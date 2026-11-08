@@ -41,25 +41,25 @@
 namespace {
 
 namespace at = field_e2::at;
-using move_script::At;
-using move_script::Long;
+// move_script::At: named in full below (source-layout B0, a clash on At)
+// move_script::Long: named in full below (source-layout B0, a clash on Long)
 using move_script::SetLong;
-using move_script::SetWord;
-using move_script::Word;
+// move_script::SetWord: named in full below (source-layout B0, a clash on SetWord)
+// move_script::Word: named in full below (source-layout B0, a clash on Word)
 using U = std::uint32_t;
 
-unsigned char& B(U a) { return *At(a); }
-U L(U a) { return static_cast<U>(Long(At(a))); }
-void SetL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
-std::uint16_t W(U a) { return Word(At(a)); }
-void SetW(U a, unsigned v) { SetWord(At(a), v); }
+unsigned char& BFieldE2(U a) { return *move_script::At(a); }
+U LFieldE2(U a) { return static_cast<U>(move_script::Long(move_script::At(a))); }
+void SetL(U a, U v) { SetLong(move_script::At(a), static_cast<std::int32_t>(v)); }
+std::uint16_t WFieldE2(U a) { return move_script::Word(move_script::At(a)); }
+void SetW(U a, unsigned v) { move_script::SetWord(move_script::At(a), v); }
 U Key(const void* p) { return Low32(p); }
 
 // The record views (game/record_views.h): the leader helpers run on the leader,
 // an ObjTrio record, and Field_State is one.
-U LongAt(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U LongAt(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
-int S16(unsigned v) { return static_cast<short>(v); }
+int S16FieldE2(unsigned v) { return static_cast<short>(v); }
 // `sub; cdq; xor; sub`: the 32-bit difference's magnitude, wrapping as the
 // original's (the magnitude of 0x80000000 is itself, negative).
 std::int32_t AbsDiff(U a, U b) {
@@ -72,9 +72,9 @@ using Handler = void (__cdecl*)();
 // A .data table's entry read in place (swapped for recorders while the fuzz
 // runs); an entry that is not code - an index past the table - aborts, where
 // the original jumps there (scena_sc0.cpp's CodeAt).
-U CodeAt(U table, U index, const char* who) {
+U CodeAtFieldE2(U table, U index, const char* who) {
     const U cell = table + 4u * index;
-    const U entry = L(cell);
+    const U entry = LFieldE2(cell);
     // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
     // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
     if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
@@ -96,14 +96,14 @@ unsigned short* Palette(const unsigned char* s) {
 // The pace's reach: Field_DirectionSteps[+8] times (+0x70 + 2), from +0x34 / +0x38.
 void Ahead(const unsigned char* s, std::int32_t& x, std::int32_t& z) {
     const U dir = s[8], k = static_cast<U>(s[0x70]) + 2u;
-    x = static_cast<std::int32_t>(L(::bof3::Img(at::kDirectionSteps) + dir * 8u) * k + LongAt(s + 0x34));
-    z = static_cast<std::int32_t>(L(::bof3::Img(at::kDirectionSteps) + 4u + dir * 8u) * k + LongAt(s + 0x38));
+    x = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kDirectionSteps) + dir * 8u) * k + LongAt(s + 0x34));
+    z = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kDirectionSteps) + 4u + dir * 8u) * k + LongAt(s + 0x38));
 }
 
 // The view follows the leader when +5 is 0 and bit 3 of the script flags'
 // low bytes is clear; then every fourth frame one tick of its script.
 void FollowAndTick(unsigned char* s) {
-    if (s[5] == 0 && ((B(::bof3::Img(at::kScriptFlags2)) | B(::bof3::Img(at::kScriptFlagsLow))) & 8) == 0)
+    if (s[5] == 0 && ((BFieldE2(::bof3::Img(at::kScriptFlags2)) | BFieldE2(::bof3::Img(at::kScriptFlagsLow))) & 8) == 0)
         SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::SpriteHead>(s)->height_whole));
     if ((Frame_Counter & 3) == 0) SH_CALL(Sprite_ScriptTickOnce)();
 }
@@ -162,10 +162,10 @@ extern "C" __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
 extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
     unsigned char named = 0;
     for (U r = 0; r < 8; ++r) {
-        if (B(::bof3::Img(at::kRecords) + 8u * r) != 4) continue;
-        if (B(::bof3::Img(at::kRecords) + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
+        if (BFieldE2(::bof3::Img(at::kRecords) + 8u * r) != 4) continue;
+        if (BFieldE2(::bof3::Img(at::kRecords) + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
         for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
-            if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
+            if (BFieldE2(p - 1) != 0 && BFieldE2(p) == r + 1u) ++named;
     }
     if (named == 0) ++*counter;
 }
@@ -176,11 +176,11 @@ extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
 extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
     for (U r = 0; r < 8; ++r) {
         unsigned char named = 0;
-        if (B(::bof3::Img(at::kRecords) + 8u * r) != static_cast<unsigned char>(kind)) continue;
-        if (B(::bof3::Img(at::kRecords) + 3u + 8u * r) == 0) continue;
+        if (BFieldE2(::bof3::Img(at::kRecords) + 8u * r) != static_cast<unsigned char>(kind)) continue;
+        if (BFieldE2(::bof3::Img(at::kRecords) + 3u + 8u * r) == 0) continue;
         for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
-            if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
-        if (named == 0) SetL(::bof3::Img(at::kRecords) + 4u + 8u * r, L(::bof3::Img(at::kRecords) + 4u + 8u * r) + 1u);
+            if (BFieldE2(p - 1) != 0 && BFieldE2(p) == r + 1u) ++named;
+        if (named == 0) SetL(::bof3::Img(at::kRecords) + 4u + 8u * r, LFieldE2(::bof3::Img(at::kRecords) + 4u + 8u * r) + 1u);
     }
 }
 
@@ -199,7 +199,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
 // with 0x9046CC at 4 or more. No PSX twin paired.
 extern "C" void __cdecl Field_AfterBattleTally(void) {
     static const signed char kThresholds[10] = {0x14, 0x14, 0x14, 0x28, 0x14, 0x14, 0x3C, 0x14, 0x14, 0x14};
-    if (SH_CALL(Flags_Test)(At(::bof3::Img(at::kTallyBits)), 4) != 0 && SH_CALL(Flags_Test)(At(::bof3::Img(at::kTallyBits) + 3), 4) == 0) {
+    if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(at::kTallyBits)), 4) != 0 && SH_CALL(Flags_Test)(move_script::At(::bof3::Img(at::kTallyBits) + 3), 4) == 0) {
         const unsigned char v = AreaW1c_Byte9045FB;
         if (v < 0x1E) AreaW1c_Byte9045FB = static_cast<unsigned char>(v + 1);
     }
@@ -207,36 +207,36 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
         U flag = 0xF6;
         bool found = false;
         for (; flag <= 0xFF; ++flag)
-            if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag) == 0) {
+            if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag) == 0) {
                 found = true;
                 break;
             }
         if (found) {
             unsigned char a = 0, b = 0;
             for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8) {
-                if (B(p - 1) == 0) continue;
-                if (B(p) == 0xA) ++a;
-                else if (B(p) == 0xB) ++b;
+                if (BFieldE2(p - 1) == 0) continue;
+                if (BFieldE2(p) == 0xA) ++a;
+                else if (BFieldE2(p) == 0xB) ++b;
             }
             const bool first = flag == 0xF6 || flag == 0xF9 || flag == 0xFC;
             if (first) b = a;
             if (b != 0) {
                 Rest4a_ClockA = Rest4a_ClockA + 1u;
-                int need = kThresholds[flag - 0xF6] - static_cast<int>(B(first ? ::bof3::Img(FieldE2_BiasA_addr) : ::bof3::Img(FieldE2_BiasB_addr)));
+                int need = kThresholds[flag - 0xF6] - static_cast<int>(BFieldE2(first ? ::bof3::Img(FieldE2_BiasA_addr) : ::bof3::Img(FieldE2_BiasB_addr)));
                 if (need < 5) need = 5;
                 if (Rest4a_ClockA >= static_cast<U>(need)) {
-                    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag);
+                    SH_CALL(Flags_Set)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag);
                     Rest4a_ClockA = 0;
                 }
             }
         }
-        if (Rest4a_LevelLit < 7) SH_CALL(Records_CountUnpaired)(1, reinterpret_cast<U*>(At(::bof3::Img(Rest4a_StampLevelLit_addr))));
-        if (FieldE2_LevelA < 0xA) SH_CALL(Records_CountUnpaired)(0, reinterpret_cast<U*>(At(::bof3::Img(Rest4a_StampLevelDark_addr))));
+        if (Rest4a_LevelLit < 7) SH_CALL(Records_CountUnpaired)(1, reinterpret_cast<U*>(move_script::At(::bof3::Img(Rest4a_StampLevelLit_addr))));
+        if (FieldE2_LevelA < 0xA) SH_CALL(Records_CountUnpaired)(0, reinterpret_cast<U*>(move_script::At(::bof3::Img(Rest4a_StampLevelDark_addr))));
         SH_CALL(Records_CountUnpairedOfKind)(5);
         SH_CALL(Records_CountUnpairedOfKind)(0xB);
     }
-    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xF5) == 0 && Rest4a_LevelLit >= 4)
-        SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xF5);
+    if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xF5) == 0 && Rest4a_LevelLit >= 4)
+        SH_CALL(Flags_Set)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xF5);
 }
 
 // original 0x534480 (PSX 0x801C32D0): Field_LeaderStates[14] and the members' 0x65F960[14]:
@@ -251,8 +251,8 @@ extern "C" void __cdecl Field_FaceMode11Object(void) {
         return;
     }
     unsigned char* const s = Sprite_Current;
-    const auto dx = static_cast<std::int32_t>(L(::bof3::Img(at::kObject) + 0x34) - LongAt(s + 0x34));
-    const auto dz = static_cast<std::int32_t>(L(::bof3::Img(at::kObject) + 0x38) - LongAt(s + 0x38));
+    const auto dx = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kObject) + 0x34) - LongAt(s + 0x34));
+    const auto dz = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kObject) + 0x38) - LongAt(s + 0x38));
     int facing = -1;
     if (dx < 0) facing = dz < 0 ? 0 : dz > 0 ? 6 : 7;
     else if (dx > 0) facing = dz > 0 ? 4 : dz < 0 ? 2 : 3;
@@ -287,19 +287,19 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
     U actor = ::bof3::Img(CharacterRecords_addr) + fs->char_index * at::kRecordStride;
-    if (rv::As<records::CharRecord>(At(actor))->hp <= (rv::As<records::CharRecord>(At(actor))->stats.max_hp >> 2)) {
-        rv::As<records::CharRecord>(At(actor))->status = rv::As<records::CharRecord>(At(actor))->status | 0x2000u;
+    if (rv::As<records::CharRecord>(move_script::At(actor))->hp <= (rv::As<records::CharRecord>(move_script::At(actor))->stats.max_hp >> 2)) {
+        rv::As<records::CharRecord>(move_script::At(actor))->status = rv::As<records::CharRecord>(move_script::At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
     const U id = fs->char_index;
     actor = ::bof3::Img(CharacterRecords_addr) + id * at::kRecordStride;
-    SetW(actor + 0x10, W(actor + 0x10) | flags);
+    SetW(actor + 0x10, WFieldE2(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
     const U a = ::bof3::Img(CharacterRecords_addr) + f[0x148] * at::kRecordStride;
-    rv::As<records::CharRecord>(At(a))->status = rv::As<records::CharRecord>(At(a))->status & 0xFFDFu;
+    rv::As<records::CharRecord>(move_script::At(a))->status = rv::As<records::CharRecord>(move_script::At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }
 
@@ -382,7 +382,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
         const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
-        return S16(static_cast<U>(slope)) > 0x40 && at::kEffectSlot != 0;
+        return S16FieldE2(static_cast<U>(slope)) > 0x40 && at::kEffectSlot != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
     q.ylo = 0x8000;
@@ -438,7 +438,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
         if (probe(0)) return 1;
     }
     const long g = SH_CALL(MapView_GroundAt)(x, z);
-    int d = S16(static_cast<U>(g)) - S16(ground);
+    int d = S16FieldE2(static_cast<U>(g)) - S16FieldE2(ground);
     if (d < 0) d = -d;
     if (d > 0xC0) return 1;
     unsigned char* const s = Sprite_Current;
@@ -557,11 +557,11 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     const U actor = rv::As<records::PartyMember>(Field_State)->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    if (S16(height) > S16(static_cast<U>(ground)) - S16(W(::bof3::Img(at::kPaceHeights) + actor * 2u))) {
-        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - B(::bof3::Img(at::kPaceRises) + actor));
+    if (S16FieldE2(height) > S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(at::kPaceHeights) + actor * 2u))) {
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - BFieldE2(::bof3::Img(at::kPaceRises) + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        const std::uint16_t offset = W(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
+        const std::uint16_t offset = WFieldE2(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again) - offset);
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
@@ -592,8 +592,8 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    if (S16(height) < S16(static_cast<U>(ground))) {
-        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, B(::bof3::Img(at::kPaceRises) + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
+    if (S16FieldE2(height) < S16FieldE2(static_cast<U>(ground))) {
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, BFieldE2(::bof3::Img(at::kPaceRises) + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again));
@@ -638,9 +638,9 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    const int floor = S16(static_cast<U>(ground)) - S16(W(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
+    const int floor = S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
-    if (S16(s->height_whole) >= floor) s->step = 3;
+    if (S16FieldE2(s->height_whole) >= floor) s->step = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -653,7 +653,7 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
     unsigned char* s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
     s = Sprite_Current;
-    if (S16(static_cast<U>(ground)) > S16(rv::As<records::PartyMember>(s)->height_whole)) {
+    if (S16FieldE2(static_cast<U>(ground)) > S16FieldE2(rv::As<records::PartyMember>(s)->height_whole)) {
         rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<U>(ground));
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
@@ -691,12 +691,12 @@ extern "C" void __cdecl Leader_TurnBack(void) {
 // hypothesis).
 extern "C" void __cdecl PartySet_ErrorLoop(void) {
     for (;;) {
-        SH_CALL(Text_DrawFont8)(0xA0, 0x64, 0, At(::bof3::Img(at::kErrorTitle)));
+        SH_CALL(Text_DrawFont8)(0xA0, 0x64, 0, move_script::At(::bof3::Img(at::kErrorTitle)));
         const U third = at::kErrorIds.b_02;
         const U ids = static_cast<std::uint32_t>(at::kErrorIds.d_00);
-        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kTextScratch))), reinterpret_cast<const char*>(At(::bof3::Img(at::kErrorFormat))),
+        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kTextScratch))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kErrorFormat))),
                              ids & 0xFF, (ids >> 8) & 0xFF, third);
-        SH_CALL(Text_DrawFont8)(0xA0, 0x74, 0, At(::bof3::Img(at::kTextScratch)));
+        SH_CALL(Text_DrawFont8)(0xA0, 0x74, 0, move_script::At(::bof3::Img(at::kTextScratch)));
         SH_CALL(Task_Sleep)(1);
     }
 }
@@ -714,11 +714,11 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 // hypothesis).
 extern "C" void __cdecl Mode11_ObjectFrame(void) {
     const std::uint16_t held = Input_Held;
-    const U state = B(::bof3::Img(at::kObject) + 1);
-    Sprite_Current = At(::bof3::Img(FieldEvent_Object905DA0_addr));
+    const U state = BFieldE2(::bof3::Img(at::kObject) + 1);
+    Sprite_Current = move_script::At(::bof3::Img(FieldEvent_Object905DA0_addr));
     Field_State = rv::Bytes(ObjTrio);
     Field_InputHeld = held;
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(Mode11_ObjectStates_addr), state, "Mode11_ObjectFrame")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(Mode11_ObjectStates_addr), state, "Mode11_ObjectFrame")))();
 }
 
 // original 0x536B90: state 0: +5 = 0, +0xB = the leader's flag byte
@@ -769,7 +769,7 @@ void LeaveRequest() {
 // state 2 and the leave request; farther: the object still, state 1, the
 // leave request. PSX twin none paired.
 extern "C" void __cdecl Mode11_ObjectControl(void) {
-    if (L(::bof3::Img(at::kInputPressed)) & 0x800u) {
+    if (LFieldE2(::bof3::Img(at::kInputPressed)) & 0x800u) {
         unsigned char* const fs = Field_State;
         const U nx = LongAt(fs + 0x34);
         const std::int32_t dx = AbsDiff(static_cast<std::uint32_t>(Field_Kind2X), nx);
@@ -780,14 +780,14 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
         const std::int32_t far = dx >= dz ? dx : dz;
         const U n = static_cast<U>(far >> 13) & 0xFF;
         U word = 0;
-        if (n != 0) word = static_cast<U>(S16(static_cast<U>(rv::As<records::PartyMember>(fs)->height_whole - W(::bof3::Img(at::kElevation)))) / static_cast<int>(n));
+        if (n != 0) word = static_cast<U>(S16FieldE2(static_cast<U>(rv::As<records::PartyMember>(fs)->height_whole - WFieldE2(::bof3::Img(at::kElevation)))) / static_cast<int>(n));
         MoveScript_FAWord = word;
         fs[0x128] = 3;
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
         Sprite_Current[1] = 3;
         return;
     }
-    if (Field_InputHeld & W(::bof3::Img(at::kButtonsLeave))) {
+    if (Field_InputHeld & WFieldE2(::bof3::Img(at::kButtonsLeave))) {
         Field_State[0x128] = 3;
         Game_Step = Game_Step + 1u;
         Sprite_Current[1] = 1;
@@ -809,16 +809,16 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     }
     unsigned char* const s = Sprite_Current;
     const U dir = s[8];
-    bool near = AbsDiff(static_cast<U>(ObjTrio[0].x) - L(::bof3::Img(at::kDirectionSteps) + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
+    bool near = AbsDiff(static_cast<U>(ObjTrio[0].x) - LFieldE2(::bof3::Img(at::kDirectionSteps) + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
     if (near)
-        near = AbsDiff(static_cast<U>(ObjTrio[0].z) - L(::bof3::Img(at::kDirectionSteps) + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
+        near = AbsDiff(static_cast<U>(ObjTrio[0].z) - LFieldE2(::bof3::Img(at::kDirectionSteps) + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
     if (!near) {
         ObjectStill(s, true);
         Sprite_Current[1] = 1;
         LeaveRequest();
         return;
     }
-    const U running = (W(::bof3::Img(at::kButtonsRun)) & Field_InputHeld) != 0 ? 1u : 0u;
+    const U running = (WFieldE2(::bof3::Img(at::kButtonsRun)) & Field_InputHeld) != 0 ? 1u : 0u;
     Field_State[0x128] = (running ^ FieldE2_RunDefault) != 0 ? 4 : 3;
     SH_CALL(Field_JumpStart)();
     SH_CALL(Field_JumpCheckHeight)();
@@ -836,7 +836,7 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
 extern "C" void __cdecl Mode11_ObjectHalt(void) {
     ObjectStill(Sprite_Current, false);
     Field_State[0x128] = 3;
-    if (L(::bof3::Img(at::kInputHeld)) & 0xF000u) {
+    if (LFieldE2(::bof3::Img(at::kInputHeld)) & 0xF000u) {
         SH_CALL(Mode11_ObjectControl)();
         return;
     }
@@ -955,12 +955,12 @@ short Place(U v) { return static_cast<short>(static_cast<U>(static_cast<std::int
 // 0x80168288 (callers, a hypothesis).
 extern "C" void __cdecl Mode11_ObjectDraw(void) {
     const unsigned char flags = FieldEvent_Object905DA0;
-    Sprite_Current = At(::bof3::Img(FieldEvent_Object905DA0_addr));
+    Sprite_Current = move_script::At(::bof3::Img(FieldEvent_Object905DA0_addr));
     if (flags & 0x40) return;
     alignas(4) short vertex[4];
-    vertex[0] = Place(L(::bof3::Img(at::kObject) + 0x34));
-    vertex[1] = Place(L(::bof3::Img(at::kObject) + 0x38));
-    vertex[2] = static_cast<short>(-((S16(W(::bof3::Img(at::kObject) + 0x3E)) + 0x80) / 2));
+    vertex[0] = Place(LFieldE2(::bof3::Img(at::kObject) + 0x34));
+    vertex[1] = Place(LFieldE2(::bof3::Img(at::kObject) + 0x38));
+    vertex[2] = static_cast<short>(-((S16FieldE2(WFieldE2(::bof3::Img(at::kObject) + 0x3E)) + 0x80) / 2));
     vertex[3] = 0;
     alignas(4) unsigned char screen[8];
     long depth, flag;
@@ -972,16 +972,16 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gte_PrimDepthFlat4_10)(prim);
-    FildFstFadd(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_x)) - 6, prim + 8, At(at::kQuadLift), prim + 0x18);
+    FildFstFadd(S16FieldE2(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_x)) - 6, prim + 8, move_script::At(at::kQuadLift), prim + 0x18);
     std::memcpy(prim + 0x28, prim + 8, 4);
     std::memcpy(prim + 0x38, prim + 0x18, 4);
     U counter = Frame_Counter;
     const U bob = (counter >> 1) & 3;
-    const U y = (counter & 8) ? bob + static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - 0x1Bu
-                              : static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - bob - 0x18u;
+    const U y = (counter & 8) ? bob + static_cast<U>(S16FieldE2(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - 0x1Bu
+                              : static_cast<U>(S16FieldE2(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - bob - 0x18u;
     Fild64Fstp(y, prim + 0xC);
     std::memcpy(prim + 0x1C, prim + 0xC, 4);
-    FldFaddFstFstp(prim + 0xC, At(at::kQuadWidth), prim + 0x2C, prim + 0x3C);
+    FldFaddFstFstp(prim + 0xC, move_script::At(at::kQuadWidth), prim + 0x2C, prim + 0x3C);
     prim[0x14] = 0xCC;
     prim[0x24] = 0xCC;
     prim[0x25] = 0x9B;
@@ -1002,7 +1002,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     alignas(4) short move[4];
     move[0] = Place(LongAt(s + 0x34));
     move[1] = Place(LongAt(s + 0x38));
-    move[2] = static_cast<short>(-(S16(rv::As<records::SpriteHead>(s)->height_whole) / 2));
+    move[2] = static_cast<short>(-(S16FieldE2(rv::As<records::SpriteHead>(s)->height_whole) / 2));
     move[3] = 0;
     alignas(4) unsigned char matrix[0x20];
     SH_CALL(Gte_RotTrans)(move, reinterpret_cast<long*>(matrix + 0x14));
@@ -1062,8 +1062,8 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
 // 0x904030). Past the table ours aborts where the original calls data.
 // PSX twin 0x801A96D4 (call, a hypothesis).
 extern "C" void __cdecl Field_ObjectTriggerByKind(unsigned char* object) {
-    const U entry = CodeAt(::bof3::Img(WorldMap_FieldHooks_addr) + 0x2c, object[0x86], "Field_ObjectTriggerByKind");
-    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, At(::bof3::Img(Cond_Flags_addr) + 0xa0));
+    const U entry = CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr) + 0x2c, object[0x86], "Field_ObjectTriggerByKind");
+    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0));
 }
 
 // original 0x56D6B0 (PSX 0x801A8880): with the object's +0x89 bit 6, Field_ObjectTriggerByKind
@@ -1075,8 +1075,8 @@ extern "C" void __cdecl Field_ObjectTrigger(unsigned char* object) {
     if (object[0x89] & 0x40) {
         SH_CALL(Field_ObjectTriggerByKind)(object);
     } else {
-        const U hooks = L(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
-        const U entry = CodeAt(hooks, 1, "Field_ObjectTrigger");
+        const U hooks = LFieldE2(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
+        const U entry = CodeAtFieldE2(hooks, 1, "Field_ObjectTrigger");
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
     }
     object[0x86] = 0xFF;
@@ -1090,10 +1090,10 @@ extern "C" void __cdecl Field_ObjectTrigger(unsigned char* object) {
 // hypothesis).
 extern "C" int __cdecl Scenario_CellHook(unsigned x, unsigned z) {
     unsigned char* const kept = Sprite_Current;
-    const U hooks = L(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
-    const U hook = L(hooks + 0x10);
+    const U hooks = LFieldE2(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
+    const U hook = LFieldE2(hooks + 0x10);
     if (hook != 0) {
-        const U entry = CodeAt(hooks, 4, "Scenario_CellHook");
+        const U entry = CodeAtFieldE2(hooks, 4, "Scenario_CellHook");
         const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
         if (static_cast<signed char>(answer) >= 0) {
             Sprite_Current = kept;
@@ -1132,7 +1132,7 @@ void TailStep(unsigned char state) { AreaW0c_TailState = state; }
 extern "C" void __cdecl FieldTail_LoadBank(void) {
     switch (TailState()) {
     case 0:
-        B(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags2)) | 7);
+        BFieldE2(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(at::kScriptFlags2)) | 7);
         SH_CALL(LoadDatFile)(0x31C);
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
@@ -1181,16 +1181,16 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         TailStep(1);
         return;
     case 1:
-        SH_CALL(Party_DropIn)(B(::bof3::Img(at::kDropInTable) + AreaW0c_TailSub));
+        SH_CALL(Party_DropIn)(BFieldE2(::bof3::Img(at::kDropInTable) + AreaW0c_TailSub));
         TailStep(2);
         return;
     case 2:
-        if (B(::bof3::Img(at::kCounterB)) != 0x20) return;
+        if (BFieldE2(::bof3::Img(at::kCounterB)) != 0x20) return;
         SetW(::bof3::Img(at::kTailTimer), 0x10);
         TailStep(3);
         return;
     case 3: {
-        const auto left = static_cast<std::uint16_t>(W(::bof3::Img(at::kTailTimer)) - 1u);
+        const auto left = static_cast<std::uint16_t>(WFieldE2(::bof3::Img(at::kTailTimer)) - 1u);
         SetW(::bof3::Img(at::kTailTimer), left);
         if (left != 0) return;
         switch (AreaW0c_TailSub) {
@@ -1206,11 +1206,11 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         return;
     }
     case 4:
-        if (B(::bof3::Img(at::kCounterB)) != 0x31) return;
-        B(::bof3::Img(at::kCounterB)) = 0;
+        if (BFieldE2(::bof3::Img(at::kCounterB)) != 0x31) return;
+        BFieldE2(::bof3::Img(at::kCounterB)) = 0;
         SH_CALL(ScriptFlags_Clear40)();
-        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1E);
-        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1F);
+        SH_CALL(Flags_Clear)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1E);
+        SH_CALL(Flags_Clear)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1F);
         TailDone();
         return;
     default: return;
@@ -1272,7 +1272,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         BattleE1_Mode = 0;
         ScenaSc1_ShopByteB = 0;
         ModeStates_ShopObject = 0xFE;
-        B(::bof3::Img(at::kFieldEC2)) = 1;
+        BFieldE2(::bof3::Img(at::kFieldEC2)) = 1;
         Game_Mode = 7;
         TailStep(7);
         return;
@@ -1298,7 +1298,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         if (Transition_Busy != 0) return;
         BattleE1_Mode = 0;
         ModeStates_ShopObject = 0xFE;
-        B(::bof3::Img(at::kFieldEC2)) = 1;
+        BFieldE2(::bof3::Img(at::kFieldEC2)) = 1;
         ScenaSc1_ShopByteB = 0;
         Game_Mode = 7;
         TailStep(6);
@@ -1334,7 +1334,7 @@ extern "C" void __cdecl FieldTail_Message(void) {
 // the original jumps into Field_ObjectTriggers).
 extern "C" void __cdecl FieldTail_WorldMapHook(void) {
     const U index = SH_CALL(WorldMap_RecordIndex)() & 0xFF;
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(WorldMap_FieldHooks_addr), index, "FieldTail_WorldMapHook")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, "FieldTail_WorldMapHook")))();
 }
 
 // original 0x56DE50 (slot 44): 0 - unless a message is up: bit (argument) of
@@ -1359,9 +1359,9 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
     switch (TailState()) {
     case 0: {
         if (Field_Request == 2) return;
-        SH_CALL(Flags_Set)(At(::bof3::Img(Gene_Bits_addr)), AreaW0c_TailSub);
+        SH_CALL(Flags_Set)(move_script::At(::bof3::Img(Gene_Bits_addr)), AreaW0c_TailSub);
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
-        char* const name = reinterpret_cast<char*>(At(::bof3::Img(at::kTextRecords)));
+        char* const name = reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kTextRecords)));
         SH_CALL(Crt_strncpy)(name, reinterpret_cast<const char*>(text), 8);
         if (g_name_nul) name[8] = 0;
         SH_CALL(Msg_OpenSystem)(0xFA);
@@ -1375,7 +1375,7 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         if (Field_Request == 2) return;
         SH_CALL(Sound_ResumeAll)();
-        *At(AreaW1a_FocusObject) = 0;
+        *move_script::At(AreaW1a_FocusObject) = 0;
         SH_CALL(ScriptFlags_Clear40)();
         TailDone();
         return;
@@ -1413,7 +1413,7 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
         if (Field_Request == 2) return;
         U flag = 0xFF, area = 0xB9;
         for (;;) {
-            if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag) != 0) break;
+            if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), flag) != 0) break;
             --flag;
             area += 0xFFFF;
             if (static_cast<std::int32_t>(flag) < 0xF6) break;
@@ -1422,7 +1422,7 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
         AreaW4d_ReturnZ = static_cast<U>(ObjTrio[0].z);
         AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
-        B(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags2)) | 0x40);
+        BFieldE2(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(at::kScriptFlags2)) | 0x40);
         SH_CALL(ScriptFlags_Clear40)();
         AreaW0a_TailKind = 0;
         AreaW0c_TailState = 0;
@@ -1473,7 +1473,7 @@ void Project4(short* v, unsigned char* prim) {
 // +2 no subrecord reaches never ends the walk, and the threshold scan has no
 // bound. A period of 0 divides by 0: ours aborts. No PSX twin paired.
 extern "C" void __cdecl MapCell_DrawFrames(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (SH_CALL(Area_TestCondition)(W(Key(record))) == 0) return;
+    if (SH_CALL(Area_TestCondition)(WFieldE2(Key(record))) == 0) return;
     const U x0 = (b1 - 0x80u) << 7, y0 = (b0 - 0x80u) << 7;
     if ((LongAt(record) & 0xFF0000u) == 0x10000u) return;
     U at = 1;
@@ -1512,7 +1512,7 @@ extern "C" void __cdecl MapCell_DrawFrames(const unsigned char* record, unsigned
 // Draw_OtSlot (0xC). A byte +2 no subrecord reaches never ends the walk, as
 // the original. No PSX twin paired.
 extern "C" void __cdecl MapCell_DrawShaded(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (SH_CALL(Area_TestCondition)(W(Key(record))) == 0) return;
+    if (SH_CALL(Area_TestCondition)(WFieldE2(Key(record))) == 0) return;
     const U x0 = (b1 - 0x80u) << 7, y0 = (b0 - 0x80u) << 7;
     if ((LongAt(record) & 0xFF0000u) != 0x10000u) {
         U at = 1;
@@ -1563,7 +1563,7 @@ extern "C" void __cdecl MapCell_DrawShaded(const unsigned char* record, unsigned
 // SVECTORs' fourth words are 0 (DIV-0023). A byte +2 no subrecord reaches
 // never ends the walk, as the original. No PSX twin paired.
 extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (SH_CALL(Area_TestCondition)(W(Key(record))) == 0) return;
+    if (SH_CALL(Area_TestCondition)(WFieldE2(Key(record))) == 0) return;
     const U d1 = LongAt(record + 4), d2 = LongAt(record + 8);
     const U counter = Frame_Counter & 0xFFFu;
     alignas(4) short centre[4];
@@ -1643,17 +1643,17 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
     if (column >= 0x1C) column -= 0x1C;
     if (row < 0 || row >= 0x38 || column < 0 || column >= 0x1C)
         bof3::Fatal("AreaMap_ClearCell: view cell (%d, %d) past MapView_Cells' 0x38 x 0x1C (the original reads there)", row, column);
-    const U item = W(::bof3::Img(at::kMapCells) + 2u * static_cast<U>(column + row * 0x1C));
+    const U item = WFieldE2(::bof3::Img(at::kMapCells) + 2u * static_cast<U>(column + row * 0x1C));
     if (item == 0) return;
     const U n = item + (AreaMap_CellBase & 0xFFFF);
     U p = ::bof3::Img(AreaMap_Header_addr) + n * 4u;
-    const U end = p + (L(::bof3::Img(at::kCellRecords) - 4u + n * 4u) >> 16) * 4u - 4u;
+    const U end = p + (LFieldE2(::bof3::Img(at::kCellRecords) - 4u + n * 4u) >> 16) * 4u - 4u;
     while (p != end) {
         if (p > end) bof3::Fatal("AreaMap_ClearCell: the record walk passed its end 0x%X at 0x%X (the original runs on)", (unsigned)end, (unsigned)p);
-        const U v = L(p);
+        const U v = LFieldE2(p);
         const U kind = v & 0xFF000000u;
         if (kind == 0x03000000u || kind == 0x09000000u || kind == 0x27000000u) SetL(p, (v & 0xFFFFFFu) | 0x30000000u);
-        const U step = B(p + 2);
+        const U step = BFieldE2(p + 2);
         if (step == 0) bof3::Fatal("AreaMap_ClearCell: a record of 0 dwords at 0x%X (the original never ends)", (unsigned)p);
         p += step * 4u;
     }
@@ -1672,14 +1672,14 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
 namespace {
 // The record the row's entry k names (0x66AD10[k + row * 10] * 8), unchecked.
 U TradeRecord(int k) {
-    return ::bof3::Img(at::kTradeRecords) + static_cast<U>(B(::bof3::Img(at::kTradeIndex) + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
+    return ::bof3::Img(at::kTradeRecords) + static_cast<U>(BFieldE2(::bof3::Img(at::kTradeIndex) + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
 }
 void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
 void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), at::kTradeList.v)(flag); }
 unsigned char TradeLacks(unsigned k, unsigned quantity) {
     return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kTradeLacks.v)(k, quantity);
 }
-const unsigned char* Pool(U word_cell) { return At(::bof3::Img(bof3::addr::MessagePools) + (L(word_cell) & 0xFFFF)); }
+const unsigned char* PoolFieldE2(U word_cell) { return move_script::At(::bof3::Img(bof3::addr::MessagePools) + (LFieldE2(word_cell) & 0xFFFF)); }
 }  // namespace
 
 // original 0x593960 (ItemTrade_States[0]; PSX 0x800F5048): the open step (ItemTrade_OpenSteps
@@ -1687,7 +1687,7 @@ const unsigned char* Pool(U word_cell) { return At(::bof3::Img(bof3::addr::Messa
 // into what is not code), then the frame 0x469750(0x14, 0x12, 0x118, 0x13, 0),
 // the list 0x594410(0), 0x5947D0 and a tail jump to 0x5942C0.
 extern "C" void __cdecl ItemTrade_Open(void) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(ItemTrade_OpenSteps_addr), Effect1g_TradeStep, "ItemTrade_Open")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(ItemTrade_OpenSteps_addr), Effect1g_TradeStep, "ItemTrade_Open")))();
     TradeBox();
     TradeList(0);
     SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
@@ -1718,7 +1718,7 @@ extern "C" void __cdecl ItemTrade_OpenWait(void) {
 // 0x5942C0, 0x5947D0 and, with the pick's bits 6 and 7 clear, the hand at
 // (0x1A, 0x51 + 13 * the s8 pick).
 extern "C" void __cdecl ItemTrade_Run(void) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(ItemTrade_RunSteps_addr), Effect1g_TradeStep, "ItemTrade_Run")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(ItemTrade_RunSteps_addr), Effect1g_TradeStep, "ItemTrade_Run")))();
     SH_AT(void (__cdecl*)(), at::kTradeFrame.v)();
     SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
@@ -1755,8 +1755,8 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
             SH_CALL(Sound_PlayEffect)(0x107);
         } else {
             const U record = TradeRecord(Effect1g_TradePick);
-            const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 1));
-            const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 0));
+            const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(BFieldE2(record + 1), BFieldE2(record), 1));
+            const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(BFieldE2(record + 1), BFieldE2(record), 0));
             if (static_cast<unsigned char>(bag + worn) >= 0x63) {
                 Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x80);
                 SH_CALL(Sound_PlayEffect)(0x104);
@@ -1765,7 +1765,7 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
             } else {
                 Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x40);
                 SH_CALL(Sound_PlayEffect)(0x104);
-                B(::bof3::Img(at::kTradeStep)) = static_cast<unsigned char>(Effect1g_TradeStep + 1);
+                BFieldE2(::bof3::Img(at::kTradeStep)) = static_cast<unsigned char>(Effect1g_TradeStep + 1);
             }
         }
     } else if (Field_CancelButtons & pressed) {
@@ -1778,7 +1778,7 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if ((pick & 0xC0) == 0) {
         const U record = TradeRecord(S8(pick));
-        const unsigned help = SH_CALL(Item_HelpMessage)(B(record + 1), B(record));
+        const unsigned help = SH_CALL(Item_HelpMessage)(BFieldE2(record + 1), BFieldE2(record));
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(help);
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, text);
     }
@@ -1812,8 +1812,8 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
         Effect1g_TradeQuantity = quantity;
     }
     const U record = TradeRecord(static_cast<int>(k));
-    const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 1));
-    const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 0));
+    const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(BFieldE2(record + 1), BFieldE2(record), 1));
+    const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(BFieldE2(record + 1), BFieldE2(record), 0));
     const U held = static_cast<unsigned char>(bag + worn);
     // The s8 quantity comes down until it plus the held count is 99 or less:
     // with more than 227 held no s8 does, and the original loops for ever.
@@ -1834,7 +1834,7 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
         Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep - 1);
     }
     TradeBox();
-    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordPick)));
+    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordPick)));
     TradeList(1);
     SH_AT(void (__cdecl*)(), at::kTradeCount.v)();
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
@@ -1915,7 +1915,7 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
                 const auto pick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) & 0xBF);
                 Effect1g_TradePick = pick;
                 const U record = TradeRecord(S8(pick));
-                SH_CALL(Inventory_Add)(B(record + 1), B(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
+                SH_CALL(Inventory_Add)(BFieldE2(record + 1), BFieldE2(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
                 SH_AT(void (__cdecl*)(), at::kTradeTake.v)();
                 Effect1g_TradeQuantity = 1;
                 Effect1g_TradeStep = 0;
@@ -1925,15 +1925,15 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
     TradeBox();
     if (Effect1g_TradeStep == 2) {
         const U record = TradeRecord(static_cast<int>(static_cast<unsigned char>(Effect1g_TradePick) & 0xFu));
-        const unsigned char* const name = SH_CALL(Item_NamePtr)(B(record + 1), B(record));
-        std::memcpy(At(::bof3::Img(at::kTextRecords)), name, 0x10);
-        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordName)));
+        const unsigned char* const name = SH_CALL(Item_NamePtr)(BFieldE2(record + 1), BFieldE2(record));
+        std::memcpy(move_script::At(::bof3::Img(at::kTextRecords)), name, 0x10);
+        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordName)));
         if (g_trade_confirm_layout) {
-            const ConfirmAnswers a = ConfirmLayout(Pool(::bof3::Img(at::kPoolWordAsk)));
+            const ConfirmAnswers a = ConfirmLayout(PoolFieldE2(::bof3::Img(at::kPoolWordAsk)));
             SH_CALL(Text_DrawAt)(a.x, 0x14, 0, 0xFF, a.line);
             SH_CALL(Menu_DrawHand)(a.stop[Effect1g_TradeAnswer != 0 ? 1 : 0], 0x16, 0);
         } else {
-            SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordAsk)));
+            SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordAsk)));
             SH_CALL(Menu_DrawHand)(static_cast<int>(Effect1g_TradeAnswer * 36u + 0xDCu), 0x16, 0);
         }
     }
