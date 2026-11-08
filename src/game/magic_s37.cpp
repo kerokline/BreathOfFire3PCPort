@@ -53,7 +53,7 @@ namespace at = magic_harness::at;
 namespace addr = bof3::addr;
 using magic_harness::Mem;
 using magic_harness::Pointer;
-using move_script::Long;
+constexpr auto& LongMagicS37 = move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
@@ -88,7 +88,7 @@ std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+std::int32_t SD(unsigned k) { return LongMagicS37(Mem(::bof3::Img(kS.v) + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
@@ -100,8 +100,8 @@ void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 std::uint32_t Key(const void* p) { return Low32(p); }
-void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(Long(at)) + v)); }
-void CopyLong(unsigned char* to, const unsigned char* from) { SetLong(to, Long(from)); }
+void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(LongMagicS37(at)) + v)); }
+void CopyLong(unsigned char* to, const unsigned char* from) { SetLong(to, LongMagicS37(from)); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
@@ -156,11 +156,11 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // task's own two cells, read once after the phase, put back after each.
 void WalkPool(std::uint32_t pool, unsigned records, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
+    const std::int32_t owner = LongMagicS37(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < records; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
-        const std::int32_t rec_owner = Long(rec + 0x80);
+        const std::int32_t rec_owner = LongMagicS37(rec + 0x80);
         Sprite_Current = rec;
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(task);

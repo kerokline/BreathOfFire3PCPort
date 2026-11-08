@@ -60,23 +60,23 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-void SetUL(U a, U v) { SetUL(At(a), v); }
-std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-std::int32_t SW(U a) { return SW(At(a)); }
+U ULEffect2c(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULEffect2c(U a) { return ULEffect2c(At(a)); }
+void SetULEffect2c(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
+void SetULEffect2c(U a, U v) { SetULEffect2c(At(a), v); }
+std::int32_t SWEffect2c(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+std::int32_t SWEffect2c(U a) { return SWEffect2c(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
-U AddressOf(const void* p) { return Low32(p); }
+U AddressOfEffect2c(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul r32, r32 then sar: the product's low 32 bits, shifted.
-U MulSar(std::int32_t a, std::int32_t b, unsigned n) { return Sar(static_cast<U>(a) * static_cast<U>(b), n); }
+U MulSarEffect2c(std::int32_t a, std::int32_t b, unsigned n) { return Sar(static_cast<U>(a) * static_cast<U>(b), n); }
 // cdq; and edx, 2^n - 1; add eax, edx; sar eax, n: a signed divide toward zero.
 std::int32_t DivPow2(U v, unsigned n) { return static_cast<std::int32_t>(v) / (1 << n); }
 // Three dwords moved as the original moves them (mov, not the FPU).
 void Copy12(unsigned char* to, const unsigned char* from) {
-    for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
+    for (unsigned i = 0; i < 12; i += 4) SetULEffect2c(to + i, ULEffect2c(from + i));
 }
 
 // --- x87 as the original has it: `fld dword` through inline assembly, so the
@@ -110,8 +110,8 @@ void Dispatch(const char* who, const void* table, unsigned entries, unsigned sta
     if (state >= entries)
         bof3::Fatal("%s: state byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/effect_2c.md section 6)",
-                    who, state, entries, (unsigned)AddressOf(table));
-    reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
+                    who, state, entries, (unsigned)AddressOfEffect2c(table));
+    reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(ULEffect2c(static_cast<const unsigned char*>(table) + 4 * state)))();
 }
 
 // The draw-mode packet every draw here opens with: Gpu_GetTPage(0, abr, x, y),
@@ -159,7 +159,7 @@ U HeightAt(const char* who, std::int32_t column) {
 // BOF3X_OFF) leaves them at 0x92EC80, the overrun with them.
 unsigned char g_ash_room = 0;
 alignas(4) unsigned char g_particles[at::kPixelRoom * at::kPixelStride];
-U Particles() { return g_ash_room ? AddressOf(g_particles) : ::bof3::Img(at::kPixels.v); }
+U Particles() { return g_ash_room ? AddressOfEffect2c(g_particles) : ::bof3::Img(at::kPixels.v); }
 
 // +9 down one (Sprite_Current read for each access, as the originals); at 0,
 // +9 = reload and +1 up.
@@ -249,10 +249,10 @@ extern "C" void __cdecl EffectKind3E_DrawBolt(const long* from, const long* to) 
     const auto* const a = reinterpret_cast<const unsigned char*>(from);
     const auto* const b = reinterpret_cast<const unsigned char*>(to);
     alignas(4) unsigned char l[12];
-    SetUL(l, UL(a));
-    SetUL(l + 4, UL(a + 4));
-    const U height = UL(a + 8);
-    SetUL(l + 8, height);
+    SetULEffect2c(l, ULEffect2c(a));
+    SetULEffect2c(l + 4, ULEffect2c(a + 4));
+    const U height = ULEffect2c(a + 8);
+    SetULEffect2c(l + 8, height);
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(l), Out(o));
     for (unsigned step = 1; step <= 0x10; ++step) {
@@ -260,10 +260,10 @@ extern "C" void __cdecl EffectKind3E_DrawBolt(const long* from, const long* to) 
         SH_CALL(Gpu_SetLineF2)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         Copy12(prim + 8, o);
-        SetUL(l, UL(l) + static_cast<U>(DivPow2(UL(b) - UL(a), 4)));
-        SetUL(l + 4, UL(l + 4) + static_cast<U>(DivPow2(UL(b + 4) - UL(a + 4), 4)));
-        SetUL(l + 8, height);
-        if (step < 0x10) SetUL(l + 8, height + (((static_cast<U>(SH_CALL(Rand)()) & 0xFFFu) - 0x800u) << 12));
+        SetULEffect2c(l, ULEffect2c(l) + static_cast<U>(DivPow2(ULEffect2c(b) - ULEffect2c(a), 4)));
+        SetULEffect2c(l + 4, ULEffect2c(l + 4) + static_cast<U>(DivPow2(ULEffect2c(b + 4) - ULEffect2c(a + 4), 4)));
+        SetULEffect2c(l + 8, height);
+        if (step < 0x10) SetULEffect2c(l + 8, height + (((static_cast<U>(SH_CALL(Rand)()) & 0xFFFu) - 0x800u) << 12));
         SH_CALL(EffectGte_ProjectPoint)(Point(l), Out(o));
         Copy12(prim + 0x14, o);
         prim[4] = prim[5] = prim[6] = 0x80;
@@ -284,19 +284,19 @@ extern "C" void __cdecl EffectKind3E_BoltGlow(const unsigned char* p0, const uns
     v[2] = 0;
     SH_CALL(Gte_VectorNormal)(v, v);
     unsigned char* const prim = Gfx_PacketNext;
-    const auto nx = static_cast<std::int32_t>(MulSar(static_cast<std::int32_t>(v[0]), 5, 12));
-    const auto ny = static_cast<std::int32_t>(MulSar(static_cast<std::int32_t>(v[1]), 5, 12));
+    const auto nx = static_cast<std::int32_t>(MulSarEffect2c(static_cast<std::int32_t>(v[0]), 5, 12));
+    const auto ny = static_cast<std::int32_t>(MulSarEffect2c(static_cast<std::int32_t>(v[1]), 5, 12));
     SH_CALL(Gpu_SetPolyG4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SetUL(prim + 8, UL(p0));
-    SetUL(prim + 0xC, UL(p0 + 4));
+    SetULEffect2c(prim + 8, ULEffect2c(p0));
+    SetULEffect2c(prim + 0xC, ULEffect2c(p0 + 4));
     StF(prim + 0x18, I(nx) + F(p0));
     StF(prim + 0x1C, I(ny) + F(p0 + 4));
     const LD z0 = F(p0 + 8);
     StF(prim + 0x20, z0);
     StF(prim + 0x10, z0);
-    SetUL(prim + 0x28, UL(p1));
-    SetUL(prim + 0x2C, UL(p1 + 4));
+    SetULEffect2c(prim + 0x28, ULEffect2c(p1));
+    SetULEffect2c(prim + 0x2C, ULEffect2c(p1 + 4));
     StF(prim + 0x38, I(nx) + F(p1));
     StF(prim + 0x3C, I(ny) + F(p1 + 4));
     const LD z1 = F(p1 + 8);
@@ -308,7 +308,7 @@ extern "C" void __cdecl EffectKind3E_BoltGlow(const unsigned char* p0, const uns
     prim[0x34] = prim[0x35] = prim[0x36] = 0;
     SH_CALL(Gfx_CommitPrim)(1, 0x44);
     unsigned char* const next = Gfx_PacketNext;
-    for (unsigned i = 0; i < 0x44; i += 4) SetUL(next + i, UL(next - 0x44 + i));   // rep movsd, forward
+    for (unsigned i = 0; i < 0x44; i += 4) SetULEffect2c(next + i, ULEffect2c(next - 0x44 + i));   // rep movsd, forward
     StF(next + 0x18, F(p0) - I(nx));
     StF(next + 0x1C, F(p0 + 4) - I(ny));
     StF(next + 0x38, F(p1) - I(nx));
@@ -355,12 +355,12 @@ extern "C" void __cdecl EffectKind3F_DrawBeam(const long* from, const long* to) 
     SH_CALL(EffectGte_ProjectSize)(from, size, out);
     unsigned char out_bytes[4];
     std::memcpy(out_bytes, out, 4);
-    const U r0 = (Frame_Counter & 1u) + UL(out_bytes);
+    const U r0 = (Frame_Counter & 1u) + ULEffect2c(out_bytes);
     const U a0 = angle + 0x400;
     SH_CALL(EffectKind3F_DrawCap)(p0, r0, a0);
     SH_CALL(EffectGte_ProjectSize)(to, size, out);
     std::memcpy(out_bytes, out, 4);
-    const U r1 = UL(out_bytes) + (Frame_Counter & 1u);
+    const U r1 = ULEffect2c(out_bytes) + (Frame_Counter & 1u);
     const U a1 = angle + 0xC00;
     SH_CALL(EffectKind3F_DrawCap)(p1, r1, a1);
     SH_CALL(EffectKind3F_DrawBand)(p0, r0, a0, p1, r1, a1);
@@ -379,21 +379,21 @@ extern "C" void __cdecl EffectKind3F_DrawCap(const unsigned char* centre, unsign
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        SetUL(prim + 8, UL(centre));
-        SetUL(prim + 0xC, UL(centre + 4));
+        SetULEffect2c(prim + 8, ULEffect2c(centre));
+        SetULEffect2c(prim + 0xC, ULEffect2c(centre + 4));
         const LD z = F(centre + 8);
         StF(prim + 0x30, z);
         StF(prim + 0x20, z);
         StF(prim + 0x10, z);
-        std::int32_t v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
+        std::int32_t v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
         StF(prim + 0x18, I(v) + F(centre));
-        v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
+        v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
         slot += 0x100;
         t = slot & 0xFFFFu;
         StF(prim + 0x1C, I(v) + F(centre + 4));
-        v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
+        v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
         StF(prim + 0x28, I(v) + F(centre));
-        v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
+        v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
         prim[4] = 0x80;
         prim[5] = 0x80;
         prim[6] = 0;
@@ -417,26 +417,26 @@ extern "C" void __cdecl EffectKind3F_DrawBand(const unsigned char* p0, unsigned 
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     const U t0 = a0 & 0xFFFFu;
     std::int32_t r = static_cast<std::int16_t>(r0);
-    SetUL(prim + 8, UL(p0));
-    SetUL(prim + 0xC, UL(p0 + 4));
+    SetULEffect2c(prim + 8, ULEffect2c(p0));
+    SetULEffect2c(prim + 0xC, ULEffect2c(p0 + 4));
     LD z = F(p0 + 8);
     StF(prim + 0x30, z);
     StF(prim + 0x10, z);
-    SetUL(prim + 0x18, UL(p1));
-    SetUL(prim + 0x1C, UL(p1 + 4));
+    SetULEffect2c(prim + 0x18, ULEffect2c(p1));
+    SetULEffect2c(prim + 0x1C, ULEffect2c(p1 + 4));
     z = F(p1 + 8);
     StF(prim + 0x40, z);
     StF(prim + 0x20, z);
-    std::int32_t v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t0)), r, 12));
+    std::int32_t v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t0)), r, 12));
     StF(prim + 0x28, I(v) + F(prim + 8));
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t0)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t0)), r, 12));
     const U t1 = a1 & 0xFFFFu;
     r = static_cast<std::int16_t>(r1);
     StF(prim + 0x2C, I(v) + F(prim + 0xC));
     U t = t1 + 0x800;
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
     StF(prim + 0x38, I(v) + F(prim + 0x18));
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0;
@@ -449,16 +449,16 @@ extern "C" void __cdecl EffectKind3F_DrawBand(const unsigned char* p0, unsigned 
     SH_CALL(Gfx_CommitPrim)(1, 0x44);
     unsigned char* const q = prim + 0x44;
     t = t0 + 0x800;
-    for (unsigned i = 0; i < 0x44; i += 4) SetUL(q + i, UL(prim + i));   // rep movsd, forward
+    for (unsigned i = 0; i < 0x44; i += 4) SetULEffect2c(q + i, ULEffect2c(prim + i));   // rep movsd, forward
     r = static_cast<std::int16_t>(r0);
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 12));
     StF(q + 0x28, I(v) + F(q + 8));
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 12));
     StF(q + 0x2C, I(v) + F(q + 0xC));
     r = static_cast<std::int16_t>(r1);
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Cos)(static_cast<int>(t1)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t1)), r, 12));
     StF(q + 0x38, I(v) + F(q + 0x18));
-    v = static_cast<std::int32_t>(MulSar(SH_CALL(Math_Sin)(static_cast<int>(t1)), r, 12));
+    v = static_cast<std::int32_t>(MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t1)), r, 12));
     StF(q + 0x3C, I(v) + F(q + 0x1C));
     SH_CALL(Gfx_CommitPrim)(1, 0x44);
 }
@@ -504,10 +504,10 @@ extern "C" void __cdecl EffectKind40_Grow(void) {
 // original 0x4757F0 (0x2B bytes): the 32 shard records' in-use bytes cleared
 // through the cursor 0x67610C (left past the last).
 extern "C" void __cdecl EffectKind40_ShardsClear(void) {
-    SetUL(::bof3::Img(at::kShardCursor.v), ::bof3::Img(EffectKind30_Shards_addr));
+    SetULEffect2c(::bof3::Img(at::kShardCursor.v), ::bof3::Img(EffectKind30_Shards_addr));
     for (unsigned n = at::kShardCount; n != 0; --n) {
         EffectKind40_ShardCursor[0] = 0;
-        SetUL(::bof3::Img(at::kShardCursor.v), UL(::bof3::Img(at::kShardCursor.v)) + at::kShardStride);
+        SetULEffect2c(::bof3::Img(at::kShardCursor.v), ULEffect2c(::bof3::Img(at::kShardCursor.v)) + at::kShardStride);
     }
 }
 
@@ -521,21 +521,21 @@ extern "C" void __cdecl EffectKind40_ShardsStep(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     DrawMode(1, 1, 3);
     U p = ::bof3::Img(EffectKind30_Shards_addr);
-    SetUL(::bof3::Img(at::kShardCursor.v), p);
+    SetULEffect2c(::bof3::Img(at::kShardCursor.v), p);
     for (unsigned n = at::kShardCount; n != 0; --n) {
         if (At(p)[0] != 0) {
             SetWord(At(p) + 8, Word(At(p) + 8) - 0x20u);
-            p = UL(::bof3::Img(at::kShardCursor.v));
-            if (SW(At(p) + 8) < 0x80) At(p)[0] = 0;
+            p = ULEffect2c(::bof3::Img(at::kShardCursor.v));
+            if (SWEffect2c(At(p) + 8) < 0x80) At(p)[0] = 0;
             SH_CALL(EffectKind40_ShardDraw)();
-            p = UL(::bof3::Img(at::kShardCursor.v));
+            p = ULEffect2c(::bof3::Img(at::kShardCursor.v));
         }
         p += at::kShardStride;
-        SetUL(::bof3::Img(at::kShardCursor.v), p);
+        SetULEffect2c(::bof3::Img(at::kShardCursor.v), p);
     }
     for (unsigned k = 0; k < 2; ++k) {
         unsigned char* const found = SH_CALL(EffectKind40_ShardFind)();
-        SetUL(::bof3::Img(at::kShardCursor.v), AddressOf(found));
+        SetULEffect2c(::bof3::Img(at::kShardCursor.v), AddressOfEffect2c(found));
         if (found != nullptr) SH_CALL(EffectKind40_ShardSpawn)(found);
     }
 }
@@ -549,18 +549,18 @@ extern "C" void __cdecl EffectKind40_ShardsStep(void) {
 // original's divide fault: ours aborts.
 extern "C" void __cdecl EffectKind40_ShardDraw(void) {
     unsigned char* p = EffectKind40_ShardCursor;
-    std::int32_t d = SW(p + 8);
+    std::int32_t d = SWEffect2c(p + 8);
     if (d == 0)
         bof3::Fatal("EffectKind40_ShardDraw: the shard's height +8 is 0 - the original faults on the divide "
                     "(docs/effect_2c.md section 6)");
-    std::int32_t q = static_cast<std::int32_t>(static_cast<U>(SW(p + 4)) << 7) / d;
+    std::int32_t q = static_cast<std::int32_t>(static_cast<U>(SWEffect2c(p + 4)) << 7) / d;
     StF(p + 0xC, I(q) + FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300));
     p = EffectKind40_ShardCursor;
-    d = SW(p + 8);
+    d = SWEffect2c(p + 8);
     if (d == 0)
         bof3::Fatal("EffectKind40_ShardDraw: the shard's height +8 is 0 - the original faults on the divide "
                     "(docs/effect_2c.md section 6)");
-    q = static_cast<std::int32_t>(static_cast<U>(SW(p + 6)) << 7) / d;
+    q = static_cast<std::int32_t>(static_cast<U>(SWEffect2c(p + 6)) << 7) / d;
     StF(p + 0x10, I(q) + FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300 + 4));
     const LD depth = FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300 + 8);
     StF(EffectKind40_ShardCursor + 0x14, depth);
@@ -584,7 +584,7 @@ extern "C" void __cdecl EffectKind40_ShardDraw(void) {
     SH_CALL(Gpu_SetTile1)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 0);
     Copy12(prim + 8, EffectKind40_ShardCursor + 0xC);
-    const U shade = (0x80u - static_cast<U>(SW(EffectKind40_ShardCursor + 8))) * 3u << 6;
+    const U shade = (0x80u - static_cast<U>(SWEffect2c(EffectKind40_ShardCursor + 8))) * 3u << 6;
     const auto c = static_cast<unsigned char>(DivPow2(shade, 9) - 0x40);
     prim[4] = prim[5] = prim[6] = c;
     SH_CALL(Gfx_CommitPrim)(3, 0x14);
@@ -605,12 +605,12 @@ extern "C" void __cdecl EffectKind40_ShardSpawn(unsigned char* shard) {
 // the cursor 0x67610C left on it (past the last, and 0 answered, when none).
 extern "C" unsigned char* __cdecl EffectKind40_ShardFind(void) {
     U p = ::bof3::Img(EffectKind30_Shards_addr);
-    SetUL(::bof3::Img(at::kShardCursor.v), p);
+    SetULEffect2c(::bof3::Img(at::kShardCursor.v), p);
     for (unsigned char n = 0;;) {
         if (At(p)[0] == 0) return At(p);
         p += at::kShardStride;
         ++n;
-        SetUL(::bof3::Img(at::kShardCursor.v), p);
+        SetULEffect2c(::bof3::Img(at::kShardCursor.v), p);
         if (n >= at::kShardCount) return nullptr;
     }
 }
@@ -627,23 +627,23 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* s = S();
     alignas(4) unsigned char q[12];
-    SetUL(q, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-    SetUL(q + 4, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
-    SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+    SetULEffect2c(q, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
+    SetULEffect2c(q + 4, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    SetULEffect2c(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     alignas(4) unsigned char c[12];
     alignas(4) unsigned char p[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(c));
     const std::int32_t r = static_cast<std::int16_t>(radius);
     U angle = 0xFF80;
-    SetUL(::bof3::Img(at::kDiscCentre.v), UL(c));
-    SetUL(::bof3::Img(at::kDiscCentre.v) + 4, UL(c + 4));
-    SetUL(::bof3::Img(at::kDiscCentre.v) + 8, UL(c + 8));
-    U v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(angle)), r, 4);
-    SetUL(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
-    v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(angle)), r, 4);
+    SetULEffect2c(::bof3::Img(at::kDiscCentre.v), ULEffect2c(c));
+    SetULEffect2c(::bof3::Img(at::kDiscCentre.v) + 4, ULEffect2c(c + 4));
+    SetULEffect2c(::bof3::Img(at::kDiscCentre.v) + 8, ULEffect2c(c + 8));
+    U v = MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(angle)), r, 4);
+    SetULEffect2c(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    v = MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(angle)), r, 4);
     s = S();
-    SetUL(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
-    SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+    SetULEffect2c(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    SetULEffect2c(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(p));
     U rim = ::bof3::Img(EffectKind30_Shards_addr) + 0x30c;
     for (unsigned n = 0x20; n != 0; --n) {
@@ -654,12 +654,12 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
         angle += 0x80;
         Copy12(prim + 0x18, p);
         const U t = angle & 0xFFFFu;
-        v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 4);
-        SetUL(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
-        v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 4);
+        v = MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 4);
+        SetULEffect2c(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+        v = MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 4);
         s = S();
-        SetUL(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
-        SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+        SetULEffect2c(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+        SetULEffect2c(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
         SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(p));
         Copy12(prim + 0x28, p);
         Copy12(At(rim), p);
@@ -805,19 +805,19 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
             const unsigned char* const s = S();
             const bool side = r[3] != 0;
             r[1] = 0x20;
-            SetUL(r + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-            SetUL(r + 0x10, (side ? 0x50000u : 0u) + 0xFFFD8000u + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
-            SetUL(r + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x1800000u);
+            SetULEffect2c(r + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
+            SetULEffect2c(r + 0x10, (side ? 0x50000u : 0u) + 0xFFFD8000u + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+            SetULEffect2c(r + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x1800000u);
             const U v = ((static_cast<U>(SH_CALL(Rand)()) & 0x1FFu) - 0x180u) << 16;
-            SetUL(r + 4, static_cast<U>(DivPow2(v, 5)));
+            SetULEffect2c(r + 4, static_cast<U>(DivPow2(v, 5)));
             r[2] = static_cast<unsigned char>(r[2] + 1);
             break;
         }
         case 1: {
-            SetUL(r + 0xC, UL(r + 0xC) + 0xFFFFD400u);
+            SetULEffect2c(r + 0xC, ULEffect2c(r + 0xC) + 0xFFFFD400u);
             const unsigned char count = r[1];
-            SetUL(r + 0x10, UL(r + 0x10) + (r[3] != 0 ? 0xFFFFF400u : 0xC00u));
-            SetUL(r + 0x14, UL(r + 0x14) + UL(r + 4));
+            SetULEffect2c(r + 0x10, ULEffect2c(r + 0x10) + (r[3] != 0 ? 0xFFFFF400u : 0xC00u));
+            SetULEffect2c(r + 0x14, ULEffect2c(r + 0x14) + ULEffect2c(r + 4));
             r[1] = static_cast<unsigned char>(count - 1);
             if (r[1] != 0) break;
             U v = static_cast<U>(SH_CALL(Rand)()) & 0x1Fu;
@@ -831,10 +831,10 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
         case 2:
         case 3: {
             const int c = SH_CALL(Math_Cos)(static_cast<int>(Word(r + 8)));
-            SetUL(r + 0xC, ((static_cast<U>(c) - 0x5800u) << 4) + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+            SetULEffect2c(r + 0xC, ((static_cast<U>(c) - 0x5800u) << 4) + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
             const int sn = SH_CALL(Math_Sin)(static_cast<int>(Word(r + 8)));
             const unsigned char* const s = S();
-            SetUL(r + 0x10, (static_cast<U>(sn) << 4) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+            SetULEffect2c(r + 0x10, (static_cast<U>(sn) << 4) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
             const unsigned char count = r[1];
             SetWord(r + 8, ((r[3] != 0 ? 0x80u : 0xFF80u) + Word(r + 8)) & 0xFFFu);
             if (r[2] == 2) {
@@ -845,15 +845,15 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
             if (s[6] != 2) break;
             const U v = static_cast<U>(SH_CALL(Rand)()) & 0x7Fu;
             r[1] = 0x10;
-            SetUL(r + 4, v + 0x80u);
+            SetULEffect2c(r + 4, v + 0x80u);
             r[2] = static_cast<unsigned char>(r[2] + 1);
             break;
         }
         case 4: {
             const int c = SH_CALL(Math_Cos)(static_cast<int>(Word(r + 8)));
-            SetUL(r + 0xC, UL(r + 0xC) + MulSar(c, static_cast<std::int32_t>(UL(r + 4)), 4));
+            SetULEffect2c(r + 0xC, ULEffect2c(r + 0xC) + MulSarEffect2c(c, static_cast<std::int32_t>(ULEffect2c(r + 4)), 4));
             const int sn = SH_CALL(Math_Sin)(static_cast<int>(Word(r + 8)));
-            SetUL(r + 0x10, UL(r + 0x10) + MulSar(sn, static_cast<std::int32_t>(UL(r + 4)), 4));
+            SetULEffect2c(r + 0x10, ULEffect2c(r + 0x10) + MulSarEffect2c(sn, static_cast<std::int32_t>(ULEffect2c(r + 4)), 4));
             r[1] = static_cast<unsigned char>(r[1] - 1);
             if (r[1] == 0) r[0] = 0;
             break;
@@ -875,7 +875,7 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
 extern "C" void __cdecl EffectKind43_SparkDraw(const unsigned char* spark) {
     const U tp = SH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tp & 0xFFFFu, 0);
-    SH_CALL(MapView_LinkPrimAt)(UL(spark + 0xC), UL(spark + 0x10), 0, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect2c(spark + 0xC), ULEffect2c(spark + 0x10), 0, 0xC);
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(spark + 0xC), Out(o));
     unsigned char* prim = Gfx_PacketNext;
@@ -884,18 +884,18 @@ extern "C" void __cdecl EffectKind43_SparkDraw(const unsigned char* spark) {
     Copy12(prim + 8, o);
     prim[5] = prim[4] = 0x80;
     prim[6] = static_cast<unsigned char>(static_cast<U>(SH_CALL(Rand)()) << 7);
-    SH_CALL(MapView_LinkPrimAt)(UL(spark + 0xC), UL(spark + 0x10), 0, 0x14);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect2c(spark + 0xC), ULEffect2c(spark + 0x10), 0, 0x14);
     prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     StF(prim + 8, F(o) - FAt(at::kOne));
     StF(prim + 0xC, F(o + 4) - FAt(at::kOne));
-    SetUL(prim + 0x10, UL(o + 8));
-    SetUL(prim + 0x14, 0x40400000u);   // 3.0
-    SetUL(prim + 0x18, 0x40400000u);
+    SetULEffect2c(prim + 0x10, ULEffect2c(o + 8));
+    SetULEffect2c(prim + 0x14, 0x40400000u);   // 3.0
+    SetULEffect2c(prim + 0x18, 0x40400000u);
     prim[5] = prim[4] = 0x20;
     prim[6] = static_cast<unsigned char>((static_cast<U>(SH_CALL(Rand)()) & 1u) << 5);
-    SH_CALL(MapView_LinkPrimAt)(UL(spark + 0xC), UL(spark + 0x10), 0, 0x1C);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect2c(spark + 0xC), ULEffect2c(spark + 0x10), 0, 0x1C);
 }
 
 // ===========================================================================
@@ -923,7 +923,7 @@ extern "C" void __cdecl EffectKind6B_Capture(void) {
     unsigned char* const e = NewRecord("EffectKind6B_Capture", found);
     auto* const eo = rv::As<records::EffectObject>(e);
     SH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
-    for (unsigned i = 0; i < at::kEffectStride; i += 4) SetUL(e + i, UL(::bof3::Img(at::kSprite2.v) + i));
+    for (unsigned i = 0; i < at::kEffectStride; i += 4) SetULEffect2c(e + i, ULEffect2c(::bof3::Img(at::kSprite2.v) + i));
     e[0] = 1;
     eo->x = static_cast<std::uint32_t>(Sprite_Objects[2].x);
     eo->z = static_cast<std::uint32_t>(Sprite_Objects[2].z);
@@ -964,12 +964,12 @@ extern "C" void __cdecl EffectKind6B_Store(void) {
 // its column +0x12; +1 up. A w or h above 0xFF never ends in the original (the
 // row and column are bytes): ours aborts, as past the 80 heights.
 extern "C" void __cdecl EffectKind6B_Scatter(void) {
-    for (unsigned i = 0; i < 2 * at::kHeightCount; i += 4) SetUL(::bof3::Img(at::kHeights.v) + i, 0);
+    for (unsigned i = 0; i < 2 * at::kHeightCount; i += 4) SetULEffect2c(::bof3::Img(at::kHeights.v) + i, 0);
     SH_CALL(EffectGte_LoadMapCamera)();
     alignas(4) unsigned char q[12];
-    SetUL(q, static_cast<std::uint32_t>(Sprite_Objects[2].x));
-    SetUL(q + 4, static_cast<std::uint32_t>(Sprite_Objects[2].z));
-    SetUL(q + 8, static_cast<std::uint32_t>(Sprite_Objects[2].height));
+    SetULEffect2c(q, static_cast<std::uint32_t>(Sprite_Objects[2].x));
+    SetULEffect2c(q + 4, static_cast<std::uint32_t>(Sprite_Objects[2].z));
+    SetULEffect2c(q + 8, static_cast<std::uint32_t>(Sprite_Objects[2].height));
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
     U pixel = ::bof3::Img(EffectKind30_Shards_addr);
@@ -988,7 +988,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
         bof3::Fatal("EffectKind6B_Scatter: the rectangle is %d x %d, past DIV-0186's room of %u particles (the frame "
                     "0x6544A8 is 80 x 72 in Capcom's data and nothing writes it)",
                     (int)EffectKind6B_Frame[2], (int)EffectKind6B_Frame[3], at::kPixelRoom);
-    U width = UL(::bof3::Img(at::kFrameW.v));
+    U width = ULEffect2c(::bof3::Img(at::kFrameW.v));
     do {
         unsigned char column = 0;
         if (static_cast<std::int16_t>(width) > 0) {
@@ -1001,8 +1001,8 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
                     const LD x = (F(o) - I(x0) + I(column)) * FAt(at::kSixteen);
                     const std::int32_t y0 = EffectKind6B_Frame[1];
                     const U height = HeightAt("EffectKind6B_Scatter", column);
-                    const std::int32_t lowest = SW(height);
-                    SetUL(p + 0xC, UL(o + 8));
+                    const std::int32_t lowest = SWEffect2c(height);
+                    SetULEffect2c(p + 0xC, ULEffect2c(o + 8));
                     StF(p + 4, x);
                     const LD y = (F(o + 4) - I(y0) + I(row)) * FAt(at::kSixteen);
                     StF(p + 8, y);
@@ -1012,7 +1012,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
                     r = static_cast<U>(SH_CALL(Rand)());
                     SetWord(p + 0x10, r & 0x1Fu);
                     SetWord(p + 0x12, column);
-                    width = UL(::bof3::Img(at::kFrameW.v));
+                    width = ULEffect2c(::bof3::Img(at::kFrameW.v));
                     particle += at::kPixelStride;
                     EffectKind6B_PixelCount = EffectKind6B_PixelCount + 1u;
                 }
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
             } while (static_cast<std::int16_t>(column) < static_cast<std::int16_t>(width));
         }
         ++row;
-    } while (static_cast<std::int16_t>(row) < SW(::bof3::Img(at::kFrameH.v)));
+    } while (static_cast<std::int16_t>(row) < SWEffect2c(::bof3::Img(at::kFrameH.v)));
     NextState();
 }
 
@@ -1061,9 +1061,9 @@ extern "C" void __cdecl EffectKind6B_Fall(void) {
                     }
                 } else if (phase == 0x10) {
                     SetWord(p + 0x10, Word(p + 0x10) + 2u);
-                    const std::int32_t speed = SW(p + 0x10);
-                    const U height = HeightAt("EffectKind6B_Fall", SW(p + 0x12));
-                    const std::int32_t lowest = SW(height);
+                    const std::int32_t speed = SWEffect2c(p + 0x10);
+                    const U height = HeightAt("EffectKind6B_Fall", SWEffect2c(p + 0x12));
+                    const std::int32_t lowest = SWEffect2c(height);
                     const LD y = I(speed) + F(p + 8);
                     StF(p + 8, y);
                     if (y > I(lowest)) p[0] = 0;
@@ -1072,7 +1072,7 @@ extern "C" void __cdecl EffectKind6B_Fall(void) {
                 SH_CALL(Gpu_SetTile1)(prim);
                 StF(prim + 8, F(p + 4) * FAt(at::kSixteenth));
                 StF(prim + 0xC, F(p + 8) * FAt(at::kSixteenth));
-                SetUL(prim + 0x10, UL(p + 0xC));
+                SetULEffect2c(prim + 0x10, ULEffect2c(p + 0xC));
                 prim[4] = static_cast<unsigned char>(p[2] << 3);
                 prim[5] = static_cast<unsigned char>((Word(p + 2) >> 2) & 0xF8u);
                 prim[6] = static_cast<unsigned char>((Word(p + 2) >> 7) & 0xF8u);
@@ -1106,13 +1106,13 @@ extern "C" void __cdecl EffectKind44_Start(void) {
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    SetUL(::bof3::Img(at::kRingCell.v), ::bof3::Img(EffectKind30_Shards_addr));
-    SetUL(::bof3::Img(at::kShards.v), static_cast<std::uint32_t>(so->x));
-    SetUL(::bof3::Img(at::kShards.v) + 4, static_cast<std::uint32_t>(so->z));
-    SetUL(::bof3::Img(at::kShards.v) + 8, static_cast<std::uint32_t>(so->height) + 0x8000000u);
-    SetUL(::bof3::Img(at::kShards.v) + 0x10, static_cast<std::uint32_t>(so->x));
-    SetUL(::bof3::Img(at::kShards.v) + 0x14, static_cast<std::uint32_t>(so->z));
-    SetUL(::bof3::Img(at::kShards.v) + 0x18, static_cast<std::uint32_t>(so->height));
+    SetULEffect2c(::bof3::Img(at::kRingCell.v), ::bof3::Img(EffectKind30_Shards_addr));
+    SetULEffect2c(::bof3::Img(at::kShards.v), static_cast<std::uint32_t>(so->x));
+    SetULEffect2c(::bof3::Img(at::kShards.v) + 4, static_cast<std::uint32_t>(so->z));
+    SetULEffect2c(::bof3::Img(at::kShards.v) + 8, static_cast<std::uint32_t>(so->height) + 0x8000000u);
+    SetULEffect2c(::bof3::Img(at::kShards.v) + 0x10, static_cast<std::uint32_t>(so->x));
+    SetULEffect2c(::bof3::Img(at::kShards.v) + 0x14, static_cast<std::uint32_t>(so->z));
+    SetULEffect2c(::bof3::Img(at::kShards.v) + 0x18, static_cast<std::uint32_t>(so->height));
     EffectKind30_Shards[0x22] = 0x20;
     EffectKind30_Shards[0x23] = 0;
     SetWord(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20), 0);
@@ -1156,7 +1156,7 @@ extern "C" void __cdecl EffectKind44_Sparks(void) {
 extern "C" void __cdecl EffectKind44_Widen(void) {
     SetWord(Ring() + 0x20, Word(Ring() + 0x20) + 0x30u);
     unsigned char* ring = Ring();
-    if (SW(ring + 0x20) > 0x180) {
+    if (SWEffect2c(ring + 0x20) > 0x180) {
         SetWord(ring + 0x20, 0x180);
         ring = Ring();
     }
@@ -1170,9 +1170,9 @@ extern "C" void __cdecl EffectKind44_Widen(void) {
 // original 0x476870 (state 4): the ring's centre Sprite_Objects record 1's
 // point; projected, drawn, its cone, the sparks; +9 down, at 0 +9 = 0x10, +1 up.
 extern "C" void __cdecl EffectKind44_Follow(void) {
-    SetUL(Ring() + 0x10, static_cast<std::uint32_t>(Sprite_Objects[1].x));
-    SetUL(Ring() + 0x14, static_cast<std::uint32_t>(Sprite_Objects[1].z));
-    SetUL(Ring() + 0x18, static_cast<std::uint32_t>(Sprite_Objects[1].height));
+    SetULEffect2c(Ring() + 0x10, static_cast<std::uint32_t>(Sprite_Objects[1].x));
+    SetULEffect2c(Ring() + 0x14, static_cast<std::uint32_t>(Sprite_Objects[1].z));
+    SetULEffect2c(Ring() + 0x18, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     SH_CALL(EffectKind44_RingProject)(Ring());
     SH_CALL(EffectKind44_RingDraw)(Ring());
     SH_CALL(EffectKind44_RingCone)(Ring());
@@ -1207,11 +1207,11 @@ extern "C" void __cdecl EffectKind44_RingProject(unsigned char* ring) {
     for (unsigned n = 0x10; n != 0; --n) {
         const U t = angle & 0xFFFFu;
         alignas(4) unsigned char q[12];
-        U v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), SW(ring + 0x20), 4);
-        SetUL(q, v + UL(ring + 0x10));
-        v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), SW(ring + 0x20), 4);
-        SetUL(q + 4, v + UL(ring + 0x14));
-        SetUL(q + 8, UL(ring + 0x18));
+        U v = MulSarEffect2c(SH_CALL(Math_Cos)(static_cast<int>(t)), SWEffect2c(ring + 0x20), 4);
+        SetULEffect2c(q, v + ULEffect2c(ring + 0x10));
+        v = MulSarEffect2c(SH_CALL(Math_Sin)(static_cast<int>(t)), SWEffect2c(ring + 0x20), 4);
+        SetULEffect2c(q + 4, v + ULEffect2c(ring + 0x14));
+        SetULEffect2c(q + 8, ULEffect2c(ring + 0x18));
         SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(out));
         out += 0xC;
         angle += 0x100;
@@ -1246,18 +1246,18 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
         SH_CALL(Gpu_SetPolyF4)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         const unsigned char* const pj = ring + 0x3C + 12u * j;
-        SetUL(prim + 8, UL(pi));
+        SetULEffect2c(prim + 8, ULEffect2c(pi));
         LD y = F(pi + 4);
         StF(prim + 0x18, y);
         StF(prim + 0xC, y);
-        SetUL(prim + 0x20, UL(pj));
+        SetULEffect2c(prim + 0x20, ULEffect2c(pj));
         y = F(pj + 4);
         StF(prim + 0x30, y);
         StF(prim + 0x24, y);
         const LD middle = (F(pi) + F(pj)) * FAt(at::kHalf);
         const U side = middle > F(ring + 0x30) ? right : left;   // 320.0 or 0 unarmed
-        SetUL(prim + 0x2C, side);
-        SetUL(prim + 0x14, side);
+        SetULEffect2c(prim + 0x2C, side);
+        SetULEffect2c(prim + 0x14, side);
         LD z = F(pi + 8);
         StF(prim + 0x1C, z);
         StF(prim + 0x10, z);
@@ -1272,9 +1272,9 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SetUL(prim + 8, left);
-    SetUL(prim + 0xC, 0);
-    SetUL(prim + 0x14, width);
+    SetULEffect2c(prim + 8, left);
+    SetULEffect2c(prim + 0xC, 0);
+    SetULEffect2c(prim + 0x14, width);
     StF(prim + 0x18, I(static_cast<std::int16_t>(highest)));
     prim[6] = prim[5] = prim[4] = ring[0x23];
     SH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -1282,8 +1282,8 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
     SH_CALL(Gpu_SetTile)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     const std::int32_t below = static_cast<std::int16_t>(lowest);
-    SetUL(prim + 8, left);
-    SetUL(prim + 0x14, width);
+    SetULEffect2c(prim + 8, left);
+    SetULEffect2c(prim + 0x14, width);
     StF(prim + 0xC, I(below));
     StF(prim + 0x18, I(static_cast<std::int32_t>(0xF0u - static_cast<U>(below))));
     prim[6] = prim[5] = prim[4] = ring[0x23];
@@ -1320,7 +1320,7 @@ extern "C" void __cdecl EffectKind44_RingCone(const unsigned char* ring) {
 // eight times the in-use byte it points at cleared - the cursor never moves,
 // so only the first of the eight records is (docs/effect_2c.md section 7).
 extern "C" void __cdecl EffectKind44_SparksClear(void) {
-    SetUL(::bof3::Img(at::kSparkCursor.v), ::bof3::Img(EffectKind30_Shards_addr) + 0xfc);
+    SetULEffect2c(::bof3::Img(at::kSparkCursor.v), ::bof3::Img(EffectKind30_Shards_addr) + 0xfc);
     for (unsigned n = at::kSparkCount44; n != 0; --n) EffectKind44_SparkCursor[0] = 0;
 }
 
@@ -1330,24 +1330,24 @@ extern "C" void __cdecl EffectKind44_SparksClear(void) {
 // (EffectKind44_SparkTrail); its life +1 down, at 0 out of use.
 extern "C" void __cdecl EffectKind44_SparksStep(void) {
     U p = ::bof3::Img(EffectKind30_Shards_addr) + 0xfc;
-    SetUL(::bof3::Img(at::kSparkCursor.v), p);
+    SetULEffect2c(::bof3::Img(at::kSparkCursor.v), p);
     for (unsigned n = at::kSparkCount44; n != 0; --n) {
         if (At(p)[0] != 0) {
-            SetUL(At(p) + 0x28, UL(At(p) + 0x28) + UL(At(p) + 8));
+            SetULEffect2c(At(p) + 0x28, ULEffect2c(At(p) + 0x28) + ULEffect2c(At(p) + 8));
             unsigned char* q = EffectKind44_SparkCursor;
-            SetUL(q + 0x2C, UL(q + 0x2C) + UL(q + 0xC));
+            SetULEffect2c(q + 0x2C, ULEffect2c(q + 0x2C) + ULEffect2c(q + 0xC));
             q = EffectKind44_SparkCursor;
             const long ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
-            SetUL(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
+            SetULEffect2c(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
             SH_CALL(EffectKind44_SparkTrail)(EffectKind44_SparkCursor);
             q = EffectKind44_SparkCursor;
             q[1] = static_cast<unsigned char>(q[1] - 1);
             q = EffectKind44_SparkCursor;
             if (q[1] == 0) q[0] = 0;
-            p = UL(::bof3::Img(at::kSparkCursor.v));
+            p = ULEffect2c(::bof3::Img(at::kSparkCursor.v));
         }
         p += at::kSparkStride44;
-        SetUL(::bof3::Img(at::kSparkCursor.v), p);
+        SetULEffect2c(::bof3::Img(at::kSparkCursor.v), p);
     }
 }
 
@@ -1367,7 +1367,7 @@ extern "C" void __cdecl EffectKind44_SparkTrail(unsigned char* spark) {
     }
     SH_CALL(EffectGte_ProjectPoint)(Point(spark + 0x18), Out(spark + 0x40));
     SH_CALL(EffectGte_ProjectPoint)(Point(spark + 0x28), Out(spark + 0x70));
-    const U colour = UL(spark + 4);
+    const U colour = ULEffect2c(spark + 4);
     auto red = static_cast<unsigned char>(colour);
     auto green = static_cast<unsigned char>(colour >> 8);
     auto blue = static_cast<unsigned char>(colour >> 16);
@@ -1425,30 +1425,30 @@ extern "C" void __cdecl EffectKind44_SparkTrail(unsigned char* spark) {
 extern "C" void __cdecl EffectKind44_SparkEmit(void) {
     unsigned char* const found = SH_CALL(EffectKind44_SparkFind)();
     const unsigned frame = Frame_Counter & 0xFFu;
-    SetUL(::bof3::Img(at::kSparkCursor.v), AddressOf(found));
+    SetULEffect2c(::bof3::Img(at::kSparkCursor.v), AddressOfEffect2c(found));
     if ((frame & 3u) != 0 || found == nullptr) return;
-    SetUL(found + 0x18, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
-    SetUL(EffectKind44_SparkCursor + 0x1C, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
-    SetUL(EffectKind44_SparkCursor + 0x20, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + 0x6000000u);
+    SetULEffect2c(found + 0x18, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetULEffect2c(EffectKind44_SparkCursor + 0x1C, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetULEffect2c(EffectKind44_SparkCursor + 0x20, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + 0x6000000u);
     U e = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     U spread = static_cast<U>(SH_CALL(Rand)()) & 0x1FFu;
     e &= 0xFFFFu;
     spread -= 0x100u;
     U v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(e))) << 8;
-    SetUL(EffectKind44_SparkCursor + 0x28, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetULEffect2c(EffectKind44_SparkCursor + 0x28, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
     v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(e))) << 8;
-    SetUL(EffectKind44_SparkCursor + 0x2C, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetULEffect2c(EffectKind44_SparkCursor + 0x2C, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
     const unsigned char* q = EffectKind44_SparkCursor;
     const long ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
     const U angle = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(spread))) + e + 0x800u;
-    SetUL(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
+    SetULEffect2c(EffectKind44_SparkCursor + 0x30, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle))) << 4;
-    SetUL(EffectKind44_SparkCursor + 8, v);
+    SetULEffect2c(EffectKind44_SparkCursor + 8, v);
     v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle))) << 4;
-    SetUL(EffectKind44_SparkCursor + 0xC, v);
-    SetUL(EffectKind44_SparkCursor + 0x10, 0);
+    SetULEffect2c(EffectKind44_SparkCursor + 0xC, v);
+    SetULEffect2c(EffectKind44_SparkCursor + 0x10, 0);
     const U pick = static_cast<U>(SH_CALL(Rand)()) & 7u;
-    SetUL(EffectKind44_SparkCursor + 4, UL(::bof3::Img(at::kSparkColours.v) + 4 * pick));
+    SetULEffect2c(EffectKind44_SparkCursor + 4, ULEffect2c(::bof3::Img(at::kSparkColours.v) + 4 * pick));
     EffectKind44_SparkCursor[0] = 1;
     EffectKind44_SparkCursor[1] = 0x20;
     SH_CALL(EffectGte_LoadMapCamera)();
@@ -1468,12 +1468,12 @@ extern "C" void __cdecl EffectKind44_SparkEmit(void) {
 // use, the cursor 0x6761B8 left on it (past the last, and 0 answered, when none).
 extern "C" unsigned char* __cdecl EffectKind44_SparkFind(void) {
     U p = ::bof3::Img(EffectKind30_Shards_addr) + 0xfc;
-    SetUL(::bof3::Img(at::kSparkCursor.v), p);
+    SetULEffect2c(::bof3::Img(at::kSparkCursor.v), p);
     for (unsigned char n = 0;;) {
         if (At(p)[0] == 0) return At(p);
         p += at::kSparkStride44;
         ++n;
-        SetUL(::bof3::Img(at::kSparkCursor.v), p);
+        SetULEffect2c(::bof3::Img(at::kSparkCursor.v), p);
         if (n >= at::kSparkCount44) return nullptr;
     }
 }
@@ -1483,7 +1483,7 @@ void Effect2C_Inject() {
     // DIV-0186: armed after the self-test, which compares ours with Capcom's at
     // 0x92EC80.
     static const std::uint8_t ash_was = 0, ash_is = 1;
-    bof3::PatchBytes("AshRoom", AddressOf(&g_ash_room), &ash_was, &ash_is, 1);
+    bof3::PatchBytes("AshRoom", AddressOfEffect2c(&g_ash_room), &ash_was, &ash_is, 1);
     bof3::Log("DIV-0186    kind 0x6B's particles in a room of %u (the original's holds 1,881): %s", at::kPixelRoom,
               g_ash_room ? "on" : "OFF (BOF3X_ORIGINAL=AshRoom)");
     BOF3_INJECT(EffectKind3E_Run);

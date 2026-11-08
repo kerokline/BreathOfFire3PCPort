@@ -70,7 +70,7 @@ constexpr unsigned kPoolSlots = 32;
 // four SVECTORs 8 bytes apart, A0 / A8 / B0 / B8.
 constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // kVertex: now Prim_VertexScratch (symbols.toml).
-unsigned char* Scr(unsigned off) { return Mem(::bof3::Img(kScratch.v) + off); }
+unsigned char* ScrMagicS21(unsigned off) { return Mem(::bof3::Img(kScratch.v) + off); }
 unsigned char* Vtx(unsigned off) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + off); }
 const short* VtxP(unsigned off) { return reinterpret_cast<const short*>(Vtx(off)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -94,7 +94,7 @@ using PrimFn = void (__cdecl*)(unsigned char*);
 std::int32_t Mul(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b));
 }
-void Bump(unsigned char& b, int d = 1) { b = static_cast<unsigned char>(b + d); }
+void BumpMagicS21(unsigned char& b, int d = 1) { b = static_cast<unsigned char>(b + d); }
 unsigned char U8(int v) { return static_cast<unsigned char>(v); }
 float* F(unsigned char* prim, unsigned off) { return reinterpret_cast<float*>(prim + off); }
 void PutF(unsigned char* prim, unsigned off, std::int32_t v) { *F(prim, off) = static_cast<float>(v); }
@@ -190,7 +190,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     MH_CALL(Inferno_TargetCentre)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
     const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     const unsigned count = enemies ? 8 : 3;
     for (unsigned i = 0; i < count; ++i) {
@@ -202,7 +202,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         child[1] = 0;
         child[3] = U8(i);
         child[9] = 0x10;
-        Bump(sc[9]);
+        BumpMagicS21(sc[9]);
     }
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
@@ -211,7 +211,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         SetLong(slot + 0x80, static_cast<std::int32_t>(Addr(sc)));
         slot[1] = 0;
         slot[4] = U8(i);
-        Bump(sc[0xB]);
+        BumpMagicS21(sc[0xB]);
     }
     for (unsigned i = 0; i < 16; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
@@ -221,7 +221,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         slot[1] = 1;
         slot[0xB] = U8(i);
         slot[9] = U8((i + 3) << 3);
-        Bump(sc[0xB]);
+        BumpMagicS21(sc[0xB]);
     }
     for (std::uint32_t p = ::bof3::Img(kClut); p < ::bof3::Img(kClutEnd); p += 2) SetWord(Mem(p), Word(Mem(p - 0x4000)) | 0x8000u);
     Mem(::bof3::Img(Gfx_ClutStripDirty_addr))[0] = 1;
@@ -289,7 +289,7 @@ MS21_EXPORT void __cdecl FxScorch_Run(void) { CallCell(::bof3::Img(FxScorch_Step
 // index with the target byte's bit 0x40, else a party member's) has its tint
 // released and set to (-8, -8, -8, 1), the actor's flags 0x10; the step on.
 MS21_EXPORT void __cdecl FxScorch_Delay(void) {
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS21(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
     if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
@@ -303,7 +303,7 @@ MS21_EXPORT void __cdecl FxScorch_Delay(void) {
         MH_CALL(Sprite_SetTint)(r, 0xF8, 0xF8, 0xF8, 1);
         MH_CALL(Battle_SetTargetFlags)(Sprite_Current[3], 0x10);
     }
-    Bump(Sprite_Current[2]);
+    BumpMagicS21(Sprite_Current[2]);
 }
 
 // original 0x4C6650: held while the owner's +0xB (its flames) is 8 or more;
@@ -321,12 +321,12 @@ MS21_EXPORT void __cdecl FxScorch_Hit(void) {
         MH_CALL(Sprite_ReleaseTint)(PartyRecord(Sprite_Current[3]));
         MH_CALL(BattleActor_Flash)(Sprite_Current[3]);
     }
-    Bump(Sprite_Current[2]);
+    BumpMagicS21(Sprite_Current[2]);
 }
 
 // original 0x4C66F0: the owner's +9 (its scorches) down; free.
 MS21_EXPORT void __cdecl FxScorch_Free(void) {
-    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[9], -1);
+    BumpMagicS21(Pointer(::bof3::Img(BattleE2_Owner_addr))[9], -1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -341,7 +341,7 @@ MS21_EXPORT void __cdecl FlamePool_Dispatch(void) { CallCell(::bof3::Img(FlamePo
 // band under the actor's matrix.
 MS21_EXPORT void __cdecl FlameColumn_Task(void) {
     CallCell(::bof3::Img(FlameColumn_Phases_addr), Sprite_Current[2]);
-    Bump(Sprite_Current[0xB]);
+    BumpMagicS21(Sprite_Current[0xB]);
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -354,11 +354,11 @@ MS21_EXPORT void __cdecl FlameColumn_Task(void) {
 // 0x90385A = (+4 & 7) << 9, round the owner.
 static void ColumnPlace() {
     const unsigned char* sc = Sprite_Current;
-    SetWord(Scr(0xA), static_cast<unsigned>((sc[4] & 7) << 9));
-    const int s = MH_CALL(Math_Sin)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x);
-    const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
+    SetWord(ScrMagicS21(0xA), static_cast<unsigned>((sc[4] & 7) << 9));
+    const int s = MH_CALL(Math_Sin)(S16(ScrMagicS21(0xA)));
+    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(ScrMagicS21(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x);
+    const int c = MH_CALL(Math_Cos)(S16(ScrMagicS21(0xA)));
+    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(ScrMagicS21(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
 }
 
 // original 0x4C6770: +0xA = (Rand & 3) << 4; the radius 0xC0 - +0xA; placed
@@ -367,36 +367,36 @@ static void ColumnPlace() {
 MS21_EXPORT void __cdecl FlameColumn_Start(void) {
     const int r = MH_CALL(Rand)();
     Sprite_Current[0xA] = U8((r & 3) << 4);
-    SetWord(Scr(0), 0xC0u - Sprite_Current[0xA]);
+    SetWord(ScrMagicS21(0), 0xC0u - Sprite_Current[0xA]);
     ColumnPlace();
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     const int r2 = MH_CALL(Rand)();
     Sprite_Current[0xB] = U8(r2);
     Sprite_Current[9] = 0;
-    Bump(Sprite_Current[2]);
+    BumpMagicS21(Sprite_Current[2]);
 }
 
 // original 0x4C6840: the radius +9 * 8 + 0xC0 - +0xA, placed again; +9 up,
 // at 0x10 the step on.
 MS21_EXPORT void __cdecl FlameColumn_Grow(void) {
     const unsigned char* const sc = Sprite_Current;
-    SetWord(Scr(0), sc[9] * 8u + 0xC0u - sc[0xA]);
+    SetWord(ScrMagicS21(0), sc[9] * 8u + 0xC0u - sc[0xA]);
     ColumnPlace();
-    Bump(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[9]);
     unsigned char* const s2 = Sprite_Current;
-    if (s2[9] == 0x10) Bump(s2[2]);
+    if (s2[9] == 0x10) BumpMagicS21(s2[2]);
 }
 
 // original 0x4C68F0: held until the owner's +0xB (its flames) is 8.
 MS21_EXPORT void __cdecl FlameColumn_Hold(void) {
-    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] == 8) Bump(Sprite_Current[2]);
+    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] == 8) BumpMagicS21(Sprite_Current[2]);
 }
 
 // original 0x4C6910: +9 down; at 0 the owner's +0xB down and the slot freed.
 MS21_EXPORT void __cdecl FlameColumn_Fade(void) {
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS21(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
+    BumpMagicS21(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -409,10 +409,10 @@ MS21_EXPORT void __cdecl FlameColumn_DrawDisc(void) {
     LinkAtTask(2, 0xC);
     const int s = MH_CALL(Math_Sin)((Sprite_Current[0xB] & 0x1F) << 7);
     const unsigned char b = Sprite_Current[9];
-    SetWord(Scr(0), static_cast<unsigned>((Mul(s, 16) >> 12) + 0x100));
+    SetWord(ScrMagicS21(0), static_cast<unsigned>((Mul(s, 16) >> 12) + 0x100));
     const unsigned char red = U8(b * 10), g0 = U8(b * 9), g1 = U8(b << 2), blue = U8(b << 1);
-    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(Scr(0))) >> 12));
-    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), S16(Scr(0))) >> 12));
+    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(ScrMagicS21(0))) >> 12));
+    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), S16(ScrMagicS21(0))) >> 12));
     SetWord(Vtx(0x14), 0);
     SetWord(Vtx(0xC), 0);
     SetWord(Vtx(4), 0);
@@ -425,8 +425,8 @@ MS21_EXPORT void __cdecl FlameColumn_DrawDisc(void) {
         SetWord(Vtx(2), 0);
         SetWord(Vtx(8), x);
         SetWord(Vtx(0xA), y);
-        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(Scr(0))) >> 12));
-        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(Scr(0))) >> 12));
+        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(ScrMagicS21(0))) >> 12));
+        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(ScrMagicS21(0))) >> 12));
         long depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x18), F(p, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(p);
@@ -451,17 +451,17 @@ MS21_EXPORT void __cdecl FlameColumn_DrawBand(void) {
     LinkAtTask(2, 0xC);
     const int s = MH_CALL(Math_Sin)((Sprite_Current[0xB] & 0x1F) << 7);
     const unsigned char flicker = Sprite_Current[0xB];
-    SetWord(Scr(0), static_cast<unsigned>((Mul(s, 16) >> 12) + 0x100));
+    SetWord(ScrMagicS21(0), static_cast<unsigned>((Mul(s, 16) >> 12) + 0x100));
     const int s2 = MH_CALL(Math_Sin)((flicker & 0x1F) << 7);
     const unsigned char b = Sprite_Current[9];
-    SetWord(Scr(2), static_cast<unsigned>((Mul(s2, 16) >> 12) + 0x180));
+    SetWord(ScrMagicS21(2), static_cast<unsigned>((Mul(s2, 16) >> 12) + 0x180));
     const unsigned char red = U8(b * 10), blue = U8(b << 1), green = U8(b << 2);
-    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(Scr(2))) >> 12));
-    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), S16(Scr(2))) >> 12));
-    SetWord(Vtx(0x18), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(Scr(0))) >> 12));
+    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(ScrMagicS21(2))) >> 12));
+    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), S16(ScrMagicS21(2))) >> 12));
+    SetWord(Vtx(0x18), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), S16(ScrMagicS21(0))) >> 12));
     const int c0 = MH_CALL(Math_Cos)(0);
     SetWord(Vtx(0x1C), 0);
-    SetWord(Vtx(0x1A), static_cast<unsigned>(Mul(c0, S16(Scr(0))) >> 12));
+    SetWord(Vtx(0x1A), static_cast<unsigned>(Mul(c0, S16(ScrMagicS21(0))) >> 12));
     SetWord(Vtx(0x14), 0);
     SetWord(Vtx(0xC), 0);
     SetWord(Vtx(4), 0);
@@ -474,15 +474,15 @@ MS21_EXPORT void __cdecl FlameColumn_DrawBand(void) {
             SetWord(Vtx(0), x);
             SetWord(Vtx(2), y);
         }
-        SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(Scr(2))) >> 12));
+        SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(ScrMagicS21(2))) >> 12));
         const int c = MH_CALL(Math_Cos)(a);
         const std::uint16_t ox = Word(Vtx(0x18));
-        SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, S16(Scr(2))) >> 12));
+        SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, S16(ScrMagicS21(2))) >> 12));
         const std::uint16_t oy = Word(Vtx(0x1A));
         SetWord(Vtx(0x10), ox);
         SetWord(Vtx(0x12), oy);
-        SetWord(Vtx(0x18), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(Scr(0))) >> 12));
-        SetWord(Vtx(0x1A), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(Scr(0))) >> 12));
+        SetWord(Vtx(0x18), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), S16(ScrMagicS21(0))) >> 12));
+        SetWord(Vtx(0x1A), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), S16(ScrMagicS21(0))) >> 12));
         long depth;
         MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), F(p, 8), F(p, 0x18), F(p, 0x28), F(p, 0x38),
                                    &depth);
@@ -513,23 +513,23 @@ MS21_EXPORT void __cdecl FlameSpark_Task(void) {
 // with +0xB odd a sound by (+0xB >> 1) % 3 - 0x101, 0x102, 0x103; +0xB 0x10,
 // +9 0, +0xA 0x40, the step on.
 MS21_EXPORT void __cdecl FlameSpark_Start(void) {
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS21(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
     tsc->x = rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x;
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
-    SetWord(Scr(0), 0x100);
+    SetWord(ScrMagicS21(0), 0x100);
     const int r = MH_CALL(Rand)();
     unsigned char* const x = Sprite_Current + 0x34;
     const int angle = static_cast<short>(static_cast<std::uint16_t>((r & 7) << 9));
-    SetWord(Scr(0xA), static_cast<unsigned>(angle));
+    SetWord(ScrMagicS21(0xA), static_cast<unsigned>(angle));
     const int s = MH_CALL(Math_Sin)(angle);
-    SetLong(x, Long(x) + (Mul(s, S16(Scr(0))) >> 3));
+    SetLong(x, Long(x) + (Mul(s, S16(ScrMagicS21(0))) >> 3));
     unsigned char* const z = Sprite_Current + 0x38;
-    const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    SetLong(z, Long(z) + (Mul(c, S16(Scr(0))) >> 3));
+    const int c = MH_CALL(Math_Cos)(S16(ScrMagicS21(0xA)));
+    SetLong(z, Long(z) + (Mul(c, S16(ScrMagicS21(0))) >> 3));
     const unsigned char tone = Sprite_Current[0xB];
     if (tone & 1) {
         const unsigned which = (tone >> 1) % 3;
@@ -538,32 +538,32 @@ MS21_EXPORT void __cdecl FlameSpark_Start(void) {
     Sprite_Current[0xB] = 0x10;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0x40;
-    Bump(Sprite_Current[2]);
+    BumpMagicS21(Sprite_Current[2]);
 }
 
 // original 0x4C6ED0: +9 (the width) up by 0x20 to 0xC0.
 MS21_EXPORT void __cdecl FlameSpark_Grow(void) {
-    Bump(Sprite_Current[9], 0x20);
+    BumpMagicS21(Sprite_Current[9], 0x20);
     unsigned char* const sc = Sprite_Current;
-    if (sc[9] == 0xC0) Bump(sc[2]);
+    if (sc[9] == 0xC0) BumpMagicS21(sc[2]);
 }
 
 // original 0x4C6EF0: +9 up by 2, +0xA (the height) down to 0x30.
 MS21_EXPORT void __cdecl FlameSpark_Stretch(void) {
-    Bump(Sprite_Current[9], 2);
-    Bump(Sprite_Current[0xA], -1);
+    BumpMagicS21(Sprite_Current[9], 2);
+    BumpMagicS21(Sprite_Current[0xA], -1);
     unsigned char* const sc = Sprite_Current;
-    if (sc[0xA] == 0x30) Bump(sc[2]);
+    if (sc[0xA] == 0x30) BumpMagicS21(sc[2]);
 }
 
 // original 0x4C6F20: +9 up, +0xA and +0xB (the shade) down; at +0xB 0 the
 // owner's +0xB down and the slot freed.
 MS21_EXPORT void __cdecl FlameSpark_Fade(void) {
-    Bump(Sprite_Current[9]);
-    Bump(Sprite_Current[0xA], -1);
-    Bump(Sprite_Current[0xB], -1);
+    BumpMagicS21(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[0xA], -1);
+    BumpMagicS21(Sprite_Current[0xB], -1);
     if (Sprite_Current[0xB] != 0) return;
-    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
+    BumpMagicS21(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -575,17 +575,17 @@ MS21_EXPORT void __cdecl FlameSpark_Fade(void) {
 // every coordinate.
 MS21_EXPORT void __cdecl FlameSpark_Draw(void) {
     const unsigned char* const sc = Sprite_Current;
-    SetWord(Scr(0xC), sc[9]);
+    SetWord(ScrMagicS21(0xC), sc[9]);
     const unsigned char shade = U8(sc[0xB] << 3);
-    SetWord(Scr(0xE), sc[0xA]);
-    SetWord(Scr(6), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
-    SetWord(Scr(8), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
+    SetWord(ScrMagicS21(0xE), sc[0xA]);
+    SetWord(ScrMagicS21(6), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+    SetWord(ScrMagicS21(8), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     LinkAtTask(0, 0xC);
-    auto X = [] { return static_cast<int>(S16(Scr(6))); };
-    auto Y = [] { return static_cast<int>(S16(Scr(8))); };
-    auto H = [] { return static_cast<int>(S16(Scr(0xC))); };
-    auto W = [] { return static_cast<int>(S16(Scr(0xE))); };
+    auto X = [] { return static_cast<int>(S16(ScrMagicS21(6))); };
+    auto Y = [] { return static_cast<int>(S16(ScrMagicS21(8))); };
+    auto H = [] { return static_cast<int>(S16(ScrMagicS21(0xC))); };
+    auto W = [] { return static_cast<int>(S16(ScrMagicS21(0xE))); };
     unsigned char* p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyGT4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -668,7 +668,7 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
     SetLong(child + 0x38, rv::As<records::SpriteHead>(src)->z);
     rv::Store(rv::As<records::BattleTask>(child)->height, rv::As<records::SpriteHead>(src)->height);
     sc[0xB] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
     MH_CALL(Sound_PlayById)(0x100);
 }
 
@@ -709,20 +709,20 @@ MS21_EXPORT void __cdecl FrostRing_Mark(void) {
     MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x20);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
 }
 
 // original 0x4C7640: +0xA and +9 up; at +9 0x10 the target's tint released
 // and set to (6, 4, 8, 0), +9 0, the phase on.
 MS21_EXPORT void __cdecl FrostRing_Grow(void) {
-    Bump(Sprite_Current[0xA]);
-    Bump(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[0xA]);
+    BumpMagicS21(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x10) return;
     unsigned char* const r = TargetRecord();
     MH_CALL(Sprite_ReleaseTint)(r);
     MH_CALL(Sprite_SetTint)(r, 6, 4, 8, 0);
     Sprite_Current[9] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
 }
 
 // original 0x4C76D0: +0xA up to 0x10; +9 up, at 0x10 back to 0 and the phase
@@ -730,20 +730,20 @@ MS21_EXPORT void __cdecl FrostRing_Grow(void) {
 MS21_EXPORT void __cdecl FrostRing_Spin(void) {
     unsigned char* sc = Sprite_Current;
     if (sc[0xA] < 0x10) {
-        Bump(sc[0xA]);
+        BumpMagicS21(sc[0xA]);
         sc = Sprite_Current;
     }
-    Bump(sc[9]);
+    BumpMagicS21(sc[9]);
     unsigned char* const s2 = Sprite_Current;
     if (s2[9] != 0x10) return;
     s2[9] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
 }
 
 // original 0x4C7710: +9 up; at 0x20 the owner's +0xB 0xFF (Frost_Wait's
 // signal) and free.
 MS21_EXPORT void __cdecl FrostRing_Fade(void) {
-    Bump(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x20) return;
     Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
@@ -766,17 +766,17 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
         const int r16 = n << 4;
         const int j = i ^ 7;
         if (sc[1] == 2) {
-            SetLong(Scr(0), r16);
-            SetLong(Scr(4), n << 6);
-            SetLong(Scr(8), (-1 - j) * 80);
+            SetLong(ScrMagicS21(0), r16);
+            SetLong(ScrMagicS21(4), n << 6);
+            SetLong(ScrMagicS21(8), (-1 - j) * 80);
         } else if (sc[1] == 3) {
-            SetLong(Scr(0), r16);
-            SetLong(Scr(4), (n << 6) - sc[9]);
-            SetLong(Scr(8), (sc[9] - (j + 1) * 40) * 2);
+            SetLong(ScrMagicS21(0), r16);
+            SetLong(ScrMagicS21(4), (n << 6) - sc[9]);
+            SetLong(ScrMagicS21(8), (sc[9] - (j + 1) * 40) * 2);
         } else {
-            SetLong(Scr(0), r16);
-            SetLong(Scr(4), Mul(sc[9], n) << 2);
-            SetLong(Scr(8), -5 * Mul(j + 1, sc[9]));
+            SetLong(ScrMagicS21(0), r16);
+            SetLong(ScrMagicS21(4), Mul(sc[9], n) << 2);
+            SetLong(ScrMagicS21(8), -5 * Mul(j + 1, sc[9]));
         }
         SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
         SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
@@ -785,7 +785,7 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
         for (int a2 = 0x200; a2 < 0x1200; a2 += 0x200, a1 += 0x200) {
             SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a1), L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const int s1 = MH_CALL(Math_Sin)(a1);
-            const std::uint16_t h = Word(Scr(8)), px = Word(Vtx(0x10));
+            const std::uint16_t h = Word(ScrMagicS21(8)), px = Word(Vtx(0x10));
             SetWord(Vtx(2), static_cast<unsigned>(Mul(s1, L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const std::uint16_t pz = Word(Vtx(0x12));
             SetWord(Vtx(4), h);
@@ -811,31 +811,31 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
             const unsigned char* const s3 = Sprite_Current;
             if (s3[1] == 3) {
-                SetLong(Scr(0xC), r16);
+                SetLong(ScrMagicS21(0xC), r16);
                 const int less = -(r16 / 16) * (s3[9] >> 1);
                 const std::int32_t v = L(::bof3::Img(kScratch.v) + 0xC) + less;
-                SetLong(Scr(0xC), v);
-                if (v < 0) SetLong(Scr(0xC), 1);
+                SetLong(ScrMagicS21(0xC), v);
+                if (v < 0) SetLong(ScrMagicS21(0xC), 1);
                 p[4] = 1;
                 p[5] = 1;
                 p[6] = 1;
-                p[0x14] = Scr(0xC)[0];
-                p[0x15] = Scr(0xC)[0];
+                p[0x14] = ScrMagicS21(0xC)[0];
+                p[0x15] = ScrMagicS21(0xC)[0];
                 const unsigned char blue = U8(0xC1 - U8(Sprite_Current[9] * 6));
                 p[0x16] = blue;
                 p[0x24] = p[0x14];
                 p[0x25] = p[0x15];
                 p[0x26] = blue;
             } else {
-                SetLong(Scr(0xC), r16);
+                SetLong(ScrMagicS21(0xC), r16);
                 p[4] = 1;
                 p[5] = 1;
                 p[6] = 1;
-                p[0x14] = Scr(0xC)[0];
-                p[0x15] = Scr(0xC)[0];
+                p[0x14] = ScrMagicS21(0xC)[0];
+                p[0x15] = ScrMagicS21(0xC)[0];
                 p[0x16] = 0xC0;
-                p[0x24] = Scr(0xC)[0];
-                p[0x25] = Scr(0xC)[0];
+                p[0x24] = ScrMagicS21(0xC)[0];
+                p[0x25] = ScrMagicS21(0xC)[0];
                 p[0x26] = 0xC0;
             }
             long depth;
@@ -885,11 +885,11 @@ MS21_EXPORT void __cdecl FrostRing_PushMatrix(void) {
 MS21_EXPORT void __cdecl FrostRing_DrawDisc(void) {
     const unsigned char* const sc = Sprite_Current;
     if (sc[1] == 2) {
-        SetLong(Scr(0), 0x40);
+        SetLong(ScrMagicS21(0), 0x40);
     } else if (sc[1] == 3) {
-        SetLong(Scr(0), (0x20 - sc[9]) * 2);
+        SetLong(ScrMagicS21(0), (0x20 - sc[9]) * 2);
     } else {
-        SetLong(Scr(0), sc[9] * 3 + 0x10);
+        SetLong(ScrMagicS21(0), sc[9] * 3 + 0x10);
     }
     int a = 0;
     do {
@@ -973,7 +973,7 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
 }
 
 // original 0x4C7E30: the disc; at +0xA 0xC the target's tint released and
@@ -989,9 +989,9 @@ MS21_EXPORT void __cdecl Iceblast_Chill(void) {
         MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x200);
         sc = Sprite_Current;
     }
-    Bump(sc[0xA]);
+    BumpMagicS21(sc[0xA]);
     unsigned char* const s2 = Sprite_Current;
-    if (s2[0xA] == 0x10) Bump(s2[1]);
+    if (s2[0xA] == 0x10) BumpMagicS21(s2[1]);
 }
 
 // original 0x4C7EC0: the spires, the inner spires, the disc; +9 up, at 0x40
@@ -1000,12 +1000,12 @@ MS21_EXPORT void __cdecl Iceblast_Rise(void) {
     MH_CALL(Iceblast_DrawSpires)();
     MH_CALL(Iceblast_DrawSpiresInner)();
     MH_CALL(Iceblast_DrawDisc)();
-    Bump(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x40) return;
     MH_CALL(Sound_PlayById)(0x101);
     MH_CALL(Sound_PlayById)(0x102);
     Sprite_Current[9] = 0x30;
-    Bump(Sprite_Current[1]);
+    BumpMagicS21(Sprite_Current[1]);
 }
 
 // original 0x4C7F20: the three draws; +9 down, at 0 the phase on.
@@ -1013,16 +1013,16 @@ MS21_EXPORT void __cdecl Iceblast_Sink(void) {
     MH_CALL(Iceblast_DrawSpires)();
     MH_CALL(Iceblast_DrawSpiresInner)();
     MH_CALL(Iceblast_DrawDisc)();
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS21(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
-    if (sc[9] == 0) Bump(sc[1]);
+    if (sc[9] == 0) BumpMagicS21(sc[1]);
 }
 
 // original 0x4C7F50: the disc; +0xA down, at 0 the target's tint released,
 // it flashed, its flag 0x40, the done flag, free.
 MS21_EXPORT void __cdecl Iceblast_End(void) {
     MH_CALL(Iceblast_DrawDisc)();
-    Bump(Sprite_Current[0xA], -1);
+    BumpMagicS21(Sprite_Current[0xA], -1);
     if (Sprite_Current[0xA] != 0) return;
     MH_CALL(Sprite_ReleaseTint)(TargetRecord());
     MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
@@ -1044,13 +1044,13 @@ static Spire SpireRow(int i) {
     return {b + 0x100, b + 0xD7, -72 * i, -72 * (i + 1)};
 }
 static void SpireColumn(int i, const Spire& s, int a, unsigned idx) {
-    SetLong(Scr(4), s.base0);
-    SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0]) + s.base0);
+    SetLong(ScrMagicS21(4), s.base0);
+    SetLong(ScrMagicS21(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0]) + s.base0);
     SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0])));
-    SetLong(Scr(4), s.base1);
-    SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]) + s.base1);
+    SetLong(ScrMagicS21(4), s.base1);
+    SetLong(ScrMagicS21(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]) + s.base1);
     SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
     const int c = MH_CALL(Math_Cos)(a);
     const signed char j1 = static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]);
@@ -1104,21 +1104,21 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpires(void) {
             int shade = Sprite_Current[9] - 7 * i;
             if (shade <= 0) continue;
             shade *= 6;
-            SetLong(Scr(8), shade);
+            SetLong(ScrMagicS21(8), shade);
             if (shade > 0x30) {
                 shade = 0x30;
-                SetLong(Scr(8), 0x30);
+                SetLong(ScrMagicS21(8), 0x30);
             }
             if (k & 1) {
                 p[4] = U8(shade);
-                p[5] = Scr(8)[0];
-                p[6] = Scr(8)[0];
+                p[5] = ScrMagicS21(8)[0];
+                p[6] = ScrMagicS21(8)[0];
                 p[0x14] = 1;
                 p[0x15] = 1;
                 p[0x16] = 1;
-                p[0x24] = Scr(8)[0];
-                p[0x25] = Scr(8)[0];
-                p[0x26] = Scr(8)[0];
+                p[0x24] = ScrMagicS21(8)[0];
+                p[0x25] = ScrMagicS21(8)[0];
+                p[0x26] = ScrMagicS21(8)[0];
                 p[0x34] = 1;
                 p[0x35] = 1;
                 p[0x36] = 1;
@@ -1126,15 +1126,15 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpires(void) {
                 p[4] = 1;
                 p[5] = 1;
                 p[6] = 1;
-                p[0x14] = Scr(8)[0];
-                p[0x15] = Scr(8)[0];
-                p[0x16] = Scr(8)[0];
+                p[0x14] = ScrMagicS21(8)[0];
+                p[0x15] = ScrMagicS21(8)[0];
+                p[0x16] = ScrMagicS21(8)[0];
                 p[0x24] = 1;
                 p[0x25] = 1;
                 p[0x26] = 1;
-                p[0x34] = Scr(8)[0];
-                p[0x35] = Scr(8)[0];
-                p[0x36] = Scr(8)[0];
+                p[0x34] = ScrMagicS21(8)[0];
+                p[0x35] = ScrMagicS21(8)[0];
+                p[0x36] = ScrMagicS21(8)[0];
             }
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0x44);
         }
@@ -1182,36 +1182,36 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
             const int d = Sprite_Current[9] - (i << 3);
             if (d <= 0) continue;
             if (d < 5) {
-                SetLong(Scr(8), d * 48);
-                if (d * 48 > 0xC0) SetLong(Scr(8), 0xC0);   // the original's compare; d <= 4 never meets it
+                SetLong(ScrMagicS21(8), d * 48);
+                if (d * 48 > 0xC0) SetLong(ScrMagicS21(8), 0xC0);   // the original's compare; d <= 4 never meets it
                 p[4] = 1;
                 p[5] = 1;
                 p[0x14] = 1;
-                p[6] = Scr(8)[0];
+                p[6] = ScrMagicS21(8)[0];
                 p[0x15] = 1;
                 p[0x16] = 1;
                 p[0x24] = 1;
                 p[0x25] = 1;
-                p[0x26] = Scr(8)[0];
+                p[0x26] = ScrMagicS21(8)[0];
                 p[0x34] = 1;
                 p[0x35] = 1;
                 p[0x36] = 1;
             } else {
                 const int v = (d * 3 - 0xC) << 4;
-                SetLong(Scr(8), v);
-                if (v > 0xC0) SetLong(Scr(8), 0xC0);
+                SetLong(ScrMagicS21(8), v);
+                if (v > 0xC0) SetLong(ScrMagicS21(8), 0xC0);
                 p[4] = 1;
                 p[5] = 1;
                 p[6] = 0xC0;
                 p[0x14] = 1;
                 p[0x15] = 1;
-                p[0x16] = Scr(8)[0];
+                p[0x16] = ScrMagicS21(8)[0];
                 p[0x24] = 1;
                 p[0x25] = 1;
                 p[0x26] = 0xC0;
                 p[0x34] = 1;
                 p[0x35] = 1;
-                p[0x36] = Scr(8)[0];
+                p[0x36] = ScrMagicS21(8)[0];
             }
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0x44);
         }
@@ -1223,7 +1223,7 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
 // 0x903850), round the origin; the centre (+0xA * 8) grey, the rim (1, 1,
 // 1); each linked at the task's position.
 MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
-    SetLong(Scr(0), 0x1C0);
+    SetLong(ScrMagicS21(0), 0x1C0);
     SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
     for (int a = 0x100; a < 0x1100; a += 0x100) {
@@ -1245,10 +1245,10 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         const std::int32_t grey = Sprite_Current[0xA] << 3;
-        SetLong(Scr(8), grey);
+        SetLong(ScrMagicS21(8), grey);
         p[4] = U8(grey);
-        p[5] = Scr(8)[0];
-        p[6] = Scr(8)[0];
+        p[5] = ScrMagicS21(8)[0];
+        p[6] = ScrMagicS21(8)[0];
         for (unsigned k : {0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) p[k] = 1;
         long depth;
         MH_CALL(Gte_RotTransPers3)(VtxP(0), VtxP(8), VtxP(0x10), F(p, 8), F(p, 0x18), F(p, 0x28), &depth);
@@ -1271,15 +1271,15 @@ MS21_EXPORT void __cdecl IceShard_Task(void) {
 // +9 (its delay) down, at 0 the phase on.
 MS21_EXPORT void __cdecl IceShard_Wait(void) {
     if (Pointer(::bof3::Img(BattleE2_Owner_addr))[1] != 3) return;
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS21(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
-    if (sc[9] == 0) Bump(sc[1]);
+    if (sc[9] == 0) BumpMagicS21(sc[1]);
 }
 
 // original 0x4C89C0: the shards; +9 up, at 0x20 free.
 MS21_EXPORT void __cdecl IceShard_Run(void) {
     MH_CALL(IceShard_Draw)();
-    Bump(Sprite_Current[9]);
+    BumpMagicS21(Sprite_Current[9]);
     if (Sprite_Current[9] == 0x20) MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -1299,15 +1299,15 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
     int k = 1;
     for (int a = 0x80; a < 0x1080; a += 0x80, ++k) {
         sc = Sprite_Current;
-        SetLong(Scr(4), base);
+        SetLong(ScrMagicS21(4), base);
         const int col = (k / 8) & 7;
         const unsigned char* const jit = Mem(::bof3::Img(Iceblast_Jitter_addr) + static_cast<std::uint32_t>(col + h * 8));
         std::int32_t radius = static_cast<signed char>(jit[0]) + base;
-        SetLong(Scr(0), radius);
+        SetLong(ScrMagicS21(0), radius);
         if (sc[0xA] != 0)
-            SetLong(Scr(0), radius + sc[0xA] * 4);
+            SetLong(ScrMagicS21(0), radius + sc[0xA] * 4);
         else
-            SetLong(Scr(0), radius + sc[9] * 4);
+            SetLong(ScrMagicS21(0), radius + sc[9] * 4);
         const int s = MH_CALL(Math_Sin)(a);
         std::uint16_t px = static_cast<std::uint16_t>(Mul(s, L(::bof3::Img(kScratch.v))) >> 12);
         const int c = MH_CALL(Math_Cos)(a);
@@ -1329,7 +1329,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_AT(PrimFn, kSetPolyF3.v)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetLong(Scr(0), 0x21 - Sprite_Current[9]);
+        SetLong(ScrMagicS21(0), 0x21 - Sprite_Current[9]);
         int v = MH_CALL(Math_Sin)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);
         SetWord(Vtx(0), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);

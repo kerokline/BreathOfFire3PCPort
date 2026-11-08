@@ -88,7 +88,7 @@ long double Fl(U a) {
 // The CRT's _ftol 0x5B9550 on the value x87 holds: truncation through a 64-bit
 // fistp, whose NaN and out-of-range answer is the integer indefinite
 // 0x8000000000000000; the callers keep eax's low word.
-U Ftol(long double v) {
+U FtolEffect6d(long double v) {
     if (!(v > -9.2233720368547758e18L && v < 9.2233720368547758e18L)) return 0;
     return static_cast<U>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
 }
@@ -97,7 +97,7 @@ U Ftol(long double v) {
 // * 4]: the table's `entries` handlers read in place (the fuzz swaps the cells
 // for recorders); a Fatal past them, where the original jumps through the dword
 // after - another table or data.
-void Dispatch(const char* who, U table, unsigned entries) {
+void DispatchEffect6d(const char* who, U table, unsigned entries) {
     const unsigned sub = Sprite_Current[2];
     if (sub >= entries)
         bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
@@ -229,8 +229,8 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
         for (U v = 0; v < 4; ++v) {
             const unsigned char* const t = At(::bof3::Img(at::kSub5CVertices.v) + 6 * (4 * i + v));
             unsigned char* const out = Vertices() + 8 * v;
-            SetWord(out, Ftol(static_cast<long double>(S16(t)) + Fl(AddressOf(MapView_ScreenXY))));
-            rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->y, Ftol(static_cast<long double>(S16(t + 2)) + Fl(AddressOf(MapView_ScreenXY) + 4)));
+            SetWord(out, FtolEffect6d(static_cast<long double>(S16(t)) + Fl(AddressOf(MapView_ScreenXY))));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->y, FtolEffect6d(static_cast<long double>(S16(t + 2)) + Fl(AddressOf(MapView_ScreenXY) + 4)));
             rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->z, Word(t + 4));
         }
         Project(p);
@@ -247,7 +247,7 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
 // original 0x514270 (hidden in E6C's 0x5140C0): jmp [EffectKind18Sub5C_States +
 // +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub5C_Run(void) {
-    Dispatch("EffectKind18Sub5C_Run", AddressOf(EffectKind18Sub5C_States), EffectKind18Sub5C_States_count);
+    DispatchEffect6d("EffectKind18Sub5C_Run", AddressOf(EffectKind18Sub5C_States), EffectKind18Sub5C_States_count);
 }
 
 // The pair as every state but the first draws it: side 0 at `dy0`, side 1 at 1.
@@ -380,7 +380,7 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
 // original 0x514690 (hidden in 0x5144F0): jmp [EffectKind18Sub5E_States + +2 *
 // 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub5E_Run(void) {
-    Dispatch("EffectKind18Sub5E_Run", AddressOf(EffectKind18Sub5E_States), EffectKind18Sub5E_States_count);
+    DispatchEffect6d("EffectKind18Sub5E_Run", AddressOf(EffectKind18Sub5E_States), EffectKind18Sub5E_States_count);
 }
 
 // original 0x5146B0 (sub-state 0): +0x3E 0xFF80, +0x30 0, +2 up; the leader
@@ -503,7 +503,7 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
 // original 0x514A70 (hidden in 0x514880): jmp [EffectKind18Sub5D_States + +2 *
 // 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub5D_Run(void) {
-    Dispatch("EffectKind18Sub5D_Run", AddressOf(EffectKind18Sub5D_States), EffectKind18Sub5D_States_count);
+    DispatchEffect6d("EffectKind18Sub5D_Run", AddressOf(EffectKind18Sub5D_States), EffectKind18Sub5D_States_count);
 }
 
 // original 0x514A90 (sub-state 0): +8 = whether the spawn's z cell is 0; the
@@ -1264,7 +1264,7 @@ extern "C" void __cdecl EffectKind18Sub64_Draw(unsigned scale, int width, unsign
 // original 0x516480 (hidden in 0x515CC0): jmp [EffectKind18Sub64_States + +2 *
 // 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub64_Run(void) {
-    Dispatch("EffectKind18Sub64_Run", AddressOf(EffectKind18Sub64_States), EffectKind18Sub64_States_count);
+    DispatchEffect6d("EffectKind18Sub64_Run", AddressOf(EffectKind18Sub64_States), EffectKind18Sub64_States_count);
 }
 
 namespace {
@@ -1401,7 +1401,7 @@ extern "C" void __cdecl EffectKind18Sub65_ShadeCluts(int level) {
 // original 0x5169F0 (hidden in 0x5167C0): jmp [EffectKind18Sub65_States + +2 *
 // 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub65_Run(void) {
-    Dispatch("EffectKind18Sub65_Run", AddressOf(EffectKind18Sub65_States), EffectKind18Sub65_States_count);
+    DispatchEffect6d("EffectKind18Sub65_Run", AddressOf(EffectKind18Sub65_States), EffectKind18Sub65_States_count);
 }
 
 // original 0x516A10 (sub-state 0): the rows black (level 0), +2 up.

@@ -36,7 +36,7 @@ Callees g = kOriginals;
 
 namespace {
 
-using map_scroll::g;
+constexpr auto& gMapScroll = map_scroll::g;
 
 std::uint32_t Dword(const unsigned char* p) {
     std::uint32_t v;
@@ -55,7 +55,7 @@ void SetWord(unsigned char* p, unsigned v) {
 void SetDword(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
 
 // Ring cell (row, col), computed as the original does - in 32 bits, unchecked.
-unsigned char* Cell(int row, int col) {
+unsigned char* CellMapScroll(int row, int col) {
     return MapView_CellItems + static_cast<std::uint32_t>(col + row * 0x1C) * 4u;
 }
 
@@ -83,9 +83,9 @@ extern "C" void __cdecl MapView_ShiftColumnPrev(void) {
     int row = MapView_Row;
     for (int i = 0; i < 0x38; ++i) {
         row = NextRow(row);
-        unsigned char* const cell = Cell(row, MapView_Column);
-        g.release_cell(cell);
-        g.cell_to_map(i, -1, cell);
+        unsigned char* const cell = CellMapScroll(row, MapView_Column);
+        gMapScroll.release_cell(cell);
+        gMapScroll.cell_to_map(i, -1, cell);
     }
     if (MapView_Column == 0) {
         OriginStep(-1, 1);
@@ -109,9 +109,9 @@ extern "C" void __cdecl MapView_ShiftColumnNext(void) {
     int row = MapView_Row;
     for (int i = 0; i < 0x38; ++i) {
         row = NextRow(row);
-        unsigned char* const cell = Cell(row, column);
-        g.release_cell(cell);
-        g.cell_to_map(i, 0x1C, cell);
+        unsigned char* const cell = CellMapScroll(row, column);
+        gMapScroll.release_cell(cell);
+        gMapScroll.cell_to_map(i, 0x1C, cell);
     }
     OriginStep(1, -1);
     MapView_Column = static_cast<short>(column);
@@ -130,9 +130,9 @@ extern "C" void __cdecl MapView_ShiftRowsPrev(void) {
         const int view_row = pass == 0 ? -2 : -3;
         for (int j = 0; j < 0x1C; ++j) {
             column = NextColumn(column);
-            unsigned char* const cell = Cell(MapView_Row, column);
-            g.release_cell(cell);
-            g.cell_to_map(view_row, j, cell);
+            unsigned char* const cell = CellMapScroll(MapView_Row, column);
+            gMapScroll.release_cell(cell);
+            gMapScroll.cell_to_map(view_row, j, cell);
         }
         if (MapView_Row == 0) MapView_Row = 0x37;
         else MapView_Row = static_cast<short>(MapView_Row - 1);
@@ -155,9 +155,9 @@ extern "C" void __cdecl MapView_ShiftRowsNext(void) {
         int column = MapView_Column;
         for (int j = 0; j < 0x1C; ++j) {
             column = NextColumn(column);
-            unsigned char* const cell = Cell(row, column);
-            g.release_cell(cell);
-            g.cell_to_map(0x38 + pass, j, cell);
+            unsigned char* const cell = CellMapScroll(row, column);
+            gMapScroll.release_cell(cell);
+            gMapScroll.cell_to_map(0x38 + pass, j, cell);
         }
         head = static_cast<unsigned short>(row);
         MapView_Row = static_cast<short>(head);
@@ -219,15 +219,15 @@ extern "C" void __cdecl MapView_PlaceRuns(void) {
 //     after);
 //   - the Kind2 position is read once, before the elevation call.
 extern "C" void __cdecl Field_ViewReset(void) {
-    g.geom_screen(0x3E8);
-    g.geom_offset(0xA0, 0x78);
-    g.back_color(0x78, 0x78, 0x78);
+    gMapScroll.geom_screen(0x3E8);
+    gMapScroll.geom_offset(0xA0, 0x78);
+    gMapScroll.back_color(0x78, 0x78, 0x78);
     // Every item's two halves - 0x800 of them in the original; DIV-0062's
     // pool has twice as many, and a half never primed here draws as garbage.
     for (unsigned q = 0; q < draw_pool::Count() * 2; ++q) {
         unsigned char* const quad = draw_pool::Items() + q * 0x48u;
-        g.set_poly_ft4(quad);
-        g.set_shade_tex(quad, 0);
+        gMapScroll.set_poly_ft4(quad);
+        gMapScroll.set_shade_tex(quad, 0);
         SetWord(quad + 0x36, 0);
         SetWord(quad + 0x46, 0);
     }
@@ -256,7 +256,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
     if (flags & 8) {
         MapView_Elevation = 0;
     } else {
-        const long got = g.elevation(kind2_x, kind2_z);
+        const long got = gMapScroll.elevation(kind2_x, kind2_z);
         flags = Field_InputFlags;
         elevation = static_cast<short>(got);
         MapView_Elevation = elevation;
@@ -276,9 +276,9 @@ extern "C" void __cdecl Field_ViewReset(void) {
     MapView_Redraw = 3;
     for (int row = 0; row < 0x38; ++row) {
         for (int column = 0; column < 0x1C; ++column) {
-            unsigned char* const cell = Cell(row, column);
+            unsigned char* const cell = CellMapScroll(row, column);
             SetWord(cell + 2, 0);
-            g.cell_to_map(row, column, cell);
+            gMapScroll.cell_to_map(row, column, cell);
         }
     }
     // DIV-0041 (wide-ring): the rim filled, no items (the pool is reset next).
@@ -287,9 +287,9 @@ extern "C" void __cdecl Field_ViewReset(void) {
     DrawItemPool_Top = 1;
     MapView_Column = 0x1B;
     MapView_Row = 0x37;
-    g.bake_patches();
-    g.setup_entries();
-    g.place_runs();
+    gMapScroll.bake_patches();
+    gMapScroll.setup_entries();
+    gMapScroll.place_runs();
 }
 
 // original 0x56FAD0: the area's always-on patches baked into its texture run
@@ -361,10 +361,10 @@ extern "C" void __cdecl AreaMap_SetupEntries(void) {
         reinterpret_cast<Handler>(static_cast<std::uintptr_t>(AreaMap_SetupHandlers[(e >> 24) & 0x3Fu]))(entry);
         entry += entry[2] * 4u;
     }
-    g.clut_start();
+    gMapScroll.clut_start();
     const unsigned char* patch = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_PatchBase) * 4u;
     while (Dword(patch) != 0) {
-        g.apply_patch(patch);
+        gMapScroll.apply_patch(patch);
         patch += (Dword(patch) >> 16) * 4u + 4u;
     }
 }

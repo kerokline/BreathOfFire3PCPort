@@ -26,12 +26,12 @@ using namespace move_script;
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 using Fn = void (__cdecl*)();
-Fn Handler(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
+Fn HandlerFrameCallees(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
 
 constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
 constexpr unsigned kSlots = 8, kSlotBytes = 0x10;
 constexpr unsigned kTints = 32, kTintBytes = 12;
-constexpr unsigned kMemberBytes = 0x14C;
+constexpr unsigned kMemberBytesFrameCallees = 0x14C;
 
 // `cdq` / `idiv`: the original's signed division, faults included - a zero
 // divisor raises the same #DE at the same point of the same computation,
@@ -47,15 +47,15 @@ QuotRem Idiv(std::int32_t dividend, std::int32_t divisor) {
 // recording functions in for them. The indirect ones are the two tables,
 // Effect_KindHandlers and CameraTurn_States, which the fuzz fills with
 // recorders instead.
-struct Callees {
+struct CalleesFrameCallees {
     void (__cdecl* run_slot)(unsigned char);   // 0x455300
     void (__cdecl* update_screen_slot)();      // 0x588F00
     void (__cdecl* update_screen)();           // 0x588F20
     void (__cdecl* release)();                 // 0x589840
 };
-const Callees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
+const CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
                             Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
-Callees g = kOriginals;
+CalleesFrameCallees g = kOriginals;
 
 // A colour component plus a tint byte, in 8 bits as the original adds them:
 // a result that is negative as a signed byte is 0, one above 31 is 31 - so a
@@ -88,7 +88,7 @@ extern "C" void __cdecl Effect_RunObjects(void) {
             bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %lu", kEffects - n, object[5],
                       object[6], object[9], static_cast<unsigned long>(Frame_Counter));
         Sprite_Current = object;
-        Handler(Effect_KindHandlers[object[5]])();
+        HandlerFrameCallees(Effect_KindHandlers[object[5]])();
     }
 }
 
@@ -96,7 +96,7 @@ extern "C" void __cdecl Effect_RunObjects(void) {
 // its state +1 through CameraTurn_States, unbounded - states 3 and up are the
 // next kind's - then MapView_Redraw 2, whatever the state did to it.
 extern "C" void __cdecl Effect_CameraTurn(void) {
-    Handler(CameraTurn_States[Sprite_Current[1]])();
+    HandlerFrameCallees(CameraTurn_States[Sprite_Current[1]])();
     MapView_Redraw = 2;
 }
 
@@ -236,7 +236,7 @@ extern "C" void __cdecl Party_UpdateScreens(void) {
     const int last = static_cast<int>(Field_MemberCount) - 1;
     if (last < 0) return;
     unsigned char* member = rv::Bytes(&ObjTrio[last]);
-    for (int left = last + 1; left != 0; --left, member -= kMemberBytes) {
+    for (int left = last + 1; left != 0; --left, member -= kMemberBytesFrameCallees) {
         if (member[0] & 0x40) continue;
         Sprite_Current = member;
         if (Field_Request == 3) g.update_screen_slot();
@@ -257,7 +257,7 @@ namespace {
 // compared.
 
 constexpr unsigned kLog = 512, kKinds = 32, kStates = 10, kSprites = 4, kSpriteBytes = 0x40;
-constexpr unsigned kMembersSpan = 5 * kMemberBytes + 4;   // a count of up to 5 reads byte +0 of five
+constexpr unsigned kMembersSpan = 5 * kMemberBytesFrameCallees + 4;   // a count of up to 5 reads byte +0 of five
 constexpr std::uint32_t kTintFrom = 0x7E06F0;              // records less a margin: sprite pointers aim into them
 constexpr unsigned kTintSpan = kTints * kTintBytes + (0x7E0700 - kTintFrom);
 constexpr unsigned kStripWords = 0xFFFF + 0xFF0 + 1;      // the highest index: row 255, column 255, 4079 on
@@ -321,7 +321,7 @@ template <std::size_t... K> void FillKinds(unsigned long* table, std::index_sequ
 template <std::size_t... S> void FillStates(unsigned long* table, std::index_sequence<S...>) {
     ((table[S] = Address(reinterpret_cast<Raw>(&StubState<S>))), ...);
 }
-const Callees kStubs = {
+const CalleesFrameCallees kStubs = {
     reinterpret_cast<void (__cdecl*)(unsigned char)>(reinterpret_cast<std::uintptr_t>(&StubRunSlot)),
     StubScreenSlot, StubScreen, StubRelease,
 };

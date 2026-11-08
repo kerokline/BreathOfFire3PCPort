@@ -30,7 +30,7 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // functions in for them, for the original's copies and for ours alike. The
 // area's handler table (op DE) and its +0x18 script array (op 86) are read
 // from memory, as the original reads them.
-struct Callees {
+struct CalleesMoveGroups {
     int (__cdecl* kind)();
     void (__cdecl* face)(unsigned char);
     unsigned char (__cdecl* turn_target)(unsigned char*);   // its result unread by group E
@@ -61,14 +61,14 @@ struct Callees {
     void (__cdecl* load_stream)(unsigned);   // Sound_LoadStream reads the whole dword (save_menu.cpp)
     int (__cdecl* stream_done)();
 };
-const Callees kOriginals = {
+const CalleesMoveGroups kOriginalsMoveGroups = {
     MoveScript_ObjectKind, Sprite_FaceDirection, MoveScript_SetTurnTarget, MoveCmd_OpE7, MoveCmd_OpE9,
     Sprite_SetTint, Sprite_ReleaseTint, Sprite_SetAnimation, Sprite_SetAnimationBank, AreaMap_Elevation,
     MapView_SetElevation, Sprite_ScriptPeek, Sound_PlayById, Sound_PlayEffect, Music_Play, Music_FadeOutStop,
     Music_FadeIn, Music_FadeOut, Port_DroppedCall, MoveCmd_OpDB, MoveCmd_TestFB, MoveCmd_TestFC, Effect_Spawn,
     Effect_SpawnAt, MoveCmd_HandlePosition, MoveCmd_Op87, MoveCmd_Op88, Sound_LoadStream, Sound_StreamDone,
 };
-Callees g = kOriginals;
+CalleesMoveGroups g = kOriginalsMoveGroups;
 
 // An 8.8 operand pair as the C and D groups add it: the high byte signed, the
 // two shifted into bits 8..23 of a 16.16 value.
@@ -726,7 +726,7 @@ constexpr std::array<void*, sizeof...(I)> AreaStubs(std::index_sequence<I...>) {
 }
 const auto kAreaStubs = AreaStubs(std::make_index_sequence<256>());
 
-const Callees kStubs = {
+const CalleesMoveGroups kStubs = {
     StubKind, StubFace, StubTurnTarget, StubOpE7, StubOpE9, StubTint, StubTintRelease, StubSetAnimation,
     StubAnimationBank, StubElevation, StubSetElevation, StubPeek, StubPlayById, StubSound, StubMusicPlay,
     StubFadeOutStop, StubFadeIn, StubFadeOut, StubOpB8, StubOpDB, StubTestFB, StubTestFC, StubEffectSpawn,
@@ -976,7 +976,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
                       "log %u / %u", round, grp.name, op, their_out.result, our_out.result, Pos(their_out.object),
                       Pos(our_out.object), their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    g = kOriginalsMoveGroups;
     Field_State = saved_field;
     Apply(saved);
     unsigned covered = 0, listed = 0;

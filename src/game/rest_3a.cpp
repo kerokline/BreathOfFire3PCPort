@@ -52,15 +52,15 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-U L(U address) { return static_cast<U>(Long(At(address))); }
-unsigned char* PtrAt(U cell) { return At(L(cell)); }
+U LRest3a(U address) { return static_cast<U>(Long(At(address))); }
+unsigned char* PtrAtRest3a(U cell) { return At(LRest3a(cell)); }
 U Addr(const void* p) { return Low32(p); }
-short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S16Rest3a(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
 // each read afresh where the original reads it.
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Slot() { return rv::Bytes(BattleFlow_TaskCurrent.Native()); }
-unsigned char* Owner() { return PtrAt(::bof3::Img(at::kTaskOwner.v)); }
+unsigned char* OwnerRest3a() { return PtrAtRest3a(::bof3::Img(at::kTaskOwner.v)); }
 
 // jmp [table + 4 * index]: the entry as read (the fuzz swaps the table's
 // cells for its recorders), a Fatal past `entries` (the original jumps
@@ -68,12 +68,12 @@ unsigned char* Owner() { return PtrAt(::bof3::Img(at::kTaskOwner.v)); }
 // entry's eax in place: ours hands the word on and answers the entry's eax
 // (round 11 doc section 5.1).
 using Entry = unsigned long (__cdecl*)(unsigned long);
-unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
+unsigned long DispatchRest3a(const char* who, U table, unsigned index, unsigned entries, unsigned long through) {
     if (index >= entries)
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3a.md section 7)",
                     who, index, entries, (unsigned)::bof3::VaOf(table));
-    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index)))(through);
+    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(LRest3a(table + 4 * index)))(through);
 }
 
 // call [esp + 4 * index] through a table the original builds on its stack:
@@ -107,7 +107,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideIn(void) {
     unsigned char* s = Sc();
     SetWord(s + 0x2E, Word(s + 0x2E) + 0x10);
     s = Sc();
-    if (S16(s + 0x2E) >= 0x10) s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (S16Rest3a(s + 0x2E) >= 0x10) s[2] = static_cast<unsigned char>(s[2] + 1);
     Phase(bof3::addr::WorldMap33_FrameShown)();
 }
 
@@ -117,7 +117,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideIn(void) {
 // its low word (world_map.cpp), so ours passes the word sign-extended.
 extern "C" void __cdecl WorldMap33_FrameShown(void) {
     if (AreaW0b_MapMode == 2) Sc()[2] = 3;
-    const short y = S16(Sc() + 0x2E);
+    const short y = S16Rest3a(Sc() + 0x2E);
     BH_CALL(WorldMap_DrawFrame)(0x10, y);
 }
 
@@ -129,7 +129,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideOut(void) {
     unsigned char* s = Sc();
     SetWord(s + 0x2E, Word(s + 0x2E) - 0x10);
     s = Sc();
-    if (S16(s + 0x2E) <= -0x30) {
+    if (S16Rest3a(s + 0x2E) <= -0x30) {
         s[2] = 0;
         s = Sc();
     }
@@ -137,7 +137,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideOut(void) {
         s[2] = 1;
         s = Sc();
     }
-    BH_CALL(WorldMap_DrawFrame)(0x10, S16(s + 0x2E));
+    BH_CALL(WorldMap_DrawFrame)(0x10, S16Rest3a(s + 0x2E));
 }
 
 // ============================================================================
@@ -148,7 +148,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideOut(void) {
 // (dword 0x929F00 & 0xFF)], 4 entries (the run of code pointers to
 // BattleExtra_TallySteps; ours aborts past them).
 extern "C" unsigned long __cdecl BattleExtra_Dispatch(unsigned long through) {
-    return Dispatch("BattleExtra_Dispatch", ::bof3::Img(BattleExtra_States_addr), L(::bof3::Img(at::kMode.v)) & 0xFF, 4, through);
+    return DispatchRest3a("BattleExtra_Dispatch", ::bof3::Img(BattleExtra_States_addr), LRest3a(::bof3::Img(at::kMode.v)) & 0xFF, 4, through);
 }
 
 // original 0x42D730 (BattleExtra_States[0]): the state 0x904C9F + 2, the step
@@ -170,13 +170,13 @@ extern "C" void __cdecl BattleExtra_Leave(void) {
 // * byte 0x929F01], 3 (BattleExtra_TallyOpenDispatch, BattleExtra_TallyCount,
 // BattleExtra_TallyClose).
 extern "C" unsigned long __cdecl BattleExtra_TallyDispatch(unsigned long through) {
-    return Dispatch("BattleExtra_TallyDispatch", ::bof3::Img(BattleExtra_TallySteps_addr), FieldS_State, 3, through);
+    return DispatchRest3a("BattleExtra_TallyDispatch", ::bof3::Img(BattleExtra_TallySteps_addr), FieldS_State, 3, through);
 }
 
 // original 0x42D770 (BattleExtra_TallySteps[0]): jmp [BattleExtra_TallyOpenSteps
 // + 4 * byte 0x929F02], 2 (BattleExtra_OpenTransition, BattleExtra_TallyOpen).
 extern "C" unsigned long __cdecl BattleExtra_TallyOpenDispatch(unsigned long through) {
-    return Dispatch("BattleExtra_TallyOpenDispatch", ::bof3::Img(BattleExtra_TallyOpenSteps_addr), FieldS_Step, 2, through);
+    return DispatchRest3a("BattleExtra_TallyOpenDispatch", ::bof3::Img(BattleExtra_TallyOpenSteps_addr), FieldS_Step, 2, through);
 }
 
 // original 0x42D780 (BattleExtra_TallyOpenSteps[0], BattleExtra_EquipOpenSteps[0]):
@@ -312,7 +312,7 @@ extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
 // [BattleEnd_LossSteps + 4 * byte 0x904AA2], 3 (BattleEnd_LossBanner,
 // BattleEnd_LossAwaitLoad, BattleLoss_Dispatch).
 extern "C" unsigned long __cdecl BattleEnd_LossDispatch(unsigned long through) {
-    return Dispatch("BattleEnd_LossDispatch", ::bof3::Img(BattleEnd_LossSteps_addr), BattleE4_Step2, 3, through);
+    return DispatchRest3a("BattleEnd_LossDispatch", ::bof3::Img(BattleEnd_LossSteps_addr), BattleE4_Step2, 3, through);
 }
 
 // original 0x431550 (BattleEnd_LossSteps[0]): unless 0x904AE5 bit 0x40 keeps
@@ -340,7 +340,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_LossAwaitL
 // byte 0x904AA2], 5 (BattleEnd_TasksBegin, BattleEnd_StartMemberTask,
 // BattleEnd_AwaitRestore, BattleEnd_RestoreLoadBank, BattleEnd_RestoreAwaitBank).
 extern "C" unsigned long __cdecl BattleEnd_RestoreDispatch(unsigned long through) {
-    return Dispatch("BattleEnd_RestoreDispatch", ::bof3::Img(BattleEnd_RestoreSteps_addr), BattleE4_Step2, 5, through);
+    return DispatchRest3a("BattleEnd_RestoreDispatch", ::bof3::Img(BattleEnd_RestoreSteps_addr), BattleE4_Step2, 5, through);
 }
 
 // original 0x431710 (BattleEnd_RestoreSteps[3]): once File_LoadDone answers,
@@ -382,7 +382,7 @@ namespace {
 // callee does not read (bits 0..14 only).
 void FlashTile() {
     const unsigned page = BH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    BH_CALL(Gpu_SetDrawMode)(PtrAt(::bof3::Img(0x7E0670)), 0, 0, page & 0xFFFF, 0);
+    BH_CALL(Gpu_SetDrawMode)(PtrAtRest3a(::bof3::Img(0x7E0670)), 0, 0, page & 0xFFFF, 0);
     BH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char actor = B(::bof3::Img(at::kActor.v));
     unsigned colour;
@@ -425,7 +425,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Rise(v
     Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - zoom;
     FlashTile();
     unsigned char* s = Slot();
-    SetLong(s + 0x10, static_cast<std::int32_t>(L(Addr(s + 0x10)) + 8));
+    SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) + 8));
     s = Slot();
     MapView_Redraw = 2;
     if (s[9] != 0) {
@@ -444,7 +444,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Fall(v
     Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) + zoom;
     FlashTile();
     unsigned char* s = Slot();
-    SetLong(s + 0x10, static_cast<std::int32_t>(L(Addr(s + 0x10)) - 8));
+    SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) - 8));
     s = Slot();
     MapView_Redraw = 2;
     if (s[9] != 0) {
@@ -511,7 +511,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxAnim_Start(v
     BH_CALL(Sprite_SetAnimationBank)(0x18);
     Sc()[0x24] = 0x80;
     Sc()[0x2A] = 0;
-    const unsigned id = rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kAction.v)))->action_id;
+    const unsigned id = rv::As<records::ActionRecord>(PtrAtRest3a(::bof3::Img(at::kAction.v)))->action_id;
     const unsigned char animation = (B(::bof3::Img(at::kAbilityFlags.v) + id * 24) & 2) ? 0 : 2;
     BH_CALL(Sprite_SetAnimation)(animation);
     unsigned char* const s = Sc();
@@ -583,7 +583,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_WatchIconSt
 // one (back to state 3), else +1 = 0.
 extern "C" void __cdecl BattleFx_WatchRecheck(void) {
     if ((B(::bof3::Img(at::kFlags.v)) & 4) == 0) return;
-    const unsigned actor = Owner()[5];
+    const unsigned actor = OwnerRest3a()[5];
     const unsigned char status = actor <= 2 ? B(::bof3::Img(at::kMembers.v) + 0x90 + actor * at::kMemberSize)
                                             : B(::bof3::Img(at::kEnemies.v) + 0x92 + (actor - 3) * at::kEnemySize);
     unsigned char* const s = Sc();
@@ -607,7 +607,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Dispa
 
 // original 0x4339B0 (slot 11's state 0): the owner's +0x48 = 2; +1 up.
 extern "C" void __cdecl BattleFxReform_Begin(void) {
-    Owner()[0x48] = 2;
+    OwnerRest3a()[0x48] = 2;
     unsigned char* const s = Sc();
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -615,7 +615,7 @@ extern "C" void __cdecl BattleFxReform_Begin(void) {
 // original 0x4339D0 (state 1 of slots 11 and 12): the owner's u32 +0x40 down
 // 0x2000 a frame while not 0; at 0 its +0 |= 0x40 and +1 up.
 extern "C" void __cdecl BattleFxReform_Shrink(void) {
-    unsigned char* const o = Owner();
+    unsigned char* const o = OwnerRest3a();
     const U scale = static_cast<U>(rv::As<records::SpriteHead>(o)->scale_x);
     if (scale != 0) {
         rv::As<records::SpriteHead>(o)->scale_x = static_cast<std::int32_t>(scale - 0x2000);
@@ -630,7 +630,7 @@ extern "C" void __cdecl BattleFxReform_Shrink(void) {
 // +0x2C 0, its +8 0 or 1), 0x2EA (+0x2C 0, other +8), 0x2E9 / 0x2EB (+0x2C not
 // 0); +1 up.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_LoadDat(void) {
-    const unsigned char* const o = Owner();
+    const unsigned char* const o = OwnerRest3a();
     const bool plain = rv::As<records::SpriteHead>(o)->column == 0;
     const unsigned char form = o[8];
     const bool low = form == 0 || form == 1;
@@ -649,7 +649,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_LoadD
 // aborts on a member index past 2 where it is written through (section 7).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reload(void) {
     if (BH_CALL(File_LoadDone)() == 0) return;
-    unsigned char* const owner = Owner();
+    unsigned char* const owner = OwnerRest3a();
     unsigned char* const kept = Sc();
     Sprite_Current = owner;
     SetLong(At(::bof3::Img(Field_State_addr)), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
@@ -673,16 +673,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reloa
 // +5 (the owner read again) loses +0x130 bit 0x2000, and a tail jmp to
 // BattleTask_FreeCurrent.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Grow(void) {
-    unsigned char* o = Owner();
+    unsigned char* o = OwnerRest3a();
     o[0] = static_cast<unsigned char>(o[0] & 0xBF);
-    o = Owner();
+    o = OwnerRest3a();
     const U scale = static_cast<U>(rv::As<records::SpriteHead>(o)->scale_x);
     if (scale != 0x10000) {
         rv::As<records::SpriteHead>(o)->scale_x = static_cast<std::int32_t>(scale + 0x2000);
         return;
     }
     o[0x48] = 0;
-    unsigned char* const m = MemberForWrite(Owner()[5], "BattleFxReform_Grow");
+    unsigned char* const m = MemberForWrite(OwnerRest3a()[5], "BattleFxReform_Grow");
     rv::As<records::PartyMember>(m)->flags_130 = static_cast<std::int32_t>(rv::As<records::PartyMember>(m)->flags_130 & 0xFFFFDFFFu);
     BH_CALL(BattleTask_FreeCurrent)();
 }
@@ -699,7 +699,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Disp
 // original 0x433BC0 (slot 12's state 0): the member of the owner's +5 gets
 // +0x130 bit 0x2000; the owner's +0x48 = 2; +1 up.
 extern "C" void __cdecl BattleFxRestore_Begin(void) {
-    unsigned char* const o = Owner();
+    unsigned char* const o = OwnerRest3a();
     unsigned char* const m = MemberForWrite(o[5], "BattleFxRestore_Begin");
     rv::As<records::PartyMember>(m)->flags_130 = static_cast<std::int32_t>(rv::As<records::PartyMember>(m)->flags_130 | 0x2000);
     o[0x48] = 2;
@@ -715,10 +715,10 @@ extern "C" void __cdecl BattleFxRestore_Begin(void) {
 // [0x64EA84] (+8 0 or 1) or [0x64EA88]); ours aborts past the 20. +1 up.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_LoadDat(void) {
     const auto low = [] {
-        const unsigned char form = Owner()[8];
+        const unsigned char form = OwnerRest3a()[8];
         return form == 0 || form == 1;
     };
-    if (L(::bof3::Img(at::kFlags.v)) & 0x8000) {
+    if (LRest3a(::bof3::Img(at::kFlags.v)) & 0x8000) {
         if (BH_CALL(Battle_BackupFlagged)() != 0) {
             if (AreaW0b_PartySet == 7) BH_CALL(LoadDatFile)(low() ? 0x122 : 0x126);
             if (AreaW0b_PartySet == 0xD) BH_CALL(LoadDatFile)(low() ? 0x123 : 0x127);
@@ -732,7 +732,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Load
     } else {
         const bool first = low();
         const unsigned set = AreaW0b_PartySet;
-        const U table = L(first ? ::bof3::Img(Rest3a_RestoreFilesA_addr) : ::bof3::Img(Rest3a_RestoreFilesB_addr));
+        const U table = LRest3a(first ? ::bof3::Img(Rest3a_RestoreFilesA_addr) : ::bof3::Img(Rest3a_RestoreFilesB_addr));
         if (set >= at::kPartySetCount)
             bof3::Fatal("BattleFxRestore_LoadDat: party set %u, past the %u entries of 0x%X (docs/rest_3a.md section 7)", set,
                         at::kPartySetCount, (unsigned)table);

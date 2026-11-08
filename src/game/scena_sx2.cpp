@@ -38,8 +38,8 @@
 namespace {
 
 namespace at = scena_sx2::at;
-using move_script::At;
-using move_script::Long;
+constexpr auto& AtScenaSx2 = move_script::At;
+constexpr auto& LongScenaSx2 = move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 
@@ -50,8 +50,8 @@ using move_script::SetWord;
 // Sprite_Kind2 record.
 using move_script::Word;
 
-std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
-std::uint32_t Addr(const void* p) { return Low32(p); }
+std::uint32_t UScenaSx2(std::int32_t v) { return static_cast<std::uint32_t>(v); }
+std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
 
 // A signed byte over 4 the way the original divides (cdq / and 3 / add / sar
 // 2): C's truncating division.
@@ -70,17 +70,17 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
     const auto step = static_cast<signed char>(step_arg);
     const auto t = static_cast<short>(target);
     if (step != 0) {
-        SetWord(At(angle_cell), static_cast<std::uint32_t>(Word(At(angle_cell)) + static_cast<short>(step)));
-        const auto now = static_cast<short>(U(Long(At(angle_cell))) & 0xFFF);
+        SetWord(AtScenaSx2(angle_cell), static_cast<std::uint32_t>(Word(AtScenaSx2(angle_cell)) + static_cast<short>(step)));
+        const auto now = static_cast<short>(UScenaSx2(LongScenaSx2(AtScenaSx2(angle_cell))) & 0xFFF);
         if (step > 0) {
             if (now < t) return 1;
         } else {
             if (now > t) return 1;
         }
     }
-    const std::uint32_t l = U(Long(At(light)));
-    SetWord(At(angle_cell), target);
-    SetWord(At(copy), l + target + static_cast<std::uint32_t>(bias));
+    const std::uint32_t l = UScenaSx2(LongScenaSx2(AtScenaSx2(light)));
+    SetWord(AtScenaSx2(angle_cell), target);
+    SetWord(AtScenaSx2(copy), l + target + static_cast<std::uint32_t>(bias));
     return 0;
 }
 
@@ -101,7 +101,7 @@ extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
-    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
+    SH_CALL(Flags_Set)(AtScenaSx2(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
 }
 
 // original 0x532FD0: Sprite_Current placed at (x, z) plus the event battle's
@@ -124,21 +124,21 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
         g = static_cast<unsigned char>(lead + 1);
     else if (count == 3)
         g = static_cast<unsigned char>(lead + 4);
-    const unsigned char* const pairs = At(::bof3::Img(bof3::addr::BattleFormation_Offsets));
-    const unsigned char* const row = At(::bof3::Img(bof3::addr::Formation_SlotVectors) + (g * 3u + (slot & 0xFF)) * 8);
-    const unsigned f = At(::bof3::Img(at::kFormation))[0];
+    const unsigned char* const pairs = AtScenaSx2(::bof3::Img(bof3::addr::BattleFormation_Offsets));
+    const unsigned char* const row = AtScenaSx2(::bof3::Img(bof3::addr::Formation_SlotVectors) + (g * 3u + (slot & 0xFF)) * 8);
+    const unsigned f = AtScenaSx2(::bof3::Img(at::kFormation))[0];
     const unsigned char a = pairs[f * 2];
     std::uint32_t zd;
     if (a != 0) {
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
-        const unsigned f2 = At(::bof3::Img(at::kFormation))[0];
-        zd = U(Quarter(pairs[f2 * 2])) * U(Long(row + 4));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(LongScenaSx2(row)) * UScenaSx2(Quarter(a)) + UScenaSx2(x)));
+        const unsigned f2 = AtScenaSx2(::bof3::Img(at::kFormation))[0];
+        zd = UScenaSx2(Quarter(pairs[f2 * 2])) * UScenaSx2(LongScenaSx2(row + 4));
     } else {
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
-        const unsigned f2 = At(::bof3::Img(at::kFormation))[0];
-        zd = U(Quarter(pairs[f2 * 2 + 1])) * U(Long(row));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(x) - UScenaSx2(Quarter(pairs[f * 2 + 1])) * UScenaSx2(LongScenaSx2(row + 4))));
+        const unsigned f2 = AtScenaSx2(::bof3::Img(at::kFormation))[0];
+        zd = UScenaSx2(Quarter(pairs[f2 * 2 + 1])) * UScenaSx2(LongScenaSx2(row));
     }
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + U(z)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + UScenaSx2(z)));
     unsigned char* const s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
@@ -153,8 +153,8 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
 // (pairs_propagated "call").
 extern "C" void __cdecl AreaMap_SetHeight(unsigned x, unsigned z, unsigned value) {
     const std::uint32_t width = AreaMap_Header[0];
-    const std::uint32_t row = width * U(static_cast<short>(z)) + static_cast<std::uint32_t>(AreaMap_HeightBase) * 4;
-    AreaMap_Header[row + U(static_cast<short>(x))] = static_cast<unsigned char>(value);
+    const std::uint32_t row = width * UScenaSx2(static_cast<short>(z)) + static_cast<std::uint32_t>(AreaMap_HeightBase) * 4;
+    AreaMap_Header[row + UScenaSx2(static_cast<short>(x))] = static_cast<unsigned char>(value);
 }
 
 // original 0x57C160 (PSX 0x8015BFE4): bit (index & 7) of bits[(index & 0xFF) >> 3] toggled -
@@ -184,7 +184,7 @@ extern "C" unsigned char __cdecl Camera_TurnStep(unsigned angle, unsigned step) 
 extern "C" unsigned char __cdecl Camera_TurnFBToDegrees(unsigned angle, unsigned step) {
     const std::int32_t s = (static_cast<std::int32_t>(static_cast<signed char>(step)) << 12) / 360;
     const std::int32_t a = ((static_cast<std::int32_t>(static_cast<short>(angle)) << 12) / 360) & 0xFFF;
-    return SH_CALL(Camera_TurnStepFB)(U(a), U(s));
+    return SH_CALL(Camera_TurnStepFB)(UScenaSx2(a), UScenaSx2(s));
 }
 
 // original 0x57C650: Camera_TurnStep for Cond_AngleFB (Camera_Angles[2]):
@@ -217,11 +217,11 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
-    for (std::uint32_t p = Addr(Sound_Channels); p < ::bof3::Img(at::kChannelsEnd); p += 4) {
-        const std::uint32_t buffer = U(Long(At(p)));
+    for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(at::kChannelsEnd); p += 4) {
+        const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(p)));
         if (buffer == 0) continue;
-        SH_CALL(SndBuf_Stop)(At(buffer));
-        SetLong(At(p), 0);
+        SH_CALL(SndBuf_Stop)(AtScenaSx2(buffer));
+        SetLong(AtScenaSx2(p), 0);
     }
 }
 
@@ -236,11 +236,11 @@ extern "C" void __cdecl Sound_StopChannels(void) {
 extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
     const std::uint32_t c = cue & 0xFFFF;
     const std::uint32_t bank = (((c >> 8) & 0xF) - 1) * at::kBankStride;
-    const std::uint32_t cue_at = Addr(Sound_Banks) + bank + (c & 0xFF) * 16;
+    const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
     for (unsigned k = 0; k < 4; ++k) {
-        const std::uint32_t voice = U(Long(At(cue_at + 4 * k)));
+        const std::uint32_t voice = UScenaSx2(LongScenaSx2(AtScenaSx2(cue_at + 4 * k)));
         if (voice == 0) continue;
-        const std::uint32_t buffer = U(Long(At(Addr(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF) * 8)));
+        const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF) * 8)));
         SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume.v)(buffer, level);
     }
 }
@@ -251,7 +251,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
 // and answers 1. KeyItem_Add's opposite; chapter 13's Scena13_Run3 takes
 // item 0xB. PSX 0x80166B54 (pairs_propagated "gap9").
 extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
-    unsigned char* const list = At(::bof3::Img(at::kKeyItems));
+    unsigned char* const list = AtScenaSx2(::bof3::Img(at::kKeyItems));
     const auto id = static_cast<unsigned char>(item);
     for (unsigned i = 0; i < 0x20; ++i) {
         if (list[i] != id) continue;
@@ -272,9 +272,9 @@ extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
 extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned id, unsigned working) {
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
-    unsigned char* const base = (working & 0xFF) != 0 ? At(::bof3::Img(at::kWorkingRecords) + m * at::kObjStride)
-                                                      : At(::bof3::Img(CharacterRecords_addr) + m * at::kRecordStride);
-    const unsigned type = At(::bof3::Img(at::kAbilityType))[(id & 0xFF) * 24] & 3;
+    unsigned char* const base = (working & 0xFF) != 0 ? AtScenaSx2(::bof3::Img(at::kWorkingRecords) + m * at::kObjStride)
+                                                      : AtScenaSx2(::bof3::Img(CharacterRecords_addr) + m * at::kRecordStride);
+    const unsigned type = AtScenaSx2(::bof3::Img(at::kAbilityType))[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }
 
