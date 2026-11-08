@@ -55,14 +55,14 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return Low32(p); }
-unsigned char B(U address) { return At(address)[0]; }
+unsigned char BRest2g(U address) { return At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
 
 // The record the window layer is running, re-read from 0x905B84 wherever the
 // original re-reads it. Volatile so that ours cannot cache it either: the
 // fuzz's stand-ins repoint it between calls.
-unsigned char* Rec() {
+unsigned char* RecRest2g() {
     return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 }
 
@@ -71,7 +71,7 @@ unsigned char* Rec() {
 // the original calls through the dword after (the next table's, and past the
 // run of code pointers, data).
 void State(const char* who, U table, unsigned entries) {
-    const unsigned s = Rec()[3];
+    const unsigned s = RecRest2g()[3];
     if (s >= entries)
         bof3::Fatal("%s: the window record's +3 is %u, past the %u states of 0x%X - the original calls through the dword "
                     "after (docs/rest_2g.md section 7)",
@@ -92,7 +92,7 @@ void StackState(const char* who, const U* table, unsigned n, unsigned index, con
 
 // The character record (CharacterRecords index) of the party slot `slot`:
 // 0x66972C[0x904062[slot]], both bytes read in place.
-unsigned PartyRecord(unsigned slot) { return B(::bof3::Img(at::kMemberRecord.v) + B(::bof3::Img(at::kParty.v) + slot)); }
+unsigned PartyRecord(unsigned slot) { return BRest2g(::bof3::Img(at::kMemberRecord.v) + BRest2g(::bof3::Img(at::kParty.v) + slot)); }
 
 // A slide: the record's word at `off` (+4 x, +6 y) moves by `step`, and when
 // it is then past `bound` - signed, by `past` - it is held there and +3 goes
@@ -100,14 +100,14 @@ unsigned PartyRecord(unsigned slot) { return B(::bof3::Img(at::kMemberRecord.v) 
 // re-read before the compare and again before +3.
 enum class Past : std::uint8_t { kAbove, kAtOrAbove, kBelow, kAtOrBelow };
 void Slide(unsigned off, int step, short bound, Past past) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecRest2g();
     SetWord(moved + off, Word(moved + off) + static_cast<unsigned>(step));
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const short v = S(r + off);
     const bool hold = past == Past::kAbove ? v > bound : past == Past::kAtOrAbove ? v >= bound : past == Past::kBelow ? v < bound : v <= bound;
     if (!hold) return;
     SetWord(r + off, static_cast<std::uint16_t>(bound));
-    Rec()[3] = 0;
+    RecRest2g()[3] = 0;
 }
 // A slide bound of DIV-0041's faster slide, as widescreen.cpp holds it (docs/operand-store.md):
 // the imm32 of `mov ecx, imm32` (its low word is cx), or the imm16 of `cmp cx,
@@ -120,9 +120,9 @@ short Imm16Bound(U operand) { return Widescreen_SlideLogic(Widescreen_SlideBound
 // (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 void SlideOff(int step, U operand, Past past) {
     const short bound = Imm32Bound(operand);
-    const short x_read = S(Rec() + 4);
+    const short x_read = S(RecRest2g() + 4);
     Slide(4, step, bound, past);
-    Widescreen_SlideHeld(Rec(), x_read, bound);
+    Widescreen_SlideHeld(RecRest2g(), x_read, bound);
 }
 
 }  // namespace
@@ -137,7 +137,7 @@ void SlideOff(int step, U operand, Past past) {
 // stack.
 extern "C" void __cdecl BattleResultWin_LevelUpStates(void) {
     static const U kStates[1] = {bof3::addr::BattleResultWin_DrawLevelUp};
-    StackState("BattleResultWin_LevelUpStates", kStates, 1, Rec()[3], "+3");
+    StackState("BattleResultWin_LevelUpStates", kStates, 1, RecRest2g()[3], "+3");
 }
 
 // original 0x598810: the EXP party slot `slot` (a byte) still needs for its
@@ -153,7 +153,7 @@ extern "C" void __cdecl BattleResultWin_LevelUpStates(void) {
 // compare is unsigned, and the answer the whole eax.
 extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const U s = slot & 0xFF;
-    const unsigned id = B(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
+    const unsigned id = BRest2g(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex.v)(arg) & 0xFF;
     const unsigned char* const rec = At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
@@ -176,7 +176,7 @@ extern "C" void __cdecl Window_Handler5Kinds(void) {
     static const U kKinds[5] = {bof3::addr::GeneWin_GridStates, bof3::addr::GeneWin_ChoiceStates,
                                 bof3::addr::GeneWin_ListStates, bof3::addr::GeneWin_List2States,
                                 bof3::addr::GeneWin_List3States};
-    StackState("Window_Handler5Kinds", kKinds, 5, Rec()[2], "kind +2");
+    StackState("Window_Handler5Kinds", kKinds, 5, RecRest2g()[2], "kind +2");
 }
 
 // original 0x5988D0: kind 0 of handler 5, the gene grid: `call [esp + 4 +3]`
@@ -184,7 +184,7 @@ extern "C" void __cdecl Window_Handler5Kinds(void) {
 extern "C" void __cdecl GeneWin_GridStates(void) {
     static const U kStates[3] = {bof3::addr::GeneWin_GridOpen, bof3::addr::GeneWin_GridSlideIn,
                                  bof3::addr::GeneWin_GridSlideOut};
-    StackState("GeneWin_GridStates", kStates, 3, Rec()[3], "+3");
+    StackState("GeneWin_GridStates", kStates, 3, RecRest2g()[3], "+3");
 }
 
 // original 0x598900: the grid's open state: the record's +8 = 0x18 columns and
@@ -197,11 +197,11 @@ extern "C" void __cdecl GeneWin_GridStates(void) {
 // slot the call answers past the pool's 48 (0xFF when none is free) is a Fatal
 // here, where the original writes past the pool (docs/rest_2g.md section 7).
 extern "C" void __cdecl GeneWin_GridOpen(void) {
-    Rec()[8] = 0x18;
-    Rec()[9] = 0x11;
+    RecRest2g()[8] = 0x18;
+    RecRest2g()[9] = 0x11;
     for (unsigned i = 0; i < 0x12; ++i) At(::bof3::Img(at::kGridWords.v) + 2 * i)[0] = 0;
     for (unsigned i = 0; i < 0x12; ++i) {
-        if (B(::bof3::Img(at::kGridCells.v) + i) == 0) continue;
+        if (BRest2g(::bof3::Img(at::kGridCells.v) + i) == 0) continue;
         const unsigned slot = SH_CALL(BattleTask_Create)(0, 9) & 0xFFu;
         if (slot >= at::kTaskCount)
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
@@ -212,7 +212,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
         task[0xB] = static_cast<unsigned char>(i);
     }
     SH_CALL(BattleTask_Create)(0, 0xA);
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     r[3] = static_cast<unsigned char>(r[3] + 1);
 }
 
@@ -223,7 +223,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
 // 0x42, which the next frame sets back; +3 is never changed here.
 extern "C" void __cdecl GeneWin_GridSlideIn(void) {
     SH_CALL(GeneWin_DrawGrid)();
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const short x = S(r + 4);
     if (r[0xA] == 0) rv::As<records::WindowRecord>(r)->x = x > 0x42 ? static_cast<unsigned>(x - 0x20) : 0x42u;
     else rv::As<records::WindowRecord>(r)->x = x < 0x42 ? static_cast<unsigned>(x + 0x20) : 0x42u;
@@ -240,13 +240,13 @@ extern "C" void __cdecl GeneWin_GridSlideIn(void) {
 // docs/ultrawide-slides.md).
 extern "C" void __cdecl GeneWin_GridSlideOut(void) {
     {
-        unsigned char* const w = Rec();
+        unsigned char* const w = RecRest2g();
         const bool right = w[0xA] == 0;
         Widescreen_SlideDraw(w, Imm16Bound(right ? at::kGridOutRight.v : at::kGridOutLeft.v), right ? 0x20 : -0x20);
     }
     SH_CALL(GeneWin_DrawGrid)();
-    Widescreen_SlideUndraw(Rec());
-    unsigned char* const r = Rec();
+    Widescreen_SlideUndraw(RecRest2g());
+    unsigned char* const r = RecRest2g();
     const short x = S(r + 4);
     if (r[0xA] == 0) {
         if (x >= Imm16Bound(at::kGridOutRight.v)) {
@@ -272,7 +272,7 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
 // party slot +0xA.
 extern "C" void __cdecl MenuList_StatsPanel(void) {
     State("MenuList_StatsPanel", ::bof3::Img(MenuList_StatsStates_addr), 7);
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     SH_CALL(Menu_DrawStatsPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]));
 }
 
@@ -280,7 +280,7 @@ extern "C" void __cdecl MenuList_StatsPanel(void) {
 // Menu_DrawEquipPanel likewise.
 extern "C" void __cdecl MenuList_EquipPanel(void) {
     State("MenuList_EquipPanel", ::bof3::Img(MenuList_EquipStates_addr), 3);
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     SH_CALL(Menu_DrawEquipPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]));
 }
 
@@ -288,7 +288,7 @@ extern "C" void __cdecl MenuList_EquipPanel(void) {
 // Menu_DrawExpPanel likewise with `next` 0 (the record's EXP).
 extern "C" void __cdecl MenuList_ExpPanel(void) {
     State("MenuList_ExpPanel", ::bof3::Img(MenuList_ExpStates_addr), 3);
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     SH_CALL(Menu_DrawExpPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]), 0);
 }
 
@@ -296,7 +296,7 @@ extern "C" void __cdecl MenuList_ExpPanel(void) {
 // Menu_DrawExpPanel with `next` 1 (the EXP of the next level).
 extern "C" void __cdecl MenuList_NextLevelPanel(void) {
     State("MenuList_NextLevelPanel", ::bof3::Img(MenuList_NextLevelStates_addr), 3);
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     SH_CALL(Menu_DrawExpPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]), 1);
 }
 
@@ -308,19 +308,19 @@ extern "C" void __cdecl MenuList_NextLevelPanel(void) {
 extern "C" void __cdecl MenuList_WideTitleBox(void) {
     State("MenuList_WideTitleBox", ::bof3::Img(MenuList_WideTitleStates_addr), 3);
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned char* r = Rec();
+    const unsigned char* r = RecRest2g();
     SH_CALL(Menu_DrawTitleBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x118, 0x13, static_cast<int>(colour));
-    r = Rec();
+    r = RecRest2g();
     if (Word(r + 0x10) == 0) return;
     const unsigned char* text = SH_CALL(Msg_SystemPtr)(Word(r + 0x10));
-    r = Rec();
+    r = RecRest2g();
     SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 7) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->y + 3) & 0xFFFF), 0, 0xFF,
                          text);
-    r = Rec();
+    r = RecRest2g();
     const unsigned id = Word(r + 0x10);
     if (id != 0x1A && id != 0x31) return;
     text = SH_CALL(Msg_SystemPtr)(0xF);
-    r = Rec();
+    r = RecRest2g();
     SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 7) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->y + 3) & 0xFFFF), 0, 0xFF,
                          text);
 }
@@ -330,7 +330,7 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
 // MenuList_CursorBoxSizes (four pairs; the byte unbounded, read in place), the
 // blink +0xB, the sides 6.
 extern "C" void __cdecl MenuList_CursorBox(void) {
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     const U pair = ::bof3::Img(MenuList_CursorBoxSizes_addr) + 4u * r[0xA];
     SH_CALL(Menu_DrawCursorBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
 }
@@ -345,15 +345,15 @@ extern "C" void __cdecl MenuList_CursorBox(void) {
 // wheel and after the step.
 extern "C" void __cdecl MenuList_IconWheel(void) {
     State("MenuList_IconWheel", ::bof3::Img(MenuList_IconWheelStates_addr), 3);
-    const unsigned char* r = Rec();
+    const unsigned char* r = RecRest2g();
     const std::int32_t angle = Sx(r + 0x10);
     const U above = static_cast<U>(angle);
     SH_CALL(Menu_DrawIconWheel)(static_cast<int>((above & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x), rv::As<records::WindowRecord>(r)->y,
                                 (above & 0xFFFFFF00u) | r[0xA], r[0xC], angle);
-    unsigned char* const lit = Rec();
+    unsigned char* const lit = RecRest2g();
     if (lit[0xC] == 0) return;
     SetWord(lit + 0x10, Word(lit + 0x10) + 0x40u);
-    r = Rec();
+    r = RecRest2g();
     SH_CALL(Menu_DrawCursorBox)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 4) & 0xFFFF), rv::As<records::WindowRecord>(r)->y, 0x44, 0x34, 0, 6);
 }
 
@@ -361,7 +361,7 @@ extern "C" void __cdecl MenuList_IconWheel(void) {
 // Menu_DrawItemList of the record (re-read).
 extern "C" void __cdecl MenuList_ItemList(void) {
     State("MenuList_ItemList", ::bof3::Img(MenuList_ItemListStates_addr), 5);
-    SH_CALL(Menu_DrawItemList)(Rec());
+    SH_CALL(Menu_DrawItemList)(RecRest2g());
 }
 
 // original 0x59A640, kind 13: the state from MenuList_ButtonRowStates, then
@@ -370,13 +370,13 @@ extern "C" void __cdecl MenuList_ItemList(void) {
 // register that held the pointer).
 extern "C" void __cdecl MenuList_ButtonRow(void) {
     State("MenuList_ButtonRow", ::bof3::Img(MenuList_ButtonRowStates_addr), 3);
-    const unsigned char* const r = Rec();
+    const unsigned char* const r = RecRest2g();
     SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x), rv::As<records::WindowRecord>(r)->y, r[0xA], r[0xB], 0);
 }
 
 // original 0x59A6B0, kind 15 (no state table): MenuList_DrawLabelList of the
 // record.
-extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelList)(Rec()); }
+extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelList)(RecRest2g()); }
 
 // original 0x59A6C0: a list of labels in the window `rec` (kind 15's draw):
 // row +0xA of the label rows 0x66B158 (6 bytes: a count, then a text index a
@@ -396,15 +396,15 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto y = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->y + d) & 0xFFFF); };
     auto text = [](unsigned index) { return At(static_cast<U>(Long(At(::bof3::Img(at::kLabelTexts.v) + 4 * index)))); };
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned count = B(::bof3::Img(at::kLabelRows.v) + 6u * rec[0xA]);
+    const unsigned count = BRest2g(::bof3::Img(at::kLabelRows.v) + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));
     SH_CALL(Menu_DrawPieces)(x(0), y(0), At(::bof3::Img(at::kLabelPieces.v)), 1);
     unsigned row = 0;
     unsigned line = 6u * rec[0xA];
-    if (B(::bof3::Img(at::kLabelRows.v) + line) != 0) {
+    if (BRest2g(::bof3::Img(at::kLabelRows.v) + line) != 0) {
         do {
-            const unsigned char* const t = text(B(::bof3::Img(at::kLabelRows.v) + 1 + line + row));
+            const unsigned char* const t = text(BRest2g(::bof3::Img(at::kLabelRows.v) + 1 + line + row));
             const unsigned dy = row << 4;
             if (row == rec[0xC]) {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 7, 0xFF, t);
@@ -419,7 +419,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
             SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), At(::bof3::Img(at::kLabelRowPieces.v)), 1);
             row = (row + 1) & 0xFF;
             line = 6u * rec[0xA];
-        } while (row < B(::bof3::Img(at::kLabelRows.v) + line));
+        } while (row < BRest2g(::bof3::Img(at::kLabelRows.v) + line));
     }
     SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), At(::bof3::Img(at::kLabelEndPieces.v)), 1);
 }
@@ -432,7 +432,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
 // register that held it), and the record index x's upper three bytes.
 extern "C" void __cdecl MenuList_EquipCompare(void) {
     State("MenuList_EquipCompare", ::bof3::Img(MenuList_EquipCompareStates_addr), 5);
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const U set = static_cast<U>(Long(r + 0x20));
     const U x = (set & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x;
     const U record = (x & 0xFFFFFF00u) | PartyRecord(r[0xC]);
@@ -443,21 +443,21 @@ extern "C" void __cdecl MenuList_EquipCompare(void) {
 // Menu_DrawAbilityPanel of the record (re-read).
 extern "C" void __cdecl MenuList_AbilityPanel(void) {
     State("MenuList_AbilityPanel", ::bof3::Img(MenuList_AbilityStates_addr), 5);
-    SH_CALL(Menu_DrawAbilityPanel)(Rec());
+    SH_CALL(Menu_DrawAbilityPanel)(RecRest2g());
 }
 
 // original 0x59AA10, kind 18: the state from MenuList_ItemPanelStates, then
 // Menu_DrawItemPanel of the record.
 extern "C" void __cdecl MenuList_ItemPanel(void) {
     State("MenuList_ItemPanel", ::bof3::Img(MenuList_ItemPanelStates_addr), 5);
-    SH_CALL(Menu_DrawItemPanel)(Rec());
+    SH_CALL(Menu_DrawItemPanel)(RecRest2g());
 }
 
 // original 0x59AA30, kind 19: the state from MenuList_ReserveStates, then
 // 0x59AA80 (R2H's: the reserve list, menu_frame.cpp) of the record.
 extern "C" void __cdecl MenuList_ReservePanel(void) {
     State("MenuList_ReservePanel", ::bof3::Img(MenuList_ReserveStates_addr), 3);
-    SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList.v)(Rec());
+    SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList.v)(RecRest2g());
 }
 
 // ===========================================================================
@@ -498,13 +498,13 @@ extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past
 // 0x8031F4 plus 0x78 as an int, read after the step and before the record is
 // re-read; the store its low word.
 extern "C" void __cdecl MenuList_SlideLeftBesidePanel(void) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecRest2g();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x - 0x20u;
     const U panel = WindowRecords[4].x;
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     if (Sx(r + 4) >= static_cast<std::int32_t>(static_cast<short>(panel)) + 0x78) return;
     rv::As<records::WindowRecord>(r)->x = panel + 0x78;
-    Rec()[3] = 0;
+    RecRest2g()[3] = 0;
 }
 
 // original 0x59A0B0 (MenuList_PanelStates[5], MenuList_StatsStates[3]): up to
@@ -517,13 +517,13 @@ extern "C" void __cdecl MenuList_SlideUpTo62Le(void) { Slide(6, -0x10, 0x3E, Pas
 // read from the record re-read after the step; the bound an int, the store its
 // low word.
 extern "C" void __cdecl MenuList_SlideDownToPanelRow(void) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecRest2g();
     rv::As<records::WindowRecord>(moved)->y = rv::As<records::WindowRecord>(moved)->y + 0x10u;
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const std::int32_t bound = 0x36 * static_cast<std::int32_t>(r[0xA]) + 0x3E;
     if (Sx(r + 6) < bound) return;
     rv::As<records::WindowRecord>(r)->y = static_cast<unsigned>(bound);
-    Rec()[3] = 0;
+    RecRest2g()[3] = 0;
 }
 
 // original 0x59A130 (MenuList_StatsStates[5]): left to x -180 or less;
@@ -544,25 +544,25 @@ extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLe
 // past 0x140 + 75 (+0xB & 1) - off the right, one column further for an odd
 // +0xB. As the original has it: +0xB from the record re-read after the step.
 extern "C" void __cdecl MenuList_SlideRightOffColumn(void) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecRest2g();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x + 0x20u;
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const std::int32_t bound = 75 * static_cast<std::int32_t>(r[0xB] & 1) + 0x140;
     if (Sx(r + 4) <= bound) return;
     rv::As<records::WindowRecord>(r)->x = static_cast<unsigned>(bound);
-    Rec()[3] = 0;
+    RecRest2g()[3] = 0;
 }
 
 // original 0x59A510 (MenuList_IconWheelStates[2]): left by 0x20 until x is
 // below 75 ((+0xB & 1) + 2) - 150 or 225 - where it takes that.
 extern "C" void __cdecl MenuList_SlideLeftToColumn(void) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecRest2g();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x - 0x20u;
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecRest2g();
     const std::int32_t bound = 75 * (static_cast<std::int32_t>(r[0xB] & 1) + 2);
     if (Sx(r + 4) >= bound) return;
     rv::As<records::WindowRecord>(r)->x = static_cast<unsigned>(bound);
-    Rec()[3] = 0;
+    RecRest2g()[3] = 0;
 }
 
 // original 0x59A610 (MenuList_ItemListStates[4], MenuList_ItemPanelStates[4]
