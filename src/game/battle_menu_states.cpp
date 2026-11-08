@@ -67,7 +67,7 @@ namespace {
 using Handler = void (__cdecl*)();
 
 // A pointer the original keeps in a dword of .data / .bss, read afresh.
-unsigned char* PtrAt(std::uint32_t address) {
+unsigned char* PtrAtBattleMenuStates(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
@@ -75,7 +75,7 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // wherever the original re-reads it.
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
-unsigned char* Command() { return PtrAt(::bof3::Img(at::kCommandRecord.v)); }
+unsigned char* CommandBattleMenuStates() { return PtrAtBattleMenuStates(::bof3::Img(at::kCommandRecord.v)); }
 unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 unsigned char* List() { return At(::bof3::Img(Window16_addr)); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
@@ -89,7 +89,7 @@ Handler Entry(std::uint32_t table, unsigned i) {
 unsigned ListItem() {
     const unsigned category = List()[0xA];
     const unsigned row = List()[0xC];
-    return PtrAt(::bof3::Img(at::kInventoryIds.v) + 4 * category)[row];
+    return PtrAtBattleMenuStates(::bof3::Img(at::kInventoryIds.v) + 4 * category)[row];
 }
 // The list's item's flag byte: 0x591810(category, item).
 unsigned char ListItemFlags() {
@@ -106,21 +106,21 @@ unsigned LastQueueEntry() { return ((BattleActorCopies_QueueWrite - 1u) & 0xF) *
 // as the original pushes eax. The command pointer is read before and again
 // after the calls; the enemy count after Input_AutoRepeat (and, for the
 // second, after the first's sound).
-void StepEnemyTarget(unsigned repeat) {
+void StepEnemyTargetBattleMenuStates(unsigned repeat) {
     if (repeat & 0x2000) {
         const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
+        const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.default_target(static_cast<unsigned>(wrapped));
-        Command()[0] = target;
+        CommandBattleMenuStates()[0] = target;
         g.sound(0x101);
     }
     if (repeat & 0x8000) {
         const long high = Battle_EnemyCount + 2;
-        const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
+        const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
         const long wrapped = g.wrap_index(high, 3, value);
         const unsigned char target = g.prev_target(static_cast<unsigned>(wrapped));
-        Command()[0] = target;
+        CommandBattleMenuStates()[0] = target;
         g.sound(0x101);
     }
 }
@@ -143,7 +143,7 @@ extern "C" void __cdecl BattleAttackCmd_Dispatch(void) { Entry(::bof3::Img(Battl
 // the state moves on. The state byte is read after the banner call.
 extern "C" void __cdecl BattleAttackCmd_Begin(void) {
     const unsigned char target = g.default_target(3);
-    Command()[0] = target;
+    CommandBattleMenuStates()[0] = target;
     g.banner_message(2, 0);
     const unsigned char state = static_cast<unsigned char>(BattleE4_Step3 + 1);
     BattleE4_Picking = 1;
@@ -154,7 +154,7 @@ extern "C" void __cdecl BattleAttackCmd_Begin(void) {
 // original 0x448020: state 1. A cancel button pressed goes to state 3, a
 // confirm button to state 2 (cancel first, both tested against the pressed
 // word's 16 bits); otherwise the pressed directions go to Input_AutoRepeat
-// and its right (0x2000) and left (0x8000) move the target (StepEnemyTarget),
+// and its right (0x2000) and left (0x8000) move the target (StepEnemyTargetBattleMenuStates),
 // right first, each with cue 0x101.
 extern "C" void __cdecl BattleAttackCmd_PickEnemy(void) {
     const unsigned pad = Input_Pressed;
@@ -166,7 +166,7 @@ extern "C" void __cdecl BattleAttackCmd_PickEnemy(void) {
         BattleE4_Step3 = 2;
         return;
     }
-    StepEnemyTarget(g.auto_repeat(pad & 0xF000));
+    StepEnemyTargetBattleMenuStates(g.auto_repeat(pad & 0xF000));
 }
 
 // original 0x4480E0: state 2, the confirm. Cue 0x104; the pick flag cleared;
@@ -175,10 +175,10 @@ extern "C" void __cdecl BattleAttackCmd_PickEnemy(void) {
 // command step 1 with the command and its state 0.
 extern "C" void __cdecl BattleAttackCmd_Confirm(void) {
     g.sound(0x104);
-    unsigned char* command = Command();
+    unsigned char* command = CommandBattleMenuStates();
     BattleE4_Picking = 0;
     command[1] = 0;
-    command = Command();
+    command = CommandBattleMenuStates();
     rv::Store<std::int32_t>(rv::As<records::ActionRecord>(command)->flags, static_cast<std::int32_t>(rv::As<records::ActionRecord>(command)->flags) | 1);
     Acting()[1] = 2;
     const unsigned char chosen = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
@@ -221,7 +221,7 @@ extern "C" void __cdecl BattleItemCmd_QueuePrompt(void) {
 // ItemMenu_SetupForParty (window record 16 from the saved page, top and
 // cursor 0x904605..7); the sub-state 0 and the state on.
 extern "C" void __cdecl BattleItemCmd_OpenList(void) {
-    Command()[1] = 5;
+    CommandBattleMenuStates()[1] = 5;
     g.setup_for_party();
     const unsigned char state = static_cast<unsigned char>(BattleE4_Step3 + 1);
     BattleE4_Step4 = 0;
@@ -377,9 +377,9 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
 
     const unsigned chosen_category = list[0xA];
     const unsigned chosen_item = ListItem();
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, (chosen_category << 8) + chosen_item);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(CommandBattleMenuStates())->action_id, (chosen_category << 8) + chosen_item);
     const unsigned use_category = list[0xA];
-    const unsigned use_item = Command()[2];
+    const unsigned use_item = CommandBattleMenuStates()[2];
     const unsigned mode = list[8];
     if (g.item_can_use(mode, 0, use_category, use_item) == 0) {
         g.sound(0x107);
@@ -407,7 +407,7 @@ extern "C" void __cdecl BattleItemCmd_TargetKind(void) {
         return;
     }
     if (flags & 0x80) {
-        Command()[0] = 0xC0;
+        CommandBattleMenuStates()[0] = 0xC0;
         BattleE4_Step3 = 4;
         BattleE4_Step4 = 3;
         return;
@@ -415,7 +415,7 @@ extern "C" void __cdecl BattleItemCmd_TargetKind(void) {
     unsigned char target;
     if (flags & 0x10) target = (flags & 0x20) ? 0x40 : 0x80;
     else target = Acting()[5];
-    Command()[0] = target;
+    CommandBattleMenuStates()[0] = target;
     BattleE4_Step3 = 4;
     BattleE4_Step4 = 3;
 }
@@ -437,17 +437,17 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
     const unsigned char flags = ListItemFlags();
     if (flags & 0x20) {
         const unsigned char target = g.default_target(3);
-        Command()[0] = target;
+        CommandBattleMenuStates()[0] = target;
         BattleE4_Step4 = 1;
         SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
         BattleE4_Picking = 1;
         return;
     }
     if (g.return_true() != 0) {
-        Command()[0] = 0;
+        CommandBattleMenuStates()[0] = 0;
     } else {
         const unsigned char target = g.default_target(0);
-        Command()[0] = target;
+        CommandBattleMenuStates()[0] = target;
     }
     BattleE4_Step4 = 2;
     SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
@@ -458,7 +458,7 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
 // 3. Otherwise Input_AutoRepeat(pressed & 0xF000): up or down (0x5000) with
 // the item's flag bit 0x80 crosses to the party - target 0 (Battle_ReturnTrue)
 // or Battle_DefaultTarget(0), sub-state 2, cue 0x101 - and ends there; then
-// right and left as the attack's (StepEnemyTarget).
+// right and left as the attack's (StepEnemyTargetBattleMenuStates).
 extern "C" void __cdecl BattleItemCmd_PickEnemy(void) {
     const unsigned pad = Input_Pressed;
     if (Field_CancelButtons & pad) {
@@ -472,16 +472,16 @@ extern "C" void __cdecl BattleItemCmd_PickEnemy(void) {
     const unsigned repeat = g.auto_repeat(pad & 0xF000);
     if ((repeat & 0x5000) && (ListItemFlags() & 0x80)) {
         if (g.return_true() != 0) {
-            Command()[0] = 0;
+            CommandBattleMenuStates()[0] = 0;
         } else {
             const unsigned char target = g.default_target(0);
-            Command()[0] = target;
+            CommandBattleMenuStates()[0] = target;
         }
         BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 1);
         g.sound(0x101);
         return;
     }
-    StepEnemyTarget(repeat);
+    StepEnemyTargetBattleMenuStates(repeat);
 }
 
 // original 0x4488C0: sub-state 2, a member. Cancel -> 4, confirm -> 3.
@@ -506,7 +506,7 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
     const unsigned repeat = g.auto_repeat(pad & 0xF000);
     if ((repeat & 0x5000) && (ListItemFlags() & 0x80)) {
         const unsigned char target = g.default_target(3);
-        Command()[0] = target;
+        CommandBattleMenuStates()[0] = target;
         BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         g.sound(0x101);
         return;
@@ -515,30 +515,30 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
     if (repeat & 0x2000) {
         if (g.return_true() != 0) {
             const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
+            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
             const long wrapped = g.wrap_index(high, 0, value);
-            Command()[0] = static_cast<unsigned char>(wrapped);
+            CommandBattleMenuStates()[0] = static_cast<unsigned char>(wrapped);
         } else {
             const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(Command()[0])) + 1;
+            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) + 1;
             const long wrapped = g.wrap_index(high, 0, value);
             const unsigned char target = g.default_target(static_cast<unsigned>(wrapped));
-            Command()[0] = target;
+            CommandBattleMenuStates()[0] = target;
         }
         g.sound(0x101);
     }
     if (repeat & 0x8000) {
         if (g.return_true() != 0) {
             const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
+            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
             const long wrapped = g.wrap_index(high, 0, value);
-            Command()[0] = static_cast<unsigned char>(wrapped);
+            CommandBattleMenuStates()[0] = static_cast<unsigned char>(wrapped);
         } else {
             const long high = party_high();
-            const long value = static_cast<long>(static_cast<signed char>(Command()[0])) - 1;
+            const long value = static_cast<long>(static_cast<signed char>(CommandBattleMenuStates()[0])) - 1;
             const long wrapped = g.wrap_index(high, 0, value);
             const unsigned char target = g.prev_target(static_cast<unsigned>(wrapped));
-            Command()[0] = target;
+            CommandBattleMenuStates()[0] = target;
         }
         g.sound(0x101);
     }
@@ -555,26 +555,26 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
 // pointer 0x656B14[4] is 0; the list's left and right keep it to 0..3).
 extern "C" void __cdecl BattleItemCmd_Commit(void) {
     g.sound(0x104);
-    unsigned char* command = Command();
+    unsigned char* command = CommandBattleMenuStates();
     BattleE4_Picking = 0;
     command[1] = 5;
     Acting()[1] = 2;
     const unsigned char chosen = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
-    command = Command();
+    command = CommandBattleMenuStates();
     const unsigned char row = List()[0xC];
     BattleActorCopies_EntryCount = chosen;
     At(::bof3::Img(at::kQueue.v) + 1 + LastQueueEntry())[0] = 1;
     command[0xA] = row;
     const unsigned index = static_cast<std::uint32_t>(Long(List() + 0xC)) & 0xFF;
     const unsigned category = List()[0xA];
-    unsigned char* const count = PtrAt(::bof3::Img(at::kInventoryCounts.v) + 4 * category) + index;
+    unsigned char* const count = PtrAtBattleMenuStates(::bof3::Img(at::kInventoryCounts.v) + 4 * category) + index;
     if (*count > 1) {
         *count = static_cast<unsigned char>(*count - 1);
     } else {
-        PtrAt(::bof3::Img(at::kInventoryIds.v) + 4 * category)[index] = 0;
+        PtrAtBattleMenuStates(::bof3::Img(at::kInventoryIds.v) + 4 * category)[index] = 0;
         const unsigned index2 = static_cast<std::uint32_t>(Long(List() + 0xC)) & 0xFF;
         const unsigned category2 = List()[0xA];
-        PtrAt(::bof3::Img(at::kInventoryCounts.v) + 4 * category2)[index2] = 0;
+        PtrAtBattleMenuStates(::bof3::Img(at::kInventoryCounts.v) + 4 * category2)[index2] = 0;
     }
     g.free_windows();
     BattleE4_Step2 = 0;
