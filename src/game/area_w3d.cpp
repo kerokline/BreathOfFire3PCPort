@@ -761,7 +761,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
 // and does not fault). With the switch on, an unplaced marker (+0x54 0) is
 // placed first by the zone-1 branch itself, as a player entering zone 4 from
 // zone 1 has it.
-static std::uint8_t g_place_marker = 0;
+namespace area_w3d { std::uint8_t g_place_marker = 0; }
 
 namespace {
 void PlaceMarker(unsigned char& zone) {
@@ -780,7 +780,7 @@ extern "C" void __cdecl Area135_Init(void) {
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x30) = static_cast<unsigned char>(B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x30) | 1);
     }
     if (zone == 4 || zone == 6 || zone == 7) {
-        if (g_place_marker && MarkerUnplaced()) {
+        if (area_w3d::g_place_marker && MarkerUnplaced()) {
             bof3::Log("DIV-0180    area 135 zone %u: the marker was never placed; placed as from zone 1", static_cast<unsigned>(zone));
             PlaceMarker(zone);
         }
@@ -971,7 +971,7 @@ void AreaW3d_Inject() {
     {
         // DIV-0180: after the self-test, which compared Capcom's init.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("Area135MarkerPlaced", Low32(&g_place_marker), &was, &is, 1);
+        bof3::PatchBytes("Area135MarkerPlaced", Low32(&area_w3d::g_place_marker), &was, &is, 1);
         bof3::Log("DIV-0180    area 135 places its marker before showing it when it was never placed (on unless the line above says OFF)");
     }
     BOF3_INJECT(Area135_ChoiceStartTail);
