@@ -940,8 +940,10 @@ is expected; the doc says so.
    overlay (`BOSS012`, `BOSS018`, `BOSS029`, `BOSS034`, `BOSS035`), no unit
    in two overlays and no two neighbours sharing one - so the rule was
    dropped and the sheet regenerated: 613 proposed files, 153 rows that want
-   a call, 516 settled. Still open: the 36 "the same names" rows, the 37 PSX
-   flags that are one overlay's own code, row 585.
+   a call, 516 settled. **The 516 settled rows are confirmed** (the owner,
+   later the same evening): every stand-alone unit keeps its own file. Still
+   open: the 36 "the same names" rows, the 37 PSX flags that are one
+   overlay's own code, row 585.
 10. **The gate for shared state** (group a's three classes, section 4): a
    promotion that changes the object is refused today. Do classes 2 (data
    layout) and 3 (an x86_64 indirect call through a now-external pointer)
