@@ -106,7 +106,7 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xF
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
-int S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
+int S16MagicS32(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -125,7 +125,7 @@ int MulShl4(int a, int b) {
 }
 
 // `fild dword` then `fstp dword`: an integer vertex as a float.
-void PutFloat(unsigned char* p, int v) {
+void PutFloatMagicS32(unsigned char* p, int v) {
     const float f = static_cast<float>(v);
     std::memcpy(p, &f, sizeof f);
 }
@@ -487,17 +487,17 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, S16(Sc() + 0x2E));
-        PutFloat(p + 0xC, S16(Sc() + 0x30));
+        PutFloatMagicS32(p + 8, S16MagicS32(Sc() + 0x2E));
+        PutFloatMagicS32(p + 0xC, S16MagicS32(Sc() + 0x30));
         int v = Sin(a);
-        PutFloat(p + 0x18, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x2E)));
+        PutFloatMagicS32(p + 0x18, Add(MulSar(v, SS(0), 12), S16MagicS32(Sc() + 0x2E)));
         v = Cos(a);
-        PutFloat(p + 0x1C, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x30)));
+        PutFloatMagicS32(p + 0x1C, Add(MulSar(v, SS(0), 12), S16MagicS32(Sc() + 0x30)));
         a += 0x200;
         v = Sin(a);
-        PutFloat(p + 0x28, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x2E)));
+        PutFloatMagicS32(p + 0x28, Add(MulSar(v, SS(0), 12), S16MagicS32(Sc() + 0x2E)));
         v = Cos(a);
-        PutFloat(p + 0x2C, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x30)));
+        PutFloatMagicS32(p + 0x2C, Add(MulSar(v, SS(0), 12), S16MagicS32(Sc() + 0x30)));
         p[4] = Mem(::bof3::Img(kS.v) + 0xE)[0];
         const auto fifth = static_cast<unsigned char>(SS(0xE) / 5);
         p[5] = fifth;
@@ -653,9 +653,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
         unsigned char out[12];
         v[0] = BeamX();
         int c = Cos(static_cast<int>(angle));
-        v[1] = RingZ(c, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
+        v[1] = RingZ(c, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
         int s = Sin(static_cast<int>(angle));
-        v[2] = RingH(s, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
+        v[2] = RingH(s, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
         Project(v, out);
         std::memcpy(p + 8, out, 12);
         v[0] = Add(BeamX(), 0x100000);
@@ -665,9 +665,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
         std::memcpy(p + 0x14, out, 12);
         v[0] = BeamX();
         c = Cos(static_cast<int>(angle));
-        v[1] = RingZ(c, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
+        v[1] = RingZ(c, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
         s = Sin(static_cast<int>(angle));
-        v[2] = RingH(s, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
+        v[2] = RingH(s, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x10)));
         Project(v, out);
         std::memcpy(p + 0x20, out, 12);
         v[0] = Add(BeamX(), 0x100000);
@@ -698,9 +698,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
     SetLong(point, x);
     unsigned a = angle & 0xFFFF;
     int c = Cos(static_cast<int>(a));
-    SetLong(point + 4, RingZ(c, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
+    SetLong(point + 4, RingZ(c, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
     int s = Sin(static_cast<int>(a));
-    SetLong(point + 8, RingH(s, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
+    SetLong(point + 8, RingH(s, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
     MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
     for (unsigned n = 0x80; n != 0; --n) {
         x = Add(x, step);
@@ -711,9 +711,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
         SetLong(point, Add(static_cast<std::int32_t>((static_cast<std::uint32_t>(r & 0xFFF) - 0x800u) << 4), x));
         a = angle & 0xFFFF;
         c = Cos(static_cast<int>(a));
-        SetLong(point + 4, RingZ(c, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
+        SetLong(point + 4, RingZ(c, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
         s = Sin(static_cast<int>(a));
-        SetLong(point + 8, RingH(s, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
+        SetLong(point + 8, RingH(s, S16MagicS32(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
         MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
         MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(::bof3::Img(kSpiralLast.v)));
     }
@@ -826,10 +826,10 @@ S32_EXPORT unsigned char __cdecl EyeBeamSparks_Draw(void) {
             v[0] = BeamX();
             const int c = Cos(Word(Mem(e) + 4));
             unsigned char* cur = SparkCurrent();
-            v[1] = Add(MulSar(c, S16(cur + 2), 4), BeamZ());
+            v[1] = Add(MulSar(c, S16MagicS32(cur + 2), 4), BeamZ());
             const int s = Sin(Word(cur + 4));
             cur = SparkCurrent();
-            v[2] = Add(MulShl4(s, S16(cur + 2)), BeamH());
+            v[2] = Add(MulShl4(s, S16MagicS32(cur + 2)), BeamH());
             Project(v, out);
             cur = SparkCurrent();
             MH_AT(DiscFn, bof3::addr::EyeBeamSpark_DrawDisc)(out, Word(cur + 6), 0x80, 0);
