@@ -65,8 +65,9 @@ a PlayStation or PSP disc image of *Breath of Fire III*. Nothing you own is
 modified; everything the game reads is built on your machine from your own
 copies.
 
-There is an alpha build packaged with the necessary external Python dependencies
-and a quick GUI. The goal is to sunset it eventually, but it is working for now.
+There is a beta build, packaged with the Python it needs and a launcher: see
+the [releases page](https://github.com/kerokline/BreathOfFire3PCPort/releases).
+The goal is to sunset it eventually, but it is working for now.
 
 For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
 
