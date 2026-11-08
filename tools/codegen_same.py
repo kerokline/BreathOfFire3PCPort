@@ -526,6 +526,10 @@ class Normaliser:
         if not (sec["flags"] & SCN_CNT_CODE):
             if sec["flags"] & SCN_CNT_UNINIT or not sec["data"]:
                 return [f"zero[{end - start}]"]
+            # an initialised symbol ends at the next anchor too: what follows it unnamed but referenced
+            # (a string literal, another constant) is compared where it is referenced, so a move that
+            # takes those items to another object does not read as a change of this symbol
+            end = next((x for x in self.sorted_anchors.get(secn, []) if start < x < end), end)
             return [self.render_data(secn, start, end, depth)]
         import capstone
         raw = bytearray(sec["data"][start:end])
