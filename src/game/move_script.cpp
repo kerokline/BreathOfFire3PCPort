@@ -33,7 +33,7 @@ using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, u
 // original's copy and for ours alike. The two tables the flow pass calls
 // through (the area's handlers, MoveScript_CounterOps) are read from memory,
 // as the original reads them; the fuzz swaps their contents instead.
-struct Callees {
+struct CalleesMoveScript {
     int (__cdecl* kind)();
     void (__cdecl* move)(unsigned char*, unsigned char);
     void (__cdecl* move_kind2)(unsigned char);
@@ -57,7 +57,7 @@ struct Callees {
     unsigned char (__cdecl* test_fb)(short, short);
     unsigned char (__cdecl* test_fc)(short, short);
 };
-const Callees kOriginals = {
+const CalleesMoveScript kOriginalsMoveScript = {
     MoveScript_ObjectKind, MoveCmd_Move, MoveCmd_MoveKind2,
     MoveScript_Group6, MoveScript_Group8, MoveScript_Group9, MoveScript_GroupC, MoveScript_GroupD, MoveScript_GroupE,
     MoveScript_GroupB, MoveScript_FindLabel, MoveScript_Variable, ObjTrio_ClearBit40, ObjTrio_SetBit40,
@@ -65,7 +65,7 @@ const Callees kOriginals = {
     MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
     MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
 };
-Callees g = kOriginals;
+CalleesMoveScript g = kOriginalsMoveScript;
 
 // Ops 0D and F3 place an object: the coordinate words of Sprite_Current, or
 // of Sprite_Kind2 itself on the kind-2 path.
@@ -568,7 +568,7 @@ const auto kAreaStubs = AreaStubs(std::make_index_sequence<256>());
 void* const kCounterStubs[4] = {reinterpret_cast<void*>(&StubCounter<0>), reinterpret_cast<void*>(&StubCounter<1>),
                                 reinterpret_cast<void*>(&StubCounter<2>), reinterpret_cast<void*>(&StubCounter<3>)};
 
-const Callees kStubs = {
+const CalleesMoveScript kStubs = {
     StubKind, StubMove, StubMoveKind2,
     StubGroup<6>, StubGroup<8>, StubGroup<9>, StubGroup<12>, StubGroup<13>, StubGroup<14>,
     StubGroupB, StubFindLabel, StubVariable, StubTrioClear, StubTrioSet,
@@ -784,7 +784,7 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
                       "position %04X / %04X, log %u / %u", round, start, their_out.result, our_out.result,
                       Pos(their_out.object), Pos(our_out.object), their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    g = kOriginalsMoveScript;
     std::memcpy(MoveScript_CounterOps, saved_counter_ops, sizeof saved_counter_ops);
     Field_State = saved_state;
     Apply(saved);
