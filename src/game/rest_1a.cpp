@@ -30,30 +30,30 @@ namespace {
 
 
 namespace at = rest_1a::at;
-using U = std::uint32_t;
+using URest1a = std::uint32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::Word;
 
-unsigned char& B(U a) { return *At(a); }
-std::int32_t L(U a) { return Long(At(a)); }
+unsigned char& B(URest1a a) { return *At(a); }
+std::int32_t L(URest1a a) { return Long(At(a)); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
 // ObjTrio's record i (stride 0x14C), the index unchecked as the original's.
-const unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
+const unsigned char* MemberRest1a(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
-U StepX(unsigned d) { return static_cast<U>(L(::bof3::Img(at::kSteps.v) + d * 8)); }
-U StepZ(unsigned d) { return static_cast<U>(L(::bof3::Img(at::kSteps.v) + d * 8 + 4)); }
+URest1a StepXRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(at::kSteps.v) + d * 8)); }
+URest1a StepZRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(at::kSteps.v) + d * 8 + 4)); }
 
 // `cdq; xor eax, edx; sub eax, edx`: the absolute value with the original's
 // wrap (the most negative stays negative).
 std::int32_t Abs32(std::int32_t v) {
-    const auto u = static_cast<U>(v);
-    const U s = static_cast<U>(v >> 31);
+    const auto u = static_cast<URest1a>(v);
+    const URest1a s = static_cast<URest1a>(v >> 31);
     return static_cast<std::int32_t>((u ^ s) - s);
 }
 
@@ -66,13 +66,13 @@ unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((sta
 // aborts at the table's own count (its symbols.toml count), before the read -
 // the rule all seven of wave one's groups share (docs/rest_1b.md section 6).
 // While the fuzz runs, the entries are its recorders.
-using Handler = void (__cdecl*)();
-Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
-    const U cell = table + 4u * index;
+using HandlerRest1a = void (__cdecl*)();
+HandlerRest1a CodeAt(URest1a table, unsigned count, unsigned index, const char* who) {
+    const URest1a cell = table + 4u * index;
     if (index >= count)
         bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
                     count, static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(cell)));
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(L(cell))));
+    return reinterpret_cast<HandlerRest1a>(static_cast<std::uintptr_t>(static_cast<URest1a>(L(cell))));
 }
 
 // Sprite_ObjectAt's answer marked: bit 0 of the object's +0x80 - 0..0x1D a
@@ -110,10 +110,10 @@ using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 // it again on a steep slope with the ground above the sprite's +0x3E),
 // Sound_PlayEffect(u16 +0x2C + 0x100), the pose (+8 - 1) / 2 + 0x42 and +0xA =
 // 5. Then +0xB = 0 and +2 one on - a steep slope moves +2 by two.
-void SideProbe(U row, unsigned d) {
+void SideProbeRest1a(URest1a row, unsigned d) {
     const unsigned char* const s = Sc();
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(L(row));
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(L(row + 4));
+    const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + static_cast<URest1a>(L(row));
+    const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + static_cast<URest1a>(L(row + 4));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -131,16 +131,16 @@ void Form0Begin() {
     }
     const unsigned char* const s = Sc();
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + StepXRest1a(d);
+    const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + StepZRest1a(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
         Sc()[0x2B] = 1;
-        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
-        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
+        SideProbeRest1a(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
+        SideProbeRest1a(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x42));
         Sc()[0xA] = 5;
@@ -163,8 +163,8 @@ void Form0Resolve(CellFn pickup, const char* who) {
     if (Sc()[0xA] == 0) {
         const unsigned char* const s = Sc();
         const unsigned d = s[8];
-        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-        const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
+        const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
+        const URest1a z = static_cast<URest1a>(Long(s + 0x38)) + 2u * StepZRest1a(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
@@ -278,13 +278,13 @@ extern "C" void __cdecl Member_FormActionState(void) {
     if ((kind == 3 || kind == 6) && ObjTrio[0].state == 0xA && ObjTrio[0].step == 1) stop = 1;
     if (Field_Request != 0) stop = 1;
     const unsigned char* const s = Sc();
-    const unsigned char* const r = Member(s[6]);
-    const U k = r[9];
-    const U ax = static_cast<U>(rv::As<records::PartyMember>(r)->step_x) * k + static_cast<U>(rv::As<records::PartyMember>(r)->x);
-    const U az = static_cast<U>(rv::As<records::PartyMember>(r)->step_z) * k + static_cast<U>(rv::As<records::PartyMember>(r)->z);
+    const unsigned char* const r = MemberRest1a(s[6]);
+    const URest1a k = r[9];
+    const URest1a ax = static_cast<URest1a>(rv::As<records::PartyMember>(r)->step_x) * k + static_cast<URest1a>(rv::As<records::PartyMember>(r)->x);
+    const URest1a az = static_cast<URest1a>(rv::As<records::PartyMember>(r)->step_z) * k + static_cast<URest1a>(rv::As<records::PartyMember>(r)->z);
     const std::int32_t reach = r[0x70] != 0 ? 0x20000 : 0x18000;
-    if (Abs32(static_cast<std::int32_t>(static_cast<U>(rv::As<records::PartyMember>(s)->x) - ax)) > reach ||
-        Abs32(static_cast<std::int32_t>(static_cast<U>(rv::As<records::PartyMember>(s)->z) - az)) > reach)
+    if (Abs32(static_cast<std::int32_t>(static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) - ax)) > reach ||
+        Abs32(static_cast<std::int32_t>(static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) - az)) > reach)
         stop = 1;
     if ((Field_ScriptFlags2 & 0x1C00) == 0 && stop == 0)
         CodeAt(::bof3::Img(Field_FormActions_addr), Field_FormActions_count, AreaW0b_PartySet & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
@@ -312,7 +312,7 @@ extern "C" void __cdecl Member_JumpState(void) { CodeAt(::bof3::Img(Member_JumpS
 // other +0x137: at or below its height Leader_Rise, above it Leader_TurnBack.
 extern "C" void __cdecl Member_JumpAir(void) {
     const unsigned char* const s = Sc();
-    const unsigned char* const r = Member(s[6]);
+    const unsigned char* const r = MemberRest1a(s[6]);
     const auto theirs = static_cast<short>(rv::As<records::PartyMember>(r)->height_whole);
     unsigned char how;
     if (r[0x137] == 3) {
@@ -536,8 +536,8 @@ extern "C" void __cdecl PartyAction0_Form2Begin(void) {
     }
     const unsigned char* const s = Sc();
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
+    const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
+    const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1a(d);
     if ((Fs()[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
         if (found != 0xFF) MarkObject(found, "PartyAction0_Form2Begin (0x51C530)");
@@ -654,8 +654,8 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
             } else {
                 const unsigned char* const s = Sc();
                 const unsigned d = s[8];
-                const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-                const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
+                const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1a(d);
+                const URest1a z = static_cast<URest1a>(Long(s + 0x38)) + 2u * StepZRest1a(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
                     MarkObject(found, "PartyAction2_Form2Strike (0x51D2F0)");
@@ -685,7 +685,7 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
 // first).
 extern "C" void __cdecl PartyAction_FinishPalette(void) {
     if (Sc()[0xB] == 1) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(Sc()[5]) << 6))), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<URest1a>(Sc()[5]) << 6))), 0);
         Sc()[0xB] = 2;
     }
     const unsigned char b = Sc()[0xB];
