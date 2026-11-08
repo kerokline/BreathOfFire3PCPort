@@ -14848,12 +14848,13 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 
-### A game folder built from the PC install leaves out the porting house's logo movie
+### The start plays Capcom's logo movie alone, and setup leaves out the porting house's
 
 - **ID:** DIV-0202
-- **Date:** 2026-11-02
-- **Subsystem:** platform (the Sources page's setup: `copy_pc` in
-  `tools/player_sources.py`; [`install-sources.md`](install-sources.md) 3)
+- **Date:** 2026-11-02 (amended 2026-11-08: the game skips the movie too)
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`, `src/game/win_main.cpp`;
+  the Sources page's setup: `copy_pc` in `tools/player_sources.py`;
+  [`install-sources.md`](install-sources.md) 3)
 - **Tier:** Sensible - the original's start works as designed; the change is
   which logos a player sees before the title, and nothing in play
 - **Original behaviour:** `Game_WinMain` plays two movies through
@@ -14865,27 +14866,36 @@ designed in rather than bolted on.
   carries the second movie (`fmv-import.md` 1: `LOGO/CAPCOM30.STR` is the one
   MDEC stream on all five PSX discs), and `Fmv_Play` skips a movie it cannot
   open (DIV-0100).
-- **New behaviour:** setup no longer copies `logos.avi`: a game folder built
-  from the PC install starts with the Capcom logo alone, as one built from a
-  disc does. The engine is unchanged - a `LOGOS.AVI` in the game folder still
-  plays, so a player's own PC folder used in place, or a folder built before
-  this change, shows it as before.
+- **New behaviour:** setup no longer copies `logos.avi`, and `Game_WinMain`
+  (2026-11-08) no longer makes the second `Fmv_Play` call: every install
+  starts with the Capcom logo alone, as one built from a disc does, including
+  a player's own PC folder used in place and a folder built before setup
+  changed, which still hold the file. No file is deleted. Armed in
+  `WinMain_Inject` (`PatchBytes "CapcomMovieOnly"`).
 - **Rationale:** the owner, 2026-11-02: one start for every source, so a
   PC-built and a disc-built install open the same way. The movie is the
   2001 porting house's branding, not Capcom's game (the question was put on
   2026-10-12 and no technical reason to keep it was found:
-  [`owner-review.md`](owner-review.md)).
+  [`owner-review.md`](owner-review.md)). The owner, 2026-11-08: setup alone
+  left the old movie on folders that already had it; skip it in the game and
+  delete nothing, since one of those folders can be the player's own install.
 - **Also in the PSX version?** No - the PlayStation release starts with
   Capcom's logo stream alone; the new start is the PlayStation's.
 - **Verification:** `copy_pc` run on a PC install that holds `capcom.avi`
   and `logos.avi` (2026-11-02, a scratch folder): `BOF3.exe`, 742 DAT files,
   `BGM\` (166), `SND\` (893) and `capcom.avi` copied, no `logos.avi`. It was
   the only place a tool wrote `logos.avi` (`git grep -i logos.avi tools`).
-- **Reversible?** Copy `logos.avi` from the PC folder into the game folder
-  and it plays. Not behind a switch: it is a file the setup leaves out.
-- **Switch:** none
+  The game's skip (2026-11-08): the start run on a copy of the PC install
+  holding a `LOGOS.AVI` stand-in. Both widths by default: the log shows
+  `CAPCOM.AVI` alone, 112 of 112 frames, then `WinMain: FMVs done`. The 32-bit
+  build under `BOF3X_OFF=CapcomMovieOnly`: `CAPCOM.AVI`, then `LOGOS.AVI`.
+- **Reversible?** `BOF3X_ORIGINAL=CapcomMovieOnly`, or a player's
+  `BOF3X_OFF=CapcomMovieOnly` (the ini's `off=`): a `LOGOS.AVI` in the game
+  folder plays again. A folder setup built holds none; copy `logos.avi` from
+  the PC folder into it first.
+- **Switch:** CapcomMovieOnly
 - **Default:** on
-- **Player:** never - a file: a `logos.avi` copied into the game folder plays
+- **Player:** yes - BOF3X_OFF=CapcomMovieOnly (ini off=)
 - **Toward:** psx
 - **Languages:** any
 - **State:** active
