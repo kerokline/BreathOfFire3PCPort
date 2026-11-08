@@ -83,7 +83,7 @@ namespace {
 
 std::uint32_t Address(const void* p) { return Low32(p); }
 // A pointer the original keeps in a dword, read afresh.
-unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
+unsigned char* PtrAtBattleFxTasks(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 // The battle-task slot being run (0x93B8C4), and a slot's owner (+0x80).
 unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent.Native()); }
 unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
@@ -147,7 +147,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicRow_Run(v
     if ((static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v)))) & 0x800) == 0) return;
     const unsigned row = Sc()[5];
     if (row >= at::kMagicRowCount) bof3::Fatal("BattleMagicRow_Run: row %u, past Magic_Rows' 151", row);
-    reinterpret_cast<Handler>(PtrAt(::bof3::Img(at::kMagicRows.v) + row * 8 + 4))();
+    reinterpret_cast<Handler>(PtrAtBattleFxTasks(::bof3::Img(at::kMagicRows.v) + row * 8 + 4))();
 }
 
 // ===========================================================================
@@ -424,17 +424,17 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(
 // address with the actor in its low byte; it reads the byte.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchTest(void) {
     const std::uint32_t flags = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v))));
-    const unsigned char* o = PtrAt(::bof3::Img(at::kTaskOwner.v));
+    const unsigned char* o = PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v));
     if ((flags & 0x400) != 0 && o[5] == At(::bof3::Img(at::kTurnGate.v))[0]) return;
     const unsigned actor = o[5];
     const unsigned arg = (Address(o) & 0xFFFFFF00u) | actor;
     if (actor <= 2) {
         if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
+        const unsigned now = PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v))[5];
         if ((At(::bof3::Img(ObjTrio_addr) + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
     } else {
         if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
+        const unsigned now = PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v))[5];
         if ((At(::bof3::Img(Battle_Enemies_addr) + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
     }
     rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
@@ -468,18 +468,18 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
                                        {0x49, 1}, {0x4C, 4}, {0x50, 4}, {0x54, 4}, {0x27, 1}, {0x28, 1}, {0x2A, 1},
                                        {0x34, 4}, {0x38, 4}, {0x3C, 4}};
     {
-        const unsigned char b = PtrAt(::bof3::Img(at::kTaskOwner.v))[0];
+        const unsigned char b = PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v))[0];
         rv::As<records::BattleTask>(Sc())->flags = static_cast<unsigned char>(b | 0x20);
     }
     for (const Copy& c : kCopies) {
-        const unsigned char* const o = PtrAt(::bof3::Img(at::kTaskOwner.v));
+        const unsigned char* const o = PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v));
         unsigned char* const sc = Sc();
         if (c.size == 1) sc[c.offset] = o[c.offset];
         else if (c.size == 2) SetWord(sc + c.offset, Word(o + c.offset));
         else SetLong(sc + c.offset, Long(o + c.offset));
     }
     g.update_screen();
-    if ((PtrAt(::bof3::Img(at::kTaskOwner.v))[0] & 1) == 0) g.free_current();
+    if ((PtrAtBattleFxTasks(::bof3::Img(at::kTaskOwner.v))[0] & 1) == 0) g.free_current();
     if (At(::bof3::Img(at::kPhase.v))[0] != 1) g.free_current();
 }
 
