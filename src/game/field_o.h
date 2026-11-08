@@ -10,6 +10,9 @@
 void FieldO_Inject();
 
 namespace field_o {
+extern unsigned char g_empty_slot_blank;   // defined in field_o.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_title_live;   // defined in field_o.cpp (source-layout B0: promoted for a moved reader)
+extern unsigned char g_wheel_name_centre;   // defined in field_o.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=field_o: the start-up fuzz, field_o_fuzz.cpp. Clones every
 // original before FieldO_Inject patches it.
 void SelfTest();

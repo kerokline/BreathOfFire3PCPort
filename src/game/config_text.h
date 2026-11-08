@@ -45,3 +45,8 @@ struct ConfigTextOperands {
     bool label_left;            // 0x461899, 0x4618E7: the label's x less its width (sub), or DIV-0196's nops: left-aligned at x + anchor (0)
 };
 const ConfigTextOperands& ConfigText_Operands();
+
+namespace config_text {
+extern bool g_icons;   // defined in config_text.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint8_t g_ja_icons;   // defined in config_text.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace config_text

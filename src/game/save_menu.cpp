@@ -248,8 +248,8 @@ extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset
 // switched on by SaveLists_Arm, after the fuzz has compared Capcom's
 // behaviour; BOF3X_ORIGINAL=SaveLists keeps the original's pattern and its
 // unbounded table.
-namespace {
-volatile unsigned char g_lists_split = 0;   // PatchBytes "SaveLists" sets it (SaveLists_Arm)
+
+namespace save_menu { volatile unsigned char g_lists_split = 0; }  namespace {   // PatchBytes "SaveLists" sets it (SaveLists_Arm)
 constexpr const char* kSavePattern = "BISLPS0?.DAT";
 }  // namespace
 
@@ -301,7 +301,7 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
 // BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
 // _findclose (a search handle leaks per call).
 extern "C" int __cdecl Save_ListFiles(void) {
-    if (g_lists_split != 0) return save_menu::ListFiles(kSavePattern, AtSaveMenu(::bof3::Img(Save_Directory_addr)), true, false);
+    if (save_menu::g_lists_split != 0) return save_menu::ListFiles(kSavePattern, AtSaveMenu(::bof3::Img(Save_Directory_addr)), true, false);
     return save_menu::ListFiles(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kListPattern.v))), AtSaveMenu(::bof3::Img(Save_Directory_addr)), false, false);
 }
 
@@ -352,7 +352,7 @@ extern "C" void __cdecl Save_ReadSummaries(void) {
 
 void SaveLists_Arm() {
     static const std::uint8_t was = 0, is = 1;
-    const bool on = bof3::PatchBytes("SaveLists", AddrSaveMenu(&g_lists_split), &was, &is, 1);
+    const bool on = bof3::PatchBytes("SaveLists", AddrSaveMenu(&save_menu::g_lists_split), &was, &is, 1);
     bof3::Log("SaveLists   the save lists split (quicksave draft B): %s",
               on ? "the saves listed as BISLPS0?.DAT, sixteen at most" : "off (BOF3X_ORIGINAL): BISLPS??.DAT, unbounded");
 }
@@ -416,12 +416,12 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
 // Music_Start - to be started again at the game's Music_Resume (halted) or
 // at the jingle's end (playing). DLL state only; with the switch off (the
 // fuzz runs before it is armed) nothing but the forgetting.
-namespace {
-bool g_stream_missing = false;
+
+namespace save_menu { bool g_stream_missing = false; }  namespace {
 }
-void save_menu::StreamMissingClear() { g_stream_missing = false; }
-bool save_menu::StreamMissing() { return g_stream_missing; }                  // the quicksave (sound.cpp)
-void save_menu::SetStreamMissing(bool missing) { g_stream_missing = missing; }
+void save_menu::StreamMissingClear() { save_menu::g_stream_missing = false; }
+bool save_menu::StreamMissing() { return save_menu::g_stream_missing; }                  // the quicksave (sound.cpp)
+void save_menu::SetStreamMissing(bool missing) { save_menu::g_stream_missing = missing; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     sound_in::StreamLoads();  // DIV-0177
     const U kind = id >> 12;
@@ -437,12 +437,12 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     if (!cache) g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kStreamFormat.v))), text);
     const int handle = g.file_open(path, 0, 0);
     if (handle == -1) {
-        if (!g_stream_missing)
+        if (!save_menu::g_stream_missing)
             bof3::Log("sound       DIV-0129: %s is not there; a wait on it ends at once", path);
-        g_stream_missing = true;  // DIV-0129
+        save_menu::g_stream_missing = true;  // DIV-0129
         return;
     }
-    g_stream_missing = false;
+    save_menu::g_stream_missing = false;
     if (SaveMenu_StreamData != 0) g.free(AtSaveMenu(SaveMenu_StreamData));
     const int size = g.file_size(handle);
     void* const data = g.malloc(static_cast<unsigned>(size));
@@ -474,7 +474,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
 // DIVERGENCE DIV-0177: 1 for a kind-0 jingle once its song has been started
 // again - the music ring plays the song now, not the jingle.
 extern "C" int __cdecl Sound_StreamDone(void) {
-    if (g_stream_missing) return 1;  // DIV-0129
+    if (save_menu::g_stream_missing) return 1;  // DIV-0129
     if (SaveMenu_StreamKind != 0) return g.voice_playing() ^ 1;
     if (sound_in::JingleOver()) return 1;  // DIV-0177
     return g.music_playing() ^ 1;
@@ -1401,7 +1401,7 @@ void CacheSoundSelfTest() {
 
     const Callees saved = g;
     const U kind = SaveMenu_StreamKind;
-    const bool missing = g_stream_missing;  // DIV-0129's flag: the opens below fail
+    const bool missing = save_menu::g_stream_missing;  // DIV-0129's flag: the opens below fail
     std::vector<std::string> opens;
     std::vector<U> banks;
     g_sound_opens = &opens;
@@ -1450,7 +1450,7 @@ void CacheSoundSelfTest() {
 
     g = saved;
     SaveMenu_StreamKind = kind;
-    g_stream_missing = missing;
+    save_menu::g_stream_missing = missing;
     g_sound_opens = nullptr;
     g_sound_banks = nullptr;
     dat_cache::TestEnd();
@@ -1476,19 +1476,19 @@ int __cdecl StillPlaying() { return 1; }
 void StreamMissingSelfTest() {
     const Callees saved = g;
     const U kind = SaveMenu_StreamKind;
-    const bool missing = g_stream_missing;
+    const bool missing = save_menu::g_stream_missing;
     g.file_open = FailOpen;
     g.music_playing = StillPlaying;
     g.voice_playing = StillPlaying;
-    g_stream_missing = false;
+    save_menu::g_stream_missing = false;
     Sound_LoadStream(0);
     const int failed = Sound_StreamDone();
     const int original = g.music_playing() ^ 1;  // the control: the original's answer to the same state
-    g_stream_missing = false;                    // as after an open that succeeded
+    save_menu::g_stream_missing = false;                    // as after an open that succeeded
     const int present = Sound_StreamDone();
     g = saved;
     SaveMenu_StreamKind = kind;
-    g_stream_missing = missing;
+    save_menu::g_stream_missing = missing;
     if (failed != 1 || original != 0 || present != 0)
         bof3::Fatal("DIV-0129 self-test: a missing stream's wait answers %d (want 1), the original's %d (want 0), a "
                     "present stream's %d (want 0)", failed, original, present);

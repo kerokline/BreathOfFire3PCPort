@@ -5,3 +5,4 @@
 #pragma once
 
 void MenuDrawHelpers_Inject();
+extern unsigned char g_shop_yes_no_line;   // defined in menu_draw_helpers.cpp, armed by MenuDrawHelpers_Inject (named here for a moved reader: source-layout B0)

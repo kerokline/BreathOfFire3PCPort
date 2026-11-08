@@ -50,11 +50,11 @@ U UL(U a) { return static_cast<U>(Long(At(a))); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U AddressOf(const void* p) { return Low32(p); }
 void StepUp() { Game_Step = static_cast<unsigned short>(Game_Step + 1); }
-
+}  // namespace
 // DIVERGENCE DIV-0149: 1 through PatchBytes("EventBattleKeepsMusic") in
 // ModeRest_Inject, after the self-test.
-std::uint8_t g_event_keeps_music = 0;
-
+namespace mode_rest { std::uint8_t g_event_keeps_music = 0; }
+namespace {
 // xor eax, eax; mov ax, [Game_Step]; jmp [table + eax * 4]: the table's
 // `entries` steps read in place (the fuzz swaps the cells for recorders); a
 // Fatal past them, where the original jumps through the dword after - for mode
@@ -306,7 +306,7 @@ extern "C" void __cdecl GameMode5_Load(void) {
     // 0xFF, which has no file, so D24's path started the old song again from
     // its top.
     bool keep = false;
-    if (g_event_keeps_music && EventBattle_Id != 0) {
+    if (mode_rest::g_event_keeps_music && EventBattle_Id != 0) {
         const unsigned asset = At(::bof3::Img(at::kEventAsset))[EventBattle_Id * 4u];
         keep = Word(At(::bof3::Img(at::kEventTrack) + asset * 4u)) == 0xFF;
     }
@@ -470,7 +470,7 @@ void ModeRest_Inject() {
     {
         // DIV-0149: after the self-test, which compared Capcom's GameMode5_Load.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("EventBattleKeepsMusic", Low32(&g_event_keeps_music),
+        bof3::PatchBytes("EventBattleKeepsMusic", Low32(&mode_rest::g_event_keeps_music),
                          &was, &is, 1);
         bof3::Log("DIV-0149    an event battle with no music of its own leaves the scene's song playing (on unless the line above says OFF)");
     }

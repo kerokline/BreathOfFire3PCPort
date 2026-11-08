@@ -91,8 +91,8 @@ void ReadKeyboard() {
 using input::Layout;
 
 Layout g_layout = Layout::kPositional;
-std::vector<input::PadBinding> g_pad_map;
-
+}  namespace pad_read { std::vector<input::PadBinding> g_pad_map; }
+namespace {
 void PadLogLine(const char* line) { bof3::Log("%s", line); }
 
 Layout LayoutFromEnv(Layout fallback) {
@@ -111,14 +111,14 @@ Layout LayoutFromEnv(Layout fallback) {
 // defaults; set, only what it names.
 void LoadPadMap() {
     input::Bindings defaults = input::Bindings::Defaults();
-    g_pad_map = defaults.pad;
+    pad_read::g_pad_map = defaults.pad;
     Layout layout = defaults.layout;
     char text[2048] = {};
     const DWORD n = GetEnvironmentVariableA("BOF3X_PAD", text, sizeof text);
     if (n > 0 && n < sizeof text) {
         std::vector<input::PadBinding> pad;
         const int understood = input::ParsePad(text, ',', pad, layout);
-        g_pad_map = pad;
+        pad_read::g_pad_map = pad;
         bof3::Log("pad: BOF3X_PAD - %d items understood, %u inputs bound, layout %s", understood,
                   static_cast<unsigned>(pad.size()), input::LayoutName(layout));
     } else if (n >= sizeof text) {
@@ -130,7 +130,7 @@ void LoadPadMap() {
 unsigned PadWord() {
     if (!input::PadSdl_Started()) return 0;
     input::PadSdl_Poll();
-    return input::PadSdl_Word(g_pad_map);
+    return input::PadSdl_Word(pad_read::g_pad_map);
 }
 
 // BOF3X_KEYS: `key=action,...` (input/bindings.h) written into the game's own

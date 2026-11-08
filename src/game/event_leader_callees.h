@@ -150,6 +150,7 @@ struct Callees {
 
 extern const Callees kOriginals;
 extern Callees g;
+extern std::uint32_t g_edge_no_area;   // defined in event_leader.cpp, armed by EventLeader_Inject (named here for a moved reader: source-layout B0)
 
 // BOF3X_SHADOW=event_leader: the start-up fuzz, event_leader_fuzz.cpp. Clones
 // every original before EventLeader_Inject patches it.

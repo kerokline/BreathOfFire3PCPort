@@ -1353,7 +1353,7 @@ extern "C" void __cdecl FieldTail_WorldMapHook(void) {
 // the JP (0x801A93E4) does not. With g_name_nul (1 through
 // PatchBytes("GeneNameNul") in FieldE2_Inject, after the self-test) the byte
 // at +8 is 0 after the copy, as on the US disc.
-static std::uint8_t g_name_nul = 0;
+namespace field_e2 { std::uint8_t g_name_nul = 0; }
 
 extern "C" void __cdecl FieldTail_FlagMessage(void) {
     switch (TailState()) {
@@ -1363,7 +1363,7 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
         char* const name = reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kTextRecords)));
         SH_CALL(Crt_strncpy)(name, reinterpret_cast<const char*>(text), 8);
-        if (g_name_nul) name[8] = 0;
+        if (field_e2::g_name_nul) name[8] = 0;
         SH_CALL(Msg_OpenSystem)(0xFA);
         Field_Request = 2;
         SH_CALL(Sound_StopMusic)();
@@ -1949,7 +1949,7 @@ void FieldE2_Inject() {
     {
         // DIV-0166: after the self-test, which compared Capcom's unterminated copy.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("GeneNameNul", Low32(&g_name_nul), &was, &is, 1);
+        bof3::PatchBytes("GeneNameNul", Low32(&field_e2::g_name_nul), &was, &is, 1);
         bof3::Log("DIV-0166    message 0xFA's gene name is terminated after its 8-byte copy (on unless the line above says OFF)");
     }
     BOF3_INJECT(Scenario_CallB);

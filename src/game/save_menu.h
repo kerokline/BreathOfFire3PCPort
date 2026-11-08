@@ -16,6 +16,8 @@ void SaveMenu_Inject();
 void SaveLists_Arm();
 
 namespace save_menu {
+extern volatile unsigned char g_lists_split;   // defined in save_menu.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_stream_missing;   // defined in save_menu.cpp (source-layout B0: promoted for a moved reader)
 
 // Save_ListFiles' and Save_ReadSummaries' bodies on any pattern and tables
 // (the original's entries pass Save_Directory 0x929F40 and the summaries

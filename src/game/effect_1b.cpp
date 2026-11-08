@@ -1315,11 +1315,11 @@ extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsign
     SH_CALL(Gfx_CommitPrim)(2, 0x2C);
 }
 
-namespace {
-unsigned g_glyph_calls = 0;   // DIV-0144's self-test (effect_1a.cpp) counts the calls that reach the draw
-}  // namespace
 
-unsigned EffectKind0F_GlyphCalls() { return g_glyph_calls; }
+namespace effect_1b { unsigned g_glyph_calls = 0; }   // DIV-0144's self-test (effect_1a.cpp) counts the calls that reach the draw
+
+
+unsigned EffectKind0F_GlyphCalls() { return effect_1b::g_glyph_calls; }
 
 // original 0x469AD0 (clut, text, width, x): a code-0x6C glyph primitive at the
 // cursor (read once, before Gpu_SetCode6C): the glyph of the text's first
@@ -1341,7 +1341,7 @@ unsigned EffectKind0F_GlyphCalls() { return g_glyph_calls; }
 // Japanese disc-built image that no layer wrote), a space what a Japanese
 // layer's fishing line holds. The PC's own strings hold neither.
 extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned char* text, unsigned width, int x) {
-    ++g_glyph_calls;
+    ++effect_1b::g_glyph_calls;
     if (FishingText_On() && text[0] == 0x20) return;
     if (FishingEmpty_LowGlyphNone() && text[0] < 0x26) return;
     unsigned char* const p = Gfx_PacketNext;

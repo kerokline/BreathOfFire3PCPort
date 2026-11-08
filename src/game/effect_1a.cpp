@@ -53,10 +53,10 @@ using U = std::uint32_t;
 using move_script::At;
 
 unsigned char* S() { return Sprite_Current; }
-
+}  // namespace
 // DIV-0144 (D279): 1 through PatchBytes("FishingEmptyLine") / ("FishingLowGlyph")
 // in FishingEmpty_Arm, after every module's self-test.
-std::uint8_t g_empty_line_none = 0;
+namespace effect_1a { std::uint8_t g_empty_line_none = 0; }  namespace {
 std::uint8_t g_low_glyph_none = 0;
 U Key(const void* p) { return Low32(p); }
 U L(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
@@ -1494,7 +1494,7 @@ extern "C" void __cdecl EffectKind0F_LineType(void) {
             eax = Key(a);
             c = S();
         }
-    } else if (g_empty_line_none && TextAt(rv::As<records::EffectObject>(c)->script)[0] == 0) {
+    } else if (effect_1a::g_empty_line_none && TextAt(rv::As<records::EffectObject>(c)->script)[0] == 0) {
         // DIVERGENCE DIV-0144 (D279): an empty line types no cursor glyph. The
         // cursor rests on a NUL here only when the line has no character (at
         // the last one's NUL the branch above has set the pause and gone on),
@@ -2066,7 +2066,7 @@ void FishingEmptySelfTest() {
     std::memcpy(saved_labels, At(::bof3::Img(at::kLabelTexts.v)), sizeof saved_labels);
     unsigned char* const saved_current = Sprite_Current;
     unsigned char* const saved_packet = Gfx_PacketNext;
-    const std::uint8_t saved_line = g_empty_line_none, saved_glyph = g_low_glyph_none;
+    const std::uint8_t saved_line = effect_1a::g_empty_line_none, saved_glyph = g_low_glyph_none;
     static const unsigned char kEmpty[4] = {0, 0, 0, 0};
     static const unsigned char kSpace[2] = {0x20, 0};
     SetL(record, Key(kEmpty));
@@ -2099,7 +2099,7 @@ void FishingEmptySelfTest() {
         check(Gfx_PacketNext == saved_packet, what, Gfx_PacketNext == saved_packet ? 0 : 1, 0);
         check(EffectKind0F_GlyphCalls() - calls == want_calls, what, EffectKind0F_GlyphCalls() - calls, want_calls);
     };
-    g_empty_line_none = 1;
+    effect_1a::g_empty_line_none = 1;
     g_low_glyph_none = 1;
     // LineType 0x466310 typing an empty line: no cursor glyph is asked for.
     start(9, 6, 0);
@@ -2112,10 +2112,10 @@ void FishingEmptySelfTest() {
           object[1], 10);
     // The control: the scroller's switch off, the call reaches the draw, which
     // declines the NUL.
-    g_empty_line_none = 0;
+    effect_1a::g_empty_line_none = 0;
     start(9, 6, 0);
     run(EffectKind0F_LineType, "LineType over an empty line (the scroller's switch off): packet / calls", 1);
-    g_empty_line_none = 1;
+    effect_1a::g_empty_line_none = 1;
     // LineNext 0x466460 while the label waits: the label's NUL reaches the
     // draw (0x66A2FC's entry 0), which draws nothing.
     start(10, 6, 6);
@@ -2131,7 +2131,7 @@ void FishingEmptySelfTest() {
     std::memcpy(record, saved_record, sizeof saved_record);
     std::memcpy(At(::bof3::Img(at::kLabelTexts.v)), saved_labels, sizeof saved_labels);
     Sprite_Current = saved_current;
-    g_empty_line_none = saved_line;
+    effect_1a::g_empty_line_none = saved_line;
     g_low_glyph_none = saved_glyph;
     bof3::Log("shadow      fishing_empty DIV-0144 self-test: an empty line typed (two frames) and its control, a NUL "
               "label, a NUL and a space drawn: %u checks, nothing drawn, %u MISMATCHES",
@@ -2145,12 +2145,12 @@ bool FishingEmpty_LowGlyphNone() { return g_low_glyph_none != 0; }
 
 void FishingEmpty_Arm() {
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("FishingEmptyLine", Low32(&g_empty_line_none),
+    bof3::PatchBytes("FishingEmptyLine", Low32(&effect_1a::g_empty_line_none),
                      &was, &is, 1);
     bof3::PatchBytes("FishingLowGlyph", Low32(&g_low_glyph_none),
                      &was, &is, 1);
     bof3::Log("DIV-0144    the fishing banner draws no glyph for an empty line (%s) nor for a one-byte code below "
-              "0x26 (%s)", g_empty_line_none ? "on" : "OFF", g_low_glyph_none ? "on" : "OFF");
+              "0x26 (%s)", effect_1a::g_empty_line_none ? "on" : "OFF", g_low_glyph_none ? "on" : "OFF");
     if (!bof3::WantsShadow("fishing_empty")) return;
     if (!bof3::IsEnabled(bof3::addr::EffectKind0F_DrawGlyph)) {
         bof3::Log("shadow      fishing_empty DIV-0144 self-test: not run, EffectKind0F_DrawGlyph is Capcom's "

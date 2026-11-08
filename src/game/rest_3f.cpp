@@ -146,11 +146,11 @@ U PixRecord(const char* who) {
 // cursor cells and the particles are named by these ten functions only (the
 // doc's raw scan). BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at
 // 0x931980, the overrun with them.
-unsigned char g_pixel_room = 0;
+}  namespace rest_3f { unsigned char g_pixel_room = 0; }  namespace {
 alignas(4) unsigned char g_pixels[at::kPartRoom * at::kPartStride];
-U Particles() { return g_pixel_room ? Low32(g_pixels) : ::bof3::Img(at::kParticles.v); }
+U Particles() { return rest_3f::g_pixel_room ? Low32(g_pixels) : ::bof3::Img(at::kParticles.v); }
 unsigned char* Particle(unsigned i) {
-    if (g_pixel_room && i >= at::kPartRoom)
+    if (rest_3f::g_pixel_room && i >= at::kPartRoom)
         bof3::Fatal("EffectKindA1: particle %u, past the room of %u (a capture larger than 0x60 x 0x78)", i,
                     at::kPartRoom);
     return P(Particles() + i * at::kPartStride);
@@ -266,7 +266,7 @@ void SplitPixels(const char* who) {
                 unsigned char* const pixel = P(Rest3f_PixCursor);
                 const U v = Word(pixel);
                 if (v != 0) {
-                    if (g_pixel_room && Rest3f_PartCount >= at::kPartRoom)
+                    if (rest_3f::g_pixel_room && Rest3f_PartCount >= at::kPartRoom)
                         bof3::Fatal("%s: particle %u, past the room of %u (DIV-0206)", who, (unsigned)Rest3f_PartCount,
                                     at::kPartRoom);
                     SetWord(P(Rest3f_PartCursor) + 2, v);
@@ -1541,9 +1541,9 @@ void Rest3F_Inject() {
     // DIV-0206: armed after the self-test, which compares ours with Capcom's at
     // 0x931980.
     static const std::uint8_t pixel_was = 0, pixel_is = 1;
-    bof3::PatchBytes("PixelRoom", Low32(&g_pixel_room), &pixel_was, &pixel_is, 1);
+    bof3::PatchBytes("PixelRoom", Low32(&rest_3f::g_pixel_room), &pixel_was, &pixel_is, 1);
     bof3::Log("DIV-0206    kinds 0xA1 / 0xA3's particles in a room of %u (the original's holds 1,306): %s", at::kPartRoom,
-              g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
+              rest_3f::g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
     BOF3_INJECT(EffectKind60_Start);
     BOF3_INJECT(EffectKind60_SlideBoth);
     BOF3_INJECT(EffectKind60_SlideEnd);

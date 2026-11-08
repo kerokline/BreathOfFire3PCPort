@@ -91,3 +91,4 @@ namespace rest_2c {
 void SelfTest();   // rest_2c_fuzz.cpp
 }
 void Rest2C_Inject();
+extern unsigned char g_summary_record0;   // defined in rest_2c.cpp, armed by Rest2C_Inject (named here for a moved reader: source-layout B0)

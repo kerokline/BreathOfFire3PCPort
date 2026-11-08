@@ -171,11 +171,11 @@ void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned c
 
 // The member a CharacterRecords flag test is about: record Character_IndexById[id].
 unsigned char* Character(unsigned char id) { return move_script::At(::bof3::Img(CharacterRecords_addr) + kCharacterStride * BRest2f(::bof3::Img(kEffectState.v) + id)); }
-
+}  // namespace
 // DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
 // the patch is read back, call Text_DrawAt as the original's copy does).
-U g_title_call = 0;
-
+namespace rest_2f { U g_title_call = 0; }
+namespace {
 }  // namespace
 
 // ===========================================================================
@@ -1473,7 +1473,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         const unsigned char* const title = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(kListTitles.v) + 4 * cat))));
         const unsigned n = SH_CALL(Text_CharCount)(title);
         const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->x) & 0xFFFF);
-        const U site = g_title_call;
+        const U site = rest_2f::g_title_call;
         if (site == 0 || site == bof3::addr::Text_DrawAt) SH_CALL(Text_DrawAt)(x, y7, static_cast<int>(grey), 0x10, title);
         else reinterpret_cast<TitleFn>(static_cast<std::uintptr_t>(::bof3::CodePlace(site)))(x, y7, static_cast<int>(grey), 0x10, title);
     }
@@ -1516,9 +1516,9 @@ void Rest2F_Inject() {
     if (bof3::WantsShadow("rest_2f")) rest_2f::SelfTest();
     // DIV-0059 survives the takeover: ours calls what the site calls, as
     // battle_draw.cpp holds it (BattleDraw_Inject ran first; operand-store.md)
-    g_title_call = ListTitle_SiteDraw();
-    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall.v, g_title_call,
-              g_title_call == bof3::addr::Text_DrawAt ? " (Text_DrawAt)" : " (DIV-0059's ListTitle_DrawAt)");
+    rest_2f::g_title_call = ListTitle_SiteDraw();
+    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall.v, rest_2f::g_title_call,
+              rest_2f::g_title_call == bof3::addr::Text_DrawAt ? " (Text_DrawAt)" : " (DIV-0059's ListTitle_DrawAt)");
     BOF3_INJECT(AbilityMenu_InitRecords);
     BOF3_INJECT(AbilityList_SortBy);
     BOF3_INJECT(AbilityList_Compact);

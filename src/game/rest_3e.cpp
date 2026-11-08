@@ -1380,7 +1380,7 @@ bool Plan(const Shape baked[kRows], const std::uint16_t wanted[kRows], Row out[k
 
 // DIVERGENCE: DIV-0137 - 1 after this module's self-test (PatchBytes
 // "DockLegend", BOF3X_ORIGINAL=DockLegend for the page as it is).
-unsigned char g_on = 0;
+}  }  namespace rest_3e::dock { unsigned char g_on = 0; }  namespace { namespace dock {
 
 // The panel's quad, or a piece of it: (x, y) w x h on screen, u0..u1 x v0..v1
 // of the page, as the original's (CLUT x 0x20, colour 0x80, slot 1).
@@ -1580,7 +1580,7 @@ void SelfTest() {
 // above); else exactly the original's.
 extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
     SH_CALL(Menu_DrawBox)(static_cast<std::uint32_t>(Rest3e_PanelBox), W(::bof3::Img(at::kPanelBox.v) + 2), W(::bof3::Img(at::kPanelBox.v) + 4), W(::bof3::Img(at::kPanelBox.v) + 6), 0, static_cast<unsigned char>(Config_WindowColour));
-    if (dock::g_on) {
+    if (rest_3e::dock::g_on) {
         if (W(::bof3::Img(at::kPanelBox.v) + 4) != dock::kBoxW || W(::bof3::Img(at::kPanelBox.v) + 6) != dock::kBoxH)
             bof3::Fatal("DockLegend: the panel box 0x654888 is 0x%X x 0x%X, not the 0x40 x 0x28 its rows were read for", W(::bof3::Img(at::kPanelBox.v) + 4),
                         W(::bof3::Img(at::kPanelBox.v) + 6));
@@ -1850,7 +1850,7 @@ void Rest3E_Inject() {
     // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
     // fuzz above, which compares Capcom's one quad).
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("DockLegend", Low32(&dock::g_on), &was, &is, 1);
+    bof3::PatchBytes("DockLegend", Low32(&rest_3e::dock::g_on), &was, &is, 1);
     bof3::Log("DockLegend the dock's legend shows the buttons the Config has its three tests on: %s",
-              dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
+              rest_3e::dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
 }

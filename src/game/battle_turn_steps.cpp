@@ -130,7 +130,7 @@ extern "C" void __cdecl BattleRoundEnd_FasterStep() {
 // DIVERGENCE DIV-0154: 1 through PatchBytes("ExtraRoundClear") in
 // BattleTurnSteps_Inject, after the self-test. The loops then clear the mark
 // from all three members and all eight enemies, the setter's bounds (D63).
-static std::uint8_t g_extra_round_clear = 0;
+namespace battle_turn_steps { std::uint8_t g_extra_round_clear = 0; }
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_CheckFaster() {
     if (BattlePhases_B7A == 0 && BattleFlow_AnimGate == 0) {
@@ -155,7 +155,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
             break;
         }
     }
-    const unsigned members = g_extra_round_clear ? 3 : 2, enemies = g_extra_round_clear ? 8 : 7;
+    const unsigned members = battle_turn_steps::g_extra_round_clear ? 3 : 2, enemies = battle_turn_steps::g_extra_round_clear ? 8 : 7;
     for (unsigned i = 0; i < members; ++i) MemberBattleTurnSteps(i)[at::kFlags + 1] &= 0x7F;
     for (unsigned i = 0; i < enemies; ++i) At(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(::bof3::Img(at::kRounds.v)), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRounds.v)))) + 1));
@@ -519,7 +519,7 @@ void BattleTurnSteps_Inject() {
     {
         // DIV-0154: after the self-test, which compared Capcom's bounds.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ExtraRoundClear", Low32(&g_extra_round_clear), &was, &is, 1);
+        bof3::PatchBytes("ExtraRoundClear", Low32(&battle_turn_steps::g_extra_round_clear), &was, &is, 1);
         bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
     }
     BOF3_INJECT(BattleRoundEnd_Step);

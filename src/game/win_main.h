@@ -17,3 +17,7 @@ bool WinMain_InputAllowed();
 // DIV-0033's switch: true unless BOF3X_BACKGROUND=0. Read by Fmv_WndProc
 // (DIV-0049), whose pause on deactivation follows it.
 bool WinMain_Background();
+
+namespace win_main {
+extern bool g_loop_ours;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace win_main

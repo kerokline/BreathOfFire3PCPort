@@ -8,6 +8,7 @@
 void Effect1B_Inject();
 
 namespace effect_1b {
+extern unsigned g_glyph_calls;   // defined in effect_1b.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=effect_1b: the start-up fuzz, effect_1b_fuzz.cpp. Clones every
 // original before Effect1B_Inject patches it.
 void SelfTest();

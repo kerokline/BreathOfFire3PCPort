@@ -7,3 +7,4 @@
 #pragma once
 
 void BattleResult_Inject();
+extern unsigned char g_exp_layout_us;   // defined in battle_result.cpp, armed by BattleResult_Inject (named here for a moved reader: source-layout B0)

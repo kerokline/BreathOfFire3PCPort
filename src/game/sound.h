@@ -10,6 +10,9 @@
 void Sound_Inject();
 
 namespace sound {
+extern std::uint32_t g_stop_unseen;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
+extern std::uint32_t g_fade_frame;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
+extern std::uint32_t g_fade_per_frame;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
 
 // DIVERGENCE DIV-0132: the PlayStation's duck - SsSepSetDecrescendo(0, 0,
 // 0x14, 0x10), the song lowered 16 of its 97 sequence-volume units, about

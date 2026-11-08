@@ -232,7 +232,7 @@ extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_a
 // FieldEvent_Inject, after the self-test. Accessory 0x15 (the Holy Mantle)
 // doubles the threshold in a byte; zone 1's 120..151 wraps to 0..46. With
 // the flag the doubling stops at 0xFF.
-static std::uint8_t g_mantle_cap = 0;
+namespace field_event { std::uint8_t g_mantle_cap = 0; }
 
 // original 0x52FEB0 (PSX 0x801B4CC4): the word at 0x802E74 set from the zone
 // the leader stands in - see docs/field-event.md section 1 for what it may be.
@@ -270,7 +270,7 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
     unsigned i = 0;
     for (; i < members; ++i)
         if (g.has_item(ObjTrio[i].char_index, 3, 0x15)) break;
-    if (i < members) value = (g_mantle_cap && value >= 0x80) ? 0xFF : static_cast<unsigned char>(value << 1);
+    if (i < members) value = (field_event::g_mantle_cap && value >= 0x80) ? 0xFF : static_cast<unsigned char>(value << 1);
     for (i = 0; i < members; ++i)
         if (g.has_item(ObjTrio[i].char_index, 3, 0x14)) break;
     if (i < members) value = static_cast<unsigned char>(value >> 1);
@@ -875,7 +875,7 @@ void FieldEvent_Inject() {
     {
         // DIV-0153: after the self-test, which compared Capcom's roll.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MantleCap", Low32(&g_mantle_cap), &was, &is, 1);
+        bof3::PatchBytes("MantleCap", Low32(&field_event::g_mantle_cap), &was, &is, 1);
         bof3::Log("DIV-0153    the Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping (on unless the line above says OFF)");
     }
     BOF3_INJECT(Field_LeaderFrame);

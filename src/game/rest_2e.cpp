@@ -703,7 +703,7 @@ template <typename Before> void BubbleFixed(U ids, Before before) {
 constexpr ::bof3::image::Va kConsumableIds{0x904154};   // Inventory_IdLists[0]; the counts 0x904354
 constexpr ::bof3::image::Va kWeaponIds{0x9041D4};       // [1]
 constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
-
+}  // namespace
 // DIVERGENCE DIV-0189: the two consumable sorts order each bucket. The
 // original's NormalItem / CombatItem sorts are a partition: the items whose
 // flag bit (bit 0 field-usable, bit 1 battle-usable) is set go first, and
@@ -712,15 +712,15 @@ constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
 // self-test, PatchBytes "ItemSortById"), sorts within each half by the item
 // id ascending - the record's index in the consumables table, the EMI's
 // order (Green Apple 1 .. Water Jug 91). Unarmed, the original's partition.
-unsigned char g_sort_by_id = 0;
-
+namespace rest_2e { unsigned char g_sort_by_id = 0; }
+namespace {
 // The pair (x, y) of non-empty entries exchanged: y's flag bit set and x's
 // clear (the original's rule), or - armed - both alike and y's id the lower.
 bool ConsumableGoesFirst(UC x, UC y, UC bit) {
     const bool fx = (BRest2e(::bof3::Img(kConsumableFlags.v) + 22u * x) & bit) != 0;
     const bool fy = (BRest2e(::bof3::Img(kConsumableFlags.v) + 22u * y) & bit) != 0;
     if (fx != fy) return fy;
-    return g_sort_by_id && y < x;
+    return rest_2e::g_sort_by_id && y < x;
 }
 
 }  // namespace
@@ -1913,9 +1913,9 @@ void Rest2E_Inject() {
         // DIV-0189: armed after the self-test, which compares the two
         // consumable sorts with Capcom's partition.
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ItemSortById", Low32(&g_sort_by_id), &was, &is, 1);
+        bof3::PatchBytes("ItemSortById", Low32(&rest_2e::g_sort_by_id), &was, &is, 1);
         bof3::Log("DIV-0189    the Items screen's NormalItem / CombatItem sorts order each half by item id: %s",
-                  g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
+                  rest_2e::g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
     }
     BOF3_INJECT(FieldItems_ArrangeCategory);
     BOF3_INJECT(FieldItems_ArrangeHow);

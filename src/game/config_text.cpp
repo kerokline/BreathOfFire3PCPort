@@ -205,18 +205,18 @@ constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of 
 constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
-
+}  // namespace
 // DIV-0051's icon path is on: set once the cell's Inject went in, which is
 // under a Latin overlay only (ConfigText_Inject), the overlay whose font
 // loc_build.py built the icon glyphs into. Without it the glyphs are past the
 // end of the Chinese font, and Text_DrawString stops on Capcom's glyph trap
 // (0xC0000096, ecx 0xA65: known-defects D312) - so the cell draws what the
 // original draws.
-bool g_icons = false;
+namespace config_text { bool g_icons = false; }
 // DIV-0051's 2026-10-21 amendment: 1 through PatchBytes("ConfigJapaneseIcons")
 // under a ja-JP layer (ConfigText_ArmJapanese).
-std::uint8_t g_ja_icons = 0;
-
+namespace config_text { std::uint8_t g_ja_icons = 0; }
+namespace {
 // The controller panel's cell, original 0x461C00 (docs/controls.md section 2;
 // disasm 2026-10-17, 0x461C00..0x461E07). cdecl (x, y, word). The original
 // tests the word's bits in the order circle 0x20, cross 0x40, triangle 0x10,
@@ -237,7 +237,7 @@ std::uint8_t g_ja_icons = 0;
 // and select none under DIV-0051 (the rebinding's `and ecx, 0xFC` never gives
 // a line the bit; a save could).
 extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int word) {
-    if (g_icons) {
+    if (config_text::g_icons) {
         struct Icon { unsigned bit; std::uint32_t glyph; int color; };
         static const Icon kIcons[] = {
             {0x20, kIconCircle, 2}, {0x40, kIconCross, 1},  {0x10, kIconTriangle, 6},
@@ -267,7 +267,7 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
         // 0x66A2FC is empty (no Japanese layer writes it); the Japan disc's
         // own icon, in the same colour at the same place.
         unsigned char ja[3];
-        if (g_ja_icons) {
+        if (config_text::g_ja_icons) {
             const unsigned g = i < 4 ? button_text::kJapaneseIcons + i : button_text::kJapaneseShoulders + (i - 4);
             if (g >= TextDraw_GlyphCount())
                 bof3::Fatal("ConfigJapaneseIcons: glyph 0x%X, the font loaded has %u (no ja-JP layer's icons)", g,
@@ -404,10 +404,10 @@ const ConfigTextOperands& ConfigText_Operands() { return g_ops; }
 void ConfigText_ArmJapanese() {
     if (Lang_Latin() || !Lang_Japanese()) return;
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("ConfigJapaneseIcons", Low32(&g_ja_icons),
+    bof3::PatchBytes("ConfigJapaneseIcons", Low32(&config_text::g_ja_icons),
                      &was, &is, 1);
     bof3::Log("DIV-0051    the Config panel's button cell under ja-JP: the Japan disc's icons %s",
-              g_ja_icons ? "on" : "OFF (BOF3X_ORIGINAL=ConfigJapaneseIcons)");
+              config_text::g_ja_icons ? "on" : "OFF (BOF3X_ORIGINAL=ConfigJapaneseIcons)");
 }
 
 void ConfigText_Inject() {
@@ -576,7 +576,7 @@ void ConfigText_Inject() {
         // in, so the icons follow the Inject, not the call: OFF under
         // BOF3X_ORIGINAL (the jmp on ours reaches Capcom's), and never without
         // a Latin overlay, whose return above leaves the original path (D312).
-        g_icons = bof3::IsEnabled(bof3::addr::Config_DrawControllerCell);
+        config_text::g_icons = bof3::IsEnabled(bof3::addr::Config_DrawControllerCell);
     }
 
     // The rows' y is the original's. An earlier build lowered every string on

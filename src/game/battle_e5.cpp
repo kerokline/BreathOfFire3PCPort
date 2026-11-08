@@ -1156,7 +1156,7 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
 // BattleE5_Inject, after the self-test. The hand then reads the word, as the
 // PlayStation; the two differ only when 0x904B76 is not 0, which no
 // instruction of the exe names (D338).
-static std::uint8_t g_store_ask_word = 0;
+namespace battle_e5 { std::uint8_t g_store_ask_word = 0; }
 
 extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     ShowLine(Line(0x62));
@@ -1174,7 +1174,7 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     }
     if (keys & 0xA000) SetW(::bof3::Img(at::kAsk.v), W(::bof3::Img(at::kAsk.v)) ^ 1u);
     const U ask = L(::bof3::Img(at::kAsk.v));
-    const U answer = g_store_ask_word ? (ask & 0xFFFFu) : ask;
+    const U answer = battle_e5::g_store_ask_word ? (ask & 0xFFFFu) : ask;
     BH_CALL(Menu_DrawHand)(static_cast<int>(answer * 0x22 + 0xD5), 0x18, 0);
 }
 
@@ -1231,7 +1231,7 @@ void BattleE5_Inject() {
     {
         // DIV-0162: after the self-test, which compared Capcom's dword read.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("StoreAskWord", Low32(&g_store_ask_word), &was, &is, 1);
+        bof3::PatchBytes("StoreAskWord", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
         bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
     }
     BOF3_INJECT(EnemyAI_OtherRowsDone);

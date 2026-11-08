@@ -281,8 +281,8 @@ bool KeptLive() { return (Effect(Scena15_Bytes[3])[0] & 1) != 0; }
 constexpr char kRollMagic[8] = {'B', 'O', 'F', '3', 'X', 'R', 'L', '2'};
 constexpr uint32_t kRollMinLines = 100, kRollMaxLines = 1024, kRollMaxText = 0x4000, kRollAfter = 14, kRollAhead = 15;
 std::vector<unsigned char> g_roll_text;
-std::vector<uint32_t> g_roll_lines;
-
+}  namespace scena_sc15 { std::vector<uint32_t> g_roll_lines; }
+namespace {
 void LoadRoll(unsigned tag, const unsigned char* payload, unsigned size) {
     if (tag != 1) bof3::Fatal("DIV-0148: a staff-roll chunk of tag %u (only 1 is a roll; rebuild the language)", tag);
     const std::vector<unsigned char> raw(payload, payload + size);
@@ -295,25 +295,25 @@ void LoadRoll(unsigned tag, const unsigned char* payload, unsigned size) {
     if (n < kRollMinLines || n > kRollMaxLines || t > kRollMaxText || raw.size() != 16u + 4u * words + t)
         bof3::Fatal("DIV-0148: the staff-roll chunk holds %u lines and %u text bytes in %u bytes", n, t, (unsigned)raw.size());
     g_roll_text.assign(raw.begin() + 16 + 4 * words, raw.end());
-    g_roll_lines.assign(n + 1 + kRollAhead, 0);
+    scena_sc15::g_roll_lines.assign(n + 1 + kRollAhead, 0);
     for (uint32_t i = 0; i < words; ++i) {
         uint32_t w;
         std::memcpy(&w, raw.data() + 16 + 4 * i, 4);
         if (w == 0) continue;
         if (w > t || std::memchr(g_roll_text.data() + (w - 1), 0, t - (w - 1)) == nullptr)
             bof3::Fatal("DIV-0148: the staff-roll chunk's word %u starts at text offset %u with no NUL after it", i, w - 1);
-        g_roll_lines[i < n ? i : i + 1] =
+        scena_sc15::g_roll_lines[i < n ? i : i + 1] =
             Low32(g_roll_text.data() + (w - 1));
     }
-    g_roll_lines[n] = 0xFFFFFFFFu;
+    scena_sc15::g_roll_lines[n] = 0xFFFFFFFFu;
     bof3::Log("DIV-0148: the language's staff roll, %u lines (%u text bytes)", n, t);
 }
 
 // Line `i` of the roll: the release's (DIV-0148) or Scena17_RollLines[i].
 uint32_t RollEntry(uint32_t i) {
-    if (g_roll_lines.empty()) return L(::bof3::Img(kRollLines) + 4u * i);
-    if (i >= g_roll_lines.size()) bof3::Fatal("DIV-0148: the roll read line %u of %u", i, (unsigned)g_roll_lines.size());
-    return g_roll_lines[i];
+    if (scena_sc15::g_roll_lines.empty()) return L(::bof3::Img(kRollLines) + 4u * i);
+    if (i >= scena_sc15::g_roll_lines.size()) bof3::Fatal("DIV-0148: the roll read line %u of %u", i, (unsigned)scena_sc15::g_roll_lines.size());
+    return scena_sc15::g_roll_lines[i];
 }
 
 }  // namespace
@@ -1817,10 +1817,10 @@ void Rays(unsigned radius, unsigned level) { SH_CALL(Scena17_DrawRays)(radius, l
 // counts and the script are the original's. Armed after the self-test
 // (PatchBytes "FinNight"); BOF3X_ORIGINAL=FinNight (or BOF3X_OFF) gives the
 // original's disc back.
-unsigned char g_fin_night = 0;
+}  namespace scena_sc15 { unsigned char g_fin_night = 0; }  namespace {
 constexpr unsigned kFinRadius = 1000;
 void FinRays(unsigned radius, unsigned level) {
-    if (g_fin_night == 0) { Rays(radius, level); return; }
+    if (scena_sc15::g_fin_night == 0) { Rays(radius, level); return; }
     Rays(radius > kFinRadius ? kFinRadius : radius, 0xFF);
 }
 void Panel(unsigned level) { SH_CALL(Scena17_DrawPanel)(0xE0, 0xBE, level, 1); }
@@ -2782,9 +2782,9 @@ void ScenaSc15_Inject() {
     if (bof3::WantsShadow("scena_sc15")) scena_sc15::SelfTest();
     {   // DIV-0207: armed after the self-test, which compared Capcom's disc.
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("FinNight", Low32(&g_fin_night), &was, &is, 1);
+        bof3::PatchBytes("FinNight", Low32(&scena_sc15::g_fin_night), &was, &is, 1);
         bof3::Log("DIV-0207    the ending's disc held at %u, the night kept under the Fin panel: %s", kFinRadius,
-                  g_fin_night ? "on" : "OFF (BOF3X_ORIGINAL=FinNight)");
+                  scena_sc15::g_fin_night ? "on" : "OFF (BOF3X_ORIGINAL=FinNight)");
     }
     BOF3_INJECT(Scena15_RecordWord);
     BOF3_INJECT(Scena15_Frame);

@@ -45,4 +45,6 @@ extern "C" void __cdecl Gfx_BeginFrame(void) {
     Gfx_UnpackNext = Gfx_UnpackScratch;
 }
 
-void GfxFrame_Inject() { BOF3_INJECT(Gfx_BeginFrame); }
+void GfxFrame_Inject() {
+    BOF3_INJECT(Gfx_BeginFrame);
+}

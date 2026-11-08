@@ -147,13 +147,13 @@ void SystemBanner(unsigned id) {
     const unsigned char* const text = g.msg(id);
     g.banner_add(2, 0, 0, 0x2D, reinterpret_cast<const char*>(text));
 }
-
+}  // namespace
 // DIVERGENCE DIV-0179, the unlearned skill in blue (BOF3X_UNLEARNED_BLUE=1,
 // unlearned_blue= in bof3x.ini; off by default). The banner pool 0x93B8E0, 8
 // entries of 0xC: +0xA is the text colour BattleWin_BannerRun 0x597C70 hands
 // Text_DrawAt, which FillBanner always sets to 0. Colour 3 is the sky-blue
 // row of FIRST.DAT's text CLUT strip (kind 0, tag 0x8000).
-bool g_unlearned_blue = false;
+namespace battle_actions { bool g_unlearned_blue = false; }  namespace {
 constexpr ::bof3::image::Va kBannerPool{0x93B8E0};
 constexpr unsigned kBannerColour = 0xA, kBlue = 3;
 
@@ -166,7 +166,7 @@ constexpr unsigned kBannerColour = 0xA, kBlue = 3;
 // that Examine and the masters fill, by the id's low byte, as
 // Battle_MemberRollByAction asks it).
 void UnlearnedBlue(unsigned long entry, unsigned actor, unsigned id) {
-    if (!g_unlearned_blue || entry % 0xC != 0) return;
+    if (!battle_actions::g_unlearned_blue || entry % 0xC != 0) return;
     if (actor <= 2) return;
     if ((Word(At(::bof3::Img(at::kAbilityRecords.v) + id * 24 + 0x14)) & 0x200) == 0) return;
     if (Battle_ActionBitSet(id & 0xFF) != 0) return;
@@ -567,10 +567,10 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
 // Sound_PlayEffect - under its own switch (PatchBytes("OneShotKeyOff"), after
 // the self-test as above; sound_st::KeyOffOneShots, game/sound_st.h), so the
 // loops' stop and the one-shots' bisect apart.
-static std::uint8_t g_effect_key_off = 0;
+namespace battle_actions { std::uint8_t g_effect_key_off = 0; }
 
 extern "C" void __cdecl BattleAction_EffectPreload(void) {
-    if (g_effect_key_off) sound::KeyOffEffectVoices();  // DIV-0167
+    if (battle_actions::g_effect_key_off) sound::KeyOffEffectVoices();  // DIV-0167
     if (sound_st::g_one_shot_key_off) sound_st::KeyOffOneShots();  // DIV-0174
     const unsigned kind = B(::bof3::Img(at::kActor.v) + at::kBKind);
     bool has_file = false;
@@ -711,7 +711,7 @@ void BattleActions_Inject() {
     {
         // DIV-0167: after the self-test, which compared Capcom's preload.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("EffectKeyOff", Low32(&g_effect_key_off), &was, &is, 1);
+        bof3::PatchBytes("EffectKeyOff", Low32(&battle_actions::g_effect_key_off), &was, &is, 1);
         bof3::Log("DIV-0167    a battle action's effect stops the sound-effect channels the last one left (on unless the line above says OFF)");
     }
     sound_st::ArmOneShotKeyOff();  // DIV-0174: after the self-test, which compared Capcom's preload
@@ -746,9 +746,9 @@ void BattleActions_Inject() {
         const DWORD n = GetEnvironmentVariableA("BOF3X_UNLEARNED_BLUE", v, sizeof v);
         if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
             bof3::Fatal("BOF3X_UNLEARNED_BLUE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
-        g_unlearned_blue = v[0] == '1';
-        if (g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
+        battle_actions::g_unlearned_blue = v[0] == '1';
+        if (battle_actions::g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
             bof3::Fatal("BOF3X_UNLEARNED_BLUE=1 needs BattleAction_AbilityCheck ours, and it is disabled");
-        if (g_unlearned_blue) bof3::Log("DIV-0179    an enemy's skill the party can still learn has its name in blue");
+        if (battle_actions::g_unlearned_blue) bof3::Log("DIV-0179    an enemy's skill the party can still learn has its name in blue");
     }
 }

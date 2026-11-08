@@ -93,16 +93,16 @@ constexpr ::bof3::image::Va kListAEntries{0x9039C0};
 constexpr ::bof3::image::Va kListBEntries{0x904F00};
 // kListC: now Rest4b_BusyB (symbols.toml).
 constexpr ::bof3::image::Va kListCPairs{0x904CA0};
-
+}  // namespace
 // DIVERGENCE DIV-0200 (faerie_name.h): 1 through PatchBytes("FaerieNameEnd")
 // in Rest4E_Inject, after the self-test. SlotName: entry e's name for a draw,
 // NUL-ended at its last whole glyph when on, else the table itself; the
 // buffer is the draw's, read before the next call.
-std::uint8_t g_faerie_name_end = 0;
+namespace rest_4e { std::uint8_t g_faerie_name_end = 0; }  namespace {
 const unsigned char* SlotName(unsigned e) {
     static unsigned char ended[6];
     const unsigned char* const slot = At(::bof3::Img(kEntryNames.v) + 5 * e);
-    return g_faerie_name_end ? faerie_name::Ended(slot, ended) : slot;
+    return rest_4e::g_faerie_name_end ? faerie_name::Ended(slot, ended) : slot;
 }
 
 // WindowRecords 0 and 1 (0x24 each): the item window and its cursor.
@@ -214,7 +214,7 @@ extern "C" void __cdecl CommuEntry_DrawPanel(int x, int y, unsigned entry, unsig
     // whole glyph; the name being edited is the editor's own, NUL-ended.
     unsigned char ended[6];
     const unsigned char* name = (editing & 0xFF) == 0 ? At(::bof3::Img(kEntryNames.v) + 5 * e) : At(::bof3::Img(kEdit.v));
-    if ((editing & 0xFF) == 0 && g_faerie_name_end) name = faerie_name::Ended(name, ended);
+    if ((editing & 0xFF) == 0 && rest_4e::g_faerie_name_end) name = faerie_name::Ended(name, ended);
     SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, name);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(p);
@@ -1285,11 +1285,11 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
 }
 
-namespace {
+
 // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01, issue #177): set by
 // Rest4E_Inject after the self-test, for a Latin language (DIV-0056).
-bool g_west_cause_column = false;
-}  // namespace
+namespace rest_4e { bool g_west_cause_column = false; }
+
 
 // original 0x460730: the first list's page `page` (its low byte) at (x, y):
 // its heading (icon 1, message 0x38, the count 0x9039A0), then up to seven
@@ -1304,7 +1304,7 @@ bool g_west_cause_column = false;
 // the West's column; Japanese, Chinese and the original keep 0x70.
 extern "C" void __cdecl CommuRank_DrawListA(int x, int y, unsigned page) {
     ListHeading(x, y, 1, 0x38, ::bof3::Img(Rest4a_RemovedCount_addr));
-    const int cause_x = x + (g_west_cause_column ? 0x48 : 0x70);
+    const int cause_x = x + (rest_4e::g_west_cause_column ? 0x48 : 0x70);
     const unsigned base = 7 * (page & 0xFF);
     for (unsigned i = 0; i < 7; ++i) {
         if (static_cast<int>(base + i) >= Rest4a_RemovedCount) break;
@@ -1427,12 +1427,12 @@ void Rest4E_Inject() {
     {
         // DIV-0200, after the self-test (which compares Capcom's draws).
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
+        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_4e::g_faerie_name_end)), &was, &is, 1);
     }
     // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01): after the self-test,
     // which compares Capcom's column; a Latin language only (DIV-0056).
     if (Lang_Latin()) {
-        g_west_cause_column = true;
+        rest_4e::g_west_cause_column = true;
         bof3::Log("DIV-0064    the village's deaths page: the cause at x + 0x48, the Western discs' column");
     }
     BOF3_INJECT(CommuEntry_DrawPanel);

@@ -212,14 +212,14 @@ void Turn(int angle, std::int32_t px, std::int32_t pz, std::int32_t& ox, std::in
 
 }  // namespace
 
-namespace {
+
 // DIVERGENCE DIV-0084: the icon wheel's formation name centred on x + 0x27,
 // as the US release draws it (its small-text draw takes the middle), where
 // the port starts its four-glyph names at x + 0x16. 0 until FieldO_Inject
 // patches it to 1 under a Latin overlay, after the fuzz, under the name
 // FormationNameCentre.
-unsigned char g_wheel_name_centre = 0;
-}  // namespace
+namespace field_o { unsigned char g_wheel_name_centre = 0; }
+
 
 // original 0x573F70: a kind's name, a turned triangle and up to three icons
 // (the field menu's panel list, 0x59A46E: the panel's +0xA kind, +0xC the lit
@@ -245,7 +245,7 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     // centred on x + 0x27, 8 a letter; the port's x + 0x16 otherwise.
     const unsigned char* const name = Text(::bof3::Img(at::kWheelNames) + k * 28);
     int name_x = x + 0x16;
-    if (g_wheel_name_centre && Labels_SmallWritten(10))
+    if (field_o::g_wheel_name_centre && Labels_SmallWritten(10))
         name_x = x + 0x27 - 4 * static_cast<int>(std::strlen(reinterpret_cast<const char*>(name)));
     SH_CALL(Text_DrawSmall)(name_x, y + 0x28, 0, 0xFF, name);
     const unsigned char kb = static_cast<unsigned char>(kind);
@@ -441,10 +441,10 @@ unsigned char ShownMember() {
 // DIVERGENCE DIV-0059, on the width its pen covers.
 // g_title_live is set by FieldO_Inject after the fuzz, which runs later than
 // BattleDraw_Inject's patch and compares with the original's arithmetic.
-bool g_title_live = false;
+}  namespace field_o { bool g_title_live = false; }  namespace {
 int Centred(int x, unsigned n, const unsigned char* title) {
     const int count = static_cast<int>(n);
-    return x + (g_title_live ? ListTitle_X(title, count) : 6 * (0xD - count));
+    return x + (field_o::g_title_live ? ListTitle_X(title, count) : 6 * (0xD - count));
 }
 
 }  // namespace
@@ -613,9 +613,9 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
 // disc-built image already did (0x669CCC is a gap there, zero). 0 until
 // FieldO_Inject patches it to 1, after the fuzz, under the name SaveSlotBlank
 // (BOF3X_ORIGINAL=SaveSlotBlank, or BOF3X_OFF, draws the port's string).
-namespace {
-unsigned char g_empty_slot_blank = 0;
-}  // namespace
+
+namespace field_o { unsigned char g_empty_slot_blank = 0; }
+
 extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const unsigned char* summary) {
     SH_CALL(Menu_DrawBox)(x + 8, y, 0xC8, 0x30, 0, Style());
     Sprintf(::bof3::Img(at::kFmtSlot), slot & 0xFF);
@@ -641,7 +641,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(at::kColon)));
         SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
         flags = summary[0x14] ? 2 : 0;
-    } else if (!g_empty_slot_blank) {
+    } else if (!field_o::g_empty_slot_blank) {
         SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(at::kEmptySlot)));
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kSlotPieces)), static_cast<int>(flags));
@@ -1326,22 +1326,22 @@ extern "C" void __cdecl ObjTrio_ClearBit40(void) {
 
 void FieldO_Inject() {
     if (bof3::WantsShadow("field_o")) field_o::SelfTest();
-    g_title_live = true;   // DIV-0059, from here on
+    field_o::g_title_live = true;   // DIV-0059, from here on
     // DIVERGENCE DIV-0084: a Latin language overlay only, as DIV-0059's switch.
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("FormationNameCentre",
-                         Low32(&g_wheel_name_centre),
+                         Low32(&field_o::g_wheel_name_centre),
                          &was, &is, 1);
-        bof3::Log("DIV-0084    formation names centred: %s", g_wheel_name_centre ? "on" : "off");
+        bof3::Log("DIV-0084    formation names centred: %s", field_o::g_wheel_name_centre ? "on" : "off");
     }
     // An empty save slot drawn blank on every install and language (the
     // owner's call of 2026-10-31, docs/exe-gap-round.md 7).
     {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("SaveSlotBlank", Low32(&g_empty_slot_blank),
+        bof3::PatchBytes("SaveSlotBlank", Low32(&field_o::g_empty_slot_blank),
                          &was, &is, 1);
-        bof3::Log("SaveSlotBlank  an empty save slot draws %s", g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
+        bof3::Log("SaveSlotBlank  an empty save slot draws %s", field_o::g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
     }
     BOF3_INJECT(Menu_DrawStatsPanel);
     BOF3_INJECT(Menu_DrawExpPanel);

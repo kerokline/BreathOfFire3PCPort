@@ -7,9 +7,12 @@
 // `impl` in symbols.toml).
 #pragma once
 
+#include <cstdint>
+
 void Effect1A_Inject();
 
 namespace effect_1a {
+extern std::uint8_t g_empty_line_none;   // defined in effect_1a.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=effect_1a: the start-up fuzz, effect_1a_fuzz.cpp. Clones every
 // original before Effect1A_Inject patches it.
 void SelfTest();

@@ -84,7 +84,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-std::uint32_t g_hologram_clear = 0;   // DIV-0142's amendment; 1 through PatchBytes("SpriteCapture") in Effect4B_Inject
+}  namespace effect_4b { std::uint32_t g_hologram_clear = 0; }  namespace {   // DIV-0142's amendment; 1 through PatchBytes("SpriteCapture") in Effect4B_Inject
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
@@ -693,7 +693,7 @@ extern "C" void __cdecl EffectKind9D_Run(void) {
 extern "C" void __cdecl EffectKind9D_Start(void) {
     const unsigned char request = Field_Request;
     if (request == 3 || request == 1) return;
-    if (g_hologram_clear != 0)
+    if (effect_4b::g_hologram_clear != 0)
         SpriteCapture_ClearSlot(0x340 + static_cast<unsigned char>(S()[0x2E] - 0xC),
                                 0x100 + static_cast<unsigned char>(S()[0x30] - 0x25), 0x19, 0x31);
     unsigned char* const s = S();
@@ -1511,7 +1511,7 @@ void Effect4B_Inject() {
     {
         // DIV-0142's amendment (issue #191): armed after the fuzz, which compares Capcom's start.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        bof3::PatchBytes("SpriteCapture", Low32(&g_hologram_clear), was, is, 4);
+        bof3::PatchBytes("SpriteCapture", Low32(&effect_4b::g_hologram_clear), was, is, 4);
     }
     BOF3_INJECT(EffectKind87_Setup);
     BOF3_INJECT(EffectKind87_FadePanes);
