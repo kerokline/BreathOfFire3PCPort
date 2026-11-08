@@ -65,9 +65,8 @@ a PlayStation or PSP disc image of *Breath of Fire III*. Nothing you own is
 modified; everything the game reads is built on your machine from your own
 copies.
 
-There is a beta build, packaged with the Python it needs and a launcher: see
-the [releases page](https://github.com/kerokline/BreathOfFire3PCPort/releases).
-The goal is to sunset it eventually, but it is working for now.
+As multiple people have made it through the whole game, I'm officially calling
+the builds beta now, not alpha. See the [releases page](https://github.com/kerokline/BreathOfFire3PCPort/releases) for details.
 
 For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
 
@@ -123,6 +122,11 @@ won't be done.
   bugs, and replaces the renderer with OpenGL. Big inspiration for me starting
   my project [`docs/PLAN.md`](docs/PLAN.md) §4.
 
+- [**bof3**](https://github.com/raulcorreia7/bof3) and [**bof3-wiki**](https://raulcorreia7.github.io/bof3-wiki/) - 
+  Huge thank you to https://github.com/raulcorreia7 and his decomposition project, which has
+  been a great resource when trying to restore PSX functionality to some broken
+  areas of the PC port.
+
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
   This is less a shoutout to myself and more to the psxrecomp team - their AI 
   tooling is what opened up the ability to go back and renovate the PC port. The
@@ -132,6 +136,9 @@ won't be done.
 - [**OpenRCT2**](https://github.com/OpenRCT2/OpenRCT2/) — absolutely the coolest
   project there is, going strong since 2014. Their pattern / development plan 
   served as the guide for how this project could begin.
+
+- [**ScrubOasis**](https://github.com/ScrubOasis) - Your playtesting and brainstorming were
+  an incalculable help, thank you!
 
 ## Legal
 
