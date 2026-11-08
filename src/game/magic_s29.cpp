@@ -58,19 +58,19 @@ using move_script::Word;
 // --- small helpers ---------------------------------------------------------
 
 // The original's imul: 32 bits, wrapping; `sar 0xC` after it is arithmetic.
-inline int Mul(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)); }
-inline int Mul12(int a, int b) { return Mul(a, b) >> 12; }
+inline int MulMagicS29(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)); }
+inline int Mul12(int a, int b) { return MulMagicS29(a, b) >> 12; }
 inline std::int32_t Add(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b));
 }
 inline std::int32_t Sub(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) - static_cast<std::uint32_t>(b));
 }
-inline short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-inline std::uint32_t Addr(const void* p) { return Low32(p); }
-inline void SetPtr(unsigned char* at_, const void* p) { SetLong(at_, static_cast<std::int32_t>(Addr(p))); }
-inline void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
-inline void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
+inline short S16MagicS29(const unsigned char* p) { return static_cast<short>(Word(p)); }
+inline std::uint32_t AddrMagicS29(const void* p) { return Low32(p); }
+inline void SetPtr(unsigned char* at_, const void* p) { SetLong(at_, static_cast<std::int32_t>(AddrMagicS29(p))); }
+inline void IncMagicS29(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
+inline void DecMagicS29(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 inline void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
 
 // `fild dword` then `fstp dword`: an integer as a float.
@@ -89,17 +89,17 @@ std::uint16_t Ftol16(std::uint32_t bits) {
     return static_cast<std::uint16_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
 }
 
-inline unsigned char* Sc() { return Sprite_Current; }
-inline unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
-inline unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+inline unsigned char* ScMagicS29() { return Sprite_Current; }
+inline unsigned char* OwnerMagicS29() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+inline unsigned char TargetByteMagicS29() { return Mem(::bof3::Img(at::kTarget))[0]; }
 inline unsigned char* TaskSlot(unsigned index) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (index & 0xFFu) * at::kTaskStride); }
 inline unsigned char* Mote(unsigned index) { return Mem(::bof3::Img(cell::kMotePool) + (index & 0xFFu) * cell::kMoteStride); }
 inline unsigned char* Shade(unsigned index) { return Mem(::bof3::Img(ShadowMote_Pool_addr) + (index & 0xFFu) * cell::kShadeStride); }
 inline unsigned char* Cur() { return Pointer(::bof3::Img(ShadowMote_Current_addr)); }
 
 // The scratch words and vertices, read and written in place.
-inline std::uint16_t SW(std::uint32_t a) { return Word(Mem(a)); }
-inline short SS(std::uint32_t a) { return static_cast<short>(Word(Mem(a))); }
+inline std::uint16_t SWMagicS29(std::uint32_t a) { return Word(Mem(a)); }
+inline short SSMagicS29(std::uint32_t a) { return static_cast<short>(Word(Mem(a))); }
 inline unsigned char SB(std::uint32_t a) { return Mem(a)[0]; }
 inline void Put(std::uint32_t a, int v) { SetWord(Mem(a), static_cast<unsigned>(v) & 0xFFFFu); }
 inline const short* Vec(std::uint32_t a) { return reinterpret_cast<const short*>(Mem(a)); }
@@ -115,17 +115,17 @@ Handler DataPhase(std::uint32_t table, unsigned index) {
 }
 
 // Callees.
-int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
-int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
+int SinMagicS29(int angle) { return MH_CALL(Math_Sin)(angle); }
+int CosMagicS29(int angle) { return MH_CALL(Math_Cos)(angle); }
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
-void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
-void Commit(unsigned slot, unsigned size) { MH_CALL(Gfx_CommitPrim)(slot, size); }
+void DrawModeMagicS29(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
+void CommitMagicS29(unsigned slot, unsigned size) { MH_CALL(Gfx_CommitPrim)(slot, size); }
 void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
 }
 void LinkAtSc(unsigned size) {
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     Link(ts->x, ts->z, 2, size);
 }
@@ -170,7 +170,7 @@ void CallOwn(std::uint32_t address) { MH_WORD(Handler, address)(); }
 // phase put back after each.
 S29_EXPORT void __cdecl DivineBreath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::DivineBreath_Start, bof3::addr::BattleFx_Finish};
-    const unsigned phase = Sc()[1];
+    const unsigned phase = ScMagicS29()[1];
     if (phase >= 2) PastTable("DivineBreath_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const saved = Sprite_Current;
@@ -201,18 +201,18 @@ S29_EXPORT void __cdecl DivineBreath_Start(void) {
         m[2] = 0;
     }
     MH_CALL(MagicFx_CenterOnSide)();
-    Sc()[0xB] = 0;
-    Inc(Sc()[1]);
+    ScMagicS29()[0xB] = 0;
+    IncMagicS29(ScMagicS29()[1]);
     static constexpr unsigned char kKind[2] = {0, 1};
     static constexpr unsigned char kDelay[2] = {1, 9};
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned slot = NewTask(0x5C);
-        unsigned char* const self = Sc();
+        unsigned char* const self = ScMagicS29();
         unsigned char* const child = TaskSlot(slot);
         SetPtr(child + 0x80, self);
         child[1] = kKind[k];
         child[9] = kDelay[k];
-        Inc(self[0xB]);
+        IncMagicS29(self[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);
 }
@@ -221,7 +221,7 @@ S29_EXPORT void __cdecl DivineBreath_Start(void) {
 // DivineBreathFx_Kinds (two entries: DivineBeam_Run, DivineBurst_Run) by +1,
 // unchecked.
 S29_EXPORT void __cdecl DivineBreathFx_Task(void) {
-    const unsigned phase = Sc()[1];
+    const unsigned phase = ScMagicS29()[1];
     if (phase >= 2) PastTable("DivineBreathFx_Task", phase, 2);
     DataPhase(::bof3::Img(DivineBreathFx_Kinds_addr), phase)();
 }
@@ -231,15 +231,15 @@ S29_EXPORT void __cdecl DivineBreathFx_Task(void) {
 // ((Rand & 3) + 4 each), the actor's matrix pushed, the disc and the wall
 // drawn, the matrix popped.
 S29_EXPORT void __cdecl DivineBeam_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 3) PastTable("DivineBeam_Run", phase, 3);
     DataPhase(::bof3::Img(DivineBeam_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
     if ((Frame_Counter & 1) == 0) {
         for (unsigned k = 0x5D; k <= 0x5F; ++k) {
             const std::uint32_t r = RandCall();
-            Sc()[k] = static_cast<unsigned char>((r & 3) + 4);
+            ScMagicS29()[k] = static_cast<unsigned char>((r & 3) + 4);
         }
     }
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -252,35 +252,35 @@ S29_EXPORT void __cdecl DivineBeam_Run(void) {
 // height 0x4000000 above; three colour bytes (Rand & 3) + 4; radius +0x14
 // 0x100, +9 0x10, +0xA 8, +2 on.
 S29_EXPORT void __cdecl DivineBeam_Wait(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(Owner())->height, 0x4000000));
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(OwnerMagicS29())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(OwnerMagicS29())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(OwnerMagicS29())->height, 0x4000000));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
-        Sc()[k] = static_cast<unsigned char>((r & 3) + 4);
+        ScMagicS29()[k] = static_cast<unsigned char>((r & 3) + 4);
     }
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
-    Sc()[9] = 0x10;
-    Sc()[0xA] = 8;
-    Inc(Sc()[2]);
+    ScMagicS29()[9] = 0x10;
+    ScMagicS29()[0xA] = 8;
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E0BB0: the height down 0x800000; +0xA down, at 0 +2 on.
 S29_EXPORT void __cdecl DivineBeam_Descend(void) {
     rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(0xFF800000u)));
-    Dec(Sc()[0xA]);
-    if (Sc()[0xA] == 0) Inc(Sc()[2]);
+    DecMagicS29(ScMagicS29()[0xA]);
+    if (ScMagicS29()[0xA] == 0) IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E0BE0: the radius +0x14 up 0x20; +9 down; at 0 the owner's
 // +0xB down and the task freed.
 S29_EXPORT void __cdecl DivineBeam_Widen(void) {
     rv::Store(rv::Current<records::BattleTask>()->step_y, Add(rv::Current<records::BattleTask>()->step_y, 0x20));
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    Dec(Owner()[0xB]);
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
+    DecMagicS29(OwnerMagicS29()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -289,10 +289,10 @@ namespace {
 // The colours both beam draws take: word 0x903856 / 58 / 5A = the signed
 // colour byte +0x5D / +0x5E / +0x5F times the brightness +9.
 void BeamColours() {
-    const unsigned char* const s = Sc();
-    Put(::bof3::Img(cell::kW6), Mul(static_cast<signed char>(s[0x5D]), s[9]));
-    Put(::bof3::Img(cell::kW8), Mul(static_cast<signed char>(s[0x5E]), s[9]));
-    Put(::bof3::Img(cell::kWA), Mul(static_cast<signed char>(s[0x5F]), s[9]));
+    const unsigned char* const s = ScMagicS29();
+    Put(::bof3::Img(cell::kW6), MulMagicS29(static_cast<signed char>(s[0x5D]), s[9]));
+    Put(::bof3::Img(cell::kW8), MulMagicS29(static_cast<signed char>(s[0x5E]), s[9]));
+    Put(::bof3::Img(cell::kWA), MulMagicS29(static_cast<signed char>(s[0x5F]), s[9]));
 }
 
 }  // namespace
@@ -303,31 +303,31 @@ void BeamColours() {
 // >> 12), the centre in the colours, the rim 0x10 grey, each
 // Gfx_CommitPrim(5, 0x34); then the draw mode 0x15.
 S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
-    DrawMode(0x35);
-    Commit(5, 0xC);
+    DrawModeMagicS29(0x35);
+    CommitMagicS29(5, 0xC);
     Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
     }
     {
-        const int c = Cos(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
+        const int c = CosMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))));
     }
     BeamColours();
     for (int a = 0x100; a < 0x1100; a += 0x100) {
-        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
-        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+        const std::uint16_t y = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
+        const std::uint16_t x = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
         Put(::bof3::Img(Prim_VertexScratch_addr), 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, x);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, y);
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
         }
-        const int c = Cos(a);
-        const int ny = Mul12(c, SS(::bof3::Img(cell::kR)));
+        const int c = CosMagicS29(a);
+        const int ny = Mul12(c, SSMagicS29(::bof3::Img(cell::kR)));
         unsigned char* const p = Gfx_PacketNext;
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, ny);
@@ -339,10 +339,10 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
         Shade3(p + 4);
         Fill3(p + 0x14, 0x10);
         Fill3(p + 0x24, 0x10);
-        Commit(5, 0x34);
+        CommitMagicS29(5, 0x34);
     }
-    DrawMode(0x15);
-    Commit(5, 0xC);
+    DrawModeMagicS29(0x15);
+    CommitMagicS29(5, 0xC);
 }
 
 // original 0x4E0E00: the beam's wall. The radius the word +0x14; 32
@@ -353,17 +353,17 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
 S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
     Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
     }
     {
-        const int c = Cos(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
+        const int c = CosMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))));
     }
     BeamColours();
     for (int a = 0x80; a < 0x1080; a += 0x80) {
-        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
-        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        const std::uint16_t y = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
+        const std::uint16_t x = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
         Put(::bof3::Img(Prim_VertexScratch_addr), x);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 2, y);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 4, -0x300);
@@ -371,16 +371,16 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
         }
-        const int c = Cos(a);
-        const int ny = Mul12(c, SS(::bof3::Img(cell::kR)));
-        const std::uint16_t nx = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        const int c = CosMagicS29(a);
+        const int ny = Mul12(c, SSMagicS29(::bof3::Img(cell::kR)));
+        const std::uint16_t nx = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, -0x300);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, nx);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, ny);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, ny);
@@ -388,7 +388,7 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
                                     ts->x);
         const std::int32_t lz = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<short>(ny)) << 9),
                                     ts->z);
-        DrawMode(0x35);
+        DrawModeMagicS29(0x35);
         Link(lx, lz, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
@@ -405,10 +405,10 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
 // original 0x4E1030: DivineBurst_Steps (three) by +2, unchecked; then while
 // +0 and +2 are set the wall drawn under the actor's matrix.
 S29_EXPORT void __cdecl DivineBurst_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 3) PastTable("DivineBurst_Run", phase, 3);
     DataPhase(::bof3::Img(DivineBurst_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     CallOwn(bof3::addr::DivineBeam_DrawWall);
@@ -418,19 +418,19 @@ S29_EXPORT void __cdecl DivineBurst_Run(void) {
 // original 0x4E1070: +9 down; at 0 the burst at the owner's point, colour
 // bytes 0xF, radius 0x100, its step +0x20 0x21, +9 0x10, +0xA 0x1E, +2 on.
 S29_EXPORT void __cdecl DivineBurst_Wait(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
-    Sc()[0x5D] = 0xF;
-    Sc()[0x5E] = 0xF;
-    Sc()[0x5F] = 0xF;
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(OwnerMagicS29())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(OwnerMagicS29())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(OwnerMagicS29())->height);
+    ScMagicS29()[0x5D] = 0xF;
+    ScMagicS29()[0x5E] = 0xF;
+    ScMagicS29()[0x5F] = 0xF;
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     rv::Store(rv::Current<records::BattleTask>()->work_20, 0x21);
-    Sc()[9] = 0x10;
-    Sc()[0xA] = 0x1E;
-    Inc(Sc()[2]);
+    ScMagicS29()[9] = 0x10;
+    ScMagicS29()[0xA] = 0x1E;
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E1110: the step +0x20 down 2 unless it is 1; the radius +0x14
@@ -440,15 +440,15 @@ S29_EXPORT void __cdecl DivineBurst_Wait(void) {
 // counted in the owner's +0xB; +2 on.
 S29_EXPORT void __cdecl DivineBurst_Shrink(void) {
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         if (rv::As<records::BattleTask>(s)->work_20 != 1) rv::Store(rv::As<records::BattleTask>(s)->work_20, Sub(rv::As<records::BattleTask>(s)->work_20, 2));
     }
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         rv::Store(rv::As<records::BattleTask>(s)->step_y, Sub(rv::As<records::BattleTask>(s)->step_y, rv::As<records::BattleTask>(s)->work_20));
     }
     if (rv::Current<records::BattleTask>()->step_y >= 0x30) return;
-    MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
+    MH_CALL(Battle_SetTargetFlags)(TargetByteMagicS29(), 0x10);
     MH_CALL(Sound_PlayById)(0x101);
     for (unsigned i = 0; i < 0x40; ++i) {
         const unsigned slot = MH_AT(AllocFn, bof3::addr::DivineMote_Alloc)();
@@ -459,29 +459,29 @@ S29_EXPORT void __cdecl DivineBurst_Shrink(void) {
         m[0xB] = static_cast<unsigned char>(i);
         const std::uint32_t r = RandCall();
         m[9] = static_cast<unsigned char>((r & 7) + (i / 6) * 8 + 1);
-        Inc(Owner()[0xB]);
+        IncMagicS29(OwnerMagicS29()[0xB]);
     }
-    Inc(Sc()[2]);
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E11F0: the radius down one while over 8 (signed); on odd frames
 // +9 down, at 0 the owner's +0xB down and the task freed.
 S29_EXPORT void __cdecl DivineBurst_Fade(void) {
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         if (rv::As<records::BattleTask>(s)->step_y > 8) rv::Store(rv::As<records::BattleTask>(s)->step_y, Sub(rv::As<records::BattleTask>(s)->step_y, 1));
     }
     if ((Frame_Counter & 1) == 0) return;
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    Dec(Owner()[0xB]);
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
+    DecMagicS29(OwnerMagicS29()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
 // original 0x4E1240: a mote, a jmp through DivineMote_TaskTable (one entry,
 // DivineMote_Run) by +1, unchecked.
 S29_EXPORT void __cdecl DivineMote_Task(void) {
-    const unsigned phase = Sc()[1];
+    const unsigned phase = ScMagicS29()[1];
     if (phase >= 1) PastTable("DivineMote_Task", phase, 1);
     DataPhase(::bof3::Img(DivineMote_TaskTable_addr), phase)();
 }
@@ -491,17 +491,17 @@ S29_EXPORT void __cdecl DivineMote_Task(void) {
 // point (BattleActor_UpdateScreenXY), its star and ring, draw mode 0x15
 // linked the same.
 S29_EXPORT void __cdecl DivineMote_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 2) PastTable("DivineMote_Run", phase, 2);
     DataPhase(::bof3::Img(DivineMote_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
-    DrawMode(0x35);
+    DrawModeMagicS29(0x35);
     LinkAtSc(0xC);
     MH_CALL(BattleActor_UpdateScreenXY)();
     CallOwn(bof3::addr::DivineMote_DrawStar);
     CallOwn(bof3::addr::DivineMote_DrawRing);
-    DrawMode(0x15);
+    DrawModeMagicS29(0x15);
     LinkAtSc(0xC);
 }
 
@@ -519,10 +519,10 @@ std::uint16_t MoteAngle(const unsigned char* s) {
 // the owner's plus sin / cos of its angle x the distance >> 12, the owner's
 // height; colour bytes (Rand & 7) + 5; +9 0, +0xA 0x18, +2 on.
 S29_EXPORT void __cdecl DivineMote_Launch(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->step_x = 0x5000;
         ts->work_18 = 0x200;
@@ -532,23 +532,23 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         Put(::bof3::Img(cell::kW4), MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(::bof3::Img(cell::kW4)));
-        const std::int32_t v = Add(Mul12(sn, SS(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(Owner())->x);
+        const int sn = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+        const std::int32_t v = Add(Mul12(sn, SSMagicS29(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(OwnerMagicS29())->x);
         rv::Current<records::BattleTask>()->x = v;
     }
     {
-        const int c = Cos(SS(::bof3::Img(cell::kW4)));
-        const std::int32_t v = Add(Mul12(c, SS(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(Owner())->z);
+        const int c = CosMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+        const std::int32_t v = Add(Mul12(c, SSMagicS29(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(OwnerMagicS29())->z);
         rv::Current<records::BattleTask>()->z = v;
     }
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(OwnerMagicS29())->height);
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
-        Sc()[k] = static_cast<unsigned char>((r & 7) + 5);
+        ScMagicS29()[k] = static_cast<unsigned char>((r & 7) + 5);
     }
-    Sc()[9] = 0;
-    Sc()[0xA] = 0x18;
-    Inc(Sc()[2]);
+    ScMagicS29()[9] = 0;
+    ScMagicS29()[0xA] = 0x18;
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E1430: +9 up; the distance +0xC less its step +0x18, the rise
@@ -557,38 +557,38 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
 // height up the rise; at distance 0 the owner's +0xB down and the record
 // freed (0x4F6290, MAGIC219's).
 S29_EXPORT void __cdecl DivineMote_Fly(void) {
-    Inc(Sc()[9]);
+    IncMagicS29(ScMagicS29()[9]);
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->step_x = Sub(ts->step_x, ts->work_18);
     }
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         rv::Store(rv::As<records::BattleTask>(s)->step_y, Add(rv::As<records::BattleTask>(s)->step_y, rv::As<records::BattleTask>(s)->work_20));
     }
     unsigned char* x = nullptr;
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
         x = s + 0x34;
         Put(::bof3::Img(cell::kW4), MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(::bof3::Img(cell::kW4)));
-        SetLong(x, Add(Long(x), Mul12(sn, SS(::bof3::Img(cell::kR)))));
+        const int sn = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+        SetLong(x, Add(Long(x), Mul12(sn, SSMagicS29(::bof3::Img(cell::kR)))));
     }
-    unsigned char* const z = Sc() + 0x38;
+    unsigned char* const z = ScMagicS29() + 0x38;
     {
-        const int c = Cos(SS(::bof3::Img(cell::kW4)));
-        SetLong(z, Add(Long(z), Mul12(c, SS(::bof3::Img(cell::kR)))));
+        const int c = CosMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+        SetLong(z, Add(Long(z), Mul12(c, SSMagicS29(::bof3::Img(cell::kR)))));
     }
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         rv::Store(rv::As<records::BattleTask>(s)->height, Add(rv::As<records::BattleTask>(s)->height, rv::As<records::BattleTask>(s)->step_y));
     }
     if (rv::Current<records::BattleTask>()->step_x != 0) return;
-    Dec(Owner()[0xB]);
+    DecMagicS29(OwnerMagicS29()[0xB]);
     MH_AT(Handler, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -598,42 +598,42 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
 // the centre 0xF0 grey, the rim the colour bytes << 4; each linked at the
 // mote (2, 0x34).
 S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
-    Put(::bof3::Img(cell::kR), Sc()[0xA]);
+    Put(::bof3::Img(cell::kR), ScMagicS29()[0xA]);
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
     }
     {
-        const int c = Cos(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        const int c = CosMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     }
     {
-        const unsigned char* const s = Sc();
-        Put(::bof3::Img(cell::kW6), Mul(static_cast<signed char>(s[0x5D]), 16));
-        Put(::bof3::Img(cell::kW8), Mul(static_cast<signed char>(s[0x5E]), 16));
-        Put(::bof3::Img(cell::kWA), Mul(static_cast<signed char>(s[0x5F]), 16));
+        const unsigned char* const s = ScMagicS29();
+        Put(::bof3::Img(cell::kW6), MulMagicS29(static_cast<signed char>(s[0x5D]), 16));
+        Put(::bof3::Img(cell::kW8), MulMagicS29(static_cast<signed char>(s[0x5E]), 16));
+        Put(::bof3::Img(cell::kWA), MulMagicS29(static_cast<signed char>(s[0x5F]), 16));
     }
     for (int a = 0x200; a < 0x1200; a += 0x200) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         {
-            const unsigned char* const s = Sc();
-            PutFloat(p + 8, S16(s + 0x2E));
-            PutFloat(p + 0xC, S16(s + 0x30));
-            PutFloat(p + 0x18, SS(::bof3::Img(Prim_VertexScratch_addr)));
-            PutFloat(p + 0x1C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
+            const unsigned char* const s = ScMagicS29();
+            PutFloat(p + 8, S16MagicS29(s + 0x2E));
+            PutFloat(p + 0xC, S16MagicS29(s + 0x30));
+            PutFloat(p + 0x18, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr)));
+            PutFloat(p + 0x1C, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 2));
         }
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x28, SS(::bof3::Img(Prim_VertexScratch_addr)));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x28, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr)));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 0xF0);
-            PutFloat(p + 0x2C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
+            PutFloat(p + 0x2C, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 2));
             Shade3(p + 0x14);
             Shade3(p + 0x24);
         }
@@ -647,18 +647,18 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
 // linked at the mote (2, 0x44).
 S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), s[0xA]);
         Put(::bof3::Img(cell::kR2), s[0xA] * 2);
     }
     // the rim points: v0 on the outer circle, v1 on the inner, at angle a
     const auto rim = [](int a, std::uint32_t radius, std::uint32_t v) {
         {
-            const int s = Sin(a);
-            Put(v, Mul12(s, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            const int s = SinMagicS29(a);
+            Put(v, Mul12(s, SSMagicS29(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
         }
-        const int c = Cos(a);
-        Put(v + 2, Mul12(c, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        const int c = CosMagicS29(a);
+        Put(v + 2, Mul12(c, SSMagicS29(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     };
     rim(0, ::bof3::Img(cell::kR2), ::bof3::Img(Prim_VertexScratch_addr));
     rim(0, ::bof3::Img(cell::kR), ::bof3::Img(cell::kV1));
@@ -666,31 +666,31 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, SS(::bof3::Img(Prim_VertexScratch_addr)));
-        PutFloat(p + 0xC, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
-        PutFloat(p + 0x28, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
-        PutFloat(p + 0x2C, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
+        PutFloat(p + 8, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr)));
+        PutFloat(p + 0xC, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 2));
+        PutFloat(p + 0x28, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
+        PutFloat(p + 0x2C, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x18, SS(::bof3::Img(Prim_VertexScratch_addr)));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SSMagicS29(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x18, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr)));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
-            PutFloat(p + 0x1C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            PutFloat(p + 0x1C, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 2));
         }
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x38, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x38, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 1);
             Fill3(p + 0x14, 1);
-            PutFloat(p + 0x3C, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
+            PutFloat(p + 0x3C, SSMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
             Shade3(p + 0x24);
             Shade3(p + 0x34);
         }
@@ -720,7 +720,7 @@ S29_EXPORT unsigned char __cdecl DivineMote_Alloc(void) {
 // after each (the current record is left as the last).
 S29_EXPORT void __cdecl ShadowBreath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::ShadowBreath_Start, bof3::addr::BattleFx_Finish};
-    const unsigned phase = Sc()[1];
+    const unsigned phase = ScMagicS29()[1];
     if (phase >= 2) PastTable("ShadowBreath_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
     const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
@@ -750,18 +750,18 @@ S29_EXPORT void __cdecl ShadowBreath_Start(void) {
     }
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    Sc()[0xB] = 0;
-    Sc()[9] = 0;
-    Inc(Sc()[1]);
+    ScMagicS29()[0xB] = 0;
+    ScMagicS29()[9] = 0;
+    IncMagicS29(ScMagicS29()[1]);
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned slot = NewTask(0x4E);
-        unsigned char* const self = Sc();
+        unsigned char* const self = ScMagicS29();
         unsigned char* const child = TaskSlot(slot);
         SetPtr(child + 0x80, self);
         child[1] = 2;
         child[0xB] = static_cast<unsigned char>(i);
         child[9] = static_cast<unsigned char>(i + 1);
-        Inc(self[0xB]);
+        IncMagicS29(self[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x102);
     for (unsigned k = 0x1A00; k < 0x1B00; ++k) Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | 0x8000);
@@ -772,7 +772,7 @@ S29_EXPORT void __cdecl ShadowBreath_Start(void) {
 // ShadowBreathFx_Kinds (three entries: ShadowOrb_Run, ShadowGlow_Run,
 // ShadowSeeker_Run) by +1, unchecked.
 S29_EXPORT void __cdecl ShadowBreathFx_Task(void) {
-    const unsigned phase = Sc()[1];
+    const unsigned phase = ScMagicS29()[1];
     if (phase >= 3) PastTable("ShadowBreathFx_Task", phase, 3);
     DataPhase(::bof3::Img(ShadowBreathFx_Kinds_addr), phase)();
 }
@@ -781,10 +781,10 @@ S29_EXPORT void __cdecl ShadowBreathFx_Task(void) {
 // WaitChildren, MAGIC060's 0x4B1740) by +2, unchecked; then while +0 and +2
 // are set, under the actor's matrix: the rim, the band, the disc.
 S29_EXPORT void __cdecl ShadowOrb_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 4) PastTable("ShadowOrb_Run", phase, 4);
     DataPhase(::bof3::Img(ShadowOrb_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     CallOwn(bof3::addr::ShadowOrb_DrawRim);
@@ -795,14 +795,14 @@ S29_EXPORT void __cdecl ShadowOrb_Run(void) {
 
 // original 0x4E1B40: +9 up 2, +0xA up 0x18; at +9 0x10 +2 on.
 S29_EXPORT void __cdecl ShadowOrb_Grow(void) {
-    AddB(Sc()[9], 2);
-    AddB(Sc()[0xA], 0x18);
-    if (Sc()[9] == 0x10) Inc(Sc()[2]);
+    AddB(ScMagicS29()[9], 2);
+    AddB(ScMagicS29()[0xA], 0x18);
+    if (ScMagicS29()[9] == 0x10) IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E1B70: +2 on once the owner's count +0xB is under 2.
 S29_EXPORT void __cdecl ShadowOrb_WaitChildren(void) {
-    if (Owner()[0xB] < 2) Inc(Sc()[2]);
+    if (OwnerMagicS29()[0xB] < 2) IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E1B90: the orb's disc. Gpu_SetDrawMode(.., 0x55) and
@@ -810,22 +810,22 @@ S29_EXPORT void __cdecl ShadowOrb_WaitChildren(void) {
 // semi-transparent POLY_G3 of the centre and two rim points 0x100 apart, the
 // centre in the shade, the rim 1; each Gfx_CommitPrim(5, 0x34).
 S29_EXPORT void __cdecl ShadowOrb_DrawDisc(void) {
-    DrawMode(0x55);
-    Commit(5, 0xC);
+    DrawModeMagicS29(0x55);
+    CommitMagicS29(5, 0xC);
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), s[0xA] * 2);
         Put(::bof3::Img(cell::kW6), s[9] * 12);
         Put(::bof3::Img(cell::kW8), s[9] * 12);
         Put(::bof3::Img(cell::kWA), s[9] * 12);
     }
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
     }
     {
-        const int c = Cos(0);
-        const int y = Mul12(c, SS(::bof3::Img(cell::kR)));
+        const int c = CosMagicS29(0);
+        const int y = Mul12(c, SSMagicS29(::bof3::Img(cell::kR)));
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
@@ -835,25 +835,25 @@ S29_EXPORT void __cdecl ShadowOrb_DrawDisc(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
-        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
+        const std::uint16_t x = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+        const std::uint16_t y = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
         Put(::bof3::Img(Prim_VertexScratch_addr), 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, x);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, y);
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))));
         }
         Project3(p);
         Shade3(p + 4);
         Fill3(p + 0x14, 1);
         Fill3(p + 0x24, 1);
-        Commit(5, 0x34);
+        CommitMagicS29(5, 0x34);
     }
 }
 
@@ -865,20 +865,20 @@ namespace {
 // scratch shade, or 1), each Gfx_CommitPrim(5, 0x44).
 void OrbRing(bool shade_first) {
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR2))));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SSMagicS29(::bof3::Img(cell::kR2))));
     }
     {
-        const int c = Cos(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR2))));
+        const int c = CosMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR2))));
     }
     {
-        const int s = Sin(0);
-        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SS(::bof3::Img(cell::kR))));
+        const int s = SinMagicS29(0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
     }
     {
-        const int c = Cos(0);
-        const int y = Mul12(c, SS(::bof3::Img(cell::kR)));
+        const int c = CosMagicS29(0);
+        const int y = Mul12(c, SSMagicS29(::bof3::Img(cell::kR)));
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, y);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
@@ -889,29 +889,29 @@ void OrbRing(bool shade_first) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const std::uint16_t x1 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
-        const std::uint16_t y1 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
-        const std::uint16_t x3 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x18);
+        const std::uint16_t x1 = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        const std::uint16_t y1 = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
+        const std::uint16_t x3 = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x18);
         Put(::bof3::Img(Prim_VertexScratch_addr), x1);
-        const std::uint16_t y3 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2);
+        const std::uint16_t y3 = SWMagicS29(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 2, y1);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, x3);
         Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y3);
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR2))));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SSMagicS29(::bof3::Img(cell::kR2))));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR2))));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR2))));
         }
         {
-            const int s = Sin(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SS(::bof3::Img(cell::kR))));
+            const int s = SinMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SSMagicS29(::bof3::Img(cell::kR))));
         }
         {
-            const int c = Cos(a);
-            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
+            const int c = CosMagicS29(a);
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, Mul12(c, SSMagicS29(::bof3::Img(cell::kR))));
         }
         Project4(p);
         if (shade_first) {
@@ -925,7 +925,7 @@ void OrbRing(bool shade_first) {
             Shade3(p + 0x24);
             Shade3(p + 0x34);
         }
-        Commit(5, 0x44);
+        CommitMagicS29(5, 0x44);
     }
 }
 
@@ -935,12 +935,12 @@ void OrbRing(bool shade_first) {
 // the inner radius +0xA x 2, the outer (Rand & 3) + +0xA x 3; the shade (+9 x
 // 15, +9 x 4, +9 x 15) on the inner edge, the outer 1.
 S29_EXPORT void __cdecl ShadowOrb_DrawRim(void) {
-    DrawMode(0x35);
-    Commit(5, 0xC);
-    Put(::bof3::Img(cell::kR), Sc()[0xA] * 2);
+    DrawModeMagicS29(0x35);
+    CommitMagicS29(5, 0xC);
+    Put(::bof3::Img(cell::kR), ScMagicS29()[0xA] * 2);
     const std::uint32_t r = RandCall();
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR2), (r & 3) + s[0xA] * 3u);
         Put(::bof3::Img(cell::kW6), s[9] * 15);
         Put(::bof3::Img(cell::kW8), s[9] * 4);
@@ -953,10 +953,10 @@ S29_EXPORT void __cdecl ShadowOrb_DrawRim(void) {
 // the inner radius +0xA, the outer +0xA x 2; the shade (+9 x 15, +9 x 4,
 // +9 x 15) on the outer edge, the inner 1.
 S29_EXPORT void __cdecl ShadowOrb_DrawBand(void) {
-    DrawMode(0x35);
-    Commit(5, 0xC);
+    DrawModeMagicS29(0x35);
+    CommitMagicS29(5, 0xC);
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), s[0xA]);
         Put(::bof3::Img(cell::kR2), s[0xA] * 2);
         Put(::bof3::Img(cell::kW6), s[9] * 15);
@@ -970,10 +970,10 @@ S29_EXPORT void __cdecl ShadowOrb_DrawBand(void) {
 // MAGIC040's 0x4A5D50) by +2, unchecked; then while +0 and +2 are set its
 // screen point and the glow drawn.
 S29_EXPORT void __cdecl ShadowGlow_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 4) PastTable("ShadowGlow_Run", phase, 4);
     DataPhase(::bof3::Img(ShadowGlow_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
     CallOwn(bof3::addr::ShadowGlow_Draw);
@@ -982,22 +982,22 @@ S29_EXPORT void __cdecl ShadowGlow_Run(void) {
 // original 0x4E2240: +9 down; at 0 sound 0x100, the glow at the owner's
 // point, +0xB 0, +9 0x14, +0xA 0, +2 on.
 S29_EXPORT void __cdecl ShadowGlow_Wait(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
     MH_CALL(Sound_PlayById)(0x100);
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
-    Sc()[0xB] = 0;
-    Sc()[9] = 0x14;
-    Sc()[0xA] = 0;
-    Inc(Sc()[2]);
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(OwnerMagicS29())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(OwnerMagicS29())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(OwnerMagicS29())->height);
+    ScMagicS29()[0xB] = 0;
+    ScMagicS29()[9] = 0x14;
+    ScMagicS29()[0xA] = 0;
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E22C0: +9 up 2; at 0x96 +2 on.
 S29_EXPORT void __cdecl ShadowGlow_Grow(void) {
-    AddB(Sc()[9], 2);
-    if (Sc()[9] == 0x96) Inc(Sc()[2]);
+    AddB(ScMagicS29()[9], 2);
+    if (ScMagicS29()[9] == 0x96) IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E22E0: the glow, two semi-transparent POLY_GT4 sprites at the
@@ -1008,20 +1008,20 @@ S29_EXPORT void __cdecl ShadowGlow_Grow(void) {
 // sprite linked at the task (2, 0x54).
 S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), 0x28);
         Put(::bof3::Img(cell::kR2), s[9]);
         Put(::bof3::Img(cell::kW4), s[0xA] << 3);
         Put(::bof3::Img(Scratch_Swap_addr), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
         Put(::bof3::Img(cell::kY), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
-    DrawMode(0xB5);
+    DrawModeMagicS29(0xB5);
     LinkAtSc(0xC);
     for (unsigned k = 0; k < 2; ++k) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyGT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const int x = SS(::bof3::Img(Scratch_Swap_addr)), y = SS(::bof3::Img(cell::kY)), r = SS(::bof3::Img(cell::kR)), h = SS(::bof3::Img(cell::kR2));
+        const int x = SSMagicS29(::bof3::Img(Scratch_Swap_addr)), y = SSMagicS29(::bof3::Img(cell::kY)), r = SSMagicS29(::bof3::Img(cell::kR)), h = SSMagicS29(::bof3::Img(cell::kR2));
         const int top = k == 0 ? y - h - 0x10 : y - 0x10;
         const int foot = k == 0 ? y - 0x10 : y;
         PutFloat(p + 8, x - r);
@@ -1072,10 +1072,10 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
 // original 0x4E26A0: ShadowSeeker_Steps (four) by +2, unchecked; then while
 // +0 and +2 are set its screen point and the seeker drawn.
 S29_EXPORT void __cdecl ShadowSeeker_Run(void) {
-    const unsigned phase = Sc()[2];
+    const unsigned phase = ScMagicS29()[2];
     if (phase >= 4) PastTable("ShadowSeeker_Run", phase, 4);
     DataPhase(::bof3::Img(ShadowSeeker_Steps_addr), phase)();
-    const unsigned char* const s = Sc();
+    const unsigned char* const s = ScMagicS29();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
     CallOwn(bof3::addr::ShadowSeeker_Draw);
@@ -1086,8 +1086,8 @@ namespace {
 // Math_Ratan2 of the owner's point less the task's, x first then z, each an
 // integer made a float (fild / fstp dword): the heading toward the owner.
 int HeadingToOwner() {
-    const unsigned char* const o = Owner();
-    const unsigned char* const s = Sc();
+    const unsigned char* const o = OwnerMagicS29();
+    const unsigned char* const s = ScMagicS29();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const std::int32_t dz = Sub(rv::As<records::SpriteHead>(o)->z, ts->z);
     const std::int32_t dx = Sub(rv::As<records::SpriteHead>(o)->x, ts->x);
@@ -1101,17 +1101,17 @@ int HeadingToOwner() {
 // turned by the direction (0x446770) and added, the height up 0x800000; its
 // heading +0xC toward the owner; +9 0, +2 on.
 S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    Sc()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
+    DecMagicS29(ScMagicS29()[9]);
+    if (ScMagicS29()[9] != 0) return;
+    ScMagicS29()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->z);
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->height);
     rv::Current<records::BattleTask>()->step_x = 0x8000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    MH_AT(TaskFn, magic_s29::kTurnByFacing)(Sc());
+    MH_AT(TaskFn, magic_s29::kTurnByFacing)(ScMagicS29());
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = Add(ts->x, ts->step_x);
         ts->z = Add(ts->z, ts->step_z);
@@ -1119,8 +1119,8 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
     }
     const int heading = HeadingToOwner();
     rv::Current<records::BattleTask>()->step_x = heading;
-    Sc()[9] = 0;
-    Inc(Sc()[2]);
+    ScMagicS29()[9] = 0;
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E27E0: +9 up 4 while under 0x10; a step toward the owner
@@ -1130,28 +1130,28 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
 // 0x600 and 0xA00 - it has passed the owner.
 S29_EXPORT void __cdecl ShadowSeeker_Home(void) {
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         if (s[9] < 0x10) AddB(s[9], 4);
     }
-    MH_CALL(MagicFx_StepToward)(Owner(), 0x60);
+    MH_CALL(MagicFx_StepToward)(OwnerMagicS29(), 0x60);
     {
-        unsigned char* const s = Sc();
+        unsigned char* const s = ScMagicS29();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->step_z = ts->step_x;
     }
     const int heading = HeadingToOwner();
     rv::Current<records::BattleTask>()->step_x = heading;
-    const int near = MH_CALL(MagicFx_NearSprite)(Owner(), 0xC000);
-    unsigned char* const s = Sc();
+    const int near = MH_CALL(MagicFx_NearSprite)(OwnerMagicS29(), 0xC000);
+    unsigned char* const s = ScMagicS29();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (near != 0) {
-        Inc(s[2]);
+        IncMagicS29(s[2]);
         return;
     }
     ts->step_z = Sub(ts->step_z & 0xFFF, ts->step_x & 0xFFF);
     if (ts->step_z < 0) ts->step_z = Sub(0, ts->step_z);
     const std::int32_t turn = ts->step_z;
-    if (turn > 0x600 && turn < 0xA00) Inc(s[2]);
+    if (turn > 0x600 && turn < 0xA00) IncMagicS29(s[2]);
 }
 
 // original 0x4E28C0: a seeker with +0xB 0 (the first) bursts, any other only
@@ -1161,27 +1161,27 @@ S29_EXPORT void __cdecl ShadowSeeker_Home(void) {
 // +1 0, +4 its number i, delay +5 (Rand & 0xF) + (i & 1) x 16 + 0x18, counted
 // in the owner's +0xB; the targets' flag 0x10; +2 on.
 S29_EXPORT void __cdecl ShadowSeeker_Burst(void) {
-    if (Sc()[0xB] != 0) {
-        Inc(Sc()[2]);
+    if (ScMagicS29()[0xB] != 0) {
+        IncMagicS29(ScMagicS29()[2]);
         return;
     }
     MH_CALL(Sound_PlayById)(0x101);
     {
         const unsigned slot = NewTask(0x4E);
-        unsigned char* const o = Owner();
+        unsigned char* const o = OwnerMagicS29();
         unsigned char* const child = TaskSlot(slot);
         SetPtr(child + 0x80, o);
         child[1] = 0;
-        Inc(o[0xB]);
+        IncMagicS29(o[0xB]);
     }
     {
         const unsigned slot = NewTask(0x4E);
-        unsigned char* const o = Owner();
+        unsigned char* const o = OwnerMagicS29();
         unsigned char* const child = TaskSlot(slot);
         SetPtr(child + 0x80, o);
         child[1] = 1;
         child[9] = 0x2E;
-        Inc(o[0xB]);
+        IncMagicS29(o[0xB]);
     }
     for (unsigned i = 0; i < 0x40; ++i) {
         const unsigned index = MH_AT(AllocFn, bof3::addr::ShadowMote_Alloc)();
@@ -1191,18 +1191,18 @@ S29_EXPORT void __cdecl ShadowSeeker_Burst(void) {
         r[4] = static_cast<unsigned char>(i);
         const std::uint32_t n = RandCall();
         r[5] = static_cast<unsigned char>((n & 0xF) + ((i & 1) << 4) + 0x18);
-        Inc(Owner()[0xB]);
+        IncMagicS29(OwnerMagicS29()[0xB]);
     }
-    MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
-    Inc(Sc()[2]);
+    MH_CALL(Battle_SetTargetFlags)(TargetByteMagicS29(), 0x10);
+    IncMagicS29(ScMagicS29()[2]);
 }
 
 // original 0x4E29E0: +9 down 2; once negative (as a signed byte) the owner's
 // +0xB down and the task freed.
 S29_EXPORT void __cdecl ShadowSeeker_Fade(void) {
-    AddB(Sc()[9], 0xFE);
-    if (static_cast<signed char>(Sc()[9]) >= 0) return;
-    Dec(Owner()[0xB]);
+    AddB(ScMagicS29()[9], 0xFE);
+    if (static_cast<signed char>(ScMagicS29()[9]) >= 0) return;
+    DecMagicS29(OwnerMagicS29()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -1213,10 +1213,10 @@ S29_EXPORT void __cdecl ShadowSeeker_Fade(void) {
 // [+0xB] (red, blue) x +9 and +9 green, the rim 1; each Gfx_CommitPrim(3,
 // 0x34). The table's index +0xB is unchecked.
 S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
-    DrawMode(0x35);
-    Commit(3, 0xC);
+    DrawModeMagicS29(0x35);
+    CommitMagicS29(3, 0xC);
     {
-        const unsigned char* const s = Sc();
+        const unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kW4), 0);
         Put(::bof3::Img(cell::kR), 0x18);
         Put(::bof3::Img(Scratch_Swap_addr), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
@@ -1230,29 +1230,29 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, SS(::bof3::Img(Scratch_Swap_addr)));
-        PutFloat(p + 0xC, SS(::bof3::Img(cell::kY)));
+        PutFloat(p + 8, SSMagicS29(::bof3::Img(Scratch_Swap_addr)));
+        PutFloat(p + 0xC, SSMagicS29(::bof3::Img(cell::kY)));
         {
-            const int s = Sin(SS(::bof3::Img(cell::kW4)));
-            PutFloat(p + 0x18, Add(Mul12(s, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(Scratch_Swap_addr))));
+            const int s = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x18, Add(Mul12(s, SSMagicS29(::bof3::Img(cell::kR))), SSMagicS29(::bof3::Img(Scratch_Swap_addr))));
         }
         {
-            const int c = Cos(SS(::bof3::Img(cell::kW4)));
-            PutFloat(p + 0x1C, Add(Mul12(c, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(cell::kY))));
+            const int c = CosMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x1C, Add(Mul12(c, SSMagicS29(::bof3::Img(cell::kR))), SSMagicS29(::bof3::Img(cell::kY))));
         }
         Put(::bof3::Img(cell::kW4), (i + 1) << 8);
         {
-            const int s = Sin(SS(::bof3::Img(cell::kW4)));
-            PutFloat(p + 0x28, Add(Mul12(s, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(Scratch_Swap_addr))));
+            const int s = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x28, Add(Mul12(s, SSMagicS29(::bof3::Img(cell::kR))), SSMagicS29(::bof3::Img(Scratch_Swap_addr))));
         }
         {
-            const int c = Cos(SS(::bof3::Img(cell::kW4)));
-            PutFloat(p + 0x2C, Add(Mul12(c, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(cell::kY))));
+            const int c = CosMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x2C, Add(Mul12(c, SSMagicS29(::bof3::Img(cell::kR))), SSMagicS29(::bof3::Img(cell::kY))));
         }
         Shade3(p + 4);
         Fill3(p + 0x14, 1);
         Fill3(p + 0x24, 1);
-        Commit(3, 0x34);
+        CommitMagicS29(3, 0x34);
     }
 }
 
@@ -1288,14 +1288,14 @@ std::uint16_t ShadeAngle(const unsigned char* r) { return static_cast<std::uint1
 // word).
 template <typename Radius> void ShadeCircle(Radius radius) {
     {
-        const int s = Sin(static_cast<short>(SW(::bof3::Img(cell::kW4))));
+        const int s = SinMagicS29(static_cast<short>(SWMagicS29(::bof3::Img(cell::kW4))));
         unsigned char* const r = Cur();
-        SetLong(r + 0x10, Add(Mul(s, radius(r)), rv::As<records::SpriteHead>(Owner())->x));
+        SetLong(r + 0x10, Add(MulMagicS29(s, radius(r)), rv::As<records::SpriteHead>(OwnerMagicS29())->x));
     }
     {
-        const int c = Cos(SS(::bof3::Img(cell::kW4)));
+        const int c = CosMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
         unsigned char* const r = Cur();
-        SetLong(r + 0x14, Add(Mul(c, radius(r)), rv::As<records::SpriteHead>(Owner())->z));
+        SetLong(r + 0x14, Add(MulMagicS29(c, radius(r)), rv::As<records::SpriteHead>(OwnerMagicS29())->z));
     }
 }
 int SpreadRadius(const unsigned char* r) { return r[7]; }
@@ -1316,54 +1316,54 @@ void ShadeMove() {
 // that radius, the owner's height + 0x800000; rise +8 0, +5 +6 0, +7 the
 // radius, +2 on.
 S29_EXPORT void __cdecl ShadowMote_Wait(void) {
-    Dec(Cur()[5]);
+    DecMagicS29(Cur()[5]);
     const unsigned char* const r = Cur();
     if (r[5] != 0) return;
     Put(::bof3::Img(cell::kW4), ShadeAngle(r));
     Put(::bof3::Img(cell::kR), (r[4] >> 4) * 8 + 8);
-    ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(::bof3::Img(cell::kR))); });
-    SetLong(Cur() + 0x18, Add(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
+    ShadeCircle([](const unsigned char*) { return static_cast<int>(SSMagicS29(::bof3::Img(cell::kR))); });
+    SetLong(Cur() + 0x18, Add(rv::As<records::SpriteHead>(OwnerMagicS29())->height, 0x800000));
     SetLong(Cur() + 8, 0);
     Cur()[5] = 0;
     Cur()[6] = 0;
     Cur()[7] = SB(::bof3::Img(cell::kR));
-    Inc(Cur()[2]);
+    IncMagicS29(Cur()[2]);
 }
 
 // original 0x4E2D30: on odd frames the size +5 and the radius +7 up; the
 // point round the owner at +7, the height up +8; +6 up, at 0x10 +2 on.
 S29_EXPORT void __cdecl ShadowMote_Spread(void) {
     if (Frame_Counter & 1) {
-        Inc(Cur()[5]);
-        Inc(Cur()[7]);
+        IncMagicS29(Cur()[5]);
+        IncMagicS29(Cur()[7]);
     }
     ShadeMove();
-    Inc(Cur()[6]);
-    if (Cur()[6] == 0x10) Inc(Cur()[2]);
+    IncMagicS29(Cur()[6]);
+    if (Cur()[6] == 0x10) IncMagicS29(Cur()[2]);
 }
 
 // original 0x4E2DF0: on odd frames the radius +7 up; the rise +8 up 0x80000;
 // the point and height as Spread; +2 on once the rise is 0x800000 or more
 // (signed).
 S29_EXPORT void __cdecl ShadowMote_Lift(void) {
-    if (Frame_Counter & 1) Inc(Cur()[7]);
+    if (Frame_Counter & 1) IncMagicS29(Cur()[7]);
     {
         unsigned char* const r = Cur();
         SetLong(r + 8, Add(Long(r + 8), 0x80000));
     }
     ShadeMove();
-    if (Long(Cur() + 8) >= 0x800000) Inc(Cur()[2]);
+    if (Long(Cur() + 8) >= 0x800000) IncMagicS29(Cur()[2]);
 }
 
 // original 0x4E2EA0: on odd frames the radius +7 up; the point and height as
 // Spread; +6 down, at 0 the owner's +0xB down and the record freed
 // (ShadowMote_Free).
 S29_EXPORT void __cdecl ShadowMote_Fade(void) {
-    if (Frame_Counter & 1) Inc(Cur()[7]);
+    if (Frame_Counter & 1) IncMagicS29(Cur()[7]);
     ShadeMove();
-    Dec(Cur()[6]);
+    DecMagicS29(Cur()[6]);
     if (Cur()[6] != 0) return;
-    Dec(Owner()[0xB]);
+    DecMagicS29(OwnerMagicS29()[0xB]);
     CallOwn(bof3::addr::ShadowMote_Free);
 }
 
@@ -1381,13 +1381,13 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
         Put(::bof3::Img(Scratch_Swap_addr), Word(r + 0xC));
         Put(::bof3::Img(cell::kY), Word(r + 0xE));
     }
-    DrawMode(0xB5);
+    DrawModeMagicS29(0xB5);
     LinkAtCur(0xC);
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyFT4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     {
-        const int x = SS(::bof3::Img(Scratch_Swap_addr)), y = SS(::bof3::Img(cell::kY)), r = SS(::bof3::Img(cell::kR)), h = SS(::bof3::Img(cell::kR2));
+        const int x = SSMagicS29(::bof3::Img(Scratch_Swap_addr)), y = SSMagicS29(::bof3::Img(cell::kY)), r = SSMagicS29(::bof3::Img(cell::kR)), h = SSMagicS29(::bof3::Img(cell::kR2));
         PutFloat(p + 8, x - r);
         PutFloat(p + 0xC, y - h);
         PutFloat(p + 0x18, x + r);
@@ -1448,7 +1448,7 @@ S29_EXPORT void __cdecl ShadowMote_Project(void) {
     short v[4];
     v[0] = static_cast<short>((Long(r + 0x10) >> 9) - 0x4000);
     v[1] = static_cast<short>((Long(r + 0x14) >> 9) - 0x4000);
-    v[2] = static_cast<short>(-(S16(r + 0x1A) / 2));
+    v[2] = static_cast<short>(-(S16MagicS29(r + 0x1A) / 2));
     v[3] = 0;
     MH_CALL(Gpu_SetTile1)(p);
     long depth;
