@@ -6,3 +6,42 @@
 # rename of the caller changes). A new class needs the coordinator's
 # entry in the round doc with its first case. Read by tools/codegen_same.py --exceptions.
 symbol	class	reason	commit
+EffectKind17_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind1B_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind37_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind3E_Bolts	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind3E_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind3F_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind40_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind40_ShardsStep	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind42_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind43_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind44_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind44_SparkEmit	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind6B_Arm	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind6B_Fall	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind6B_Run	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+EffectKind6B_Scatter	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Magic071_Task	low32-site	B0 rename in magic_s16.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Magic072_Task	low32-site	B0 rename in magic_s16.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Magic073_Task	low32-site	B0 rename in magic_s16.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Magic074_Task	low32-site	B0 rename in magic_s16.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+SaveMenu_DrawChoices	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Save_ReadSummaries	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+ShadowBreath_Task	low32-site	B0 rename in magic_s29.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+ShadowSeeker_Burst	low32-site	B0 rename in magic_s29.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Snd_LoadBankFile	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+Sound_LoadStream	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_Z13SaveLists_Armv	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_Z15Effect2C_Injectv	low32-site	B0 rename in effect_2c.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_ZN9save_menu13DrawSlotsOverEiijPKhPVKjS3_	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_ZN9save_menu13ReadSummariesEPKhPhPFbPKcS2_PvES5_	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_ZN9save_menu9ListFilesEPKcPhbb	low32-site	B0 rename in save_menu.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
+_ZN12_GLOBAL__N_117AddressOfEffect2cEPKv	low32-site	B0 rename in effect_2c.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_14WalkERKNS_4PoolEPFvvE	low32-site	B0 rename in magic_s16.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_19AddressOfEPKv	low32-site	B0 rename in rest_3e.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_115AddressOfRest3eEPKv	low32-site	B0 rename in rest_3e.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_14WalkERKNS_4PoolEPFvvE	low32-site	B0 rename in magic_s16.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_110StagedReadEPKcPhPv	low32-site	B0 rename in save_menu.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_19AddressOfEPKv	low32-site	B0 rename in effect_2c.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
+_ZN12_GLOBAL__N_110StagedReadEPKcPhPv	low32-site	B0 rename in save_menu.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
