@@ -12,9 +12,9 @@
 namespace {
 
 constexpr unsigned kObjectSize = 0xA4;
-constexpr unsigned kObjects = 30, kExtra = 4;
-static_assert(kObjectSize * kObjects == (Sprite_Objects_count * sizeof(records::SpriteObject)));
-static_assert(kObjectSize * kExtra == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
+constexpr unsigned kObjectsSpriteFind = 30, kExtraSpriteFind = 4;
+static_assert(kObjectSize * kObjectsSpriteFind == (Sprite_Objects_count * sizeof(records::SpriteObject)));
+static_assert(kObjectSize * kExtraSpriteFind == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
 
 // The fields of a sprite object this file reads; the rest is unread.
 constexpr unsigned kFlags = 0x00;     // u8, bit 0: in use
@@ -135,11 +135,11 @@ void SelfTest(FindFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;   // 1: nothing leans; 12: nearly everything does
-        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtraSpriteFind; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
 
-        const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
+        const unsigned where = Rng() % (kObjectsSpriteFind + kExtraSpriteFind + 4);
+        unsigned char* const current = where < kObjectsSpriteFind ? rv::Bytes(&Sprite_Objects[where]) : where < kObjectsSpriteFind + kExtraSpriteFind ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjectsSpriteFind) * kObjectSize
                                      : outside;
         PutSpriteFind<std::int32_t>(current, kX, cx);
         PutSpriteFind<std::int32_t>(current, kY, cy);
@@ -149,7 +149,7 @@ void SelfTest(FindFn theirs) {
         const unsigned char their_result = theirs();
         const unsigned char our_result = Sprite_FindNearby();
         if (our_result == 0xFF) ++none;
-        else if (our_result < kObjects) ++first;
+        else if (our_result < kObjectsSpriteFind) ++first;
         else ++extra;
         if (their_result != our_result && ++bad <= 8)
             bof3::Log("shadow      Sprite_FindNearby self-test MISMATCH round %u: %u vs ours %u",
@@ -224,7 +224,7 @@ void SelfTestObjectByHandle(HandleFn theirs) {
     unsigned bad = 0, calls = 0;
     for (unsigned layout = 0; layout < kLayouts; ++layout) {
         const unsigned lean = layout % 4;   // 0: no type-0x0A objects at all
-        for (unsigned i = 0; i < kObjects; ++i)
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i)
             Sprite_Objects[i].type =
                 lean && Rng() % 4 < lean ? 0x0A : static_cast<unsigned char>(Rng() | 1u);
         for (unsigned handle = 0; handle < 0x100; ++handle, ++calls) {
@@ -271,12 +271,12 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;
-        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtraSpriteFind; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
         for (auto& b : outside) b = static_cast<unsigned char>(Rng());
 
-        const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
+        const unsigned where = Rng() % (kObjectsSpriteFind + kExtraSpriteFind + 4);
+        unsigned char* const current = where < kObjectsSpriteFind ? rv::Bytes(&Sprite_Objects[where]) : where < kObjectsSpriteFind + kExtraSpriteFind ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjectsSpriteFind) * kObjectSize
                                      : outside;
         PutSpriteFind<std::int32_t>(current, kX, cx);
         PutSpriteFind<std::int32_t>(current, kY, cy);
@@ -287,7 +287,7 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         // it h & 0x3F; out-of-range ones are folded back, keeping bits 6 and 7.
         unsigned char handle = kHandles[Rng() % sizeof kHandles];
         if (Rng() % 2) handle = static_cast<unsigned char>(Rng());
-        const unsigned limit = handle & 0x80 ? kObjects + kExtra : kExtra;
+        const unsigned limit = handle & 0x80 ? kObjectsSpriteFind + kExtraSpriteFind : kExtraSpriteFind;
         if ((handle & 0x3Fu) >= limit) handle = static_cast<unsigned char>((handle & 0xC0u) | ((handle & 0x3Fu) % limit));
         current[kHandle] = handle;
         if (Rng() % 2) current[kFlags24] |= 0x20; else current[kFlags24] &= ~0x20;
@@ -315,8 +315,8 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         if (!same && ++bad <= 8)
             bof3::Log("shadow      Sprite_InheritDrawKey self-test MISMATCH round %u: handle %02X, attached %u, "
                       "+0x32 %04X vs ours %04X", round, handle, (current[kFlags24] & 0x20) ? 1u : 0u,
-                      GetSpriteFind<std::uint16_t>(where < kObjects ? their_a + where * kObjectSize
-                                         : where < kObjects + kExtra ? their_b + (where - kObjects) * kObjectSize
+                      GetSpriteFind<std::uint16_t>(where < kObjectsSpriteFind ? their_a + where * kObjectSize
+                                         : where < kObjectsSpriteFind + kExtraSpriteFind ? their_b + (where - kObjectsSpriteFind) * kObjectSize
                                          : their_out, kDrawKey),
                       GetSpriteFind<std::uint16_t>(current, kDrawKey));
     }
@@ -341,10 +341,10 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
 // and its limit is a fixed 0x300.
 extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
     const unsigned char* const current = Sprite_Current;
-    for (unsigned i = 0; i < kObjects; ++i)
+    for (unsigned i = 0; i < kObjectsSpriteFind; ++i)
         if (Qualifies(rv::Bytes(&Sprite_Objects[i]), current)) return static_cast<unsigned char>(i);
-    for (unsigned i = 0; i < kExtra; ++i)
-        if (Qualifies(rv::Bytes(&Sprite_ObjectsExtra[i]), current)) return static_cast<unsigned char>(i + kObjects);
+    for (unsigned i = 0; i < kExtraSpriteFind; ++i)
+        if (Qualifies(rv::Bytes(&Sprite_ObjectsExtra[i]), current)) return static_cast<unsigned char>(i + kObjectsSpriteFind);
     return 0xFF;
 }
 
@@ -386,7 +386,7 @@ namespace {
 
 unsigned char ObjectByHandle(unsigned char handle) {
     const unsigned char n = handle & 0x3F;
-    return handle & 0x80 ? n : static_cast<unsigned char>(n + kObjects);
+    return handle & 0x80 ? n : static_cast<unsigned char>(n + kObjectsSpriteFind);
 }
 
 // --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
@@ -423,7 +423,7 @@ namespace {
 // 30 and above into Sprite_ObjectsExtra, and no bound on either side.
 const unsigned char* ObjectByNumber(unsigned char number) {
     const int n = static_cast<signed char>(number);
-    return n >= static_cast<int>(kObjects) ? rv::Bytes(Sprite_ObjectsExtra) + (n - static_cast<int>(kObjects)) * static_cast<int>(kObjectSize)
+    return n >= static_cast<int>(kObjectsSpriteFind) ? rv::Bytes(Sprite_ObjectsExtra) + (n - static_cast<int>(kObjectsSpriteFind)) * static_cast<int>(kObjectSize)
                                            : rv::Bytes(Sprite_Objects) + n * static_cast<int>(kObjectSize);
 }
 
