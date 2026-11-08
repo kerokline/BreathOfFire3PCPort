@@ -139,7 +139,7 @@ constexpr ::bof3::image::Va kPageFormat{0x6531F4};    // "page / pages"
 constexpr ::bof3::image::Va kOneGlyph{0x669F08};
 constexpr rdata::Const kFour{0x5C41C8}, kEight{0x5C41CC};   // the floats 4.0, 8.0 (rdata_consts.h)
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& BRest4e(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
@@ -227,7 +227,7 @@ extern "C" void __cdecl CommuEntry_DrawPanel(int x, int y, unsigned entry, unsig
     // 0x653210 is the image's (20 bytes an entry); the entry is the caller's
     // index of the 60 (R4D's), read here as a byte
     for (unsigned k = 0; k < 4; ++k)
-        SH_CALL(CommuEntry_DrawBar)(x + 6, y + 0x12 + 4 * static_cast<int>(k), 12 * B(::bof3::Img(kBars.v) + 20 * e + k), k);
+        SH_CALL(CommuEntry_DrawBar)(x + 6, y + 0x12 + 4 * static_cast<int>(k), 12 * BRest4e(::bof3::Img(kBars.v) + 20 * e + k), k);
 }
 
 // original 0x45E9B0: the entry panel's frame of pieces - piece 6 at (x, y);
@@ -376,7 +376,7 @@ extern "C" unsigned __cdecl CommuName_MakeRandom(void) {
     copy(Message(0x1F0 + first));
     const unsigned second = static_cast<unsigned>(SH_CALL(Rand)()) & 0x3F;
     copy(Message(0x230 + second));
-    B(::bof3::Img(kEdit.v) + n) = 0;
+    BRest4e(::bof3::Img(kEdit.v) + n) = 0;
     return n + 1;
 }
 
@@ -432,7 +432,7 @@ extern "C" void __cdecl CommuMember_DrawPortrait(int x, int y, unsigned kind, un
 extern "C" void __cdecl CommuMember_DrawAll(void) {
     unsigned shown = 0;
     for (unsigned i = 0; i < kMemberCount; ++i) {
-        if ((B(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) == 0) continue;
+        if ((BRest4e(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) == 0) continue;
         const auto n = static_cast<unsigned char>(shown);
         SH_CALL(CommuMember_DrawPanel)(0x88 * (n & 1) + 0x20, 0x38 * (n >> 1) + 0x2B, i, 0);
         ++shown;
@@ -444,7 +444,7 @@ extern "C" void __cdecl CommuMember_DrawAll(void) {
 extern "C" unsigned char __cdecl CommuMember_Count(void) {
     unsigned char n = 0;
     for (unsigned i = 0; i < kMemberCount; ++i)
-        if (B(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) ++n;
+        if (BRest4e(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) ++n;
     return n;
 }
 
@@ -454,7 +454,7 @@ extern "C" unsigned char __cdecl CommuMember_Nth(unsigned n) {
     const auto want = static_cast<unsigned char>(n);
     unsigned char seen = 0;
     for (unsigned i = 0; i < kMemberCount; ++i) {
-        if ((B(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) == 0) continue;
+        if ((BRest4e(::bof3::Img(kMembers.v) + kMemberStride * i + 0xB) & 1) == 0) continue;
         if (seen == want) return static_cast<unsigned char>(i);
         ++seen;
     }
@@ -580,10 +580,10 @@ extern "C" void __cdecl CommuName_CommitMember(void) {
     SetL(::bof3::Img(kTextRecords.v) + 0x20, L(::bof3::Img(kEdit.v)));
     SetL(::bof3::Img(kTextRecords.v) + 4, Get<U>(old, 4));
     SetL(::bof3::Img(kTextRecords.v) + 0x24, L(::bof3::Img(kEdit.v) + 4));
-    B(::bof3::Img(kTextRecords.v) + 8) = old[8];
+    BRest4e(::bof3::Img(kTextRecords.v) + 8) = old[8];
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const record = member();
-        record[k] = B(::bof3::Img(kEdit.v) + k);
+        record[k] = BRest4e(::bof3::Img(kEdit.v) + k);
     }
     OpenMessage(0xF5);
     Field_Request = 2;
@@ -612,22 +612,22 @@ extern "C" void __cdecl CommuName_CommitEntry(void) {
     for (int k = 4; k >= 0; --k) {
         const unsigned char c = name()[k];
         if (c == 0x20 && !kept) {
-            B(::bof3::Img(kTextRecords.v) + k) = 0;
+            BRest4e(::bof3::Img(kTextRecords.v) + k) = 0;
         } else {
             const unsigned char d = name()[k];
             kept = true;
-            B(::bof3::Img(kTextRecords.v) + k) = d;
+            BRest4e(::bof3::Img(kTextRecords.v) + k) = d;
         }
     }
-    B(::bof3::Img(kTextRecords.v) + 5) = 0;
+    BRest4e(::bof3::Img(kTextRecords.v) + 5) = 0;
     SetL(::bof3::Img(kTextRecords.v) + 0x20, L(::bof3::Img(kEdit.v)));
     SetL(::bof3::Img(kTextRecords.v) + 0x24, L(::bof3::Img(kEdit.v) + 4));
     for (unsigned k = 0; k < 5; ++k) {
-        if (B(::bof3::Img(kEdit.v) + k) == 0) {
+        if (BRest4e(::bof3::Img(kEdit.v) + k) == 0) {
             name()[k] = 0x20;
         } else {
             unsigned char* const n = name();
-            n[k] = B(::bof3::Img(kEdit.v) + k);
+            n[k] = BRest4e(::bof3::Img(kEdit.v) + k);
         }
     }
     OpenMessage(0xF5);
@@ -709,7 +709,7 @@ U TrackIndex() { return CommuMusic_Track; }
 // docs/button-tests.md 3).
 extern "C" void __cdecl CommuMusic_Browse(void) {
     const unsigned pressed = Input_Pressed & 0xA000u;
-    const unsigned char count = B(::bof3::Img(kTrackCounts.v) + 8u * B(::bof3::Img(kEntries.v) + 1 + 8u * AreaW0c_TailSub));
+    const unsigned char count = BRest4e(::bof3::Img(kTrackCounts.v) + 8u * BRest4e(::bof3::Img(kEntries.v) + 1 + 8u * AreaW0c_TailSub));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(pressed);
     if ((moved & 0xFFFF) != 0) {
         if (moved & 0x2000) {
@@ -733,7 +733,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
         const unsigned now = Input_Pressed & 0xFF;
         if (now & Sigma(0x20)) {
             if (Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(10);
-            const unsigned track = B(::bof3::Img(kTracks.v) + TrackIndex());
+            const unsigned track = BRest4e(::bof3::Img(kTracks.v) + TrackIndex());
             if (Music_Track == track) {
                 Music_Track = 0xFF;
             } else {
@@ -755,7 +755,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
 // track played (Music_Play(track, 8)) and the step 0; the list drawn.
 extern "C" void __cdecl CommuMusic_Play(void) {
     if (SH_CALL(File_LoadDone)() != 0) {
-        const unsigned track = B(::bof3::Img(kTracks.v) + TrackIndex());
+        const unsigned track = BRest4e(::bof3::Img(kTracks.v) + TrackIndex());
         SH_CALL(Music_Play)(track, 8);
         Rest4b_BoardStep = 0;
     }
@@ -820,7 +820,7 @@ extern "C" void __cdecl CommuMusic_DrawList(int x, int y) {
     SH_CALL(Menu_DrawOutlineNotched)(x + 8, y + 8, 0xCA, 0x5E, 0);
     SH_CALL(Menu_DrawOutlineNotched)(x + 0x10, y + 0x12, 0xBC, 0x22, 1);
     const U row = TrackIndex();
-    const int colour = Music_Track == B(::bof3::Img(kTracks.v) + row) ? 2 : 0;
+    const int colour = Music_Track == BRest4e(::bof3::Img(kTracks.v) + row) ? 2 : 0;
     SH_CALL(Text_DrawAt)(x + 0x14, y + 0x17, colour, 0xFF, At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * (0x271 + row))));
     Box(x + 0x48, y + 0x3C, 0x7C, 0xE, 1);
     SH_CALL(Menu_DrawOutlineNotched)(x + 0x48, y + 0x3C, 0x7C, 0xE, 1);
@@ -986,7 +986,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     const U window_x = L(::bof3::Img(kWin0.v) + 4);
     WindowRecords[1].in_use = 1;
     SetW(::bof3::Img(kWin1.v) + 4, window_x + 7);
-    SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - B(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords[0].y));
+    SetW(::bof3::Img(kWin1.v) + 6, 13u * (static_cast<std::uint32_t>(Window0_Cursor) - BRest4e(::bof3::Img(kTop.v)) + 2u) + static_cast<std::uint32_t>(WindowRecords[0].y));
     const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
@@ -1005,37 +1005,37 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     const unsigned char was = row;
     if (moved & 0x1000) {
         if (row != 0) Window0_Cursor = --row;
-        if (row < B(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
+        if (row < BRest4e(::bof3::Img(kTop.v))) SetW(::bof3::Img(kScroll.v), 0xF0);
     } else if (moved & 0x4000) {
         if (row < 0x7F) Window0_Cursor = ++row;
-        if (Window0_Cursor >= static_cast<int>(B(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
+        if (Window0_Cursor >= static_cast<int>(BRest4e(::bof3::Img(kTop.v))) + 9) SetW(::bof3::Img(kScroll.v), 0x10);
     } else if (moved & Sigma(4)) {
-        const unsigned char top = B(::bof3::Img(kTop.v));
+        const unsigned char top = BRest4e(::bof3::Img(kTop.v));
         if (top == 0) {
             row = 0;
             Window0_Cursor = 0;
         } else if (top < 9) {
             row = static_cast<unsigned char>(row - top);
-            B(::bof3::Img(kTop.v)) = 0;
+            BRest4e(::bof3::Img(kTop.v)) = 0;
             Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row - 9);
             Window0_Cursor = row;
-            B(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top - 9);
+            BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top - 9);
         }
     } else if (moved & Sigma(8)) {
-        const unsigned char top = B(::bof3::Img(kTop.v));
+        const unsigned char top = BRest4e(::bof3::Img(kTop.v));
         if (top == 0x77) {
             row = 0x7F;
             Window0_Cursor = row;
         } else if (top > 0x6E) {
-            B(::bof3::Img(kTop.v)) = 0x77;
+            BRest4e(::bof3::Img(kTop.v)) = 0x77;
             row = static_cast<unsigned char>(row + (0x77 - top));
             Window0_Cursor = row;
         } else {
             row = static_cast<unsigned char>(row + 9);
             Window0_Cursor = row;
-            B(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top + 9);
+            BRest4e(::bof3::Img(kTop.v)) = static_cast<unsigned char>(top + 9);
         }
     }
     if (was != row) SH_CALL(Sound_PlayEffect)(0x100);
@@ -1106,10 +1106,10 @@ extern "C" void __cdecl CommuItem_Confirm(void) {
     const unsigned item = entry[2];
     unsigned char kind;
     switch (tab & 0xF) {
-    case 0: kind = B(::bof3::Img(bof3::addr::NameTable_Consumables) + 0x10 + 22 * item); break;
-    case 1: kind = B(::bof3::Img(bof3::addr::NameTable_Weapons) + 0x11 + 28 * item); break;
-    case 2: kind = B(::bof3::Img(bof3::addr::NameTable_Armour) + 0x11 + 26 * item); break;
-    default: kind = B(::bof3::Img(bof3::addr::NameTable_Accessories) + 0x11 + 24 * item); break;
+    case 0: kind = BRest4e(::bof3::Img(bof3::addr::NameTable_Consumables) + 0x10 + 22 * item); break;
+    case 1: kind = BRest4e(::bof3::Img(bof3::addr::NameTable_Weapons) + 0x11 + 28 * item); break;
+    case 2: kind = BRest4e(::bof3::Img(bof3::addr::NameTable_Armour) + 0x11 + 26 * item); break;
+    default: kind = BRest4e(::bof3::Img(bof3::addr::NameTable_Accessories) + 0x11 + 24 * item); break;
     }
     if (kind & 8) {
         OpenMessage(0xEB);
@@ -1157,17 +1157,17 @@ extern "C" void __cdecl CommuItem_SetupWindow(void) {
     WindowRecords[0].in_use = 1;
     WindowRecords[0].x = 0xFF56;
     WindowRecords[0].y = 0x3E;
-    B(::bof3::Img(kWin0.v) + 0xA) = 0;
-    B(::bof3::Img(kWin0.v) + 0xB) = 0;
-    B(::bof3::Img(kWin0.v) + 0xC) = 0;
-    B(::bof3::Img(kWin0.v) + 0xD) = 0xFF;
-    B(::bof3::Img(kWin0.v) + 8) = 0;
-    B(::bof3::Img(kWin0.v) + 9) = 0;
+    BRest4e(::bof3::Img(kWin0.v) + 0xA) = 0;
+    BRest4e(::bof3::Img(kWin0.v) + 0xB) = 0;
+    BRest4e(::bof3::Img(kWin0.v) + 0xC) = 0;
+    BRest4e(::bof3::Img(kWin0.v) + 0xD) = 0xFF;
+    BRest4e(::bof3::Img(kWin0.v) + 8) = 0;
+    BRest4e(::bof3::Img(kWin0.v) + 9) = 0;
     SetW(::bof3::Img(kWin0.v) + 0x10, 0);
     SetW(::bof3::Img(kWin0.v) + 0x12, 0);
-    B(::bof3::Img(kWin1.v) + 1) = 2;
-    B(::bof3::Img(kWin1.v) + 2) = 1;
-    B(::bof3::Img(kWin1.v) + 3) = 0;
+    BRest4e(::bof3::Img(kWin1.v) + 1) = 2;
+    BRest4e(::bof3::Img(kWin1.v) + 2) = 1;
+    BRest4e(::bof3::Img(kWin1.v) + 3) = 0;
     WindowRecords[1].in_use = 0;
 }
 
@@ -1190,10 +1190,10 @@ extern "C" void __cdecl CommuRank_Pages(void) {
     auto pages = [](unsigned n, unsigned per) -> unsigned char {
         return n == 0 ? 0 : static_cast<unsigned char>((static_cast<int>(n) - 1) / static_cast<int>(per) + 1);
     };
-    B(::bof3::Img(kPages.v)) = pages(Rest4a_RemovedCount, 7);
-    B(::bof3::Img(kPages.v) + 1) = pages(Rest4b_BusyA, 20);
+    BRest4e(::bof3::Img(kPages.v)) = pages(Rest4a_RemovedCount, 7);
+    BRest4e(::bof3::Img(kPages.v) + 1) = pages(Rest4b_BusyA, 20);
     CommuList_Page = 0;
-    B(::bof3::Img(kPages.v) + 2) = pages(Rest4b_BusyB, 8);
+    BRest4e(::bof3::Img(kPages.v) + 2) = pages(Rest4b_BusyB, 8);
     ++Rest4b_BoardState;
 }
 
@@ -1213,8 +1213,8 @@ extern "C" void __cdecl CommuRank_Show(void) {
         if (list >= 3)
             bof3::Fatal("CommuRank_Show (0x4605D0): the page 0x675FDB is %u, past the three lists' %u + %u + %u pages "
                         "- the original reads on past 0x675FDA (docs/rest_4e.md section 7)",
-                        static_cast<unsigned char>(CommuList_Page), B(::bof3::Img(kPages.v)), B(::bof3::Img(kPages.v) + 1), B(::bof3::Img(kPages.v) + 2));
-        const unsigned char count = B(::bof3::Img(kPages.v) + list);
+                        static_cast<unsigned char>(CommuList_Page), BRest4e(::bof3::Img(kPages.v)), BRest4e(::bof3::Img(kPages.v) + 1), BRest4e(::bof3::Img(kPages.v) + 2));
+        const unsigned char count = BRest4e(::bof3::Img(kPages.v) + list);
         if (left < count) break;
         left = static_cast<unsigned char>(left - count);
         ++list;
@@ -1226,7 +1226,7 @@ extern "C" void __cdecl CommuRank_Show(void) {
         SH_CALL(CommuRank_DrawListB)(0x28, 0x28, left);
     else
         SH_CALL(CommuRank_DrawListC)(0x28, 0x28, left);
-    const auto total = static_cast<unsigned char>(B(::bof3::Img(kPages.v) + 2) + B(::bof3::Img(kPages.v) + 1) + B(::bof3::Img(kPages.v)));
+    const auto total = static_cast<unsigned char>(BRest4e(::bof3::Img(kPages.v) + 2) + BRest4e(::bof3::Img(kPages.v) + 1) + BRest4e(::bof3::Img(kPages.v)));
     const unsigned pressed = Input_Pressed;
     if (pressed & 0x2000) {
         const auto page = static_cast<unsigned char>(static_cast<unsigned char>(CommuList_Page) + 1);
@@ -1236,7 +1236,7 @@ extern "C" void __cdecl CommuRank_Show(void) {
     if (pressed & 0x8000) {
         const auto page = static_cast<unsigned char>(static_cast<unsigned char>(CommuList_Page) - 1);
         CommuList_Page = page;
-        if (static_cast<signed char>(page) < 0) B(::bof3::Img(kPage.v)) = static_cast<unsigned char>(total - 1);
+        if (static_cast<signed char>(page) < 0) BRest4e(::bof3::Img(kPage.v)) = static_cast<unsigned char>(total - 1);
     }
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(At(::bof3::Img(kPageFormat.v))),
                          CommuList_Page + 1, static_cast<unsigned>(total));
@@ -1268,7 +1268,7 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
     const unsigned char* const row = Message(title);
     SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, row);
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kTextBuffer.v))),
-                         reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), B(count));
+                         reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), BRest4e(count));
     // The count's column is x + 0x6C, sized for the five-glyph Chinese row
     // label; a disc's longer label (the French `Taux de natalité`, the German
     // `Geburtenrate`) runs under it, so under a written group the column
@@ -1280,7 +1280,7 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
     }
     SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(::bof3::Img(kTextBuffer.v)));
     if (words)
-        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, B(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
+        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, BRest4e(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
     else
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
 }
@@ -1309,8 +1309,8 @@ extern "C" void __cdecl CommuRank_DrawListA(int x, int y, unsigned page) {
     for (unsigned i = 0; i < 7; ++i) {
         if (static_cast<int>(base + i) >= Rest4a_RemovedCount) break;
         const int row = 16 * static_cast<int>(i) + y + 0x2C;
-        SH_CALL(Text_DrawAt)(x + 0x14, row, 0, 5, SlotName(B(::bof3::Img(kListAEntries.v) + base + i) & 0x7F));   // DIV-0200
-        const unsigned id = B(::bof3::Img(kListAEntries.v) + base + i) & 0x80 ? 0x3A : 0x39;
+        SH_CALL(Text_DrawAt)(x + 0x14, row, 0, 5, SlotName(BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x7F));   // DIV-0200
+        const unsigned id = BRest4e(::bof3::Img(kListAEntries.v) + base + i) & 0x80 ? 0x3A : 0x39;
         SH_CALL(Text_DrawAt)(cause_x, row, 0, 0xFF, Message(id));
     }
 }
@@ -1344,7 +1344,7 @@ extern "C" void __cdecl CommuRank_DrawListB(int x, int y, unsigned page) {
     const unsigned p = page & 0xFF;
     for (unsigned i = 0; i < 20; ++i) {
         if (static_cast<int>(20 * p + i) >= Rest4b_BusyA) break;
-        const unsigned entry = B(::bof3::Img(kListBEntries.v) + 15 * p + i);
+        const unsigned entry = BRest4e(::bof3::Img(kListBEntries.v) + 15 * p + i);
         const int column = static_cast<int>(i % 3), line = static_cast<int>(i / 3);
         SH_CALL(Text_DrawAt)(x + 72 * column + 0x12, 16 * line + y + 0x2C, 0, 5, SlotName(entry));   // DIV-0200
     }
@@ -1366,10 +1366,10 @@ extern "C" void __cdecl CommuRank_DrawListC(int x, int y, unsigned page) {
         const unsigned char* const pair = At(::bof3::Img(kListCPairs.v) + 16 * p + 2 * i);
         const unsigned kind = pair[0];
         if (W(::bof3::Img(kPairMessages.v) + 4 * kind + 2) != 0) {
-            B(::bof3::Img(kTextRecords.v) + 5) = 0;
+            BRest4e(::bof3::Img(kTextRecords.v) + 5) = 0;
             const unsigned n = pair[1];
             SetL(::bof3::Img(kTextRecords.v), L(::bof3::Img(kEntryNames.v) + 5 * n));
-            B(::bof3::Img(kTextRecords.v) + 4) = B(::bof3::Img(kEntryNames.v) + 5 * n + 4);
+            BRest4e(::bof3::Img(kTextRecords.v) + 4) = BRest4e(::bof3::Img(kEntryNames.v) + 5 * n + 4);
         }
         SH_CALL(Text_DrawAt)(x + 0x14, 16 * static_cast<int>(i) + y + 0x1C, 0, 0xFF,
                              Message(W(::bof3::Img(kPairMessages.v) + 4 * kind)));
@@ -1391,10 +1391,10 @@ extern "C" void __cdecl CommuRank_DrawBackdrop(int x, int y) {
         const int cx = 64 * c + x;
         for (unsigned r = 0; r < 10; ++r) {
             const int ry = 16 * static_cast<int>(r + 1) + y;
-            const unsigned char a = B(::bof3::Img(kTilesSide.v) + 2 * r);
+            const unsigned char a = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r);
             SH_CALL(CommuRank_DrawTile)(cx, ry, static_cast<unsigned char>((a & 1) << 5),
                                         static_cast<unsigned char>((a & 0xFE) << 3), 1);
-            const unsigned char b = B(::bof3::Img(kTilesSide.v) + 2 * r + 1);
+            const unsigned char b = BRest4e(::bof3::Img(kTilesSide.v) + 2 * r + 1);
             SH_CALL(CommuRank_DrawTile)(cx + 0x20, ry, static_cast<unsigned char>((b & 1) << 5),
                                         static_cast<unsigned char>((b & 0xFE) << 3), 1);
         }

@@ -70,7 +70,7 @@ using namespace battle_setup;
 namespace {
 
 using move_script::At;
-using move_script::Long;
+// move_script::Long is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
@@ -167,7 +167,7 @@ extern "C" unsigned __cdecl Battle_PartyOutpaces(unsigned actor, unsigned averag
 // kind 4 with ability 0xA3. An actor above 2 is an enemy, (actor - 3) * 0x128
 // - unbounded, as the original's.
 extern "C" void __cdecl Battle_ClearActingFlags() {
-    const std::uint32_t acting = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kActing.v))));
+    const std::uint32_t acting = static_cast<std::uint32_t>(move_script::Long(At(::bof3::Img(at::kActing.v))));
     const unsigned a = acting & 0xFF, kind = (acting >> 8) & 0xFF;
     const unsigned ability = Word(At(::bof3::Img(at::kAbility.v)));
     const auto clear = [a](unsigned bit, unsigned party_count, unsigned enemy_count) {
@@ -176,7 +176,7 @@ extern "C" void __cdecl Battle_ClearActingFlags() {
         unsigned char* const flags = o + (party ? at::kPFlags : at::kEFlags);
         if ((flags[0] & bit) == 0) return;
         o[party ? party_count : enemy_count] = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~bit));
+        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~bit));
     };
     if (!(kind == 4 && ability == 0x27)) clear(0x40, at::kPCount40, at::kECount40);
     if (!(kind == 4 && ability == 0xA3)) clear(0x80, at::kPCount80, at::kECount80);
@@ -246,7 +246,7 @@ extern "C" unsigned __cdecl Battle_MarkFasterSide() {
         if (!Yes(g.can_act(i))) continue;
         if (!Yes(g.outpaces(i, average, highest))) continue;
         unsigned char* const flags = P(i) + at::kPFlags;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) | 0x8000u));
+        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
         marked = (marked + 1) & 0xFF;
     }
     const unsigned answer = marked != 0 ? 1 : 0;
@@ -255,7 +255,7 @@ extern "C" unsigned __cdecl Battle_MarkFasterSide() {
         if (!Yes(g.can_act(i))) continue;
         if (!Yes(g.enemy_outpaces(i, average, highest))) continue;
         unsigned char* const flags = E(i) + at::kEFlags;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) | 0x8000u));
+        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
     }
     return answer;
 }
@@ -318,7 +318,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
 // through 0x44A6E0(0, 2, 0, 0, 0xFF, text).
 extern "C" void __cdecl Battle_OpeningMessage() {
     static constexpr unsigned char kLines[6] = {0, 1, 2, 3, 4, 0};
-    const std::uint32_t kind = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kOpening.v))));
+    const std::uint32_t kind = static_cast<std::uint32_t>(move_script::Long(At(::bof3::Img(at::kOpening.v))));
     const unsigned base = kind == 1 ? 0 : (kind == 0 || kind > 4) ? 4 : 2;
     const unsigned id = kLines[base + (static_cast<unsigned>(g.rand()) & 1)];
     g.message_at(0, 2, 0, 0, 0xFF, g.msg(id));
@@ -344,9 +344,9 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
         unsigned char* const o = P(i);
         auto* const member_rec = rv::As<records::PartyMember>(o);
         unsigned char* const flags = o + at::kPFlags;
-        if ((Long(flags) & 0x4000) == 0 || member_rec->count_4000 != 3) continue;
+        if ((move_script::Long(flags) & 0x4000) == 0 || member_rec->count_4000 != 3) continue;
         member_rec->count_4000 = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~0x4000u));
+        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
         rv::Store<unsigned>(member_rec->hp_change, member_rec->hp);
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
@@ -358,9 +358,9 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
         unsigned char* const o = E(i);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
         unsigned char* const flags = o + at::kEFlags;
-        if ((Long(flags) & 0x4000) == 0 || rv::As<records::PartyMember>(P(i))->count_4000 != 3) continue;   // the party array, as the original
+        if ((move_script::Long(flags) & 0x4000) == 0 || rv::As<records::PartyMember>(P(i))->count_4000 != 3) continue;   // the party array, as the original
         enemy_rec->count_4000 = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~0x4000u));
+        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
         enemy_rec->hp_change = enemy_rec->hp;
         MarkEffect(o);
         enemy_rec->shown = 0x11;
@@ -563,7 +563,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
             member_rec->flags_134 = static_cast<std::int32_t>(flags & ~0x20u);
             continue;
         }
-        const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(::bof3::Img(BattleActions_ApCost_addr)))) & 0xFF) + 1) / 2;
+        const int cost = static_cast<int>((static_cast<std::uint32_t>(move_script::Long(At(::bof3::Img(BattleActions_ApCost_addr)))) & 0xFF) + 1) / 2;
         if (static_cast<int>(member_rec->ap) < cost) {
             member_rec->state = 6;
             member_rec->step = 4;

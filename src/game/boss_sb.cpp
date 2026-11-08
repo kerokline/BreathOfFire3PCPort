@@ -73,7 +73,7 @@ unsigned long CallEntry(U table, unsigned index, unsigned word) {
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+unsigned long DispatchBossSb(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -85,7 +85,7 @@ unsigned long Dispatch(const char* who, U table, unsigned entries, unsigned at, 
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatch(const char* who, U table, unsigned word) {
+unsigned long HookDispatchBossSb(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -246,7 +246,7 @@ void EndVar(unsigned char var) {
 // original 0x438290: BossKind_Table[3]: by Sprite_Current +1 through
 // BossEngineer_Steps (12).
 extern "C" unsigned long __cdecl BossEngineer_Dispatch(unsigned word) {
-    return Dispatch("BossEngineer_Dispatch", AddressOf(BossEngineer_Steps), 12, 1, word);
+    return DispatchBossSb("BossEngineer_Dispatch", AddressOf(BossEngineer_Steps), 12, 1, word);
 }
 
 // original 0x4382B0: state 0: +0xFC = BossEngineer_Anims, +0xF4 =
@@ -258,13 +258,13 @@ extern "C" unsigned char __cdecl BossEngineer_Enter(void) {
 // original 0x4382F0: BossEngineer_Steps 6: by +2 through BossEngineer_ActSubs
 // (6: EnemyOp_ActSubs with BossOp_Death at 4).
 extern "C" unsigned long __cdecl BossEngineer_ActDispatch(unsigned word) {
-    return Dispatch("BossEngineer_ActDispatch", AddressOf(BossEngineer_ActSubs), 6, 2, word);
+    return DispatchBossSb("BossEngineer_ActDispatch", AddressOf(BossEngineer_ActSubs), 6, 2, word);
 }
 
 // original 0x438310: BossEngineer_Steps 11: by +2 through
 // BossEngineer_HitSteps (3: HitStart, HitStep, BossOp_ScriptTick).
 extern "C" unsigned long __cdecl BossEngineer_HitDispatch(unsigned word) {
-    return Dispatch("BossEngineer_HitDispatch", AddressOf(BossEngineer_HitSteps), 3, 2, word);
+    return DispatchBossSb("BossEngineer_HitDispatch", AddressOf(BossEngineer_HitSteps), 3, 2, word);
 }
 
 // original 0x438330: BossEngineer_HitSteps 0: BattleEnemy_SetAnimation(4);
@@ -307,7 +307,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
 // original 0x438420: kind 3's +0xF4 hook: by the word through
 // BossEngineer_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossEngineer_Hook(unsigned word) {
-    return HookDispatch("BossEngineer_Hook", AddressOf(BossEngineer_Hooks), word);
+    return HookDispatchBossSb("BossEngineer_Hook", AddressOf(BossEngineer_Hooks), word);
 }
 
 // ===========================================================================
@@ -378,7 +378,7 @@ extern "C" void __cdecl Boss06_Exit(void) {
 
 // original 0x438B30: BossKind_Table[4]: by +1 through BossWorker_Steps (12).
 extern "C" unsigned long __cdecl BossWorker_Dispatch(unsigned word) {
-    return Dispatch("BossWorker_Dispatch", AddressOf(BossWorker_Steps), 12, 1, word);
+    return DispatchBossSb("BossWorker_Dispatch", AddressOf(BossWorker_Steps), 12, 1, word);
 }
 
 // original 0x438B50: state 0: +0xFC = BossWorker_Anims, +0xF4 =
@@ -389,12 +389,12 @@ extern "C" unsigned char __cdecl BossWorker_Enter(void) {
 
 // original 0x438B90: kind 4's +0xF4 hook through BossWorker_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossWorker_Hook(unsigned word) {
-    return HookDispatch("BossWorker_Hook", AddressOf(BossWorker_Hooks), word);
+    return HookDispatchBossSb("BossWorker_Hook", AddressOf(BossWorker_Hooks), word);
 }
 
 // original 0x438BA0: BossKind_Table[5]: by +1 through BossOperator_Steps (12).
 extern "C" unsigned long __cdecl BossOperator_Dispatch(unsigned word) {
-    return Dispatch("BossOperator_Dispatch", AddressOf(BossOperator_Steps), 12, 1, word);
+    return DispatchBossSb("BossOperator_Dispatch", AddressOf(BossOperator_Steps), 12, 1, word);
 }
 
 // original 0x438BC0: state 0: +0xFC = BossOperator_Anims, +0xF4 =
@@ -410,7 +410,7 @@ extern "C" unsigned char __cdecl BossOperator_Enter(void) {
 // original 0x438C10: kind 5's +0xF4 hook through BossOperator_Hooks (3:
 // BareRet, BossOperator_HookHit, BareRet).
 extern "C" unsigned long __cdecl BossOperator_Hook(unsigned word) {
-    return HookDispatch("BossOperator_Hook", AddressOf(BossOperator_Hooks), word);
+    return HookDispatchBossSb("BossOperator_Hook", AddressOf(BossOperator_Hooks), word);
 }
 
 // original 0x438C20: BossOperator_Hooks 1 (the hook's word 1, the hit
@@ -520,7 +520,7 @@ extern "C" void __cdecl Boss13_End(void) {
 
 // original 0x438E50: BossKind_Table[8]: by +1 through BossTorast_Steps (12).
 extern "C" unsigned long __cdecl BossTorast_Dispatch(unsigned word) {
-    return Dispatch("BossTorast_Dispatch", AddressOf(BossTorast_Steps), 12, 1, word);
+    return DispatchBossSb("BossTorast_Dispatch", AddressOf(BossTorast_Steps), 12, 1, word);
 }
 // original 0x438E70: kind 8's state 0: +0xFC = BossTorast_Anims, +0xF4 =
 // BossTorast_Hook, +0xF8 = BossTorast_Cues; +1 = 2; Sprite_ScriptTick.
@@ -529,12 +529,12 @@ extern "C" unsigned char __cdecl BossTorast_Enter(void) {
 }
 // original 0x4390E0: kind 8's +0xF4 hook through BossTorast_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossTorast_Hook(unsigned word) {
-    return HookDispatch("BossTorast_Hook", AddressOf(BossTorast_Hooks), word);
+    return HookDispatchBossSb("BossTorast_Hook", AddressOf(BossTorast_Hooks), word);
 }
 
 // original 0x4390F0: BossKind_Table[9]: by +1 through BossKassen_Steps (12).
 extern "C" unsigned long __cdecl BossKassen_Dispatch(unsigned word) {
-    return Dispatch("BossKassen_Dispatch", AddressOf(BossKassen_Steps), 12, 1, word);
+    return DispatchBossSb("BossKassen_Dispatch", AddressOf(BossKassen_Steps), 12, 1, word);
 }
 // original 0x439110: kind 9's state 0: kind 8's tables, +0xF4 = BossKassen_Hook.
 extern "C" unsigned char __cdecl BossKassen_Enter(void) {
@@ -542,12 +542,12 @@ extern "C" unsigned char __cdecl BossKassen_Enter(void) {
 }
 // original 0x439150: kind 9's +0xF4 hook through BossKassen_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossKassen_Hook(unsigned word) {
-    return HookDispatch("BossKassen_Hook", AddressOf(BossKassen_Hooks), word);
+    return HookDispatchBossSb("BossKassen_Hook", AddressOf(BossKassen_Hooks), word);
 }
 
 // original 0x439160: BossKind_Table[10]: by +1 through BossGaltel_Steps (12).
 extern "C" unsigned long __cdecl BossGaltel_Dispatch(unsigned word) {
-    return Dispatch("BossGaltel_Dispatch", AddressOf(BossGaltel_Steps), 12, 1, word);
+    return DispatchBossSb("BossGaltel_Dispatch", AddressOf(BossGaltel_Steps), 12, 1, word);
 }
 // original 0x439180: kind 10's state 0: kind 8's tables, +0xF4 = BossGaltel_Hook.
 extern "C" unsigned char __cdecl BossGaltel_Enter(void) {
@@ -555,12 +555,12 @@ extern "C" unsigned char __cdecl BossGaltel_Enter(void) {
 }
 // original 0x4391C0: kind 10's +0xF4 hook through BossGaltel_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossGaltel_Hook(unsigned word) {
-    return HookDispatch("BossGaltel_Hook", AddressOf(BossGaltel_Hooks), word);
+    return HookDispatchBossSb("BossGaltel_Hook", AddressOf(BossGaltel_Hooks), word);
 }
 
 // original 0x4391D0: BossKind_Table[11]: by +1 through BossDoksen_Steps (12).
 extern "C" unsigned long __cdecl BossDoksen_Dispatch(unsigned word) {
-    return Dispatch("BossDoksen_Dispatch", AddressOf(BossDoksen_Steps), 12, 1, word);
+    return DispatchBossSb("BossDoksen_Dispatch", AddressOf(BossDoksen_Steps), 12, 1, word);
 }
 // original 0x4391F0: kind 11's state 0: kind 8's tables, +0xF4 = BossDoksen_Hook.
 extern "C" unsigned char __cdecl BossDoksen_Enter(void) {
@@ -568,7 +568,7 @@ extern "C" unsigned char __cdecl BossDoksen_Enter(void) {
 }
 // original 0x439230: kind 11's +0xF4 hook through BossDoksen_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossDoksen_Hook(unsigned word) {
-    return HookDispatch("BossDoksen_Hook", AddressOf(BossDoksen_Hooks), word);
+    return HookDispatchBossSb("BossDoksen_Hook", AddressOf(BossDoksen_Hooks), word);
 }
 
 // ===========================================================================

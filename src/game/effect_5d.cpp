@@ -69,8 +69,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
+U ULEffect5d(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULEffect5d(U a) { return ULEffect5d(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(const unsigned char* p) { return Word(p); }
 U W(U a) { return Word(At(a)); }
@@ -115,13 +115,13 @@ using Handler = scenario_harness::Handler;
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
 // swaps the cells for recorders); a Fatal past them, where the original jumps
 // through the dword after - the next table or data.
-void Dispatch(const char* who, U table, unsigned entries) {
+void DispatchEffect5d(const char* who, U table, unsigned entries) {
     const unsigned state = Sprite_Current[2];
     if (state >= entries)
         bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
                     "after (docs/effect_5d.md section 7)",
                     who, state, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(table + 4 * state)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULEffect5d(table + 4 * state)))();
 }
 
 // An index into one of the image's tables by a record word or byte, checked:
@@ -292,7 +292,7 @@ extern "C" void __cdecl EffectKind18Sub17_CopyFrame(U frame) {
 // original 0x504430 (EffectKind18_States[24], hidden in 0x5043B0):
 // jmp [EffectKind18Sub18_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub18_Run(void) {
-    Dispatch("EffectKind18Sub18_Run", E5D_TABLE(EffectKind18Sub18_States));
+    DispatchEffect5d("EffectKind18Sub18_Run", E5D_TABLE(EffectKind18Sub18_States));
 }
 
 // original 0x504450 (sub-state 0): the column at +9 (0x80), the ring at +9; +9
@@ -658,7 +658,7 @@ extern "C" void __cdecl EffectKind18Sub1B_Run(void) {
 // original 0x504F70 (EffectKind18_States[67], hidden in 0x5047A0):
 // jmp [EffectKind18Sub43_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub43_Run(void) {
-    Dispatch("EffectKind18Sub43_Run", E5D_TABLE(EffectKind18Sub43_States));
+    DispatchEffect5d("EffectKind18Sub43_Run", E5D_TABLE(EffectKind18Sub43_States));
 }
 
 // original 0x504F90 (sub-state 1): while the counter 0x903848 is 0xE, the quad
@@ -723,7 +723,7 @@ extern "C" void __cdecl EffectKind18Sub43_DrawQuad(U grow, U shade) {
 // of part 2 that no group of the round holds): jmp [EffectKind18Sub1C_States +
 // +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub1C_Run(void) {
-    Dispatch("EffectKind18Sub1C_Run", E5D_TABLE(EffectKind18Sub1C_States));
+    DispatchEffect5d("EffectKind18Sub1C_Run", E5D_TABLE(EffectKind18Sub1C_States));
 }
 
 // original 0x505120 (sub-state 0; sub-kind 0x43's 4): +0x3E the ground's height
@@ -856,7 +856,7 @@ void Column(const char* who, U rise, U row, Place place) {
         SH_CALL(Prim_SetTexture)((texture & 0xF80000) | 0xBA009124u, p, 1);
         if (row == 3) p[6] = 0;
         s = S();
-        SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), static_cast<int>(row), 0x48);
+        SH_CALL(MapView_LinkPrimAt)(ULEffect5d(s + 0x34), ULEffect5d(s + 0x38), static_cast<int>(row), 0x48);
         c -= 0x400000;
         ++level;
     } while (c > static_cast<std::int32_t>(0xFFF80000u));
@@ -900,7 +900,7 @@ extern "C" U __cdecl EffectKind18Sub1C_OnScreen(void) {
 // of part 2 that no group of the round holds): jmp [EffectKind18Sub1D_States +
 // +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub1D_Run(void) {
-    Dispatch("EffectKind18Sub1D_Run", E5D_TABLE(EffectKind18Sub1D_States));
+    DispatchEffect5d("EffectKind18Sub1D_Run", E5D_TABLE(EffectKind18Sub1D_States));
 }
 
 // original 0x505560 (sub-state 0): +0xA the wait 0x65E2F4 gives the cell's
@@ -956,8 +956,8 @@ extern "C" void __cdecl EffectKind18Sub1D_Hurt(void) {
     static const char kWho[] = "EffectKind18Sub1D_Hurt";
     unsigned char* s = S();
     for (U step = 1; step < 3; ++step) {
-        const U x = ((UL(s + 0xC) * step) << 16) + UL(s + 0x34);
-        const U z = ((UL(s + 0x10) * step) << 16) + UL(s + 0x38);
+        const U x = ((ULEffect5d(s + 0xC) * step) << 16) + ULEffect5d(s + 0x34);
+        const U z = ((ULEffect5d(s + 0x10) * step) << 16) + ULEffect5d(s + 0x38);
         const unsigned char who = SH_CALL(Party_MemberAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (S8(who) < 0) {
             s = S();
@@ -1018,7 +1018,7 @@ extern "C" void __cdecl EffectKind18Sub1D_Draw(U rise) {
 // original 0x5059A0 (EffectKind18_States[20], hidden in 0x5057D0):
 // jmp [EffectKind18Sub14_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub14_Run(void) {
-    Dispatch("EffectKind18Sub14_Run", E5D_TABLE(EffectKind18Sub14_States));
+    DispatchEffect5d("EffectKind18Sub14_Run", E5D_TABLE(EffectKind18Sub14_States));
 }
 
 // original 0x5059C0 (sub-state 0): area flag 0x3E (0x903FD8) set: the strip at
@@ -1058,7 +1058,7 @@ extern "C" void __cdecl EffectKind18Sub14_ScaleClut(U scale) {
 // jmp [EffectKind18Sub1E_States + +2 * 4], unbounded (0x65E300, sub-kind 0x14's
 // table from its entry 2).
 extern "C" void __cdecl EffectKind18Sub1E_Run(void) {
-    Dispatch("EffectKind18Sub1E_Run", E5D_TABLE(EffectKind18Sub1E_States));
+    DispatchEffect5d("EffectKind18Sub1E_Run", E5D_TABLE(EffectKind18Sub1E_States));
 }
 
 // original 0x505AD0 (sub-kind 0x14's sub-state 3, 0x1E's 1): the place's flag
@@ -1078,9 +1078,9 @@ extern "C" void __cdecl EffectKind18Sub14_WaitFlag(void) {
             e[0] = 1;
             e[5] = 0x6E;
             U k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn.v);
-            SetUL(e + 0x34, UL(::bof3::Img(at::kSub14Spawn.v) + 8 * k));
+            SetUL(e + 0x34, ULEffect5d(::bof3::Img(at::kSub14Spawn.v) + 8 * k));
             k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn.v);
-            SetUL(e + 0x38, UL(::bof3::Img(at::kSub14Spawn.v) + 4 + 8 * k));
+            SetUL(e + 0x38, ULEffect5d(::bof3::Img(at::kSub14Spawn.v) + 4 + 8 * k));
             SetUL(e + 0x3C, 0x7800000);
         }
         const U second = SH_CALL(Effect_FindFree)() & 0xFFu;
@@ -1181,7 +1181,7 @@ extern "C" void __cdecl EffectKind18Sub14_DrawTiles(U shade, U unused) {
 // original 0x505E20 (EffectKind18_States[33], hidden in 0x505BF0): call
 // [EffectKind18Sub21_States + +2 * 4] (unbounded), then the spiral at +9.
 extern "C" void __cdecl EffectKind18Sub21_Run(void) {
-    Dispatch("EffectKind18Sub21_Run", E5D_TABLE(EffectKind18Sub21_States));
+    DispatchEffect5d("EffectKind18Sub21_Run", E5D_TABLE(EffectKind18Sub21_States));
     SH_CALL(EffectKind18Sub21_DrawSpiral)(S()[9]);
 }
 
@@ -1358,7 +1358,7 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
 // original 0x5064A0 (EffectKind18_States[34], hidden in 0x505E60):
 // jmp [EffectKind18Sub22_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub22_Run(void) {
-    Dispatch("EffectKind18Sub22_Run", E5D_TABLE(EffectKind18Sub22_States));
+    DispatchEffect5d("EffectKind18Sub22_Run", E5D_TABLE(EffectKind18Sub22_States));
 }
 
 namespace {
@@ -1534,7 +1534,7 @@ extern "C" void __cdecl EffectKind18Sub22_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
-        U d = UL(piece);
+        U d = ULEffect5d(piece);
         const U x = ((d >> 24) << 7) - 0x3FC0;
         const U z = (((d >> 16) & 0xFF) << 7) - 0x3FC0;
         const U shape = ::bof3::Img(at::kSub22Shapes.v) + 12 * Index(kWho, (d >> 8) & 0xFF, at::kSub22ShapeCount, at::kSub22Shapes.v);
@@ -1547,8 +1547,8 @@ extern "C" void __cdecl EffectKind18Sub22_Draw(void) {
         long depth[2];
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
-        SH_CALL(Prim_SetTexture)(UL(piece + 4), p, 1);
-        d = UL(piece);
+        SH_CALL(Prim_SetTexture)(ULEffect5d(piece + 4), p, 1);
+        d = ULEffect5d(piece);
         unsigned char* s = S();
         const U kind = Index(kWho, d & 0xFF, at::kSub22RowKinds, at::kSub22Rows.v);
         const std::int32_t row = S8(B(::bof3::Img(at::kSub22Rows.v) + (s[2] == 2 ? 1 : 0) + 2 * kind));

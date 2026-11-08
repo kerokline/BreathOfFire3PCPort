@@ -60,32 +60,32 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll and
 // BattleTask_RunAll push nothing; an entry that reads it - Port_DroppedCall's
 // byte, a hook's word - reads that word), its eax the dispatcher's.
-using Forward = U (__cdecl*)(unsigned);
-Forward Entry(U table, unsigned index) {
-    return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(L(At(table + 4 * index))));   // as read: the fuzz swaps the cells
+using ForwardBossSg = U (__cdecl*)(unsigned);
+ForwardBossSg EntryBossSg(U table, unsigned index) {
+    return reinterpret_cast<ForwardBossSg>(static_cast<std::uintptr_t>(L(At(table + 4 * index))));   // as read: the fuzz swaps the cells
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
+U DispatchBossSg(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sg.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    return Entry(table, state)(passed);
+    return EntryBossSg(table, state)(passed);
 }
 
 // An enemy's +0xF4 hook: mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 *
 // eax] - three entries (the words 0, 1, 2 the engine passes), a Fatal past
 // them; the entry gets the caller's word whole.
-U HookTable(const char* who, U table, unsigned word) {
+U HookTableBossSg(const char* who, U table, unsigned word) {
     const unsigned i = word & 0xFF;
     if (i >= 3)
         bof3::Fatal("%s(0x%X): past the 3 entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sg.md section 6)",
                     who, word, (unsigned)table);
-    return Entry(table, i)(word);
+    return EntryBossSg(table, i)(word);
 }
 
 // call [table + 4 * Sprite_Current +2] (no argument), then, the Sprite_Current
@@ -102,7 +102,7 @@ void TaskSteps(const char* who, U table, unsigned entries) {
 }
 
 // The three set-up stores (BattleHook_End / _Exit / _Event).
-void StoreHooks(U end, U exit, U event) {
+void StoreHooksBossSg(U end, U exit, U event) {
     BattleHook_End = S(end);
     BattleHook_Exit = S(exit);
     BattleHook_Event = S(event);
@@ -159,7 +159,7 @@ unsigned char* EnemyByIndex(unsigned index) { return At(::bof3::Img(Battle_Enemi
 
 // original 0x43CDE0: BossKind_Table[34]: jmp [BossDolphin_States + 4 * +1] (12).
 extern "C" U __cdecl BossDolphin_Dispatch(unsigned passed) {
-    return Dispatch("BossDolphin_Dispatch", AddressOf(BossDolphin_States), 12, 1, passed);
+    return DispatchBossSg("BossDolphin_Dispatch", AddressOf(BossDolphin_States), 12, 1, passed);
 }
 
 // original 0x43CE00: state 0. 0x939AD8's +0xFC = BossDolphin_Anims, +0xF4 =
@@ -171,12 +171,12 @@ extern "C" unsigned char __cdecl BossDolphin_Enter(void) {
 }
 
 // original 0x43CE40: the +0xF4 hook through BossDolphin_Hooks (3, all BareRet).
-extern "C" U __cdecl BossDolphin_Hook(unsigned word) { return HookTable("BossDolphin_Hook", AddressOf(BossDolphin_Hooks), word); }
+extern "C" U __cdecl BossDolphin_Hook(unsigned word) { return HookTableBossSg("BossDolphin_Hook", AddressOf(BossDolphin_Hooks), word); }
 
 // original 0x43CE50: Boss_SetupTable[29]. The hooks: end Boss29_End, exit
 // BossHook_ExitClearActor0, event BareRetZero.
 extern "C" void __cdecl Boss29_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss29_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSg(::bof3::Code(bof3::addr::Boss29_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CE70: the end hook. Won (0x904AE8 bit 1): the chapter's step
@@ -198,7 +198,7 @@ extern "C" void __cdecl Boss29_End(void) {
 
 // original 0x43CEA0: BossKind_Table[35]: jmp [BossGisshan_States + 4 * +1] (12).
 extern "C" U __cdecl BossGisshan_Dispatch(unsigned passed) {
-    return Dispatch("BossGisshan_Dispatch", AddressOf(BossGisshan_States), 12, 1, passed);
+    return DispatchBossSg("BossGisshan_Dispatch", AddressOf(BossGisshan_States), 12, 1, passed);
 }
 
 // original 0x43CEC0: state 0: BossGisshan_Anims, BossGisshan_Hook,
@@ -209,11 +209,11 @@ extern "C" unsigned char __cdecl BossGisshan_Enter(void) {
 }
 
 // original 0x43CF00: the +0xF4 hook through BossGisshan_Hooks (3, all BareRet).
-extern "C" U __cdecl BossGisshan_Hook(unsigned word) { return HookTable("BossGisshan_Hook", AddressOf(BossGisshan_Hooks), word); }
+extern "C" U __cdecl BossGisshan_Hook(unsigned word) { return HookTableBossSg("BossGisshan_Hook", AddressOf(BossGisshan_Hooks), word); }
 
 // original 0x43CF10: BossKind_Table[36]: jmp [BossScylla_States + 4 * +1] (12).
 extern "C" U __cdecl BossScylla_Dispatch(unsigned passed) {
-    return Dispatch("BossScylla_Dispatch", AddressOf(BossScylla_States), 12, 1, passed);
+    return DispatchBossSg("BossScylla_Dispatch", AddressOf(BossScylla_States), 12, 1, passed);
 }
 
 // original 0x43CF30: state 0: BossScylla_Anims, BossScylla_Hook,
@@ -225,7 +225,7 @@ extern "C" unsigned char __cdecl BossScylla_Enter(void) {
 }
 
 // original 0x43CF70: the +0xF4 hook through BossScylla_Hooks (3, all BareRet).
-extern "C" U __cdecl BossScylla_Hook(unsigned word) { return HookTable("BossScylla_Hook", AddressOf(BossScylla_Hooks), word); }
+extern "C" U __cdecl BossScylla_Hook(unsigned word) { return HookTableBossSg("BossScylla_Hook", AddressOf(BossScylla_Hooks), word); }
 
 // ===========================================================================
 // Kind 37 (Garr, area 85) and set-up 31 (BOSS031, area 85 row 7)
@@ -233,7 +233,7 @@ extern "C" U __cdecl BossScylla_Hook(unsigned word) { return HookTable("BossScyl
 
 // original 0x43CFD0: BossKind_Table[37]: jmp [BossGarr2_States + 4 * +1] (12).
 extern "C" U __cdecl BossGarr2_Dispatch(unsigned passed) {
-    return Dispatch("BossGarr2_Dispatch", AddressOf(BossGarr2_States), 12, 1, passed);
+    return DispatchBossSg("BossGarr2_Dispatch", AddressOf(BossGarr2_States), 12, 1, passed);
 }
 
 // original 0x43CFF0: state 0: BossGarr2_Anims, BossGarr2_Hook,
@@ -246,7 +246,7 @@ extern "C" unsigned char __cdecl BossGarr2_Enter(void) {
 // original 0x43D030: state 6: jmp [BossGarr2_ActSubs + 4 * +2] (6: the generic
 // action entries with the kind's death at 4).
 extern "C" U __cdecl BossGarr2_ActDispatch(unsigned passed) {
-    return Dispatch("BossGarr2_ActDispatch", AddressOf(BossGarr2_ActSubs), 6, 2, passed);
+    return DispatchBossSg("BossGarr2_ActDispatch", AddressOf(BossGarr2_ActSubs), 6, 2, passed);
 }
 
 // original 0x43D050: +2 entry 4, the death: Sprite_EnsureAnimation(1), the
@@ -261,12 +261,12 @@ extern "C" void __cdecl BossGarr2_Death(void) {
 }
 
 // original 0x43D0B0: the +0xF4 hook through BossGarr2_Hooks (3, all BareRet).
-extern "C" U __cdecl BossGarr2_Hook(unsigned word) { return HookTable("BossGarr2_Hook", AddressOf(BossGarr2_Hooks), word); }
+extern "C" U __cdecl BossGarr2_Hook(unsigned word) { return HookTableBossSg("BossGarr2_Hook", AddressOf(BossGarr2_Hooks), word); }
 
 // original 0x43D0C0: Boss_SetupTable[31]. The hooks: end Boss31_End, exit
 // Boss31_Exit, event BareRetZero.
 extern "C" void __cdecl Boss31_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss31_End), ::bof3::Code(bof3::addr::Boss31_Exit), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSg(::bof3::Code(bof3::addr::Boss31_End), ::bof3::Code(bof3::addr::Boss31_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43D0E0: the end hook. Won (0x904AE8 bit 1): the chapter's step =
@@ -295,7 +295,7 @@ extern "C" void __cdecl Boss31_Exit(void) {
 
 // original 0x43D140: BossKind_Table[38]: jmp [BossDZombie_States + 4 * +1] (12).
 extern "C" U __cdecl BossDZombie_Dispatch(unsigned passed) {
-    return Dispatch("BossDZombie_Dispatch", AddressOf(BossDZombie_States), 12, 1, passed);
+    return DispatchBossSg("BossDZombie_Dispatch", AddressOf(BossDZombie_States), 12, 1, passed);
 }
 
 // original 0x43D160: state 0: BossDZombie_Anims, BossDZombie_Hook,
@@ -310,7 +310,7 @@ extern "C" unsigned char __cdecl BossDZombie_Enter(void) {
 
 // original 0x43D1C0: state 6: jmp [BossDZombie_ActSubs + 4 * +2] (6).
 extern "C" U __cdecl BossDZombie_ActDispatch(unsigned passed) {
-    return Dispatch("BossDZombie_ActDispatch", AddressOf(BossDZombie_ActSubs), 6, 2, passed);
+    return DispatchBossSg("BossDZombie_ActDispatch", AddressOf(BossDZombie_ActSubs), 6, 2, passed);
 }
 
 // original 0x43D1E0: +2 entry 4, the death: Sprite_EnsureAnimation(0),
@@ -323,12 +323,12 @@ extern "C" void __cdecl BossDZombie_Death(void) {
 }
 
 // original 0x43D240: the +0xF4 hook through BossDZombie_Hooks (3, all BareRet).
-extern "C" U __cdecl BossDZombie_Hook(unsigned word) { return HookTable("BossDZombie_Hook", AddressOf(BossDZombie_Hooks), word); }
+extern "C" U __cdecl BossDZombie_Hook(unsigned word) { return HookTableBossSg("BossDZombie_Hook", AddressOf(BossDZombie_Hooks), word); }
 
 // original 0x43D250: Boss_SetupTable[32]. The hooks: end Boss32_End, exit
 // Boss32_Exit, event BareRetZero.
 extern "C" void __cdecl Boss32_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss32_End), ::bof3::Code(bof3::addr::Boss32_Exit), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSg(::bof3::Code(bof3::addr::Boss32_End), ::bof3::Code(bof3::addr::Boss32_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43D270: the end hook. Won (0x904AE8 bit 1): for each party member
@@ -369,7 +369,7 @@ extern "C" void __cdecl Boss32_Exit(void) { ActorZero(0); }
 
 // original 0x43D670: Boss_SetupTable[33]. The hooks: end Boss33_End, exit
 // BareRet, event BareRetZero.
-extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss33_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
+extern "C" void __cdecl Boss33_Setup(void) { StoreHooksBossSg(::bof3::Code(bof3::addr::Boss33_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
 
 // original 0x43D690: the end hook. With neither 0x904AE8 bit 1 nor bit 2: a
 // tail jump to 0x446E00 (step 2). Otherwise BossActor_Clear(0); after it,
@@ -399,7 +399,7 @@ extern "C" void __cdecl Boss33_End(void) {
 // original 0x43D6D0: the task: jmp [BossWeretigrFx_Steps + 4 * +1] (2: the
 // turn, the trail).
 extern "C" U __cdecl BossWeretigrFx_Task(unsigned passed) {
-    return Dispatch("BossWeretigrFx_Task", AddressOf(BossWeretigrFx_Steps), 2, 1, passed);
+    return DispatchBossSg("BossWeretigrFx_Task", AddressOf(BossWeretigrFx_Steps), 2, 1, passed);
 }
 
 // original 0x43D6F0: +1 = 0, the turn: TaskSteps through
@@ -599,7 +599,7 @@ extern "C" void __cdecl BossWeretigrFx_TrailFade(void) {
 
 // original 0x43DBF0: BossKind_Table[40]: jmp [BossMikba_States + 4 * +1] (12).
 extern "C" U __cdecl BossMikba_Dispatch(unsigned passed) {
-    return Dispatch("BossMikba_Dispatch", AddressOf(BossMikba_States), 12, 1, passed);
+    return DispatchBossSg("BossMikba_Dispatch", AddressOf(BossMikba_States), 12, 1, passed);
 }
 
 // original 0x43DC10: state 0: BossMikba_Anims, BossMikba_Hook,
@@ -612,13 +612,13 @@ extern "C" unsigned char __cdecl BossMikba_Enter(void) {
 // original 0x43DC50: state 6: jmp [BossMikba_ActSubs + 4 * +2] (6: the generic
 // action entries with the kind's death dispatcher at 4).
 extern "C" U __cdecl BossMikba_ActDispatch(unsigned passed) {
-    return Dispatch("BossMikba_ActDispatch", AddressOf(BossMikba_ActSubs), 6, 2, passed);
+    return DispatchBossSg("BossMikba_ActDispatch", AddressOf(BossMikba_ActSubs), 6, 2, passed);
 }
 
 // original 0x43DC70: +2 entry 4: jmp [BossMikba_DeathSteps + 4 * +3] (7: the six
 // steps below, then BossOp_ScriptTick).
 extern "C" U __cdecl BossMikba_DeathDispatch(unsigned passed) {
-    return Dispatch("BossMikba_DeathDispatch", AddressOf(BossMikba_DeathSteps), 7, 3, passed);
+    return DispatchBossSg("BossMikba_DeathDispatch", AddressOf(BossMikba_DeathSteps), 7, 3, passed);
 }
 
 // original 0x43DC90: death step 0. When Sprite_ScriptTick answers al not 0:
@@ -728,7 +728,7 @@ extern "C" void __cdecl BossMikba_DeathEnd(void) {
 }
 
 // original 0x43DEE0: the +0xF4 hook through BossMikba_Hooks (3, all BareRet).
-extern "C" U __cdecl BossMikba_Hook(unsigned word) { return HookTable("BossMikba_Hook", AddressOf(BossMikba_Hooks), word); }
+extern "C" U __cdecl BossMikba_Hook(unsigned word) { return HookTableBossSg("BossMikba_Hook", AddressOf(BossMikba_Hooks), word); }
 
 // original 0x43E290: the death's quad, turned by the argument. One
 // draw-mode primitive at Gfx_PacketNext (read after the page is made):

@@ -89,7 +89,7 @@ unsigned CountOf(U table, const char* who) {
 // aborts at the table's own count, before the read - the rule all seven of
 // wave one's groups share (docs/rest_1b.md section 6). While the fuzz runs the
 // table holds the harness's recorders.
-Handler Entry(U table, unsigned index, const char* who) {
+Handler EntryRest1c(U table, unsigned index, const char* who) {
     const U at = table + 4u * index;
     const unsigned count = CountOf(table, who);
     if (index >= count)
@@ -97,14 +97,14 @@ Handler Entry(U table, unsigned index, const char* who) {
                     count, (unsigned)table, (unsigned)at);
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(at)))));
 }
-void ByForm(U table, const char* who) { Entry(table, rv::Current<records::PartyMember>()->column, who)(); }
-void ByState(U table, const char* who) { Entry(table, Sprite_Current[2], who)(); }
-void ByStep(U table, const char* who) { Entry(table, Sprite_Current[3], who)(); }
+void ByFormRest1c(U table, const char* who) { EntryRest1c(table, rv::Current<records::PartyMember>()->column, who)(); }
+void ByStateRest1c(U table, const char* who) { EntryRest1c(table, Sprite_Current[2], who)(); }
+void ByStepRest1c(U table, const char* who) { EntryRest1c(table, Sprite_Current[3], who)(); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte), as the originals read it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
+U StepXRest1c(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZRest1c(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0; plus a base, as
@@ -122,7 +122,7 @@ unsigned char Sloped() { return kSloped; }
 // Sprite_ObjectsExtra 0x1E..0x21 (Sprite_ObjectAt answers those or 0xFF). The
 // originals index unchecked (0x51F700 / Form0Resolve the byte signed, 0x51FAF0
 // unsigned); ours aborts on any other byte.
-void MarkObject(unsigned char found, const char* who) {
+void MarkObjectRest1c(unsigned char found, const char* who) {
     if (found > 0x21)
         bof3::Fatal("%s: Sprite_ObjectAt answered 0x%02X, past the 34 objects; the original writes bit 0 of +0x80 there unchecked",
                     who, found);
@@ -145,8 +145,8 @@ unsigned char* EffectToWrite(int index, const char* who) {
 // step that way from Sprite_Current (re-read); the slope there steep (the
 // sloped flag set, its low word above 0x40 signed) and the ground there above
 // the sprite's height word (both s16): +0x2B = 0. PartyAction_SideProbes'
-// probe, and PartyAction5_Form0Begin's ProbeSide.
-void ProbeSide(U row, unsigned d) {
+// probe, and PartyAction5_Form0Begin's ProbeSideRest1c.
+void ProbeSideRest1c(U row, unsigned d) {
     const unsigned char* s = Sprite_Current;
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
@@ -176,8 +176,8 @@ unsigned char __cdecl BlockedAhead() { return SH_CALL(PartyAction_BlockedAhead)(
 // Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5.
 void BeginLevel() {
     Sprite_Current[0x2B] = 1;
-    ProbeSide(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
-    ProbeSide(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
+    ProbeSideRest1c(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
+    ProbeSideRest1c(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sprite_Current + 0x2C) + 0x100));
     SH_CALL(Sprite_EnsureAnimation)(Turned(Sprite_Current[8], 0x42));
     Sprite_Current[0xA] = 5;
@@ -196,12 +196,12 @@ void BeginEnd() {
 // PartyAction5_Form0Begin's code (0x51F210 is a copy of 0x51E930 instruction
 // for instruction): the first turn by PartyAction_TargetAhead, then the slope
 // one step ahead in +8 (MapView_SlopeAt with the direction byte) decides.
-void Form0Begin() {
+void Form0BeginRest1c() {
     FirstTurn(&TargetAhead);
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1c(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1c(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (Sloped() != 0 && static_cast<short>(slope) > 0x40) BeginSteep();
     else BeginLevel();
@@ -217,8 +217,8 @@ void Form2Begin() {
     FirstTurn(&TargetAhead);
     const unsigned char* s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1c(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1c(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
@@ -235,15 +235,15 @@ void Form2Begin() {
 // only while none found; +2 one on. Sprite_ScriptTickOnce every time. The
 // originals pass the cells as dwords over their own uninitialised stack; each
 // pickup reads 16 bits of them (docs/field_hidden.md section 3).
-void Form0Resolve(CellFn pickup, const char* who) {
+void Form0ResolveRest1c(CellFn pickup, const char* who) {
     --Sprite_Current[0xA];
     if (Sprite_Current[0xA] == 0) {
         const unsigned char* const s = Sprite_Current;
         const unsigned d = s[8];
-        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-        const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
+        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1c(d);
+        const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZRest1c(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
-        if (found != 0xFF) MarkObject(found, who);
+        if (found != 0xFF) MarkObjectRest1c(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
         if (pickup(cx, cz) == 0) {
             bool done = false;
@@ -265,7 +265,7 @@ void Form0Resolve(CellFn pickup, const char* who) {
 // (0, 0x56, 1): Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else
 // Msg_OpenSystem(3); Field_Request 2, +0xB = 1. Both clear the cell and answer
 // 1; anything else answers 0.
-unsigned char CellPickup(unsigned x, unsigned z, unsigned times) {
+unsigned char CellPickupRest1c(unsigned x, unsigned z, unsigned times) {
     const unsigned char cell = SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z));
     if (cell == 0xF2) {
         if (SH_CALL(Effect_FindFree)() != 0xFF) {
@@ -338,11 +338,11 @@ void BlockedResolve(CellFn hit, const char* who) {
             } else {
                 const unsigned char* const c = Sprite_Current;
                 const unsigned d = c[8];
-                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepX(d);
-                const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZ(d);
+                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepXRest1c(d);
+                const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZRest1c(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
-                    MarkObject(found, who);
+                    MarkObjectRest1c(found, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);
                 }
                 const unsigned cx = x >> 16, cz = z >> 16;
@@ -370,7 +370,7 @@ void BlockedResolve(CellFn hit, const char* who) {
 // 2 in all three. Each answers 1; anything else 0. The original stores the cell
 // byte over its own z argument's low byte and pushes that dword as a fourth
 // argument Effect_SpawnAtCellHigh does not read; no caller reads it again.
-unsigned char CellHit(unsigned x, unsigned z) {
+unsigned char CellHitRest1c(unsigned x, unsigned z) {
     const unsigned char cell = SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z));
     if (cell == 0xF0 || cell == 0xF1 || cell == 0xF4) {
         SH_CALL(Effect_SpawnAtCellHigh)(0, x, z);
@@ -437,11 +437,11 @@ void Kind30Begin(const char* who) {
     }
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1c(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1c(d);
     if ((Field_State[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
-        if (found != 0xFF) MarkObject(found, who);
+        if (found != 0xFF) MarkObjectRest1c(found, who);
     }
     Field_State[0x137] = 0;
 }
@@ -457,62 +457,62 @@ void Kind30Begin(const char* who) {
 // ===========================================================================
 
 // original 0x51FA70: Field_FormActions[6] - PartyFormAction6_Forms 0x65FC88 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByForm(::bof3::Img(PartyFormAction6_Forms_addr), "PartyFormAction6_ByForm (0x51FA70)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByFormRest1c(::bof3::Img(PartyFormAction6_Forms_addr), "PartyFormAction6_ByForm (0x51FA70)"); }
 // original 0x51FA90: Field_ActionBySet[6] - PartyAction6_Forms 0x65FC94 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByForm(::bof3::Img(PartyAction6_Forms_addr), "PartyAction6_ByForm (0x51FA90)"); }
+R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByFormRest1c(::bof3::Img(PartyAction6_Forms_addr), "PartyAction6_ByForm (0x51FA90)"); }
 // original 0x520120: Field_FormActions[7] - PartyFormAction7_Forms 0x65FCD8.
-R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByForm(::bof3::Img(PartyFormAction7_Forms_addr), "PartyFormAction7_ByForm (0x520120)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByFormRest1c(::bof3::Img(PartyFormAction7_Forms_addr), "PartyFormAction7_ByForm (0x520120)"); }
 // original 0x520140: Field_ActionBySet[7] - PartyAction7_Forms 0x65FCE4.
-R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByForm(::bof3::Img(PartyAction7_Forms_addr), "PartyAction7_ByForm (0x520140)"); }
+R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByFormRest1c(::bof3::Img(PartyAction7_Forms_addr), "PartyAction7_ByForm (0x520140)"); }
 // original 0x5207E0: Field_FormActions[8] - PartyFormAction8_Forms 0x65FD34.
-R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByForm(::bof3::Img(PartyFormAction8_Forms_addr), "PartyFormAction8_ByForm (0x5207E0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByFormRest1c(::bof3::Img(PartyFormAction8_Forms_addr), "PartyFormAction8_ByForm (0x5207E0)"); }
 // original 0x520800: Field_ActionBySet[8] - PartyAction8_Forms 0x65FD40.
-R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByForm(::bof3::Img(PartyAction8_Forms_addr), "PartyAction8_ByForm (0x520800)"); }
+R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByFormRest1c(::bof3::Img(PartyAction8_Forms_addr), "PartyAction8_ByForm (0x520800)"); }
 
 // original 0x51F5D0: set 6's form action, form 1 - PartyFormAction6_Form1States 0x65FC3C by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByState(::bof3::Img(PartyFormAction6_Form1States_addr), "PartyFormAction6_Form1 (0x51F5D0)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByStateRest1c(::bof3::Img(PartyFormAction6_Form1States_addr), "PartyFormAction6_Form1 (0x51F5D0)"); }
 // original 0x51F5F0: set 6's action, form 1 - PartyAction6_Form1States 0x65FC48 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByState(::bof3::Img(PartyAction6_Form1States_addr), "PartyAction6_Form1 (0x51F5F0)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByStateRest1c(::bof3::Img(PartyAction6_Form1States_addr), "PartyAction6_Form1 (0x51F5F0)"); }
 // original 0x51F610: set 6's form action, form 2 - PartyFormAction6_Form2States 0x65FC54 by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByState(::bof3::Img(PartyFormAction6_Form2States_addr), "PartyFormAction6_Form2 (0x51F610)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByStateRest1c(::bof3::Img(PartyFormAction6_Form2States_addr), "PartyFormAction6_Form2 (0x51F610)"); }
 // original 0x51F630: set 6's action, form 2 - PartyAction6_Form2States 0x65FC60 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByState(::bof3::Img(PartyAction6_Form2States_addr), "PartyAction6_Form2 (0x51F630)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByStateRest1c(::bof3::Img(PartyAction6_Form2States_addr), "PartyAction6_Form2 (0x51F630)"); }
 // original 0x51F650: its state 0 - PartyAction6_Form2State0Steps 0x65FC68 by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStep(::bof3::Img(PartyAction6_Form2State0Steps_addr), "PartyAction6_Form2State0 (0x51F650)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStepRest1c(::bof3::Img(PartyAction6_Form2State0Steps_addr), "PartyAction6_Form2State0 (0x51F650)"); }
 // original 0x51FA10: its state 1 - PartyAction6_Form2State1Steps 0x65FC7C by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStep(::bof3::Img(PartyAction6_Form2State1Steps_addr), "PartyAction6_Form2State1 (0x51FA10)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStepRest1c(::bof3::Img(PartyAction6_Form2State1Steps_addr), "PartyAction6_Form2State1 (0x51FA10)"); }
 // original 0x51FAB0: set 7's form action, form 0 - 0x65FCA0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByState(::bof3::Img(PartyFormAction7_Form0States_addr), "PartyFormAction7_Form0 (0x51FAB0)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByStateRest1c(::bof3::Img(PartyFormAction7_Form0States_addr), "PartyFormAction7_Form0 (0x51FAB0)"); }
 // original 0x51FAD0: set 7's action, form 0 - 0x65FCAC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByState(::bof3::Img(PartyAction7_Form0States_addr), "PartyAction7_Form0 (0x51FAD0)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByStateRest1c(::bof3::Img(PartyAction7_Form0States_addr), "PartyAction7_Form0 (0x51FAD0)"); }
 // original 0x51FC60: set 7's form action, form 1 - 0x65FCB4 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByState(::bof3::Img(PartyFormAction7_Form1States_addr), "PartyFormAction7_Form1 (0x51FC60)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByStateRest1c(::bof3::Img(PartyFormAction7_Form1States_addr), "PartyFormAction7_Form1 (0x51FC60)"); }
 // original 0x51FD00: set 7's form action, form 2 - 0x65FCC0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByState(::bof3::Img(PartyFormAction7_Form2States_addr), "PartyFormAction7_Form2 (0x51FD00)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByStateRest1c(::bof3::Img(PartyFormAction7_Form2States_addr), "PartyFormAction7_Form2 (0x51FD00)"); }
 // original 0x51FD20: set 7's action, form 2 - 0x65FCCC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByState(::bof3::Img(PartyAction7_Form2States_addr), "PartyAction7_Form2 (0x51FD20)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByStateRest1c(::bof3::Img(PartyAction7_Form2States_addr), "PartyAction7_Form2 (0x51FD20)"); }
 // original 0x520160: set 8's form action, form 0 - 0x65FCF0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByState(::bof3::Img(PartyFormAction8_Form0States_addr), "PartyFormAction8_Form0 (0x520160)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByStateRest1c(::bof3::Img(PartyFormAction8_Form0States_addr), "PartyFormAction8_Form0 (0x520160)"); }
 // original 0x520180: set 8's action, form 0 - 0x65FCFC by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByState(::bof3::Img(PartyAction8_Form0States_addr), "PartyAction8_Form0 (0x520180)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByStateRest1c(::bof3::Img(PartyAction8_Form0States_addr), "PartyAction8_Form0 (0x520180)"); }
 // original 0x520310: set 8's form action, form 1 - 0x65FD04 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByState(::bof3::Img(PartyFormAction8_Form1States_addr), "PartyFormAction8_Form1 (0x520310)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByStateRest1c(::bof3::Img(PartyFormAction8_Form1States_addr), "PartyFormAction8_Form1 (0x520310)"); }
 // original 0x520330: set 8's action, form 1 - 0x65FD10 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByState(::bof3::Img(PartyAction8_Form1States_addr), "PartyAction8_Form1 (0x520330)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByStateRest1c(::bof3::Img(PartyAction8_Form1States_addr), "PartyAction8_Form1 (0x520330)"); }
 // original 0x5203C0: set 8's form action, form 2 - 0x65FD1C by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByState(::bof3::Img(PartyFormAction8_Form2States_addr), "PartyFormAction8_Form2 (0x5203C0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByStateRest1c(::bof3::Img(PartyFormAction8_Form2States_addr), "PartyFormAction8_Form2 (0x5203C0)"); }
 // original 0x5203E0: set 8's action, form 2 - 0x65FD28 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByState(::bof3::Img(PartyAction8_Form2States_addr), "PartyAction8_Form2 (0x5203E0)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByStateRest1c(::bof3::Img(PartyAction8_Form2States_addr), "PartyAction8_Form2 (0x5203E0)"); }
 // original 0x520820: set 9's form action, form 0 (R1D's 0x521320 by +0x2C) - 0x65FD4C by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByState(::bof3::Img(PartyFormAction9_Form0States_addr), "PartyFormAction9_Form0 (0x520820)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByStateRest1c(::bof3::Img(PartyFormAction9_Form0States_addr), "PartyFormAction9_Form0 (0x520820)"); }
 // original 0x5208B0: set 9's action, form 0 (R1D's 0x521340) - 0x65FD58 by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByState(::bof3::Img(PartyAction9_Form0States_addr), "PartyAction9_Form0 (0x5208B0)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByStateRest1c(::bof3::Img(PartyAction9_Form0States_addr), "PartyAction9_Form0 (0x5208B0)"); }
 // original 0x520A40: set 9's form action, form 1 - 0x65FD60 by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByState(::bof3::Img(PartyFormAction9_Form1States_addr), "PartyFormAction9_Form1 (0x520A40)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByStateRest1c(::bof3::Img(PartyFormAction9_Form1States_addr), "PartyFormAction9_Form1 (0x520A40)"); }
 // original 0x520A60: set 9's action, form 1 - 0x65FD6C by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByState(::bof3::Img(PartyAction9_Form1States_addr), "PartyAction9_Form1 (0x520A60)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByStateRest1c(::bof3::Img(PartyAction9_Form1States_addr), "PartyAction9_Form1 (0x520A60)"); }
 // original 0x520A80: its state 0 - PartyAction9_Form1State0Steps 0x65FD74 by +3.
-R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(::bof3::Img(PartyAction9_Form1State0Steps_addr), "PartyAction9_Form1State0 (0x520A80)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStepRest1c(::bof3::Img(PartyAction9_Form1State0Steps_addr), "PartyAction9_Form1State0 (0x520A80)"); }
 
 // ===========================================================================
 // The state handlers
@@ -523,7 +523,7 @@ R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(::bof3::Img(Part
 // steep - Sprite_EnsureAnimation(the turn + 0x46), +2 one on - or not: +0x2B =
 // 1, the side probes 3 and 5, Sound_PlayEffect(u16 +0x2C + 0x100),
 // Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5. Then +0xB = 0, +2 one on.
-R1C_EXPORT void __cdecl PartyAction6_Form0Begin(void) { Form0Begin(); }
+R1C_EXPORT void __cdecl PartyAction6_Form0Begin(void) { Form0BeginRest1c(); }
 // original 0x51FD40: set 7's action, form 2, state 0 - the steep test on the
 // ground's rise one step ahead (Form2Begin above).
 R1C_EXPORT void __cdecl PartyAction7_Form2Begin(void) { Form2Begin(); }
@@ -532,24 +532,24 @@ R1C_EXPORT void __cdecl PartyAction8_Form2Begin(void) { Form2Begin(); }
 
 // original 0x51F4B0: set 6's cell pickup (Field_CellPickup's code; the zenny's
 // tenfold), called by PartyAction6_Form0Resolve.
-R1C_EXPORT unsigned char __cdecl PartyAction6_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z, 10); }
+R1C_EXPORT unsigned char __cdecl PartyAction6_CellPickup(unsigned x, unsigned z) { return CellPickupRest1c(x, z, 10); }
 // original 0x520000: set 7's - the zenny's twentyfold.
-R1C_EXPORT unsigned char __cdecl PartyAction7_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z, 20); }
+R1C_EXPORT unsigned char __cdecl PartyAction7_CellPickup(unsigned x, unsigned z) { return CellPickupRest1c(x, z, 20); }
 // original 0x5206C0: set 8's - the zenny's twentyfold.
-R1C_EXPORT unsigned char __cdecl PartyAction8_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z, 20); }
+R1C_EXPORT unsigned char __cdecl PartyAction8_CellPickup(unsigned x, unsigned z) { return CellPickupRest1c(x, z, 20); }
 
 // original 0x51F3D0: set 6's action, form 0, state 1 (PartyAction5_Form0Resolve's
 // code) with set 6's pickup.
 R1C_EXPORT void __cdecl PartyAction6_Form0Resolve(void) {
-    Form0Resolve(SH_CALL(PartyAction6_CellPickup), "PartyAction6_Form0Resolve (0x51F3D0)");
+    Form0ResolveRest1c(SH_CALL(PartyAction6_CellPickup), "PartyAction6_Form0Resolve (0x51F3D0)");
 }
 // original 0x51FF20: set 7's action, form 2, state 1, with set 7's pickup.
 R1C_EXPORT void __cdecl PartyAction7_Form2Resolve(void) {
-    Form0Resolve(SH_CALL(PartyAction7_CellPickup), "PartyAction7_Form2Resolve (0x51FF20)");
+    Form0ResolveRest1c(SH_CALL(PartyAction7_CellPickup), "PartyAction7_Form2Resolve (0x51FF20)");
 }
 // original 0x5205E0: set 8's action, form 2, state 1, with set 8's pickup.
 R1C_EXPORT void __cdecl PartyAction8_Form2Resolve(void) {
-    Form0Resolve(SH_CALL(PartyAction8_CellPickup), "PartyAction8_Form2Resolve (0x5205E0)");
+    Form0ResolveRest1c(SH_CALL(PartyAction8_CellPickup), "PartyAction8_Form2Resolve (0x5205E0)");
 }
 
 // original 0x51F670: set 6's action, form 2, state 0, step 0 - BlockedBegin above.
@@ -557,11 +557,11 @@ R1C_EXPORT void __cdecl PartyAction6_Form2Begin(void) { BlockedBegin(); }
 // original 0x520AA0: set 9's action, form 1, state 0, step 0 - 0x51F670's code.
 R1C_EXPORT void __cdecl PartyAction9_Form1Begin(void) { BlockedBegin(); }
 
-// original 0x51F880: set 6's cell hit (CellHit above), called by
+// original 0x51F880: set 6's cell hit (CellHitRest1c above), called by
 // PartyAction6_Form2Resolve.
-R1C_EXPORT unsigned char __cdecl PartyAction6_CellHit(unsigned x, unsigned z) { return CellHit(x, z); }
+R1C_EXPORT unsigned char __cdecl PartyAction6_CellHit(unsigned x, unsigned z) { return CellHitRest1c(x, z); }
 // original 0x520C80: set 9's - 0x51F880's code.
-R1C_EXPORT unsigned char __cdecl PartyAction9_CellHit(unsigned x, unsigned z) { return CellHit(x, z); }
+R1C_EXPORT unsigned char __cdecl PartyAction9_CellHit(unsigned x, unsigned z) { return CellHitRest1c(x, z); }
 
 // original 0x51F700: set 6's action, form 2, state 0, step 1, with set 6's cell hit.
 R1C_EXPORT void __cdecl PartyAction6_Form2Resolve(void) {

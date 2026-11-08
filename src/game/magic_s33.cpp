@@ -45,7 +45,7 @@ namespace {
 namespace at = magic_harness::at;
 using magic_harness::Mem;
 using magic_harness::Pointer;
-using move_script::Long;
+// move_script::Long is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
@@ -83,7 +83,7 @@ constexpr ::bof3::image::Va kWindowRows{0x803337};    // the battle windows 0xD.
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
-unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
+unsigned ActorIndex() { return static_cast<unsigned>(move_script::Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
@@ -101,7 +101,7 @@ void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
 std::uint32_t Key(const void* p) { return Low32(p); }
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
-void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(Long(at)) + v)); }
+void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(move_script::Long(at)) + v)); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
@@ -202,7 +202,7 @@ const unsigned char* FormTable() {
     const unsigned facing = Owner()[8];
     const unsigned kind = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
     const std::uint32_t cell = ::bof3::Img(kFormFiles.v) + kind * 8u + (facing == 0 || facing == 1 ? 0u : 4u);
-    return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(Long(Mem(cell)))));
+    return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(move_script::Long(Mem(cell)))));
 }
 
 }  // namespace
@@ -297,7 +297,7 @@ S33_EXPORT void __cdecl Accession_ActorScript(void) {
 S33_EXPORT void __cdecl Accession_LoadFormA(void) {
     if (Sc()[0xB] != 1) return;
     const unsigned char* const table = FormTable();
-    const unsigned set = static_cast<unsigned>(Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
+    const unsigned set = static_cast<unsigned>(move_script::Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
     MH_CALL(LoadDatFile)(static_cast<int>(Word(table + set * 2u)));
     Inc(Sc()[3]);
 }
@@ -309,7 +309,7 @@ S33_EXPORT void __cdecl Accession_LoadFormA(void) {
 // STP bits, animation +8 + 4 ensured; Sprite_Current back, +3 on.
 S33_EXPORT void __cdecl Accession_ApplyA(void) {
     if (MH_CALL(File_LoadDone)() == 0) return;
-    if ((U(Long(Mem(::bof3::Img(at::kFlags)))) & 0x4000) != 0 && Mem(::bof3::Img(BattleFlow_ActorAt_addr))[0] == Mem(::bof3::Img(at::kActor))[0])
+    if ((U(move_script::Long(Mem(::bof3::Img(at::kFlags)))) & 0x4000) != 0 && Mem(::bof3::Img(BattleFlow_ActorAt_addr))[0] == Mem(::bof3::Img(at::kActor))[0])
         SetWord(Mem(::bof3::Img(at::kFlags)), Word(Mem(::bof3::Img(at::kFlags))) & 0xBFFFu);
     unsigned char* const saved = Sc();
     unsigned char* const rec = PartyRecord(ActorIndex());
@@ -392,18 +392,18 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         unsigned char* const first = PartyRecord(0);
         records::PartyMember* const tfirst = rv::As<records::PartyMember>(first);
         const unsigned char* const from = PartyRecord(ActorIndex());
-        const std::int32_t x = Long(Mem(::bof3::Img(BossSi_CentreX_addr)));
+        const std::int32_t x = move_script::Long(Mem(::bof3::Img(BossSi_CentreX_addr)));
         // rep movsd: 0x53 dwords, forward, one at a time
-        for (unsigned k = 0; k < 0x14C; k += 4) SetLong(first + k, Long(from + k));
-        const std::int32_t z = Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
+        for (unsigned k = 0; k < 0x14C; k += 4) SetLong(first + k, move_script::Long(from + k));
+        const std::int32_t z = move_script::Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
         first[5] = 0;
         tfirst->x = x;
         tfirst->z = z;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         const std::int32_t z0 = tfirst->z;
-        const std::int32_t cz = Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
+        const std::int32_t cz = move_script::Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
         rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
-        SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x34), Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
+        SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x34), move_script::Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
         const std::int32_t x0 = tfirst->x;
         SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
@@ -427,7 +427,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         w[-1] = 5;
         w[0] = 0;
         const unsigned k = (column + row * 4u) * 2u;
-        const unsigned side = ((U(Long(Mem(::bof3::Img(0x904AAC)))) & 0xFF) ^ 2u) >> 1;
+        const unsigned side = ((U(move_script::Long(Mem(::bof3::Img(0x904AAC)))) & 0xFF) ^ 2u) >> 1;
         const unsigned dx = static_cast<unsigned>(SignedByte(Mem(::bof3::Img(kSideOffsets.v) + side * 2u)[0]) +
                                                   SignedByte(Mem(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + k)[0])) +
                             static_cast<std::uint16_t>(tm->screen_x);
@@ -451,7 +451,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     MH_CALL(Battle_SetActorBit)(rec[5]);
     Sprite_Current[0] &= 0xBF;
     {
-        const unsigned set = static_cast<unsigned>(Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
+        const unsigned set = static_cast<unsigned>(move_script::Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
         MH_CALL(Field_MemberSprite)(Mem(::bof3::Img(MoveScript_EffectArg_addr) + 0xc + set * 3u)[0], 0);
     }
     LoadPaletteOfCurrent();
@@ -470,7 +470,7 @@ S33_EXPORT void __cdecl Accession_End(void) {
     const unsigned a = ActorIndex();
     Mem(::bof3::Img(at::kFlags))[0] |= 4;
     unsigned char* const flags = PartyRecord(a) + 0x134;
-    SetLong(flags, static_cast<std::int32_t>((U(Long(flags)) & ~4u) | 0x20u));
+    SetLong(flags, static_cast<std::int32_t>((U(move_script::Long(flags)) & ~4u) | 0x20u));
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -502,8 +502,8 @@ S33_EXPORT void __cdecl AccessionCtl_Run(void) {
 // sound 0x102.
 S33_EXPORT void __cdecl AccessionCtl_Start(void) {
     Sc()[8] = Pointer(::bof3::Img(BattleOdds_ActorObject_addr))[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(::bof3::Img(BossSi_CentreZ_addr))));
+    rv::Store(rv::Current<records::BattleTask>()->x, move_script::Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
+    rv::Store(rv::Current<records::BattleTask>()->z, move_script::Long(Mem(::bof3::Img(BossSi_CentreZ_addr))));
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -1285,7 +1285,7 @@ S33_EXPORT void __cdecl MightyChop_Start(void) {
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     // rep movsd: 0x20 dwords, forward, one at a time (the two can overlap)
-    for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, Long(record + k));
+    for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, move_script::Long(record + k));
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 1;
     child[2] = 0;

@@ -41,7 +41,7 @@ namespace {
 
 namespace at = rest_3d::at;
 using U = std::uint32_t;
-using S32 = std::int32_t;
+using S32Rest3d = std::int32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -51,7 +51,7 @@ using move_script::Word;
 unsigned char& B(U address) { return At(address)[0]; }
 std::uint16_t W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
-S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
+S32Rest3d S16Rest3d(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 
 // An actor's record as the originals index it: the low byte, 0..2 a party
 // member (ObjTrio, 0x14C), else an enemy object at (actor - 3) * 0x128 - in
@@ -60,8 +60,8 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
 U PartyAt(U actor) { return ::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride; }
 U EnemyAt(U actor) { return ::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
-unsigned char* Party(U actor) { return At(PartyAt(actor)); }
-unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
+unsigned char* PartyRest3d(U actor) { return At(PartyAt(actor)); }
+unsigned char* EnemyRest3d(U actor) { return At(EnemyAt(actor)); }
 
 // The party size 0x904AB0 as slots 117's and 118's write loops read it: past
 // ObjTrio's three the original writes on into WindowRecords; ours aborts, as
@@ -77,11 +77,11 @@ unsigned PartySizeForWrite(const char* who) {
 
 // The cells by side: HP (party +0x98, enemy +0xA4); the flag words +0x130 /
 // +0x110 (0x10000: no damage; 0x200: no hit pose) and +0x134 / +0x114.
-unsigned char* Hp(U actor) { return IsMember(actor) ? Party(actor) + 0x98 : Enemy(actor) + 0xA4; }
-unsigned char* Flags(U actor) { return IsMember(actor) ? Party(actor) + 0x130 : Enemy(actor) + 0x110; }
-unsigned char* Flags2(U actor) { return IsMember(actor) ? Party(actor) + 0x134 : Enemy(actor) + 0x114; }
-void OrLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32>(static_cast<U>(Long(p)) | bits)); }
-void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32>(static_cast<U>(Long(p)) & bits)); }
+unsigned char* Hp(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x98 : EnemyRest3d(actor) + 0xA4; }
+unsigned char* Flags(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x130 : EnemyRest3d(actor) + 0x110; }
+unsigned char* Flags2(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x134 : EnemyRest3d(actor) + 0x114; }
+void OrLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) | bits)); }
+void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) & bits)); }
 
 unsigned char* Result() { return At(BattleDamage_Result); }
 unsigned Actor() { return B(::bof3::Img(at::kActor.v)); }
@@ -95,35 +95,35 @@ unsigned char AbilityStep() { return B(::bof3::Img(bof3::addr::NameTable_Abiliti
 // The two terms of the status roll, read before the rate lookup:
 // a = min(u16 0x939FEA * 100 / 500 + 50, 100) and
 // d = max(125 - u16 0x939F8A * 100 / 500, 50) (signed 32-bit, as there).
-S32 RollAttack() {
-    const S32 a = BattleDamage_AttackerInt * 100 / 500 + 50;
+S32Rest3d RollAttack() {
+    const S32Rest3d a = BattleDamage_AttackerInt * 100 / 500 + 50;
     return a > 100 ? 100 : a;
 }
-S32 RollDefence() {
-    const S32 d = 125 - BattleDamage_TargetInt * 100 / 500;
+S32Rest3d RollDefence() {
+    const S32Rest3d d = 125 - BattleDamage_TargetInt * 100 / 500;
     return d < 50 ? 50 : d;
 }
 
 // The roll: the rate's ax (movsx) of -1 is "cannot be resisted" (al 0);
 // otherwise Rand, and al 1 (resisted) when Rand % 100 is at least
 // (rate * d * a, in 32 bits) / 10000, both signed.
-unsigned char Roll(S32 a, S32 d, U rate_eax) {
-    const S32 rate = S16(rate_eax);
+unsigned char Roll(S32Rest3d a, S32Rest3d d, U rate_eax) {
+    const S32Rest3d rate = S16Rest3d(rate_eax);
     if (rate == -1) return 0;
-    const S32 r = static_cast<S32>(BH_CALL(Rand)());
-    const S32 p = static_cast<S32>(static_cast<U>(rate) * static_cast<U>(d) * static_cast<U>(a));
+    const S32Rest3d r = static_cast<S32Rest3d>(BH_CALL(Rand)());
+    const S32Rest3d p = static_cast<S32Rest3d>(static_cast<U>(rate) * static_cast<U>(d) * static_cast<U>(a));
     return (r % 100) >= p / 10000 ? 1 : 0;
 }
 
 // The class lookups (0x44F030, 0x44F770): eax 0 to start; mask bit 0x40 the
 // table's s16 by the actor's class byte +0xB5 (enemy +0xC5), 0x80 by +0xB6
 // (+0xC6), 0x100 by +0xB7 (+0xC7), each later bit overriding.
-S32 ClassLookup(U table, unsigned actor, unsigned mask) {
-    const unsigned char* const c = IsMember(actor) ? Party(actor) + 0xB5 : Enemy(actor) + 0xC5;
-    S32 v = 0;
-    if (mask & 0x40) v = S16(W(table + 2u * c[0]));
-    if (mask & 0x80) v = S16(W(table + 2u * c[1]));
-    if (mask & 0x100) v = S16(W(table + 2u * c[2]));
+S32Rest3d ClassLookup(U table, unsigned actor, unsigned mask) {
+    const unsigned char* const c = IsMember(actor) ? PartyRest3d(actor) + 0xB5 : EnemyRest3d(actor) + 0xC5;
+    S32Rest3d v = 0;
+    if (mask & 0x40) v = S16Rest3d(W(table + 2u * c[0]));
+    if (mask & 0x80) v = S16Rest3d(W(table + 2u * c[1]));
+    if (mask & 0x100) v = S16Rest3d(W(table + 2u * c[2]));
     return v;
 }
 
@@ -147,7 +147,7 @@ extern "C" int __cdecl Battle_PsiStatusDeathAffinity(unsigned target, unsigned m
 // the table 0x64E96C, and 0xFFFF (the rolls' "cannot be resisted") when the
 // mask has none of 0x1C0.
 extern "C" int __cdecl Battle_StatusResistRate(unsigned actor, unsigned mask) {
-    const S32 v = ClassLookup(::bof3::Img(Battle_StatusResistRates_addr), actor, mask);
+    const S32Rest3d v = ClassLookup(::bof3::Img(Battle_StatusResistRates_addr), actor, mask);
     return (mask & 0x1C0) == 0 ? 0xFFFF : v;
 }
 
@@ -156,8 +156,8 @@ extern "C" int __cdecl Battle_StatusResistRate(unsigned actor, unsigned mask) {
 // never "cannot be resisted").
 extern "C" int __cdecl Battle_StatusResistRate20(unsigned actor, unsigned mask) {
     if ((mask & 0x20) == 0) return 0;
-    const unsigned char c = IsMember(actor) ? Party(actor)[0xB4] : Enemy(actor)[0xC4];
-    return S16(W(::bof3::Img(at::kResistRates20.v) + 2u * c));
+    const unsigned char c = IsMember(actor) ? PartyRest3d(actor)[0xB4] : EnemyRest3d(actor)[0xC4];
+    return S16Rest3d(W(::bof3::Img(at::kResistRates20.v) + 2u * c));
 }
 
 // original 0x44F6A0: the status roll for the acting ability: Roll with the
@@ -165,8 +165,8 @@ extern "C" int __cdecl Battle_StatusResistRate20(unsigned actor, unsigned mask) 
 // read. al 1: resisted.
 extern "C" unsigned char __cdecl Battle_StatusResisted(unsigned actor, unsigned target) {
     (void)actor;
-    const S32 a = RollAttack();
-    const S32 d = RollDefence();
+    const S32Rest3d a = RollAttack();
+    const S32Rest3d d = RollDefence();
     const U rate = static_cast<U>(BH_CALL(Battle_StatusResistRate)(target, AbilityMask()));
     return Roll(a, d, rate);
 }
@@ -174,8 +174,8 @@ extern "C" unsigned char __cdecl Battle_StatusResisted(unsigned actor, unsigned 
 // original 0x44F880: the same roll with the caller's mask (its low nine bits).
 extern "C" unsigned char __cdecl Battle_StatusResistedMask(unsigned actor, unsigned target, unsigned mask) {
     (void)actor;
-    const S32 a = RollAttack();
-    const S32 d = RollDefence();
+    const S32Rest3d a = RollAttack();
+    const S32Rest3d d = RollDefence();
     const U rate = static_cast<U>(BH_CALL(Battle_StatusResistRate)(target, mask & 0x1FF));
     return Roll(a, d, rate);
 }
@@ -183,8 +183,8 @@ extern "C" unsigned char __cdecl Battle_StatusResistedMask(unsigned actor, unsig
 // original 0x44F940: the roll on Battle_StatusResistRate20 (the ability's mask).
 extern "C" unsigned char __cdecl Battle_StatusResisted20(unsigned actor, unsigned target) {
     (void)actor;
-    const S32 a = RollAttack();
-    const S32 d = RollDefence();
+    const S32Rest3d a = RollAttack();
+    const S32Rest3d d = RollDefence();
     const U rate = static_cast<U>(BH_CALL(Battle_StatusResistRate20)(target, AbilityMask()));
     return Roll(a, d, rate);
 }
@@ -193,8 +193,8 @@ extern "C" unsigned char __cdecl Battle_StatusResisted20(unsigned actor, unsigne
 // the mask 0x80.
 extern "C" unsigned char __cdecl Battle_StatusResisted80(unsigned attacker, unsigned target) {
     (void)attacker;
-    const S32 a = RollAttack();
-    const S32 d = RollDefence();
+    const S32Rest3d a = RollAttack();
+    const S32Rest3d d = RollDefence();
     const U rate = static_cast<U>(BH_CALL(Battle_StatusResistRate)(target, 0x80));
     return Roll(a, d, rate);
 }
@@ -275,12 +275,12 @@ extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
             BH_CALL(Battle_ReturnQueuedItem)(target);
             B(::bof3::Img(at::kActorTaskByte.v) + (target & 0xFF) * at::kActorTaskStride) = 0;
             if (member) {
-                unsigned char* const p = Party(target);
+                unsigned char* const p = PartyRest3d(target);
                 p[0x125] = 0;
                 AndLong(p + 0x130, 0xFFFFFFFDu);
                 AndLong(p + 0x134, 0xFFFFFFFBu);
             } else {
-                unsigned char* const e = Enemy(target);
+                unsigned char* const e = EnemyRest3d(target);
                 e[0x105] = 0;
                 AndLong(e + 0x110, 0xFFFFFFFDu);
             }
@@ -322,11 +322,11 @@ extern "C" void __cdecl Effect_NoHitReaction(void) {
     const unsigned t = Target();
     B(::bof3::Img(at::kRoundFlagsHi.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlagsHi.v)) | 0x20);
     if (IsMember(t)) {
-        unsigned char* const p = Party(t);
+        unsigned char* const p = PartyRest3d(t);
         OrLong(p + 0x130, 0x200);
         p[0x12C] = static_cast<unsigned char>(p[0x12C] & 0xFE);
     } else {
-        unsigned char* const e = Enemy(t);
+        unsigned char* const e = EnemyRest3d(t);
         OrLong(e + 0x110, 0x200);
         e[0x10C] = static_cast<unsigned char>(e[0x10C] & 0xFE);
     }
@@ -337,7 +337,7 @@ extern "C" void __cdecl Effect_NoHitReaction(void) {
 // the byte plus the step's byte.
 extern "C" void __cdecl Effect_StepStatByte(unsigned step, unsigned stat) {
     unsigned char* const p = At(BattleDamage_Result + (stat & 0xFF) + 0x14);
-    const S32 v = static_cast<signed char>(*p) + S16(step);
+    const S32Rest3d v = static_cast<signed char>(*p) + S16Rest3d(step);
     if (v > 50) *p = 50;
     else if (v < -25) *p = 0xE7;
     else *p = static_cast<unsigned char>(*p + step);
@@ -352,7 +352,7 @@ namespace {
 unsigned char RollStatStep(unsigned stat) {
     if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return 1;
     const auto step = static_cast<signed char>(AbilityStep());
-    BH_CALL(Effect_StepStatByte)(static_cast<U>(static_cast<S32>(step)), stat);
+    BH_CALL(Effect_StepStatByte)(static_cast<U>(static_cast<S32Rest3d>(step)), stat);
     BH_CALL(Battle_RecalcStats)((stat & 0xFFFFFF00u) | Target());
     return 0;
 }
@@ -398,16 +398,16 @@ extern "C" unsigned char __cdecl Effect_RollInflict(unsigned status) { return Ro
 extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
     const U hp = Word(Hp(Actor()));
     const U mask = AbilityMask();
-    S32 affinity = 100;
-    if (mask & 0x1F) affinity = S16(static_cast<U>(BH_CALL(Battle_ElementAffinity)(Target(), mask)));
+    S32Rest3d affinity = 100;
+    if (mask & 0x1F) affinity = S16Rest3d(static_cast<U>(BH_CALL(Battle_ElementAffinity)(Target(), mask)));
     const U roll = static_cast<U>(BH_CALL(Rand)()) & 7;
-    const S32 variance = S16(W(::bof3::Img(at::kHpVariance.v) + 2 * roll));
+    const S32Rest3d variance = S16Rest3d(W(::bof3::Img(at::kHpVariance.v) + 2 * roll));
     if (divisor == 0)
         bof3::Fatal("Effect_HpBasedDamage: a divisor of 0 - the original's idiv faults (docs/rest_3d.md section 7)");
-    const S32 quotient = static_cast<S32>(hp) / divisor;
-    const S32 product = static_cast<S32>(static_cast<U>(variance) * static_cast<U>(quotient) * static_cast<U>(affinity));
-    S32 v = product / 10000;
-    if (static_cast<U>(Long(Flags(Target()))) & 0x10000) v = static_cast<S32>(static_cast<U>(v) & 0xFFFF0000u);
+    const S32Rest3d quotient = static_cast<S32Rest3d>(hp) / divisor;
+    const S32Rest3d product = static_cast<S32Rest3d>(static_cast<U>(variance) * static_cast<U>(quotient) * static_cast<U>(affinity));
+    S32Rest3d v = product / 10000;
+    if (static_cast<U>(Long(Flags(Target()))) & 0x10000) v = static_cast<S32Rest3d>(static_cast<U>(v) & 0xFFFF0000u);
     return v;
 }
 
@@ -424,9 +424,9 @@ void HpLessDefence(int divisor) {
     const bool member = IsMember(Target());
     const U v = static_cast<U>(BH_CALL(Effect_HpBasedDamage)(divisor));
     const unsigned t = Target();
-    const U def = member ? rv::As<records::PartyMember>(Party(t))->def : rv::As<records::BattleEnemy>(Enemy(t))->def;
+    const U def = member ? rv::As<records::PartyMember>(PartyRest3d(t))->def : rv::As<records::BattleEnemy>(EnemyRest3d(t))->def;
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, v - def);
-    if (S16(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) < 0) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
+    if (S16Rest3d(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) < 0) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
 }
 
 }  // namespace
@@ -474,8 +474,8 @@ extern "C" void __cdecl Effect117_PartyFlag400Others(void) {
     const unsigned t = Target();
     if (!IsMember(t)) return;
     const unsigned n = PartySizeForWrite("Effect117_PartyFlag400Others");
-    for (unsigned m = 0; m < n; ++m) OrLong(Party(m) + 0x134, 0x400);
-    AndLong(Party(t) + 0x134, 0xFFFFFBFFu);
+    for (unsigned m = 0; m < n; ++m) OrLong(PartyRest3d(m) + 0x134, 0x400);
+    AndLong(PartyRest3d(t) + 0x134, 0xFFFFFBFFu);
 }
 
 // original 0x44E720 (slot 118): a member target only. Its character (+0x148)
@@ -490,7 +490,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     const unsigned t = Target();
     if (!IsMember(t)) return;
     {
-        unsigned char* const p = Party(t);
+        unsigned char* const p = PartyRest3d(t);
         unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
@@ -500,7 +500,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
-        unsigned char* const p = Party(m);
+        unsigned char* const p = PartyRest3d(m);
         const unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
@@ -508,7 +508,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     BH_CALL(Formation_ApplyStatMods)();
     n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
-        unsigned char* const p = Party(m);
+        unsigned char* const p = PartyRest3d(m);
         for (unsigned i = 0; i < 0x20; ++i) p[0xA0 + i] = p[0xC0 + i];
     }
     BH_CALL(BattleForm_ApplyStats)();
@@ -519,7 +519,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
             m = (m + 1) & 0xFF;
         } while (m < B(::bof3::Img(at::kPartySize.v)));
     }
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0u - rv::As<records::PartyMember>(Party(Target()))->max_hp);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0u - rv::As<records::PartyMember>(PartyRest3d(Target()))->max_hp);
 }
 
 // original 0x44E8B0 (slot 119): Effect_NoHitReaction; the actor's +0x134 (an
@@ -555,8 +555,8 @@ extern "C" void __cdecl Effect121_ActorFlag4000(void) {
     const unsigned a = Actor();
     const unsigned t = Target();
     OrLong(Flags2(a), 0x4000);
-    if (IsMember(a)) Party(a)[0x142] = 0;
-    else Enemy(a)[0x122] = 0;
+    if (IsMember(a)) PartyRest3d(a)[0x142] = 0;
+    else EnemyRest3d(a)[0x122] = 0;
     BH_CALL(Battle_RecalcStats)(t);
 }
 
@@ -605,7 +605,7 @@ extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
     const short v = BH_CALL(Battle_CalcDamage)(Actor(), t, 0xFFFF);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(v));
     if (IsMember(t)) return;
-    if (Enemy(Target())[0x8D] == 4) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) << 1);
+    if (EnemyRest3d(Target())[0x8D] == 4) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) << 1);
 }
 
 // original 0x44EBE0 (slot 128): the HP delta Battle_CalcDamage(actor, target,
@@ -613,7 +613,7 @@ extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
 // says not resisted, Effect_RollInflict(4) (a second roll).
 extern "C" void __cdecl Effect128_HalfAttackInflict4(void) {
     const short v = BH_CALL(Battle_CalcDamage)(Actor(), Target(), 0xFFFF);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<S32>(v) / 2));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<S32Rest3d>(v) / 2));
     if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) == 0) return;
     if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return;
     BH_CALL(Effect_RollInflict)(4);
@@ -629,13 +629,13 @@ extern "C" void __cdecl Effect129_TargetSoleFlag40000(void) {
     BH_CALL(Effect_NoHitReaction)();
     for (unsigned m = 0; m <= 2; ++m) {
         if (BH_CALL(Battle_ActorIsOut)(m)) continue;
-        AndLong(Party(Target()) + 0x134, 0xFFFBFFFFu);
+        AndLong(PartyRest3d(Target()) + 0x134, 0xFFFBFFFFu);
     }
     unsigned t = 0;
     for (unsigned m = 3; m <= 10; ++m) {
         const unsigned char out = BH_CALL(Battle_ActorIsOut)(m);
         t = Target();
-        if (!out) AndLong(Enemy(t) + 0x114, 0xFFFBFFFFu);
+        if (!out) AndLong(EnemyRest3d(t) + 0x114, 0xFFFBFFFFu);
     }
     OrLong(Flags2(t), 0x40000);
 }

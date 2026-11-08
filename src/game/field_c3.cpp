@@ -48,7 +48,7 @@ namespace {
 
 namespace at = field_c3::at;
 using U = std::uint32_t;
-using move_script::At;
+// move_script::At is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -64,7 +64,7 @@ unsigned char* F() { return Field_State; }
 // leader's state tables, docs/mode_states.md -, the kind-2 object), so only
 // the shared head is named (records.h SpriteHead; stage C2).
 // Field_State is an ObjTrio record.
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SWord(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -125,10 +125,10 @@ void ShadeBegin(unsigned at, unsigned char state) {
 
 // The jump table's step pair (8 bytes a direction) for direction d, unchecked
 // (a byte: the image's table read past its eight, as the original's).
-U JumpStepX(unsigned d) { return ULong(At(::bof3::Img(MoveCmd_F9Steps_addr) + d * 8)); }
-U JumpStepZ(unsigned d) { return ULong(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + d * 8)); }
-U DirStepX(unsigned d) { return ULong(At(AddressOf(Field_DirectionSteps) + d * 8)); }
-U DirStepZ(unsigned d) { return ULong(At(AddressOf(Field_DirectionSteps) + 4 + d * 8)); }
+U JumpStepX(unsigned d) { return ULong(move_script::At(::bof3::Img(MoveCmd_F9Steps_addr) + d * 8)); }
+U JumpStepZ(unsigned d) { return ULong(move_script::At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + d * 8)); }
+U DirStepX(unsigned d) { return ULong(move_script::At(AddressOf(Field_DirectionSteps) + d * 8)); }
+U DirStepZ(unsigned d) { return ULong(move_script::At(AddressOf(Field_DirectionSteps) + 4 + d * 8)); }
 
 }  // namespace
 
@@ -346,7 +346,7 @@ extern "C" void __cdecl FieldCore_ScriptMoveNext(void) {
         f[0x125] = static_cast<unsigned char>(f[0x125] - 1);
         return;
     }
-    const unsigned char step = SH_CALL(MoveScript_Step)(f + 0x124, At(ULong(f + 0x130)));
+    const unsigned char step = SH_CALL(MoveScript_Step)(f + 0x124, move_script::At(ULong(f + 0x130)));
     unsigned char animation = step;   // the byte the original keeps at [esp + 8]
     if (step == 0xFF) return;
     f = Field_State;   // esi, from here to the end
@@ -469,7 +469,7 @@ extern "C" void __cdecl FieldCore_Attached(void) {
         static const unsigned kFields[] = {0x34, 0x38, 0x3C, 0x64, 0x68, 0x6C};
         for (const unsigned field : kFields) {
             records::SpriteHead* const s = rv::Current<records::SpriteHead>();
-            SetULong(rv::Bytes(s) + field, ULong(At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34 + (field - 0x34) + static_cast<U>(s->work_18) * 0xA4u)));
+            SetULong(rv::Bytes(s) + field, ULong(move_script::At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34 + (field - 0x34) + static_cast<U>(s->work_18) * 0xA4u)));
         }
         long offset[3];
         SH_CALL(MoveCmd_AttachOffset)(offset, S()[0x1C]);
@@ -635,7 +635,7 @@ extern "C" void __cdecl FieldCore_UpIn(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole + 0x10u);
     const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     const int stop = static_cast<int>(static_cast<short>(ground)) -
-                     static_cast<int>(SWord(At(::bof3::Img(at::kTargetOffsets) + rv::As<records::PartyMember>(F())->char_id * 2u)));
+                     static_cast<int>(SWord(move_script::At(::bof3::Img(at::kTargetOffsets) + rv::As<records::PartyMember>(F())->char_id * 2u)));
     if (static_cast<int>(SWord(S() + 0x3E)) >= stop) {
         SH_AT(void (__cdecl*)(), at::kUpLanded.v)();
         S()[4] = static_cast<unsigned char>(S()[4] + 1);
@@ -1053,7 +1053,7 @@ extern "C" void __cdecl FieldCore_Recoil(void) { Run("FieldCore_Recoil", FieldCo
 extern "C" void __cdecl FieldCore_RecoilBegin(void) {
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
     if (s->draw_mode != 0) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Bytes(s)[5] * 64u)), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Bytes(s)[5] * 64u)), 0);
         rv::Current<records::SpriteHead>()->flags = static_cast<unsigned char>(rv::Current<records::SpriteHead>()->flags & 0xDF);
         rv::Current<records::SpriteHead>()->draw_mode = 0;
         rv::Current<records::SpriteHead>()->shade[0] = 0;

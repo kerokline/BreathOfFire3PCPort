@@ -27,7 +27,7 @@ constexpr unsigned kY = 0x38;         // s32
 constexpr unsigned kZ = 0x3E;         // s16
 constexpr unsigned kRecord = 0x54;    // const u8*: +2 s8 reach, +3 bit 0x10 "not this one"
 
-template <class T> T Get(const unsigned char* at, unsigned offset) {
+template <class T> T GetSpriteFind(const unsigned char* at, unsigned offset) {
     // A pointer-typed field is a 32-bit word of the image on every width.
     if constexpr (std::is_pointer_v<T>) {
         std::uint32_t w;
@@ -39,7 +39,7 @@ template <class T> T Get(const unsigned char* at, unsigned offset) {
         return v;
     }
 }
-template <class T> void Put(unsigned char* at, unsigned offset, T v) {
+template <class T> void PutSpriteFind(unsigned char* at, unsigned offset, T v) {
     if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
         const std::uint32_t w = Low32(v);
         std::memcpy(at + offset, &w, sizeof w);
@@ -66,12 +66,12 @@ bool Qualifies(const unsigned char* object, const unsigned char* current) {
     if (!(object[kFlags24] & 0x40)) return false;
     if (object[kType] != 0x0A) return false;
     if (object == current) return false;
-    const auto* record = Get<const unsigned char*>(object, kRecord);
+    const auto* record = GetSpriteFind<const unsigned char*>(object, kRecord);
     if (record[3] & 0x10) return false;
     const std::int32_t reach = ReachOf(record);
-    if (WrappingDistance(Get<std::int32_t>(current, kX), Get<std::int32_t>(object, kX)) > reach) return false;
-    if (WrappingDistance(Get<std::int32_t>(current, kY), Get<std::int32_t>(object, kY)) > reach) return false;
-    const int dz = Get<std::int16_t>(current, kZ) - Get<std::int16_t>(object, kZ);
+    if (WrappingDistance(GetSpriteFind<std::int32_t>(current, kX), GetSpriteFind<std::int32_t>(object, kX)) > reach) return false;
+    if (WrappingDistance(GetSpriteFind<std::int32_t>(current, kY), GetSpriteFind<std::int32_t>(object, kY)) > reach) return false;
+    const int dz = GetSpriteFind<std::int16_t>(current, kZ) - GetSpriteFind<std::int16_t>(object, kZ);
     return (dz < 0 ? -dz : dz) <= 0x300;
 }
 
@@ -111,11 +111,11 @@ void Fill(unsigned char* object, unsigned likely, std::int32_t cx, std::int32_t 
     if (Rng() % likely) object[kFlags24] |= 0x40;
     if (Rng() % likely) object[kType] = 0x0A;
     const unsigned char* record = g_records[Rng() % 8];
-    Put<const unsigned char*>(object, kRecord, record);
-    Put<std::int32_t>(object, kX, Near(cx, ReachOf(record)));
-    Put<std::int32_t>(object, kY, Near(cy, ReachOf(record)));
+    PutSpriteFind<const unsigned char*>(object, kRecord, record);
+    PutSpriteFind<std::int32_t>(object, kX, Near(cx, ReachOf(record)));
+    PutSpriteFind<std::int32_t>(object, kY, Near(cy, ReachOf(record)));
     static const int kDz[] = {0, 0x300, 0x301, -0x300, -0x301, 0x100, -0x100, 0x7000};
-    Put<std::int16_t>(object, kZ, static_cast<std::int16_t>(cz + kDz[Rng() % 8]));
+    PutSpriteFind<std::int16_t>(object, kZ, static_cast<std::int16_t>(cz + kDz[Rng() % 8]));
 }
 
 void SelfTest(FindFn theirs) {
@@ -141,9 +141,9 @@ void SelfTest(FindFn theirs) {
         const unsigned where = Rng() % (kObjects + kExtra + 4);
         unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
                                      : outside;
-        Put<std::int32_t>(current, kX, cx);
-        Put<std::int32_t>(current, kY, cy);
-        Put<std::int16_t>(current, kZ, cz);
+        PutSpriteFind<std::int32_t>(current, kX, cx);
+        PutSpriteFind<std::int32_t>(current, kY, cy);
+        PutSpriteFind<std::int16_t>(current, kZ, cz);
         Sprite_Current = current;
 
         const unsigned char their_result = theirs();
@@ -177,8 +177,8 @@ void SelfTestPointInReach(PointFn theirs) {
         unsigned char object[kObjectSize];
         for (auto& b : object) b = static_cast<unsigned char>(Rng());
         if (Rng() % 2) object[0x09] = static_cast<unsigned char>(Rng() % 4);
-        if (Rng() % 2) { Put<std::int32_t>(object, 0x0C, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000);
-                         Put<std::int32_t>(object, 0x10, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000); }
+        if (Rng() % 2) { PutSpriteFind<std::int32_t>(object, 0x0C, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000);
+                         PutSpriteFind<std::int32_t>(object, 0x10, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000); }
         const int margin = Rng() % 8 == 0 ? static_cast<int>(Rng()) : static_cast<int>(Rng() % 300) - 280;
         const std::uint32_t reach = object[0x70] + static_cast<std::uint32_t>(margin) + 2u;
         auto offset = [&](unsigned shift) -> std::uint32_t {
@@ -194,10 +194,10 @@ void SelfTestPointInReach(PointFn theirs) {
             }
         };
         const std::uint32_t steps = object[0x09];
-        const int x = static_cast<int>(Get<std::uint32_t>(object, kX) + Get<std::uint32_t>(object, 0x0C) * steps + offset(15));
-        const int y = static_cast<int>(Get<std::uint32_t>(object, kY) + Get<std::uint32_t>(object, 0x10) * steps + offset(15));
+        const int x = static_cast<int>(GetSpriteFind<std::uint32_t>(object, kX) + GetSpriteFind<std::uint32_t>(object, 0x0C) * steps + offset(15));
+        const int y = static_cast<int>(GetSpriteFind<std::uint32_t>(object, kY) + GetSpriteFind<std::uint32_t>(object, 0x10) * steps + offset(15));
         const unsigned z = (Rng() & 0xFFFF0000u) |
-            static_cast<std::uint16_t>(Get<std::uint16_t>(object, kZ) + (Rng() % 3 ? offset(7) % 0x4000 : offset(7)));
+            static_cast<std::uint16_t>(GetSpriteFind<std::uint16_t>(object, kZ) + (Rng() % 3 ? offset(7) % 0x4000 : offset(7)));
 
         const unsigned char their_result = theirs(x, y, z, margin, object);
         const unsigned char our_result =
@@ -278,9 +278,9 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         const unsigned where = Rng() % (kObjects + kExtra + 4);
         unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
                                      : outside;
-        Put<std::int32_t>(current, kX, cx);
-        Put<std::int32_t>(current, kY, cy);
-        Put<std::int16_t>(current, kZ, cz);
+        PutSpriteFind<std::int32_t>(current, kX, cx);
+        PutSpriteFind<std::int32_t>(current, kY, cy);
+        PutSpriteFind<std::int16_t>(current, kZ, cz);
         // A handle whose number stays inside the 34 objects: a larger one reads
         // game memory past Sprite_ObjectsExtra, which is the same for both but
         // not ours to vary. Without bit 7 the number is (h & 0x3F) + 30, with
@@ -315,10 +315,10 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         if (!same && ++bad <= 8)
             bof3::Log("shadow      Sprite_InheritDrawKey self-test MISMATCH round %u: handle %02X, attached %u, "
                       "+0x32 %04X vs ours %04X", round, handle, (current[kFlags24] & 0x20) ? 1u : 0u,
-                      Get<std::uint16_t>(where < kObjects ? their_a + where * kObjectSize
+                      GetSpriteFind<std::uint16_t>(where < kObjects ? their_a + where * kObjectSize
                                          : where < kObjects + kExtra ? their_b + (where - kObjects) * kObjectSize
                                          : their_out, kDrawKey),
-                      Get<std::uint16_t>(current, kDrawKey));
+                      GetSpriteFind<std::uint16_t>(current, kDrawKey));
     }
     std::memcpy(Sprite_Objects, saved_a, sizeof saved_a);
     std::memcpy(Sprite_ObjectsExtra, saved_b, sizeof saved_b);
@@ -357,14 +357,14 @@ extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
 // as within any reach.
 extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int margin, const unsigned char* object) {
     const std::uint32_t reach = static_cast<std::uint32_t>(object[0x70]) + static_cast<std::uint32_t>(margin) + 2u;
-    const int dz = Get<std::int16_t>(object, kZ) - z;
+    const int dz = GetSpriteFind<std::int16_t>(object, kZ) - z;
     if ((dz < 0 ? -dz : dz) > static_cast<std::int32_t>(reach << 7)) return 0;
     const std::uint32_t steps = object[0x09];
     const std::int32_t limit = static_cast<std::int32_t>(reach << 15);
-    const std::uint32_t ax = static_cast<std::uint32_t>(x) - Get<std::uint32_t>(object, 0x0C) * steps;
-    if (WrappingDistance(static_cast<std::int32_t>(ax), Get<std::int32_t>(object, kX)) >= limit) return 0;
-    const std::uint32_t ay = static_cast<std::uint32_t>(y) - Get<std::uint32_t>(object, 0x10) * steps;
-    if (WrappingDistance(static_cast<std::int32_t>(ay), Get<std::int32_t>(object, kY)) >= limit) return 0;
+    const std::uint32_t ax = static_cast<std::uint32_t>(x) - GetSpriteFind<std::uint32_t>(object, 0x0C) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ax), GetSpriteFind<std::int32_t>(object, kX)) >= limit) return 0;
+    const std::uint32_t ay = static_cast<std::uint32_t>(y) - GetSpriteFind<std::uint32_t>(object, 0x10) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ay), GetSpriteFind<std::int32_t>(object, kY)) >= limit) return 0;
     return 1;
 }
 
@@ -448,7 +448,7 @@ void InheritDrawKey() {
         number = Sprite_FindNearby();
         if (number == 0xFF) return;
     }
-    Put<std::uint16_t>(Sprite_Current, kDrawKey, Get<std::uint16_t>(ObjectByNumber(number), kDrawKey));
+    PutSpriteFind<std::uint16_t>(Sprite_Current, kDrawKey, GetSpriteFind<std::uint16_t>(ObjectByNumber(number), kDrawKey));
 }
 
 }  // namespace
@@ -457,12 +457,12 @@ extern "C" void __cdecl Sprite_InheritDrawKey(void) {
     if (!g_inherit_live) return InheritDrawKey();
     // The one store either makes is the current object's +0x32.
     unsigned char* const current = Sprite_Current;
-    const std::uint16_t before = Get<std::uint16_t>(current, kDrawKey);
+    const std::uint16_t before = GetSpriteFind<std::uint16_t>(current, kDrawKey);
     g_inherit_live();
-    const std::uint16_t theirs = Get<std::uint16_t>(current, kDrawKey);
-    Put<std::uint16_t>(current, kDrawKey, before);
+    const std::uint16_t theirs = GetSpriteFind<std::uint16_t>(current, kDrawKey);
+    PutSpriteFind<std::uint16_t>(current, kDrawKey, before);
     InheritDrawKey();
-    const std::uint16_t ours = Get<std::uint16_t>(current, kDrawKey);
+    const std::uint16_t ours = GetSpriteFind<std::uint16_t>(current, kDrawKey);
     LiveCounts& c = g_live_inherit;
     ++c.calls;
     if ((current[kFlags24] & 0x20) && (current[kHandle] & 0x80)) ++c.bit7;

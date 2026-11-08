@@ -50,32 +50,32 @@ namespace {
 namespace at = battle_e7::at;
 using U = std::uint32_t;
 using boss_harness::Phase;
-using move_script::At;
+// move_script::At is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::Long;
 using move_script::SetWord;
-using move_script::Word;
+// move_script::Word is named in full here (step B0, analysis/tu_renames.tsv)
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 // The record 0x905B84 names, read afresh wherever the original reads it.
-unsigned char* Win() { return At(BattleWinStates_Current); }
+unsigned char* Win() { return move_script::At(BattleWinStates_Current); }
 std::int32_t S16(unsigned v) { return static_cast<std::int16_t>(v); }
-unsigned W(const unsigned char* p) { return Word(p); }
+unsigned W(const unsigned char* p) { return move_script::Word(p); }
 // `fild dword` then `fstp dword`: an int made a float (exact below 2^24).
 void PutFloat(unsigned char* p, std::int32_t v) {
     const auto f = static_cast<float>(v);
     std::memcpy(p, &f, sizeof f);
 }
 U Addr(const void* p) { return Low32(p); }
-const char* Str(U address) { return reinterpret_cast<const char*>(At(address)); }
-char* Buf(U address) { return reinterpret_cast<char*>(At(address)); }
-const unsigned char* Text(U address) { return At(address); }
+const char* Str(U address) { return reinterpret_cast<const char*>(move_script::At(address)); }
+char* Buf(U address) { return reinterpret_cast<char*>(move_script::At(address)); }
+const unsigned char* Text(U address) { return move_script::At(address); }
 
 // The window colour's first CLUT word (row s8 0x903A5A of the shadow
 // 0x80B7A8), one five-bit field shifted into a byte. Read afresh each time,
 // as the original reads it.
 unsigned ColourField(unsigned shift) {
     const int row = Config_WindowColour;
-    const unsigned w = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<U>(row * 64)));
+    const unsigned w = move_script::Word(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<U>(row * 64)));
     return (((w >> shift) & 0x1F) << 3) & 0xFF;
 }
 
@@ -96,7 +96,7 @@ unsigned char* TaskSlot(const char* who, unsigned slot) {
         bof3::Fatal("%s: BattleTask_Create answered slot %u, past the %u of the pool - the original writes its +9 / "
                     "+0xA past the pool (docs/battle_e7.md section 7)",
                     who, slot, at::kTaskCount);
-    return At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
+    return move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
 }
 
 // call [esp + 4 * record +3] over a stack table of `n`: a Fatal past it (the
@@ -135,7 +135,7 @@ unsigned RowCost(const unsigned char* row) {
 // cost, else 0.
 unsigned CostColour(unsigned cost) {
     auto* const member = static_cast<const records::PartyMember*>(BattleE4_MenuActor);
-    const unsigned ap = W(At(::bof3::Img(ObjTrio_addr) + 0x9a + member->actor * at::kPartyStride));
+    const unsigned ap = W(move_script::At(::bof3::Img(ObjTrio_addr) + 0x9a + member->actor * at::kPartyStride));
     return ap < (cost & 0xFFFF) ? 7u : 0u;
 }
 
@@ -249,7 +249,7 @@ extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
     auto* const win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(BattleResultWin_DrawFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), 0x118, rec[9]);
     for (unsigned i = 0; (i & 0xFF) < Battle_DropCount; i = (i + 1) & 0xFF) {
-        const unsigned word = W(At(::bof3::Img(at::kDropItems.v) + 2 * i));
+        const unsigned word = W(move_script::At(::bof3::Img(at::kDropItems.v) + 2 * i));
         if (word == 0) continue;
         const unsigned count = B(::bof3::Img(at::kDropCounts.v) + i);
         auto* const win2 = rv::As<records::WindowRecord>(Win());
@@ -356,7 +356,7 @@ extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
         const U bx = x + 48 * k;
         BH_CALL(Menu_DrawBox)(static_cast<int>(bx), static_cast<int>(y), 0x2D, 0x14, 0, static_cast<int>(colour));
         const unsigned choice = BossSb_Countdown;
-        const unsigned char* const text = At(static_cast<U>(Long(At(::bof3::Img(at::kChoiceTexts.v) + 4 * k))));
+        const unsigned char* const text = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(at::kChoiceTexts.v) + 4 * k))));
         U pieces = ::bof3::Img(at::kChoicePieces.v);
         unsigned text_colour = 0;
         if (choice & 0x80) {
@@ -418,7 +418,7 @@ extern "C" void __cdecl GeneWin_DrawListFrame(U x, U y, U, U, U title) {
     BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x82, 0, static_cast<unsigned char>(Config_WindowColour));
     BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
     BH_CALL(Menu_DrawBox)(xi + 3, yi + 0x7A, 0x89, 8, 0, static_cast<unsigned char>(Config_WindowColour));
-    const unsigned char* const text = At(::bof3::Img(at::kTitles.v) + (title & 0xFF) * 5);
+    const unsigned char* const text = move_script::At(::bof3::Img(at::kTitles.v) + (title & 0xFF) * 5);
     const unsigned n = BH_CALL(Text_CharCount)(text);
     BH_CALL(Text_DrawAt)(xi + 0x46 - 6 * static_cast<int>(n & 0xFF), yi + 7, 0, 0x10, text);
     BH_CALL(Menu_DrawPieces)(xi, yi, Text(::bof3::Img(at::kListPieces.v)), 1);
@@ -534,13 +534,13 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
     for (unsigned k = 0; k < 6; ++k) B(::bof3::Img(at::kScrollMarks.v) + k) = static_cast<unsigned char>(B(::bof3::Img(at::kGeneList.v) + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawScrollBar)(At(::bof3::Img(at::kScrollMarks.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
+    BH_CALL(Menu_DrawScrollBar)(move_script::At(::bof3::Img(at::kScrollMarks.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
                                 static_cast<int>(static_cast<unsigned>(win->y) + 0x18), 3, rec[0x14], 0x5C);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     for (unsigned i = 0; i < 3; ++i) {
         const std::int32_t index = S16(W(rec + 0x12)) + static_cast<std::int32_t>(i);
-        const unsigned char* const row = At(::bof3::Img(at::kGeneList.v) + static_cast<U>(index * 4));
+        const unsigned char* const row = move_script::At(::bof3::Img(at::kGeneList.v) + static_cast<U>(index * 4));
         const unsigned cost = RowCost(row);
         const unsigned colour = CostColour(cost);
         BH_CALL(Crt_sprintf)(Buf(::bof3::Img(at::kPrintBuf.v)), Str(::bof3::Img(at::kFmtNumber.v)), index + 1);
@@ -589,13 +589,13 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
         B(::bof3::Img(at::kScrollMarks2.v) + k) = static_cast<unsigned char>(B(::bof3::Img(at::kGeneList2.v) + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawScrollBar)(At(::bof3::Img(at::kScrollMarks2.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
+    BH_CALL(Menu_DrawScrollBar)(move_script::At(::bof3::Img(at::kScrollMarks2.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
                                 static_cast<int>(static_cast<unsigned>(win->y) + 0x18), 3, rec[0x14], 0x5C);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     for (unsigned i = 0; i < 3; ++i) {
         const std::int32_t index = S16(W(rec + 0x12)) + static_cast<std::int32_t>(i);
-        const unsigned char* const row = At(::bof3::Img(at::kGeneList2.v) + static_cast<U>(index * 4));
+        const unsigned char* const row = move_script::At(::bof3::Img(at::kGeneList2.v) + static_cast<U>(index * 4));
         const unsigned form = row[3];
         if (form == 0xFF) continue;
         const unsigned cost = RowCost(row);
@@ -818,7 +818,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
     BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(Config_WindowColour));
-    unsigned char* const ch = At(::bof3::Img(CharacterRecords_addr) + (member & 0xFF) * at::kCharStride);
+    unsigned char* const ch = move_script::At(::bof3::Img(CharacterRecords_addr) + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);
@@ -850,7 +850,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     }
     unsigned char items[6];
     std::memcpy(items, ch + 0x12, sizeof items);
-    unsigned char* const rec = At(record);
+    unsigned char* const rec = move_script::At(record);
     SetWord(rec + 0x10, 0);
     int text_y = yi + 0x55, icon_y = yi + 0x57;
     for (unsigned r = 0; r < 6; ++r) {
