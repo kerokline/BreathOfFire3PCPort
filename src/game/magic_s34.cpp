@@ -52,7 +52,7 @@ namespace at = magic_harness::at;
 namespace addr = bof3::addr;
 using magic_harness::Mem;
 using magic_harness::Pointer;
-using move_script::Long;
+constexpr auto& LongMagicS34 = move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
@@ -101,7 +101,7 @@ void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t Key(const void* p) { return Low32(p); }
 void AddLong(unsigned char* at, std::uint32_t v) {
-    SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + v));
+    SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(LongMagicS34(at)) + v));
 }
 void AddWord(unsigned char* at, unsigned v) { SetWord(at, (Word(at) + v) & 0xFFFF); }
 
@@ -170,7 +170,7 @@ void LinkAtSprite(unsigned size) {
 // Linked at the current Transfer record's (+0x14, +0x18), layer 2.
 void LinkAtCur(unsigned size) {
     const unsigned char* const r = Cur();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(r + 0x14)), static_cast<unsigned long>(Long(r + 0x18)), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(LongMagicS34(r + 0x14)), static_cast<unsigned long>(LongMagicS34(r + 0x18)), 2,
                                 size);
 }
 // A draw-mode packet (tpage 0x35, dithered) at Gfx_PacketNext.
@@ -185,7 +185,7 @@ unsigned char* MoteRecord(std::uint32_t pool, unsigned index) { return Mem(pool 
 // are read once, after the phase call that precedes the walk.
 void WalkMotes(std::uint32_t pool, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
+    const std::int32_t owner = LongMagicS34(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kMotePools; ++i) {
         unsigned char* const rec = MoteRecord(pool, i);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
@@ -695,7 +695,7 @@ S34_EXPORT void __cdecl TimedBlow_Start(void) {
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     // `rep movsd`: dword by dword, forward.
-    for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, Long(rec + k));
+    for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, LongMagicS34(rec + k));
     unsigned char* const self = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(self));
     child[1] = 0;
@@ -836,11 +836,11 @@ S34_EXPORT void __cdecl Transfer_Task(void) {
     static constexpr std::uint32_t kPhases[6] = {addr::Transfer_Start,    addr::BattleFx_TintActor, addr::BattleFx_Brighten,
                                                  addr::BattleFx_WaitStep4, addr::Sparkle_End,        addr::BattleFx_Finish};
     Dispatch(kPhases, 6, Sc()[1], "Transfer_Task");
-    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
+    const std::int32_t owner = LongMagicS34(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kTransferRecords; ++i) {
         unsigned char* const rec = TransferRecord(i);
         if ((rec[0] & 1) == 0) continue;
-        const std::int32_t rec_owner = Long(rec + 0x28);
+        const std::int32_t rec_owner = LongMagicS34(rec + 0x28);
         SetLong(Mem(::bof3::Img(TransferMote_Current_addr)), static_cast<std::int32_t>(Key(rec)));
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(addr::TransferMote_Task);
