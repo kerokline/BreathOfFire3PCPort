@@ -50,7 +50,7 @@ using U = std::uint32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
-using move_script::SetWord;
+constexpr auto& SetWordRest1g = move_script::SetWord;
 using move_script::Word;
 using Handler = void (__cdecl*)();
 
@@ -124,22 +124,22 @@ constexpr unsigned kSpriteCount = 30;
 unsigned char* S() { return Sprite_Current; }
 unsigned char* AM() { return Field_ActiveMember; }
 unsigned char& B(U address) { return At(address)[0]; }
-std::int32_t L(U address) { return Long(At(address)); }
-void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-U W(U address) { return Word(At(address)); }
-void SetW(U address, U v) { SetWord(At(address), v); }
+std::int32_t LRest1g(U address) { return Long(At(address)); }
+void SetLRest1g(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+U WRest1g(U address) { return Word(At(address)); }
+void SetW(U address, U v) { SetWordRest1g(At(address), v); }
 // The address of a typed alias, for the accessors above.
 U AddrOf(const void* p) { return Low32(p); }
 U Key(const void* p) { return Low32(p); }
 // A register loaded with Sprite_Current, then `movzx ax, byte [reg + n]`: the
 // pointer's upper half above the byte (E1E's PtrHi).
 U PtrHi(const unsigned char* p) { return Key(p) & 0xFFFF0000u; }
-std::int32_t L(const unsigned char* p, unsigned at) { return Long(p + at); }
-void SetL(unsigned char* p, unsigned at, U v) { SetLong(p + at, static_cast<std::int32_t>(v)); }
+std::int32_t LRest1g(const unsigned char* p, unsigned at) { return Long(p + at); }
+void SetLRest1g(unsigned char* p, unsigned at, U v) { SetLong(p + at, static_cast<std::int32_t>(v)); }
 short Sh(const unsigned char* p, unsigned at) { return static_cast<short>(Word(p + at)); }
 
-unsigned char* RecordA() { return At(Effect1a_PanelScript); }
-unsigned char* RecordB() { return At(Effect1a_PanelSet); }
+unsigned char* RecordARest1g() { return At(Effect1a_PanelScript); }
+unsigned char* RecordBRest1g() { return At(Effect1a_PanelSet); }
 
 // A byte of the kind table: the kind's 36-byte row at `at`, read in place with
 // the kind unbounded (the originals' `lea edx, [eax + eax*8]` on the byte).
@@ -151,7 +151,7 @@ unsigned char DirByte(unsigned d) { return At(::bof3::Img(kDirAnims.v) + 2 * d +
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
 // original jumps through the dword after.
-void Run(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+void RunRest1g(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1g.md section 7)",
@@ -161,7 +161,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries, unsigned
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-unsigned char Tick() { return SH_CALL(Sprite_ScriptTick)(); }
+unsigned char TickRest1g() { return SH_CALL(Sprite_ScriptTick)(); }
 void Shade() { SH_CALL(FieldPanel_DrawShade)(); }
 void Text(int x, int y, const unsigned char* text) { SH_CALL(Text_DrawAt)(x, y, 0, 0xFF, text); }
 void Bank(U bank) { SH_CALL(Sprite_SetAnimationBank)(static_cast<unsigned short>(bank)); }
@@ -200,7 +200,7 @@ std::int32_t DivPow2(std::int32_t v, unsigned k) { return (v + (v < 0 ? (1 << k)
 // original 0x5289A0: LeaderPanel_Stages[1] - jmp through LeaderPanel_Stage1Steps
 // by Sprite_Current +3, unchecked (ours aborts past its 11).
 extern "C" void __cdecl LeaderPanel_S1(void) {
-    Run("LeaderPanel_S1 (0x5289A0)", LeaderPanel_Stage1Steps, LeaderPanel_Stage1Steps_count, Sprite_Current[3],
+    RunRest1g("LeaderPanel_S1 (0x5289A0)", LeaderPanel_Stage1Steps, LeaderPanel_Stage1Steps_count, Sprite_Current[3],
         "Sprite_Current +3");
 }
 
@@ -211,7 +211,7 @@ extern "C" void __cdecl LeaderPanel_S1(void) {
 extern "C" void __cdecl LeaderPanel_S1Begin(void) {
     SH_CALL(LeaderPanel_SetRecords)();
     Effect1a_PanelObject = 0xFF;
-    for (unsigned at = 0xC; at <= 0x20; at += 4) SetL(S(), at, 0);
+    for (unsigned at = 0xC; at <= 0x20; at += 4) SetLRest1g(S(), at, 0);
     S()[9] = 0;
     const unsigned mode = CharStats_ExtraItem != 0 && B(::bof3::Img(kItemA.v)) != 0 ? 0u : 6u;
     SH_CALL(LeaderPanel_Effect3Mode)(mode);
@@ -319,7 +319,7 @@ extern "C" void __cdecl LeaderPanel_S1Box3In(void) {
     }
     Shade();
     SH_CALL(Panel_DrawWindow)(0x14, static_cast<int>(0x12u - (static_cast<U>(S()[9]) << 3)), 0x118, 0x13, 0);
-    const U pool = static_cast<U>(L(::bof3::Img(kPoolWordStage1.v))) & 0xFFFF;
+    const U pool = static_cast<U>(LRest1g(::bof3::Img(kPoolWordStage1.v))) & 0xFFFF;
     Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), At(::bof3::Img(kPools.v) + pool));
 }
 
@@ -334,7 +334,7 @@ extern "C" void __cdecl LeaderPanel_S1Box3In(void) {
 // else 0x8000: sound 0x102, +0x3C = +0x3E - 1 (0x16 below 0), +8 = 1, record 6
 // up; else a cancel button: sound 0x106, +4 = 0, +3 down.
 extern "C" void __cdecl ChoiceMenu_DataPage(void) {
-    Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + W(::bof3::Img(kPoolWordData.v))));
+    Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + WRest1g(::bof3::Img(kPoolWordData.v))));
     if (Effect_Objects[6].state != 8) return;
     const unsigned pressed = Input_Pressed;
     if (pressed & 0x2000) {
@@ -347,7 +347,7 @@ extern "C" void __cdecl ChoiceMenu_DataPage(void) {
     }
     if (pressed & 0x8000) {
         Sound(0x102);
-        const auto page = static_cast<short>(W(AddrOf(&kEff6Shown)) - 1);
+        const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
         kEff6Page = page < 0 ? 0x16u : static_cast<U>(page);
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
         Effect_Objects[6].state = static_cast<unsigned char>(Effect_Objects[6].state + 1);
@@ -366,7 +366,7 @@ extern "C" void __cdecl ChoiceMenu_DataPage(void) {
 // up (0 past 5: six pages); else 0x1000: the page word down (5 below 0), +8 =
 // 1. No sound for the two turns.
 extern "C" void __cdecl ChoiceMenu_RulePage(void) {
-    Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(L(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
+    Text(0x1D, 0x14, At(::bof3::Img(kPools.v) + (static_cast<U>(LRest1g(::bof3::Img(kPoolWordRule.v))) & 0xFFFF)));
     if (Effect_Objects[6].state != 0xE || rv::Bytes(&Effect_Objects[6])[0x8] != 0) return;
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
@@ -383,7 +383,7 @@ extern "C" void __cdecl ChoiceMenu_RulePage(void) {
         return;
     }
     if (pressed & 0x1000) {
-        const auto page = static_cast<short>(W(AddrOf(&kEff6Page)) - 1);
+        const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
         SetW(AddrOf(&kEff6Page), static_cast<U>(page));
         rv::Bytes(&Effect_Objects[6])[0x8] = 1;
         if (page < 0) kEff6Page = 5;
@@ -406,7 +406,7 @@ extern "C" void __cdecl LeaderPanel_S9Back(void) {
 // original 0x52AF60: LeaderPanel_Stages[10] - jmp through LeaderPanel_Stage10Steps
 // by +3, unchecked (ours aborts past its 2).
 extern "C" void __cdecl LeaderPanel_S10(void) {
-    Run("LeaderPanel_S10 (0x52AF60)", LeaderPanel_Stage10Steps, LeaderPanel_Stage10Steps_count, Sprite_Current[3],
+    RunRest1g("LeaderPanel_S10 (0x52AF60)", LeaderPanel_Stage10Steps, LeaderPanel_Stage10Steps_count, Sprite_Current[3],
         "Sprite_Current +3");
 }
 
@@ -464,7 +464,7 @@ extern "C" void __cdecl LeaderPanel_S10End(void) {
 // original 0x52B0E0: LeaderPanel_Stages[11] - jmp through LeaderPanel_Stage11Steps
 // by +3, unchecked (ours aborts past its 4).
 extern "C" void __cdecl LeaderPanel_S11(void) {
-    Run("LeaderPanel_S11 (0x52B0E0)", LeaderPanel_Stage11Steps, LeaderPanel_Stage11Steps_count, Sprite_Current[3],
+    RunRest1g("LeaderPanel_S11 (0x52B0E0)", LeaderPanel_Stage11Steps, LeaderPanel_Stage11Steps_count, Sprite_Current[3],
         "Sprite_Current +3");
 }
 
@@ -540,7 +540,7 @@ extern "C" void __cdecl LeaderPanel_UseItemEnd(void) {
     Effect_Objects[4].state = state;
     Effect_Objects[4].param = 3;
     s[3] = static_cast<unsigned char>(s[3] + 1);
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52B250: the two record pointers - 0x90412E set: 0x939A24 =
@@ -612,7 +612,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
     for (unsigned i = 0; i < 4; ++i) {
         const U row = ::bof3::Img(kComboTable.v) + 8 * i;
         const unsigned char step = B(::bof3::Img(kComboStep.v) + i);
-        const unsigned char* const at = At(static_cast<U>(L(row)) + step);
+        const unsigned char* const at = At(static_cast<U>(LRest1g(row)) + step);
         const unsigned char want = static_cast<unsigned char>(at[0] & 0x7F);
         if (step != 0) B(::bof3::Img(kComboTimer.v) + i) = static_cast<unsigned char>(B(::bof3::Img(kComboTimer.v) + i) - 1);
         bool advance = false;
@@ -640,13 +640,13 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
             B(::bof3::Img(kComboStep.v) + i) = static_cast<unsigned char>(step + 1);
             continue;
         }
-        const unsigned char* const rb = RecordB();
+        const unsigned char* const rb = RecordBRest1g();
         const auto base = static_cast<signed char>(At(row + 4)[0]);
         const auto plus = static_cast<signed char>(rb[0xF]);
         if (static_cast<int>(base) + plus >= static_cast<signed char>(depth)) {
             depth = static_cast<unsigned char>(base + plus);
             rv::Bytes(Effect_Objects)[0x7] = depth;
-            rv::Bytes(Effect_Objects)[0xa] = RecordB()[0x10];
+            rv::Bytes(Effect_Objects)[0xa] = RecordBRest1g()[0x10];
         }
         now = Effect1e_PressNow;
         B(::bof3::Img(kComboStep.v) + i) = 0;
@@ -693,7 +693,7 @@ extern "C" void __cdecl Fish_Spawn(void) {
             S()[5] = static_cast<unsigned char>(index);
             S()[6] = static_cast<unsigned char>(k);
             const unsigned r = Rnd();
-            SetWord(AM() + 0x9C, r & 0xFF);
+            SetWordRest1g(AM() + 0x9C, r & 0xFF);
             for (;;) {
                 const unsigned char m = Kind(S()[6], 0x1F);
                 unsigned char* const am = AM();
@@ -703,7 +703,7 @@ extern "C" void __cdecl Fish_Spawn(void) {
                     bof3::Fatal("Fish_Spawn (0x52B480): kind %u's top size (0x%X) is %u and the size rolled is %u - the "
                                 "original subtracts M / 2 = 0 for ever (docs/rest_1g.md section 7)",
                                 (unsigned)S()[6], (unsigned)(Fish_Kinds_addr + kKindStride * S()[6] + 0x1F), (unsigned)m, (unsigned)size);
-                SetWord(am + 0x9C, size - (m >> 1));
+                SetWordRest1g(am + 0x9C, size - (m >> 1));
             }
             {
                 unsigned char* const am = AM();
@@ -712,7 +712,7 @@ extern "C" void __cdecl Fish_Spawn(void) {
                 U v = size;
                 if (size < static_cast<U>(m >> 1)) v = m >> 1;
                 else if (size > m) v = m;
-                SetWord(am + 0x9C, v);
+                SetWordRest1g(am + 0x9C, v);
             }
             {
                 const unsigned kind = S()[6];
@@ -722,9 +722,9 @@ extern "C" void __cdecl Fish_Spawn(void) {
                                 "(docs/rest_1g.md section 7)",
                                 kind, (unsigned)(Fish_Kinds_addr + kKindStride * kind + 0x1F));
                 const auto tenths = static_cast<std::int32_t>(Word(am + 0x9C) * 10u) / static_cast<std::int32_t>(Kind(kind, 0x1F));
-                SetWord(am + 0x98, static_cast<U>((tenths * static_cast<std::int32_t>(Kind(kind, 0x1E))) / 10));
+                SetWordRest1g(am + 0x98, static_cast<U>((tenths * static_cast<std::int32_t>(Kind(kind, 0x1E))) / 10));
                 unsigned char* const am2 = AM();
-                SetWord(am2 + 0x9A, Word(am2 + 0x98));
+                SetWordRest1g(am2 + 0x9A, Word(am2 + 0x98));
             }
             const unsigned kind = S()[6];
             if (kind != 0x15) {
@@ -734,7 +734,7 @@ extern "C" void __cdecl Fish_Spawn(void) {
                     for (int n = 0; n <= extra; ++n) {
                         if ((Rnd() & 1) == 0) break;
                         unsigned char* const am = AM();
-                        SetWord(am + 0x9C, Word(am + 0x9C) + 1);
+                        SetWordRest1g(am + 0x9C, Word(am + 0x9C) + 1);
                     }
                 }
             }
@@ -760,7 +760,7 @@ extern "C" void __cdecl Fish_RunAll(void) {
         if (rec[0] == 0) continue;
         Sprite_Current = rec;
         Field_ActiveMember = rec;
-        Run("Fish_RunAll (0x52B6C0)", Fish_States, Fish_States_count, rec[1], "the record's +1");
+        RunRest1g("Fish_RunAll (0x52B6C0)", Fish_States, Fish_States_count, rec[1], "the record's +1");
         unsigned char* const s = S();
         unsigned char shade = 0;
         if (s[0] & 0x20) {
@@ -797,20 +797,20 @@ extern "C" void __cdecl Fish_Begin(void) {
         am[0x9E] = static_cast<unsigned char>(am[0x9E] & 3);
     }
     const unsigned r2 = Rnd();
-    SetL(S(), 0x34, (0x14u - (r2 & 0xF)) << 16);
+    SetLRest1g(S(), 0x34, (0x14u - (r2 & 0xF)) << 16);
     const U zbase = 0x3E0000u - ((static_cast<U>(AM()[0x9E]) * 3u) << 18);
     const unsigned r3 = Rnd();
-    SetL(S(), 0x38, zbase - ((r3 & 0xF) << 16));
+    SetLRest1g(S(), 0x38, zbase - ((r3 & 0xF) << 16));
     const U top = (0u - static_cast<U>(Kind(S()[6], 0x1A))) << 8;
     const unsigned r4 = Rnd();
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, top - ((r4 & 7) << 5));
-    const short ground = Elevation(static_cast<U>(L(S(), 0x34)), static_cast<U>(L(S(), 0x38)));
+    const short ground = Elevation(static_cast<U>(LRest1g(S(), 0x34)), static_cast<U>(LRest1g(S(), 0x38)));
     unsigned char* const s = S();
     const short h = Sh(s, 0x3E);
     if (h == 0) rv::As<records::SpriteObject>(s)->height_whole = 0xFFE0;
     else if (h < ground) rv::As<records::SpriteObject>(s)->height_whole = static_cast<U>(ground);
     S()[8] = 4;
-    SetL(S(), 0x14, 0);
+    SetLRest1g(S(), 0x14, 0);
     Animation(0);
     unsigned char* const t = S();
     t[1] = static_cast<unsigned char>(t[1] + 1);
@@ -850,46 +850,46 @@ extern "C" void __cdecl Fish_Swim(void) {
             SH_CALL(Fish_Heading)();
             DirEnsure();
             s = S();
-            const U x = (static_cast<U>(L(s, 0xC)) << 4) + static_cast<U>(L(s, 0x34));
-            const U z = (static_cast<U>(L(s, 0x10)) << 4) + static_cast<U>(L(s, 0x38));
+            const U x = (static_cast<U>(LRest1g(s, 0xC)) << 4) + static_cast<U>(LRest1g(s, 0x34));
+            const U z = (static_cast<U>(LRest1g(s, 0x10)) << 4) + static_cast<U>(LRest1g(s, 0x38));
             const short ground = Elevation(x, z);
             s = S();
             const short h = Sh(s, 0x3E);
             if (h < ground) {
-                SetL(s, 0x14, static_cast<U>(DivPow2(ground - h, 4)));
+                SetLRest1g(s, 0x14, static_cast<U>(DivPow2(ground - h, 4)));
             } else {
-                SetL(s, 0x14, 0);
+                SetLRest1g(s, 0x14, 0);
                 if (bits & 0x10) {
                     unsigned char* const c = S();
                     const std::int32_t level = Kind(c[6], 0x1A);
                     if (bits & 0x20) {
                         const short ch = Sh(c, 0x3E);
                         if (ch != 0 && static_cast<std::int32_t>((0u - static_cast<U>(level)) << 8) >= ch + 0x20)
-                            SetL(c, 0x14, 2);
+                            SetLRest1g(c, 0x14, 2);
                     } else {
                         const std::int32_t below = Sh(c, 0x3E) - 0x20;
                         if (ground <= below && static_cast<std::int32_t>((0xFFFFFFFFu - static_cast<U>(level)) << 8) <= below)
-                            SetL(c, 0x14, 0xFFFFFFFEu);
+                            SetLRest1g(c, 0x14, 0xFFFFFFFEu);
                     }
                 }
             }
             if (bits & 0x40) {
-                SetL(S(), 0xC, 0);
-                SetL(S(), 0x10, 0);
-                SetL(S(), 0x14, 0);
+                SetLRest1g(S(), 0xC, 0);
+                SetLRest1g(S(), 0x10, 0);
+                SetLRest1g(S(), 0x14, 0);
             }
             S()[9] = 0x10;
         }
     }
     SH_CALL(Fish_Step)();
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52BB20: Fish_States[2] - Sprite_ScriptTick done: 0x6BC716 = 0, the
 // kind's bank +0x10, +0 bit 5 set, +0x2A and the animation by +8, +0x48 = 2,
 // the steps 0, 0, -2, +9 = 0x10, state 1.
 extern "C" void __cdecl Fish_Settle(void) {
-    if (Tick() == 0) return;
+    if (TickRest1g() == 0) return;
     const unsigned kind = S()[6];
     Fish_Nibbling = 0;
     Bank(KindWord(kind, 0x10));
@@ -899,9 +899,9 @@ extern "C" void __cdecl Fish_Settle(void) {
     s[0x2A] = DirByte(s[8]);
     S()[0x48] = 2;
     Animation(DirAnim(S()[8]));
-    SetL(S(), 0xC, 0);
-    SetL(S(), 0x10, 0);
-    SetL(S(), 0x14, 0xFFFFFFFEu);
+    SetLRest1g(S(), 0xC, 0);
+    SetLRest1g(S(), 0x10, 0);
+    SetLRest1g(S(), 0x14, 0xFFFFFFFEu);
     S()[9] = 0x10;
     S()[1] = 1;
 }
@@ -920,19 +920,19 @@ extern "C" void __cdecl Fish_Settle(void) {
 extern "C" void __cdecl Fish_Approach(void) {
     if (S()[9] != 0) {
         SH_CALL(Fish_Step)();
-        Tick();
+        TickRest1g();
         return;
     }
     if (SH_CALL(Fish_LureInReach)() == 0) {
         S()[1] = 1;
         SH_CALL(Fish_Step)();
-        Tick();
+        TickRest1g();
         return;
     }
     const unsigned bits = Rnd();
     unsigned char* s = S();
-    const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].x) - static_cast<U>(L(s, 0x34)));
-    const auto dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].z) - static_cast<U>(L(s, 0x38)));
+    const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].x) - static_cast<U>(LRest1g(s, 0x34)));
+    const auto dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(Effect_Objects[0].z) - static_cast<U>(LRest1g(s, 0x38)));
     int way = -1;
     if (dx < 0) way = dz < 0 ? 0 : dz > 0 ? 6 : 7;
     else if (dx == 0) way = dz < 0 ? 1 : dz > 0 ? 5 : -1;
@@ -941,7 +941,7 @@ extern "C" void __cdecl Fish_Approach(void) {
         s[8] = static_cast<unsigned char>(way);
         s = S();
     }
-    const unsigned nib = RecordB()[0xE] & 0xF;
+    const unsigned nib = RecordBRest1g()[0xE] & 0xF;
     const auto diff = static_cast<signed char>(rv::Bytes(Effect_Objects)[0x7] - Kind(s[6], 0x14 + nib));
     const signed char level = diff < -1 ? -1 : diff > 3 ? 3 : diff;
     switch (level) {
@@ -965,28 +965,28 @@ extern "C" void __cdecl Fish_Approach(void) {
     }
     SH_CALL(Fish_Heading)();
     s = S();
-    const U x = (static_cast<U>(L(s, 0xC)) << 4) + static_cast<U>(L(s, 0x34));
-    const U z = (static_cast<U>(L(s, 0x10)) << 4) + static_cast<U>(L(s, 0x38));
+    const U x = (static_cast<U>(LRest1g(s, 0xC)) << 4) + static_cast<U>(LRest1g(s, 0x34));
+    const U z = (static_cast<U>(LRest1g(s, 0x10)) << 4) + static_cast<U>(LRest1g(s, 0x38));
     const short ground = Elevation(x, z);
     s = S();
     const short h = Sh(s, 0x3E);
     if (h < ground) {
-        SetL(s, 0x14, static_cast<U>(DivPow2(ground - h, 4)));
+        SetLRest1g(s, 0x14, static_cast<U>(DivPow2(ground - h, 4)));
     } else {
-        SetL(s, 0x14, 0);
+        SetLRest1g(s, 0x14, 0);
         unsigned char* const c = S();
         const short lure = static_cast<std::int16_t>(Effect_Objects[0].height_whole);
         const short ch = Sh(c, 0x3E);
-        if (lure < ch) SetL(c, 0x14, 0xFFFFFFFEu);
-        else if (lure > ch) SetL(c, 0x14, 2);
+        if (lure < ch) SetLRest1g(c, 0x14, 0xFFFFFFFEu);
+        else if (lure > ch) SetLRest1g(c, 0x14, 2);
     }
     DirEnsure();
     if (SH_CALL(Fish_LureClose)() != 0) {
         const unsigned kind = S()[6];
         const unsigned r = Rnd() & 0xF;
-        const unsigned char* rb = RecordB();
+        const unsigned char* rb = RecordBRest1g();
         if (static_cast<int>(Kind(kind, 0x1C)) > static_cast<int>(r) || (rb[0xE] & 0x80) != 0) {
-            rb = RecordB();
+            rb = RecordBRest1g();
             if (Kind(kind, 0x14 + (rb[0xE] & 0xF)) != 9) {
                 unsigned char* const f = S();
                 const unsigned char index = f[5];
@@ -994,12 +994,12 @@ extern "C" void __cdecl Fish_Approach(void) {
                 Effect1a_PanelObject = index;
                 ObjTrio[0].state3 = 0;
                 Effect_Objects[0].state = 5;
-                SetL(::bof3::Img(kEff0StepX.v), 0);
-                SetL(::bof3::Img(kEff0StepY.v), 0);
+                SetLRest1g(::bof3::Img(kEff0StepX.v), 0);
+                SetLRest1g(::bof3::Img(kEff0StepY.v), 0);
                 Effect_Objects[0].step_y = 0;
-                SetL(f, 0xC, 0);
-                SetL(S(), 0x10, 0);
-                SetL(S(), 0x14, 0);
+                SetLRest1g(f, 0xC, 0);
+                SetLRest1g(S(), 0x10, 0);
+                SetLRest1g(S(), 0x14, 0);
                 S()[9] = 0;
                 S()[0xA] = 0;
                 S()[0xB] = 0;
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl Fish_Approach(void) {
                 t[1] = static_cast<unsigned char>(t[1] + 1);
                 S()[8] = 1;
                 DirEnsure();
-                Tick();
+                TickRest1g();
                 return;
             }
         }
@@ -1015,15 +1015,15 @@ extern "C" void __cdecl Fish_Approach(void) {
     S()[9] = 0x10;
     if (level == 3 && (Rnd() & 3) == 0) {
         unsigned char* t = S();
-        SetL(t, 0xC, static_cast<U>(L(t, 0xC)) << 1);
+        SetLRest1g(t, 0xC, static_cast<U>(LRest1g(t, 0xC)) << 1);
         t = S();
-        SetL(t, 0x10, static_cast<U>(L(t, 0x10)) << 1);
+        SetLRest1g(t, 0x10, static_cast<U>(LRest1g(t, 0x10)) << 1);
         t = S();
-        SetL(t, 0x14, static_cast<U>(L(t, 0x14)) << 1);
+        SetLRest1g(t, 0x14, static_cast<U>(LRest1g(t, 0x14)) << 1);
         S()[9] = 8;
     }
     SH_CALL(Fish_Step)();
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52BF90: Fish_States[4] - the pull. The window: record 5's +0x30
@@ -1043,13 +1043,13 @@ extern "C" void __cdecl Fish_Approach(void) {
 // animation, Sprite_ScriptTick.
 extern "C" void __cdecl Fish_Hooked(void) {
     const unsigned char level = rv::Bytes(&Effect_Objects[5])[0x30];
-    const auto width = static_cast<unsigned char>((RecordA()[3] + 3) << 2);
+    const auto width = static_cast<unsigned char>((RecordARest1g()[3] + 3) << 2);
     const auto lo = static_cast<unsigned char>(level - width);
     const auto hi = static_cast<unsigned char>(width + level);
     unsigned char* s = S();
     const U chances = ::bof3::Img(Fish_Kinds_addr) + kKindStride * s[6];
-    if (L(s, 0x38) <= 0x8000) {
-        SetL(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
+    if (LRest1g(s, 0x38) <= 0x8000) {
+        SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
         Effect_Objects[0].state = 0;
         ObjTrio[0].step = 6;
         ObjTrio[0].state3 = 0;
@@ -1057,7 +1057,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         return;
     }
     if (s[4] == 3) {
-        if (Tick() != 0) {
+        if (TickRest1g() != 0) {
             Bank(KindWord(S()[6], 0x10));
             unsigned char* t = S();
             t[0] = static_cast<unsigned char>(t[0] | 0x20);
@@ -1067,7 +1067,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
             rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0xFFE0);
             S()[4] = 0;
             S()[0x48] = 2;
-            SetL(S(), 0x10, 0);
+            SetLRest1g(S(), 0x10, 0);
             Effect_Objects[0].flags = static_cast<unsigned char>(Effect_Objects[0].flags & 0xBF);
         }
         unsigned char* const t = S();
@@ -1084,15 +1084,15 @@ extern "C" void __cdecl Fish_Hooked(void) {
         if (t > static_cast<signed char>(hi)) {
             s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
             s = S();
-            if (s[0xB] >= RecordA()[8]) {
+            if (s[0xB] >= RecordARest1g()[8]) {
                 s[0xB] = 0;
-                if (L(::bof3::Img(kEff5Frame.v)) < 0) {
+                if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
                     s = S();
-                    if (L(s, 0x10) > 0) {
+                    if (LRest1g(s, 0x10) > 0) {
                         if (SH_CALL(Fish_Chance)(hi, 1) != 0) {
                             unsigned char* const f = S();
                             Effect_Objects[0].state = 0;
-                            SetL(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
+                            SetLRest1g(::bof3::Img(kEff5Frame.v), 0xFFFFFFF9u);
                             ObjTrio[0].step = 6;
                             ObjTrio[0].state3 = 0;
                             f[1] = static_cast<unsigned char>(f[1] + 1);
@@ -1107,7 +1107,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         } else if (t < static_cast<signed char>(lo)) {
             s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
             s = S();
-            if (s[0xB] >= RecordA()[9]) {
+            if (s[0xB] >= RecordARest1g()[9]) {
                 s[0xB] = 0;
                 if (SH_CALL(Fish_Chance)(lo, 2) != 0) {
                     unsigned char* const f = S();
@@ -1145,7 +1145,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
                 S()[0x48] = 0;
                 rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0);
                 Animation(0);
-                SetL(S(), 0x10, 0xFFFFFFFDu);
+                SetLRest1g(S(), 0x10, 0xFFFFFFFDu);
                 SH_CALL(Fish_AdjustStrength)(static_cast<unsigned>(-5));
                 S()[4] = 3;
                 return;
@@ -1157,7 +1157,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
             if (Sh(am2, 0x9A) > static_cast<short>(Sh(am2, 0x98) >> 4)) {
                 const unsigned r = Rnd();
                 unsigned char* f = S();
-                SetL(f, 0x10, (r & (Kind(f[6], 0x1D) & 7)) + 1);
+                SetLRest1g(f, 0x10, (r & (Kind(f[6], 0x1D) & 7)) + 1);
                 f = S();
                 if (static_cast<signed char>(f[0xA]) < 0) {
                     unsigned char* const cell = f + 0x10;
@@ -1165,38 +1165,38 @@ extern "C" void __cdecl Fish_Hooked(void) {
                     SetLong(cell, static_cast<std::int32_t>(static_cast<U>(Long(cell)) + (r2 & 1)));
                     f = S();
                 }
-                const std::int32_t v = L(f, 0x10);
-                SetL(f, 0x10, static_cast<U>(v < 0 ? 0 : v > 5 ? 5 : v));
-                if (L(::bof3::Img(kEff5Frame.v)) < 0) {
-                    const std::int32_t gap = static_cast<signed char>(S()[0xA]) - static_cast<short>(W(::bof3::Img(kEff5Level.v)));
+                const std::int32_t v = LRest1g(f, 0x10);
+                SetLRest1g(f, 0x10, static_cast<U>(v < 0 ? 0 : v > 5 ? 5 : v));
+                if (LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
+                    const std::int32_t gap = static_cast<signed char>(S()[0xA]) - static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
                     AM()[0x81] = gap < -0x30 ? 0xFD : gap < -0x18 ? 0xFE : 0xFF;
                 }
             } else {
-                SetL(S(), 0x10, 0);
+                SetLRest1g(S(), 0x10, 0);
                 AM()[0x81] = 0;
             }
             unsigned char* f = S();
             if (Kind(f[6], 0x20) == 0) {
-                SetL(f, 0xC, 0);
+                SetLRest1g(f, 0xC, 0);
             } else if ((Rnd() & 1) != 0) {
                 const unsigned way = Rnd() & 1;
-                SetL(S(), 0xC, way != 0 ? 0x1000u : 0xFFFFF000u);
+                SetLRest1g(S(), 0xC, way != 0 ? 0x1000u : 0xFFFFF000u);
             } else {
-                SetL(S(), 0xC, 0);
+                SetLRest1g(S(), 0xC, 0);
             }
             S()[8] = 1;
             S()[4] = 0;
         } else if (static_cast<int>(Rnd() & 0xF) < row[2]) {
             // the rest
-            SetL(S(), 0xC, 0);
-            SetL(S(), 0x10, 0);
+            SetLRest1g(S(), 0xC, 0);
+            SetLRest1g(S(), 0x10, 0);
             AM()[0x81] = 1;
             S()[4] = 1;
         } else if (S()[0xA] != 0) {
             // the drift
             AM()[0x81] = 0;
-            SetL(S(), 0xC, 0);
-            SetL(S(), 0x10, 0xFFFFFFFFu);
+            SetLRest1g(S(), 0xC, 0);
+            SetLRest1g(S(), 0x10, 0xFFFFFFFFu);
             S()[4] = 2;
         }
         const auto frames = static_cast<unsigned char>(((Rnd() & 3) + 1) * (8 - tier));
@@ -1206,7 +1206,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         const auto wear = static_cast<signed char>(AM()[0x81]);
         bool wears;
         if (wear > 0) {
-            wears = (Frame_Counter & 0xF) == 0 && L(S(), 0x10) >= 0 && Sh(AM(), 0x9A) < static_cast<short>(Sh(AM(), 0x98) >> 1);
+            wears = (Frame_Counter & 0xF) == 0 && LRest1g(S(), 0x10) >= 0 && Sh(AM(), 0x9A) < static_cast<short>(Sh(AM(), 0x98) >> 1);
         } else {
             wears = (Frame_Counter & 1) != 0;
         }
@@ -1221,60 +1221,60 @@ extern "C" void __cdecl Fish_Hooked(void) {
     }
     if (Field_Kind2Hold == 0) MoveScript_F3Divisor = 0;
     f = S();
-    const short limit = static_cast<short>(W(::bof3::Img(kEff5Level.v)));
+    const short limit = static_cast<short>(WRest1g(::bof3::Img(kEff5Level.v)));
     const short tension = static_cast<signed char>(f[0xA]);
-    if (tension > limit && L(f, 0x10) > 0) {
+    if (tension > limit && LRest1g(f, 0x10) > 0) {
         // reeled in: toward the shore
-        SetL(f, 0x38, static_cast<U>(L(f, 0x38)) - 0x1000);
+        SetLRest1g(f, 0x38, static_cast<U>(LRest1g(f, 0x38)) - 0x1000);
         unsigned char* e = S();
         if (Sh(e, 0x3E) < 0) {
             rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
-        const std::int32_t z = L(e, 0x38);
+        const std::int32_t z = LRest1g(e, 0x38);
         if (z > 0x150000) {
             Field_Kind2Z = z;
             MoveScript_F3Divisor = 0x10;
             if (z > 0x3C0000) Field_Kind2Z = 0x3C0000;
         }
-        const std::int32_t vx = L(e, 0xC);
+        const std::int32_t vx = LRest1g(e, 0xC);
         bool reread = true;
         if (vx < 0) {
-            if (L(e, 0x34) > 0x60000) reread = false;
-            else SetL(e, 0xC, 0u - static_cast<U>(vx));
+            if (LRest1g(e, 0x34) > 0x60000) reread = false;
+            else SetLRest1g(e, 0xC, 0u - static_cast<U>(vx));
         } else if (vx > 0) {
-            if (L(e, 0x34) < 0x140000) reread = false;
-            else SetL(e, 0xC, 0u - static_cast<U>(vx));
+            if (LRest1g(e, 0x34) < 0x140000) reread = false;
+            else SetLRest1g(e, 0xC, 0u - static_cast<U>(vx));
         } else {
-            SetL(e, 0xC, 0);
+            SetLRest1g(e, 0xC, 0);
         }
         if (reread) e = S();
-        SetL(e, 0x34, static_cast<U>(L(e, 0x34)) + static_cast<U>(L(e, 0xC)));
+        SetLRest1g(e, 0x34, static_cast<U>(LRest1g(e, 0x34)) + static_cast<U>(LRest1g(e, 0xC)));
         e = S();
-        const std::int32_t step = L(e, 0xC);
+        const std::int32_t step = LRest1g(e, 0xC);
         e[8] = static_cast<unsigned char>(step < -0x800 ? 0 : step > 0x800 ? 2 : 1);
-    } else if (tension < limit && L(::bof3::Img(kEff5Frame.v)) < 0) {
+    } else if (tension < limit && LRest1g(::bof3::Img(kEff5Frame.v)) < 0) {
         // let out: away from the shore, x drawn toward 0xF0000
         const std::int32_t left = 0x3E - static_cast<std::int32_t>(Sh(f, 0x3A));
         if (left == 0) {
-            SetL(f, 0xC, 0);
+            SetLRest1g(f, 0xC, 0);
         } else {
-            const auto span = static_cast<std::int32_t>(0xF0000u - static_cast<U>(L(f, 0x34))) >> 4;
-            SetL(f, 0xC, static_cast<U>(span / left));
+            const auto span = static_cast<std::int32_t>(0xF0000u - static_cast<U>(LRest1g(f, 0x34))) >> 4;
+            SetLRest1g(f, 0xC, static_cast<U>(span / left));
             unsigned char* const c = S();
-            const std::int32_t v = L(c, 0xC);
-            SetL(c, 0xC, static_cast<U>(v < -0x1000 ? -0x1000 : v > 0x1000 ? 0x1000 : v));
+            const std::int32_t v = LRest1g(c, 0xC);
+            SetLRest1g(c, 0xC, static_cast<U>(v < -0x1000 ? -0x1000 : v > 0x1000 ? 0x1000 : v));
         }
         unsigned char* e = S();
-        SetL(e, 0x34, static_cast<U>(L(e, 0x34)) + static_cast<U>(L(e, 0xC)));
+        SetLRest1g(e, 0x34, static_cast<U>(LRest1g(e, 0x34)) + static_cast<U>(LRest1g(e, 0xC)));
         e = S();
         if (Sh(e, 0x3E) < 0) {
             rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
-        SetL(e, 0x38, static_cast<U>(L(e, 0x38)) + 0x1000);
+        SetLRest1g(e, 0x38, static_cast<U>(LRest1g(e, 0x38)) + 0x1000);
         unsigned char* const c = S();
-        const std::int32_t z = L(c, 0x38);
+        const std::int32_t z = LRest1g(c, 0x38);
         if (z > 0x150000) {
             Field_Kind2Z = z;
             MoveScript_F3Divisor = 0x10;
@@ -1283,13 +1283,13 @@ extern "C" void __cdecl Fish_Hooked(void) {
         c[8] = c[4] != 0 ? 5 : 1;
     }
     DirEnsure();
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52C7C0: Fish_States[5] - jmp through Fish_S5Steps by +2,
 // unchecked (ours aborts past its 2).
 extern "C" void __cdecl Fish_S5(void) {
-    Run("Fish_S5 (0x52C7C0)", Fish_S5Steps, Fish_S5Steps_count, Sprite_Current[2], "Sprite_Current +2");
+    RunRest1g("Fish_S5 (0x52C7C0)", Fish_S5Steps, Fish_S5Steps_count, Sprite_Current[2], "Sprite_Current +2");
 }
 
 // original 0x52C7E0: Fish_S5Steps[0] - the steps toward the half-cell below x
@@ -1297,11 +1297,11 @@ extern "C" void __cdecl Fish_S5(void) {
 // 0x1FFF.... for any fraction), +9 = 8, +2 up.
 extern "C" void __cdecl Fish_S5Center(void) {
     unsigned char* s = S();
-    const U x = static_cast<U>(L(s, 0x34));
-    SetL(s, 0xC, ((x & 0xFFFF8000u) - x) >> 3);
+    const U x = static_cast<U>(LRest1g(s, 0x34));
+    SetLRest1g(s, 0xC, ((x & 0xFFFF8000u) - x) >> 3);
     s = S();
-    const U z = static_cast<U>(L(s, 0x38));
-    SetL(s, 0x10, ((z & 0xFFFF8000u) - z) >> 3);
+    const U z = static_cast<U>(LRest1g(s, 0x38));
+    SetLRest1g(s, 0x10, ((z & 0xFFFF8000u) - z) >> 3);
     S()[9] = 8;
     s = S();
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -1312,14 +1312,14 @@ extern "C" void __cdecl Fish_S5Center(void) {
 // then (a tail jmp) Sprite_ScriptTick.
 extern "C" void __cdecl Fish_S5Move(void) {
     unsigned char* s = S();
-    SetL(s, 0x34, static_cast<U>(L(s, 0x34)) + static_cast<U>(L(s, 0xC)));
+    SetLRest1g(s, 0x34, static_cast<U>(LRest1g(s, 0x34)) + static_cast<U>(LRest1g(s, 0xC)));
     s = S();
-    SetL(s, 0x38, static_cast<U>(L(s, 0x38)) + static_cast<U>(L(s, 0x10)));
+    SetLRest1g(s, 0x38, static_cast<U>(LRest1g(s, 0x38)) + static_cast<U>(LRest1g(s, 0x10)));
     s = S();
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (S()[9] == 0) {
-        SetL(S(), 0xC, 0);
-        SetL(S(), 0x10, 0);
+        SetLRest1g(S(), 0xC, 0);
+        SetLRest1g(S(), 0x10, 0);
         s = S();
         rv::As<records::SpriteObject>(s)->x_frac = rv::As<records::SpriteObject>(s)->x_frac & 0x8000;
         s = S();
@@ -1327,19 +1327,19 @@ extern "C" void __cdecl Fish_S5Move(void) {
         S()[1] = 1;
         S()[2] = 0;
     }
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52C8B0: Fish_States[6] - jmp through Fish_S6Steps by +2,
 // unchecked (ours aborts past its 3).
 extern "C" void __cdecl Fish_S6(void) {
-    Run("Fish_S6 (0x52C8B0)", Fish_S6Steps, Fish_S6Steps_count, Sprite_Current[2], "Sprite_Current +2");
+    RunRest1g("Fish_S6 (0x52C8B0)", Fish_S6Steps, Fish_S6Steps_count, Sprite_Current[2], "Sprite_Current +2");
 }
 
 // original 0x52C8D0: Fish_S6Steps[0] - +0x3C..+0x3F cleared, sound 0x206, the
 // kind's bank +0x12, +0 bit 5 off, +0x2A and +0x48 cleared, animation 0, +2 up.
 extern "C" void __cdecl Fish_S6Begin(void) {
-    SetL(S(), 0x3C, 0);
+    SetLRest1g(S(), 0x3C, 0);
     Sound(0x206);
     Bank(KindWord(S()[6], 0x12));
     unsigned char* s = S();
@@ -1359,7 +1359,7 @@ extern "C" void __cdecl Fish_S6Wait(void) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
         return;
     }
-    Tick();
+    TickRest1g();
 }
 
 // original 0x52C970: Fish_S6Steps[2] - the leader's step (ObjTrio +3) above 9:
@@ -1372,12 +1372,12 @@ extern "C" void __cdecl Fish_S6Release(void) {
 // `delta`, kept in 0..+0x98 (s16).
 extern "C" void __cdecl Fish_AdjustStrength(unsigned delta) {
     unsigned char* am = AM();
-    SetWord(am + 0x9A, Word(am + 0x9A) + static_cast<U>(static_cast<short>(static_cast<signed char>(delta))));
+    SetWordRest1g(am + 0x9A, Word(am + 0x9A) + static_cast<U>(static_cast<short>(static_cast<signed char>(delta))));
     am = AM();
     const short now = Sh(am, 0x9A);
-    if (now < 0) SetWord(am + 0x9A, 0);
-    else if (now > Sh(am, 0x98)) SetWord(am + 0x9A, Word(am + 0x98));
-    else SetWord(am + 0x9A, static_cast<U>(now));
+    if (now < 0) SetWordRest1g(am + 0x9A, 0);
+    else if (now > Sh(am, 0x98)) SetWordRest1g(am + 0x9A, Word(am + 0x98));
+    else SetWordRest1g(am + 0x9A, static_cast<U>(now));
 }
 
 // original 0x52C990's sibling 0x52C9E0: a chance by the tension's distance
@@ -1389,7 +1389,7 @@ extern "C" unsigned char __cdecl Fish_Chance(unsigned edge, unsigned tier) {
     const std::int32_t d = Abs32(static_cast<U>(static_cast<signed char>(S()[0xA]) - static_cast<std::int32_t>(edge & 0xFF)));
     const auto dist = static_cast<unsigned char>(d);
     const auto band = static_cast<unsigned char>(
-        static_cast<unsigned char>(static_cast<signed char>(RecordA()[3] + 3) * static_cast<signed char>(tier)) << 3);
+        static_cast<unsigned char>(static_cast<signed char>(RecordARest1g()[3] + 3) * static_cast<signed char>(tier)) << 3);
     unsigned odds;
     if (dist < (band >> 2)) odds = 1;
     else if (dist < (band >> 1)) odds = 2;
@@ -1406,9 +1406,9 @@ extern "C" void __cdecl Fish_Step(void) {
     if (s[9] == 0) return;
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = S();
-    SetL(s, 0x34, static_cast<U>(L(s, 0x34)) + static_cast<U>(L(s, 0xC)));
+    SetLRest1g(s, 0x34, static_cast<U>(LRest1g(s, 0x34)) + static_cast<U>(LRest1g(s, 0xC)));
     s = S();
-    SetL(s, 0x38, static_cast<U>(L(s, 0x38)) + static_cast<U>(L(s, 0x10)));
+    SetLRest1g(s, 0x38, static_cast<U>(LRest1g(s, 0x38)) + static_cast<U>(LRest1g(s, 0x10)));
     s = S();
     rv::As<records::SpriteObject>(s)->height_whole = rv::As<records::SpriteObject>(s)->height_whole + Word(s + 0x14);
 }
@@ -1421,25 +1421,25 @@ extern "C" void __cdecl Fish_Step(void) {
 // size) equal them, 8 when none does.
 extern "C" void __cdecl Fish_Heading(void) {
     unsigned char* s = S();
-    SetL(s, 0xC, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * s[8]))));
+    SetLRest1g(s, 0xC, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * s[8]))));
     s = S();
-    SetL(s, 0x10, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * s[8]))));
+    SetLRest1g(s, 0x10, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * s[8]))));
     s = S();
     if (s[8] == 2 || s[8] == 6) {
-        SetL(s, 0xC, static_cast<U>(L(s, 0xC)) << 1);
+        SetLRest1g(s, 0xC, static_cast<U>(LRest1g(s, 0xC)) << 1);
         s = S();
-        SetL(s, 0x10, static_cast<U>(L(s, 0x10)) << 1);
+        SetLRest1g(s, 0x10, static_cast<U>(LRest1g(s, 0x10)) << 1);
         s = S();
     }
-    const std::int32_t x = L(s, 0x34);
+    const std::int32_t x = LRest1g(s, 0x34);
     if (x <= 0x80000) {
-        if (L(s, 0xC) < 0) {
-            SetL(s, 0xC, 0u - static_cast<U>(L(s, 0xC)));
+        if (LRest1g(s, 0xC) < 0) {
+            SetLRest1g(s, 0xC, 0u - static_cast<U>(LRest1g(s, 0xC)));
             s = S();
         }
     } else if (x >= 0x140000) {
-        if (L(s, 0xC) > 0) {
-            SetL(s, 0xC, 0u - static_cast<U>(L(s, 0xC)));
+        if (LRest1g(s, 0xC) > 0) {
+            SetLRest1g(s, 0xC, 0u - static_cast<U>(LRest1g(s, 0xC)));
             s = S();
         }
     }
@@ -1449,15 +1449,15 @@ extern "C" void __cdecl Fish_Heading(void) {
     std::int32_t bottom = static_cast<std::int32_t>(0x320000u - depth - band);
     top = top < 0x1A0000 ? 0x1A0000 : top > 0x3E0000 ? 0x3E0000 : top;
     bottom = bottom < 0x110000 ? 0x110000 : bottom > 0x320000 ? 0x320000 : bottom;
-    const std::int32_t z = L(s, 0x38);
+    const std::int32_t z = LRest1g(s, 0x38);
     if (z >= top) {
-        if (L(s, 0x10) > 0) {
-            SetL(s, 0x10, 0u - static_cast<U>(L(s, 0x10)));
+        if (LRest1g(s, 0x10) > 0) {
+            SetLRest1g(s, 0x10, 0u - static_cast<U>(LRest1g(s, 0x10)));
             s = S();
         }
     } else if (z <= bottom) {
-        if (L(s, 0x10) < 0) {
-            SetL(s, 0x10, 0u - static_cast<U>(L(s, 0x10)));
+        if (LRest1g(s, 0x10) < 0) {
+            SetLRest1g(s, 0x10, 0u - static_cast<U>(LRest1g(s, 0x10)));
             s = S();
         }
     }
@@ -1467,7 +1467,7 @@ extern "C" void __cdecl Fish_Heading(void) {
         const U sz = static_cast<U>(Long(At(at)));
         const U wx = Abs32(sx) <= 0x400 ? sx + sx : sx;
         const U wz = Abs32(sz) <= 0x400 ? sz + sz : sz;
-        if (static_cast<U>(L(s, 0xC)) == wx && static_cast<U>(L(s, 0x10)) == wz) break;
+        if (static_cast<U>(LRest1g(s, 0xC)) == wx && static_cast<U>(LRest1g(s, 0x10)) == wz) break;
     }
     s[8] = static_cast<unsigned char>(row);
 }
@@ -1479,10 +1479,10 @@ extern "C" void __cdecl Fish_Heading(void) {
 extern "C" unsigned char __cdecl Fish_LureInReach(void) {
     if (Effect_Objects[0].state == 4 && Effect1a_PanelObject == 0xFF && ObjTrio[0].step == 3) {
         unsigned char* const s = S();
-        const unsigned char* const rb = RecordB();
+        const unsigned char* const rb = RecordBRest1g();
         if (s[6] == 0x16 && (rb[0xE] & 0xF) == 4) return 1;
         const auto margin = static_cast<unsigned char>(rv::Bytes(Effect_Objects)[0x7] - rb[0xF] + 3);
-        if (SH_CALL(Sprite_PointInReach)(L(s, 0x34), L(s, 0x38), Sh(s, 0x3E), margin, rv::Bytes(Effect_Objects)) != 0) return 1;
+        if (SH_CALL(Sprite_PointInReach)(LRest1g(s, 0x34), LRest1g(s, 0x38), Sh(s, 0x3E), margin, rv::Bytes(Effect_Objects)) != 0) return 1;
     }
     S()[1] = 1;
     return 0;
@@ -1494,8 +1494,8 @@ extern "C" unsigned char __cdecl Fish_LureInReach(void) {
 extern "C" unsigned char __cdecl Fish_LureClose(void) {
     if (Effect_Objects[0].state != 4 || Effect1a_PanelObject != 0xFF || Effect_Objects[4].state != 0 || ObjTrio[0].step != 3) return 0;
     const unsigned char* const s = S();
-    if (Abs32(static_cast<U>(L(s, 0x34)) - static_cast<std::uint32_t>(Effect_Objects[0].x)) >= 0x8000) return 0;
-    if (Abs32(static_cast<U>(L(s, 0x38)) - static_cast<std::uint32_t>(Effect_Objects[0].z)) >= 0x8000) return 0;
+    if (Abs32(static_cast<U>(LRest1g(s, 0x34)) - static_cast<std::uint32_t>(Effect_Objects[0].x)) >= 0x8000) return 0;
+    if (Abs32(static_cast<U>(LRest1g(s, 0x38)) - static_cast<std::uint32_t>(Effect_Objects[0].z)) >= 0x8000) return 0;
     if (Abs32(static_cast<U>(Sh(s, 0x3E) - static_cast<std::int16_t>(Effect_Objects[0].height_whole))) >= 0x400) return 0;
     return 1;
 }
