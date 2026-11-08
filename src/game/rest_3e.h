@@ -91,3 +91,7 @@ namespace rest_3e {
 // originals before Rest3E_Inject patches them.
 void SelfTest();
 }  // namespace rest_3e
+
+namespace rest_3e::dock {
+extern unsigned char g_on;   // defined in rest_3e.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace rest_3e::dock
