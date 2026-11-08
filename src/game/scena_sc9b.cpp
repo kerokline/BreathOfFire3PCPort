@@ -211,7 +211,7 @@ void Kind2At(std::int32_t x, std::int32_t z) {
 
 // A table entry read in place, the index checked against the table and the
 // entry against 0 (the original would call address 0).
-std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* who) {
+std::uint32_t EntryScenaSc9b(std::uint32_t table, int index, unsigned count, const char* who) {
     if (index < 0 || static_cast<unsigned>(index) >= count)
         bof3::Fatal("%s: index %d outside its table of %u at 0x%X", who, index, count, table);
     const std::uint32_t e = D(table + 4 * static_cast<std::uint32_t>(index));
@@ -1034,7 +1034,7 @@ SC9B_EXPORT unsigned char __cdecl Scena09_CellHook(int x, int z) {
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
-        Entry(::bof3::Img(Scena09_CellHooks_addr), index, at::kCell9Count, "Scena09_CellHook")))(x, z);
+        EntryScenaSc9b(::bof3::Img(Scena09_CellHooks_addr), index, at::kCell9Count, "Scena09_CellHook")))(x, z);
 }
 
 // original 0x557A50: cell 0 - run 6 at 0 (the leader's byte not 5), else at
@@ -1148,7 +1148,7 @@ SC9B_EXPORT unsigned char __cdecl Scena09_Cell13(void) {
 // (group SC13's block), 1 Scena10_EnterArea, 2 Scena10_Run.
 SC9B_EXPORT void __cdecl Scena10_Frame(void) {
     const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena10_States_addr), state, at::kState10Count, "Scena10_Frame")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(EntryScenaSc9b(::bof3::Img(Scena10_States_addr), state, at::kState10Count, "Scena10_Frame")))();
 }
 
 // original 0x5585F0: state 2, a tail jump through Scena10_Runs on the s8 run
@@ -1156,7 +1156,7 @@ SC9B_EXPORT void __cdecl Scena10_Frame(void) {
 // are 0.
 SC9B_EXPORT void __cdecl Scena10_Run(void) {
     const int run = MoveScript_Var7;
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena10_Runs_addr), run, at::kRun10Count, "Scena10_Run")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(EntryScenaSc9b(::bof3::Img(Scena10_Runs_addr), run, at::kRun10Count, "Scena10_Run")))();
 }
 
 // original 0x55B6D0: slot 1, called by 0x56D6D0 with the object that
@@ -1165,7 +1165,7 @@ SC9B_EXPORT void __cdecl Scena10_ObjectTrigger(unsigned char* object) {
     const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(::bof3::Img(Scena10_Objects_addr), static_cast<int>(index), at::kObject10Count, "Scena10_ObjectTrigger")))(object, bits);
+        EntryScenaSc9b(::bof3::Img(Scena10_Objects_addr), static_cast<int>(index), at::kObject10Count, "Scena10_ObjectTrigger")))(object, bits);
 }
 
 // original 0x558150: state 1, the chapter's area entry - by the area (read
