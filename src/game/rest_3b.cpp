@@ -46,7 +46,7 @@ namespace {
 
 namespace at = rest_3b::at;
 using U = std::uint32_t;
-using S32 = std::int32_t;
+using S32Rest3b = std::int32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -56,17 +56,17 @@ using move_script::Word;
 unsigned char& B(U address) { return At(address)[0]; }
 std::uint16_t W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
-S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
-unsigned char* Ptr(U cell) { return At(L(cell)); }
-unsigned char* Result() { return Ptr(::bof3::Img(at::kResult.v)); }
+S32Rest3b S16Rest3b(std::uint16_t v) { return static_cast<std::int16_t>(v); }
+unsigned char* PtrRest3b(U cell) { return At(L(cell)); }
+unsigned char* ResultRest3b() { return PtrRest3b(::bof3::Img(at::kResult.v)); }
 
 // The records as the originals index them: a party record by the byte
 // itself (0x802D40 + 0x14C n, any n), an enemy object by the byte less 3
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
-unsigned char* Party(unsigned n) { return At(::bof3::Img(ObjTrio_addr) + (n & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned roster) { return At(::bof3::Img(CharacterRecords_addr) + (roster & 0xFF) * at::kCharStride); }
+unsigned char* PartyRest3b(unsigned n) { return At(::bof3::Img(ObjTrio_addr) + (n & 0xFF) * at::kPartyStride); }
+unsigned char* EnemyRest3b(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + static_cast<U>(static_cast<S32Rest3b>(n & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* CharRecordRest3b(unsigned roster) { return At(::bof3::Img(CharacterRecords_addr) + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(::bof3::Img(at::kAbilityRows.v) + (id & 0xFFFF) * at::kAbilityStride); }
 
 // R3D's callees, ours, by address (named in rest_3b_callees.h).
@@ -82,7 +82,7 @@ void Inflict(U status) { BH_AT(U1, at::kRollInflict.v)(status); }
 
 // jmp [table + 4 * byte]: the byte below `entries`, else a Fatal where the
 // original jumps through the dword after its table.
-void Dispatch(const char* who, U cell, U table, unsigned entries) {
+void DispatchRest3b(const char* who, U cell, U table, unsigned entries) {
     const unsigned state = B(cell);
     if (state >= entries)
         bof3::Fatal("%s: the state byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword "
@@ -95,7 +95,7 @@ void Dispatch(const char* who, U cell, U table, unsigned entries) {
 // a member's word at `party_at`, an enemy's at `enemy_at` (the actor the
 // dword 0x904B34's low byte, below 3 a member).
 std::uint16_t ActorWord(unsigned actor, U party_at, U enemy_at) {
-    return actor < 3 ? Word(Party(actor) + party_at) : Word(Enemy(actor) + enemy_at);
+    return actor < 3 ? Word(PartyRest3b(actor) + party_at) : Word(EnemyRest3b(actor) + enemy_at);
 }
 
 // Battle_CalcDamage(actor, target, element): the two bytes read here, the
@@ -105,7 +105,7 @@ std::uint16_t Hit(unsigned element) {
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, element);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
     return static_cast<std::uint16_t>(d);
 }
 
@@ -129,7 +129,7 @@ extern "C" unsigned __cdecl CharId_ToRosterIndex(unsigned id) {
 // dword +0x134 has bit 10 clear. al only (the caller tests it).
 extern "C" unsigned char __cdecl BattleResult_MemberTakesExp(unsigned slot) {
     if (BH_CALL(Battle_ActorIsOut)(slot) & 0xFF) return 0;
-    return static_cast<unsigned char>(((rv::As<records::PartyMember>(Party(slot))->flags_134 >> 10) & 1) ^ 1);
+    return static_cast<unsigned char>(((rv::As<records::PartyMember>(PartyRest3b(slot))->flags_134 >> 10) & 1) ^ 1);
 }
 
 // original 0x4468B0 (PSX BattleResult_AddExp 0x801DD564, the sibling's
@@ -145,15 +145,15 @@ extern "C" unsigned __cdecl BattleResult_AddExp(unsigned exp) {
     for (unsigned slot = 0; (slot & 0xFF) < B(::bof3::Img(at::kPartyCount.v)); slot = (slot + 1) & 0xFF) {
         const unsigned char takes = BH_CALL(BattleResult_MemberTakesExp)(slot);
         if (takes == 0) continue;
-        const unsigned r1 = BH_CALL(CharId_ToRosterIndex)(Party(slot)[0x89]) & 0xFF;
-        const U sum = static_cast<U>(rv::As<records::CharRecord>(CharRecord(r1))->exp) + exp;
+        const unsigned r1 = BH_CALL(CharId_ToRosterIndex)(PartyRest3b(slot)[0x89]) & 0xFF;
+        const U sum = static_cast<U>(rv::As<records::CharRecord>(CharRecordRest3b(r1))->exp) + exp;
         if (sum < 9999999u) {
-            const unsigned r2 = BH_CALL(CharId_ToRosterIndex)(Party(slot)[0x89]) & 0xFF;
-            unsigned char* const e = CharRecord(r2) + 0xC;
-            SetLong(e, static_cast<S32>(static_cast<U>(Long(e)) + exp));
+            const unsigned r2 = BH_CALL(CharId_ToRosterIndex)(PartyRest3b(slot)[0x89]) & 0xFF;
+            unsigned char* const e = CharRecordRest3b(r2) + 0xC;
+            SetLong(e, static_cast<S32Rest3b>(static_cast<U>(Long(e)) + exp));
         } else {
-            const unsigned r3 = BH_CALL(CharId_ToRosterIndex)(Party(slot)[0x89]) & 0xFF;
-            rv::As<records::CharRecord>(CharRecord(r3))->exp = 9999999;
+            const unsigned r3 = BH_CALL(CharId_ToRosterIndex)(PartyRest3b(slot)[0x89]) & 0xFF;
+            rv::As<records::CharRecord>(CharRecordRest3b(r3))->exp = 9999999;
         }
     }
     return exp;
@@ -168,7 +168,7 @@ namespace {
 // signed and truncated (imul 0x51EB851F, sar 5, + the sign bit); above `cap`
 // the cap, below 0 zero.
 int Percent(int value, int percent, int cap) {
-    const S32 q = static_cast<S32>(static_cast<U>(value) * static_cast<U>(percent)) / 100;
+    const S32Rest3b q = static_cast<S32Rest3b>(static_cast<U>(value) * static_cast<U>(percent)) / 100;
     if (q > cap) return cap;
     return q < 0 ? 0 : q;
 }
@@ -208,25 +208,25 @@ extern "C" void __cdecl BattleTarget_PickParty(void) {
     const U held = BH_CALL(Input_AutoRepeat)(pressed & 0xF000);
     if (held & 0x5000) {
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(3);
-        Ptr(::bof3::Img(at::kCommand.v))[0] = t;
+        PtrRest3b(::bof3::Img(at::kCommand.v))[0] = t;
         BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         BH_CALL(Sound_PlayEffect)(0x101);
         return;
     }
     if (held & 0x2000) {
-        const long value = static_cast<signed char>(Ptr(::bof3::Img(at::kCommand.v))[0]) + 1;
+        const long value = static_cast<signed char>(PtrRest3b(::bof3::Img(at::kCommand.v))[0]) + 1;
         const long high = static_cast<long>(B(::bof3::Img(at::kPartyCount.v))) - 1;
         const long wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(static_cast<unsigned>(wrapped));
-        Ptr(::bof3::Img(at::kCommand.v))[0] = t;
+        PtrRest3b(::bof3::Img(at::kCommand.v))[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
     }
     if (held & 0x8000) {
-        const long value = static_cast<signed char>(Ptr(::bof3::Img(at::kCommand.v))[0]) - 1;
+        const long value = static_cast<signed char>(PtrRest3b(::bof3::Img(at::kCommand.v))[0]) - 1;
         const long high = static_cast<long>(B(::bof3::Img(at::kPartyCount.v))) - 1;
         const long wrapped = BH_CALL(Battle_WrapIndex)(high, 0, value);
         const unsigned char t = BH_CALL(Battle_PrevTarget)(static_cast<unsigned>(wrapped));
-        Ptr(::bof3::Img(at::kCommand.v))[0] = t;
+        PtrRest3b(::bof3::Img(at::kCommand.v))[0] = t;
         BH_CALL(Sound_PlayEffect)(0x101);
     }
 }
@@ -309,29 +309,29 @@ extern "C" void __cdecl BattleItemCmd_TargetCancel(void) {
 // original 0x447D70 (BattleItem_Steps entry 5): jmp [0x64E43C + 4 * (dword
 // 0x904AA4 & 0xFF)] - BattleItem_SideSteps' four.
 extern "C" void __cdecl BattleItem_SideDispatch(void) {
-    Dispatch("BattleItem_SideDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItem_SideSteps_addr), 4);
+    DispatchRest3b("BattleItem_SideDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItem_SideSteps_addr), 4);
 }
 
 // original 0x448B80 (BattleItemCmd_States entry 5): through BattleItemCmd_SideSteps (4).
 extern "C" void __cdecl BattleItemCmd_SideDispatch(void) {
-    Dispatch("BattleItemCmd_SideDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItemCmd_SideSteps_addr), 4);
+    DispatchRest3b("BattleItemCmd_SideDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItemCmd_SideSteps_addr), 4);
 }
 
 // original 0x448C80 (BattleItemCmd_States entry 6): through BattleItemCmd_EquipSteps (4).
 extern "C" void __cdecl BattleItemCmd_EquipDispatch(void) {
-    Dispatch("BattleItemCmd_EquipDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItemCmd_EquipSteps_addr), 4);
+    DispatchRest3b("BattleItemCmd_EquipDispatch", ::bof3::Img(BattleE4_Step4_addr), ::bof3::Img(BattleItemCmd_EquipSteps_addr), 4);
 }
 
 // original 0x44A000 (Battle_MenuSteps[6]; PSX 0x8009823C, paired): jmp
 // [0x64E4FC + 4 * byte 0x904AA3] - Escape_States' three.
-extern "C" void __cdecl Escape_Dispatch(void) { Dispatch("Escape_Dispatch", ::bof3::Img(BattleE4_Step3_addr), ::bof3::Img(Escape_States_addr), 3); }
+extern "C" void __cdecl Escape_Dispatch(void) { DispatchRest3b("Escape_Dispatch", ::bof3::Img(BattleE4_Step3_addr), ::bof3::Img(Escape_States_addr), 3); }
 
 // original 0x447D90 (BattleItem_SideSteps entry 0): a whole side as the
 // target, by byte +0 of the command's word +2's NameTable_Abilities row: bit
 // 0x20 the enemies (0x40), else the party (0x80); sub-state 1, the repeat
 // latch 0, the pick flag set. BattleItemCmd_SideBegin's twin.
 extern "C" void __cdecl BattleItem_SideBegin(void) {
-    unsigned char* const c = Ptr(::bof3::Img(at::kCommand.v));
+    unsigned char* const c = PtrRest3b(::bof3::Img(at::kCommand.v));
     const unsigned char flags = AbilityRow(Word(c + 2))[0];
     c[0] = static_cast<unsigned char>((flags & 0x20) ? 0x40 : 0x80);
     BattleE4_Step4 = 1;
@@ -360,7 +360,7 @@ extern "C" void __cdecl BattleItem_SidePick(void) {
     const unsigned char* const list = BH_CALL(Char_AbilityList)(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
     const unsigned id = list[L(::bof3::Img(at::kWin16Cursor.v)) & 0xFF];
     if ((AbilityRow(id)[0] & 0x80) == 0) return;
-    unsigned char* const c = Ptr(::bof3::Img(at::kCommand.v));
+    unsigned char* const c = PtrRest3b(::bof3::Img(at::kCommand.v));
     c[0] = static_cast<unsigned char>(c[0] ^ 0xC0);
     BH_CALL(Sound_PlayEffect)(0x101);
 }
@@ -400,9 +400,9 @@ extern "C" void __cdecl EffectSlot01_VariedHit(void) {
 extern "C" void __cdecl EffectSlot02_HitInflict4(void) {
     Hit(4);
     const unsigned t = B(::bof3::Img(at::kTarget.v));
-    const S32 hp = t < 3 ? rv::As<records::PartyMember>(Party(t))->hp : rv::As<records::BattleEnemy>(Enemy(t))->hp;
-    const std::uint16_t d = static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change);
-    if (S16(d) < hp && d != 0) Inflict(4);
+    const S32Rest3b hp = t < 3 ? rv::As<records::PartyMember>(PartyRest3b(t))->hp : rv::As<records::BattleEnemy>(EnemyRest3b(t))->hp;
+    const std::uint16_t d = static_cast<std::uint16_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change);
+    if (S16Rest3b(d) < hp && d != 0) Inflict(4);
 }
 
 namespace {
@@ -412,8 +412,8 @@ void HalfHitInflict(U status) {
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(static_cast<S32>(d) / 2));
-    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) != 0) Inflict(status);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(static_cast<S32Rest3b>(d) / 2));
+    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change) != 0) Inflict(status);
 }
 
 // Effect_SkillDamage(actor, target, power, 0) as the HP delta.
@@ -421,7 +421,7 @@ void SkillHit(unsigned power) {
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const int d = BH_CALL(Effect_SkillDamage)(actor, target, power, 0);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
 }
 }  // namespace
 
@@ -438,7 +438,7 @@ extern "C" void __cdecl EffectSlot04_SkillPower(void) {
     const unsigned power = AbilityRow(ability)[3];
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const int d = BH_CALL(Effect_SkillDamage)(actor, target, power, 0);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
 }
 
 namespace {
@@ -457,15 +457,15 @@ extern "C" void __cdecl EffectSlot05_Clear80(void) { ClearThenMiss(0x80); }
 // delta 9999. Else 0x44FCE0(3) less the target's enemy object's +0xB6 (by
 // the target byte, whichever side; 16 bits). Then a negative delta is 0.
 extern "C" void __cdecl EffectSlot06_HpThirdHit(void) {
-    if (Party(B(::bof3::Img(at::kActor.v)))[0x89] == 0x0A) {
+    if (PartyRest3b(B(::bof3::Img(at::kActor.v)))[0x89] == 0x0A) {
         MissTail();
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 9999);
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 9999);
     } else {
         const U share = BH_AT(U1, at::kHpShare.v)(3);
         const unsigned t = B(::bof3::Img(at::kTarget.v));
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(share - Word(Enemy(t) + 0xB6)));
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(share - Word(EnemyRest3b(t) + 0xB6)));
     }
-    if (S16(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) < 0) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
+    if (S16Rest3b(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change)) < 0) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0);
 }
 
 // original 0x44C120 (slot 7; R3C's 0x44D120 jumps here): not in the cut.
@@ -474,13 +474,13 @@ extern "C" void __cdecl EffectSlot07_Heal(void) {
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const int d = BH_CALL(Effect_HealAmount)(actor, target);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
 }
 
 // original 0x44C150 (slot 9): the HP delta -40.
-extern "C" void __cdecl EffectSlot09_Heal40(void) { rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFD8); }
+extern "C" void __cdecl EffectSlot09_Heal40(void) { rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xFFD8); }
 // original 0x44C160 (slot 10): the HP delta -100.
-extern "C" void __cdecl EffectSlot10_Heal100(void) { rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFF9C); }
+extern "C" void __cdecl EffectSlot10_Heal100(void) { rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xFF9C); }
 
 // original 0x44C170 (slot 11; R3C's 0x44D6A0 jumps here): not in the cut. A
 // member target: the HP delta minus its maximum HP (+0xA0). An enemy: its
@@ -489,23 +489,23 @@ extern "C" void __cdecl EffectSlot10_Heal100(void) { rv::Store<std::uint32_t>(rv
 extern "C" void __cdecl EffectSlot11_HealFull(void) {
     const unsigned t = B(::bof3::Img(at::kTarget.v));
     if (t < 3) {
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(0u - rv::As<records::PartyMember>(Party(t))->max_hp));
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(0u - rv::As<records::PartyMember>(PartyRest3b(t))->max_hp));
         return;
     }
-    const std::uint16_t max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
+    const std::uint16_t max = rv::As<records::BattleEnemy>(EnemyRest3b(t))->max_hp;
     if (max == 0xFFFF) {
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFFF);
-        unsigned char* const e = Enemy(B(::bof3::Img(at::kTarget.v)));
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xFFFF);
+        unsigned char* const e = EnemyRest3b(B(::bof3::Img(at::kTarget.v)));
         e[0x10C] = static_cast<unsigned char>(e[0x10C] | 4);
         return;
     }
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(0u - max));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(0u - max));
 }
 
 // original 0x44C1F0 (slot 12): the HP delta -5; then (Rand & 0x7F) at most
 // 0x26: Battle_ClearStatus(target, 0x68).
 extern "C" void __cdecl EffectSlot12_Heal5Clear68(void) {
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFFB);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xFFFB);
     const U roll = static_cast<U>(BH_CALL(Rand)()) & 0x7F;
     if (roll <= 0x26) BH_CALL(Battle_ClearStatus)(B(::bof3::Img(at::kTarget.v)), 0x68);
 }
@@ -525,12 +525,12 @@ extern "C" void __cdecl EffectSlot16_ClearBFC(void) { ClearThenMiss(0xBFC); }
 // again) 0x904AB1 (a member) or 0x904AB3 (an enemy) one up. Else the delta 0.
 extern "C" void __cdecl EffectSlot17_RaiseDown(void) {
     const unsigned t = B(::bof3::Img(at::kTarget.v));
-    const std::uint16_t status = t <= 2 ? rv::As<records::PartyMember>(Party(t))->status : rv::As<records::BattleEnemy>(Enemy(t))->status;
+    const std::uint16_t status = t <= 2 ? rv::As<records::PartyMember>(PartyRest3b(t))->status : rv::As<records::BattleEnemy>(EnemyRest3b(t))->status;
     if ((status & 0x4000) == 0) {
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0);
         return;
     }
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFFF);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xFFFF);
     BH_CALL(Battle_ClearStatus)(B(::bof3::Img(at::kTarget.v)), 0x4000);
     if (B(::bof3::Img(at::kTarget.v)) <= 2) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
     else Battle_EnemiesLeft = static_cast<unsigned char>(Battle_EnemiesLeft + 1);
@@ -544,13 +544,13 @@ extern "C" void __cdecl EffectSlot19_StatMod0(void) { StatMod(0); }
 
 // original 0x44C390 (slot 20): the result's +8 = 2, the AP delta -20.
 extern "C" void __cdecl EffectSlot20_ApHeal20(void) {
-    Result()[8] = 2;
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->ap_change, 0xFFEC);
+    ResultRest3b()[8] = 2;
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->ap_change, 0xFFEC);
 }
 // original 0x44C3B0 (slot 21): the result's +8 = 2, the AP delta -100.
 extern "C" void __cdecl EffectSlot21_ApHeal100(void) {
-    Result()[8] = 2;
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->ap_change, 0xFF9C);
+    ResultRest3b()[8] = 2;
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->ap_change, 0xFF9C);
 }
 
 // original 0x44C7C0 (slot 24): 0x44FBB0(1).
@@ -569,20 +569,20 @@ extern "C" void __cdecl EffectSlot27_Inflict20(void) { InflictMiss(0x20); }
 // and Battle_ClearStatus(target, 0x4000). Else the result's +8 = 1.
 extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
     if (B(::bof3::Img(at::kTarget.v)) > 2) return;
-    const std::uint16_t status = Word(Party(B(::bof3::Img(at::kTarget.v))) + 0x90);
+    const std::uint16_t status = Word(PartyRest3b(B(::bof3::Img(at::kTarget.v))) + 0x90);
     const U roll = static_cast<U>(BH_CALL(Rand)());
     if ((roll & 3) == 0 || (status & 0x4000) == 0) {
-        Result()[8] = 1;
+        ResultRest3b()[8] = 1;
         return;
     }
     const unsigned t = B(::bof3::Img(at::kTarget.v));
     if (t <= 2) {
-        const S32 max = rv::As<records::PartyMember>(Party(t))->max_hp;
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
+        const S32Rest3b max = rv::As<records::PartyMember>(PartyRest3b(t))->max_hp;
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
         Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
     } else {
-        const S32 max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
+        const S32Rest3b max = rv::As<records::BattleEnemy>(EnemyRest3b(t))->max_hp;
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>((0 - max) >> 2));
         Battle_EnemiesLeft = static_cast<unsigned char>(Battle_EnemiesLeft + 1);
     }
     BH_CALL(Battle_ClearStatus)(B(::bof3::Img(at::kTarget.v)), 0x4000);
@@ -593,11 +593,11 @@ extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
 // call), Battle_ClearStatus(target, 0x4000). Else the delta 0.
 extern "C" void __cdecl EffectSlot29_RaiseFull(void) {
     if (B(::bof3::Img(at::kTarget.v)) > 2) return;
-    if ((Party(B(::bof3::Img(at::kTarget.v)))[0x91] & 0x40) == 0) {
-        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
+    if ((PartyRest3b(B(::bof3::Img(at::kTarget.v)))[0x91] & 0x40) == 0) {
+        rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0);
         return;
     }
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xD8F0);
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, 0xD8F0);
     const unsigned char up = static_cast<unsigned char>(Battle_PartyStanding + 1);
     const unsigned t = B(::bof3::Img(at::kTarget.v));
     Battle_PartyStanding = up;
@@ -615,7 +615,7 @@ extern "C" void __cdecl EffectSlot32_HalfHitPlus1(void) {
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     B(::bof3::Img(at::kRoundFlags2.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags2.v)) | 0x20);
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>((d >> 1) + 1));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>((d >> 1) + 1));
 }
 
 // original 0x44C9F0 (slot 33): 0x904AA9 |= 0x20; the power word = the
@@ -630,8 +630,8 @@ extern "C" void __cdecl EffectSlot33_HitDropTurn(void) {
     SetWord(At(::bof3::Img(at::kPower.v)), static_cast<std::uint16_t>(base + (base >> 2)));
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
-    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) == 0) return;
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
+    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change) == 0) return;
     const unsigned t2 = B(::bof3::Img(at::kTarget.v));
     const unsigned a2 = B(::bof3::Img(at::kActor.v));
     if (BH_AT(U2, at::kResisted.v)(a2, t2) & 0xFF) return;
@@ -645,7 +645,7 @@ extern "C" void __cdecl EffectSlot33_HitDropTurn(void) {
 // the status word of the actor read again.
 extern "C" void __cdecl EffectSlot34_HitIgnore8(void) {
     const unsigned actor = B(::bof3::Img(at::kActor.v));
-    unsigned char* const word = actor < 3 ? Party(actor) + 0x90 : Enemy(actor) + 0x92;
+    unsigned char* const word = actor < 3 ? PartyRest3b(actor) + 0x90 : EnemyRest3b(actor) + 0x92;
     const std::uint16_t status = Word(word);
     const std::uint16_t kept = status & 8;
     SetWord(word, status & 0xFFF7);
@@ -653,9 +653,9 @@ extern "C" void __cdecl EffectSlot34_HitIgnore8(void) {
     B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 0x80);
     BattleE4_HitEnemy = 0x64;
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(d));
+    rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(ResultRest3b())->hp_change, static_cast<std::uint16_t>(d));
     const unsigned a2 = B(::bof3::Img(at::kActor.v));
-    unsigned char* const back = a2 < 3 ? Party(a2) + 0x90 : Enemy(a2) + 0x92;
+    unsigned char* const back = a2 < 3 ? PartyRest3b(a2) + 0x90 : EnemyRest3b(a2) + 0x92;
     SetWord(back, Word(back) | kept);
 }
 
@@ -671,7 +671,7 @@ void StatSumHit(U addend) {
     B(::bof3::Img(at::kRoundFlags2.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags2.v)) | 0x20);
     const unsigned actor = L(::bof3::Img(at::kActor.v)) & 0xFF;
     const std::uint16_t stat =
-        a <= 2 ? rv::As<records::CharRecord>(CharRecord(B(::bof3::Img(at::kRosterOf.v) + Party(actor)[0x89])))->base.atk : rv::As<records::BattleEnemy>(Enemy(actor))->base_atk;
+        a <= 2 ? rv::As<records::CharRecord>(CharRecordRest3b(B(::bof3::Img(at::kRosterOf.v) + PartyRest3b(actor)[0x89])))->base.atk : rv::As<records::BattleEnemy>(EnemyRest3b(actor))->base_atk;
     const std::uint16_t half = static_cast<std::uint16_t>(Rest3b_PowerAdd2 >> 1);
     BattleE4_HitEnemy = static_cast<unsigned char>(half + 0x1E > 0x64 ? 0x64 : half + 0x1E);
     const std::uint16_t add = W(addend);
@@ -742,8 +742,8 @@ extern "C" void __cdecl EffectSlot47_MissMark200(void) {
     MissTail();
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const unsigned t = L(::bof3::Img(at::kTarget.v)) & 0xFF;
-    unsigned char* const flags = actor <= 2 ? Party(t) + 0x134 : Enemy(t) + 0x114;
-    SetLong(flags, static_cast<S32>(static_cast<U>(Long(flags)) | 0x200));
+    unsigned char* const flags = actor <= 2 ? PartyRest3b(t) + 0x134 : EnemyRest3b(t) + 0x114;
+    SetLong(flags, static_cast<S32Rest3b>(static_cast<U>(Long(flags)) | 0x200));
 }
 
 // original 0x44CFC0 (slot 48): the acting kind 4, the ability 0x55, 0x44FBB0(0).
