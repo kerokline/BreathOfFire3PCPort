@@ -5,3 +5,5 @@
 source_file	old_name	new_name	kind	reason	target_file	other_source	commit
 src/game/battle_e3.cpp	Entry	EntryBattleE3	helper	Entry meets battle_e2.cpp's Entry of another body in src/game/battle/enemy_op.cpp; old name with the source stem	src/game/battle/enemy_op.cpp	src/game/battle_e2.cpp	
 src/game/battle_e3.cpp	Dispatch	DispatchBattleE3	helper	Dispatch meets battle_e2.cpp's Dispatch of another body in src/game/battle/enemy_op.cpp; old name with the source stem	src/game/battle/enemy_op.cpp	src/game/battle_e2.cpp	
+src/game/battle_flow.cpp	PtrAt	PtrAtBattleFlow	helper	PtrAt meets battle_e2.cpp's PtrAt of another body in src/game/battle/battle_fx.cpp; old name with the source stem	src/game/battle/battle_fx.cpp	src/game/battle_e2.cpp	
+src/game/battle_flow.cpp	PtrAt	PtrAtBattleFlow	helper	PtrAt meets battle_e3.cpp's PtrAt of another body in src/game/battle/enemy_op.cpp; old name with the source stem	src/game/battle/enemy_op.cpp	src/game/battle_e3.cpp	
