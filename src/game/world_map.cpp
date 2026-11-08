@@ -76,25 +76,25 @@ namespace {
 
 using namespace world_map;
 
-unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Word(const unsigned char* p) {
+unsigned char* AtWorldMap(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+U WordWorldMap(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-std::int32_t Short(const unsigned char* p) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(Word(p))); }
-U Long(const unsigned char* p) {
+std::int32_t ShortWorldMap(const unsigned char* p) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(WordWorldMap(p))); }
+U LongWorldMap(const unsigned char* p) {
     U v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char* Object() { return At(Long(At(at::Sprite_CurrentAt()))); }
+unsigned char* Object() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Sprite_CurrentAt()))); }
 
 // The map task's object, Object(), is an effect record: its frame runs from
 // WorldMapHud_Frame, effect kind 0x58's handler, on the effect record.
-unsigned char* PacketNext() { return At(Long(At(at::Gfx_PacketNextAt()))); }
+unsigned char* PacketNext() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()))); }
 
 // The needle's corner arithmetic, as the original's x87 executes it: the
 // integer offset loaded with fild, the corner's float loaded over it, the
@@ -201,26 +201,26 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
 // that precede them; the index the original pushes for a lit key carries the
 // button word's upper bytes, which the sprite draw masks off.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
-    if (!(At(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
+    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
     g.commit_prim(1, 0xC);
     g.draw_sprite(x, y, 0);
     const unsigned char cell =
-        g.byte_at(static_cast<short>(Word(At(::bof3::Img(kLeaderCellX)))), static_cast<short>(Word(At(::bof3::Img(kLeaderCellZ)))));
+        g.byte_at(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     const bool withheld1 =
-        cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
+        cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 6, Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
+    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 6, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 8, Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
+    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 8, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
-        g.cell_event(static_cast<short>(Word(At(::bof3::Img(kLeaderCellX)))), static_cast<short>(Word(At(::bof3::Img(kLeaderCellZ)))));
+        g.cell_event(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     bool third = event != 0;
-    if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
+    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
-    if (!third) third = (Word(At(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
+    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
     if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
     g.draw_needle(x + 0x18, y + 0x18);
@@ -254,7 +254,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
     PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
     prim[4] = prim[5] = prim[6] = 0x80;
     rv::As<records::GpuSprt>(prim)->clut = 0x7B80;
-    const unsigned char* const entry = At(::bof3::Img(kSpriteTable) + (index & 0xFF) * 4u);
+    const unsigned char* const entry = AtWorldMap(::bof3::Img(kSpriteTable) + (index & 0xFF) * 4u);
     rv::As<records::GpuSprt>(prim)->w = entry[0];
     rv::As<records::GpuSprt>(prim)->h = entry[1];
     prim[0x14] = entry[2];
@@ -269,10 +269,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
 // 0x803588 - the area's 0x80010000 section's word +8, read after the two
 // sprites. The return (Text_DrawAt's) is not read by the three callers.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int x, int y) {
-    if (!(At(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
+    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     g.draw_sprite(x, y, 4);
     g.draw_sprite(x + 0x80, y, 5);
-    const unsigned char* text = At(::bof3::Img(kAreaText) + (Long(At(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
+    const unsigned char* text = AtWorldMap(::bof3::Img(kAreaText) + (LongWorldMap(AtWorldMap(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
     g.text_draw_at(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -290,14 +290,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(int x, int y) {
     g.push_matrix();
     alignas(4) unsigned char matrix[0x20];
-    g.rot_matrix(reinterpret_cast<const short*>(At(at::Camera_AnglesAt())), reinterpret_cast<short*>(matrix));
+    g.rot_matrix(reinterpret_cast<const short*>(AtWorldMap(at::Camera_AnglesAt())), reinterpret_cast<short*>(matrix));
     PutLong(matrix + 0x14, 0);
     PutLong(matrix + 0x18, 0);
     PutLong(matrix + 0x1C, 0);
     g.set_rot_matrix(reinterpret_cast<const unsigned long*>(matrix));
     g.set_trans_matrix(reinterpret_cast<const unsigned long*>(matrix));
     unsigned char* const prim = PacketNext();
-    unsigned char* const scratch = At(at::Prim_VertexScratchAt());
+    unsigned char* const scratch = AtWorldMap(at::Prim_VertexScratchAt());
     rv::As<records::SVector>(scratch)[0].x = 0xFFF6;   // (-10, 0, 0)
     rv::As<records::SVector>(scratch)[0].y = 0;
     rv::As<records::SVector>(scratch)[0].z = 0;
@@ -341,7 +341,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
 extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(long x, long y) {
     const U item = static_cast<U>(g.item_at(x, y));
     if (item == 0) return nullptr;
-    return At(at::DrawItemsAt() + (At(at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
+    return AtWorldMap(at::DrawItemsAt() + (AtWorldMap(at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
 }
 
 // original 0x572FA0 (PSX 0x801564C4): links the primitive at Gfx_PacketNext
@@ -360,19 +360,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     std::int32_t row = static_cast<std::int16_t>(z >> 16);
     row -= (z & 0xFFFF) == 0 ? 1 : 0;
     row -= (x & 0xFFFF) == 0 ? 1 : 0;
-    row -= Short(At(at::MapView_OriginAt() + 2));
+    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt() + 2));
     row += static_cast<std::int16_t>(x >> 16);
-    row -= Short(At(at::MapView_OriginAt()));
+    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt()));
     row += static_cast<signed char>(dy) + 2;
     if (row < 0 || row >= 0x38) return;
     const U bytes = size & 0xFF;
-    const U prim = Long(At(at::Gfx_PacketNextAt()));
+    const U prim = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
     // Tooling only (BOF3X_DRAWORDER): the walk's log names a frame node by its
     // row alone; this says who linked it.
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
                   Low32(__builtin_return_address(0)));
-    const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
+    const U bound = (static_cast<U>(AtWorldMap(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
@@ -380,11 +380,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
         return;
     }
     const U slot_index = static_cast<U>(row) * 6u;
-    unsigned char* const slot = At(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
-    g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(Long(slot))), prim);
-    const U next = Long(At(at::Gfx_PacketNextAt()));
-    PutLong(At(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
-    PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
+    unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u);
+    g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
+    const U next = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
+    PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u), next);
+    PutLong(AtWorldMap(at::Gfx_PacketNextAt()), next + bytes);
 }
 
 // --- the legend's keys: DIV-0135 (world_map.h) -------------------------------
@@ -494,7 +494,7 @@ const StandIn* StandInFor(U bit) {
 }
 
 const unsigned char* StandInText(const StandIn& s) {
-    return At(Long(At(::bof3::Img(kStandInStrings) + s.string * 4)));
+    return AtWorldMap(LongWorldMap(AtWorldMap(::bof3::Img(kStandInStrings) + s.string * 4)));
 }
 
 // The withheld (dim) form of a stand-in. A disc draws a withheld row's key
@@ -552,7 +552,7 @@ void DimCluts(std::uint16_t out[5][16]) {
 // character (the small font's (u, v) pair for colours under 16, the glyph
 // b - 0x26 or an overlay's 8 x 8 one) with that CLUT for 0x7800 | colour.
 void EmitDim(int x, int y, int w, const unsigned char* text, unsigned colour) {
-    const unsigned char* const uv = At(::bof3::Img(kSmallUV) + (colour >> 4) * 2);
+    const unsigned char* const uv = AtWorldMap(::bof3::Img(kSmallUV) + (colour >> 4) * 2);
     unsigned glyph = (text[0] - 0x26u) & 0xFFFF;
     if (const unsigned small = Labels_SmallGlyph(text)) glyph = small;
     rv::Store<U>(rv::As<records::GpuGlyph>(PacketNext())->glyph, glyph);
@@ -564,8 +564,8 @@ void EmitDim(int x, int y, int w, const unsigned char* text, unsigned colour) {
 // bit of the button word's low 16 bits; the entry, or nullptr.
 const unsigned char* KeyEntry(U buttons, U count, U word) {
     for (U k = 0; k < count; ++k) {
-        const unsigned char* const entry = At(buttons + k * 4);
-        if ((Word(entry) & word & 0xFFFF) != 0) return entry;
+        const unsigned char* const entry = AtWorldMap(buttons + k * 4);
+        if ((WordWorldMap(entry) & word & 0xFFFF) != 0) return entry;
     }
     return nullptr;
 }
@@ -661,11 +661,11 @@ void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint3
         sprite(x, y, withheld ? key : ((key + 1) & 0xFF));
         return;
     }
-    const StandIn* const s = StandInFor(Word(entry));
+    const StandIn* const s = StandInFor(WordWorldMap(entry));
     if (s == nullptr)
         bof3::Fatal("WorldMapLegend: the legend's button word %08X picks the table entry %08X past the six buttons "
                     "(mask %04X): no stand-in for it (BOF3X_ORIGINAL=WorldMapLegend draws the original's)",
-                    word, Low32(entry), Word(entry));
+                    word, Low32(entry), WordWorldMap(entry));
     if (withheld)
         EmitDim(x, y, 8, StandInText(*s), s->colour);
     else
@@ -674,7 +674,7 @@ void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint3
 
 void Start(int x, int y, bool withheld) {
     if (!g_standin) return;
-    const unsigned char* const uv = At(::bof3::Img(kSmallUV));
+    const unsigned char* const uv = AtWorldMap(::bof3::Img(kSmallUV));
     const unsigned u = uv[0], v = uv[1];
     static const char kStart[] = "START";
     for (int i = 0; kStart[i] != 0; ++i) {
@@ -746,8 +746,8 @@ void LegendSelfTest() {
         ++tables;
         const unsigned char* const row1 = KeyEntry(::bof3::Img(kButtonTable), 6, words[0]);
         const unsigned char* const row2 = KeyEntry(::bof3::Img(kButtonTable), 8, words[6]);
-        if (row1 == nullptr || Word(row1) != sg::Apply(t, 0x20)) fail("row 1 is not Sigma(circle)", words[0], sg::Apply(t, 0x20));
-        if (row2 == nullptr || Word(row2) != sg::Apply(t, 0x40)) fail("row 2 is not Sigma(cross)", words[6], sg::Apply(t, 0x40));
+        if (row1 == nullptr || WordWorldMap(row1) != sg::Apply(t, 0x20)) fail("row 1 is not Sigma(circle)", words[0], sg::Apply(t, 0x20));
+        if (row2 == nullptr || WordWorldMap(row2) != sg::Apply(t, 0x40)) fail("row 2 is not Sigma(cross)", words[6], sg::Apply(t, 0x40));
         bool identity = true;
         for (int i = 0; i < 6; ++i) identity = identity && perm[i] == i;
         if (identity && row1 && row2 && (row1[2] + 1 != 11 || row2[2] + 1 != 13))
@@ -761,10 +761,10 @@ void LegendSelfTest() {
     } while (std::next_permutation(perm, perm + 6));
     // 2. The stand-ins.
     for (U k = 0; k < 6; ++k) {
-        const unsigned char* const entry = At(::bof3::Img(kButtonTable) + k * 4);
-        const StandIn* const s = StandInFor(Word(entry));
+        const unsigned char* const entry = AtWorldMap(::bof3::Img(kButtonTable) + k * 4);
+        const StandIn* const s = StandInFor(WordWorldMap(entry));
         if (s == nullptr) {
-            fail("a button entry has no stand-in", k, Word(entry));
+            fail("a button entry has no stand-in", k, WordWorldMap(entry));
             continue;
         }
         const unsigned char* const text = StandInText(*s);
