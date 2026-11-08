@@ -8,10 +8,13 @@
 // 10). docs/battle_e7.md.
 #pragma once
 
+#include <cstdint>
+
 void BattleE7_Inject();
 extern unsigned char g_equip_labels_row;   // defined in battle_e7.cpp, armed by BattleE7_Inject (named here for a moved reader: source-layout B0)
 
 namespace battle_e7 {
+extern std::uint8_t g_cursor_box_signed;   // defined in battle_e7.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=battle_e7: the start-up fuzz, battle_e7_fuzz.cpp - one
 // boss_harness::Run over the 31. Clones every original before
 // BattleE7_Inject patches it.
