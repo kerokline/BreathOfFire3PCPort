@@ -40,14 +40,14 @@ using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::Word;
-using Handler = scenario_harness::Handler;
+using HandlerRest1e = scenario_harness::Handler;
 using CellHelper = unsigned char(__cdecl*)(unsigned, unsigned);
 
 constexpr unsigned kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 
 unsigned char* S() { return Sprite_Current; }
-unsigned char Al(U eax) { return static_cast<unsigned char>(eax); }
+unsigned char AlRest1e(U eax) { return static_cast<unsigned char>(eax); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + k] (or mov ax, [ecx +
 // 0x2C]); jmp [table + eax * 4]: the entry read in place (the fuzz swaps the
@@ -58,24 +58,24 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1e.md section 5)",
                     who, by, index, entries, static_cast<unsigned>(::bof3::VaOf(table)));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))();
+    reinterpret_cast<HandlerRest1e>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))();
 }
 // A state table's address (symbols.toml [[data]]: the name is a pointer to its
 // first dword).
 U Table(const unsigned long* t) { return Low32(t); }
 void ByState2(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +2", table, S()[2], entries); }
 void ByState3(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +3", table, S()[3], entries); }
-void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, rv::As<records::PartyMember>(S())->column, 3); }
+void ByFormRest1e(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, rv::As<records::PartyMember>(S())->column, 3); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked, as the originals index it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
+U StepXRest1e(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZRest1e(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: dec eax;
 // cdq; sub eax, edx; sar eax, 1 on the zero-extended byte - (d - 1) / 2
 // truncated, so 0 gives 0; the add to al never carries (0..0x7F + 0x46).
-unsigned HalfTurn(unsigned char d) { return static_cast<unsigned>((static_cast<int>(d) - 1) / 2); }
+unsigned HalfTurnRest1e(unsigned char d) { return static_cast<unsigned>((static_cast<int>(d) - 1) / 2); }
 
 // An even direction turned one eighth back, then two on, then back again,
 // while `probe` (PartyAction_TargetAhead or PartyAction_BlockedAhead) answers
@@ -85,9 +85,9 @@ void TurnWhileClear(unsigned char (__cdecl* probe)(void)) {
     unsigned char* const s = S();
     if ((s[8] & 1) != 0) return;
     s[8] = static_cast<unsigned char>((s[8] - 1) & 7);
-    if (Al(SH_CALL(probe)()) != 0) return;
+    if (AlRest1e(SH_CALL(probe)()) != 0) return;
     S()[8] = static_cast<unsigned char>((S()[8] + 2) & 7);
-    if (Al(SH_CALL(probe)()) != 0) return;
+    if (AlRest1e(SH_CALL(probe)()) != 0) return;
     S()[8] = static_cast<unsigned char>((S()[8] - 2) & 7);
 }
 
@@ -96,7 +96,7 @@ void TurnWhileClear(unsigned char (__cdecl* probe)(void)) {
 // when MapView_SlopeAt there is steep (the scratch flag set and its low word,
 // signed, above 0x40) and MapView_GroundAt there is above the height word
 // (s16 against s16), +0x2B = 0. PartyAction_SideProbes' probe, inline.
-void SideProbe(unsigned d, U row) {
+void SideProbeRest1e(unsigned d, U row) {
     const unsigned char* const s = S();
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
@@ -108,8 +108,8 @@ void SideProbe(unsigned d, U row) {
 }
 void SideProbes() {
     S()[0x2B] = 1;
-    SideProbe(3, ::bof3::Img(Field_DirectionSteps_addr) + 0x18);
-    SideProbe(5, ::bof3::Img(Field_DirectionSteps_addr) + 0x28);
+    SideProbeRest1e(3, ::bof3::Img(Field_DirectionSteps_addr) + 0x18);
+    SideProbeRest1e(5, ::bof3::Img(Field_DirectionSteps_addr) + 0x28);
 }
 
 // Sprite_ObjectAt's index, as the originals use it: bit 0 of the object's
@@ -131,7 +131,7 @@ void FlagObject(const char* who, unsigned char found) {
 
 // An Effect_Objects record by an index the original uses unchecked; ours aborts
 // past the 20 records.
-unsigned char* EffectAt(const char* who, int index, const char* what) {
+unsigned char* EffectAtRest1e(const char* who, int index, const char* what) {
     if (index < 0 || index >= static_cast<int>(kEffectCount))
         bof3::Fatal("%s: %s is %d, past Effect_Objects' 20 records; the original reads 0x%X unchecked "
                     "(docs/rest_1e.md section 5)",
@@ -141,11 +141,11 @@ unsigned char* EffectAt(const char* who, int index, const char* what) {
 
 // The point two steps ahead of Sprite_Current (read now), as the resolve and
 // strike states compute it (lea r, [pos + step * 2]).
-void TwoAhead(U& x, U& z) {
+void TwoAheadRest1e(U& x, U& z) {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
+    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1e(d);
+    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1e(d);
 }
 
 // The cell calls after a probe two steps ahead: on the point's cell; when that
@@ -155,20 +155,20 @@ void TwoAhead(U& x, U& z) {
 // every callee reads the low word only (docs/rest_1e.md section 2).
 void CellsAhead(CellHelper helper, U x, U z) {
     const unsigned cx = x >> 16, cz = z >> 16;
-    if (Al(SH_CALL(helper)(cx, cz)) != 0) return;
-    if ((x & 0xFFFF) != 0 && Al(SH_CALL(helper)(cx + 1, cz)) != 0) return;
+    if (AlRest1e(SH_CALL(helper)(cx, cz)) != 0) return;
+    if ((x & 0xFFFF) != 0 && AlRest1e(SH_CALL(helper)(cx + 1, cz)) != 0) return;
     if ((z & 0xFFFF) != 0) SH_CALL(helper)(cx, cz + 1);
 }
 
 // --- the shapes' bodies -------------------------------------------------------------
 
 // 0x522760 / 0x5230D0 / 0x523550.
-void Form2Begin() {
+void Form2BeginRest1e() {
     TurnWhileClear(&PartyAction_TargetAhead);
     const unsigned char* s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1e(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1e(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = S();
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
@@ -181,12 +181,12 @@ void Form2Begin() {
     const U direction = upper | s[8];
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);   // its answer unused
     if (SharedScratch.b_00 != 0 && rise > 0x40) {
-        SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
+        SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurnRest1e(S()[8]) + 0x46));
         ++S()[2];
     } else {
         SideProbes();
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(S() + 0x2C) + 0x100));
-        SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x42));
+        SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurnRest1e(S()[8]) + 0x42));
         S()[0xA] = 5;
     }
     S()[0xB] = 0;
@@ -199,8 +199,8 @@ void Form2Resolve(const char* who, CellHelper pickup) {
     --S()[0xA];
     if (S()[0xA] == 0) {
         U x, z;
-        TwoAhead(x, z);
-        const unsigned char found = Al(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
+        TwoAheadRest1e(x, z);
+        const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
         if (found != 0xFF) FlagObject(who, found);
         CellsAhead(pickup, x, z);
         ++S()[2];
@@ -209,15 +209,15 @@ void Form2Resolve(const char* who, CellHelper pickup) {
 }
 
 // 0x522A20 / 0x523390 / 0x523810: Field_CellPickup's code, the bonus x 20.
-unsigned char CellPickup(unsigned x, unsigned z) {
-    const unsigned char cell = Al(SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)));
+unsigned char CellPickupRest1e(unsigned x, unsigned z) {
+    const unsigned char cell = AlRest1e(SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)));
     if (cell == 0xF2) {
-        if (Al(SH_CALL(Effect_FindFree)()) != 0xFF) {
+        if (AlRest1e(SH_CALL(Effect_FindFree)()) != 0xFF) {
             SH_CALL(Effect_SpawnAtCell)(0, x, z);
-            const unsigned roll = Al(static_cast<U>(SH_CALL(Rand)())) & 0xF;
+            const unsigned roll = AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 0xF;
             if (roll >= 0xD) {
                 unsigned char amount = roll < 0xF ? 2 : 5;
-                if ((Field_InputFlags & 6) != 0 && (Al(static_cast<U>(SH_CALL(Rand)())) & 3) == 0)
+                if ((Field_InputFlags & 6) != 0 && (AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 3) == 0)
                     amount = static_cast<unsigned char>(amount * 20);
                 SH_CALL(Field_GiveZenny)(amount);
                 SH_CALL(Effect_SpawnAtCell)(1, x, z);
@@ -228,7 +228,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kPickupItem);
         for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
-        if (Al(SH_CALL(Inventory_Add)(0, at::kPickupItem, 1)) != 0) {
+        if (AlRest1e(SH_CALL(Inventory_Add)(0, at::kPickupItem, 1)) != 0) {
             SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);
         } else {
@@ -247,7 +247,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
 void StrikeBegin() {
     TurnWhileClear(&PartyAction_BlockedAhead);
     SH_CALL(PartyAction_SideProbes)();
-    SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x42));
+    SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurnRest1e(S()[8]) + 0x42));
     S()[0xB] = 0;
     S()[0xA] = 0xB;
     S()[3] = 1;
@@ -260,19 +260,19 @@ void Strike(const char* who, CellHelper strike) {
         S()[0xA] = static_cast<unsigned char>(t - 1);
         if (S()[0xA] == 0) {
             SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(S() + 0x2C) + 0x100));
-            const unsigned char ahead = Al(SH_CALL(Field_EffectAhead)());
+            const unsigned char ahead = AlRest1e(SH_CALL(Field_EffectAhead)());
             if (ahead != 0xFF) {
                 SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
                 unsigned char* const s = S();
-                unsigned char* const e = EffectAt(who, static_cast<signed char>(ahead), "Field_EffectAhead's answer");
+                unsigned char* const e = EffectAtRest1e(who, static_cast<signed char>(ahead), "Field_EffectAhead's answer");
                 e[8] = s[8];
                 e[0xA] = 1;
                 s[6] = ahead;
                 ++S()[3];
             } else {
                 U x, z;
-                TwoAhead(x, z);
-                const unsigned char found = Al(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
+                TwoAheadRest1e(x, z);
+                const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
                 if (found != 0xFF) {
                     FlagObject(who, found);
                     SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
@@ -289,22 +289,22 @@ void Strike(const char* who, CellHelper strike) {
 // z argument's slot after the cell byte was stored into its low byte), which it
 // never reads; ours passes the three it reads.
 unsigned char StrikeCell(unsigned x, unsigned z) {
-    const unsigned char cell = Al(SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)));
+    const unsigned char cell = AlRest1e(SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z)));
     if (cell == 0xF0 || cell == 0xF1 || cell == 0xF4) {
         SH_CALL(Effect_SpawnAtCellHigh)(0, x, z);
-        if (static_cast<signed char>(Al(static_cast<U>(SH_CALL(Rand)())) & 7) > 5) SH_CALL(Effect_SpawnAtCellHigh)(4, x, z);
+        if (static_cast<signed char>(AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 7) > 5) SH_CALL(Effect_SpawnAtCellHigh)(4, x, z);
         SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
         return 1;
     }
     if (cell != 0xF6 && cell != 0xF7) return 0;
     SH_CALL(Effect_SpawnAtCellHigh)(0, x, z);
     SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
-    const unsigned roll = Al(static_cast<U>(SH_CALL(Rand)())) & 0xF;
+    const unsigned roll = AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 0xF;
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kStrikeItem);
         for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
-        if (Al(SH_CALL(Inventory_Add)(0, at::kStrikeItem, 1)) != 0) {
+        if (AlRest1e(SH_CALL(Inventory_Add)(0, at::kStrikeItem, 1)) != 0) {
             SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);
         } else {
@@ -350,7 +350,7 @@ extern "C" void __cdecl PartyAction_ProbeBegin(void) {
 // in state 1 (+1), and Field_Kind2Hold 0: +6 = 0, +3 = +3 - 2.
 extern "C" void __cdecl PartyAction_StrikeWait(void) {
     unsigned char* const s = S();
-    const unsigned char* const e = EffectAt("PartyAction_StrikeWait (0x522DE0)", s[6], "the sprite's +6");
+    const unsigned char* const e = EffectAtRest1e("PartyAction_StrikeWait (0x522DE0)", s[6], "the sprite's +6");
     if (e[0] != 0 && e[1] != 1) return;
     if (Field_Kind2Hold != 0) return;
     s[6] = 0;
@@ -364,15 +364,15 @@ extern "C" void __cdecl PartyAction_StrikeWait(void) {
 // reader bounds it; docs/rest_1e.md section 3).
 // ===========================================================================
 
-extern "C" void __cdecl PartyFormAction13_ByForm(void) { ByForm("PartyFormAction13_ByForm (0x522B40)", Table(PartyFormAction13_Forms)); }
-extern "C" void __cdecl PartyAction13_ByForm(void) { ByForm("PartyAction13_ByForm (0x522B60)", Table(PartyAction13_Forms)); }
+extern "C" void __cdecl PartyFormAction13_ByForm(void) { ByFormRest1e("PartyFormAction13_ByForm (0x522B40)", Table(PartyFormAction13_Forms)); }
+extern "C" void __cdecl PartyAction13_ByForm(void) { ByFormRest1e("PartyAction13_ByForm (0x522B60)", Table(PartyAction13_Forms)); }
 extern "C" void __cdecl PartyFormAction13_Form1(void) { ByState2("PartyFormAction13_Form1 (0x5226E0)", Table(PartyFormAction13_Form1States), 3); }
 extern "C" void __cdecl PartyAction13_Form1(void) { ByState2("PartyAction13_Form1 (0x522700)", Table(PartyAction13_Form1States), 3); }
 extern "C" void __cdecl PartyFormAction13_Form2(void) { ByState2("PartyFormAction13_Form2 (0x522720)", Table(PartyFormAction13_Form2States), 3); }
 extern "C" void __cdecl PartyAction13_Form2(void) { ByState2("PartyAction13_Form2 (0x522740)", Table(PartyAction13_Form2States), 3); }
 
-extern "C" void __cdecl PartyFormAction14_ByForm(void) { ByForm("PartyFormAction14_ByForm (0x5234B0)", Table(PartyFormAction14_Forms)); }
-extern "C" void __cdecl PartyAction14_ByForm(void) { ByForm("PartyAction14_ByForm (0x5234D0)", Table(PartyAction14_Forms)); }
+extern "C" void __cdecl PartyFormAction14_ByForm(void) { ByFormRest1e("PartyFormAction14_ByForm (0x5234B0)", Table(PartyFormAction14_Forms)); }
+extern "C" void __cdecl PartyAction14_ByForm(void) { ByFormRest1e("PartyAction14_ByForm (0x5234D0)", Table(PartyAction14_Forms)); }
 extern "C" void __cdecl PartyFormAction14_Form0(void) { ByState2("PartyFormAction14_Form0 (0x522B80)", Table(PartyFormAction14_Form0States), 3); }
 extern "C" void __cdecl PartyFormAction14_Form1(void) { ByState2("PartyFormAction14_Form1 (0x522BA0)", Table(PartyFormAction14_Form1States), 3); }
 extern "C" void __cdecl PartyFormAction14_Form2(void) { ByState2("PartyFormAction14_Form2 (0x523090)", Table(PartyFormAction14_Form2States), 3); }
@@ -381,8 +381,8 @@ extern "C" void __cdecl PartyAction14_Form1Mode0(void) { ByState3("PartyAction14
 extern "C" void __cdecl PartyAction14_Form1Mode1(void) { ByState3("PartyAction14_Form1Mode1 (0x523030)", Table(PartyAction14_Mode1States), 3); }
 extern "C" void __cdecl PartyAction14_Form2(void) { ByState2("PartyAction14_Form2 (0x5230B0)", Table(PartyAction14_Form2States), 3); }
 
-extern "C" void __cdecl PartyFormAction15_ByForm(void) { ByForm("PartyFormAction15_ByForm (0x523970)", Table(PartyFormAction15_Forms)); }
-extern "C" void __cdecl PartyAction15_ByForm(void) { ByForm("PartyAction15_ByForm (0x523990)", Table(PartyAction15_Forms)); }
+extern "C" void __cdecl PartyFormAction15_ByForm(void) { ByFormRest1e("PartyFormAction15_ByForm (0x523970)", Table(PartyFormAction15_Forms)); }
+extern "C" void __cdecl PartyAction15_ByForm(void) { ByFormRest1e("PartyAction15_ByForm (0x523990)", Table(PartyAction15_Forms)); }
 extern "C" void __cdecl PartyFormAction15_Form0(void) { ByState2("PartyFormAction15_Form0 (0x5234F0)", Table(PartyFormAction15_Form0States), 3); }
 extern "C" void __cdecl PartyFormAction15_Form1(void) { ByState2("PartyFormAction15_Form1 (0x523510)", Table(PartyFormAction15_Form1States), 3); }
 extern "C" void __cdecl PartyFormAction15_Form2(void) { ByState2("PartyFormAction15_Form2 (0x523930)", Table(PartyFormAction15_Form2States), 3); }
@@ -401,9 +401,9 @@ extern "C" void __cdecl PartyAction16_Form1Mode1(void) { ByState3("PartyAction16
 // ===========================================================================
 
 // originals 0x522760, 0x5230D0, 0x523550 (0x1D4 bytes each).
-extern "C" void __cdecl PartyAction13_Form2Begin(void) { Form2Begin(); }
-extern "C" void __cdecl PartyAction14_Form2Begin(void) { Form2Begin(); }
-extern "C" void __cdecl PartyAction15_Form1Begin(void) { Form2Begin(); }
+extern "C" void __cdecl PartyAction13_Form2Begin(void) { Form2BeginRest1e(); }
+extern "C" void __cdecl PartyAction14_Form2Begin(void) { Form2BeginRest1e(); }
+extern "C" void __cdecl PartyAction15_Form1Begin(void) { Form2BeginRest1e(); }
 
 // originals 0x522940, 0x5232B0, 0x523730 (0xDB bytes each).
 extern "C" void __cdecl PartyAction13_Form2Resolve(void) {
@@ -419,9 +419,9 @@ extern "C" void __cdecl PartyAction15_Form1Resolve(void) {
 // originals 0x522A20, 0x523390, 0x523810 (0x11F bytes each). The original also
 // keeps the amount in the low byte of its own z argument's slot (the caller's
 // stack, which no caller reads again).
-extern "C" unsigned char __cdecl PartyAction13_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z); }
-extern "C" unsigned char __cdecl PartyAction14_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z); }
-extern "C" unsigned char __cdecl PartyAction15_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z); }
+extern "C" unsigned char __cdecl PartyAction13_CellPickup(unsigned x, unsigned z) { return CellPickupRest1e(x, z); }
+extern "C" unsigned char __cdecl PartyAction14_CellPickup(unsigned x, unsigned z) { return CellPickupRest1e(x, z); }
+extern "C" unsigned char __cdecl PartyAction15_CellPickup(unsigned x, unsigned z) { return CellPickupRest1e(x, z); }
 
 // originals 0x522C00, 0x523B40 (0x87 bytes each).
 extern "C" void __cdecl PartyAction14_StrikeBegin(void) { StrikeBegin(); }
@@ -430,7 +430,7 @@ extern "C" void __cdecl PartyAction16_StrikeBegin(void) { StrikeBegin(); }
 // original 0x523050 (0x35 bytes).
 extern "C" void __cdecl PartyAction14_Mode1Begin(void) {
     SH_CALL(PartyAction_SideProbes)();
-    SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x42));
+    SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurnRest1e(S()[8]) + 0x42));
     S()[0xA] = 0xB;
     S()[3] = 1;
 }
@@ -439,7 +439,7 @@ extern "C" void __cdecl PartyAction14_Mode1Begin(void) {
 extern "C" void __cdecl PartyAction14_Strike(void) { Strike("PartyAction14_Strike (0x522C90)", &PartyAction14_StrikeCell); }
 extern "C" void __cdecl PartyAction16_Strike(void) { Strike("PartyAction16_Strike (0x523BD0)", &PartyAction16_StrikeCell); }
 
-// originals 0x522E20, 0x523D20 (0x188 bytes each). As CellPickup, the original
+// originals 0x522E20, 0x523D20 (0x188 bytes each). As CellPickupRest1e, the original
 // stores the cell byte into the low byte of its z argument's slot.
 extern "C" unsigned char __cdecl PartyAction14_StrikeCell(unsigned x, unsigned z) { return StrikeCell(x, z); }
 extern "C" unsigned char __cdecl PartyAction16_StrikeCell(unsigned x, unsigned z) { return StrikeCell(x, z); }
