@@ -67,17 +67,17 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 // nothing; an entry that reads it - Port_DroppedCall's byte, a hook's code -
 // reads that word).
 using Forward = void (__cdecl*)(unsigned);
-Forward Entry(U table, unsigned index) { return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index))))); }
+Forward EntryBossSd(U table, unsigned index) { return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index))))); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-void Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
+void DispatchBossSd(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sd.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    Entry(table, state)(passed);   // as read: the fuzz swaps the table's cells for its recorders
+    EntryBossSd(table, state)(passed);   // as read: the fuzz swaps the table's cells for its recorders
 }
 
 // An enemy's +0xF4 hook: jmp [table + 4 * (code & 0xFF)], three entries, a
@@ -88,7 +88,7 @@ void HookTable(const char* who, U table, unsigned code) {
         bof3::Fatal("%s: hook code %u, past the 3 entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sd.md section 6)",
                     who, index, (unsigned)table);
-    Entry(table, index)(code);
+    EntryBossSd(table, index)(code);
 }
 
 // The entrance's three stores into 0x939AD8's object (read again for each):
@@ -100,7 +100,7 @@ void PointEnemy(U fc, U hook, U f8) {
 }
 
 // The three set-ups' stores.
-void StoreHooks(U end, U exit, U event) {
+void StoreHooksBossSd(U end, U exit, U event) {
     BattleHook_End = end;
     BattleHook_Exit = exit;
     BattleHook_Event = event;
@@ -236,7 +236,7 @@ void GroundWords() {
 
 // original 0x43A590: BossKind_Table[18]: jmp [BossMutant_Steps + 4 * +1].
 extern "C" void __cdecl BossMutant_Dispatch(unsigned passed) {
-    Dispatch("BossMutant_Dispatch", AddressOf(BossMutant_Steps), 12, 1, passed);
+    DispatchBossSd("BossMutant_Dispatch", AddressOf(BossMutant_Steps), 12, 1, passed);
 }
 
 // original 0x43A5B0: BossMutant_Steps 0, the entrance: 0x939AD8's +0xFC =
@@ -250,7 +250,7 @@ extern "C" unsigned char __cdecl BossMutant_Enter(void) {
 
 // original 0x43A5F0: BossMutant_Steps 6: jmp [BossMutant_ActSubs + 4 * +2].
 extern "C" void __cdecl BossMutant_ActDispatch(unsigned passed) {
-    Dispatch("BossMutant_ActDispatch", AddressOf(BossMutant_ActSubs), 6, 2, passed);
+    DispatchBossSd("BossMutant_ActDispatch", AddressOf(BossMutant_ActSubs), 6, 2, passed);
 }
 
 // original 0x43A610: the +0xF4 hook: jmp [BossMutant_Hooks + 4 * (code & 0xFF)].
@@ -260,7 +260,7 @@ extern "C" void __cdecl BossMutant_Hook(unsigned code) { HookTable("BossMutant_H
 
 // original 0x43A620: Boss_SetupTable[17]: BattleHook_End = Boss17_End,
 // BattleHook_Exit = BossHook_ExitActor0Bit40, BattleHook_Event = BareRetZero.
-extern "C" void __cdecl Boss17_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss17_End), ::bof3::Code(at::kExitActor0Bit40.v), ::bof3::Code(at::kBareRetZero.v)); }
+extern "C" void __cdecl Boss17_Setup(void) { StoreHooksBossSd(::bof3::Code(bof3::addr::Boss17_End), ::bof3::Code(at::kExitActor0Bit40.v), ::bof3::Code(at::kBareRetZero.v)); }
 
 // original 0x43A640: the end hook: the win (0x904AE8 bit 1) sets the field's
 // move-script counter 0 to 0x14 and jumps to the end phase's step 1; else step 2.
@@ -270,7 +270,7 @@ extern "C" void __cdecl Boss17_End(void) { EndCounter(0x14); }
 
 // original 0x43A660: BossKind_Table[21]: jmp [BossClaw_Steps + 4 * +1].
 extern "C" void __cdecl BossClaw_Dispatch(unsigned passed) {
-    Dispatch("BossClaw_Dispatch", AddressOf(BossClaw_Steps), 12, 1, passed);
+    DispatchBossSd("BossClaw_Dispatch", AddressOf(BossClaw_Steps), 12, 1, passed);
 }
 
 // original 0x43A680: BossClaw_Steps 0, the entrance: with chapter flag 0x35,
@@ -289,7 +289,7 @@ extern "C" void __cdecl BossClaw_Hook(unsigned code) { HookTable("BossClaw_Hook"
 
 // original 0x43A770: BossKind_Table[22]: jmp [BossCawer_Steps + 4 * +1].
 extern "C" void __cdecl BossCawer_Dispatch(unsigned passed) {
-    Dispatch("BossCawer_Dispatch", AddressOf(BossCawer_Steps), 12, 1, passed);
+    DispatchBossSd("BossCawer_Dispatch", AddressOf(BossCawer_Steps), 12, 1, passed);
 }
 
 // original 0x43A790: BossCawer_Steps 0: BossClaw_Enter's body with flag 0x36,
@@ -306,7 +306,7 @@ extern "C" void __cdecl BossCawer_Hook(unsigned code) { HookTable("BossCawer_Hoo
 
 // original 0x43A840: BossKind_Table[23]: jmp [BossPatrio_Steps + 4 * +1].
 extern "C" void __cdecl BossPatrio_Dispatch(unsigned passed) {
-    Dispatch("BossPatrio_Dispatch", AddressOf(BossPatrio_Steps), 12, 1, passed);
+    DispatchBossSd("BossPatrio_Dispatch", AddressOf(BossPatrio_Steps), 12, 1, passed);
 }
 
 // original 0x43A860: BossPatrio_Steps 0: flag 0x37, +0xFC = 0x64CF1C, +0xF4 =
@@ -335,7 +335,7 @@ extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
         const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x33) & 0xFF;
         SetCell(Enemy() + 0xFC, ::bof3::Img(f ? 0x64CF4C : 0x64CF40));
     }
-    Dispatch("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
+    DispatchBossSd("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
 }
 
 // original 0x43A990: BossDodai_Steps 0, the entrance: with chapter flag 0x1E
@@ -365,7 +365,7 @@ extern "C" unsigned char __cdecl BossDodai_Enter(void) {
 
 // original 0x43AA50: BossDodai_Steps 6: jmp [BossDodai_ActSubs + 4 * +2].
 extern "C" void __cdecl BossDodai_ActDispatch(unsigned passed) {
-    Dispatch("BossDodai_ActDispatch", AddressOf(BossDodai_ActSubs), 6, 2, passed);
+    DispatchBossSd("BossDodai_ActDispatch", AddressOf(BossDodai_ActSubs), 6, 2, passed);
 }
 
 // original 0x43AA70: BossDodai_ActSubs 4, the death: Sprite_SetAnimation(4),
@@ -383,7 +383,7 @@ extern "C" void __cdecl BossDodai_Death(void) {
 // original 0x43AB00: BossDodai_Steps 11 (where EnemyOp_Steps has
 // EnemyOp_HitPose): jmp [BossDodai_HitPoseSubs + 4 * +2].
 extern "C" void __cdecl BossDodai_HitPoseDispatch(unsigned passed) {
-    Dispatch("BossDodai_HitPoseDispatch", AddressOf(BossDodai_HitPoseSubs), 3, 2, passed);
+    DispatchBossSd("BossDodai_HitPoseDispatch", AddressOf(BossDodai_HitPoseSubs), 3, 2, passed);
 }
 
 // original 0x43AB20: BossDodai_HitPoseSubs 0: Sprite_Current's dword +0x38 +=
@@ -413,7 +413,7 @@ extern "C" void __cdecl BossDodai_HitSound(unsigned) {
 
 // original 0x43ABA0: Boss_SetupTable[18]: End = Boss18_End, Exit = Boss18_Exit,
 // Event = Boss18_Event.
-extern "C" void __cdecl Boss18_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss18_End), ::bof3::Code(bof3::addr::Boss18_Exit), ::bof3::Code(bof3::addr::Boss18_Event)); }
+extern "C" void __cdecl Boss18_Setup(void) { StoreHooksBossSd(::bof3::Code(bof3::addr::Boss18_End), ::bof3::Code(bof3::addr::Boss18_Exit), ::bof3::Code(bof3::addr::Boss18_Event)); }
 
 // original 0x43ABC0: the event hook (EventAreaFight above).
 extern "C" unsigned char __cdecl Boss18_Event(unsigned code) { return EventAreaFight(code); }
@@ -428,7 +428,7 @@ extern "C" void __cdecl Boss18_Exit(void) { ExitAreaFight(0); }
 
 // original 0x43AD60: Boss_SetupTable[19]: End = Boss19_End, Exit =
 // Boss19_Exit, Event = Boss19_Event.
-extern "C" void __cdecl Boss19_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss19_End), ::bof3::Code(bof3::addr::Boss19_Exit), ::bof3::Code(bof3::addr::Boss19_Event)); }
+extern "C" void __cdecl Boss19_Setup(void) { StoreHooksBossSd(::bof3::Code(bof3::addr::Boss19_End), ::bof3::Code(bof3::addr::Boss19_Exit), ::bof3::Code(bof3::addr::Boss19_Event)); }
 
 // original 0x43AD80: Boss18_Event's body.
 extern "C" unsigned char __cdecl Boss19_Event(unsigned code) { return EventAreaFight(code); }
@@ -441,7 +441,7 @@ extern "C" void __cdecl Boss19_Exit(void) { ExitAreaFight(1); }
 
 // original 0x43AF20: Boss_SetupTable[20]: End = Boss20_End, Exit =
 // Boss20_Exit, Event = Boss20_Event.
-extern "C" void __cdecl Boss20_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss20_End), ::bof3::Code(bof3::addr::Boss20_Exit), ::bof3::Code(bof3::addr::Boss20_Event)); }
+extern "C" void __cdecl Boss20_Setup(void) { StoreHooksBossSd(::bof3::Code(bof3::addr::Boss20_End), ::bof3::Code(bof3::addr::Boss20_Exit), ::bof3::Code(bof3::addr::Boss20_Event)); }
 
 // original 0x43AF40: Boss18_Event's body.
 extern "C" unsigned char __cdecl Boss20_Event(unsigned code) { return EventAreaFight(code); }
@@ -457,7 +457,7 @@ extern "C" void __cdecl Boss20_Exit(void) { ExitAreaFight(2); }
 
 // original 0x43B280: BossKind_Table[24]: jmp [BossEmitai_Steps + 4 * +1].
 extern "C" void __cdecl BossEmitai_Dispatch(unsigned passed) {
-    Dispatch("BossEmitai_Dispatch", AddressOf(BossEmitai_Steps), 12, 1, passed);
+    DispatchBossSd("BossEmitai_Dispatch", AddressOf(BossEmitai_Steps), 12, 1, passed);
 }
 
 // original 0x43B2A0: BossEmitai_Steps 0: +0xFC = 0x64D0A0, +0xF4 =
@@ -470,7 +470,7 @@ extern "C" unsigned char __cdecl BossEmitai_Enter(void) {
 
 // original 0x43B2E0: BossEmitai_Steps 6: jmp [BossEmitai_ActSubs + 4 * +2].
 extern "C" void __cdecl BossEmitai_ActDispatch(unsigned passed) {
-    Dispatch("BossEmitai_ActDispatch", AddressOf(BossEmitai_ActSubs), 6, 2, passed);
+    DispatchBossSd("BossEmitai_ActDispatch", AddressOf(BossEmitai_ActSubs), 6, 2, passed);
 }
 
 // original 0x43B300: BossEmitai_ActSubs 4, the death: Sprite_EnsureAnimation(4),
@@ -492,7 +492,7 @@ extern "C" void __cdecl BossEmitai_Hook(unsigned code) { HookTable("BossEmitai_H
 
 // original 0x43B370: BossKind_Table[25]: jmp [BossGolem_Steps + 4 * +1].
 extern "C" void __cdecl BossGolem_Dispatch(unsigned passed) {
-    Dispatch("BossGolem_Dispatch", AddressOf(BossGolem_Steps), 12, 1, passed);
+    DispatchBossSd("BossGolem_Dispatch", AddressOf(BossGolem_Steps), 12, 1, passed);
 }
 
 // original 0x43B390: BossGolem_Steps 0: +0xFC = 0x64D0AC, +0xF4 =
@@ -510,7 +510,7 @@ extern "C" void __cdecl BossGolem_Hook(unsigned code) { HookTable("BossGolem_Hoo
 
 // original 0x43B3E0: Boss_SetupTable[21]: End = Boss21_End, Exit =
 // Boss21_Exit, Event = Boss21_Event.
-extern "C" void __cdecl Boss21_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss21_End), ::bof3::Code(bof3::addr::Boss21_Exit), ::bof3::Code(bof3::addr::Boss21_Event)); }
+extern "C" void __cdecl Boss21_Setup(void) { StoreHooksBossSd(::bof3::Code(bof3::addr::Boss21_End), ::bof3::Code(bof3::addr::Boss21_Exit), ::bof3::Code(bof3::addr::Boss21_Event)); }
 
 // original 0x43B400: the event hook: phase 3 - every actor 0..10 that
 // Battle_ActorIsOut answers al 0 for gets bit 0x10: members 0..2 in their
@@ -554,7 +554,7 @@ extern "C" void __cdecl Boss21_End(void) { EndCounter(0xA); }
 
 // original 0x43B4B0: BossKind_Table[27]: jmp [BossGarr_Steps + 4 * +1].
 extern "C" void __cdecl BossGarr_Dispatch(unsigned passed) {
-    Dispatch("BossGarr_Dispatch", AddressOf(BossGarr_Steps), 12, 1, passed);
+    DispatchBossSd("BossGarr_Dispatch", AddressOf(BossGarr_Steps), 12, 1, passed);
 }
 
 // original 0x43B4D0: BossGarr_Steps 0: +0xFC = 0x64D158, +0xF4 =
@@ -571,7 +571,7 @@ extern "C" void __cdecl BossGarr_Enter(void) {
 
 // original 0x43B530: BossGarr_Steps 6: jmp [BossGarr_ActSubs + 4 * +2].
 extern "C" void __cdecl BossGarr_ActDispatch(unsigned passed) {
-    Dispatch("BossGarr_ActDispatch", AddressOf(BossGarr_ActSubs), 6, 2, passed);
+    DispatchBossSd("BossGarr_ActDispatch", AddressOf(BossGarr_ActSubs), 6, 2, passed);
 }
 
 // original 0x43B5A0: the +0xF4 hook through BossGarr_Hooks (three BareRet).
