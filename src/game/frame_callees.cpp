@@ -43,20 +43,10 @@ QuotRem Idiv(std::int32_t dividend, std::int32_t divisor) {
     return {quot, rem};
 }
 
-// Every direct callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them. The indirect ones are the two tables,
-// Effect_KindHandlers and CameraTurn_States, which the fuzz fills with
-// recorders instead.
-struct CalleesFrameCallees {
-    void (__cdecl* run_slot)(unsigned char);   // 0x455300
-    void (__cdecl* update_screen_slot)();      // 0x588F00
-    void (__cdecl* update_screen)();           // 0x588F20
-    void (__cdecl* release)();                 // 0x589840
-};
-const CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
+const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
                             Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
-CalleesFrameCallees g = kOriginals;
-
+}  namespace frame_callees { CalleesFrameCallees g = kOriginals; }
+namespace {
 // A colour component plus a tint byte, in 8 bits as the original adds them:
 // a result that is negative as a signed byte is 0, one above 31 is 31 - so a
 // large positive tint (0x61 and up on a component of 31) wraps to negative
@@ -156,7 +146,7 @@ extern "C" void __cdecl CameraTurn_End(void) {
     Camera_Angles[1] = static_cast<short>(Word(object + 0x68));
     Camera_Angles[2] = static_cast<short>(Word(object + 0x6C));
     Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xDF);
-    g.release();
+    frame_callees::g.release();
 }
 
 // original 0x455250: the slot records (PSX FUN_80197C8C, term for term). Each
@@ -167,7 +157,7 @@ extern "C" void __cdecl CameraTurn_End(void) {
 extern "C" void __cdecl Field_RunSlots(void) {
     const unsigned char* slot = Field_Slots;
     for (unsigned index = 0; index < kSlots; ++index, slot += kSlotBytes)
-        if (slot[0] & 1) g.run_slot(static_cast<unsigned char>(index));
+        if (slot[0] & 1) frame_callees::g.run_slot(static_cast<unsigned char>(index));
 }
 
 // original 0x454AD0: the tint records' frame (PSX FUN_8019725C, term for
@@ -239,8 +229,8 @@ extern "C" void __cdecl Party_UpdateScreens(void) {
     for (int left = last + 1; left != 0; --left, member -= kMemberBytesFrameCallees) {
         if (member[0] & 0x40) continue;
         Sprite_Current = member;
-        if (Field_Request == 3) g.update_screen_slot();
-        else g.update_screen();
+        if (Field_Request == 3) frame_callees::g.update_screen_slot();
+        else frame_callees::g.update_screen();
     }
 }
 
@@ -321,7 +311,7 @@ template <std::size_t... K> void FillKinds(unsigned long* table, std::index_sequ
 template <std::size_t... S> void FillStates(unsigned long* table, std::index_sequence<S...>) {
     ((table[S] = Address(reinterpret_cast<Raw>(&StubState<S>))), ...);
 }
-const CalleesFrameCallees kStubs = {
+const frame_callees::CalleesFrameCallees kStubs = {
     reinterpret_cast<void (__cdecl*)(unsigned char)>(reinterpret_cast<std::uintptr_t>(&StubRunSlot)),
     StubScreenSlot, StubScreen, StubRelease,
 };
@@ -485,7 +475,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     std::memcpy(saved_states, CameraTurn_States, sizeof saved_states);
     FillKinds(Effect_KindHandlers, std::make_index_sequence<kKinds>());
     FillStates(CameraTurn_States, std::make_index_sequence<kStates>());
-    g = kStubs;
+    frame_callees::g = kStubs;
     const Raw ours[kCount] = {
         reinterpret_cast<Raw>(&Effect_RunObjects), reinterpret_cast<Raw>(&Effect_CameraTurn),
         reinterpret_cast<Raw>(&CameraTurn_Start), reinterpret_cast<Raw>(&CameraTurn_Step),
@@ -541,7 +531,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             for (unsigned i = 0; i < kTints; ++i) active_tints += input.memory[kEffects * kEffectBytes + kSlots * kSlotBytes + kMembersSpan +
                                                                                (0x7E0700 - kTintFrom) + i * kTintBytes] & 1;
     }
-    g = kOriginals;
+    frame_callees::g = kOriginals;
     std::memcpy(Effect_KindHandlers, saved_kinds, sizeof saved_kinds);
     std::memcpy(CameraTurn_States, saved_states, sizeof saved_states);
     std::memcpy(Gfx_ClutStrip, g_strip_saved, sizeof g_strip_saved);
