@@ -67,19 +67,19 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll and
 // BattleTask_RunAll push nothing; an entry that reads it - Port_DroppedCall's
 // byte, a hook's code - reads that word), its eax passed back.
-using Forward = U (__cdecl*)(unsigned);
-Forward Entry(U table, unsigned index) { return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index))))); }
+using ForwardBossSf = U (__cdecl*)(unsigned);
+ForwardBossSf EntryBossSf(U table, unsigned index) { return reinterpret_cast<ForwardBossSf>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index))))); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, as
 // read (the fuzz swaps the cells for recorders); a Fatal past them (the
 // original jumps through the dword after).
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
+U DispatchBossSf(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sf.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    return Entry(table, state)(passed);
+    return EntryBossSf(table, state)(passed);
 }
 
 // call [table + 4 * Sprite_Current[at]]: the same, as a call (the caller goes
@@ -95,13 +95,13 @@ void Step(const char* who, U table, unsigned entries, unsigned at) {
 
 // An enemy's +0xF4 hook: jmp [table + 4 * (word & 0xFF)], three entries, a
 // Fatal past them; the entry gets the hook's word.
-U HookDispatch(const char* who, U table, unsigned word) {
+U HookDispatchBossSf(const char* who, U table, unsigned word) {
     const unsigned i = word & 0xFF;
     if (i >= 3)
         bof3::Fatal("%s: hook word %u, past the 3 entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sf.md section 6)",
                     who, i, (unsigned)table);
-    return Entry(table, i)(word);
+    return EntryBossSf(table, i)(word);
 }
 
 // BattleTask_Create's slot: a Fatal on 0xFF (all 48 taken), where the original
@@ -115,7 +115,7 @@ unsigned char* TaskSlot(const char* who, unsigned n) {
 }
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
-void StoreHooks(U end, U exit, U event) {
+void StoreHooksBossSf(U end, U exit, U event) {
     BattleHook_End = end;
     BattleHook_Exit = exit;
     BattleHook_Event = event;
@@ -156,7 +156,7 @@ std::int32_t Height() { return static_cast<std::int16_t>(Word(Sprite_Current + 0
 
 // original 0x43C480: Boss_SetupTable[27]. The hooks: end Boss27_End, exit
 // Boss27_Exit, event Boss27_Event.
-extern "C" void __cdecl Boss27_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss27_End), ::bof3::Code(bof3::addr::Boss27_Exit), ::bof3::Code(bof3::addr::Boss27_Event)); }
+extern "C" void __cdecl Boss27_Setup(void) { StoreHooksBossSf(::bof3::Code(bof3::addr::Boss27_End), ::bof3::Code(bof3::addr::Boss27_Exit), ::bof3::Code(bof3::addr::Boss27_Event)); }
 
 // original 0x43C4A0: the event hook, by the code's low byte; al 0 on every
 // path.
@@ -253,7 +253,7 @@ extern "C" void __cdecl Boss27_Exit(void) {
 
 // original 0x43C740: jmp [Boss26Fx_States + 4 * Sprite_Current +1] (2).
 extern "C" unsigned __cdecl Boss26Fx_Dispatch(unsigned passed) {
-    return Dispatch("Boss26Fx_Dispatch", AddressOf(Boss26Fx_States), 2, 1, passed);
+    return DispatchBossSf("Boss26Fx_Dispatch", AddressOf(Boss26Fx_States), 2, 1, passed);
 }
 
 // original 0x43C760: state 0 - with the window byte 0x803433 clear and
@@ -312,7 +312,7 @@ extern "C" void __cdecl Boss26Fx_DrawCount(void) {
 // Sprite_Current +1] (12: its entry, its states 4 and 5, the generic enemy
 // states).
 extern "C" unsigned __cdecl BossGazer_Dispatch(unsigned passed) {
-    return Dispatch("BossGazer_Dispatch", AddressOf(BossGazer_States), 12, 1, passed);
+    return DispatchBossSf("BossGazer_Dispatch", AddressOf(BossGazer_States), 12, 1, passed);
 }
 
 // original 0x43C830: state 0. 0x939AD8's +0xFC = BossGazer_Anims, +0xF4 =
@@ -330,7 +330,7 @@ extern "C" unsigned char __cdecl BossGazer_Enter(void) {
 // original 0x43C870: state 4 (the generic table's turn start). jmp
 // [BossGazer_State4Steps + 4 * Sprite_Current +2] (3).
 extern "C" unsigned __cdecl BossGazer_State4Dispatch(unsigned passed) {
-    return Dispatch("BossGazer_State4Dispatch", AddressOf(BossGazer_State4Steps), 3, 2, passed);
+    return DispatchBossSf("BossGazer_State4Dispatch", AddressOf(BossGazer_State4Steps), 3, 2, passed);
 }
 
 // original 0x43C890: state 4 step 0 - +9 = the enemy data record's +0x8A (the
@@ -362,7 +362,7 @@ extern "C" void __cdecl BossGazer_State4Wait(void) {
 // original 0x43C950: state 5. jmp [BossGazer_State5Steps + 4 * Sprite_Current
 // +2] (2).
 extern "C" unsigned __cdecl BossGazer_State5Dispatch(unsigned passed) {
-    return Dispatch("BossGazer_State5Dispatch", AddressOf(BossGazer_State5Steps), 2, 2, passed);
+    return DispatchBossSf("BossGazer_State5Dispatch", AddressOf(BossGazer_State5Steps), 2, 2, passed);
 }
 
 // original 0x43C970: state 5 step 0 - Sprite_SetAnimation(2); the target
@@ -386,7 +386,7 @@ extern "C" void __cdecl BossGazer_State5Close(void) {
 
 // original 0x43C9C0: the +0xF4 hook: by the word's low byte through
 // BossGazer_Hooks (3, all BareRet).
-extern "C" unsigned __cdecl BossGazer_Hook(unsigned word) { return HookDispatch("BossGazer_Hook", AddressOf(BossGazer_Hooks), word); }
+extern "C" unsigned __cdecl BossGazer_Hook(unsigned word) { return HookDispatchBossSf("BossGazer_Hook", AddressOf(BossGazer_Hooks), word); }
 
 // ===========================================================================
 // Set-up 28 (BOSS028, area 77 row 7: the Gazer)
@@ -395,7 +395,7 @@ extern "C" unsigned __cdecl BossGazer_Hook(unsigned word) { return HookDispatch(
 // original 0x43C9D0: Boss_SetupTable[28]. The hooks: end Boss28_End, exit
 // BossHook_ExitClearActor0, event BareRetZero (BH's).
 extern "C" void __cdecl Boss28_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss28_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSf(::bof3::Code(bof3::addr::Boss28_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CA00: the end hook. The win (0x904AE8 bit 1): movement-script
@@ -415,7 +415,7 @@ extern "C" void __cdecl Boss28_End(void) {
 
 // original 0x43CA20: jmp [BossGazerFx_States + 4 * Sprite_Current +1] (2).
 extern "C" unsigned __cdecl BossGazerFx_Dispatch(unsigned passed) {
-    return Dispatch("BossGazerFx_Dispatch", AddressOf(BossGazerFx_States), 2, 1, passed);
+    return DispatchBossSf("BossGazerFx_Dispatch", AddressOf(BossGazerFx_States), 2, 1, passed);
 }
 
 // original 0x43CA40: state 0 - call [BossGazerFx_BounceSteps + 4 * +2] (4);
@@ -549,7 +549,7 @@ extern "C" unsigned char __cdecl BossGazerFx_MarkWait(void) {
 // original 0x440080: BossKind_Table[62]. jmp [BossMyria_States + 4 *
 // Sprite_Current +1] (12).
 extern "C" unsigned __cdecl BossMyria_Dispatch(unsigned passed) {
-    return Dispatch("BossMyria_Dispatch", AddressOf(BossMyria_States), 12, 1, passed);
+    return DispatchBossSf("BossMyria_Dispatch", AddressOf(BossMyria_States), 12, 1, passed);
 }
 
 // original 0x4400A0: state 0. The word 0x904B7E = 0; 0x939AD8's +0xFC =
@@ -580,7 +580,7 @@ extern "C" unsigned char __cdecl BossMyria_Enter(void) {
 // original 0x440140: state 2 (the generic table's idle). jmp
 // [BossMyria_IdleSteps + 4 * Sprite_Current +2] (2).
 extern "C" unsigned __cdecl BossMyria_IdleDispatch(unsigned passed) {
-    return Dispatch("BossMyria_IdleDispatch", AddressOf(BossMyria_IdleSteps), 2, 2, passed);
+    return DispatchBossSf("BossMyria_IdleDispatch", AddressOf(BossMyria_IdleSteps), 2, 2, passed);
 }
 
 // original 0x440160: idle step 0 - +0xB = 1, the word 0x904B7E = 0,
@@ -605,7 +605,7 @@ extern "C" void __cdecl BossMyria_IdleEnd(void) {
 
 // original 0x4401C0: state 4. jmp [BossMyria_State4Steps + 4 * +2] (2).
 extern "C" unsigned __cdecl BossMyria_State4Dispatch(unsigned passed) {
-    return Dispatch("BossMyria_State4Dispatch", AddressOf(BossMyria_State4Steps), 2, 2, passed);
+    return DispatchBossSf("BossMyria_State4Dispatch", AddressOf(BossMyria_State4Steps), 2, 2, passed);
 }
 
 // original 0x4401E0: state 4 step 0 - BossMyria_SpawnFxAndWait(4, 2, 2); +9 =
@@ -626,7 +626,7 @@ extern "C" void __cdecl BossMyria_State4Wait(void) {
 
 // original 0x440260: state 5. jmp [BossMyria_State5Steps + 4 * +2] (2).
 extern "C" unsigned __cdecl BossMyria_State5Dispatch(unsigned passed) {
-    return Dispatch("BossMyria_State5Dispatch", AddressOf(BossMyria_State5Steps), 2, 2, passed);
+    return DispatchBossSf("BossMyria_State5Dispatch", AddressOf(BossMyria_State5Steps), 2, 2, passed);
 }
 
 // original 0x440280: state 5 step 0 - Battle_SetTargetFlag40(the target
@@ -639,7 +639,7 @@ extern "C" void __cdecl BossMyria_State5Start(void) {
 // original 0x4402A0: state 6 (an action taken or received). jmp
 // [BossMyria_ActSubs + 4 * +2] (6).
 extern "C" unsigned __cdecl BossMyria_ActDispatch(unsigned passed) {
-    return Dispatch("BossMyria_ActDispatch", AddressOf(BossMyria_ActSubs), 6, 2, passed);
+    return DispatchBossSf("BossMyria_ActDispatch", AddressOf(BossMyria_ActSubs), 6, 2, passed);
 }
 
 // original 0x4402C0: action step 0 - unless the acting kind 0x904B35 is 4 (an
@@ -670,7 +670,7 @@ extern "C" void __cdecl BossMyria_Death(void) {
 
 // original 0x440370: state 7. jmp [BossMyria_State7Steps + 4 * +2] (3).
 extern "C" unsigned __cdecl BossMyria_State7Dispatch(unsigned passed) {
-    return Dispatch("BossMyria_State7Dispatch", AddressOf(BossMyria_State7Steps), 3, 2, passed);
+    return DispatchBossSf("BossMyria_State7Dispatch", AddressOf(BossMyria_State7Steps), 3, 2, passed);
 }
 
 // original 0x440390: state 7 step 0 - nothing (eax 0) until File_LoadDone
@@ -824,7 +824,7 @@ extern "C" void __cdecl BossMyria_State8Check(void) {
 
 // original 0x440620: the +0xF4 hook: by the word's low byte through
 // BossMyria_Hooks (3, all BareRet).
-extern "C" unsigned __cdecl BossMyria_Hook(unsigned word) { return HookDispatch("BossMyria_Hook", AddressOf(BossMyria_Hooks), word); }
+extern "C" unsigned __cdecl BossMyria_Hook(unsigned word) { return HookDispatchBossSf("BossMyria_Hook", AddressOf(BossMyria_Hooks), word); }
 
 // original 0x440630 (state, part, wait): BossMyria_SpawnFx(state, part); then
 // Sprite_Current +0xB = 1 and the word 0x904B7E = the wait's low byte.
