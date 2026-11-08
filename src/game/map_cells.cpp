@@ -50,7 +50,7 @@ int (__cdecl* g_rand)(void) = Rand;
 // never writes that word, so Gte_LoadVertex and Gte_LoadVertices3 carry stale
 // stack into the top halves of Gte_Vertices[1], [3] and [5], which no
 // instruction in the image reads.
-void QuadVertex(short* v, std::uint32_t dword, std::uint32_t x0, std::uint32_t y0) {
+void QuadVertexMapCells(short* v, std::uint32_t dword, std::uint32_t x0, std::uint32_t y0) {
     v[0] = static_cast<short>(x0 + 2u * static_cast<std::uint32_t>(S8(dword >> 24)));
     v[1] = static_cast<short>(y0 + 2u * static_cast<std::uint32_t>(S8(dword >> 16)));
     v[2] = static_cast<short>(dword);
@@ -174,7 +174,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
     unsigned count = 1;
     for (const unsigned char* sub = record + 4;; sub += 0x14) {
         alignas(4) short first[4];
-        QuadVertex(first, Get<std::uint32_t>(sub, 0), x0, y0);
+        QuadVertexMapCells(first, Get<std::uint32_t>(sub, 0), x0, y0);
         Gte_LoadVertex(reinterpret_cast<const unsigned long*>(first));
         Gte_Rtps();
         unsigned char* const prim = Gfx_PacketNext;
@@ -185,7 +185,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
             Gpu_SetPolyFT4(prim);
             Gpu_SetShadeTex(prim, 0);
             alignas(4) short rest[12];
-            for (unsigned k = 0; k < 3; ++k) QuadVertex(rest + 4 * k, Get<std::uint32_t>(sub, 4 + 4 * k), x0, y0);
+            for (unsigned k = 0; k < 3; ++k) QuadVertexMapCells(rest + 4 * k, Get<std::uint32_t>(sub, 4 + 4 * k), x0, y0);
             Gte_LoadVertices3(reinterpret_cast<const unsigned long*>(rest));
             const std::uint32_t texture = Get<std::uint32_t>(sub, 0x10);
             Prim_SetTexture(texture, prim, 1);
