@@ -59,7 +59,7 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-void Dispatch(const char* who, U table, unsigned entries, unsigned at) {
+void DispatchBossSe(const char* who, U table, unsigned entries, unsigned at) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -83,7 +83,7 @@ void DispatchHook(const char* who, U table, unsigned word) {
 }
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
-void StoreHooks(U end, U exit, U event) {
+void StoreHooksBossSe(U end, U exit, U event) {
     BattleHook_End = S(end);
     BattleHook_Exit = S(exit);
     BattleHook_Event = S(event);
@@ -142,7 +142,7 @@ void Message(unsigned id) {
 // original 0x43B5B0: Boss_SetupTable[22]. The hooks: end Boss22_End, exit
 // Boss22_Exit, event BareRetZero.
 extern "C" void __cdecl Boss22_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss22_End), ::bof3::Code(bof3::addr::Boss22_Exit), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::Boss22_End), ::bof3::Code(bof3::addr::Boss22_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B5D0: the end hook. 0x904AE8 and 0x904AE5 read; movement-script
@@ -178,7 +178,7 @@ extern "C" void __cdecl Boss22_Exit(void) {
 
 // original 0x43B650: BossKind_Table[28]. jmp [BossBully_States + 4 *
 // Sprite_Current +1] (12: its entry, then the generic enemy states).
-extern "C" void __cdecl BossBully_Dispatch(void) { Dispatch("BossBully_Dispatch", AddressOf(BossBully_States), 12, 1); }
+extern "C" void __cdecl BossBully_Dispatch(void) { DispatchBossSe("BossBully_Dispatch", AddressOf(BossBully_States), 12, 1); }
 
 // original 0x43B670: state 0. 0x939AD8's +0xFC = BossBully_AnimsB when
 // Sprite_Current +5 is 3, else BossBully_AnimsA; +0xF8 by +5 read again - 3
@@ -204,7 +204,7 @@ extern "C" void __cdecl BossBully_Hook(unsigned word) { DispatchHook("BossBully_
 // original 0x43B710: Boss_SetupTable[23]. The hooks: end 0x43B730 (set-up 21's
 // too, group BSD's), exit BossHook_ExitClearActors012, event BareRetZero.
 extern "C" void __cdecl Boss23_Setup(void) {
-    StoreHooks(::bof3::Code(at::kEnd21.v), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSe(::bof3::Code(at::kEnd21.v), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B750: the exit hook of set-ups 23 and 30: BossActor_Clear(0),
@@ -222,7 +222,7 @@ extern "C" void __cdecl BossHook_ExitClearActors012(void) {
 // original 0x43CF80: Boss_SetupTable[30]. The hooks: end Boss30_End, exit
 // BossHook_ExitClearActors012, event BareRetZero.
 extern "C" void __cdecl Boss30_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss30_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::Boss30_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CFA0: the end hook. Won (0x904AE8 bit 1): variable 3 read, the
@@ -248,7 +248,7 @@ extern "C" void __cdecl Boss30_End(void) {
 
 // original 0x43B770: BossKind_Table[29]: jmp [BossStallion_States + 4 * +1] (12).
 extern "C" void __cdecl BossStallion_Dispatch(void) {
-    Dispatch("BossStallion_Dispatch", AddressOf(BossStallion_States), 12, 1);
+    DispatchBossSe("BossStallion_Dispatch", AddressOf(BossStallion_States), 12, 1);
 }
 
 // original 0x43B790: state 0. 0x939AD8's +0xFC = BossStallion_Anims, +0xF4 =
@@ -267,7 +267,7 @@ extern "C" void __cdecl BossStallion_Hook(unsigned word) {
 
 // original 0x43B7E0: BossKind_Table[55]: jmp [BossSample10_States + 4 * +1] (12).
 extern "C" void __cdecl BossSample10_Dispatch(void) {
-    Dispatch("BossSample10_Dispatch", AddressOf(BossSample10_States), 12, 1);
+    DispatchBossSe("BossSample10_Dispatch", AddressOf(BossSample10_States), 12, 1);
 }
 
 // original 0x43B800: state 0. As BossStallion_Enter with Stallion's two byte
@@ -289,7 +289,7 @@ extern "C" void __cdecl BossSample10_Hook(unsigned word) {
 // original 0x43B870: Boss_SetupTable[24]. The hooks: end Boss24_End, exit
 // Boss24_Exit, event BareRetZero.
 extern "C" void __cdecl Boss24_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss24_End), ::bof3::Code(bof3::addr::Boss24_Exit), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::Boss24_End), ::bof3::Code(bof3::addr::Boss24_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B890: the end hook. 0x904AE8 read; won (bit 1): variable 3 =
@@ -313,7 +313,7 @@ extern "C" void __cdecl Boss24_Exit(void) { BH_CALL(BossActor_Clear)(3); }
 // original 0x43B8D0: Boss_SetupTable[48]. The hooks: end BossHook_EndPickWay,
 // exit BareRet, event BareRetZero.
 extern "C" void __cdecl Boss48_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // ===========================================================================
@@ -321,7 +321,7 @@ extern "C" void __cdecl Boss48_Setup(void) {
 // ===========================================================================
 
 // original 0x43B8F0: BossKind_Table[30]: jmp [BossBeyd_States + 4 * +1] (12).
-extern "C" void __cdecl BossBeyd_Dispatch(void) { Dispatch("BossBeyd_Dispatch", AddressOf(BossBeyd_States), 12, 1); }
+extern "C" void __cdecl BossBeyd_Dispatch(void) { DispatchBossSe("BossBeyd_Dispatch", AddressOf(BossBeyd_States), 12, 1); }
 
 // original 0x43B910: state 0. 0x939AD8's +0xFC = BossBeyd_Anims, +0xF4 =
 // BossBeyd_Hook, +0xF8 = BossBeyd_Sounds; Sprite_Current +1 = 2;
@@ -343,7 +343,7 @@ extern "C" void __cdecl BossBeyd_Enter(void) {
 // original 0x43BA10: state 6: jmp [BossBeyd_ActSubs + 4 * +2] (6: the generic
 // EnemyOp_ActSubs with the kind's death at 4).
 extern "C" void __cdecl BossBeyd_ActDispatch(void) {
-    Dispatch("BossBeyd_ActDispatch", AddressOf(BossBeyd_ActSubs), 6, 2);
+    DispatchBossSe("BossBeyd_ActDispatch", AddressOf(BossBeyd_ActSubs), 6, 2);
 }
 
 // original 0x43BA30: +2 entry 4, the death (animation 0xF); in fight 0x19
@@ -381,7 +381,7 @@ extern "C" void __cdecl BossBeyd_HookTick(unsigned) {
 }
 
 // original 0x43BB00: BossKind_Table[31]: jmp [BossBeyd2_States + 4 * +1] (12).
-extern "C" void __cdecl BossBeyd2_Dispatch(void) { Dispatch("BossBeyd2_Dispatch", AddressOf(BossBeyd2_States), 12, 1); }
+extern "C" void __cdecl BossBeyd2_Dispatch(void) { DispatchBossSe("BossBeyd2_Dispatch", AddressOf(BossBeyd2_States), 12, 1); }
 
 // original 0x43BB20: state 0. Kind 30's two byte tables and its own hook;
 // Sprite_Current +1 = 2; Sprite_ScriptTick called (answer not kept); the
@@ -398,7 +398,7 @@ extern "C" void __cdecl BossBeyd2_Enter(void) {
 
 // original 0x43BC00: state 6: jmp [BossBeyd2_ActSubs + 4 * +2] (6).
 extern "C" void __cdecl BossBeyd2_ActDispatch(void) {
-    Dispatch("BossBeyd2_ActDispatch", AddressOf(BossBeyd2_ActSubs), 6, 2);
+    DispatchBossSe("BossBeyd2_ActDispatch", AddressOf(BossBeyd2_ActSubs), 6, 2);
 }
 
 // original 0x43BC20: +2 entry 4, the death (animation 0xF).
@@ -412,7 +412,7 @@ extern "C" void __cdecl BossBeyd2_Hook(unsigned word) { DispatchHook("BossBeyd2_
 extern "C" void __cdecl BossBeyd2_HookTarget4(unsigned) { B(::bof3::Img(at::kTarget.v)) = 4; }
 
 // original 0x43BC90: BossKind_Table[32]: jmp [BossZig_States + 4 * +1] (12).
-extern "C" void __cdecl BossZig_Dispatch(void) { Dispatch("BossZig_Dispatch", AddressOf(BossZig_States), 12, 1); }
+extern "C" void __cdecl BossZig_Dispatch(void) { DispatchBossSe("BossZig_Dispatch", AddressOf(BossZig_States), 12, 1); }
 
 // original 0x43BCB0: state 0. 0x939AD8's +0xFC = BossZig_Anims, +0xF4 =
 // BossZig_Hook, +0xF8 = BossZig_Sounds; Sprite_Current +8 = 3 and +1 = 2; a
@@ -442,7 +442,7 @@ extern "C" void __cdecl BossZig_Idle(void) {
 
 // original 0x43BD40: state 5: jmp [BossZig_Step5Subs + 4 * +2] (2).
 extern "C" void __cdecl BossZig_Step5Dispatch(void) {
-    Dispatch("BossZig_Step5Dispatch", AddressOf(BossZig_Step5Subs), 2, 2);
+    DispatchBossSe("BossZig_Step5Dispatch", AddressOf(BossZig_Step5Subs), 2, 2);
 }
 
 // original 0x43BD60: step 5, +2 = 0: BattleEnemy_ScriptTick (answer not read);
@@ -478,7 +478,7 @@ extern "C" void __cdecl BossZig_Step5Fire(void) {
 }
 
 // original 0x43BDF0: state 6: jmp [BossZig_ActSubs + 4 * +2] (6).
-extern "C" void __cdecl BossZig_ActDispatch(void) { Dispatch("BossZig_ActDispatch", AddressOf(BossZig_ActSubs), 6, 2); }
+extern "C" void __cdecl BossZig_ActDispatch(void) { DispatchBossSe("BossZig_ActDispatch", AddressOf(BossZig_ActSubs), 6, 2); }
 
 // original 0x43BE10: +2 entry 4, the death (animation 0xD).
 extern "C" void __cdecl BossZig_Death(void) { Death(0xD); }
@@ -512,7 +512,7 @@ extern "C" void __cdecl Boss25_Setup(void) {
     const unsigned char ap = rv::Bytes(ObjTrio)[0x9a];
     BossSe_SavedHp = hp;
     const unsigned max_ap = ObjTrio[0].max_ap;
-    StoreHooks(::bof3::Code(bof3::addr::Boss25_End), ::bof3::Code(bof3::addr::Boss25_Exit), ::bof3::Code(bof3::addr::Boss25_Event));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::Boss25_End), ::bof3::Code(bof3::addr::Boss25_Exit), ::bof3::Code(bof3::addr::Boss25_Event));
     BattlePhases_Initiative = 3;
     ObjTrio[0].hp = max_hp;
     BossSe_SavedAp = ap;
@@ -657,7 +657,7 @@ extern "C" void __cdecl Boss25_Exit(void) {
 // BossHook_ExitTransition4, event Boss26_Event; then the two sums 0x939A08 and
 // 0x939A04 and the count 0x939A0C = 0.
 extern "C" void __cdecl Boss26_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss26_End), ::bof3::Code(bof3::addr::BossHook_ExitTransition4), ::bof3::Code(bof3::addr::Boss26_Event));
+    StoreHooksBossSe(::bof3::Code(bof3::addr::Boss26_End), ::bof3::Code(bof3::addr::BossHook_ExitTransition4), ::bof3::Code(bof3::addr::Boss26_Event));
     BattleE1_SumB = 0;
     BattleE1_SumA = 0;
     BattleE1_Count = 0;
