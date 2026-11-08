@@ -699,8 +699,51 @@ changes the string and every function that names the helper. Call 8's
 `low32-site` class is this mechanism (the message's file, line or function),
 so these rows go in `analysis/tu_gate_exceptions.tsv`.
 
-**Group t** (the tooling): its report is `reports\t.md`; what merged is listed
-at this section's end.
+**Group t** (the tooling, merged `47d3d81c`; `reports\t.md`): `codegen_same.py
+--exceptions` (a listed code symbol of a known class prints `EXCEPT`, an unknown
+class exits 2, an unused row is reported); the source-root placeholder above;
+`PROMOTED` (a file-local that gained external linkage with its body unchanged,
+its references mapped too - the `g_effect_key_off` scratch case reads 0
+differ); `tools/tu_renames.py --check` / `--fill` and the CI step; a data
+symbol's body ends at its next anchor; `cpp_items.py` knows a function a
+macro invocation defines, and the mover moves a macro family only whole
+(`task_sched`'s 6 move and gate 0 differ; `MS16_SPARKLES`' 40 are split across
+4 files by the table and, sent to one file, 4 `SparkleDispatch` functions
+differ - a tail `jmp` became a `call`, cause not found; `sound.cpp`'s 5 want two
+globals declared; `sound_rest.cpp`'s 1 would be ambiguous beside `sound.cpp`'s
+helpers); group s's mover findings as refusals (a pointer-to-const is state,
+`static const` / `constexpr` locals are constants, `extern "C"` in an anonymous
+namespace is not local, a bind in another file stays; a name two sources'
+`using namespace` lines would both bring into a target is refused: 293 lines
+in 50 targets, which want a qualification pass - a body edit, so the owner's
+word). On the merged tree `tu_renames.py --check`: 583 rows, 0 problems;
+`--fill` wrote 482 commits (the 101 unfilled are group s's unapplied
+decisions). The 39 `low32-site` rows are in (`175028c8`); the x86_64 gate
+with them: `15409 code, 850 data, 424 bss symbols compared, 0 differ; 39
+excepted`.
+
+**The self-tests on the renamed tree** (`175028c8`'s build, a clean launcher
+copy `slb1108\L32`, the harness game copy `x641107\game`): the hosted suite
+under `BOF3X_SHADOW='*'` exit 0, 32,265 log lines, "self-test only: done";
+the exe host (`--host exe`, no `BOF3X_SHADOW` - it refuses the shadow fuzz with
+a Fatal, which is its rule, not a defect) exit 0, "self-test only: done".
+
+**The sheet in two tables** (`47f0eab2`, the owner's ask of 2026-11-08 to
+review the contentions remotely): `tu_census.py` writes the 232 rows that
+want a call first (167 joins - 2 files of bosses, 17 "one area", 15 "the
+same names", 13 "a one-function unit, nothing separates it from its
+neighbour" - and 92 rows with a PSX check, 27 both), then the 444 stand-alone
+rows no neighbour or PlayStation unit contests. The table regenerates
+identical. The 92 PSX checks form 41 clusters; about a third pair an area
+unit with an effect unit through a recurring `u000`, which reads as an
+overlay's common helper rather than a cut (a guess, being checked against the
+PlayStation decompilation's duplicate-function list).
+
+**Left in B0:** group a (applying group s's 135 decisions, running), the
+qualification pass for the 50 ambiguous targets (the owner's word), the
+`SparkleDispatch` difference, `Gfx_DrawOTag` (differs on i686 when moved to
+`platform/d3d.cpp`: a copied helper inlined, so it cannot leave
+`d3d_list.cpp` as the table has it - a sheet row for the owner).
 
 ## 5. Stage C: what follows the moves (one agent, after B)
 
