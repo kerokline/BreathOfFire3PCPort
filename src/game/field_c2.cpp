@@ -51,7 +51,7 @@ unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
-template <typename T> U AddressOf(T* p) { return Low32(p); }
+template <typename T> U AddressOfFieldC2(T* p) { return Low32(p); }
 U Key(const void* p) { return Low32(p); }
 void StoreFloat(unsigned char* at, double v) {
     const auto f = static_cast<float>(v);
@@ -530,11 +530,11 @@ extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size,
 
 // original 0x46C730: Effect_KindHandlers[0x34] - jmp [EffectKind34_Variants +
 // 4 * +1], 6 entries (the five below and FC1's 0x46A310). No PSX twin paired.
-extern "C" void __cdecl EffectKind34_Run(void) { Run("EffectKind34_Run", AddressOf(EffectKind34_Variants), 6, 1); }
+extern "C" void __cdecl EffectKind34_Run(void) { Run("EffectKind34_Run", AddressOfFieldC2(EffectKind34_Variants), 6, 1); }
 
 // original 0x46C750 (PSX 0x8019EE18): variant 0 - jmp [EffectKind34_V0States + 4 * +2], 4
 // entries. PSX 0x8019EE18 (table-anchored).
-extern "C" void __cdecl EffectKind34_V0Run(void) { Run("EffectKind34_V0Run", AddressOf(EffectKind34_V0States), 4, 2); }
+extern "C" void __cdecl EffectKind34_V0Run(void) { Run("EffectKind34_V0Run", AddressOfFieldC2(EffectKind34_V0States), 4, 2); }
 
 // original 0x46C770 (PSX 0x8019EE5C): variant 0's state 0, a burst: ten times Effect_FindFree
 // and, for each record it gives, +0 1, +5 0x34, +2 2 (variant 0 at state 2:
@@ -670,7 +670,7 @@ extern "C" void __cdecl EffectKind34_V0DebrisFly(void) {
 
 // original 0x46C9F0 (PSX 0x8019F26C): variant 1 - jmp [EffectKind34_V1States + 4 * +2], 2
 // entries. PSX 0x8019F26C (table-anchored).
-extern "C" void __cdecl EffectKind34_V1Run(void) { Run("EffectKind34_V1Run", AddressOf(EffectKind34_V1States), 2, 2); }
+extern "C" void __cdecl EffectKind34_V1Run(void) { Run("EffectKind34_V1Run", AddressOfFieldC2(EffectKind34_V1States), 2, 2); }
 
 // The shared start of variants 1..3: Sprite_SetAnimationBank(0x18) (its al
 // unread), +0x24 0, +0x2A 0, +0x2B up, +0x48 0.
@@ -728,7 +728,7 @@ extern "C" void __cdecl EffectKind34_V1Fall(void) {
 
 // original 0x46CB00 (PSX 0x8019F42C): variant 2 - jmp [EffectKind34_V2States + 4 * +2], 4
 // entries. PSX 0x8019F42C (table-anchored).
-extern "C" void __cdecl EffectKind34_V2Run(void) { Run("EffectKind34_V2Run", AddressOf(EffectKind34_V2States), 4, 2); }
+extern "C" void __cdecl EffectKind34_V2Run(void) { Run("EffectKind34_V2Run", AddressOfFieldC2(EffectKind34_V2States), 4, 2); }
 
 // original 0x46CB20 (PSX 0x8019F470): variant 2's state 0: +9 0, +0xA 5 (pieces to make), +2 up.
 // PSX 0x8019F470 (gap74).
@@ -807,7 +807,7 @@ extern "C" void __cdecl EffectKind34_V2PieceFall(void) {
 
 // original 0x46CCF0 (PSX 0x8019F788): variant 3 - jmp [EffectKind34_V3States + 4 * +2], 2
 // entries. PSX 0x8019F788 (table-anchored).
-extern "C" void __cdecl EffectKind34_V3Run(void) { Run("EffectKind34_V3Run", AddressOf(EffectKind34_V3States), 2, 2); }
+extern "C" void __cdecl EffectKind34_V3Run(void) { Run("EffectKind34_V3Run", AddressOfFieldC2(EffectKind34_V3States), 2, 2); }
 
 // original 0x46CD10 (PSX 0x8019F7CC): variant 3's state 0: the piece bank, +0x14 0, +0x20 -8,
 // +0x5D..+0x5F 0, Sprite_SetAnimation(9), +2 up. PSX 0x8019F7CC (gap74).
@@ -840,7 +840,7 @@ extern "C" void __cdecl EffectKind34_V3Fall(void) {
 
 // original 0x46CDE0 (PSX 0x8019F920): variant 4 - jmp [EffectKind34_V4States + 4 * +2], 2
 // entries. PSX 0x8019F920 (table-anchored).
-extern "C" void __cdecl EffectKind34_V4Run(void) { Run("EffectKind34_V4Run", AddressOf(EffectKind34_V4States), 2, 2); }
+extern "C" void __cdecl EffectKind34_V4Run(void) { Run("EffectKind34_V4Run", AddressOfFieldC2(EffectKind34_V4States), 2, 2); }
 
 // original 0x46CE00: variant 4's state 0: Sprite_SetAnimationBank(0x46); al not
 // 0 - Effect_Release (a tail jump). Else +0x29 up, +0x2A 0, +0x24 0, +0x2B up,
@@ -885,7 +885,7 @@ extern "C" void __cdecl EffectKind34_V4Move(void) {
 
 // original 0x46CEF0: Effect_KindHandlers[0x3A] - jmp [EffectKind3A_States + 4
 // * +1], 3 entries. A gap of the tool (in no cut row). No PSX twin paired.
-extern "C" void __cdecl EffectKind3A_Run(void) { Run("EffectKind3A_Run", AddressOf(EffectKind3A_States), 3, 1); }
+extern "C" void __cdecl EffectKind3A_Run(void) { Run("EffectKind3A_Run", AddressOfFieldC2(EffectKind3A_States), 3, 1); }
 
 // original 0x46CF10: kind 0x3A's state 0: +8 the leader's facing 0x802D48; x /
 // z the leader's (0x802D74 / 0x802D78) plus Field_DirectionSteps' half cell
@@ -897,9 +897,9 @@ extern "C" void __cdecl EffectKind3A_Start(void) {
     records::EffectObject* s = rv::As<records::EffectObject>(S());
     rv::Bytes(s)[8] = ObjTrio[0].direction;
     s = rv::As<records::EffectObject>(S());
-    s->x = UL(At(AddressOf(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].x);
+    s->x = UL(At(AddressOfFieldC2(Field_DirectionSteps) + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].x);
     s = rv::As<records::EffectObject>(S());
-    s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].z);
+    s->z = UL(At(AddressOfFieldC2(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].z);
     rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     s = rv::As<records::EffectObject>(S());
     s->step_x = UL(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * rv::Bytes(s)[8])) << 4;
@@ -927,7 +927,7 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     const U width = UL(AreaMap_Header) & 0xFFu;
     const U cell = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(s->z_whole))) * width +
                    static_cast<U>(static_cast<std::int32_t>(static_cast<short>(s->x_whole))) + Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2)) * 2u;
-    if (Word(At(AddressOf(AreaMap_Header) + cell * 2u)) == 0) {
+    if (Word(At(AddressOfFieldC2(AreaMap_Header) + cell * 2u)) == 0) {
         SH_CALL(Effect_Release)();
         return;
     }
@@ -1081,7 +1081,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
 
 // original 0x46D400: Effect_KindHandlers[0x41] - jmp [EffectKind41_States + 4
 // * +1], 4 entries. A gap of the tool (in no cut row). No PSX twin paired.
-extern "C" void __cdecl EffectKind41_Run(void) { Run("EffectKind41_Run", AddressOf(EffectKind41_States), 4, 1); }
+extern "C" void __cdecl EffectKind41_Run(void) { Run("EffectKind41_Run", AddressOfFieldC2(EffectKind41_States), 4, 1); }
 
 // original 0x46D420: kind 0x41's state 0: the offset's low word +0x38 0, its
 // high word +0x3A -10 with Field_InputFlags bit 0, else -20; the rise +0x10
