@@ -97,7 +97,7 @@ void MarkObjectRest1d(unsigned char found, bool is_signed, const char* who) {
 }
 
 // The point two steps ahead of Sprite_Current (x + 2 * step, z + 2 * step).
-void TwoAhead(U& x, U& z) {
+void TwoAheadRest1d(U& x, U& z) {
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
     x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1d(d);
@@ -121,7 +121,7 @@ void TryCells(CellProbe probe, U x, U z) {
 // step that way (Sprite_Current re-read); the slope there steep (the scratch
 // flag set and its low word above 0x40, signed) and the ground there above the
 // sprite's height word (both s16): +0x2B = 0. PartyAction_SideProbes' probe.
-void SideProbe(unsigned d) {
+void SideProbeRest1d(unsigned d) {
     const unsigned char* s = Sprite_Current;
     const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1d(d);
     const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1d(d);
@@ -168,8 +168,8 @@ void FormBegin() {
         ++Sprite_Current[2];
     } else {
         Sprite_Current[0x2B] = 1;
-        SideProbe(3);
-        SideProbe(5);
+        SideProbeRest1d(3);
+        SideProbeRest1d(5);
         SH_CALL(Sound_PlayEffect)(SoundOfForm());
         SH_CALL(Sprite_EnsureAnimation)(Pose(Sprite_Current[8], 0x42));
         Sprite_Current[0xA] = 5;
@@ -187,7 +187,7 @@ void FormResolve(CellProbe pickup, const char* who) {
     --Sprite_Current[0xA];
     if (Sprite_Current[0xA] == 0) {
         U x, z;
-        TwoAhead(x, z);
+        TwoAheadRest1d(x, z);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObjectRest1d(found, true, who);
         TryCells(pickup, x, z);
@@ -273,7 +273,7 @@ void Kind30BeginRest1d(const char* who) {
         return;
     }
     U x, z;
-    TwoAhead(x, z);
+    TwoAheadRest1d(x, z);
     if ((Field_State[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
         if (found != 0xFF) MarkObjectRest1d(found, false, who);
@@ -477,7 +477,7 @@ extern "C" void __cdecl PartyAction12_Form0Resolve(void) {
                 ++Sprite_Current[3];
             } else {
                 U x, z;
-                TwoAhead(x, z);
+                TwoAheadRest1d(x, z);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
                     MarkObjectRest1d(found, true, "PartyAction12_Form0Resolve (0x5221E0)");
