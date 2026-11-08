@@ -69,8 +69,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
+U ULEffect4f(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULEffect4f(U a) { return ULEffect4f(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
 unsigned char& B(U a) { return At(a)[0]; }
@@ -84,7 +84,7 @@ U MulSar(int a, U b, unsigned n) { return Sar(static_cast<U>(a) * b, n); }
 U Sx16(U v) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(v & 0xFFFFu))); }
 // Three dwords moved as the original moves them (mov, not the FPU).
 void Copy12(unsigned char* to, const unsigned char* from) {
-    for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
+    for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, ULEffect4f(from + i));
 }
 
 // --- x87 as the original has it --------------------------------------------------
@@ -126,10 +126,10 @@ Handler Entry(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/effect_4f.md section 6)",
                     who, state, entries, (unsigned)table);
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(table + 4 * state)));
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULEffect4f(table + 4 * state)));
 }
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp [table + eax * 4]
-void Dispatch(const char* who, U table, unsigned entries) { Entry(who, table, entries)(); }
+void DispatchEffect4f(const char* who, U table, unsigned entries) { Entry(who, table, entries)(); }
 
 // The draw-mode packet the draws open with: Gpu_GetTPage(0, abr, x, y),
 // Gpu_SetDrawMode(packet, 0, dtd, the page's low word, 0 - the fifth word the
@@ -187,14 +187,14 @@ void SparkTick() {
 // unbounded. Its three states are catalog part 6 rows (EffectKindAA_Start, _FadeIn,
 // _FadeOut).
 extern "C" void __cdecl EffectKindAA_Run(void) {
-    Dispatch("EffectKindAA_Run", AddressOf(EffectKindAA_States), EffectKindAA_States_count);
+    DispatchEffect4f("EffectKindAA_Run", AddressOf(EffectKindAA_States), EffectKindAA_States_count);
 }
 
 // original 0x4925A0 (hidden in 0x492400): jmp [EffectKindAC_States + +1 * 4],
 // unbounded. Its three states are catalog part 6 rows (0x4925C0, 0x4925E0,
 // 0x492620).
 extern "C" void __cdecl EffectKindAC_Run(void) {
-    Dispatch("EffectKindAC_Run", AddressOf(EffectKindAC_States), EffectKindAC_States_count);
+    DispatchEffect4f("EffectKindAC_Run", AddressOf(EffectKindAC_States), EffectKindAC_States_count);
 }
 
 // ===========================================================================
@@ -207,7 +207,7 @@ extern "C" void __cdecl EffectKindAC_Run(void) {
 // +1 up; else EffectKindAB_Emit and a tail jmp to EffectKindAB_MoveDrops),
 // Effect_StateRelease.
 extern "C" void __cdecl EffectKindAB_Run(void) {
-    Dispatch("EffectKindAB_Run", AddressOf(EffectKindAB_States), EffectKindAB_States_count);
+    DispatchEffect4f("EffectKindAB_Run", AddressOf(EffectKindAB_States), EffectKindAB_States_count);
 }
 
 // original 0x492530 (state 0; hidden in 0x492400, catalog part 6): the record's
@@ -235,8 +235,8 @@ extern "C" unsigned char __cdecl EffectKindAB_MoveDrops(void) {
     for (U i = 0; i < at::kDropCount; ++i) {
         unsigned char* const d = Drop(i);
         if (d[0] == 0) continue;
-        const U speed = UL(d + 0x14) + 0x20000u;
-        const U height = UL(d + 0xC);
+        const U speed = ULEffect4f(d + 0x14) + 0x20000u;
+        const U height = ULEffect4f(d + 0xC);
         any = 1;
         const auto blink = static_cast<unsigned char>(d[3] ^ 1u);
         SetUL(d + 0x14, speed);
@@ -261,7 +261,7 @@ extern "C" unsigned char __cdecl EffectKindAB_MoveDrops(void) {
 extern "C" void __cdecl EffectKindAB_DrawDrop(unsigned char* drop) {
     const U page = SH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, page & 0xFFFFu, 0);
-    SH_CALL(MapView_LinkPrimAt)(UL(drop + 4), UL(drop + 8), 0, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect4f(drop + 4), ULEffect4f(drop + 8), 0, 0xC);
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(drop + 4), Out(o));
     unsigned char* p = Gfx_PacketNext;
@@ -277,7 +277,7 @@ extern "C" void __cdecl EffectKindAB_DrawDrop(unsigned char* drop) {
         p[5] = 0;
         p[6] = 0;
     }
-    SH_CALL(MapView_LinkPrimAt)(UL(drop + 4), UL(drop + 8), 0, 0x14);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect4f(drop + 4), ULEffect4f(drop + 8), 0, 0x14);
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -294,7 +294,7 @@ extern "C" void __cdecl EffectKindAB_DrawDrop(unsigned char* drop) {
         p[5] = 0;
         p[6] = 0;
     }
-    SH_CALL(MapView_LinkPrimAt)(UL(drop + 4), UL(drop + 8), 0, 0x1C);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect4f(drop + 4), ULEffect4f(drop + 8), 0, 0x1C);
 }
 
 // original 0x492C80 (cdecl): EffectKind81_PlaceSources for eight - the sources
@@ -339,10 +339,10 @@ extern "C" unsigned char __cdecl EffectKindAB_Emit(void) {
             d[0] = 1;
             d[2] = static_cast<unsigned char>((static_cast<U>(SH_CALL(Rand)()) & 0x1Fu) + 0x20u);
             const U rx = static_cast<U>(SH_CALL(Rand)()) & 0xFFu;
-            SetUL(d + 4, ((rx - 0x100u) << 8) + UL(src + 4));
+            SetUL(d + 4, ((rx - 0x100u) << 8) + ULEffect4f(src + 4));
             const U rz = static_cast<U>(SH_CALL(Rand)()) & 0xFFu;
-            SetUL(d + 8, ((rz - 0x100u) << 8) + UL(src + 8));
-            SetUL(d + 0xC, UL(src + 0xC));
+            SetUL(d + 8, ((rz - 0x100u) << 8) + ULEffect4f(src + 8));
+            SetUL(d + 0xC, ULEffect4f(src + 0xC));
             SetUL(d + 0x14, 0);
             d[3] = static_cast<unsigned char>(static_cast<U>(SH_CALL(Rand)()) & 1u);
         }
@@ -359,7 +359,7 @@ extern "C" unsigned char __cdecl EffectKindAB_Emit(void) {
 // unbounded. States: 0x492680, 0x492710 (part 6), Effect_StateNext twice,
 // Effect_StateRelease.
 extern "C" void __cdecl EffectKindAD_Run(void) {
-    Dispatch("EffectKindAD_Run", AddressOf(EffectKindAD_States), EffectKindAD_States_count);
+    DispatchEffect4f("EffectKindAD_Run", AddressOf(EffectKindAD_States), EffectKindAD_States_count);
 }
 
 // original 0x492750 (hidden in 0x492400, catalog part 6; kind 0xAD's states 2
@@ -387,18 +387,18 @@ extern "C" void __cdecl EffectKindAD_DrawArc(const long* a, const long* b, unsig
     U angle = 0xFE00;
     {
         const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
-        SetUL(q, ArcOffset(c) + UL(pa));
+        SetUL(q, ArcOffset(c) + ULEffect4f(pa));
         const int s = SH_CALL(Math_Sin)(static_cast<int>(angle));
-        SetUL(q + 4, ArcOffset(s) + UL(pa + 4));
-        SetUL(q + 8, UL(pa + 8));
+        SetUL(q + 4, ArcOffset(s) + ULEffect4f(pa + 4));
+        SetUL(q + 8, ULEffect4f(pa + 8));
         SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o1));
     }
     {
         const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
-        SetUL(r, ArcOffset(c) + UL(pb));
+        SetUL(r, ArcOffset(c) + ULEffect4f(pb));
         const int s = SH_CALL(Math_Sin)(static_cast<int>(angle));
-        SetUL(r + 4, ArcOffset(s) + UL(pb + 4));
-        SetUL(r + 8, UL(pb + 8));
+        SetUL(r + 4, ArcOffset(s) + ULEffect4f(pb + 4));
+        SetUL(r + 8, ULEffect4f(pb + 8));
         SH_CALL(EffectGte_ProjectPoint)(Point(r), Out(o2));
     }
     const unsigned char shadeA = static_cast<unsigned char>(inner);
@@ -408,35 +408,35 @@ extern "C" void __cdecl EffectKindAD_DrawArc(const long* a, const long* b, unsig
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         angle += 0x80;
-        SetUL(p + 8, UL(o1));
-        SetUL(p + 0xC, UL(o1 + 4));
-        SetUL(p + 0x10, UL(o1 + 8));
-        SetUL(p + 0x18, UL(o2));
-        SetUL(p + 0x1C, UL(o2 + 4));
-        SetUL(p + 0x20, UL(o2 + 4));   // the original's: the y again, not the depth o2 + 8
+        SetUL(p + 8, ULEffect4f(o1));
+        SetUL(p + 0xC, ULEffect4f(o1 + 4));
+        SetUL(p + 0x10, ULEffect4f(o1 + 8));
+        SetUL(p + 0x18, ULEffect4f(o2));
+        SetUL(p + 0x1C, ULEffect4f(o2 + 4));
+        SetUL(p + 0x20, ULEffect4f(o2 + 4));   // the original's: the y again, not the depth o2 + 8
         const int t = static_cast<int>(angle & 0xFFFFu);
         {
             const int c = SH_CALL(Math_Cos)(t);
-            SetUL(q, ArcOffset(c) + UL(pa));
+            SetUL(q, ArcOffset(c) + ULEffect4f(pa));
             const int s = SH_CALL(Math_Sin)(t);
-            SetUL(q + 4, ArcOffset(s) + UL(pa + 4));
-            SetUL(q + 8, UL(pa + 8));
+            SetUL(q + 4, ArcOffset(s) + ULEffect4f(pa + 4));
+            SetUL(q + 8, ULEffect4f(pa + 8));
             SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o1));
         }
         {
             const int c = SH_CALL(Math_Cos)(t);
-            SetUL(r, ArcOffset(c) + UL(pb));
+            SetUL(r, ArcOffset(c) + ULEffect4f(pb));
             const int s = SH_CALL(Math_Sin)(t);
-            SetUL(r + 4, ArcOffset(s) + UL(pb + 4));
-            SetUL(r + 8, UL(pb + 8));
+            SetUL(r + 4, ArcOffset(s) + ULEffect4f(pb + 4));
+            SetUL(r + 8, ULEffect4f(pb + 8));
             SH_CALL(EffectGte_ProjectPoint)(Point(r), Out(o2));
         }
-        SetUL(p + 0x28, UL(o1));
-        SetUL(p + 0x2C, UL(o1 + 4));
-        SetUL(p + 0x30, UL(o1 + 8));
-        SetUL(p + 0x38, UL(o2));
-        SetUL(p + 0x3C, UL(o2 + 4));
-        SetUL(p + 0x40, UL(o2 + 8));
+        SetUL(p + 0x28, ULEffect4f(o1));
+        SetUL(p + 0x2C, ULEffect4f(o1 + 4));
+        SetUL(p + 0x30, ULEffect4f(o1 + 8));
+        SetUL(p + 0x38, ULEffect4f(o2));
+        SetUL(p + 0x3C, ULEffect4f(o2 + 4));
+        SetUL(p + 0x40, ULEffect4f(o2 + 8));
         p[4] = shadeA;
         p[5] = shadeA;
         p[6] = shadeA;
@@ -460,7 +460,7 @@ extern "C" void __cdecl EffectKindAD_DrawArc(const long* a, const long* b, unsig
 // original 0x492760 (hidden in 0x492400): jmp [EffectKindAE_States + +1 * 4],
 // unbounded. States: 0x492780 (part 6), _Sink, _Widen, _Narrow, _Shrink.
 extern "C" void __cdecl EffectKindAE_Run(void) {
-    Dispatch("EffectKindAE_Run", AddressOf(EffectKindAE_States), EffectKindAE_States_count);
+    DispatchEffect4f("EffectKindAE_Run", AddressOf(EffectKindAE_States), EffectKindAE_States_count);
 }
 
 // original 0x492880 (state 1): the height +0x3C down 0x1000000; drawn
@@ -545,11 +545,11 @@ extern "C" void __cdecl Effect_DrawEllipse(const long* point, unsigned w, unsign
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetUL(p + 8, UL(o));
-        SetUL(p + 0xC, UL(o + 4));
-        SetUL(p + 0x30, UL(o + 8));
-        SetUL(p + 0x20, UL(o + 8));
-        SetUL(p + 0x10, UL(o + 8));
+        SetUL(p + 8, ULEffect4f(o));
+        SetUL(p + 0xC, ULEffect4f(o + 4));
+        SetUL(p + 0x30, ULEffect4f(o + 8));
+        SetUL(p + 0x20, ULEffect4f(o + 8));
+        SetUL(p + 0x10, ULEffect4f(o + 8));
         // the first rim point, at a
         U x = Sx16(MulSar(SH_CALL(Math_Cos)(static_cast<int>(a)), static_cast<U>(static_cast<std::int32_t>(radius[0])), 12));
         U y = Sx16(MulSar(SH_CALL(Math_Sin)(static_cast<int>(a)), static_cast<U>(static_cast<std::int32_t>(radius[1])), 12));
@@ -590,7 +590,7 @@ extern "C" void __cdecl Effect_DrawEllipse(const long* point, unsigned w, unsign
 // original 0x492980 (hidden in 0x492400): jmp [EffectKindAF_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKindAF_Run(void) {
-    Dispatch("EffectKindAF_Run", AddressOf(EffectKindAF_States), EffectKindAF_States_count);
+    DispatchEffect4f("EffectKindAF_Run", AddressOf(EffectKindAF_States), EffectKindAF_States_count);
 }
 
 // original 0x4929A0 (state 0): +9 = 0, +6 = 0x10, +1 up.
@@ -659,7 +659,7 @@ extern "C" void __cdecl EffectKindAF_DrawScreen(unsigned shade) {
 // original 0x492A50 (hidden in 0x492400): jmp [EffectKindB0_States + +1 * 4],
 // unbounded. States: _Start, _Spawn, Effect_StateRelease.
 extern "C" void __cdecl EffectKindB0_Run(void) {
-    Dispatch("EffectKindB0_Run", AddressOf(EffectKindB0_States), EffectKindB0_States_count);
+    DispatchEffect4f("EffectKindB0_Run", AddressOf(EffectKindB0_States), EffectKindB0_States_count);
 }
 
 // original 0x492A70 (state 0): the word +0x2E = 0x12C, +9 = 0; the bars
@@ -807,7 +807,7 @@ extern "C" void __cdecl EffectKindB1_SwayBack(void) {
 // unbounded. States: EffectKind64_Start (E3A's), _Grow, _Hold, _Rise, _Burst,
 // _Launch, _Fly, _FlyWait, Effect_StateRelease.
 extern "C" void __cdecl EffectKindB9_Run(void) {
-    Dispatch("EffectKindB9_Run", AddressOf(EffectKindB9_States), EffectKindB9_States_count);
+    DispatchEffect4f("EffectKindB9_Run", AddressOf(EffectKindB9_States), EffectKindB9_States_count);
 }
 
 // original 0x493570 (state 1): the size +0x2E up 0x20; the glow drawn (E4E's
@@ -933,18 +933,18 @@ extern "C" void __cdecl EffectKindB9_DrawTrail(const long* from, const long* to,
     SH_CALL(EffectGte_ProjectPoint)(from, Out(o));
     StF(p + 8, F(o) + half);
     StF(p + 0xC, F(o + 4) - half);
-    SetUL(p + 0x18, UL(o));
-    SetUL(p + 0x1C, UL(o + 4));
-    SetUL(p + 0x20, UL(o + 8));
-    SetUL(p + 0x10, UL(o + 8));
+    SetUL(p + 0x18, ULEffect4f(o));
+    SetUL(p + 0x1C, ULEffect4f(o + 4));
+    SetUL(p + 0x20, ULEffect4f(o + 8));
+    SetUL(p + 0x10, ULEffect4f(o + 8));
     SH_CALL(EffectGte_ProjectPoint)(to, Out(o));
     const unsigned char k = static_cast<unsigned char>(shade);
     StF(p + 0x28, F(o) + half);
     StF(p + 0x2C, F(o + 4) - half);
-    SetUL(p + 0x38, UL(o));
-    SetUL(p + 0x3C, UL(o + 4));
-    SetUL(p + 0x40, UL(o + 8));
-    SetUL(p + 0x30, UL(o + 8));
+    SetUL(p + 0x38, ULEffect4f(o));
+    SetUL(p + 0x3C, ULEffect4f(o + 4));
+    SetUL(p + 0x40, ULEffect4f(o + 8));
+    SetUL(p + 0x30, ULEffect4f(o + 8));
     p[4] = 0;
     p[5] = 0;
     p[6] = 0;
@@ -962,19 +962,19 @@ extern "C" void __cdecl EffectKindB9_DrawTrail(const long* from, const long* to,
     SH_CALL(Gpu_SetPolyG4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     SH_CALL(EffectGte_ProjectPoint)(from, Out(o));
-    SetUL(p + 8, UL(o));
-    SetUL(p + 0xC, UL(o + 4));
+    SetUL(p + 8, ULEffect4f(o));
+    SetUL(p + 0xC, ULEffect4f(o + 4));
     StF(p + 0x18, F(o) - half);
     StF(p + 0x1C, F(o + 4) + half);
-    SetUL(p + 0x20, UL(o + 8));
-    SetUL(p + 0x10, UL(o + 8));
+    SetUL(p + 0x20, ULEffect4f(o + 8));
+    SetUL(p + 0x10, ULEffect4f(o + 8));
     SH_CALL(EffectGte_ProjectPoint)(to, Out(o));
-    SetUL(p + 0x28, UL(o));
-    SetUL(p + 0x2C, UL(o + 4));
+    SetUL(p + 0x28, ULEffect4f(o));
+    SetUL(p + 0x2C, ULEffect4f(o + 4));
     StF(p + 0x38, F(o) - half);
     StF(p + 0x3C, F(o + 4) + half);
-    SetUL(p + 0x40, UL(o + 8));
-    SetUL(p + 0x30, UL(o + 8));
+    SetUL(p + 0x40, ULEffect4f(o + 8));
+    SetUL(p + 0x30, ULEffect4f(o + 8));
     p[4] = k;
     p[5] = k;
     p[6] = 0;
@@ -990,9 +990,9 @@ extern "C" void __cdecl EffectKindB9_DrawTrail(const long* from, const long* to,
     SH_CALL(Gfx_CommitPrim)(2, 0x44);
     const U f = Frame_Counter & 0xFu;
     alignas(4) unsigned char q[12];
-    SetUL(q, UL(b) - (f << 12));
-    SetUL(q + 4, UL(b + 4) - (f << 10));
-    SetUL(q + 8, UL(b + 8));
+    SetUL(q, ULEffect4f(b) - (f << 12));
+    SetUL(q + 4, ULEffect4f(b + 4) - (f << 10));
+    SetUL(q + 8, ULEffect4f(b + 8));
     for (unsigned char dot = 0; dot < 8; ++dot) {
         if (Long(q) < Long(a)) return;
         SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
@@ -1004,8 +1004,8 @@ extern "C" void __cdecl EffectKindB9_DrawTrail(const long* from, const long* to,
         p[5] = k;
         p[6] = 0;
         SH_CALL(Gfx_CommitPrim)(2, 0x14);
-        SetUL(q, UL(q) - 0x10000u);
-        SetUL(q + 4, UL(q + 4) - 0x4000u);
+        SetUL(q, ULEffect4f(q) - 0x10000u);
+        SetUL(q + 4, ULEffect4f(q + 4) - 0x4000u);
     }
 }
 
@@ -1084,7 +1084,7 @@ void ShardCorner(unsigned char* shard, unsigned e, unsigned char* v) {
     t = c * SW(shard + e + 2);
     const U dy = Sar(e1 + t, 8) * speed;
     const U dz = (SW(shard + e + 4) << 12) * speed;
-    SetUL(v, dx + UL(shard));
+    SetUL(v, dx + ULEffect4f(shard));
     SetUL(v + 8, dz + static_cast<std::uint32_t>(rv::As<records::EffectShard>(shard)->height));
     SetUL(v + 4, dy + static_cast<std::uint32_t>(rv::As<records::EffectShard>(shard)->z));
 }
@@ -1133,7 +1133,7 @@ extern "C" void __cdecl EffectKindB9_DrawShard(unsigned char* shard) {
 // unbounded. States: _Start, 0x493E50 (part 6: the line drawn from the leader's
 // ring), Effect_StateRelease.
 extern "C" void __cdecl EffectKindBA_Run(void) {
-    Dispatch("EffectKindBA_Run", AddressOf(EffectKindBA_States), EffectKindBA_States_count);
+    DispatchEffect4f("EffectKindBA_Run", AddressOf(EffectKindBA_States), EffectKindBA_States_count);
 }
 
 // original 0x493E30 (state 0): the word +0x2E = 0; +1 up; Sound_PlayEffect(0x215).
