@@ -98,7 +98,7 @@ def load_psx_units(path):
                 head = cols
                 continue
             r = dict(zip(head, cols))
-            out[int(r['pc'], 16)] = (r['psx_unit'], r['agreement'])
+            out[int(r['pc'], 16)] = (r['psx_unit'], r['agreement'], r.get('psx', ''))
     return out
 
 
@@ -107,16 +107,18 @@ def psx_checks(M, units, psx):
     functions this unit shares with another of our units - a cut SL2 does
     not support. {unit index: [(psx_unit, [other unit ids])]}."""
     where = collections.defaultdict(set)      # psx unit -> our unit indices
-    size = collections.Counter()
+    twins = collections.defaultdict(set)      # psx unit -> distinct PSX functions twinned
     for k, u in enumerate(units):
         for i in range(u['lo'], u['hi'] + 1):
             p = psx.get(M.g[i]['pc'])
-            if p:
+            if p and p[0]:                    # an empty unit key is "no PSX unit", not one unit
                 where[p[0]].add(k)
-                size[p[0]] += 1
+                twins[p[0]].add(p[2] if len(p) > 2 and p[2] else M.g[i]['pc'])
     out = collections.defaultdict(list)
     for pu, ks in where.items():
-        if size[pu] >= 2 and len(ks) > 1:
+        # two or more *PlayStation* functions: two PC copies twinned to one PSX function are
+        # one function (2026-11-08: 14 one-function flags read that way before)
+        if len(twins[pu]) >= 2 and len(ks) > 1:
             for k in ks:
                 out[k].append((pu, sorted(unit_id(M, units[x]) for x in ks if x != k)))
     return out
