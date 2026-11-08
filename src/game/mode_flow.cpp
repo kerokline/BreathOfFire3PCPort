@@ -636,12 +636,12 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
 // DIVERGENCE DIV-0175 (known-defects D352): 1 through
 // PatchBytes("WindowResetFull") in ModeFlow_Inject, after the self-test,
 // which compared Capcom's five-field reset.
-static std::uint8_t g_reset_full = 0;
+namespace mode_flow { std::uint8_t g_reset_full = 0; }
 
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
         unsigned char* const r = At(::bof3::Img(WindowRecords_addr) + i * 0x24);
-        if (g_reset_full) {
+        if (mode_flow::g_reset_full) {
             std::memset(r, 0, 0x20);
             continue;
         }
@@ -767,7 +767,7 @@ void ModeFlow_Inject() {
     {
         // DIV-0175: after the self-test, which compared Capcom's five-field reset.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("WindowResetFull", Low32(&g_reset_full), &was, &is, 1);
+        bof3::PatchBytes("WindowResetFull", Low32(&mode_flow::g_reset_full), &was, &is, 1);
         bof3::Log("DIV-0175    the window reset clears +0..+0x1F of every record, as the US disc (on unless the line above says OFF)");
     }
     BOF3_INJECT(Transition_Start);
