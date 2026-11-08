@@ -81,7 +81,7 @@ unsigned char* Cell(U cell) { return At(UL(At(cell))); }
 // eax * 4]: the table's `entries` handlers read in place (the fuzz swaps the
 // cells for recorders); a Fatal past them, where the original jumps through
 // the dword after - the next table or data.
-void Dispatch(const char* who, U table, unsigned entries, unsigned byte) {
+void DispatchEffect2e(const char* who, U table, unsigned entries, unsigned byte) {
     const unsigned index = Sprite_Current[byte];
     if (index >= entries)
         bof3::Fatal("%s: byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -248,7 +248,7 @@ extern "C" void __cdecl EffectKind48_State7_Lift(void) {
 
 // original 0x478B30: jmp [EffectKind48_State8_Steps + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind48_State8_Run(void) {
-    Dispatch("EffectKind48_State8_Run", AddressOf(EffectKind48_State8_Steps), EffectKind48_State8_Steps_count, 2);
+    DispatchEffect2e("EffectKind48_State8_Run", AddressOf(EffectKind48_State8_Steps), EffectKind48_State8_Steps_count, 2);
 }
 
 // original 0x478B50 (step 0): the ground under the record; the spiral at its
@@ -268,7 +268,7 @@ extern "C" void __cdecl EffectKind48_State8_Turn(void) { SpiralTurn(0x40); }
 
 // original 0x478C30: jmp [EffectKind48_State9_Steps + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind48_State9_Run(void) {
-    Dispatch("EffectKind48_State9_Run", AddressOf(EffectKind48_State9_Steps), EffectKind48_State9_Steps_count, 2);
+    DispatchEffect2e("EffectKind48_State9_Run", AddressOf(EffectKind48_State9_Steps), EffectKind48_State9_Steps_count, 2);
 }
 
 // original 0x478C50 (step 0): the record at the leader's x / z, the ground
@@ -311,7 +311,7 @@ extern "C" void __cdecl EffectKind48_State9_Drain(void) {
 
 // original 0x478D30: jmp [EffectKind48_State10_Steps + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind48_State10_Run(void) {
-    Dispatch("EffectKind48_State10_Run", AddressOf(EffectKind48_State10_Steps), EffectKind48_State10_Steps_count, 2);
+    DispatchEffect2e("EffectKind48_State10_Run", AddressOf(EffectKind48_State10_Steps), EffectKind48_State10_Steps_count, 2);
 }
 
 // original 0x478D50 (step 0): the record at the leader's x / z, the ground under
@@ -331,7 +331,7 @@ extern "C" void __cdecl EffectKind48_State10_Turn(void) { SpiralTurn(0xFFC0u); }
 
 // original 0x478E40: jmp [EffectKind48_State11_Steps + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind48_State11_Run(void) {
-    Dispatch("EffectKind48_State11_Run", AddressOf(EffectKind48_State11_Steps), EffectKind48_State11_Steps_count, 2);
+    DispatchEffect2e("EffectKind48_State11_Run", AddressOf(EffectKind48_State11_Steps), EffectKind48_State11_Steps_count, 2);
 }
 
 // original 0x478E60 (step 0): the record at the leader's x / z, the ground under
@@ -360,7 +360,7 @@ extern "C" void __cdecl EffectKind48_State11_Draw(void) {
 
 // original 0x478EF0: jmp [EffectKind48_State12_Steps + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind48_State12_Run(void) {
-    Dispatch("EffectKind48_State12_Run", AddressOf(EffectKind48_State12_Steps), EffectKind48_State12_Steps_count, 2);
+    DispatchEffect2e("EffectKind48_State12_Run", AddressOf(EffectKind48_State12_Steps), EffectKind48_State12_Steps_count, 2);
 }
 
 // original 0x478F10 (step 0): the burst's size word 0x92C49E = 0xC0; the burst
@@ -565,7 +565,7 @@ extern "C" unsigned char __cdecl EffectSphere_Draw(void) {
 
 // original 0x47A950: jmp [EffectKind4A_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind4A_Run(void) {
-    Dispatch("EffectKind4A_Run", AddressOf(EffectKind4A_States), EffectKind4A_States_count, 1);
+    DispatchEffect2e("EffectKind4A_Run", AddressOf(EffectKind4A_States), EffectKind4A_States_count, 1);
 }
 
 // original 0x47A970 (state 0): the record's point = Sprite_Objects[1]'s
@@ -748,7 +748,7 @@ extern "C" void __cdecl EffectKind4A_DrawGlow(const long* point, unsigned size, 
 
 // original 0x47AA50: jmp [EffectKind4B_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind4B_Run(void) {
-    Dispatch("EffectKind4B_Run", AddressOf(EffectKind4B_States), EffectKind4B_States_count, 1);
+    DispatchEffect2e("EffectKind4B_Run", AddressOf(EffectKind4B_States), EffectKind4B_States_count, 1);
 }
 
 // original 0x47AA70 (state 0): the record at the cell x 0x738000, z 0xB8000,
@@ -833,7 +833,7 @@ extern "C" void __cdecl EffectKind4B_DebrisInit(unsigned char* debris) {
 
 // original 0x47ABA0: jmp [EffectKind4C_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind4C_Run(void) {
-    Dispatch("EffectKind4C_Run", AddressOf(EffectKind4C_States), EffectKind4C_States_count, 1);
+    DispatchEffect2e("EffectKind4C_Run", AddressOf(EffectKind4C_States), EffectKind4C_States_count, 1);
 }
 
 // original 0x47ABC0 (state 0): the record at the cell x 0x740000, z 0x60000,
@@ -900,7 +900,7 @@ extern "C" void __cdecl EffectKind4C_DrawSpark(void) {
 
 // original 0x47B2B0: jmp [EffectKind4D_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind4D_Run(void) {
-    Dispatch("EffectKind4D_Run", AddressOf(EffectKind4D_States), EffectKind4D_States_count, 1);
+    DispatchEffect2e("EffectKind4D_Run", AddressOf(EffectKind4D_States), EffectKind4D_States_count, 1);
 }
 
 // original 0x47B2D0 (state 0): the column's base +0xC / +0x10 / +0x14 = the
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
 
 // original 0x47B630: jmp [EffectKind4E_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind4E_Run(void) {
-    Dispatch("EffectKind4E_Run", AddressOf(EffectKind4E_States), EffectKind4E_States_count, 1);
+    DispatchEffect2e("EffectKind4E_Run", AddressOf(EffectKind4E_States), EffectKind4E_States_count, 1);
 }
 
 // original 0x47B650 (state 0): the leader's point as the camera vector ((x sar
