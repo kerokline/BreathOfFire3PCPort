@@ -108,7 +108,7 @@ unsigned char* Bytes(long* p) { return reinterpret_cast<unsigned char*>(p); }
 // [table + eax * 4]: the table's `entries` handlers read in place (the fuzz
 // swaps the cells for recorders); a Fatal past them, where the original
 // jumps through the dword after - the next kind's table or data.
-void Dispatch(const char* who, const void* table, unsigned entries) {
+void DispatchEffect4e(const char* who, const void* table, unsigned entries) {
     const unsigned state = S()[1];
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -193,7 +193,7 @@ void SwapPoints() {
 // original 0x48DF90 (hidden in E4D's 0x48DC40): jmp [EffectKind9B_States +
 // +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind9B_Run(void) {
-    Dispatch("EffectKind9B_Run", EffectKind9B_States, EffectKind9B_States_count);
+    DispatchEffect4e("EffectKind9B_Run", EffectKind9B_States, EffectKind9B_States_count);
 }
 
 // original 0x48DFB0 (state 0): +0x3C = AreaMap_Elevation(+0x34, +0x38) as an
@@ -291,7 +291,7 @@ extern "C" void __cdecl EffectKind9B_DrawRing(const long* point, long height) {
 // original 0x48E320 (hidden in 0x48E0A0): jmp [EffectKind9C_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKind9C_Run(void) {
-    Dispatch("EffectKind9C_Run", EffectKind9C_States, EffectKind9C_States_count);
+    DispatchEffect4e("EffectKind9C_Run", EffectKind9C_States, EffectKind9C_States_count);
 }
 
 // original 0x48E340 (state 0): the point (0x308000, 0x740000), +0x3C its
@@ -621,7 +621,7 @@ extern "C" void __cdecl EffectKind9C_DrawBeamSides(unsigned x1, unsigned y1, uns
 // original 0x48F070 (hidden in catalog part 6's 0x48ED80): jmp
 // [EffectKind9E_States + +1 * 4], unbounded.
 extern "C" void __cdecl EffectKind9E_Run(void) {
-    Dispatch("EffectKind9E_Run", EffectKind9E_States, EffectKind9E_States_count);
+    DispatchEffect4e("EffectKind9E_Run", EffectKind9E_States, EffectKind9E_States_count);
 }
 
 namespace {
@@ -774,7 +774,7 @@ extern "C" void __cdecl EffectKind9E_DrawShadePlate(const long* a, const long* b
 // original 0x48FC20 (hidden in 0x48FA80): jmp [EffectKindA0_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKindA0_Run(void) {
-    Dispatch("EffectKindA0_Run", EffectKindA0_States, EffectKindA0_States_count);
+    DispatchEffect4e("EffectKindA0_Run", EffectKindA0_States, EffectKindA0_States_count);
 }
 
 // original 0x48FC40 (state 0): the glow's point +0x64..+0x6C the leader's
@@ -1269,27 +1269,27 @@ extern "C" void __cdecl EffectKindA0_SwapLong(long* a, long* b) {
 // original 0x490A60 (hidden in 0x490A30): jmp [EffectKindA1_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKindA1_Run(void) {
-    Dispatch("EffectKindA1_Run", EffectKindA1_States, EffectKindA1_States_count);
+    DispatchEffect4e("EffectKindA1_Run", EffectKindA1_States, EffectKindA1_States_count);
 }
 
 // original 0x4910D0 (hidden in 0x490A30): jmp [EffectKindA2_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKindA2_Run(void) {
-    Dispatch("EffectKindA2_Run", EffectKindA2_States, EffectKindA2_States_count);
+    DispatchEffect4e("EffectKindA2_Run", EffectKindA2_States, EffectKindA2_States_count);
 }
 
 // original 0x4912F0 (in no list; between catalog part 6 rows): jmp
 // [EffectKindA3_States + +1 * 4], unbounded. Its first five states are kind
 // 0xA1's.
 extern "C" void __cdecl EffectKindA3_Run(void) {
-    Dispatch("EffectKindA3_Run", EffectKindA3_States, EffectKindA3_States_count);
+    DispatchEffect4e("EffectKindA3_Run", EffectKindA3_States, EffectKindA3_States_count);
 }
 
 // original 0x491AA0 (hidden in catalog part 6's 0x4918B0): call
 // [EffectKindA7_States + +1 * 4], unbounded; then, Sprite_Current read again,
 // while +1 is not 0 the glow EffectKindA7_DrawGlow(+0x34, the word +0xC, 7).
 extern "C" void __cdecl EffectKindA7_Run(void) {
-    Dispatch("EffectKindA7_Run", EffectKindA7_States, EffectKindA7_States_count);
+    DispatchEffect4e("EffectKindA7_Run", EffectKindA7_States, EffectKindA7_States_count);
     unsigned char* const s = S();
     if (s[1] == 0) return;
     using Glow = void (__cdecl*)(const long*, unsigned, unsigned);
@@ -1299,14 +1299,14 @@ extern "C" void __cdecl EffectKindA7_Run(void) {
 // original 0x491BA0 (hidden in 0x4918B0): jmp [EffectKindA8_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKindA8_Run(void) {
-    Dispatch("EffectKindA8_Run", EffectKindA8_States, EffectKindA8_States_count);
+    DispatchEffect4e("EffectKindA8_Run", EffectKindA8_States, EffectKindA8_States_count);
 }
 
 // original 0x491C60 (hidden in 0x4918B0): call [EffectKindA9_States + +1 *
 // 4], unbounded; then, while +1 is not 0, the disc EffectKindA9_DrawDisc(the word +0x2E,
 // the word +0x30, 0x80).
 extern "C" void __cdecl EffectKindA9_Run(void) {
-    Dispatch("EffectKindA9_Run", EffectKindA9_States, EffectKindA9_States_count);
+    DispatchEffect4e("EffectKindA9_Run", EffectKindA9_States, EffectKindA9_States_count);
     unsigned char* const s = S();
     if (s[1] == 0) return;
     using Disc = void (__cdecl*)(unsigned, unsigned, unsigned);
