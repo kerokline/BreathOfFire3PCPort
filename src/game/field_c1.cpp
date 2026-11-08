@@ -59,7 +59,7 @@ using U = std::uint32_t;
 using Handler = void (__cdecl*)();
 
 unsigned char* Cur() { return Sprite_Current; }
-U AddressOf(const void* p) { return Low32(p); }
+U AddressOfFieldC1(const void* p) { return Low32(p); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
@@ -117,7 +117,7 @@ void Tick() {
 U CellWord(short cx, short cz) {
     const int width = static_cast<int>(AreaMap_Header[0]);
     const int index = width * cz + static_cast<int>(Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2))) * 2 + cx;
-    return Word(At(AddressOf(AreaMap_Header) + static_cast<U>(index) * 2u));
+    return Word(At(AddressOfFieldC1(AreaMap_Header) + static_cast<U>(index) * 2u));
 }
 
 // The object at the effect's point (Sprite_ObjectAt's index): its +0x80 bit 0
@@ -239,14 +239,14 @@ extern "C" void __cdecl EffectKind06_Fade(void) {
 // original 0x469DE0 (Effect_KindHandlers[0x19]; PSX 0x8019B80C): a tail jump through
 // EffectKind19_States 0x653EF4 by +1 - EffectKind06_Start, EffectKind19_Tick,
 // EffectKind06_End.
-extern "C" void __cdecl EffectKind19_Run(void) { Entry(AddressOf(EffectKind19_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind19_Run")(); }
+extern "C" void __cdecl EffectKind19_Run(void) { Entry(AddressOfFieldC1(EffectKind19_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind19_Run")(); }
 
 // original 0x469E00 (EffectKind19_States[1]; PSX 0x8019B850): EffectKind19_Ticks 0x653F00 by
 // the variant +6 (kind 6's ticks again: _Blink for 0, 1, 2, 4, _Fade for 3,
 // _PlayOnce for 5), then the words +0x2E += +0xC and +0x30 -= +0x10 - kind
 // 6's tick with a drift.
 extern "C" void __cdecl EffectKind19_Tick(void) {
-    Entry(AddressOf(EffectKind19_Ticks), rv::As<records::EffectObject>(Cur())->param, "EffectKind19_Tick")();
+    Entry(AddressOfFieldC1(EffectKind19_Ticks), rv::As<records::EffectObject>(Cur())->param, "EffectKind19_Tick")();
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
     o->screen_x = static_cast<std::uint16_t>(o->screen_x) + Word(rv::Bytes(o) + 0xC);
     o = rv::As<records::EffectObject>(Cur());
@@ -278,7 +278,7 @@ extern "C" void __cdecl EffectKind04_HoldTick(void) {
 // original 0x46A020 (Effect_KindHandlers[0x31]; PSX 0x8019BC3C): CameraZoom_States 0x653F24
 // by +1, then MapView_Redraw = 2 (as Effect_CameraTurn's).
 extern "C" void __cdecl EffectKind31_Run(void) {
-    Entry(AddressOf(CameraZoom_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind31_Run")();
+    Entry(AddressOfFieldC1(CameraZoom_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind31_Run")();
     MapView_Redraw = 2;
 }
 
@@ -326,7 +326,7 @@ extern "C" void __cdecl CameraZoom_End(void) {
 
 // original 0x46A0E0 (Effect_KindHandlers[0x32]; PSX 0x8019BDAC): a tail jump through
 // EffectKind32_States 0x653F30 by +1.
-extern "C" void __cdecl EffectKind32_Run(void) { Entry(AddressOf(EffectKind32_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind32_Run")(); }
+extern "C" void __cdecl EffectKind32_Run(void) { Entry(AddressOfFieldC1(EffectKind32_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind32_Run")(); }
 
 // original 0x46A100 (EffectKind32_States[0]; PSX 0x8019BDF0): +8 = the leader's facing
 // (ObjTrio +8) & 7; Sprite_SetAnimationBank(0x18); +0x48, +0x24, +0x2A = 0;
@@ -365,9 +365,9 @@ extern "C" void __cdecl EffectKind32_Arc(void) {
     const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(o->x, o->z)));
     o = rv::As<records::EffectObject>(Cur());
     if (ground >= static_cast<short>(o->height_whole) || (o->flags & 0x80) || o->state == 0) {
-        o->step_y = L(At(AddressOf(EffectKind32_Hops) + 8u * o->step));
+        o->step_y = L(At(AddressOfFieldC1(EffectKind32_Hops) + 8u * o->step));
         o = rv::As<records::EffectObject>(Cur());
-        o->work_20 = L(At(AddressOf(EffectKind32_Hops) + 4 + 8u * o->step));
+        o->work_20 = L(At(AddressOfFieldC1(EffectKind32_Hops) + 4 + 8u * o->step));
         o = rv::As<records::EffectObject>(Cur());
         o->state = static_cast<unsigned char>(o->state + 1);
         o = rv::As<records::EffectObject>(Cur());
@@ -467,7 +467,7 @@ void TwinStart(const char* who) {
         return;
     }
     SpriteRec(self[4], who)[0] = 1;
-    const auto* const op = At(kKind14 ? AddressOf(EffectKind14_Op) : AddressOf(EffectKind3C_Op));
+    const auto* const op = At(kKind14 ? AddressOfFieldC1(EffectKind14_Op) : AddressOfFieldC1(EffectKind3C_Op));
     SharedScratch.w_00 = self[3];
     if (kKind14) {
         SH_CALL(EventOp_6x)(op);
@@ -939,8 +939,8 @@ extern "C" unsigned char __cdecl EffectKind17_BlockedAhead(void) {
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     const U d = rv::Bytes(o)[8];
     const U x = static_cast<U>(o->x), z = static_cast<U>(o->z);
-    const U dx = L(At(AddressOf(Field_DirectionSteps) + 8u * d));
-    const U dz = L(At(AddressOf(Field_DirectionSteps) + 4 + 8u * d));
+    const U dx = L(At(AddressOfFieldC1(Field_DirectionSteps) + 8u * d));
+    const U dz = L(At(AddressOfFieldC1(Field_DirectionSteps) + 4 + 8u * d));
     return SH_CALL(EffectKind17_BlockedAt)(S32(x + dx * 2u), S32(z + dz * 2u));
 }
 
@@ -1119,7 +1119,7 @@ extern "C" unsigned char __cdecl EffectKind1B_Hit(void) {
 
 // original 0x46BB30 (Effect_KindHandlers[0x30]; PSX 0x8019DB9C): a tail jump through
 // EffectKind30_States 0x653FE4 by +1.
-extern "C" void __cdecl EffectKind30_Run(void) { Entry(AddressOf(EffectKind30_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind30_Run")(); }
+extern "C" void __cdecl EffectKind30_Run(void) { Entry(AddressOfFieldC1(EffectKind30_States), rv::As<records::EffectObject>(Cur())->state, "EffectKind30_Run")(); }
 
 // original 0x46BB50 (EffectKind30_States[0]; PSX 0x8019DBE0): +8 = 1;
 // Sprite_InitFromEntry(the area's entry list (Area_Descriptors[Game_AreaNumber]
