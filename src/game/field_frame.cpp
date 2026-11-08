@@ -100,7 +100,7 @@ void CallHandler(unsigned char* object) {
 // recording functions in for them - for the original's copies and for ours
 // alike, so that each of the twelve is tested alone. The ones this file
 // implements are here too, called through the same pointers.
-struct Callees {
+struct CalleesFieldFrame {
     // the entries' calls, in 0x517240's order
     void (__cdecl* mode_dispatch)();
     void (__cdecl* task_records)();
@@ -147,7 +147,7 @@ struct Callees {
 };
 // MoveScript_SetTurnTarget returns 0 or 1 in al (0x517EAA, 0x517F21), which
 // Field_ObjectsFrame tests.
-const Callees kOriginals = {
+const CalleesFieldFrame kOriginals = {
     Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
     AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots,
     MoveScript_TintFrame, Field_DrawFrame,
@@ -159,7 +159,7 @@ const Callees kOriginals = {
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,
     AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, Sprite_SwapOverlays, Sprite_Draw,
 };
-Callees g = kOriginals;
+CalleesFieldFrame g = kOriginals;
 
 // `fld dword` then `fstp dword`: exact, except that a signalling NaN comes
 // back quiet (bit 22 set). As sprite_screen.cpp's.
@@ -666,7 +666,7 @@ void __cdecl StubSpriteDraw() {
     if (h % 5 == 0) Sprite_Current = Pool(h >> 12);
 }
 
-const Callees kStubs = {
+const CalleesFieldFrame kStubs = {
     StubVoid<13>, StubVoid<14>, StubVoid<1>, StubVoid<2>, StubVoid<3>, StubVoid<4>, StubVoid<5>, StubVoid<6>,
     StubVoid<7>, StubVoid<8>, StubVoid<9>, StubVoid<10>, StubVoid<11>, StubVoid<12>,
     StubVoid<15>, StubVoid<16>, StubVoid<17>,
