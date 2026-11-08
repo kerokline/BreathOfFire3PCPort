@@ -70,36 +70,36 @@ Callees g = kOriginals;
 namespace {
 
 using namespace menu_draw_helpers;
-using move_script::At;
-using move_script::Long;
+constexpr auto& AtMenuDrawHelpers = move_script::At;
+constexpr auto& LongMenuDrawHelpers = move_script::Long;
 using move_script::SetWord;
-using move_script::Word;
+constexpr auto& WordMenuDrawHelpers = move_script::Word;
 
 using Handler = void (__cdecl*)();
 
 unsigned char* Rec() {
-    return At(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+    return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 }
 
 // rv::As<records::WindowRecord>(p) views a window record
 // (docs/typed-records.md; WindowRecords
 // 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
-short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S(const unsigned char* p) { return static_cast<short>(WordMenuDrawHelpers(p)); }
 unsigned X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->x; }
 unsigned Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->y; }
 
 // `call / jmp [table + index * 4]`: the .data dword read at the call, the
 // index unbounded as in the original (a byte, zero-extended).
 void Dispatch(U table, unsigned index) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + index * 4)))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
 }
 // The step: the current record's byte +3 through a step table.
 void Step(U table) { Dispatch(table, Rec()[3]); }
 
 // A party slot's character record: 0x66972C[0x904062[slot]], both bytes, the
 // slot unbounded.
-unsigned Member(unsigned slot) { return At(::bof3::Img(Character_IndexById_addr) + At(::bof3::Img(Cond_Flags_addr) + 0xd2 + slot)[0])[0]; }
+unsigned Member(unsigned slot) { return AtMenuDrawHelpers(::bof3::Img(Character_IndexById_addr) + AtMenuDrawHelpers(::bof3::Img(Cond_Flags_addr) + 0xd2 + slot)[0])[0]; }
 
 // The slides: x (+4) or y (+6) stepped by `by`; past `bound` (signed 16-bit;
 // `below` says which side) it is set to `to` and the step +3 goes to 0.
@@ -164,12 +164,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(voi
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* w = Rec();
     g.title_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0x118, 0x13, static_cast<int>(colour));
-    const unsigned id = Word(Rec() + 0x10);
+    const unsigned id = WordMenuDrawHelpers(Rec() + 0x10);
     if (id == 0) return;
     const unsigned char* text = g.msg_system(id);
     w = Rec();
     g.text_draw_at(static_cast<std::uint16_t>(X(w) + 7), static_cast<std::uint16_t>(Y(w) + 3), 0, 0xFF, text);
-    const unsigned again = Word(Rec() + 0x10);
+    const unsigned again = WordMenuDrawHelpers(Rec() + 0x10);
     if (again != 0x36 && again != 0x49 && again != 0x4A && again != 0x52) return;
     text = g.msg_system(0xF);
     if (g_shop_yes_no_line) text = YesNoLayout_SystemLine(text);   // DIV-0027, amended 2026-10-03
@@ -212,7 +212,7 @@ extern "C" void __cdecl ShopWin_MoneySlideUp(void) { SlideY(-0x10, -0x14, false,
 // No step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_CursorBoxDraw(void) {
     const unsigned char* const w = Rec();
-    const unsigned width = Word(At(::bof3::Img(ShopWin_CursorBoxWidths_addr) + w[0xA] * 2u));
+    const unsigned width = WordMenuDrawHelpers(AtMenuDrawHelpers(::bof3::Img(ShopWin_CursorBoxWidths_addr) + w[0xA] * 2u));
     g.cursor_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), static_cast<int>(width), 0x34, w[0xB], 6);
 }
 
@@ -244,7 +244,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
 // bound at every width; in the wide view the box is drawn to the bound moved
 // out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuWin_SlideOutLeft(void) {
-    const short bound = Widescreen_SlideLogic(static_cast<short>(Word(At(g.slide_left_bound))));
+    const short bound = Widescreen_SlideLogic(static_cast<short>(WordMenuDrawHelpers(AtMenuDrawHelpers(g.slide_left_bound))));
     const short x_read = S(Rec() + 4);
     SlideX(-0x20, bound, true, bound);
     Widescreen_SlideHeld(Rec(), x_read, bound);
