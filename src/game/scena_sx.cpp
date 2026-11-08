@@ -48,7 +48,7 @@
 namespace {
 
 namespace at = scena_sx::at;
-using move_script::At;
+// move_script::At is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::Long;
 using move_script::SetLong;
 
@@ -62,11 +62,11 @@ using move_script::SetWord;
 using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Record(unsigned n) { return At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
+unsigned char* RecordScenaSx(unsigned n) { return move_script::At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
-unsigned char* MemberRecord(unsigned char id) { return Record(Character_IndexById[id]); }
-unsigned char* Obj(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
+unsigned char* MemberRecord(unsigned char id) { return RecordScenaSx(Character_IndexById[id]); }
+unsigned char* ObjScenaSx(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
 
 // A signed byte's value.
 int S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -106,9 +106,9 @@ void Grow(unsigned char* word, int gain, unsigned char bias) {
 // (row +7, ...). Then the level +0xA and Char_RecalcStats.
 extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
     const unsigned id = index_arg & 0xFF;
-    unsigned char* const rec = Record(id);
+    unsigned char* const rec = RecordScenaSx(id);
     const unsigned rows = id * 99;
-    const auto* const exp_table = At(::bof3::Img(bof3::addr::Char_ExpTable));
+    const auto* const exp_table = move_script::At(::bof3::Img(bof3::addr::Char_ExpTable));
     const std::int32_t exp = rv::As<records::CharRecord>(rec)->exp;
     unsigned char level = 1;
     std::int32_t sum = 0;
@@ -150,13 +150,13 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
 // Sprite_EnsureAnimation of it. No PSX twin paired.
 extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, unsigned formation_arg) {
     BossSi_CentreX = x;
-    const unsigned char formation = At(::bof3::Img(bof3::addr::EventBattle_Records))[(formation_arg & 0xFF) * 4 + 1];
+    const unsigned char formation = move_script::At(::bof3::Img(bof3::addr::EventBattle_Records))[(formation_arg & 0xFF) * 4 + 1];
     BossSi_CentreZ = z;
-    At(::bof3::Img(at::kFormation))[0] = formation;
+    move_script::At(::bof3::Img(at::kFormation))[0] = formation;
     if (Field_MemberCount == 0) return;
     std::uint32_t slot_arg = formation_arg;
     for (unsigned i = 0; static_cast<int>(i) < Field_MemberCount; ++i) {
-        unsigned char* const o = Obj(i);
+        unsigned char* const o = ObjScenaSx(i);
         Field_State = o;
         Sprite_Current = o;
         const unsigned char id = o[0x89];
@@ -171,11 +171,11 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
         SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), at::kFormationPlace.v)(
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
-        unsigned char* const pos = At(::bof3::Img(at::kSlotPositions) + (slot_arg & 0xFF) * 8);
+        unsigned char* const pos = move_script::At(::bof3::Img(at::kSlotPositions) + (slot_arg & 0xFF) * 8);
         SetLong(pos, rv::As<records::SpriteObject>(s)->x);
         SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
-        s[8] = At(::bof3::Img(bof3::addr::BattleFormation_Anims))[At(::bof3::Img(at::kFormation))[0]];
+        s[8] = move_script::At(::bof3::Img(bof3::addr::BattleFormation_Anims))[move_script::At(::bof3::Img(at::kFormation))[0]];
         const auto p = Low32(s);
         EnsureAnimation((p & 0xFFFFFF00u) | s[8]);
     }
@@ -189,10 +189,10 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
 extern "C" void __cdecl Party_ReloadPalettes(void) {
     if (Field_MemberCount == 0) return;
     for (unsigned i = 0; static_cast<int>(i) < Field_MemberCount; ++i) {
-        unsigned char* const o = Obj(i);
+        unsigned char* const o = ObjScenaSx(i);
         Sprite_Current = o;
         SH_CALL(Sprite_ReleaseTint)(o);
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + 0x40 * i)), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + 0x40 * i)), 0);
     }
 }
 
@@ -205,7 +205,7 @@ extern "C" void __cdecl Party_ReloadPalettes(void) {
 // twin paired; Party_RestoreAll (0x580630, the inn's) is its larger cousin.
 extern "C" void __cdecl Party_HealJoined(void) {
     for (unsigned r = 0; r < 8; ++r) {
-        unsigned char* const rec = Record(r);
+        unsigned char* const rec = RecordScenaSx(r);
         if (!(rec[0xB] & 1)) continue;
         rec[0x1E] = 0;
         SH_CALL(Char_RecalcStats)(rec);
@@ -216,7 +216,7 @@ extern "C" void __cdecl Party_HealJoined(void) {
     }
     const int n = Field_MemberCount;
     for (int i = 0; i < n; ++i)
-        std::memmove(Obj(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), at::kRecordStride);
+        std::memmove(ObjScenaSx(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), at::kRecordStride);
 }
 
 // original 0x534030: a member out of the party (the argument's low byte, an
@@ -233,8 +233,8 @@ extern "C" void __cdecl Party_HealJoined(void) {
 extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     SH_CALL(Party_JoinReset)();
     const auto id = static_cast<unsigned char>(id_arg);
-    unsigned char* const first = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
-    unsigned char* const second = At(::bof3::Img(Cond_Flags_addr) + 0xd5);
+    unsigned char* const first = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
+    unsigned char* const second = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd5);
     const int count = Field_MemberCount;
     int k = 0;
     while (k < count && second[k] != id) ++k;
@@ -252,7 +252,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
         for (int s = 0; s < Field_MemberCount - 1; ++s) {
             if (first[s] != 0xFF) continue;
             first[s] = first[s + 1];
-            unsigned char* const o = Obj(static_cast<unsigned>(s));
+            unsigned char* const o = ObjScenaSx(static_cast<unsigned>(s));
             Sprite_Current = o;
             first[s + 1] = 0xFF;
             std::memmove(o, o + at::kObjStride, at::kObjStride);
@@ -308,7 +308,7 @@ extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned memb
     std::uint32_t took = amount;
     if (hp <= (amount & 0xFFFF)) took = hp - 1;
     rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, hp - took);
-    unsigned char* const actor = Record(Field_State[0x148]);
+    unsigned char* const actor = RecordScenaSx(Field_State[0x148]);
     if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) {
         rv::Store<unsigned>(rv::As<records::CharRecord>(actor)->status, rv::As<records::CharRecord>(actor)->status | 0x2000);
         rv::Store<unsigned>(rv::As<records::PartyMember>(Field_State)->status, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
@@ -365,7 +365,7 @@ extern "C" void __cdecl MapView_FillCells(void) {
         for (int j = 0; j < 0x1C; ++j) {
             col = col == 0x1B ? 0 : col + 1;
             const std::uint32_t cell = Low32(MapView_CellItems) + static_cast<std::uint32_t>(row * 28 + col) * 4;
-            SH_CALL(MapView_CellToMap)(i, j, At(cell));
+            SH_CALL(MapView_CellToMap)(i, j, move_script::At(cell));
         }
     }
     // DIV-0041 (wide-ring): the rim refilled in place, its items kept, as Capcom's.
@@ -401,13 +401,13 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
         const std::int32_t acc = static_cast<std::int32_t>(static_cast<std::uint32_t>(CameraTurn_Angles[2]) +
                                                            static_cast<std::uint32_t>(CameraTurn_Steps[2]));
         CameraTurn_Angles[2] = acc;
-        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<std::uint32_t>(acc >> 16));
+        SetWord(move_script::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<std::uint32_t>(acc >> 16));
         --left;
         ScenaSx_EaseLeft = left;
         return left != 0 ? 1 : 0;
     }
     if (speed == 0) {
-        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
+        SetWord(move_script::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
         return 0;
     }
     const unsigned char mode = Sprite_Kind2.direction;
@@ -415,7 +415,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
     const auto product = static_cast<unsigned char>(per * S8(speed));
     if (product == 0) bof3::Fatal("Camera_EaseAngleFB: 0x80 / 0 (speed byte 0x%X): the original faults", speed);
     const std::int32_t frames = 0x80 / product;
-    const auto cur = static_cast<short>(Word(At(::bof3::Img(Cond_AngleFB_addr))));
+    const auto cur = static_cast<short>(Word(move_script::At(::bof3::Img(Cond_AngleFB_addr))));
     const std::int32_t total = static_cast<std::int32_t>(static_cast<std::uint32_t>(frames) *
                                                          static_cast<std::uint32_t>(S8(static_cast<unsigned char>(frames_arg))));
     CameraTurn_Angles[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(cur) << 16);
@@ -452,7 +452,7 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
         list = SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListOf.v)(member, id_arg, which);
         slots = 10;
     } else {
-        list = At(::bof3::Img(at::kAbilityShared));
+        list = move_script::At(::bof3::Img(at::kAbilityShared));
         slots = 0x80;
     }
     for (unsigned i = 0; i < slots; ++i) {
@@ -467,7 +467,7 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
 // byte of the 32-byte key-item list 0x904554, al 1; full, al 0. PSX twin
 // 0x80166B10 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl KeyItem_Add(unsigned item) {
-    unsigned char* const list = At(::bof3::Img(at::kKeyItems));
+    unsigned char* const list = move_script::At(::bof3::Img(at::kKeyItems));
     for (unsigned i = 0; i < 0x20; ++i) {
         if (list[i] != 0) continue;
         list[i] = static_cast<unsigned char>(item);
@@ -488,13 +488,13 @@ extern "C" unsigned char __cdecl Inventory_Remove(unsigned category, unsigned it
     if (item == 0) return 0;
     if (static_cast<unsigned char>(count_arg) == 0) return 0;
     const unsigned cat = category & 0xFF;
-    unsigned char* ids = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(bof3::addr::Inventory_IdLists) + 4 * cat))));
+    unsigned char* ids = move_script::At(static_cast<std::uint32_t>(Long(move_script::At(::bof3::Img(bof3::addr::Inventory_IdLists) + 4 * cat))));
     // the count list's pointer, stepped with the id's though category 4's is 0 and never read
-    const auto counts = static_cast<std::uint32_t>(Long(At(::bof3::Img(bof3::addr::Inventory_CountLists) + 4 * cat)));
+    const auto counts = static_cast<std::uint32_t>(Long(move_script::At(::bof3::Img(bof3::addr::Inventory_CountLists) + 4 * cat)));
     for (unsigned i = 0; i < 0x80; ++i, ++ids) {
         if (*ids != item) continue;
         if (static_cast<unsigned char>(category) != 4) {
-            unsigned char* const have = At(counts + i);
+            unsigned char* const have = move_script::At(counts + i);
             const auto n = static_cast<unsigned char>(count_arg);
             if (*have < n) return 0;
             *have = static_cast<unsigned char>(*have - n);
@@ -522,7 +522,7 @@ extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
 // 9,999,999 it is 9,999,999 and al 0, else al 1. PSX Zenny_Add 0x80166FFC
 // (the sibling's name; pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Zenny_Add(std::uint32_t amount, unsigned tally) {
-    unsigned char* const money = At(::bof3::Img(Party_Zenny_addr));
+    unsigned char* const money = move_script::At(::bof3::Img(Party_Zenny_addr));
     SetLong(money, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(money)) + amount));
     if (static_cast<unsigned char>(tally) == 0)
         Rest4a_CountC = static_cast<std::int32_t>(Rest4a_CountC + amount);
