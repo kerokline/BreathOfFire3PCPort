@@ -66,7 +66,7 @@ using Handler = scenario_harness::Handler;
 // the table's `entries` handlers read in place (the fuzz swaps the cells for
 // recorders); a Fatal past them, where the original jumps through the dword
 // after - the next kind's table, a null or data.
-void Dispatch(const char* who, U table, unsigned entries) {
+void DispatchEffect4a(const char* who, U table, unsigned entries) {
     const unsigned state = Sprite_Current[1];
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -95,7 +95,7 @@ bool Reached(U x) {
 }
 
 // +1 0xD and +9 0 when the record at `x` has reached the leader; else +1 `next`.
-void Check(U x, unsigned next) {
+void CheckEffect4a(U x, unsigned next) {
     unsigned char* const s = S();
     if (Reached(x)) {
         s[1] = 0xD;
@@ -165,7 +165,7 @@ bool CountingHeld() {
 
 // original 0x488020 (EffectKind82_States[11], hidden in 0x487BF0): record 0
 // reached the leader: +1 0xD, +9 0; else +1 0xC.
-extern "C" void __cdecl EffectKind82_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0x34, 0xC); }
+extern "C" void __cdecl EffectKind82_Check11(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0x34, 0xC); }
 
 // original 0x488060 (state 12): +1 0; 0x903849 0 when it is 0xFF or 0x90384A
 // is 0x80.
@@ -216,7 +216,7 @@ extern "C" void __cdecl EffectKind82_End(void) {
 // original 0x488220 (Effect_KindHandlers[0x83], hidden in 0x487BF0): jmp
 // [EffectKind83_States + +1 * 4].
 extern "C" void __cdecl EffectKind83_Run(void) {
-    Dispatch("EffectKind83_Run", AddressOf(EffectKind83_States), EffectKind83_States_count);
+    DispatchEffect4a("EffectKind83_Run", AddressOf(EffectKind83_States), EffectKind83_States_count);
 }
 
 // original 0x488240 (state 1): +1 0x16 when record 0 (not 1) has reached the
@@ -246,23 +246,23 @@ extern "C" void __cdecl EffectKind83_Wait(void) {
 // + 0x4000 four times (a cell), +1 3.
 extern "C" void __cdecl EffectKind83_Push2(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 3, -1); }
 // original 0x488410 (state 3): record 1 reached: +1 0xD, +9 0; else +1 4.
-extern "C" void __cdecl EffectKind83_Check3(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 4); }
+extern "C" void __cdecl EffectKind83_Check3(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 4); }
 // original 0x488450 (state 4): a push, +1 5.
 extern "C" void __cdecl EffectKind83_Push4(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 5, -1); }
 // original 0x488490 (state 5): reached: +1 0xD; else +1 6.
-extern "C" void __cdecl EffectKind83_Check5(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 6); }
+extern "C" void __cdecl EffectKind83_Check5(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 6); }
 // original 0x4884D0 (state 6): a push, +1 7.
 extern "C" void __cdecl EffectKind83_Push6(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 7, -1); }
 // original 0x488510 (state 7): reached: +1 0xD; else +1 8.
-extern "C" void __cdecl EffectKind83_Check7(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 8); }
+extern "C" void __cdecl EffectKind83_Check7(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 8); }
 // original 0x488550 (state 8): a push, +1 9.
 extern "C" void __cdecl EffectKind83_Push8(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 9, -1); }
 // original 0x488590 (state 9): reached: +1 0xD; else +1 0xA.
-extern "C" void __cdecl EffectKind83_Check9(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xA); }
+extern "C" void __cdecl EffectKind83_Check9(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xA); }
 // original 0x4885D0 (state 10): a push, +1 0xB.
 extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 0xB, -1); }
 // original 0x488610 (state 11): reached: +1 0xD; else +1 0xC.
-extern "C" void __cdecl EffectKind83_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xC); }
+extern "C" void __cdecl EffectKind83_Check11(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xC); }
 
 // original 0x433640 (EffectKind83_States[12], and the stack table of the
 // battle's BattleFx_ActorWatch 0x433460, its state 2; hidden in 0x432F10): +1 0.
@@ -319,7 +319,7 @@ extern "C" void __cdecl EffectKind83_Finish(void) {
 // original 0x4887E0 (Effect_KindHandlers[0x84], hidden in 0x487BF0): jmp
 // [EffectKind84_States + +1 * 4].
 extern "C" void __cdecl EffectKind84_Run(void) {
-    Dispatch("EffectKind84_Run", AddressOf(EffectKind84_States), EffectKind84_States_count);
+    DispatchEffect4a("EffectKind84_Run", AddressOf(EffectKind84_States), EffectKind84_States_count);
 }
 
 // original 0x488800 (state 0): +1 1 when Input_Held is 0x3000, 0x6000 or 0x2000.
@@ -391,7 +391,7 @@ extern "C" void __cdecl EffectKind84_Pause(void) {
 // original 0x4889E0 (Effect_KindHandlers[0x85], hidden in 0x487BF0): jmp
 // [EffectKind85_States + +1 * 4].
 extern "C" void __cdecl EffectKind85_Run(void) {
-    Dispatch("EffectKind85_Run", AddressOf(EffectKind85_States), EffectKind85_States_count);
+    DispatchEffect4a("EffectKind85_Run", AddressOf(EffectKind85_States), EffectKind85_States_count);
 }
 
 // original 0x488A00 (state 0): the tile's colour +0x5D..+0x5F 0, the message
@@ -497,7 +497,7 @@ extern "C" void __cdecl EffectKind85_Wait(void) {
 // original 0x488BE0 (Effect_KindHandlers[0x86], hidden in 0x487BF0; no list of
 // the cut has it): jmp [EffectKind86_States + +1 * 4].
 extern "C" void __cdecl EffectKind86_Run(void) {
-    Dispatch("EffectKind86_Run", AddressOf(EffectKind86_States), EffectKind86_States_count);
+    DispatchEffect4a("EffectKind86_Run", AddressOf(EffectKind86_States), EffectKind86_States_count);
 }
 
 // original 0x488C00 (state 0): two free sprites (Sprite_FindFree) into +3 and
@@ -599,7 +599,7 @@ extern "C" void __cdecl EffectKind86_End(void) {
 // original 0x488F60 (Effect_KindHandlers[0x87], hidden in 0x487BF0): jmp
 // [EffectKind87_States + +1 * 4].
 extern "C" void __cdecl EffectKind87_Run(void) {
-    Dispatch("EffectKind87_Run", AddressOf(EffectKind87_States), EffectKind87_States_count);
+    DispatchEffect4a("EffectKind87_Run", AddressOf(EffectKind87_States), EffectKind87_States_count);
 }
 
 // original 0x488F80 (state 0): +6 the draw pass flags (Draw_PassFlags' low
