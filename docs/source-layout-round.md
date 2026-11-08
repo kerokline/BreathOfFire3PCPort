@@ -941,9 +941,31 @@ is expected; the doc says so.
    in two overlays and no two neighbours sharing one - so the rule was
    dropped and the sheet regenerated: 613 proposed files, 153 rows that want
    a call, 516 settled. **The 516 settled rows are confirmed** (the owner,
-   later the same evening): every stand-alone unit keeps its own file. Still
-   open: the 36 "the same names" rows, the 37 PSX flags that are one
-   overlay's own code, row 585.
+   later the same evening): every stand-alone unit keeps its own file.
+   **The 36 "the same names" rows were audited and decided the same evening**
+   (`slb1108\same_names_audit.txt`; the measure per seam: calls across,
+   unit-local statics read on both sides, PSX images, the hard cut between
+   them). Every one of the 14 groups was split by a PlayStation cut, of two
+   kinds. *Class A, 10 groups, 28 rows:* the twin of a one- or two-function
+   unit inside the run points at another overlay. A masked scan of the host
+   overlay (group p's method) found a copy for seven of them -
+   `EffectKind81_FindFreeDrop`, `EffectKindB9_SpawnSpark`, `Leech_WaitOrbs`,
+   `EffectKind18Sub54_Pulse`, `Scena10_Object11`, `Scena10_Object12`,
+   `Scena18_EnterArea` (this one at the very same address) - and those twins
+   were re-pointed in `symbols.toml`, which merged their units (661 units
+   now, the whole Leech spell one unit of 23). The other four
+   (`BattleIntro_Finish`, `Magic018Row53_Wait`, `Scena16_EnterArea`,
+   `Scena17_Intro04`) are a function that on PlayStation lived in one overlay
+   and was reached from others, which the PC build holds one copy of among
+   the host unit's functions: the join is right, and those 16 rows stand as
+   proposed. *Class B, 3 groups, 8 rows:* one image, but the PlayStation link
+   order runs backwards at the seam (`battle_4`, `field_4` with its four
+   units, `gpu`): two objects there, so they **stand alone**; `tu_census.py`
+   now refuses a same-names join across a `psx back` cut, areas excepted
+   (the "one area" call). With every join class decided, the sheet's first
+   table holds the PSX checks only: 71 rows want a call, 590 are settled,
+   617 proposed files. Still open: the PSX flags that are one overlay's own
+   code (71 rows carry a flag, most of them common code), row 585.
 10. **The gate for shared state** (group a's three classes, section 4): a
    promotion that changes the object is refused today. Do classes 2 (data
    layout) and 3 (an x86_64 indirect call through a now-external pointer)

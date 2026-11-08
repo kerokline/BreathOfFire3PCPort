@@ -782,6 +782,14 @@ def proposals(M, units, names, hard):
     """Stand alone, or join neighbours in one file, with the reason. A unit is
     never split. Returns per unit (file, proposal, reason)."""
     hard_edges = {i for i, j, *_ in hard if j == i + 1}
+
+    def back_order(u, v):
+        """a PSX back-order cut between u and v: one image, the PlayStation
+        linked v's code before u's, so they were two objects there (the
+        owner, 2026-11-08: such units stand alone whatever their names)"""
+        return any(u['lo'] <= i <= u['hi'] and v['lo'] <= j <= v['hi'] and 'psx back' in why
+                   for i, j, kind, why in hard)
+
     groups = [[0]]
     reasons = {}
     for k in range(1, len(units)):
@@ -795,7 +803,7 @@ def proposals(M, units, names, hard):
             why = None
         elif {ha, hb} <= {'Font', 'Glyph'}:
             why = "fonts together (the owner's example)"
-        elif a['sub'] == b['sub'] and a['stem'] == b['stem']:
+        elif a['sub'] == b['sub'] and a['stem'] == b['stem'] and (a['sub'] == 'area' or not back_order(units[k - 1], units[k])):
             why = f'the same names ({a["stem"]})' if a['sub'] != 'area' else f'one area ({a["stem"]})'
         elif (a['sub'] == b['sub'] and b['sub'] != 'area' and units[k - 1]['hi'] not in hard_edges
               and (units[k]['hi'] == units[k]['lo']
@@ -1091,7 +1099,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
             c[how] += b - a + 1
         n = names[k]
         f = files[k]
-        call = f[1].startswith('join') or bool(pchk.get(k))
+        call = bool(pchk.get(k))    # every join class was decided on 2026-11-08 (round doc 7b item 9)
         rows.append((call, f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
                      f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
                      f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
@@ -1106,13 +1114,14 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
     settled = [r for call, r in rows if not call]
     joins = sum(1 for k in range(len(units)) if files[k][1].startswith('join'))
     L.append(f'## Rows that want a call ({len(want)})\n')
-    L.append(f'A *join* proposal (a choice between one file and several), a PSX check, or both: '
-             f'{joins} join rows and {len(pchk)} rows with a PSX check.\n')
+    L.append(f'A PSX check: a PlayStation unit whose twins this table puts in more than one unit. '
+             f'(The join proposals were all decided by the owner on 2026-11-08, round doc 7b item 9: '
+             f'{joins} join rows stand as proposed and sit in the second table.)\n')
     L.extend(header + want)
     L.append(f'\n## Rows with one recommended layout ({len(settled)})\n')
-    L.append('A *stand alone* unit that no neighbour shares a name or folder rule with and that no '
-             'PlayStation unit contests: the tool found no alternative, so these rows need no call '
-             'unless the owner wants to make one.\n')
+    L.append('A *stand alone* unit that no PlayStation unit contests, or a *join* the owner approved '
+             '(one area, a one-function unit, the same names where the PlayStation link order agrees): '
+             'these rows need no call.\n')
     L.extend(header + settled)
     with open(path, 'w', newline='\n', encoding='utf-8') as fh:
         fh.write('\n'.join(L) + '\n')
