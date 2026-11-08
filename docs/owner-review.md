@@ -90,12 +90,15 @@ Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc 
   item below. JA's sheets and DIV-0196 were seen and approved on 2026-10-31.
 - **The Preset page** (ledger-fields stage D, PR #164; [`ledger-fields-round.md`](ledger-fields-round.md) 5): the
   Settings sub-tab at 100 % and 200 % scale, screenshots in `C:\Users\kerok\bof3x-runs\lfd1028\d2\shots`.
-- **The enemy-information cheat** (DIV-0187, PR #169; [`cheats.md`](cheats.md) 6): checked headless only; a fight
-  with `cheat.enemy_info=1` shows every enemy's HP gauge and Identify stats from the first meeting.
+  **The owner, 2026-11-07 night: opened and toggled; the play stayed under Recommended.** Left: a stretch of play
+  under each of the other three presets.
+- ~~**The enemy-information cheat** (DIV-0187, PR #169; [`cheats.md`](cheats.md) 6)~~ - **played with, working
+  well (the owner, 2026-11-07 night).**
 - **The consumables sorted by id** (DIV-0189, PR #173; [`rest_2e.md`](rest_2e.md)): a sort on a long game's bag,
   and your word on a hand-written type order as the next step.
-- **The no-fail cheat's next minigame** (DIV-0188; [`cheats.md`](cheats.md) 7): a recording of the well's start
-  (`BOF3X_RECORD`).
+- **The no-fail cheats** (DIV-0188; [`cheats.md`](cheats.md) 7): **played with, working well (the owner,
+  2026-11-07 night).** The well's start recording (`BOF3X_RECORD`) is still wanted for the harness, not for the
+  release.
 
 ## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 

@@ -38,9 +38,10 @@ What that retires from alpha.6's "watched, not yet played" list ([`releases/v0.1
 
 What the clears do **not** establish, and the notes must keep saying:
 
-- **The Preset page** (DIV from the ledger-fields round, PR #164) and **the enemy-information switch** (DIV-0187)
-  and the **no-fail minigame cheats** (DIV-0188): were they used in the plays? If not, they stay "checked
-  headless". The owner answers this line.
+- **Answered by the owner, 2026-11-07 night:** the **enemy-information switch** (DIV-0187) and the **no-fail
+  minigame cheats** (DIV-0188) were both played with and work well - "played" lines in the notes. The **Preset
+  page** (PR #164) was opened and toggled, but the play was under **Recommended** throughout: the page itself is
+  seen, the other three presets are still "checked headless", and the notes say so.
 - **The 32-bit build's movies through our decoder** (DIV-0205): the owner saw the Capcom movie on the 64-bit
   build copied into `game\` (owner-review, 2026-11-07 evening); the 32-bit build goes through the same code and
   has not been started since. One start of the released 32-bit zip covers it (section 4, item 2).
@@ -76,10 +77,10 @@ What the clears do **not** establish, and the notes must keep saying:
 
 ## 4. The work before the tag
 
-In order. Items 1..3 are the owner's; 4..8 an agent can do and the owner reads.
+In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner reads.
 
-1. **The owner's answer** (section 1): which of the Preset page, the enemy-information switch and the
-   no-fail cheats were used in play.
+1. ~~The owner's answer~~ - given 2026-11-07 night (section 1): the two cheats played, the Preset page seen,
+   the other presets not played.
 2. **One start of the 32-bit zip** from the `latest` build or the draft: the two movies with sound (DIV-0205 on
    the player's width), then the title. Five minutes.
 3. **The upgrade path**: unzip the draft over a copy of a real alpha.5 folder (the owner's own, copied aside, or
