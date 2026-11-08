@@ -107,7 +107,8 @@ commit` (tab-separated), `#` lines comments, one row per symbol the x86_64
 gate lets differ. A DIFFER, GONE or NEW line of a code symbol listed there
 whose class is a known one - `inline` (the compiler inlined, or stopped
 inlining, a moved or copied helper because its callers in the file changed)
-or `low32-site` (Low32()'s failure message names the new file and line) -
+or `low32-site` (Low32()'s failure message names another file, line or
+function: __FILE__, __LINE__, __builtin_FUNCTION() of a moved or renamed caller) -
 prints as `EXCEPT <class> <symbol>` and is not counted. The symbol is the
 name the line prints (for a `local:<hash>` key, any of the names it lists).
 A data, bss or inject line is never excepted. A row whose class is not a
