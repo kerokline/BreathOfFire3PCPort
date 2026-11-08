@@ -47,23 +47,23 @@ constexpr unsigned kEffectCount = 20;
 // kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects (its name is a macro here)
 // kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
 // kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
-constexpr U kEffectStride = 0x80;
+constexpr U kEffectStrideRest1f = 0x80;
 // kPanelPose: now Fish_Nibbling (symbols.toml): rest_1g's "a fish is nibbling", its one reader Fish_Swim; this file only clears it
 // kPanelCounter: now Effect1e_Choice (symbols.toml).
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char& Cell(unsigned i) { return At(::bof3::Img(kCells.v))[i & 0xFF]; }
+unsigned char& CellRest1f(unsigned i) { return At(::bof3::Img(kCells.v))[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
+U StepXRest1f(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZRest1f(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 // The pose offset of a direction: (d - 1) / 2 as the originals compute it
 // (`dec eax; cdq; sub eax, edx; sar eax, 1`), so direction 0 gives 0.
 unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((static_cast<int>(d) - 1) / 2); }
 // `cdq; sub eax, edx; sar eax, 1`: a signed halving that rounds toward zero.
-long Half(U v) {
+long HalfRest1f(U v) {
     const auto s = static_cast<std::int32_t>(v);
     return static_cast<long>(static_cast<std::int32_t>(static_cast<U>(s) + (s < 0 ? 1u : 0u)) >> 1);
 }
@@ -72,31 +72,31 @@ std::uint16_t W16(unsigned v) { return static_cast<std::uint16_t>(v); }
 // A dispatcher: the table's entry by `index`, called as the original jumps
 // to it - a Fatal past the table's own entries, where the original jumps
 // through the dword after (docs/rest_1f.md section 7).
-void Dispatch(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
+void DispatchRest1f(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
     if (index >= count)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1f.md section 7)",
                     who, by, index, count, static_cast<unsigned>(::bof3::VaOf(Low32(table))));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
-void ByState(const char* who, const unsigned long* table, unsigned count) {
-    Dispatch(who, "Sprite_Current +2", table, count, Sc()[2]);
+void ByStateRest1f(const char* who, const unsigned long* table, unsigned count) {
+    DispatchRest1f(who, "Sprite_Current +2", table, count, Sc()[2]);
 }
-void ByStep(const char* who, const unsigned long* table, unsigned count) {
-    Dispatch(who, "Sprite_Current +3", table, count, Sc()[3]);
+void ByStepRest1f(const char* who, const unsigned long* table, unsigned count) {
+    DispatchRest1f(who, "Sprite_Current +3", table, count, Sc()[3]);
 }
-void ByForm(const char* who, const unsigned long* table, unsigned count) {
-    Dispatch(who, "Sprite_Current's word +0x2C", table, count, rv::As<records::PartyMember>(Sc())->column);
+void ByFormRest1f(const char* who, const unsigned long* table, unsigned count) {
+    DispatchRest1f(who, "Sprite_Current's word +0x2C", table, count, rv::As<records::PartyMember>(Sc())->column);
 }
 
 // An Effect_Objects record by an index byte the original uses unchecked
 // (`shl reg, 7`): a Fatal past the 20 records.
-unsigned char* EffectAt(unsigned index, const char* who) {
+unsigned char* EffectAtRest1f(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
-                    who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
-    return rv::Bytes(Effect_Objects) + index * kEffectStride;
+                    who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStrideRest1f));
+    return rv::Bytes(Effect_Objects) + index * kEffectStrideRest1f;
 }
 
 // The object Sprite_ObjectAt found gets bit 0 of its +0x80: 0..0x1D a
@@ -104,7 +104,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
 // 0x1E; movsx eax, al; jge`, a signed byte). Sprite_ObjectAt answers 0..0x21
 // or 0xFF; any other byte - a negative one indexes before Sprite_Objects -
 // aborts here.
-void MarkObject(unsigned char found, const char* who) {
+void MarkObjectRest1f(unsigned char found, const char* who) {
     const int i = static_cast<signed char>(found);
     if (i >= 0 && i < static_cast<int>(kObjectCount))
         Sprite_Objects[static_cast<unsigned>(i)].context |= 1;
@@ -132,10 +132,10 @@ void CopyName(const unsigned char* name) {
 // rows read by address) from Sprite_Current; the slope there steep (the
 // scratch flag set and its low word above 0x40, signed) and the ground there
 // above Sprite_Current's height word (s16 against s16): +0x2B = 0.
-void SideProbe(unsigned d) {
+void SideProbeRest1f(unsigned d) {
     const unsigned char* const s = Sc();
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1f(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1f(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -155,8 +155,8 @@ void BeginShape() {
         s = Sc();
     }
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1f(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1f(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sc() + 0x3E)));
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), Sc()[8]);
@@ -165,8 +165,8 @@ void BeginShape() {
         ++Sc()[2];
     } else {
         Sc()[0x2B] = 1;
-        SideProbe(3);
-        SideProbe(5);
+        SideProbeRest1f(3);
+        SideProbeRest1f(5);
         SH_CALL(Sound_PlayEffect)(W16(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x42));
         Sc()[0xA] = 5;
@@ -183,10 +183,10 @@ void ResolveShape(Pickup pickup, const char* who) {
     if (Sc()[0xA] == 0) {
         const unsigned char* const s = Sc();
         const unsigned d = s[8];
-        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-        const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
+        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1f(d);
+        const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZRest1f(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
-        if (found != 0xFF) MarkObject(found, who);
+        if (found != 0xFF) MarkObjectRest1f(found, who);
         const unsigned cx = x >> 16, cz = z >> 16;
         if (scenario_harness::Call(pickup)(cx, cz) == 0) {
             bool done = false;
@@ -251,99 +251,99 @@ void ProbeStartShape() {
 
 // original 0x5243D0 (0x13 bytes): Field_FormActions[16] - PartyFormAction16_Forms by the word +0x2C.
 extern "C" void __cdecl PartyFormAction16_ByForm(void) {
-    ByForm("PartyFormAction16_ByForm (0x5243D0)", PartyFormAction16_Forms, PartyFormAction16_Forms_count);
+    ByFormRest1f("PartyFormAction16_ByForm (0x5243D0)", PartyFormAction16_Forms, PartyFormAction16_Forms_count);
 }
 // original 0x5243F0 (0x13 bytes): Field_ActionBySet[16] - PartyAction16_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction16_ByForm(void) {
-    ByForm("PartyAction16_ByForm (0x5243F0)", PartyAction16_Forms, PartyAction16_Forms_count);
+    ByFormRest1f("PartyAction16_ByForm (0x5243F0)", PartyAction16_Forms, PartyAction16_Forms_count);
 }
 // original 0x523FB0 (0x12 bytes): PartyFormAction16_Forms[2] - PartyFormAction16_Form2States by +2.
 extern "C" void __cdecl PartyFormAction16_Form2(void) {
-    ByState("PartyFormAction16_Form2 (0x523FB0)", PartyFormAction16_Form2States, PartyFormAction16_Form2States_count);
+    ByStateRest1f("PartyFormAction16_Form2 (0x523FB0)", PartyFormAction16_Form2States, PartyFormAction16_Form2States_count);
 }
 // original 0x523FD0 (0x12 bytes): PartyAction16_Forms[2] - PartyAction16_Form2States by +2.
 extern "C" void __cdecl PartyAction16_Form2(void) {
-    ByState("PartyAction16_Form2 (0x523FD0)", PartyAction16_Form2States, PartyAction16_Form2States_count);
+    ByStateRest1f("PartyAction16_Form2 (0x523FD0)", PartyAction16_Form2States, PartyAction16_Form2States_count);
 }
 // original 0x524930 (0x13 bytes): Field_FormActions[17] - PartyFormAction17_Forms by the word +0x2C.
 extern "C" void __cdecl PartyFormAction17_ByForm(void) {
-    ByForm("PartyFormAction17_ByForm (0x524930)", PartyFormAction17_Forms, PartyFormAction17_Forms_count);
+    ByFormRest1f("PartyFormAction17_ByForm (0x524930)", PartyFormAction17_Forms, PartyFormAction17_Forms_count);
 }
 // original 0x524950 (0x13 bytes): Field_ActionBySet[17] - PartyAction17_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction17_ByForm(void) {
-    ByForm("PartyAction17_ByForm (0x524950)", PartyAction17_Forms, PartyAction17_Forms_count);
+    ByFormRest1f("PartyAction17_ByForm (0x524950)", PartyAction17_Forms, PartyAction17_Forms_count);
 }
 // original 0x524410 (0x12 bytes): PartyFormAction17_Forms[0] - PartyFormAction17_Form0States by +2.
 extern "C" void __cdecl PartyFormAction17_Form0(void) {
-    ByState("PartyFormAction17_Form0 (0x524410)", PartyFormAction17_Form0States, PartyFormAction17_Form0States_count);
+    ByStateRest1f("PartyFormAction17_Form0 (0x524410)", PartyFormAction17_Form0States, PartyFormAction17_Form0States_count);
 }
 // original 0x524450 (0x12 bytes): PartyFormAction17_Forms[1] - PartyFormAction17_Form1States by +2.
 extern "C" void __cdecl PartyFormAction17_Form1(void) {
-    ByState("PartyFormAction17_Form1 (0x524450)", PartyFormAction17_Form1States, PartyFormAction17_Form1States_count);
+    ByStateRest1f("PartyFormAction17_Form1 (0x524450)", PartyFormAction17_Form1States, PartyFormAction17_Form1States_count);
 }
 // original 0x5248F0 (0x12 bytes): PartyFormAction17_Forms[2] - PartyFormAction17_Form2States by +2.
 extern "C" void __cdecl PartyFormAction17_Form2(void) {
-    ByState("PartyFormAction17_Form2 (0x5248F0)", PartyFormAction17_Form2States, PartyFormAction17_Form2States_count);
+    ByStateRest1f("PartyFormAction17_Form2 (0x5248F0)", PartyFormAction17_Form2States, PartyFormAction17_Form2States_count);
 }
 // original 0x524430 (0x12 bytes): PartyAction17_Forms[0] - PartyAction17_Form0States by +2.
 extern "C" void __cdecl PartyAction17_Form0(void) {
-    ByState("PartyAction17_Form0 (0x524430)", PartyAction17_Form0States, PartyAction17_Form0States_count);
+    ByStateRest1f("PartyAction17_Form0 (0x524430)", PartyAction17_Form0States, PartyAction17_Form0States_count);
 }
 // original 0x524470 (0x12 bytes): PartyAction17_Forms[1] - PartyAction17_Form1States by +2.
 extern "C" void __cdecl PartyAction17_Form1(void) {
-    ByState("PartyAction17_Form1 (0x524470)", PartyAction17_Form1States, PartyAction17_Form1States_count);
+    ByStateRest1f("PartyAction17_Form1 (0x524470)", PartyAction17_Form1States, PartyAction17_Form1States_count);
 }
 // original 0x524910 (0x12 bytes): PartyAction17_Forms[2] - PartyAction17_Form2States by +2.
 extern "C" void __cdecl PartyAction17_Form2(void) {
-    ByState("PartyAction17_Form2 (0x524910)", PartyAction17_Form2States, PartyAction17_Form2States_count);
+    ByStateRest1f("PartyAction17_Form2 (0x524910)", PartyAction17_Form2States, PartyAction17_Form2States_count);
 }
 // original 0x525330 (0x13 bytes): Field_FormActions[18] - PartyFormAction18_Forms by the word +0x2C.
 extern "C" void __cdecl PartyFormAction18_ByForm(void) {
-    ByForm("PartyFormAction18_ByForm (0x525330)", PartyFormAction18_Forms, PartyFormAction18_Forms_count);
+    ByFormRest1f("PartyFormAction18_ByForm (0x525330)", PartyFormAction18_Forms, PartyFormAction18_Forms_count);
 }
 // original 0x525350 (0x13 bytes): Field_ActionBySet[18] - PartyAction18_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction18_ByForm(void) {
-    ByForm("PartyAction18_ByForm (0x525350)", PartyAction18_Forms, PartyAction18_Forms_count);
+    ByFormRest1f("PartyAction18_ByForm (0x525350)", PartyAction18_Forms, PartyAction18_Forms_count);
 }
 // original 0x524970 (0x12 bytes): PartyFormAction18_Forms[0] - PartyFormAction18_Form0States by +2.
 extern "C" void __cdecl PartyFormAction18_Form0(void) {
-    ByState("PartyFormAction18_Form0 (0x524970)", PartyFormAction18_Form0States, PartyFormAction18_Form0States_count);
+    ByStateRest1f("PartyFormAction18_Form0 (0x524970)", PartyFormAction18_Form0States, PartyFormAction18_Form0States_count);
 }
 // original 0x524E50 (0x12 bytes): PartyFormAction18_Forms[1] - PartyFormAction18_Form1States by +2.
 extern "C" void __cdecl PartyFormAction18_Form1(void) {
-    ByState("PartyFormAction18_Form1 (0x524E50)", PartyFormAction18_Form1States, PartyFormAction18_Form1States_count);
+    ByStateRest1f("PartyFormAction18_Form1 (0x524E50)", PartyFormAction18_Form1States, PartyFormAction18_Form1States_count);
 }
 // original 0x525270 (0x12 bytes): PartyFormAction18_Forms[2] - PartyFormAction18_Form2States by +2.
 extern "C" void __cdecl PartyFormAction18_Form2(void) {
-    ByState("PartyFormAction18_Form2 (0x525270)", PartyFormAction18_Form2States, PartyFormAction18_Form2States_count);
+    ByStateRest1f("PartyFormAction18_Form2 (0x525270)", PartyFormAction18_Form2States, PartyFormAction18_Form2States_count);
 }
 // original 0x524990 (0x12 bytes): PartyAction18_Forms[0] - PartyAction18_Form0Subs by +2.
 extern "C" void __cdecl PartyAction18_Form0(void) {
-    ByState("PartyAction18_Form0 (0x524990)", PartyAction18_Form0Subs, PartyAction18_Form0Subs_count);
+    ByStateRest1f("PartyAction18_Form0 (0x524990)", PartyAction18_Form0Subs, PartyAction18_Form0Subs_count);
 }
 // original 0x5249B0 (0x12 bytes): PartyAction18_Form0Subs[0] - PartyAction18_Form0Sub0Steps by +3.
 extern "C" void __cdecl PartyAction18_Form0Sub0(void) {
-    ByStep("PartyAction18_Form0Sub0 (0x5249B0)", PartyAction18_Form0Sub0Steps, PartyAction18_Form0Sub0Steps_count);
+    ByStepRest1f("PartyAction18_Form0Sub0 (0x5249B0)", PartyAction18_Form0Sub0Steps, PartyAction18_Form0Sub0Steps_count);
 }
 // original 0x524D40 (0x12 bytes): PartyAction18_Form0Subs[1] - PartyAction18_Form0Sub1Steps by +3.
 extern "C" void __cdecl PartyAction18_Form0Sub1(void) {
-    ByStep("PartyAction18_Form0Sub1 (0x524D40)", PartyAction18_Form0Sub1Steps, PartyAction18_Form0Sub1Steps_count);
+    ByStepRest1f("PartyAction18_Form0Sub1 (0x524D40)", PartyAction18_Form0Sub1Steps, PartyAction18_Form0Sub1Steps_count);
 }
 // original 0x524E70 (0x12 bytes): PartyAction18_Forms[1] - PartyAction18_Form1States by +2.
 extern "C" void __cdecl PartyAction18_Form1(void) {
-    ByState("PartyAction18_Form1 (0x524E70)", PartyAction18_Form1States, PartyAction18_Form1States_count);
+    ByStateRest1f("PartyAction18_Form1 (0x524E70)", PartyAction18_Form1States, PartyAction18_Form1States_count);
 }
 // original 0x525290 (0x12 bytes): PartyAction18_Forms[2] - PartyAction18_Form2States by +2.
 extern "C" void __cdecl PartyAction18_Form2(void) {
-    ByState("PartyAction18_Form2 (0x525290)", PartyAction18_Form2States, PartyAction18_Form2States_count);
+    ByStateRest1f("PartyAction18_Form2 (0x525290)", PartyAction18_Form2States, PartyAction18_Form2States_count);
 }
 // original 0x528880 (0x12 bytes): Field_LeaderStates[9] - LeaderPanel_Stages by +2.
 extern "C" void __cdecl LeaderPanel_Run(void) {
-    ByState("LeaderPanel_Run (0x528880)", LeaderPanel_Stages, LeaderPanel_Stages_count);
+    ByStateRest1f("LeaderPanel_Run (0x528880)", LeaderPanel_Stages, LeaderPanel_Stages_count);
 }
 // original 0x5288A0 (0x12 bytes): LeaderPanel_Stages[0] - LeaderPanel_Stage0Steps by +3.
 extern "C" void __cdecl LeaderPanel_S0(void) {
-    ByStep("LeaderPanel_S0 (0x5288A0)", LeaderPanel_Stage0Steps, LeaderPanel_Stage0Steps_count);
+    ByStepRest1f("LeaderPanel_S0 (0x5288A0)", LeaderPanel_Stage0Steps, LeaderPanel_Stage0Steps_count);
 }
 
 // ===========================================================================
@@ -426,9 +426,9 @@ extern "C" void __cdecl PartyAction_EffectCountdown(void) {
     if (s[0xA] != 0) return;
     SH_CALL(Sound_PlayEffect)(W16(Word(s + 0x2C) + 0x100));
     unsigned char* const c = Sc();
-    EffectAt(c[0xB], who)[8] = c[8];
+    EffectAtRest1f(c[0xB], who)[8] = c[8];
     if (c[7] == 0) c[7] = 1;
-    EffectAt(c[0xB], who)[0xA] = c[7];
+    EffectAtRest1f(c[0xB], who)[0xA] = c[7];
     SH_CALL(Sound_PlayEffect)(0x10B);
 }
 
@@ -452,8 +452,8 @@ extern "C" void __cdecl PartyAction_SpawnKind1B(void) {
         bof3::Log("debt3       PartyAction_SpawnKind1B: no effect record free (set %u, action %u) - the wait reads the packet pool",
                   static_cast<unsigned>(c[0]), static_cast<unsigned>(c[1]));
     if (c[0xB] != 0xFF) {
-        EffectAt(c[0xB], who)[0] = 1;
-        EffectAt(c[0xB], who)[5] = 0x1B;
+        EffectAtRest1f(c[0xB], who)[0] = 1;
+        EffectAtRest1f(c[0xB], who)[5] = 0x1B;
     }
     SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>((c[8] >> 1) + 0x42));
     SH_CALL(Sound_PlayEffect)(W16(Word(Sc() + 0x2C) + 0x100));
@@ -504,8 +504,8 @@ extern "C" void __cdecl PartyAction18_Form0Sub0Strike(void) {
                 SH_CALL(Sound_PlayEffect)(0x10B);
                 unsigned char* const c = Sc();
                 // `movsx eax, bl; shl eax, 7`: 0x80..0xFE index before the
-                // records; EffectAt aborts on any byte past 19
-                unsigned char* const e = EffectAt(ahead, who);
+                // records; EffectAtRest1f aborts on any byte past 19
+                unsigned char* const e = EffectAtRest1f(ahead, who);
                 e[8] = c[8];
                 e[0xA] = 1;
                 c[6] = ahead;
@@ -513,11 +513,11 @@ extern "C" void __cdecl PartyAction18_Form0Sub0Strike(void) {
             } else {
                 const unsigned char* const c = Sc();
                 const unsigned d = c[8];
-                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepX(d);
-                const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZ(d);
+                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepXRest1f(d);
+                const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZRest1f(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
-                    MarkObject(found, who);
+                    MarkObjectRest1f(found, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);
                 }
                 const unsigned cx = x >> 16, cz = z >> 16;
@@ -597,19 +597,19 @@ extern "C" unsigned char __cdecl PartyAction18_CellStrike(unsigned x, unsigned z
 // Sprite_Current re-read before each): cells 1, 2, 3, 4, 5, 6, 7 in the order
 // (x, z), (x, zs), (x, zs + 1), (xs, z), (xs + 1, z), (x, zs - 1), (xs - 1, z).
 extern "C" void __cdecl Field_ReadCellsRaised(unsigned x, unsigned z, unsigned x0, unsigned z0) {
-    Cell(1) = SH_CALL(Field_CellKind)(x, z, x0, z0);
+    CellRest1f(1) = SH_CALL(Field_CellKind)(x, z, x0, z0);
     std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
-    Cell(2) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
+    CellRest1f(2) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
     zs = W16(rv::As<records::PartyMember>(Sc())->z_whole + 1);
-    Cell(3) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
+    CellRest1f(3) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
     std::uint16_t xs = rv::As<records::PartyMember>(Sc())->x_whole;
-    Cell(4) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
+    CellRest1f(4) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
     xs = W16(rv::As<records::PartyMember>(Sc())->x_whole + 1);
-    Cell(5) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
+    CellRest1f(5) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
     zs = W16(rv::As<records::PartyMember>(Sc())->z_whole - 1);
-    Cell(6) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
+    CellRest1f(6) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
     xs = W16(rv::As<records::PartyMember>(Sc())->x_whole - 1);
-    Cell(7) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
+    CellRest1f(7) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
 }
 
 // original 0x527DB0 (0x23B bytes): the class of up to five cells (indices a..e
@@ -628,7 +628,7 @@ extern "C" unsigned char __cdecl Field_CellClass5(unsigned a, unsigned b, unsign
                           static_cast<unsigned char>(d), static_cast<unsigned char>(e)};
     unsigned n = 0;
     while (n < 5 && k[n] != 0) ++n;
-    for (unsigned i = 0; i < n; ++i) k[i] = Cell(k[i]);
+    for (unsigned i = 0; i < n; ++i) k[i] = CellRest1f(k[i]);
     if (n == 2 && k[0] == 0x70 && k[1] == 0x70) return 0x70;
     for (unsigned i = 0; i < n; ++i)
         if (k[i] == 0x70) k[i] = 0xFF;
@@ -672,9 +672,9 @@ extern "C" unsigned char __cdecl Field_CellClass5(unsigned a, unsigned b, unsign
 // 10: Field_TurnUnless(4, 6, 5); neither: +8 one eighth on (& 7). 0 but for
 // the first case; 0 when cell 8 is neither.
 extern "C" unsigned char __cdecl Field_CornerTurn(void) {
-    const unsigned char c8 = Cell(8);
+    const unsigned char c8 = CellRest1f(8);
     if (c8 != 0x10 && c8 != 0x20) return 0;
-    const unsigned char c9 = Cell(9), c10 = Cell(10);
+    const unsigned char c9 = CellRest1f(9), c10 = CellRest1f(10);
     const bool side9 = c9 == 0x10 || c9 == 0x20, side10 = c10 == 0x10 || c10 == 0x20;
     if (side9 && side10) return 1;
     if (side9) {
@@ -696,10 +696,10 @@ extern "C" unsigned char __cdecl Field_CornerTurn(void) {
 // when the sloped flag (cell 0) is set and the answer's low word, signed, is
 // above 0x40, else 0.
 extern "C" unsigned char __cdecl Field_SlopeBetween(unsigned x0, unsigned x1, unsigned z0, unsigned z1, unsigned direction) {
-    const long x = Half(static_cast<U>(static_cast<int>(static_cast<short>(x0)) + static_cast<int>(static_cast<short>(x1))) << 16);
-    const long z = Half(static_cast<U>(static_cast<int>(static_cast<short>(z0)) + static_cast<int>(static_cast<short>(z1))) << 16);
+    const long x = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(x0)) + static_cast<int>(static_cast<short>(x1))) << 16);
+    const long z = HalfRest1f(static_cast<U>(static_cast<int>(static_cast<short>(z0)) + static_cast<int>(static_cast<short>(z1))) << 16);
     const long r = SH_CALL(MapView_SlopeAt)(x, z, direction);
-    if (Cell(0) == 0) return 0;
+    if (CellRest1f(0) == 0) return 0;
     return static_cast<short>(r) > 0x40 ? 1 : 0;
 }
 
@@ -756,28 +756,28 @@ struct DiagSide {
 };
 
 unsigned char DiagEdge(const DiagSide& d, bool on_x, std::uint16_t ax, std::uint16_t az) {
-    Cell(8) = SH_CALL(Field_CellClass5)(d.c0, d.c1, d.c2, 0, 0);
-    Cell(9) = SH_CALL(Field_CellClass)(d.c0, 0, 0);
-    Cell(10) = SH_CALL(Field_CellClass)(d.c2, 0, 0);
+    CellRest1f(8) = SH_CALL(Field_CellClass5)(d.c0, d.c1, d.c2, 0, 0);
+    CellRest1f(9) = SH_CALL(Field_CellClass)(d.c0, 0, 0);
+    CellRest1f(10) = SH_CALL(Field_CellClass)(d.c2, 0, 0);
     const unsigned char last = SH_CALL(Field_CellClass)(d.c1, 0, 0);
-    Cell(0xB) = last;
-    unsigned char k = Cell(8);
+    CellRest1f(0xB) = last;
+    unsigned char k = CellRest1f(8);
     if (k == 0xB0) return 6;
     if (k == 0x70) return 7;
     bool pair = k == 0x10;
     if (k == 0x20) {
-        if ((Cell(d.second) & 0xF0) == 0x20) return 0;
+        if ((CellRest1f(d.second) & 0xF0) == 0x20) return 0;
         pair = true;
     }
     if (pair) {
         if (last == 0x10) return 0;
         if (SH_CALL(Field_CellPairTurn)(9, 0xA, d.turn, 0x10) != 0) return 0;
-        if (Cell(0xB) == 0xA2) {
+        if (CellRest1f(0xB) == 0xA2) {
             if (SH_CALL(Field_CellPairTurn)(9, 0xA, d.turn_a2, 0xA2) != 0) return 0;
         } else {
             if (SH_CALL(Field_CellPairTurn)(9, 0xA, d.turn, 0xA2) != 0) return 0;
         }
-        k = Cell(8);
+        k = CellRest1f(8);
     }
     if ((k & 0xF0) == 0xA0) return SH_CALL(Field_CellSlope)(8);
     if (on_x) {
@@ -836,12 +836,12 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
         if (rv::As<records::PartyMember>(c)->x_frac != 0) {
             if (rv::As<records::PartyMember>(c)->z_frac != 0) {
                 // Mid-cell on both axes: ahead and the two sides.
-                Cell(8) = SH_CALL(Field_CellClass5)(1, 2, 3, 4, 5);
-                Cell(9) = SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
+                CellRest1f(8) = SH_CALL(Field_CellClass5)(1, 2, 3, 4, 5);
+                CellRest1f(9) = SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
                 const unsigned char side_z = SH_CALL(Field_CellClass5)(2, 3, 0, 0, 0);
-                Cell(10) = side_z;
-                if (Cell(8) == 0xB0) return 6;
-                if (Cell(9) == 0x70) {
+                CellRest1f(10) = side_z;
+                if (CellRest1f(8) == 0xB0) return 6;
+                if (CellRest1f(9) == 0x70) {
                     SH_CALL(Field_TurnUnless)(4, 6, 5);
                     return 7;
                 }
@@ -850,10 +850,10 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
                     return 7;
                 }
                 if (SH_CALL(Field_CornerTurn)() != 0) return 0;
-                const unsigned char high9 = Cell(9) & 0xF0;
+                const unsigned char high9 = CellRest1f(9) & 0xF0;
                 unsigned char* const s = Sc();
                 if (high9 == 0xA0 && (s[8] == 1 || s[8] == 5)) return SH_CALL(Field_CellSlope)(9);
-                const unsigned char high10 = Cell(10) & 0xF0;
+                const unsigned char high10 = CellRest1f(10) & 0xF0;
                 if (high10 == 0xA0 && (s[8] == 3 || s[8] == 7)) return SH_CALL(Field_CellSlope)(0xA);
                 if (high9 == 0xA0) {
                     s[8] = facing;
@@ -870,11 +870,11 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
             }
             // x mid-cell, z on a cell edge: ahead on x.
             unsigned char k = SH_CALL(Field_CellClass5)(3, 2, 6, 0, 0);
-            Cell(8) = k;
+            CellRest1f(8) = k;
             if (k == 0xB0) return 6;
             if (k == 0x10 || k == 0x20) {
                 SH_CALL(Field_TurnUnless)(4, 6, 5);
-                k = Cell(8);
+                k = CellRest1f(8);
             }
             if ((k & 0xF0) == 0xA0) {
                 if ((Sc()[8] & 1) == 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
@@ -890,11 +890,11 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
         }
         // x on a cell edge, z mid-cell: ahead on z.
         unsigned char k = SH_CALL(Field_CellClass5)(5, 4, 7, 0, 0);
-        Cell(8) = k;
+        CellRest1f(8) = k;
         if (k == 0xB0) return 6;
         if (k == 0x10 || k == 0x20) {
             SH_CALL(Field_TurnUnless)(2, 4, 3);
-            k = Cell(8);
+            k = CellRest1f(8);
         }
         const unsigned char now = Sc()[8];
         if ((k & 0xF0) == 0xA0) {
@@ -915,7 +915,7 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
     if (rv::As<records::PartyMember>(c)->x_frac != 0) {
         if (rv::As<records::PartyMember>(c)->z_frac != 0) {
             const unsigned char k = (dir & 2) ? SH_CALL(Field_CellClass5)(2, 3, 0, 0, 0) : SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
-            Cell(8) = k;
+            CellRest1f(8) = k;
             if (k == 0xB0) return 6;
             if (k == 0x70) return 7;
             if (k == 0x10 || k == 0x20) return 0;
