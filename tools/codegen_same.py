@@ -623,6 +623,7 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, 
                 e = table.setdefault(name, {"kind": kind, "bodies": {}, "names": set()})
                 e["names"].add(real)
                 e["bodies"].setdefault(h, []).append(key)
+                e.setdefault("where", {}).setdefault(real, set()).add(key)
                 texts[h] = lines
     return table, texts, nfunc
 
@@ -689,6 +690,13 @@ def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
                 same = [n for n in sorted(base[k]["names"]) if unqualified(spell[n]) == unqualified(spell[name])]
                 if len(same) == 1 and by_tail[unqualified(spell[name])].count(k) == 1:
                     out[name] = same[0]
+                else:
+                    # two sources' file-locals of one name and one body (a zero byte each): the one
+                    # defined in the object that now defines the global, when exactly one is
+                    here = set(new[name]["bodies"][h])
+                    mine = [n for n in same if base[k]["where"].get(n, set()) & here]
+                    if len(mine) == 1:
+                        out[name] = mine[0]
     return out
 
 
