@@ -38,32 +38,32 @@
 namespace {
 
 using U = std::uint32_t;
-using S = std::int32_t;
+using SEffect1f = std::int32_t;
 using Handler = void (__cdecl*)();
 namespace at = effect_1f::at;
 using bof3x::input::sigma::Sigma;
 
-unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 U Key(const void* p) { return Low32(p); }
-unsigned char& B(U a) { return *At(a); }
-std::uint16_t Word(U a) {
+unsigned char& BEffect1f(U a) { return *AtEffect1f(a); }
+std::uint16_t WordEffect1f(U a) {
     std::uint16_t v;
-    std::memcpy(&v, At(a), 2);
+    std::memcpy(&v, AtEffect1f(a), 2);
     return v;
 }
 void SetWord(U a, U v) {
     const auto w = static_cast<std::uint16_t>(v);
-    std::memcpy(At(a), &w, 2);
+    std::memcpy(AtEffect1f(a), &w, 2);
 }
-U Long(U a) {
+U LongEffect1f(U a) {
     U v;
-    std::memcpy(&v, At(a), 4);
+    std::memcpy(&v, AtEffect1f(a), 4);
     return v;
 }
-void SetLong(U a, U v) { std::memcpy(At(a), &v, 4); }
+void SetLongEffect1f(U a, U v) { std::memcpy(AtEffect1f(a), &v, 4); }
 
 // Effect record 6's cells, the menu's state.
-unsigned char& R6(unsigned offset) { return B(::bof3::Img(at::kRecord6.v) + offset); }
+unsigned char& R6(unsigned offset) { return BEffect1f(::bof3::Img(at::kRecord6.v) + offset); }
 U R6Address(unsigned offset) { return ::bof3::Img(Effect_Objects_addr) + 0x300 + offset; }
 
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
@@ -78,20 +78,20 @@ void Dispatch(const char* who, const unsigned long* table, unsigned entries, uns
 }
 
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Hand(int x, int y) { SH_CALL(Menu_DrawHand)(x, y, 0); }
+void HandEffect1f(int x, int y) { SH_CALL(Menu_DrawHand)(x, y, 0); }
 // Text_DrawAt(0x1D, 0x14, 0, 0xFF, MessagePools + the pool's word at `cell`):
 // the original adds the word, zero-extended (movzx or `and 0xFFFF`), to 0x803580.
 void Label(U cell) {
-    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(::bof3::Img(bof3::addr::MessagePools) + Word(cell)));
+    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, AtEffect1f(::bof3::Img(bof3::addr::MessagePools) + WordEffect1f(cell)));
 }
 // The id at the s16 index of the category-3 list, and its record's kind byte
 // (24-byte NameTable_Accessories records, +0x12): both read in place, unchecked
 // as in the original.
 unsigned char IdAt(U index_cell) {
-    const S index = static_cast<short>(Word(index_cell));
-    return B(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
+    const SEffect1f index = static_cast<short>(WordEffect1f(index_cell));
+    return BEffect1f(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
 }
-unsigned char KindOf(unsigned char id) { return B(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
+unsigned char KindOf(unsigned char id) { return BEffect1f(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
 
 // The shared exit of ExtraSlots_PickItem's cancel and confirm: record 6 +7 bit
 // 1 cleared, Sprite_Current +4 down (the original's 0x52A922, after the sound).
@@ -125,7 +125,7 @@ extern "C" void __cdecl ExtraSlots_Enter(void) {
     if (state == 3 || state == 4) {
         const auto b = static_cast<unsigned char>(R6(7) & 0x7F);
         R6(7) = b;
-        Hand(0x1C, static_cast<int>((static_cast<U>(b) << 4) + 0x58));
+        HandEffect1f(0x1C, static_cast<int>((static_cast<U>(b) << 4) + 0x58));
         unsigned char* const s = Sprite_Current;
         s[4] = static_cast<unsigned char>(s[4] + 1);
     }
@@ -172,10 +172,10 @@ extern "C" void __cdecl ExtraSlots_PickSlot(void) {
     Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
     const unsigned char b = R6(7);
     if (!(b & 0x80)) {
-        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(::bof3::Img(at::kExtraAccessory.v));
+        const unsigned char held = (b & 1) ? CharStats_ExtraItem : BEffect1f(::bof3::Img(at::kExtraAccessory.v));
         SetWord(R6Address(0x2C), held ? held + 4u : 0xFFFFu);
     }
-    Hand(0x1C, static_cast<int>(((b & 1u) << 4) + 0x58));
+    HandEffect1f(0x1C, static_cast<int>(((b & 1u) << 4) + 0x58));
 }
 
 // original 0x52A8F0: the list for the slot record 6 +7 bit 0 chose. The repeat
@@ -214,29 +214,29 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
             const unsigned char id = IdAt(R6Address(0x36));
             if (KindOf(id) == 0xB) {
                 SH_CALL(Inventory_Remove)(3, id, 1);
-                const unsigned char old = B(::bof3::Img(at::kExtraAccessory.v));
+                const unsigned char old = BEffect1f(::bof3::Img(at::kExtraAccessory.v));
                 if (old) SH_CALL(Inventory_Add)(3, old, 1);
-                B(::bof3::Img(at::kExtraAccessory.v)) = id;
+                BEffect1f(::bof3::Img(at::kExtraAccessory.v)) = id;
             }
             Sound(0x103);
             PickItemBack();
             return;
         }
         if (repeat & 0x1000u) {
-            if (Long(R6Address(0xC)) != 0) {
+            if (LongEffect1f(R6Address(0xC)) != 0) {
                 Sound(0x100);
-                SetLong(R6Address(0xC), Long(R6Address(0xC)) - 1);
+                SetLongEffect1f(R6Address(0xC), LongEffect1f(R6Address(0xC)) - 1);
             }
         } else if (repeat & 0x4000u) {
-            const U last = Long(R6Address(0x18)) - 1;
-            if (static_cast<S>(Long(R6Address(0xC))) < static_cast<S>(last)) {
+            const U last = LongEffect1f(R6Address(0x18)) - 1;
+            if (static_cast<SEffect1f>(LongEffect1f(R6Address(0xC))) < static_cast<SEffect1f>(last)) {
                 Sound(0x100);
-                SetLong(R6Address(0xC), Long(R6Address(0xC)) + 1);
+                SetLongEffect1f(R6Address(0xC), LongEffect1f(R6Address(0xC)) + 1);
             }
         }
         const unsigned char id = IdAt(R6Address(0x36));
         SetWord(R6Address(0x2C), KindOf(id) == 0xB ? id + 4u : 0xFFFFu);
-        Hand(0xA8, static_cast<int>(Long(R6Address(0xC)) * 13u + 0x5A));
+        HandEffect1f(0xA8, static_cast<int>(LongEffect1f(R6Address(0xC)) * 13u + 0x5A));
         return;
     }
     Label(::bof3::Img(at::kListLabelB.v));
@@ -250,12 +250,12 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                 if (old) SH_CALL(Inventory_Add)(3, old, 1);
                 CharStats_ExtraItem = id;
                 CharStats_ExtraCount = 1;
-                S count = 0;
+                SEffect1f count = 0;
                 for (U i = 0; i < 0x80; ++i)
-                    if (KindOf(B(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
-                if (static_cast<S>(Long(R6Address(0x1C))) >= count && Word(R6Address(0x38)) != 0) {
-                    const S scroll = static_cast<S>(Long(R6Address(0x38)) & 0xFFFF);
-                    if (scroll > count - 9) SetWord(R6Address(0x38), Word(R6Address(0x38)) - 1u);
+                    if (KindOf(BEffect1f(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
+                if (static_cast<SEffect1f>(LongEffect1f(R6Address(0x1C))) >= count && WordEffect1f(R6Address(0x38)) != 0) {
+                    const SEffect1f scroll = static_cast<SEffect1f>(LongEffect1f(R6Address(0x38)) & 0xFFFF);
+                    if (scroll > count - 9) SetWord(R6Address(0x38), WordEffect1f(R6Address(0x38)) - 1u);
                 }
             }
             Sound(0x103);
@@ -263,33 +263,33 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
             return;
         }
         if (repeat & 0x1000u) {
-            if (Long(R6Address(0x10)) == 0) {
-                if (Word(R6Address(0x38)) != 0) {
+            if (LongEffect1f(R6Address(0x10)) == 0) {
+                if (WordEffect1f(R6Address(0x38)) != 0) {
                     Sound(0x100);
-                    SetWord(R6Address(0x38), Word(R6Address(0x38)) - 1u);
+                    SetWord(R6Address(0x38), WordEffect1f(R6Address(0x38)) - 1u);
                     R6(8) = 4;
                     R6(0xA) = 3;
                 }
             } else {
                 Sound(0x100);
-                SetLong(R6Address(0x10), Long(R6Address(0x10)) - 1);
+                SetLongEffect1f(R6Address(0x10), LongEffect1f(R6Address(0x10)) - 1);
             }
         } else if (repeat & 0x4000u) {
-            const U cursor = Long(R6Address(0x10));
+            const U cursor = LongEffect1f(R6Address(0x10));
             if (cursor == 8) {
-                const S bottom = static_cast<S>((Long(R6Address(0x38)) & 0xFFFF) + cursor);
-                if (static_cast<S>(Long(R6Address(0x1C))) > bottom) {
+                const SEffect1f bottom = static_cast<SEffect1f>((LongEffect1f(R6Address(0x38)) & 0xFFFF) + cursor);
+                if (static_cast<SEffect1f>(LongEffect1f(R6Address(0x1C))) > bottom) {
                     Sound(0x100);
-                    SetWord(R6Address(0x38), Word(R6Address(0x38)) + 1u);
+                    SetWord(R6Address(0x38), WordEffect1f(R6Address(0x38)) + 1u);
                     R6(8) = 0;
                     R6(0xA) = 3;
                 }
-            } else if (static_cast<S>(cursor) < static_cast<S>(Long(R6Address(0x1C)))) {
+            } else if (static_cast<SEffect1f>(cursor) < static_cast<SEffect1f>(LongEffect1f(R6Address(0x1C)))) {
                 Sound(0x100);
-                SetLong(R6Address(0x10), Long(R6Address(0x10)) + 1);
+                SetLongEffect1f(R6Address(0x10), LongEffect1f(R6Address(0x10)) + 1);
             }
         } else if (pressed & Sigma(4)) {   // DIVERGENCE DIV-0139: Japan's L1 through σ (0x52AC58)
-            const U old = Long(R6Address(0x38));
+            const U old = LongEffect1f(R6Address(0x38));
             const auto scrolled = static_cast<std::uint16_t>(old - 9u);
             SetWord(R6Address(0x38), scrolled);
             if (static_cast<short>(scrolled) >= 0) {
@@ -298,32 +298,32 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                 SetWord(R6Address(0x38), 0);
                 if (static_cast<std::uint16_t>(old) != 0) {
                     Sound(0x100);
-                } else if (Long(R6Address(0x10)) != 0) {
+                } else if (LongEffect1f(R6Address(0x10)) != 0) {
                     Sound(0x100);
-                    SetLong(R6Address(0x10), 0);
+                    SetLongEffect1f(R6Address(0x10), 0);
                 }
             }
         } else if (pressed & Sigma(8)) {   // DIVERGENCE DIV-0139: Japan's R1 through σ (0x52ACAA)
-            const U count = Long(R6Address(0x1C));
-            if (static_cast<S>(count) <= 8) {
-                if (static_cast<S>(Long(R6Address(0x10))) < static_cast<S>(count)) {
+            const U count = LongEffect1f(R6Address(0x1C));
+            if (static_cast<SEffect1f>(count) <= 8) {
+                if (static_cast<SEffect1f>(LongEffect1f(R6Address(0x10))) < static_cast<SEffect1f>(count)) {
                     Sound(0x100);
-                    SetLong(R6Address(0x10), Long(R6Address(0x1C)));
+                    SetLongEffect1f(R6Address(0x10), LongEffect1f(R6Address(0x1C)));
                 }
             } else {
-                const U old = Long(R6Address(0x38));
-                SetWord(R6Address(0x38), Word(R6Address(0x38)) + 9u);
-                const S bottom = static_cast<S>((Long(R6Address(0x38)) & 0xFFFF) + 8);
-                if (static_cast<S>(count) > bottom) {
+                const U old = LongEffect1f(R6Address(0x38));
+                SetWord(R6Address(0x38), WordEffect1f(R6Address(0x38)) + 9u);
+                const SEffect1f bottom = static_cast<SEffect1f>((LongEffect1f(R6Address(0x38)) & 0xFFFF) + 8);
+                if (static_cast<SEffect1f>(count) > bottom) {
                     Sound(0x100);
                 } else {
                     const auto last = static_cast<std::uint16_t>(count - 8u);
                     SetWord(R6Address(0x38), last);
                     if (last != static_cast<std::uint16_t>(old)) {
                         Sound(0x100);
-                    } else if (static_cast<S>(Long(R6Address(0x10))) < 8) {
+                    } else if (static_cast<SEffect1f>(LongEffect1f(R6Address(0x10))) < 8) {
                         Sound(0x100);
-                        SetLong(R6Address(0x10), 8);
+                        SetLongEffect1f(R6Address(0x10), 8);
                     }
                 }
             }
@@ -331,7 +331,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
     }
     const unsigned char id = IdAt(R6Address(0x3A));
     SetWord(R6Address(0x2C), KindOf(id) == 0xA ? id + 4u : 0xFFFFu);
-    Hand(0xA8, static_cast<int>(Long(R6Address(0x10)) * 13u + 0x5A));
+    HandEffect1f(0xA8, static_cast<int>(LongEffect1f(R6Address(0x10)) * 13u + 0x5A));
 }
 
 // original 0x52CD50: Sprite_UpdateScreen with +0x3C held at 0 and put back on
@@ -342,41 +342,41 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
 // is the original's divide fault: ours aborts.
 extern "C" unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
     unsigned char* s = Sprite_Current;
-    const U held = Long(Key(s + 0x3C));
-    SetLong(Key(s + 0x3C), 0);
+    const U held = LongEffect1f(Key(s + 0x3C));
+    SetLongEffect1f(Key(s + 0x3C), 0);
     SH_CALL(Sprite_UpdateScreen)();
     unsigned char* const after = Sprite_Current;
-    SetLong(Key(after + 0x3C), held);
+    SetLongEffect1f(Key(after + 0x3C), held);
     s = Sprite_Current;
-    const S far = static_cast<S>(Long(Key(s + 0x60)));
-    auto divisor = [](const unsigned char* r, bool below) -> S {
-        const U d = Long(Key(r + 0x60));
-        if (!below) return static_cast<S>(d);
-        const U lift = static_cast<U>(static_cast<S>(static_cast<short>(Word(Key(r + 0x3E))))) << 1;
-        return static_cast<S>(d - lift);
+    const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
+    auto divisor = [](const unsigned char* r, bool below) -> SEffect1f {
+        const U d = LongEffect1f(Key(r + 0x60));
+        if (!below) return static_cast<SEffect1f>(d);
+        const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
+        return static_cast<SEffect1f>(d - lift);
     };
-    auto scale = [](S d) -> U {
+    auto scale = [](SEffect1f d) -> U {
         if (d == 0)
             bof3::Fatal("Sprite_UpdateScreenScaled (0x52CD50): +0x60 is twice s16 +0x3E below 0 - the original divides "
                         "0x4650000 by 0 there (a divide fault; docs/effect_1f.md section 6)");
         return static_cast<U>(0x4650000 / d) & 0xFFFFFF00u;
     };
     if (far < 0) {
-        SetLong(Key(s + 0x40), scale(divisor(s, true)));
+        SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
         unsigned char* const c = Sprite_Current;
         const U q = scale(divisor(c, true));
-        SetLong(Key(c + 0x44), q);
+        SetLongEffect1f(Key(c + 0x44), q);
         return q;
     }
     if (far > 0) {
-        SetLong(Key(s + 0x40), scale(far));
+        SetLongEffect1f(Key(s + 0x40), scale(far));
         unsigned char* const c = Sprite_Current;
         const U q = scale(divisor(c, false));
-        SetLong(Key(c + 0x44), q);
+        SetLongEffect1f(Key(c + 0x44), q);
         return q;
     }
-    SetLong(Key(s + 0x40), 0);
-    SetLong(Key(Sprite_Current + 0x44), 0);
+    SetLongEffect1f(Key(s + 0x40), 0);
+    SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
     return Key(after);
 }
 
@@ -387,8 +387,8 @@ extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
     constexpr U kStride = 0xA4;
     const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
     for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
-        if (B(record) == 0) continue;
-        Sprite_Current = At(record);
+        if (BEffect1f(record) == 0) continue;
+        Sprite_Current = AtEffect1f(record);
         SH_CALL(Sprite_UpdateScreenScaled)();
     }
 }
@@ -397,7 +397,7 @@ extern "C" void __cdecl Sprite_UpdateAllScaled(void) {
 // order record by record; Effect_ReleaseAt(7) .. (19); record 2 +1 = 2.
 extern "C" void __cdecl Effect_ResetFirstSeven(void) {
     for (U record = 0; record <= 6; ++record) {
-        unsigned char* const r = At(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
+        unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
         r[1] = 0;
         r[2] = 0;
         r[3] = 0;
@@ -415,11 +415,11 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
 // not negative), in eax whole.
 extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
     const U record = ::bof3::Img(Fish_Kinds_addr) + 0x10 + 36u * (kind & 0xFF);
-    const unsigned threshold = B(record + 0xF);
+    const unsigned threshold = BEffect1f(record + 0xF);
     const unsigned low = count & 0xFFFF;
-    if (low >= threshold) return (count & 0xFFFF0000u) | Word(record + 0x12);
-    const S share = static_cast<S>(low * 10) / static_cast<S>(threshold);
-    const S product = static_cast<S>(static_cast<U>(share) * Word(record + 0x12));
+    if (low >= threshold) return (count & 0xFFFF0000u) | WordEffect1f(record + 0x12);
+    const SEffect1f share = static_cast<SEffect1f>(low * 10) / static_cast<SEffect1f>(threshold);
+    const SEffect1f product = static_cast<SEffect1f>(static_cast<U>(share) * WordEffect1f(record + 0x12));
     return static_cast<U>(product / 10);
 }
 
@@ -428,7 +428,7 @@ extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned c
 extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
     U sum = 0;
     for (U i = 0; i < 0x20; ++i) {
-        const unsigned char count = B(::bof3::Img(at::kKindCounts.v) + i);
+        const unsigned char count = BEffect1f(::bof3::Img(at::kKindCounts.v) + i);
         if (count) sum += SH_CALL(FieldPanel_KindPoints)(i, count);
     }
     return static_cast<unsigned short>(sum);
@@ -466,10 +466,10 @@ extern "C" void __cdecl GameMode8_WaitFrame(void) {
 // reads it).
 extern "C" void __cdecl UiSprite_SetMode(unsigned index, unsigned slot) {
     const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
-    const U d0 = Long(record), d4 = Long(record + 4), d8 = Long(record + 8), dC = Long(record + 0xC);
+    const U d0 = LongEffect1f(record), d4 = LongEffect1f(record + 4), d8 = LongEffect1f(record + 8), dC = LongEffect1f(record + 0xC);
     U high = ((d0 & 3) << 2) | (d4 & 3);
     high = ((high << 3) | (dC & 0x200)) << 2;
-    const U low = static_cast<U>(static_cast<S>((static_cast<U>(static_cast<S>(d8) >> 2) & 0xF0) | (dC & 0x100)) >> 4);
+    const U low = static_cast<U>(static_cast<SEffect1f>((static_cast<U>(static_cast<SEffect1f>(d8) >> 2) & 0xF0) | (dC & 0x100)) >> 4);
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetDrawMode)(prim, 0, 0, high | low, 0);
     SH_CALL(Gfx_CommitPrim)(slot, 0xC);
@@ -492,12 +492,12 @@ extern "C" unsigned char* __cdecl UiSprite_Draw(unsigned sprite, unsigned slot, 
     std::memcpy(prim + 8, &fx, 4);
     std::memcpy(prim + 0xC, &fy, 4);
     const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
-    const U clut = (static_cast<U>(Word(record + 4)) << 6) | (static_cast<U>(static_cast<S>(Long(record)) >> 4) & 0x3F);
+    const U clut = (static_cast<U>(WordEffect1f(record + 4)) << 6) | (static_cast<U>(static_cast<SEffect1f>(LongEffect1f(record)) >> 4) & 0x3F);
     SetWord(Key(prim + 0x16), clut);
-    SetWord(Key(prim + 0x18), Word(record + 8));
-    SetWord(Key(prim + 0x1A), Word(record + 0xA));
-    prim[0x14] = B(record + 0xC);
-    prim[0x15] = B(record + 0xD);
+    SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
+    SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
+    prim[0x14] = BEffect1f(record + 0xC);
+    prim[0x15] = BEffect1f(record + 0xD);
     SH_CALL(Gfx_CommitPrim)(slot, 0x1C);
     return prim;
 }
