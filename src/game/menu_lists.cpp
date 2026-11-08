@@ -105,7 +105,7 @@ Step Entry(std::uint32_t table, unsigned index) {
 // The record the window layer is running, re-read from 0x905B84 wherever the
 // original re-reads it. Volatile so that ours cannot cache it either: the
 // fuzz's stand-ins repoint it between calls.
-unsigned char* Rec() {
+unsigned char* RecMenuLists() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
 }
@@ -440,15 +440,15 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
 // MenuList_TitleBox, and sixteen more kinds of other screens (5..20). The
 // kind unchecked; a jump, as the original's.
 extern "C" void __cdecl MenuList_Run(void) {
-    const Step step = Entry(::bof3::Img(MenuList_Kinds_addr), Rec()[2]);
+    const Step step = Entry(::bof3::Img(MenuList_Kinds_addr), RecMenuLists()[2]);
     [[clang::musttail]] return step();
 }
 
 // original 0x599B70, kind 0: the record's state from 0x66AFE8 (+3,
 // unchecked), then MenuList_DrawMemberPanel of the record (re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel(void) {
-    Entry(::bof3::Img(MenuList_PanelStates_addr), Rec()[3])();
-    g.draw_member(Rec());
+    Entry(::bof3::Img(MenuList_PanelStates_addr), RecMenuLists()[3])();
+    g.draw_member(RecMenuLists());
 }
 
 // original 0x599B90 (recorded start, 114 calls on the world-map route): a
@@ -472,16 +472,16 @@ extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
 // at the record's (+4, +6) with the money 0x904058.
 extern "C" void __cdecl MenuList_MoneyBox(void) {
-    Entry(::bof3::Img(MenuList_MoneyStates_addr), Rec()[3])();
-    const unsigned char* const r = Rec();
+    Entry(::bof3::Img(MenuList_MoneyStates_addr), RecMenuLists()[3])();
+    const unsigned char* const r = RecMenuLists();
     g.money_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0, Party_Zenny);
 }
 
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
 // 0x5746C0 at the record's (+4, +6).
 extern "C" void __cdecl MenuList_TimeBox(void) {
-    Entry(::bof3::Img(MenuList_TimeStates_addr), Rec()[3])();
-    const unsigned char* const r = Rec();
+    Entry(::bof3::Img(MenuList_TimeStates_addr), RecMenuLists()[3])();
+    const unsigned char* const r = RecMenuLists();
     g.time_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
 }
 
@@ -497,16 +497,16 @@ extern "C" void __cdecl MenuList_TimeBox(void) {
 // store; the count is compared as a signed word; the size is the count's low
 // byte plus 8, doubled, as a byte.
 extern "C" void __cdecl MenuList_TopBarIcons(void) {
-    Entry(::bof3::Img(MenuList_IconStates_addr), Rec()[3])();
-    unsigned char* r = Rec();
+    Entry(::bof3::Img(MenuList_IconStates_addr), RecMenuLists()[3])();
+    unsigned char* r = RecMenuLists();
     if (r[0xB] != r[0xA]) {
         SetWord(r + 0x10, 0);
-        r = Rec();
+        r = RecMenuLists();
     }
     const short count = S(r + 0x10);
     if (count < 3) {
         SetWord(r + 0x10, static_cast<std::uint16_t>(count + 1));
-        r = Rec();
+        r = RecMenuLists();
     }
     for (unsigned i = 0; i < 7; ++i) {
         if (i == r[0xA]) continue;
@@ -514,7 +514,7 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
         const unsigned y = rv::As<records::WindowRecord>(r)->y;
         const unsigned x = ((i << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF;
         g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + i)[0], x, y, 0x10, 0x10, shade);
-        r = Rec();
+        r = RecMenuLists();
     }
     const unsigned sel = r[0xA];
     const unsigned shade = sel == 6 && r[0xC] != 0 ? 0x40 : 0x80;
@@ -523,7 +523,7 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     const unsigned y = (rv::As<records::WindowRecord>(r)->y - grow) & 0xFFFF;
     const unsigned x = ((((sel << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF) - grow) & 0xFFFF;
     g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + sel)[0], x, y, size, size, shade);
-    r = Rec();
+    r = RecMenuLists();
     r[0xB] = r[0xA];
 }
 
@@ -548,17 +548,17 @@ unsigned char g_title_centre = 0;
 // every read and call and changes only the x: x + 0x25 - width / 2, the
 // width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
-    Entry(::bof3::Img(MenuList_TitleStates_addr), Rec()[3])();
+    Entry(::bof3::Img(MenuList_TitleStates_addr), RecMenuLists()[3])();
     const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned char* r = Rec();
+    const unsigned char* r = RecMenuLists();
     g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);
-    r = Rec();
+    r = RecMenuLists();
     const unsigned char* const text = g.msg(Word(r + 0x10));
     const unsigned count = g.char_count(text);
-    r = Rec();
+    r = RecMenuLists();
     const unsigned y = (rv::As<records::WindowRecord>(r)->y + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
-    r = Rec();
+    r = RecMenuLists();
     const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
     const int x = static_cast<int>((rv::As<records::WindowRecord>(r)->x - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
@@ -575,21 +575,21 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
 // the record is re-read after the move and after the clamp.
 namespace {
 void SlideY(int step, short bound, bool down) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecMenuLists();
     rv::As<records::WindowRecord>(moved)->y = rv::As<records::WindowRecord>(moved)->y + static_cast<unsigned>(step);
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecMenuLists();
     if (down ? S(r + 6) > bound : S(r + 6) < bound) {
         rv::As<records::WindowRecord>(r)->y = static_cast<std::uint16_t>(bound);
-        Rec()[3] = 0;
+        RecMenuLists()[3] = 0;
     }
 }
 void SlideX(int step, short bound, bool right) {
-    unsigned char* const moved = Rec();
+    unsigned char* const moved = RecMenuLists();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x + static_cast<unsigned>(step);
-    unsigned char* const r = Rec();
+    unsigned char* const r = RecMenuLists();
     if (right ? S(r + 4) > bound : S(r + 4) < bound) {
         rv::As<records::WindowRecord>(r)->x = static_cast<std::uint16_t>(bound);
-        Rec()[3] = 0;
+        RecMenuLists()[3] = 0;
     }
 }
 }  // namespace
@@ -605,9 +605,9 @@ extern "C" void __cdecl MenuSlide_DownTo16(void) { SlideY(0x10, 0x10, true); }
 // (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuSlide_LeftOff(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kLeftOffBound));
-    const short x_read = S(Rec() + 4);
+    const short x_read = S(RecMenuLists() + 4);
     SlideX(-0x20, bound, false);
-    Widescreen_SlideHeld(Rec(), x_read, bound);
+    Widescreen_SlideHeld(RecMenuLists(), x_read, bound);
 }
 // original 0x59A5B0: right 0x20 a frame to x 0x11.
 extern "C" void __cdecl MenuSlide_RightTo17(void) { SlideX(0x20, 0x11, true); }
@@ -615,9 +615,9 @@ extern "C" void __cdecl MenuSlide_RightTo17(void) { SlideX(0x20, 0x11, true); }
 // faster slide as MenuSlide_LeftOff's.
 extern "C" void __cdecl MenuSlide_RightOff(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kRightOffBound));
-    const short x_read = S(Rec() + 4);
+    const short x_read = S(RecMenuLists() + 4);
     SlideX(0x20, bound, true);
-    Widescreen_SlideHeld(Rec(), x_read, bound);
+    Widescreen_SlideHeld(RecMenuLists(), x_read, bound);
 }
 // original 0x59A680: down 0x10 a frame to y 0x26.
 extern "C" void __cdecl MenuSlide_DownTo38(void) { SlideY(0x10, 0x26, true); }
