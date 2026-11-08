@@ -153,11 +153,11 @@ void FillFormat(U record, const Format& f, U rank) {
     PutLongDisplaySetup(record + 0x38, f.bmask);
     PutLongDisplaySetup(record + 0x3C, f.amask);
 }
+}  // namespace
+namespace display_setup { bool g_backend_up; }
 
-bool g_backend_up;
-
-U g_scale;   // the target's k (DIV-0036, DIV-0042)
-
+namespace display_setup { U g_scale; }   // the target's k (DIV-0036, DIV-0042)
+namespace {
 // The largest k in 1..kMaxScale whose (view width) k x 240k fits cw x ch; 1 if none.
 U FitScale(U view_w, U cw, U ch) {
     U k = kMaxScale;
@@ -170,7 +170,7 @@ U FitScale(U view_w, U cw, U ch) {
 // D3d_ScaleX/Y, DIV-0010's far-edge table, Gfx_ScreenRect's size, and the
 // primary and back surfaces' size as GetSurfaceDesc reports it.
 void Rescale(U k) {
-    g_scale = k;
+    display_setup::g_scale = k;
     const U width = render::TargetWidth(), height = render::TargetHeight();
     Gfx_ScreenRect[2] = width;
     Gfx_ScreenRect[3] = height;
@@ -207,7 +207,7 @@ render::Options ReadOptions(HWND hwnd, bool borderless) {
     o.logical_h = 240;
     o.scale = k;
     o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 c) k wide (c 53 or 120), the view centred in it
-    g_scale = k;
+    display_setup::g_scale = k;
     o.point_filter = false;
     if (GetEnvironmentVariableA("BOF3X_FILTER", text, sizeof text) > 0) {
         if (std::strcmp(text, "point") == 0) o.point_filter = true;
@@ -267,11 +267,11 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
 
     // 2.6 the mode and the scale: the logical picture is the target's size
     const render::Options options = ReadOptions(hwnd, *fullscreen != 0);
-    if (!g_backend_up) {
+    if (!display_setup::g_backend_up) {
         render::InitShim(256 * 1024, 32 * 1024, 8 * 1024 * 1024);
         render::InitD3d11(options);
         render::SetRescaleHook(&Rescale);
-        g_backend_up = true;
+        display_setup::g_backend_up = true;
     }
     const U width = render::TargetWidth(), height = render::TargetHeight();
     Gfx_ScreenRect[2] = width;
@@ -280,9 +280,9 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // The game's scale is k, the view's - not the target's width over 320,
     // which a wide target (DIV-0041) would make 1.33k: the game keeps
     // drawing a 320-wide view and the backend shifts it into the target.
-    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(g_scale));
-    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(g_scale));
-    SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(display_setup::g_scale));
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(display_setup::g_scale));
+    SprtDraw_SetScale(display_setup::g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
     Zero(::bof3::Img(D3d_DeviceDesc_addr), kDeviceDescBytes);
     PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescTextureCaps, kTextureCaps);
     PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescMinW, kMinTexture);
@@ -337,7 +337,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     s.flat = false;
 
     bof3::LogFlush();
-    bof3::Log("Display_Setup: %u x %u, scale %u, %s filter, device %d", width, height, g_scale,
+    bof3::Log("Display_Setup: %u x %u, scale %u, %s filter, device %d", width, height, display_setup::g_scale,
               options.point_filter ? "point" : "linear", *device);
     return 0;
 }
@@ -377,7 +377,7 @@ unsigned DisplaySetup_WindowedScale() {
     return k;
 }
 
-unsigned DisplaySetup_TargetScale() { return g_backend_up ? g_scale : 0; }
+unsigned DisplaySetup_TargetScale() { return display_setup::g_backend_up ? display_setup::g_scale : 0; }
 
 unsigned DisplaySetup_ViewWidth() { return 320 + 2 * Widescreen_Columns(); }
 
