@@ -11,6 +11,8 @@
 // words. All cdecl.
 #pragma once
 
+#include <cstdint>
+
 extern "C" {
 
 // --- the tail kinds and their states -------------------------------------------
@@ -85,5 +87,6 @@ void Rest4B_Inject();
 extern unsigned char g_board_yes_no_layout;   // defined in rest_4b.cpp, armed by Rest4B_Inject (named here for a moved reader: source-layout B0)
 
 namespace rest_4b {
+extern std::uint8_t g_faerie_name_end;   // defined in rest_4b.cpp (source-layout B0: promoted for a moved reader)
 void SelfTest();   // rest_4b_fuzz.cpp: BOF3X_SHADOW=rest_4b
 }  // namespace rest_4b
