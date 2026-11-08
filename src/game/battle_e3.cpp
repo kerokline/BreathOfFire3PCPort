@@ -88,7 +88,7 @@ unsigned char* Member(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + i * at
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll pushes
 // nothing; an entry that reads it reads that word), its eax passed back.
 using Forward = U (__cdecl*)(unsigned);
-U Entry(U table, unsigned index) { return ULong(At(table + 4 * index)); }
+U EntryBattleE3(U table, unsigned index) { return ULong(At(table + 4 * index)); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, as read
 // (the fuzz swaps the cells for recorders); a Fatal past them (the original
@@ -101,14 +101,14 @@ unsigned CheckedState(const char* who, U table, unsigned entries, unsigned at) {
                     who, at, state, entries, (unsigned)table);
     return state;
 }
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
-    return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(Entry(table, CheckedState(who, table, entries, at))))(passed);
+U DispatchBattleE3(const char* who, U table, unsigned entries, unsigned at, unsigned passed) {
+    return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(EntryBattleE3(table, CheckedState(who, table, entries, at))))(passed);
 }
 // The party objects' dispatchers: the same jmp, with nothing forwarded -
 // BattleObj_RunState's entries read no word, and their eax reaches only
 // callers that drop it (battle_obj_states.md section 2).
 void Run(const char* who, U table, unsigned entries, unsigned at) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(table, CheckedState(who, table, entries, at))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(EntryBattleE3(table, CheckedState(who, table, entries, at))))();
 }
 
 // BattleTask_Create's slot: a Fatal on 0xFF (all 48 taken), where the original
@@ -159,7 +159,7 @@ void ClearFormFlag() {
 // original 0x437030 (PSX 0x801E4A40): EnemyOp_Steps[7] - jmp [EnemyOp_CastSubs + 4 * +2] (3:
 // EnemyOp_CastStart, EnemyOp_CastCue, BossMyria_State7End).
 extern "C" unsigned __cdecl EnemyOp_CastDispatch(unsigned passed) {
-    return Dispatch("EnemyOp_CastDispatch", AddressOf(EnemyOp_CastSubs), 3, 2, passed);
+    return DispatchBattleE3("EnemyOp_CastDispatch", AddressOf(EnemyOp_CastSubs), 3, 2, passed);
 }
 
 // original 0x437050: the cast's step 0 - nothing (eax 0) until File_LoadDone
@@ -220,7 +220,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastCue(void) {
 // then a tail jump to EnemyOp_CastDoneCheck.
 extern "C" void __cdecl EnemyOp_CastDoneDispatch(void) {
     const unsigned state = CheckedState("EnemyOp_CastDoneDispatch", AddressOf(EnemyOp_CastDoneSubs), 3, 2);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(AddressOf(EnemyOp_CastDoneSubs), state)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(EntryBattleE3(AddressOf(EnemyOp_CastDoneSubs), state)))();
     BH_CALL(EnemyOp_CastDoneCheck)();
 }
 
@@ -258,7 +258,7 @@ extern "C" void __cdecl EnemyOp_CastDoneCheck(void) {
 // original 0x437240 (PSX 0x801E4EA4): EnemyOp_Steps[9] - jmp [EnemyOp_LeaveSubs + 4 * +2] (3:
 // EnemyOp_LeaveStart, EnemyOp_LeaveStep, EnemyOp_LeaveEnd).
 extern "C" unsigned __cdecl EnemyOp_LeaveDispatch(unsigned passed) {
-    return Dispatch("EnemyOp_LeaveDispatch", AddressOf(EnemyOp_LeaveSubs), 3, 2, passed);
+    return DispatchBattleE3("EnemyOp_LeaveDispatch", AddressOf(EnemyOp_LeaveSubs), 3, 2, passed);
 }
 
 // original 0x437260 (PSX 0x801E4EE8): the leave's step 0 - the velocity +0x18 = -0x1000, +0x1C =
