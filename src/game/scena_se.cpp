@@ -42,15 +42,15 @@ using move_script::Word;
 
 // The placement count (SharedScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
-short Count() { return static_cast<std::int16_t>(at::kCount); }
-unsigned char* Object(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
+short CountScenaSe() { return static_cast<std::int16_t>(at::kCount); }
+unsigned char* ObjectScenaSe(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.
 // rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record: Object(n) is a Sprite_Objects record.
+// Sprite_Kind2 record: ObjectScenaSe(n) is a Sprite_Objects record.
 // rv::As<records::EffectObject>(p) is given effect objects (Effect_Objects).
 
 // A placement's x or z: the whole part from `whole`, the half (0x8000) when
@@ -150,8 +150,8 @@ extern "C" void __cdecl EventObj_Face(void) {
 // original does. The count is read again after each call, Sprite_Current at
 // every use, the op's bytes where the original reads them.
 extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
-    if (Count() >= static_cast<short>(at::kObjectCount)) return;
-    unsigned char* const o = Object(Count());
+    if (CountScenaSe() >= static_cast<short>(at::kObjectCount)) return;
+    unsigned char* const o = ObjectScenaSe(CountScenaSe());
     Sprite_Current = o;
     Field_ActiveMember = o;
     at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
@@ -159,17 +159,17 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     SH_CALL(Sprite_SetAnimationBank)(at::kBank);
     Sprite_Current[0] = 1;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_x, rv::Current<records::SpriteObject>()->x);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
-    rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_z, rv::Current<records::SpriteObject>()->z);
+    rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->best_score = 0;
     const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
     Sprite_Current[6] = static_cast<unsigned char>(op[0] >> 4);
-    unsigned char* const n = Object(Count());
+    unsigned char* const n = ObjectScenaSe(CountScenaSe());
     rv::As<records::SpriteObject>(n)->half_w = op[4];
     rv::As<records::SpriteObject>(n)->half_d = op[5];
     rv::As<records::SpriteObject>(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
