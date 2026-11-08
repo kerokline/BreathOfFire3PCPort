@@ -83,7 +83,7 @@ unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(
 
 // A stack-table dispatcher: the phase byte through the table the original
 // builds on its stack, unchecked there; past the table ours aborts.
-void Dispatch(const char* who, const std::uint32_t* phases, unsigned n, unsigned phase) {
+void DispatchMagicEngine(const char* who, const std::uint32_t* phases, unsigned n, unsigned phase) {
     if (phase >= n) bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, n);
     magic_harness::Phase(phases[phase])();
 }
@@ -100,7 +100,7 @@ void Dispatch(const char* who, const std::uint32_t* phases, unsigned n, unsigned
 // two-entry stack table - Task_StartHold60, MagicHold_Countdown.
 MENGINE_EXPORT void __cdecl MagicHold_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::Task_StartHold60, bof3::addr::MagicHold_Countdown};
-    Dispatch("MagicHold_Task", kPhases, 2, Sprite_Current[1]);
+    DispatchMagicEngine("MagicHold_Task", kPhases, 2, Sprite_Current[1]);
 }
 
 // original 0x47FDA0: +9 = 60, the phase on. Shared: also entry 0 of the .data
@@ -133,7 +133,7 @@ MENGINE_EXPORT void __cdecl MagicHold_Countdown(void) {
 // table - RestoreForm_Start, RestoreForm_Wait.
 MENGINE_EXPORT void __cdecl RestoreForm_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::RestoreForm_Start, bof3::addr::RestoreForm_Wait};
-    Dispatch("RestoreForm_Task", kPhases, 2, Sprite_Current[1]);
+    DispatchMagicEngine("RestoreForm_Task", kPhases, 2, Sprite_Current[1]);
 }
 
 // original 0x452620: the acting actor's (0x904B34) party record gets state 6,
@@ -168,7 +168,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Wait(void) {
 MENGINE_EXPORT void __cdecl Paralyzer_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {bof3::addr::Paralyzer_Start, bof3::addr::MagicFx_WaitOwnerAnim,
                                                  bof3::addr::MagicFx_FlagTargetEnd};
-    Dispatch("Paralyzer_Task", kPhases, 3, Sprite_Current[1]);
+    DispatchMagicEngine("Paralyzer_Task", kPhases, 3, Sprite_Current[1]);
 }
 
 // original 0x43F3E0: with Sprite_Current the slot's owner (0x93B8C4 +0x80, the
@@ -245,7 +245,7 @@ MENGINE_EXPORT void __cdecl HeadCracker_Task(void) {
         bof3::addr::HeadCracker_Drop,       bof3::addr::HeadCracker_WaitTarget, bof3::addr::HeadCracker_Drop,
         bof3::addr::HeadCracker_WaitTarget, bof3::addr::HeadCracker_Drop,       bof3::addr::HeadCracker_WaitTarget,
         bof3::addr::MagicFx_DoneAndFree};
-    Dispatch("HeadCracker_Task", kPhases, 10, Sprite_Current[1]);
+    DispatchMagicEngine("HeadCracker_Task", kPhases, 10, Sprite_Current[1]);
 }
 
 // original 0x43FCE0: with Sprite_Current the slot's owner (the caster),
@@ -349,7 +349,7 @@ MENGINE_EXPORT void __cdecl MagicFx_DoneAndFree(void) {
 // HeadCrackerRock_Run.
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Task(void) {
     static constexpr std::uint32_t kPhases[1] = {bof3::addr::HeadCrackerRock_Run};
-    Dispatch("HeadCrackerRock_Task", kPhases, 1, Sprite_Current[1]);
+    DispatchMagicEngine("HeadCrackerRock_Task", kPhases, 1, Sprite_Current[1]);
 }
 
 // original 0x43FEB0: phase +2 through a three-entry stack table - Start,
@@ -358,7 +358,7 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Task(void) {
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Run(void) {
     static constexpr std::uint32_t kPhases[3] = {bof3::addr::HeadCrackerRock_Start, bof3::addr::HeadCrackerRock_Fall,
                                                  bof3::addr::HeadCrackerRock_Land};
-    Dispatch("HeadCrackerRock_Run", kPhases, 3, Sprite_Current[2]);
+    DispatchMagicEngine("HeadCrackerRock_Run", kPhases, 3, Sprite_Current[2]);
     if ((Sprite_Current[0] & 1) == 0) return;
     MH_CALL(Sprite_ScriptTick)();
     MH_CALL(Sprite_UpdateScreen)();
