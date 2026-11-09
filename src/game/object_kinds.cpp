@@ -234,7 +234,7 @@ void FadeInStep() {
 // return 1; else with flags bit 1 and steps left, a move's frames.
 unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags, unsigned char bit, unsigned char add) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    if ((flags & 1) && ((At(::bof3::Img(Field_StepCount_addr))[0] ^ At(::bof3::Img(Field_StepCountPrev_addr))[0]) & bit)) {
+    if ((flags & 1) && ((move_script::At(::bof3::Img(Field_StepCount_addr))[0] ^ move_script::At(::bof3::Img(Field_StepCountPrev_addr))[0]) & bit)) {
         if (obj->move_steps < 0xFA) obj->move_steps = static_cast<unsigned char>(obj->move_steps + add);
         return 1;
     }
@@ -405,13 +405,13 @@ extern "C" unsigned char __cdecl Field_ObjectRandomTurn(unsigned char* object) {
 // home box. Everything from the argument, not Sprite_Current.
 extern "C" unsigned char __cdecl Field_ObjectInHome(unsigned char* object) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    const unsigned char* const step = At(::bof3::Img(Field_DirectionSteps_addr)) + (object[8] & 7) * 8u;
-    const std::uint32_t x = static_cast<std::uint32_t>(Long(step)) + static_cast<std::uint32_t>(obj->x);
-    const std::uint32_t z = static_cast<std::uint32_t>(Long(step + 4)) + static_cast<std::uint32_t>(obj->z);
-    int dx = static_cast<short>(x >> 16) - static_cast<short>(Word(object + 0x8E));
+    const unsigned char* const step = move_script::At(::bof3::Img(Field_DirectionSteps_addr)) + (object[8] & 7) * 8u;
+    const std::uint32_t x = static_cast<std::uint32_t>(move_script::Long(step)) + static_cast<std::uint32_t>(obj->x);
+    const std::uint32_t z = static_cast<std::uint32_t>(move_script::Long(step + 4)) + static_cast<std::uint32_t>(obj->z);
+    int dx = static_cast<short>(x >> 16) - static_cast<short>(move_script::Word(object + 0x8E));
     if (dx < 0) dx = -dx;
     if (static_cast<short>(obj->half_w) < dx) return 0;
-    int dz = static_cast<short>(z >> 16) - static_cast<short>(Word(object + 0x92));
+    int dz = static_cast<short>(z >> 16) - static_cast<short>(move_script::Word(object + 0x92));
     if (dz < 0) dz = -dz;
     return static_cast<short>(obj->half_d) >= dz ? 1 : 0;
 }
@@ -449,7 +449,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     unsigned char n = 0;
     for (; n < 4; ++n) {
-        rv::Current<records::SpriteObject>()->direction = At(::bof3::Img(kAsideRows))[n + (ObjTrio[0].direction & 7) * 4u];
+        rv::Current<records::SpriteObject>()->direction = move_script::At(::bof3::Img(kAsideRows))[n + (ObjTrio[0].direction & 7) * 4u];
         if (g.blocked_ahead(object)) continue;
         if (rv::Current<records::SpriteObject>()->state == 3 || Sprite_Current[3] == 3) {
             if (g.in_home(object)) break;
@@ -488,11 +488,11 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
     unsigned char* const sprite = Sprite_Current;
     if (sprite[6] == 5) {
         BattleE1_Mode = 0;
-        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
         Game_Mode = 7;
         // (object - Sprite_Objects) / 0xA4, signed as the original's imul.
         const auto offset = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_Objects)));
-        At(::bof3::Img(BattleE1_Mode_addr))[0xC] = static_cast<unsigned char>(offset / 0xA4);
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[0xC] = static_cast<unsigned char>(offset / 0xA4);
         return;
     }
     if (!(Field_StatusBits & 0x40)) {
@@ -510,24 +510,24 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
 // message (bit 13) or a script message. The word is read again after the
 // script, which may change it; the one found on entry is put back.
 extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context) {
-    const std::uint16_t word = Word(context + 8);
+    const std::uint16_t word = move_script::Word(context + 8);
     context[0] &= 0xEF;
     if (word == 0xFFFF) return 0;
     if (word & 0x8000) {
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-        const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 4));   // a table of 32-bit places
-        g.event_script(At(static_cast<std::uint32_t>(Long(At(scripts + 4u * (word & 0xFFF))))));
+        const auto scripts = static_cast<std::uint32_t>(move_script::Long(descriptor + 4));   // a table of 32-bit places
+        g.event_script(move_script::At(static_cast<std::uint32_t>(move_script::Long(move_script::At(scripts + 4u * (word & 0xFFF))))));
     }
-    const std::uint16_t now = Word(context + 8);
+    const std::uint16_t now = move_script::Word(context + 8);
     if (!(now & 0x8000)) {
         if (now & 0x2000) g.msg_system(now & 0xFFFu);
         else g.msg_script(now);
         Field_Request = 2;
     }
-    SetWord(context + 8, word);
+    move_script::SetWord(context + 8, word);
     if (rv::Current<records::SpriteObject>()->flags2 & 4) context[0] &= 0xDF;
     unsigned char* const member = Field_ActiveMember;
-    std::memcpy(At(::bof3::Img(AreaW1a_FocusObject_addr)), &member, sizeof member);
+    std::memcpy(move_script::At(::bof3::Img(AreaW1a_FocusObject_addr)), &member, sizeof member);
     return 1;
 }
 
