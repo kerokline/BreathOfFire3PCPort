@@ -172,8 +172,8 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
         unsigned char* const pos = move_script::At(::bof3::Img(at::kSlotPositions) + (slot_arg & 0xFF) * 8);
-        SetLong(pos, rv::As<records::SpriteObject>(s)->x);
-        SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
+        move_script::SetLong(pos, rv::As<records::SpriteObject>(s)->x);
+        move_script::SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
         s[8] = move_script::At(::bof3::Img(bof3::addr::BattleFormation_Anims))[move_script::At(::bof3::Img(at::kFormation))[0]];
         const auto p = Low32(s);
