@@ -187,7 +187,7 @@ struct Extent {
     std::int32_t left, top, right, bottom;
     U checksum;
 };
-void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* extent) {
+void DrawCells(U first, U count, const void* palette, const tex_cells::Desc& desc, Extent* extent) {
     if (static_cast<std::int32_t>(first) >= static_cast<std::int32_t>(first + count)) return;
     U record = ::bof3::Img(SpriteCell_Table_addr) + first * 8;
     U n = count;
@@ -340,7 +340,7 @@ void D3d_FreeCellTexture(int slot) {
 void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
     const void* palette = tex_cells::g.clut_pixels(clut);
     const tex_cells::U src = tex_cells::Long(::bof3::Img(kGlyphData.v)) + glyph * 0x120u;
-    Desc desc;
+    tex_cells::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const tex_cells::U entry = ::bof3::Img(Font_TexCache_addr) + static_cast<tex_cells::U>(slot) * tex_cells::kFontEntryBytes;
     const tex_cells::U surface_slot = entry + 8;
@@ -416,7 +416,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
         Dd_ClearSurface(Dd_StageSurface);
     }
     Extent extent = {0, 0, 0, 0, 0};
-    Desc desc;
+    tex_cells::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     if (tex_cells::Com(tex_cells::Long(::bof3::Img(tex_cells::kStage.v)), tex_cells::kLock, tex_cells::kNoRect, desc.b, tex_cells::kLockWait, 0u) != 0) return;
     const void* palette = tex_cells::g.clut_pixels(clut);
@@ -484,7 +484,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
 // the EndScene. The surface must exist: nothing tests +0x20 (D31).
 void D3d_RefreshCellTexture(int slot, unsigned first, unsigned count, unsigned clut) {
     Dd_ClearSurface(Dd_StageSurface);
-    Desc desc;
+    tex_cells::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     if (tex_cells::Com(tex_cells::Long(::bof3::Img(tex_cells::kStage.v)), tex_cells::kLock, tex_cells::kNoRect, desc.b, tex_cells::kLockWait, 0u) != 0) return;
     const void* palette = tex_cells::g.clut_pixels(clut);

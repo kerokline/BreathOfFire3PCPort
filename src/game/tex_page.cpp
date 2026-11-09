@@ -261,7 +261,7 @@ void Dd_InitSurfaceDesc(void* desc) {
 // word or a cache entry's field), which the render shim fills as x86 COM
 // fills an out-pointer: four bytes.
 int Dd_CreatePlainSurface(unsigned width, unsigned height, ::bof3::Slot32<void>* surface, unsigned format) {
-    Desc desc;
+    tex_page::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const tex_page::U caps = (Gfx_RenderFlags & 1) ? 0x840u : 0x1800u;
     tex_page::PutLong(desc.b + 0xC, (width + 3) & ~3u);
@@ -280,7 +280,7 @@ int Dd_CreatePlainSurface(unsigned width, unsigned height, ::bof3::Slot32<void>*
 // nothing more; on success asks the new surface (read back from *surface) for
 // IID_IDirect3DTexture2 into *texture and returns 1 whatever that answers.
 int Dd_CreateTextureSurface(unsigned width, unsigned height, ::bof3::Slot32<void>* surface, ::bof3::Slot32<void>* texture, unsigned format) {
-    Desc desc;
+    tex_page::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     tex_page::PutLong(desc.b + 0xC, width);
     tex_page::PutLong(desc.b + 4, 0x101007);
@@ -370,7 +370,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     }
     if (slot == 0x20) return 0;
     const tex_page::U src = Source(p, m, tex_page::Short(::bof3::Img(kTexKey.v)), tex_page::Short(::bof3::Img(kTexKey.v) + 2));
-    Desc desc;
+    tex_page::Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const tex_page::U entry = ::bof3::Img(Gfx_TexCache_addr) + ((p << 5) + slot) * kEntryBytes;
     const tex_page::U surface_slot = entry + 0x10;
@@ -438,7 +438,7 @@ void D3d_RefreshPageTexture(int page, int slot) {
     tex_page::At(entry)[0] = 1;
     const tex_page::U mode = tex_page::At(entry)[1];
     const tex_page::U src = Source(p, mode, tex_page::Short(entry + 8), tex_page::Short(entry + 0xA));
-    Desc desc;
+    tex_page::Desc desc;
     tex_page::Rect rect = {0, 0, 0x100, 0x100};
     if (mode & 2) {
         Dd_InitSurfaceDesc(desc.b);
