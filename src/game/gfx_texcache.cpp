@@ -41,11 +41,11 @@ constexpr int kPerPage = 32;
 constexpr int kEntries = 32 * kPerPage;
 static_assert(sizeof(TexCacheEntry) * kEntries == Gfx_TexCache_count);
 
-struct Rect { int left, top, right, bottom; };
+struct RectGfxTexcache { int left, top, right, bottom; };
 
 // USER32 IntersectRect, which the original calls: right and bottom are
 // exclusive, and an empty rect intersects nothing.
-bool Intersects(const Rect& p, const Rect& q) {
+bool Intersects(const RectGfxTexcache& p, const RectGfxTexcache& q) {
     const int l = p.left > q.left ? p.left : q.left;
     const int r = p.right < q.right ? p.right : q.right;
     const int t = p.top > q.top ? p.top : q.top;
@@ -67,12 +67,12 @@ struct Tally { unsigned dropped = 0, closed_up = 0, staled = 0; };
 template <class Release>
 Tally Invalidate(TexCacheEntry* table, const short* rect, int mode, Release release) {
     Tally tally;
-    const Rect dirty{rect[0], rect[1], rect[0] + rect[2] - 1, rect[1] + rect[3] - 1};
+    const RectGfxTexcache dirty{rect[0], rect[1], rect[0] + rect[2] - 1, rect[1] + rect[3] - 1};
 
     int page = 0;
     for (int py = 0; py < 0x200; py += 0x100) {
         for (int px = 0; px < 0x400; px += 0x40, ++page) {
-            if (!Intersects(Rect{px, py, px + 0x3F, py + 0xFF}, dirty)) continue;
+            if (!Intersects(RectGfxTexcache{px, py, px + 0x3F, py + 0xFF}, dirty)) continue;
 
             // The page's own entries. Mode 0 stops at the first free slot;
             // mode non-zero visits all 32.
