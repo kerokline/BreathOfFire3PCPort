@@ -68,7 +68,7 @@ using VoidFn = void (__cdecl*)();
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
 VoidFn Entry(std::uint32_t table, int index) {
-    return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
+    return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
 
 unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
@@ -113,9 +113,9 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
 // As the original has it: the chapter Cond_ByteFA is signed and unchecked;
 // the table is read afresh; the tail is a jump, here a call.
 extern "C" void __cdecl Field_ModeDispatch(void) {
-    const auto vtable = static_cast<std::uint32_t>(Long(At(::bof3::Img(Scenario_Hooks_addr) + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
+    const auto vtable = static_cast<std::uint32_t>(field_modes::Long(field_modes::At(::bof3::Img(Scenario_Hooks_addr) + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
     Entry(vtable, 0)();
-    g.mode_tail();
+    field_modes::g.mode_tail();
 }
 
 // original 0x56D8B0: a tail jump through the two-entry table 0x662CD0 on the
