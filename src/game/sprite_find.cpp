@@ -348,6 +348,26 @@ extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
     return 0xFF;
 }
 
+// original 0x531C70. Whether the point (x, y, z) is within the object's reach -
+// byte +0x70, widened by `margin` and 2 - of where the object is about to be:
+// its position less dword +0xC (and +0x10) times byte +9.
+//
+// As the original has it: z is compared inclusively and x and y exclusively;
+// everything wraps in 32 bits, and an absolute difference of 0x80000000 counts
+// as within any reach.
+extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int margin, const unsigned char* object) {
+    const std::uint32_t reach = static_cast<std::uint32_t>(object[0x70]) + static_cast<std::uint32_t>(margin) + 2u;
+    const int dz = GetSpriteFind<std::int16_t>(object, kZ) - z;
+    if ((dz < 0 ? -dz : dz) > static_cast<std::int32_t>(reach << 7)) return 0;
+    const std::uint32_t steps = object[0x09];
+    const std::int32_t limit = static_cast<std::int32_t>(reach << 15);
+    const std::uint32_t ax = static_cast<std::uint32_t>(x) - GetSpriteFind<std::uint32_t>(object, 0x0C) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ax), GetSpriteFind<std::int32_t>(object, kX)) >= limit) return 0;
+    const std::uint32_t ay = static_cast<std::uint32_t>(y) - GetSpriteFind<std::uint32_t>(object, 0x10) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ay), GetSpriteFind<std::int32_t>(object, kY)) >= limit) return 0;
+    return 1;
+}
+
 // original 0x57C0A0 (PSX 0x8015BEE4). The object number an attachment handle names - the byte
 // the movement-script command F8 07 stores at +0x18 - in Sprite_FindNearby's
 // numbering: without bit 7, (handle & 0x3F) + 30, one of Sprite_ObjectsExtra;
@@ -474,6 +494,7 @@ void SpriteFind_Inject() {
         sprite_find::g_inherit_live = reinterpret_cast<InheritFn>(inherit);
     }
     BOF3_INJECT(Sprite_FindNearby);
+    BOF3_INJECT(Sprite_PointInReach);
     BOF3_INJECT(Sprite_ObjectByHandle);
     BOF3_INJECT(Sprite_InheritDrawKey);
 }

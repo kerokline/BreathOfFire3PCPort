@@ -204,6 +204,78 @@ U TileTest(U x_arg, U z_arg, U want) {
 
 // --- the map tests -----------------------------------------------------------
 
+// original 0x5183C0 (PSX 0x801A2EE0): Field_MapBlockedAhead's test for a sprite
+// of size 0. X, Y the cells (high words of x, y), fx, fy the fractions. By
+// direction & 0xFF - 1 through the table 0x518600:
+//   1: cell (X, Y); if fx: (X+1, Y), the slopes at (x & ~0xFFFF, y), (x + 0x8000, y)
+//   7: cell (X, Y); if fy: (X, Y+1), the slopes at (x, y & ~0xFFFF), (x, y + 0x8000)
+//   5: row Y+1 if fy, else Y: cell (X, row); if fx: (X+1, row) and direction 1's slopes
+//   3: column X+1 if fx, else X: cell (col, Y); if fy: (col, Y+1) and direction 7's slopes
+// then AreaMap_TooSteep(x, y) in each - its slopes through AreaMap_TooSteepAt;
+// any other direction: 1, nothing called. The answers are summed as a byte
+// (AreaMap_BlockedWide's shape, docs/field-blocked.md 1.1) and its non-zero-ness
+// returned in al. The original passes the cells as dwords whose upper halves
+// are the neighbouring argument's bytes (it reads its arguments unaligned, and
+// X + 1 is added to the whole dword); AreaMap_CellBlocked reads 16 bits. Its one
+// caller, Field_MapBlockedAhead (ours), reads al.
+extern "C" unsigned char __cdecl AreaMap_BlockedNarrow(long x_arg, long y_arg, unsigned direction) {
+    const field_misc::U x = static_cast<field_misc::U>(x_arg), y = static_cast<field_misc::U>(y_arg);
+    const auto X = static_cast<short>(x >> 16), Y = static_cast<short>(y >> 16);
+    const auto X1 = static_cast<short>((x >> 16) + 1), Y1 = static_cast<short>((y >> 16) + 1);
+    const bool fx = (x & 0xFFFF) != 0, fy = (y & 0xFFFF) != 0;
+    const auto xl = static_cast<long>(x), yl = static_cast<long>(y);
+    const auto x_cell = static_cast<long>(x & 0xFFFF0000u), y_cell = static_cast<long>(y & 0xFFFF0000u);
+    const auto x_half = static_cast<long>(x + 0x8000u), y_half = static_cast<long>(y + 0x8000u);
+    unsigned char sum;
+    switch (direction & 0xFF) {
+    case 1:
+        sum = field_misc::g.cell_blocked(X, Y);
+        if (fx) {
+            sum += field_misc::g.cell_blocked(X1, Y);
+            sum += field_misc::g.too_steep_at(x_cell, yl);
+            sum += field_misc::g.too_steep_at(x_half, yl);
+        }
+        break;
+    case 7:
+        sum = field_misc::g.cell_blocked(X, Y);
+        if (fy) {
+            sum += field_misc::g.cell_blocked(X, Y1);
+            sum += field_misc::g.too_steep_at(xl, y_cell);
+            sum += field_misc::g.too_steep_at(xl, y_half);
+        }
+        break;
+    case 5: {
+        const short row = fy ? Y1 : Y;
+        sum = field_misc::g.cell_blocked(X, row);
+        if (fx) {
+            sum += field_misc::g.cell_blocked(X1, row);
+            sum += field_misc::g.too_steep_at(x_cell, yl);
+            sum += field_misc::g.too_steep_at(x_half, yl);
+        }
+        break;
+    }
+    case 3: {
+        const short column = fx ? X1 : X;
+        sum = field_misc::g.cell_blocked(column, Y);
+        if (fy) {
+            sum += field_misc::g.cell_blocked(column, Y1);
+            sum += field_misc::g.too_steep_at(xl, y_cell);
+            sum += field_misc::g.too_steep_at(xl, y_half);
+        }
+        break;
+    }
+    default:
+        return 1;
+    }
+    sum += field_misc::g.too_steep(xl, yl);
+    return sum != 0;
+}
+
+// original 0x5187A0 (PSX 0x801A3244, a wrapper there too): AreaMap_TooSteep(x,
+// y), its eax passed through. Called only by AreaMap_BlockedNarrow (ten sites,
+// E8 scan), which adds al.
+extern "C" unsigned char __cdecl AreaMap_TooSteepAt(long x, long y) { return field_misc::g.too_steep(x, y); }
+
 // original 0x5725C0 (PSX 0x80155A34): the slope at (x, y) along `direction`
 // with the height scale the leader's state asks for: MapView_CheckHeightScale,
 // AreaMap_Slope(x, y, direction) - the three dwords passed on whole - then
@@ -530,6 +602,8 @@ extern "C" unsigned char* __cdecl Gpu_SetDrawMove(unsigned char* prim, const uns
 
 void FieldMisc_Inject() {
     if (bof3::WantsShadow("field_misc")) field_misc::SelfTest();
+    BOF3_INJECT(AreaMap_BlockedNarrow);
+    BOF3_INJECT(AreaMap_TooSteepAt);
     BOF3_INJECT(MapCell_FlatOverlay);
     BOF3_INJECT(AreaMap_ApplyPatch);
     BOF3_INJECT(Gfx_ClutAdjust);

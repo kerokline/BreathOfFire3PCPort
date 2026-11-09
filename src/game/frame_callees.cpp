@@ -217,6 +217,23 @@ extern "C" void __cdecl MoveScript_TintFrame(void) {
     }
 }
 
+// original 0x531B60: the party members' screen updates (PSX FUN_801BEAB0,
+// term for term). Field_MemberCount read once; from the last member down,
+// each without bit 6 of +0 becomes Sprite_Current and is updated - through
+// Sprite_UpdateScreenSlot when Field_Request (read each time) is 3. A count
+// above 3 walks on past ObjTrio's three at the same stride, as the original.
+extern "C" void __cdecl Party_UpdateScreens(void) {
+    const int last = static_cast<int>(Field_MemberCount) - 1;
+    if (last < 0) return;
+    unsigned char* member = rv::Bytes(&ObjTrio[last]);
+    for (int left = last + 1; left != 0; --left, member -= kMemberBytesFrameCallees) {
+        if (member[0] & 0x40) continue;
+        Sprite_Current = member;
+        if (Field_Request == 3) frame_callees::g.update_screen_slot();
+        else frame_callees::g.update_screen();
+    }
+}
+
 namespace {
 
 // --- BOF3X_SHADOW=frame_callees: a differential fuzz, once at start-up ------
@@ -546,4 +563,5 @@ void FrameCallees_Inject() {
     BOF3_INJECT(CameraTurn_End);
     BOF3_INJECT(Field_RunSlots);
     BOF3_INJECT(MoveScript_TintFrame);
+    BOF3_INJECT(Party_UpdateScreens);
 }

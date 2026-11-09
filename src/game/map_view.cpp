@@ -196,6 +196,12 @@ extern "C" void __cdecl MapView_CellToMap(int row, int col, unsigned char* out) 
     out[1] = 0;
 }
 
+// original 0x536700 (PSX 0x80167628). The area map's byte for a cell. No bounds check; the
+// arguments are 16 bits, signed.
+extern "C" unsigned char __cdecl AreaMap_ByteAt(short x, short y) {
+    return AreaMap_Bytes[x + y * static_cast<int>(AreaMap_Header[0])];
+}
+
 // original 0x5725F0 (PSX 0x80155A94). Sets the view's elevation and asks for a redraw; unless
 // the area's header word +0x1E is set, the offset moves by two for every unit
 // the elevation changed.
@@ -227,5 +233,6 @@ void MapView_Inject() {
             bof3::CloneOriginal("MapView_SetElevation", bof3::addr::MapView_SetElevation, 0x30)));
     }
     BOF3_INJECT(MapView_CellToMap);
+    BOF3_INJECT(AreaMap_ByteAt);
     BOF3_INJECT(MapView_SetElevation);
 }

@@ -66,6 +66,7 @@ unsigned char* RecordScenaSx(unsigned n) { return move_script::At(::bof3::Img(Ch
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
 unsigned char* MemberRecord(unsigned char id) { return RecordScenaSx(Character_IndexById[id]); }
+unsigned char* ObjScenaSx(unsigned n) { return rv::Bytes(&ObjTrio[n]); }
 
 // A signed byte's value.
 int S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -73,6 +74,13 @@ int S8(unsigned char b) { return static_cast<signed char>(b); }
 // C's truncating division by 360 of a value times 4096 - the imul
 // 0xB60B60B7 / add / sar 8 / add sign idiom, exact for every s32.
 std::int32_t Degrees(std::int32_t v) { return (v << 12) / 360; }
+
+// Sprite_EnsureAnimation with the whole dword the original pushes (the
+// callee hands it on to Sprite_SetAnimation), as scena_sc0.cpp's.
+void EnsureAnimation(std::uint32_t eax) {
+    const auto callee = reinterpret_cast<std::uintptr_t>(SH_CALL(Sprite_EnsureAnimation));
+    reinterpret_cast<unsigned char (__cdecl*)(std::uint32_t)>(callee)(eax);
+}
 
 // One stat word of the level-up: + max(0, gain + bias), the 16-bit word
 // capped at 999 (the add and the compare are 16-bit, unsigned).
@@ -128,6 +136,184 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
     }
     rec[0xA] = level;
     SH_CALL(Char_RecalcStats)(rec);
+}
+
+// original 0x532ED0: the members placed for an event battle. The x and z
+// (16.16) to 0x903780 / 0x903784, the formation byte 0x904AAC from
+// EventBattle_Records[n] +1 (n the third argument's low byte, unchecked).
+// Then for each member i below Field_MemberCount (read again each time):
+// Field_State and Sprite_Current its ObjTrio record, its slot j the index in
+// the second list of the record's +0x89 (3 when absent); 0x532FD0(x, z, j) -
+// the slot passed in the argument's dword, whose upper bytes stay the
+// caller's; Sprite_Current's +0x34 / +0x38 to the slot's pair at 0x7E06E0,
+// +0x48 0, +8 from BattleFormation_Anims[formation] and
+// Sprite_EnsureAnimation of it. No PSX twin paired.
+extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, unsigned formation_arg) {
+    BossSi_CentreX = x;
+    const unsigned char formation = move_script::At(::bof3::Img(bof3::addr::EventBattle_Records))[(formation_arg & 0xFF) * 4 + 1];
+    BossSi_CentreZ = z;
+    move_script::At(::bof3::Img(scena_sx::at::kFormation))[0] = formation;
+    if (Field_MemberCount == 0) return;
+    std::uint32_t slot_arg = formation_arg;
+    for (unsigned i = 0; static_cast<int>(i) < Field_MemberCount; ++i) {
+        unsigned char* const o = ObjScenaSx(i);
+        Field_State = o;
+        Sprite_Current = o;
+        const unsigned char id = o[0x89];
+        unsigned char j = 0;
+        for (;;) {
+            slot_arg = (slot_arg & 0xFFFFFF00u) | j;
+            if (Cond_Flags[0xd5 + j] == id) break;
+            ++j;
+            slot_arg = (slot_arg & 0xFFFFFF00u) | j;
+            if (j >= 3) break;
+        }
+        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), scena_sx::at::kFormationPlace.v)(
+            static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
+        unsigned char* const s = Sprite_Current;
+        unsigned char* const pos = move_script::At(::bof3::Img(scena_sx::at::kSlotPositions) + (slot_arg & 0xFF) * 8);
+        move_script::SetLong(pos, rv::As<records::SpriteObject>(s)->x);
+        move_script::SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
+        s[0x48] = 0;
+        s[8] = move_script::At(::bof3::Img(bof3::addr::BattleFormation_Anims))[move_script::At(::bof3::Img(scena_sx::at::kFormation))[0]];
+        const auto p = Low32(s);
+        EnsureAnimation((p & 0xFFFFFF00u) | s[8]);
+    }
+}
+
+// original 0x533E00: for each member i below Field_MemberCount (read again
+// each time): Sprite_Current its ObjTrio record, Sprite_ReleaseTint(the
+// record), Sprite_LoadPalette(0x80D380 + 0x40 i, 0). Called by 63 of the
+// chapter call tables' entries (most as a tail jmp) and group SE's
+// Scena08_PartyJoin784. No PSX twin paired.
+extern "C" void __cdecl Party_ReloadPalettes(void) {
+    if (Field_MemberCount == 0) return;
+    for (unsigned i = 0; static_cast<int>(i) < Field_MemberCount; ++i) {
+        unsigned char* const o = ObjScenaSx(i);
+        Sprite_Current = o;
+        SH_CALL(Sprite_ReleaseTint)(o);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + 0x40 * i)), 0);
+    }
+}
+
+// original 0x533E50: each of the eight CharacterRecords with +0xB bit 0 (the
+// joined bit): +0x1E 0, Char_RecalcStats(record), then +0x1C = +0x2E, HP +0x18
+// = +0x20, AP +0x1A = +0x22, the state word +0x10 0 - read after the call.
+// Then, for each member i below Field_MemberCount (read once, after the
+// eight), the member's record (Character_IndexById of the first list's id,
+// unchecked) copied whole (0xA4 bytes) over ObjTrio record i +0x80. No PSX
+// twin paired; Party_RestoreAll (0x580630, the inn's) is its larger cousin.
+extern "C" void __cdecl Party_HealJoined(void) {
+    for (unsigned r = 0; r < 8; ++r) {
+        unsigned char* const rec = RecordScenaSx(r);
+        if (!(rec[0xB] & 1)) continue;
+        rec[0x1E] = 0;
+        SH_CALL(Char_RecalcStats)(rec);
+        rec[0x1C] = rec[0x2E];
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, rv::As<records::CharRecord>(rec)->stats.max_hp);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->ap, rv::As<records::CharRecord>(rec)->stats.max_ap);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->status, 0);
+    }
+    const int n = Field_MemberCount;
+    for (int i = 0; i < n; ++i)
+        std::memmove(ObjScenaSx(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), scena_sx::at::kRecordStride);
+}
+
+// original 0x534030: a member out of the party (the argument's low byte, an
+// id). Party_JoinReset; the id's slot in the second list (the count when it
+// is absent, unchecked) becomes 0xFF and moves to the end below the count;
+// the id's slot in the first list becomes 0xFF, and each 0xFF below the count
+// - 1 (read again each time) takes the next slot's id, the next ObjTrio record
+// copied over it (0x14C bytes; Sprite_Current it) and renumbered: +5 its slot,
+// +0x26 the slot x 0x50 (a byte), +0x27 0x78 + the slot, +0x4B 0xFF, +0x148
+// Character_IndexById[+0x89]. Then ObjTrio record count - 1 +0 cleared,
+// Member_ClearState(count - 1), and with the count read again: three -
+// 0x904060 cleared when 3 or more, two - cleared; the count one less. No PSX
+// twin paired.
+extern "C" void __cdecl Party_Remove(unsigned id_arg) {
+    SH_CALL(Party_JoinReset)();
+    const auto id = static_cast<unsigned char>(id_arg);
+    unsigned char* const first = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
+    unsigned char* const second = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd5);
+    const int count = Field_MemberCount;
+    int k = 0;
+    while (k < count && second[k] != id) ++k;
+    const int last = count - 1;
+    second[k] = 0xFF;
+    for (; k < last; ++k) {
+        if (second[k] != 0xFF) continue;
+        second[k] = second[k + 1];
+        second[k + 1] = 0xFF;
+    }
+    k = 0;
+    while (k < count && first[k] != id) ++k;
+    first[k] = 0xFF;
+    if (last > 0) {
+        for (int s = 0; s < Field_MemberCount - 1; ++s) {
+            if (first[s] != 0xFF) continue;
+            first[s] = first[s + 1];
+            unsigned char* const o = ObjScenaSx(static_cast<unsigned>(s));
+            Sprite_Current = o;
+            first[s + 1] = 0xFF;
+            std::memmove(o, o + scena_sx::at::kObjStride, scena_sx::at::kObjStride);
+            o[5] = static_cast<unsigned char>(s);
+            Sprite_Current[0x26] = static_cast<unsigned char>(s * 0x50);
+            Sprite_Current[0x27] = static_cast<unsigned char>(s + 0x78);
+            Sprite_Current[0x4B] = 0xFF;
+            o[0x148] = Character_IndexById[o[0x89]];
+        }
+    }
+    const unsigned char n = Field_MemberCount;
+    const auto below = static_cast<unsigned char>(n - 1);
+    ObjTrio[static_cast<int>(n) - 1].flags = 0;
+    SH_CALL(Member_ClearState)(below);
+    const unsigned char now = Field_MemberCount;
+    if (now == 3) {
+        if (Cond_Flags[0xd0] >= 3) Cond_Flags[0xd0] = 0;
+    } else if (now == 2) {
+        Cond_Flags[0xd0] = 0;
+    }
+    Field_MemberCount = static_cast<unsigned char>(now - 1);
+}
+
+// original 0x534DB0 (PSX 0x801C4084): Sprite_Current's CLUT row (+0x27) one colour: words 1..31
+// of Gfx_ClutStrip row +0x27 = colour c of {0x0010, 0x4010, 0x0210, 0x4000}
+// (c the argument's low byte; the original keeps the four on its stack and
+// reads its own frame for c of 4 or more - ours aborts), Gfx_ClutStripDirty
+// 1, Sound_PlayEffect(0x108), then Field_State +0x138 |= 8 (read after the
+// call). PSX twin 0x801C4084 (pairs_propagated "call-anchored").
+extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
+    static const std::uint16_t kColours[4] = {0x0010, 0x4010, 0x0210, 0x4000};
+    const unsigned c = colour_arg & 0xFF;
+    if (c >= 4)
+        bof3::Fatal("Sprite_FlashClut: colour %u past the four (the original reads its own stack frame)", c);
+    const unsigned row = Sprite_Current[0x27];
+    for (unsigned i = 1; i < 0x20; ++i) Gfx_ClutStrip[row * 0x20 + i] = kColours[c];
+    Gfx_ClutStripDirty = 1;
+    SH_CALL(Sound_PlayEffect)(0x108);
+    Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] | 8);
+}
+
+// original 0x537480 (PSX 0x80168AB4): a member's HP (+0x18 of its record: the second
+// argument's low byte through Character_IndexById, unchecked) down by the
+// first argument's word while it is more; else to 1 (an HP of 0 becomes 1
+// too). Then the record Field_State +0x148 names (not the member's): with HP
+// at most a quarter of +0x20 (>> 2), its state word +0x10 and Field_State's
+// word +0x90 |= 0x2000. Answers what it took: the first argument whole, or
+// HP - 1 (0xFFFFFFFF at HP 0); Field_Bit80Tick reads ax. PSX twin 0x80168AB4
+// (pairs_propagated "call").
+extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned member_arg) {
+    unsigned char* const rec = MemberRecord(static_cast<unsigned char>(member_arg));
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
+    std::uint32_t took = amount;
+    if (hp <= (amount & 0xFFFF)) took = hp - 1;
+    rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, hp - took);
+    unsigned char* const actor = RecordScenaSx(Field_State[0x148]);
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) {
+        rv::Store<unsigned>(rv::As<records::CharRecord>(actor)->status, rv::As<records::CharRecord>(actor)->status | 0x2000);
+        rv::Store<unsigned>(rv::As<records::PartyMember>(Field_State)->status, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
+    }
+    return took;
 }
 
 // original 0x56D6F0: Field_StatusBits |= 0x80. No PSX twin paired.
@@ -350,6 +536,12 @@ extern "C" unsigned char __cdecl Zenny_Add(std::uint32_t amount, unsigned tally)
 void ScenaSx_Inject() {
     if (bof3::WantsShadow("scena_sx")) scena_sx::SelfTest();
     BOF3_INJECT(Char_LevelUp);
+    BOF3_INJECT(Party_PlaceForBattle);
+    BOF3_INJECT(Party_ReloadPalettes);
+    BOF3_INJECT(Party_HealJoined);
+    BOF3_INJECT(Party_Remove);
+    BOF3_INJECT(Sprite_FlashClut);
+    BOF3_INJECT(Char_LoseHp);
     BOF3_INJECT(Field_SetStatus80);
     BOF3_INJECT(Field_CellTriggerAt);
     BOF3_INJECT(MapView_FillCells);

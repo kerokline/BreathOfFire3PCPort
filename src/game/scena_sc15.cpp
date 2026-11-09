@@ -321,6 +321,15 @@ uint32_t RollEntry(uint32_t i) {
 // ===========================================================================
 // Chapter 15
 
+// original 0x537580: the word at [0x7E0880] + (index & 0xFFFF) * 8 - an
+// 8-byte record's first word, the table a pointer in 0x7E0880; eax the word
+// zero-extended. Called by area code (0x48A57A, 0x48A59D, testing 0x261 and
+// 0x308) and Scena15_Run5 (0x308). Placed by the linker before chapter 0's
+// block.
+SC15_EXPORT unsigned __cdecl Scena15_RecordWord(unsigned index) {
+    return W(L(::bof3::Img(0x7E0880)) + (index & 0xFFFFu) * 8u);
+}
+
 // original 0x567DC0: chapter 15's vtable slot 0 (PSX 0x801F9CAC): a tail jump
 // through Scena15_States on the s8 0x8034E2 - 0 is 0x5646B0 (state 1, chapter
 // 13/14's), 1 Scena15_EnterArea, 2 Scena15_Run. Unchecked.
@@ -2777,6 +2786,7 @@ void ScenaSc15_Inject() {
         bof3::Log("DIV-0207    the ending's disc held at %u, the night kept under the Fin panel: %s", kFinRadius,
                   scena_sc15::g_fin_night ? "on" : "OFF (BOF3X_ORIGINAL=FinNight)");
     }
+    BOF3_INJECT(Scena15_RecordWord);
     BOF3_INJECT(Scena15_Frame);
     BOF3_INJECT(Scena15_EnterArea);
     BOF3_INJECT(Scena15_BattleSetup);

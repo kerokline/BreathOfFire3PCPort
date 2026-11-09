@@ -78,11 +78,39 @@ void SelfTest(CopyFn theirs) {
     if (bad) bof3::Fatal("Field_CopyInput differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+bool HasState20(unsigned member) {
+    return (Field_ActorStates[(rv::Bytes(ObjTrio) + 0x148)[member * kMemberSize] * kStateSize] & 0x20) != 0;
+}
+
 }  // namespace
+
+// original 0x531BD0 (PSX 0x801BEBBC). The field's copy of the held buttons - with bits 12-13
+// and 14-15 changing places while a member's state byte has bit 0x20. Which
+// members count is Field_InputFlags bit 0: set, any of them; clear, the first,
+// whatever the count says.
+//
+// As the original has it: the exchanged word also loses bits 9 and 10, and
+// with bit 0 set and a count of 0 nothing is exchanged.
+extern "C" void __cdecl Field_CopyInput(void) {
+    bool exchange = false;
+    if (Field_InputFlags & 1) {
+        for (unsigned i = 0; i < Field_MemberCount; ++i)
+            if (HasState20(i)) exchange = true;
+    } else {
+        exchange = HasState20(0);
+    }
+    const std::uint32_t held = Input_Held;
+    if (!exchange) {
+        Field_InputHeld = static_cast<unsigned short>(held);
+        return;
+    }
+    Field_InputHeld = static_cast<unsigned short>(((held & 0xF000u) << 2) | ((held >> 2) & 0x3000u) | (held & 0x9FFu));
+}
 
 void FieldInput_Inject() {
     // 0x531BD0..0x531C69: no calls, every jump internal (disasm 2026-09-20).
     if (bof3::WantsShadow("field_input"))
         SelfTest(reinterpret_cast<CopyFn>(
             bof3::CloneOriginal("Field_CopyInput", bof3::addr::Field_CopyInput, 0x9A)));
+    BOF3_INJECT(Field_CopyInput);
 }

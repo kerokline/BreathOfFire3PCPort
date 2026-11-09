@@ -120,6 +120,154 @@ std::uint32_t FloatBits(std::int16_t v) {
 
 }  // namespace
 
+// original 0x517200: the field's frame (PSX FUN_8019A1B8, call for call).
+extern "C" void __cdecl Field_Frame(void) {
+    field_frame::g.kind2();
+    field_frame::g.extra_frame();
+    field_frame::g.members();
+    field_frame::g.objects();
+    field_frame::g.area_map();
+    field_frame::g.extra_screens();
+    field_frame::g.party_screens();
+    field_frame::g.objects_screen();
+    field_frame::g.effects();
+    field_frame::g.slots();
+    field_frame::g.tint();
+    field_frame::g.draw();   // a tail jmp in the original
+}
+
+// original 0x517240 (PSX 0x8019A230): the same frame with the area's mode dispatch and the
+// task records first (PSX FUN_8019A230, call for call).
+extern "C" void __cdecl Field_FrameScripted(void) {
+    field_frame::g.mode_dispatch();
+    field_frame::g.task_records();
+    field_frame::g.kind2();
+    field_frame::g.extra_frame();
+    field_frame::g.members();
+    field_frame::g.objects();
+    field_frame::g.area_map();
+    field_frame::g.extra_screens();
+    field_frame::g.party_screens();
+    field_frame::g.objects_screen();
+    field_frame::g.effects();
+    field_frame::g.slots();
+    field_frame::g.tint();
+    field_frame::g.draw();   // a tail jmp in the original
+}
+
+// original 0x517350: the party members' frames (PSX FUN_8019A440). Bit n of
+// the two flag words' low bytes holds member n still; the second member runs
+// only with more than one, the third only with exactly three - four or more
+// run two, as the original has it. Flags and count are re-read after every
+// call, as the original's loads are.
+extern "C" void __cdecl Field_MembersFrame(void) {
+    field_frame::g.pending();
+    const auto held = [] { return static_cast<unsigned char>(Field_ScriptFlags2 | Field_ScriptFlags); };
+    if (!(held() & 1)) {
+        Field_State = rv::Bytes(ObjTrio);
+        Sprite_Current = rv::Bytes(ObjTrio);
+        field_frame::g.leader();
+    }
+    if (Field_MemberCount <= 1) return;
+    if (!(held() & 2)) {
+        Field_State = rv::Bytes(&ObjTrio[1]);
+        Sprite_Current = rv::Bytes(&ObjTrio[1]);
+        field_frame::g.member();
+    }
+    if (Field_MemberCount != 3) return;
+    if (!(held() & 4)) {
+        Field_State = rv::Bytes(&ObjTrio[2]);
+        Sprite_Current = rv::Bytes(&ObjTrio[2]);
+        field_frame::g.member();   // a tail jmp in the original
+    }
+}
+
+// original 0x5173E0: the 30 field objects' screen update (PSX FUN_801A151C).
+//
+// As the original has it: a type-9 object keeps whatever slot byte +0x29 it
+// had (and is skipped entirely under Draw_OtSlot 4); the type-0x0A test reads
+// Sprite_Current, which is the object here since nothing runs in between.
+extern "C" void __cdecl Field_ObjectsScreen(void) {
+    unsigned char* object = rv::Bytes(Sprite_Objects);
+    for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
+        Sprite_Current = object;
+        if (!(object[0] & 1)) continue;
+        if (object[6] == 9) {
+            if (Draw_OtSlot == 4) continue;
+        } else {
+            object[0x29] = (object[0x24] & 0x10) ? 4 : Draw_OtSlot;
+        }
+        if (rv::Current<records::SpriteObject>()->type == 0x0A) field_frame::g.screen_a();
+        else field_frame::g.update_screen();
+    }
+}
+
+// original 0x517490: the 30 field objects' frame (PSX FUN_801A16E0). The
+// object's script context is +0x80; +9 counts a timed move's frames.
+//
+// As the original has it: Field_ObjectLinked ends an object's turn with
+// nothing after it; everything after a callee reads Sprite_Current and the
+// context byte afresh, since the callee may move or change them; the tick
+// count is max(+0x84 - 2, 0) + 1, +0x84 read once before the ticks; after the
+// turn target, the face-ObjTrio branch stores (ObjTrio[8] ^ 4) & 7 - the
+// original also compares the sprite's direction with ObjTrio's there and
+// branches on (differ ^ 4), which is never 0: a dead test with no effect,
+// not reproduced.
+extern "C" void __cdecl Field_ObjectsFrame(void) {
+    if (Field_ScriptFlags2 & 0x400) return;
+    unsigned char* object = rv::Bytes(Sprite_Objects);
+    for (unsigned n = kObjects; n != 0; --n, object += kObjectBytes) {
+        Sprite_Current = object;
+        Field_ActiveMember = object;
+        if (!(object[0] & 1)) continue;
+        Scratch()[3] = 0;
+        unsigned char* const context = object + 0x80;
+        const unsigned char timed = object[9];
+        const unsigned char flags = context[0];
+        if (timed == 0 && (flags & 0x20)) {
+            if (flags & 0x10) {
+                const unsigned char turned = field_frame::g.turn_target(context);
+                records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+                if (turned != 0 && !(sprite->flags2 & 8)) {
+                    object[0x85] = static_cast<unsigned char>(sprite->direction & 7);
+                    if (sprite->flags2 & 2) {
+                        field_frame::g.face(static_cast<unsigned char>(sprite->direction & 7));
+                    } else {   // turn to face ObjTrio's first member
+                        sprite->direction = static_cast<unsigned char>((ObjTrio[0].direction ^ 4) & 7);
+                        field_frame::g.face(rv::Current<records::SpriteObject>()->direction);
+                    }
+                    if (rv::Current<records::SpriteObject>()->state == 0x0A) object[0x85] |= 1;
+                }
+            } else {
+                field_frame::g.idle(object);
+            }
+        } else {
+            if (context[0] & 1) {
+                field_frame::g.linked();
+                continue;
+            }
+            if (move_script::Word(object + 0x9C) > 0x1E && timed == 0) field_frame::g.idle_long(object);
+            else CallHandler(object);
+        }
+        records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
+        if (sprite->type == 0x0A) continue;
+        const unsigned char after = context[0];
+        if (after & 0x40) {
+            if (sprite->flags2 & 0x20) continue;
+            if (sprite->flags & 0x10) field_frame::g.tick();
+            else field_frame::g.tick_once();
+        } else if (after & 8) {
+            field_frame::g.face(sprite->direction);
+            context[0] &= 0xF7;
+        } else if (!(sprite->flags2 & 0x20)) {
+            const int extra = static_cast<int>(object[0x84]) - 2;
+            const unsigned ticks = (extra < 0 ? 0u : static_cast<unsigned>(extra) & 0xFF) + 1;
+            for (unsigned i = 0; i < ticks; ++i) field_frame::g.tick();
+        }
+    }
+    Field_StepCountPrev = Field_StepCount;
+}
+
 // original 0x57B780: the four extra party objects' screen update (PSX
 // FUN_8015B148): Sprite_UpdateScreenA for each present (bit 0) and not
 // hidden by bit 6.
@@ -808,6 +956,11 @@ void FieldFrame_Inject() {
         }
         SelfTest(clones);
     }
+    BOF3_INJECT(Field_Frame);
+    BOF3_INJECT(Field_FrameScripted);
+    BOF3_INJECT(Field_MembersFrame);
+    BOF3_INJECT(Field_ObjectsScreen);
+    BOF3_INJECT(Field_ObjectsFrame);
     BOF3_INJECT(Party_ExtraScreens);
     BOF3_INJECT(Party_ExtraFrame);
     BOF3_INJECT(Sprite_UpdateScreenA);
