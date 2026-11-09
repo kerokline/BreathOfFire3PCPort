@@ -674,6 +674,13 @@ class FileItems:
             k = kw + 1
             if k < len(ts) and ts[k].text in ("class", "struct"):    # enum class
                 k += 1
+            while k < len(ts) and ts[k].text in ("alignas", "__attribute__", "__declspec")                     and k + 1 < len(ts) and ts[k + 1].text == "(":   # `struct alignas(4) Desc`: skip to the name
+                depth, k = 0, k + 1
+                while k < len(ts):
+                    depth += {"(": 1, ")": -1}.get(ts[k].text, 0)
+                    k += 1
+                    if depth == 0:
+                        break
             if k < len(ts) and ts[k].kind == "id" and ts[k].text not in ("alignas", "__attribute__"):
                 names.append(ts[k].text)
             if ts[kw].text == "enum":                                  # its enumerators
