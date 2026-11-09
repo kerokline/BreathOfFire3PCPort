@@ -46,10 +46,10 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-void SetUL(U a, U v) { SetUL(At(a), v); }
+U UL(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
+U UL(U a) { return UL(move_script::At(a)); }
+void SetUL(unsigned char* p, U v) { move_script::SetLong(p, static_cast<std::int32_t>(v)); }
+void SetUL(U a, U v) { SetUL(move_script::At(a), v); }
 unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 // The community's records and buildings, and the traits table by record.
@@ -112,27 +112,27 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
     const auto a = static_cast<unsigned char>(actor);
     if (forced == a) return 1;
     if (a < 3) {
-        At(::bof3::Img(at::kTarget.v))[0] = forced;
+        move_script::At(::bof3::Img(at::kTarget.v))[0] = forced;
         return 0;
     }
     const U e = at::kEnemyStride * (static_cast<U>(a) - 3);
-    if (Word(At(::bof3::Img(at::kEnemyIntel.v) + e)) > 1 && !(At(::bof3::Img(Battle_Enemies_addr) + 0x92 + e)[0] & 0x20) && !(UL(::bof3::Img(at::kEnemyFlags.v) + e) & 0x4000))
+    if (move_script::Word(move_script::At(::bof3::Img(at::kEnemyIntel.v) + e)) > 1 && !(move_script::At(::bof3::Img(Battle_Enemies_addr) + 0x92 + e)[0] & 0x20) && !(UL(::bof3::Img(at::kEnemyFlags.v) + e) & 0x4000))
         return 1;
-    if (At(::bof3::Img(at::kAutoMode.v))[0] != 4) {
-        At(::bof3::Img(at::kTarget.v))[0] = forced;
+    if (move_script::At(::bof3::Img(at::kAutoMode.v))[0] != 4) {
+        move_script::At(::bof3::Img(at::kTarget.v))[0] = forced;
         return 0;
     }
-    const unsigned char bits = At(::bof3::Img(at::kAbilityFlags.v) + at::kAbilityStride * Word(At(::bof3::Img(Battle_Enemies_addr) + 0x106 + e)))[0];
+    const unsigned char bits = move_script::At(::bof3::Img(at::kAbilityFlags.v) + at::kAbilityStride * move_script::Word(move_script::At(::bof3::Img(Battle_Enemies_addr) + 0x106 + e)))[0];
     if (bits & 0x10) {
-        if (bits & 0x80) At(::bof3::Img(at::kTarget.v))[0] = 0xC0;
-        else At(::bof3::Img(at::kTarget.v))[0] = forced >= 3 ? 0x80 : 0x40;
+        if (bits & 0x80) move_script::At(::bof3::Img(at::kTarget.v))[0] = 0xC0;
+        else move_script::At(::bof3::Img(at::kTarget.v))[0] = forced >= 3 ? 0x80 : 0x40;
         return 1;
     }
     if (!(bits & 0x40)) {
-        At(::bof3::Img(at::kTarget.v))[0] = a;
+        move_script::At(::bof3::Img(at::kTarget.v))[0] = a;
         return 1;
     }
-    At(::bof3::Img(at::kTarget.v))[0] = forced;
+    move_script::At(::bof3::Img(at::kTarget.v))[0] = forced;
     return 0;
 }
 
@@ -190,7 +190,7 @@ extern "C" unsigned char __cdecl Battle_RandomLiveEnemy(void) {
 // original 0x454260 (no PSX twin paired): 1 when the member's action word
 // (ObjTrio + 0x126 of the argument's low byte, unchecked) is 0xE or 0x128.
 extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
-    const unsigned short w = Word(At(::bof3::Img(ObjTrio_addr) + 0x126 + at::kMemberStride * (member & 0xFFu)));
+    const unsigned short w = move_script::Word(move_script::At(::bof3::Img(ObjTrio_addr) + 0x126 + at::kMemberStride * (member & 0xFFu)));
     if (w == 0xE) return 1;
     return w == 0x128 ? 1 : 0;
 }
@@ -202,7 +202,7 @@ extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
 // the target 0x904B44 the answer.
 extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
     const U m = member & 0xFFu;
-    auto odds = static_cast<signed char>(At(::bof3::Img(ObjTrio_addr) + 0x142 + at::kMemberStride * m)[0]);
+    auto odds = static_cast<signed char>(move_script::At(::bof3::Img(ObjTrio_addr) + 0x142 + at::kMemberStride * m)[0]);
     if (odds > 5) odds = 5;
     const int r = SH_CALL(Rand)();
     const int roll = r % 20;
@@ -213,9 +213,9 @@ extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
         const int r2 = SH_CALL(Rand)();
         target = SH_CALL(Battle_DefaultTarget)((static_cast<U>(r2) & 0xFFFFFF00u) | static_cast<unsigned char>((r2 & 7) + 3));
     }
-    At(::bof3::Img(ObjTrio_addr) + 0x125 + at::kMemberStride * m)[0] = 1;
-    At(::bof3::Img(at::kAutoMode.v))[0] = 1;
-    At(::bof3::Img(at::kTarget.v))[0] = target;
+    move_script::At(::bof3::Img(ObjTrio_addr) + 0x125 + at::kMemberStride * m)[0] = 1;
+    move_script::At(::bof3::Img(at::kAutoMode.v))[0] = 1;
+    move_script::At(::bof3::Img(at::kTarget.v))[0] = target;
 }
 
 // original 0x454310 (no PSX twin paired): of members 0..2, those
@@ -279,10 +279,10 @@ extern "C" void __cdecl Field_SlotClutCopy(unsigned char* slot) {
     unsigned char* const obj = Ptr(UL(slot + 0xC));
     const int frame = slot[3];
     const unsigned char kind = obj[0x28];
-    const int divisor = At(::bof3::Img(at::kSlotDivisors.v) + kind)[0];
+    const int divisor = move_script::At(::bof3::Img(at::kSlotDivisors.v) + kind)[0];
     if (divisor == 0) bof3::Fatal("Field_SlotClutCopy: object kind %u has no frames - the original divides by 0", (unsigned)kind);
     auto row = static_cast<unsigned char>(frame / divisor);
-    const auto offset = static_cast<unsigned char>((frame % divisor) * At(::bof3::Img(at::kSlotSteps.v) + kind)[0]);
+    const auto offset = static_cast<unsigned char>((frame % divisor) * move_script::At(::bof3::Img(at::kSlotSteps.v) + kind)[0]);
     const unsigned char* const script = Ptr(UL(slot + 8));
     const auto to = static_cast<unsigned char>(script[0] + offset);
     const auto from = static_cast<unsigned char>(script[1] + offset);
