@@ -5,6 +5,7 @@
 
 #include "game/effect_2g_callees.h"
 #include "game/effect_3a_callees.h"
+#include "game/magic_harness.h"
 #include "game/rest_3e_callees.h"
 #include "game/rest_3f_callees.h"
 
