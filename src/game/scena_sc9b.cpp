@@ -59,8 +59,8 @@ std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(sta
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(::bof3::Img(scena_sc9b::at::kCounters) + k); }
-void SetCounter(unsigned k, unsigned char v) { B(::bof3::Img(scena_sc9b::at::kCounters) + k) = v; }
-void BumpCounter() { SetCounter(0, static_cast<unsigned char>(Counter(0) + 1)); }
+void SetCounterScenaSc9b(unsigned k, unsigned char v) { B(::bof3::Img(scena_sc9b::at::kCounters) + k) = v; }
+void BumpCounter() { SetCounterScenaSc9b(0, static_cast<unsigned char>(Counter(0) + 1)); }
 unsigned char Step() { return MoveScript_PartyRecords[0x65]; }
 void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
 void SetRun(unsigned char v) { MoveScript_Var7 = v; }
@@ -77,7 +77,7 @@ bool TimerDone() {
     return W(::bof3::Img(scena_sc9b::at::kTimer)) == 0;
 }
 // Field_ScriptFlags as the originals touch it: its low byte or'd, the word and'd.
-void ScriptOrByte(unsigned char v) { B(::bof3::Img(scena_sc9b::at::kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(scena_sc9b::at::kScriptFlags)) | v); }
+void ScriptOrByteScenaSc9b(unsigned char v) { B(::bof3::Img(scena_sc9b::at::kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(scena_sc9b::at::kScriptFlags)) | v); }
 void ScriptAnd(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags & v); }
 void Redraw() { MapView_Redraw = 2; }
 unsigned char* SpriteCurrent() { return Sprite_Current; }
@@ -85,11 +85,11 @@ unsigned char MemberByte(unsigned m, unsigned offset) { return B(::bof3::Img(Obj
 unsigned char LeaderKind() { return ObjTrio[0].char_id; }
 
 // The four counters 0x903848..B zeroed, in that order; counters 1..3 alone.
-void ClearCounters() {
-    for (unsigned k = 0; k < 4; ++k) SetCounter(k, 0);
+void ClearCountersScenaSc9b() {
+    for (unsigned k = 0; k < 4; ++k) SetCounterScenaSc9b(k, 0);
 }
-void ClearCounters123() {
-    for (unsigned k = 1; k < 4; ++k) SetCounter(k, 0);
+void ClearCounters123ScenaSc9b() {
+    for (unsigned k = 1; k < 4; ++k) SetCounterScenaSc9b(k, 0);
 }
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
@@ -228,8 +228,8 @@ bool Near(std::uint16_t cell, unsigned base, unsigned n) { return static_cast<st
 // counter 0 alone), the step and the run; al 1.
 unsigned char Start(unsigned char step, unsigned char run, bool all_counters) {
     Set40();
-    if (all_counters) ClearCounters();
-    else SetCounter(0, 0);
+    if (all_counters) ClearCountersScenaSc9b();
+    else SetCounterScenaSc9b(0, 0);
     SetStep(step);
     SetRun(run);
     return 1;
@@ -253,9 +253,9 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
     }
     if (Area() == 0x2E && Flag(0x23) && !Flag(0x24) && In(x, 0xF0000, 0x108000) && (z == 0x220000 || z == 0x228000)) {
         Set40();
-        ClearCounters123();
+        ClearCounters123ScenaSc9b();
         SetStep(0);
-        SetCounter(0, 1);
+        SetCounterScenaSc9b(0, 1);
         SetRun(0x10);
         return 1;
     }
@@ -269,7 +269,7 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
             return Start(0xA, 2, true);
         }
         if (Flag(0x1E) && !Flag(0x2E) && In(x, 0x4E0000, 0x4E8000) && In(z, 0x220000, 0x258000)) {
-            ScriptOrByte(0xE);
+            ScriptOrByteScenaSc9b(0xE);
             return Start(0, 0xE, false);
         }
     }
@@ -318,7 +318,7 @@ unsigned char StepHook9(std::int32_t x, std::int32_t z) {
         return 1;
     }
     if (!Flag(0x20) || Flag(0x21)) {
-        SetCounter(0, 0x10);
+        SetCounterScenaSc9b(0, 0x10);
         Set40();
         return 1;
     }
@@ -419,7 +419,7 @@ void EnterArea10Body() {
             } else if (!Flag(0x3B)) {
                 if (FD() == 5) {
                     DropIn(7);
-                    ScriptOrByte(0x10);
+                    ScriptOrByteScenaSc9b(0x10);
                 } else {
                     ScriptAnd(0xFFEF);
                 }
@@ -501,7 +501,7 @@ void Run6Body() {
         if (!WaitClear()) return;
         SetPass(0x1F);
         Transition(1);
-        SetCounter(0, 1);
+        SetCounterScenaSc9b(0, 1);
         SetStep(4);
         return;
     case 4:
@@ -599,7 +599,7 @@ void Run6Body() {
         return;
     case 0x11:
         if (EffectBusy(::bof3::Img(Scena10_Slot_addr))) return;
-        ScriptOrByte(0x80);
+        ScriptOrByteScenaSc9b(0x80);
         Scena10_Shaking = 0;
         Sound(0x205);
         ChangeArea(0x79, 0x2A0000, 0x180000, 0x80);
@@ -616,7 +616,7 @@ void Run6Body() {
     case 0x13:
         if (!WaitClear() || Counter(0) != 5) return;
         Clear40();
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         Set(0x14);
         SetStep(0x14);
         return;
@@ -825,7 +825,7 @@ void Run6Body() {
     case 0x32:
         if (Counter(0) != 0x15) return;
         Clear40();
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         Set(0x17);
         SetRun(0);
         SetStep(0);
@@ -909,7 +909,7 @@ bool Run7Body() {
     case 7:
         if (!WaitClear() || Counter(0) != 3) return false;
         Clear40();
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         Set(0x18);
         SetStep(9);
         Shake();
@@ -944,7 +944,7 @@ bool Run7Body() {
         Shake();
         return true;
     case 0xF:
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         Set(0x12);
         ChangeArea(0x79, 0x270000, 0x370000, 7);
         ModeFlow_AreaTransition = 0xFF;
@@ -1061,7 +1061,7 @@ SC9B_EXPORT unsigned char __cdecl Scena09_Cell03(void) {
     if (!Flag(0x12)) return Run6At(3);
     if (!Flag(0x1D)) {
         Set40();
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetStep(0x32);
         SetRun(6);
         return 1;
@@ -1128,7 +1128,7 @@ SC9B_EXPORT unsigned char __cdecl Scena09_Cell12(void) {
 SC9B_EXPORT unsigned char __cdecl Scena09_Cell13(void) {
     if (Flag(0x33)) return 0xFF;
     if (LeaderKind() == 4) {
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         Set40();
         SetStep(0x32);
         SetRun(0xF);
@@ -1204,7 +1204,7 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
     switch (Step()) {
     case 0:
         if (EffectBusy(::bof3::Img(Scena10_Slot_addr))) return;
-        SetCounter(0, 1);
+        SetCounterScenaSc9b(0, 1);
         SetStep(1);
         return;
     case 1:
@@ -1308,7 +1308,7 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 2:
         if (Request() == 2) return;
-        SetCounter(0, 1);
+        SetCounterScenaSc9b(0, 1);
         SetStep(3);
         return;
     case 3: {
@@ -1346,7 +1346,7 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
     case 7:
         if (!TimerDone()) return;
         MusicPlay(0x7B, 8);
-        SetCounter(0, 1);
+        SetCounterScenaSc9b(0, 1);
         SetStep(8);
         return;
     case 8:
@@ -1357,7 +1357,7 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         return;
     case 9:
         if (!TimerDone()) return;
-        SetCounter(0, 0xB);
+        SetCounterScenaSc9b(0, 0xB);
         SetStep(0xA);
         return;
     case 0xA: {
@@ -1476,7 +1476,7 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         if (Counter(0) != 8) return;
         Set(8);
         Clear40();
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetRun(0);
         SetStep(0);
         return;
@@ -1606,7 +1606,7 @@ SC9B_EXPORT void __cdecl Scena10_Run3(void) {
 SC9B_EXPORT void __cdecl Scena10_Run4(void) {
     switch (Step()) {
     case 0:
-        SetCounter(0, 0xA);
+        SetCounterScenaSc9b(0, 0xA);
         SetStep(1);
         return;
     case 1:
@@ -1629,7 +1629,7 @@ SC9B_EXPORT void __cdecl Scena10_Run4(void) {
         return;
     case 2:
         if (Request() == 2) return;
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetRun(0);
         SetStep(0);
         Clear40();
@@ -1655,7 +1655,7 @@ SC9B_EXPORT void __cdecl Scena10_Run4(void) {
             SetStep(6);
             return;
         }
-        SetCounter(0, 0x14);
+        SetCounterScenaSc9b(0, 0x14);
         SetStep(5);
         return;
     case 6:
@@ -1728,7 +1728,7 @@ SC9B_EXPORT void __cdecl Scena10_Run4(void) {
         Clear40();
         Set(0x10);
         ChangeArea(0x4B, 0x380000, 0x2C8000, 7);
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetRun(0);
         SetStep(0);
         return;
@@ -1786,7 +1786,7 @@ SC9B_EXPORT void __cdecl Scena10_Run5(void) {
     case 8:
         Set(2);
         ChangeArea(0x4B, 0x198000, 0x188000, 0x86);
-        SetCounter(0, 0x28);
+        SetCounterScenaSc9b(0, 0x28);
         SetStep(9);
         return;
     case 9:
@@ -1838,7 +1838,7 @@ SC9B_EXPORT void __cdecl Scena10_Run11(void) {
     if (Step() != 0x23) return;
     Clear40();
     DropIn(4);
-    SetCounter(0, 0x20);
+    SetCounterScenaSc9b(0, 0x20);
     SetRun(0);
     SetStep(0);
 }
@@ -1928,7 +1928,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
     case 1:
         if (Counter(0) != 0) return;
         Set(0x39);
-        ScriptOrByte(0x10);
+        ScriptOrByteScenaSc9b(0x10);
         Clear40();
         SetRun(0);
         SetStep(0);
@@ -1939,7 +1939,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
         Set(0x3A);
         ScriptAnd(0xFFEF);
         DropIn(3);
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetRun(0);
         SetStep(0);
         return;
@@ -1962,7 +1962,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
         EndRun();
         return;
     case 0xF:
-        SetCounter(0, 0xA);
+        SetCounterScenaSc9b(0, 0xA);
         DropIn(5);
         SetStep(0x10);
         return;
@@ -2004,7 +2004,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
         Area_EnterTransition = 0xFF;
         ModeFlow_AreaTransition = 0xFF;
         AreaW1f_MusicCurrent = 0x49;
-        SetCounter(0, 0);
+        SetCounterScenaSc9b(0, 0);
         SetStep(0x16);
         return;
     case 0x16:
@@ -2128,7 +2128,7 @@ SC9B_EXPORT void __cdecl Scena10_Object03(void) {
     Set40();
     SetRun(3);
     SetStep(0xA);
-    SetCounter(0, 0xA);
+    SetCounterScenaSc9b(0, 0xA);
 }
 
 // The object's pose set by objects 4, 6 and 7: +1 = 4, +0x84 = 2, +0x83 the
@@ -2287,7 +2287,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_StepHook(int x, int z) {
             scena_sc9b::at::kEffectSlot.b_00 = b;
             if (b != 6 && b != 5 && b != 4) {
                 if (SH_CALL(Scena07_PartyHas89State2)() == 0) {
-                    SetCounter(0, 0x10);
+                    SetCounterScenaSc9b(0, 0x10);
                     Set40();
                     return 1;
                 }
@@ -2360,7 +2360,7 @@ SC9B_EXPORT unsigned char __cdecl Scena10_ArriveHook(int x, int z) {
         Set40();
         Set(9);
         SetAt(::bof3::Img(Cond_Flags_addr) + 0xa0, 0x43);
-        SetCounter(0, 0xA);
+        SetCounterScenaSc9b(0, 0xA);
         return 1;
     }
     if (Area() == 0x69) {

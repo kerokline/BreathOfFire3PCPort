@@ -80,7 +80,7 @@ char* NumberText() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(
 const char* NumberFormat() { return reinterpret_cast<const char*>(move_script::At(::bof3::Img(effect_1g::at::kNumberFormat.v))); }
 
 // E1B's frame of the trade screen, as every state draws it.
-void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), effect_1g::at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
+void TradeBoxEffect1g() { SH_AT(void (__cdecl*)(int, int, int, int, int), effect_1g::at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
 void PieceMode(unsigned id) { SH_AT(void (__cdecl*)(unsigned, unsigned), effect_1g::at::kPieceMode.v)(id, 1); }
 void Piece(unsigned id, U x, U y) { SH_AT(void (__cdecl*)(unsigned, unsigned, U, U), effect_1g::at::kPiece.v)(id, 1, x, y); }
 void Quad(U x, U y, unsigned length, unsigned piece) { SH_AT(void (__cdecl*)(U, U, unsigned, unsigned), effect_1g::at::kQuad.v)(x, y, length, piece); }
@@ -101,7 +101,7 @@ namespace {
 // The yes / no prompt of the leave steps: the frame, the question, the hand
 // at (36 * the answer + 0xE0, 0x16), the list, the ingredients, the backdrop.
 void LeavePrompt() {
-    TradeBox();
+    TradeBoxEffect1g();
     if (g_trade_leave_layout) {
         const YesNoTail t = YesNoLayout_Tail(Pool(::bof3::Img(effect_1g::at::kPoolWordAsk.v)), 0x18, "Manillo's prompt");
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, t.line);
@@ -171,7 +171,7 @@ effect_1g::BackdropSpan effect_1g::ItemTrade_BackdropSpan(unsigned quad, unsigne
 // (MessagePools + the word at 0x80361A) at (0x18, 0x14), the list with its
 // flag 1, and a tail jump to ItemTrade_DrawCount.
 extern "C" void __cdecl ItemTrade_FullMessage(void) {
-    TradeBox();
+    TradeBoxEffect1g();
     if (static_cast<std::uint16_t>(Field_CancelButtons | Field_ConfirmButtons) & Input_Pressed) {
         Effect1g_TradeQuantity = 1;
         SH_CALL(Sound_PlayEffect)(0x106);
