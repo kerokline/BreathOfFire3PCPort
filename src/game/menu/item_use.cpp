@@ -257,7 +257,7 @@ extern "C" __attribute__((disable_tail_calls)) unsigned char __cdecl ItemUse_Dis
     return answer;
 }
 
-void ItemUse_Inject() {
+void MenuItemUse_Inject() {
     BOF3_INJECT(ItemUse_None);
     BOF3_INJECT(ItemUse_HealHp20);
     BOF3_INJECT(ItemUse_HealHp40);

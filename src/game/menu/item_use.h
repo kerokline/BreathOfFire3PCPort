@@ -2,4 +2,4 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void ItemUse_Inject();
+void MenuItemUse_Inject();

@@ -151,7 +151,7 @@ extern "C" void __cdecl EffectKind5C_Run(void) {
 // (WorldMap33_DrawDrift on the Yraall map).
 extern "C" void __cdecl WorldMap_RecordHook10(void) { RecordEntry(0x10)(); }
 
-void WorldMap_Inject() {
+void EffectWorldMap_Inject() {
     BOF3_INJECT(WorldMap_RecordIndex);
     BOF3_INJECT(WorldMap_ExitRecords);
     BOF3_INJECT(EffectKind00_WorldMap);

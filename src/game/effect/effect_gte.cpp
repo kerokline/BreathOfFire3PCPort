@@ -208,7 +208,7 @@ extern "C" long __cdecl EffectGte_ProjectSize(const long* point, const short* si
     return second;
 }
 
-void EffectGte_Inject() {
+void EffectEffectGte_Inject() {
     BOF3_INJECT(Effect_RunObjects);
     BOF3_INJECT(EffectGte_LoadMapCamera);
     BOF3_INJECT(EffectGte_ProjectPoint);

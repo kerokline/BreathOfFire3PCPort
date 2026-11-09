@@ -522,7 +522,7 @@ void InjectAll() {
     YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
     ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
                                 // four area descriptors swapped: order does not matter
-    ItemUse_Inject();
+    MenuItemUse_Inject();
     Sound_Inject();             // every call of its clones re-aimed at a recorder, its three Win32 import
                                 // operands moved onto recorders in the copies: order does not matter
     D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
@@ -1539,7 +1539,7 @@ void InjectAll() {
     EffectKindBa_Inject();
     EffectKindAe_Inject();
     EffectKindAc_Inject();
-    EffectGte_Inject();
+    EffectEffectGte_Inject();
     Battle5_Inject();
     Battle4_Inject();
     Rest3D_Inject();            // round 14 wave-three group R3D (0x44E4B0..0x44FF0E: Effect_Handlers slots 112..129,
@@ -1577,7 +1577,7 @@ void InjectAll() {
                                 // Config draws ours reads in place (DIV-0011, DIV-0017, DIV-0026, DIV-0051); ours
                                 // that call it (effect_1a, event_leader, rest_2f) call it by the address it had;
                                 // before FishingText_Arm
-    WorldMap_Inject();
+    EffectWorldMap_Inject();
     EffectKind0f_Inject();
     EffectKind09_Inject();
     Rest4E_Inject();            // round 14 wave-four group R4E (0x45E870..0x460CAD: the community band's panels,

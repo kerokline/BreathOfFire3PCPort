@@ -2,4 +2,4 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void EffectGte_Inject();
+void EffectEffectGte_Inject();

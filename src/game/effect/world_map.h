@@ -2,4 +2,4 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void WorldMap_Inject();
+void EffectWorldMap_Inject();
