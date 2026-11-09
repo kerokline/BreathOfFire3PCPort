@@ -246,12 +246,34 @@ def source_roots(build: Path) -> list[bytes]:
     return sorted(out, key=len, reverse=True)
 
 
-def unroot(data: bytes, roots: list[bytes]) -> bytes:
-    """`data` with every spelling of the build's source root replaced by one placeholder."""
+def unroot(data: bytes, roots: list) -> bytes:
+    """`data` with every spelling of the build's source root replaced by one placeholder; a
+    (new path, old path) pair among `roots` (--moved-map) then reads a moved file's path as it was."""
     for r in roots:
-        if r in data:
+        if isinstance(r, tuple):
+            if r[0] in data:
+                data = data.replace(r[0], r[1])
+        elif r in data:
             data = data.replace(r, SOURCE_ROOT)
     return data
+
+
+def moved_files(map_path: Path) -> dict[str, str]:
+    """new path -> old path of the files that moved whole (the `file` rows of analysis/tu_moves.tsv)."""
+    out: dict[str, str] = {}
+    with open(map_path, encoding="utf-8", newline="") as f:
+        head = None
+        for line in f:
+            if line.startswith("#"):
+                continue
+            cells = line.rstrip("\r\n").split("\t")
+            if head is None:
+                head = cells
+                continue
+            r = dict(zip(head, cells))
+            if r.get("kind") == "file" and r.get("new_path"):
+                out[r["new_path"]] = r["old_path"]
+    return out
 
 
 def data_dump(objdump: str, path: Path, roots: list[bytes] = ()) -> list[str]:
@@ -568,7 +590,7 @@ class Normaliser:
         """The offset of the first source-root spelling in a section's bytes, or None."""
         if secn not in self.root_at:
             data = self.o.sections[secn - 1]["data"]
-            hits = [k for k in (data.find(r) for r in self.roots) if k >= 0]
+            hits = [k for k in (data.find(r) for r in self.roots if not isinstance(r, tuple)) if k >= 0]
             self.root_at[secn] = min(hits) if hits else None
         return self.root_at[secn]
 
@@ -922,6 +944,27 @@ def by_function(a) -> int:
               f"padding a path moves is not compared (the docstring's 'source root')")
     base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals, broots, pad_free)
     new_objs = objects(a.new)
+    if a.moved_map:
+        # a file that moved whole (stage C) is read under the path it had: its object's name, and
+        # the path its code carries (__FILE__: x86_64's Low32() message). The padding a longer
+        # path moves is not compared.
+        moved = moved_files(a.moved_map)
+        renamed = {}
+        for k, p in new_objs.items():
+            for n, o in moved.items():
+                if k.endswith("/" + n + ".obj"):
+                    k = k[:-len(n + ".obj")] + o + ".obj"
+                    break
+            if k in renamed:
+                print(f"codegen_same: --moved-map: two objects of NEW read as {k}")
+                return 2
+            renamed[k] = p
+        new_objs = renamed
+        nroots = list(nroots)
+        for n, o in sorted(moved.items()):
+            nroots.append((n.encode(), o.encode()))
+            nroots.append((n.replace("/", "\\").encode(), o.replace("/", "\\").encode()))
+        pad_free = True
     new, ntext, nn = symbol_table(new_objs, wanted, a.anonymous_locals, nroots, pad_free)
     promotions: dict[str, str] = {}
     some = next((p for k, p in sorted(new_objs.items()) if wanted(k)), None)
@@ -1093,6 +1136,9 @@ def main() -> int:
     ap.add_argument("--exceptions", type=Path, metavar="FILE",
                     help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed symbol of a known "
                          "class prints as EXCEPT and is not counted")
+    ap.add_argument("--moved-map", type=Path, metavar="TSV",
+                    help="with --by-function: analysis/tu_moves.tsv - a file its `file` rows moved whole is read "
+                         "under its old path (object name and __FILE__ strings)")
     ap.add_argument("--exception-classes", metavar="CLASS[,CLASS]",
                     help="with --exceptions: only these classes may except (default every class); the i686 "
                          "gate passes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness")
