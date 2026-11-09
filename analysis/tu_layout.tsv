@@ -5309,24 +5309,24 @@
 0x4b1b60	IdentifyTint_Start	tu_4b0d50	0x4b0d50	0x4b1cb0	joined	psx MAGIC060.EMI#0 0x801f03c4>0x801f0854; link static?	src/game/magic_s12.cpp	src/game/magic/identify.cpp	
 0x4b1ba0	IdentifyTint_Brighten	tu_4b0d50	0x4b0d50	0x4b1cb0	joined	psx MAGIC060.EMI#0 0x801f0854>0x801f097c; psx MAGIC060.EMI#0 0x801f03c4>0x801f0854; link static?	src/game/magic_s12.cpp	src/game/magic/identify.cpp	MAGIC060.EMI#0:u026:subset
 0x4b1c10	IdentifyTint_Dim	tu_4b0d50	0x4b0d50	0x4b1cb0	joined	psx MAGIC060.EMI#0 0x801f0854>0x801f097c; link static?	src/game/magic_s12.cpp	src/game/magic/identify.cpp	MAGIC060.EMI#0:u026:subset
-0x4b1cb0	Celerity_Task	tu_4b1cb0	0x4b1cb0	0x4b1e70	joined	psx MAGIC062.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s12.cpp	src/game/magic/celerity.cpp	MAGIC062.EMI#3:u000:single
-0x4b1d00	Celerity_Start	tu_4b1cb0	0x4b1cb0	0x4b1e70	joined	psx MAGIC062.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s12.cpp	src/game/magic/celerity.cpp	MAGIC062.EMI#3:u001:interleaved
-0x4b1e70	BattleFx_TintActor	tu_4b1e70	0x4b1e70	0x4b1f40	guessed	alone; link extern	src/game/battle_odds.cpp	src/game/battle/battle_fx_2.cpp	MAGIC082.EMI#3:u001:interleaved
-0x4b1ed0	BattleFx_Brighten	tu_4b1e70	0x4b1e70	0x4b1f40	guessed	name prefix BattleFx; link extern	src/game/battle_odds.cpp	src/game/battle/battle_fx_2.cpp	
-0x4b1f40	Celerity_Apply	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef0c0>0x801ef2a0; link extern	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:interleaved
-0x4b2040	Celerity_End	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; psx MAGIC062.EMI#3 0x801ef0c0>0x801ef2a0; link extern	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:interleaved
-0x4b2060	Celerity_ApplyStat	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b2120	CelerityChild_Task	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link extern	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b2140	CelerityRing_Run	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b2180	CelerityRing_DrawDisc	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef670>0x801ef92c; psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u007:single
-0x4b2380	CelerityRing_DrawBand	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; psx MAGIC062.EMI#3 0x801ef670>0x801ef92c; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u008:single
-0x4b2570	CeleritySpark_Run	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b2590	CeleritySpark_Rise	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b2630	CeleritySpark_Fall	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
-0x4b26c0	CeleritySpark_Spin	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eff60>0x801f00e4; psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u013:single
-0x4b27a0	CeleritySpark_Orbit	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f00e4>0x801f0264; psx MAGIC062.EMI#3 0x801eff60>0x801f00e4; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u014:single
-0x4b28b0	CeleritySpark_Draw	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f0264>0x801f0908; psx MAGIC062.EMI#3 0x801f00e4>0x801f0264; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u015:single
-0x4b2d70	CeleritySpark_DrawDisc	tu_4b1f40	0x4b1f40	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f0264>0x801f0908; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u016:single
+0x4b1cb0	Celerity_Task	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u000:single
+0x4b1d00	Celerity_Start	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eec94>0x801eeec0; psx MAGIC062.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:subset+superset
+0x4b1e70	BattleFx_TintActor	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eeec0>0x801ef0c0; psx MAGIC062.EMI#3 0x801eec94>0x801eeec0; link extern	src/game/battle_odds.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:subset+superset
+0x4b1ed0	BattleFx_Brighten	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eeec0>0x801ef0c0; link extern	src/game/battle_odds.cpp	src/game/magic/celerity_spark.cpp	
+0x4b1f40	Celerity_Apply	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef0c0>0x801ef2a0; psx MAGIC062.EMI#3 0x801eeec0>0x801ef0c0; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:subset+superset
+0x4b2040	Celerity_End	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; psx MAGIC062.EMI#3 0x801ef0c0>0x801ef2a0; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u001:subset+superset
+0x4b2060	Celerity_ApplyStat	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b2120	CelerityChild_Task	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link extern	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b2140	CelerityRing_Run	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b2180	CelerityRing_DrawDisc	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef670>0x801ef92c; psx MAGIC062.EMI#3 0x801ef2a0>0x801ef670; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u007:single
+0x4b2380	CelerityRing_DrawBand	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; psx MAGIC062.EMI#3 0x801ef670>0x801ef92c; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u008:single
+0x4b2570	CeleritySpark_Run	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b2590	CeleritySpark_Rise	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b2630	CeleritySpark_Fall	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	
+0x4b26c0	CeleritySpark_Spin	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801eff60>0x801f00e4; psx MAGIC062.EMI#3 0x801ef92c>0x801eff60; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u013:single
+0x4b27a0	CeleritySpark_Orbit	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f00e4>0x801f0264; psx MAGIC062.EMI#3 0x801eff60>0x801f00e4; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u014:single
+0x4b28b0	CeleritySpark_Draw	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f0264>0x801f0908; psx MAGIC062.EMI#3 0x801f00e4>0x801f0264; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u015:single
+0x4b2d70	CeleritySpark_DrawDisc	tu_4b1cb0	0x4b1cb0	0x4b2f40	joined	psx MAGIC062.EMI#3 0x801f0264>0x801f0908; link static?	src/game/magic_s12.cpp	src/game/magic/celerity_spark.cpp	MAGIC062.EMI#3:u016:single
 0x4b2f40	SuddenDeath_Task	tu_4b2f40	0x4b2f40	0x4b3f00	joined	psx MAGIC063.EMI#3 0x801eec18>0x801eecf8; bss 0x683280; link static?	src/game/magic_s13.cpp	src/game/magic/sudden_death_child.cpp	MAGIC063.EMI#3:u000:subset
 0x4b2fb0	SuddenDeath_Spawn	tu_4b2f40	0x4b2f40	0x4b3f00	joined	psx MAGIC063.EMI#3 0x801eecf8>0x801ef40c; bss 0x683280; psx MAGIC063.EMI#3 0x801eec18>0x801eecf8; link static?	src/game/magic_s13.cpp	src/game/magic/sudden_death_child.cpp	MAGIC063.EMI#3:u000:subset
 0x4b30f0	SuddenDeathChild_Task	tu_4b2f40	0x4b2f40	0x4b3f00	joined	psx MAGIC063.EMI#3 0x801eecf8>0x801ef40c; bss 0x683280; link extern	src/game/magic_s13.cpp	src/game/magic/sudden_death_child.cpp	
@@ -5633,9 +5633,9 @@
 0x4bfee0	RottenBreathMote_Draw	tu_4bf8d0	0x4bf8d0	0x4c01f0	joined	psx MAGIC081.EMI#3 0x801ef6a0>0x801efa20; bss 0x68e1b8; psx MAGIC081.EMI#3 0x801ef614>0x801ef6a0; link static?	src/game/magic_c2.cpp	src/game/magic/rotten_breath_mote.cpp	MAGIC081.EMI#3:u005:single
 0x4c0190	RottenBreathMote_Alloc	tu_4bf8d0	0x4bf8d0	0x4c01f0	joined	psx MAGIC081.EMI#3 0x801ef6a0>0x801efa20; link static?	src/game/magic_c2.cpp	src/game/magic/rotten_breath_mote.cpp	MAGIC081.EMI#3:u006:single
 0x4c01f0	Buff_Task	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u000:single
-0x4c0240	Buff_Start	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801eec94>0x801ef0c4; psx MAGIC082.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:interleaved
-0x4c03b0	Buff_WaitChildren	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef0c4>0x801ef10c; psx MAGIC082.EMI#3 0x801eec94>0x801ef0c4; link extern	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:interleaved
-0x4c03d0	Buff_Fade	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef10c>0x801ef3a0; psx MAGIC082.EMI#3 0x801ef0c4>0x801ef10c; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:interleaved
+0x4c0240	Buff_Start	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801eec94>0x801ef0c4; psx MAGIC082.EMI#3 0x801eec1c>0x801eec94; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:subset
+0x4c03b0	Buff_WaitChildren	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef0c4>0x801ef10c; psx MAGIC082.EMI#3 0x801eec94>0x801ef0c4; link extern	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:subset
+0x4c03d0	Buff_Fade	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef10c>0x801ef3a0; psx MAGIC082.EMI#3 0x801ef0c4>0x801ef10c; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u001:subset
 0x4c04f0	Buff_Kind	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef3a0>0x801ef720; psx MAGIC082.EMI#3 0x801ef10c>0x801ef3a0; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	MAGIC082.EMI#3:u003:single
 0x4c0620	BuffFx_Dispatch	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef3a0>0x801ef720; link extern	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	
 0x4c0640	BuffRing_Task	tu_4c01f0	0x4c01f0	0x4c1470	joined	psx MAGIC082.EMI#3 0x801ef3a0>0x801ef720; link static?	src/game/magic_s18.cpp	src/game/magic/buff_spike.cpp	
@@ -6676,14 +6676,14 @@
 0x4f71f0	Combustion_Task	tu_4f71f0	0x4f71f0	0x4f7350	joined	psx MAGIC222.EMI#3 0x801eec10>0x801eec70; link static?	src/game/magic_s37.cpp	src/game/magic/combustion.cpp	MAGIC222.EMI#3:u000:single
 0x4f7220	Combustion_Start	tu_4f71f0	0x4f71f0	0x4f7350	joined	psx MAGIC222.EMI#3 0x801eec70>0x801eee80; psx MAGIC222.EMI#3 0x801eec10>0x801eec70; link static?	src/game/magic_s37.cpp	src/game/magic/combustion.cpp	MAGIC222.EMI#3:u001:single
 0x4f7320	Combustion_Wait	tu_4f71f0	0x4f71f0	0x4f7350	joined	psx MAGIC222.EMI#3 0x801eec70>0x801eee80; link extern	src/game/magic_s37.cpp	src/game/magic/combustion.cpp	MAGIC222.EMI#3:u003:single
-0x4f7350	BattleFx_Finish	tu_4f7350	0x4f7350	0x4f7380	guessed	alone; link extern	src/game/battle_odds.cpp	src/game/battle/battle_fx_3.cpp	MAGIC100.EMI#3:u002:interleaved
-0x4f7380	CombustionChild_Task	tu_4f7380	0x4f7380	0x4f7750	guessed	name head Combustion; link extern	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f73a0	CombustionSprite_Run	tu_4f7380	0x4f7380	0x4f7750	guessed	alone; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f73f0	CombustionSprite_Start	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f7520	CombustionSprite_Fall	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f75e0	CombustionSprite_Shake	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f7630	CombustionSprite_Flash	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
-0x4f76e0	CombustionSprite_Fade	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_3.cpp	
+0x4f7350	BattleFx_Finish	tu_4f7350	0x4f7350	0x4f7380	guessed	alone; link extern	src/game/battle_odds.cpp	src/game/battle/battle_fx_2.cpp	MAGIC100.EMI#3:u002:interleaved
+0x4f7380	CombustionChild_Task	tu_4f7380	0x4f7380	0x4f7750	guessed	name head Combustion; link extern	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f73a0	CombustionSprite_Run	tu_4f7380	0x4f7380	0x4f7750	guessed	alone; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f73f0	CombustionSprite_Start	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f7520	CombustionSprite_Fall	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f75e0	CombustionSprite_Shake	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f7630	CombustionSprite_Flash	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
+0x4f76e0	CombustionSprite_Fade	tu_4f7380	0x4f7380	0x4f7750	guessed	name prefix CombustionSprite; link static?	src/game/magic_s37.cpp	src/game/battle/battle_fx_2.cpp	
 0x4f7750	CombustionGlow_Run	tu_4f7750	0x4f7750	0x4f7c00	guessed	alone; link static?	src/game/magic_s37.cpp	src/game/battle/combustion_glow.cpp	
 0x4f7790	CombustionGlow_Start	tu_4f7750	0x4f7750	0x4f7c00	guessed	name prefix CombustionGlow; link static?	src/game/magic_s37.cpp	src/game/battle/combustion_glow.cpp	
 0x4f7800	CombustionGlow_Grow	tu_4f7750	0x4f7750	0x4f7c00	guessed	name prefix CombustionGlow; link static?	src/game/magic_s37.cpp	src/game/battle/combustion_glow.cpp	

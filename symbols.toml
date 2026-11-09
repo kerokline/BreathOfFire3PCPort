@@ -15878,10 +15878,10 @@ evidence = "disasm 2026-09-25, 0x4AEE90..0x4AEE94 (5 bytes): jmp 0x4351F0 Battle
 [[func]]
 pc = 0x4B1E70
 name = "BattleFx_TintActor"
-psx = 0x801EEF0C
-psx_overlay = "MAGIC082.EMI#3"
+psx = 0x801EEEC0
+psx_overlay = "MAGIC062.EMI#3"
 psx_status = "hypothesis"
-psx_evidence = "exe_imm.py pair 2026-10-18, tables: state 1 of 0x4C01F0's table stack (docs/install-gap-pairs.md)"
+psx_evidence = "exe_imm.py pair 2026-10-18, tables: state 1 of 0x4C01F0's table stack (docs/install-gap-pairs.md); re-pointed 2026-11-08 from MAGIC082 0x801EEF0C (copy, exact, 168 B; its own overlay holds one: the PSX-flag audit, source-layout-round.md 7b item 9)"
 ret = "unsigned long"
 params = "void"
 impl = "src/game/battle_odds.cpp"
