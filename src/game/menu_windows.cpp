@@ -123,7 +123,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
-unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
+unsigned char* Ptr(std::uint32_t at) { return menu_windows::At(static_cast<std::uint32_t>(Long(menu_windows::At(at)))); }
 
 // rv::As<records::WindowRecord>(p) views a window record
 // (docs/typed-records.md; WindowRecords
@@ -167,9 +167,9 @@ unsigned char* PoolRect(unsigned x, unsigned y, unsigned w, unsigned h) {
 // The draw mode with the page GetTPage(0, 0, page_x, 0x100) that the piece
 // draws open with.
 void PiecePage(int page_x) {
-    const unsigned tpage = g.get_tpage(0, 0, page_x, 0x100);
-    g.draw_mode(Next(), 0, 0, tpage & 0xFFFF, 0);
-    g.commit(1, 0xC);
+    const unsigned tpage = menu_windows::g.get_tpage(0, 0, page_x, 0x100);
+    menu_windows::g.draw_mode(Next(), 0, 0, tpage & 0xFFFF, 0);
+    menu_windows::g.commit(1, 0xC);
 }
 
 }  // namespace
@@ -185,11 +185,11 @@ void PiecePage(int page_x) {
 // when the pool's side chunk has one (MsgBox_ReadingRowSystem); none loaded,
 // the original.
 extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
-    const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, g.msg_system_ptr(id));
+    const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, menu_windows::g.msg_system_ptr(id));
     Msgbox_Base = Addr(text);
     MenuWindows_ListText = Addr(text);
-    SetWord(At(::bof3::Img(at::kMessage.v)), id);
-    g.msgbox_reset();
+    SetWord(menu_windows::At(::bof3::Img(at::kMessage.v)), id);
+    menu_windows::g.msgbox_reset();
 }
 
 // original 0x498D20: the "there is more" arrow under the message box, an 8 x 8
@@ -197,13 +197,13 @@ extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
 // bit 5 of Frame_Counter is set - so it blinks, 32 frames on and 32 off. x and
 // y are read as 16-bit (movsx).
 extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
-    if (!(At(::bof3::Img(Frame_Counter_addr))[0] & 0x20)) return;
-    const unsigned tpage = g.get_tpage(0, 1, 0x3C0, 0);
-    g.draw_mode(Next(), 0, 0, tpage & 0xFFFF, 0);
-    g.commit(1, 0xC);
+    if (!(menu_windows::At(::bof3::Img(Frame_Counter_addr))[0] & 0x20)) return;
+    const unsigned tpage = menu_windows::g.get_tpage(0, 1, 0x3C0, 0);
+    menu_windows::g.draw_mode(Next(), 0, 0, tpage & 0xFFFF, 0);
+    menu_windows::g.commit(1, 0xC);
     unsigned char* const p = Next();
-    g.set_sprt(p);
-    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(0xC0, 0x1E0));
+    menu_windows::g.set_sprt(p);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, menu_windows::g.get_clut(0xC0, 0x1E0));
     p[4] = p[5] = p[6] = 0x80;
     Put(p + 8, F(S16MenuWindows(x)));
     Put(p + 0xC, F(S16MenuWindows(y)));
@@ -211,8 +211,8 @@ extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     p[0x14] = 0xD0;
     p[0x15] = 0xF8;
-    g.set_semi(p, 1);
-    g.commit(1, 0x1C);
+    menu_windows::g.set_semi(p, 1);
+    menu_windows::g.commit(1, 0x1C);
 }
 
 // ===========================================================================
@@ -231,8 +231,8 @@ extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
 // more is one cell like any other. x and y are drawn as 16-bit.
 extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned char* text) {
     std::int32_t pen_y = y + 1;
-    g.draw_mode(Next(), 0, 0, 0x2F, 0);
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 0, 0x2F, 0);
+    menu_windows::g.commit(1, 0xC);
     const unsigned clut = (colour & 0x3F) | 0x7800;
     std::uint32_t pen_x = static_cast<std::uint32_t>(x);
     unsigned char* p = Next();
@@ -250,9 +250,9 @@ extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned
             p[0x15] = static_cast<unsigned char>((c / 21) * 12);
             Put(p + 8, F(S16MenuWindows(pen_x)));
             Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
-            g.set_sprt(p);
-            g.set_semi(p, 1);
-            g.commit(1, 0x1C);
+            menu_windows::g.set_sprt(p);
+            menu_windows::g.set_semi(p, 1);
+            menu_windows::g.commit(1, 0x1C);
             p = Next();
         }
         const unsigned char after = text[1];
@@ -269,8 +269,8 @@ extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned
 // quirks as Text_DrawFont12. Its the menus' numerals (every "%3d" here).
 extern "C" void __cdecl Text_DrawFont8(int x, int y, int colour, const unsigned char* text) {
     std::int32_t pen_y = y;
-    g.draw_mode(Next(), 0, 0, 0x2F, 0);
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 0, 0x2F, 0);
+    menu_windows::g.commit(1, 0xC);
     const unsigned clut = (colour & 0x3F) | 0x7800;
     std::uint32_t pen_x = static_cast<std::uint32_t>(x);
     unsigned char* p = Next();
@@ -287,9 +287,9 @@ extern "C" void __cdecl Text_DrawFont8(int x, int y, int colour, const unsigned 
             p[0x15] = static_cast<unsigned char>((cell / 32) * 8);
             Put(p + 8, F(S16MenuWindows(pen_x)));
             Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
-            g.set_sprt8(p);
-            g.set_semi(p, 1);
-            g.commit(1, 0x18);
+            menu_windows::g.set_sprt8(p);
+            menu_windows::g.set_semi(p, 1);
+            menu_windows::g.commit(1, 0x18);
             p = Next();
         }
         const unsigned char after = text[1];
@@ -312,11 +312,11 @@ extern "C" void __cdecl Window_Kind2List() {
     for (int i = 0;;) {
         const unsigned set = MenuWindows_ListSet;
         const unsigned char* const record = Ptr(::bof3::Img(at::kCurrent.v));
-        const unsigned char* const xy = At(::bof3::Img(at::kSetXY.v) + set * 6);
+        const unsigned char* const xy = menu_windows::At(::bof3::Img(at::kSetXY.v) + set * 6);
         const auto dy = static_cast<std::uint16_t>(Word(xy + 4) * static_cast<std::uint16_t>(i));
         const auto y = static_cast<std::uint16_t>(dy + (S16MenuWindows(rv::As<records::WindowRecord>(record)->y) >> 4) + Word(xy + 2));
         const auto x = static_cast<std::uint16_t>((S16MenuWindows(rv::As<records::WindowRecord>(record)->x) >> 4) + Word(xy));
-        text = g.text_immediate(x, y, text);
+        text = menu_windows::g.text_immediate(x, y, text);
         ++i;
         if (i > MenuWindows_ListCount) break;
     }
@@ -360,13 +360,13 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
     const auto kind = static_cast<unsigned char>(flags & 0xF);
     const unsigned char shade = kind == 1 ? 0x48 : 0xAC;
     const unsigned char* const window = PoolRect(0, 0xF0, 0x10, 0x10);
-    g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
+    menu_windows::g.commit(1, 0xC);
     unsigned char* p = Next();
-    g.set_poly_ft4(p);
+    menu_windows::g.set_poly_ft4(p);
     std::uint32_t clut_x = static_cast<std::uint32_t>(colour & 0xFF) << 5;
     if (kind == 2) {
-        g.set_semi(p, 1);
+        menu_windows::g.set_semi(p, 1);
         clut_x += 0x10;
     }
     p[6] = p[5] = p[4] = shade;
@@ -401,9 +401,9 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         Put(p + 0x2C, Add(fyh, -4.0));
         p[0x35] = static_cast<unsigned char>(yhb - 4);
     }
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(static_cast<int>(clut_x & 0xFFFF), 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(static_cast<int>(clut_x & 0xFFFF), 0x1E1));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     const auto wv = static_cast<std::uint32_t>(w);
     const std::int32_t ws = U16(wv);
@@ -429,7 +429,7 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         p[0x35] = hb;
         p[0x44] = u;
         p[0x45] = hb;
-        g.commit(1, 0x48);
+        menu_windows::g.commit(1, 0x48);
     } else {
         const std::int32_t half = ws >> 1;
         const float fm = F(half + xs);
@@ -448,7 +448,7 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         p[0x35] = hb;
         p[0x44] = u;
         p[0x45] = hb;
-        g.commit(1, 0x48);
+        menu_windows::g.commit(1, 0x48);
         p += 0x48;
         std::memcpy(p, p - 0x48, 0x48);
         const float fr = F(xs + half * 2 - 4);
@@ -460,7 +460,7 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         Put(p + 0x38, fr);
         Put(p + 0x2C, fyh);
         Put(p + 0x3C, fyh);
-        g.commit(1, 0x48);
+        menu_windows::g.commit(1, 0x48);
     }
 
     p += 0x48;
@@ -496,11 +496,11 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         Put(p + 0x3C, Add(v, -4.0));
         p[0x45] = static_cast<unsigned char>(p[0x45] - 4);
     }
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     const unsigned char* const whole = PoolRect(0, 0, 0x100, 0x100);
-    g.draw_mode(Next(), 0, 0, 0xF, Addr(whole));
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 0, 0xF, Addr(whole));
+    menu_windows::g.commit(1, 0xC);
 }
 
 // original 0x57D830: piece id's rectangle (u, v, w, h), from 0x663B94, or from
@@ -519,18 +519,18 @@ namespace {
 // h) given here rather than a piece's (DIV-0138's steps).
 void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, unsigned char f) {
     unsigned char* const p = Next();
-    g.set_sprt(p);
-    g.set_semi(p, 0);
+    menu_windows::g.set_sprt(p);
+    menu_windows::g.set_semi(p, 0);
     Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x))));
     Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y))));
     p[0x14] = static_cast<unsigned char>(u);
     p[0x15] = static_cast<unsigned char>(v);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, w);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, h);
-    const unsigned clut = (f & 2) ? g.get_clut(0x80, 0x1E2) : g.get_clut(0xB0, 0x1E1);
+    const unsigned clut = (f & 2) ? menu_windows::g.get_clut(0x80, 0x1E2) : menu_windows::g.get_clut(0xB0, 0x1E1);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
     p[4] = p[5] = p[6] = 0x80;
-    g.commit(1, 0x1C);
+    menu_windows::g.commit(1, 0x1C);
 }
 
 // DIVERGENCE (DIV-0138, docs/button-shoulder-corner.md): a piece of the
@@ -539,7 +539,7 @@ void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, u
 // a page with the L1 / R1 art).
 bool ShoulderPiece(int x, int y, unsigned id, unsigned char f, std::uint16_t slot) {
     auto rect = [](unsigned piece) {
-        const unsigned char* const r = g.piece_rect(piece, 1);
+        const unsigned char* const r = menu_windows::g.piece_rect(piece, 1);
         return shoulder_glyphs::Rect{r[0], r[1], r[2], r[3]};
     };
     const std::uint16_t shown = bof3x::input::sigma::Sigma(slot);
@@ -572,20 +572,20 @@ extern "C" void __cdecl Menu_DrawPiece(int x, int y, unsigned id, unsigned flags
             if (ShoulderPiece(x, y, id, f, slot)) return;
         }
     }
-    const unsigned char* const rect = g.piece_rect(id, f & 1u);
+    const unsigned char* const rect = menu_windows::g.piece_rect(id, f & 1u);
     unsigned char* const p = Next();
-    g.set_sprt(p);
-    g.set_semi(p, 0);
+    menu_windows::g.set_sprt(p);
+    menu_windows::g.set_semi(p, 0);
     Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x))));
     Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y))));
     p[0x14] = rect[0];
     p[0x15] = rect[1];
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, rect[2]);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, rect[3]);
-    const unsigned clut = (f & 2) ? g.get_clut(0x80, 0x1E2) : g.get_clut(0xB0, 0x1E1);
+    const unsigned clut = (f & 2) ? menu_windows::g.get_clut(0x80, 0x1E2) : menu_windows::g.get_clut(0xB0, 0x1E1);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
     p[4] = p[5] = p[6] = 0x80;
-    g.commit(1, 0x1C);
+    menu_windows::g.commit(1, 0x1C);
 }
 
 // original 0x57D910 (PSX 0x801B0390): a list of pieces - 3-byte records (s8
@@ -597,7 +597,7 @@ extern "C" void __cdecl Menu_DrawPieces(int x, int y, const unsigned char* list,
     unsigned char id = list[2];
     if (id == 0xFF) return;
     do {
-        g.piece(x + static_cast<signed char>(list[0]) * 8, y + static_cast<signed char>(list[1]) * 8, id,
+        menu_windows::g.piece(x + static_cast<signed char>(list[0]) * 8, y + static_cast<signed char>(list[1]) * 8, id,
                 static_cast<unsigned>(flags));
         id = list[5];
         list += 3;
@@ -614,23 +614,23 @@ extern "C" void __cdecl Menu_DrawBorder(int x, int y, int w, int h) {
     if (wb) {
         const int bottom = y + static_cast<int>(hb) * 8 + 8;
         for (unsigned char i = 0; i < wb; ++i) {
-            g.piece(x + i * 8 + 8, y, 0x29, 0);
-            g.piece(x + i * 8 + 8, bottom, 0x2E, 0);
+            menu_windows::g.piece(x + i * 8 + 8, y, 0x29, 0);
+            menu_windows::g.piece(x + i * 8 + 8, bottom, 0x2E, 0);
         }
     }
     if (hb) {
         const int right = x + static_cast<int>(wb) * 8 + 8;
         for (unsigned char j = 0; j < hb; ++j) {
-            g.piece(x, y + j * 8 + 8, 0x2B, 0);
-            g.piece(right, y + j * 8 + 8, 0x2C, 0);
+            menu_windows::g.piece(x, y + j * 8 + 8, 0x2B, 0);
+            menu_windows::g.piece(right, y + j * 8 + 8, 0x2C, 0);
         }
     }
-    g.piece(x, y, 0x28, 0);
+    menu_windows::g.piece(x, y, 0x28, 0);
     const int right = x + static_cast<int>(wb) * 8 + 8;
-    g.piece(right, y, 0x2A, 0);
+    menu_windows::g.piece(right, y, 0x2A, 0);
     const int bottom = y + static_cast<int>(hb) * 8 + 8;
-    g.piece(x, bottom, 0x2D, 0);
-    g.piece(right, bottom, 0x2F, 0);
+    menu_windows::g.piece(x, bottom, 0x2D, 0);
+    menu_windows::g.piece(right, bottom, 0x2F, 0);
 }
 
 // original 0x575830 (PSX 0x801DBEB0 and three more overlays' copies): a menu
@@ -644,25 +644,25 @@ extern "C" void __cdecl Menu_DrawBorder(int x, int y, int w, int h) {
 extern "C" void __cdecl Menu_DrawPanel(int x, int y, int w, int h) {
     const unsigned wb = static_cast<unsigned>(w) & 0xFF, hb = static_cast<unsigned>(h) & 0xFF;
     const int height = static_cast<int>(hb) * 8 + 0x18;
-    g.box(x + 3, y + 3, static_cast<int>(wb) * 8 + 0x2D, height, 0, static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(x + 3, y + 3, static_cast<int>(wb) * 8 + 0x2D, height, 0, static_cast<unsigned char>(Config_WindowColour));
     PiecePage(0x340);
-    g.piece(x, y, 0, 1);
-    for (unsigned char c = 0; c < wb; ++c) g.piece(x + c * 8 + 0x20, y, 1, 1);
-    g.piece(x + static_cast<int>(wb) * 8 + 0x20, y, 2, 1);
+    menu_windows::g.piece(x, y, 0, 1);
+    for (unsigned char c = 0; c < wb; ++c) menu_windows::g.piece(x + c * 8 + 0x20, y, 1, 1);
+    menu_windows::g.piece(x + static_cast<int>(wb) * 8 + 0x20, y, 2, 1);
     const int right = x + static_cast<int>(wb) * 8 + 0x30;
-    g.piece(right, y, 3, 1);
+    menu_windows::g.piece(right, y, 3, 1);
     const int n = static_cast<int>(wb) + 5;
     unsigned char c = 0;
     do {
-        g.piece(x + c * 8 + 8, y + height, 6, 1);
+        menu_windows::g.piece(x + c * 8 + 8, y + height, 6, 1);
         ++c;
     } while (static_cast<int>(c) < n);
     for (unsigned char r = 0; r < hb; ++r) {
-        g.piece(x, y + r * 8 + 0x18, 4, 1);
-        g.piece(right, y + r * 8 + 0x18, 8, 1);
+        menu_windows::g.piece(x, y + r * 8 + 0x18, 4, 1);
+        menu_windows::g.piece(right, y + r * 8 + 0x18, 8, 1);
     }
-    g.piece(x, y + height, 5, 1);
-    g.piece(right, y + height, 7, 1);
+    menu_windows::g.piece(x, y + height, 5, 1);
+    menu_windows::g.piece(right, y + height, 7, 1);
 }
 
 // original 0x5A7720 (PSX 0x8017B36C, the sibling's SetSprt8): code 0x74, SPRT_8,
@@ -681,10 +681,10 @@ extern "C" void __cdecl Gpu_SetSprt8(unsigned char* prim) {
 // original (`and 0xffff` at 0x57D3A0 / 0x57D3BB), signed halfwords on the
 // PSX (0x801AFA80); sign-extended with g_signed_xy, as Menu_DrawBox.
 extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
-    g.draw_mode(Next(), 0, 0, 0xF, 0);
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 0, 0xF, 0);
+    menu_windows::g.commit(1, 0xC);
     unsigned char* const p = Next();
-    g.set_sprt8(p);
+    menu_windows::g.set_sprt8(p);
     const unsigned char shade = (dim & 0xFF) ? 0x40 : 0x80;
     p[4] = p[5] = p[6] = shade;
     Put(p + 8, F(menu_windows::g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
@@ -693,17 +693,17 @@ extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     p[0x14] = static_cast<unsigned char>((icon + 7) << 3);
     const unsigned i = static_cast<unsigned>(icon) & 0xFF;
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, (i == 1 || i == 3 || i == 15) ? 0x780E : 0x780C);
-    g.commit(1, 0x18);
+    menu_windows::g.commit(1, 0x18);
 }
 
 // original 0x57D760: a LINE_F2 from (x0, y0) to (x1, y1), 16-bit, colour (r, g,
 // b), semi-transparent under abr & 3 - after a draw mode of page
 // ((abr & 3) << 5) | 0x1E.
 extern "C" void __cdecl Menu_DrawLine(int x0, int y0, int x1, int y1, int r, int gr, int b, int abr) {
-    g.draw_mode(Next(), 0, 0, (static_cast<unsigned>(abr & 3) << 5) | 0x1E, 0);
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 0, (static_cast<unsigned>(abr & 3) << 5) | 0x1E, 0);
+    menu_windows::g.commit(1, 0xC);
     unsigned char* const p = Next();
-    g.set_line_f2(p);
+    menu_windows::g.set_line_f2(p);
     Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x0))));
     Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y0))));
     p[4] = static_cast<unsigned char>(r);
@@ -711,8 +711,8 @@ extern "C" void __cdecl Menu_DrawLine(int x0, int y0, int x1, int y1, int r, int
     p[5] = static_cast<unsigned char>(gr);
     p[6] = static_cast<unsigned char>(b);
     Put(p + 0x18, F(S16MenuWindows(static_cast<std::uint32_t>(y1))));
-    g.set_semi(p, 1);
-    g.commit(1, 0x20);
+    menu_windows::g.set_semi(p, 1);
+    menu_windows::g.commit(1, 0x20);
 }
 
 // original 0x57D420: a rectangle's outline in four Menu_DrawLines of the
@@ -729,10 +729,10 @@ extern "C" void __cdecl Menu_DrawOutline(int x, int y, int w, int h, int flags) 
     const auto gr = static_cast<unsigned char>(((c >> 5) & 0x1F) << 3);
     const auto b = static_cast<unsigned char>(((c >> 10) & 0x1F) << 3);
     const int yh = y + h, xw = x + w;
-    g.line(x, y, x, yh - 1, r, gr, b, abr_a);
-    g.line(x, yh, xw - 1, yh, r, gr, b, abr_b);
-    g.line(xw, yh, xw, y + 1, r, gr, b, abr_b);
-    g.line(xw, y, x + 1, y, r, gr, b, abr_a);
+    menu_windows::g.line(x, y, x, yh - 1, r, gr, b, abr_a);
+    menu_windows::g.line(x, yh, xw - 1, yh, r, gr, b, abr_b);
+    menu_windows::g.line(xw, yh, xw, y + 1, r, gr, b, abr_b);
+    menu_windows::g.line(xw, y, x + 1, y, r, gr, b, abr_a);
 }
 
 // original 0x574AB0 (PSX 0x801DAB48): the screen title's box, the owner's
@@ -745,12 +745,12 @@ extern "C" void __cdecl Menu_DrawOutline(int x, int y, int w, int h, int flags) 
 // h - 4, 0) inside it. The box spans w + 1 by h + 1.
 extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour) {
     const unsigned char* const window = PoolRect(0, 0xF0, 0x10, 0x10);
-    g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
+    menu_windows::g.commit(1, 0xC);
     const auto w1 = static_cast<std::uint32_t>(w) + 1, h1 = static_cast<std::uint32_t>(h) + 1;
     unsigned char* p = Next();
-    g.set_poly_ft4(p);
-    g.set_semi(p, 1);
+    menu_windows::g.set_poly_ft4(p);
+    menu_windows::g.set_semi(p, 1);
     const std::int32_t xs = U16(static_cast<std::uint32_t>(x)), ys = U16(static_cast<std::uint32_t>(y));
     const std::int32_t hs = U16(h1);
     const auto hb = static_cast<unsigned char>(h1);
@@ -776,16 +776,16 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     const auto hb3 = static_cast<unsigned char>(hb - 3);
     p[0x35] = hb3;
     const int clut_x = static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 5) + 0x10;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(clut_x, 0x1E1));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     const std::int32_t ws = U16(w1);
     const std::int32_t half = (ws - 4) >> 1;
     const std::int32_t parity = static_cast<std::int32_t>(w1 & 1);
     p = Next();
-    g.set_poly_ft4(p);
-    g.set_semi(p, 1);
+    menu_windows::g.set_poly_ft4(p);
+    menu_windows::g.set_semi(p, 1);
     const std::int32_t half16 = S16MenuWindows(static_cast<std::uint32_t>(half));
     const float fmid = F(half16 + xs + 2);
     Put(p + 0xC, fy);
@@ -805,13 +805,13 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x44] = static_cast<unsigned char>(half);
     p[0x45] = hb;
     p[4] = p[5] = p[6] = 0xAC;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(clut_x, 0x1E1));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     p = Next();
-    g.set_poly_ft4(p);
-    g.set_semi(p, 1);
+    menu_windows::g.set_poly_ft4(p);
+    menu_windows::g.set_semi(p, 1);
     const float fright = F(xs + parity + half16 * 2 + 2);
     const auto u3 = static_cast<unsigned char>(parity + half);
     Put(p + 8, fmid);
@@ -831,13 +831,13 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x44] = u3;
     p[0x45] = hb;
     p[4] = p[5] = p[6] = 0xAC;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(clut_x, 0x1E1));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     p = Next();
-    g.set_poly_ft4(p);
-    g.set_semi(p, 1);
+    menu_windows::g.set_poly_ft4(p);
+    menu_windows::g.set_semi(p, 1);
     const std::int32_t xe = xs + ws;
     const float fe2 = F(xe - 2), fe = F(xe);
     Put(p + 0xC, fy);
@@ -858,14 +858,14 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x25] = 2;
     p[0x35] = static_cast<unsigned char>(hb - 1);
     p[0x45] = hb3;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(clut_x, 0x1E1));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 
     const unsigned char* const whole = PoolRect(0, 0, 0x100, 0x100);
-    g.draw_mode(Next(), 0, 1, 0xF, Addr(whole));
-    g.commit(1, 0xC);
-    g.outline(x + 2, y + 2, static_cast<int>(w1 - 5), static_cast<int>(h1 - 5), 0);
+    menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(whole));
+    menu_windows::g.commit(1, 0xC);
+    menu_windows::g.outline(x + 2, y + 2, static_cast<int>(w1 - 5), static_cast<int>(h1 - 5), 0);
 }
 
 // ===========================================================================
@@ -877,10 +877,10 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
 // shade 0x80 for 0, 0x30 for 1, else (0x40, 0x40, 0x80).
 extern "C" void __cdecl Menu_DrawBigIcon(int x, int y, int icon, int shade) {
     const unsigned char* const r = At(::bof3::Img(at::kIconRects) + (static_cast<unsigned>(icon) & 0xFF) * 4);
-    g.draw_mode(Next(), 0, 1, 0x1E, 0);
-    g.commit(1, 0xC);
+    menu_windows::g.draw_mode(Next(), 0, 1, 0x1E, 0);
+    menu_windows::g.commit(1, 0xC);
     unsigned char* const p = Next();
-    g.set_sprt(p);
+    menu_windows::g.set_sprt(p);
     const auto s = static_cast<unsigned char>(shade);
     if (s == 0) {
         p[6] = p[5] = p[4] = 0x80;
@@ -897,7 +897,7 @@ extern "C" void __cdecl Menu_DrawBigIcon(int x, int y, int icon, int shade) {
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x28);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x30);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, ((r[3] + 0x1E0u) << 6) | static_cast<unsigned>(r[2] >> 4));
-    g.commit(1, 0x1C);
+    menu_windows::g.commit(1, 0x1C);
 }
 
 // original 0x573F30 (PSX 0x801D90E8): Menu_DrawBigIcon, with icon 4 drawn as
@@ -905,7 +905,7 @@ extern "C" void __cdecl Menu_DrawBigIcon(int x, int y, int icon, int shade) {
 extern "C" void __cdecl Menu_DrawItemIcon(int x, int y, int icon, int shade) {
     if ((icon & 0xFF) == 4 && Cond_ByteFA >= 8)
         icon = static_cast<int>((static_cast<unsigned>(icon) & ~0xFFu) | 0xB);
-    g.icon(x, y, icon, shade);
+    menu_windows::g.icon(x, y, icon, shade);
 }
 
 // original 0x5747D0 (PSX 0x801DA628): the Yes / No chooser (DIV-0027,
@@ -919,27 +919,27 @@ extern "C" void __cdecl Menu_DrawItemIcon(int x, int y, int icon, int shade) {
 // through YesNo_Line and the hand at 0x112 - 56 * selection, as the patched
 // original has them.
 extern "C" unsigned char __cdecl Menu_YesNo() {
-    const unsigned char* const line = g.yes_no_line(0xF);
-    g.text_draw_at(0x1C, 0x16, 0, 0xFF, line);
+    const unsigned char* const line = menu_windows::g.yes_no_line(0xF);
+    menu_windows::g.text_draw_at(0x1C, 0x16, 0, 0xFF, line);
     const auto sel = static_cast<std::uint32_t>(FieldS_Answer);
     const std::uint32_t hand = g_yes_no_div ? 0x112u - 56u * sel : 0xFEu - 36u * sel;
-    g.draw_hand(static_cast<int>(hand), 0x18, 0);
+    menu_windows::g.draw_hand(static_cast<int>(hand), 0x18, 0);
     const auto pressed = static_cast<std::uint32_t>(Long(At(::bof3::Img(Input_Pressed_addr))));
     if (Field_CancelButtons & pressed) {
-        g.sound(0x106);
+        menu_windows::g.sound(0x106);
         FieldS_Answer = 0;
         return 1;
     }
     if (Field_ConfirmButtons & pressed) {
         if (static_cast<unsigned char>(FieldS_Answer)) {
-            g.sound(0x104);
+            menu_windows::g.sound(0x104);
             return 1;
         }
-        g.sound(0x106);
+        menu_windows::g.sound(0x106);
         return 1;
     }
     if ((pressed >> 8) & 0xA0) {
-        g.sound(0x101);
+        menu_windows::g.sound(0x101);
         FieldS_Answer = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
     }
     return 0;
@@ -966,21 +966,21 @@ extern "C" void __cdecl Menu_DrawButtonRow(int x, int y, int set, int sel, int) 
     unsigned char i = 0;
     do {
         const int bx = x + 48 * i;
-        g.box(bx, y, 0x2D, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
+        menu_windows::g.box(bx, y, 0x2D, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
         unsigned char colour;
         if (selected >= sets[s5]) colour = 0;
         else colour = (i == selected) ? 0 : 7;
         const unsigned char verb = sets[s5 + 1 + i];
         if (verb == 0x12 && !(Field_InputFlags & 1)) colour = 7;
         if (verb == 8) {
-            if ((g.has_key_item(0xF) & 0xFF) == 0) {
-                if ((g.count_owned(0, 0x58, 0) & 0xFFFF) == 0) colour = 7;
+            if ((menu_windows::g.has_key_item(0xF) & 0xFF) == 0) {
+                if ((menu_windows::g.count_owned(0, 0x58, 0) & 0xFFFF) == 0) colour = 7;
             }
         }
         const unsigned char* const text = Ptr(::bof3::Img(at::kVerbPointers.v) + verb * 4u);
-        const unsigned n = g.char_count(text);
-        g.verb_label(x + 0x16 + 6 * (8 * i - static_cast<int>(n)), y + 3, colour, 0x10, text);
-        g.pieces(bx, y, At(::bof3::Img(i == selected ? 0x663440 : 0x663428)), 0);
+        const unsigned n = menu_windows::g.char_count(text);
+        menu_windows::g.verb_label(x + 0x16 + 6 * (8 * i - static_cast<int>(n)), y + 3, colour, 0x10, text);
+        menu_windows::g.pieces(bx, y, At(::bof3::Img(i == selected ? 0x663440 : 0x663428)), 0);
         ++i;
     } while (i < sets[s5]);
 }
@@ -1041,15 +1041,15 @@ extern "C" int __cdecl Char_ExpForLevel(unsigned member, unsigned level) {
 // unsigned. With next equal to need the line has no length. x and y 16-bit.
 extern "C" void __cdecl Menu_DrawExpBar(int x, int y, unsigned member, unsigned level, unsigned exp) {
     unsigned char* const p = Next();
-    g.set_line_f2(p);
-    g.set_semi(p, 0);
+    menu_windows::g.set_line_f2(p);
+    menu_windows::g.set_semi(p, 0);
     const std::int32_t xs = U16(static_cast<std::uint32_t>(x));
     const float fx = F(xs), fy = F(U16(static_cast<std::uint32_t>(y)));
     Put(p + 8, fx);
     Put(p + 0xC, fy);
-    const auto need = static_cast<std::uint32_t>(g.exp_for_level(member, level));
+    const auto need = static_cast<std::uint32_t>(menu_windows::g.exp_for_level(member, level));
     const auto next = static_cast<std::uint32_t>(
-        g.exp_for_level(member, (level & ~0xFFu) | ((level + 1) & 0xFFu)));
+        menu_windows::g.exp_for_level(member, (level & ~0xFFu) | ((level + 1) & 0xFFu)));
     const std::uint32_t span = next - need;
     if (span != 0) {
         const std::uint32_t end = (57u * exp - 57u * need) / span + static_cast<std::uint32_t>(xs);
@@ -1061,7 +1061,7 @@ extern "C" void __cdecl Menu_DrawExpBar(int x, int y, unsigned member, unsigned 
     p[4] = 0x80;
     p[5] = 0;
     p[6] = 0;
-    g.commit(1, 0x20);
+    menu_windows::g.commit(1, 0x20);
 }
 
 // original 0x57D9A0 (PSX 0x801B0494): whether a list of mode shows item as
@@ -1079,11 +1079,11 @@ extern "C" unsigned char __cdecl Item_CanUse(unsigned mode, unsigned member, uns
         if (category & 0xFF) return 0;
         if (!(At(::bof3::Img(at::kItemFlags.v) + it * 22u)[0] & 1)) return 0;
         if (it != 0x57) return 1;
-        return g.area_byte(ObjTrio[0].x_whole, ObjTrio[0].z_whole) == 0xAE ? 1 : 0;
-    case 2: return (g.item_flags(category, item) & 2) ? 1 : 0;
-    case 3: return (g.item_flags(category, item) & 8) ? 0 : 1;
+        return menu_windows::g.area_byte(ObjTrio[0].x_whole, ObjTrio[0].z_whole) == 0xAE ? 1 : 0;
+    case 2: return (menu_windows::g.item_flags(category, item) & 2) ? 1 : 0;
+    case 3: return (menu_windows::g.item_flags(category, item) & 8) ? 0 : 1;
     case 4: {
-        const unsigned mask = g.equip_mask(category, item);
+        const unsigned mask = menu_windows::g.equip_mask(category, item);
         return ((1u << (member & 31)) & mask & 0xFF) ? 1 : 0;
     }
     default: return 1;
@@ -1155,18 +1155,18 @@ extern "C" unsigned char __cdecl Menu_ListScroll(unsigned char* top, unsigned ch
 // +0x12 (a weapon), +0x13..+0x15 (armour), +0x16, +0x17 (accessories). The
 // six names are looked up once, after the stat icon.
 extern "C" void __cdecl Menu_DrawEquipPanel(int x, int y, unsigned member) {
-    g.panel(x, y, 9, 0xA);
+    menu_windows::g.panel(x, y, 9, 0xA);
     const unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + (member & 0xFF) * at::kCharStride);
-    g.text_draw_at(x + 0x26, y + 7, 0, 0xFF, At(::bof3::Img(at::kEquipLabel.v)));
-    g.stat_icon(0, x + 7, y + 5, 0x10, 0x10, 0x80);
+    menu_windows::g.text_draw_at(x + 0x26, y + 7, 0, 0xFF, At(::bof3::Img(at::kEquipLabel.v)));
+    menu_windows::g.stat_icon(0, x + 7, y + 5, 0x10, 0x10, 0x80);
     const unsigned char* const names[6] = {
         At(::bof3::Img(0x657450) + record[0x12] * 28u), At(::bof3::Img(0x657D68) + record[0x13] * 26u), At(::bof3::Img(0x657D68) + record[0x14] * 26u),
         At(::bof3::Img(0x657D68) + record[0x15] * 26u), At(::bof3::Img(0x658450) + record[0x16] * 24u), At(::bof3::Img(0x658450) + record[0x17] * 24u),
     };
     for (unsigned i = 0; i < 6; ++i) {
-        g.icon8(x + 5, y + static_cast<int>(13 * i) + 0x1C, At(::bof3::Img(0x663660))[i], 0);
-        const unsigned n = g.char_count(names[i]);
-        g.text_draw_at(x + 0x11, y + static_cast<int>(13 * i) + 0x1A, 0, static_cast<int>(n), names[i]);
+        menu_windows::g.icon8(x + 5, y + static_cast<int>(13 * i) + 0x1C, At(::bof3::Img(0x663660))[i], 0);
+        const unsigned n = menu_windows::g.char_count(names[i]);
+        menu_windows::g.text_draw_at(x + 0x11, y + static_cast<int>(13 * i) + 0x1A, 0, static_cast<int>(n), names[i]);
     }
 }
 
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
     const auto f = static_cast<unsigned char>(flags);
     const unsigned char c0 = (f & 1) ? shade : 0, c1 = (f & 2) ? shade : 0, c2 = (f & 4) ? shade : 0;
     unsigned char* p = Next();
-    g.set_line_f3(p);
+    menu_windows::g.set_line_f3(p);
     const std::int32_t xs = U16(static_cast<std::uint32_t>(x)), ys = U16(static_cast<std::uint32_t>(y));
     const std::int32_t hs = U16(static_cast<std::uint32_t>(h));
     const float fx4 = F(xs + 4), fy = F(ys), fx = F(xs), fyh = F(hs + ys - 1);
@@ -1201,9 +1201,9 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
     Put(p + 0x18, F(ys + 4));
     Put(p + 0x20, fx);
     Put(p + 0x24, fyh);
-    g.commit(1, 0x2C);
+    menu_windows::g.commit(1, 0x2C);
     p = Next();
-    g.set_line_f4(p);
+    menu_windows::g.set_line_f4(p);
     const float fxw = F(U16(static_cast<std::uint32_t>(w)) + xs - 1);
     Put(p + 8, fx4);
     Put(p + 0x2C, fx);
@@ -1216,7 +1216,7 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
     p[6] = c0;
     Put(p + 0x20, fxw);
     Put(p + 0x14, fxw);
-    g.commit(1, 0x38);
+    menu_windows::g.commit(1, 0x38);
 }
 
 // original 0x574610 (PSX 0x801DA2A8): the money box - the box (x + 3, y + 3,
@@ -1224,13 +1224,13 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
 // label 0x66A31C at (x + 0x58, y + 4), then three piece lists across it. The
 // third argument is not read (every caller passes 0).
 extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
-    g.box(x + 3, y + 3, 0x65, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7d.v)), value);
-    g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(::bof3::Img(at::kMoneyLabel.v)));
-    g.pieces(x, y, At(::bof3::Img(0x6633A8)), 0);
-    for (unsigned i = 0; i < 11; ++i) g.pieces(x + static_cast<int>(i * 8), y, At(::bof3::Img(Menu_PlayTimePieces_addr)), 0);
-    g.pieces(x, y, At(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
+    menu_windows::g.box(x + 3, y + 3, 0x65, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7d.v)), value);
+    menu_windows::g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(::bof3::Img(at::kMoneyLabel.v)));
+    menu_windows::g.pieces(x, y, At(::bof3::Img(0x6633A8)), 0);
+    for (unsigned i = 0; i < 11; ++i) menu_windows::g.pieces(x + static_cast<int>(i * 8), y, At(::bof3::Img(Menu_PlayTimePieces_addr)), 0);
+    menu_windows::g.pieces(x, y, At(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
 }
 
 // original 0x575430 (PSX 0x801DB988 and three more overlays' copies): a
@@ -1250,18 +1250,18 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
     unsigned char colour = 0;
     const unsigned s1 = (slot & 0xFF) - 1;
     const unsigned char category = s1 > 10 ? 0 : kCategory[s1];
-    const unsigned mask = g.equip_mask(category, item);
+    const unsigned mask = menu_windows::g.equip_mask(category, item);
     const unsigned char cannot = ((1u << (m & 31)) & mask & 0xFF) == 0 ? 1 : 0;
-    g.box(x + 3, y + 3, 0x6C, 0x30, cannot, static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(x + 3, y + 3, 0x6C, 0x30, cannot, static_cast<unsigned char>(Config_WindowColour));
     if (!cannot) {
         unsigned char colours[4] = {0, 0, 0, 0};
         unsigned short stats[4] = {0, 0, 0, 0};
-        g.equip_compare(member, (slot & ~0xFFu) | ((slot - 1) & 0xFF), item, colours, stats);
+        menu_windows::g.equip_compare(member, (slot & ~0xFFu) | ((slot - 1) & 0xFF), item, colours, stats);
         stats[2] = stats[3];
         colours[2] = colours[3];
         for (unsigned i = 0; i < 3; ++i) {
-            g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(stats[i]));
-            g.font8(x + 0x2C, y + static_cast<int>(15 * i) + 8, colours[i],
+            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(stats[i]));
+            menu_windows::g.font8(x + 0x2C, y + static_cast<int>(15 * i) + 8, colours[i],
                     reinterpret_cast<const unsigned char*>(PrintBuf()));
         }
     } else {
@@ -1269,15 +1269,15 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
         static const unsigned kStat[3] = {0x24, 0x26, 0x28};
         static const int kY[3] = {8, 0x17, 0x26};
         for (unsigned i = 0; i < 3; ++i) {
-            g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(Word(record + kStat[i])));
-            g.font8(x + 0x2C, y + kY[i], 7, reinterpret_cast<const unsigned char*>(PrintBuf()));
+            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(Word(record + kStat[i])));
+            menu_windows::g.font8(x + 0x2C, y + kY[i], 7, reinterpret_cast<const unsigned char*>(PrintBuf()));
         }
     }
-    g.item_icon(x + 0x46, y + 2, record[9], cannot);
-    g.text_draw_at(x + 5, y + 6, colour, 0xFF, At(::bof3::Img(at::kStatLabels[0])));
-    g.text_draw_at(x + 5, y + 0x15, colour, 0xFF, At(::bof3::Img(at::kStatLabels[1])));
-    g.text_draw_at(x + 5, y + 0x24, colour, 0xFF, At(::bof3::Img(at::kStatLabels[2])));
-    g.pieces(x, y, At(::bof3::Img(0x663528)), 0);
+    menu_windows::g.item_icon(x + 0x46, y + 2, record[9], cannot);
+    menu_windows::g.text_draw_at(x + 5, y + 6, colour, 0xFF, At(::bof3::Img(at::kStatLabels[0])));
+    menu_windows::g.text_draw_at(x + 5, y + 0x15, colour, 0xFF, At(::bof3::Img(at::kStatLabels[1])));
+    menu_windows::g.text_draw_at(x + 5, y + 0x24, colour, 0xFF, At(::bof3::Img(at::kStatLabels[2])));
+    menu_windows::g.pieces(x, y, At(::bof3::Img(0x663528)), 0);
 }
 
 // original 0x575690 (PSX 0x801DBCBC): the menu backdrop (docs/menu-screens.md
@@ -1299,10 +1299,10 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
 extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     PiecePage(0x340);
     std::uint16_t cluts[4];
-    cluts[0] = static_cast<std::uint16_t>(g.get_clut(0x30, 0x1E2));
-    cluts[1] = static_cast<std::uint16_t>(g.get_clut(0x50, 0x1E2));
-    cluts[2] = static_cast<std::uint16_t>(g.get_clut(0x40, 0x1E2));
-    cluts[3] = static_cast<std::uint16_t>(g.get_clut(0x60, 0x1E2));
+    cluts[0] = static_cast<std::uint16_t>(menu_windows::g.get_clut(0x30, 0x1E2));
+    cluts[1] = static_cast<std::uint16_t>(menu_windows::g.get_clut(0x50, 0x1E2));
+    cluts[2] = static_cast<std::uint16_t>(menu_windows::g.get_clut(0x40, 0x1E2));
+    cluts[3] = static_cast<std::uint16_t>(menu_windows::g.get_clut(0x60, 0x1E2));
     const unsigned k = kind & 0xFF;
     if (k >= 4) return;   // DIV-0030
     const std::uint16_t clut = cluts[k];
@@ -1319,8 +1319,8 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
             std::uint32_t row = 0;
             do {
                 unsigned char* const p = Next();
-                g.set_sprt(p);
-                g.set_semi(p, 0);
+                menu_windows::g.set_sprt(p);
+                menu_windows::g.set_semi(p, 0);
                 Put(p + 8, fcolumn);
                 rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
                 Put(p + 0xC, F(S16MenuWindows(row)));
@@ -1330,7 +1330,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
                 rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, r[2]);
                 rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, r[3]);
                 p[4] = p[5] = p[6] = 0x80;
-                g.commit(1, 0x1C);
+                menu_windows::g.commit(1, 0x1C);
                 row += r[3];
             } while (S16MenuWindows(row) < 0xF0);
             column += 0x20;
@@ -1357,9 +1357,9 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
 // when it runs out), the frame's pieces and the scroll bar.
 extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
-    const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
+    const unsigned char top = menu_windows::g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const unsigned category = w[0xA];
     const unsigned char* items = Ptr(::bof3::Img(at::kInventory.v) + category * 4) + top;
     const unsigned char* counts = Ptr(::bof3::Img(at::kCounts.v) + category * 4) + top;
@@ -1370,7 +1370,7 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
             unsigned char dim;
             if (w[9] == 0) {
                 const unsigned char member = Character_IndexById[Cond_Flags[0xd2 + BattleActorCopies_ItemActor]];
-                dim = g.can_use(w[8], member, w[0xA], items[0]) ? 0 : 1;
+                dim = menu_windows::g.can_use(w[8], member, w[0xA], items[0]) ? 0 : 1;
             } else {
                 dim = 1;
             }
@@ -1383,10 +1383,10 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
             const unsigned char count = row_category == 4 ? 1 : counts[0];
             if (here == mark || here == w[0xC] + static_cast<unsigned>(adj)) {
                 if (colour != 7)
-                    g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), 7, row_category, items[0], count, 1);
-                g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row) - 2, colour, w[0xA], items[0], count, dim);
+                    menu_windows::g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), 7, row_category, items[0], count, 1);
+                menu_windows::g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row) - 2, colour, w[0xA], items[0], count, dim);
             } else {
-                g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), colour, row_category, items[0], count, dim);
+                menu_windows::g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), colour, row_category, items[0], count, dim);
             }
         }
         ++items;
@@ -1394,47 +1394,47 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         row += 0xD;
     }
 
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const int label_y = rv::As<records::WindowRecord>(w)->y + 7;
         const unsigned char* const label = Ptr(::bof3::Img(at::kCategoryLabels.v) + w[0xA] * 4u);
-        const unsigned n = g.char_count(label);
+        const unsigned n = menu_windows::g.char_count(label);
         // DIVERGENCE DIV-0059: the original's 6 * (13 - n) unless a Latin overlay is on.
-        g.text_draw_at(static_cast<std::uint16_t>(ListTitle_X(label, static_cast<int>(n)) + rv::As<records::WindowRecord>(w)->x), label_y, grey, 0x10,
+        menu_windows::g.text_draw_at(static_cast<std::uint16_t>(ListTitle_X(label, static_cast<int>(n)) + rv::As<records::WindowRecord>(w)->x), label_y, grey, 0x10,
                        label);
     }
     {
         const unsigned char cat = w[0xA];
         const unsigned room = cat != 4 ? 0x80 : 0x20;
-        const unsigned have = g.count_category(cat) & 0xFF;
-        g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d3d.v)), have, room);
+        const unsigned have = menu_windows::g.count_category(cat) & 0xFF;
+        menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d3d.v)), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
+        menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
     }
-    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 2) ? 0x66349C : 0x663484)), 1);
-    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 1) ? 0x6634A8 : 0x663490)), 1);
+    menu_windows::g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 2) ? 0x66349C : 0x663484)), 1);
+    menu_windows::g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 1) ? 0x6634A8 : 0x663490)), 1);
     {
         const unsigned t = static_cast<std::uint16_t>(rv::As<records::ItemListWindow>(w)->arrows);
         rv::Store<unsigned>(rv::As<records::ItemListWindow>(w)->arrows, (t & 0xF0) ? t - 0x10 : 0);
     }
-    for (unsigned b = 0; b < 10; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x28, rv::As<records::WindowRecord>(w)->y, 1, 1);
-    for (unsigned b = 0; b < 15; ++b) g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x18, 4, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 0x16, 1);
-    for (unsigned b = 0; b < 12; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x28, 0x17, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x88, 0x18, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + 0x90, 0x19, 1);
-    for (unsigned b = 0; b < 9; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1A, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0x50, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1B, 1);
-    for (unsigned b = 0; b < 6; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x58, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1C, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0x88, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1D, 1);
+    for (unsigned b = 0; b < 10; ++b) menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x28, rv::As<records::WindowRecord>(w)->y, 1, 1);
+    for (unsigned b = 0; b < 15; ++b) menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x18, 4, 1);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 0x16, 1);
+    for (unsigned b = 0; b < 12; ++b) menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x28, 0x17, 1);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x88, 0x18, 1);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + 0x90, 0x19, 1);
+    for (unsigned b = 0; b < 9; ++b) menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1A, 1);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x50, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1B, 1);
+    for (unsigned b = 0; b < 6; ++b) menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x58, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1C, 1);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x88, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1D, 1);
     if (w[0xA] == 4) {
-        g.piece(rv::As<records::WindowRecord>(w)->x + 8, rv::As<records::WindowRecord>(w)->y, 0x32, 1);
-        g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y, 0x33, 1);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 8, rv::As<records::WindowRecord>(w)->y, 0x32, 1);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y, 0x33, 1);
     }
     const unsigned char cat = w[0xA];
-    g.scroll_bar(Ptr(::bof3::Img(at::kInventory.v) + cat * 4u), w[0xB], rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 9,
+    menu_windows::g.scroll_bar(Ptr(::bof3::Img(at::kInventory.v) + cat * 4u), w[0xB], rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 9,
                  cat == 4 ? 0x20 : 0x80, 0x74);
 }
 
@@ -1444,15 +1444,15 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
 // or more.
 extern "C" void __cdecl Menu_DrawItemRow(int x, int y, int colour, unsigned category, unsigned id, unsigned count,
                                          int dim) {
-    const unsigned kind = g.item_kind(category, id) & 0xFF;
-    g.icon8(x, y + 2, At(::bof3::Img(at::kRowIcons.v))[kind], dim);
-    const unsigned char* const name = g.item_name(category, id);
-    const unsigned n = g.char_count(name);
-    g.text_draw_at(x + 0xA, y, colour, static_cast<int>(n), name);
+    const unsigned kind = menu_windows::g.item_kind(category, id) & 0xFF;
+    menu_windows::g.icon8(x, y + 2, At(::bof3::Img(at::kRowIcons.v))[kind], dim);
+    const unsigned char* const name = menu_windows::g.item_name(category, id);
+    const unsigned n = menu_windows::g.char_count(name);
+    menu_windows::g.text_draw_at(x + 0xA, y, colour, static_cast<int>(n), name);
     const auto c = static_cast<unsigned char>(count);
     if (c > 1) {
-        g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(c));
-        g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
+        menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(c));
+        menu_windows::g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
     }
 }
 
@@ -1470,7 +1470,7 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
     for (std::int32_t i = 1; i <= t; ++i) {
         if (items[i - 1] == 0) continue;
         unsigned char* const p = Next();
-        g.set_tile(p);
+        menu_windows::g.set_tile(p);
         Put(p + 8, F(sx + 4));
         const std::int32_t a = IDiv((i - 1) * hgt, t) + sy + 3;
         Put32(p + 0x14, 0x40400000u);
@@ -1480,10 +1480,10 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
         const std::int32_t b = IDiv(i * hgt, t) + sy + 3;
         Put(p + 0xC, F(a));
         Put(p + 0x18, static_cast<float>(static_cast<double>(b) - static_cast<double>(a)));
-        g.commit(1, 0x1C);
+        menu_windows::g.commit(1, 0x1C);
     }
     unsigned char* const p = Next();
-    g.set_poly_ft4(p);
+    menu_windows::g.set_poly_ft4(p);
     const std::int32_t thumb = IDiv(t + 2 * static_cast<std::int32_t>(top & 0xFF) * hgt, 2 * t) & 0xFF;
     const float ftop = F(thumb + sy + 3), fx8 = F(sx + 8);
     Put(p + 8, F(sx));
@@ -1504,10 +1504,10 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
     Put(p + 0x3C, fbottom);
     p[0x35] = 0x9F;
     p[0x45] = 0x9F;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x340, 0x100));
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(0xB0, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, menu_windows::g.get_tpage(0, 0, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, menu_windows::g.get_clut(0xB0, 0x1E1));
     p[4] = p[5] = p[6] = 0x80;
-    g.commit(1, 0x48);
+    menu_windows::g.commit(1, 0x48);
 }
 
 // ===========================================================================
@@ -1523,7 +1523,7 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
 // again after each entry. Then the border (x, y, 0x14, 0x13).
 extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(Config_WindowColour));
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(Config_WindowColour));
     const unsigned char* const list = Ptr(Addr(w + 0x20));
     std::uint32_t text_y = static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 8);
     std::uint32_t row_y = text_y + 3;
@@ -1532,10 +1532,10 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
         do {
             const unsigned char category = list[1 + 2 * i], id = list[2 + 2 * i];
             const unsigned percent = w[0xB];   // pushed before Item_BasePrice, for the scale after it
-            const unsigned price = g.item_price(category, id) & 0xFFFF;
-            const std::uint32_t cost = g.price_scale(price, percent);
-            const unsigned char kind = static_cast<unsigned char>(g.item_kind(category, id));
-            const unsigned char* const name = g.item_name(category, id);
+            const unsigned price = menu_windows::g.item_price(category, id) & 0xFFFF;
+            const std::uint32_t cost = menu_windows::g.price_scale(price, percent);
+            const unsigned char kind = static_cast<unsigned char>(menu_windows::g.item_kind(category, id));
+            const unsigned char* const name = menu_windows::g.item_name(category, id);
             unsigned char colour, dim;
             if (w[0xA] == 0 && Party_Zenny >= cost) {
                 colour = 0;
@@ -1544,22 +1544,22 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
                 colour = 7;
                 dim = 1;
             }
-            g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), cost);
+            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), cost);
             if (i == w[0xC]) {
                 if (colour == 0) {
-                    g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(::bof3::Img(at::kBuyIcons.v))[kind], 1);
-                    const unsigned n = g.char_count(name);
-                    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), 7, static_cast<int>(n), name);
-                    g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), 7,
+                    menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(::bof3::Img(at::kBuyIcons.v))[kind], 1);
+                    const unsigned n = menu_windows::g.char_count(name);
+                    menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), 7, static_cast<int>(n), name);
+                    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), 7,
                             reinterpret_cast<const unsigned char*>(PrintBuf()));
                 }
                 text_y -= 2;
                 row_y -= 2;
             }
-            g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(::bof3::Img(at::kBuyIcons.v))[kind], dim);
-            const unsigned n = g.char_count(name);
-            g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), colour, static_cast<int>(n), name);
-            g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), colour,
+            menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(::bof3::Img(at::kBuyIcons.v))[kind], dim);
+            const unsigned n = menu_windows::g.char_count(name);
+            menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), colour, static_cast<int>(n), name);
+            menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), colour,
                     reinterpret_cast<const unsigned char*>(PrintBuf()));
             if (i == w[0xC]) {
                 text_y += 2;
@@ -1570,7 +1570,7 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
             ++i;
         } while (i < list[0]);
     }
-    g.border(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x14, 0x13);
+    menu_windows::g.border(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x14, 0x13);
 }
 
 namespace {
@@ -1581,17 +1581,17 @@ namespace {
 void DetailFrame(const unsigned char* w, int bottom, unsigned rows) {
     PiecePage(0x380);
     for (unsigned b = 0; b < 0x14; ++b) {
-        g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y, 0x29, 0);
-        g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3B, 0);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y, 0x29, 0);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3B, 0);
     }
     for (unsigned b = 0; b < rows; ++b) {
-        g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2B, 0);
-        g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2C, 0);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2B, 0);
+        menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2C, 0);
     }
-    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x28, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y, 0x2A, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + bottom, 0x3A, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3C, 0);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x28, 0);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y, 0x2A, 0);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + bottom, 0x3A, 0);
+    menu_windows::g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3C, 0);
 }
 
 }  // namespace
@@ -1607,28 +1607,28 @@ extern "C" void __cdecl Shop_DrawBuyDetail(unsigned char* window) {
     const unsigned sel = w[0xB];
     const unsigned char category = list[1 + 2 * sel], id = list[2 + 2 * sel];
     const unsigned percent = w[0xA];
-    const unsigned price = g.item_price(category, id) & 0xFFFF;
-    const std::uint32_t cost = g.price_scale(price, percent);
-    const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(Config_WindowColour));
-    const unsigned kind = g.item_kind(category, id) & 0xFF;
-    g.icon8(rv::As<records::WindowRecord>(w)->x + 4, rv::As<records::WindowRecord>(w)->y + 7, At(::bof3::Img(at::kBuyDetailIcons.v))[kind], 0);
-    const unsigned n = g.char_count(name);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * cost);
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    const unsigned char* const held = g.msg_system_ptr(0x27);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x20, 0, 0xFF, held);
-    const unsigned owned = g.count_owned(category, id, 0) & 0xFFFF;
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), owned);
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    const unsigned char* const equipped = g.msg_system_ptr(0x28);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x2D, 0, 0xFF, equipped);
-    const unsigned worn = g.count_owned(category, id, 1) & 0xFFFF;
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), worn);
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    const unsigned price = menu_windows::g.item_price(category, id) & 0xFFFF;
+    const std::uint32_t cost = menu_windows::g.price_scale(price, percent);
+    const unsigned char* const name = menu_windows::g.item_name(category, id);
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(Config_WindowColour));
+    const unsigned kind = menu_windows::g.item_kind(category, id) & 0xFF;
+    menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 4, rv::As<records::WindowRecord>(w)->y + 7, At(::bof3::Img(at::kBuyDetailIcons.v))[kind], 0);
+    const unsigned n = menu_windows::g.char_count(name);
+    menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * cost);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    const unsigned char* const held = menu_windows::g.msg_system_ptr(0x27);
+    menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x20, 0, 0xFF, held);
+    const unsigned owned = menu_windows::g.count_owned(category, id, 0) & 0xFFFF;
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), owned);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    const unsigned char* const equipped = menu_windows::g.msg_system_ptr(0x28);
+    menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x2D, 0, 0xFF, equipped);
+    const unsigned worn = menu_windows::g.count_owned(category, id, 1) & 0xFFFF;
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), worn);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     DetailFrame(w, 0x38, 6);
 }
 
@@ -1639,19 +1639,19 @@ extern "C" void __cdecl Shop_DrawBuyDetail(unsigned char* window) {
 extern "C" void __cdecl Shop_DrawSellDetail(unsigned char* window) {
     unsigned char* const w = window;
     const unsigned char id = w[0xB], category = w[0xA], flag = w[0xD];
-    const std::uint32_t unit = g.sell_price(category, id, flag);
-    const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(Config_WindowColour));
-    const unsigned kind = g.item_kind(category, id) & 0xFF;
-    g.icon8(rv::As<records::WindowRecord>(w)->x + 7, rv::As<records::WindowRecord>(w)->y + 6, At(::bof3::Img(at::kSellIcons.v))[kind], 0);
-    const unsigned n = g.char_count(name);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0x11, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), unit);
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * unit);
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
-    g.font8(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    const std::uint32_t unit = menu_windows::g.sell_price(category, id, flag);
+    const unsigned char* const name = menu_windows::g.item_name(category, id);
+    menu_windows::g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(Config_WindowColour));
+    const unsigned kind = menu_windows::g.item_kind(category, id) & 0xFF;
+    menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 7, rv::As<records::WindowRecord>(w)->y + 6, At(::bof3::Img(at::kSellIcons.v))[kind], 0);
+    const unsigned n = menu_windows::g.char_count(name);
+    menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0x11, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), unit);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * unit);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     DetailFrame(w, 0x18, 2);
 }
 
