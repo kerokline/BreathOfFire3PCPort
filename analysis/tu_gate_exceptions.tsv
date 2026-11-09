@@ -192,3 +192,29 @@ Sprite_Draw	x64-indirect	B0 promotion of sprite_draw.cpp's g_draw_clone: DIFFER 
 _ZN11sprite_draw12g_draw_cloneE	x64-indirect	B0 promotion of sprite_draw.cpp's g_draw_clone: NEW _ZN11sprite_draw12g_draw_cloneE  (bss)	
 _ZZN12_GLOBAL__N_18LiveDrawEvE4ours	x64-indirect	B0 promotion of sprite_draw.cpp's g_draw_clone: NEW local:4e7413096dc1  (named _ZZN12_GLOBAL__N_18LiveDrawEvE4ours, _ZZN12_GLOBAL__N_18LiveDrawEvE5input, _ZZN12_GLOBAL__N_18LiveDrawEvE6theirs)	
 _ZN12_GLOBAL__N_14DrawEv	x64-indirect	B0 promotion of sprite_draw.cpp's g_draw_clone: NEW local:e89e20e17927  (named _ZN12_GLOBAL__N_14DrawEv)	
+_LoadDatFile	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER _LoadDatFile  first at instruction 9: 'cmp byte ptr [0], 1 @r6:local#617e1a42a62d' -> 'cmp byte ptr [0], 1 @r6:__ZN8dat_load8g_datlogE'	
+__Z14DatLoad_Injectv	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER __Z14DatLoad_Injectv  first at instruction 11: 'call @r14:local#c5feafab97e5' -> 'call @r14:local#4e38e336acc5'	
+__Z22DatLoad_OptLayerChunksPKcPFvPvRKN9dat_cache5ChunkEPhE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER __Z22DatLoad_OptLayerChunksPKcPFvPvRKN9dat_cache5ChunkEPhE  first at instruction 11: 'cmp byte ptr [0], 1 @r6:local#617e1a42a62d' -> 'cmp byte ptr [0], 1 @r6:__ZN8dat_load8g_datlogE'	
+__ZN8dat_load12g_opt_cachedE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW __ZN8dat_load12g_opt_cachedE  (bss)	
+__ZN8dat_load13g_lang_cachedE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW __ZN8dat_load13g_lang_cachedE  (bss)	
+__ZN8dat_load15g_datlog_callerE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW __ZN8dat_load15g_datlog_callerE  (bss)	
+__ZN8dat_load6g_takeE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW __ZN8dat_load6g_takeE  (data)	
+__ZN8dat_load8g_datlogE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW __ZN8dat_load8g_datlogE  (bss)	
+__ZN12_GLOBAL__N_16DatLogEPKcS1_	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:012748595c6c  (named __ZN12_GLOBAL__N_16DatLogEPKcS1_)	
+__ZZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_E5cache	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW local:060ec47ea999  (named __ZZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_E5cache)	
+__ZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:3cbc1a3ff508  (named __ZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_)	
+__ZN12_GLOBAL__N_16g_takeE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:3e8eec7f29dd  (named __ZN12_GLOBAL__N_16g_takeE)	
+__ZN12_GLOBAL__N_113CacheSelfTestEv	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW local:ab0d88a86286  (named __ZN12_GLOBAL__N_113CacheSelfTestEv)	
+LoadDatFile	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER LoadDatFile  first at instruction 14: 'cmp byte ptr [rip - 1], 1 @r4:local#5b5d7263536a' -> 'cmp byte ptr [rip - 1], 1 @r4:_ZN8dat_load8g_datlogE'	
+_Z14DatLoad_Injectv	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER _Z14DatLoad_Injectv  first at instruction 11: 'lea rsi, [rip] @r4:local#5b5d7263536a' -> 'lea rsi, [rip] @r4:_ZN8dat_load6g_langE'	
+_Z22DatLoad_OptLayerChunksPKcPFvPvRKN9dat_cache5ChunkEPhE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): DIFFER _Z22DatLoad_OptLayerChunksPKcPFvPvRKN9dat_cache5ChunkEPhE  first at instruction 14: 'cmp byte ptr [rip - 1], 1 @r4:local#5b5d7263536a' -> 'cmp byte ptr [rip - 1], 1 @r4:_ZN8dat_load8g_datlogE'	
+_ZN8dat_load11g_opt_countE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load11g_opt_countE  (bss)	
+_ZN8dat_load13g_lang_cachedE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load13g_lang_cachedE  (bss)	
+_ZN8dat_load19g_walking_opt_layerE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load19g_walking_opt_layerE  (bss)	
+_ZN8dat_load6g_langE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load6g_langE  (bss)	
+_ZN8dat_load6g_takeE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load6g_takeE  (data)	
+_ZN8dat_load8g_datlogE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW _ZN8dat_load8g_datlogE  (bss)	
+_ZN12_GLOBAL__N_119g_desert_directionsE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:3631e62118ff  (named _ZN12_GLOBAL__N_119g_desert_directionsE)	
+_ZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:3958311097b9  (named _ZN12_GLOBAL__N_111WalkOverlayEPKcS1_bS1_S1_)	
+_ZN12_GLOBAL__N_19TakeChunkEPvRKN9dat_cache5ChunkEPh	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): NEW local:70f7d6f97dc1  (named _ZN12_GLOBAL__N_19TakeChunkEPvRKN9dat_cache5ChunkEPh)	
+_ZN12_GLOBAL__N_16g_takeE	data-layout	B0 promotion of dat_load.cpp's eleven variables (g_lang .. g_datlog_index): GONE local:a2ad19940b53  (named _ZN12_GLOBAL__N_16g_takeE)	

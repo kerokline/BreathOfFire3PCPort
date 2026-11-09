@@ -30,3 +30,17 @@ const unsigned char* DatLoad_ReadingRow(std::uint32_t tag, std::uint32_t half, s
 // the one it replaced, kept one load longer so an open box never walks freed
 // memory): the message the box's base points at is annotated.
 bool DatLoad_ReadingRowHolds(const unsigned char* p);
+
+namespace dat_load {
+extern char g_lang[8];   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern char g_opt[16][24];   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern int g_opt_count;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_lang_cached;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_opt_cached[16];   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern dat_cache::ChunkFn g_take;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_area_block_loaded;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_walking_opt_layer;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_datlog;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern const void* g_datlog_caller;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern int g_datlog_index;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace dat_load
