@@ -123,7 +123,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
-unsigned char* Ptr(std::uint32_t at) { return menu_windows::At(static_cast<std::uint32_t>(Long(menu_windows::At(at)))); }
+unsigned char* Ptr(std::uint32_t at) { return menu_windows::At(static_cast<std::uint32_t>(move_script::Long(menu_windows::At(at)))); }
 
 // rv::As<records::WindowRecord>(p) views a window record
 // (docs/typed-records.md; WindowRecords
@@ -188,7 +188,7 @@ extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
     const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, menu_windows::g.msg_system_ptr(id));
     Msgbox_Base = Addr(text);
     MenuWindows_ListText = Addr(text);
-    SetWord(menu_windows::At(::bof3::Img(at::kMessage.v)), id);
+    move_script::SetWord(menu_windows::At(::bof3::Img(at::kMessage.v)), id);
     menu_windows::g.msgbox_reset();
 }
 
@@ -313,9 +313,9 @@ extern "C" void __cdecl Window_Kind2List() {
         const unsigned set = MenuWindows_ListSet;
         const unsigned char* const record = Ptr(::bof3::Img(at::kCurrent.v));
         const unsigned char* const xy = menu_windows::At(::bof3::Img(at::kSetXY.v) + set * 6);
-        const auto dy = static_cast<std::uint16_t>(Word(xy + 4) * static_cast<std::uint16_t>(i));
-        const auto y = static_cast<std::uint16_t>(dy + (S16MenuWindows(rv::As<records::WindowRecord>(record)->y) >> 4) + Word(xy + 2));
-        const auto x = static_cast<std::uint16_t>((S16MenuWindows(rv::As<records::WindowRecord>(record)->x) >> 4) + Word(xy));
+        const auto dy = static_cast<std::uint16_t>(move_script::Word(xy + 4) * static_cast<std::uint16_t>(i));
+        const auto y = static_cast<std::uint16_t>(dy + (S16MenuWindows(rv::As<records::WindowRecord>(record)->y) >> 4) + move_script::Word(xy + 2));
+        const auto x = static_cast<std::uint16_t>((S16MenuWindows(rv::As<records::WindowRecord>(record)->x) >> 4) + move_script::Word(xy));
         text = menu_windows::g.text_immediate(x, y, text);
         ++i;
         if (i > MenuWindows_ListCount) break;

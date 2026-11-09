@@ -53,7 +53,7 @@ constexpr U kEffectStrideRest1f = 0x80;
 // kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char& CellRest1f(unsigned i) { return At(::bof3::Img(kCells.v))[i & 0xFF]; }
+unsigned char& CellRest1f(unsigned i) { return move_script::At(::bof3::Img(kCells.v))[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
@@ -821,7 +821,7 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
     const unsigned char* c = Sc();
     const unsigned char facing = c[8];
     if (rv::As<records::PartyMember>(c)->x_frac == 0 && rv::As<records::PartyMember>(c)->z_frac == 0) return 1;
-    const unsigned char* const offsets = At(::bof3::Img(kCellOffsets.v)) + static_cast<unsigned>(facing) * 2u;
+    const unsigned char* const offsets = move_script::At(::bof3::Img(kCellOffsets.v)) + static_cast<unsigned>(facing) * 2u;
     const auto ox = static_cast<signed char>(offsets[0]);
     const auto oz = static_cast<signed char>(offsets[1]);
     const std::uint16_t dx = ox == 1 ? 2 : static_cast<std::uint16_t>(static_cast<short>(ox));

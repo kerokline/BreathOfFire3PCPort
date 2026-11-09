@@ -99,18 +99,18 @@ void CopyActor(unsigned char* to, const unsigned char* from) { std::memcpy(to, f
 // original jumps (a tail call); the handler's eax is not kept, which no caller
 // reads (docs/field-event.md, section 1).
 extern "C" void __cdecl Field_LeaderFrame(void) {
-    g.restore_clut();
+    field_event::g.restore_clut();
     unsigned char* const timer = move_script::At(::bof3::Img(EventOps_BlockByte_addr));
     if (*timer != 0) *timer = static_cast<unsigned char>(*timer - 1);
-    g.copy_input();
-    Dispatch(g.leader_states, rv::Current<records::PartyMember>()->state);
+    field_event::g.copy_input();
+    Dispatch(field_event::g.leader_states, rv::Current<records::PartyMember>()->state);
 }
 
 // original 0x52D920, the leader's state 0 (PSX 0x801B1164): its counters
 // cleared, grounded, and on to state 1 with its standing animation - or to
 // state 0xC (Field_InputFlags bit 0x20) or 0xD (area 0xBD).
 extern "C" void __cdecl Field_LeaderStart(void) {
-    g.clear_steps();
+    field_event::g.clear_steps();
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_18, 0);
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_1c, 0);
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_20, 0);
@@ -122,7 +122,7 @@ extern "C" void __cdecl Field_LeaderStart(void) {
     {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
         const long z = c->z, x = c->x;
-        const long ground = g.ground_at(x, z);
+        const long ground = field_event::g.ground_at(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
     }
     Field_State[0x128] = 3;
@@ -142,7 +142,7 @@ extern "C" void __cdecl Field_LeaderStart(void) {
         rv::Current<records::PartyMember>()->step = 0;
         return;
     }
-    g.leader_animation(rv::Current<records::PartyMember>()->direction);
+    field_event::g.leader_animation(rv::Current<records::PartyMember>()->direction);
     rv::Current<records::PartyMember>()->state = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state + 1);
     rv::Current<records::PartyMember>()->step = 0;
 }
@@ -154,8 +154,8 @@ extern "C" void __cdecl Field_LeaderStart(void) {
 // above reach the .data after the table); Sprite_ScriptTick is a tail jump,
 // whose al the original returns and no caller reads.
 extern "C" void __cdecl Field_LeaderControl(void) {
-    Dispatch(g.control_states, rv::Current<records::PartyMember>()->step);
-    g.script_tick();
+    Dispatch(field_event::g.control_states, rv::Current<records::PartyMember>()->step);
+    field_event::g.script_tick();
 }
 
 // original 0x52DA70, sub-state 0 of state 1 (PSX 0x801B1364): the leader
@@ -169,9 +169,9 @@ extern "C" void __cdecl Field_LeaderStand(void) {
     if (Field_ScriptFlags & 0x100) return;
     if (Field_ScriptFlags2 & 0x40) return;
     if (Field_Request == 5) return;
-    if (g.test_535120(1)) return;
-    if (g.test_535240(1)) return;
-    if (g.test_5301f0()) {
+    if (field_event::g.test_535120(1)) return;
+    if (field_event::g.test_535240(1)) return;
+    if (field_event::g.test_5301f0()) {
         Field_State[0x136] = 0;
         return;
     }
@@ -179,14 +179,14 @@ extern "C" void __cdecl Field_LeaderStand(void) {
         records::PartyMember* const state = rv::As<records::PartyMember>(Field_State);
         if (!(Field_ActorStates[state->char_index * kActorBytes] & 0x20)) rv::Bytes(state)[0x136] = 0;
     }
-    for (auto* const test : g.tests)
+    for (auto* const test : field_event::g.tests)
         if (test()) return;
     if (Field_InputHeld == 0) return;
-    g.walk();
+    field_event::g.walk();
     Sprite_Current[7] = 0;
     Sprite_Current[0xA] = 2;
     Sprite_Current[0xB] = 0;
-    g.leader_animation(rv::Current<records::PartyMember>()->direction);
+    field_event::g.leader_animation(rv::Current<records::PartyMember>()->direction);
     rv::Current<records::PartyMember>()->states[1] = 1;
 }
 
@@ -203,9 +203,9 @@ extern "C" void __cdecl Field_LeaderStand(void) {
 // whatever ecx held (second); 0x589330 compares al and hands eax to
 // Sprite_SetAnimation, typed as a byte - unchecked past that.
 extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
-    if (!(Field_InputFlags & 1)) return g.set_animation(animation);
+    if (!(Field_InputFlags & 1)) return field_event::g.set_animation(animation);
     const unsigned char* const pair = move_script::At(::bof3::Img(at::kAnimationRemap)) + (animation & 0xFF) * 2u;
-    g.set_animation(pair[0]);
+    field_event::g.set_animation(pair[0]);
     unsigned char* const c = Sprite_Current;
     c[0x2A] = pair[1];
     return static_cast<unsigned char>(Address(c));
@@ -247,7 +247,7 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
         move_script::SetWord(counter, 0);
         return;
     }
-    const unsigned char* const zone = g.zone_at(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]);
+    const unsigned char* const zone = field_event::g.zone_at(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]);
     const unsigned char* const bases = move_script::At(::bof3::Img(at::kZoneBases));
     unsigned char value = bases[zone[4] * 2u];
     if (value == 0) {
@@ -262,17 +262,17 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
             return;
         }
     }
-    unsigned char roll = static_cast<unsigned char>(g.rand() & 0x1F);
+    unsigned char roll = static_cast<unsigned char>(field_event::g.rand() & 0x1F);
     const unsigned char most = bases[zone[4] * 2u + 1];
     if (roll > most) roll = most;
     value = static_cast<unsigned char>(value + roll);
-    const unsigned members = static_cast<unsigned char>(g.party_count(0));
+    const unsigned members = static_cast<unsigned char>(field_event::g.party_count(0));
     unsigned i = 0;
     for (; i < members; ++i)
-        if (g.has_item(ObjTrio[i].char_index, 3, 0x15)) break;
+        if (field_event::g.has_item(ObjTrio[i].char_index, 3, 0x15)) break;
     if (i < members) value = (field_event::g_mantle_cap && value >= 0x80) ? 0xFF : static_cast<unsigned char>(value << 1);
     for (i = 0; i < members; ++i)
-        if (g.has_item(ObjTrio[i].char_index, 3, 0x14)) break;
+        if (field_event::g.has_item(ObjTrio[i].char_index, 3, 0x14)) break;
     if (i < members) value = static_cast<unsigned char>(value >> 1);
     move_script::SetWord(counter, value);
 }
@@ -397,8 +397,8 @@ extern "C" void __cdecl MapView_CheckHeightScale(void) {
 // original 0x572570 (PSX 0x801559E4): the ground at (x, z), with the height
 // scale set for the call and cleared after it.
 extern "C" long __cdecl MapView_GroundAt(long x, long z) {
-    g.height_check();
-    const long ground = g.elevation(x, z);
+    field_event::g.height_check();
+    const long ground = field_event::g.elevation(x, z);
     MapView_HeightScale = 0;
     return ground;
 }
@@ -408,7 +408,7 @@ extern "C" long __cdecl MapView_GroundAt(long x, long z) {
 extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
     for (unsigned i = 0; i < 32; ++i)
         if (static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
-            g.tint_release(static_cast<unsigned char>(i));
+            field_event::g.tint_release(static_cast<unsigned char>(i));
 }
 
 // --- the party's placement ---------------------------------------------------
@@ -428,7 +428,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     unsigned char column = 0;
     while (row[column] != member)
         if (++column >= 3) break;
-    g.release_tint(Sprite_Current);
+    field_event::g.release_tint(Sprite_Current);
     move_script::SetWord(Sprite_Current + 0x2C, column);
     {
         unsigned char* const c = Sprite_Current;
@@ -454,7 +454,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;
     Sprite_Current[0x5C] = 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + slot * 64u)), 0);
+    field_event::g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + slot * 64u)), 0);
 }
 
 // original 0x533CE0 (PSX 0x801C23F8): Field_MemberCount members from the
@@ -467,7 +467,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
 // -4 and -8 are pushed as dwords, and Sprite_SetTint reads them as bytes.
 extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
     const unsigned slot = slot_arg & 0xFF;
-    if (Field_Request != 6) g.clear_all();
+    if (Field_Request != 6) field_event::g.clear_all();
     if (Field_MemberCount == 0) return;
     const unsigned char* const list = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2) + slot * 3u;
     for (unsigned i = 0;;) {
@@ -476,7 +476,7 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
         Sprite_Current = rv::Bytes(m);
         m->flags = 1;
         rv::Current<records::PartyMember>()->actor = static_cast<unsigned char>(i);
-        g.member_sprite(list[i], i);
+        field_event::g.member_sprite(list[i], i);
         Sprite_Current[0x48] = 0;
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_x, 0x10000);
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_y, 0x10000);
@@ -485,9 +485,9 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
         CopyActor(rv::Bytes(m) + 0x80, Actor(actor));
         rv::Bytes(m)[0x138] = static_cast<unsigned char>(rv::Bytes(m)[0x138] & 0xFE);
         if (slot != 0) {
-            if (Field_ActorStates[m->char_index * kActorBytes] & 0x80) g.set_tint(Sprite_Current, 0xFC, 0xF8, 0, 0);
+            if (Field_ActorStates[m->char_index * kActorBytes] & 0x80) field_event::g.set_tint(Sprite_Current, 0xFC, 0xF8, 0, 0);
         } else {
-            g.member_timers();
+            field_event::g.member_timers();
         }
         ++i;
         if (i >= Field_MemberCount) break;
@@ -522,7 +522,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
             }
         }
         m->direction = d;
-        const long ground = g.ground_at(m->x, m->z);
+        const long ground = field_event::g.ground_at(m->x, m->z);
         m->height_whole = static_cast<std::uint16_t>(ground);
         if (i != 0)
             m->flags = static_cast<unsigned char>(m->flags | 0x40);
@@ -552,13 +552,13 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         if (!(input & 9) && area != 0xBD && area != 0xBB) {
             if (!(input & 0x40))
                 whole_party = true;
-            else if (g.flags_test(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x77))
+            else if (field_event::g.flags_test(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x77))
                 whole_party = true;
         }
     }
     if (!whole_party) {
         // The leader alone.
-        const unsigned count = static_cast<unsigned char>(g.party_count(0));
+        const unsigned count = static_cast<unsigned char>(field_event::g.party_count(0));
         const unsigned char* const list = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
         for (unsigned i = 0; i < count; ++i) {
             unsigned char* const word = Field_ActorStates + Character_IndexById[list[i]] * kActorBytes;
@@ -582,29 +582,29 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         if (input & 1) {
             const unsigned char who = Actor(0)[9];
             if (who == 0)
-                g.set_bank(0x52);
+                field_event::g.set_bank(0x52);
             else if (who == 9)
-                g.set_bank(0xCB);
+                field_event::g.set_bank(0xCB);
             else if (who == 7)
-                g.set_bank(0x27A);
+                field_event::g.set_bank(0x27A);
             Sprite_Current[0x24] = 0;
             *(reinterpret_cast<unsigned char*>(&Field_ScriptFlags) + 1) |= 0x10;
         } else if (input & 8) {
-            g.set_bank(Actor(0)[9] == 0 ? 0x47 : 0x1FD);
+            field_event::g.set_bank(Actor(0)[9] == 0 ? 0x47 : 0x1FD);
             Sprite_Current[0x2A] = 0;
             Sprite_Current[0x24] = 0;
         } else if (input & 0x40) {
-            g.member_sprite(Actor(0)[9], 0);
+            field_event::g.member_sprite(Actor(0)[9], 0);
         } else if (Game_AreaNumber == 0xBD) {
             ObjTrio[0].key_class = 0;
             ObjTrio[0].reach = 0;
         }
     } else {
         // The whole party.
-        const auto count = static_cast<unsigned char>(g.party_count(0));
+        const auto count = static_cast<unsigned char>(field_event::g.party_count(0));
         Field_MemberCount = count;
         if (!(Field_ScriptFlags2 & 0x8000)) {
-            g.party_load(0);
+            field_event::g.party_load(0);
         } else if (count != 0) {
             for (unsigned i = 0;;) {
                 records::PartyMember* const m = rv::As<records::PartyMember>(Member(i));
@@ -619,12 +619,12 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                 m->char_index = actor;
                 CopyActor(rv::Bytes(m) + 0x80, Actor(actor));
                 if (!(Sprite_Current[0x24] & 1)) {
-                    g.member_sprite(id, i);
+                    field_event::g.member_sprite(id, i);
                 } else {
-                    g.member_sprite(id, i);
-                    g.release_tint(Sprite_Current);
+                    field_event::g.member_sprite(id, i);
+                    field_event::g.release_tint(Sprite_Current);
                     Sprite_Current[0x27] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->actor + 0x78);
-                    g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Current<records::PartyMember>()->actor * 64u)), 0);
+                    field_event::g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Current<records::PartyMember>()->actor * 64u)), 0);
                 }
                 ++i;
                 if (i >= Field_MemberCount) break;
@@ -645,9 +645,9 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         return;
     }
     if (Field_ScriptFlags & 0x800)
-        g.position_alt(x, z, flags);
+        field_event::g.position_alt(x, z, flags);
     else
-        g.position(x, z, flags);
+        field_event::g.position(x, z, flags);
     const long leader_x = ObjTrio[0].x, leader_z = ObjTrio[0].z;
     Field_Kind2X = leader_x;
     Field_Kind2Z = leader_z;
@@ -667,7 +667,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xBFFF);
         return;
     }
-    g.clear_active();
+    field_event::g.clear_active();
     const unsigned char input = Field_InputFlags;
     const unsigned char count = Field_MemberCount;
     if (input & 8) {
@@ -683,9 +683,9 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
                 Field_State = rv::Bytes(m);
                 Sprite_Current = rv::Bytes(m);
                 if (slot == 0)
-                    g.leader_frame();
+                    field_event::g.leader_frame();
                 else
-                    g.member_frame();
+                    field_event::g.member_frame();
             }
             ++i;
             if (i >= Field_MemberCount) break;
@@ -701,7 +701,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
 // loading it).
 extern "C" void __cdecl Field_PendingJump(void) {
     if (EventLeader_PendingFlag == 0) return;
-    Dispatch(g.pending_jumps, *move_script::At(::bof3::Img(EventLeader_PendingFlag_addr) + 1));
+    Dispatch(field_event::g.pending_jumps, *move_script::At(::bof3::Img(EventLeader_PendingFlag_addr) + 1));
 }
 
 // original 0x533EF0 (PSX 0x801C2874): member `member` joins the party as
@@ -715,7 +715,7 @@ extern "C" void __cdecl Field_PendingJump(void) {
 // 24 entries.
 extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     const auto member = static_cast<unsigned char>(member_arg);
-    g.join_reset();
+    field_event::g.join_reset();
     const unsigned char* const actor_of = Character_IndexById + member;
     unsigned char* const joined = Actor(*actor_of) + 0xB;
     *joined = static_cast<unsigned char>(*joined | 1);
@@ -727,11 +727,11 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     Cond_Flags[0xd2 + n] = member;
     Cond_Flags[0xd2 + n + 3] = member;
     Member(n)[0] = 1;
-    g.clear_state(n);
+    field_event::g.clear_state(n);
     unsigned char* const slot = Member(Field_MemberCount);
     Sprite_Current = slot;
     slot[0x24] = 1;
-    g.member_sprite(member, Field_MemberCount);
+    field_event::g.member_sprite(member, Field_MemberCount);
     const unsigned char actor = *actor_of;
     const unsigned char count = Field_MemberCount;
     CopyActor(Member(count) + 0x80, Actor(actor));

@@ -75,7 +75,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
-unsigned char* Window(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowStride); }
+unsigned char* Window(unsigned slot) { return move_script::At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowStride); }
 char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
@@ -89,11 +89,11 @@ void Put(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 void ShadeColour(unsigned char* p, unsigned row) {
     const auto entry = [row]() {
         const std::int32_t colour = Config_WindowColour;
-        return At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x208 + static_cast<std::uint32_t>((static_cast<std::int32_t>(row) + colour * 2) << 5));
+        return move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x208 + static_cast<std::uint32_t>((static_cast<std::int32_t>(row) + colour * 2) << 5));
     };
     p[4] = static_cast<unsigned char>((entry()[0] & 0x1F) << 3);
-    p[5] = static_cast<unsigned char>(((Word(entry()) >> 5) & 0x1F) << 3);
-    p[6] = static_cast<unsigned char>(((Word(entry()) >> 10) & 0x1F) << 3);
+    p[5] = static_cast<unsigned char>(((move_script::Word(entry()) >> 5) & 0x1F) << 3);
+    p[6] = static_cast<unsigned char>(((move_script::Word(entry()) >> 10) & 0x1F) << 3);
 }
 
 }  // namespace
@@ -113,10 +113,10 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
     unsigned char* const w = Window(1);
     auto* const win = rv::As<records::WindowRecord>(w);
     win->state = static_cast<unsigned char>(state);
-    const unsigned size = At(::bof3::Img(at::kPartyCount.v))[0];
+    const unsigned size = move_script::At(::bof3::Img(at::kPartyCount.v))[0];
     w[0xA] = static_cast<unsigned char>(size);
     win->kind = 0;
-    win->x = At(::bof3::Img(at::kStatusX.v) + size)[0];
+    win->x = move_script::At(::bof3::Img(at::kStatusX.v) + size)[0];
     win->y = 0xF0;
     w[8] = 0;
     w[9] = 0;
@@ -203,16 +203,16 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
 extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_poly_f4(p);
-    const unsigned char* const t = At(::bof3::Img(at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
+    const unsigned char* const t = move_script::At(::bof3::Img(at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
     const std::int32_t sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), sy = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
-    Put(p + 0x08, F(Word(t + 0x0) + sx));
-    Put(p + 0x0C, F(Word(t + 0x2) + sy));
-    Put(p + 0x14, F(Word(t + 0x4) + sx));
-    Put(p + 0x18, F(Word(t + 0x6) + sy));
-    Put(p + 0x20, F(Word(t + 0x8) + sx));
-    Put(p + 0x24, F(Word(t + 0xA) + sy));
-    Put(p + 0x2C, F(Word(t + 0xC) + sx));
-    Put(p + 0x30, F(Word(t + 0xE) + sy));
+    Put(p + 0x08, F(move_script::Word(t + 0x0) + sx));
+    Put(p + 0x0C, F(move_script::Word(t + 0x2) + sy));
+    Put(p + 0x14, F(move_script::Word(t + 0x4) + sx));
+    Put(p + 0x18, F(move_script::Word(t + 0x6) + sy));
+    Put(p + 0x20, F(move_script::Word(t + 0x8) + sx));
+    Put(p + 0x24, F(move_script::Word(t + 0xA) + sy));
+    Put(p + 0x2C, F(move_script::Word(t + 0xC) + sx));
+    Put(p + 0x30, F(move_script::Word(t + 0xE) + sy));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
     ShadeColour(p, row);
     battle_window_draw::g.set_semi(p, row);
@@ -226,13 +226,13 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
 extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_tile(p);
-    const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    const unsigned char* const t = move_script::At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(move_script::Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
     Put(p + 0x0C, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
     Put(p + 0x14, F(w));
-    Put(p + 0x18, F(Word(t + 2)));
+    Put(p + 0x18, F(move_script::Word(t + 2)));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
     ShadeColour(p, row);
     battle_window_draw::g.set_semi(p, row);
@@ -245,13 +245,13 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
 extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour, int abe) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_tile(p);
-    const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    const unsigned char* const t = move_script::At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(move_script::Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
     Put(p + 0x0C, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
     Put(p + 0x14, F(w));
-    Put(p + 0x18, F(Word(t + 2)));
+    Put(p + 0x18, F(move_script::Word(t + 2)));
     const auto c = static_cast<std::uint32_t>(colour);
     p[4] = static_cast<unsigned char>(((c >> 10) & 0x1F) << 3);
     p[5] = static_cast<unsigned char>(((c >> 5) & 0x1F) << 3);
@@ -431,7 +431,7 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
         if (win->state != 2 && win->state != 3) {
             const std::int32_t index = static_cast<std::int32_t>(w[0xA]) - 3;
             const std::uint32_t at = ::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
-            if (At(at)[0] == kind) return 0;
+            if (move_script::At(at)[0] == kind) return 0;
         }
         --k;
     } while (k > found);
@@ -515,7 +515,7 @@ extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kin
 // As the original has it: the scan runs to 10 and would answer 10, which the
 // mask makes unreachable.
 extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
-    const unsigned flags = Word(At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x14));
+    const unsigned flags = move_script::Word(move_script::At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x14));
     if ((flags & 0x1FF) == 0) return 0;
     unsigned bit = 1;
     unsigned char n = 1;
@@ -535,8 +535,8 @@ extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
 extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsigned battle) {
     const unsigned m = member & 0xFF;
     const unsigned char* const r =
-        (battle & 0xFF) == 0 ? At(::bof3::Img(CharacterRecords_addr) + m * at::kCharStride) : At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
-    const unsigned cost = At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
+        (battle & 0xFF) == 0 ? move_script::At(::bof3::Img(CharacterRecords_addr) + m * at::kCharStride) : move_script::At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
+    const unsigned cost = move_script::At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
     const unsigned char a = r[0x16];
     if (a == 0x1A) return static_cast<unsigned char>((cost + 1) >> 1);
     const unsigned char b = r[0x17];
@@ -556,10 +556,10 @@ extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsi
 extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned type, unsigned battle) {
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
-        const unsigned character = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + (member & 0xFF))[0];
-        r = At(::bof3::Img(CharacterRecords_addr) + At(::bof3::Img(Character_IndexById_addr) + character)[0] * at::kCharStride);
+        const unsigned character = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2 + (member & 0xFF))[0];
+        r = move_script::At(::bof3::Img(CharacterRecords_addr) + move_script::At(::bof3::Img(Character_IndexById_addr) + character)[0] * at::kCharStride);
     } else {
-        r = At(::bof3::Img(at::kWorking.v) + (member & 0xFF) * at::kWorkingStride);
+        r = move_script::At(::bof3::Img(at::kWorking.v) + (member & 0xFF) * at::kWorkingStride);
     }
     switch (type & 0xFF) {
     case 1: return r + 0x6A;

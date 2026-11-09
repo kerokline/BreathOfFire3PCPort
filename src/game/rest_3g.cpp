@@ -60,8 +60,8 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-U ULRest3g(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U ULRest3g(U a) { return ULRest3g(At(a)); }
+U ULRest3g(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
+U ULRest3g(U a) { return ULRest3g(move_script::At(a)); }
 void SetULRest3g(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetULRest3g(U a, U v) { SetULRest3g(At(a), v); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
@@ -416,10 +416,10 @@ extern "C" void __cdecl GameMode8_Enter(void) {
     SH_CALL(AreaMap_Frame)();
     SH_CALL(Field_DrawFrame)();
     alignas(4) unsigned char rect[8];
-    SetWord(rect, 0);
-    SetWord(rect + 2, static_cast<U>(Gfx_BufferIndex) * 0xF0u + 0x50u);
-    SetWord(rect + 4, 0x40);
-    SetWord(rect + 6, 0x78);
+    move_script::SetWord(rect, 0);
+    move_script::SetWord(rect + 2, static_cast<U>(Gfx_BufferIndex) * 0xF0u + 0x50u);
+    move_script::SetWord(rect + 4, 0x40);
+    move_script::SetWord(rect + 6, 0x78);
     SH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, rect, 0x340, 0x100);
     SH_CALL(Gfx_CommitPrim)(5, 0x18);
     SH_CALL(GameMode8_Frame)();
@@ -452,7 +452,7 @@ void LoadBank() {
 extern "C" void __cdecl GameMode8_Leave(void) {
     {
         const unsigned char was = AreaW0b_PartySet;
-        At(::bof3::Img(Field_ScriptFlags2_addr))[0] = static_cast<unsigned char>(At(::bof3::Img(Field_ScriptFlags2_addr))[0] | 0x40);
+        move_script::At(::bof3::Img(Field_ScriptFlags2_addr))[0] = static_cast<unsigned char>(move_script::At(::bof3::Img(Field_ScriptFlags2_addr))[0] | 0x40);
         const unsigned char b = static_cast<unsigned char>(was | 0x80);
         AreaW0b_PartySet = b;
         SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
@@ -551,7 +551,7 @@ extern "C" void __cdecl GameMode11_Look(void) {
 extern "C" void __cdecl GameMode11_LookEnd(void) {
     SH_CALL(Look_Return)();
     SH_CALL(Mode11_FieldFrame)();
-    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) Game_Step = 0;
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && move_script::Word(move_script::At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) Game_Step = 0;
 }
 
 // ===========================================================================

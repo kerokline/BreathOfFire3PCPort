@@ -60,8 +60,8 @@ S32Rest3d S16Rest3d(U v) { return static_cast<std::int16_t>(static_cast<std::uin
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
 U PartyAt(U actor) { return ::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride; }
 U EnemyAt(U actor) { return ::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
-unsigned char* PartyRest3d(U actor) { return At(PartyAt(actor)); }
-unsigned char* EnemyRest3d(U actor) { return At(EnemyAt(actor)); }
+unsigned char* PartyRest3d(U actor) { return move_script::At(PartyAt(actor)); }
+unsigned char* EnemyRest3d(U actor) { return move_script::At(EnemyAt(actor)); }
 
 // The party size 0x904AB0 as slots 117's and 118's write loops read it: past
 // ObjTrio's three the original writes on into WindowRecords; ours aborts, as
@@ -80,7 +80,7 @@ unsigned PartySizeForWrite(const char* who) {
 unsigned char* Hp(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x98 : EnemyRest3d(actor) + 0xA4; }
 unsigned char* Flags(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x130 : EnemyRest3d(actor) + 0x110; }
 unsigned char* Flags2(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x134 : EnemyRest3d(actor) + 0x114; }
-void OrLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) | bits)); }
+void OrLong(unsigned char* p, U bits) { move_script::SetLong(p, static_cast<S32Rest3d>(static_cast<U>(move_script::Long(p)) | bits)); }
 void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) & bits)); }
 
 unsigned char* Result() { return At(BattleDamage_Result); }
@@ -396,7 +396,7 @@ extern "C" unsigned char __cdecl Effect_RollInflict(unsigned status) { return Ro
 // A divisor of 0 faults in the original (idiv): ours aborts. Its callers pass
 // 1, 2 and 3 (R3C's slots 64..66 pass 3, 1, 2).
 extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
-    const U hp = Word(Hp(Actor()));
+    const U hp = move_script::Word(Hp(Actor()));
     const U mask = AbilityMask();
     S32Rest3d affinity = 100;
     if (mask & 0x1F) affinity = S16Rest3d(static_cast<U>(BH_CALL(Battle_ElementAffinity)(Target(), mask)));
@@ -407,7 +407,7 @@ extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
     const S32Rest3d quotient = static_cast<S32Rest3d>(hp) / divisor;
     const S32Rest3d product = static_cast<S32Rest3d>(static_cast<U>(variance) * static_cast<U>(quotient) * static_cast<U>(affinity));
     S32Rest3d v = product / 10000;
-    if (static_cast<U>(Long(Flags(Target()))) & 0x10000) v = static_cast<S32Rest3d>(static_cast<U>(v) & 0xFFFF0000u);
+    if (static_cast<U>(move_script::Long(Flags(Target()))) & 0x10000) v = static_cast<S32Rest3d>(static_cast<U>(v) & 0xFFFF0000u);
     return v;
 }
 

@@ -108,10 +108,10 @@ void StepRest2h(const char* who, U table, unsigned entries) {
 // re-read 0x905B84 between the stores with nothing called in between.
 void Slide(unsigned at_word, int by, short bound, bool below, short to) {
     unsigned char* const w = RecRest2h();
-    SetWord(w + at_word, static_cast<unsigned>(WordRest2h(w + at_word) + by));
+    move_script::SetWord(w + at_word, static_cast<unsigned>(WordRest2h(w + at_word) + by));
     const auto v = static_cast<short>(WordRest2h(w + at_word));
     if (below ? v < bound : v > bound) {
-        SetWord(w + at_word, static_cast<std::uint16_t>(to));
+        move_script::SetWord(w + at_word, static_cast<std::uint16_t>(to));
         w[3] = 0;
     }
 }
@@ -715,7 +715,7 @@ extern "C" void __cdecl BattleEquipWin_DrawBar(int x, int y, unsigned u, unsigne
     PutFloat(p + 0xC, static_cast<std::int32_t>(static_cast<U>(y) & 0xFFFF));
     p[0x15] = static_cast<unsigned char>(v << 3);
     p[0x14] = static_cast<unsigned char>(u << 3);
-    SetWord(p + 0x16, clut);
+    move_script::SetWord(p + 0x16, clut);
     p[6] = p[5] = p[4] = static_cast<unsigned char>(shade);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0x18);

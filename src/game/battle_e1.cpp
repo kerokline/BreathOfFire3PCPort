@@ -60,11 +60,11 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& BBattleE1(U address) { return At(address)[0]; }
-U LBattleE1(U address) { return static_cast<U>(Long(At(address))); }
-unsigned char* PtrAtBattleE1(U address) { return At(LBattleE1(address)); }
+unsigned char& BBattleE1(U address) { return move_script::At(address)[0]; }
+U LBattleE1(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
+unsigned char* PtrAtBattleE1(U address) { return move_script::At(LBattleE1(address)); }
 unsigned char* Packet() { return Gfx_PacketNext; }
-unsigned char* Member(U index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
+unsigned char* Member(U index) { return move_script::At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
 unsigned short* Stat(U address) { return reinterpret_cast<unsigned short*>(At(address)); }
 unsigned Pressed() { return Input_Pressed; }
 // fild dword / fstp dword: the int to a float, nearest.
@@ -693,14 +693,14 @@ extern "C" void __cdecl BattleAction_Kind3Wait(void) {
 // al out.
 extern "C" unsigned char __cdecl BattleAction_PickRandomAbility(void) {
     unsigned char id = 0;
-    unsigned action = Word(At(::bof3::Img(at::kActionId.v)));
+    unsigned action = move_script::Word(move_script::At(::bof3::Img(at::kActionId.v)));
     if (action == 0x24) {
         id = BBattleE1(::bof3::Img(at::kRandomIds24.v) + (static_cast<U>(BH_CALL(Rand)()) & 0x1F));
-        action = Word(At(::bof3::Img(at::kActionId.v)));
+        action = move_script::Word(move_script::At(::bof3::Img(at::kActionId.v)));
     }
     if (action == 0x25 || action == 0x8C) id = BBattleE1(::bof3::Img(at::kRandomIds25.v) + (static_cast<U>(BH_CALL(Rand)()) & 0x1F));
     unsigned char* const record = PtrAtBattleE1(::bof3::Img(at::kActing2.v));
-    SetWord(At(::bof3::Img(at::kActionId.v)), id);
+    move_script::SetWord(move_script::At(::bof3::Img(at::kActionId.v)), id);
     const unsigned char flags = BBattleE1(::bof3::Img(bof3::addr::NameTable_Abilities) + 24u * id);
     rv::Store<unsigned>(rv::As<records::ActionRecord>(record)->action_id, id);  // 0x904B40: the acting block's action record
     const bool party = BBattleE1(::bof3::Img(at::kActor.v)) <= 2;
@@ -732,23 +732,23 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
             ++slot;
             BossSb_Countdown = slot;
             const U id = rv::As<records::ActionRecord>(record)->action_id;  // 0x904B40: the acting block's action record
-            const bool learns = (Word(At(::bof3::Img(0x65C4DC) + 24 * id)) & 0x200) != 0;
-            unsigned char* const flags = At(::bof3::Img(0x802D24) + slot * at::kMemberSize);
+            const bool learns = (move_script::Word(move_script::At(::bof3::Img(0x65C4DC) + 24 * id)) & 0x200) != 0;
+            unsigned char* const flags = move_script::At(::bof3::Img(0x802D24) + slot * at::kMemberSize);
             if (!(flags[0] & 8)) continue;
-            SetLong(flags, static_cast<std::int32_t>(static_cast<U>(Long(flags)) & ~8u));
+            move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<U>(move_script::Long(flags)) & ~8u));
             if (!learns) {
                 BH_CALL(BattleQueue_Push)(1, 0, Low32(BH_CALL(Msg_SystemPtr)(0x23)));
                 return;
             }
             BH_AT(void (__cdecl*)(unsigned), at::kBe4MemberName.v)(slot - 1u);
-            std::memset(At(::bof3::Img(bof3::addr::Text_Records) + 0x20), 0, 32);
+            std::memset(move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x20), 0, 32);
             const U enemy = static_cast<U>(BBattleE1(::bof3::Img(at::kActor.v))) - 3;
-            const U ability = Word(At(::bof3::Img(0x93BA66) + enemy * 0x128));
+            const U ability = move_script::Word(move_script::At(::bof3::Img(0x93BA66) + enemy * 0x128));
             const U from = ::bof3::Img(bof3::addr::Ability_Records) + 24 * ability;
-            SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x20), Long(At(from)));
-            SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x24), Long(At(from + 4)));
-            SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x28), Long(At(from + 8)));
-            SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x2C), Long(At(from + 0xC)));
+            move_script::SetLong(move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x20), move_script::Long(move_script::At(from)));
+            move_script::SetLong(move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x24), move_script::Long(move_script::At(from + 4)));
+            move_script::SetLong(move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x28), move_script::Long(move_script::At(from + 8)));
+            move_script::SetLong(move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x2C), move_script::Long(move_script::At(from + 0xC)));
             BH_CALL(BattleQueue_Push)(1, 0, Low32(BH_CALL(Msg_SystemPtr)(0x24)));
             return;
         } while (slot <= 2);
@@ -791,7 +791,7 @@ extern "C" void __cdecl BattleEnd_AwaitRestore(void) {
         auto* const member_rec = rv::As<records::PartyMember>(m);
         if (member_rec->flags & 1) {
             Sprite_Current = m;
-            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(member_rec->script_pos - 2), At(::bof3::Img(at::kAnimBuffer.v)), 0x1800);
+            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(member_rec->script_pos - 2), move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0x1800);
             count = BBattleE1(::bof3::Img(at::kPartyCount.v));
         }
         ++i;

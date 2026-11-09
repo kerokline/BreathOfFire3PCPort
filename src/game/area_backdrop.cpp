@@ -104,11 +104,11 @@ extern "C" void __cdecl AreaMap_DrawBackdrop(const unsigned char* entry) {
     if (static_cast<std::int32_t>((bounds >> 16) & 0xFFu) < fx) return;
     if (static_cast<std::int32_t>(bounds >> 24) < fz) return;
 
-    g.draw_mode(Gfx_PacketNext, 0, 1, 0x95, 0);
-    g.commit(7, 0xC);
+    area_backdrop::g.draw_mode(Gfx_PacketNext, 0, 1, 0x95, 0);
+    area_backdrop::g.commit(7, 0xC);
     unsigned char* const quad = Gfx_PacketNext;   // read again: the commit moved it
-    g.set_poly_g4(quad);
-    g.set_semi(quad, 0);
+    area_backdrop::g.set_poly_g4(quad);
+    area_backdrop::g.set_semi(quad, 0);
     // DIV-0041: (-53, 0)..(373, 240) under a wide picture, (0, 0)..(320, 240) otherwise.
     const float wide = static_cast<float>(Widescreen_Live());
     const float left = 0.0f - wide;   // not -wide, which is -0.0f when wide is 0
@@ -129,7 +129,7 @@ extern "C" void __cdecl AreaMap_DrawBackdrop(const unsigned char* entry) {
         quad[0x24 + shift] = bottom;
         quad[0x34 + shift] = bottom;
     }
-    g.commit(7, 0x44);
+    area_backdrop::g.commit(7, 0x44);
 }
 
 // original 0x4FD350 (read 2026-09-30): the screen-wide gradient of a colour
@@ -215,7 +215,7 @@ extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
 // or above f, so a list without one runs on (read, not run: the fuzz ends
 // every list with 0xFF).
 extern "C" void __cdecl AreaMap_TextureCycle(const unsigned char* entry) {
-    if (g.test(Word(entry + 4)) == 0) return;
+    if (area_backdrop::g.test(Word(entry + 4)) == 0) return;
     const unsigned frame = Frame_Counter % (entry[0] + 1u);
     const unsigned char* pair = entry + 8;
     while (static_cast<int>(frame) > static_cast<int>(pair[3])) pair += 8;
@@ -227,8 +227,8 @@ extern "C" void __cdecl AreaMap_TextureCycle(const unsigned char* entry) {
     SetWord(rect + 6, pair[6] + 1u);
     const std::uint32_t x = (((a >> 20) & 0xFu) << 7) + ((a >> 9) & 0x7Fu) + 0x140u;
     const std::uint32_t y = (a & 0xFFu) + 0x100u;
-    g.set_draw_move(Gfx_PacketNext, rect, x, y);
-    g.commit(6, 0x18);
+    area_backdrop::g.set_draw_move(Gfx_PacketNext, rect, x, y);
+    area_backdrop::g.commit(6, 0x18);
 }
 
 // original 0x571E20: AreaMap_EntryHandlers 3 (PSX FUN_801593FC) - draw-slot

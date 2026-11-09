@@ -60,7 +60,7 @@ using Handler = void (__cdecl*)();
 
 unsigned char* Cur() { return Sprite_Current; }
 U AddressOfFieldC1(const void* p) { return Low32(p); }
-U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U L(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 void SetL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
 short S16(U v) { return static_cast<short>(v & 0xFFFFu); }
@@ -71,7 +71,7 @@ std::int32_t Abs32(U v) { return static_cast<std::int32_t>(S32(v) < 0 ? 0u - v :
 // recorders); past the table's code the original jumps to what is not code.
 Handler Entry(U table, unsigned index, const char* who) {
     const U cell = table + 4u * index;
-    const U entry = L(At(cell));
+    const U entry = L(move_script::At(cell));
     // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
     // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
     if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
@@ -248,9 +248,9 @@ extern "C" void __cdecl EffectKind19_Run(void) { Entry(AddressOfFieldC1(EffectKi
 extern "C" void __cdecl EffectKind19_Tick(void) {
     Entry(AddressOfFieldC1(EffectKind19_Ticks), rv::As<records::EffectObject>(Cur())->param, "EffectKind19_Tick")();
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
-    o->screen_x = static_cast<std::uint16_t>(o->screen_x) + Word(rv::Bytes(o) + 0xC);
+    o->screen_x = static_cast<std::uint16_t>(o->screen_x) + move_script::Word(rv::Bytes(o) + 0xC);
     o = rv::As<records::EffectObject>(Cur());
-    o->screen_y = static_cast<std::uint16_t>(o->screen_y) - Word(rv::Bytes(o) + 0x10);
+    o->screen_y = static_cast<std::uint16_t>(o->screen_y) - move_script::Word(rv::Bytes(o) + 0x10);
 }
 
 // ============================================================================
@@ -264,7 +264,7 @@ extern "C" void __cdecl EffectKind04_HoldTick(void) {
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     const unsigned char left = o->timer;
     if (left == 0) {
-        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
+        SH_CALL(Flags_Clear)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
         SH_CALL(Effect_Release)();
         return;
     }
@@ -316,7 +316,7 @@ extern "C" void __cdecl CameraZoom_Step(void) {
 // original 0x46A0C0 (CameraZoom_States[2]; PSX 0x8019BD78): Camera_Distance = the word +0xC,
 // then a tail jump to CameraTurn_End.
 extern "C" void __cdecl CameraZoom_End(void) {
-    Camera_Distance = static_cast<short>(Word(Cur() + 0xC));
+    Camera_Distance = static_cast<short>(move_script::Word(Cur() + 0xC));
     SH_CALL(CameraTurn_End)();
 }
 
@@ -365,9 +365,9 @@ extern "C" void __cdecl EffectKind32_Arc(void) {
     const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(o->x, o->z)));
     o = rv::As<records::EffectObject>(Cur());
     if (ground >= static_cast<short>(o->height_whole) || (o->flags & 0x80) || o->state == 0) {
-        o->step_y = L(At(AddressOfFieldC1(EffectKind32_Hops) + 8u * o->step));
+        o->step_y = L(move_script::At(AddressOfFieldC1(EffectKind32_Hops) + 8u * o->step));
         o = rv::As<records::EffectObject>(Cur());
-        o->work_20 = L(At(AddressOfFieldC1(EffectKind32_Hops) + 4 + 8u * o->step));
+        o->work_20 = L(move_script::At(AddressOfFieldC1(EffectKind32_Hops) + 4 + 8u * o->step));
         o = rv::As<records::EffectObject>(Cur());
         o->state = static_cast<unsigned char>(o->state + 1);
         o = rv::As<records::EffectObject>(Cur());

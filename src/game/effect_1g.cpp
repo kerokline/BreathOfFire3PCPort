@@ -45,9 +45,9 @@ using move_script::SetWord;
 using move_script::Word;
 using U = std::uint32_t;
 
-unsigned char& B(U a) { return *At(a); }
-U L(U a) { return static_cast<U>(Long(At(a))); }
-std::uint16_t W(U a) { return Word(At(a)); }
+unsigned char& B(U a) { return *move_script::At(a); }
+U L(U a) { return static_cast<U>(move_script::Long(move_script::At(a))); }
+std::uint16_t W(U a) { return move_script::Word(move_script::At(a)); }
 U Key(const void* p) { return Low32(p); }
 void PutFloat(unsigned char* p, float f) { __builtin_memcpy(p, &f, 4); }
 
@@ -75,9 +75,9 @@ U CodeAt(U table, U index, const char* who) {
 U Record(U k) { return ::bof3::Img(at::kTradeRecords.v) + 8u * B(::bof3::Img(at::kTradeIndex.v) + k + 10u * AreaEntry_PendingFlags); }
 
 // A prompt: MessagePools + the u16 at `word`.
-const unsigned char* Pool(U word) { return At(::bof3::Img(bof3::addr::MessagePools) + W(word)); }
-char* NumberText() { return reinterpret_cast<char*>(At(::bof3::Img(at::kNumberText.v))); }
-const char* NumberFormat() { return reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))); }
+const unsigned char* Pool(U word) { return move_script::At(::bof3::Img(bof3::addr::MessagePools) + W(word)); }
+char* NumberText() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kNumberText.v))); }
+const char* NumberFormat() { return reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kNumberFormat.v))); }
 
 // E1B's frame of the trade screen, as every state draws it.
 void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
@@ -269,10 +269,10 @@ extern "C" void __cdecl ItemTrade_LeaveWait(void) {
 extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     unsigned char* rect = Gfx_PacketNext;
     Gfx_PacketNext = rect + 8;
-    SetWord(rect, ((Frame_Counter >> 4) & 3u) << 5);
-    SetWord(rect + 2, 0x80);
-    SetWord(rect + 6, 0x20);
-    SetWord(rect + 4, 0x20);
+    move_script::SetWord(rect, ((Frame_Counter >> 4) & 3u) << 5);
+    move_script::SetWord(rect + 2, 0x80);
+    move_script::SetWord(rect + 6, 0x20);
+    move_script::SetWord(rect + 4, 0x20);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
     const unsigned columns = Widescreen_Fill();
@@ -282,8 +282,8 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
         const effect_1g::BackdropSpan s = effect_1g::ItemTrade_BackdropSpan(quad, columns);
         const float x0 = s.x0, x1 = s.x1, y1 = 240.0f;
         PutFloat(prim + 8, x0);
-        SetWord(prim + 0x26, 0x95);
-        SetWord(prim + 0x16, 0x7A80);
+        move_script::SetWord(prim + 0x26, 0x95);
+        move_script::SetWord(prim + 0x16, 0x7A80);
         PutFloat(prim + 0xC, 0.0f);
         PutFloat(prim + 0x1C, 0.0f);
         PutFloat(prim + 0x18, x1);
@@ -306,10 +306,10 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     }
     rect = Gfx_PacketNext;
     Gfx_PacketNext = rect + 8;
-    SetWord(rect, 0);
-    SetWord(rect + 2, 0);
-    SetWord(rect + 6, 0x100);
-    SetWord(rect + 4, 0x100);
+    move_script::SetWord(rect, 0);
+    move_script::SetWord(rect + 2, 0);
+    move_script::SetWord(rect + 6, 0x100);
+    move_script::SetWord(rect + 4, 0x100);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
 }

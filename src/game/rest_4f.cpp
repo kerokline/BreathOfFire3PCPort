@@ -61,12 +61,12 @@ using Frame = void (__cdecl*)(int, int, int, int);
 using DrawText = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
 
 unsigned char* S() { return Sprite_Current; }
-unsigned char& BRest4f(U a) { return At(a)[0]; }
-U LRest4f(U a) { return static_cast<U>(Long(At(a))); }
+unsigned char& BRest4f(U a) { return move_script::At(a)[0]; }
+U LRest4f(U a) { return static_cast<U>(Long(move_script::At(a))); }
 std::int32_t SLRest4f(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-U WRest4f(U a) { return Word(At(a)); }
-void SetWRest4f(U a, U v) { SetWord(At(a), v); }
+U WRest4f(U a) { return move_script::Word(move_script::At(a)); }
+void SetWRest4f(U a, U v) { move_script::SetWord(move_script::At(a), v); }
 U Key(const void* p) { return Low32(p); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // Config_DrawControllerPanel's frame rows: the imm8 of its `push 0xF`
@@ -541,7 +541,7 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
         const U colour = (row & 0xFFFFFF00u) | (chosen == i ? 2u : 0u);
         const unsigned char n = BRest4f(rec);
         const U rx = static_cast<std::uint16_t>(static_cast<std::int16_t>(static_cast<signed char>(BRest4f(rec + 1))));
-        const unsigned char* const text = At(rec + 2);
+        const unsigned char* const text = move_script::At(rec + 2);
         if (chosen == i && state == 3) {
             const ConfigTextOperands& ops = ConfigText_Operands();   // at::kOptionWidth, kOptionBigSite
             const U width = ops.option_x8 ? n * 8u : n * 12u;   // DIV-0017's shl eax,1, or the original's lea
@@ -595,7 +595,7 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
         bof3::Fatal("Config_DrawControllerRow: row %u, past the six names of 0x%X - the original reads the dword after "
                     "as a string (docs/rest_4f.md section 7)",
                     (unsigned)r, (unsigned)at::kPadNames.v);
-    const auto* const name = At(LRest4f(::bof3::Img(at::kPadNames.v) + 4 * r));
+    const auto* const name = move_script::At(LRest4f(::bof3::Img(at::kPadNames.v) + 4 * r));
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     const U k = ops.name_x4 ? 4 : 6;   // DIV-0026's lea [ecx+ecx], or the original's [ecx+ecx*2]
     const int edge = ops.name_edge;

@@ -65,9 +65,9 @@ unsigned char* F() { return Field_State; }
 // the shared head is named (records.h SpriteHead; stage C2).
 // Field_State is an ObjTrio record.
 unsigned char& B(U address) { return move_script::At(address)[0]; }
-U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
-void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-short SWord(const unsigned char* p) { return static_cast<short>(Word(p)); }
+U ULong(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
+void SetULong(unsigned char* p, U v) { move_script::SetLong(p, static_cast<std::int32_t>(v)); }
+short SWord(const unsigned char* p) { return static_cast<short>(move_script::Word(p)); }
 template <typename T> U AddressOf(T* p) { return Low32(p); }
 // A word's low byte, stored alone as the original's byte `or` does.
 unsigned char& LowByte(unsigned short& w) { return *reinterpret_cast<unsigned char*>(&w); }
@@ -1030,7 +1030,7 @@ extern "C" void __cdecl FieldCore_FallSpin(void) {
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
     s->step_y = static_cast<U>(s->step_y) - 8;
     s = rv::Current<records::SpriteHead>();
-    s->height_whole = s->height_whole + Word(rv::Bytes(s) + 0x14);
+    s->height_whole = s->height_whole + move_script::Word(rv::Bytes(s) + 0x14);
     s = rv::Current<records::SpriteHead>();
     s->direction = static_cast<unsigned char>((s->direction + 1) & 7);
     Animate(rv::Current<records::SpriteHead>()->direction);

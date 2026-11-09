@@ -54,10 +54,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U UL(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 U Key(const void* p) { return Low32(p); }
-unsigned char* PtrIn(const unsigned char* p) { return At(UL(p)); }
-unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
+unsigned char* PtrIn(const unsigned char* p) { return move_script::At(UL(p)); }
+unsigned char* PtrAt(U cell) { return move_script::At(UL(move_script::At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return PtrAt(::bof3::Img(at::kOwner.v)); }
 unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
@@ -65,9 +65,9 @@ unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_Curren
 // enemy op runs on (docs/battle_e2.md 1.1, 1.3).
 // An enemy object and a party member by an actor's index, as the originals
 // address them (32-bit wrap: an index below its base reads below the array).
-unsigned char* EnemyObj(U index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemyStride); }
-unsigned char* Member(U index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
-unsigned char* Task(U slot) { return At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* EnemyObj(U index) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemyStride); }
+unsigned char* Member(U index) { return move_script::At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
+unsigned char* Task(U slot) { return move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 
 // A party member the restore steps write through (or read from before they
 // write): the original indexes the three records by a byte it never checks;
@@ -123,7 +123,7 @@ U Dispatch(const char* who, U table, unsigned n, unsigned at_, U word) {
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/battle_e2.md section 7)",
                     who, at_, state, n, (unsigned)table);
-    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))(word);
+    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(UL(move_script::At(table + 4 * state))))(word);
 }
 
 // The animation set pointer 0x9039D8 at the battle's pose pool around a task's
@@ -156,7 +156,7 @@ void MarkerLook() {
 void GridPlace() {
     unsigned char* s = Sprite_Current;
     unsigned b = s[0xB];
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(::bof3::Img(Window21_addr) + 4)) + (b % 6) * 30 + 0x13);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(move_script::At(::bof3::Img(Window21_addr) + 4)) + (b % 6) * 30 + 0x13);
     s = Sprite_Current;
     b = s[0xB];
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, (b / 6) * 32 + WindowRecords[0x15].y + 0x30);
@@ -165,8 +165,8 @@ void GridPlace() {
 // The animation byte of a cursor's grid: the 18 dwords of `grid` as bytes,
 // row (+9 plus the record's s16 +0x12) times 4 plus the column +0xA.
 unsigned char GridByte(U grid, U window, const unsigned char* s) {
-    const std::int32_t row = static_cast<std::int32_t>(s[9]) + static_cast<std::int16_t>(Word(At(window + 0x12)));
-    return At(grid + static_cast<U>(row) * 4 + s[0xA])[0];
+    const std::int32_t row = static_cast<std::int32_t>(s[9]) + static_cast<std::int16_t>(move_script::Word(move_script::At(window + 0x12)));
+    return move_script::At(grid + static_cast<U>(row) * 4 + s[0xA])[0];
 }
 
 }  // namespace
@@ -185,7 +185,7 @@ unsigned char GridByte(U grid, U window, const unsigned char* s) {
 // index (+5 - 3) is not checked.
 extern "C" unsigned char __cdecl BattleFx_NextStatusIcon(void) {
     const unsigned actor = Owner()[5];
-    const unsigned status = actor <= 2 ? Word(Member(actor) + 0x90) : Word(EnemyObj(actor - 3) + 0x92);
+    const unsigned status = actor <= 2 ? move_script::Word(Member(actor) + 0x90) : move_script::Word(EnemyObj(actor - 3) + 0x92);
     const unsigned bits = status & 0x58;
     const unsigned char cur = Sprite_Current[0xB];
     for (unsigned char i = static_cast<unsigned char>((cur + 1) & 0xF); i != cur; i = static_cast<unsigned char>((i + 1) & 0xF)) {
@@ -212,19 +212,19 @@ extern "C" void __cdecl BattleFx_PlaceOverOwner(void) {
     const unsigned actor = o[5];
     if (actor <= 2) {
         const unsigned row = rv::As<records::PartyMember>(Member(actor))->char_id;
-        const auto dx = static_cast<std::int8_t>(At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + (o[8] + row * 4) * 2)[0]);
+        const auto dx = static_cast<std::int8_t>(move_script::At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + (o[8] + row * 4) * 2)[0]);
         rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<unsigned>(dx + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(o)->screen_x)));
         o = Owner();
         const unsigned row2 = Member(o[5])[0x89];
-        const unsigned dy = o[8] <= 1 ? At(::bof3::Img(at::kMemberRowY.v) + row2 * 2)[0] : At(::bof3::Img(at::kMemberRowY.v) + 1 + row2 * 2)[0];
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(o + 0x30) - dy - 8);
+        const unsigned dy = o[8] <= 1 ? move_script::At(::bof3::Img(at::kMemberRowY.v) + row2 * 2)[0] : move_script::At(::bof3::Img(at::kMemberRowY.v) + 1 + row2 * 2)[0];
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, move_script::Word(o + 0x30) - dy - 8);
     } else {
         const auto dx = static_cast<std::int8_t>(EnemyObj(actor - 3)[0xF2]);
         rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<unsigned>(dx + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(o)->screen_x)));
         o = Owner();
         const unsigned kind = EnemyObj(static_cast<U>(o[5]) - 3)[0xF0];
-        const unsigned dy = At(::bof3::Img(at::kEnemyDataY.v) + kind * 0x8C)[0];
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(o + 0x30) - dy - 8);
+        const unsigned dy = move_script::At(::bof3::Img(at::kEnemyDataY.v) + kind * 0x8C)[0];
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, move_script::Word(o + 0x30) - dy - 8);
     }
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->draw_key, rv::As<records::SpriteHead>(Owner())->draw_key);
 }
@@ -243,13 +243,13 @@ extern "C" void __cdecl BattleFx_PlaceOverOwner(void) {
 // owner at each use; the icon test reads the owner's actor afresh; an
 // enemy's index is not checked.
 extern "C" void __cdecl BattleFx_WatchIcon(void) {
-    if ((UL(At(::bof3::Img(at::kRoundFlags.v))) & 0x400) != 0) {
+    if ((UL(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x400) != 0) {
         if (Owner()[5] == B(::bof3::Img(at::kActor.v))) {
             ++rv::Current<records::BattleTask>()->state;
             return;
         }
         if (B(::bof3::Img(at::kActKind.v)) == 4) {
-            const unsigned id = Word(At(::bof3::Img(at::kMagicId.v)));
+            const unsigned id = move_script::Word(move_script::At(::bof3::Img(at::kMagicId.v)));
             if (id == 0x97 || id == 0xE1) {
                 ++rv::Current<records::BattleTask>()->state;
                 return;
@@ -268,7 +268,7 @@ extern "C" void __cdecl BattleFx_WatchIcon(void) {
         rv::Current<records::BattleTask>()->clut = 0xFF;
         Sc()[0xA] = 0x3C;
         if (Sc()[0xB] != icon) {
-            BH_CALL(Sprite_SetAnimation)(At(::bof3::Img(at::kStatusIcons.v) + icon)[0]);
+            BH_CALL(Sprite_SetAnimation)(move_script::At(::bof3::Img(at::kStatusIcons.v) + icon)[0]);
             Sc()[0xB] = icon;
         }
     }
@@ -290,9 +290,9 @@ extern "C" void __cdecl BattleFx_WatchIcon(void) {
 // has +0x134 bit 0 before a record not in use is met; else 0.
 extern "C" unsigned char __cdecl Battle_BackupFlagged(void) {
     for (unsigned i = 0; i < 3; ++i) {
-        auto* const member_rec = rv::AsConst<records::PartyMember>(At(::bof3::Img(at::kBackup.v) + i * at::kPartyStride));
+        auto* const member_rec = rv::AsConst<records::PartyMember>(move_script::At(::bof3::Img(at::kBackup.v) + i * at::kPartyStride));
         if ((member_rec->flags & 1) == 0) return 0;
-        if ((At(::bof3::Img(at::kBackupFlags.v) + i * at::kPartyStride)[0] & 1) != 0) return 1;
+        if ((move_script::At(::bof3::Img(at::kBackupFlags.v) + i * at::kPartyStride)[0] & 1) != 0) return 1;
     }
     return 0;
 }
@@ -321,8 +321,8 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     const unsigned char kept8 = rv::As<records::PartyMember>(rec())->direction;
     {
         unsigned char* const to = rec();
-        const unsigned char* const from = At(::bof3::Img(at::kBackup.v) + static_cast<U>(owner_rec->actor) * at::kPartyStride);
-        for (unsigned k = 0; k < at::kPartyStride; k += 4) SetLong(to + k, Long(from + k));   // rep movsd, forward
+        const unsigned char* const from = move_script::At(::bof3::Img(at::kBackup.v) + static_cast<U>(owner_rec->actor) * at::kPartyStride);
+        for (unsigned k = 0; k < at::kPartyStride; k += 4) move_script::SetLong(to + k, move_script::Long(from + k));   // rep movsd, forward
     }
     rv::As<records::PartyMember>(rec())->state = 6;
     rv::As<records::PartyMember>(rec())->step = 4;
@@ -332,8 +332,8 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     rec()[0x48] = 2;
     rv::Store<U>(rv::As<records::PartyMember>(rec())->scale_x, 0);
     rv::As<records::PartyMember>(rec())->flags_130 = static_cast<U>(rv::As<records::PartyMember>(rec())->flags_130) | 0x2000;
-    rv::Store<U>(rv::As<records::BattleTask>(Task(owner_rec->actor))->x, UL(At(::bof3::Img(at::kMemberPositions.v) + static_cast<U>(owner_rec->actor) * 8)));
-    rv::Store<U>(rv::As<records::BattleTask>(Task(owner_rec->actor))->z, UL(At(::bof3::Img(at::kMemberPositions.v) + 4 + static_cast<U>(owner_rec->actor) * 8)));
+    rv::Store<U>(rv::As<records::BattleTask>(Task(owner_rec->actor))->x, UL(move_script::At(::bof3::Img(at::kMemberPositions.v) + static_cast<U>(owner_rec->actor) * 8)));
+    rv::Store<U>(rv::As<records::BattleTask>(Task(owner_rec->actor))->z, UL(move_script::At(::bof3::Img(at::kMemberPositions.v) + 4 + static_cast<U>(owner_rec->actor) * 8)));
     {
         unsigned char* const t = Task(owner_rec->actor);
         auto* const task_rec = rv::As<records::BattleTask>(t);
@@ -347,7 +347,7 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
         {
             unsigned char* const r = rec();
             auto* const member_rec = rv::As<records::PartyMember>(r);
-            r[0x9E] = At(::bof3::Img(Field_ActorStates_addr) + 0xe + static_cast<U>(member_rec->char_index) * 0xA4)[0];
+            r[0x9E] = move_script::At(::bof3::Img(Field_ActorStates_addr) + 0xe + static_cast<U>(member_rec->char_index) * 0xA4)[0];
         }
         rv::Store<U>(rv::As<records::PartyMember>(rec())->flags_130, BattleE2_KeptFlags);
         rv::Store<U>(rv::As<records::PartyMember>(rec())->flags_134, BattleE2_KeptFlags2);
@@ -359,20 +359,20 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
     auto* const cur_member = rv::As<records::PartyMember>(s);
     {
         unsigned i = cur_member->actor;
-        SetWord(At(::bof3::Img(WindowRecords_addr) + 0x1e8 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
+        move_script::SetWord(move_script::At(::bof3::Img(WindowRecords_addr) + 0x1e8 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->hp);
         i = cur_member->actor;
-        SetWord(At(::bof3::Img(WindowRecords_addr) + 0x1e8 + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
+        move_script::SetWord(move_script::At(::bof3::Img(WindowRecords_addr) + 0x1e8 + 2 + i * 0x24), rv::As<records::PartyMember>(Rec(who, i))->ap);
         i = cur_member->actor;
         const unsigned hp = rv::As<records::PartyMember>(Rec(who, i))->hp, max_hp = rv::As<records::PartyMember>(Rec(who, i))->max_hp;
         if (max_hp == 0) bof3::Fatal("%s: member %u's max HP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(::bof3::Img(WindowRecords_addr) + 0x1df + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
+        move_script::At(::bof3::Img(WindowRecords_addr) + 0x1df + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
         i = cur_member->actor;
         const unsigned ap = rv::As<records::PartyMember>(Rec(who, i))->ap, max_ap = rv::As<records::PartyMember>(Rec(who, i))->max_ap;
         if (max_ap == 0) bof3::Fatal("%s: member %u's max AP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
-        At(::bof3::Img(WindowRecords_addr) + 0x1df + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
+        move_script::At(::bof3::Img(WindowRecords_addr) + 0x1df + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
     }
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(cur_member->direction + 4));
-    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(rv::Current<records::PartyMember>()->actor) << 6))), 0);
+    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(rv::Current<records::PartyMember>()->actor) << 6))), 0);
     BH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(Rec(who, rv::Current<records::PartyMember>()->actor))->status);
     BH_CALL(Sprite_SetClutStp)();
 }
@@ -399,18 +399,18 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
     static const char* const kWho = "BattleFx_RestoreParty";
     if (BH_CALL(File_LoadDone)() == 0) return;
     BH_CALL(Sprite_ReleaseTint)(Rec(kWho, Owner()[5]));
-    if ((UL(At(::bof3::Img(at::kRoundFlags.v))) & 0x8000) != 0) {
+    if ((UL(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x8000) != 0) {
         const unsigned char n = BattleE2_SavedCount;
         B(::bof3::Img(at::kPartyCount.v)) = n;
         Battle_PartyStanding = 0;
         if (n > 0) {
             unsigned char in = 0;
             for (unsigned k = 0; k < n; ++k)
-                if ((At(::bof3::Img(at::kBackupBit40.v) + k * at::kPartyStride)[0] & 0x40) == 0) ++in;
+                if ((move_script::At(::bof3::Img(at::kBackupBit40.v) + k * at::kPartyStride)[0] & 0x40) == 0) ++in;
             Battle_PartyStanding = in;
         }
         Window1_ParamA = n;
-        WindowRecords[1].x = At(::bof3::Img(at::kCountX.v) + n)[0];
+        WindowRecords[1].x = move_script::At(::bof3::Img(at::kCountX.v) + n)[0];
         if (n > 1) {
             unsigned char m = 1;
             do {
@@ -435,7 +435,7 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
         BattleE2_KeptFlags2 = static_cast<U>(member_rec->flags_134) & 0xFFF884FDu;
     }
     RestoreBody(kWho, o, true);
-    if ((UL(At(::bof3::Img(at::kRoundFlags.v))) & 0x8000) != 0) {
+    if ((UL(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x8000) != 0) {
         const unsigned char a = BattleE2_Place94, b = BattleE2_Place95;
         B(::bof3::Img(at::kPlaceCells.v)) = a;
         B(::bof3::Img(at::kPlaceCells.v) + 1) = b;
@@ -444,7 +444,7 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
         B(::bof3::Img(at::kPlaceCells.v) + static_cast<U>(cur_member->actor) * 3) = BattleE2_Place94;
         B(::bof3::Img(at::kPlaceCells.v) + 1 + static_cast<U>(cur_member->actor) * 3) = BattleE2_Place95;
     }
-    SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0x7FFF);
+    move_script::SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), move_script::Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x7FFF);
     Sprite_Current = saved;
     ++saved[1];
 }
@@ -543,7 +543,7 @@ extern "C" void __cdecl BattleFx_GridMarkCount(void) {
     if (BattleE5_GeneCount == 0) return;
     unsigned char* s = Sprite_Current;
     do {
-        if (At(::bof3::Img(at::kPickList.v) + i)[0] == s[0xB]) {
+        if (move_script::At(::bof3::Img(at::kPickList.v) + i)[0] == s[0xB]) {
             s[2] = static_cast<unsigned char>(s[2] + 1);
             s = Sprite_Current;
         }
@@ -561,8 +561,8 @@ extern "C" void __cdecl BattleFx_GridMarkPlace(void) {
         const unsigned char b = s[0xB];
         unsigned char i = 0;
         do {
-            if (At(::bof3::Img(at::kPickList.v) + i)[0] == b) {
-                rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(::bof3::Img(Window21_addr) + 4)) + i * 24u + 0x41);
+            if (move_script::At(::bof3::Img(at::kPickList.v) + i)[0] == b) {
+                rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(move_script::At(::bof3::Img(Window21_addr) + 4)) + i * 24u + 0x41);
                 rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
                 return;
             }
@@ -585,7 +585,7 @@ extern "C" void __cdecl BattleFx_ListHand(void) {
 // overlay queued (a tail jmp).
 extern "C" void __cdecl BattleFx_ListHandStart(void) {
     MarkerLook();
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(At(::bof3::Img(Window21_addr) + 4)) + 0x14);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, UL(move_script::At(::bof3::Img(Window21_addr) + 4)) + 0x14);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     ++rv::Current<records::BattleTask>()->state;
     BH_CALL(Sprite_SetAnimation)(0x13);
@@ -607,7 +607,7 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
         Sprite_Current[2] = 0;
         return;
     }
-    rv::Store<unsigned>(cur_task->screen_x, UL(At(::bof3::Img(Window21_addr) + 4)) + 0x14);
+    rv::Store<unsigned>(cur_task->screen_x, UL(move_script::At(::bof3::Img(Window21_addr) + 4)) + 0x14);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, WindowRecords[0x15].y + 0x12);
     BH_CALL(Sprite_QueueOverlay)();
 }
@@ -647,7 +647,7 @@ void CursorStart(U window, U grid) {
         BH_CALL(Sprite_SetAnimation)(a);
         s = Sprite_Current;
     }
-    SetWord(At(window + 0x1E), Word(At(window + 0x12)));
+    move_script::SetWord(move_script::At(window + 0x1E), move_script::Word(move_script::At(window + 0x12)));
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -661,14 +661,14 @@ void CursorRun(U window, U grid) {
         Sc()[2] = 0;
         return;
     }
-    if (Word(At(window + 0x1E)) != Word(At(window + 0x12))) {
+    if (move_script::Word(move_script::At(window + 0x1E)) != move_script::Word(move_script::At(window + 0x12))) {
         rv::Current<records::BattleTask>()->state = 0;
         return;
     }
     unsigned char* s = Sprite_Current;
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(At(window + 4)) + s[0xA] * 22u + 0x44);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, UL(move_script::At(window + 4)) + s[0xA] * 22u + 0x44);
     s = Sprite_Current;
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, s[9] * 32u + Word(At(window + 6)) + 0x22);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, s[9] * 32u + move_script::Word(move_script::At(window + 6)) + 0x22);
     s = Sprite_Current;
     const unsigned char a = GridByte(grid, window, s);
     if (a == 0xFF) return;
@@ -744,19 +744,19 @@ extern "C" unsigned char __cdecl Battle_RandomEnemy(unsigned exclude) {
 // zero; ours aborts); each Battle_ActorIsOut is asked again on the second
 // pass.
 extern "C" unsigned char __cdecl Battle_RandomMember(void) {
-    const unsigned n = UL(At(::bof3::Img(at::kPartyCount.v))) & 0xFF;
+    const unsigned n = UL(move_script::At(::bof3::Img(at::kPartyCount.v))) & 0xFF;
     if (n != 2 && n != 3) return 0;
     const U weights = n == 3 ? ::bof3::Img(at::kFormationWeights3.v) : ::bof3::Img(at::kFormationWeights2.v);
     unsigned char sum = 0;
     for (unsigned char m = 0; m < n; ++m)
-        if (BH_CALL(Battle_ActorIsOut)(m) == 0) sum = static_cast<unsigned char>(sum + At(weights + (UL(At(::bof3::Img(Cond_Flags_addr) + 0xd0)) & 0xFF) * n + m)[0]);
+        if (BH_CALL(Battle_ActorIsOut)(m) == 0) sum = static_cast<unsigned char>(sum + move_script::At(weights + (UL(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd0)) & 0xFF) * n + m)[0]);
     const int r = BH_CALL(Rand)();
     if (sum == 0) bof3::Fatal("Battle_RandomMember: the weights sum to 0 - the original divides by 0 (docs/battle_e2.md section 7)");
     const auto pick = static_cast<unsigned char>(r % static_cast<int>(sum));
     unsigned char run = 0;
     for (unsigned char m = 0; m < n; ++m) {
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
-        run = static_cast<unsigned char>(run + At(weights + (UL(At(::bof3::Img(Cond_Flags_addr) + 0xd0)) & 0xFF) * n + m)[0]);
+        run = static_cast<unsigned char>(run + move_script::At(weights + (UL(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd0)) & 0xFF) * n + m)[0]);
         if (run > pick) return m;
     }
     return static_cast<unsigned char>(n);
@@ -838,7 +838,7 @@ extern "C" unsigned char __cdecl BattleEnemy_PickTarget(unsigned enemy) {
     auto* const enemy_rec = rv::As<records::BattleEnemy>(EnemyArg(kWho, enemy));
     const unsigned id = enemy_rec->ability;
     const unsigned flags = enemy_rec->flags_90;
-    const unsigned char a = At(::bof3::Img(at::kAbilities.v) + id * 24)[0];
+    const unsigned char a = move_script::At(::bof3::Img(at::kAbilities.v) + id * 24)[0];
     const bool one = (flags & 1) != 0;
     if ((a & 0x10) != 0) {
         if ((a & 0x80) != 0 && (a & 0x40) == 0) return 0xC0;
@@ -889,9 +889,9 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     unsigned char* const e = EnemyArg(kWho, enemy);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     const unsigned r = static_cast<unsigned>(BH_CALL(Rand)());
-    unsigned char kind = static_cast<unsigned char>((At(::bof3::Img(at::kActKinds.v) + enemy_rec->odds_index)[0] >> ((r & 3) * 2)) & 3);
+    unsigned char kind = static_cast<unsigned char>((move_script::At(::bof3::Img(at::kActKinds.v) + enemy_rec->odds_index)[0] >> ((r & 3) * 2)) & 3);
     B(::bof3::Img(at::kActKind.v)) = kind;
-    if ((UL(At(::bof3::Img(at::kRoundFlags.v))) & 0x4000) != 0 && enemy_rec->intel <= 1) {
+    if ((UL(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x4000) != 0 && enemy_rec->intel <= 1) {
         kind = 0;
         B(::bof3::Img(at::kActKind.v)) = 0;
     }
@@ -1003,7 +1003,7 @@ extern "C" void __cdecl EnemyOp_SlideStep(void) {
 extern "C" void __cdecl EnemyOp_TurnStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(2);
     const unsigned record = rv::As<records::BattleEnemy>(Enemy())->data_id;
-    Sprite_Current[9] = At(::bof3::Img(at::kEnemyDataCount.v) + record * 0x8C)[0];
+    Sprite_Current[9] = move_script::At(::bof3::Img(at::kEnemyDataCount.v) + record * 0x8C)[0];
     ++rv::Current<records::BattleEnemy>()->state;
     rv::Current<records::BattleEnemy>()->step = 0;
 }
@@ -1029,7 +1029,7 @@ extern "C" void __cdecl EnemyOp_PlayCreatureCue(void) {
     const unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(e);
     if (fight != 0) {
-        BH_AT(void (__cdecl*)(unsigned), at::kPlayCue.v)(Word(PtrIn(e + 0xF8)));
+        BH_AT(void (__cdecl*)(unsigned), at::kPlayCue.v)(move_script::Word(PtrIn(e + 0xF8)));
     } else {
         BH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x600 + 2 * enemy_rec->data_id));
     }

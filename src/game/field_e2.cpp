@@ -50,7 +50,7 @@ using U = std::uint32_t;
 
 unsigned char& BFieldE2(U a) { return *move_script::At(a); }
 U LFieldE2(U a) { return static_cast<U>(move_script::Long(move_script::At(a))); }
-void SetL(U a, U v) { SetLong(move_script::At(a), static_cast<std::int32_t>(v)); }
+void SetL(U a, U v) { move_script::SetLong(move_script::At(a), static_cast<std::int32_t>(v)); }
 std::uint16_t WFieldE2(U a) { return move_script::Word(move_script::At(a)); }
 void SetW(U a, unsigned v) { move_script::SetWord(move_script::At(a), v); }
 U Key(const void* p) { return Low32(p); }

@@ -55,7 +55,7 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return Low32(p); }
-unsigned char BRest2g(U address) { return At(address)[0]; }
+unsigned char BRest2g(U address) { return move_script::At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
 
@@ -63,7 +63,7 @@ std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p))
 // original re-reads it. Volatile so that ours cannot cache it either: the
 // fuzz's stand-ins repoint it between calls.
 unsigned char* RecRest2g() {
-    return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
+    return move_script::At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 }
 
 // `call [table + 4 * record +3]` over a .data table of `entries` handlers, read
@@ -76,7 +76,7 @@ void State(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the window record's +3 is %u, past the %u states of 0x%X - the original calls through the dword "
                     "after (docs/rest_2g.md section 7)",
                     who, s, entries, (unsigned)::bof3::VaOf(table));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * s)))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(move_script::Long(move_script::At(table + 4 * s)))))();
 }
 
 // `call [esp + 4 * byte]` over a stack table of `n` immediates: a Fatal past
@@ -101,12 +101,12 @@ unsigned PartyRecord(unsigned slot) { return BRest2g(::bof3::Img(at::kMemberReco
 enum class Past : std::uint8_t { kAbove, kAtOrAbove, kBelow, kAtOrBelow };
 void Slide(unsigned off, int step, short bound, Past past) {
     unsigned char* const moved = RecRest2g();
-    SetWord(moved + off, Word(moved + off) + static_cast<unsigned>(step));
+    move_script::SetWord(moved + off, move_script::Word(moved + off) + static_cast<unsigned>(step));
     unsigned char* const r = RecRest2g();
     const short v = S(r + off);
     const bool hold = past == Past::kAbove ? v > bound : past == Past::kAtOrAbove ? v >= bound : past == Past::kBelow ? v < bound : v <= bound;
     if (!hold) return;
-    SetWord(r + off, static_cast<std::uint16_t>(bound));
+    move_script::SetWord(r + off, static_cast<std::uint16_t>(bound));
     RecRest2g()[3] = 0;
 }
 // A slide bound of DIV-0041's faster slide, as widescreen.cpp holds it (docs/operand-store.md):
@@ -156,10 +156,10 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const unsigned id = BRest2g(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex.v)(arg) & 0xFF;
-    const unsigned char* const rec = At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
+    const unsigned char* const rec = move_script::At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
-    for (unsigned k = 0; k < rows; ++k) sum += Word(At(::bof3::Img(at::kExpTable.v) + 0x318 * r + 8 * k));
+    for (unsigned k = 0; k < rows; ++k) sum += move_script::Word(move_script::At(::bof3::Img(at::kExpTable.v) + 0x318 * r + 8 * k));
     const U exp = static_cast<U>(rv::As<records::CharRecord>(rec)->exp);
     return sum >= exp ? sum - exp : 0;
 }
@@ -199,7 +199,7 @@ extern "C" void __cdecl GeneWin_GridStates(void) {
 extern "C" void __cdecl GeneWin_GridOpen(void) {
     RecRest2g()[8] = 0x18;
     RecRest2g()[9] = 0x11;
-    for (unsigned i = 0; i < 0x12; ++i) At(::bof3::Img(at::kGridWords.v) + 2 * i)[0] = 0;
+    for (unsigned i = 0; i < 0x12; ++i) move_script::At(::bof3::Img(at::kGridWords.v) + 2 * i)[0] = 0;
     for (unsigned i = 0; i < 0x12; ++i) {
         if (BRest2g(::bof3::Img(at::kGridCells.v) + i) == 0) continue;
         const unsigned slot = SH_CALL(BattleTask_Create)(0, 9) & 0xFFu;
@@ -207,7 +207,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
                         "writes its +0xB / +0x4B past the pool (docs/rest_2g.md section 7)",
                         slot, at::kTaskCount);
-        unsigned char* const task = At(::bof3::Img(BattleTask_Slots_addr) + at::kTaskStride * slot);
+        unsigned char* const task = move_script::At(::bof3::Img(BattleTask_Slots_addr) + at::kTaskStride * slot);
         task[0x4B] = static_cast<unsigned char>(i);
         task[0xB] = static_cast<unsigned char>(i);
     }
@@ -311,13 +311,13 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
     const unsigned char* r = RecRest2g();
     SH_CALL(Menu_DrawTitleBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x118, 0x13, static_cast<int>(colour));
     r = RecRest2g();
-    if (Word(r + 0x10) == 0) return;
-    const unsigned char* text = SH_CALL(Msg_SystemPtr)(Word(r + 0x10));
+    if (move_script::Word(r + 0x10) == 0) return;
+    const unsigned char* text = SH_CALL(Msg_SystemPtr)(move_script::Word(r + 0x10));
     r = RecRest2g();
     SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 7) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->y + 3) & 0xFFFF), 0, 0xFF,
                          text);
     r = RecRest2g();
-    const unsigned id = Word(r + 0x10);
+    const unsigned id = move_script::Word(r + 0x10);
     if (id != 0x1A && id != 0x31) return;
     text = SH_CALL(Msg_SystemPtr)(0xF);
     r = RecRest2g();
@@ -332,7 +332,7 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
 extern "C" void __cdecl MenuList_CursorBox(void) {
     const unsigned char* const r = RecRest2g();
     const U pair = ::bof3::Img(MenuList_CursorBoxSizes_addr) + 4u * r[0xA];
-    SH_CALL(Menu_DrawCursorBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
+    SH_CALL(Menu_DrawCursorBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, move_script::Word(move_script::At(pair)), move_script::Word(move_script::At(pair + 2)), r[0xB], 6);
 }
 
 // original 0x59A440, kind 11: the state from MenuList_IconWheelStates;
@@ -352,7 +352,7 @@ extern "C" void __cdecl MenuList_IconWheel(void) {
                                 (above & 0xFFFFFF00u) | r[0xA], r[0xC], angle);
     unsigned char* const lit = RecRest2g();
     if (lit[0xC] == 0) return;
-    SetWord(lit + 0x10, Word(lit + 0x10) + 0x40u);
+    move_script::SetWord(lit + 0x10, move_script::Word(lit + 0x10) + 0x40u);
     r = RecRest2g();
     SH_CALL(Menu_DrawCursorBox)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 4) & 0xFFFF), rv::As<records::WindowRecord>(r)->y, 0x44, 0x34, 0, 6);
 }
@@ -394,12 +394,12 @@ extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelLis
 extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto x = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->x + d) & 0xFFFF); };
     auto y = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->y + d) & 0xFFFF); };
-    auto text = [](unsigned index) { return At(static_cast<U>(Long(At(::bof3::Img(at::kLabelTexts.v) + 4 * index)))); };
+    auto text = [](unsigned index) { return move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(at::kLabelTexts.v) + 4 * index)))); };
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned count = BRest2g(::bof3::Img(at::kLabelRows.v) + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));
-    SH_CALL(Menu_DrawPieces)(x(0), y(0), At(::bof3::Img(at::kLabelPieces.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y(0), move_script::At(::bof3::Img(at::kLabelPieces.v)), 1);
     unsigned row = 0;
     unsigned line = 6u * rec[0xA];
     if (BRest2g(::bof3::Img(at::kLabelRows.v) + line) != 0) {
@@ -415,13 +415,13 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
             } else {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 0, 0xFF, t);
             }
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), At(::bof3::Img(at::kLabelRowPieces.v)), 1);
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), At(::bof3::Img(at::kLabelRowPieces.v)), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), move_script::At(::bof3::Img(at::kLabelRowPieces.v)), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), move_script::At(::bof3::Img(at::kLabelRowPieces.v)), 1);
             row = (row + 1) & 0xFF;
             line = 6u * rec[0xA];
         } while (row < BRest2g(::bof3::Img(at::kLabelRows.v) + line));
     }
-    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), At(::bof3::Img(at::kLabelEndPieces.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), move_script::At(::bof3::Img(at::kLabelEndPieces.v)), 1);
 }
 
 // original 0x59A8E0, kind 16: the state from MenuList_EquipCompareStates, then
@@ -433,10 +433,10 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
 extern "C" void __cdecl MenuList_EquipCompare(void) {
     State("MenuList_EquipCompare", ::bof3::Img(MenuList_EquipCompareStates_addr), 5);
     unsigned char* const r = RecRest2g();
-    const U set = static_cast<U>(Long(r + 0x20));
+    const U set = static_cast<U>(move_script::Long(r + 0x20));
     const U x = (set & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x;
     const U record = (x & 0xFFFFFF00u) | PartyRecord(r[0xC]);
-    SH_CALL(Menu_DrawEquipCompare)(record, static_cast<int>(x), rv::As<records::WindowRecord>(r)->y, At(set), r[0xD], r);
+    SH_CALL(Menu_DrawEquipCompare)(record, static_cast<int>(x), rv::As<records::WindowRecord>(r)->y, move_script::At(set), r[0xD], r);
 }
 
 // original 0x59A9C0, kind 17: the state from MenuList_AbilityStates, then

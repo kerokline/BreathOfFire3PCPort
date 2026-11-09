@@ -120,7 +120,7 @@ void OpenTasks(const char* who, unsigned param, unsigned rows) {
             t[9] = static_cast<unsigned char>(i);
             t[0xA] = static_cast<unsigned char>(j);
         }
-    SetWord(Win() + 0x14, rows);
+    move_script::SetWord(Win() + 0x14, rows);
 }
 
 // A row's cost: the cost bytes of its three indices (0xFF none after the
@@ -356,7 +356,7 @@ extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
         const U bx = x + 48 * k;
         BH_CALL(Menu_DrawBox)(static_cast<int>(bx), static_cast<int>(y), 0x2D, 0x14, 0, static_cast<int>(colour));
         const unsigned choice = BossSb_Countdown;
-        const unsigned char* const text = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(at::kChoiceTexts.v) + 4 * k))));
+        const unsigned char* const text = move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(at::kChoiceTexts.v) + 4 * k))));
         U pieces = ::bof3::Img(at::kChoicePieces.v);
         unsigned text_colour = 0;
         if (choice & 0x80) {
@@ -851,7 +851,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     unsigned char items[6];
     std::memcpy(items, ch + 0x12, sizeof items);
     unsigned char* const rec = move_script::At(record);
-    SetWord(rec + 0x10, 0);
+    move_script::SetWord(rec + 0x10, 0);
     int text_y = yi + 0x55, icon_y = yi + 0x57;
     for (unsigned r = 0; r < 6; ++r) {
         const unsigned category = B(::bof3::Img(at::kEquipCategories.v) + r);
@@ -864,7 +864,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;
             } else if (r == rec[0xA]) {
-                SetWord(rec + 0x10, (category << 8) + items[r]);
+                move_script::SetWord(rec + 0x10, (category << 8) + items[r]);
             }
         }
         if (colour != 7) {
