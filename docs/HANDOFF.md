@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch (main 7f215457 merged in), the mover refuses nothing and the move map is written; the moves B1..B5 are next, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on `source-layout/stage-b` (main 7f215457 merged in, the mover refuses nothing, the move map written, the ten-route state-hash proof passed 2026-11-09); the moves B1..B5 start in a fresh session, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -401,9 +401,28 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode transition one frame apart after the
    `r2` confirm at recipe frame 2579 (`Transition_Busy`, `ModeFlow_TransitionKind`, `ItemUse_RepeatTimer` 7
    against 0); main's own build shows it, so a PR among 170..213 did it - bisect main's merges on
-   `tools/recipes/shop.txt` with the state hash to name it, then ledger or fix. **Next:**
-   the moves B1..B5 (round doc 4: groups by `.text` range, parallel, merged one at a time with the gate after
-   each), then stages C/D/E. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
+   `tools/recipes/shop.txt` with the state hash to name it, then ledger or fix.
+   **Pick up here (a fresh session, the owner's word of 2026-11-09): the moves B1..B5.** The branch
+   `source-layout/stage-b` sits in worktree `C:\Users\kerok\bof3x-runs\slb1108\wt` (470 commits over `main`
+   7f215457, unpushed, tree clean; `main` may be merged in first, a PR at the owner's word). The baseline
+   `slb1108\base2` is `main` 7f215457 built at both widths. The gates, run from the worktree, both 0 differ on
+   the tip: i686 `python tools/codegen_same.py C:/Users/kerok/bof3x-runs/slb1108/base2/build build
+   --by-function --anonymous-locals --exceptions analysis/tu_gate_exceptions.tsv --exception-classes
+   data-layout,i686-fold,i686-inline,i686-convention` (153 excepted, 93 promoted); x86_64 the same with
+   `base2/build-x86_64 build-x86_64` and no class limit (280 excepted, 61 promoted). Checks: `tu_renames.py
+   --check` (1477 rows, 0 problems), `tu_census.py --check`, `move_funcs.py analysis/tu_layout.tsv --check`
+   (prints the whole plan, 851 targets, refuses nothing). **How a group runs:** one worktree off the tip per
+   group, `python tools/move_funcs.py analysis/tu_layout.tsv --range LO..HI` (hex pcs, HI exclusive; the
+   round doc's section 4 table gives the first cut, redrawn to unit edges from `analysis/tu_layout_sheet.md`
+   so no two groups touch one unit; `--unit U` moves one unit); the mover moves bodies byte for byte, copies
+   shared file-locals (`--shared copy`), moves `BOF3_INJECT` lines into `<TStem>_Inject()`, writes the
+   `_callees.h` aliases, is idempotent, and refuses a source with uncommitted changes. Build both widths,
+   gate: a move's only lawful differences are x86_64 `inline` and `low32-site` rows (the i686 gate stays
+   exact); every row names its gate line; `tu_census.py --check` counts the functions now in their proposed
+   file. Groups run in parallel and **merge one at a time with the gate after each** (a merge is where a
+   shared helper shows); each group's report per section 4: files made, emptied and deleted, the `guessed`
+   rows it placed, the gate's verdict. Then stages C (the headers), D, E (round doc 5, 5a). The main
+   checkout's `game\` folder stays the owner's; harness roots under `bof3x-runs`. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
    as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
    (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
