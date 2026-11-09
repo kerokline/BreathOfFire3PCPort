@@ -57,7 +57,7 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
-using Handler = scenario_harness::Handler;
+using HandlerRest3g = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
 U ULRest3g(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
@@ -103,7 +103,7 @@ void StepDispatchRest3g(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: Game_Step is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3g.md section 7)",
                     who, step, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
+    reinterpret_cast<HandlerRest3g>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
 }
 
 // The two framed waits of the mode steps: while the wait word is not 0, a frame
