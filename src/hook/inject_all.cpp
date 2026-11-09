@@ -316,6 +316,7 @@
 #include "game/effect/effect_kind_33.h"
 #include "game/effect/effect_kind_2f.h"
 #include "game/effect_2d.h"
+#include "game/effect/effect_kind_48.h"
 #include "game/effect/effect_kind_46.h"
 #include "game/effect/effect_kind_45.h"
 #include "game/effect_2c.h"
@@ -1232,6 +1233,7 @@ void InjectAll() {
                                 // recorders, its ten state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject (none of its eight rows is E2D's); no module patches
                                 // bytes inside its 54 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind48FromEffect2d_Inject();
     EffectKind46_Inject();
     EffectKind45_Inject();
     Effect2C_Inject();          // round 13 group E2C (0x474F40..0x4771A5: effect kinds 0x3E, 0x3F, 0x40, 0x42, 0x43,
@@ -1255,6 +1257,7 @@ void InjectAll() {
                                 // harness's recorders, its ten state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject, which copies E2E's 0x479970; no module patches bytes
                                 // inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind48FromEffect2e_Inject();
     EffectKind4eFromEffect2e_Inject();
     EffectKind4d_Inject();
     Effect2A_Inject();          // round 13 group E2A (0x470300..0x473192: effect kinds 0x28..0x2E, their dispatchers,
@@ -1577,6 +1580,7 @@ void InjectAll() {
                                 // every effect group's (they call its functions by the addresses they had); before
                                 // FishingText_Arm; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    EffectKind48FromRest3e_Inject();
     EffectKind5fFromRest3e_Inject();
     EffectKind5dFromRest3e_Inject();
     EffectShardsFromRest3e_Inject();
