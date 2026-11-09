@@ -307,6 +307,10 @@ class SourcePlan:
     bound_elsewhere: dict[str, str] = field(default_factory=dict)          # function -> where its bind stays
     namespace_names: dict[str, set[str]] = field(default_factory=dict)     # `using namespace X` -> X's names
     alias_bodies: dict[str, dict[str, str]] = field(default_factory=dict)  # X -> alias name -> its code
+    # the `at` namespaces S's bodies can mean: its alias's, and X::at of each `using namespace X;`
+    # whose X has one - name -> the entity it denotes (namespace_entities); the header declaring each
+    at_entities: dict[str, dict[str, str]] = field(default_factory=dict)
+    at_header: dict[str, str] = field(default_factory=dict)
 
 
 def resolve_include(inc: str) -> str | None:
@@ -460,6 +464,12 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     for lst in plan.decls_for.values():
         local_ids |= {id(d) for d in lst}
     owners = owners_of(fi, roots, local_by_name)
+    # a file-local nothing reaches (dead code, or a helper only a macro or a fuzz file names) stays in
+    # S, and what it names must stay there too: it is a root of S as well
+    unreached = [(it, source) for lst in local_by_name.values() for it in lst
+                 if not owners.get(id(it)) and id(it) not in undef_ids]
+    if unreached:
+        owners = owners_of(fi, roots + unreached, local_by_name)
     seen = set()
     for lst in local_by_name.values():
         for it in lst:
@@ -499,6 +509,23 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         for u in sorted(it.uses & set(globals_here) - declared):
             problems.append(f"{source}: {name} names {u}, a global {source} defines and no header it includes "
                             f"declares; give it a declaration first")
+    # the same for a function of external linkage that stays in S (a helper of ours, not in the table)
+    funcs_here = {n for it in leaves if it.kind == "func" and not it.local and id(it) not in moved
+                  and not any(it.ns) for n in it.names[:1]}
+    # named bare (`save_menu::ListFiles` is its namespace's) and outside an asm string's BOF3_SYM(X),
+    # which names the link symbol and needs no declaration
+    def calls(it: ci.Item) -> set[str]:
+        code = re.sub(r"\bBOF3_SYM\s*\(\s*\w+\s*\)", "", " ".join(
+            t.text for t in ci.lex(it.text) if t.kind not in ("comment", "str")))
+        return {u for u in it.uses_unq & funcs_here if re.search(rf"(?<!::)(?<!:: )\b{re.escape(u)}\b", code)}
+    fneeded = {u for it in plan.funcs.values() if it.kind != "pp" for u in calls(it)}
+    fdeclared = prototyped_in_headers(text, fneeded)
+    for name, it in plan.funcs.items():
+        if it.kind == "pp":
+            continue
+        for u in sorted(calls(it) & fneeded - fdeclared):
+            problems.append(f"{source}: {name} calls {u}, a function of external linkage {source} defines and "
+                            f"no header it includes declares; give it a declaration first")
     # the inject lines; a bind kept elsewhere (another file's _Inject(), a one-line or conditional
     # bof3::Inject) stays where it is and is listed
     for m in INJECT_LINE.finditer(text):
@@ -516,7 +543,26 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         if mm:
             plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
             plan.alias_bodies[mm.group(2)] = namespace_alias_bodies(text, mm.group(2))
+    for x in ([plan.alias_at] if plan.alias_at else []) + [
+            f"{y}::at" for y in plan.namespace_names if not y.endswith("::at") and y != "at"]:
+        ents = namespace_entities(text, x)
+        if ents:
+            plan.at_entities[x] = ents
+            h = header_declaring(text, x)
+            if h:
+                plan.at_header[x] = h
     return plan
+
+
+def at_refs(it: ci.Item) -> list[str]:
+    """The names an item's code writes as a bare `at::NAME` (not `X::at::NAME`, not `.at` / `->at`)."""
+    toks = [t for t in ci.lex(it.text) if t.kind not in ("comment", "pp")]
+    out = []
+    for i in range(len(toks) - 2):
+        if (toks[i].kind == "id" and toks[i].text == "at" and toks[i + 1].text == "::"
+                and toks[i + 2].kind == "id" and (i == 0 or toks[i - 1].text not in ("::", ".", "->"))):
+            out.append(toks[i + 2].text)
+    return out
 
 
 _bind_cache: dict[str, str] = {}
@@ -589,6 +635,85 @@ def has_static_local(it: ci.Item) -> bool:
         if not ci.declares_constant(words, name):
             return True
     return False
+
+
+def namespace_entities(text: str, ns: str) -> dict[str, str]:
+    """What each name namespace `ns` defines at its scope denotes, in this file and the project headers
+    it includes (one level), as namespace_names finds them: `ns::name` for a definition, the target for
+    a using-declaration, the code for a type alias - so two namespaces that bring one entity under one
+    name are told from two that define two ([namespace.udir]/6)."""
+    parts = tuple(ns.split("::"))
+    out: dict[str, str] = {}
+    texts = [text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
+                      for t in [resolve_include(inc)] if t]
+    for t in texts:
+        try:
+            fi = ci.FileItems(t.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            if not (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
+                    and it.kind in ("decl", "func", "type", "alias", "typedef", "using")):
+                continue
+            code = code_tokens(it)
+            for n in it.names:
+                if it.kind == "using":
+                    m = re.match(r"using\s+(?:::\s*)?([\w:\s]+?)\s*;", code)
+                    out[n] = re.sub(r"\s", "", m.group(1)) if m else f"{ns}::{n}"
+                elif it.kind in ("alias", "typedef"):
+                    out[n] = "type " + code
+                else:
+                    out[n] = f"{ns}::{n}"
+    return out
+
+
+def header_declaring(text: str, ns: str) -> str | None:
+    """The project header (src/-relative path) among those `text` includes, and theirs, that opens
+    namespace `ns`."""
+    parts = tuple(ns.split("::"))
+    todo, seen = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        h = resolve_include(inc)
+        if h is None:
+            continue
+        try:
+            fi = ci.FileItems(h.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        if any(it.ns[:len(parts)] == parts for it in fi.leaves()):
+            return "src/" + inc
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
+    return None
+
+
+def prototyped_in_headers(text: str, names: set[str]) -> set[str]:
+    """Which of the function `names` a declaration at global scope in a project header `text`
+    includes (and theirs) declares."""
+    if not names:
+        return set()
+    found = set()
+    todo, seen = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        h = resolve_include(inc)
+        if h is None:
+            continue
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
+        try:
+            fi = ci.FileItems(h.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            if not any(it.ns) and it.kind in ("decl", "func"):
+                found |= names & set(it.names)
+    return found
 
 
 def code_tokens(it: ci.Item) -> str:
@@ -843,7 +968,8 @@ def main() -> int:
     for s, p in plans.items():
         for name, t in p.target_of.items():
             e = targets.setdefault(t, {"funcs": [], "locals": [], "sources": [], "aliases": {}, "shared_from": set(),
-                                       "undefs": [], "binds": set(), "namespaces": {}, "alias_bodies": {}})
+                                       "undefs": [], "binds": set(), "namespaces": {}, "alias_bodies": {},
+                                       "at_entities": {}, "at_header": {}})
             e["funcs"].append((move_of[name].pc, name, p.funcs[name], s))
             if name in p.inject_lines:
                 e["binds"].add(name)
@@ -855,6 +981,9 @@ def main() -> int:
                 e["namespaces"].setdefault(x, set()).update(names)
             for x, bodies in p.alias_bodies.items():
                 e["alias_bodies"].setdefault(x, {}).update(bodies)
+            for x, ents in p.at_entities.items():
+                e["at_entities"].setdefault(x, {}).update(ents)
+            e["at_header"].update(p.at_header)
         for t, its in p.moved_locals.items():
             targets[t]["locals"] += [(s, it, "local") for it in its]
         for t, its in p.decls_for.items():
@@ -935,6 +1064,31 @@ def main() -> int:
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
                                     f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
                                     f"qualify it first")
+        # `at::NAME` written bare in a file-scope body: the target's own `at` alias (one group's, or the
+        # union <T stem>::at of several) and each X::at a copied `using namespace X;` brings are all
+        # found from file scope, so two of them make `at` itself ambiguous; with the alias alone, a name
+        # two of the union's groups define as two entities is ambiguous inside the union
+        at_users = [(name, it) for _, name, it, _ in e["funcs"] if not any(it.ns)] + \
+                   [("/".join(it.names), it) for _, it, _ in e["locals"] if not any(it.ns)]
+        refs = {(name, n) for name, it in at_users for n in at_refs(it)}
+        if refs:
+            aliases_t = sorted(set(e["aliases"].values()))
+            via_using = sorted(f"{x}::at" for x in e["namespaces"] if f"{x}::at" in e["at_entities"]
+                               and f"{x}::at" not in aliases_t)
+            if via_using and (aliases_t or len(via_using) > 1):
+                users = sorted({name for name, _ in refs})
+                problems.append(f"{t}: `at` would be ambiguous - "
+                                f"{', '.join((['the alias of ' + ' + '.join(aliases_t)] if aliases_t else []) + via_using)} "
+                                f"are all found from file scope (`at::` written bare by {', '.join(users)}); "
+                                f"qualify it first")
+            elif len(aliases_t) > 1:
+                for n in sorted({n for _, n in refs}):
+                    ents = {e["at_entities"].get(x, {}).get(n) for x in aliases_t} - {None}
+                    if len(ents) > 1:
+                        xs = [x for x in aliases_t if e["at_entities"].get(x, {}).get(n)]
+                        users = sorted({name for name, m in refs if m == n})
+                        problems.append(f"{t}: `at::{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} "
+                                        f"meet in {Path(t).stem}::at (named by {', '.join(users)}); qualify it first")
 
     if problems:
         print("move_funcs: refused, nothing written:")
@@ -1067,6 +1221,12 @@ def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) ->
     write(lh, head + "\n".join(sort_includes(incs, None)) + "\n\n" + block(shared, True))
 
 
+def callees_header(s: str, e: dict) -> str:
+    """The header that declares source s's `at` namespace: the header its includes open the
+    namespace in (most often its own <stem>_callees.h; else that file's name, as before (magic_engine.cpp's `at` is magic_harness::at, magic_harness.h)."""
+    return e["at_header"].get(e["aliases"][s], header_of(s)[:-2] + "_callees.h")
+
+
 def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
     th = header_of(t)
     stem = Path(t).stem
@@ -1087,8 +1247,8 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
                        "// groups' namespaces (tools/move_funcs.py, docs/source-layout-round.md 2). The constants\n"
                        "// stay in the groups' headers; a name two of them define differently is refused.\n"
                        "#pragma once\n\n"
-                       + "".join(f'#include "{include_name(header_of(s)[:-2] + "_callees.h")}"\n'
-                                 for s in e["sources"] if s in e["aliases"])
+                       + "".join(f'#include "{include_name(h)}"\n' for h in dict.fromkeys(
+                                 callees_header(s, e) for s in e["sources"] if s in e["aliases"]))
                        + f"\nnamespace {stem}::at {{\n"
                        + "".join(f"using namespace ::{x};\n" for x in aliases)
                        + f"}}  // namespace {stem}::at\n")
