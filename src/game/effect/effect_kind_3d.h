@@ -1,0 +1,6 @@
+// tools/move_funcs.py (docs/source-layout-round.md). The functions of effect_kind_3d.cpp are declared
+// by symbols.gen.h (each has an `impl` in symbols.toml).
+#pragma once
+
+void EffectKind3d_InjectFromEffect2b();
+void EffectKind3d_InjectFromEffect2c();

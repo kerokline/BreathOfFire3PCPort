@@ -51,7 +51,6 @@ using bof3x::input::sigma::Sigma;
 
 namespace {
 
-
 namespace at = rest_3e::at;
 using U = std::uint32_t;
 using LD = long double;
@@ -65,7 +64,6 @@ unsigned char* S() { return Sprite_Current; }
 U ULRest3e(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 U ULRest3e(U a) { return ULRest3e(move_script::At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
 U AddressOfRest3e(const void* p) { return Low32(p); }
@@ -133,217 +131,9 @@ void DrawModeRest3e(U abr, int x, int y, int dtd, U slot) {
 // state tables FC1's, docs/field_c1.md)
 // ===========================================================================
 
-// original 0x46A320 (hidden in 0x46A1E0's catalog extent; EffectKind32_Arc
-// ends at 0x46A287): jmp [EffectKind37_States + +1 * 4], unbounded.
-extern "C" void __cdecl EffectKind37_Run(void) { Dispatch("EffectKind37_Run", EffectKind37_States, EffectKind37_States_count); }
-// original 0x46ABB0: jmp [EffectKind17_States + +1 * 4], unbounded.
-extern "C" void __cdecl EffectKind17_Run(void) { Dispatch("EffectKind17_Run", EffectKind17_States, EffectKind17_States_count); }
-// original 0x46B7A0 (EffectKind17_CellBlocked ends at 0x46B799): jmp
-// [EffectKind1B_States + +1 * 4], unbounded.
-extern "C" void __cdecl EffectKind1B_Run(void) { Dispatch("EffectKind1B_Run", EffectKind1B_States, EffectKind1B_States_count); }
-
 // ===========================================================================
 // Helpers of kinds 0x41, 0x30, 0x1D, 0x21, 0x24
 // ===========================================================================
-
-// original 0x46D5F0 (FC2's kind 0x41 calls it): Crt_sprintf(0x904BA0,
-// Area08_MessageFormat, the byte +6); a draw mode (page 0xF) committed to the
-// slot +0x29 (0xC); then each character of the text from the first (the first
-// taken whatever it is, the loop's test after it), a space skipped, else the
-// character less '0' written back and an 8 x 8 SPRT at (x + 8 i, y) - x and y
-// the low words, signed - its u (char - '0' + 0x16) * 8, v 0xD0, the colour
-// 0x80, CLUT (clut byte * 16, 0x1E0), committed to the slot +0x29 (0x1C). The
-// index is a byte: past 255 it wraps to the text's start (already rewritten),
-// so the loop stops only at a NUL.
-extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, unsigned clut) {
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(rest_3e::at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(rest_3e::at::kNumberFormat.v))),
-                         static_cast<unsigned>(S()[6]));
-    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xF, 0);
-    SH_CALL(Gfx_CommitPrim)(S()[0x29], 0xC);
-    U px = static_cast<U>(x);
-    unsigned char i = 0;
-    unsigned char* c = At(::bof3::Img(rest_3e::at::kText.v));
-    do {
-        if (*c != 0x20) {
-            unsigned char* const p = Gfx_PacketNext;
-            *c = static_cast<unsigned char>(*c - 0x30);
-            const U clut_word = SH_CALL(Gpu_GetClut)(static_cast<int>((clut & 0xFFu) << 4), 0x1E0);
-            rv::As<records::GpuSprt>(p)->clut = clut_word;
-            p[4] = 0x80;
-            p[5] = 0x80;
-            p[6] = 0x80;
-            StI(p + 8, static_cast<std::int16_t>(px));
-            StI(p + 0xC, static_cast<std::int16_t>(y));
-            p[0x15] = 0xD0;
-            p[0x14] = static_cast<unsigned char>((*c + 0x16) << 3);
-            rv::As<records::GpuSprt>(p)->w = 8;
-            rv::As<records::GpuSprt>(p)->h = 8;
-            SH_CALL(Gpu_SetSprt)(p);
-            SH_CALL(Gfx_CommitPrim)(S()[0x29], 0x1C);
-        }
-        px += 8;
-        ++i;
-        c = At(::bof3::Img(rest_3e::at::kText.v) + i);
-    } while (*c != 0);
-}
-
-// original 0x46D710 (PSX 0x801A0764; Area135_SpawnCopy calls it; FC2's EffectKind30_Push does
-// the same): the byte *(+0x54), signed, times 0x28 bytes copied from *(+0x50)
-// to 0x8C5D80 one at a time, +0x50 stepped each byte (Sprite_Current read each
-// time); +0x50 = 0x8C5D80; EffectKind30_ShardsInit, EffectKind30_SparksInit;
-// +9 = 0x10.
-extern "C" void __cdecl EffectShards_LoadModel(void) {
-    unsigned char* s = S();
-    std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
-                     static_cast<std::int32_t>(rest_3e::at::kModelFace);
-    unsigned char* to = At(::bof3::Img(rest_3e::at::kModelCopy.v));
-    for (; n > 0; --n) {
-        *to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
-        rv::As<records::EffectObject>(s)->script = rv::As<records::EffectObject>(s)->script + 1;
-        s = S();
-    }
-    rv::As<records::EffectObject>(s)->script = ::bof3::Img(rest_3e::at::kModelCopy.v);
-    SH_CALL(EffectKind30_ShardsInit)();
-    SH_CALL(EffectKind30_SparksInit)();
-    S()[9] = 0x10;
-}
-
-// original 0x46D770 (Area135_SpawnCountdown calls it; PSX 0x801A0820): EffectKind30_ShardsStep,
-// then a tail jump to EffectKind30_SparksDraw.
-extern "C" void __cdecl EffectShards_Step(void) {
-    SH_CALL(EffectKind30_ShardsStep)();
-    SH_CALL(EffectKind30_SparksDraw)();
-}
-
-// original 0x46E190 (E1C's EffectKind1D_MoveShards calls it; PSX twin
-// 0x801F752C): the speck's point +4 projected (EffectGte_ProjectPoint into a
-// stack vector); a TILE_1 at the packet cursor, opaque, at it, white on an odd
-// Rand, else black; committed to slot 1 (0x14). E2A's EffectSpecks_Draw links
-// the same tile instead.
-extern "C" void __cdecl EffectKind1D_DrawSpeck(const unsigned char* speck) {
-    alignas(4) unsigned char screen[12];
-    SH_CALL(EffectGte_ProjectPoint)(Point(speck + 4), Out(screen));
-    unsigned char* const p = Gfx_PacketNext;
-    SH_CALL(Gpu_SetTile1)(p);
-    SH_CALL(Gpu_SetSemiTrans)(p, 0);
-    Copy12Rest3e(p + 8, screen);
-    const auto c = static_cast<unsigned char>((SH_CALL(Rand)() & 1) ? 0xFF : 0);
-    p[6] = c;
-    p[5] = c;
-    p[4] = c;
-    SH_CALL(Gfx_CommitPrim)(1, 0x14);
-}
-
-// original 0x46F570 (E1D's kind 0x21 states call it; PSX twin 0x801F7FFC): the
-// arm's four points round its centre. With the angle +0x4C and the length
-// +0x52 (words, signed): c = cos * length << 4, s = sin * length << 4; a matrix
-// EffectGte_SetDiagonalOne, turned by Gte_RotMatrixY(+0x4E) and
-// Gte_RotMatrixZ(+0x50). The original then calls Gte_ApplyMatrixLV once with a
-// stack vector it never wrote, and drops the answer (ours passes zeros: the
-// callee writes only its out, which the loop overwrites). Point i of four
-// (+0xC + 0x10 i): the vector (0, 0), (c, s), (c, 0), (c, -s) - z 0 - through
-// the matrix; x = +0 + out x, y = +4 + out y, z = +8 + (out z << 8).
-extern "C" void __cdecl EffectKind21_ArmPoints(unsigned char* arm) {
-    const U cos = static_cast<U>(SH_CALL(Math_Cos)(SW(arm + 0x4C)));
-    const U c = Mul(cos, static_cast<U>(SW(arm + 0x52))) << 4;
-    const U sin = static_cast<U>(SH_CALL(Math_Sin)(SW(arm + 0x4C)));
-    const U s = Mul(sin, static_cast<U>(SW(arm + 0x52))) << 4;
-    alignas(4) short m[16] = {};
-    SH_CALL(EffectGte_SetDiagonalOne)(m);
-    SH_CALL(Gte_RotMatrixY)(SW(arm + 0x4E), m);
-    SH_CALL(Gte_RotMatrixZ)(SW(arm + 0x50), m);
-    long v[3] = {0, 0, 0};
-    long out[3];
-    SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
-    for (unsigned i = 0; i < 4; ++i) {
-        switch (i) {
-        case 0: v[0] = 0; v[1] = 0; break;
-        case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
-        case 2: v[0] = static_cast<long>(c); v[1] = 0; break;
-        default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
-        }
-        v[2] = 0;
-        SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
-        unsigned char* const q = arm + 0xC + 0x10 * i;
-        SetUL(q, ULRest3e(arm) + static_cast<U>(out[0]));
-        SetUL(q + 4, ULRest3e(arm + 4) + static_cast<U>(out[1]));
-        SetUL(q + 8, (static_cast<U>(out[2]) << 8) + ULRest3e(arm + 8));
-    }
-}
-
-// original 0x46F690 (E1D's kind 0x21 states call it): a draw mode
-// (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1); EffectGte_LoadMapCamera; the
-// triangles of points 0, 1, 2 and 0, 3, 2.
-extern "C" void __cdecl EffectKind21_DrawArm(unsigned char* arm) {
-    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
-    SH_CALL(EffectGte_LoadMapCamera)();
-    SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 1, 2);
-    SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 3, 2);
-}
-
-// original 0x46F6F0: a POLY_G3 at the packet cursor, semi-transparent (1);
-// its vertices the arm's points a, b, c (bytes; +0xC + 0x10 each) projected;
-// the shades 0x40, 0, 0x80; committed to slot 1 (0x34).
-extern "C" void __cdecl EffectKind21_DrawArmTriangle(unsigned char* arm, unsigned a, unsigned b, unsigned c) {
-    unsigned char* const p = Gfx_PacketNext;
-    SH_CALL(Gpu_SetPolyG3)(p);
-    SH_CALL(Gpu_SetSemiTrans)(p, 1);
-    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((a & 0xFFu) << 4)), Out(p + 8));
-    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((b & 0xFFu) << 4)), Out(p + 0x18));
-    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((c & 0xFFu) << 4)), Out(p + 0x28));
-    p[4] = p[5] = p[6] = 0x40;
-    p[0x14] = p[0x15] = p[0x16] = 0;
-    p[0x24] = p[0x25] = p[0x26] = 0x80;
-    SH_CALL(Gfx_CommitPrim)(1, 0x34);
-}
-
-// original 0x46FAE0 (E1D's kind 0x24 calls it; PSX twin 0x801F88FC): a draw
-// mode (as the arm's); the direction from the two angles (+4, +2: words,
-// signed) - dx = cos(+4) sin(+2) sar 8, dz = sin(+4) sin(+2) sar 8, the height
-// step cos(+2) << 4; EffectGte_LoadMapCamera; four LINE_G2s, semi-transparent,
-// the direction turned a quarter each time ((dx, dz) := (-dz, dx)): from the
-// leader's point (ObjTrio +0x34 / +0x38 / +0x3C) out by a = (+6 * +0) sar 8
-// (its low word, signed) to b = (+8 * +0) sar 8 - x + a dx sar 8, z + a dz sar
-// 8, y + a times the height step - each end projected; its colour the scale
-// word (+6 or +8) times the bytes +0xA, +0xB, +0xC, sar 8; committed to slot 1
-// (0x24).
-extern "C" void __cdecl EffectKind24_DrawRay(const unsigned char* ray) {
-    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
-    const U cos4 = static_cast<U>(SH_CALL(Math_Cos)(SW(ray + 4)));
-    const U sin2 = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 2)));
-    U dx = Sar(Mul(cos4, sin2), 8);
-    const U sin4 = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 4)));
-    const U sin2b = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 2)));
-    U dz = Sar(Mul(sin4, sin2b), 8);
-    const U lift = static_cast<U>(SH_CALL(Math_Cos)(SW(ray + 2))) << 4;
-    SH_CALL(EffectGte_LoadMapCamera)();
-    for (unsigned n = 4; n != 0; --n) {
-        unsigned char* const p = Gfx_PacketNext;
-        SH_CALL(Gpu_SetLineG2)(p);
-        SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        alignas(4) unsigned char pt[12];
-        U a = static_cast<U>(static_cast<std::int16_t>(Sar(Mul(static_cast<U>(SW(ray + 6)), static_cast<U>(SW(ray))), 8)));
-        SetUL(pt, Sar(Mul(a, dx), 8) + static_cast<std::uint32_t>(ObjTrio[0].x));
-        SetUL(pt + 4, Sar(Mul(a, dz), 8) + static_cast<std::uint32_t>(ObjTrio[0].z));
-        SetUL(pt + 8, Mul(a, lift) + static_cast<std::uint32_t>(ObjTrio[0].height));
-        SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(p + 8));
-        p[4] = static_cast<unsigned char>((Word(ray + 6) * ray[0xA]) >> 8);
-        p[5] = static_cast<unsigned char>((Word(ray + 6) * ray[0xB]) >> 8);
-        p[6] = static_cast<unsigned char>((Word(ray + 6) * ray[0xC]) >> 8);
-        a = static_cast<U>(static_cast<std::int16_t>(Sar(Mul(static_cast<U>(SW(ray + 8)), static_cast<U>(SW(ray))), 8)));
-        SetUL(pt, Sar(Mul(a, dx), 8) + static_cast<std::uint32_t>(ObjTrio[0].x));
-        SetUL(pt + 4, Sar(Mul(a, dz), 8) + static_cast<std::uint32_t>(ObjTrio[0].z));
-        SetUL(pt + 8, Mul(a, lift) + static_cast<std::uint32_t>(ObjTrio[0].height));
-        SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(p + 0x18));
-        p[0x14] = static_cast<unsigned char>((Word(ray + 8) * ray[0xA]) >> 8);
-        p[0x15] = static_cast<unsigned char>((Word(ray + 8) * ray[0xB]) >> 8);
-        p[0x16] = static_cast<unsigned char>((Word(ray + 8) * ray[0xC]) >> 8);
-        SH_CALL(Gfx_CommitPrim)(1, 0x24);
-        const U old = dx;
-        dx = 0u - dz;
-        dz = old;
-    }
-}
 
 // ===========================================================================
 // The glow sparks: 8 records of 0x1C at EffectKind30_Shards (+0 in use, +1 the
@@ -1437,7 +1227,6 @@ void LogPlan(bool readable, const Shape baked[kRows], const std::uint16_t wanted
               kShapeName[baked[2]], what[0], what[1], what[2]);
 }
 
-
 // The self-test (BOF3X_SHADOW=rest_3e, after the fuzz): the rule on shapes
 // drawn here by rule - no page's texels are copied - at every place in the
 // cell; then the plan on each release's page order (docs/rest_3e.md section
@@ -1797,17 +1586,6 @@ void Rest3E_Inject() {
         rest_3e::SelfTest();
         dock::SelfTest();
     }
-    BOF3_INJECT(EffectKind37_Run);
-    BOF3_INJECT(EffectKind17_Run);
-    BOF3_INJECT(EffectKind1B_Run);
-    BOF3_INJECT(EffectKind41_DrawNumber);
-    BOF3_INJECT(EffectShards_LoadModel);
-    BOF3_INJECT(EffectShards_Step);
-    BOF3_INJECT(EffectKind1D_DrawSpeck);
-    BOF3_INJECT(EffectKind21_ArmPoints);
-    BOF3_INJECT(EffectKind21_DrawArm);
-    BOF3_INJECT(EffectKind21_DrawArmTriangle);
-    BOF3_INJECT(EffectKind24_DrawRay);
     BOF3_INJECT(EffectGlowSparks_Clear);
     BOF3_INJECT(EffectGlowSparks_StartRise);
     BOF3_INJECT(EffectGlowSparks_StartBurst);

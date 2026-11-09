@@ -1,0 +1,600 @@
+// Moved here by tools/move_funcs.py from effect_1d.cpp, rest_3e.cpp (docs/source-layout-round.md).
+#include "game/effect/effect_kind_21.h"
+
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "bof3/symbols.gen.h"
+#include "game/effect/effect_kind_21_callees.h"
+#include "game/effect_1d.h"
+#include "game/effect_1d_callees.h"
+#include "game/effect_gte.h"
+#include "game/labels.h"
+#include "game/lang_layout.h"
+#include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
+#include "game/rest_3e.h"
+#include "game/rest_3e_callees.h"
+#include "game/scenario_harness.h"
+#include "hook/detour.h"
+#include "hook/exe_image.h"
+#include "hook/log.h"
+#include "input/sigma.h"
+
+namespace {
+
+namespace at = effect_kind_21::at;
+
+}  // namespace
+
+namespace {
+
+using U = std::uint32_t;
+
+using move_script::At;
+
+using move_script::Long;
+
+using move_script::SetLong;
+
+using move_script::SetWord;
+
+using move_script::Word;
+
+unsigned char* S() { return Sprite_Current; }
+
+U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
+
+void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
+
+std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+
+void AddWord(unsigned char* p, U d) { SetWord(p, Word(p) + d); }
+
+U AddressOf(const void* p) { return Low32(p); }
+
+// sar: an arithmetic right shift of the 32 bits as the original holds them.
+U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
+
+float ToFloat(U v) { return static_cast<float>(static_cast<std::int32_t>(v)); }
+
+void StoreFloat(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
+
+// `fld dword` then the CRT's _ftol 0x5B9550: truncation through a 64-bit
+// fistp, whose NaN and out-of-range answer is the integer indefinite
+// 0x8000000000000000 - so 0 in the low word the caller keeps (battle_items.cpp's
+// Ftol16).
+std::uint16_t Ftol16(const unsigned char* p) {
+    float v;
+    std::memcpy(&v, p, sizeof v);
+    if (!(v > -9.2233720368547758e18f && v < 9.2233720368547758e18f)) return 0;   // NaN included
+    return static_cast<std::uint16_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
+}
+
+// mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 1]; jmp [table + eax * 4]:
+// the table's `entries` handlers read in place (the fuzz swaps the cells for
+// recorders); a Fatal past them, where the original jumps through the dword
+// after - the next kind's table or data.
+void Dispatch(const char* who, U table, unsigned entries) {
+    const unsigned state = Sprite_Current[1];
+    if (state >= entries)
+        bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
+                    "(docs/effect_1d.md section 2)",
+                    who, state, entries, (unsigned)table);
+    reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
+}
+
+// Effect_FindFree's record (answer & 0xFF, as the originals widen it): a Fatal
+// on an answer past the twenty (the callee answers 0xFF or 0..19; the original
+// would write past the pool).
+unsigned char* NewRecord(const char* who, unsigned index) {
+    if (index >= at::kEffects)
+        bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
+                    "(docs/effect_1d.md section 2)",
+                    who, index);
+    return rv::Bytes(Effect_Objects) + index * at::kEffectStride;
+}
+
+// Kind 0x21's frame: the arm's points built and drawn (the arm is the record +
+// 0xC as read on entry; both callees take it).
+unsigned char* ArmFrame() {
+    unsigned char* const arm = S() + 0xC;
+    SH_AT(void (__cdecl*)(unsigned char*), at::kArmVertices.v)(arm);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kArmDraw.v)(arm);
+    return arm;
+}
+
+// +9 down one (Sprite_Current read for each access, as the originals); at 0,
+// +9 = `reload` and +1 up - or, when `reload` is negative, +1 up with +9 left 0.
+void CountDown(int reload) {
+    unsigned char* s = S();
+    s[9] = static_cast<unsigned char>(s[9] - 1);
+    s = S();
+    if (s[9] != 0) return;
+    if (reload >= 0) {
+        s[9] = static_cast<unsigned char>(reload);
+        s = S();
+    }
+    s[1] = static_cast<unsigned char>(s[1] + 1);
+}
+
+// +1 up, Sprite_Current read afresh.
+void NextState() {
+    unsigned char* const s = S();
+    s[1] = static_cast<unsigned char>(s[1] + 1);
+}
+
+U ULRest3e(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
+
+U ULRest3e(U a) { return ULRest3e(move_script::At(a)); }
+
+// imul r32, r32: the product's low 32 bits.
+U Mul(U a, U b) { return a * b; }
+
+const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+
+float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
+
+// The draw-mode packet the draws open with: Gpu_GetTPage(0, abr, x, y),
+// Gpu_SetDrawMode(packet, 0, dtd, the page's low word, 0 - the fifth word the
+// leftover of GetTPage's five pushes), committed to `slot` (0xC).
+void DrawModeRest3e(U abr, int x, int y, int dtd, U slot) {
+    const U tp = SH_CALL(Gpu_GetTPage)(0, abr, x, y);
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, dtd, tp & 0xFFFFu, 0);
+    SH_CALL(Gfx_CommitPrim)(slot, 0xC);
+}
+
+}  // namespace
+
+// original 0x46F2B0 (0x12 bytes): jmp [EffectKind21_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind21_Run(void) { Dispatch("EffectKind21_Run", AddressOf(EffectKind21_States), EffectKind21_States_count); }
+
+// original 0x46F2D0 (state 0): +9 = 0xF frames, +1 up.
+extern "C" void __cdecl EffectKind21_Start(void) {
+    S()[9] = 0xF;
+    NextState();
+}
+
+// original 0x46F2F0 (state 1): the arm built and drawn; its length word +0x5E
+// (the arm's +0x52, through the pointer taken on entry) one longer; +9 down, at
+// 0 +9 = 8 and +1 up.
+extern "C" void __cdecl EffectKind21_Grow(void) {
+    unsigned char* const arm = ArmFrame();
+    AddWord(arm + 0x52, 1);
+    CountDown(8);
+}
+
+// original 0x46F340 (state 2): the arm built and drawn; its angle word +0x58
+// (the arm's +0x4C) up 4; +9 down, at 0 +9 = 8 and +1 up.
+extern "C" void __cdecl EffectKind21_Lift(void) {
+    unsigned char* const arm = ArmFrame();
+    AddWord(arm + 0x4C, 4);
+    CountDown(8);
+}
+
+// original 0x46F390 (state 3): the arm built and drawn; +9 down, at 0 +9 =
+// 0x80 and +1 up.
+extern "C" void __cdecl EffectKind21_Hold(void) {
+    ArmFrame();
+    CountDown(0x80);
+}
+
+// original 0x46F3D0 (state 4): the arm built and drawn; its turn words +0x5A
+// down 8 and +0x5C down 0x40 (the arm's +0x4E, +0x50); +9 down, at 0 +1 up
+// (+9 left 0).
+extern "C" void __cdecl EffectKind21_Swirl(void) {
+    unsigned char* const arm = ArmFrame();
+    AddWord(arm + 0x4E, 0xFFF8u);
+    AddWord(arm + 0x50, 0xFFC0u);
+    CountDown(-1);
+}
+
+// original 0x46F410 (state 5): the arm built and drawn; its angle word +0x58
+// down 8; once it is below 0 (s16), +6 = 1 (done: EffectKind22_WaitArms reads
+// it) on Sprite_Current as read then, and a tail jmp to Effect_Release.
+extern "C" void __cdecl EffectKind21_Fold(void) {
+    unsigned char* const arm = ArmFrame();
+    AddWord(arm + 0x4C, 0xFFF8u);
+    if (SW(arm + 0x4C) >= 0) return;
+    S()[6] = 1;
+    SH_CALL(Effect_Release)();
+}
+
+// original 0x46F450: jmp [EffectKind22_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind22_Run(void) { Dispatch("EffectKind22_Run", AddressOf(EffectKind22_States), EffectKind22_States_count); }
+
+// original 0x46F470 (state 0): Sound_PlayEffect(0x209); +1 up (Sprite_Current
+// read after the call).
+extern "C" void __cdecl EffectKind22_Sound(void) {
+    SH_CALL(Sound_PlayEffect)(0x209);
+    NextState();
+}
+
+// original 0x46F490 (state 1): five arms. For i = 0..4, Effect_FindFree; when it
+// answers a record: the record's address into the dword +0xC + 4 i of the
+// record current on entry (none written when it answers 0xFF), +0 = 1, +6 = 0,
+// +5 = 0x21; its +0xC, +0x10, +0x14 = Sprite_Current's +0x34, +0x38, +0x3C
+// (the centre: x, z, height; Sprite_Current read for each); its words +0x58 =
+// 6, +0x5A = 0, +0x5E = 0, +0x5C = 0x333 i (a fifth of the circle each). Then
+// +1 up.
+extern "C" void __cdecl EffectKind22_SpawnArms(void) {
+    unsigned char* const cells = S() + 0xC;
+    for (unsigned i = 0; i < 5; ++i) {
+        const unsigned char found = SH_CALL(Effect_FindFree)();
+        if (found == 0xFF) continue;
+        unsigned char* const e = NewRecord("EffectKind22_SpawnArms", found);
+        SetUL(cells + 4 * i, AddressOf(e));
+        e[0] = 1;
+        e[6] = 0;
+        e[5] = 0x21;
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+        const U height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->step_y, height);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->script_pos, 6);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(e)->frame_word, 0);
+        SetWord(e + 0x5E, 0);
+        SetWord(e + 0x5C, 0x333u * i);
+    }
+    NextState();
+}
+
+// original 0x46F530 (state 2): the five records whose addresses +0xC..+0x1C
+// hold - each dereferenced as it stands (a cell EffectKind22_SpawnArms left
+// unwritten is whatever the record held: docs/effect_1d.md section 7). Any
+// whose +6 is 0: return. All five done: the counter byte 0x903848 up and
+// Effect_Release.
+extern "C" void __cdecl EffectKind22_WaitArms(void) {
+    const unsigned char* const s = S();
+    for (unsigned i = 0; i < 5; ++i)
+        if (At(UL(s + 0xC + 4 * i))[6] == 0) return;
+    unsigned char* const counter = At(::bof3::Img(at::kCounter0.v));
+    counter[0] = static_cast<unsigned char>(counter[0] + 1);
+    SH_CALL(Effect_Release)();
+}
+
+// original 0x46F570 (E1D's kind 0x21 states call it; PSX twin 0x801F7FFC): the
+// arm's four points round its centre. With the angle +0x4C and the length
+// +0x52 (words, signed): c = cos * length << 4, s = sin * length << 4; a matrix
+// EffectGte_SetDiagonalOne, turned by Gte_RotMatrixY(+0x4E) and
+// Gte_RotMatrixZ(+0x50). The original then calls Gte_ApplyMatrixLV once with a
+// stack vector it never wrote, and drops the answer (ours passes zeros: the
+// callee writes only its out, which the loop overwrites). Point i of four
+// (+0xC + 0x10 i): the vector (0, 0), (c, s), (c, 0), (c, -s) - z 0 - through
+// the matrix; x = +0 + out x, y = +4 + out y, z = +8 + (out z << 8).
+extern "C" void __cdecl EffectKind21_ArmPoints(unsigned char* arm) {
+    const U cos = static_cast<U>(SH_CALL(Math_Cos)(SW(arm + 0x4C)));
+    const U c = Mul(cos, static_cast<U>(SW(arm + 0x52))) << 4;
+    const U sin = static_cast<U>(SH_CALL(Math_Sin)(SW(arm + 0x4C)));
+    const U s = Mul(sin, static_cast<U>(SW(arm + 0x52))) << 4;
+    alignas(4) short m[16] = {};
+    SH_CALL(EffectGte_SetDiagonalOne)(m);
+    SH_CALL(Gte_RotMatrixY)(SW(arm + 0x4E), m);
+    SH_CALL(Gte_RotMatrixZ)(SW(arm + 0x50), m);
+    long v[3] = {0, 0, 0};
+    long out[3];
+    SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
+    for (unsigned i = 0; i < 4; ++i) {
+        switch (i) {
+        case 0: v[0] = 0; v[1] = 0; break;
+        case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
+        case 2: v[0] = static_cast<long>(c); v[1] = 0; break;
+        default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
+        }
+        v[2] = 0;
+        SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
+        unsigned char* const q = arm + 0xC + 0x10 * i;
+        SetUL(q, ULRest3e(arm) + static_cast<U>(out[0]));
+        SetUL(q + 4, ULRest3e(arm + 4) + static_cast<U>(out[1]));
+        SetUL(q + 8, (static_cast<U>(out[2]) << 8) + ULRest3e(arm + 8));
+    }
+}
+
+// original 0x46F690 (E1D's kind 0x21 states call it): a draw mode
+// (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1); EffectGte_LoadMapCamera; the
+// triangles of points 0, 1, 2 and 0, 3, 2.
+extern "C" void __cdecl EffectKind21_DrawArm(unsigned char* arm) {
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
+    SH_CALL(EffectGte_LoadMapCamera)();
+    SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 1, 2);
+    SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 3, 2);
+}
+
+// original 0x46F6F0: a POLY_G3 at the packet cursor, semi-transparent (1);
+// its vertices the arm's points a, b, c (bytes; +0xC + 0x10 each) projected;
+// the shades 0x40, 0, 0x80; committed to slot 1 (0x34).
+extern "C" void __cdecl EffectKind21_DrawArmTriangle(unsigned char* arm, unsigned a, unsigned b, unsigned c) {
+    unsigned char* const p = Gfx_PacketNext;
+    SH_CALL(Gpu_SetPolyG3)(p);
+    SH_CALL(Gpu_SetSemiTrans)(p, 1);
+    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((a & 0xFFu) << 4)), Out(p + 8));
+    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((b & 0xFFu) << 4)), Out(p + 0x18));
+    SH_CALL(EffectGte_ProjectPoint)(Point(arm + 0xC + ((c & 0xFFu) << 4)), Out(p + 0x28));
+    p[4] = p[5] = p[6] = 0x40;
+    p[0x14] = p[0x15] = p[0x16] = 0;
+    p[0x24] = p[0x25] = p[0x26] = 0x80;
+    SH_CALL(Gfx_CommitPrim)(1, 0x34);
+}
+
+// original 0x46F790: jmp [EffectKind23_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind23_Run(void) { Dispatch("EffectKind23_Run", AddressOf(EffectKind23_States), EffectKind23_States_count); }
+
+// original 0x46F7B0 (state 0): +9 = 0x60 frames, +1 up, then
+// Sound_PlayEffect(0x204).
+extern "C" void __cdecl EffectKind23_Start(void) {
+    S()[9] = 0x60;
+    NextState();
+    SH_CALL(Sound_PlayEffect)(0x204);
+}
+
+// original 0x46F7D0 (state 1): with +9 bit 2 set, Effect_FindFree; a record
+// found gets +0 = 1 and +5 = 0x24 (a ray). Then +9 down, at 0 +1 up.
+extern "C" void __cdecl EffectKind23_SpawnRays(void) {
+    if (S()[9] & 4) {
+        const unsigned char found = SH_CALL(Effect_FindFree)();
+        if (found != 0xFF) {
+            unsigned char* const e = NewRecord("EffectKind23_SpawnRays", found);
+            e[0] = 1;
+            e[5] = 0x24;
+        }
+    }
+    CountDown(-1);
+}
+
+// original 0x46F820: jmp [EffectKind24_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind24_Run(void) { Dispatch("EffectKind24_Run", AddressOf(EffectKind24_States), EffectKind24_States_count); }
+
+// original 0x46F840 (state 0): the ray, from the record current on entry: the
+// length word +0xC = 0x600, the scales +0x12 = +0x14 = 0x100, the angles +0xE =
+// Rand & 0x700 and +0x10 = Rand & 0xF00; the colour +0x18, +0x17, +0x16 = 0xFF
+// (in that order), then +0x16 = 0 when Rand is odd and +0x18 = 0 when the next
+// is. +1 up (Sprite_Current read then).
+extern "C" void __cdecl EffectKind24_Start(void) {
+    unsigned char* const ray = S() + 0xC;
+    SetWord(ray, 0x600);
+    SetWord(ray + 6, 0x100);
+    SetWord(ray + 8, 0x100);
+    SetWord(ray + 2, static_cast<U>(SH_CALL(Rand)()) & 0x700u);
+    SetWord(ray + 4, static_cast<U>(SH_CALL(Rand)()) & 0xF00u);
+    ray[0xC] = 0xFF;
+    ray[0xB] = 0xFF;
+    ray[0xA] = 0xFF;
+    if (SH_CALL(Rand)() & 1) ray[0xA] = 0;
+    if (SH_CALL(Rand)() & 1) ray[0xC] = 0;
+    NextState();
+}
+
+// original 0x46F8B0 (state 1): the ray drawn (0x46FAE0, the record + 0xC as read
+// on entry); its first scale +0x12 down 0x10, held at 0 (s16); while that is
+// below 0x80 the second +0x14 down 0x10; once the second is below 0 (s16), the
+// FIRST is set 0 (as the original writes it) and +1 up.
+extern "C" void __cdecl EffectKind24_Shrink(void) {
+    unsigned char* const ray = S() + 0xC;
+    SH_AT(void (__cdecl*)(const unsigned char*), at::kRayDraw.v)(ray);
+    AddWord(ray + 6, 0xFFF0u);
+    if (SW(ray + 6) < 0) SetWord(ray + 6, 0);
+    if (SW(ray + 6) < 0x80) AddWord(ray + 8, 0xFFF0u);
+    if (SW(ray + 8) >= 0) return;
+    SetWord(ray + 6, 0);
+    NextState();
+}
+
+// original 0x46F900: jmp [EffectKind25_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind25_Run(void) { Dispatch("EffectKind25_Run", AddressOf(EffectKind25_States), EffectKind25_States_count); }
+
+// original 0x46F920 (state 0): the leader's point projected. Prim_VertexScratch
+// [0] = (leader x sar 9) - 0x4000, [2] = -(the leader's height word / 2, toward
+// zero), [1] = (leader z sar 9) - 0x4000 (stored in that order; [3] not
+// written); Gte_RotTransPers(Prim_VertexScratch, MapView_ScreenXY, a local) -
+// the original hands a fourth argument, a second local, the callee never reads.
+// Its answer to the dword +0x60; the two floats of MapView_ScreenXY through
+// _ftol to the words +0x2E and +0x30 (Sprite_Current read for each store); +9 =
+// 0, +1 up.
+extern "C" void __cdecl EffectKind25_Start(void) {
+    const U x = static_cast<std::uint32_t>(ObjTrio[0].x);
+    const U z = static_cast<std::uint32_t>(ObjTrio[0].z);
+    Prim_VertexScratch[0].x = static_cast<short>(Sar(x, 9) - 0x4000u);
+    const std::int32_t height = static_cast<std::int16_t>(ObjTrio[0].height_whole);
+    Prim_VertexScratch[0].z = static_cast<short>(-(height / 2));
+    Prim_VertexScratch[0].y = static_cast<short>(Sar(z, 9) - 0x4000u);
+    long depth = 0;
+    const long answer =
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
+    rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
+    const auto* const screen = reinterpret_cast<const unsigned char*>(MapView_ScreenXY);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, Ftol16(screen));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol16(screen + 4));
+    S()[9] = 0;
+    NextState();
+}
+
+// original 0x46F9D0 (state 1): the disc at (+0x2E, +0x30), radius +9, the
+// centre 0x80 and the rim 0; +9 up 0xF; above 0x3C (unsigned), +9 = 0xFF and
+// +1 up.
+extern "C" void __cdecl EffectKind25_Grow(void) {
+    const unsigned char* const s = S();
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, s[9], 0x80, 0);
+    unsigned char* t = S();
+    t[9] = static_cast<unsigned char>(t[9] + 0xF);
+    t = S();
+    if (t[9] <= 0x3C) return;
+    t[9] = 0xFF;
+    NextState();
+}
+
+// original 0x46FA20 (state 2): the disc at (+0x2E, +0x30), radius 0x3C + (+9 &
+// 1), the centre 0x80 and the rim 0; at +9 = 0xD7 Sound_PlayEffect(0x208); +9
+// down, at 0 +9 = 0x3C and +1 up.
+extern "C" void __cdecl EffectKind25_Glow(void) {
+    const unsigned char* const s = S();
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, 0x3Cu + (s[9] & 1u), 0x80, 0);
+    if (S()[9] == 0xD7) SH_CALL(Sound_PlayEffect)(0x208);
+    CountDown(0x3C);
+}
+
+// original 0x46FA90 (state 3): the disc at (+0x2E, +0x30), radius +9, the
+// centre 0x80 and the rim 0; +9 down; below 0 (s8), +1 up.
+extern "C" void __cdecl EffectKind25_Shrink(void) {
+    const unsigned char* const s = S();
+    SH_CALL(EffectKind25_DrawDisc)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, s[9], 0x80, 0);
+    unsigned char* t = S();
+    t[9] = static_cast<unsigned char>(t[9] - 1);
+    t = S();
+    if (static_cast<signed char>(t[9]) >= 0) return;
+    t[1] = static_cast<unsigned char>(t[1] + 1);
+}
+
+// original 0x46FAE0 (E1D's kind 0x24 calls it; PSX twin 0x801F88FC): a draw
+// mode (as the arm's); the direction from the two angles (+4, +2: words,
+// signed) - dx = cos(+4) sin(+2) sar 8, dz = sin(+4) sin(+2) sar 8, the height
+// step cos(+2) << 4; EffectGte_LoadMapCamera; four LINE_G2s, semi-transparent,
+// the direction turned a quarter each time ((dx, dz) := (-dz, dx)): from the
+// leader's point (ObjTrio +0x34 / +0x38 / +0x3C) out by a = (+6 * +0) sar 8
+// (its low word, signed) to b = (+8 * +0) sar 8 - x + a dx sar 8, z + a dz sar
+// 8, y + a times the height step - each end projected; its colour the scale
+// word (+6 or +8) times the bytes +0xA, +0xB, +0xC, sar 8; committed to slot 1
+// (0x24).
+extern "C" void __cdecl EffectKind24_DrawRay(const unsigned char* ray) {
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
+    const U cos4 = static_cast<U>(SH_CALL(Math_Cos)(SW(ray + 4)));
+    const U sin2 = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 2)));
+    U dx = Sar(Mul(cos4, sin2), 8);
+    const U sin4 = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 4)));
+    const U sin2b = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 2)));
+    U dz = Sar(Mul(sin4, sin2b), 8);
+    const U lift = static_cast<U>(SH_CALL(Math_Cos)(SW(ray + 2))) << 4;
+    SH_CALL(EffectGte_LoadMapCamera)();
+    for (unsigned n = 4; n != 0; --n) {
+        unsigned char* const p = Gfx_PacketNext;
+        SH_CALL(Gpu_SetLineG2)(p);
+        SH_CALL(Gpu_SetSemiTrans)(p, 1);
+        alignas(4) unsigned char pt[12];
+        U a = static_cast<U>(static_cast<std::int16_t>(Sar(Mul(static_cast<U>(SW(ray + 6)), static_cast<U>(SW(ray))), 8)));
+        SetUL(pt, Sar(Mul(a, dx), 8) + static_cast<std::uint32_t>(ObjTrio[0].x));
+        SetUL(pt + 4, Sar(Mul(a, dz), 8) + static_cast<std::uint32_t>(ObjTrio[0].z));
+        SetUL(pt + 8, Mul(a, lift) + static_cast<std::uint32_t>(ObjTrio[0].height));
+        SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(p + 8));
+        p[4] = static_cast<unsigned char>((Word(ray + 6) * ray[0xA]) >> 8);
+        p[5] = static_cast<unsigned char>((Word(ray + 6) * ray[0xB]) >> 8);
+        p[6] = static_cast<unsigned char>((Word(ray + 6) * ray[0xC]) >> 8);
+        a = static_cast<U>(static_cast<std::int16_t>(Sar(Mul(static_cast<U>(SW(ray + 8)), static_cast<U>(SW(ray))), 8)));
+        SetUL(pt, Sar(Mul(a, dx), 8) + static_cast<std::uint32_t>(ObjTrio[0].x));
+        SetUL(pt + 4, Sar(Mul(a, dz), 8) + static_cast<std::uint32_t>(ObjTrio[0].z));
+        SetUL(pt + 8, Mul(a, lift) + static_cast<std::uint32_t>(ObjTrio[0].height));
+        SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(p + 0x18));
+        p[0x14] = static_cast<unsigned char>((Word(ray + 8) * ray[0xA]) >> 8);
+        p[0x15] = static_cast<unsigned char>((Word(ray + 8) * ray[0xB]) >> 8);
+        p[0x16] = static_cast<unsigned char>((Word(ray + 8) * ray[0xC]) >> 8);
+        SH_CALL(Gfx_CommitPrim)(1, 0x24);
+        const U old = dx;
+        dx = 0u - dz;
+        dz = old;
+    }
+}
+
+// original 0x46FCF0 (0x16E bytes): a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0),
+// Gpu_SetDrawMode(packet, 0, 1, it, 0), committed 0xC); then for the angles a =
+// 0, 0x80, .. 0xF80, a triangle at the packet cursor (read afresh each time):
+// Gpu_SetPolyG3, Gpu_SetSemiTrans(1); vertex 0 the centre (x, y as floats), then
+// Math_Cos(a), vertex 1 x = x + (cos * r sar 12), Math_Sin(a), its y likewise;
+// Math_Cos(b), vertex 2 x, Math_Sin(b), vertex 2 y, with b = (a + 0x80) & 0xFFF;
+// vertex 0 shaded `centre`, 1 and 2 `rim` (each r, g, b); committed 0x34. x, y
+// and r are read as s16, the shades as bytes (the callers push whole registers).
+extern "C" void __cdecl EffectKind25_DrawDisc(unsigned x, unsigned y, unsigned radius, unsigned centre, unsigned rim) {
+    const unsigned tpage = SH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0);
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage & 0xFFFFu, 0);
+    SH_CALL(Gfx_CommitPrim)(1, 0xC);
+    const U cx = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(x)));
+    const U cy = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(y)));
+    const U r = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(radius)));
+    const auto rim_shade = static_cast<unsigned char>(rim);
+    const float fx = ToFloat(cx);
+    const float fy = ToFloat(cy);
+    U a = 0;
+    U next = 0;
+    do {
+        unsigned char* const prim = Gfx_PacketNext;
+        SH_CALL(Gpu_SetPolyG3)(prim);
+        SH_CALL(Gpu_SetSemiTrans)(prim, 1);
+        next += 0x80;
+        const U b = next & 0xFFFu;
+        StoreFloat(prim + 8, fx);
+        StoreFloat(prim + 0xC, fy);
+        StoreFloat(prim + 0x18, ToFloat(Sar(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))) * r, 12) + cx));
+        StoreFloat(prim + 0x1C, ToFloat(Sar(static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a))) * r, 12) + cy));
+        StoreFloat(prim + 0x28, ToFloat(Sar(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(b))) * r, 12) + cx));
+        const float y2 = ToFloat(Sar(static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(b))) * r, 12) + cy);
+        const auto centre_shade = static_cast<unsigned char>(centre);
+        prim[4] = prim[5] = prim[6] = centre_shade;
+        prim[0x14] = prim[0x15] = prim[0x16] = rim_shade;
+        StoreFloat(prim + 0x2C, y2);
+        prim[0x24] = prim[0x25] = prim[0x26] = rim_shade;
+        SH_CALL(Gfx_CommitPrim)(1, 0x34);
+        a += 0x80;
+    } while ((next & 0xFFFFu) < 0x1000u);
+}
+
+// original 0x46FE60: jmp [EffectKind26_States + +1 * 4], unbounded.
+extern "C" void __cdecl EffectKind26_Run(void) { Dispatch("EffectKind26_Run", AddressOf(EffectKind26_States), EffectKind26_States_count); }
+
+// original 0x46FE80 (state 0): the dword +0xC = 0, +1 up.
+extern "C" void __cdecl EffectKind26_Start(void) {
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
+    NextState();
+}
+
+// original 0x46FEA0 (state 1): the band at the record's point (+0x34, +0x38,
+// +0x3C) and t = the word +0xC, all read on entry; then the dword +0xC up 0x10;
+// above 0x500 (signed), +1 up.
+extern "C" void __cdecl EffectKind26_Widen(void) {
+    const unsigned char* const s = S();
+    auto* const so = rv::AsConst<records::EffectObject>(s);
+    SH_CALL(EffectKind26_DrawBand)(so->x, so->z, so->height, Word(s + 0xC));
+    unsigned char* t = S();
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(t)->work_0c, rv::As<records::EffectWork>(t)->work_0c + 0x10u);
+    t = S();
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(t)->work_0c) <= 0x500) return;
+    t[1] = static_cast<unsigned char>(t[1] + 1);
+}
+
+void EffectKind21_InjectFromEffect1d() {
+    BOF3_INJECT(EffectKind21_Run);
+    BOF3_INJECT(EffectKind21_Start);
+    BOF3_INJECT(EffectKind21_Grow);
+    BOF3_INJECT(EffectKind21_Lift);
+    BOF3_INJECT(EffectKind21_Hold);
+    BOF3_INJECT(EffectKind21_Swirl);
+    BOF3_INJECT(EffectKind21_Fold);
+    BOF3_INJECT(EffectKind22_Run);
+    BOF3_INJECT(EffectKind22_Sound);
+    BOF3_INJECT(EffectKind22_SpawnArms);
+    BOF3_INJECT(EffectKind22_WaitArms);
+    BOF3_INJECT(EffectKind23_Run);
+    BOF3_INJECT(EffectKind23_Start);
+    BOF3_INJECT(EffectKind23_SpawnRays);
+    BOF3_INJECT(EffectKind24_Run);
+    BOF3_INJECT(EffectKind24_Start);
+    BOF3_INJECT(EffectKind24_Shrink);
+    BOF3_INJECT(EffectKind25_Run);
+    BOF3_INJECT(EffectKind25_Start);
+    BOF3_INJECT(EffectKind25_Grow);
+    BOF3_INJECT(EffectKind25_Glow);
+    BOF3_INJECT(EffectKind25_Shrink);
+    BOF3_INJECT(EffectKind25_DrawDisc);
+    BOF3_INJECT(EffectKind26_Run);
+    BOF3_INJECT(EffectKind26_Start);
+    BOF3_INJECT(EffectKind26_Widen);
+}
+
+void EffectKind21_InjectFromRest3e() {
+    BOF3_INJECT(EffectKind21_ArmPoints);
+    BOF3_INJECT(EffectKind21_DrawArm);
+    BOF3_INJECT(EffectKind21_DrawArmTriangle);
+    BOF3_INJECT(EffectKind24_DrawRay);
+}

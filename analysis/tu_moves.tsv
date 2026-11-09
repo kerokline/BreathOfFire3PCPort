@@ -6668,6 +6668,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetLong	copied		src/game/effect_1c.cpp	53	53	53	src/game/effect/effect_kind_1d.cpp	d3e6abb3
 	SetLong	copied		src/game/effect_1c.cpp	53	53	53	src/game/effect/effect_shards.cpp	d3e6abb3
 	SetWord	copied		src/game/effect_1c.cpp	54	54	54	src/game/effect/effect_shards.cpp	d3e6abb3
+	SetWord	local		src/game/effect_1c.cpp	54	54	54	src/game/effect/effect_shards.cpp	c2899085
 	Word	copied		src/game/effect_1c.cpp	55	55	55	src/game/effect/effect_kind_17.cpp	d3e6abb3
 	Word	copied		src/game/effect_1c.cpp	55	55	55	src/game/effect/effect_kind_1c.cpp	d3e6abb3
 	Word	copied		src/game/effect_1c.cpp	55	55	55	src/game/effect/effect_kind_1d.cpp	d3e6abb3
@@ -6774,6 +6775,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x46E890	EffectKind1E_TurnPiece	func	tu_46e140	src/game/effect_1c.cpp	739	746	766	src/game/effect/effect_shards.cpp	d3e6abb3
 0x46EA60	EffectKind1E_DebrisInit	func	tu_46e140	src/game/effect_1c.cpp	768	770	772	src/game/effect/effect_shards.cpp	d3e6abb3
 0x46EA80	EffectKind1E_DebrisInitOne	func	tu_46e140	src/game/effect_1c.cpp	774	782	810	src/game/effect/effect_shards.cpp	d3e6abb3
+	DebrisLoop	local		src/game/effect_1c.cpp	812	816	826	src/game/effect/effect_shards.cpp	c2899085
 0x46EBA0	EffectKind1E_DebrisDraw	func	tu_46e140	src/game/effect_1c.cpp	828	830	834	src/game/effect/effect_shards.cpp	d3e6abb3
 0x46EC20	EffectKind1E_DrawModel	func	tu_46e140	src/game/effect_1c.cpp	836	849	890	src/game/effect/effect_shards.cpp	d3e6abb3
 0x46EE20	EffectKind1E_Winding	func	tu_46e140	src/game/effect_1c.cpp	892	897	901	src/game/effect/effect_shards.cpp	d3e6abb3
@@ -6782,6 +6784,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x46EEE0	EffectKind1F_Debris	func	tu_46e140	src/game/effect_1c.cpp	920	923	930	src/game/effect/effect_shards.cpp	d3e6abb3
 0x46EF70	EffectKind20_Run	func	tu_46ef70	src/game/effect_1c.cpp	936	938	941	src/game/effect/effect_kind_20.cpp	d3e6abb3
 0x46EFA0	EffectKind20_Start	func	tu_46ef70	src/game/effect_1c.cpp	943	945	952	src/game/effect/effect_kind_20.cpp	d3e6abb3
+	Tick	local		src/game/effect_1c.cpp	954	955	963	src/game/effect/effect_kind_20.cpp	c2899085
 0x46EFE0	EffectKind20_Grow	func	tu_46ef70	src/game/effect_1c.cpp	965	966	970	src/game/effect/effect_kind_20.cpp	d3e6abb3
 0x46F030	EffectKind20_Wait	func	tu_46ef70	src/game/effect_1c.cpp	972	973	973	src/game/effect/effect_kind_20.cpp	d3e6abb3
 0x46F060	EffectKind20_Rise	func	tu_46ef70	src/game/effect_1c.cpp	975	977	982	src/game/effect/effect_kind_20.cpp	d3e6abb3
@@ -11489,12 +11492,14 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x46BB30	EffectKind30_Run	func	tu_46b7a0	src/game/field_c1.cpp	1120	1122	1122	src/game/effect/effect_kind_34.cpp	d3e6abb3
 0x46BB50	EffectKind30_Start	func	tu_46b7a0	src/game/field_c1.cpp	1124	1129	1147	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	U	local		src/game/field_c2.cpp	42	42	42	src/game/effect/effect_kind_34.cpp	d3e6abb3
+	U	copied		src/game/field_c2.cpp	42	42	42	src/game/effect/effect_kind_34.cpp	c2899085
 	At	local		src/game/field_c2.cpp	43	43	43	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	Long	local		src/game/field_c2.cpp	44	44	44	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	SetLong	local		src/game/field_c2.cpp	45	45	45	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	SetWord	local		src/game/field_c2.cpp	46	46	46	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	Word	local		src/game/field_c2.cpp	47	47	47	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	S	copied		src/game/field_c2.cpp	49	49	49	src/game/effect/effect_kind_34.cpp	d3e6abb3
+	S	local		src/game/field_c2.cpp	49	49	49	src/game/effect/effect_kind_34.cpp	c2899085
 	UL	local		src/game/field_c2.cpp	51	51	51	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	SetUL	local		src/game/field_c2.cpp	52	52	52	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	SW	local		src/game/field_c2.cpp	53	53	53	src/game/effect/effect_kind_34.cpp	d3e6abb3
@@ -11528,6 +11533,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x46C820	EffectKind34_V0DebrisStart	func	tu_46b7a0	src/game/field_c2.cpp	575	585	643	src/game/effect/effect_kind_34.cpp	d3e6abb3
 0x46C980	EffectKind34_V0DebrisFly	func	tu_46b7a0	src/game/field_c2.cpp	645	649	669	src/game/effect/effect_kind_34.cpp	d3e6abb3
 0x46C9F0	EffectKind34_V1Run	func	tu_46b7a0	src/game/field_c2.cpp	671	673	673	src/game/effect/effect_kind_34.cpp	d3e6abb3
+	PieceBank	local		src/game/field_c2.cpp	675	677	684	src/game/effect/effect_kind_34.cpp	c2899085
+	ClearTints	local		src/game/field_c2.cpp	685	685	689	src/game/effect/effect_kind_34.cpp	c2899085
 0x46CA10	EffectKind34_V1Start	func	tu_46b7a0	src/game/field_c2.cpp	691	694	702	src/game/effect/effect_kind_34.cpp	d3e6abb3
 0x46CA90	EffectKind34_V1Fall	func	tu_46b7a0	src/game/field_c2.cpp	704	709	727	src/game/effect/effect_kind_34.cpp	d3e6abb3
 0x46CB00	EffectKind34_V2Run	func	tu_46b7a0	src/game/field_c2.cpp	729	731	731	src/game/effect/effect_kind_34.cpp	d3e6abb3
@@ -23024,6 +23031,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4594A0	CommuBoard_MoveGridCursor	func	tu_457640	src/game/rest_4b.cpp	1379	1394	1507	src/game/community/commu_board.cpp	d3e6abb3
 0x459720	CommuBoard_DrawDigits	func	tu_457640	src/game/rest_4b.cpp	1509	1513	1529	src/game/community/commu_board.cpp	d3e6abb3
 0x4597E0	CommuBoard_DrawSprite	func	tu_457640	src/game/rest_4b.cpp	1531	1535	1552	src/game/community/commu_board.cpp	d3e6abb3
+	ListBoxWidth	local		src/game/rest_4b.cpp	1554	1560	1564	src/game/community/commu_board.cpp	c2899085
 0x4598A0	CommuBoard_DrawListBox	func	tu_457640	src/game/rest_4b.cpp	1566	1570	1582	src/game/community/commu_board.cpp	d3e6abb3
 0x459960	CommuBoard_DrawListFrame	func	tu_457640	src/game/rest_4b.cpp	1584	1588	1605	src/game/community/commu_board.cpp	d3e6abb3
 0x459A30	CommuBoard_ListY	func	tu_457640	src/game/rest_4b.cpp	1607	1609	1615	src/game/community/commu_board.cpp	d3e6abb3
@@ -23034,7 +23042,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x459D80	CommuBoard_SlotHelp	func	tu_457640	src/game/rest_4b.cpp	1715	1720	1747	src/game/community/commu_board.cpp	d3e6abb3
 0x459E50	CommuBoard_PickHelp	func	tu_457640	src/game/rest_4b.cpp	1749	1753	1773	src/game/community/commu_board.cpp	d3e6abb3
 	U	local		src/game/rest_4c.cpp	39	39	39	src/game/community/commu_board.cpp	d3e6abb3
+	U	copied		src/game/rest_4c.cpp	39	39	39	src/game/community/commu_board.cpp	c2899085
 	At	local		src/game/rest_4c.cpp	40	40	40	src/game/community/commu_board.cpp	d3e6abb3
+	At	copied		src/game/rest_4c.cpp	40	40	40	src/game/community/commu_board.cpp	c2899085
 	Long	local		src/game/rest_4c.cpp	41	41	41	src/game/community/commu_board.cpp	d3e6abb3
 	SetLong	local		src/game/rest_4c.cpp	42	42	42	src/game/community/commu_board.cpp	d3e6abb3
 	SetWord	local		src/game/rest_4c.cpp	43	43	43	src/game/community/commu_board.cpp	d3e6abb3
@@ -23293,6 +23303,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kTextRecords	copied		src/game/rest_4e.cpp	118	118	118	src/game/community/commu_music.cpp	d3e6abb3
 	kTextRecords	copied		src/game/rest_4e.cpp	118	118	118	src/game/core/title.cpp	d3e6abb3
 	kTextBuffer	copied		src/game/rest_4e.cpp	119	119	119	src/game/core/title.cpp	d3e6abb3
+	kTextBuffer	local		src/game/rest_4e.cpp	119	119	119	src/game/core/title.cpp	c2899085
 	kScriptPool	copied		src/game/rest_4e.cpp	120	120	120	src/game/community/commu.cpp	d3e6abb3
 	kScriptPool	copied		src/game/rest_4e.cpp	120	120	120	src/game/community/commu_music.cpp	d3e6abb3
 	kScriptPool	copied		src/game/rest_4e.cpp	120	120	120	src/game/core/title.cpp	d3e6abb3
@@ -23309,6 +23320,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kTilesBottom	local		src/game/rest_4e.cpp	136	136	136	src/game/core/title.cpp	d3e6abb3
 	kTilesSide	local		src/game/rest_4e.cpp	137	137	137	src/game/core/title.cpp	d3e6abb3
 	kPageFormat	local		src/game/rest_4e.cpp	138	138	138	src/game/core/title.cpp	d3e6abb3
+	kOneGlyph	local		src/game/rest_4e.cpp	139	139	139	src/game/core/title.cpp	c2899085
 	kFour/kEight	local		src/game/rest_4e.cpp	140	140	140	src/game/community/commu_music.cpp	d3e6abb3
 	BRest4e	copied		src/game/rest_4e.cpp	142	142	142	src/game/community/commu.cpp	d3e6abb3
 	BRest4e	copied		src/game/rest_4e.cpp	142	142	142	src/game/community/commu_music.cpp	d3e6abb3
@@ -23353,6 +23365,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	OpenMessage	copied		src/game/rest_4e.cpp	186	186	186	src/game/core/title.cpp	d3e6abb3
 	Box	copied		src/game/rest_4e.cpp	187	187	187	src/game/community/commu.cpp	d3e6abb3
 	Box	copied		src/game/rest_4e.cpp	187	187	187	src/game/community/commu_music.cpp	d3e6abb3
+	Box	copied		src/game/rest_4e.cpp	187	187	187	src/game/core/title.cpp	c2899085
 	Pulse	local		src/game/rest_4e.cpp	189	191	195	src/game/community/commu.cpp	d3e6abb3
 0x45E870	CommuEntry_DrawPanel	func	tu_45e6b0	src/game/rest_4e.cpp	203	209	231	src/game/community/commu.cpp	d3e6abb3
 0x45E9B0	CommuEntry_DrawPanelFrame	func	tu_45e6b0	src/game/rest_4e.cpp	233	237	250	src/game/community/commu.cpp	d3e6abb3
@@ -23374,6 +23387,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x45F770	CommuMusic_Open	func	tu_45f750	src/game/rest_4e.cpp	658	661	673	src/game/community/commu_music.cpp	d3e6abb3
 0x45F7D0	CommuMusic_SlideIn	func	tu_45f750	src/game/rest_4e.cpp	675	679	688	src/game/community/commu_music.cpp	d3e6abb3
 0x45F820	CommuMusic_BrowseDispatch	func	tu_45f750	src/game/rest_4e.cpp	690	692	695	src/game/community/commu_music.cpp	d3e6abb3
+	TrackIndex	local		src/game/rest_4e.cpp	697	699	699	src/game/community/commu_music.cpp	c2899085
 0x45F830	CommuMusic_Browse	func	tu_45f750	src/game/rest_4e.cpp	701	710	752	src/game/community/commu_music.cpp	d3e6abb3
 0x45F950	CommuMusic_Play	func	tu_45f750	src/game/rest_4e.cpp	754	756	763	src/game/community/commu_music.cpp	d3e6abb3
 0x45F990	CommuMusic_CloseDispatch	func	tu_45f750	src/game/rest_4e.cpp	765	767	770	src/game/community/commu_music.cpp	d3e6abb3
@@ -23386,7 +23400,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x45FE20	CommuItem_StepDispatch	func	tu_45f750	src/game/rest_4e.cpp	923	925	928	src/game/community/commu_music.cpp	d3e6abb3
 0x45FE30	CommuItem_Prompt	func	tu_45f750	src/game/rest_4e.cpp	930	932	938	src/game/community/commu_music.cpp	d3e6abb3
 0x45FE60	CommuItem_OpenWindow	func	tu_45fe60	src/game/rest_4e.cpp	940	942	949	src/game/core/title.cpp	d3e6abb3
+	ItemFrame	local		src/game/rest_4e.cpp	951	955	958	src/game/core/title.cpp	c2899085
+	ItemList	local		src/game/rest_4e.cpp	960	962	967	src/game/core/title.cpp	c2899085
 0x45FE90	CommuItem_Choose	func	tu_45fe60	src/game/rest_4e.cpp	969	981	1071	src/game/core/title.cpp	d3e6abb3
+	ItemClosed	local		src/game/rest_4e.cpp	1073	1075	1080	src/game/core/title.cpp	c2899085
 0x4601D0	CommuItem_Cancel	func	tu_45fe60	src/game/rest_4e.cpp	1082	1084	1091	src/game/core/title.cpp	d3e6abb3
 0x460270	CommuItem_Confirm	func	tu_45fe60	src/game/rest_4e.cpp	1093	1101	1127	src/game/core/title.cpp	d3e6abb3
 0x4603F0	CommuItem_Give	func	tu_45fe60	src/game/rest_4e.cpp	1129	1132	1140	src/game/core/title.cpp	d3e6abb3
@@ -23396,6 +23413,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x460510	CommuRank_Pages	func	tu_45fe60	src/game/rest_4e.cpp	1186	1189	1198	src/game/core/title.cpp	d3e6abb3
 0x4605D0	CommuRank_Show	func	tu_45fe60	src/game/rest_4e.cpp	1200	1209	1245	src/game/core/title.cpp	d3e6abb3
 0x460720	CommuRank_Close	func	tu_45fe60	src/game/rest_4e.cpp	1247	1249	1249	src/game/core/title.cpp	d3e6abb3
+	ListHeading	local		src/game/rest_4e.cpp	1251	1262	1286	src/game/core/title.cpp	c2899085
 0x460730	CommuRank_DrawListA	func	tu_45fe60	src/game/rest_4e.cpp	1294	1305	1316	src/game/core/title.cpp	d3e6abb3
 0x460890	CommuRank_DrawIcon	func	tu_45fe60	src/game/rest_4e.cpp	1318	1321	1334	src/game/core/title.cpp	d3e6abb3
 0x460920	CommuRank_DrawListB	func	tu_45fe60	src/game/rest_4e.cpp	1336	1342	1351	src/game/core/title.cpp	d3e6abb3
