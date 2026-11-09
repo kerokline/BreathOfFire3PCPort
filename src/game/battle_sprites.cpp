@@ -109,7 +109,7 @@ unsigned char* ActionRecord(std::uint32_t action) { return At(::bof3::Img(at::kA
 // 0x904B40 holds the acting block's +0xC: the actor's action record (a
 // member's +0x124, an enemy's +0x104; records.h ActionRecord).
 std::uint16_t CurrentAction() { return rv::As<records::ActionRecord>(Ptr(At(::bof3::Img(BattleSprites_Action_addr))))->action_id; }
-unsigned char Target() { return At(::bof3::Img(at::kTarget.v))[0]; }
+unsigned char TargetBattleSprites() { return At(::bof3::Img(at::kTarget.v))[0]; }
 void SetTarget(unsigned char t) { At(::bof3::Img(at::kTarget.v))[0] = t; }
 void OrLong(unsigned char* at, std::uint32_t bits) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) | bits)); }
 unsigned char* EnemyData(std::uint32_t id) { return At(::bof3::Img(at::kEnemyData.v) + id * at::kEnemyDataStride); }
@@ -135,7 +135,7 @@ using namespace battle_sprites;
 extern "C" unsigned char __cdecl Battle_RollPendingFlag(void) {
     const unsigned char kind = Field_State[0x92];
     if (kind != 0x1B && kind != 0x3F && kind != 0x44) return 0;
-    const unsigned char t = Target();
+    const unsigned char t = TargetBattleSprites();
     if (t & 0xC0) {
         unsigned char hits = 0;
         if (t & 0x80) {
@@ -159,15 +159,15 @@ extern "C" unsigned char __cdecl Battle_RollPendingFlag(void) {
     }
     if (t > 2) {
         if (battle_sprites::g.actor_out(t)) return 0;
-        if (Enemy(Target() - 3u)[0xC7] >= 6) return 0;
+        if (Enemy(TargetBattleSprites() - 3u)[0xC7] >= 6) return 0;
         if (battle_sprites::g.rand() % 12 != 0) return 0;
-        OrLong(Enemy(Target() - 3u) + 0x110, 0x100);
+        OrLong(Enemy(TargetBattleSprites() - 3u) + 0x110, 0x100);
         return 1;
     }
     if (battle_sprites::g.actor_out(t)) return 0;
-    if (Party(Target())[0xB7] >= 6) return 0;
+    if (Party(TargetBattleSprites())[0xB7] >= 6) return 0;
     if (battle_sprites::g.rand() % 12 != 0) return 0;
-    OrLong(Party(Target()) + 0x130, 0x100);
+    OrLong(Party(TargetBattleSprites()) + 0x130, 0x100);
     return 1;
 }
 
@@ -245,7 +245,7 @@ extern "C" unsigned char __cdecl Battle_AnyFlagF0(void) {
 extern "C" unsigned char __cdecl Battle_ActionSuitsTarget(void) {
     const std::uint16_t action = CurrentAction();
     if (ActionRecord(action)[0] & 0x10) return 0;
-    if (battle_sprites::g.actor_out(Target())) return OutAction(action) ? 0 : 1;
+    if (battle_sprites::g.actor_out(TargetBattleSprites())) return OutAction(action) ? 0 : 1;
     return OutAction(action) ? 1 : 0;
 }
 
@@ -256,7 +256,7 @@ extern "C" unsigned char __cdecl Battle_ItemSuitsTarget(void) {
     const std::uint16_t item = CurrentAction();
     if (battle_sprites::g.item_class(item >> 8, item) & 0x10) return 0;
     const bool out_item = item == 0x0E || item == 0x128;
-    if (battle_sprites::g.actor_out(Target())) return out_item ? 0 : 1;
+    if (battle_sprites::g.actor_out(TargetBattleSprites())) return out_item ? 0 : 1;
     return out_item ? 1 : 0;
 }
 
@@ -270,7 +270,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
     unsigned char passed[3] = {};
     unsigned char count = 0;
     const bool second = ((battle_sprites::Word(ActionRecord(CurrentAction()) + 4) >> 9) & 1) != 0;
-    const unsigned char t = Target();
+    const unsigned char t = TargetBattleSprites();
     auto test = [second](unsigned i) { return second ? battle_sprites::g.member_chance_b(i) : battle_sprites::g.member_chance(i); };
     unsigned char pick = 0;
     bool taken = false;
@@ -575,7 +575,7 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     popup->owner = Address(s);
     if (block == nullptr)   // DIV-0185: no target block yet, the bit read as clear
         bof3::Log("DIV-0185    Battle_SetHitPopup: no target block (actor %u, target 0x%02X), the actor's hit class", actor,
-                  Target());
+                  TargetBattleSprites());
     const bool fixed = block != nullptr && (block[0xC] & 2) != 0;
     if (actor <= 2) popup->mode = fixed ? 7 : battle_sprites::At(::bof3::Img(battle_sprites::at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
     else popup->mode = fixed ? 7 : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;

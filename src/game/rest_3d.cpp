@@ -80,7 +80,7 @@ unsigned PartySizeForWrite(const char* who) {
 unsigned char* Hp(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x98 : EnemyRest3d(actor) + 0xA4; }
 unsigned char* Flags(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x130 : EnemyRest3d(actor) + 0x110; }
 unsigned char* Flags2(U actor) { return IsMember(actor) ? PartyRest3d(actor) + 0x134 : EnemyRest3d(actor) + 0x114; }
-void OrLong(unsigned char* p, U bits) { move_script::SetLong(p, static_cast<S32Rest3d>(static_cast<U>(move_script::Long(p)) | bits)); }
+void OrLongRest3d(unsigned char* p, U bits) { move_script::SetLong(p, static_cast<S32Rest3d>(static_cast<U>(move_script::Long(p)) | bits)); }
 void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) & bits)); }
 
 unsigned char* Result() { return At(BattleDamage_Result); }
@@ -323,11 +323,11 @@ extern "C" void __cdecl Effect_NoHitReaction(void) {
     B(::bof3::Img(rest_3d::at::kRoundFlagsHi.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3d::at::kRoundFlagsHi.v)) | 0x20);
     if (IsMember(t)) {
         unsigned char* const p = PartyRest3d(t);
-        OrLong(p + 0x130, 0x200);
+        OrLongRest3d(p + 0x130, 0x200);
         p[0x12C] = static_cast<unsigned char>(p[0x12C] & 0xFE);
     } else {
         unsigned char* const e = EnemyRest3d(t);
-        OrLong(e + 0x110, 0x200);
+        OrLongRest3d(e + 0x110, 0x200);
         e[0x10C] = static_cast<unsigned char>(e[0x10C] & 0xFE);
     }
 }
@@ -443,7 +443,7 @@ extern "C" void __cdecl Effect112_HpToOne(void) {
 // 0x10000 (the flag Battle_CalcDamage and Effect_SkillDamage answer 0 for).
 extern "C" void __cdecl Effect113_ActorNullDamage(void) {
     BH_CALL(Effect_NoHitReaction)();
-    OrLong(Flags(ActorRest3d()), 0x10000);
+    OrLongRest3d(Flags(ActorRest3d()), 0x10000);
 }
 
 // original 0x44E580 (slot 114): the result's mark +8 = 2, then the AP delta
@@ -474,7 +474,7 @@ extern "C" void __cdecl Effect117_PartyFlag400Others(void) {
     const unsigned t = Target();
     if (!IsMember(t)) return;
     const unsigned n = PartySizeForWrite("Effect117_PartyFlag400Others");
-    for (unsigned m = 0; m < n; ++m) OrLong(PartyRest3d(m) + 0x134, 0x400);
+    for (unsigned m = 0; m < n; ++m) OrLongRest3d(PartyRest3d(m) + 0x134, 0x400);
     AndLong(PartyRest3d(t) + 0x134, 0xFFFFFBFFu);
 }
 
@@ -527,7 +527,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
 extern "C" void __cdecl Effect119_ActorFlag1000(void) {
     BH_CALL(Effect_NoHitReaction)();
     const unsigned t = Target();
-    OrLong(Flags2(ActorRest3d()), 0x1000);
+    OrLongRest3d(Flags2(ActorRest3d()), 0x1000);
     BH_CALL(Battle_RecalcStats)(t);
 }
 
@@ -541,7 +541,7 @@ extern "C" void __cdecl Effect120_TargetFlag800(void) {
         BH_CALL(Battle_SetDamagePopup)(0, Target());
     } else {
         const U t = L(::bof3::Img(rest_3d::at::kTarget.v));
-        OrLong(Flags2(t), 0x800);
+        OrLongRest3d(Flags2(t), 0x800);
         BH_CALL(Battle_RecalcStats)(t);
     }
     BH_CALL(Effect_NoHitReaction)();
@@ -554,7 +554,7 @@ extern "C" void __cdecl Effect121_ActorFlag4000(void) {
     BH_CALL(Effect_NoHitReaction)();
     const unsigned a = ActorRest3d();
     const unsigned t = Target();
-    OrLong(Flags2(a), 0x4000);
+    OrLongRest3d(Flags2(a), 0x4000);
     if (IsMember(a)) PartyRest3d(a)[0x142] = 0;
     else EnemyRest3d(a)[0x122] = 0;
     BH_CALL(Battle_RecalcStats)(t);
@@ -637,7 +637,7 @@ extern "C" void __cdecl Effect129_TargetSoleFlag40000(void) {
         t = Target();
         if (!out) AndLong(EnemyRest3d(t) + 0x114, 0xFFFBFFFFu);
     }
-    OrLong(Flags2(t), 0x40000);
+    OrLongRest3d(Flags2(t), 0x40000);
 }
 
 // ===========================================================================
