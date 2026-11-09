@@ -45,7 +45,7 @@ Callees g = kOriginals;
 
 namespace {
 
-using event_script::g;
+// using event_script::g;   (B6: every use written event_script::g, so the moves copy no using-declaration)
 
 unsigned char* AtEventScript(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 void SetWord(unsigned char* p, unsigned v) {

@@ -497,8 +497,8 @@ constexpr unsigned kFrameBytes = 0x100 + 1 + 255 * kPartBytes;
 constexpr unsigned kWindow = 0x40;
 }  // namespace
 namespace sprite_draw { unsigned long g_tails[8]; }
-namespace {
-}  namespace sprite_draw { struct State {
+namespace sprite_draw {
+struct State {
     alignas(4) unsigned char object[0x80];
     alignas(4) unsigned char frame[kFrameBytes];
     unsigned char cells[kCellWindow];
@@ -509,11 +509,11 @@ namespace {
     unsigned char buffer_index;
     unsigned char* current;
     unsigned char window[kWindow];   // the pool, from packet_next as it was on the way in
-}; }  namespace { using sprite_draw::State;
-}  // namespace
+};
+}  // namespace sprite_draw
 namespace sprite_draw { State g_live; }   // the object and frame the calls see: Sprite_Current points in here
 namespace {
-void Capture(State& s, const unsigned char* window_at) {
+void Capture(sprite_draw::State& s, const unsigned char* window_at) {
     std::memcpy(s.object, sprite_draw::g_live.object, sizeof s.object);
     std::memcpy(s.frame, sprite_draw::g_live.frame, sizeof s.frame);
     std::memcpy(s.cells, SpriteCell_Table, kCellWindow);
@@ -525,7 +525,7 @@ void Capture(State& s, const unsigned char* window_at) {
     s.current = Sprite_Current;
     if (window_at) std::memcpy(s.window, window_at, kWindow);
 }
-void Apply(const State& s, unsigned char* window_at) {
+void Apply(const sprite_draw::State& s, unsigned char* window_at) {
     std::memcpy(sprite_draw::g_live.object, s.object, sizeof s.object);
     std::memcpy(sprite_draw::g_live.frame, s.frame, sizeof s.frame);
     std::memcpy(SpriteCell_Table, s.cells, kCellWindow);
@@ -543,7 +543,7 @@ using AddFn = unsigned long (__cdecl*)(unsigned, unsigned, unsigned, unsigned, u
 
 void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_add) {
     constexpr unsigned kRounds = 24000;
-    static State saved, input, their_out, our_out;
+    static sprite_draw::State saved, input, their_out, our_out;
     Capture(saved, nullptr);
     static unsigned char saved_pool[2 * 0x10000];
     std::memcpy(saved_pool, Gfx_PacketPools, sizeof saved_pool);
