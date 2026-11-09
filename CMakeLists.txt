@@ -47,7 +47,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Without it the optimiser may reorder a short* read past a long* write to the
 # same bytes - which hid a deliberately wrong Gte_ApplyMatrix from its own
 # differential fuzz (docs/psx-library-layer.md section 2).
-add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16 -fno-strict-aliasing)
+# -fno-auto-import: every binary here links statically and takes no data from a DLL, so a global
+# another file defines is read directly, not through a `.refptr.<name>` stub the compiler lays in
+# case the linker must auto-import it. With the stubs a function reads a global of its own file
+# and one of another file by different code, so moving a function between files changed it
+# (docs/source-layout-round.md, the `refptr` class, 1,400 gate exceptions; IDEAS I60). The linker
+# is told the same (--disable-auto-import), so a data import that is ever needed fails the link
+# instead of being patched at load, where on x86-64 a 32-bit reach may not hold.
+add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16 -fno-strict-aliasing -fno-auto-import)
+add_link_options(-Wl,--disable-auto-import)
 # The DLL is injected by path into a process whose DLL search order we do not
 # control, so it may not depend on libc++.dll / libunwind.dll sitting nearby.
 add_link_options(-static)
