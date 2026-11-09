@@ -12604,6 +12604,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	TargetByte	copied		src/game/magic_c1.cpp	63	63	63	src/game/platform/magic_080.cpp	d3e6abb3
 	SD	local		src/game/magic_c1.cpp	65	65	65	src/game/magic/pentagram.cpp	d3e6abb3
 	SetSD	local		src/game/magic_c1.cpp	66	66	66	src/game/magic/pentagram.cpp	d3e6abb3
+	SB	local		src/game/magic_c1.cpp	67	67	67	src/game/magic/wall_of_fire_child.cpp	db510830
 	SW	copied		src/game/magic_c1.cpp	67	67	67	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	SW	copied		src/game/magic_c1.cpp	67	67	67	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_c1.cpp	68	68	68	src/game/magic/magic_213_mote.cpp	d3e6abb3
@@ -12612,6 +12613,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SB	copied		src/game/magic_c1.cpp	69	69	69	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	VW	local		src/game/magic_c1.cpp	71	71	71	src/game/magic/pentagram.cpp	d3e6abb3
 	VS	local		src/game/magic_c1.cpp	72	72	72	src/game/magic/pentagram.cpp	d3e6abb3
+	Mul12	local		src/game/magic_c1.cpp	73	74	74	src/game/magic/wall_of_fire_child.cpp	db510830
 	SetVW	local		src/game/magic_c1.cpp	73	73	73	src/game/magic/pentagram.cpp	d3e6abb3
 	VP	local		src/game/magic_c1.cpp	74	74	74	src/game/magic/pentagram.cpp	d3e6abb3
 	S16	copied		src/game/magic_c1.cpp	76	76	76	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12671,6 +12673,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	ClutCopy	copied		src/game/magic_c1.cpp	138	142	145	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	ClutCopy	copied		src/game/magic_c1.cpp	138	142	145	src/game/magic/pentagram.cpp	d3e6abb3
 	ClutCopy	copied		src/game/magic_c1.cpp	138	142	145	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	DrawMode	local		src/game/magic_c1.cpp	140	140	140	src/game/magic/wall_of_fire_child.cpp	db510830
 	Rtp1Fn	local		src/game/magic_c1.cpp	147	149	149	src/game/magic/pentagram.cpp	d3e6abb3
 	Rtp3Fn	local		src/game/magic_c1.cpp	150	150	151	src/game/magic/pentagram.cpp	d3e6abb3
 	Rtp4Fn	local		src/game/magic_c1.cpp	152	152	153	src/game/magic/pentagram.cpp	d3e6abb3
@@ -12764,10 +12767,12 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	addr	copied		src/game/magic_c2.cpp	44	44	44	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	addr	copied		src/game/magic_c2.cpp	44	44	44	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	addr	copied		src/game/magic_c2.cpp	44	44	44	src/game/magic/utmost_attack.cpp	d3e6abb3
+	addr	local		src/game/magic_c2.cpp	44	44	44	src/game/magic/holocaust_beam.cpp	db510830
 	Mem	copied		src/game/magic_c2.cpp	45	45	45	src/game/magic/bone_dance.cpp	d3e6abb3
 	Mem	copied		src/game/magic_c2.cpp	45	45	45	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Mem	copied		src/game/magic_c2.cpp	45	45	45	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Mem	copied		src/game/magic_c2.cpp	45	45	45	src/game/magic/utmost_attack.cpp	d3e6abb3
+	Mem	local		src/game/magic_c2.cpp	45	45	45	src/game/magic/holocaust_beam.cpp	db510830
 	Pointer	copied		src/game/magic_c2.cpp	46	46	46	src/game/magic/bone_dance.cpp	d3e6abb3
 	Pointer	copied		src/game/magic_c2.cpp	46	46	46	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Pointer	copied		src/game/magic_c2.cpp	46	46	46	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
@@ -12776,50 +12781,69 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Long	copied		src/game/magic_c2.cpp	47	47	47	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Long	copied		src/game/magic_c2.cpp	47	47	47	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Long	copied		src/game/magic_c2.cpp	47	47	47	src/game/magic/utmost_attack.cpp	d3e6abb3
+	Long	local		src/game/magic_c2.cpp	47	47	47	src/game/magic/holocaust_beam.cpp	db510830
 	SetLong	copied		src/game/magic_c2.cpp	48	48	48	src/game/magic/bone_dance.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_c2.cpp	48	48	48	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_c2.cpp	48	48	48	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_c2.cpp	48	48	48	src/game/magic/utmost_attack.cpp	d3e6abb3
+	SetLong	local		src/game/magic_c2.cpp	48	48	48	src/game/magic/holocaust_beam.cpp	db510830
 	SetWord	copied		src/game/magic_c2.cpp	49	49	49	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_c2.cpp	49	49	49	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	SetWord	local		src/game/magic_c2.cpp	49	49	49	src/game/magic/holocaust_beam.cpp	db510830
 	Word	copied		src/game/magic_c2.cpp	50	50	50	src/game/magic/bone_dance.cpp	d3e6abb3
 	Word	copied		src/game/magic_c2.cpp	50	50	50	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Word	copied		src/game/magic_c2.cpp	50	50	50	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Word	local		src/game/magic_c2.cpp	50	50	50	src/game/magic/holocaust_beam.cpp	db510830
 	kS	copied		src/game/magic_c2.cpp	52	56	56	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kS	copied		src/game/magic_c2.cpp	52	56	56	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	kS	local		src/game/magic_c2.cpp	52	56	56	src/game/magic/holocaust_beam.cpp	db510830
 	kRottenTypes	local		src/game/magic_c2.cpp	61	66	66	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	kRecord	local		src/game/magic_c2.cpp	66	66	66	src/game/magic/holocaust_beam.cpp	db510830
 	kBeamTypes	local		src/game/magic_c2.cpp	67	67	67	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kBeamPhases	local		src/game/magic_c2.cpp	68	68	68	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kSparkTypes	local		src/game/magic_c2.cpp	69	69	69	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kSparkPhases	local		src/game/magic_c2.cpp	70	70	70	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kMotes	local		src/game/magic_c2.cpp	71	71	71	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Owner	local		src/game/magic_c2.cpp	72	72	72	src/game/magic/holocaust_beam.cpp	db510830
 	kStreaks	local		src/game/magic_c2.cpp	72	72	72	src/game/magic/utmost_attack.cpp	d3e6abb3
 	kSparks	local		src/game/magic_c2.cpp	73	73	73	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kRecord	copied		src/game/magic_c2.cpp	74	74	74	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	kRecord	copied		src/game/magic_c2.cpp	74	74	74	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	kStreak	local		src/game/magic_c2.cpp	75	75	75	src/game/magic/utmost_attack.cpp	d3e6abb3
 	kSetMapCamera	local		src/game/magic_c2.cpp	76	80	80	src/game/magic/utmost_attack.cpp	d3e6abb3
+	TaskSlot	local		src/game/magic_c2.cpp	77	77	77	src/game/magic/holocaust_beam.cpp	db510830
+	Key	local		src/game/magic_c2.cpp	78	78	78	src/game/magic/holocaust_beam.cpp	db510830
+	SW	local		src/game/magic_c2.cpp	80	80	80	src/game/magic/holocaust_beam.cpp	db510830
+	SS	local		src/game/magic_c2.cpp	81	81	81	src/game/magic/holocaust_beam.cpp	db510830
 	kProjectPoint	local		src/game/magic_c2.cpp	81	81	81	src/game/magic/utmost_attack.cpp	d3e6abb3
+	SetSW	local		src/game/magic_c2.cpp	82	82	82	src/game/magic/holocaust_beam.cpp	db510830
+	Inc	local		src/game/magic_c2.cpp	86	86	86	src/game/magic/holocaust_beam.cpp	db510830
 	Sc	copied		src/game/magic_c2.cpp	86	86	86	src/game/magic/bone_dance.cpp	d3e6abb3
 	Sc	copied		src/game/magic_c2.cpp	86	86	86	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Sc	copied		src/game/magic_c2.cpp	86	86	86	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Sc	copied		src/game/magic_c2.cpp	86	86	86	src/game/magic/utmost_attack.cpp	d3e6abb3
+	Dec	local		src/game/magic_c2.cpp	87	87	87	src/game/magic/holocaust_beam.cpp	db510830
 	Owner	copied		src/game/magic_c2.cpp	87	87	87	src/game/magic/bone_dance.cpp	d3e6abb3
 	Owner	copied		src/game/magic_c2.cpp	87	87	87	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Owner	copied		src/game/magic_c2.cpp	87	87	87	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Add	local		src/game/magic_c2.cpp	88	88	90	src/game/magic/holocaust_beam.cpp	db510830
 	Caster	copied		src/game/magic_c2.cpp	88	89	91	src/game/magic/bone_dance.cpp	d3e6abb3
 	Caster	copied		src/game/magic_c2.cpp	88	89	91	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Caster	copied		src/game/magic_c2.cpp	88	89	91	src/game/magic/utmost_attack.cpp	d3e6abb3
+	AddLong	local		src/game/magic_c2.cpp	91	91	91	src/game/magic/holocaust_beam.cpp	db510830
+	Mul12	local		src/game/magic_c2.cpp	92	93	93	src/game/magic/holocaust_beam.cpp	db510830
 	TaskSlot	copied		src/game/magic_c2.cpp	92	92	92	src/game/magic/bone_dance.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_c2.cpp	92	92	92	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_c2.cpp	92	92	92	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Key	copied		src/game/magic_c2.cpp	93	93	93	src/game/magic/bone_dance.cpp	d3e6abb3
 	Key	copied		src/game/magic_c2.cpp	93	93	93	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Key	copied		src/game/magic_c2.cpp	93	93	93	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Shl12	local		src/game/magic_c2.cpp	94	95	95	src/game/magic/holocaust_beam.cpp	db510830
 	SW	copied		src/game/magic_c2.cpp	95	95	95	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	SW	copied		src/game/magic_c2.cpp	95	95	95	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	SS	copied		src/game/magic_c2.cpp	96	96	96	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	SS	copied		src/game/magic_c2.cpp	96	96	96	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	PutFloat	local		src/game/magic_c2.cpp	97	98	101	src/game/magic/holocaust_beam.cpp	db510830
 	SetSW	copied		src/game/magic_c2.cpp	97	97	97	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_c2.cpp	97	97	97	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	SetVW	local		src/game/magic_c2.cpp	98	98	98	src/game/magic/holocaust_beam.cpp	d3e6abb3
@@ -12836,28 +12860,39 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Add	copied		src/game/magic_c2.cpp	103	103	105	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Add	copied		src/game/magic_c2.cpp	103	103	105	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Add	copied		src/game/magic_c2.cpp	103	103	105	src/game/magic/utmost_attack.cpp	d3e6abb3
+	RandCall	local		src/game/magic_c2.cpp	103	103	103	src/game/magic/holocaust_beam.cpp	db510830
+	NewTask	local		src/game/magic_c2.cpp	104	104	104	src/game/magic/holocaust_beam.cpp	db510830
+	Sin	local		src/game/magic_c2.cpp	105	105	105	src/game/magic/holocaust_beam.cpp	db510830
 	AddLong	copied		src/game/magic_c2.cpp	106	106	106	src/game/magic/bone_dance.cpp	d3e6abb3
 	AddLong	copied		src/game/magic_c2.cpp	106	106	106	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	AddLong	copied		src/game/magic_c2.cpp	106	106	106	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	AddLong	copied		src/game/magic_c2.cpp	106	106	106	src/game/magic/utmost_attack.cpp	d3e6abb3
+	Cos	local		src/game/magic_c2.cpp	106	106	106	src/game/magic/holocaust_beam.cpp	db510830
+	CopyPosition	local		src/game/magic_c2.cpp	107	107	111	src/game/magic/holocaust_beam.cpp	db510830
 	Mul12	copied		src/game/magic_c2.cpp	107	108	108	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Mul12	copied		src/game/magic_c2.cpp	107	108	108	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Shl12	copied		src/game/magic_c2.cpp	109	110	110	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Shl12	copied		src/game/magic_c2.cpp	109	110	110	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	PutFloat	copied		src/game/magic_c2.cpp	112	113	116	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	PutFloat	copied		src/game/magic_c2.cpp	112	113	116	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Fn0	local		src/game/magic_c2.cpp	113	116	116	src/game/magic/holocaust_beam.cpp	db510830
+	FnB	local		src/game/magic_c2.cpp	117	117	117	src/game/magic/holocaust_beam.cpp	db510830
+	Call0	local		src/game/magic_c2.cpp	118	118	118	src/game/magic/holocaust_beam.cpp	db510830
 	RandCall	copied		src/game/magic_c2.cpp	118	118	118	src/game/magic/bone_dance.cpp	d3e6abb3
 	RandCall	copied		src/game/magic_c2.cpp	118	118	118	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	RandCall	copied		src/game/magic_c2.cpp	118	118	118	src/game/magic/utmost_attack.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_c2.cpp	119	119	119	src/game/magic/bone_dance.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_c2.cpp	119	119	119	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_c2.cpp	119	119	119	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	PastTable	local		src/game/magic_c2.cpp	120	120	122	src/game/magic/holocaust_beam.cpp	db510830
 	Sin	copied		src/game/magic_c2.cpp	120	120	120	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Sin	copied		src/game/magic_c2.cpp	120	120	120	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Cos	copied		src/game/magic_c2.cpp	121	121	121	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Cos	copied		src/game/magic_c2.cpp	121	121	121	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	CopyPosition	copied		src/game/magic_c2.cpp	122	122	126	src/game/magic/bone_dance.cpp	d3e6abb3
 	CopyPosition	copied		src/game/magic_c2.cpp	122	122	126	src/game/magic/holocaust_beam.cpp	d3e6abb3
+	Step	local		src/game/magic_c2.cpp	123	124	127	src/game/magic/holocaust_beam.cpp	db510830
+	CallCell	local		src/game/magic_c2.cpp	128	129	131	src/game/magic/holocaust_beam.cpp	db510830
 	Fn0	copied		src/game/magic_c2.cpp	128	131	131	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Fn0	copied		src/game/magic_c2.cpp	128	131	131	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Fn0	copied		src/game/magic_c2.cpp	128	131	131	src/game/magic/utmost_attack.cpp	d3e6abb3
@@ -12865,6 +12900,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	FnB	copied		src/game/magic_c2.cpp	132	132	132	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	FnB	copied		src/game/magic_c2.cpp	132	132	132	src/game/magic/utmost_attack.cpp	d3e6abb3
 	FnP	local		src/game/magic_c2.cpp	133	133	133	src/game/magic/utmost_attack.cpp	d3e6abb3
+	Walk	local		src/game/magic_c2.cpp	133	136	149	src/game/magic/holocaust_beam.cpp	db510830
 	Call0	copied		src/game/magic_c2.cpp	134	134	134	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Call0	copied		src/game/magic_c2.cpp	134	134	134	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Call0	copied		src/game/magic_c2.cpp	134	134	134	src/game/magic/utmost_attack.cpp	d3e6abb3
@@ -12880,8 +12916,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	CallCell	copied		src/game/magic_c2.cpp	144	145	147	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	Walk	copied		src/game/magic_c2.cpp	149	152	165	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Walk	copied		src/game/magic_c2.cpp	149	152	165	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	Alloc	local		src/game/magic_c2.cpp	151	152	160	src/game/magic/holocaust_beam.cpp	db510830
 	Alloc	copied		src/game/magic_c2.cpp	167	168	176	src/game/magic/holocaust_beam.cpp	d3e6abb3
 	Alloc	copied		src/game/magic_c2.cpp	167	168	176	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
+	C2_EXPORT	local		src/game/magic_c2.cpp	173	173	173	src/game/magic/holocaust_beam.cpp	db510830
 	CasterAnimation	copied		src/game/magic_c2.cpp	178	179	185	src/game/magic/bone_dance.cpp	d3e6abb3
 	CasterAnimation	copied		src/game/magic_c2.cpp	178	179	185	src/game/magic/rotten_breath_mote.cpp	d3e6abb3
 	CasterAnimation	copied		src/game/magic_c2.cpp	178	179	185	src/game/magic/utmost_attack.cpp	d3e6abb3

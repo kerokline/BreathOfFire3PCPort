@@ -64,14 +64,10 @@ unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
 
 short S16(const unsigned char* at) { return static_cast<short>(move_script::Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
-
-// `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
-int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
 
 // `fild dword` then `fstp dword`: an integer vertex as a float.
 void PutFloat(unsigned char* at, int v) {
@@ -96,12 +92,9 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 // originals call them: in the game Capcom's code or the jmp Inject put there,
 // in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-using PtrFn = void (__cdecl*)(unsigned char*);
 using ByteFn = unsigned char (__cdecl*)();
 void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
-// Capcom's and other groups' code this group calls (docs/magic_c1.md section 8).
-constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};  // engine: +0xC / +0x10 of a task turned by its +8
 // Other groups' functions and the phase handlers a stack table holds are ours
 // now and called by name (bof3::addr): Port_DroppedCall (MAGIC124's extent, a
 // bare ret) and S37's MagicFx_FreeCurrentRecord among them.
@@ -136,8 +129,6 @@ void ClutCopy(unsigned first, unsigned last, std::uint16_t stp) {
     for (unsigned k = first; k < last; ++k)
         Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | stp);
 }
-
-void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 
 }  // namespace
 
@@ -297,127 +288,6 @@ C1_EXPORT void __cdecl Magic080_DrawGlyphs(void) {
 // ===========================================================================
 // MAGIC145 (row 149) and MAGIC146 (row 150)
 
-// original 0x4E9A70: the kind-2 task. A three-entry stack table by +1:
-// Ink_Start, MAGIC009's wait for +0xB 0 (0x49DA50), the engine's end
-// (0x43F460).
-C1_EXPORT void __cdecl Ink_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Ink_Start, bof3::addr::Chlorine_WaitChildren,
-                                                 bof3::addr::MagicFx_FlagTargetEnd};
-    StackCall(kPhases, 3, Sc()[1], "Ink_Task");
-}
-
-// original 0x4E9AA0: +0xB 0, +1 on; three puffs (kind 1, parameter 0x6C: +0xB
-// 0..2 their offset, +9 1, 5, 9 their delay), counted in +0xB; row 26's
-// entries 1..15 from their source with the STP bit and entry 0 cleared,
-// Gfx_ClutStripDirty; sound 0x100; the target's flags 0x10.
-C1_EXPORT void __cdecl Ink_Start(void) {
-    Sc()[0xB] = 0;
-    Inc(Sc()[1]);
-    for (unsigned i = 0, delay = 1; delay < 0xD; ++i, delay += 4) {
-        const unsigned slot = NewTask(0x6C);
-        unsigned char* const self = Sc();
-        unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-        tchild->owner = static_cast<std::int32_t>(Addr(self));
-        child[1] = 0;
-        child[0xB] = static_cast<unsigned char>(i);
-        child[9] = static_cast<unsigned char>(delay);
-        Inc(self[0xB]);
-    }
-    ClutCopy(0x1A21, 0x1A30, 0x8000);
-    Gfx_ClutStrip[0x1A20] = 0;
-    Gfx_ClutStripDirty = 1;
-    MH_CALL(Sound_PlayById)(0x100);
-    MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
-}
-
-// original 0x4E9B70: the puff's kind-1 task, a jmp through InkPuff_Kinds
-// (one entry) by +1.
-C1_EXPORT void __cdecl InkPuff_Task(void) { CellCall(Addr(InkPuff_Kinds), 1, Sc()[1], "InkPuff_Task"); }
-
-// original 0x4E9B90: a call through InkPuff_Phases (three entries: Start,
-// then MAGIC009's 0x49DB90 and MAGIC040's 0x4A5D50) by +2; while +0 and +2
-// are set, the puff.
-C1_EXPORT void __cdecl InkPuff_Run(void) {
-    CellCall(Addr(InkPuff_Phases), 3, Sc()[2], "InkPuff_Run");
-    const unsigned char* const s = Sc();
-    if (s[0] == 0 || s[2] == 0) return;
-    Call0(bof3::addr::Ink_DrawPuff);
-}
-
-namespace {
-
-// The puffs' start: at the base record's position and direction, offset by
-// the (dx, dz, dy) row +0xB of `offsets` (12-byte rows, the index unbounded),
-// dx / dz turned by the direction (0x446770); the screen point; +9 and +0xA 0;
-// +2 on. The base is read once; what it holds is read after the turn.
-void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
-    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(offsets + 12u * Sc()[0xB])));
-    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
-    MH_AT(PtrFn, kTurnOffset.v)(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) +
-                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z) +
-                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->z)));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
-                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->height)));
-    MH_CALL(BattleActor_UpdateScreenXY)();
-    Sc()[9] = 0;
-    Sc()[0xA] = 0;
-    Inc(Sc()[2]);
-}
-
-}  // namespace
-
-// original 0x4E9BC0: +9 down; at 0 the puff at the source sprite (its
-// direction, its position offset by InkPuff_Offsets[+0xB]).
-C1_EXPORT void __cdecl InkPuff_Start(void) {
-    Dec(Sc()[9]);
-    unsigned char* const s = Sc();
-    if (s[9] != 0) return;
-    const unsigned char* const src = Source();
-    s[8] = src[8];
-    PuffPlace(src, Addr(InkPuff_Offsets));
-}
-
-// original 0x4E9C90 (MAGIC145's and 146's): the puff - a textured quad, page
-// (0x340, 0x100) with blend 2, CLUT (0x20, 0x1FA), its corners at the angles
-// 0x200, 0x600, 0xE00, 0xA00 of a circle of radius +9 x 2 round the screen
-// point, its grey +0xA x 8; a draw mode (0x55) before, sorted at the task's
-// position (dy 2).
-C1_EXPORT void __cdecl Ink_DrawPuff(void) {
-    DrawMode(0x55);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
-                                0xC);
-    unsigned char* const p = Gfx_PacketNext;
-    SetSW(0, Sc()[9] * 2u);
-    SetSW(4, Sc()[0xA] * 8u);
-    MH_CALL(Gpu_SetPolyFT4)(p);
-    MH_CALL(Gpu_SetSemiTrans)(p, 1);
-    static constexpr int kAngles[4] = {0x200, 0x600, 0xE00, 0xA00};
-    for (unsigned k = 0; k < 4; ++k) {
-        int v = MH_CALL(Math_Cos)(kAngles[k]);
-        PutFloat(p + 8 + 0x10 * k, Mul12(v, static_cast<short>(SW(0))) + S16(Sc() + 0x2E));
-        v = MH_CALL(Math_Sin)(kAngles[k]);
-        PutFloat(p + 0xC + 0x10 * k, Mul12(v, static_cast<short>(SW(0))) + S16(Sc() + 0x30));
-    }
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
-    p[0x14] = 0x80;
-    p[0x34] = 0x80;
-    p[0x15] = 0x20;
-    p[0x24] = 0xA0;
-    p[0x25] = 0x20;
-    p[0x35] = 0x40;
-    p[0x44] = 0xA0;
-    p[0x45] = 0x40;
-    p[4] = SB(4);
-    p[5] = SB(4);
-    p[6] = SB(4);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
-                                0x48);
-}
-
 namespace {
 
 // A pool of 64 records of 0x84 bytes (MAGIC146's, MAGIC213's), run as tasks:
@@ -505,114 +375,6 @@ unsigned char PoolAlloc(std::uint32_t pool) {
 // kMotePool: now Magic213Mote_Pool (symbols.toml). Magic213Mote_Pool
 
 }  // namespace
-
-// original 0x4E9EF0: the kind-2 task. A three-entry stack table by +1 -
-// InkInk_Start, MAGIC009's wait (0x49DA50), the engine's end (0x43F460) -
-// then the puff pool walked (InkInkPuff_Dispatch).
-C1_EXPORT void __cdecl InkInk_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::InkInk_Start, bof3::addr::Chlorine_WaitChildren,
-                                                 bof3::addr::MagicFx_FlagTargetEnd};
-    StackCall(kPhases, 3, Sc()[1], "InkInk_Task");
-    WalkPool(::bof3::Img(InkInkPuff_Pool_addr), bof3::addr::InkInkPuff_Dispatch);
-}
-
-// original 0x4E9F70: the puff pool cleared; +0xB 0, +9 8, +1 on; a child
-// (kind 1, parameter 0x6D) on each living actor of the target's side; row 26
-// as Ink_Start's (entries 1..15 with STP, entry 0 cleared), Gfx_ClutStripDirty.
-C1_EXPORT void __cdecl InkInk_Start(void) {
-    ClearPool(::bof3::Img(InkInkPuff_Pool_addr));
-    Sc()[0xB] = 0;
-    Sc()[9] = 8;
-    Inc(Sc()[1]);
-    SpawnOnActors(0x6D, true);
-    ClutCopy(0x1A21, 0x1A30, 0x8000);
-    Gfx_ClutStrip[0x1A20] = 0;
-    Gfx_ClutStripDirty = 1;
-}
-
-// original 0x4EA0F0: the actor child's kind-1 task, a jmp through
-// InkInkActor_Kinds (one entry) by +1.
-C1_EXPORT void __cdecl InkInkActor_Task(void) {
-    CellCall(Addr(InkInkActor_Kinds), 1, Sc()[1], "InkInkActor_Task");
-}
-
-// original 0x4EA110: a jmp through InkInkActor_Phases (two entries: Start,
-// MAGIC063's 0x4B3320) by +2.
-C1_EXPORT void __cdecl InkInkActor_Run(void) {
-    CellCall(Addr(InkInkActor_Phases), 2, Sc()[2], "InkInkActor_Run");
-}
-
-// original 0x4EA130: +9 down; at 0: the actor's record (+4, by the target
-// byte's side bit, unchecked); sound 0x100; the task at the actor's direction
-// and position; +0xB 0, +2 on; three puff records (+9 1, 3, 5) from the pool;
-// the actor's flags 0x10.
-C1_EXPORT void __cdecl InkInkActor_Start(void) {
-    Dec(Sc()[9]);
-    const unsigned char* const s = Sc();
-    if (s[9] != 0) return;
-    const unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
-    MH_CALL(Sound_PlayById)(0x100);
-    Sc()[8] = rec[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
-    Sc()[0xB] = 0;
-    Inc(Sc()[2]);
-    SpawnRecords(bof3::addr::InkInkPuff_Alloc, ::bof3::Img(InkInkPuff_Pool_addr), 1, 2, 7);
-    MH_CALL(Battle_SetTargetFlags)(Sc()[4], 0x10);
-}
-
-// original 0x4EA260: a puff record's dispatch, a jmp through InkInkPuff_Kinds
-// (one entry) by +1.
-C1_EXPORT void __cdecl InkInkPuff_Dispatch(void) {
-    CellCall(Addr(InkInkPuff_Kinds), 1, Sc()[1], "InkInkPuff_Dispatch");
-}
-
-// original 0x4EA280: a call through InkInkPuff_Phases (three entries: Start,
-// MAGIC009's 0x49DB90, Fade) by +2; while +0 and +2 are set, the puff.
-C1_EXPORT void __cdecl InkInkPuff_Run(void) {
-    CellCall(Addr(InkInkPuff_Phases), 3, Sc()[2], "InkInkPuff_Run");
-    const unsigned char* const s = Sc();
-    if (s[0] == 0 || s[2] == 0) return;
-    Call0(bof3::addr::Ink_DrawPuff);
-}
-
-// original 0x4EA2B0: +9 down; at 0 the puff at its owner (the actor child:
-// its direction, position offset by InkInkPuff_Offsets[+0xB]).
-C1_EXPORT void __cdecl InkInkPuff_Start(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
-    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
-    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
-    MH_AT(PtrFn, kTurnOffset.v)(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->x) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->height) +
-                                                   static_cast<std::uint32_t>(Long(Mem(Addr(InkInkPuff_Offsets) + 8 + 12u * Sc()[0xB])))));
-    MH_CALL(BattleActor_UpdateScreenXY)();
-    Sc()[9] = 0;
-    Sc()[0xA] = 0;
-    Inc(Sc()[2]);
-}
-
-// original 0x4EA3B0: +9 up, +0xA down; at 0 the owner's +0xB down and the
-// record freed (MAGIC219's 0x4F6290: +0..+4 cleared).
-C1_EXPORT void __cdecl InkInkPuff_Fade(void) {
-    Inc(Sc()[9]);
-    Dec(Sc()[0xA]);
-    if (Sc()[0xA] != 0) return;
-    Dec(Owner()[0xB]);
-    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
-}
-
-// original 0x4EA3F0: the puff pool's alloc (0x6A6F40, 64 records).
-C1_EXPORT unsigned char __cdecl InkInkPuff_Alloc(void) { return PoolAlloc(::bof3::Img(InkInkPuff_Pool_addr)); }
 
 // ===========================================================================
 // MAGIC213 (row 148)
@@ -771,22 +533,6 @@ void MagicC1_Inject() {
     BOF3_INJECT(Magic080_Run);
     BOF3_INJECT(Magic080_DrawText);
     BOF3_INJECT(Magic080_DrawGlyphs);
-    BOF3_INJECT(Ink_Task);
-    BOF3_INJECT(Ink_Start);
-    BOF3_INJECT(InkPuff_Task);
-    BOF3_INJECT(InkPuff_Run);
-    BOF3_INJECT(InkPuff_Start);
-    BOF3_INJECT(Ink_DrawPuff);
-    BOF3_INJECT(InkInk_Task);
-    BOF3_INJECT(InkInk_Start);
-    BOF3_INJECT(InkInkActor_Task);
-    BOF3_INJECT(InkInkActor_Run);
-    BOF3_INJECT(InkInkActor_Start);
-    BOF3_INJECT(InkInkPuff_Dispatch);
-    BOF3_INJECT(InkInkPuff_Run);
-    BOF3_INJECT(InkInkPuff_Start);
-    BOF3_INJECT(InkInkPuff_Fade);
-    BOF3_INJECT(InkInkPuff_Alloc);
     BOF3_INJECT(Magic213_Task);
     BOF3_INJECT(Magic213_Start);
     BOF3_INJECT(Magic213Actor_Task);

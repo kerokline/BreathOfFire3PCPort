@@ -190,7 +190,12 @@
 #include "game/magic_c3.h"
 #include "game/magic/magic_111.h"
 #include "game/magic_s29.h"
+#include "game/magic/shadow_mote.h"
 #include "game/magic_s31.h"
+#include "game/magic/thunder_clap_bolt.h"
+#include "game/magic/doom_breath_orb.h"
+#include "game/magic/corona_ray.h"
+#include "game/core/main_cannon.h"
 #include "game/magic_s28.h"
 #include "game/magic/breath_beam.h"
 #include "game/magic_s27.h"
@@ -202,7 +207,14 @@
 #include "game/magic/magic_115.h"
 #include "game/magic/magic_114.h"
 #include "game/magic_s30.h"
+#include "game/magic/venom_ring.h"
+#include "game/magic/magic_fx_2.h"
+#include "game/magic/magic_fx.h"
+#include "game/magic/kaiser_ring.h"
+#include "game/magic/kaiser_pillar.h"
+#include "game/magic/kaiser.h"
 #include "game/magic_c2.h"
+#include "game/magic/holocaust_beam.h"
 #include "game/magic/utmost_attack.h"
 #include "game/magic/rotten_breath_mote.h"
 #include "game/magic/bone_dance.h"
@@ -263,7 +275,15 @@
 #include "game/magic/foretell.h"
 #include "game/magic/chill_ray.h"
 #include "game/magic_s32.h"
+#include "game/magic/wall_of_fire_child.h"
+#include "game/magic/eye_beam.h"
 #include "game/magic_s33.h"
+#include "game/magic/accession_spark.h"
+#include "game/magic/accession_ring.h"
+#include "game/magic/accession_orb.h"
+#include "game/magic/accession_ctl.h"
+#include "game/magic/accession_bolt.h"
+#include "game/magic/accession.h"
 #include "game/magic_s34.h"
 #include "game/magic_s36.h"
 #include "game/magic_s37.h"
@@ -696,9 +716,14 @@ void InjectAll() {
                                 // stack-table immediates and eleven .data handler tables re-aimed at the shared
                                 // harness's recorders, _ftol left to the copy; no module patches bytes inside its
                                 // 49: order does not matter
+    ShadowMote_Inject();
     MagicS31_Inject();          // round 9 group S31 (MAGIC132, 137, 138, 143): its clones' calls, stack-table
                                 // immediates and jump table re-aimed or moved, its eight .data tables swapped for
                                 // the fuzz only; no module patches bytes inside its 51: order does not matter
+    ThunderClapBolt_Inject();
+    DoomBreathOrb_Inject();
+    CoronaRay_Inject();
+    MainCannon_Inject();
     MagicS28_Inject();          // round 9 group S28 (MAGIC122..124: Firebreath, Icebreath, ThundrBreath, and
                                 // Port_DroppedCall 0x4DF820): its clones' calls and stack-table immediates re-aimed
                                 // at the shared harness's recorders, its seven .data tables swapped for the fuzz
@@ -720,10 +745,17 @@ void InjectAll() {
     MagicS30_Inject();          // round 9 group S30 (MAGIC130, MAGIC131): its clones' calls, stack-table immediates and
                                 // eleven .data tables re-aimed at the shared harness's recorders; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    VenomRing_Inject();
+    MagicFx2_Inject();
+    MagicFx_Inject();
+    KaiserRing_Inject();
+    KaiserPillar_Inject();
+    Kaiser_Inject();
     MagicC2_Inject();           // round 9 group C2 (MAGIC057, 081, 116, 129: Bone Dance, RottenBreath, UtmostAttack,
                                 // Holocaust): its clones' calls, stack-table immediates and .data handler tables
                                 // re-aimed at the shared harness's recorders; no module patches bytes inside its 64:
                                 // order does not matter
+    HolocaustBeam_Inject();
     UtmostAttack_Inject();
     RottenBreathMote_Inject();
     BoneDance_Inject();
@@ -832,9 +864,17 @@ void InjectAll() {
                                 // stack-table immediates re-aimed at the shared harness's recorders, its five .data
                                 // tables swapped for the fuzz only; no module patches bytes inside its 36
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    WallOfFireChild_Inject();
+    EyeBeam_Inject();
     MagicS33_Inject();          // round 9 group S33 (MAGIC151, 154: Accession, Mighty Chop): its clones' calls
                                 // and stack-table immediates re-aimed, its seven .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 57 (DIVERGENCE.md, cheats.cpp)
+    AccessionSpark_Inject();
+    AccessionRing_Inject();
+    AccessionOrb_Inject();
+    AccessionCtl_Inject();
+    AccessionBolt_Inject();
+    Accession_Inject();
     MagicS34_Inject();          // round 9 group S34 (MAGIC158, 159, 161, 162, 166: Charm, (no label), Timed Blow,
                                 // Transfer, Monopolize): its clones' calls and stack-table immediates re-aimed at the
                                 // shared harness's recorders, its eight .data tables swapped for the fuzz only; no
