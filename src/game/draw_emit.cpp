@@ -13,6 +13,10 @@
 
 namespace {
 
+// The end of a 64 KB packet pool less 0x54 bytes of margin - the literal
+// 0x7F1BAC in the original, for buffer 0.
+constexpr std::uint32_t kPoolLimit = 0x7F1BAC;   // Gfx_PacketPools 0x7E1C00 + 0x10000 - 0x54
+
 // A layer is 0x30 bytes: three lists, each a (first, last) pair per buffer.
 // The second list, at +0x10, is the one closed here.
 constexpr unsigned kLayerDwords = 12, kSecondList = 4;
@@ -302,6 +306,34 @@ void SelfTestOpen(OpenFn theirs) {
 
 }  // namespace
 
+// original 0x461E50: the primitive just built at Gfx_PacketNext joins ordering
+// -table slot `slot`, and the packet pointer moves on by `size` - if the pool
+// has room for it, and silently not at all if it has not. Both arguments are
+// bytes. 640,316 calls a whole attract cycle.
+//
+// As the original has it: the slot is not checked against the eight there are.
+extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
+    size &= 0xFF;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+    const std::uint32_t next = Low32(Gfx_PacketNext.Native());
+    if (limit <= next + size) {
+        // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.
+        if (draw_order::Tagging())
+            bof3::Log("draworder   packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
+                      size, slot & 0xFF, next, limit, Low32(__builtin_return_address(0)));
+        return;
+    }
+    slot &= 0xFF;
+    if (draw_order::g_on)   // BOF3X_DRAWORDER, diagnostic only
+        draw_order::TagCommit(next, slot, Low32(__builtin_return_address(0)));
+    // DIV-0071 (layering.h): what a map cell's record run draws, for the next
+    // pass's verdicts; only while DrawLayer_Open runs a record under mode 1.
+    if (layering::g_in_run) layering::RunPrim(Gfx_PacketNext, size);
+    Gpu_LinkPrim(Gfx_OtPointers[slot], next);
+    Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext.Native());
+    Gfx_PacketNext = Gfx_PacketNext + size;
+}
+
 // original 0x56FE80: after a layer's sprites, in the draw-order pass - a
 // draw-mode primitive (texture page 0x95, nothing else set) committed to slot
 // 6, then the layer's second list, if it has one, appended to the slot
@@ -504,6 +536,7 @@ void DrawEmit_Inject() {
         SelfTestOpen(reinterpret_cast<OpenFn>(
             bof3::CloneOriginal("DrawLayer_Open", bof3::addr::DrawLayer_Open, 0x159, open_calls, 1)));
     }
+    BOF3_INJECT(Gfx_CommitPrim);
     BOF3_INJECT(DrawLayer_Close);
     BOF3_INJECT(DrawLayer_Open);
 }

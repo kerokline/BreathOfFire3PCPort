@@ -73,10 +73,27 @@ mode_states::Handler Entry(std::uint32_t table, int index) {
         static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
 
+// A byte argument read from its stack slot: the callers push whole
+// registers or constants, and the original reads the byte.
+unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast<const volatile unsigned char*>(&argument); }
+
+// The camera words: yaw Camera_Angles[0] and the pitch word Camera_Angles[2]
+// (Cond_AngleFB's low half), and their copies Light_AnglesCopy[0] / [2].
+constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
+short Signed16(std::uint32_t address) { return static_cast<short>(mode_states::Word(mode_states::At(address))); }
+void AddWordModeStates(std::uint32_t address, int delta) { mode_states::SetWord(mode_states::At(address), mode_states::Word(mode_states::At(address)) + static_cast<unsigned>(delta)); }
+
 // The field's load wait: File_LoadDone asked first, then a frame's sleep and
 // the question again until it answers non-zero.
 void WaitLoad() {
     while (g.load_done() == 0) g.sleep(1);
+}
+// The same with a loading frame before each sleep (the mode handlers').
+void WaitLoadFramed() {
+    while (mode_states::g.load_done() == 0) {
+        mode_states::g.loading_frame();
+        mode_states::g.sleep(1);
+    }
 }
 
 // Scenario chapter 1's bytes (docs/field-modes.md section 2).
@@ -108,9 +125,148 @@ bool PlaceEffect(unsigned char kind) {
 // The look-around mode (Game_Mode 6) and its camera
 // ===========================================================================
 
+// original 0x496A00 (no PSX twin paired; PSX 0x80199F1C): mode 6's step 0, and mode 11's
+// step 1. While none of the buttons of the map word 0x903586 is held in
+// Input_Held, the look ends: the pitch word above 0x200 leaves the turn byte
+// 0x66C7D9 0, below it sets it 1 (equal leaves it), and the step moves on.
+// Otherwise bits 8..15 of the held word turn the camera 22 a frame, each
+// word and its Light_AnglesCopy word together: 0x40 yaw down to 0xFD56,
+// 0x10 yaw up to 0xFE39, 0x20 pitch up to 0x355, 0x80 pitch down to 0xAA.
+//
+// As the original has it: every limit is a signed 16-bit compare of the word
+// read afresh, and the step past a limit is not clamped (the word may end up
+// to 21 past it); the held word is read once.
+extern "C" void __cdecl Look_PadControl(void) {
+    const unsigned held = Input_Held;
+    if ((mode_states::Word(mode_states::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f006)) & held & 0xFFFF) == 0) {
+        const short pitch = Signed16(::bof3::Img(kPitch));
+        if (pitch > 0x200) {
+            ModeStates_LookTurn = 0;
+        } else if (pitch < 0x200) {
+            ModeStates_LookTurn = 1;
+        }
+        Game_Step = static_cast<unsigned short>(Game_Step + 1);
+        return;
+    }
+    const unsigned buttons = (held >> 8) & 0xFF;
+    if ((buttons & 0x40) != 0 && Camera_Angles[0] > static_cast<short>(0xFD56)) {
+        AddWordModeStates(::bof3::Img(kYaw), -0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+    }
+    if ((buttons & 0x10) != 0 && Camera_Angles[0] < static_cast<short>(0xFE39)) {
+        AddWordModeStates(::bof3::Img(kYaw), 0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
+    }
+    if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
+        AddWordModeStates(::bof3::Img(kPitch), 0x16);
+        AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+    }
+    if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
+        AddWordModeStates(::bof3::Img(kPitch), -0x16);
+        AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+    }
+}
+
+// original 0x496AD0 (no PSX twin paired; PSX 0x8019A0D0): one frame of the camera's way back
+// from a look - yaw 22 down to 0xFD56 (below it, snapped there), and the
+// pitch word 22 towards 0x200, down with the turn byte 0x66C7D9 at 0 and up
+// otherwise, snapped to 0x200 once there or past it; each word with its
+// Light_AnglesCopy word. Nothing moves once the pitch is 0x200.
+//
+// As the original has it: the yaw copy is stepped by 22 or set to 0xFD56 with
+// the yaw, never compared; the pitch is read once and its copy stepped where
+// it lies.
+extern "C" void __cdecl Look_Return(void) {
+    if (Camera_Angles[0] > static_cast<short>(0xFD56)) {
+        AddWordModeStates(::bof3::Img(kYaw), -0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
+    } else {
+        Camera_Angles[0] = 0xFD56;
+        Light_AnglesCopy[0] = 0xFD56;
+    }
+    const short pitch = Signed16(::bof3::Img(kPitch));
+    if (pitch == 0x200) return;
+    if (ModeStates_LookTurn == 0) {
+        if (pitch <= 0x200) {
+            mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
+            Light_AnglesCopy[2] = 0x200;
+            return;
+        }
+        AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
+        mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch - 0x16));
+        return;
+    }
+    if (pitch >= 0x200) {
+        mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
+        Light_AnglesCopy[2] = 0x200;
+        return;
+    }
+    AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
+    mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch + 0x16));
+}
+
+// original 0x496250 (no PSX twin paired): mode 6's step 1 - Look_Return, and
+// with the camera back at yaw 0xFD56 and pitch 0x200, mode 2 (the field)
+// with Field_Request and Game_Step 0.
+extern "C" void __cdecl GameMode_LookEnd(void) {
+    mode_states::g.look_return();
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && mode_states::Word(mode_states::At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) {
+        Game_Mode = 2;
+        Field_Request = 0;
+        Game_Step = 0;
+    }
+}
+
 // ===========================================================================
 // The shop mode (Game_Mode 7)
 // ===========================================================================
+
+// original 0x496290 (no PSX twin paired): Game_Mode 7 (GameMode_Handlers
+// entry 7) - a tail jump through GameMode_ShopSteps 0x656AAC on Game_Step:
+// 0 Shop_Open, 1 Shop_Frame, 2 Shop_Close. Unchecked: step 3 would run mode
+// 8's first step, GameMode8_Enter 0x496440, the word after the table.
+extern "C" void __cdecl GameMode_Shop(void) { Entry(::bof3::Img(GameMode_ShopSteps_addr), Game_Step)(); }
+
+// original 0x4962A0 (no PSX twin paired; PSX 0x80199270): the shop's step 0. The object the
+// shop was opened on is the s8 0x929F0C (Field_ObjectIdle sets it with
+// Game_Mode 7). When it is an object and its dword +0x18 is 9, there is no
+// shop: back to mode 2 at once - the object turned to face +0x85 unless its
+// +7 bit 3 (and then its +0x80 bit 3 set), its +0x80 bit 5 cleared,
+// Field_ScriptFlags bit 8 cleared, a field frame. Otherwise the shop's file
+// DAT 0x31B is loaded with a loading frame and a sleep each frame of the
+// wait, CLUT strip rows 1 and 2 kept, a field frame, and step 1.
+//
+// As the original has it: Sprite_Current is set to the object before the
+// +0x18 test either way; the facing is read through Sprite_Current, the rest
+// through the object; Game_Step goes up after the field frame, read afresh.
+extern "C" void __cdecl Shop_Open(void) {
+    const signed char index = static_cast<signed char>(ModeStates_ShopObject);
+    if (index >= 0) {
+        unsigned char* const o = rv::Bytes(Sprite_Objects) + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
+        Sprite_Current = o;
+        if (mode_states::Long(o + 0x18) == 9) {
+            Game_Mode = 2;
+            Game_Step = 0;
+            Field_Request = 0;
+            if ((o[7] & 8) == 0) {
+                o[8] = o[0x85];
+                mode_states::g.face_direction(Sprite_Current[8]);
+                o[0x80] = static_cast<unsigned char>(o[0x80] | 8);
+            }
+            o[0x80] = static_cast<unsigned char>(o[0x80] & ~0x20u);
+            Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFEFF);
+            mode_states::g.field_frame();
+            return;
+        }
+    }
+    mode_states::g.load_dat(0x31B);
+    WaitLoadFramed();
+    mode_states::g.clut_copy_row(1);
+    mode_states::g.clut_copy_row(2);
+    Gfx_ClutStripDirty = 1;
+    mode_states::g.field_frame();
+    Game_Step = static_cast<unsigned short>(Game_Step + 1);
+}
 
 // original 0x517300 (no PSX twin paired; PSX 0x8019A398): the shop's step 1, once a frame -
 // the field drawn without its objects' logic (AreaMap_Frame,
@@ -126,6 +282,28 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
     mode_states::g.draw_frame();
     mode_states::g.task_records();
     mode_states::g.shop_states();
+}
+
+// original 0x496390 (no PSX twin paired; PSX 0x801993D8): the shop's step 2. The party
+// combination byte 0x90412C gets bit 7, and the sound bank 0x2C2 + its low
+// seven bits is loaded (the area's own, which the shop's file replaced) with
+// the framed wait; with Field_InputFlags bit 4, DAT 0x12A too, with its wait,
+// and CommuSim_RollOffers 0x4560D0 (R4A's); then mode 2 with Game_Step and Field_Request 0
+// and a tail jump to Field_Frame.
+extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
+    const unsigned char combo = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+    AreaW0b_PartySet = combo;
+    mode_states::g.bank_file((combo & 0x7Fu) + 0x2C2);
+    WaitLoadFramed();
+    if ((Field_InputFlags & 0x10) != 0) {
+        mode_states::g.load_dat(0x12A);
+        WaitLoadFramed();
+        mode_states::g.after_shop();
+    }
+    Game_Mode = 2;
+    Game_Step = 0;
+    Field_Request = 0;
+    mode_states::g.field_frame();
 }
 
 // ===========================================================================
@@ -156,6 +334,26 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
     mode_states::g.mode_dispatch();
     mode_states::g.menu_states();
     mode_states::g.task_records();
+}
+
+// original 0x496830 (no PSX twin paired; PSX 0x80199C38): Field_WaitTransition with the menu's
+// frame - called by mode 3's steps 0 and 2 after Transition_Start(3) / (2).
+// Loop: a frame's sleep; with Transition_Busy 0 and `run` 0, one more
+// sleep and return; else Menu_Frame, and return once the word is 0.
+//
+// As the original has it: `run` is the argument's byte, read once, and
+// tested every pass; the wait word is read afresh at both tests.
+extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(unsigned char run_argument) {
+    const unsigned char run = SlotByte(run_argument);
+    for (;;) {
+        mode_states::g.sleep(1);
+        if (Transition_Busy == 0 && run == 0) {
+            mode_states::g.sleep(1);
+            return;
+        }
+        mode_states::g.menu_frame();
+        if (Transition_Busy == 0) return;
+    }
 }
 
 // ===========================================================================
@@ -694,6 +892,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(vo
 
 void ModeStates_Inject() {
     if (bof3::WantsShadow("mode_states")) mode_states::SelfTest();
+    BOF3_INJECT(GameMode_LookEnd);
+    BOF3_INJECT(GameMode_Shop);
+    BOF3_INJECT(Shop_Open);
+    BOF3_INJECT(Shop_Close);
+    BOF3_INJECT(Menu_WaitTransition);
+    BOF3_INJECT(Look_PadControl);
+    BOF3_INJECT(Look_Return);
     BOF3_INJECT(MsgBox_SystemChoice);
     BOF3_INJECT(Text_DrawSmall);
     BOF3_INJECT(Field_LoadingFrame);

@@ -33,11 +33,109 @@
 
 namespace {
 
+using U = std::uint32_t;
+using move_script::At;
+using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
+using move_script::Word;
+
+// kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects
+constexpr U kObjectStride = 0xA4;
+constexpr unsigned kObjectCount = 30;
+constexpr ::bof3::image::Va kEnemyData{0x8C55C8};    // the area's eight enemy data records
+constexpr U kEnemyDataStride = 0x8C;
+
+unsigned char* ObjectAt(unsigned i) { return At(::bof3::Img(Sprite_Objects_addr) + i * kObjectStride); }
+bool Tagged(const unsigned char* o, unsigned tag) { return o[6] == 7 && o[0x9E] == (tag & 0xFF); }
+
+// The actor BossActor_Find answers, or a Fatal where the original would write
+// through its null answer.
+unsigned char* FoundOrAbort(const char* who, unsigned tag) {
+    unsigned char* const p = BH_CALL(BossActor_Find)(tag);
+    if (p == nullptr)
+        bof3::Fatal("%s: no field actor carries tag %u - the original writes through the null pointer "
+                    "BossActor_Find answers (docs/boss_h.md section 6)",
+                    who, tag & 0xFF);
+    return p;
+}
 
 }  // namespace
 
+// original 0x4948E0: the index 0..7 of the first of the loaded area's eight
+// enemy data records (0x8C55C8 + i * 0x8C) whose byte +0xC is the tag's low
+// byte, or 0xFF. Answers in al (the original keeps the caller's upper eax).
+extern "C" unsigned char __cdecl EnemyData_FindByTag(unsigned tag) {
+    for (unsigned i = 0; i < 8; ++i)
+        if (At(::bof3::Img(kEnemyData.v) + i * kEnemyDataStride)[0xC] == (tag & 0xFF)) return static_cast<unsigned char>(i);
+    return 0xFF;
+}
+
+// original 0x494920: the first field actor (Sprite_Objects 0..29, type +6 of
+// 7) whose +0x9E is the tag's low byte, or null.
+extern "C" unsigned char* __cdecl BossActor_Find(unsigned tag) {
+    for (unsigned i = 0; i < kObjectCount; ++i)
+        if (Tagged(ObjectAt(i), tag)) return ObjectAt(i);
+    return nullptr;
+}
+
+// original 0x494980: BossActor_Find's search answering the index 0..29 in al,
+// or 0xFF (the original keeps the caller's upper eax).
+extern "C" unsigned char __cdecl BossActor_Index(unsigned tag) {
+    for (unsigned i = 0; i < kObjectCount; ++i)
+        if (Tagged(ObjectAt(i), tag)) return static_cast<unsigned char>(i);
+    return 0xFF;
+}
+
+// original 0x4949D0: the tagged actor's +0 loses bit 0x40. BossActor_Find's
+// answer is not tested (a Fatal here where the original faults).
+extern "C" void __cdecl BossActor_ClearBit40(unsigned tag) {
+    auto* const actor_rec = rv::As<records::SpriteObject>(FoundOrAbort("BossActor_ClearBit40", tag));
+    actor_rec->flags &= 0xBF;
+}
+
+// original 0x4949F0: onto the tagged actor, by what's low byte - 0: from's
+// pose (+0x4B the animation byte, the dwords +0x50 / +0x54, the words +0x58 /
+// +0x5A) and +7 |= 0x20; 1: from's place (the dwords +0x34 / +0x38 / +0x3C);
+// anything else: nothing, the actor looked for all the same. The answer is
+// tested by neither copy (a Fatal here where the original faults); for any
+// other `what` a missing actor is harmless in both.
+extern "C" void __cdecl BossActor_CopyFrom(unsigned tag, const unsigned char* from, unsigned what) {
+    unsigned char* const p = BH_CALL(BossActor_Find)(tag);
+    auto* const actor_rec = rv::As<records::SpriteObject>(p);
+    const unsigned mode = what & 0xFF;
+    if (mode > 1) return;
+    if (p == nullptr)
+        bof3::Fatal("BossActor_CopyFrom: no field actor carries tag %u - the original writes through the null pointer "
+                    "BossActor_Find answers (docs/boss_h.md section 6)",
+                    tag & 0xFF);
+    if (mode == 1) {
+        actor_rec->x = Long(from + 0x34);
+        actor_rec->z = Long(from + 0x38);
+        actor_rec->height = Long(from + 0x3C);
+        return;
+    }
+    actor_rec->animation = from[0x4B];
+    actor_rec->script = Long(from + 0x50);
+    actor_rec->frames = Long(from + 0x54);
+    actor_rec->script_pos = Word(from + 0x58);
+    actor_rec->frame_word = Word(from + 0x5A);
+    actor_rec->flags2 |= 0x20;
+}
+
+// original 0x494A60: the tagged actor's bytes +0..+4 zeroed (a Fatal where
+// the original faults on a missing actor).
+extern "C" void __cdecl BossActor_Clear(unsigned tag) {
+    unsigned char* const p = FoundOrAbort("BossActor_Clear", tag);
+    for (unsigned i = 0; i < 5; ++i) p[i] = 0;
+}
+
 void BossSpawn_Inject() {
     if (bof3::WantsShadow("boss_spawn")) boss_spawn::SelfTest();
+    BOF3_INJECT(EnemyData_FindByTag);
+    BOF3_INJECT(BossActor_Find);
+    BOF3_INJECT(BossActor_Index);
+    BOF3_INJECT(BossActor_ClearBit40);
+    BOF3_INJECT(BossActor_CopyFrom);
+    BOF3_INJECT(BossActor_Clear);
 }
