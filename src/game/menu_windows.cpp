@@ -131,8 +131,8 @@ unsigned char* Ptr(std::uint32_t at) { return menu_windows::At(static_cast<std::
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 
 unsigned char* Next() { return Gfx_PacketNext; }
-char* PrintBufMenuWindows() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
-const char* FormatMenuWindows(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
+char* PrintBufMenuWindows() { return reinterpret_cast<char*>(menu_windows::At(::bof3::Img(at::kPrintBuf.v))); }
+const char* FormatMenuWindows(std::uint32_t at) { return reinterpret_cast<const char*>(menu_windows::At(at)); }
 
 std::int16_t S16MenuWindows(std::uint32_t v) { return static_cast<std::int16_t>(v); }
 std::int32_t U16(std::uint32_t v) { return static_cast<std::int32_t>(v & 0xFFFF); }
