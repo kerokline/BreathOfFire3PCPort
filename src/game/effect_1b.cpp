@@ -135,7 +135,7 @@ std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
 // the answer (0xFF, none free, would write 0x7E91E0.., past the pool): ours
 // aborts on any index outside the 20.
 unsigned char* SpawnedEffect1b(unsigned char k, const char* who) {
-    if (k >= at::kEffectCount)
+    if (k >= effect_1b::at::kEffectCount)
         bof3::Fatal("%s: Effect_FindFree answered %u, and the original writes that record unchecked (past the pool)",
                     who, (unsigned)k);
     return rv::Bytes(&Effect_Objects[k]);
@@ -1383,10 +1383,10 @@ extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned cha
 extern "C" void __cdecl EffectKind92_Follow() {
     unsigned char* const s = Sc();
     const unsigned n = s[0xB];
-    if (n >= at::kSpriteCount)
+    if (n >= effect_1b::at::kSpriteCount)
         bof3::Fatal("EffectKind92_Follow: sprite object %u past the %u (the original writes past Sprite_Objects)", n,
-                    at::kSpriteCount);
-    unsigned char* const o = rv::Bytes(Sprite_Objects) + at::kSpriteStride * n;
+                    effect_1b::at::kSpriteCount);
+    unsigned char* const o = rv::Bytes(Sprite_Objects) + effect_1b::at::kSpriteStride * n;
     auto* const oo = rv::As<records::SpriteObject>(o);
     if ((s[0] & 0x40) == 0) {
         oo->screen_x = static_cast<std::uint16_t>(oo->screen_x) + rv::As<records::EffectWork>(s)->work_2e;
