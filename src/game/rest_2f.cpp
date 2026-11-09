@@ -136,7 +136,7 @@ constexpr ::bof3::image::Va kListPieces3{0x66AEBC};
 constexpr ::bof3::image::Va kUsedFormat{0x6639C8};  // "%3d/%3d"
 
 unsigned char& BRest2f(U address) { return move_script::At(address)[0]; }
-U WRest2f(U address) { return Word(move_script::At(address)); }
+U WRest2f(U address) { return move_script::Word(move_script::At(address)); }
 void SetWRest2f(U address, U v) { SetWord(move_script::At(address), v); }
 U Key(const void* p) { return Low32(p); }
 // Window record n's byte / word at `at`.
@@ -1250,7 +1250,7 @@ extern "C" void __cdecl Win1_TitleStrip(void) {
     const unsigned char* r = Cur();
     SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), 0x118, 0x13, colour);
     r = Cur();
-    const U v = Word(r + 0x10);
+    const U v = move_script::Word(r + 0x10);
     if (v == 0) return;
     const U at = ::bof3::Img(kPools.v) + 2u * static_cast<U>(static_cast<int>(static_cast<short>(v)));
     const unsigned char* const text = move_script::At(::bof3::Img(kPools.v) + WRest2f(at));
@@ -1285,7 +1285,7 @@ extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
     SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 3u) & 0xFFFF), 0x95,
                           0xA0, 0, static_cast<unsigned char>(Config_WindowColour));
     for (unsigned char i = 0; i < 4; ++i) {
-        const unsigned char held = move_script::At(static_cast<U>(Long(rec + 0x20)))[i];
+        const unsigned char held = move_script::At(static_cast<U>(move_script::Long(rec + 0x20)))[i];
         const unsigned colour = held != 0 ? 0 : 7;
         const unsigned dim = held != 0 ? 0 : 1;
         if (i != rec[0xA]) {
@@ -1293,7 +1293,7 @@ extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
             continue;
         }
         if (held != 0) Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF, 7, 0, BRest2f(::bof3::Img(kShisuIds.v) + i), held, 1);
-        const unsigned char again = move_script::At(static_cast<U>(Long(rec + 0x20)))[i];
+        const unsigned char again = move_script::At(static_cast<U>(move_script::Long(rec + 0x20)))[i];
         Row(Wx(rec) + 7, ((13u * i + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF) + 0x18u, colour, 0, BRest2f(::bof3::Img(kShisuIds.v) + i), again, dim);
     }
     {
@@ -1379,7 +1379,7 @@ extern "C" void __cdecl Win2_EquipCompare(void) {
     Run("Win2_EquipCompare (0x5969A0)", Win2_EquipCompareStates, Win2_EquipCompareStates_count, Cur()[3],
         "the window record's +3");
     unsigned char* const r = Cur();
-    SH_CALL(Menu_DrawEquipCompare)(7, Wx(r), Wy(r), move_script::At(static_cast<U>(Long(r + 0x20))), r[0xD], r);
+    SH_CALL(Menu_DrawEquipCompare)(7, Wx(r), Wy(r), move_script::At(static_cast<U>(move_script::Long(r + 0x20))), r[0xD], r);
 }
 
 // original 0x5969E0: Window_Handler2KindTable[4] - its state
@@ -1390,9 +1390,9 @@ extern "C" void __cdecl Win2_TitleBox(void) {
     Run("Win2_TitleBox (0x5969E0)", Win2_TitleBoxStates, Win2_TitleBoxStates_count, Cur()[3], "the window record's +3");
     const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Cur();
-    SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), static_cast<int>(Word(r + 0x12)), 0x13, colour);
+    SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), static_cast<int>(move_script::Word(r + 0x12)), 0x13, colour);
     r = Cur();
-    const U v = Word(r + 0x10);
+    const U v = move_script::Word(r + 0x10);
     if (v == 0) return;
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(v);
     r = Cur();
@@ -1433,8 +1433,8 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     const unsigned char top = SH_CALL(Menu_ListScroll)(rec + 0xB, &offset, &moving, rec + 0x12);
     const unsigned rows = moving + 9u;
     const U category = rec[0xA];
-    const unsigned char* ids = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(kIdLists.v) + 4 * category)))) + top;
-    const unsigned char* counts = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(kCountLists.v) + 4 * category)))) + top;
+    const unsigned char* ids = move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(kIdLists.v) + 4 * category)))) + top;
+    const unsigned char* counts = move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(kCountLists.v) + 4 * category)))) + top;
     U y = static_cast<std::uint16_t>(static_cast<signed char>(offset) + rv::As<records::WindowRecord>(rec)->y) + 0x1Au;
     for (unsigned char i = 0; i < rows; ++i, ++ids, ++counts, y += 0xD) {
         const unsigned char item = *ids;
@@ -1470,7 +1470,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         const U cat = rec[0xA];
         const unsigned grey = rec[9] ? 7 : 0;
         const int y7 = static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 7u) & 0xFFFF);
-        const unsigned char* const title = move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(kListTitles.v) + 4 * cat))));
+        const unsigned char* const title = move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(kListTitles.v) + 4 * cat))));
         const unsigned n = SH_CALL(Text_CharCount)(title);
         const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->x) & 0xFFFF);
         const U site = rest_2f::g_title_call;
@@ -1507,7 +1507,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     {
         const U cat = rec[0xA];
         const U total = cat == 4 ? 0x20 : 0x80;
-        SH_CALL(Menu_DrawScrollBar)(move_script::At(static_cast<U>(Long(move_script::At(::bof3::Img(kIdLists.v) + 4 * cat)))), rec[0xB], Wx(rec) + 0x90, Wy(rec) + 0x18, 9,
+        SH_CALL(Menu_DrawScrollBar)(move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(kIdLists.v) + 4 * cat)))), rec[0xB], Wx(rec) + 0x90, Wy(rec) + 0x18, 9,
                                     total, 0x74);
     }
 }
