@@ -26,37 +26,7 @@ using AreaHandler = void (__cdecl*)();
 // object), so only that part is named: rv::Current<records::SpriteHead>()
 // (C2 audit frs F3; typed-data-round.md 3, "C2 audit as run").
 using CounterOp = signed char (__cdecl*)(const unsigned char*);
-using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, unsigned char);
 
-// Every callee that is not one of these three, through pointers so that the
-// start-up fuzz can stand recording functions in for them - for the
-// original's copy and for ours alike. The two tables the flow pass calls
-// through (the area's handlers, MoveScript_CounterOps) are read from memory,
-// as the original reads them; the fuzz swaps their contents instead.
-struct CalleesMoveScript {
-    int (__cdecl* kind)();
-    void (__cdecl* move)(unsigned char*, unsigned char);
-    void (__cdecl* move_kind2)(unsigned char);
-    GroupFn group6, group8, group9, group_c, group_d, group_e;
-    void (__cdecl* group_b)(unsigned char*, const unsigned char*);
-    unsigned short (__cdecl* find_label)(unsigned char*, unsigned char, const unsigned char*);
-    int (__cdecl* variable)(unsigned char);
-    void (__cdecl* trio_clear)();
-    void (__cdecl* trio_set)();
-    long (__cdecl* elevation)(long, long);
-    void (__cdecl* set_animation)(unsigned char);
-    void (__cdecl* set_animation_at)(unsigned char, unsigned short);
-    void (__cdecl* flags_clear)();
-    void (__cdecl* flags_set)();
-    int (__cdecl* wait_test)(unsigned char, unsigned char);
-    unsigned char (__cdecl* tick_once)();
-    unsigned short (__cdecl* peek)();
-    void (__cdecl* sound)(unsigned short);
-    void (__cdecl* op_f7)(long, long, unsigned char, unsigned char*);
-    void (__cdecl* attach)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
-    unsigned char (__cdecl* test_fb)(short, short);
-    unsigned char (__cdecl* test_fc)(short, short);
-};
 const CalleesMoveScript kOriginalsMoveScript = {
     MoveScript_ObjectKind, MoveCmd_Move, MoveCmd_MoveKind2,
     MoveScript_Group6, MoveScript_Group8, MoveScript_Group9, MoveScript_GroupC, MoveScript_GroupD, MoveScript_GroupE,
@@ -65,8 +35,8 @@ const CalleesMoveScript kOriginalsMoveScript = {
     MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
     MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
 };
-CalleesMoveScript g = kOriginalsMoveScript;
-
+}  namespace move_script { CalleesMoveScript g = kOriginalsMoveScript; }
+namespace {
 // Ops 0D and F3 place an object: the coordinate words of Sprite_Current, or
 // of Sprite_Kind2 itself on the kind-2 path.
 void PlaceAndGround(unsigned char* sprite, const unsigned char* operands) {
@@ -101,7 +71,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
                 if (skip < 0) return result;
                 SetPos(object, Pos(object) + static_cast<unsigned>(skip) + 1u);
             } else if (group == 0xB0) {
-                g.group_b(object, script);
+                move_script::g.group_b(object, script);
                 SetPos(object, Pos(object) + 1u);
             } else {
                 return result;
@@ -115,7 +85,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             const unsigned target = static_cast<unsigned>(hi) << 8 | p[2];
             if ((hi & 0xC0) == 0x40) {
                 SetPos(object, target);
-                SetPos(object, g.find_label(object, p[2], script));
+                SetPos(object, move_script::g.find_label(object, p[2], script));
             } else {
                 SetPos(object, target + pos);
             }
@@ -145,8 +115,8 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
         case 0x04: case 0x05: case 0x06: case 0x07: case 0x08: case 0x09: {
             // op a b l1h l1l l2h l2l: compare, then go to label l1l or l2l. The
             // even ops take a as a constant, the odd ones as a variable.
-            const int want = (op & 1) ? g.variable(p[1]) : p[1];
-            const int have = g.variable(script[Pos(object) + 2u]);
+            const int want = (op & 1) ? move_script::g.variable(p[1]) : p[1];
+            const int have = move_script::g.variable(script[Pos(object) + 2u]);
             bool first;
             if (op <= 0x05) first = have == want;
             else if (op <= 0x07) first = have < want;
@@ -155,7 +125,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             const unsigned char hi = script[at + (first ? 3u : 5u)];
             const unsigned char lo = script[at + (first ? 4u : 6u)];
             SetPos(object, static_cast<unsigned>(hi) << 8 | lo);
-            SetPos(object, g.find_label(object, lo, script));
+            SetPos(object, move_script::g.find_label(object, lo, script));
             break;
         }
         case 0x0A:
@@ -165,19 +135,19 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             SetPos(object, 0);
             break;
         case 0x0C:
-            if (p[1]) g.trio_clear();
-            else g.trio_set();
+            if (p[1]) move_script::g.trio_clear();
+            else move_script::g.trio_set();
             SetPos(object, Pos(object) + 2u);
             break;
         case 0x0D: {   // 0D x xh z zh: place at (x.xh, z.zh) and take the ground's elevation
-            if (g.kind() == 2) {
+            if (move_script::g.kind() == 2) {
                 PlaceAndGround(rv::Bytes(&Sprite_Kind2), script + Pos(object));
-                rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(Sprite_Kind2.x, Sprite_Kind2.z)));
+                rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(move_script::g.elevation(Sprite_Kind2.x, Sprite_Kind2.z)));
                 result = 0xFF;
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
                 wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
-                const long h = g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
+                const long h = move_script::g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
                 rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(h));
             }
             SetPos(object, Pos(object) + 5u);
@@ -193,11 +163,11 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             rv::Current<records::SpriteHead>()->flip = script[Pos(object) + 2u];
             const unsigned at = Pos(object);
             if (script[at + 3] & 2) {
-                g.set_animation_at(animation, script[at + 4]);
+                move_script::g.set_animation_at(animation, script[at + 4]);
                 SetPos(object, Pos(object) + 1u);
                 SetPos(object, Pos(object) + 4u);
             } else {
-                g.set_animation(animation);
+                move_script::g.set_animation(animation);
                 SetPos(object, Pos(object) + 4u);
             }
             break;
@@ -224,10 +194,10 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     if (p[0] < 0xF0) return value;   // unreachable from the step
     switch (p[0]) {
     case 0xF0:
-        g.flags_clear();
+        move_script::g.flags_clear();
         return value;
     case 0xF1:
-        g.flags_set();
+        move_script::g.flags_set();
         return value;
     case 0xF2: case 0xFA: case 0xF3: {
         value = p[1];
@@ -235,18 +205,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         const bool moves = p[2] != 0;
         if (p[0] == 0xF2) {
             if (moves) {
-                if (g.kind() == 2) g.move_kind2(value);
-                else g.move(object, value);
+                if (move_script::g.kind() == 2) move_script::g.move_kind2(value);
+                else move_script::g.move(object, value);
             }
             SetPos(object, Pos(object) + 2u);
         } else if (p[0] == 0xFA) {
             if (moves) {
-                if (g.kind() == 2) {
-                    g.move_kind2(value);
+                if (move_script::g.kind() == 2) {
+                    move_script::g.move_kind2(value);
                     MoveScript_FAWord = 0;
                     object[0] |= 0x40;
                 } else {
-                    g.move(object, value);
+                    move_script::g.move(object, value);
                     object[0] |= 0x80;
                 }
             }
@@ -255,8 +225,8 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
             rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
             SetPos(object, Pos(object) + 4u);
         } else if (moves) {   // F3 d m th tl: move toward height th.tl, over the move's frames
-            if (g.kind() != 2) {
-                g.move(object, value);
+            if (move_script::g.kind() != 2) {
+                move_script::g.move(object, value);
                 const unsigned at = Pos(object);
                 const auto target = static_cast<std::int16_t>(script[at + 3] << 8 | script[at + 4]);
                 records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
@@ -270,7 +240,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 SetWord(scratch, rv::Current<records::SpriteHead>()->height_whole);
                 const unsigned at = Pos(object);
                 SetWord(scratch + 2, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
-                g.move_kind2(value);
+                move_script::g.move_kind2(value);
                 const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2.move_steps;
                 const std::int32_t rise = static_cast<std::int16_t>(Word(scratch + 2)) - static_cast<std::int16_t>(Word(scratch));
                 rv::Store<std::int32_t>(Sprite_Kind2.step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
@@ -306,18 +276,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     case 0xF7: {
         const long x = static_cast<long>((static_cast<unsigned>(p[1]) << 8 | p[2]) << 8);
         const long z = static_cast<long>((static_cast<unsigned>(p[3]) << 8 | p[4]) << 8);
-        g.op_f7(x, z, p[5], object);
+        move_script::g.op_f7(x, z, p[5], object);
         value = script[Pos(object) + 6u];
-        if (g.kind() == 1) object[7] = 1;
+        if (move_script::g.kind() == 1) object[7] = 1;
         SetPos(object, Pos(object) + 6u);
         return value;
     }
     case 0xF8:
-        g.attach(object, p[1], p[2], p[3], p[4]);
+        move_script::g.attach(object, p[1], p[2], p[3], p[4]);
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xF9:
-        if (g.wait_test(p[1], p[2]) != 0) {
+        if (move_script::g.wait_test(p[1], p[2]) != 0) {
             SetPos(object, Pos(object) - 1u);
             return 0xFF;
         }
@@ -326,22 +296,22 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     case 0xFB: case 0xFC: {
         unsigned char* const sprite = Sprite_Current;
         const auto x = static_cast<short>(rv::As<records::SpriteHead>(sprite)->x_whole), z = static_cast<short>(rv::As<records::SpriteHead>(sprite)->z_whole);
-        if ((p[0] == 0xFB ? g.test_fb : g.test_fc)(x, z)) g.sound(0x103);
+        if ((p[0] == 0xFB ? move_script::g.test_fb : move_script::g.test_fc)(x, z)) move_script::g.sound(0x103);
         return value;
     }
     case 0xFD:
-        if (!g.tick_once()) {
+        if (!move_script::g.tick_once()) {
             rv::Current<records::SpriteHead>()->flags2 |= 0x20;
             SetPos(object, Pos(object) - 1u);
         }
         return value;
     case 0xFE:
         if (Field_Request != 3) {
-            const std::uint16_t next = g.peek();
+            const std::uint16_t next = move_script::g.peek();
             SetWord(Scratch(), next);
             if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned at = Pos(object);
-                if (next == script[at + 2]) g.sound(static_cast<unsigned short>(script[at + 1] + 0x200u));
+                if (next == script[at + 2]) move_script::g.sound(static_cast<unsigned short>(script[at + 1] + 0x200u));
             }
         }
         SetPos(object, Pos(object) + 2u);
@@ -369,20 +339,20 @@ extern "C" unsigned char __cdecl MoveScript_Step(unsigned char* object, const un
         result = static_cast<unsigned char>(static_cast<unsigned char>(op - 0x10) >> 3);
         object[7] = op & 7;
         if (op & 7) {
-            if (g.kind() == 2) g.move_kind2(result);
-            else g.move(object, result);
+            if (move_script::g.kind() == 2) move_script::g.move_kind2(result);
+            else move_script::g.move(object, result);
         }
         break;
     }
     case 0x50:
         object[1] = op & 0xF;
         break;
-    case 0x60: result = g.group6(object, script, result); break;
-    case 0x80: result = g.group8(object, script, result); break;
-    case 0x90: result = g.group9(object, script, result); break;
-    case 0xC0: result = g.group_c(object, script, result); break;
-    case 0xD0: result = g.group_d(object, script, result); break;
-    case 0xE0: result = g.group_e(object, script, result); break;
+    case 0x60: result = move_script::g.group6(object, script, result); break;
+    case 0x80: result = move_script::g.group8(object, script, result); break;
+    case 0x90: result = move_script::g.group9(object, script, result); break;
+    case 0xC0: result = move_script::g.group_c(object, script, result); break;
+    case 0xD0: result = move_script::g.group_d(object, script, result); break;
+    case 0xE0: result = move_script::g.group_e(object, script, result); break;
     case 0xF0: result = MoveScript_GroupF(object, script, result); break;
     case 0xA0:   // A0-AF that the flow pass stopped on: stay
         SetPos(object, pos - 1u);
@@ -736,7 +706,7 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
     const void* const area_table = kAreaStubs.data();
     std::memcpy(g_descriptor + 0x3C, &area_table, sizeof area_table);
     Field_State = g_state;
-    g = kStubs;
+    move_script::g = kStubs;
 
     unsigned bad = 0, flow_ops = 0, log_calls = 0, kind2_rounds = 0;
     unsigned dispatched[16] = {}, group_f[16] = {};   // what the step's own dispatch saw
@@ -784,7 +754,7 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
                       "position %04X / %04X, log %u / %u", round, start, their_out.result, our_out.result,
                       Pos(their_out.object), Pos(our_out.object), their_out.log_n, our_out.log_n);
     }
-    g = kOriginalsMoveScript;
+    move_script::g = kOriginalsMoveScript;
     std::memcpy(MoveScript_CounterOps, saved_counter_ops, sizeof saved_counter_ops);
     Field_State = saved_state;
     Apply(saved);
