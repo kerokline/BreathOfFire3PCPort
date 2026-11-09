@@ -54,8 +54,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-std::uint16_t W(U address) { return Word(At(address)); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+std::uint16_t W(U address) { return move_script::Word(move_script::At(address)); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 S32Rest3b S16Rest3b(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* PtrRest3b(U cell) { return move_script::At(L(cell)); }
 unsigned char* ResultRest3b() { return PtrRest3b(::bof3::Img(at::kResult.v)); }

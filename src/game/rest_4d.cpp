@@ -43,7 +43,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return *At(address); }
 int S8(U address) { return static_cast<signed char>(*At(address)); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 void PutL(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 const unsigned char* Text(U address) { return At(address); }

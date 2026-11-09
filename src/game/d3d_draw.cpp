@@ -234,13 +234,13 @@ using namespace d3d_draw;
 void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long* diffuse,
                    unsigned long* specular) {
     const unsigned char c = static_cast<unsigned char>(code);
-    U alpha = 0xFF;
+    d3d_draw::U alpha = 0xFF;
     if (c & 2) {
-        static constexpr U kAlpha[4] = {0x80, 0xFF, 0xFF, 0x40};
+        static constexpr d3d_draw::U kAlpha[4] = {0x80, 0xFF, 0xFF, 0x40};
         alpha = kAlpha[(mode >> 5) & 3];
     }
-    U red = r, green = g, blue = b;
-    U excess_r = 0, excess_g = 0, excess_b = 0;
+    d3d_draw::U red = r, green = g, blue = b;
+    d3d_draw::U excess_r = 0, excess_g = 0, excess_b = 0;
     if (c & 4) {
         if (c & 1) {
             red = green = blue = 0xFF;
@@ -271,8 +271,8 @@ void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned m
 // clear: 5, 6 (SRCALPHA, INVSRCALPHA - the alpha is 0xFF, so opaque). Set: by
 // (mode >> 5) & 3 through 0x59FD6C - 5, 6 / 2, 2 / 1, 4 / 5, 2.
 void D3d_SetBlend(unsigned code, unsigned mode) {
-    static constexpr U kBlend[4][2] = {{5, 6}, {2, 2}, {1, 4}, {5, 2}};
-    const U* pair = (code & 2) ? kBlend[(mode >> 5) & 3] : kBlend[0];
+    static constexpr d3d_draw::U kBlend[4][2] = {{5, 6}, {2, 2}, {1, 4}, {5, 2}};
+    const d3d_draw::U* pair = (code & 2) ? kBlend[(mode >> 5) & 3] : kBlend[0];
     SetRenderState(0x1B, 1);
     SetRenderState(0x13, pair[0]);
     SetRenderState(0x14, pair[1]);
@@ -281,7 +281,7 @@ void D3d_SetBlend(unsigned code, unsigned mode) {
 // 0x59FD80. SHADEMODE (9), only when it differs from the cache; the cache is
 // written after the call.
 void D3d_SetShadeMode(unsigned mode) {
-    if (*reinterpret_cast<volatile U*>(At(::bof3::Img(D3d_ShadeModeCache_addr))) == mode) return;
+    if (*reinterpret_cast<volatile d3d_draw::U*>(d3d_draw::At(::bof3::Img(D3d_ShadeModeCache_addr))) == mode) return;
     SetRenderState(9, mode);
     D3d_ShadeModeCache = mode;
 }
@@ -295,22 +295,22 @@ void D3d_SetShadeMode(unsigned mode) {
 long D3d_BindTexture(unsigned tpage, unsigned clut) {
     const int page = static_cast<int>(tpage & 0x1F);
     const int mode = static_cast<int>((tpage >> 7) & 3);
-    const int slot = g.tex_find(page, static_cast<int>(clut), mode);
-    U texture;
+    const int slot = d3d_draw::g.tex_find(page, static_cast<int>(clut), mode);
+    d3d_draw::U texture;
     if (slot == 0x20) {
         if (draw_order::Tagging())
             bof3::Log("d3d_draw: page cache miss - page %d clut %04X mode %d built", page, clut, mode);
-        Scene(0x28);   // EndScene
-        texture = static_cast<U>(g.tex_build(page, static_cast<int>(clut), mode));
-        Scene(0x24);   // BeginScene
+        d3d_draw::Scene(0x28);   // EndScene
+        texture = static_cast<d3d_draw::U>(d3d_draw::g.tex_build(page, static_cast<int>(clut), mode));
+        d3d_draw::Scene(0x24);   // BeginScene
     } else {
-        const unsigned char* e = At(::bof3::Img(Gfx_TexCache_addr) + static_cast<U>(page * 32 + slot) * 0x18);
+        const unsigned char* e = d3d_draw::At(::bof3::Img(Gfx_TexCache_addr) + static_cast<d3d_draw::U>(page * 32 + slot) * 0x18);
         const unsigned char state = e[0];
-        texture = Long(e + 0x14);
+        texture = d3d_draw::Long(e + 0x14);
         if (state == 2) {
-            Scene(0x28);
-            g.tex_refresh(page, slot);
-            Scene(0x24);
+            d3d_draw::Scene(0x28);
+            d3d_draw::g.tex_refresh(page, slot);
+            d3d_draw::Scene(0x24);
         }
     }
     // DIV-0125 (render/fb_grab.h), not in the original: a direct-colour
@@ -319,12 +319,12 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
     // window w x h its 256 texels tile - so a frame-buffer grab there can be
     // sampled. Does nothing under Capcom's DirectX 6 objects.
     if (mode & 2) {
-        const unsigned char* key = At(::bof3::Img(Gfx_TexCacheKey_addr));
+        const unsigned char* key = d3d_draw::At(::bof3::Img(Gfx_TexCacheKey_addr));
         render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-                               (page & 0xF) * 64 + Short(key), (page & 0x10) * 16 + Short(key + 2), Short(key + 4),
-                               Short(key + 6));
+                               (page & 0xF) * 64 + d3d_draw::Short(key), (page & 0x10) * 16 + d3d_draw::Short(key + 2), d3d_draw::Short(key + 4),
+                               d3d_draw::Short(key + 6));
     }
-    return SetTexture(0, texture);
+    return d3d_draw::SetTexture(0, texture);
 }
 
 // --- the handlers ------------------------------------------------------------
@@ -338,21 +338,21 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
 // words in the first two. One colour for all four, in the tpage's blend mode.
 long D3d_DrawPolyFT4(const unsigned char* prim) {
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Word(prim + 0x26), &diffuse, &specular);
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
-        PutPosition(out, prim + 8 + i * 0x10);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
-        PutLong(out + 0x14, static_cast<U>(specular));
+    d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_draw::Word(prim + 0x26), &diffuse, &specular);
+    for (d3d_draw::U i = 0; i < 4; ++i) {
+        unsigned char* out = d3d_draw::Vertex(i);
+        d3d_draw::PutPosition(out, prim + 8 + i * 0x10);
+        d3d_draw::PutLong(out + 0x10, static_cast<d3d_draw::U>(diffuse));
+        d3d_draw::PutLong(out + 0x14, static_cast<d3d_draw::U>(specular));
     }
-    for (U i = 0; i < 4; ++i) PutTexel(Vertex(i), prim + 0x14 + i * 0x10);
+    for (d3d_draw::U i = 0; i < 4; ++i) d3d_draw::PutTexel(d3d_draw::Vertex(i), prim + 0x14 + i * 0x10);
     QuadFarEdge(prim + 0x14, 0x10);   // DIV-0199
-    g.bind_texture(Word(prim + 0x26), Word(prim + 0x16));
-    g.ret_only(Word(prim + 0x26) & 0x400);
-    g.ret_only(Word(prim + 0x26) & 0x800);
-    g.set_blend(prim[7], Word(prim + 0x26));
-    g.set_shade(1);   // flat
-    return DrawVertices(5, 4);   // TRIANGLESTRIP
+    d3d_draw::g.bind_texture(d3d_draw::Word(prim + 0x26), d3d_draw::Word(prim + 0x16));
+    d3d_draw::g.ret_only(d3d_draw::Word(prim + 0x26) & 0x400);
+    d3d_draw::g.ret_only(d3d_draw::Word(prim + 0x26) & 0x800);
+    d3d_draw::g.set_blend(prim[7], d3d_draw::Word(prim + 0x26));
+    d3d_draw::g.set_shade(1);   // flat
+    return d3d_draw::DrawVertices(5, 4);   // TRIANGLESTRIP
 }
 
 // 0x5A14C0, code 0x3C (Gpu_SetPolyGT4): a textured Gouraud quad. Four corners
@@ -361,25 +361,25 @@ long D3d_DrawPolyFT4(const unsigned char* prim) {
 // blend mode, all four computed before any vertex is written.
 long D3d_DrawPolyGT4(const unsigned char* prim) {
     unsigned long diffuse[4], specular[4];
-    for (U i = 0; i < 4; ++i) {
+    for (d3d_draw::U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x14;
-        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], Word(prim + 0x2A), &diffuse[i], &specular[i]);
+        d3d_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_draw::Word(prim + 0x2A), &diffuse[i], &specular[i]);
     }
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
+    for (d3d_draw::U i = 0; i < 4; ++i) {
+        unsigned char* out = d3d_draw::Vertex(i);
         const unsigned char* in = prim + 8 + i * 0x14;
-        PutPosition(out, in);
-        PutLong(out + 0x10, static_cast<U>(diffuse[i]));
-        PutLong(out + 0x14, static_cast<U>(specular[i]));
-        PutTexel(out, in + 0xC);
+        d3d_draw::PutPosition(out, in);
+        d3d_draw::PutLong(out + 0x10, static_cast<d3d_draw::U>(diffuse[i]));
+        d3d_draw::PutLong(out + 0x14, static_cast<d3d_draw::U>(specular[i]));
+        d3d_draw::PutTexel(out, in + 0xC);
     }
     QuadFarEdge(prim + 0x14, 0x14);   // DIV-0199
-    g.bind_texture(Word(prim + 0x2A), Word(prim + 0x16));
-    g.ret_only(0);
-    g.ret_only(0);
-    g.set_blend(prim[7], Word(prim + 0x2A));
-    g.set_shade(2);   // Gouraud
-    return DrawVertices(5, 4);
+    d3d_draw::g.bind_texture(d3d_draw::Word(prim + 0x2A), d3d_draw::Word(prim + 0x16));
+    d3d_draw::g.ret_only(0);
+    d3d_draw::g.ret_only(0);
+    d3d_draw::g.set_blend(prim[7], d3d_draw::Word(prim + 0x2A));
+    d3d_draw::g.set_shade(2);   // Gouraud
+    return d3d_draw::DrawVertices(5, 4);
 }
 
 namespace {
@@ -387,21 +387,21 @@ namespace {
 // mode from Gfx_DrawTpage - read before the colour and read again for the
 // blend - and no specular: the colour helper is handed a null pointer, so the
 // vertices' specular, tu and tv are left as the last draw left them.
-long DrawLines(const unsigned char* prim, U corners) {
-    const U mode = Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
+long DrawLines(const unsigned char* prim, d3d_draw::U corners) {
+    const d3d_draw::U mode = d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
-    for (U i = 0; i < corners; ++i) {
-        unsigned char* out = Vertex(i);
-        PutPosition(out, prim + 8 + i * 0xC);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
+    d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
+    for (d3d_draw::U i = 0; i < corners; ++i) {
+        unsigned char* out = d3d_draw::Vertex(i);
+        d3d_draw::PutPosition(out, prim + 8 + i * 0xC);
+        d3d_draw::PutLong(out + 0x10, static_cast<d3d_draw::U>(diffuse));
     }
-    SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(1);
-    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
-    g.set_shade(1);
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(corners) : DrawVertices(3, corners);   // LINESTRIP; DIV-0079 the quads
+    d3d_draw::SetTexture(0, 0);
+    d3d_draw::g.ret_only(0);
+    d3d_draw::g.ret_only(1);
+    d3d_draw::g.set_blend(prim[7], d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
+    d3d_draw::g.set_shade(1);
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(corners) : d3d_draw::DrawVertices(3, corners);   // LINESTRIP; DIV-0079 the quads
 }
 }  // namespace
 
@@ -419,31 +419,31 @@ long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
 // through fld / fst to all four corners (a signalling NaN comes out quiet, unlike
 // the other handlers' mov).
 long D3d_DrawTile(const unsigned char* prim) {
-    const U mode = Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
+    const d3d_draw::U mode = d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
-    const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
-    const float left = X87Mul(D3d_ScaleX, x);
-    const float top = X87Mul(D3d_ScaleY, y);
-    const float right = X87AddMul(Float(prim + 0x14), x, D3d_ScaleX);
-    const float bottom = X87AddMul(Float(prim + 0x18), y, D3d_ScaleY);
-    const float sz = X87Pass(z);
-    const float rhw = X87Div(FloatAt(kRhwNumerator), z);
+    d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
+    const float x = d3d_draw::Float(prim + 8), y = d3d_draw::Float(prim + 0xC), z = d3d_draw::Float(prim + 0x10);
+    const float left = d3d_draw::X87Mul(D3d_ScaleX, x);
+    const float top = d3d_draw::X87Mul(D3d_ScaleY, y);
+    const float right = X87AddMul(d3d_draw::Float(prim + 0x14), x, D3d_ScaleX);
+    const float bottom = X87AddMul(d3d_draw::Float(prim + 0x18), y, D3d_ScaleY);
+    const float sz = d3d_draw::X87Pass(z);
+    const float rhw = d3d_draw::X87Div(d3d_draw::FloatAt(d3d_draw::kRhwNumerator), z);
     const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
-        PutFloat(out + 0x00, xs[i]);
-        PutFloat(out + 0x04, ys[i]);
-        PutFloat(out + 0x08, sz);
-        PutFloat(out + 0x0C, rhw);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
+    for (d3d_draw::U i = 0; i < 4; ++i) {
+        unsigned char* out = d3d_draw::Vertex(i);
+        d3d_draw::PutFloat(out + 0x00, xs[i]);
+        d3d_draw::PutFloat(out + 0x04, ys[i]);
+        d3d_draw::PutFloat(out + 0x08, sz);
+        d3d_draw::PutFloat(out + 0x0C, rhw);
+        d3d_draw::PutLong(out + 0x10, static_cast<d3d_draw::U>(diffuse));
     }
-    SetTexture(0, 0);
-    g.ret_only(1);
-    g.ret_only(1);
-    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
-    g.set_shade(1);
-    return DrawVertices(5, 4);
+    d3d_draw::SetTexture(0, 0);
+    d3d_draw::g.ret_only(1);
+    d3d_draw::g.ret_only(1);
+    d3d_draw::g.set_blend(prim[7], d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
+    d3d_draw::g.set_shade(1);
+    return d3d_draw::DrawVertices(5, 4);
 }
 
 // 0x5A2EB0, code 0x84 (Gpu_SetCode84 - no PSX GPU code; the port's): a sprite
@@ -458,37 +458,37 @@ long D3d_DrawTile(const unsigned char* prim) {
 // out of the table reads past it, as the original does.
 long D3d_DrawCellSprite(const unsigned char* prim) {
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Word(prim + 0x1E), &diffuse, &specular);
-    const int index = g.cell_texture(Word(prim + 0x18), Word(prim + 0x1A), Word(prim + 0x1C), Word(prim + 0x1E));
-    const unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(index) * kCellEntry);
+    d3d_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_draw::Word(prim + 0x1E), &diffuse, &specular);
+    const int index = d3d_draw::g.cell_texture(d3d_draw::Word(prim + 0x18), d3d_draw::Word(prim + 0x1A), d3d_draw::Word(prim + 0x1C), d3d_draw::Word(prim + 0x1E));
+    const unsigned char* e = d3d_draw::At(::bof3::Img(D3d_CellTexCache_addr) + static_cast<d3d_draw::U>(index) * kCellEntry);
     const bool flip = (prim[0x1F] & 4) != 0;
-    const float x = Float(prim + 8), y = Float(prim + 0xC), sx = Float(prim + 0x10), sy = Float(prim + 0x14);
-    const float left = X87IntMulAddMul(Short(e + 8), sx, x, D3d_ScaleX, flip);
-    const float right = X87IntMulAddMul(Short(e + 0xA), sx, x, D3d_ScaleX, flip);
-    const float top = X87IntMulAddMul(Short(e + 0xC), sy, y, D3d_ScaleY, false);
-    const float bottom = X87IntMulAddMul(Short(e + 0xE), sy, y, D3d_ScaleY, false);
-    const float half = FloatAt(kHalf);
-    const auto used_w = static_cast<std::int32_t>(Word(e + 0)), used_h = static_cast<std::int32_t>(Word(e + 2));
-    const auto full_w = static_cast<std::int32_t>(Word(e + 4)), full_h = static_cast<std::int32_t>(Word(e + 6));
+    const float x = d3d_draw::Float(prim + 8), y = d3d_draw::Float(prim + 0xC), sx = d3d_draw::Float(prim + 0x10), sy = d3d_draw::Float(prim + 0x14);
+    const float left = X87IntMulAddMul(d3d_draw::Short(e + 8), sx, x, D3d_ScaleX, flip);
+    const float right = X87IntMulAddMul(d3d_draw::Short(e + 0xA), sx, x, D3d_ScaleX, flip);
+    const float top = X87IntMulAddMul(d3d_draw::Short(e + 0xC), sy, y, D3d_ScaleY, false);
+    const float bottom = X87IntMulAddMul(d3d_draw::Short(e + 0xE), sy, y, D3d_ScaleY, false);
+    const float half = d3d_draw::FloatAt(kHalf);
+    const auto used_w = static_cast<std::int32_t>(d3d_draw::Word(e + 0)), used_h = static_cast<std::int32_t>(d3d_draw::Word(e + 2));
+    const auto full_w = static_cast<std::int32_t>(d3d_draw::Word(e + 4)), full_h = static_cast<std::int32_t>(d3d_draw::Word(e + 6));
     const float u0 = X87DivInt(half, full_w), v0 = X87DivInt(half, full_h);
     const float u1 = X87IntSubDivInt(used_w, half, full_w), v1 = X87IntSubDivInt(used_h, half, full_h);
     const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
     const float us[4] = {u0, u1, u0, u1}, vs[4] = {v0, v0, v1, v1};
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
-        PutFloat(out + 0x00, xs[i]);
-        PutFloat(out + 0x04, ys[i]);
-        PutLong(out + 0x08, 0x3F7D70A4);   // 0.99
-        PutLong(out + 0x0C, 0x3DCCCCCD);   // 0.1
-        PutLong(out + 0x10, static_cast<U>(diffuse));
-        PutLong(out + 0x14, static_cast<U>(specular));
-        PutFloat(out + 0x18, us[i]);
-        PutFloat(out + 0x1C, vs[i]);
+    for (d3d_draw::U i = 0; i < 4; ++i) {
+        unsigned char* out = d3d_draw::Vertex(i);
+        d3d_draw::PutFloat(out + 0x00, xs[i]);
+        d3d_draw::PutFloat(out + 0x04, ys[i]);
+        d3d_draw::PutLong(out + 0x08, 0x3F7D70A4);   // 0.99
+        d3d_draw::PutLong(out + 0x0C, 0x3DCCCCCD);   // 0.1
+        d3d_draw::PutLong(out + 0x10, static_cast<d3d_draw::U>(diffuse));
+        d3d_draw::PutLong(out + 0x14, static_cast<d3d_draw::U>(specular));
+        d3d_draw::PutFloat(out + 0x18, us[i]);
+        d3d_draw::PutFloat(out + 0x1C, vs[i]);
     }
-    g.ret_only(1);
-    g.set_blend(prim[7], Word(prim + 0x1E));
-    g.set_shade(1);
-    return DrawVertices(5, 4);
+    d3d_draw::g.ret_only(1);
+    d3d_draw::g.set_blend(prim[7], d3d_draw::Word(prim + 0x1E));
+    d3d_draw::g.set_shade(1);
+    return d3d_draw::DrawVertices(5, 4);
 }
 
 // 0x5A3160. Finds - or builds - the texture composed from `count` SpriteCell
@@ -531,12 +531,12 @@ bool PoseLogOn() {
     if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
     return on == 1;
 }
-void NoteCellFoot(U slot, unsigned first, unsigned count) {
+void NoteCellFoot(d3d_draw::U slot, unsigned first, unsigned count) {
     if (slot >= 128) return;
     CellFoot f{0, 0, 0, 0, 0};
     for (unsigned k = 0; k < count; ++k) {
-        const unsigned char* r = At(::bof3::Img(SpriteCell_Table_addr) + (first + k) * 8u);
-        const unsigned size = r[3], tpage = Word(r + 4), u = r[6], v = r[7];
+        const unsigned char* r = d3d_draw::At(::bof3::Img(SpriteCell_Table_addr) + (first + k) * 8u);
+        const unsigned size = r[3], tpage = d3d_draw::Word(r + 4), u = r[6], v = r[7];
         const bool four_bit = (tpage & 0x180) == 0;
         const int w_tex = static_cast<int>(size & 0xF) * 8, h = static_cast<int>(size >> 4) * 8;
         const int x0 = static_cast<int>((tpage & 0xF) * 64u) + (four_bit ? static_cast<int>(u) / 4 : static_cast<int>(u) / 2);
@@ -574,28 +574,28 @@ void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
 }
 
 int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flags) {
-    U best = 0xFFFF;
-    U victim = count;
-    U i;
+    d3d_draw::U best = 0xFFFF;
+    d3d_draw::U victim = count;
+    d3d_draw::U i;
     for (i = 0; i < kCellEntries; ++i) {
-        const unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
-        if (Long(e) == 0) {
-            g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
+        const unsigned char* e = d3d_draw::At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
+        if (d3d_draw::Long(e) == 0) {
+            d3d_draw::g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
             NoteCellFoot(i, first, count);
             goto used;
         }
-        if (Word(e + 0x12) == count && Word(e + 0x10) == clut) {
-            U sum = 0;
-            const U bytes = count * 8;
-            for (U k = 0; k < bytes; k += 4) sum += Long(At(::bof3::Img(SpriteCell_Table_addr) + first * 8 + k));
-            if (Long(e + 0x18) == sum) {
-                if (Long(e + 0x1C) != Long(At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8)) && Word(e + 0x14) == 0)
-                    g.cell_refresh(static_cast<int>(i), first, count, clut);
+        if (d3d_draw::Word(e + 0x12) == count && d3d_draw::Word(e + 0x10) == clut) {
+            d3d_draw::U sum = 0;
+            const d3d_draw::U bytes = count * 8;
+            for (d3d_draw::U k = 0; k < bytes; k += 4) sum += d3d_draw::Long(d3d_draw::At(::bof3::Img(SpriteCell_Table_addr) + first * 8 + k));
+            if (d3d_draw::Long(e + 0x18) == sum) {
+                if (d3d_draw::Long(e + 0x1C) != d3d_draw::Long(d3d_draw::At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8)) && d3d_draw::Word(e + 0x14) == 0)
+                    d3d_draw::g.cell_refresh(static_cast<int>(i), first, count, clut);
                 goto used;
             }
         }
-        if (static_cast<std::int32_t>(best) > static_cast<std::int32_t>(Word(e + 0x16)) && Word(e + 0x14) == 0) {
-            best = Word(e + 0x16);
+        if (static_cast<std::int32_t>(best) > static_cast<std::int32_t>(d3d_draw::Word(e + 0x16)) && d3d_draw::Word(e + 0x14) == 0) {
+            best = d3d_draw::Word(e + 0x16);
             victim = i;
         }
     }
@@ -610,14 +610,14 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
                       kCellEntries, count);
         }
     }
-    g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
+    d3d_draw::g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
     NoteCellFoot(i, first, count);
 used:
     const unsigned char render_flags = Gfx_RenderFlags;
-    unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
-    PutWord(e + 0x16, Word(e + 0x16) + 1);
-    PutWord(e + 0x14, 1);
-    if (!(render_flags & 1)) SetTexture(0, Long(e + 0x24));
+    unsigned char* e = d3d_draw::At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
+    d3d_draw::PutWord(e + 0x16, d3d_draw::Word(e + 0x16) + 1);
+    d3d_draw::PutWord(e + 0x14, 1);
+    if (!(render_flags & 1)) d3d_draw::SetTexture(0, d3d_draw::Long(e + 0x24));
     return static_cast<int>(i);
 }
 

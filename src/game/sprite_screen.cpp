@@ -93,7 +93,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     unsigned low;
     if (Draw_OtSlot == 4) {
         sprite = rv::Current<records::SpriteHead>();
-        low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
+        low = static_cast<unsigned>(move_script::Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     } else {
         sprite = rv::Current<records::SpriteHead>();
         low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;

@@ -109,7 +109,7 @@ Callees g = Originals();
 std::uint32_t StepX(unsigned d, std::uint32_t n) { return static_cast<std::uint32_t>(Field_DirectionSteps[(d & 7) * 2]) * n; }
 std::uint32_t StepY(unsigned d, std::uint32_t n) { return static_cast<std::uint32_t>(Field_DirectionSteps[(d & 7) * 2 + 1]) * n; }
 long Ahead(const unsigned char* object, unsigned at, std::uint32_t step) {
-    return static_cast<long>(static_cast<std::uint32_t>(Long(object + at)) + step);
+    return static_cast<long>(static_cast<std::uint32_t>(move_script::Long(object + at)) + step);
 }
 
 // Sprite_ObjectAt and Party_MemberAt: the first object of `count` from `first`
