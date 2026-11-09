@@ -190,14 +190,7 @@ struct Callee {
 // swapped for recorders while the fuzz runs, then put back.
 struct DataTable { std::uint32_t at; unsigned entries; };
 
-// A block of state both passes start from and are compared on. skip_len > 0 leaves
-// bytes [skip_off + k * skip_stride, + skip_len) out of the compare (not of the copy)
-// for every k whose bytes fit inside the region; skip_stride 0 is once. For bytes the
-// originals leave undefined (a copy of uninitialised stack). Zero: every byte compared.
-struct Region {
-    std::uint32_t at, size;
-    std::uint32_t skip_off = 0, skip_len = 0, skip_stride = 0;
-};
+struct Region { std::uint32_t at, size; };
 
 struct Group {
     const char* shadow;             // the BOF3X_SHADOW name, and the log's
@@ -230,6 +223,13 @@ struct Group {
 // Clones every function (before the caller injects), fuzzes each against ours
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
 void Run(const Group& g);
+
+// Bytes the originals leave undefined (a copy of uninitialised stack), left out of
+// the state compare though still captured and restored: `count` runs of `len` bytes
+// from `at`, `stride` apart, each inside one region. SetSkips arms them for the next
+// Run only (Run disarms them); a group that never calls it compares every byte.
+struct Skip { std::uint32_t at, len, stride, count; };
+void SetSkips(const Skip* skips, unsigned n);
 
 // --- seeding helpers, for Seed and Disturb -------------------------------------
 
