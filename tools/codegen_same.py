@@ -133,17 +133,23 @@ The classes:
 - `i686-inline` (both widths; call 16): a promoted file-local function the
   compiler had inlined into its callers in the file, now called. A row names
   the function (which reads NEW, out of line) or a caller; where the
-  function's static local reads NEW or GONE, a row of this class names it.
+  function's static local reads NEW or GONE, a row of this class names it;
+- `i686-convention` (both widths; call 16, the owner 2026-11-09): a promoted
+  file-local function that had a body of its own but was called by LLVM's
+  internal convention (arguments in registers); external, its callers call
+  it as the ABI says. A row names the function (NEW, its local GONE), a
+  caller, its static local, or the exception table whose call-site offsets
+  moved with the caller's code.
 
 The symbol is the name the line prints (for a `local:<hash>` key, any of the
 names it lists), or `NAME@OBJECT` - that name only where the line's objects
 are OBJECT alone, a file name such as `title_states.cpp.obj`: the one way to
 name a pooled per-file symbol (`_GLOBAL__sub_I_*`) of one file without
 excepting every file's. A data or bss line is excepted by a `data-layout`, `x64-indirect`,
-`i686-fold` or `i686-inline` row only (DATA_CLASSES); an inject line never. --exception-classes limits which classes may except:
+`i686-fold`, `i686-inline` or `i686-convention` row only (DATA_CLASSES); an inject line never. --exception-classes limits which classes may except:
 the rows of the other classes are read (and checked) but never used, and
 never reported as unused. The i686 gate runs with `--exception-classes
-data-layout,i686-fold,i686-inline`; the x86_64 gate with every class (no flag, the default). A row
+data-layout,i686-fold,i686-inline,i686-convention`; the x86_64 gate with every class (no flag, the default). A row
 whose class is not a known one, a name in --exception-classes that is not
 one, a row without a symbol and a class, or a file without the header, is
 an error: the line is printed and the exit is 2, before anything is
@@ -735,9 +741,10 @@ def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
     return out
 
 
-EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect", "i686-fold", "i686-inline")
+EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect", "i686-fold", "i686-inline",
+                     "i686-convention")
 # the classes that may except a DATA, BSS or data NEW/GONE line
-DATA_CLASSES = ("data-layout", "x64-indirect", "i686-fold", "i686-inline")
+DATA_CLASSES = ("data-layout", "x64-indirect", "i686-fold", "i686-inline", "i686-convention")
 X64_ONLY_CLASSES = ("x64-indirect",)  # never used on an i386 build
 
 
@@ -954,7 +961,7 @@ def main() -> int:
                          "class prints as EXCEPT and is not counted")
     ap.add_argument("--exception-classes", metavar="CLASS[,CLASS]",
                     help="with --exceptions: only these classes may except (default every class); the i686 "
-                         "gate passes data-layout,i686-fold,i686-inline")
+                         "gate passes data-layout,i686-fold,i686-inline,i686-convention")
     a = ap.parse_args()
     if a.exceptions and not a.by_function:
         ap.error("--exceptions belongs to --by-function")

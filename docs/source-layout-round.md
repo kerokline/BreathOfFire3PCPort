@@ -952,19 +952,21 @@ is expected; the doc says so.
      @r6:__ZN8win_main12g_backgroundE'` (the internal bool had been stored
      as its negation, the `xor al, 1` gone).
    - `i686-inline`: a promoted file-local function the compiler had inlined
-     into its callers, or called by LLVM's internal convention (arguments
-     in registers): external, it has a body of its own (NEW) and its callers
-     call it as the ABI says. First case: `d3d_draw.cpp`'s `PoseLogOn`, i686
-     `NEW __ZN8d3d_draw9PoseLogOnEv` with its callers unchanged (it had
-     been inlined everywhere and had no body). The convention case is
-     sound's `ResumeSkip`: `_Music_Start 'call @r14:local#...' -> 'call
-     @r14:__ZN5sound10ResumeSkipEjiij'`, two register arguments become four
-     on the stack; the brief had named inlining only, group h recorded the
-     convention change under the same class (one cause: a file-local became
-     external) and flagged every such row - **the owner's to confirm** (7b
-     item 16 as run).
+     into its callers: external, it has a body of its own (NEW) and its
+     callers call it. First case: `d3d_draw.cpp`'s `PoseLogOn`, i686 `NEW
+     __ZN8d3d_draw9PoseLogOnEv` with its callers unchanged (it had been
+     inlined everywhere and had no body).
+   - `i686-convention` (the owner's call of 2026-11-09, a class of its own):
+     a promoted file-local function that had a body but was called by
+     LLVM's internal convention, arguments in registers; external, its
+     callers call it as the ABI says. Group h had recorded these under
+     `i686-inline` and flagged them; 15 rows re-classed (sound `ResumeSkip`,
+     dat_load `WalkOverlay`, `DatLog`, their callers, static local and
+     exception table). First case: sound's `ResumeSkip`, `_Music_Start 'call
+     @r14:local#...' -> 'call @r14:__ZN5sound10ResumeSkipEjiij'`, two
+     register arguments become four on the stack.
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
-   --exception-classes data-layout,i686-fold,i686-inline` (the other
+   --exception-classes data-layout,i686-fold,i686-inline,i686-convention` (the other
    classes' rows are read but never used there), the x86_64 gate with the
    file and no restriction.
    **Class 1** (the i686 optimiser folds or shrinks an internal global:
@@ -1273,7 +1275,8 @@ is expected; the doc says so.
    split into 12 globals on i686, move_script's seam changes x86_64 only.
    The five functions: PoseLogOn and Capture had been inlined; ResumeSkip,
    WalkOverlay and DatLog had bodies and were called by the internal
-   register convention (7a, the owner's to confirm). The seams moved their
+   register convention (7a: `i686-convention`, a class of its own by the
+   owner's call of 2026-11-09). The seams moved their
    `Callees` struct and aliases to `<stem>_callees.h` headers: field_blocked
    677 -> 656 lines, kind2_object 610 -> 593, object_kinds 1014 -> 986,
    move_script 890 -> 860, title_states 934 -> 903; one `low32-site` row
