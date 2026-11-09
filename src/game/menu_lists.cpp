@@ -99,7 +99,7 @@ using Step = void (__cdecl*)();
 
 // Entry `index` of a code-pointer table in .data, read afresh and unchecked.
 Step Entry(std::uint32_t table, unsigned index) {
-    return reinterpret_cast<Step>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + index * 4)))));
+    return reinterpret_cast<Step>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(menu_lists::Long(menu_lists::At(table + index * 4)))));
 }
 
 // The record the window layer is running, re-read from 0x905B84 wherever the
@@ -116,7 +116,7 @@ unsigned char* RecMenuLists() {
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
-short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S(const unsigned char* p) { return static_cast<short>(menu_lists::Word(p)); }
 
 // The low byte of Party_Count's answer: every caller here tests al or masks
 // eax with 0xFF.
@@ -448,7 +448,7 @@ extern "C" void __cdecl MenuList_Run(void) {
 // unchecked), then MenuList_DrawMemberPanel of the record (re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel(void) {
     Entry(::bof3::Img(MenuList_PanelStates_addr), RecMenuLists()[3])();
-    g.draw_member(RecMenuLists());
+    menu_lists::g.draw_member(RecMenuLists());
 }
 
 // original 0x599B90 (recorded start, 114 calls on the world-map route): a
@@ -460,13 +460,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 // As the original has it: the record is the argument, not 0x905B84; its
 // fields are read again after the calls; Gfx_PacketNext after the panel.
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
-    const unsigned member = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
-    const unsigned record = At(::bof3::Img(Character_IndexById_addr) + member)[0];
-    g.member_body(rv::As<records::WindowRecord>(rec)->x, rv::As<records::WindowRecord>(rec)->y, record, rec[0xC], 0);
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
-    g.commit(1, 0xC);
-    const unsigned clut = g.get_clut(0x10, 0x1E0);
-    g.member_face(rv::As<records::WindowRecord>(rec)->x + 9, rv::As<records::WindowRecord>(rec)->y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
+    const unsigned member = menu_lists::At(::bof3::Img(Cond_Flags_addr) + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
+    const unsigned record = menu_lists::At(::bof3::Img(Character_IndexById_addr) + member)[0];
+    menu_lists::g.member_body(rv::As<records::WindowRecord>(rec)->x, rv::As<records::WindowRecord>(rec)->y, record, rec[0xC], 0);
+    menu_lists::g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
+    menu_lists::g.commit(1, 0xC);
+    const unsigned clut = menu_lists::g.get_clut(0x10, 0x1E0);
+    menu_lists::g.member_face(rv::As<records::WindowRecord>(rec)->x + 9, rv::As<records::WindowRecord>(rec)->y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
 }
 
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
@@ -474,7 +474,7 @@ extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
 extern "C" void __cdecl MenuList_MoneyBox(void) {
     Entry(::bof3::Img(MenuList_MoneyStates_addr), RecMenuLists()[3])();
     const unsigned char* const r = RecMenuLists();
-    g.money_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0, Party_Zenny);
+    menu_lists::g.money_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0, Party_Zenny);
 }
 
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
@@ -482,7 +482,7 @@ extern "C" void __cdecl MenuList_MoneyBox(void) {
 extern "C" void __cdecl MenuList_TimeBox(void) {
     Entry(::bof3::Img(MenuList_TimeStates_addr), RecMenuLists()[3])();
     const unsigned char* const r = RecMenuLists();
-    g.time_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
+    menu_lists::g.time_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
 }
 
 // original 0x599E50, kind 3 (the body is the tail jump's target 0x599E70,
@@ -500,12 +500,12 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     Entry(::bof3::Img(MenuList_IconStates_addr), RecMenuLists()[3])();
     unsigned char* r = RecMenuLists();
     if (r[0xB] != r[0xA]) {
-        SetWord(r + 0x10, 0);
+        menu_lists::SetWord(r + 0x10, 0);
         r = RecMenuLists();
     }
     const short count = S(r + 0x10);
     if (count < 3) {
-        SetWord(r + 0x10, static_cast<std::uint16_t>(count + 1));
+        menu_lists::SetWord(r + 0x10, static_cast<std::uint16_t>(count + 1));
         r = RecMenuLists();
     }
     for (unsigned i = 0; i < 7; ++i) {
@@ -513,16 +513,16 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
         const unsigned shade = i == 6 && r[0xC] != 0 ? 0x40 : 0x80;
         const unsigned y = rv::As<records::WindowRecord>(r)->y;
         const unsigned x = ((i << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF;
-        g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + i)[0], x, y, 0x10, 0x10, shade);
+        menu_lists::g.icon(menu_lists::At(::bof3::Img(FieldMenu_IconIds_addr) + i)[0], x, y, 0x10, 0x10, shade);
         r = RecMenuLists();
     }
     const unsigned sel = r[0xA];
     const unsigned shade = sel == 6 && r[0xC] != 0 ? 0x40 : 0x80;
-    const unsigned grow = Word(r + 0x10);
+    const unsigned grow = menu_lists::Word(r + 0x10);
     const unsigned size = static_cast<unsigned char>((r[0x10] + 8) << 1);
     const unsigned y = (rv::As<records::WindowRecord>(r)->y - grow) & 0xFFFF;
     const unsigned x = ((((sel << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF) - grow) & 0xFFFF;
-    g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + sel)[0], x, y, size, size, shade);
+    menu_lists::g.icon(menu_lists::At(::bof3::Img(FieldMenu_IconIds_addr) + sel)[0], x, y, size, size, shade);
     r = RecMenuLists();
     r[0xB] = r[0xA];
 }
@@ -551,17 +551,17 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
     Entry(::bof3::Img(MenuList_TitleStates_addr), RecMenuLists()[3])();
     const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = RecMenuLists();
-    g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);
+    menu_lists::g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);
     r = RecMenuLists();
-    const unsigned char* const text = g.msg(Word(r + 0x10));
-    const unsigned count = g.char_count(text);
+    const unsigned char* const text = menu_lists::g.msg(menu_lists::Word(r + 0x10));
+    const unsigned count = menu_lists::g.char_count(text);
     r = RecMenuLists();
     const unsigned y = (rv::As<records::WindowRecord>(r)->y + 3u) & 0xFFFF;
-    const unsigned width = g.char_count(text);
+    const unsigned width = menu_lists::g.char_count(text);
     r = RecMenuLists();
     const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
     const int x = static_cast<int>((rv::As<records::WindowRecord>(r)->x - half + 0x25u) & 0xFFFF);
-    g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
+    menu_lists::g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
 
 // ===========================================================================
