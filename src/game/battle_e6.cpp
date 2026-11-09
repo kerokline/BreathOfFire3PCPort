@@ -65,7 +65,7 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
 unsigned char* PartyBattleE6(unsigned member) { return move_script::At(::bof3::Img(ObjTrio_addr) + (member & 0xFFu) * battle_e6::at::kPartyStride); }
-unsigned char* Enemy(unsigned index) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * battle_e6::at::kEnemyStride); }
+unsigned char* EnemyBattleE6(unsigned index) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * battle_e6::at::kEnemyStride); }
 unsigned Actor() { return B(::bof3::Img(battle_e6::at::kActor.v)); }
 unsigned char* Owner() { return move_script::At(BattleE2_Owner); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).
@@ -689,8 +689,8 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
         BH_CALL(MagicFx_StepToward)(PartyBattleE6(target), 0x50);
         near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v))), 0x10000);
     } else {
-        BH_CALL(MagicFx_StepToward)(Enemy(target - 3), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(Enemy(B(::bof3::Img(battle_e6::at::kTarget.v)) - 3u), 0x10000);
+        BH_CALL(MagicFx_StepToward)(EnemyBattleE6(target - 3), 0x50);
+        near = BH_CALL(MagicFx_NearSprite3D)(EnemyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v)) - 3u), 0x10000);
     }
     if (near != 0) {
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x44));
@@ -814,7 +814,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
         BH_CALL(Battle_RecalcMemberStats)(move_script::At(::bof3::Img(ObjTrio_addr) + 0x80 + index * battle_e6::at::kPartyStride), actor);
     } else {
         index = (actor - 3) & 0xFF;
-        unsigned char* const e = Enemy(index);
+        unsigned char* const e = EnemyBattleE6(index);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         for (unsigned i = 0; i < 4; ++i)
             move_script::SetWord(e + 0xB4 + 2 * i,
@@ -831,7 +831,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
         enemy_rec->atk = static_cast<std::uint16_t>(Percent999(enemy_rec->atk, 100));
         enemy_rec->def = static_cast<std::uint16_t>(Percent999(enemy_rec->def, 100));
     }
-    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(index));
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(EnemyBattleE6(index));
     if (static_cast<U>(enemy_rec->flags_114) & 0x800) enemy_rec->holy = 0;
     if (static_cast<U>(enemy_rec->flags_114) & 0x2000) enemy_rec->elements[0] = 0;
 }
@@ -945,8 +945,8 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
         bits = PartyBattleE6(who)[0x12C];
         task_rec->owner = Addr(PartyBattleE6(who));
     } else {
-        bits = rv::As<records::BattleEnemy>(Enemy(who - 3))->shown;
-        task_rec->owner = Addr(Enemy(who - 3));
+        bits = rv::As<records::BattleEnemy>(EnemyBattleE6(who - 3))->shown;
+        task_rec->owner = Addr(EnemyBattleE6(who - 3));
     }
     const std::int32_t value = S16BattleE6(amount);
     if (value < 0) {
