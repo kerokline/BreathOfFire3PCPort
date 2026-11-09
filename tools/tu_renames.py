@@ -215,16 +215,21 @@ def check(path: Path) -> int:
                 # `ns::name`: a using-declaration dropped and its uses named in full; defined elsewhere
                 # a seam's struct promoted in B0 lives in the source's own <stem>_callees.h
                 seam = src[:-len(".cpp")] + "_callees.h" if src.endswith(".cpp") else ""
+                # a stage-B move may have carried the renamed helper out with all its callers: it is then
+                # defined in one of the files the map moved src's items into
+                moved_to = sorted(p for p in moves.get(src, ()) if p and p != src and (ROOT / p).is_file())
                 if "::" not in r["new_name"] and r["new_name"] not in defined_names(src) and not (
-                        seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)):
-                    bad.append(f"{r['new_name']} is not defined in {src}")
+                        seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)) and not any(
+                        r["new_name"] in defined_names(p) for p in moved_to):
+                    bad.append(f"{r['new_name']} is not defined in {src}"
+                               + (f" nor in the files it moved into ({', '.join(moved_to)})" if moved_to else ""))
             else:
                 homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
                 if "::" not in r["new_name"] and not any(r["new_name"] in defined_names(p) for p in homes):
                     bad.append(f"{r['new_name']} is defined in none of the files {src} moved into "
                                f"({', '.join(homes) or 'none in the tree'})")
         if not bad and r["kind"] == "qualify":
-            homes = [src] if exists else sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+            homes = ([src] if exists else []) + sorted(p for p in moves.get(src, ()) if p and p != src and (ROOT / p).is_file())
             if not any(named_in_full(p, r["new_name"]) for p in homes):
                 bad.append(f"{r['new_name']} is not named in {src if exists else ', '.join(homes) or 'the tree'}")
         for b in bad:
