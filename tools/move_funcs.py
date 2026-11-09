@@ -652,7 +652,7 @@ def namespace_alias_bodies(text: str, ns: str) -> dict[str, str]:
             continue
         for it in fi.leaves():
             if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
-                    and it.kind in ("alias", "typedef")):
+                    and (it.kind in ("alias", "typedef") or (it.kind == "using" and it.names))):
                 for n in it.names:
                     out[n] = code_tokens(it)
     return out
@@ -1013,7 +1013,8 @@ def main() -> int:
             # a type alias every provider (and the target's own file-scope copy, if any) spells the
             # same is one entity, not an ambiguity ([namespace.udir]/6)
             own_alias = {n: code_tokens(it) for _, it, _ in e["locals"]
-                         if it.kind in ("alias", "typedef") and not any(it.ns) for n in it.names}
+                         if (it.kind in ("alias", "typedef") or (it.kind == "using" and it.names))
+                         and not any(it.ns) for n in it.names}
             for n, xs in sorted(providers.items()):
                 bodies = {e["alias_bodies"].get(x, {}).get(n) for x in xs} | ({own_alias[n]} if n in own_alias else set())
                 if len(xs) > 1 and None not in bodies and len(bodies) == 1:
