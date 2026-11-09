@@ -127,7 +127,10 @@ The classes:
   used on an i386 build.
 
 The symbol is the name the line prints (for a `local:<hash>` key, any of the
-names it lists). A data or bss line is excepted by a `data-layout` or an
+names it lists), or `NAME@OBJECT` - that name only where the line's objects
+are OBJECT alone, a file name such as `title_states.cpp.obj`: the one way to
+name a pooled per-file symbol (`_GLOBAL__sub_I_*`) of one file without
+excepting every file's. A data or bss line is excepted by a `data-layout` or an
 `x64-indirect` row only (DATA_CLASSES); an inject line never. --exception-classes limits which classes may except:
 the rows of the other classes are read (and checked) but never used, and
 never reported as unused. The i686 gate runs with `--exception-classes
@@ -764,8 +767,12 @@ def excepted(exceptions: dict, key: str, e: dict, allowed: tuple[str, ...]) -> s
     `allowed`, a data or bss symbol only by a row of a DATA_CLASSES class in `allowed`."""
     if not exceptions:
         return None
+    objs = {o.replace("\\", "/").rsplit("/", 1)[-1] for v in e["bodies"].values() for o in v}
     for n in [key] + sorted(e["names"]):
         x = exceptions.get(n)
+        if not x:
+            # a row `NAME@OBJECT`: this name in that object only (a pooled name such as _GLOBAL__sub_I_*)
+            x = next((exceptions[f"{n}@{o}"] for o in objs if len(objs) == 1 and f"{n}@{o}" in exceptions), None)
         if not x or x["class"] not in allowed:
             continue
         if e["kind"] != "code" and x["class"] not in DATA_CLASSES:
