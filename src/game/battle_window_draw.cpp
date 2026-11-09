@@ -109,7 +109,7 @@ void ShadeColour(unsigned char* p, unsigned row) {
 // also kept in +0xA), y 0xF0 (its handler slides it up to 0xC8), +8 and +9
 // cleared.
 extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
-    g.window_alloc(1, 3);
+    battle_window_draw::g.window_alloc(1, 3);
     unsigned char* const w = Window(1);
     auto* const win = rv::As<records::WindowRecord>(w);
     win->state = static_cast<unsigned char>(state);
@@ -124,7 +124,7 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
 
 // original 0x444290 (PSX 0x801D9358): window 2, sub-kind 1, at (0x88, 0x58).
 extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
-    g.window_alloc(2, 3);
+    battle_window_draw::g.window_alloc(2, 3);
     auto* const win = rv::As<records::WindowRecord>(Window(2));
     win->kind = 1;
     win->state = static_cast<unsigned char>(state);
@@ -135,7 +135,7 @@ extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
 // original 0x4442C0 (PSX 0x801D93B4): window 3, sub-kind 2; its place is
 // left as it was.
 extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
-    g.window_alloc(3, 3);
+    battle_window_draw::g.window_alloc(3, 3);
     auto* const win = rv::As<records::WindowRecord>(Window(3));
     win->kind = 2;
     win->state = static_cast<unsigned char>(state);
@@ -143,7 +143,7 @@ extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
 
 // original 0x4442E0 (PSX 0x801D93F8): window 4, sub-kind 3, at (0x7C, 0x2A).
 extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
-    g.window_alloc(4, 3);
+    battle_window_draw::g.window_alloc(4, 3);
     auto* const win = rv::As<records::WindowRecord>(Window(4));
     win->kind = 3;
     win->state = static_cast<unsigned char>(state);
@@ -166,12 +166,12 @@ extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
 // a dword and only its low 16 bits are placed.
 extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value) {
     if ((static_cast<std::uint32_t>(value) & 0xFFFF) == 0xFFFF)
-        g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNone.v)));
+        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNone.v)));
     else
-        g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
-    const unsigned page = g.get_tpage(0, 0, 0x3C0, 0);
-    g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
-    g.commit(1, 0xC);
+        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
+    const unsigned page = battle_window_draw::g.get_tpage(0, 0, 0x3C0, 0);
+    battle_window_draw::g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
+    battle_window_draw::g.commit(1, 0xC);
     std::int32_t px = x;
     unsigned char i = 0;
     unsigned char* c = reinterpret_cast<unsigned char*>(PrintBuf());
@@ -179,7 +179,7 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
         if (*c != 0x20) {
             unsigned char* const p = Next();  // a SPRT: g.set_sprt below
             *c = static_cast<unsigned char>(*c - 0x30);
-            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, battle_window_draw::g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
             Put(p + 8, F(S16BattleWindowDraw(static_cast<std::uint32_t>(px))));
             Put(p + 0xC, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
             p[4] = p[5] = p[6] = 0x80;
@@ -187,8 +187,8 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
             p[0x14] = static_cast<unsigned char>(*c * 6 - 0x50);
             rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 6);
             rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 5);
-            g.set_sprt(p);
-            g.commit(1, 0x1C);
+            battle_window_draw::g.set_sprt(p);
+            battle_window_draw::g.commit(1, 0x1C);
         }
         ++i;
         px += 5;
@@ -202,7 +202,7 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
 // semi-transparent by the shade's bit 0.
 extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade) {
     unsigned char* const p = Next();
-    g.set_poly_f4(p);
+    battle_window_draw::g.set_poly_f4(p);
     const unsigned char* const t = At(::bof3::Img(at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
     const std::int32_t sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), sy = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
     Put(p + 0x08, F(Word(t + 0x0) + sx));
@@ -215,8 +215,8 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
     Put(p + 0x30, F(Word(t + 0xE) + sy));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
     ShadeColour(p, row);
-    g.set_semi(p, row);
-    g.commit(1, 0x38);
+    battle_window_draw::g.set_semi(p, row);
+    battle_window_draw::g.commit(1, 0x38);
 }
 
 // original 0x444900 (PSX 0x801D9C50): a TILE at (s16 x, s16 y) of size
@@ -225,7 +225,7 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
 // full-frame tile, over the wide frame (Widescreen_BattleTile).
 extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     unsigned char* const p = Next();
-    g.set_tile(p);
+    battle_window_draw::g.set_tile(p);
     const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
     int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
@@ -235,8 +235,8 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     Put(p + 0x18, F(Word(t + 2)));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
     ShadeColour(p, row);
-    g.set_semi(p, row);
-    g.commit(1, 0x1C);
+    battle_window_draw::g.set_semi(p, row);
+    battle_window_draw::g.commit(1, 0x1C);
 }
 
 // original 0x4449E0 (PSX 0x801D9D8C): the same tile in a given 15-bit colour -
@@ -244,7 +244,7 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
 // semi-transparent by `abe`'s bit 0. DIV-0041: size 11 as BattleWin_DrawTile.
 extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour, int abe) {
     unsigned char* const p = Next();
-    g.set_tile(p);
+    battle_window_draw::g.set_tile(p);
     const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
     int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
@@ -256,8 +256,8 @@ extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour
     p[4] = static_cast<unsigned char>(((c >> 10) & 0x1F) << 3);
     p[5] = static_cast<unsigned char>(((c >> 5) & 0x1F) << 3);
     p[6] = static_cast<unsigned char>((c & 0x1F) << 3);
-    g.set_semi(p, static_cast<unsigned>(abe) & 0xFF);
-    g.commit(1, 0x1C);
+    battle_window_draw::g.set_semi(p, static_cast<unsigned>(abe) & 0xFF);
+    battle_window_draw::g.commit(1, 0x1C);
 }
 
 // original 0x444A90 (PSX 0x801D9E6C): a bar 7 high of two POLY_FT4s from the
@@ -271,10 +271,10 @@ extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour
 // the argument slots and copied as bits - the same values ours converts again.
 extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit) {
     unsigned char* p = Next();
-    g.set_poly_ft4(p);
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
+    battle_window_draw::g.set_poly_ft4(p);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, battle_window_draw::g.get_tpage(0, 0, 0x3C0, 0));
     const bool on = (static_cast<unsigned>(lit) & 0xFF) != 0;
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, battle_window_draw::g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
     const std::int32_t left = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), top = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
     const std::int32_t mid = left + static_cast<std::int32_t>(static_cast<unsigned>(w) & 0xFF);
     const std::int32_t bottom = top + 7;
@@ -296,12 +296,12 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
     p[0x35] = 0xDF;
     p[0x44] = u1;
     p[0x45] = 0xDF;
-    g.commit(1, 0x48);
+    battle_window_draw::g.commit(1, 0x48);
 
     p = Next();
-    g.set_poly_ft4(p);
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(0xB0, 0x1E0));
+    battle_window_draw::g.set_poly_ft4(p);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, battle_window_draw::g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, battle_window_draw::g.get_clut(0xB0, 0x1E0));
     const std::int32_t right = mid + static_cast<std::int32_t>(static_cast<unsigned>(cap) & 0xFF);
     Put(p + 0x08, F(mid));
     Put(p + 0x0C, F(top));
@@ -320,7 +320,7 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
     p[0x35] = 0xDF;
     p[0x44] = 0x9F;
     p[0x45] = 0xDF;
-    g.commit(1, 0x48);
+    battle_window_draw::g.commit(1, 0x48);
 }
 
 // original 0x444C40 (PSX 0x801DA048): cell `cell` of the battle's 16 x 8 strip -
@@ -340,9 +340,9 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
 namespace battle_window_draw { std::uint8_t g_draw_signed = 0; }
 
 extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
-    const unsigned page = g.get_tpage(0, 1, 0x3C0, 0);
-    g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
-    g.commit(1, 0xC);
+    const unsigned page = battle_window_draw::g.get_tpage(0, 1, 0x3C0, 0);
+    battle_window_draw::g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
+    battle_window_draw::g.commit(1, 0xC);
     unsigned char* const p = Next();  // a SPRT: g.set_sprt below
     p[4] = p[5] = p[6] = 0x80;
     p[0x14] = static_cast<unsigned char>(static_cast<unsigned>(cell) << 4);
@@ -354,8 +354,8 @@ extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     Put(p + 0x0C, F(ys));
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, 0x7800);
     p[0x15] = 0xD8;
-    g.set_sprt(p);
-    g.commit(1, 0x1C);
+    battle_window_draw::g.set_sprt(p);
+    battle_window_draw::g.commit(1, 0x1C);
 }
 
 namespace {
@@ -375,14 +375,14 @@ void LineBody(unsigned char* p, int x0, int y0, int x1, int y1, int r, int gr, i
 // The two semi-transparent ones: draw mode page (0x3C0, 0) under `abr`, then
 // the line, semi-transparent.
 void BlendLine(unsigned abr, int x0, int y0, int x1, int y1, int r, int gr, int b) {
-    const unsigned page = g.get_tpage(0, abr, 0x3C0, 0);
-    g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
-    g.commit(1, 0xC);
+    const unsigned page = battle_window_draw::g.get_tpage(0, abr, 0x3C0, 0);
+    battle_window_draw::g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
+    battle_window_draw::g.commit(1, 0xC);
     unsigned char* const p = Next();
-    g.set_line_f2(p);
+    battle_window_draw::g.set_line_f2(p);
     LineBody(p, x0, y0, x1, y1, r, gr, b);
-    g.set_semi(p, 1);
-    g.commit(1, 0x20);
+    battle_window_draw::g.set_semi(p, 1);
+    battle_window_draw::g.commit(1, 0x20);
 }
 
 }  // namespace
@@ -390,9 +390,9 @@ void BlendLine(unsigned abr, int x0, int y0, int x1, int y1, int r, int gr, int 
 // original 0x444CE0 (PSX 0x801DA3D8): an opaque LINE_F2, no draw mode of its own.
 extern "C" void __cdecl BattleWin_DrawLine(int x0, int y0, int x1, int y1, int r, int gr, int b) {
     unsigned char* const p = Next();
-    g.set_line_f2(p);
+    battle_window_draw::g.set_line_f2(p);
     LineBody(p, x0, y0, x1, y1, r, gr, b);
-    g.commit(1, 0x20);
+    battle_window_draw::g.commit(1, 0x20);
 }
 
 // original 0x444D50 (PSX 0x801DA484): the line under abr 0 (half and half).
@@ -466,14 +466,14 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
     if (m == 1) {
         const unsigned character = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + (member & 0xFF))[0];
         const unsigned record = At(::bof3::Img(Character_IndexById_addr) + character)[0];
-        const unsigned cost = g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
+        const unsigned cost = battle_window_draw::g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
         if (Word(At(::bof3::Img(CharacterRecords_addr) + record * at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
     }
     if (m != 2) return 1;
     const unsigned char* const w = At(::bof3::Img(at::kWorking.v) + (member & 0xFF) * at::kWorkingStride);
     const unsigned ap = Word(w + 0x1A);
-    const unsigned cost = g.ap_cost(member, id, 1) & 0xFF;
+    const unsigned cost = battle_window_draw::g.ap_cost(member, id, 1) & 0xFF;
     if (ap < cost) return 0;
     if ((rec[0x10] & 2) == 0) return 0;
     if ((w[0x10] & 0x10) != 0 && (rec[0x15] & 4) != 0) return 0;
@@ -502,11 +502,11 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
 extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kind, const unsigned char* name,
                                           unsigned cost, int dim) {
     const unsigned char icon = At(::bof3::Img(at::kSkillIcons.v) + (kind & 0xFF))[0];
-    g.icon8(x, y + 2, icon, dim);
-    const unsigned char n = g.char_count(name);
-    g.text_draw_at(x + 10, y, colour, n, name);
-    g.sprintf_(PrintBuf(), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), cost & 0xFF);
-    g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    battle_window_draw::g.icon8(x, y + 2, icon, dim);
+    const unsigned char n = battle_window_draw::g.char_count(name);
+    battle_window_draw::g.text_draw_at(x + 10, y, colour, n, name);
+    battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), cost & 0xFF);
+    battle_window_draw::g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
 }
 
 // original 0x5918A0 (boot 0x80166A74): the lowest set bit of ability `id`'s
