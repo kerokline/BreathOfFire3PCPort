@@ -938,9 +938,35 @@ is expected; the doc says so.
      case: `text_immediate.cpp`'s `g_draw_at`, `Text_DrawImmediate` `call
      @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:_ZN14text_immediate9g_draw_atE`,
      and `NEW _ZN14text_immediate9g_draw_atE (data)`.
+   **Two more, by the owner's call 16 (2026-11-09, 7b item 16: promote the
+   25 items whose readers split between a moving function and the source's
+   own `_Inject()` / self-test).** Both reach the i686 build, which the gate
+   had kept exact until them, and are named for that; both widths read
+   their rows, and a row may name the data or bss symbol:
+   - `i686-fold`: a promoted variable whose value or layout the optimiser
+     had folded into its readers - a constant it knew, a struct split into
+     scalars, a branch dropped on a known value - which now load it. First
+     case: `win_main.cpp`'s `g_background`, i686 `DIFFER
+     __Z18WinMain_Backgroundv first at instruction 0: 'movzx eax, byte ptr
+     [0] @r6:local#...' -> 'movzx eax, byte ptr [0]
+     @r6:__ZN8win_main12g_backgroundE'` (the internal bool had been stored
+     as its negation, the `xor al, 1` gone).
+   - `i686-inline`: a promoted file-local function the compiler had inlined
+     into its callers, or called by LLVM's internal convention (arguments
+     in registers): external, it has a body of its own (NEW) and its callers
+     call it as the ABI says. First case: `d3d_draw.cpp`'s `PoseLogOn`, i686
+     `NEW __ZN8d3d_draw9PoseLogOnEv` with its callers unchanged (it had
+     been inlined everywhere and had no body). The convention case is
+     sound's `ResumeSkip`: `_Music_Start 'call @r14:local#...' -> 'call
+     @r14:__ZN5sound10ResumeSkipEjiij'`, two register arguments become four
+     on the stack; the brief had named inlining only, group h recorded the
+     convention change under the same class (one cause: a file-local became
+     external) and flagged every such row - **the owner's to confirm** (7b
+     item 16 as run).
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
-   --exception-classes data-layout` (the other classes' rows are read but
-   never used there), the x86_64 gate with the file and no restriction.
+   --exception-classes data-layout,i686-fold,i686-inline` (the other
+   classes' rows are read but never used there), the x86_64 gate with the
+   file and no restriction.
    **Class 1** (the i686 optimiser folds or shrinks an internal global:
    `win_main`'s `g_background`, `msg_pool`'s `g_pool`, `map_layers`'
    `g_side_dup`) **and class 4** (the 8 function promotions, which change
@@ -1236,6 +1262,35 @@ is expected; the doc says so.
    cases), the five seams with their `Callees` struct and aliases moved to the
    header and a `low32-site` row where the x86_64 gate asks. Anything that
    differs outside those classes is reverted and comes back here.
+   **As run (group h, 2026-11-09, 18 commits, `slb1108\reports\h.md`): all
+   25 promoted, nothing left blocked.** Measured classes against g's sorting:
+   win_main's two, msg_pool, map_layers, sound `g_restore_skip` fold at both
+   widths; gfx_clut, field_frame, sprite_draw's columns/tails/live fold on
+   x86_64 only (the self-test that alone stores them is not built there);
+   rest_2d and `g_canvas` no difference at all; kind2_object, object_kinds
+   and title_states seams read as references only (class 2; their pointers
+   were already called through on x86_64), field_blocked's struct had been
+   split into 12 globals on i686, move_script's seam changes x86_64 only.
+   The five functions: PoseLogOn and Capture had been inlined; ResumeSkip,
+   WalkOverlay and DatLog had bodies and were called by the internal
+   register convention (7a, the owner's to confirm). The seams moved their
+   `Callees` struct and aliases to `<stem>_callees.h` headers: field_blocked
+   677 -> 656 lines, kind2_object 610 -> 593, object_kinds 1014 -> 986,
+   move_script 890 -> 860, title_states 934 -> 903; one `low32-site` row
+   (title_states `StubTaskCreate`, line 541 -> 510). 189 exception rows (88
+   `data-layout`, 57 `i686-fold`, 25 `i686-inline`, 18 `x64-indirect`, 1
+   `low32-site`), file-local names keyed `NAME@<file>.obj`; 12 rows the gate
+   read as unused pruned, older rows re-classed where a fold or an inline
+   now covers them (`Was:` keeps the old reason). With `move_script::g`
+   external the mover read move_cmds' own `g` as ambiguous: move_cmds'
+   13 uses qualified, and the coordinator renamed the promoted one
+   `gMoveScript` (4cc947cd; 19 sources say `using namespace move_script`,
+   five hold their own `g`). Both self-test suites clean; the state-hash A/B
+   was not run (its runs need the foreground and the main checkout's
+   reference pairs) - the first i686 code change of the round is excepted
+   by class and construction, not yet by a played route. Not promoted, for
+   the mover never reports them: the `=` rows WalkDatFile,
+   g_desert_directions, g_reading_row(_any), Draw, LiveDraw.
 17. **The sparkle macro family** (magic_s16.cpp): `MS16_SPARKLES` is invoked
    four times and defines 40 functions, ten per spell, which the mover can
    move only together with the macro to one file; the table sends them to
@@ -1256,6 +1311,14 @@ is expected; the doc says so.
    ambiguities (`Long`, `SetLong`, `SetWord`, `Word` between battle_items and
    magic_fx_reached, named by the macro body) - group k's, by the item 13
    rename rule and the item 11 qualification (`slb1108\briefs\k.md`).
+   **Group k as run** (3 commits, `slb1108\reports\k.md`): battle_items'
+   `Cur` -> `CurBattleItems` (36 uses against magic_s16's 39); magic_s16's
+   `Scr`, `PutFloat`, `Sway`, `RayShade` -> `...MagicS16` (the fewer uses,
+   or tied and calling `Scr`); the four names were not in the macro body
+   but in 13 file-local functions (52 uses), written `move_script::X` -
+   what the file's `using move_script::X;` lines already meant. Line counts
+   kept, both gates exactly the unchanged tree's, no line names
+   `magic/sparkle.cpp` any more.
 
 ## 8. Ownership, merge order, numbering
 
