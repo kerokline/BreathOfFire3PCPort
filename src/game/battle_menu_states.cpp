@@ -75,7 +75,7 @@ unsigned char& Byte(std::uint32_t address) { return battle_menu_states::At(addre
 // wherever the original re-reads it.
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
-unsigned char* CommandBattleMenuStates() { return PtrAtBattleMenuStates(::bof3::Img(at::kCommandRecord.v)); }
+unsigned char* CommandBattleMenuStates() { return PtrAtBattleMenuStates(::bof3::Img(battle_menu_states::at::kCommandRecord.v)); }
 unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 unsigned char* List() { return battle_menu_states::At(::bof3::Img(Window16_addr)); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
@@ -89,7 +89,7 @@ Handler Entry(std::uint32_t table, unsigned i) {
 unsigned ListItem() {
     const unsigned category = List()[0xA];
     const unsigned row = List()[0xC];
-    return PtrAtBattleMenuStates(::bof3::Img(at::kInventoryIds.v) + 4 * category)[row];
+    return PtrAtBattleMenuStates(::bof3::Img(battle_menu_states::at::kInventoryIds.v) + 4 * category)[row];
 }
 // The list's item's flag byte: 0x591810(category, item).
 unsigned char ListItemFlags() {
@@ -147,7 +147,7 @@ extern "C" void __cdecl BattleAttackCmd_Begin(void) {
     battle_menu_states::g.banner_message(2, 0);
     const unsigned char state = static_cast<unsigned char>(BattleE4_Step3 + 1);
     BattleE4_Picking = 1;
-    battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(at::kRepeatLatch.v)), 0);
+    battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kRepeatLatch.v)), 0);
     BattleE4_Step3 = state;
 }
 
@@ -263,7 +263,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     hand_window->in_use = 1;
     hand_window->x = static_cast<unsigned>(battle_menu_states::Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
-    auto* const member_rec = rv::As<records::PartyMember>(battle_menu_states::At(::bof3::Img(ObjTrio_addr) + actor * at::kMemberSize));
+    auto* const member_rec = rv::As<records::PartyMember>(battle_menu_states::At(::bof3::Img(ObjTrio_addr) + actor * battle_menu_states::at::kMemberSize));
     member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
@@ -337,7 +337,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     const unsigned item = ListItem();
     const unsigned message = battle_menu_states::g.item_price(category, item);
     const unsigned char* const help = battle_menu_states::g.system_ptr(message);
-    battle_menu_states::SetLong(battle_menu_states::At(::bof3::Img(at::kQueue.v) + 4 + entry), static_cast<std::int32_t>(Low32(help)));
+    battle_menu_states::SetLong(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kQueue.v) + 4 + entry), static_cast<std::int32_t>(Low32(help)));
     if (battle_menu_states::Word(list + 0x12) != 0) return;
 
     if (up && before == 0) {
@@ -365,9 +365,9 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         unsigned char* const acting = Acting();
         list_window->state = 1;
         hand_window->in_use = 0;
-        battle_menu_states::At(::bof3::Img(at::kQueue.v) + 1 + entry)[0] = 1;
-        Byte(::bof3::Img(at::kSavedList.v) + 1) = top;
-        Byte(::bof3::Img(at::kSavedList.v) + 2) = row;
+        battle_menu_states::At(::bof3::Img(battle_menu_states::at::kQueue.v) + 1 + entry)[0] = 1;
+        Byte(::bof3::Img(battle_menu_states::at::kSavedList.v) + 1) = top;
+        Byte(::bof3::Img(battle_menu_states::at::kSavedList.v) + 2) = row;
         acting[0x125] = 0;
         battle_menu_states::g.sound(0x106);
         BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
@@ -387,8 +387,8 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     }
     const unsigned char page = list[0xA], top = list[0xB], row = list[0xC];
     BattleMisc_PartyPages = page;
-    Byte(::bof3::Img(at::kSavedList.v) + 1) = top;
-    Byte(::bof3::Img(at::kSavedList.v) + 2) = row;
+    Byte(::bof3::Img(battle_menu_states::at::kSavedList.v) + 1) = top;
+    Byte(::bof3::Img(battle_menu_states::at::kSavedList.v) + 2) = row;
     battle_menu_states::g.sound(0x103);
     list_window->state = 1;
     hand_window->in_use = 0;
@@ -439,7 +439,7 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
         const unsigned char target = battle_menu_states::g.default_target(3);
         CommandBattleMenuStates()[0] = target;
         BattleE4_Step4 = 1;
-        battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(at::kRepeatLatch.v)), 0);
+        battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kRepeatLatch.v)), 0);
         BattleE4_Picking = 1;
         return;
     }
@@ -450,7 +450,7 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
         CommandBattleMenuStates()[0] = target;
     }
     BattleE4_Step4 = 2;
-    battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(at::kRepeatLatch.v)), 0);
+    battle_menu_states::SetWord(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kRepeatLatch.v)), 0);
     BattleE4_Picking = 1;
 }
 
@@ -511,7 +511,7 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
         battle_menu_states::g.sound(0x101);
         return;
     }
-    const auto party_high = [] { return static_cast<long>(static_cast<std::uint32_t>(battle_menu_states::Long(battle_menu_states::At(::bof3::Img(at::kPartyCount.v)))) & 0xFF) - 1; };
+    const auto party_high = [] { return static_cast<long>(static_cast<std::uint32_t>(battle_menu_states::Long(battle_menu_states::At(::bof3::Img(battle_menu_states::at::kPartyCount.v)))) & 0xFF) - 1; };
     if (repeat & 0x2000) {
         if (battle_menu_states::g.return_true() != 0) {
             const long high = party_high();
@@ -563,18 +563,18 @@ extern "C" void __cdecl BattleItemCmd_Commit(void) {
     command = CommandBattleMenuStates();
     const unsigned char row = List()[0xC];
     BattleActorCopies_EntryCount = chosen;
-    battle_menu_states::At(::bof3::Img(at::kQueue.v) + 1 + LastQueueEntry())[0] = 1;
+    battle_menu_states::At(::bof3::Img(battle_menu_states::at::kQueue.v) + 1 + LastQueueEntry())[0] = 1;
     command[0xA] = row;
     const unsigned index = static_cast<std::uint32_t>(battle_menu_states::Long(List() + 0xC)) & 0xFF;
     const unsigned category = List()[0xA];
-    unsigned char* const count = PtrAtBattleMenuStates(::bof3::Img(at::kInventoryCounts.v) + 4 * category) + index;
+    unsigned char* const count = PtrAtBattleMenuStates(::bof3::Img(battle_menu_states::at::kInventoryCounts.v) + 4 * category) + index;
     if (*count > 1) {
         *count = static_cast<unsigned char>(*count - 1);
     } else {
-        PtrAtBattleMenuStates(::bof3::Img(at::kInventoryIds.v) + 4 * category)[index] = 0;
+        PtrAtBattleMenuStates(::bof3::Img(battle_menu_states::at::kInventoryIds.v) + 4 * category)[index] = 0;
         const unsigned index2 = static_cast<std::uint32_t>(battle_menu_states::Long(List() + 0xC)) & 0xFF;
         const unsigned category2 = List()[0xA];
-        PtrAtBattleMenuStates(::bof3::Img(at::kInventoryCounts.v) + 4 * category2)[index2] = 0;
+        PtrAtBattleMenuStates(::bof3::Img(battle_menu_states::at::kInventoryCounts.v) + 4 * category2)[index2] = 0;
     }
     battle_menu_states::g.free_windows();
     BattleE4_Step2 = 0;

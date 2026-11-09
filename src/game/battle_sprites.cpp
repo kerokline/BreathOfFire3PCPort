@@ -275,7 +275,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
     unsigned char pick = 0;
     bool taken = false;
     if (!(t & 0xC0) && t <= 2 && test(t)) {
-        pick = static_cast<unsigned char>(battle_sprites::Long(battle_sprites::At(::bof3::Img(at::kTarget.v))));
+        pick = static_cast<unsigned char>(battle_sprites::Long(battle_sprites::At(::bof3::Img(battle_sprites::at::kTarget.v))));
         taken = true;
     }
     if (!taken) {
@@ -296,7 +296,7 @@ extern "C" unsigned char __cdecl Battle_MemberCoinFlip(unsigned i) {
     if (battle_sprites::g.actor_out(i)) return 0;
     unsigned char* const p = Party(i & 0xFFu);
     if (!(p[0x130] & 1)) return 0;
-    if (p[0x124] != battle_sprites::At(::bof3::Img(at::kActor.v))[0]) return 0;
+    if (p[0x124] != battle_sprites::At(::bof3::Img(battle_sprites::at::kActor.v))[0]) return 0;
     if (battle_sprites::g.slots_full(i)) return 0;
     return battle_sprites::g.rand() % 2 == 0 ? 1 : 0;
 }
@@ -352,14 +352,14 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
         battle_sprites::g.add_cap100(battle_sprites::At(::bof3::Img(0x802E19)), battle_sprites::At(::bof3::Img(0x802E19))[0]);
         return;
     case 1:
-        for (unsigned char i = 0; i < battle_sprites::At(::bof3::Img(at::kPartyCount.v))[0]; ++i)
-            if (!battle_sprites::g.actor_out(i)) battle_sprites::g.add_clamped(stat(::bof3::Img(0x802E08) + i * at::kPartyStride), 0u - quarter(::bof3::Img(0x802E08) + i * at::kPartyStride));
+        for (unsigned char i = 0; i < battle_sprites::At(::bof3::Img(battle_sprites::at::kPartyCount.v))[0]; ++i)
+            if (!battle_sprites::g.actor_out(i)) battle_sprites::g.add_clamped(stat(::bof3::Img(0x802E08) + i * battle_sprites::at::kPartyStride), 0u - quarter(::bof3::Img(0x802E08) + i * battle_sprites::at::kPartyStride));
         return;
     case 2:
-        for (unsigned char i = 0; i < battle_sprites::At(::bof3::Img(at::kPartyCount.v))[0]; ++i) {
+        for (unsigned char i = 0; i < battle_sprites::At(::bof3::Img(battle_sprites::at::kPartyCount.v))[0]; ++i) {
             if (battle_sprites::g.actor_out(i)) continue;
-            battle_sprites::SetWord(battle_sprites::At(::bof3::Img(0x802E08) + i * at::kPartyStride), battle_sprites::Word(battle_sprites::At(::bof3::Img(0x802E08))));
-            battle_sprites::g.add_clamped(stat(::bof3::Img(0x802E06) + i * at::kPartyStride), 0u - half(::bof3::Img(0x802E06) + i * at::kPartyStride));
+            battle_sprites::SetWord(battle_sprites::At(::bof3::Img(0x802E08) + i * battle_sprites::at::kPartyStride), battle_sprites::Word(battle_sprites::At(::bof3::Img(0x802E08))));
+            battle_sprites::g.add_clamped(stat(::bof3::Img(0x802E06) + i * battle_sprites::at::kPartyStride), 0u - half(::bof3::Img(0x802E06) + i * battle_sprites::at::kPartyStride));
         }
         return;
     case 3:
@@ -381,7 +381,7 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
 // amount or with bit 4, and 3 for zero.
 extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
     const unsigned slot = battle_sprites::g.popup_slot(0, 1);
-    unsigned char* const rec = battle_sprites::At(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFFu) * at::kPopupStride);
+    unsigned char* const rec = battle_sprites::At(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFFu) * battle_sprites::at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     rec[0xB] = 0;
     const unsigned char who = static_cast<unsigned char>(actor);
@@ -431,11 +431,11 @@ extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
 extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     unsigned char* const p = Party(member & 0xFFu);
     auto* const member_rec = rv::As<records::PartyMember>(p);
-    battle_sprites::At(::bof3::Img(at::kAutoMode.v))[0] = p[0x125];
+    battle_sprites::At(::bof3::Img(battle_sprites::at::kAutoMode.v))[0] = p[0x125];
     if ((p[0x90] & 0x20) || (static_cast<std::int32_t>(member_rec->flags_134) & 0x14000) || (p[0x134] & 1)) {
         if (!battle_sprites::g.auto_allowed(member)) {
             p[0x125] = 1;
-            battle_sprites::At(::bof3::Img(at::kAutoMode.v))[0] = 1;
+            battle_sprites::At(::bof3::Img(battle_sprites::at::kAutoMode.v))[0] = 1;
             return;
         }
         if (!(p[0x134] & 1)) {
@@ -445,7 +445,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
             else
                 SetTarget(battle_sprites::g.pick_enemy_b(static_cast<unsigned char>((battle_sprites::g.rand() & 7) + 3)));
             p[0x125] = 1;
-            battle_sprites::At(::bof3::Img(at::kAutoMode.v))[0] = 1;
+            battle_sprites::At(::bof3::Img(battle_sprites::at::kAutoMode.v))[0] = 1;
             return;
         }
     }
@@ -453,7 +453,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
         battle_sprites::g.auto_fixed(member);
         return;
     }
-    if (battle_sprites::At(::bof3::Img(at::kBattleFlags.v))[0] & 0x10) {
+    if (battle_sprites::At(::bof3::Img(battle_sprites::at::kBattleFlags.v))[0] & 0x10) {
         battle_sprites::g.no_target();
         return;
     }
@@ -539,10 +539,10 @@ extern "C" unsigned char __cdecl Battle_MemberOutAction(unsigned i) {
 // u16 at 0x64F10C + (class + 7 * critical) * 2, critical bit 7 of the battle
 // flags.
 extern "C" void __cdecl Battle_PlayHitSound(void) {
-    const unsigned critical = battle_sprites::At(::bof3::Img(at::kBattleFlags.v))[0] >> 7;
-    const unsigned char actor = battle_sprites::At(::bof3::Img(at::kActor.v))[0];
-    const unsigned hit_class = actor <= 2 ? battle_sprites::At(::bof3::Img(at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu] : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
-    battle_sprites::g.play_effect(battle_sprites::Word(battle_sprites::At(::bof3::Img(at::kHitSounds.v) + (hit_class + critical * 7) * 2)));
+    const unsigned critical = battle_sprites::At(::bof3::Img(battle_sprites::at::kBattleFlags.v))[0] >> 7;
+    const unsigned char actor = battle_sprites::At(::bof3::Img(battle_sprites::at::kActor.v))[0];
+    const unsigned hit_class = actor <= 2 ? battle_sprites::At(::bof3::Img(battle_sprites::at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu] : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
+    battle_sprites::g.play_effect(battle_sprites::Word(battle_sprites::At(::bof3::Img(battle_sprites::at::kHitSounds.v) + (hit_class + critical * 7) * 2)));
 }
 
 // original 0x454410 (0x800A8840): a hit pop-up: a free record from
@@ -567,9 +567,9 @@ extern "C" void __cdecl Battle_PlayHitSound(void) {
 // BOF3X_ORIGINAL=Battle_SetHitPopup leaves Capcom's function, its read with it.
 extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned slot = battle_sprites::g.popup_slot(0, 3) & 0xFFu;
-    const unsigned char actor = battle_sprites::At(::bof3::Img(at::kActor.v))[0];
+    const unsigned char actor = battle_sprites::At(::bof3::Img(battle_sprites::at::kActor.v))[0];
     const unsigned char* const block = Ptr(battle_sprites::At(::bof3::Img(BattleSprites_HitBlock_addr)));
-    unsigned char* const rec = battle_sprites::At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kPopupStride);
+    unsigned char* const rec = battle_sprites::At(::bof3::Img(BattleTask_Slots_addr) + slot * battle_sprites::at::kPopupStride);
     auto* const popup = rv::As<records::BattleTask>(rec);
     unsigned char* const s = Sprite_Current;
     popup->owner = Address(s);
@@ -577,7 +577,7 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
         bof3::Log("DIV-0185    Battle_SetHitPopup: no target block (actor %u, target 0x%02X), the actor's hit class", actor,
                   Target());
     const bool fixed = block != nullptr && (block[0xC] & 2) != 0;
-    if (actor <= 2) popup->mode = fixed ? 7 : battle_sprites::At(::bof3::Img(at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
+    if (actor <= 2) popup->mode = fixed ? 7 : battle_sprites::At(::bof3::Img(battle_sprites::at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
     else popup->mode = fixed ? 7 : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
     if (s[5] > 2) {
         const unsigned char* const offsets = Ptr(battle_sprites::At(::bof3::Img(BattleE3_CurrentEnemy_addr)));
@@ -649,7 +649,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
         answer = battle_sprites::g.clut_owner(owner);
         fill = 0xFF;
     }
-    unsigned char* const cells = battle_sprites::At(::bof3::Img(at::kClutMap.v) + at::kCells.b_00 * 16u + at::kCells.b_01);
+    unsigned char* const cells = battle_sprites::At(::bof3::Img(battle_sprites::at::kClutMap.v) + battle_sprites::at::kCells.b_00 * 16u + battle_sprites::at::kCells.b_01);
     unsigned n;
     switch (kind & 0xFF) {
     case 0: n = 1; break;
@@ -671,7 +671,7 @@ extern "C" unsigned char __cdecl ClutMap_Mark(unsigned kind, unsigned owner, uns
 // 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2
 // + cell / 8 - or 0xFF.
 extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
-    const unsigned char* const map = battle_sprites::At(::bof3::Img(at::kClutMap.v));
+    const unsigned char* const map = battle_sprites::At(::bof3::Img(battle_sprites::at::kClutMap.v));
     auto free_run = [map](unsigned row, unsigned cell, unsigned size) {
         for (unsigned k = cell; k < cell + size; ++k)
             if (map[row * 16 + k] != 0xFF) return false;
@@ -680,8 +680,8 @@ extern "C" unsigned char __cdecl ClutMap_FindFree(unsigned kind) {
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell) {
             if (map[row * 16 + cell] != 0xFF) continue;
-            at::kCells.b_01 = static_cast<unsigned char>(cell);
-            at::kCells.b_00 = static_cast<unsigned char>(row);
+            battle_sprites::at::kCells.b_01 = static_cast<unsigned char>(cell);
+            battle_sprites::at::kCells.b_00 = static_cast<unsigned char>(row);
             switch (kind & 0xFF) {
             case 0: return static_cast<unsigned char>((row + 0xC) * 16 + cell);
             case 1:
@@ -709,9 +709,9 @@ extern "C" unsigned char __cdecl ClutMap_FindOwner(unsigned owner) {
     const unsigned char o = static_cast<unsigned char>(owner);
     for (unsigned row = 0; row < 4; ++row)
         for (unsigned cell = 0; cell < 16; ++cell)
-            if (battle_sprites::At(::bof3::Img(at::kClutMap.v))[row * 16 + cell] == o) {
-                at::kCells.b_00 = static_cast<unsigned char>(row);
-                at::kCells.b_01 = static_cast<unsigned char>(cell);
+            if (battle_sprites::At(::bof3::Img(battle_sprites::at::kClutMap.v))[row * 16 + cell] == o) {
+                battle_sprites::at::kCells.b_00 = static_cast<unsigned char>(row);
+                battle_sprites::at::kCells.b_01 = static_cast<unsigned char>(cell);
                 return o;
             }
     return 0xFF;
@@ -729,17 +729,17 @@ extern "C" void __cdecl Sprite_SetClutStp(void) {
     const unsigned char* const s = Sprite_Current;
     const unsigned kind = s[0x28];
     const int slot = s[0x27];
-    volatile int divisor = battle_sprites::At(::bof3::Img(at::kClutDivisor.v))[kind];
+    volatile int divisor = battle_sprites::At(::bof3::Img(battle_sprites::at::kClutDivisor.v))[kind];
     unsigned char row = static_cast<unsigned char>(slot / divisor);
-    const unsigned char column = static_cast<unsigned char>((slot % divisor) * battle_sprites::At(::bof3::Img(at::kClutStep.v))[kind]);
+    const unsigned char column = static_cast<unsigned char>((slot % divisor) * battle_sprites::At(::bof3::Img(battle_sprites::at::kClutStep.v))[kind]);
     if (s[0x24] & 4) row = static_cast<unsigned char>(row + 0x10);
-    unsigned count = battle_sprites::At(::bof3::Img(at::kClutCount.v))[kind] << 4;
+    unsigned count = battle_sprites::At(::bof3::Img(battle_sprites::at::kClutCount.v))[kind] << 4;
     unsigned i = 1;
     if (count > i) {
         unsigned char* entry = reinterpret_cast<unsigned char*>(Gfx_ClutStrip) + 2 + ((row << 8) + column) * 2u;
         do {
             entry[1] |= 0x80;
-            count = battle_sprites::At(::bof3::Img(at::kClutCount.v))[s[0x28]] << 4;
+            count = battle_sprites::At(::bof3::Img(battle_sprites::at::kClutCount.v))[s[0x28]] << 4;
             ++i;
             entry += 2;
         } while (i < count);

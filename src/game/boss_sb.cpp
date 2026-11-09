@@ -231,10 +231,10 @@ void ExitPoseOne(unsigned tag, bool flip) {
 void EndVar(unsigned char var) {
     if (Battle_EndFlags & 2) {
         B(::bof3::Img(at::kScriptVar3.v)) = var;
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_sb::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther.v)();
+    BH_AT(Handler, boss_sb::at::kEndOther.v)();
 }
 
 }  // namespace
@@ -504,12 +504,12 @@ extern "C" void __cdecl Boss13_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss
 // 0x446E20, then 0x92BF18 = 3.
 extern "C" void __cdecl Boss13_End(void) {
     const unsigned char end = Battle_EndFlags;
-    B(::bof3::Img(at::kScriptVar3.v)) = 0x32;
+    B(::bof3::Img(boss_sb::at::kScriptVar3.v)) = 0x32;
     if (end & 2) {
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_sb::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndThird.v)();
+    BH_AT(Handler, boss_sb::at::kEndThird.v)();
     BossH_LeaderPick = 3;
 }
 

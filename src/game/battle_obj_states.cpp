@@ -60,7 +60,7 @@ namespace {
 
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
-unsigned char* Task(unsigned index) { return battle_obj_states::At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskSize); }
+unsigned char* Task(unsigned index) { return battle_obj_states::At(::bof3::Img(BattleTask_Slots_addr) + index * battle_obj_states::at::kTaskSize); }
 // The party objects' states run on the member: Sprite_Current and Field_State are its record.
 // A code pointer out of one of the tables, called; the index is not checked
 // (a byte, as the original's).
@@ -82,7 +82,7 @@ void Pose(unsigned add) { battle_obj_states::g.ensure_animation(static_cast<unsi
 extern "C" void __cdecl BattleObj_StateInit(void) {
     for (unsigned o = 0xC; o <= 0x20; o += 4) SetLong(S() + o, 0);
     rv::As<records::PartyMember>(S())->ot_slot = 4;
-    rv::As<records::PartyMember>(S())->direction = battle_obj_states::At(::bof3::Img(at::kPoseBase.v))[0];
+    rv::As<records::PartyMember>(S())->direction = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kPoseBase.v))[0];
     S()[0x48] = 0;
     auto* const member_s = rv::As<records::PartyMember>(S());
     const long h = battle_obj_states::g.elevation(member_s->x, member_s->z);
@@ -131,22 +131,22 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
     S()[0x5E] = 0;
     S()[0x5D] = 0;
     bool phase5 = false;
-    if (battle_obj_states::At(::bof3::Img(at::kPhase.v))[0] == 1) {
+    if (battle_obj_states::At(::bof3::Img(battle_obj_states::at::kPhase.v))[0] == 1) {
         if (BattleActions_Step > 1) {
             const unsigned member = BattleE4_AutoMember;
-            const unsigned char c = rv::As<records::PartyMember>(F())->char_id == battle_obj_states::At(::bof3::Img(ObjTrio_addr) + member * at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
+            const unsigned char c = rv::As<records::PartyMember>(F())->char_id == battle_obj_states::At(::bof3::Img(ObjTrio_addr) + member * battle_obj_states::at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
             S()[0x5F] = c;
             S()[0x5E] = c;
             S()[0x5D] = c;
-            phase5 = battle_obj_states::At(::bof3::Img(at::kPhase.v))[0] == 5;
+            phase5 = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kPhase.v))[0] == 5;
         }
     } else {
-        phase5 = battle_obj_states::At(::bof3::Img(at::kPhase.v))[0] == 5;
+        phase5 = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kPhase.v))[0] == 5;
     }
     unsigned char* const f = F();
     auto* const member_f = rv::As<records::PartyMember>(f);
     if (phase5) {
-        if ((Long(battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))) & 0x8000) != 0 && (F()[0x134] & 2) != 0) {
+        if ((Long(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))) & 0x8000) != 0 && (F()[0x134] & 2) != 0) {
             rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->x, static_cast<std::int32_t>(BossSi_CentreX));
             rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->z, static_cast<std::int32_t>(BossSi_CentreZ));
         } else {
@@ -208,7 +208,7 @@ extern "C" void __cdecl BattleObj_IdleTintOn(void) {
 extern "C" void __cdecl BattleObj_IdleTintOff(void) {
     unsigned char* const s = S();
     auto* const member_s = rv::As<records::PartyMember>(s);
-    const unsigned char level = battle_obj_states::At(::bof3::Img(at::kTintLevel.v))[0];
+    const unsigned char level = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kTintLevel.v))[0];
     battle_obj_states::At(::bof3::Img(MoveScript_TintRecords_addr) + 4 + s[7] * 12u)[0] = level;
     battle_obj_states::At(::bof3::Img(MoveScript_TintRecords_addr) + 3 + s[7] * 12u)[0] = level;
     battle_obj_states::At(::bof3::Img(MoveScript_TintRecords_addr) + 2 + s[7] * 12u)[0] = level;
@@ -251,11 +251,11 @@ extern "C" void __cdecl BattleObj_StateAttack(void) {
 // again for the second counter.
 extern "C" void __cdecl BattleObj_AttackStart(void) {
     if (F()[0x134] & 2) {
-        rv::As<records::PartyMember>(S())->step_frames = battle_obj_states::At(::bof3::Img(at::kAttackCountBy.v) + BattlePhases_B89)[0];
-        S()[0xA] = battle_obj_states::At(::bof3::Img(at::kAttackCountBy.v) + BattlePhases_B89)[0];
+        rv::As<records::PartyMember>(S())->step_frames = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kAttackCountBy.v) + BattlePhases_B89)[0];
+        S()[0xA] = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kAttackCountBy.v) + BattlePhases_B89)[0];
     } else {
-        rv::As<records::PartyMember>(S())->step_frames = battle_obj_states::At(::bof3::Img(at::kAttackCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
-        S()[0xA] = battle_obj_states::At(::bof3::Img(at::kAttackCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
+        rv::As<records::PartyMember>(S())->step_frames = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kAttackCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
+        S()[0xA] = battle_obj_states::At(::bof3::Img(battle_obj_states::at::kAttackCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
     }
     Pose(0xC);
     battle_obj_states::g.tick();
@@ -288,7 +288,7 @@ extern "C" void __cdecl BattleObj_SwingCue(void) {
     } else {
         const int roll = battle_obj_states::g.rand_() % 100;
         if (static_cast<int>(F()[0xBA]) > roll) {
-            battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] | 0x80);
+            battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] = static_cast<unsigned char>(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] | 0x80);
             cue = 3;
         } else {
             cue = 2;
@@ -305,9 +305,9 @@ extern "C" void __cdecl BattleObj_SwingCue(void) {
 // (a tail jump to 0x442DD0).
 extern "C" void __cdecl BattleObj_SwingEnd(void) {
     if (battle_obj_states::g.tick_once() == 0) return;
-    if (battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] & 0x80) battle_obj_states::g.task_create(0, 2);
-    battle_obj_states::g.set_target_flag(battle_obj_states::At(::bof3::Img(at::kSwingTarget.v))[0]);
-    battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] | 4);
+    if (battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] & 0x80) battle_obj_states::g.task_create(0, 2);
+    battle_obj_states::g.set_target_flag(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kSwingTarget.v))[0]);
+    battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] = static_cast<unsigned char>(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] | 4);
     battle_obj_states::g.end_action();
 }
 
@@ -346,10 +346,10 @@ extern "C" void __cdecl BattleObj_CastStart(void) {
     } else {
         rv::As<records::PartyMember>(S())->step_frames = 0;
     }
-    const unsigned skill = Word(battle_obj_states::At(::bof3::Img(at::kSkillId.v)));
-    if ((battle_obj_states::At(::bof3::Img(at::kSkillWord.v) + 1 + skill * 24)[0] & 8) == 0) {
-        const unsigned char count = (F()[0x134] & 2) ? battle_obj_states::At(::bof3::Img(at::kCastCountBy.v) + BattlePhases_B89)[0]
-                                                     : battle_obj_states::At(::bof3::Img(at::kCastCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
+    const unsigned skill = Word(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kSkillId.v)));
+    if ((battle_obj_states::At(::bof3::Img(battle_obj_states::at::kSkillWord.v) + 1 + skill * 24)[0] & 8) == 0) {
+        const unsigned char count = (F()[0x134] & 2) ? battle_obj_states::At(::bof3::Img(battle_obj_states::at::kCastCountBy.v) + BattlePhases_B89)[0]
+                                                     : battle_obj_states::At(::bof3::Img(battle_obj_states::at::kCastCount.v) + rv::As<records::PartyMember>(F())->char_id)[0];
         rv::As<records::PartyMember>(S())->step_frames = count;
         Pose(0x2C);
         rv::As<records::PartyMember>(S())->states[1] = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->states[1] + 1);
@@ -398,7 +398,7 @@ extern "C" void __cdecl BattleObj_CastWait(void) {
 // chunk, 0x442C60, a tail jump to 0x442DD0).
 extern "C" void __cdecl BattleObj_StateCastDone(void) {
     Dispatch(battle_obj_states::g.cast_done_subs, rv::As<records::PartyMember>(S())->step);
-    if (battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] & 4) battle_obj_states::g.end_action();
+    if (battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] & 4) battle_obj_states::g.end_action();
 }
 
 // original 0x442BC0 (PSX 0x801E1968): a script tick, the next sub-state.
@@ -420,10 +420,10 @@ extern "C" void __cdecl BattleObj_CastDone(void) {
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    SetWord(battle_obj_states::At(::bof3::Img(at::kRoundFlags.v)), Word(battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))) | 0x800);
+    SetWord(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v)), Word(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))) | 0x800);
     f[0x125] = 0;
-    const unsigned skill = Word(battle_obj_states::At(::bof3::Img(at::kSkillId.v)));
-    if (Word(battle_obj_states::At(::bof3::Img(at::kSkillWord.v) + skill * 24)) & 0x800) {
+    const unsigned skill = Word(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kSkillId.v)));
+    if (Word(battle_obj_states::At(::bof3::Img(battle_obj_states::at::kSkillWord.v) + skill * 24)) & 0x800) {
         rv::As<records::PartyMember>(S())->step = static_cast<unsigned char>(rv::As<records::PartyMember>(S())->step + 1);
         return;
     }
@@ -478,7 +478,7 @@ extern "C" void __cdecl BattleObj_EndAction(void) {
     battle_obj_states::g.clear_actor_bit(rv::As<records::PartyMember>(S())->actor);
     auto* const member_f = rv::As<records::PartyMember>(F());
     member_f->flags_130 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_f->flags_130)) & ~0x200u);
-    if ((battle_obj_states::At(::bof3::Img(at::kRoundFlags.v))[0] & 0x40) == 0) F()[0x125] = 0;
+    if ((battle_obj_states::At(::bof3::Img(battle_obj_states::at::kRoundFlags.v))[0] & 0x40) == 0) F()[0x125] = 0;
 }
 
 // ===========================================================================

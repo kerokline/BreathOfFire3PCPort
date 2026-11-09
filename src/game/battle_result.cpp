@@ -77,8 +77,8 @@ unsigned char& Byte(std::uint32_t address) { return battle_result::At(address)[0
 std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(Long(At(address))); }
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
-unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
-unsigned char* WindowSlot(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowSize); }
+unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(battle_result::at::kMembers.v) + (slot & 0xFF) * battle_result::at::kMemberSize); }
+unsigned char* WindowSlot(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * battle_result::at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return battle_result::At(BattleWinStates_Current); }
 // MemberBattleResult() is +0x80 into the member record (0x802DC0); the record, and its
@@ -123,10 +123,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
         if (n != 0) share = (Battle_ExpTotal + n - 1) / n;
     }
     Battle_ExpTotal = share;
-    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), share);
+    g.crt_sprintf(TextBattleResult(::bof3::Img(battle_result::at::kText0.v)), Format(::bof3::Img(battle_result::at::kFormatD.v)), share);
     const unsigned char* const msg = g.msg_system(5);
     const unsigned set = AreaW0b_PartySet & 0x7Fu;
-    SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
+    SetDword(::bof3::Img(battle_result::at::kMsgCurrent.v), Low32(msg));
     g.party_set_select(set, 0);
     Advance(::bof3::Img(BattleE4_Step4_addr));
 }
@@ -141,7 +141,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
 // Window_Alloc.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_OpenExpWindow(void) {
     g.window_alloc(1, 4);
-    const auto height = static_cast<unsigned char>((Byte(::bof3::Img(at::kPartyCount.v)) << 4) + 4);
+    const auto height = static_cast<unsigned char>((Byte(::bof3::Img(battle_result::at::kPartyCount.v)) << 4) + 4);
     const std::uint32_t exp = Battle_ExpTotal;
     unsigned char* const w = WindowSlot(1);
     auto* const window_rec = rv::As<records::WindowRecord>(w);
@@ -173,11 +173,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ExpTick
     if (Input_Held != 0 && g.file_load_done() != 0) {
         amount = Battle_ExpTotal;
     } else {
-        const std::uint32_t step = Dword(::bof3::Img(at::kTickStep.v)) & 0xFFFF;
+        const std::uint32_t step = Dword(::bof3::Img(battle_result::at::kTickStep.v)) & 0xFFFF;
         const std::uint32_t exp = Battle_ExpTotal;
         if (static_cast<std::int32_t>(exp - step) > 0) {
             g.add_exp(step);
-            Battle_ExpTotal = Battle_ExpTotal - (Dword(::bof3::Img(at::kTickStep.v)) & 0xFFFF);
+            Battle_ExpTotal = Battle_ExpTotal - (Dword(::bof3::Img(battle_result::at::kTickStep.v)) & 0xFFFF);
             return;
         }
         amount = exp;
@@ -219,7 +219,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_LevelUp
 // its increment, and slot and count afresh after Char_LevelUpGain; the index passed
 // on is 0x4469D0's whole answer (a byte, zero-extended by the callee).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLevelUp(void) {
-    while (BossSb_Countdown < Byte(::bof3::Img(at::kPartyCount.v))) {
+    while (BossSb_Countdown < Byte(::bof3::Img(battle_result::at::kPartyCount.v))) {
         const unsigned index = g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(BossSb_Countdown) - 0x80)->char_id);
         const auto next = static_cast<unsigned char>(BossSb_Countdown + 1);
         BattleE1_Roster = static_cast<unsigned char>(index);
@@ -274,7 +274,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     if ((Battle_EndFlags & 0x20) != 0 && Input_Pressed == 0) return;
     if (Input_Held == 0) return;
 
-    for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot) {
+    for (unsigned char slot = 0; slot < Byte(::bof3::Img(battle_result::at::kPartyCount.v)); ++slot) {
         const unsigned index = g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(slot) - 0x80)->char_id);
         if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(slot) - 0x80)->char_id));
     }
@@ -285,10 +285,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     const std::uint32_t zenny = BattleFlow_ZennyTotal;
     rv::As<records::WindowRecord>(WindowSlot(1))->kind = 5;
     rv::As<records::WindowRecord>(WindowSlot(1))->state = 0;
-    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), zenny);
+    g.crt_sprintf(TextBattleResult(::bof3::Img(battle_result::at::kText0.v)), Format(::bof3::Img(battle_result::at::kFormatD.v)), zenny);
     const unsigned char* const msg = g.msg_system(6);
     const std::uint32_t total = BattleFlow_ZennyTotal;
-    SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
+    SetDword(::bof3::Img(battle_result::at::kMsgCurrent.v), Low32(msg));
     SetTickStep(total);
 
     if (Battle_DropCount != 0) {
@@ -306,16 +306,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
             do {
                 const auto next = static_cast<unsigned char>(i + 1);
                 for (unsigned char j = next; j < n; ++j) {
-                    unsigned char* const a = At(::bof3::Img(at::kDropItems.v) + i * 2u);
-                    unsigned char* const b = At(::bof3::Img(at::kDropItems.v) + j * 2u);
+                    unsigned char* const a = At(::bof3::Img(battle_result::at::kDropItems.v) + i * 2u);
+                    unsigned char* const b = At(::bof3::Img(battle_result::at::kDropItems.v) + j * 2u);
                     const unsigned ai = Word(a);
                     if (ai <= Word(b)) continue;
                     // the original's xor swap, store for store
                     SetWord(a, ai ^ Word(b));
                     SetWord(b, Word(b) ^ Word(a));
                     SetWord(a, Word(a) ^ Word(b));
-                    unsigned char* const ci = At(::bof3::Img(at::kDropCounts.v) + i);
-                    unsigned char* const cj = At(::bof3::Img(at::kDropCounts.v) + j);
+                    unsigned char* const ci = At(::bof3::Img(battle_result::at::kDropCounts.v) + i);
+                    unsigned char* const cj = At(::bof3::Img(battle_result::at::kDropCounts.v) + j);
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
                     cj[0] = static_cast<unsigned char>(cj[0] ^ ci[0]);
                     ci[0] = static_cast<unsigned char>(ci[0] ^ cj[0]);
@@ -347,11 +347,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ZennyTi
     if (Input_Held != 0 && g.file_load_done() != 0) {
         amount = BattleFlow_ZennyTotal;
     } else {
-        const std::uint32_t step = Dword(::bof3::Img(at::kTickStep.v)) & 0xFFFF;
+        const std::uint32_t step = Dword(::bof3::Img(battle_result::at::kTickStep.v)) & 0xFFFF;
         const std::uint32_t zenny = BattleFlow_ZennyTotal;
         if (static_cast<std::int32_t>(zenny - step) > 0) {
             g.add_zenny(step, 0);
-            BattleFlow_ZennyTotal = BattleFlow_ZennyTotal - (Dword(::bof3::Img(at::kTickStep.v)) & 0xFFFF);
+            BattleFlow_ZennyTotal = BattleFlow_ZennyTotal - (Dword(::bof3::Img(battle_result::at::kTickStep.v)) & 0xFFFF);
             return;
         }
         amount = zenny;
@@ -373,9 +373,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ZennyTi
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDrops(void) {
     if (g.file_load_done() == 0) return;
     for (unsigned char i = 0; i < Battle_DropCount; ++i) {
-        const unsigned count = At(::bof3::Img(at::kDropCounts.v) + i)[0];
-        const unsigned item = At(::bof3::Img(at::kDropItems.v) + i * 2u)[0];
-        const unsigned category = At(::bof3::Img(at::kDropItems.v) + i * 2u)[1];
+        const unsigned count = At(::bof3::Img(battle_result::at::kDropCounts.v) + i)[0];
+        const unsigned item = At(::bof3::Img(battle_result::at::kDropItems.v) + i * 2u)[0];
+        const unsigned category = At(::bof3::Img(battle_result::at::kDropItems.v) + i * 2u)[1];
         g.inventory_add(category, item, count, 0);
     }
     BattleActions_Step = 4;

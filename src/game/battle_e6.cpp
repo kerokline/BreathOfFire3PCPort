@@ -64,26 +64,26 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
-unsigned char* PartyBattleE6(unsigned member) { return move_script::At(::bof3::Img(ObjTrio_addr) + (member & 0xFFu) * at::kPartyStride); }
-unsigned char* Enemy(unsigned index) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemyStride); }
-unsigned Actor() { return B(::bof3::Img(at::kActor.v)); }
+unsigned char* PartyBattleE6(unsigned member) { return move_script::At(::bof3::Img(ObjTrio_addr) + (member & 0xFFu) * battle_e6::at::kPartyStride); }
+unsigned char* Enemy(unsigned index) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * battle_e6::at::kEnemyStride); }
+unsigned Actor() { return B(::bof3::Img(battle_e6::at::kActor.v)); }
 unsigned char* Owner() { return move_script::At(BattleE2_Owner); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).
 
 // The three pure percent helpers nobody owns: (value * percent) / 100 clamped.
 using Percent = U (__cdecl*)(U value, std::int32_t percent);
-U Percent999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent999.v)(value, percent); }
-U Percent9999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent9999.v)(value, percent); }
-U Percent100(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent100.v)(value, percent); }
+U Percent999(U value, std::int32_t percent) { return BH_AT(Percent, battle_e6::at::kPercent999.v)(value, percent); }
+U Percent9999(U value, std::int32_t percent) { return BH_AT(Percent, battle_e6::at::kPercent9999.v)(value, percent); }
+U Percent100(U value, std::int32_t percent) { return BH_AT(Percent, battle_e6::at::kPercent100.v)(value, percent); }
 // A BMAGIC vertex's height (Quake_VertexLift 0x4CF4B0, R3G's): ax is read.
 U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::int32_t, std::int32_t), at::kCellHeight.v)(x, z); }
 
 // The party records copied to 0x939AE0 before a transformation changes them:
 // 0x904AB0 records of 0x14C bytes, a dword at a time.
 void BackUpParty() {
-    const unsigned n = B(::bof3::Img(at::kPartyCount.v));
+    const unsigned n = B(::bof3::Img(battle_e6::at::kPartyCount.v));
     if (n == 0) return;
-    for (U i = 0; i < n * at::kPartyStride; i += 4) SetL(move_script::At(::bof3::Img(at::kPartyBackup.v) + i), LBattleE6(move_script::At(::bof3::Img(ObjTrio_addr) + i)));
+    for (U i = 0; i < n * battle_e6::at::kPartyStride; i += 4) SetL(move_script::At(::bof3::Img(battle_e6::at::kPartyBackup.v) + i), LBattleE6(move_script::At(::bof3::Img(ObjTrio_addr) + i)));
 }
 
 // The first stat of a form (the u16 at +0xC0, +0xA0 and +0x98): `percent` of
@@ -92,14 +92,14 @@ void BackUpParty() {
 // member's u16 +0xC4 as it was.
 void FirstStat(unsigned char* member, const unsigned char* character, std::uint16_t value) {
     auto* const member_rec = rv::As<records::PartyMember>(member);
-    move_script::SetWord(move_script::At(::bof3::Img(at::kStatDeltas.v)), value);
+    move_script::SetWord(move_script::At(::bof3::Img(battle_e6::at::kStatDeltas.v)), value);
     const std::int32_t cut = (static_cast<std::int32_t>(character[0x1E]) * S16BattleE6(value) + 5) / 10;
-    const auto stat = static_cast<std::uint16_t>(LBattleE6(move_script::At(::bof3::Img(at::kStatDeltas.v))) - static_cast<U>(cut));
+    const auto stat = static_cast<std::uint16_t>(LBattleE6(move_script::At(::bof3::Img(battle_e6::at::kStatDeltas.v))) - static_cast<U>(cut));
     const std::uint16_t next = move_script::Word(member + 0xC4);
     move_script::SetWord(member + 0xC0, stat);
     member_rec->max_hp = stat;
     member_rec->hp = stat;
-    move_script::SetWord(move_script::At(::bof3::Img(at::kStatDeltas.v) + 2), next);
+    move_script::SetWord(move_script::At(::bof3::Img(battle_e6::at::kStatDeltas.v) + 2), next);
 }
 
 // Kept by the recipe path: the stat at `field` (0xC4 .. 0xCA) through
@@ -245,19 +245,19 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         BH_CALL(DragonForm_Mix)(0xFF);
         form = BattleE6_FormCode;
     }
-    for (U record = ::bof3::Img(at::kHistoryLast.v); record > ::bof3::Img(at::kHistory.v); record -= 4)
+    for (U record = ::bof3::Img(battle_e6::at::kHistoryLast.v); record > ::bof3::Img(battle_e6::at::kHistory.v); record -= 4)
         for (U i = 0; i < 4; ++i) B(record + i) = B(record - 4 + i);
     const unsigned count = BattleE5_GeneCount;
     unsigned kept = 0;
     if (count > 0) {
-        for (unsigned i = 0; i < count; ++i) B(::bof3::Img(at::kHistory.v) + i) = B(::bof3::Img(at::kGenes.v) + i);
+        for (unsigned i = 0; i < count; ++i) B(::bof3::Img(battle_e6::at::kHistory.v) + i) = B(::bof3::Img(battle_e6::at::kGenes.v) + i);
         kept = count;
     }
-    for (unsigned i = kept; i < 3; ++i) B(::bof3::Img(at::kHistory.v) + i) = 0xFF;
+    for (unsigned i = kept; i < 3; ++i) B(::bof3::Img(battle_e6::at::kHistory.v) + i) = 0xFF;
     const unsigned char group = BattleE6_FormGroupWork;
     BattleE6_FormGroup = group;
     const unsigned who = Actor();
-    B(::bof3::Img(at::kHistoryForm.v)) = static_cast<unsigned char>((group << 5) + (form & 0x1F));
+    B(::bof3::Img(battle_e6::at::kHistoryForm.v)) = static_cast<unsigned char>((group << 5) + (form & 0x1F));
     BattlePhases_B89 = form;
     BH_CALL(Battle_RecalcStats)(who);
 }
@@ -277,7 +277,7 @@ extern "C" unsigned char __cdecl DragonForm_FindRecipe(void) {
         unsigned slot = 0;
         while (slot < 3 && BH_CALL(DragonForm_RecipeSlotHeld)(recipe, slot) != 0) ++slot;
         if (slot == 3) {
-            BattleE6_FormGroupWork = move_script::At(::bof3::Img(at::kRecipeGroups.v))[recipe];
+            BattleE6_FormGroupWork = move_script::At(::bof3::Img(battle_e6::at::kRecipeGroups.v))[recipe];
             return static_cast<unsigned char>(recipe);
         }
         if (++recipe > 10) return 0xFF;
@@ -287,11 +287,11 @@ extern "C" unsigned char __cdecl DragonForm_FindRecipe(void) {
 // original 0x4516F0 (PSX 0x800A3C60): recipe `recipe`'s gene `slot` (0x64ED78 + 3 recipe +
 // slot): 1 when it is 0xFF (any) or among the chosen genes, else 0.
 extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsigned slot) {
-    const unsigned char gene = move_script::At(::bof3::Img(at::kRecipeGenes.v))[(recipe & 0xFF) * 3 + (slot & 0xFF)];
+    const unsigned char gene = move_script::At(::bof3::Img(battle_e6::at::kRecipeGenes.v))[(recipe & 0xFF) * 3 + (slot & 0xFF)];
     if (gene == 0xFF) return 1;
     const unsigned count = BattleE5_GeneCount;
     for (unsigned i = 0; i < count; ++i)
-        if (B(::bof3::Img(at::kGenes.v) + i) == gene) return 1;
+        if (B(::bof3::Img(battle_e6::at::kGenes.v) + i) == gene) return 1;
     return 0;
 }
 
@@ -302,7 +302,7 @@ extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
     if (count == 0) return 0;
     const unsigned char size = Battle_PartyStanding;
     for (unsigned i = 0; i < count; ++i)
-        if (B(::bof3::Img(at::kGenes.v) + i) == 0x10 && size == 3) return BH_CALL(DragonForm_PartyRecipe)();
+        if (B(::bof3::Img(battle_e6::at::kGenes.v) + i) == 0x10 && size == 3) return BH_CALL(DragonForm_PartyRecipe)();
     return 0;
 }
 
@@ -321,27 +321,27 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     BackUpParty();
     unsigned char* const member = PartyBattleE6(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
-    const unsigned char* const character = move_script::At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * at::kCharStride);
-    static_assert(at::kCharStride == sizeof(records::CharRecord));
-    unsigned char* const sums = move_script::At(::bof3::Img(at::kMixSums.v));
+    const unsigned char* const character = move_script::At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * battle_e6::at::kCharStride);
+    static_assert(battle_e6::at::kCharStride == sizeof(records::CharRecord));
+    unsigned char* const sums = move_script::At(::bof3::Img(battle_e6::at::kMixSums.v));
     for (unsigned i = 0; i < 14; ++i) sums[i] = 0;
     const unsigned count = BattleE5_GeneCount;
     if (count > 0) {
         for (unsigned k = 0; k < count; ++k) {
-            const unsigned char gene = B(::bof3::Img(at::kGenes.v) + k);
+            const unsigned char gene = B(::bof3::Img(battle_e6::at::kGenes.v) + k);
             if (gene == 0xA || gene == 0xB || gene == 0xC) continue;
-            for (unsigned i = 0; i < 14; ++i) sums[i] = static_cast<unsigned char>(sums[i] + move_script::At(::bof3::Img(at::kGeneRows.v) + gene * 14u)[i]);
+            for (unsigned i = 0; i < 14; ++i) sums[i] = static_cast<unsigned char>(sums[i] + move_script::At(::bof3::Img(battle_e6::at::kGeneRows.v) + gene * 14u)[i]);
         }
         for (unsigned k = 0; k < count; ++k)
-            if (B(::bof3::Img(at::kGenes.v) + k) == 0xB)
+            if (B(::bof3::Img(battle_e6::at::kGenes.v) + k) == 0xB)
                 for (unsigned i = 0; i < 10; ++i) sums[i] = static_cast<unsigned char>(-sums[i]);
         for (unsigned k = 0; k < count; ++k)
-            if (B(::bof3::Img(at::kGenes.v) + k) == 0xA)
+            if (B(::bof3::Img(battle_e6::at::kGenes.v) + k) == 0xA)
                 for (unsigned i = 0; i < 14; ++i) sums[i] = static_cast<unsigned char>(sums[i] << 1);
     }
     unsigned limit = count;
     for (unsigned k = 0; k < limit; ++k) {
-        if (B(::bof3::Img(at::kGenes.v) + k) != 0xC) continue;
+        if (B(::bof3::Img(battle_e6::at::kGenes.v) + k) != 0xC) continue;
         for (unsigned i = 0; i < 14; ++i) {
             const bool move = sums[i] == 0 ? BH_CALL(Rand)() % 10 == 0 : (BH_CALL(Rand)() & 1) != 0;
             if (!move) continue;
@@ -360,18 +360,18 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     // the first stat: 1 below 1
     {
         const unsigned char shift = BH_CALL(DragonForm_StatShift)(sums[5]);
-        const unsigned column = move_script::At(::bof3::Img(at::kShiftColumns.v))[BattleE6_FormCode * 5];
+        const unsigned column = move_script::At(::bof3::Img(battle_e6::at::kShiftColumns.v))[BattleE6_FormCode * 5];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 1;
         if (S16BattleE6(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, S16BattleE6(sum) * 10));
         FirstStat(member, character, value);
     }
     // the other four: 0 below 1; the old value's cell takes the change
-    const U deltas[4] = {::bof3::Img(at::kStatDeltas.v) + 2, ::bof3::Img(at::kStatDeltas.v) + 4, ::bof3::Img(at::kStatDeltas.v) + 6, ::bof3::Img(at::kStatDeltas.v) + 8};
+    const U deltas[4] = {::bof3::Img(battle_e6::at::kStatDeltas.v) + 2, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 4, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 6, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 8};
     for (unsigned n = 0; n < 4; ++n) {
         const unsigned field = 0xC4 + 2 * n;
         const unsigned char shift = BH_CALL(DragonForm_StatShift)(sums[6 + n]);
-        const unsigned column = move_script::At(::bof3::Img(at::kShiftColumns.v))[BattleE6_FormCode * 5 + 1 + n];
+        const unsigned column = move_script::At(::bof3::Img(battle_e6::at::kShiftColumns.v))[BattleE6_FormCode * 5 + 1 + n];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 0;
         if (S16BattleE6(sum) > 0) value = static_cast<std::uint16_t>(Percent999(move_script::Word(member + field), S16BattleE6(sum) * 10));
@@ -398,7 +398,7 @@ extern "C" unsigned char __cdecl DragonForm_StatShift(unsigned sum) {
     std::int32_t i = S8(static_cast<unsigned char>(sum + 2));
     if (i < 0) i = 0;
     else if (i > 4) i = 4;
-    return move_script::At(::bof3::Img(at::kShiftSteps.v))[i];
+    return move_script::At(::bof3::Img(battle_e6::at::kShiftSteps.v))[i];
 }
 
 namespace {
@@ -420,16 +420,16 @@ void MixByte(unsigned char* record, unsigned at, U cell, unsigned char v) {
 // held to 0..4. Answers 0.
 extern "C" unsigned char __cdecl DragonForm_SetMixBytes(unsigned s0, unsigned s1, unsigned s2, unsigned s3, unsigned s4) {
     unsigned char* const record = PartyBattleE6(Actor());
-    MixByte(record, 0x4F, ::bof3::Img(at::kStatDeltas.v) + 0xA, move_script::At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s0)]);
-    MixByte(record, 0x50, ::bof3::Img(at::kStatDeltas.v) + 0xB, move_script::At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s1)]);
-    MixByte(record, 0x51, ::bof3::Img(at::kStatDeltas.v) + 0xC, move_script::At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s2)]);
-    MixByte(record, 0x52, ::bof3::Img(at::kStatDeltas.v) + 0xD, 2);
-    MixByte(record, 0x53, ::bof3::Img(at::kStatDeltas.v) + 0xE, 2);
-    MixByte(record, 0x54, ::bof3::Img(at::kStatDeltas.v) + 0xF, move_script::At(::bof3::Img(at::kMixBytesC.v))[Clamp4(s4)]);
-    MixByte(record, 0x55, ::bof3::Img(at::kStatDeltas.v) + 0x10, 2);
+    MixByte(record, 0x4F, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xA, move_script::At(::bof3::Img(battle_e6::at::kMixBytesA.v))[Clamp4(s0)]);
+    MixByte(record, 0x50, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xB, move_script::At(::bof3::Img(battle_e6::at::kMixBytesA.v))[Clamp4(s1)]);
+    MixByte(record, 0x51, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xC, move_script::At(::bof3::Img(battle_e6::at::kMixBytesA.v))[Clamp4(s2)]);
+    MixByte(record, 0x52, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xD, 2);
+    MixByte(record, 0x53, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xE, 2);
+    MixByte(record, 0x54, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xF, move_script::At(::bof3::Img(battle_e6::at::kMixBytesC.v))[Clamp4(s4)]);
+    MixByte(record, 0x55, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0x10, 2);
     const unsigned third = Clamp4(s3);
-    MixByte(record, 0x56, ::bof3::Img(at::kStatDeltas.v) + 0x11, move_script::At(::bof3::Img(at::kMixBytesB.v))[third]);
-    MixByte(record, 0x57, ::bof3::Img(at::kStatDeltas.v) + 0x12, move_script::At(::bof3::Img(at::kMixBytesB.v))[third]);
+    MixByte(record, 0x56, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0x11, move_script::At(::bof3::Img(battle_e6::at::kMixBytesB.v))[third]);
+    MixByte(record, 0x57, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0x12, move_script::At(::bof3::Img(battle_e6::at::kMixBytesB.v))[third]);
     return 0;
 }
 
@@ -441,11 +441,11 @@ extern "C" void __cdecl DragonForm_MixAbilities(void) {
     unsigned char* const list = PartyBattleE6(Actor()) + 0xF4;
     unsigned char count = 0;
     for (unsigned j = 0; j < 3; ++j) {
-        const unsigned char ability = move_script::At(::bof3::Img(at::kFormAbilities.v))[BattleE6_FormCode * 3u + j];
+        const unsigned char ability = move_script::At(::bof3::Img(battle_e6::at::kFormAbilities.v))[BattleE6_FormCode * 3u + j];
         if (ability == 0) break;
         list[count++] = ability;
     }
-    auto sum = [](unsigned i) { return S8(move_script::At(::bof3::Img(at::kMixSums.v))[i]); };
+    auto sum = [](unsigned i) { return S8(move_script::At(::bof3::Img(battle_e6::at::kMixSums.v))[i]); };
     auto add = [&count](unsigned row) { count = BH_CALL(DragonForm_AddAbilityRow)(row, count); };
     if (sum(0) >= 1) {
         add(0);
@@ -482,7 +482,7 @@ extern "C" unsigned char __cdecl DragonForm_AddAbilityRow(unsigned row, unsigned
     const unsigned base = (row & 0xFF) * 3;
     auto n = static_cast<unsigned char>(count);
     for (unsigned k = 0; k < 3; ++k) {
-        const unsigned char ability = move_script::At(::bof3::Img(at::kAbilityRows.v))[base + k];
+        const unsigned char ability = move_script::At(::bof3::Img(battle_e6::at::kAbilityRows.v))[base + k];
         if (ability == 0) return n;
         bool held = false;
         for (unsigned char d = 0; d < n; ++d)
@@ -508,9 +508,9 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     unsigned char* const member = PartyBattleE6(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned r = recipe & 0xFF;
-    const unsigned char* const row = move_script::At(::bof3::Img(at::kRecipeStats.v) + r * 14);
-    const unsigned char* const character = move_script::At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * at::kCharStride);
-    static_assert(at::kCharStride == sizeof(records::CharRecord));
+    const unsigned char* const row = move_script::At(::bof3::Img(battle_e6::at::kRecipeStats.v) + r * 14);
+    const unsigned char* const character = move_script::At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * battle_e6::at::kCharStride);
+    static_assert(battle_e6::at::kCharStride == sizeof(records::CharRecord));
     FirstStat(member, character,
               static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, static_cast<std::int32_t>(row[0]) * 10)));
     // RecipeStat's first store is the old value: the first stat left it at 0x939EE2 already
@@ -518,16 +518,16 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
         const auto v = static_cast<std::uint16_t>(Percent999(member_rec->base_atk, static_cast<std::int32_t>(row[1]) * 10));
         rv::Store<unsigned>(member_rec->base_atk, v);
         member_rec->atk = v;
-        move_script::SetWord(move_script::At(::bof3::Img(at::kStatDeltas.v) + 2), static_cast<std::uint16_t>(v - move_script::Word(move_script::At(::bof3::Img(at::kStatDeltas.v) + 2))));
+        move_script::SetWord(move_script::At(::bof3::Img(battle_e6::at::kStatDeltas.v) + 2), static_cast<std::uint16_t>(v - move_script::Word(move_script::At(::bof3::Img(battle_e6::at::kStatDeltas.v) + 2))));
     }
-    RecipeStat(member, 0xC6, row[2], ::bof3::Img(at::kStatDeltas.v) + 4);
-    RecipeStat(member, 0xC8, row[3], ::bof3::Img(at::kStatDeltas.v) + 6);
-    RecipeStat(member, 0xCA, row[4], ::bof3::Img(at::kStatDeltas.v) + 8);
-    for (unsigned i = 0; i < 9; ++i) MixByte(member, 0x4F + i, ::bof3::Img(at::kStatDeltas.v) + 0xA + i, row[5 + i]);
+    RecipeStat(member, 0xC6, row[2], ::bof3::Img(battle_e6::at::kStatDeltas.v) + 4);
+    RecipeStat(member, 0xC8, row[3], ::bof3::Img(battle_e6::at::kStatDeltas.v) + 6);
+    RecipeStat(member, 0xCA, row[4], ::bof3::Img(battle_e6::at::kStatDeltas.v) + 8);
+    for (unsigned i = 0; i < 9; ++i) MixByte(member, 0x4F + i, ::bof3::Img(battle_e6::at::kStatDeltas.v) + 0xA + i, row[5 + i]);
     unsigned char* const list = member + 0xF4;
     unsigned char n = 0;
     for (;;) {
-        const unsigned char ability = move_script::At(::bof3::Img(at::kRecipeAbilities.v))[n + r * 8];
+        const unsigned char ability = move_script::At(::bof3::Img(battle_e6::at::kRecipeAbilities.v))[n + r * 8];
         if (ability == 0) break;
         list[n] = ability;
         n = static_cast<unsigned char>(n + 1);
@@ -548,7 +548,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
     unsigned char found[3] = {};
     unsigned n = 0;
     for (unsigned m = 0; m < 3; ++m) {
-        if (B(::bof3::Img(at::kActor.v)) == m) continue;
+        if (B(::bof3::Img(battle_e6::at::kActor.v)) == m) continue;
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
         found[n++] = rv::As<records::PartyMember>(PartyBattleE6(m))->char_id;
     }
@@ -586,7 +586,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
 extern "C" unsigned char __cdecl DragonGenes_Held(unsigned gene) {
     const unsigned count = BattleE5_GeneCount;
     for (unsigned i = 0; i < count; ++i)
-        if (B(::bof3::Img(at::kGenes.v) + i) == static_cast<unsigned char>(gene)) return 1;
+        if (B(::bof3::Img(battle_e6::at::kGenes.v) + i) == static_cast<unsigned char>(gene)) return 1;
     return 0;
 }
 
@@ -598,7 +598,7 @@ extern "C" void __cdecl DragonGenes_SumCost(void) {
     unsigned char sum = 0;
     BattleActions_ApCost = 0;
     for (unsigned i = 0; i < count; ++i) {
-        sum = static_cast<unsigned char>(sum + move_script::At(::bof3::Img(at::kGeneCosts.v))[B(::bof3::Img(at::kGenes.v) + i)]);
+        sum = static_cast<unsigned char>(sum + move_script::At(::bof3::Img(battle_e6::at::kGeneCosts.v))[B(::bof3::Img(battle_e6::at::kGenes.v) + i)]);
         BattleActions_ApCost = sum;
     }
 }
@@ -642,17 +642,17 @@ extern "C" unsigned char __cdecl BattleFxDash_Rise(void) {
         rv::Store<U>(cur_task->height, static_cast<U>(z) + 0x1000000u);
     } else {
         unsigned side;
-        if (B(::bof3::Img(at::kTarget.v)) >= 3) {
-            side = B(::bof3::Img(at::kFormTable.v));
-            cur_task->x = static_cast<U>(S8(move_script::At(::bof3::Img(at::kDashSides.v))[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
-            side = B(::bof3::Img(at::kFormTable.v));
+        if (B(::bof3::Img(battle_e6::at::kTarget.v)) >= 3) {
+            side = B(::bof3::Img(battle_e6::at::kFormTable.v));
+            cur_task->x = static_cast<U>(S8(move_script::At(::bof3::Img(battle_e6::at::kDashSides.v))[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
+            side = B(::bof3::Img(battle_e6::at::kFormTable.v));
         } else {
             s[8] ^= 2;
-            side = B(::bof3::Img(at::kFormTable.v)) ^ 2u;
-            rv::Current<records::BattleTask>()->x = static_cast<U>(S8(move_script::At(::bof3::Img(at::kDashSides.v))[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
-            side = B(::bof3::Img(at::kFormTable.v)) ^ 2u;
+            side = B(::bof3::Img(battle_e6::at::kFormTable.v)) ^ 2u;
+            rv::Current<records::BattleTask>()->x = static_cast<U>(S8(move_script::At(::bof3::Img(battle_e6::at::kDashSides.v))[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X);
+            side = B(::bof3::Img(battle_e6::at::kFormTable.v)) ^ 2u;
         }
-        rv::Store<U>(rv::Current<records::BattleTask>()->z, static_cast<U>(S8(move_script::At(::bof3::Img(at::kDashSides.v))[side * 2 + 1])) + static_cast<std::uint32_t>(Field_Kind2Z));
+        rv::Store<U>(rv::Current<records::BattleTask>()->z, static_cast<U>(S8(move_script::At(::bof3::Img(battle_e6::at::kDashSides.v))[side * 2 + 1])) + static_cast<std::uint32_t>(Field_Kind2Z));
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x40));
         rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     }
@@ -669,7 +669,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 0x12);
     if (slot != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
+        unsigned char* const t = move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * battle_e6::at::kTaskStride);
         auto* const task_rec = rv::As<records::BattleTask>(t);
         for (U i = 0; i < 0x80; i += 4) SetL(t + i, LBattleE6(s + i));
         task_rec->flags &= 0xBF;
@@ -683,18 +683,18 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
         t[0xB] = s[0xB];
         if (s[0xB] != 0) s[0xB] = static_cast<unsigned char>(s[0xB] - 1);
     }
-    const unsigned target = B(::bof3::Img(at::kTarget.v));
+    const unsigned target = B(::bof3::Img(battle_e6::at::kTarget.v));
     int near;
     if (target <= 2) {
         BH_CALL(MagicFx_StepToward)(PartyBattleE6(target), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(at::kTarget.v))), 0x10000);
+        near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v))), 0x10000);
     } else {
         BH_CALL(MagicFx_StepToward)(Enemy(target - 3), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(Enemy(B(::bof3::Img(at::kTarget.v)) - 3u), 0x10000);
+        near = BH_CALL(MagicFx_NearSprite3D)(Enemy(B(::bof3::Img(battle_e6::at::kTarget.v)) - 3u), 0x10000);
     }
     if (near != 0) {
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x44));
-        BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(at::kTarget.v)));
+        BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(battle_e6::at::kTarget.v)));
         rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     }
     return BH_CALL(BattleObj_ScriptTickOnce)();
@@ -811,7 +811,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
     unsigned index;
     if ((actor & 0xFF) <= 2) {
         index = actor & 0xFF;
-        BH_CALL(Battle_RecalcMemberStats)(move_script::At(::bof3::Img(ObjTrio_addr) + 0x80 + index * at::kPartyStride), actor);
+        BH_CALL(Battle_RecalcMemberStats)(move_script::At(::bof3::Img(ObjTrio_addr) + 0x80 + index * battle_e6::at::kPartyStride), actor);
     } else {
         index = (actor - 3) & 0xFF;
         unsigned char* const e = Enemy(index);
@@ -897,12 +897,12 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     unsigned char* const r = PartyBattleE6(member);
     auto* const member_rec = rv::As<records::PartyMember>(r);
     if (!(r[0x130] & 1)) return 0;
-    if (r[0x124] != B(::bof3::Img(at::kActor.v))) return 0;
+    if (r[0x124] != B(::bof3::Img(battle_e6::at::kActor.v))) return 0;
     if (BH_CALL(Battle_ActionBitSet)(move_script::At(BattleSprites_Action)[2]) != 0) return 0;
     if (BH_CALL(Battle_MemberListFull)(member) != 0) return 0;
-    const U table = Character_IndexById[member_rec->char_id] == 6 ? ::bof3::Img(at::kRollOddsB.v) : ::bof3::Img(at::kRollOdds.v);
+    const U table = Character_IndexById[member_rec->char_id] == 6 ? ::bof3::Img(battle_e6::at::kRollOddsB.v) : ::bof3::Img(battle_e6::at::kRollOdds.v);
     const unsigned id = move_script::Word(move_script::At(BattleSprites_Action) + 2);
-    const unsigned nibble = move_script::At(::bof3::Img(at::kActionRows.v) + id * at::kActionRowStride)[0] >> 4;
+    const unsigned nibble = move_script::At(::bof3::Img(battle_e6::at::kActionRows.v) + id * battle_e6::at::kActionRowStride)[0] >> 4;
     const unsigned odds = move_script::At(table)[nibble];
     const int roll = BH_CALL(Rand)();
     if (odds == 0)
@@ -936,7 +936,7 @@ extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
 // = 1) with bit 3 and not bit 5; else 0.
 extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 1);
-    unsigned char* const t = move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
+    unsigned char* const t = move_script::At(::bof3::Img(BattleTask_Slots_addr) + slot * battle_e6::at::kTaskStride);
     auto* const task_rec = rv::As<records::BattleTask>(t);
     t[0xB] = 1;
     const unsigned who = actor & 0xFF;

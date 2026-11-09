@@ -80,8 +80,8 @@ void SetPtrAtBattleFlow(std::uint32_t address, const unsigned char* p) {
 // each re-read wherever the original re-reads it.
 unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
 unsigned char* CurrentTask() { return PtrAtBattleFlow(::bof3::Img(BattleFlow_TaskCurrent_addr)); }
-unsigned char* Task(unsigned index) { return battle_flow::At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskSize); }
-unsigned char* EnemyObject(unsigned index) { return battle_flow::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
+unsigned char* Task(unsigned index) { return battle_flow::At(::bof3::Img(BattleTask_Slots_addr) + index * battle_flow::at::kTaskSize); }
+unsigned char* EnemyObject(unsigned index) { return battle_flow::At(::bof3::Img(Battle_Enemies_addr) + index * battle_flow::at::kEnemySize); }
 
 // A float's bits for a primitive's corner: the original's fild of a sign-
 // extended 16-bit value, then fstp.
@@ -92,7 +92,7 @@ std::int32_t FloatOfShort(int v) { return std::bit_cast<std::int32_t>(static_cas
 // not checked (items use 0..3).
 unsigned ItemRow(unsigned id) {
     const unsigned w = id & 0xFFFF;
-    return PtrAtBattleFlow(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
+    return PtrAtBattleFlow(::bof3::Img(battle_flow::at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
 }
 
 // The magic file of a row: the u16 at the head of its 8-byte record; 0xFFFF
@@ -101,7 +101,7 @@ void LoadMagicRow(unsigned row) {
     const unsigned file = battle_flow::Word(battle_flow::At(::bof3::Img(Magic_Rows_addr) + row * 8));
     if (file == 0xFFFF) return;
     battle_flow::g.load_dat(static_cast<int>(file));
-    battle_flow::At(::bof3::Img(at::kLoadFlags.v))[0] = static_cast<unsigned char>(battle_flow::At(::bof3::Img(at::kLoadFlags.v))[0] | 4);
+    battle_flow::At(::bof3::Img(battle_flow::at::kLoadFlags.v))[0] = static_cast<unsigned char>(battle_flow::At(::bof3::Img(battle_flow::at::kLoadFlags.v))[0] | 4);
 }
 
 // The event hook 0x904B6C and the enemies' +0xF4 hooks.
@@ -152,7 +152,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch
 // later slot is seen the same frame. The kind is not checked: 4..255 would
 // call through the original's stack above the table; ours aborts.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(void) {
-    for (unsigned i = 0; i < at::kTaskCount; ++i) {
+    for (unsigned i = 0; i < battle_flow::at::kTaskCount; ++i) {
         unsigned char* const t = Task(i);
         auto* const task_rec = rv::As<records::BattleTask>(t);
         if (task_rec->flags == 0) continue;
@@ -173,7 +173,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(vo
 // As the original has it: kind and parameter are the arguments' low bytes;
 // the other bits of byte +0 are kept. The callers do not test for 0xFF.
 extern "C" unsigned char __cdecl BattleTask_Create(unsigned kind, unsigned parameter) {
-    for (unsigned i = 0; i < at::kTaskCount; ++i) {
+    for (unsigned i = 0; i < battle_flow::at::kTaskCount; ++i) {
         auto* const task_rec = rv::As<records::BattleTask>(Task(i));
         if ((task_rec->flags & 1) != 0) continue;
         task_rec->flags = static_cast<unsigned char>(task_rec->flags | 1);
@@ -194,7 +194,7 @@ extern "C" void __cdecl BattleTask_FreeCurrent(void) {
 // original 0x435260 (PSX 0x801E5978): the same eleven bytes of all 48 slots.
 extern "C" void __cdecl BattleTask_ClearAll(void) {
     static constexpr unsigned kBytes[] = {0, 5, 6, 1, 2, 3, 4, 0x48, 0x5D, 0x5E, 0x5F};
-    for (unsigned i = 0; i < at::kTaskCount; ++i)
+    for (unsigned i = 0; i < battle_flow::at::kTaskCount; ++i)
         for (const unsigned b : kBytes) Task(i)[b] = 0;
 }
 
@@ -215,7 +215,7 @@ extern "C" void __cdecl BattleTask_ClearAll(void) {
 // null). The event path re-reads 0x939AD8 after the hook; the other reads
 // the loop's own object.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(void) {
-    for (unsigned i = 0; i < at::kEnemyCount; ++i) {
+    for (unsigned i = 0; i < battle_flow::at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         if (enemy_rec->flags == 0) continue;
@@ -237,7 +237,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
 // frame, after BattleEnemy_RunAll. Each enemy object whose byte +0 is not
 // zero becomes Sprite_Current and 0x939AD8 and gets Sprite_UpdateScreen.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_UpdateScreenAll(void) {
-    for (unsigned i = 0; i < at::kEnemyCount; ++i) {
+    for (unsigned i = 0; i < battle_flow::at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         if (enemy_rec->flags == 0) continue;
@@ -299,8 +299,8 @@ extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
     const unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(e);
     if ((enemy_rec->status & 0x4064) != 0) return 0;
-    if (battle_flow::At(::bof3::Img(at::kTurnGate.v))[0] >= 3) return 0;
-    if (battle_flow::At(::bof3::Img(at::kFormation.v))[0] == 4 && battle_flow::Word(battle_flow::At(::bof3::Img(at::kMagicId.v))) == 0xA1) return 0;
+    if (battle_flow::At(::bof3::Img(battle_flow::at::kTurnGate.v))[0] >= 3) return 0;
+    if (battle_flow::At(::bof3::Img(battle_flow::at::kFormation.v))[0] == 4 && battle_flow::Word(battle_flow::At(::bof3::Img(battle_flow::at::kMagicId.v))) == 0xA1) return 0;
     if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 0;
     if ((e[0x90] & 2) == 0) return 0;
     if ((static_cast<std::int32_t>(enemy_rec->flags_110) & 0x8000) != 0) return 1;
@@ -342,8 +342,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated
     const auto left = static_cast<unsigned char>(Battle_EnemiesLeft - 1);
     Battle_EnemiesLeft = left;
     if (left == 0) Battle_EndFlags = static_cast<unsigned char>(Battle_EndFlags | 2);
-    if ((battle_flow::Long(battle_flow::At(::bof3::Img(at::kRoundFlags.v))) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
-        battle_flow::SetWord(battle_flow::At(::bof3::Img(at::kRoundFlags.v)), battle_flow::Word(battle_flow::At(::bof3::Img(at::kRoundFlags.v))) & 0xBFFF);
+    if ((battle_flow::Long(battle_flow::At(::bof3::Img(battle_flow::at::kRoundFlags.v))) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
+        battle_flow::SetWord(battle_flow::At(::bof3::Img(battle_flow::at::kRoundFlags.v)), battle_flow::Word(battle_flow::At(::bof3::Img(battle_flow::at::kRoundFlags.v))) & 0xBFFF);
     battle_flow::g.set_flag_bit(rv::As<records::BattleEnemy>(Enemy())->enemy_kind);
     battle_flow::g.release_tint(Sprite_Current);
     e = Enemy();
@@ -390,8 +390,8 @@ extern "C" void __cdecl Battle_RollDrops(void) {
         if (count != 0) {
             unsigned i = 0;
             do {
-                if (battle_flow::Word(battle_flow::At(::bof3::Img(at::kDropItems.v) + i * 2)) == battle_flow::Word(e + slot)) {
-                    battle_flow::At(::bof3::Img(at::kDropCounts.v))[i] = static_cast<unsigned char>(battle_flow::At(::bof3::Img(at::kDropCounts.v))[i] + 1);
+                if (battle_flow::Word(battle_flow::At(::bof3::Img(battle_flow::at::kDropItems.v) + i * 2)) == battle_flow::Word(e + slot)) {
+                    battle_flow::At(::bof3::Img(battle_flow::at::kDropCounts.v))[i] = static_cast<unsigned char>(battle_flow::At(::bof3::Img(battle_flow::at::kDropCounts.v))[i] + 1);
                     battle_flow::SetWord(e + slot, 0);
                     e = Enemy();
                     count = Battle_DropCount;
@@ -399,8 +399,8 @@ extern "C" void __cdecl Battle_RollDrops(void) {
                 i = (i + 1) & 0xFF;
             } while (i < count);
         }
-        battle_flow::SetWord(battle_flow::At(::bof3::Img(at::kDropItems.v) + count * 2), battle_flow::Word(e + slot));
-        battle_flow::At(::bof3::Img(at::kDropCounts.v))[Battle_DropCount] = 1;
+        battle_flow::SetWord(battle_flow::At(::bof3::Img(battle_flow::at::kDropItems.v) + count * 2), battle_flow::Word(e + slot));
+        battle_flow::At(::bof3::Img(battle_flow::at::kDropCounts.v))[Battle_DropCount] = 1;
         const unsigned char entries = Battle_DropCount;
         if (entries < 0xF) Battle_DropCount = static_cast<unsigned char>(entries + 1);
         battle_flow::SetWord(e + slot, 0);
@@ -420,7 +420,7 @@ extern "C" void __cdecl Battle_RollDrops(void) {
 // slot taken) writes `owner` 0x80 bytes into the 256th slot's place,
 // 0x9423FC, past the array.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_StartItemMagic(unsigned id, unsigned owner) {
-    battle_flow::SetWord(battle_flow::At(::bof3::Img(at::kMagicId.v)), id);
+    battle_flow::SetWord(battle_flow::At(::bof3::Img(battle_flow::at::kMagicId.v)), id);
     const unsigned index = battle_flow::g.task_create(2, ItemRow(id)) & 0xFF;
     rv::As<records::BattleTask>(Task(index))->owner = static_cast<std::int32_t>(owner);
 }
@@ -504,14 +504,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_RollingDigi
 // 16 bits, the pen as 32 bits; the tpage call's texture window 0 is a push
 // left under it.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawNumber(int x, int y, unsigned clut, unsigned value) {
-    battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(::bof3::Img(at::kNumberFormat.v))),
+    battle_flow::g.crt_sprintf(reinterpret_cast<char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v))), reinterpret_cast<const char*>(battle_flow::At(::bof3::Img(battle_flow::at::kNumberFormat.v))),
               value & 0xFFFF);
     const unsigned tpage = battle_flow::g.get_tpage(0, 0, 0x3C0, 0) & 0xFFFF;
     battle_flow::g.draw_mode(Gfx_PacketNext, 0, 0, tpage, 0);
     battle_flow::g.commit(1, 0xC);
     unsigned i = 0;
     int pen = x;
-    unsigned char* c = battle_flow::At(::bof3::Img(at::kNumberText.v));
+    unsigned char* c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v));
     do {
         if (c[0] != ' ') {
             unsigned char* const p = Gfx_PacketNext;
@@ -533,7 +533,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawNumber(in
         }
         pen += 8;
         i = (i + 1) & 0xFF;
-        c = battle_flow::At(::bof3::Img(at::kNumberText.v) + i);
+        c = battle_flow::At(::bof3::Img(battle_flow::at::kNumberText.v) + i);
     } while (c[0] != 0);
 }
 
@@ -574,7 +574,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawLabel(int
 extern "C" unsigned char __cdecl Battle_ActorIsOut(unsigned actor) {
     const unsigned a = actor & 0xFF;
     if (a < 3) {
-        const unsigned char* const m = battle_flow::At(::bof3::Img(ObjTrio_addr) + a * at::kMemberSize);
+        const unsigned char* const m = battle_flow::At(::bof3::Img(ObjTrio_addr) + a * battle_flow::at::kMemberSize);
         auto* const member = rv::AsConst<records::PartyMember>(m);
         if ((member->flags & 1) == 0) return 1;
         return (m[0x91] & 0x40) != 0 ? 1 : 0;

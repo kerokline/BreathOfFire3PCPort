@@ -437,7 +437,7 @@ extern "C" void __cdecl Boss55_Setup(void) {
 // (the end phase's step 3), then Music_Track = 0xFF.
 extern "C" void __cdecl Boss55_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther.v)();
+        BH_AT(Handler, boss_sj::at::kEndOther.v)();
         return;
     }
     PoseParty();

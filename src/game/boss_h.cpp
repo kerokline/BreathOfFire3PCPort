@@ -102,10 +102,10 @@ extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 extern "C" void __cdecl BossHook_EndPickWay(void) {
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 5;
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_h::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther.v)();
+    BH_AT(Handler, boss_h::at::kEndOther.v)();
 }
 
 // original 0x43A4A0: the exit hook (0x904B68) of set-ups 14, 28, 29:
@@ -119,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (rv::Bytes(ObjTrio)[0x124] == 4) B(::bof3::Img(at::kTarget.v)) = 5;
+    if (rv::Bytes(ObjTrio)[0x124] == 4) B(::bof3::Img(boss_h::at::kTarget.v)) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------

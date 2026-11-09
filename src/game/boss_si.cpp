@@ -131,10 +131,10 @@ void SetupOwnEnd(U end) { SetupBossSi(end, ::bof3::Code(bof3::addr::BareRet), ::
 void EndStepBossSi(unsigned step) {
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(step);
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_si::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther.v)();
+    BH_AT(Handler, boss_si::at::kEndOther.v)();
 }
 
 }  // namespace

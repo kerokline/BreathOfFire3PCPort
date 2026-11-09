@@ -734,7 +734,7 @@ extern "C" void __cdecl Gfx_ClutStripRestore(void) {
 // zeroed, then 16 dwords from 0x7E06A0 set to -1.
 extern "C" void __cdecl MoveScript_TintReset(void) {
     for (unsigned i = 0; i < 32; ++i) MoveScript_TintRecords[i * 12] = 0;
-    for (unsigned i = 0; i < 16; ++i) mode_flow::SetLong(mode_flow::At(::bof3::Img(at::kTintMarks) + i * 4), -1);
+    for (unsigned i = 0; i < 16; ++i) mode_flow::SetLong(mode_flow::At(::bof3::Img(mode_flow::at::kTintMarks) + i * 4), -1);
 }
 
 // original 0x454A50 (PSX 0x8014E378): the Field_Slots record `slot` (its low

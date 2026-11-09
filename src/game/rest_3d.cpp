@@ -58,8 +58,8 @@ S32Rest3d S16Rest3d(U v) { return static_cast<std::int16_t>(static_cast<std::uin
 // 32 bits, unbounded either way (an index past the records reads or writes
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
-U PartyAt(U actor) { return ::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride; }
-U EnemyAt(U actor) { return ::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
+U PartyAt(U actor) { return ::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * rest_3d::at::kPartyStride; }
+U EnemyAt(U actor) { return ::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * rest_3d::at::kEnemyStride; }
 unsigned char* PartyRest3d(U actor) { return move_script::At(PartyAt(actor)); }
 unsigned char* EnemyRest3d(U actor) { return move_script::At(EnemyAt(actor)); }
 
@@ -67,7 +67,7 @@ unsigned char* EnemyRest3d(U actor) { return move_script::At(EnemyAt(actor)); }
 // ObjTrio's three the original writes on into WindowRecords; ours aborts, as
 // R3C's restat loops do (docs/rest_3d.md section 7).
 unsigned PartySizeForWrite(const char* who) {
-    const unsigned n = B(::bof3::Img(at::kPartySize.v));
+    const unsigned n = B(::bof3::Img(rest_3d::at::kPartySize.v));
     if (n > 3)
         bof3::Fatal("%s: the party size 0x904AB0 is %u, past ObjTrio's three members - the original writes on into "
                     "WindowRecords (docs/rest_3d.md section 7)",
@@ -84,9 +84,9 @@ void OrLong(unsigned char* p, U bits) { move_script::SetLong(p, static_cast<S32R
 void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) & bits)); }
 
 unsigned char* Result() { return At(BattleDamage_Result); }
-unsigned Actor() { return B(::bof3::Img(at::kActor.v)); }
-unsigned Target() { return B(::bof3::Img(at::kTarget.v)); }
-U Ability() { return L(::bof3::Img(at::kAbility.v)) & 0xFFFF; }
+unsigned Actor() { return B(::bof3::Img(rest_3d::at::kActor.v)); }
+unsigned Target() { return B(::bof3::Img(rest_3d::at::kTarget.v)); }
+U Ability() { return L(::bof3::Img(rest_3d::at::kAbility.v)) & 0xFFFF; }
 // NameTable_Abilities (24 bytes an ability): +3 the s8 stat step, +4 the word
 // whose low nine bits are the status / element mask.
 U AbilityMask() { return W(::bof3::Img(bof3::addr::NameTable_Abilities) + 4 + Ability() * 24) & 0x1FF; }
@@ -157,7 +157,7 @@ extern "C" int __cdecl Battle_StatusResistRate(unsigned actor, unsigned mask) {
 extern "C" int __cdecl Battle_StatusResistRate20(unsigned actor, unsigned mask) {
     if ((mask & 0x20) == 0) return 0;
     const unsigned char c = IsMember(actor) ? PartyRest3d(actor)[0xB4] : EnemyRest3d(actor)[0xC4];
-    return S16Rest3d(W(::bof3::Img(at::kResistRates20.v) + 2u * c));
+    return S16Rest3d(W(::bof3::Img(rest_3d::at::kResistRates20.v) + 2u * c));
 }
 
 // original 0x44F6A0: the status roll for the acting ability: Roll with the
@@ -250,12 +250,12 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 // `target` is handed on whole, as the original pushes it.
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
-    const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
+    const U offset = member ? (target & 0xFF) * rest_3d::at::kPartyStride : ((target & 0xFF) - 3u) * rest_3d::at::kEnemyStride;
     const U record = (member ? ::bof3::Img(ObjTrio_addr) : ::bof3::Img(Battle_Enemies_addr)) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;
-    auto mark = [](unsigned char bit) { B(::bof3::Img(at::kNewStatus.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kNewStatus.v)) | bit); };
+    auto mark = [](unsigned char bit) { B(::bof3::Img(rest_3d::at::kNewStatus.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3d::at::kNewStatus.v)) | bit); };
     if ((s & 0x80) && !(cur & 0x80)) mark(0x80);
     if ((s & 1) && !(cur & 1)) mark(1);
     if ((s & 2) && !(cur & 2)) mark(2);
@@ -273,7 +273,7 @@ extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
         if (lacks && !(cur & 0x64) && !(cur & 0x800)) {
             mark(0x20);
             BH_CALL(Battle_ReturnQueuedItem)(target);
-            B(::bof3::Img(at::kActorTaskByte.v) + (target & 0xFF) * at::kActorTaskStride) = 0;
+            B(::bof3::Img(rest_3d::at::kActorTaskByte.v) + (target & 0xFF) * rest_3d::at::kActorTaskStride) = 0;
             if (member) {
                 unsigned char* const p = PartyRest3d(target);
                 p[0x125] = 0;
@@ -301,12 +301,12 @@ extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     }
     if ((status & 0x800) && !(cur & 0x800)) {
         BH_CALL(Battle_ClearStatus)(target, 0x7E);
-        B(::bof3::Img(at::kNewStatusHi.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kNewStatusHi.v)) | 8);
+        B(::bof3::Img(rest_3d::at::kNewStatusHi.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3d::at::kNewStatusHi.v)) | 8);
         BH_CALL(Battle_ReturnQueuedItem)(target);
         BH_CALL(Battle_RemoveFromTurnOrder)(target);
     }
     BH_CALL(Sprite_ReleaseTint)(At(record));
-    SetWord(At(word_at), W(word_at) | W(::bof3::Img(at::kNewStatus.v)));
+    SetWord(At(word_at), W(word_at) | W(::bof3::Img(rest_3d::at::kNewStatus.v)));
     BH_CALL(Battle_StatusTint)((offset & 0xFFFF0000u) | W(word_at));
 }
 
@@ -320,7 +320,7 @@ extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
 // damage pop-up's flag; an enemy's +0x110 and +0x10C).
 extern "C" void __cdecl Effect_NoHitReaction(void) {
     const unsigned t = Target();
-    B(::bof3::Img(at::kRoundFlagsHi.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlagsHi.v)) | 0x20);
+    B(::bof3::Img(rest_3d::at::kRoundFlagsHi.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_3d::at::kRoundFlagsHi.v)) | 0x20);
     if (IsMember(t)) {
         unsigned char* const p = PartyRest3d(t);
         OrLong(p + 0x130, 0x200);
@@ -401,7 +401,7 @@ extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
     S32Rest3d affinity = 100;
     if (mask & 0x1F) affinity = S16Rest3d(static_cast<U>(BH_CALL(Battle_ElementAffinity)(Target(), mask)));
     const U roll = static_cast<U>(BH_CALL(Rand)()) & 7;
-    const S32Rest3d variance = S16Rest3d(W(::bof3::Img(at::kHpVariance.v) + 2 * roll));
+    const S32Rest3d variance = S16Rest3d(W(::bof3::Img(rest_3d::at::kHpVariance.v) + 2 * roll));
     if (divisor == 0)
         bof3::Fatal("Effect_HpBasedDamage: a divisor of 0 - the original's idiv faults (docs/rest_3d.md section 7)");
     const S32Rest3d quotient = static_cast<S32Rest3d>(hp) / divisor;
@@ -491,17 +491,17 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     if (!IsMember(t)) return;
     {
         unsigned char* const p = PartyRest3d(t);
-        unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
+        unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * rest_3d::at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
             p[0x9E] = static_cast<unsigned char>(p[0x9E] + 1);
         }
-        BH_CALL(Char_RecalcStats)(At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride));
+        BH_CALL(Char_RecalcStats)(At(::bof3::Img(CharacterRecords_addr) + p[0x148] * rest_3d::at::kCharacterStride));
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = PartyRest3d(m);
-        const unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
+        const unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * rest_3d::at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }
@@ -512,12 +512,12 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
         for (unsigned i = 0; i < 0x20; ++i) p[0xA0 + i] = p[0xC0 + i];
     }
     BH_CALL(BattleForm_ApplyStats)();
-    if (B(::bof3::Img(at::kPartySize.v)) != 0) {
+    if (B(::bof3::Img(rest_3d::at::kPartySize.v)) != 0) {
         unsigned m = 0;
         do {
             BH_CALL(Battle_RecalcStats)(m);
             m = (m + 1) & 0xFF;
-        } while (m < B(::bof3::Img(at::kPartySize.v)));
+        } while (m < B(::bof3::Img(rest_3d::at::kPartySize.v)));
     }
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0u - rv::As<records::PartyMember>(PartyRest3d(Target()))->max_hp);
 }
@@ -540,7 +540,7 @@ extern "C" void __cdecl Effect120_TargetFlag800(void) {
         Result()[8] = 1;
         BH_CALL(Battle_SetDamagePopup)(0, Target());
     } else {
-        const U t = L(::bof3::Img(at::kTarget.v));
+        const U t = L(::bof3::Img(rest_3d::at::kTarget.v));
         OrLong(Flags2(t), 0x800);
         BH_CALL(Battle_RecalcStats)(t);
     }
@@ -572,9 +572,9 @@ extern "C" void __cdecl Effect122_InflictThree(void) {
 // original 0x44EA70 (slot 123): the acting kind 4 and the ability 0x6A, then a
 // tail jump to R3C's 0x44D8B0.
 extern "C" void __cdecl Effect123_Ability6A(void) {
-    B(::bof3::Img(at::kActingKind.v)) = 4;
-    SetWord(At(::bof3::Img(at::kAbility.v)), 0x6A);
-    BH_AT(Void0, at::kAbility6AHelper.v)();
+    B(::bof3::Img(rest_3d::at::kActingKind.v)) = 4;
+    SetWord(At(::bof3::Img(rest_3d::at::kAbility.v)), 0x6A);
+    BH_AT(Void0, rest_3d::at::kAbility6AHelper.v)();
 }
 
 // original 0x44EA90 (slot 124): HpLessDefence(2).
@@ -592,8 +592,8 @@ extern "C" void __cdecl Effect125_Inflict8Roll80(void) {
 // original 0x44EB50 (slot 126; group BE5's doc called it slot 124): the acting
 // kind 4 and the ability 0x4E, then a tail jump to Effect_DrainAp.
 extern "C" void __cdecl Effect126_Ability4EDrainAp(void) {
-    B(::bof3::Img(at::kActingKind.v)) = 4;
-    SetWord(At(::bof3::Img(at::kAbility.v)), 0x4E);
+    B(::bof3::Img(rest_3d::at::kActingKind.v)) = 4;
+    SetWord(At(::bof3::Img(rest_3d::at::kAbility.v)), 0x4E);
     BH_CALL(Effect_DrainAp)();
 }
 

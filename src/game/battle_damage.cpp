@@ -92,8 +92,8 @@ using move_script::Word;
 
 // An actor byte: 0..2 the party, 3 and up the enemies. Both address the
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
-unsigned char* Party(unsigned actor) { return move_script::At(::bof3::Img(ObjTrio_addr) + 0x10 + (actor & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + 0x80 + ((actor & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* Party(unsigned actor) { return move_script::At(::bof3::Img(ObjTrio_addr) + 0x10 + (actor & 0xFF) * battle_damage::at::kPartyStride); }
+unsigned char* Enemy(unsigned actor) { return move_script::At(::bof3::Img(Battle_Enemies_addr) + 0x80 + ((actor & 0xFF) - 3) * battle_damage::at::kEnemyStride); }
 // Party(a) is +0x10 into the member record (0x802D50), Enemy(a) +0x80 into the
 // enemy object (0x93B9E0): their typed views start at the records'
 // starts, rv::As<records::PartyMember>(Party(a) - 0x10) and
@@ -138,7 +138,7 @@ bool Gated(const unsigned char* flags2) { return BattlePhases_B7A != 0 && (move_
 // 99, 99), so 4 and 5 never come back and a level of 99 is class 6. Both
 // arguments' low bytes; the row is not bounded.
 extern "C" unsigned char __cdecl Battle_LevelClass(unsigned level, unsigned row) {
-    const unsigned char* const thresholds = move_script::At(::bof3::Img(at::kLevelRows.v) + (row & 0xFF) * 6);
+    const unsigned char* const thresholds = move_script::At(::bof3::Img(battle_damage::at::kLevelRows.v) + (row & 0xFF) * 6);
     for (unsigned i = 0; i < 6; ++i)
         if ((level & 0xFF) < thresholds[i]) return static_cast<unsigned char>(i);
     return 6;
@@ -155,7 +155,7 @@ extern "C" unsigned char __cdecl Battle_ActorCanAct(unsigned actor) {
         auto* const pr = rv::AsConst<records::PartyMember>(p - 0x10);
         if ((pr->flags & 1) == 0) return 0;
         if (pr->status & 0x4944) return 0;
-        if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
+        if (BattleFlow_AnimGate != 0 && (p[battle_damage::at::kPFlags2] & 0x10) == 0) return 0;
         const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
     }
@@ -163,7 +163,7 @@ extern "C" unsigned char __cdecl Battle_ActorCanAct(unsigned actor) {
     auto* const er = rv::AsConst<records::BattleEnemy>(e - 0x80);
     if ((er->flags & 1) == 0) return 0;
     if (er->status & 0x4144) return 0;
-    if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
+    if (BattleFlow_AnimGate != 0 && (e[battle_damage::at::kEFlags2] & 0x10) == 0) return 0;
     const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
 }
@@ -178,7 +178,7 @@ extern "C" unsigned char __cdecl Battle_ActorCanCommand(unsigned actor) {
         auto* const pr = rv::AsConst<records::PartyMember>(p - 0x10);
         if ((pr->flags & 1) == 0) return 0;
         if (pr->status & 0x4964) return 0;
-        if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
+        if (BattleFlow_AnimGate != 0 && (p[battle_damage::at::kPFlags2] & 0x10) == 0) return 0;
         if (static_cast<std::int32_t>(pr->flags_134) & 0x14001) return 0;
         const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
@@ -187,7 +187,7 @@ extern "C" unsigned char __cdecl Battle_ActorCanCommand(unsigned actor) {
     auto* const er = rv::AsConst<records::BattleEnemy>(e - 0x80);
     if ((er->flags & 1) == 0) return 0;
     if (er->status & 0x4164) return 0;
-    if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
+    if (BattleFlow_AnimGate != 0 && (e[battle_damage::at::kEFlags2] & 0x10) == 0) return 0;
     if (static_cast<std::int32_t>(er->flags_114) & 0x4000) return 0;
     const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
@@ -204,7 +204,7 @@ extern "C" unsigned char __cdecl Battle_ActorCanCommand(unsigned actor) {
 // PSX computes and drops the same); the calls are kept, the arithmetic is not.
 extern "C" void __cdecl Battle_BuildEntryOrder() {
     for (unsigned a = 3; a <= 10; ++a) {
-        if (Gated(Enemy(a) + at::kEFlags2)) continue;
+        if (Gated(Enemy(a) + battle_damage::at::kEFlags2)) continue;
         battle_damage::g.can_act(a);
     }
     unsigned char list[3 * 4];
@@ -212,7 +212,7 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
     for (unsigned a = 0; a <= 2; ++a) {
         const unsigned char* const p = Party(a);
         auto* const pr = rv::AsConst<records::PartyMember>(p - 0x10);
-        if (Gated(p + at::kPFlags2)) continue;
+        if (Gated(p + battle_damage::at::kPFlags2)) continue;
         if (!battle_damage::g.can_command(a)) continue;
         move_script::SetWord(list + 4 * n, pr->agi);
         move_script::SetWord(list + 4 * n + 2, a);
@@ -220,13 +220,13 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
     }
     SortDescending(list, n);
     BattleActorCopies_EntryCount = 0;
-    move_script::SetWord(move_script::At(::bof3::Img(at::kEntryOrder.v)), 0xFFFF);
-    move_script::At(::bof3::Img(at::kEntryOrder.v) + 2)[0] = 0xFF;
+    move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v)), 0xFFFF);
+    move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + 2)[0] = 0xFF;
     for (unsigned k = 0; k < n; ++k) {
         const unsigned char actor = list[4 * k + 2];
         if (!battle_damage::g.can_command(actor)) continue;
         const int index = BattleActorCopies_EntryCount;
-        move_script::At(::bof3::Img(at::kEntryOrder.v) + index)[0] = actor;
+        move_script::At(::bof3::Img(battle_damage::at::kEntryOrder.v) + index)[0] = actor;
         BattleActorCopies_EntryCount = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     }
 }
@@ -251,27 +251,27 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
 // defects).
 extern "C" void __cdecl Battle_BuildTurnOrder() {
     for (unsigned a = 0; a <= 2; ++a) {
-        if (Gated(Party(a) + at::kPFlags2)) continue;
+        if (Gated(Party(a) + battle_damage::at::kPFlags2)) continue;
         battle_damage::g.can_act(a);
     }
     unsigned n = 0;
     for (unsigned a = 0; a <= 2; ++a) {
         unsigned char* const p = Party(a);
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
-        if (Gated(p + at::kPFlags2)) continue;
+        if (Gated(p + battle_damage::at::kPFlags2)) continue;
         if (!battle_damage::g.can_act(a)) continue;
-        unsigned char* const slot = move_script::At(::bof3::Img(at::kTurnWork.v) + 4 * n);
-        const unsigned char command = p[at::kPCommand];
+        unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
+        const unsigned char command = p[battle_damage::at::kPCommand];
         move_script::SetWord(slot + 2, a);
         move_script::SetWord(slot, 0);
         if (command == 4) {
-            const unsigned kind = move_script::At(::bof3::Img(bof3::addr::NameTable_Abilities) + pr->queued_id * at::kAbilityStride)[1];
+            const unsigned kind = move_script::At(::bof3::Img(bof3::addr::NameTable_Abilities) + pr->queued_id * battle_damage::at::kAbilityStride)[1];
             if (kind == 0) move_script::SetWord(slot, 4);
             else if (kind == 1 || kind == 3) move_script::SetWord(slot, 2);
         }
         if (command == 5) move_script::SetWord(slot, 1);
         const unsigned level_class = battle_damage::g.level_class(pr->level, 1);
-        const unsigned percent = move_script::Word(move_script::At(::bof3::Img(at::kTurnPercent.v) + 2 * level_class));
+        const unsigned percent = move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kTurnPercent.v) + 2 * level_class));
         const int product = S16(percent * move_script::Word(slot));
         move_script::SetWord(slot, static_cast<unsigned>(product / 100) + pr->agi);
         ++n;
@@ -279,23 +279,23 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
     for (unsigned a = 3; a <= 10; ++a) {
         const unsigned char* const e = Enemy(a);
         auto* const er = rv::AsConst<records::BattleEnemy>(e - 0x80);
-        if (Gated(e + at::kEFlags2)) continue;
+        if (Gated(e + battle_damage::at::kEFlags2)) continue;
         if (!battle_damage::g.can_act(a)) continue;
-        unsigned char* const slot = move_script::At(::bof3::Img(at::kTurnWork.v) + 4 * n);
-        const unsigned level_class = battle_damage::g.level_class(e[at::kELevel], 0);
+        unsigned char* const slot = move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * n);
+        const unsigned level_class = battle_damage::g.level_class(e[battle_damage::at::kELevel], 0);
         const unsigned roll = static_cast<unsigned>(battle_damage::g.rand()) & 0xF;
-        const int jitter = static_cast<signed char>(Byte(::bof3::Img(at::kTurnJitter.v) + 16 * level_class + roll));
+        const int jitter = static_cast<signed char>(Byte(::bof3::Img(battle_damage::at::kTurnJitter.v) + 16 * level_class + roll));
         move_script::SetWord(slot, static_cast<unsigned>(jitter) + er->agi);
         move_script::SetWord(slot + 2, a);
         ++n;
     }
     BattleDamage_TurnCount = static_cast<unsigned char>(n);
-    SortDescending(move_script::At(::bof3::Img(at::kTurnWork.v)), n);
-    move_script::SetLong(move_script::At(::bof3::Img(at::kTurnOrder.v)), -1);
-    move_script::SetLong(move_script::At(::bof3::Img(at::kTurnOrder.v) + 4), -1);
-    move_script::SetWord(move_script::At(::bof3::Img(at::kTurnOrder.v) + 8), 0xFFFF);
-    move_script::At(::bof3::Img(at::kTurnOrder.v) + 10)[0] = 0xFF;
-    for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(at::kTurnWork.v) + 4 * k + 2);
+    SortDescending(move_script::At(::bof3::Img(battle_damage::at::kTurnWork.v)), n);
+    move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v)), -1);
+    move_script::SetLong(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 4), -1);
+    move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 8), 0xFFFF);
+    move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + 10)[0] = 0xFF;
+    for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = Byte(::bof3::Img(battle_damage::at::kTurnWork.v) + 4 * k + 2);
     BossSe_RoundSlot = 0;
 }
 
@@ -306,11 +306,11 @@ extern "C" void __cdecl Battle_ClearCommands() {
     for (unsigned a = 0; a < 3; ++a) {
         unsigned char* const p = Party(a);
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
-        p[at::kPCommand] = 0;
+        p[battle_damage::at::kPCommand] = 0;
         pr->flags_130 = 0;
     }
     for (unsigned a = 3; a < 11; ++a) {
-        auto* const er = rv::As<records::BattleEnemy>(Enemy(a) + at::kEObject);
+        auto* const er = rv::As<records::BattleEnemy>(Enemy(a) + battle_damage::at::kEObject);
         er->command_kind = 0;
         er->flags_110 = 0;
     }
@@ -349,16 +349,16 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
     if (b <= 2) {
         unsigned char* const p = Party(actor);
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
-        p[at::kPCommand] = 0;
+        p[battle_damage::at::kPCommand] = 0;
         pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) & ~2u);
         pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~4u);
     } else {
-        auto* const er = rv::As<records::BattleEnemy>(Enemy(actor) + at::kEObject);
+        auto* const er = rv::As<records::BattleEnemy>(Enemy(actor) + battle_damage::at::kEObject);
         er->command_kind = 0;
         er->flags_110 = S32(U32(static_cast<std::int32_t>(er->flags_110)) & ~2u);
     }
     for (unsigned k = 0; k < BattleDamage_TurnCount; ++k)
-        if (Byte(::bof3::Img(at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(at::kTurnOrder.v) + k)[0] = 0xFF;
+        if (Byte(::bof3::Img(battle_damage::at::kTurnOrder.v) + k) == b) move_script::At(::bof3::Img(battle_damage::at::kTurnOrder.v) + k)[0] = 0xFF;
 }
 
 // ===========================================================================
@@ -390,7 +390,7 @@ extern "C" int __cdecl Battle_ScaleDamage(unsigned attacker, unsigned target, in
         scratch = SharedScratch.w_00;
     }
     if (scratch & 0x20) {
-        const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject)->holy;
+        const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + battle_damage::at::kEObject)->holy;
         v = Mul(S16(move_script::Word(move_script::At(::bof3::Img(bof3::addr::Battle_HolyAffinityTable) + 2 * holy))), v) / 100;
     }
     if ((v & 0xFF) >= 0x80) v = S32(U32(v) + 0x100);
@@ -414,18 +414,18 @@ extern "C" int __cdecl Battle_BaseDamage(unsigned attacker, unsigned target, uns
     std::int32_t v;
     if (a <= 2 || (target & 0xFF) > 2) {
         const std::int32_t def = plain ? 0 : BattleDamage_TargetDef;
-        v = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(at::kAttackerAtk.v)))) & 0xFFFF) - def;
+        v = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
         if (v < 0) v = 0;
     } else {
         const std::int32_t def = plain ? 0 : static_cast<std::int32_t>(U32(battle_damage::g.party_def()) & 0xFFFF);
-        std::int32_t x = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(at::kAttackerAtk.v)))) & 0xFFFF) - def;
+        std::int32_t x = static_cast<std::int32_t>(U32(move_script::Long(move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v)))) & 0xFFFF) - def;
         if (x < 0) x = 0;
         unsigned char index = static_cast<unsigned char>(x / -5);
         if (x > -5) index = 0;
         if (x < -0x33) index = 8;
         const std::int32_t factor = battle_damage::g.rand() % 2 + 2;
-        const std::int32_t numerator = S32(U32(Mul(factor, rv::As<records::BattleEnemy>(Enemy(attacker) + at::kEObject)->level)) << 16);
-        const std::int32_t divisor = static_cast<std::int32_t>(Byte(::bof3::Img(at::kBonusDivisor.v) + index)) << 8;
+        const std::int32_t numerator = S32(U32(Mul(factor, rv::As<records::BattleEnemy>(Enemy(attacker) + battle_damage::at::kEObject)->level)) << 16);
+        const std::int32_t divisor = static_cast<std::int32_t>(Byte(::bof3::Img(battle_damage::at::kBonusDivisor.v) + index)) << 8;
         if (divisor == 0) bof3::Fatal("Battle_BaseDamage: a zero divisor, where the original divides by zero");
         v = S32(U32(numerator / divisor) + (U32(x) << 8)) >> 8;
     }
@@ -470,18 +470,18 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     if ((element & 0xFFFF) == 0xFFFF) {
         if (a <= 2) {
             const unsigned weapon = rv::As<records::PartyMember>(Party(a) - 0x10)->weapon;
-            move_script::SetWord(scratch, Byte(::bof3::Img(bof3::addr::NameTable_Weapons) + weapon * at::kWeaponStride + at::kWeaponElement));
+            move_script::SetWord(scratch, Byte(::bof3::Img(bof3::addr::NameTable_Weapons) + weapon * battle_damage::at::kWeaponStride + battle_damage::at::kWeaponElement));
         } else {
             move_script::SetWord(scratch, 0);
         }
     } else {
         move_script::SetWord(scratch, element);
     }
-    unsigned char* const atk = move_script::At(::bof3::Img(at::kAttackerAtk.v));
+    unsigned char* const atk = move_script::At(::bof3::Img(battle_damage::at::kAttackerAtk.v));
     if (a <= 2) {
         unsigned char* const p = Party(a);
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
-        if (p[at::kPFlags2] & 0x40) {
+        if (p[battle_damage::at::kPFlags2] & 0x40) {
             const std::int32_t add = static_cast<std::int32_t>(pr->count_40 * (U32(move_script::Long(atk)) & 0xFFFF)) >> 1;
             move_script::SetWord(atk, move_script::Word(atk) + U32(add));
             pr->count_40 = 0;
@@ -490,7 +490,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     } else {
         unsigned char* const e = Enemy(a);
         auto* const er = rv::As<records::BattleEnemy>(e - 0x80);
-        if (e[at::kEFlags2] & 0x40) {
+        if (e[battle_damage::at::kEFlags2] & 0x40) {
             const std::int32_t set = static_cast<std::int32_t>(er->count_40 * (U32(move_script::Long(atk)) & 0xFFFF)) >> 1;
             move_script::SetWord(atk, U32(set));
             er->count_40 = 0;
@@ -500,39 +500,39 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     std::int32_t v = battle_damage::g.base_damage(attacker, target, 0);
     if (a <= 2 && t >= 3) {
         const unsigned char weapon = rv::As<records::PartyMember>(Party(a) - 0x10)->weapon;
-        if ((weapon == 0x13 || weapon == 0x17 || weapon == 0x33) && rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->family == 4) v = S32(U32(v) * 2);
-        if ((weapon == 0x16 || weapon == 0x35 || weapon == 0x40) && rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->family == 1) v = S32(U32(v) * 2);
+        if ((weapon == 0x13 || weapon == 0x17 || weapon == 0x33) && rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->family == 4) v = S32(U32(v) * 2);
+        if ((weapon == 0x16 || weapon == 0x35 || weapon == 0x40) && rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->family == 1) v = S32(U32(v) * 2);
     }
     unsigned char status, flags;
     if (t <= 2) {
-        status = Party(t)[at::kPStatus];
-        flags = Party(t)[at::kPFlags];
+        status = Party(t)[battle_damage::at::kPStatus];
+        flags = Party(t)[battle_damage::at::kPFlags];
     } else {
-        status = Enemy(t)[at::kEStatus];
-        flags = Enemy(t)[at::kEFlags];
+        status = Enemy(t)[battle_damage::at::kEStatus];
+        flags = Enemy(t)[battle_damage::at::kEFlags];
     }
     if ((status & 0x64) == 0) {
         v = t <= 2 ? battle_damage::g.hit_party(v, attacker, target) : battle_damage::g.hit_enemy(v, attacker, target);
     } else {
         if (status & 0x40) {
-            move_script::At(::bof3::Img(at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(at::kCuredBits.v)) | 0x40);
+            move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))[0] = static_cast<unsigned char>(Byte(::bof3::Img(battle_damage::at::kCuredBits.v)) | 0x40);
             if (t <= 2) {
                 battle_damage::g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->actor, 0x40);
-                Party(t)[at::kPShown2] = 0;
+                Party(t)[battle_damage::at::kPShown2] = 0;
             } else {
-                battle_damage::g.cure(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->actor, 0x40);
-                rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->counter = 0;
+                battle_damage::g.cure(rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->actor, 0x40);
+                rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->counter = 0;
             }
             if ((U32(v) & 0xFFFF) == 0) v = 1;
         }
         if (status & 0x20) {
-            move_script::SetWord(move_script::At(::bof3::Img(at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(at::kCuredBits.v))) | 0x20);
+            move_script::SetWord(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v)), move_script::Word(move_script::At(::bof3::Img(battle_damage::at::kCuredBits.v))) | 0x20);
             if (t <= 2) {
                 battle_damage::g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->actor, 0x20);
-                Party(t)[at::kPShown2] = 0;
+                Party(t)[battle_damage::at::kPShown2] = 0;
             } else {
-                battle_damage::g.cure(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->actor, 0x20);
-                rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->counter = 0;
+                battle_damage::g.cure(rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->actor, 0x20);
+                rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->counter = 0;
             }
             if ((U32(v) & 0xFFFF) == 0) v = 1;
         }
@@ -543,7 +543,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
         if (roll < 0) bof3::Fatal("Battle_CalcDamage: Rand %d, where the original reads its saved registers", roll);
         v = Mul(kFlagRoll[roll % 8], S16(U32(v))) / 100;
     }
-    if (Byte(::bof3::Img(at::kBattleFlags.v)) & 0x80) {
+    if (Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) {
         const std::int32_t plain = S16(U32(battle_damage::g.base_damage(attacker, target, 1)));
         v = S32(U32((plain + (plain < 0 ? 3 : 0)) >> 2) + U32(v) * 2);
     }
@@ -551,8 +551,8 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     if (t <= 2 && Cond_Flags[0xd0] == 2) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
     if (status & 0x80) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
     if ((status & 0x60) && d == 0) d = 1;
-    if ((Byte(::bof3::Img(at::kBattleFlags.v)) & 0x80) && d == 0) d = 1;
-    if (t <= 2 ? (static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(t) - 0x10)->flags_130) & 0x10000) : (static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->flags_110) & 0x10000)) return 0;
+    if ((Byte(::bof3::Img(battle_damage::at::kBattleFlags.v)) & 0x80) && d == 0) d = 1;
+    if (t <= 2 ? (static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(t) - 0x10)->flags_130) & 0x10000) : (static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->flags_110) & 0x10000)) return 0;
     if (S16(d) > 9999) return 9999;
     if (S16(d) < -9999) return -9999;
     return S16(d);
@@ -573,8 +573,8 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
 // 0x44F1D0 unless 0x44FA70 says it was resisted. Returns the amount.
 extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) {
     const unsigned t = target & 0xFF;
-    if (t <= 2) Party(t)[at::kPShown] = 0x11;
-    else rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->shown = 0x11;
+    if (t <= 2) Party(t)[battle_damage::at::kPShown] = 0x11;
+    else rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->shown = 0x11;
     std::int32_t v = battle_damage::g.calc_damage(attacker, target, 0xFFFF);
     if (t <= 2) {
         unsigned char* const p = Party(t);
@@ -591,7 +591,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
             if (hp > v) {
                 pr->hp = U32(hp - v);
             } else {
-                if (v - hp < pr->survive && (p[at::kPFlags2] & 3) == 0)
+                if (v - hp < pr->survive && (p[battle_damage::at::kPFlags2] & 3) == 0)
                     pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) | 4);
                 pr->hp = 0;
             }
@@ -601,7 +601,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
                 pr->hp = U32(hp - v);
             } else {
                 pr->hp = U32(max);
-                p[at::kPShown] = static_cast<unsigned char>(p[at::kPShown] | 4);
+                p[battle_damage::at::kPShown] = static_cast<unsigned char>(p[battle_damage::at::kPShown] | 4);
             }
         }
     } else {
@@ -609,7 +609,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
         auto* const er = rv::As<records::BattleEnemy>(e - 0x80);
         if (er->hp != 0xFFFF) {
             if ((static_cast<std::int32_t>(er->flags_110) & 0x100) && er->hp <= 0x7FFF) {
-                v = move_script::Word(e + at::kEHp);
+                v = move_script::Word(e + battle_damage::at::kEHp);
                 battle_damage::g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
                 const std::uint32_t f = U32(static_cast<std::int32_t>(er->flags_110)) & ~0x100u;
                 WindowRecords[4].state = 1;
@@ -647,10 +647,10 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
 // takes the low word).
 extern "C" int __cdecl Battle_ElementAffinity(unsigned target, unsigned mask) {
     const unsigned char* const classes =
-        (target & 0xFF) <= 2 ? Party(target) + at::kPElements : Enemy(target) + at::kEElements;
+        (target & 0xFF) <= 2 ? Party(target) + battle_damage::at::kPElements : Enemy(target) + battle_damage::at::kEElements;
     std::int32_t sum = 0;
     for (unsigned k = 0; k < 5; ++k)
-        if (mask & (1u << k)) sum += S16(Word(At(::bof3::Img(at::kElementTable.v) + 2 * classes[k])));
+        if (mask & (1u << k)) sum += S16(Word(At(::bof3::Img(battle_damage::at::kElementTable.v) + 2 * classes[k])));
     return sum;
 }
 
@@ -683,11 +683,11 @@ unsigned char* Result() { return At(BattleDamage_Result); }
 // As the original has it (the PSX too): an enemy's AP heal is compared with
 // its max HP, then clamped to its max AP (docs/battle_damage.md, defects).
 extern "C" void __cdecl Effect_ApplyResult() {
-    const unsigned target0 = Byte(::bof3::Img(at::kTarget.v));
-    if (target0 <= 2) Party(target0)[at::kPShown] = static_cast<unsigned char>(Party(target0)[at::kPShown] | 0x31);
-    else rv::As<records::BattleEnemy>(Enemy(target0) + at::kEObject)->shown = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Enemy(target0) + at::kEObject)->shown | 0x31);
-    const std::uint32_t acting = U32(Long(At(::bof3::Img(at::kActing.v))));
-    const std::uint32_t ability = U32(Long(At(::bof3::Img(at::kAbility.v))));
+    const unsigned target0 = Byte(::bof3::Img(battle_damage::at::kTarget.v));
+    if (target0 <= 2) Party(target0)[battle_damage::at::kPShown] = static_cast<unsigned char>(Party(target0)[battle_damage::at::kPShown] | 0x31);
+    else rv::As<records::BattleEnemy>(Enemy(target0) + battle_damage::at::kEObject)->shown = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Enemy(target0) + battle_damage::at::kEObject)->shown | 0x31);
+    const std::uint32_t acting = U32(Long(At(::bof3::Img(battle_damage::at::kActing.v))));
+    const std::uint32_t ability = U32(Long(At(::bof3::Img(battle_damage::at::kAbility.v))));
     const unsigned actor = acting & 0xFF;
     const unsigned kind = (acting >> 8) & 0xFF;
     if (!(kind == 4 && (ability & 0xFFFF) == 0xA3)) {
@@ -695,7 +695,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
         if (actor <= 2) {
             unsigned char* const p = Party(actor);
             auto* const pr = rv::As<records::PartyMember>(p - 0x10);
-            if (p[at::kPFlags2] & 0x80) {
+            if (p[battle_damage::at::kPFlags2] & 0x80) {
                 const unsigned times = pr->count_80 + 1u;
                 pr->count_80 = 0;
                 SetWord(power, times * Word(power));
@@ -704,7 +704,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
         } else {
             unsigned char* const e = Enemy(actor);
             auto* const er = rv::As<records::BattleEnemy>(e - 0x80);
-            if (e[at::kEFlags2] & 0x80) {
+            if (e[battle_damage::at::kEFlags2] & 0x80) {
                 const unsigned times = er->count_80 + 1u;
                 er->count_80 = 0;
                 SetWord(power, times * Word(power));
@@ -714,15 +714,15 @@ extern "C" void __cdecl Effect_ApplyResult() {
     }
     unsigned handler;
     if (kind == 4) {
-        handler = Byte(::bof3::Img(at::kSkillHandler.v) + (ability & 0xFFFF));
+        handler = Byte(::bof3::Img(battle_damage::at::kSkillHandler.v) + (ability & 0xFFFF));
     } else {
         const unsigned item = Word(At(BattleSprites_Action) + 2);
-        handler = At(U32(Long(At(::bof3::Img(at::kItemHandlers.v) + 4 * (item >> 8)))))[item & 0xFF];
+        handler = At(U32(Long(At(::bof3::Img(battle_damage::at::kItemHandlers.v) + 4 * (item >> 8)))))[item & 0xFF];
     }
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(U32(Long(At(::bof3::Img(Effect_Handlers_addr) + 4 * handler)))))();
 
-    const unsigned t = Byte(::bof3::Img(at::kTarget.v));
-    if (t <= 2 ? (static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(t) - 0x10)->flags_130) & 0x10000) : (static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->flags_110) & 0x10000)) {
+    const unsigned t = Byte(::bof3::Img(battle_damage::at::kTarget.v));
+    if (t <= 2 ? (static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(t) - 0x10)->flags_130) & 0x10000) : (static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy(t) + battle_damage::at::kEObject)->flags_110) & 0x10000)) {
         rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
         rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->ap_change, 0);
     }
@@ -745,7 +745,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
                 if (hp > hp_delta) {
                     pr->hp = U32(hp - hp_delta);
                 } else {
-                    if (hp_delta - hp < pr->survive && (p[at::kPFlags2] & 3) == 0)
+                    if (hp_delta - hp < pr->survive && (p[battle_damage::at::kPFlags2] & 3) == 0)
                         pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) | 4);
                     pr->hp = 0;
                 }
@@ -755,7 +755,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
                     rv::Store<unsigned>(pr->hp, U32(hp - hp_delta));
                 } else {
                     rv::Store<unsigned>(pr->hp, U32(max));
-                    p[at::kPShown] = static_cast<unsigned char>((p[at::kPShown] & 0xEF) | 5);
+                    p[battle_damage::at::kPShown] = static_cast<unsigned char>((p[battle_damage::at::kPShown] & 0xEF) | 5);
                 }
                 r = Result();
             }
@@ -801,7 +801,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
                 pr->ap = U32(ap - ap_delta);
             } else {
                 pr->ap = U32(max);
-                p[at::kPShown] = static_cast<unsigned char>((p[at::kPShown] & 0xDF) | 0xA);
+                p[battle_damage::at::kPShown] = static_cast<unsigned char>((p[battle_damage::at::kPShown] & 0xDF) | 0xA);
             }
         }
         return;
@@ -838,20 +838,20 @@ extern "C" int __cdecl Effect_SkillDamage(unsigned caster, unsigned target, unsi
     if (resist < 50) resist = 50;
     v = U32(resist) * v / 100u;
     const unsigned mask =
-        Word(At(::bof3::Img(bof3::addr::NameTable_Abilities) + (U32(Long(At(::bof3::Img(at::kAbility.v)))) & 0xFFFF) * at::kAbilityStride + 4)) & 0x1FF;
+        Word(At(::bof3::Img(bof3::addr::NameTable_Abilities) + (U32(Long(At(::bof3::Img(battle_damage::at::kAbility.v)))) & 0xFFFF) * battle_damage::at::kAbilityStride + 4)) & 0x1FF;
     if (mask != 0) {
         const short affinity = static_cast<short>((psi & 0xFF) ? battle_damage::g.psi_affinity(target, mask) : battle_damage::g.element_affinity(target, mask));
         v = U32(Mul(affinity, S32(v)) / 100);
     }
     const unsigned roll = U32(battle_damage::g.rand()) & 7;
-    std::int32_t amount = Mul(Word(At(::bof3::Img(at::kPowerVariance.v) + 2 * roll)), S32(v)) / 10000;
-    if (Byte(::bof3::Img(at::kTarget.v)) <= 2 && Cond_Flags[0xd0] == 2 && amount > 0) amount -= amount >> 2;
+    std::int32_t amount = Mul(Word(At(::bof3::Img(battle_damage::at::kPowerVariance.v) + 2 * roll)), S32(v)) / 10000;
+    if (Byte(::bof3::Img(battle_damage::at::kTarget.v)) <= 2 && Cond_Flags[0xd0] == 2 && amount > 0) amount -= amount >> 2;
     if ((target & 0xFF) <= 2) {
         auto* const pr = rv::As<records::PartyMember>(Party(target) - 0x10);
         if (static_cast<std::int32_t>(pr->flags_134) & 0x200) amount /= 2;
         if (static_cast<std::int32_t>(pr->flags_130) & 0x10000) return 0;
     } else {
-        auto* const er = rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject);
+        auto* const er = rv::As<records::BattleEnemy>(Enemy(target) + battle_damage::at::kEObject);
         if (static_cast<std::int32_t>(er->flags_114) & 0x200) amount /= 2;
         if (static_cast<std::int32_t>(er->flags_110) & 0x10000) return 0;
     }
@@ -867,11 +867,11 @@ extern "C" int __cdecl Effect_SkillDamage(unsigned caster, unsigned target, unsi
 // numbers. `caster` is not read.
 extern "C" int __cdecl Effect_HealAmount(unsigned caster, unsigned target) {
     (void)caster;
-    const std::uint32_t id = U32(Long(At(::bof3::Img(at::kAbility.v)))) & 0xFFFF;
-    const std::uint32_t power = Byte(::bof3::Img(bof3::addr::NameTable_Abilities) + id * at::kAbilityStride + 3);
+    const std::uint32_t id = U32(Long(At(::bof3::Img(battle_damage::at::kAbility.v)))) & 0xFFFF;
+    const std::uint32_t power = Byte(::bof3::Img(bof3::addr::NameTable_Abilities) + id * battle_damage::at::kAbilityStride + 3);
     const std::uint32_t base = power * (BattleDamage_AttackerInt + 100u) * 100u / 100u;
-    const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + at::kEObject)->holy;
-    return Mul(S16(Word(At(::bof3::Img(at::kHealTable.v) + 2 * holy))), S32(base)) / -10000;
+    const unsigned holy = (target & 0xFF) <= 2 ? rv::As<records::PartyMember>(Party(target) - 0x10)->holy : rv::As<records::BattleEnemy>(Enemy(target) + battle_damage::at::kEObject)->holy;
+    return Mul(S16(Word(At(::bof3::Img(battle_damage::at::kHealTable.v) + 2 * holy))), S32(base)) / -10000;
 }
 
 // ===========================================================================
@@ -908,12 +908,12 @@ extern "C" unsigned char __cdecl EnemyAI_RowDone(const unsigned char* enemy, uns
 extern "C" void __cdecl EnemyAI_ChooseActions() {
     for (unsigned e = 0; e < 8; ++e) {
         if (battle_damage::g.is_out(e + 3)) continue;
-        unsigned char* const obj = Enemy(e + 3) + at::kEObject;
+        unsigned char* const obj = Enemy(e + 3) + battle_damage::at::kEObject;
         auto* const er = rv::As<records::BattleEnemy>(obj);
         for (unsigned r = 0; r < 4; ++r) {
-            const unsigned char* const row = At(::bof3::Img(at::kAiScripts.v) + er->data_id * at::kAiScriptStride + 16 * r);
+            const unsigned char* const row = At(::bof3::Img(battle_damage::at::kAiScripts.v) + er->data_id * battle_damage::at::kAiScriptStride + 16 * r);
             const unsigned hp = er->hp, ap = er->ap, max_hp = er->max_hp, max_ap = er->max_ap;
-            const std::uint32_t counter = U32(Long(At(::bof3::Img(at::kTurnCounter.v))));
+            const std::uint32_t counter = U32(Long(At(::bof3::Img(battle_damage::at::kTurnCounter.v))));
             bool holds;
             switch (row[0]) {
             case 0x0B: holds = hp <= (max_hp >> 2); break;
@@ -922,7 +922,7 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
             case 0x0E: {
                 unsigned char count = 0;
                 for (unsigned k = 0; k < 8; ++k)
-                    if (!battle_damage::g.is_out(k + 3) && (Enemy(k + 3)[at::kEStatus + 1] & 0x20)) ++count;
+                    if (!battle_damage::g.is_out(k + 3) && (Enemy(k + 3)[battle_damage::at::kEStatus + 1] & 0x20)) ++count;
                 holds = count != 0;
                 break;
             }

@@ -101,8 +101,8 @@ void PutWord(unsigned char* p, U v) {
 void PutLong(unsigned char* p, battle_misc::U v) { std::memcpy(p, &v, sizeof v); }
 battle_misc::U Addr(const void* p) { return Low32(p); }
 
-battle_misc::U SpriteCurrent() { return LongBattleMisc(AtBattleMisc(at::Sprite_CurrentAt())); }
-void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(at::Sprite_CurrentAt()), v); }
+battle_misc::U SpriteCurrent() { return LongBattleMisc(AtBattleMisc(battle_misc::at::Sprite_CurrentAt())); }
+void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(battle_misc::at::Sprite_CurrentAt()), v); }
 battle_misc::U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
 unsigned char* Banner(battle_misc::U i) { return AtBattleMisc(::bof3::Img(battle_misc::kBanners.v) + i * 0xC); }
 
@@ -146,7 +146,7 @@ extern "C" void __cdecl Battle_PulseStep(void) {
 // [..]); Sound_PlayEffect reads the low word. Returns its eax, which one of the
 // thirteen callers (0x4FC079) returns on.
 extern "C" unsigned long __cdecl Battle_PlayActorCue(unsigned cue) {
-    const battle_misc::U record = LongBattleMisc(AtBattleMisc(at::Field_StateAt()));
+    const battle_misc::U record = LongBattleMisc(AtBattleMisc(battle_misc::at::Field_StateAt()));
     const battle_misc::U index = WordBattleMisc(AtBattleMisc(record + 0x2C)) + (cue & 0xFF) * 3;
     const battle_misc::U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
     return battle_misc::g.play_effect(id);
@@ -203,10 +203,10 @@ extern "C" void __cdecl Battle_InitActorContext(void) {
 // any other still takes a slot, 0x435180(0, 0), so slots stay in actor order.
 extern "C" void __cdecl Battle_InitActorContexts(void) {
     for (battle_misc::U i = 0; i < 3; ++i) {
-        const battle_misc::U object = at::ObjTrioAt() + i * kPartyStride;
+        const battle_misc::U object = battle_misc::at::ObjTrioAt() + i * kPartyStride;
         if (AtBattleMisc(object)[0] & 1) {
             SetSpriteCurrent(object);
-            PutLong(AtBattleMisc(at::Field_StateAt()), object);
+            PutLong(AtBattleMisc(battle_misc::at::Field_StateAt()), object);
             battle_misc::g.init_context();
         } else {
             battle_misc::g.alloc_context(0, 0);
@@ -240,7 +240,7 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
     for (battle_misc::U index = 0; index <= 10; ++index) {
         battle_misc::U object;
         if (index <= 2) {
-            object = at::ObjTrioAt() + index * kPartyStride;
+            object = battle_misc::at::ObjTrioAt() + index * kPartyStride;
             if (!(AtBattleMisc(object)[0] & 1) || (AtBattleMisc(object + 0x134)[0] & 8)) continue;
         } else {
             object = ::bof3::Img(Battle_Enemies_addr) + (index - 3) * kEnemyStride;

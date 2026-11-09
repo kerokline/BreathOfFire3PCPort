@@ -197,7 +197,7 @@ void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
 // layer's bank (psp-chord-one-tone) replaces the container's here as it does
 // in LoadDatFile. No layer named: nothing more.
 extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
-    const U name = LongSaveMenu(::bof3::Img(at::kDatNames.v) + index * 4);
+    const U name = LongSaveMenu(::bof3::Img(save_menu::at::kDatNames.v) + index * 4);
     if (name == 0) return;
     const char* const text = reinterpret_cast<const char*>(AtSaveMenu(name));
     if (dat_cache::WalkShipped(text, TakeBank, nullptr)) {  // DIV-0089
@@ -205,7 +205,7 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
         return;
     }
     char path[0x28];
-    save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kDatFormat.v))), reinterpret_cast<const char*>(AtSaveMenu(name)));
+    save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kDatFormat.v))), reinterpret_cast<const char*>(AtSaveMenu(name)));
     const int handle = save_menu::g.file_open(path, 0, 0);
     if (handle == -1) return;
     const int size = save_menu::g.file_size(handle);

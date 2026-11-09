@@ -377,7 +377,7 @@ extern "C" void __cdecl Boss33_Setup(void) { StoreHooksBossSg(::bof3::Code(bof3:
 // dwords); the chapter's step = 8; a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss33_End(void) {
     if ((Battle_EndFlags & 6) == 0) {
-        BH_AT(Handler, at::kEndOther.v)();
+        BH_AT(Handler, boss_sg::at::kEndOther.v)();
         return;
     }
     BH_CALL(BossActor_Clear)(0);
@@ -386,7 +386,7 @@ extern "C" void __cdecl Boss33_End(void) {
     Field_Kind2X = x;
     Field_Kind2Z = z;
     MoveScript_PartyRecords[0x65] = 8;
-    BH_AT(Handler, at::kEndWin.v)();
+    BH_AT(Handler, boss_sg::at::kEndWin.v)();
 }
 
 // ===========================================================================

@@ -150,10 +150,10 @@ void NameBanner() {
 void EndByWin(unsigned char scene) {
     if (Battle_EndFlags & 2) {
         B(::bof3::Img(at::kMoveCounter.v)) = scene;
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_sc::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther.v)();
+    BH_AT(Handler, boss_sc::at::kEndOther.v)();
 }
 
 }  // namespace
@@ -540,7 +540,7 @@ extern "C" void __cdecl BossNina_HookAct(unsigned) {
     }
     const unsigned char count = BossSe_RoundSlot;
     B(::bof3::Img(at::kAction.v)) = 1;
-    B(::bof3::Img(at::kTarget.v)) = 4;
+    B(::bof3::Img(boss_sc::at::kTarget.v)) = 4;
     BossSe_RoundSlot = static_cast<unsigned char>(count - 1);
     BossSe_Script = static_cast<unsigned char>(BossSe_Script | 1);
 }
@@ -585,7 +585,7 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
             BossSe_Script |= 8;
         return 0;
     case 1:
-        if (B(::bof3::Img(at::kActor.v)) != 0 || !(B(::bof3::Img(at::kTarget.v)) & 0x40) || (BossSe_Script & 1)) return 0;
+        if (B(::bof3::Img(boss_sc::at::kActor.v)) != 0 || !(B(::bof3::Img(boss_sc::at::kTarget.v)) & 0x40) || (BossSe_Script & 1)) return 0;
         Line(0, 0x27);
         return 0;
     case 2:
@@ -622,7 +622,7 @@ extern "C" void __cdecl Boss16_End(void) {
         const U sum = (static_cast<std::uint32_t>(Battle_Enemies[1].exp) + Battle_Enemies[0].exp) * Cheats_ExpMultiplier();
         B(::bof3::Img(at::kMoveCounter.v)) = 0x14;
         Battle_ExpTotal = static_cast<std::int32_t>(sum);
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_sc::at::kEndWin.v)();
     } else {
         if (BossSe_Script & 0x40) {
             Sprite_Current = At(::bof3::Img(Battle_Enemies_addr) + 0x250);
@@ -632,7 +632,7 @@ extern "C" void __cdecl Boss16_End(void) {
             BH_CALL(Sprite_SetAnimation)(1);
         }
         B(::bof3::Img(at::kMoveCounter.v)) = 0x50;
-        BH_AT(Handler, at::kEndThird.v)();
+        BH_AT(Handler, boss_sc::at::kEndThird.v)();
     }
     Field_ScriptFlags = Field_ScriptFlags & 0xFF7F;
     Music_Track = 0x31;

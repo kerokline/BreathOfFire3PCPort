@@ -73,14 +73,14 @@ void SetULong(unsigned char* p, U v) { move_script::SetLong(p, static_cast<std::
 template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // The ability record `id` (24 bytes at 0x65C4D8): a flag byte, or the word +4.
-unsigned AbilityId() { return move_script::Word(move_script::At(::bof3::Img(at::kAbility.v))); }
-unsigned char AbilityByte(U base) { return move_script::At(base + AbilityId() * at::kAbilityStride)[0]; }
-unsigned AbilityWord4() { return move_script::Word(move_script::At(::bof3::Img(at::kAbilityWord4.v) + AbilityId() * at::kAbilityStride)); }
+unsigned AbilityId() { return move_script::Word(move_script::At(::bof3::Img(battle_e3::at::kAbility.v))); }
+unsigned char AbilityByte(U base) { return move_script::At(base + AbilityId() * battle_e3::at::kAbilityStride)[0]; }
+unsigned AbilityWord4() { return move_script::Word(move_script::At(::bof3::Img(battle_e3::at::kAbilityWord4.v) + AbilityId() * battle_e3::at::kAbilityStride)); }
 
 // CharacterRecords' record for a member's character byte +0x148 (unchecked, as
 // the original: a character byte, not a table index of this group's).
-unsigned char* CharRecord(unsigned character) { return move_script::At(::bof3::Img(CharacterRecords_addr) + character * at::kCharStride); }
-unsigned char* Member(unsigned i) { return move_script::At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* CharRecord(unsigned character) { return move_script::At(::bof3::Img(CharacterRecords_addr) + character * battle_e3::at::kCharStride); }
+unsigned char* Member(unsigned i) { return move_script::At(::bof3::Img(ObjTrio_addr) + i * battle_e3::at::kPartyStride); }
 // Sprite_Current is the enemy in the enemy ops, the member in the party
 // objects' states; Field_State the member (docs/battle_e3.md 1.1, 1.2).
 
@@ -115,18 +115,18 @@ void Run(const char* who, U table, unsigned entries, unsigned at) {
 // writes at 0x93A000 + 0xFF * 0x84, past the pool (docs/battle_e3.md section 6).
 unsigned char* TaskSlot(const char* who, unsigned n) {
     n &= 0xFF;
-    if (n >= at::kTaskCount)
+    if (n >= battle_e3::at::kTaskCount)
         bof3::Fatal("%s: BattleTask_Create answered slot %u (all 48 taken) - the original writes at 0x93A000 + %u * 0x84, "
                     "past the pool (docs/battle_e3.md section 6)",
                     who, n, n);
-    return move_script::At(::bof3::Img(BattleTask_Slots_addr) + n * at::kTaskStride);
+    return move_script::At(::bof3::Img(BattleTask_Slots_addr) + n * battle_e3::at::kTaskStride);
 }
 
 // The party count 0x904AB0 as the loops over ObjTrio read it: a Fatal past its
 // three members, where the original walks on into the window records.
 unsigned PartyCount(const char* who) {
-    const unsigned n = B(::bof3::Img(at::kPartyCount.v));
-    if (n > at::kPartyMax)
+    const unsigned n = B(::bof3::Img(battle_e3::at::kPartyCount.v));
+    if (n > battle_e3::at::kPartyMax)
         bof3::Fatal("%s: the party count 0x904AB0 is %u, past ObjTrio's three members - the original walks on into "
                     "WindowRecords (docs/battle_e3.md section 6)",
                     who, n);
@@ -145,9 +145,9 @@ void MoveBy(unsigned char* s, bool back) {
 // 0x904AA8 bit 14 cleared when 0x904B8A is the object's actor (the fall's two
 // sites; the object read after the flags, as the original).
 void ClearFormFlag() {
-    const bool bit = (Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x4000) != 0;
+    const bool bit = (Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0x4000) != 0;
     unsigned char* const s = S();
-    if (bit && BattleFlow_ActorAt == s[5]) SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0xBFFF);
+    if (bit && BattleFlow_ActorAt == s[5]) SetWord(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0xBFFF);
 }
 
 }  // namespace
@@ -182,11 +182,11 @@ extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     } else {
         S()[9] = 0;
     }
-    if (AbilityByte(::bof3::Img(at::kAbilityFlags5.v)) & 8) {
+    if (AbilityByte(::bof3::Img(battle_e3::at::kAbilityFlags5.v)) & 8) {
         rv::As<records::BattleEnemy>(S())->states[0] += 1;
     } else {
         const unsigned record = rv::As<records::BattleEnemy>(Enemy())->data_id;
-        S()[9] = move_script::At(::bof3::Img(at::kEnemyData8B.v) + record * at::kEnemyDataStride)[0];
+        S()[9] = move_script::At(::bof3::Img(battle_e3::at::kEnemyData8B.v) + record * battle_e3::at::kEnemyDataStride)[0];
         BH_CALL(BattleEnemy_SetAnimation)(6);
         rv::As<records::BattleEnemy>(S())->states[1] += 1;
     }
@@ -235,7 +235,7 @@ extern "C" void __cdecl EnemyOp_CastDoneCost(void) {
         enemy_rec->ap = enemy_rec->ap - BattleE3_Cost;
         enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     }
-    move_script::SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), move_script::Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) | 0x800);
+    move_script::SetWord(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v)), move_script::Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) | 0x800);
     enemy_rec->command_kind = 0;
     if ((AbilityWord4() & 0x800) == 0) BH_CALL(BattleEnemy_ScriptTickOnce)();
     rv::As<records::BattleEnemy>(S())->step += 1;
@@ -244,7 +244,7 @@ extern "C" void __cdecl EnemyOp_CastDoneCost(void) {
 // original 0x437200: the cast's end, step 2 - unless the ability's byte +5 has
 // bit 3, BattleEnemy_ScriptTickOnce; then +9 up by one (each frame).
 extern "C" void __cdecl EnemyOp_CastDoneTickUnless(void) {
-    if ((AbilityByte(::bof3::Img(at::kAbilityFlags5.v)) & 8) == 0) BH_CALL(BattleEnemy_ScriptTickOnce)();
+    if ((AbilityByte(::bof3::Img(battle_e3::at::kAbilityFlags5.v)) & 8) == 0) BH_CALL(BattleEnemy_ScriptTickOnce)();
     S()[9] += 1;
 }
 
@@ -252,7 +252,7 @@ extern "C" void __cdecl EnemyOp_CastDoneTickUnless(void) {
 // by 0x437180's tail jump): with 0x904AA8 bit 2, a tail jump to
 // EnemyOp_EndAction.
 extern "C" void __cdecl EnemyOp_CastDoneCheck(void) {
-    if (B(::bof3::Img(at::kRoundFlags.v)) & 4) BH_CALL(EnemyOp_EndAction)();
+    if (B(::bof3::Img(battle_e3::at::kRoundFlags.v)) & 4) BH_CALL(EnemyOp_EndAction)();
 }
 
 // original 0x437240 (PSX 0x801E4EA4): EnemyOp_Steps[9] - jmp [EnemyOp_LeaveSubs + 4 * +2] (3:
@@ -270,7 +270,7 @@ extern "C" unsigned __cdecl EnemyOp_LeaveDispatch(unsigned passed) {
 extern "C" void __cdecl EnemyOp_LeaveStart(void) {
     SetULong(S() + 0x18, 0xFFFFF000u);
     SetULong(S() + 0x1C, 0);
-    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity18.v)(S());
+    BH_AT(void (__cdecl*)(unsigned char*), battle_e3::at::kTurnVelocity18.v)(S());
     rv::As<records::BattleEnemy>(S())->layout ^= 2;
     SetULong(S() + 0xC, 0);
     SetULong(S() + 0x10, 0);
@@ -349,7 +349,7 @@ extern "C" void __cdecl EnemyOp_EndAction(void) {
     BH_CALL(Battle_ClearActorBit)(rv::As<records::BattleEnemy>(S())->actor);
     unsigned char* const e = Enemy();
     SetULong(e + 0x110, ULong(e + 0x110) & ~0x200u);
-    if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command_kind = 0;
+    if ((B(::bof3::Img(battle_e3::at::kRoundFlags.v)) & 0x40) == 0) rv::As<records::BattleEnemy>(Enemy())->command_kind = 0;
 }
 
 // original 0x4376F0: with 0x939AD8's +0x90 bit 3 and Rand's bit 0, 0x904AA8 |=
@@ -358,7 +358,7 @@ extern "C" void __cdecl EnemyOp_EndAction(void) {
 extern "C" void __cdecl EnemyOp_RollBit80Task(void) {
     if ((Enemy()[0x90] & 8) == 0) return;
     if ((BH_CALL(Rand)() & 1) == 0) return;
-    B(::bof3::Img(at::kRoundFlags.v)) |= 0x80;
+    B(::bof3::Img(battle_e3::at::kRoundFlags.v)) |= 0x80;
     BH_CALL(BattleTask_Create)(0, 2);
 }
 
@@ -427,16 +427,16 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     auto* const member_s = rv::As<records::PartyMember>(s);
     unsigned char* f = F();
     records::PartyMember* member_f = rv::As<records::PartyMember>(f);
-    SetWord(move_script::At(::bof3::Img(at::kStatusOr2.v)), 0);
-    SetWord(move_script::At(::bof3::Img(at::kStatusOr.v)), 0);
+    SetWord(move_script::At(::bof3::Img(battle_e3::at::kStatusOr2.v)), 0);
+    SetWord(move_script::At(::bof3::Img(battle_e3::at::kStatusOr.v)), 0);
     const unsigned char actor = member_s->actor;
     BattleE3_HitSprite = s;
-    B(::bof3::Img(at::kHitActor.v)) = actor;
-    SetPtrAt(::bof3::Img(at::kResult.v), f + 0x124);
+    B(::bof3::Img(battle_e3::at::kHitActor.v)) = actor;
+    SetPtrAt(::bof3::Img(battle_e3::at::kResult.v), f + 0x124);
     rv::Store<unsigned>(member_f->hp_change, 0);
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->ap_change, 0);
-    PtrAt(::bof3::Img(at::kResult.v))[8] = 0;
-    std::memcpy(move_script::At(::bof3::Img(at::kStatCopy.v)), f + 0xA0, 32);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(battle_e3::at::kResult.v)))->ap_change, 0);
+    PtrAt(::bof3::Img(battle_e3::at::kResult.v))[8] = 0;
+    std::memcpy(move_script::At(::bof3::Img(battle_e3::at::kStatCopy.v)), f + 0xA0, 32);
     if (member_f->status & 0x800) BattleDamage_TargetDef = 1;
     if (f[0x130] & 1) {
         if (BattleE3_EvadeBoost + 0x19u >= 0x64u)
@@ -444,20 +444,20 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         else
             BattleE3_EvadeBoost += 0x19;
     }
-    unsigned kind = B(::bof3::Img(at::kActKind.v));
+    unsigned kind = B(::bof3::Img(battle_e3::at::kActKind.v));
     if (kind == 1) {
         // the target goes out in eax with Field_State's upper bytes (the
         // register held the pointer); the actor's in ecx, whose upper bytes the
         // original had zeroed
-        const U target = (Key(f) & 0xFFFFFF00u) | B(::bof3::Img(at::kHitActor.v));
-        const short dealt = BH_CALL(Battle_ApplyDamage)(B(::bof3::Img(at::kActor.v)), target);
-        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->hp_change, static_cast<unsigned short>(dealt));
-        kind = B(::bof3::Img(at::kActKind.v));
+        const U target = (Key(f) & 0xFFFFFF00u) | B(::bof3::Img(battle_e3::at::kHitActor.v));
+        const short dealt = BH_CALL(Battle_ApplyDamage)(B(::bof3::Img(battle_e3::at::kActor.v)), target);
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(battle_e3::at::kResult.v)))->hp_change, static_cast<unsigned short>(dealt));
+        kind = B(::bof3::Img(battle_e3::at::kActKind.v));
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     } else if (kind >= 4 && kind <= 5) {
         BH_CALL(Effect_ApplyResult)();
-        kind = B(::bof3::Img(at::kActKind.v));
+        kind = B(::bof3::Img(battle_e3::at::kActKind.v));
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
@@ -471,14 +471,14 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
             f = F();
             member_f = rv::As<records::PartyMember>(f);
         } else if (kind == 4) {
-            if ((AbilityByte(::bof3::Img(at::kAbilityFlags0.v)) & 4) == 0) {
+            if ((AbilityByte(::bof3::Img(battle_e3::at::kAbilityFlags0.v)) & 4) == 0) {
                 BH_CALL(BattleObj_HitPose)();
                 f = F();
                 member_f = rv::As<records::PartyMember>(f);
             }
         } else if (kind == 5) {
-            const unsigned char cls = BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kItemClass.v)(B(::bof3::Img(at::kItemCategory.v)),
-                                                                                                        B(::bof3::Img(at::kAbility.v)));
+            const unsigned char cls = BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), battle_e3::at::kItemClass.v)(B(::bof3::Img(battle_e3::at::kItemCategory.v)),
+                                                                                                        B(::bof3::Img(battle_e3::at::kAbility.v)));
             if ((cls & 4) == 0) BH_CALL(BattleObj_HitPose)();
             f = F();
             member_f = rv::As<records::PartyMember>(f);
@@ -490,14 +490,14 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         member_f = rv::As<records::PartyMember>(f);
     }
     if (f[0x12C] & 2) {
-        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
+        BH_AT(void (__cdecl*)(unsigned, unsigned), battle_e3::at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    member_f->status = member_f->status | Word(move_script::At(::bof3::Img(at::kStatusOr.v)));
+    member_f->status = member_f->status | Word(move_script::At(::bof3::Img(battle_e3::at::kStatusOr.v)));
     f = F();
     member_f = rv::As<records::PartyMember>(f);
-    SetWord(move_script::At(::bof3::Img(at::kStatusOr.v)), 0);
+    SetWord(move_script::At(::bof3::Img(battle_e3::at::kStatusOr.v)), 0);
     if (member_f->hp_change > 0) {
         if (member_f->hp == 0) {
             if (f[0x134] & 2)
@@ -513,16 +513,16 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         member_f = rv::As<records::PartyMember>(f);
     }
     if (member_f->hp_change < 0 || member_f->ap_change < 0) BH_CALL(Sound_PlayById)(0x206);
-    if ((Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0x2000) == 0) {
-        if (B(::bof3::Img(at::kActKind.v)) == 1) {
+    if ((Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0x2000) == 0) {
+        if (B(::bof3::Img(battle_e3::at::kActKind.v)) == 1) {
             BH_CALL(Battle_PlayHitSound)();
             BH_CALL(Battle_SetHitPopup)();
         }
-        if (B(::bof3::Img(at::kActKind.v)) == 4 && (AbilityWord4() & 0x800) != 0) {
+        if (B(::bof3::Img(battle_e3::at::kActKind.v)) == 4 && (AbilityWord4() & 0x800) != 0) {
             BH_CALL(Battle_PlayHitSound)();
             BH_CALL(Battle_SetHitPopup)();
         }
-        SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0xFF7F);
+        SetWord(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0xFF7F);
     }
     BH_CALL(BattleObj_ScriptTick)();
     rv::As<records::PartyMember>(S())->state3 += 1;
@@ -554,19 +554,19 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     unsigned char* const s = S();
     auto* const member_s = rv::As<records::PartyMember>(s);
     if (s[2] != 3 && (F()[0x91] & 0x40)) {
-        SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0xFFBF);
+        SetWord(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v)), Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0xFFBF);
         member_s->state = 6;
         rv::As<records::PartyMember>(S())->step = 4;
         rv::As<records::PartyMember>(S())->state3 = 0;
         return;
     }
-    if (B(::bof3::Img(at::kRoundFlags.v)) & 0x40) {
-        SetWord(move_script::At(::bof3::Img(at::kRoundFlags.v)), (Word(move_script::At(::bof3::Img(at::kRoundFlags.v))) & 0xFFBF) | 0x1000);
-    } else if ((B(::bof3::Img(at::kTarget.v)) & 0xC0) == 0) {
-        if (B(::bof3::Img(at::kActKind.v)) == 1 && BH_AT(unsigned char (__cdecl*)(), at::kRollB9.v)() != 0) B(::bof3::Img(at::kRoundFlags.v)) |= 0x40;
-        if (B(::bof3::Img(at::kActKind.v)) == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlags5.v)) & 8) != 0 &&
-            BH_AT(unsigned char (__cdecl*)(), at::kRollB9.v)() != 0 && (AbilityByte(::bof3::Img(at::kAbilityFlags0.v)) & 0x10) == 0)
-            B(::bof3::Img(at::kRoundFlags.v)) |= 0x40;
+    if (B(::bof3::Img(battle_e3::at::kRoundFlags.v)) & 0x40) {
+        SetWord(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v)), (Word(move_script::At(::bof3::Img(battle_e3::at::kRoundFlags.v))) & 0xFFBF) | 0x1000);
+    } else if ((B(::bof3::Img(battle_e3::at::kTarget.v)) & 0xC0) == 0) {
+        if (B(::bof3::Img(battle_e3::at::kActKind.v)) == 1 && BH_AT(unsigned char (__cdecl*)(), battle_e3::at::kRollB9.v)() != 0) B(::bof3::Img(battle_e3::at::kRoundFlags.v)) |= 0x40;
+        if (B(::bof3::Img(battle_e3::at::kActKind.v)) == 4 && (AbilityByte(::bof3::Img(battle_e3::at::kAbilityFlags5.v)) & 8) != 0 &&
+            BH_AT(unsigned char (__cdecl*)(), battle_e3::at::kRollB9.v)() != 0 && (AbilityByte(::bof3::Img(battle_e3::at::kAbilityFlags0.v)) & 0x10) == 0)
+            B(::bof3::Img(battle_e3::at::kRoundFlags.v)) |= 0x40;
     }
     BH_CALL(Battle_ClearActorBit)(rv::As<records::PartyMember>(S())->actor);
     SetULong(F() + 0x130, ULong(F() + 0x130) & 0xFFFFFF8Fu);
@@ -597,7 +597,7 @@ extern "C" void __cdecl BattleObj_HitStepStart(void) {
     rv::Store<unsigned>(rv::As<records::PartyMember>(f)->hp_change, 0);
     SetULong(S() + 0xC, 0);
     SetULong(S() + 0x10, 0xFFFFE000u);
-    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocityC.v)(S());
+    BH_AT(void (__cdecl*)(unsigned char*), battle_e3::at::kTurnVelocityC.v)(S());
     S()[0xA] = 4;
     BH_CALL(BattleObj_ScriptTickOnce)();
     BH_CALL(Sound_PlayById)(0x205);
@@ -717,7 +717,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     rv::As<records::PartyMember>(F())->count_800 = 0;
     rv::As<records::PartyMember>(F())->count_40 = 0;
     rv::As<records::PartyMember>(F())->count_80 = 0;
-    BH_AT(void (__cdecl*)(unsigned), at::kPass453300.v)(rv::As<records::PartyMember>(S())->actor);
+    BH_AT(void (__cdecl*)(unsigned), battle_e3::at::kPass453300.v)(rv::As<records::PartyMember>(S())->actor);
     if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) Battle_EndFlags |= 1;
     ClearFormFlag();
     auto* const member_s = rv::As<records::PartyMember>(S());
@@ -754,13 +754,13 @@ extern "C" void __cdecl BattleParty_RecalcStats(void) {
     BH_CALL(Formation_ApplyStatMods)();
     n = PartyCount("BattleParty_RecalcStats");
     for (unsigned i = 0; i < n; ++i) std::memmove(Member(i) + 0xA0, Member(i) + 0xC0, 32);
-    BH_AT(void (__cdecl*)(), at::kPass44FDE0.v)();
-    if (B(::bof3::Img(at::kPartyCount.v)) == 0) return;
+    BH_AT(void (__cdecl*)(), battle_e3::at::kPass44FDE0.v)();
+    if (B(::bof3::Img(battle_e3::at::kPartyCount.v)) == 0) return;
     unsigned member = 0;
     do {
-        BH_AT(void (__cdecl*)(unsigned), at::kPass453300.v)(member);
+        BH_AT(void (__cdecl*)(unsigned), battle_e3::at::kPass453300.v)(member);
         member = static_cast<unsigned char>(member + 1);
-    } while (member < B(::bof3::Img(at::kPartyCount.v)));
+    } while (member < B(::bof3::Img(battle_e3::at::kPartyCount.v)));
 }
 
 // original 0x442420 (PSX 0x801E0DA0): al 0 if any in-use member (+0 bit 0) of the three is up -
@@ -769,7 +769,7 @@ extern "C" void __cdecl BattleParty_RecalcStats(void) {
 // states BattleObj_Fall revives from); else 1 (the party is down). The upper
 // bytes of eax are the caller's.
 extern "C" unsigned char __cdecl BattleParty_AllDown(void) {
-    for (unsigned i = 0; i < at::kPartyMax; ++i) {
+    for (unsigned i = 0; i < battle_e3::at::kPartyMax; ++i) {
         const unsigned char* const m = Member(i);
         auto* const member_rec = rv::AsConst<records::PartyMember>(m);
         if ((member_rec->flags & 1) == 0) continue;
@@ -806,8 +806,8 @@ extern "C" void __cdecl BattleObj_Revive(void) {
     BH_CALL(Sound_PlayById)(0x206);
     if (BattleMisc_BannerKinds == 0) {
         BH_CALL(Battle_OpenMsgWindow)();
-        BH_AT(void (__cdecl*)(unsigned), at::kNameToText.v)(rv::As<records::PartyMember>(S())->actor);
-        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kBannerByPair.v)(0, rv::As<records::PartyMember>(F())->char_id);
+        BH_AT(void (__cdecl*)(unsigned), battle_e3::at::kNameToText.v)(rv::As<records::PartyMember>(S())->actor);
+        BH_AT(void (__cdecl*)(unsigned, unsigned), battle_e3::at::kBannerByPair.v)(0, rv::As<records::PartyMember>(F())->char_id);
     }
     rv::As<records::PartyMember>(S())->state3 = 2;
     BH_CALL(BattleObj_ScriptTick)();
@@ -948,7 +948,7 @@ extern "C" void __cdecl BattleObj_HpApply(void) {
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
+    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), battle_e3::at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
     BH_CALL(BattleObj_ScriptTick)();
     rv::As<records::PartyMember>(S())->state3 += 1;
 }
@@ -989,9 +989,9 @@ extern "C" void __cdecl BattleObj_State10(void) { Run("BattleObj_State10", Addre
 // character Field_State +0x89 (each read again); +2 up by one.
 extern "C" void __cdecl BattleObj_State10Task(void) {
     unsigned char* const t = TaskSlot("BattleObj_State10Task", BH_CALL(BattleTask_Create)(0, 5));
-    const auto dx = static_cast<signed char>(move_script::At(::bof3::Img(at::kSpecialOffsets.v) + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
+    const auto dx = static_cast<signed char>(move_script::At(::bof3::Img(battle_e3::at::kSpecialOffsets.v) + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
     rv::Store<unsigned>(rv::As<records::BattleTask>(t)->screen_x, static_cast<unsigned>(static_cast<std::uint16_t>(rv::As<records::PartyMember>(S())->screen_x) - dx) & 0xFFFF);
-    const auto dy = static_cast<signed char>(move_script::At(::bof3::Img(at::kSpecialOffsets.v) + 1 + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
+    const auto dy = static_cast<signed char>(move_script::At(::bof3::Img(battle_e3::at::kSpecialOffsets.v) + 1 + 2 * rv::As<records::PartyMember>(F())->char_id)[0]);
     rv::Store<unsigned>(rv::As<records::BattleTask>(t)->screen_y, static_cast<unsigned>(Word(S() + 0x30) - dy) & 0xFFFF);
     rv::As<records::PartyMember>(S())->step += 1;
 }
@@ -1037,8 +1037,8 @@ extern "C" void __cdecl BattleObj_SpecialStart(void) {
     const unsigned char slot = BH_CALL(BattleTask_Create)(0, 0xF);
     unsigned char* const t = TaskSlot("BattleObj_SpecialStart", slot);
     auto* const task_rec = rv::As<records::BattleTask>(t);
-    const unsigned actor = B(::bof3::Img(at::kActor.v));
-    if (actor >= at::kPartyMax)
+    const unsigned actor = B(::bof3::Img(battle_e3::at::kActor.v));
+    if (actor >= battle_e3::at::kPartyMax)
         bof3::Fatal("BattleObj_SpecialStart: the actor 0x904B34 is %u, past ObjTrio's three members - the original copies "
                     "from past them (docs/battle_e3.md section 6)",
                     actor);
@@ -1073,7 +1073,7 @@ extern "C" void __cdecl BattleObj_SpecialCue(void) {
     } else {
         const int roll = static_cast<int>(BH_CALL(Rand)()) % 100;
         if (static_cast<int>(F()[0xBA]) > roll) {
-            B(::bof3::Img(at::kRoundFlags.v)) |= 0x80;
+            B(::bof3::Img(battle_e3::at::kRoundFlags.v)) |= 0x80;
             cue = 3;
         } else {
             cue = 2;
@@ -1088,7 +1088,7 @@ extern "C" void __cdecl BattleObj_SpecialCue(void) {
 // it), 0x904AA8 |= 4 and a tail jump to BattleObj_EndAction.
 extern "C" void __cdecl BattleObj_SpecialWait(void) {
     if (rv::As<records::PartyMember>(S())->flags & 0x40) return;
-    B(::bof3::Img(at::kRoundFlags.v)) |= 4;
+    B(::bof3::Img(battle_e3::at::kRoundFlags.v)) |= 4;
     BH_CALL(BattleObj_EndAction)();
 }
 

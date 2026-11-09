@@ -152,12 +152,12 @@ extern "C" void __cdecl Boss22_Setup(void) {
 extern "C" void __cdecl Boss22_End(void) {
     const unsigned char end = Battle_EndFlags;
     const unsigned char music = EventBattle_Flags;
-    B(::bof3::Img(at::kScriptVar3.v)) = 0xC;
+    B(::bof3::Img(boss_se::at::kScriptVar3.v)) = 0xC;
     Battle_EndFlags = static_cast<unsigned char>(end | 8);
     EventBattle_Flags = static_cast<unsigned char>(music & 0xBF);
     Music_Track = 0x6A;
     BossH_LeaderPick = 3;
-    BH_AT(Handler, at::kEndThird.v)();
+    BH_AT(Handler, boss_se::at::kEndThird.v)();
 }
 
 // original 0x43B610: the exit hook. BossActor_ClearBit40(0); Sprite_Current =
@@ -231,13 +231,13 @@ extern "C" void __cdecl Boss30_Setup(void) {
 // jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss30_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther.v)();
+        BH_AT(Handler, boss_se::at::kEndOther.v)();
         return;
     }
     const unsigned char var = B(::bof3::Img(at::kScriptVar3.v));
     MoveScript_PartyRecords[0x65] = 0xC;
     B(::bof3::Img(at::kScriptVar3.v)) = static_cast<unsigned char>(var + 1);
-    BH_AT(Handler, at::kEndWin.v)();
+    BH_AT(Handler, boss_se::at::kEndWin.v)();
     Music_Track = 0x5A;
 }
 
@@ -544,7 +544,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
     const unsigned char c = static_cast<unsigned char>(code);
     if (c == 0) {
         const unsigned char round = BossSe_RoundSlot;
-        SetLong(At(::bof3::Img(at::kTurn.v)), S((static_cast<U>(round) >> 1) + 1));
+        SetLong(At(::bof3::Img(boss_se::at::kTurn.v)), S((static_cast<U>(round) >> 1) + 1));
         switch (round) {
         case 1: Message(0x1B); break;
         case 2:
@@ -572,12 +572,12 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
     }
     if (c != 3) return 0;
     unsigned char script = BossSe_Script;
-    if ((script & 0x20) == 0 && B(::bof3::Img(at::kPhase.v)) == 1) {
+    if ((script & 0x20) == 0 && B(::bof3::Img(boss_se::at::kPhase.v)) == 1) {
         BH_CALL(BattleTask_Create)(0, 8);
         script = static_cast<unsigned char>(BossSe_Script | 0x20);
         BossSe_Script = script;
     }
-    if ((script & 0x10) == 0 && B(::bof3::Img(at::kPhase.v)) == 3 && BattleActions_Step == 0) {
+    if ((script & 0x10) == 0 && B(::bof3::Img(boss_se::at::kPhase.v)) == 3 && BattleActions_Step == 0) {
         const U flags = Battle_Enemies[0].flags_110 | 2;
         rv::Bytes(ObjTrio)[0x124] = 3;
         rv::Bytes(ObjTrio)[0x125] = 1;
@@ -616,7 +616,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
             if (ObjTrio[0].step != 1) return 0;
             SetWord(At(::bof3::Img(ObjTrio_addr) + 0x128), 0);
             SetWord(At(::bof3::Img(ObjTrio_addr) + 0x12a), 0);
-            B(::bof3::Img(at::kActKind.v)) = 0xFF;
+            B(::bof3::Img(boss_se::at::kActKind.v)) = 0xFF;
             return 0;
         }
     } else if (round == 6) {
@@ -638,7 +638,7 @@ extern "C" void __cdecl Boss25_End(void) {
     ObjTrio[0].hp = hp;
     ObjTrio[0].ap = ap;
     MoveScript_PartyRecords[0x65] = 4;
-    BH_AT(Handler, at::kEndThird.v)();
+    BH_AT(Handler, boss_se::at::kEndThird.v)();
 }
 
 // original 0x43C1B0: the exit hook. Round-flag bit 1 set; Transition_Start(4);
@@ -680,9 +680,9 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
     switch (code & 0xFF) {
     case 0: {
         const unsigned char actor = B(::bof3::Img(at::kActor.v));
-        const unsigned char target = B(::bof3::Img(at::kTarget.v));
+        const unsigned char target = B(::bof3::Img(boss_se::at::kTarget.v));
         if (actor == 3 && target <= 2) {
-            const auto w = static_cast<std::int16_t>(Word(At(::bof3::Img(ObjTrio_addr) + 0x128 + at::kPartyStride * target)));
+            const auto w = static_cast<std::int16_t>(Word(At(::bof3::Img(ObjTrio_addr) + 0x128 + boss_se::at::kPartyStride * target)));
             if (w > 0) {
                 BattleE1_SumB = S(BattleE1_SumB + static_cast<U>(static_cast<std::int32_t>(w)));
                 return 0;
@@ -708,10 +708,10 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
         }
         return 0;
     case 2:
-        if (static_cast<U>(Long(At(::bof3::Img(at::kTurn.v)))) == 0x15) Battle_EndFlags |= 4;
+        if (static_cast<U>(Long(At(::bof3::Img(boss_se::at::kTurn.v)))) == 0x15) Battle_EndFlags |= 4;
         return 0;
     case 3:
-        if ((BossSe_Script & 0x20) == 0 && B(::bof3::Img(at::kPhase.v)) == 1) {
+        if ((BossSe_Script & 0x20) == 0 && B(::bof3::Img(boss_se::at::kPhase.v)) == 1) {
             BH_CALL(BattleTask_Create)(0, 8);
             BossSe_Script |= 0x20;
         }
@@ -727,23 +727,23 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
 // to 0x446E20 (step 3).
 extern "C" void __cdecl Boss26_End(void) {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride);
+        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * boss_se::at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
-        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
+        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(boss_se::at::kPoseSet.v)), 0x1800);
     }
-    B(::bof3::Img(at::kScriptVar3.v)) = 4;
-    BH_AT(Handler, at::kEndThird.v)();
+    B(::bof3::Img(boss_se::at::kScriptVar3.v)) = 4;
+    BH_AT(Handler, boss_se::at::kEndThird.v)();
 }
 
 // original 0x43E790: the exit hook of set-ups 26 and 35 (35 is group BSH's):
 // round-flag bit 1 set, Transition_Start(4).
 extern "C" void __cdecl BossHook_ExitTransition4(void) {
-    B(::bof3::Img(at::kFlags.v)) |= 2;
+    B(::bof3::Img(boss_se::at::kFlags.v)) |= 2;
     BH_CALL(Transition_Start)(4);
 }
 

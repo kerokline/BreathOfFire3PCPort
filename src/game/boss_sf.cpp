@@ -187,7 +187,7 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
         }
         if (Battle_EndFlags == 0 && (BossSe_Script & 8) == 0) {
             const unsigned char who = B(::bof3::Img(at::kOrderBefore.v) + BossSe_RoundSlot);
-            if (who <= 2 && (At(::bof3::Img(ObjTrio_addr) + who * at::kPartyStride)[0x130] & 3) == 0) {
+            if (who <= 2 && (At(::bof3::Img(ObjTrio_addr) + who * boss_sf::at::kPartyStride)[0x130] & 3) == 0) {
                 const unsigned char script = BossSe_Script;
                 Battle_EndFlags = 4;
                 BossSe_Script = static_cast<unsigned char>(script | 4);
@@ -220,20 +220,20 @@ extern "C" unsigned char __cdecl Boss27_Event(unsigned code) {
 // standing); a tail jump to 0x446E20 (step 3).
 extern "C" void __cdecl Boss27_End(void) {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride);
+        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * boss_sf::at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
-        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
+        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(boss_sf::at::kPoseSet.v)), 0x1800);
     }
     const unsigned char script = BossSe_Script;
     if (script & 1) MoveScript_PartyRecords[0x65] = 0xF;
     if (script & 2) MoveScript_PartyRecords[0x65] = 7;
     if (script & 4) MoveScript_PartyRecords[0x65] = 0x14;
-    BH_AT(Handler, at::kEndThird.v)();
+    BH_AT(Handler, boss_sf::at::kEndThird.v)();
 }
 
 // original 0x43C6F0: the exit hook. With 0x904AAD bit 0,
@@ -403,10 +403,10 @@ extern "C" void __cdecl Boss28_Setup(void) {
 extern "C" void __cdecl Boss28_End(void) {
     if (Battle_EndFlags & 2) {
         B(::bof3::Img(at::kScriptVar3.v)) = 0x1E;
-        BH_AT(Handler, at::kEndWin.v)();
+        BH_AT(Handler, boss_sf::at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther.v)();
+    BH_AT(Handler, boss_sf::at::kEndOther.v)();
 }
 
 // ===========================================================================

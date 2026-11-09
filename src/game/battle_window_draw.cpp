@@ -75,8 +75,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
-unsigned char* Window(unsigned slot) { return move_script::At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowStride); }
-char* PrintBuf() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kPrintBuf.v))); }
+unsigned char* Window(unsigned slot) { return move_script::At(::bof3::Img(WindowRecords_addr) + slot * battle_window_draw::at::kWindowStride); }
+char* PrintBuf() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(battle_window_draw::at::kPrintBuf.v))); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(move_script::At(at)); }
 
 std::int32_t S16BattleWindowDraw(std::uint32_t v) { return static_cast<std::int16_t>(v); }
@@ -113,10 +113,10 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
     unsigned char* const w = Window(1);
     auto* const win = rv::As<records::WindowRecord>(w);
     win->state = static_cast<unsigned char>(state);
-    const unsigned size = move_script::At(::bof3::Img(at::kPartyCount.v))[0];
+    const unsigned size = move_script::At(::bof3::Img(battle_window_draw::at::kPartyCount.v))[0];
     w[0xA] = static_cast<unsigned char>(size);
     win->kind = 0;
-    win->x = move_script::At(::bof3::Img(at::kStatusX.v) + size)[0];
+    win->x = move_script::At(::bof3::Img(battle_window_draw::at::kStatusX.v) + size)[0];
     win->y = 0xF0;
     w[8] = 0;
     w[9] = 0;
@@ -166,9 +166,9 @@ extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
 // a dword and only its low 16 bits are placed.
 extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value) {
     if ((static_cast<std::uint32_t>(value) & 0xFFFF) == 0xFFFF)
-        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNone.v)));
+        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNone.v)));
     else
-        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
+        battle_window_draw::g.sprintf_(PrintBuf(), Format(::bof3::Img(battle_window_draw::at::kFmtNumber.v)), static_cast<std::uint32_t>(value) & 0xFFFF);
     const unsigned page = battle_window_draw::g.get_tpage(0, 0, 0x3C0, 0);
     battle_window_draw::g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
     battle_window_draw::g.commit(1, 0xC);
@@ -203,7 +203,7 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
 extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_poly_f4(p);
-    const unsigned char* const t = move_script::At(::bof3::Img(at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
+    const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
     const std::int32_t sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), sy = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
     Put(p + 0x08, F(move_script::Word(t + 0x0) + sx));
     Put(p + 0x0C, F(move_script::Word(t + 0x2) + sy));
@@ -226,7 +226,7 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
 extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_tile(p);
-    const unsigned char* const t = move_script::At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+    const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
     int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(move_script::Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
@@ -245,7 +245,7 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
 extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour, int abe) {
     unsigned char* const p = Next();
     battle_window_draw::g.set_tile(p);
-    const unsigned char* const t = move_script::At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
+    const unsigned char* const t = move_script::At(::bof3::Img(battle_window_draw::at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
     int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(move_script::Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
@@ -430,7 +430,7 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
         auto* const win = rv::AsConst<records::WindowRecord>(w);
         if (win->state != 2 && win->state != 3) {
             const std::int32_t index = static_cast<std::int32_t>(w[0xA]) - 3;
-            const std::uint32_t at = ::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));
+            const std::uint32_t at = ::bof3::Img(Battle_Enemies_addr) + 0x80 + battle_window_draw::at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(battle_window_draw::at::kEnemyStride));
             if (move_script::At(at)[0] == kind) return 0;
         }
         --k;

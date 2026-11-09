@@ -76,7 +76,7 @@ constexpr unsigned char kReacting = 6;
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
 // The effect-done bit: `or byte [0x904AA8], 4`.
-void SetDone() { Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4); }
+void SetDone() { Mem(::bof3::Img(magic_harness::at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(magic_harness::at::kFlags))[0] | 4); }
 
 // The task slot's owner (0x93B8C4's +0x80), read at the point of the call.
 unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(BattleFlow_TaskCurrent_addr)))) + 0x80); }
@@ -143,7 +143,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Task(void) {
 // As the original has it: the actor indexes the party records (0x802D40 +
 // 0x14C actor), unchecked - an enemy actor writes past the three members.
 MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
-    unsigned char* const member = PartyOf(Mem(::bof3::Img(at::kActor))[0]);
+    unsigned char* const member = PartyOf(Mem(::bof3::Img(magic_harness::at::kActor))[0]);
     member[1] = kReacting;
     member[2] = 4;
     member[3] = 4;
