@@ -265,8 +265,8 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
     const std::int32_t x = Add(Mul(sprite->step_x, frames), sprite->x);
     const std::int32_t z = Add(Mul(sprite->step_z, frames), sprite->z);
     if (!(object[0] & 0x80)) {
-        long ground = g.slope(x, z, direction);
-        if (Scratch()[0] != 0) ground = g.elevation(x, z);
+        long ground = move_cmds::g.slope(x, z, direction);
+        if (Scratch()[0] != 0) ground = move_cmds::g.elevation(x, z);
         sprite = rv::Current<records::SpriteHead>();
         const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground))) -
                                   static_cast<short>(Word(rv::Bytes(sprite) + 0x3E));
@@ -290,7 +290,7 @@ extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsig
     const records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     const std::int32_t dz = Sub(z, sprite->z);
     const std::int32_t dx = Sub(x, sprite->x);
-    const long ground = g.elevation(x, z);
+    const long ground = move_cmds::g.elevation(x, z);
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - rv::Current<records::SpriteHead>()->height_whole));
     if (context[4] == 0) return;
     const unsigned char n = frames ? frames : 1;
@@ -333,7 +333,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     }
     Sprite_Current = object;
     long buffer[4] = {};
-    g.attach_offset(buffer, offset);
+    move_cmds::g.attach_offset(buffer, offset);
     const records::SpriteHead* const at = rv::Current<records::SpriteHead>();
     const std::int32_t x = Add(buffer[0], at->x);
     const std::int32_t z = Add(buffer[1], at->z);
@@ -356,8 +356,8 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
 // As the original has it: +1 is read back after the store.
 extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mode, unsigned char handle, unsigned char s,
                                        unsigned char t) {
-    if (g.object_kind() == 1) {
-        if (Sprite_Current[2] == 1) g.detach();
+    if (move_cmds::g.object_kind() == 1) {
+        if (Sprite_Current[2] == 1) move_cmds::g.detach();
         if (mode != 7) {
             Sprite_Current[2] = 0;
             return;
@@ -366,18 +366,18 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, handle);
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, s);
         if (context[4] != 0) {
-            g.attach_move(t);
+            move_cmds::g.attach_move(t);
             context[7] = 1;
         }
         SetPos(context, Pos(context) + 3u);
         return;
     }
-    if (rv::Current<records::SpriteHead>()->state == 7) g.detach();
+    if (rv::Current<records::SpriteHead>()->state == 7) move_cmds::g.detach();
     rv::Current<records::SpriteHead>()->state = mode;
     if (rv::Current<records::SpriteHead>()->state != 7) return;
     rv::Current<records::SpriteHead>()->work_18 = handle;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, s);
-    if (context[4] != 0) g.attach_move(t);
+    if (context[4] != 0) move_cmds::g.attach_move(t);
     SetPos(context, Pos(context) + 3u);
 }
 
@@ -385,7 +385,7 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
 // the object kind 1 +2 too.
 extern "C" void __cdecl MoveCmd_Detach(void) {
     rv::Current<records::SpriteHead>()->draw_flags &= 0xDF;
-    if (g.object_kind() == 1) Sprite_Current[2] = 0;
+    if (move_cmds::g.object_kind() == 1) Sprite_Current[2] = 0;
 }
 
 // original 0x5793B0: the timed move to where the attachment puts the sprite
@@ -399,7 +399,7 @@ extern "C" void __cdecl MoveCmd_AttachMove(unsigned char t) {
     const unsigned char offset = Sprite_Current[0x1C];
     const unsigned char handle = Sprite_Current[0x18];
     long buffer[4];
-    const long* const at = g.handle_position(buffer, handle, offset);
+    const long* const at = move_cmds::g.handle_position(buffer, handle, offset);
     const std::int32_t x = at[0], z = at[1], y = at[2];
     const unsigned char count = t ? t : 1;
     rv::Current<records::SpriteHead>()->step_frames = count;
@@ -492,12 +492,12 @@ extern "C" unsigned short __cdecl Sprite_ScriptPeek(void) {
 // written after the lists. The original returns Party_Join's al; Scenario_CallA's
 // callers never read eax (symbols.toml there).
 extern "C" void __cdecl Scena16_PartyReset(void) {
-    g.partyset_load(0xA, 0xFF, 0xFF, 0);
+    move_cmds::g.partyset_load(0xA, 0xFF, 0xFF, 0);
     const auto flags = static_cast<unsigned char>(Cond_Flags[0xd1] | 7);
     for (unsigned i = 0; i < 6; ++i) Cond_Flags[0xd2 + i] = 0xFF;
     Cond_Flags[0xd1] = flags;
     Field_MemberCount = 0;
-    g.party_join(0xA);
+    move_cmds::g.party_join(0xA);
 }
 
 void MoveCmds_Inject() {

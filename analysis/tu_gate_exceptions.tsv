@@ -380,7 +380,7 @@ _GLOBAL__sub_I_*@object_kinds.cpp.obj	data-layout	B0 promotion of object_kinds.c
 _ZN12_GLOBAL__N_16WanderEPhb@object_kinds.cpp.obj	data-layout	B0 promotion of object_kinds.cpp's gObjectKinds (the seam): NEW local:2d2061e3331c  (named _ZN12_GLOBAL__N_16WanderEPhb)	ebf7406d
 _ZN12_GLOBAL__N_110FadeInStepEv@object_kinds.cpp.obj	data-layout	B0 promotion of object_kinds.cpp's gObjectKinds (the seam): NEW local:324d27bed381  (named _ZN12_GLOBAL__N_110FadeInStepEv)	ebf7406d
 _ZN12_GLOBAL__N_110LeaderMoveEPhPFhS0_Eh@object_kinds.cpp.obj	data-layout	B0 promotion of object_kinds.cpp's gObjectKinds (the seam): GONE local:3461eed34319  (named _ZN12_GLOBAL__N_110LeaderMoveEPhPFhS0_Eh)	ebf7406d
-MoveScript_Flow	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Flow  first at instruction 2: 'push r12' -> 'push r13'	
-MoveScript_GroupF	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_GroupF  first at instruction 22: 'ja .+25E' -> 'ja .+267'	
-MoveScript_Step	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Step  first at instruction 9: 'jne .+19B' -> 'jne .+1A7'	
-_ZN11move_script1gE	x64-indirect	B0 promotion of move_script.cpp's g (the seam): NEW _ZN11move_script1gE  (data)	
+MoveScript_Flow	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Flow  first at instruction 2: 'push r12' -> 'push r13'	e1c7d32c
+MoveScript_GroupF	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_GroupF  first at instruction 22: 'ja .+25E' -> 'ja .+267'	e1c7d32c
+MoveScript_Step	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Step  first at instruction 9: 'jne .+19B' -> 'jne .+1A7'	e1c7d32c
+_ZN11move_script1gE	x64-indirect	B0 promotion of move_script.cpp's g (the seam): NEW _ZN11move_script1gE  (data)	e1c7d32c
