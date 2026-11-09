@@ -118,7 +118,7 @@ constexpr ::bof3::image::Va kMessage{0x803194};       // u16: record 1 +0x10, th
 constexpr rdata::Const kOffsetX{0x5C4278};
 constexpr rdata::Const kOffsetY{0x5C4274};
 
-unsigned char& BRest2b(U address) { return At(address)[0]; }
+unsigned char& BRest2b(U address) { return move_script::At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
