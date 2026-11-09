@@ -52,10 +52,13 @@ What one move carries, for each function F leaving source S for target T:
   docs/source-layout-round.md 5a); a name two groups both define is an
   ambiguity the build reports;
 - F's `BOF3_INJECT(F);` line, out of S's `_Inject()` into T's
-  `<TStem>_Inject()`, which src/hook/inject_all.cpp calls right after the
-  last of its sources' `_Inject()` calls - after each source's self-test,
-  which clones the originals before they are patched; T's header is included
-  after the last source header's line there. A function with no such line
+  `<TStem>_Inject()`, which src/hook/inject_all.cpp calls right after its
+  source's `_Inject()` call - after the source's self-test, which clones the
+  originals before they are patched, and in the order the functions were
+  patched before the move. Where T's binds come from several sources, T
+  gets one `<TStem>_InjectFrom<Source>()` for each, each called right after
+  its source's; T's header is included after a source header's line there.
+  A function with no such line
   whose bind sits elsewhere (another file's `_Inject()`, a one-line or a
   conditional `bof3::Inject`) keeps that bind where it is, listed by
   --check; a target whose functions are all bound elsewhere gets no
@@ -1142,8 +1145,8 @@ def main() -> int:
     # whose functions are all bound elsewhere gets no _Inject() of its own
     inject_all = read("src/hook/inject_all.cpp")
     for t, e in sorted(targets.items()):
-        if e["binds"]:
-            inject_all = insert_inject_all(inject_all, e["sources"], header_of(t), target_inject_name(t))
+        for src, name, _ in inject_parts(t, e):
+            inject_all = insert_inject_all(inject_all, [src], header_of(t), name)
 
     # --- write the sources ------------------------------------------------------------
     for s, p in plans.items():
@@ -1217,6 +1220,25 @@ def target_inject_name(t: str) -> str:
     name = camel(Path(t).stem) + "_Inject"
     taken = any(name in names for f, names in _inject_defined.items() if f != t)
     return camel(Path(t).parent.name) + name if taken else name
+
+
+def inject_parts(t: str, e: dict) -> list[tuple[str, str, list[str]]]:
+    """A target's inject functions: (source, name, its BOF3_INJECT functions in pc order). The binds
+    of each source stay right after that source's _Inject() in inject_all.cpp, so the order in which
+    the functions are patched is the one before the move: a later source's self-test may rely on an
+    earlier source's functions being ours already (rest_3g's DIV-0108 check of Battle_PlaceBossActor
+    calls battle_sprites' Battle_CopyEnemyData, patched at BattleSprites_Inject; one
+    Battle4_Inject() after Rest3G_Inject() left Capcom's in place for it). One source with binds:
+    <T>_Inject(); several: <T>_InjectFrom<Source>() each."""
+    base = target_inject_name(t)
+    by_src: dict[str, list[str]] = {}
+    for _, name, _, src in sorted(e["funcs"]):
+        if name in e["binds"]:
+            by_src.setdefault(src, []).append(name)
+    order = [src for src in e["sources"] if src in by_src]
+    if len(order) == 1:
+        return [(order[0], base, by_src[order[0]])]
+    return [(src, base + "From" + camel(Path(src).stem), by_src[src]) for src in order]
 
 
 def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) -> None:
@@ -1293,16 +1315,15 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
             items.append(it)
     out.append(block(items, True))
     out.append(block(e["undefs"], True))
-    if e["binds"]:                             # a bind kept elsewhere stays there
-        out.append(f"void {inject}() {{\n")
-        for _, name, _, _ in e["funcs"]:
-            if name in e["binds"]:
-                out.append(f"    BOF3_INJECT({name});\n")
+    parts = inject_parts(t, e)                 # a bind kept elsewhere stays there
+    for k, (_, name, binds) in enumerate(parts):
+        out.append(("\n" if k else "") + f"void {name}() {{\n")
+        out += [f"    BOF3_INJECT({b});\n" for b in binds]
         out.append("}\n")
     write(t, re.sub(r"\n{3,}", "\n\n", "".join(out)).rstrip("\n") + "\n")
     write(th, f"// tools/move_funcs.py (docs/source-layout-round.md). The functions of {Path(t).name} are declared\n"
               f"// by symbols.gen.h (each has an `impl` in symbols.toml).\n#pragma once\n"
-              + (f"\nvoid {inject}();\n" if e["binds"] else ""))
+              + ("\n" + "".join(f"void {name}();\n" for _, name, _ in parts) if parts else ""))
 
 
 def fuzz_rows(names: set[str]) -> list[tuple[str, int]]:
