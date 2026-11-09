@@ -1058,7 +1058,8 @@ is expected; the doc says so.
    **Row 572** (`tu_52d8f0`, `field/field_4`, 70 functions, the old row 585):
    the US decompilation's unit boundary falls inside it at
    `Field_ActionState`; a unit is never split by the sheet's rule, so this
-   stays as one file unless the owner says otherwise.
+   stays as one file unless the owner says otherwise. **Answered 2026-11-09:
+   "Field_4 can stay as one file."**
 10. **The gate for shared state** (group a's three classes, section 4): a
    promotion that changes the object is refused today. Do classes 2 (data
    layout) and 3 (an x86_64 indirect call through a now-external pointer)

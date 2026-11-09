@@ -395,8 +395,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    data-layout,i686-fold,i686-inline,i686-convention` 0 differ (153 excepted, 93 promoted); x86_64
    `--exceptions` 0 differ (280 excepted, 61 promoted); both self-test suites clean on h's and k's tips. **Owed
    the owner:** (1) the first i686 code change of the round has no played route behind it yet - the state-hash
-   A/B of the ten routes against the `orig4` pairs, or a play of the branch build; (2) row 572's extent (item
-   9). **Next:**
+   A/B of the ten routes against the `orig4` pairs (running 2026-11-09 from `slb1108b\proof_b0.sh`), or a
+   play of the branch build. Row 572 answered 2026-11-09: field_4 stays one file. **Next:**
    the moves B1..B5 (round doc 4: groups by `.text` range, parallel, merged one at a time with the gate after
    each), then stages C/D/E. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
