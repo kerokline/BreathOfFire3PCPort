@@ -62,7 +62,7 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
 // Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * at::kObjectStride);
+    return move_script::At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * at::kObjectStride);
 }
 
 }  // namespace
@@ -197,7 +197,7 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
     const unsigned char member = static_cast<unsigned char>(member_arg);
     unsigned char* const flags = RecordFlags(member);
     *flags = static_cast<unsigned char>(*flags | 3);
-    unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
+    unsigned char* const lists = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     const unsigned char n = Field_MemberCount;
     if (n < 3) {
         Field_MemberCount = static_cast<unsigned char>(n + 1);
