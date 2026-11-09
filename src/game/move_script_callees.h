@@ -1,4 +1,4 @@
-// The callees seam of move_script.cpp: the struct and the one `g` its functions call through, so that a
+// The callees seam of move_script.cpp: the struct and the one `gMoveScript` its functions call through, so that a
 // function moved out of move_script.cpp calls through the same pointers the start-up fuzz swaps
 // (source-layout B0, analysis/tu_renames.tsv). Defined in move_script.cpp.
 #pragma once
@@ -38,5 +38,5 @@ struct CalleesMoveScript {
     unsigned char (__cdecl* test_fc)(short, short);
 };
 
-extern CalleesMoveScript g;   // defined in move_script.cpp (source-layout B0: promoted for a moved reader)
+extern CalleesMoveScript gMoveScript; // defined in move_script.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace move_script

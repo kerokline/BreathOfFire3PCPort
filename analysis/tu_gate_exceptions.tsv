@@ -383,7 +383,7 @@ _ZN12_GLOBAL__N_110LeaderMoveEPhPFhS0_Eh@object_kinds.cpp.obj	data-layout	B0 pro
 MoveScript_Flow	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Flow  first at instruction 2: 'push r12' -> 'push r13'	e1c7d32c
 MoveScript_GroupF	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_GroupF  first at instruction 22: 'ja .+25E' -> 'ja .+267'	e1c7d32c
 MoveScript_Step	x64-indirect	B0 promotion of move_script.cpp's g (the seam): DIFFER MoveScript_Step  first at instruction 9: 'jne .+19B' -> 'jne .+1A7'	e1c7d32c
-_ZN11move_script1gE	x64-indirect	B0 promotion of move_script.cpp's g (the seam): NEW _ZN11move_script1gE  (data)	e1c7d32c
+_ZN11move_script11gMoveScriptE	x64-indirect	B0 promotion of move_script.cpp's g (the seam): NEW _ZN11move_script11gMoveScriptE  (data)	e1c7d32c
 _Scenario_Load	data-layout	B0 promotion of title_states.cpp's gTitleStates (the seam): DIFFER _Scenario_Load  first at instruction 5: 'call dword ptr [4] @r6:local#dc0b56af1c1c' -> 'call dword ptr [4] @r6:__ZN12title_states12gTitleStatesE'	95c07df6
 _Scenario_Start	data-layout	B0 promotion of title_states.cpp's gTitleStates (the seam): DIFFER _Scenario_Start  first at instruction 13: 'call dword ptr [0x50] @r6:local#dc0b56af1c1c' -> 'call dword ptr [0x50] @r6:__ZN12title_states12gTitleStatesE'	95c07df6
 _Title_DrawBadge	data-layout	B0 promotion of title_states.cpp's gTitleStates (the seam): DIFFER _Title_DrawBadge  first at instruction 18: 'call dword ptr [0x40] @r6:local#dc0b56af1c1c' -> 'call dword ptr [0x40] @r6:__ZN12title_states12gTitleStatesE'	95c07df6
