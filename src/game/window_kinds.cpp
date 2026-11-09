@@ -105,7 +105,7 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
                                             unsigned char* step, unsigned char* kind) {
     const short max = S(max_hp);
     if (S(max_seen) != max) {
-        if (!(max > S(hp))) SetWord(hp, static_cast<std::uint16_t>(max));
+        if (!(max > S(hp))) window_kinds::SetWord(hp, static_cast<std::uint16_t>(max));
         const short was = S(shown);
         const short now = S(hp);
         if (was == now) {
@@ -117,10 +117,10 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
             gauge[0] = q;
             if (q > 0x37) {
                 gauge[0] = 0x37;
-                SetWord(shown, Word(hp));
+                window_kinds::SetWord(shown, window_kinds::Word(hp));
             }
         }
-        SetWord(max_seen, Word(max_hp));
+        window_kinds::SetWord(max_seen, window_kinds::Word(max_hp));
     }
     const short was = S(shown);
     const short now = S(hp);
@@ -135,19 +135,19 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
             if (S(hp) != 0 && q == 0) gauge[0] = 1;
             drain[0] = static_cast<unsigned char>(at::kScratch - gauge[0]);
         }
-        SetWord(step, static_cast<unsigned>(drain[0] >> 4));
+        window_kinds::SetWord(step, static_cast<unsigned>(drain[0] >> 4));
         kind[0] = 1;
     } else if (was < now) {
         const int max_now = S(max_hp);
         const int from = Scale(was, max_now);
         const int to = Scale(now, max_now);
-        SetWord(step, static_cast<unsigned>((to - from) / 16));
+        window_kinds::SetWord(step, static_cast<unsigned>((to - from) / 16));
         kind[0] = 2;
     } else {
         return;
     }
-    if (Word(step) == 0) SetWord(step, 1);
-    SetWord(shown, Word(hp));
+    if (window_kinds::Word(step) == 0) window_kinds::SetWord(step, 1);
+    window_kinds::SetWord(shown, window_kinds::Word(hp));
 }
 
 // original 0x597BD0, gauge state 1 (draining): the drained part loses the
@@ -169,7 +169,7 @@ extern "C" void __cdecl Window_HpGaugeDrain(unsigned char* gauge, const unsigned
         drain[0] = 0;
         kind[0] = 0;
     }
-    if (Word(hp) != 0 && gauge[0] == 0) gauge[0] = 1;
+    if (window_kinds::Word(hp) != 0 && gauge[0] == 0) gauge[0] = 1;
 }
 
 // original 0x597C10, gauge state 2 (filling): the gauge grows by the step
@@ -193,7 +193,7 @@ extern "C" void __cdecl Window_HpGaugeFill(unsigned char* gauge, const unsigned 
         gauge[0] = static_cast<unsigned char>(target);
         kind[0] = 0;
     }
-    if (Word(hp) != 0 && gauge[0] == 0) gauge[0] = 1;
+    if (window_kinds::Word(hp) != 0 && gauge[0] == 0) gauge[0] = 1;
 }
 
 // ===========================================================================
@@ -214,14 +214,14 @@ extern "C" void __cdecl Window_HpGaugeFill(unsigned char* gauge, const unsigned 
 extern "C" void __cdecl BattleWin_BannerRun(void) {
     const unsigned state = Rec()[3];
     if (state >= 3) bof3::Fatal("a battle banner window's state byte is %u; the original's stack table holds three", state);
-    g.banner[state]();
+    window_kinds::g.banner[state]();
     const unsigned char* w = Rec();
-    g.message_box(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y);
+    window_kinds::g.message_box(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y);
     w = Rec();
     const std::uint32_t e = static_cast<std::uint32_t>(w[0xA]) * 0xC;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kBannerText.v) + e))));
-    const std::uint32_t colour = (e & ~0xFFu) | At(::bof3::Img(at::kBannerColour.v) + e)[0];
-    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 3),
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(at::kBannerText.v) + e))));
+    const std::uint32_t colour = (e & ~0xFFu) | window_kinds::At(::bof3::Img(at::kBannerColour.v) + e)[0];
+    window_kinds::g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 3),
                    static_cast<int>(colour), 0xFF, text);
 }
 
@@ -252,7 +252,7 @@ extern "C" void __cdecl BattleWin_BannerSlideOut(void) {
         const auto* const entry = As<const unsigned char*>(BattleMisc_BannerCurrent);
         const auto keep = static_cast<unsigned char>(~entry[1]);
         BattleMisc_BannerKinds = static_cast<unsigned char>(BattleMisc_BannerKinds & keep);
-        g.free_current();
+        window_kinds::g.free_current();
         return;
     }
     rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y - 8);
@@ -267,7 +267,7 @@ extern "C" void __cdecl BattleWin_BannerSlideOut(void) {
 extern "C" void __cdecl BattleWin_MessageRun(void) {
     const unsigned state = Rec()[3];
     if (state >= 4) bof3::Fatal("a battle message window's state byte is %u; the original's stack table holds four", state);
-    g.message[state]();
+    window_kinds::g.message[state]();
 }
 
 // original 0x597D90, message state 0: nothing drawn; when the ring has an
@@ -291,7 +291,7 @@ extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
         ++w[3];
     else
         rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y + 8);
-    g.draw_message();
+    window_kinds::g.draw_message();
 }
 
 // original 0x597DF0, message state 2: the message drawn; then, when the ring
@@ -304,20 +304,20 @@ extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
 // so a button that advances the ring makes the timer test look at the NEXT
 // entry in the same frame; the record is re-read for each state store.
 extern "C" void __cdecl BattleWin_MessageShow(void) {
-    g.draw_message();
+    window_kinds::g.draw_message();
     unsigned i = BattleWindows_MsgHead;
-    if ((At(::bof3::Img(at::kMsgRing.v) + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
-        if (g.msg_advance() != 0) Rec()[3] = 3;
+    if ((window_kinds::At(::bof3::Img(at::kMsgRing.v) + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
+        if (window_kinds::g.msg_advance() != 0) Rec()[3] = 3;
     }
     i = BattleWindows_MsgHead;
-    unsigned char* const entry = At(::bof3::Img(at::kMsgRing.v) + 8 * i);
+    unsigned char* const entry = window_kinds::At(::bof3::Img(at::kMsgRing.v) + 8 * i);
     if ((entry[0] & 2) == 0) return;
     unsigned char timer = entry[1];
     if (timer == 0xFF) return;
     --timer;
     entry[1] = timer;
     if (timer != 0) return;
-    if (g.msg_advance() != 0) Rec()[3] = 3;
+    if (window_kinds::g.msg_advance() != 0) Rec()[3] = 3;
 }
 
 // original 0x597E60, message state 3: the window slides up 8 a frame until
@@ -335,11 +335,11 @@ extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
         rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y - 8);
     }
     const unsigned char* r = Rec();
-    g.message_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
+    window_kinds::g.message_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
     const unsigned i = (BattleWindows_MsgHead - 1u) & 0xFu;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kMsgRing.v) + 4 + 8 * i))));
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(at::kMsgRing.v) + 4 + 8 * i))));
     r = Rec();
-    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->y + 3), 0, 0xFF,
+    window_kinds::g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->y + 3), 0, 0xFF,
                    text);
 }
 
@@ -355,9 +355,9 @@ extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
 extern "C" void __cdecl Window_Handler4Kinds(void) {
     const unsigned kind = Rec()[2];
     if (kind >= 6) bof3::Fatal("a record-handler-4 window's kind byte is %u; the original's stack table holds six", kind);
-    if (g.result[kind] == nullptr)
+    if (window_kinds::g.result[kind] == nullptr)
         bof3::Fatal("a record-handler-4 window has kind %u, whose slot in the original's stack table is 0", kind);
-    g.result[kind]();
+    window_kinds::g.result[kind]();
 }
 
 // ===========================================================================
