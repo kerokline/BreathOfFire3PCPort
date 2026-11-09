@@ -246,7 +246,7 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
                 field_frame::g.linked();
                 continue;
             }
-            if (Word(object + 0x9C) > 0x1E && timed == 0) field_frame::g.idle_long(object);
+            if (move_script::Word(object + 0x9C) > 0x1E && timed == 0) field_frame::g.idle_long(object);
             else CallHandler(object);
         }
         records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
