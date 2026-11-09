@@ -616,6 +616,38 @@ def entity_of(it: ci.Item, ns: str, n: str) -> str:
     return "class " + name if it.kind == "type" else name
 
 
+def same_at_names(e: dict, s: str, p: "SourcePlan", meant: set[str], alias: str, plans: dict) -> bool:
+    """Whether each `at::name` S's bodies in a target write (bare `at`) is defined with the same code
+    in the namespace S meant and in the target's `at` (mode_states' and scena_sc1's
+    `constexpr std::uint32_t kCounters = 0x903848;`): binding to the other is then no change."""
+    if len(meant) != 1:
+        return False
+    mine = next(iter(meant))
+    src_alias = next(x for x, a in e["aliases"].items() if a == alias)
+    names = set().union(set(), *(at_uses(it) for _, _, it, src in e["funcs"] if src == s),
+                        *(at_uses(it) for src, it, _ in e["locals"] if src == s))
+    a = namespace_bodies(p.text, mine)
+    b = namespace_bodies(plans[src_alias].text, alias)
+    return bool(names) and all(n in a and a.get(n) == b.get(n) for n in names)
+
+
+def namespace_bodies(text: str, ns: str) -> dict[str, str]:
+    """name -> code without comments, of what namespace `ns` defines (in `text` and its headers)."""
+    parts = tuple(ns.split("::"))
+    out: dict[str, str] = {}
+    for t in [text] + included_texts(text):
+        try:
+            fi = ci.FileItems(t.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            its_ns = tuple(q for c in it.ns for q in (c.split("::") if c else [c]))
+            if its_ns[:len(parts)] == parts and not any(its_ns[len(parts):]):
+                for n in it.names:
+                    out.setdefault(n, code_tokens(it))
+    return out
+
+
 def at_uses(it: ci.Item) -> set[str]:
     """The names an item writes as `at::name` (cpp_items leaves `at::` out of its uses)."""
     toks = [t for t in ci.lex(it.text) if t.kind in ("id", "punct")]
@@ -1070,6 +1102,9 @@ def main() -> int:
             for n in sorted((uses_s & set(own_entity) & set(s_ent)) - p.local_names):
                 if n == "at" and p.alias_at:
                     continue
+                if n == "at" and len(aliases_t) == 1 and same_at_names(
+                        e, s, p, s_ent[n], aliases_t[0], plans):
+                    continue        # every at::name these bodies write is spelt the same in both
                 if own_entity[n] - s_ent[n] and distinct(own_entity[n] | s_ent[n]):
                     problems.append(f"{t}: `{n}` in {s}'s bodies means {', '.join(sorted(s_ent[n]))}; here it "
                                     f"would find {', '.join(sorted(own_entity[n] - s_ent[n]))}; qualify it first")
@@ -1090,7 +1125,11 @@ def main() -> int:
             # (the qualification pass, docs/source-layout-round.md 7b item 11); nor is a name the body
             # declares itself (a local `g`, a parameter, a struct member), which hides the namespaces'
             used = set().union(*(it.uses_unq - it.declares for _, _, it, _ in e["funcs"]),
-                               *(it.uses_unq - it.declares for _, it, _ in e["locals"] if not any(it.ns)))
+                               *(it.uses_unq - it.declares for _, it, _ in e["locals"] if it.ns == ()),
+                               # inside the anonymous namespace the file's own name of it (its `at`)
+                               # is found before the directives' names
+                               *(it.uses_unq - it.declares - set(own_entity) for _, it, _ in e["locals"]
+                                 if it.ns and not any(it.ns)))
             providers: dict[str, list[str]] = defaultdict(list)
             for x, names in sorted(e["namespaces"].items()):
                 for n in set(names) & used:
