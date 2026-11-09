@@ -598,7 +598,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
 extern "C" unsigned __cdecl WorldMap_RecordIndex(void) {
     const unsigned area = Game_AreaNumber;
     unsigned index = 0;
-    for (U a = ::bof3::Img(WorldMap_Records_addr) + 0x18; a < ::bof3::Img(at::kRecordAreasEnd); a += at::kRecordSize, ++index)
+    for (U a = ::bof3::Img(WorldMap_Records_addr) + 0x18; a < ::bof3::Img(worldmap_area::at::kRecordAreasEnd); a += worldmap_area::at::kRecordSize, ++index)
         if (At(a)[0] == area) break;
     return index;
 }
@@ -611,7 +611,7 @@ namespace {
 // 104) holds nulls at +4, +8 and +0x14.
 Handler RecordEntry(U slot) {
     const U index = g.record_index() & 0xFF;
-    return EntryWorldmapArea(::bof3::Img(WorldMap_Records_addr) + index * at::kRecordSize + slot);
+    return EntryWorldmapArea(::bof3::Img(WorldMap_Records_addr) + index * worldmap_area::at::kRecordSize + slot);
 }
 }  // namespace
 
