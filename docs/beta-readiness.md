@@ -42,9 +42,6 @@ What the clears do **not** establish, and the notes must keep saying:
   minigame cheats** (DIV-0188) were both played with and work well - "played" lines in the notes. The **Preset
   page** (PR #164) was opened and toggled, but the play was under **Recommended** throughout: the page itself is
   seen, the other three presets are still "checked headless", and the notes say so.
-- **The 32-bit build's movies through our decoder** (DIV-0205): the owner saw the Capcom movie on the 64-bit
-  build copied into `game\` (owner-review, 2026-11-07 evening); the 32-bit build goes through the same code and
-  has not been started since. One start of the released 32-bit zip covers it (section 4, item 2).
 - The **upgrade from alpha.5** over an existing folder (section 4, item 3).
 
 ## 2. Open defects and issues at the cut
@@ -77,19 +74,19 @@ What the clears do **not** establish, and the notes must keep saying:
 
 ## 4. The work before the tag
 
-In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner reads.
+In order. Item 3 is the owner's (item 2 is done); 4..8 an agent can do and the owner reads.
 
 1. ~~The owner's answer~~ - given 2026-11-07 night (section 1): the two cheats played, the Preset page seen,
    the other presets not played.
-2. **One start of the 32-bit zip** from the `latest` build or the draft: the two movies with sound (DIV-0205 on
-   the player's width), then the title. Five minutes.
+2. ~~One start of the 32-bit build~~ - done 2026-11-08: the owner saw the FMV play on the 32-bit build
+   (DIV-0205 on the player's width).
 3. **The upgrade path**: unzip the draft over a copy of a real alpha.5 folder (the owner's own, copied aside, or
    ScrubOasis's shape, a disc-built one is the stronger test). Expect: the launcher names the stale pieces and
    offers the rebuild; a disc-built image built by an older release is refused until rebuilt (DIV-0101's
    strict mode, `BOF3X_EXEIMAGE_STRICT=0` the override); the game's own saves are kept and load; the quicksave
    files are kept but the new build **refuses** them, naming the other build in the overlay and the log
    (DIV-0145, [`quicksave.md`](quicksave.md) "A load checks everything"; the x64 round's stage C proof shows
-   the refusal) - a "load as a plain save" fallback is designed, not built; the Jukebox's names still show. A clean-folder install is already step 4 of the release routine.
+   the refusal) - a "load as a plain save" fallback is designed, not built; the Jukebox's names still show; the start plays Capcom's logo alone though the alpha.5 folder still holds `logos.avi` (DIV-0202 as amended 2026-11-08). A clean-folder install is already step 4 of the release routine.
 4. **The release notes**, `docs/releases/v0.1.0-beta.1.md`, in alpha.6's shape, rewritten rather than appended:
    - the first paragraph says *beta*, and in one sentence what the word means here: two full clears by hand,
      every scripted route hashing against its reference, the crashes found in play since alpha.5 fixed, the
@@ -109,9 +106,8 @@ In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner read
      upgrading (DIV-0145; the x64 round's stage C measurement). The first draft said the quicksaves carry
      forward - they do not (corrected 2026-11-08).
    The workflow refuses to run without the file (`release.yml`, "Release notes exist").
-5. **The README's status line** (line 68 of [`../README.md`](../README.md), "There is an alpha build"): say
-   beta, and point at the releases page; the two sentences after it ("the goal is to sunset it eventually")
-   are the owner's to keep or drop.
+5. ~~The README's status line~~ - done 2026-11-08, in the owner's own words: the builds are called beta, the
+   releases page named, and the "sunset" sentence dropped.
 6. **A bug-report issue template** (`.github/ISSUE_TEMPLATE/bug-report.md`; the repo has a PR template only):
    the release's name (the launcher shows no version; the zip's name, or `bof3x-launcher.exe`'s Properties >
    Details > Product version, which `src/version.rc` stamps from the tag), the sources on the Sources page and

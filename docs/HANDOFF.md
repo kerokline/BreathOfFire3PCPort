@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's two checks, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B waits on the owner's read of the sheet, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B waits on the owner's read of the sheet, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -35,8 +35,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 0. **The beta's first reports.** `v0.1.0-beta.1` is being cut from `main` `67c3259b`
    ([`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
    the notes; [`STATUS.md`](STATUS.md) says what it holds and what the two clears established). **Still the
-   owner's before the tag** (beta-readiness section 4): item 2, one start of the 32-bit zip from the `latest`
-   build or the draft - the two movies with sound through DIV-0205, then the title; item 3, the alpha.5 upgrade
+   owner's before the tag** (beta-readiness section 4): item 3, the alpha.5 upgrade
    path over a copy of a real alpha.5 folder (the launcher names the stale pieces and offers the rebuild; a
    disc-built image built by an older release is refused until rebuilt, DIV-0101's strict mode; the saves load;
    the Jukebox's names show). Then the routine ([`releases/README.md`](releases/README.md)): commit the notes on
@@ -69,8 +68,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      the *Fin* disc fall off the recorded frames. `kFinRadius` in `scena_sc15.cpp` is the one constant if the
      owner says "tighter" or "wider". Root `D:/bof3x-runs/end1107` (shots `shots_v4`, `shots_e2`, `shots_o`,
      `shots_p2`), removable.
-   - **The FMV decoders** (DIV-0205, in PR #207): the 64-bit picture seen by the owner; the 32-bit start is the
-     beta's item 2 (above). A 4:3 fit without a whole multiple is the untried `HALFTONE` path. Root
+   - **The FMV decoders** (DIV-0205, in PR #207): the picture seen by the owner on both widths (the 32-bit
+     build on 2026-11-08, the beta's item 2). A 4:3 fit without a whole multiple is the untried `HALFTONE` path. Root
      `C:\Users\kerok\bof3x-runs\fmv1107` (game-derived), removable.
    - **The mountain passes** (DIV-0191, PR #175): nothing owed. Traps paid: a door reached from a plain cell acts
      on the last place a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check

@@ -3661,12 +3661,12 @@ site	src/game/effect_3a.cpp	108	uintptr	-	live	std::uintptr_t	-	reinterpret_cast
 site	src/game/effect_3a.cpp	108	widen	word_read	live	UL(static_cast<const unsigned char*>(table) + 4 * state)	scenario_harness::Handler [fn]	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
 site	src/game/effect_3a.cpp	219	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
 site	src/game/effect_3a.cpp	219	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
-site	src/game/effect_3a.cpp	640	long	l	live	long	-	extern " " unsigned char __cdecl EffectKind62_DrawRing(const long* point, int inner, int outer) {
-site	src/game/effect_3a.cpp	855	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, unsigned colour) {
-site	src/game/effect_3a.cpp	908	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/effect_3a.cpp	908	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/effect_3a.cpp	1235	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
-site	src/game/effect_3a.cpp	1371	narrow_call	object_ours	live	&g_pixel_room	AddressOf	bof3::PatchBytes(" ", AddressOf(&g_pixel_room), &pixel_was, &pixel_is, 1);
+site	src/game/effect_3a.cpp	643	long	l	live	long	-	extern " " unsigned char __cdecl EffectKind62_DrawRing(const long* point, int inner, int outer) {
+site	src/game/effect_3a.cpp	858	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, unsigned colour) {
+site	src/game/effect_3a.cpp	911	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/effect_3a.cpp	911	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/effect_3a.cpp	1238	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
+site	src/game/effect_3a.cpp	1374	narrow_call	object_ours	live	&g_pixel_room	AddressOf	bof3::PatchBytes(" ", AddressOf(&g_pixel_room), &pixel_was, &pixel_is, 1);
 site	src/game/effect_3a_fuzz.cpp	157	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_3a_fuzz.cpp	157	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_3a_fuzz.cpp	158	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -10098,17 +10098,17 @@ site	src/game/scena_sc15.cpp	2333	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_R
 site	src/game/scena_sc15.cpp	2333	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
 site	src/game/scena_sc15.cpp	2341	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
 site	src/game/scena_sc15.cpp	2341	widen	code_place	live	::bof3::Code(kEndTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
-site	src/game/scena_sc15.cpp	2433	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
-site	src/game/scena_sc15.cpp	2434	long	l	live	long	-	long flag;
-site	src/game/scena_sc15.cpp	2442	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
-site	src/game/scena_sc15.cpp	2448	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2449	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2463	long	l	live	long	-	long depth, flags;
-site	src/game/scena_sc15.cpp	2578	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2578	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2724	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2724	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2784	low32	object_ours	live	&g_fin_night	Low32	bof3::PatchBytes(" ", Low32(&g_fin_night), &was, &is, 1);
+site	src/game/scena_sc15.cpp	2434	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
+site	src/game/scena_sc15.cpp	2435	long	l	live	long	-	long flag;
+site	src/game/scena_sc15.cpp	2443	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
+site	src/game/scena_sc15.cpp	2449	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2450	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2464	long	l	live	long	-	long depth, flags;
+site	src/game/scena_sc15.cpp	2579	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2579	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2725	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2725	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2785	low32	object_ours	live	&g_fin_night	Low32	bof3::PatchBytes(" ", Low32(&g_fin_night), &was, &is, 1);
 site	src/game/scena_sc15_fuzz.cpp	43	narrow	image_local	fuzz	p	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	93	narrow	func_ours	fuzz	f	-	return reinterpret_cast<F>(const_cast<void*>(sh::StandIn(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(f)))));
@@ -11461,46 +11461,47 @@ site	src/game/widescreen.h	221	long	l	live	long	-	const long long q = num >= 0 ?
 site	src/game/win_main.cpp	107	uintptr	-	live	std::uintptr_t	-	const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/win_main.cpp	107	widen	param	live	address	const char*	const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/win_main.cpp	191	long	l	live	long	-	long v[4];
-site	src/game/win_main.cpp	300	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
-site	src/game/win_main.cpp	317	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
-site	src/game/win_main.cpp	319	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
-site	src/game/win_main.cpp	345	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/win_main.cpp	345	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-site	src/game/win_main.cpp	348	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
-site	src/game/win_main.cpp	348	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
-site	src/game/win_main.cpp	371	long	ul	live	unsigned long	-	Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
-site	src/game/win_main.cpp	372	long	ul	live	unsigned long	-	static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
-site	src/game/win_main.cpp	409	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
-site	src/game/win_main.cpp	409	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
-site	src/game/win_main.cpp	442	long	l	live	long	-	bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));
-site	src/game/win_main.cpp	445	long	l	live	long	-	if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
-site	src/game/win_main.cpp	513	long	ul	live	unsigned long	-	bof3::Log(" ", g_speed, static_cast<unsigned long>(Frame_Counter));
-site	src/game/win_main.cpp	528	long	l	live	long	-	if (wparam == 0) return static_cast<long>(BROADCAST_QUERY_DENY);
-site	src/game/win_main.cpp	533	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, lparam));
-site	src/game/win_main.cpp	554	long	l	live	long	-	const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
-site	src/game/win_main.cpp	586	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/win_main.cpp	586	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/win_main.cpp	641	long	ul	live	unsigned long	-	unsigned long logic_at_fps_tick = 0;
-site	src/game/win_main.cpp	646	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/win_main.cpp	663	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/win_main.cpp	663	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/win_main.cpp	696	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
-site	src/game/win_main.cpp	714	long	ul	live	unsigned long	-	now - deadline, static_cast<unsigned long>(Frame_Counter));
-site	src/game/win_main.cpp	728	long	ul	live	unsigned long	-	Gfx_DrawOTag(reinterpret_cast<unsigned long*>(env + 0x8C));
-site	src/game/win_main.cpp	755	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
-site	src/game/win_main.cpp	755	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
-site	src/game/win_main.cpp	769	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/win_main.cpp	769	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/win_main.cpp	771	long	ul	live	unsigned long	-	Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
-site	src/game/win_main.cpp	852	fmt_place	word	live	code	%08X	bof3::Log("exittrace ExitProcess(0x%08X)", code);
-site	src/game/win_main.cpp	873	long	ul	live	unsigned long	-	static_cast<unsigned long>(info->ContextRecord->EFlags), GetCurrentThreadId());
-site	src/game/win_main.cpp	899	uintptr	-	live	std::uintptr_t	-	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
-site	src/game/win_main.cpp	899	widen	param	live	slot	void*	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
-site	src/game/win_main.cpp	902	uintptr	-	live	std::uintptr_t	-	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
-site	src/game/win_main.cpp	902	widen	param	live	word	F [fn]	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
-site	src/game/win_main.cpp	904	fmt_place	pointer	live	::bof3::VaOf(slot)	%08X	if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
-site	src/game/win_main.cpp	905	low32	image_local	live	reinterpret_cast<const void*>(ours)	Low32	word = Low32(reinterpret_cast<const void*>(ours));
-site	src/game/win_main.cpp	925	low32	object_ours	live	&g_pad_reset	Low32	bof3::PatchBytes(" ", Low32(&g_pad_reset), &was, &is, 1);
+site	src/game/win_main.cpp	306	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
+site	src/game/win_main.cpp	323	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+site	src/game/win_main.cpp	325	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
+site	src/game/win_main.cpp	351	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/win_main.cpp	351	widen	img_place	live	::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C	char*	return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
+site	src/game/win_main.cpp	354	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
+site	src/game/win_main.cpp	354	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
+site	src/game/win_main.cpp	377	long	ul	live	unsigned long	-	Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
+site	src/game/win_main.cpp	378	long	ul	live	unsigned long	-	static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
+site	src/game/win_main.cpp	415	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+site	src/game/win_main.cpp	415	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+site	src/game/win_main.cpp	448	long	l	live	long	-	bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));
+site	src/game/win_main.cpp	451	long	l	live	long	-	if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
+site	src/game/win_main.cpp	519	long	ul	live	unsigned long	-	bof3::Log(" ", g_speed, static_cast<unsigned long>(Frame_Counter));
+site	src/game/win_main.cpp	534	long	l	live	long	-	if (wparam == 0) return static_cast<long>(BROADCAST_QUERY_DENY);
+site	src/game/win_main.cpp	539	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, lparam));
+site	src/game/win_main.cpp	560	long	l	live	long	-	const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
+site	src/game/win_main.cpp	592	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/win_main.cpp	592	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/win_main.cpp	647	long	ul	live	unsigned long	-	unsigned long logic_at_fps_tick = 0;
+site	src/game/win_main.cpp	652	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/win_main.cpp	669	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/win_main.cpp	669	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/win_main.cpp	702	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
+site	src/game/win_main.cpp	720	long	ul	live	unsigned long	-	now - deadline, static_cast<unsigned long>(Frame_Counter));
+site	src/game/win_main.cpp	734	long	ul	live	unsigned long	-	Gfx_DrawOTag(reinterpret_cast<unsigned long*>(env + 0x8C));
+site	src/game/win_main.cpp	761	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+site	src/game/win_main.cpp	761	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+site	src/game/win_main.cpp	775	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/win_main.cpp	775	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/win_main.cpp	777	long	ul	live	unsigned long	-	Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
+site	src/game/win_main.cpp	858	fmt_place	word	live	code	%08X	bof3::Log("exittrace ExitProcess(0x%08X)", code);
+site	src/game/win_main.cpp	879	long	ul	live	unsigned long	-	static_cast<unsigned long>(info->ContextRecord->EFlags), GetCurrentThreadId());
+site	src/game/win_main.cpp	905	uintptr	-	live	std::uintptr_t	-	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
+site	src/game/win_main.cpp	905	widen	param	live	slot	void*	void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
+site	src/game/win_main.cpp	908	uintptr	-	live	std::uintptr_t	-	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
+site	src/game/win_main.cpp	908	widen	param	live	word	F [fn]	real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
+site	src/game/win_main.cpp	910	fmt_place	pointer	live	::bof3::VaOf(slot)	%08X	if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
+site	src/game/win_main.cpp	911	low32	image_local	live	reinterpret_cast<const void*>(ours)	Low32	word = Low32(reinterpret_cast<const void*>(ours));
+site	src/game/win_main.cpp	931	low32	object_ours	live	&g_pad_reset	Low32	bof3::PatchBytes(" ", Low32(&g_pad_reset), &was, &is, 1);
+site	src/game/win_main.cpp	937	low32	object_ours	live	&g_capcom_movie_only	Low32	bof3::PatchBytes(" ", Low32(&g_capcom_movie_only), &was, &is, 1);
 site	src/game/window_kinds.cpp	35	uintptr	-	live	std::uintptr_t	-	template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 site	src/game/window_kinds.cpp	35	widen	param	live	address	T	template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 site	src/game/window_kinds.cpp	41	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
@@ -18126,7 +18127,7 @@ file	src/game/win_main.cpp	live	fmt_place	word	1
 file	src/game/win_main.cpp	live	long	l	9
 file	src/game/win_main.cpp	live	long	ul	16
 file	src/game/win_main.cpp	live	low32	image_local	1
-file	src/game/win_main.cpp	live	low32	object_ours	1
+file	src/game/win_main.cpp	live	low32	object_ours	2
 file	src/game/win_main.cpp	live	uintptr	-	7
 file	src/game/win_main.cpp	live	widen	code_place	2
 file	src/game/win_main.cpp	live	widen	img_place	2
@@ -18395,8 +18396,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	14739
-#count sites_live	10522
+#count sites	14740
+#count sites_live	10523
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -18633,8 +18634,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	477
-#count low32_live	469
+#count low32	478
+#count low32_live	470
 #count low32_live_files	283
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -18653,8 +18654,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	101
 #count low32_image_local_live	101
 #count low32_image_local_live_files	60
-#count low32_object_ours	84
-#count low32_object_ours_live	84
+#count low32_object_ours	85
+#count low32_object_ours_live	85
 #count low32_object_ours_live_files	65
 #count low32_pool	18
 #count low32_pool_live	18

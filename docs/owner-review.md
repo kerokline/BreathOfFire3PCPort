@@ -1233,7 +1233,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   Drop it from our build by default with a ledger entry, or keep it on the
   PC-install path? **Answered 2026-11-02: drop it** - the Sources page's
   setup no longer copies it, so a PC-built and a disc-built install start
-  the same way (DIV-0202).
+  the same way (DIV-0202). **2026-11-08:** the game skips it as well where
+  the file is still present, nothing deleted (`off=CapcomMovieOnly` plays it).
 - **Six doubtful `.bss` words CP holds as pointers** (24 bytes,
   `exe-import-engine.md` 7.2) and **DIV-0055's 94 plate bytes** with no
   transform (the PSX source unmeasured): small, listed so they are not lost.
