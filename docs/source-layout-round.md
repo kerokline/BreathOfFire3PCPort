@@ -1008,10 +1008,17 @@ is expected; the doc says so.
    i686) acceptable - which means a named class on i686 too, against call
    8's "i686 stays exact"? The same differences return in B1..B5 as soon as
    a reader of the state moves out of its file.
+   **Answered 2026-11-08 night:** classes 2 and 3 become named gate classes
+   (`data-layout`, `x64-indirect`; group g builds them and re-applies the
+   rows, worktree `slb1108\g`, brief `briefs\g.md`); class 1 and the 8
+   function promotions stay refused, their readers move with them.
 11. **The qualification pass:** 289 names in 50 proposed targets that two
    sources' `using namespace <stem>;` lines would make ambiguous (`g` seams
    mostly) want writing as `<stem>::g` in the moved bodies - a body edit by
    section 1's rule, so the owner's word.
+   **Answered 2026-11-08 night: run it.** Group q qualifies the names in two
+   passes (100 files first, `briefs\q.md`; the 13 files group g also edits
+   after g merges), each name a `qualify` row in `tu_renames.tsv`.
 12. **The commit trailer:** the groups' commits carry `Co-Authored-By: Claude
    Opus 5.5` (the model that did the work), the coordinator's `Claude Fable
    5.1`; both are signed off. Left as they are unless the owner wants one.
