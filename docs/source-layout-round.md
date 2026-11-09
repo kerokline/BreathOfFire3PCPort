@@ -1228,6 +1228,14 @@ is expected; the doc says so.
    game functions for good. The recommendation is (a): it is what item 14
    already did, the i686 change is measured and named, and the layout stays
    Capcom's.
+   **Answered 2026-11-09: "I agree with the recommendation."** Group h promotes
+   the 25 (brief `slb1108\briefs\h.md`): the class-2/3 ones under the
+   existing classes, the folds and the inlined functions under two new
+   classes `i686-fold` and `i686-inline` (both widths, named for the width
+   whose gate was exact until them; 7a gets their paragraph from h's first
+   cases), the five seams with their `Callees` struct and aliases moved to the
+   header and a `low32-site` row where the x86_64 gate asks. Anything that
+   differs outside those classes is reverted and comes back here.
 17. **The sparkle macro family** (magic_s16.cpp): `MS16_SPARKLES` is invoked
    four times and defines 40 functions, ten per spell, which the mover can
    move only together with the macro to one file; the table sends them to
@@ -1239,6 +1247,15 @@ is expected; the doc says so.
    some 400 lines, a `low32-site` row for every `Low32()` call in them). The
    recommendation is the join: the PC port's source has one copy, and the
    file says so.
+   **Answered 2026-11-09: "I agree with the recommendation." As run** (1d069611):
+   three rows in `analysis/tu_joins.tsv` (`0x4B8A90`+`0x4BA460`, `+0x4BAF90`,
+   `+0x4BBD60`), the census regenerated: 659 units, 609 proposed files, 88
+   join rows; the mover's check no longer refuses the family. The larger file
+   exposed nine ordinary lines - five helper clashes (magic_s16's `Cur`,
+   `Scr`, `PutFloat`, `Sway`, `RayShade` differ from battle_items') and four
+   ambiguities (`Long`, `SetLong`, `SetWord`, `Word` between battle_items and
+   magic_fx_reached, named by the macro body) - group k's, by the item 13
+   rename rule and the item 11 qualification (`slb1108\briefs\k.md`).
 
 ## 8. Ownership, merge order, numbering
 
