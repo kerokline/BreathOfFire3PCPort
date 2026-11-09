@@ -57,17 +57,17 @@ unsigned char& B(U address) { return At(address)[0]; }
 std::uint16_t W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32Rest3b S16Rest3b(std::uint16_t v) { return static_cast<std::int16_t>(v); }
-unsigned char* PtrRest3b(U cell) { return At(L(cell)); }
+unsigned char* PtrRest3b(U cell) { return move_script::At(L(cell)); }
 unsigned char* ResultRest3b() { return PtrRest3b(::bof3::Img(at::kResult.v)); }
 
 // The records as the originals index them: a party record by the byte
 // itself (0x802D40 + 0x14C n, any n), an enemy object by the byte less 3
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
-unsigned char* PartyRest3b(unsigned n) { return At(::bof3::Img(ObjTrio_addr) + (n & 0xFF) * at::kPartyStride); }
+unsigned char* PartyRest3b(unsigned n) { return move_script::At(::bof3::Img(ObjTrio_addr) + (n & 0xFF) * at::kPartyStride); }
 unsigned char* EnemyRest3b(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + static_cast<U>(static_cast<S32Rest3b>(n & 0xFF) - 3) * at::kEnemyStride); }
-unsigned char* CharRecordRest3b(unsigned roster) { return At(::bof3::Img(CharacterRecords_addr) + (roster & 0xFF) * at::kCharStride); }
-unsigned char* AbilityRow(unsigned id) { return At(::bof3::Img(at::kAbilityRows.v) + (id & 0xFFFF) * at::kAbilityStride); }
+unsigned char* CharRecordRest3b(unsigned roster) { return move_script::At(::bof3::Img(CharacterRecords_addr) + (roster & 0xFF) * at::kCharStride); }
+unsigned char* AbilityRow(unsigned id) { return move_script::At(::bof3::Img(at::kAbilityRows.v) + (id & 0xFFFF) * at::kAbilityStride); }
 
 // R3D's callees, ours, by address (named in rest_3b_callees.h).
 using Void0 = void (__cdecl*)();
@@ -150,7 +150,7 @@ extern "C" unsigned __cdecl BattleResult_AddExp(unsigned exp) {
         if (sum < 9999999u) {
             const unsigned r2 = BH_CALL(CharId_ToRosterIndex)(PartyRest3b(slot)[0x89]) & 0xFF;
             unsigned char* const e = CharRecordRest3b(r2) + 0xC;
-            SetLong(e, static_cast<S32Rest3b>(static_cast<U>(Long(e)) + exp));
+            move_script::SetLong(e, static_cast<S32Rest3b>(static_cast<U>(move_script::Long(e)) + exp));
         } else {
             const unsigned r3 = BH_CALL(CharId_ToRosterIndex)(PartyRest3b(slot)[0x89]) & 0xFF;
             rv::As<records::CharRecord>(CharRecordRest3b(r3))->exp = 9999999;
@@ -332,10 +332,10 @@ extern "C" void __cdecl Escape_Dispatch(void) { DispatchRest3b("Escape_Dispatch"
 // latch 0, the pick flag set. BattleItemCmd_SideBegin's twin.
 extern "C" void __cdecl BattleItem_SideBegin(void) {
     unsigned char* const c = PtrRest3b(::bof3::Img(at::kCommand.v));
-    const unsigned char flags = AbilityRow(Word(c + 2))[0];
+    const unsigned char flags = AbilityRow(move_script::Word(c + 2))[0];
     c[0] = static_cast<unsigned char>((flags & 0x20) ? 0x40 : 0x80);
     BattleE4_Step4 = 1;
-    SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
+    move_script::SetWord(move_script::At(::bof3::Img(at::kRepeatLatch.v)), 0);
     BattleE4_Picking = 1;
 }
 
