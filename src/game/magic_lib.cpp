@@ -61,9 +61,9 @@ constexpr int kDepths = 0x38;
 // kFxRowSource: now Gfx_ClutStripSource[0x200] (symbols.toml).
 constexpr ::bof3::image::Va kEnemyFxSizeB{0x8C5653};   // + 0x8C * the enemy's type: FxSize's byte + 1
 
-short S16MagicLib(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S16MagicLib(const unsigned char* p) { return static_cast<short>(move_script::Word(p)); }
 std::int32_t I32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
-std::uint32_t U32(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
+std::uint32_t U32(const unsigned char* p) { return static_cast<std::uint32_t>(move_script::Long(p)); }
 void PutFloat(unsigned char* p, int v) {
     const float f = static_cast<float>(v);
     std::memcpy(p, &f, sizeof f);
@@ -284,21 +284,21 @@ MLIB_EXPORT void __cdecl BuffPopup_Draw(unsigned icon) {
 // roll answered 0 (not resisted), else 0. The actor unchecked above 2.
 MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned actor) {
     const unsigned char kept_target = Mem(::bof3::Img(kResultTarget.v))[0];
-    const std::int32_t kept_record = Long(Mem(::bof3::Img(BattleDamage_Result_addr)));
+    const std::int32_t kept_record = move_script::Long(Mem(::bof3::Img(BattleDamage_Result_addr)));
     const unsigned a = actor & 0xFF;
     Mem(::bof3::Img(kResultTarget.v))[0] = static_cast<unsigned char>(a);
     const unsigned char* stats;
     if (a < 3) {
-        SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(PartyRecord(a) + 0x124)));
+        move_script::SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(PartyRecord(a) + 0x124)));
         stats = PartyRecord(a) + 0xA0;
     } else {
-        SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(EnemyRecord(a) + 0x104)));
+        move_script::SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(EnemyRecord(a) + 0x104)));
         stats = EnemyRecord(a) + 0xB0;
     }
-    for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(::bof3::Img(kStatsCopy.v) + i), Long(stats + i));
+    for (unsigned i = 0; i < 32; i += 4) move_script::SetLong(Mem(::bof3::Img(kStatsCopy.v) + i), move_script::Long(stats + i));
     const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll.v)(stat);
     Mem(::bof3::Img(kResultTarget.v))[0] = kept_target;
-    SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), kept_record);
+    move_script::SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), kept_record);
     return resisted == 0 ? 1 : 0;
 }
 
@@ -316,7 +316,7 @@ MLIB_EXPORT void __cdecl MagicFx_BuffPopup(unsigned kind, unsigned who) {
     const unsigned char icon = applied != 0 ? static_cast<unsigned char>(kind) : 8;
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x48);
     unsigned char* const t = Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride);
-    SetLong(t + 0x80, I32(Addr(Sprite_Current)));
+    move_script::SetLong(t + 0x80, I32(Addr(Sprite_Current)));
     t[4] = icon;
     t[9] = 1;
     t[0xA] = 0;
@@ -343,7 +343,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
     unsigned char* const next_cell = reinterpret_cast<unsigned char*>(&Gfx_PacketNext);
     if (depth < 0 || depth >= kDepths ||
         ::bof3::Img(kPoolEnd) + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) <= U32(next_cell) + sz) {
-        SetLong(next_cell, I32(U32(next_cell) - n * sz));
+        move_script::SetLong(next_cell, I32(U32(next_cell) - n * sz));
         return;
     }
     const std::uint32_t row = static_cast<std::uint32_t>(depth) * 6;
@@ -356,7 +356,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
         keys[best] = 0;
         unsigned char* const head = Mem(::bof3::Img(DrawLayers_addr) + 0x24 + (Gfx_BufferIndex + row) * 8);
         MH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(U32(head))), prim);
-        SetLong(Mem(::bof3::Img(DrawLayers_addr) + 0x24 + (Gfx_BufferIndex + row) * 8), I32(prim));
+        move_script::SetLong(Mem(::bof3::Img(DrawLayers_addr) + 0x24 + (Gfx_BufferIndex + row) * 8), I32(prim));
     }
 }
 
@@ -399,10 +399,10 @@ MLIB_EXPORT int __cdecl MagicFx_StepAround(const unsigned char* to, int radius, 
                                        0xFFF);
     unsigned char* const px = Sprite_Current + 0x34;
     const std::uint32_t c = static_cast<std::uint32_t>(MH_CALL(Math_Cos)(angle));
-    SetLong(px, I32(U32(px) + static_cast<std::uint32_t>(I32(c * static_cast<std::uint32_t>(radius)) >> 12)));
+    move_script::SetLong(px, I32(U32(px) + static_cast<std::uint32_t>(I32(c * static_cast<std::uint32_t>(radius)) >> 12)));
     unsigned char* const pz = Sprite_Current + 0x38;
     const std::uint32_t s = static_cast<std::uint32_t>(MH_CALL(Math_Sin)(angle));
-    SetLong(pz, I32(U32(pz) + static_cast<std::uint32_t>(I32(s * static_cast<std::uint32_t>(radius)) >> 12)));
+    move_script::SetLong(pz, I32(U32(pz) + static_cast<std::uint32_t>(I32(s * static_cast<std::uint32_t>(radius)) >> 12)));
     return angle;
 }
 
@@ -414,7 +414,7 @@ MLIB_EXPORT int __cdecl MagicFx_StepAround(const unsigned char* to, int radius, 
 MLIB_EXPORT int __cdecl MagicFx_NearSprite3D(const unsigned char* other, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     if (!NearXZ(sc, U32(other + 0x34), U32(other + 0x38), size)) return 0;
-    const std::uint32_t h = ((size >> 9) - Word(other + 0x3E) + rv::As<records::SpriteHead>(sc)->height_whole) & 0xFFFF;
+    const std::uint32_t h = ((size >> 9) - move_script::Word(other + 0x3E) + rv::As<records::SpriteHead>(sc)->height_whole) & 0xFFFF;
     return h <= (size >> 8) ? 1 : 0;
 }
 
@@ -450,7 +450,7 @@ MLIB_EXPORT void __cdecl SpriteClut_SetStp(const unsigned char* s) {
 MLIB_EXPORT void __cdecl SpriteClut_ClearEntry31(const unsigned char* s) {
     const unsigned cell = ClutCell(s, "SpriteClut_ClearEntry31");
     Gfx_ClutStripDirty = 1;
-    SetWord(StripWord(cell + 31), 0);
+    move_script::SetWord(StripWord(cell + 31), 0);
 }
 
 // original 0x4FBF50: the record's CLUT, count entries (as SpriteClut_SetStp),
@@ -460,7 +460,7 @@ MLIB_EXPORT void __cdecl SpriteClut_ClearEntry31(const unsigned char* s) {
 MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
     const unsigned cell = ClutCell(s, "SpriteClut_CopyToFxRow");
     for (unsigned i = 0; i < SpriteClut_Counts[s[0x28]] * 16u; ++i)
-        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400 + 2 * i), Word(StripWord(cell + i)));
+        move_script::SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400 + 2 * i), move_script::Word(StripWord(cell + i)));
     Gfx_ClutStripDirty = 1;
     return SpriteClut_Divisors[s[0x28]] * 2u;
 }
@@ -468,7 +468,7 @@ MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
 // original 0x4FC000: the strip's row 2 (256 entries) put back from the strip
 // as loaded (Gfx_ClutStripSource); Gfx_ClutStripDirty 1.
 MLIB_EXPORT void __cdecl SpriteClut_RestoreFxRow(void) {
-    for (unsigned i = 0; i < 0x200; i += 2) SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400 + i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x400 + i)));
+    for (unsigned i = 0; i < 0x200; i += 2) move_script::SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400 + i), move_script::Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x400 + i)));
     Gfx_ClutStripDirty = 1;
 }
 
