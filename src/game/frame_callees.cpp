@@ -104,7 +104,7 @@ extern "C" void __cdecl CameraTurn_Start(void) {
     CameraTurn_Angles[1] = static_cast<long>(static_cast<std::uint32_t>(y) << 16);
     CameraTurn_Angles[2] = static_cast<long>(static_cast<std::uint32_t>(z) << 16);
     const auto step = [object](unsigned at, std::int32_t angle) {
-        const std::uint32_t diff = static_cast<std::uint32_t>(Long(object + at)) - static_cast<std::uint32_t>(angle);
+        const std::uint32_t diff = static_cast<std::uint32_t>(move_script::Long(object + at)) - static_cast<std::uint32_t>(angle);
         return static_cast<long>(Idiv(static_cast<std::int32_t>(diff << 16), object[9]).quot);
     };
     CameraTurn_Steps[0] = step(0x64, x);
@@ -142,9 +142,9 @@ extern "C" void __cdecl CameraTurn_Step(void) {
 // tail jmp in the original.
 extern "C" void __cdecl CameraTurn_End(void) {
     unsigned char* const object = Sprite_Current;
-    Camera_Angles[0] = static_cast<short>(Word(object + 0x64));
-    Camera_Angles[1] = static_cast<short>(Word(object + 0x68));
-    Camera_Angles[2] = static_cast<short>(Word(object + 0x6C));
+    Camera_Angles[0] = static_cast<short>(move_script::Word(object + 0x64));
+    Camera_Angles[1] = static_cast<short>(move_script::Word(object + 0x68));
+    Camera_Angles[2] = static_cast<short>(move_script::Word(object + 0x6C));
     Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xDF);
     frame_callees::g.release();
 }
@@ -211,9 +211,9 @@ extern "C" void __cdecl MoveScript_TintFrame(void) {
         if (!(flags & 0x40)) continue;
         const unsigned char clut = record[6];
         record[0] = static_cast<unsigned char>(flags & 0xBF);
-        At(static_cast<std::uint32_t>(Long(record + 8)))[0x27] = clut;
+        move_script::At(static_cast<std::uint32_t>(move_script::Long(record + 8)))[0x27] = clut;
         if (!(record[0] & 0x80)) continue;
-        At(static_cast<std::uint32_t>(Long(record + 8)))[0x24] |= 4;
+        move_script::At(static_cast<std::uint32_t>(move_script::Long(record + 8)))[0x24] |= 4;
     }
 }
 
