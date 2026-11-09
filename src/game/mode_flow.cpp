@@ -750,16 +750,6 @@ extern "C" void __cdecl Field_SlotsReleaseAll(void) {
     for (unsigned i = 0; i < 8; ++i) mode_flow::g.slot_release(i);
 }
 
-// original 0x461E10 (PSX 0x8014E458): a RECT {x, y, w, h} of 16-bit words on
-// the stack, cleared through Gfx_ClearImage with colour 0.
-//
-// As the original has it: each argument's low 16 bits; a third zero is
-// pushed that Gfx_ClearImage does not read (the PSX ClearImage's blue).
-extern "C" void __cdecl Gfx_ClearRect(int x, int y, int w, int h) {
-    short rect[4] = {static_cast<short>(x), static_cast<short>(y), static_cast<short>(w), static_cast<short>(h)};
-    mode_flow::g.clear_image(rect, 0, 0);
-}
-
 // ===========================================================================
 
 void ModeFlow_Inject() {
@@ -811,5 +801,4 @@ void ModeFlow_Inject() {
     BOF3_INJECT(MoveScript_TintReset);
     BOF3_INJECT(Field_SlotRelease);
     BOF3_INJECT(Field_SlotsReleaseAll);
-    BOF3_INJECT(Gfx_ClearRect);
 }

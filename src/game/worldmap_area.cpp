@@ -589,131 +589,9 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
 // The world-map records and the effect kinds that go through them
 // ===========================================================================
 
-// original 0x462A90 (4,560 calls on the world-map route): the index of the
-// first of the eleven 0x1C-byte WorldMap_Records whose area byte +0x18 is
-// Game_AreaNumber (u16 against the zero-extended byte), or 11 when none -
-// the whole eax. The records are the eleven world maps (areas 16, 33, 45, 65,
-// 87, 88, 104, 115, 121, 151, 152), each with five code pointers and a data
-// pointer; the callers take the index's low byte.
-extern "C" unsigned __cdecl WorldMap_RecordIndex(void) {
-    const unsigned area = Game_AreaNumber;
-    unsigned index = 0;
-    for (U a = ::bof3::Img(WorldMap_Records_addr) + 0x18; a < ::bof3::Img(worldmap_area::at::kRecordAreasEnd); a += worldmap_area::at::kRecordSize, ++index)
-        if (At(a)[0] == area) break;
-    return index;
-}
-
-namespace {
-// A world-map record's code pointer at `slot`, by WorldMap_RecordIndex's low
-// byte, read in place. Index 11 (no world map) reads the dwords after the
-// eleventh record - EffectKind01_States 0x653A44 of EffectKind01_Run 0x462BA0 (0x462BC0, 0x462BF0,
-// 0x462E70, 0x462EB0, EffectKind07_Hold, ...) - as the original does; record 6 (area
-// 104) holds nulls at +4, +8 and +0x14.
-Handler RecordEntry(U slot) {
-    const U index = g.record_index() & 0xFF;
-    return EntryWorldmapArea(::bof3::Img(WorldMap_Records_addr) + index * worldmap_area::at::kRecordSize + slot);
-}
-}  // namespace
-
-// original 0x462AE0 (Effect_KindHandlers 0x00): a tail jump to the world-map
-// record's +0 (WorldMap33_PlateRun on the Yraall map).
-extern "C" void __cdecl EffectKind00_WorldMap(void) { RecordEntry(0)(); }
-
-// original 0x462B40 (Effect_KindHandlers 0x58): the record's +0xC
-// (WorldMapHud_Run on the Yraall map).
-extern "C" void __cdecl EffectKind58_WorldMap(void) { RecordEntry(0xC)(); }
-
-// original 0x462B80 (EffectKind18_States 2 and 3): the record's +0x10
-// (WorldMap33_DrawDrift on the Yraall map).
-extern "C" void __cdecl WorldMap_RecordHook10(void) { RecordEntry(0x10)(); }
-
 // ===========================================================================
 // Effect kind 6 (the combat route's) and kind 0x18
 // ===========================================================================
-
-// original 0x469BB0 (Effect_KindHandlers 0x06): EffectKind06_States 0x653EC8
-// by +1 - _Start, _Tick, _End.
-extern "C" void __cdecl EffectKind06_Run(void) { EntryWorldmapArea(::bof3::Img(EffectKind06_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
-
-// original 0x469BD0 (EffectKind06_States 0 and 0x653EF4's entry 0; PSX
-// 0x8019B404): Sprite_SetAnimationBank(0x18); +0x48 = 0; the word +0x2E +=
-// the word +0xC, +0x30 -= the word +0x10; +0x24 = 0, +0x2A = 0, +0x29 = 2.
-// Variant +6 == 3: byte +0 |= 0x20, +0x5C = 1, +0x5F / +0x5E / +0x5D = 0xF8,
-// +9 = 0x14; any other: +0x5C and the three = 0, +9 = 0x10. Then
-// Sprite_SetAnimation(EffectKind06_Anims[+6] - 0 0 2 1 3 4, unchecked) and
-// +1 = 1.
-extern "C" void __cdecl EffectKind06_Start(void) {
-    g.set_bank(0x18);
-    Cur()[0x48] = 0;
-    rv::As<records::EffectObject>(Cur())->screen_x = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_x) + worldmap_area::Word(Cur() + 0xC);
-    rv::As<records::EffectObject>(Cur())->screen_y = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_y) - worldmap_area::Word(Cur() + 0x10);
-    Cur()[0x24] = 0;
-    Cur()[0x2A] = 0;
-    Cur()[0x29] = 2;
-    records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
-    if (o->param == 3) {
-        o->flags = static_cast<unsigned char>(o->flags | 0x20);
-        Cur()[0x5C] = 1;
-        rv::As<records::EffectObject>(Cur())->shade[2] = 0xF8;
-        rv::As<records::EffectObject>(Cur())->shade[1] = 0xF8;
-        rv::As<records::EffectObject>(Cur())->shade[0] = 0xF8;
-        rv::As<records::EffectObject>(Cur())->timer = 0x14;
-    } else {
-        rv::Bytes(o)[0x5C] = 0;
-        rv::As<records::EffectObject>(Cur())->shade[2] = 0;
-        rv::As<records::EffectObject>(Cur())->shade[1] = 0;
-        rv::As<records::EffectObject>(Cur())->shade[0] = 0;
-        rv::As<records::EffectObject>(Cur())->timer = 0x10;
-    }
-    g.set_animation(worldmap_area::At(::bof3::Img(EffectKind06_Anims_addr) + rv::As<records::EffectObject>(Cur())->param)[0]);
-    rv::As<records::EffectObject>(Cur())->state = 1;
-}
-
-// original 0x469CB0 (EffectKind06_States 1; PSX 0x8019B544): EffectKind06_Ticks
-// 0x653EDC by the variant +6 - _Blink for 0, 1, 2 and 4, 0x469D40 for 3,
-// 0x469D10 for 5 (EffectKind06_Fade, EffectKind06_PlayOnce: field_c1.cpp).
-extern "C" void __cdecl EffectKind06_Tick(void) { EntryWorldmapArea(::bof3::Img(EffectKind06_Ticks_addr) + rv::As<records::EffectObject>(Cur())->param * 4u)(); }
-
-// original 0x469CD0 (PSX 0x8019B588): +9 - 1; at 0 +1 + 1 and nothing more.
-// Otherwise Sprite_ScriptTick, and - only while bit 2 of +9 is set, so it
-// blinks - a tail jump to Sprite_QueueOverlay when the kind +5 is 6, else to
-// Sprite_UpdateScreen. Sprite_ScriptTick's answer is not read.
-extern "C" void __cdecl EffectKind06_Blink(void) {
-    rv::As<records::EffectObject>(Cur())->timer = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->timer - 1);
-    records::EffectObject* o = rv::As<records::EffectObject>(Cur());
-    if (o->timer == 0) {
-        o->state = static_cast<unsigned char>(o->state + 1);
-        return;
-    }
-    g.script_tick();
-    o = rv::As<records::EffectObject>(Cur());
-    if ((o->timer & 4) == 0) return;
-    if (o->kind == 6) g.queue_overlay();
-    else g.update_screen();
-}
-
-// original 0x469DB0 (EffectKind06_States 2; PSX 0x8019B7DC): +0x5F, +0x5E,
-// +0x5D = 0, then a tail jump to Effect_Release.
-extern "C" void __cdecl EffectKind06_End(void) {
-    rv::As<records::EffectObject>(Cur())->shade[2] = 0;
-    rv::As<records::EffectObject>(Cur())->shade[1] = 0;
-    rv::As<records::EffectObject>(Cur())->shade[0] = 0;
-    g.effect_release();
-}
-
-// original 0x46D830 (Effect_KindHandlers 0x18): EffectKind18_States 0x65406C
-// by +1.
-extern "C" void __cdecl EffectKind18_Run(void) { EntryWorldmapArea(::bof3::Img(EffectKind18_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
-
-// original 0x46D850 (EffectKind18_States 0): +1 = +0xB (the effect's sub-kind
-// is its next state), +2 = +3 = +4 = +9 = 0.
-extern "C" void __cdecl EffectKind18_Start(void) {
-    rv::As<records::EffectObject>(Cur())->state = Cur()[0xB];
-    rv::As<records::EffectObject>(Cur())->step = 0;
-    Cur()[3] = 0;
-    Cur()[4] = 0;
-    rv::As<records::EffectObject>(Cur())->timer = 0;
-}
 
 // ===========================================================================
 
@@ -738,15 +616,4 @@ void WorldmapArea_Inject() {
     BOF3_INJECT(WorldMapHud_BoxHold);
     BOF3_INJECT(WorldMapHud_BoxSlideOut);
     BOF3_INJECT(WorldMap33_DrawDrift);
-    BOF3_INJECT(WorldMap_RecordIndex);
-    BOF3_INJECT(EffectKind00_WorldMap);
-    BOF3_INJECT(EffectKind58_WorldMap);
-    BOF3_INJECT(WorldMap_RecordHook10);
-    BOF3_INJECT(EffectKind06_Run);
-    BOF3_INJECT(EffectKind06_Start);
-    BOF3_INJECT(EffectKind06_Tick);
-    BOF3_INJECT(EffectKind06_Blink);
-    BOF3_INJECT(EffectKind06_End);
-    BOF3_INJECT(EffectKind18_Run);
-    BOF3_INJECT(EffectKind18_Start);
 }

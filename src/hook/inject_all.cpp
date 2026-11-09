@@ -269,17 +269,39 @@
 #include "game/effect_gte.h"
 #include "game/effect_1f.h"
 #include "game/effect_1b.h"
+#include "game/effect/effect_kind_11.h"
 #include "game/effect_1g.h"
 #include "game/effect_1d.h"
+#include "game/effect/effect_kind_27.h"
 #include "game/effect_1a.h"
 #include "game/effect_2g.h"
 #include "game/effect_1c.h"
+#include "game/effect/effect_kind_20.h"
+#include "game/effect/effect_kind_1d.h"
+#include "game/effect/effect_kind_1c.h"
 #include "game/effect_2b.h"
+#include "game/effect/effect_kind_3b.h"
+#include "game/effect/effect_kind_38.h"
+#include "game/effect/effect_kind_35.h"
+#include "game/effect/effect_kind_33.h"
+#include "game/effect/effect_kind_2f.h"
 #include "game/effect_2d.h"
+#include "game/effect/effect_kind_46.h"
+#include "game/effect/effect_kind_45.h"
 #include "game/effect_2c.h"
+#include "game/effect/effect_kind_44.h"
+#include "game/effect/effect_kind_43.h"
+#include "game/effect/effect_kind_3d.h"
 #include "game/effect_2f.h"
 #include "game/effect_2e.h"
 #include "game/effect_2a.h"
+#include "game/effect/effect_specks.h"
+#include "game/effect/effect_kind_2e.h"
+#include "game/effect/effect_kind_2d.h"
+#include "game/effect/effect_kind_2b.h"
+#include "game/effect/effect_kind_2a.h"
+#include "game/effect/effect_kind_29.h"
+#include "game/effect/effect_kind_28.h"
 #include "game/effect_3b.h"
 #include "game/effect_3d.h"
 #include "game/effect_4a.h"
@@ -319,17 +341,33 @@
 #include "game/rest_2c.h"
 #include "game/rest_3g.h"
 #include "game/rest_4a.h"
+#include "game/field/field_trigger_01.h"
+#include "game/community/commu_sim.h"
 #include "game/rest_2b.h"
 #include "game/rest_3a.h"
 #include "game/rest_3c.h"
 #include "game/rest_3e.h"
+#include "game/effect/effect_shards.h"
+#include "game/effect/effect_kind_34.h"
+#include "game/effect/effect_kind_21.h"
+#include "game/effect/effect_kind_17.h"
+#include "game/effect/effect_kind_06.h"
 #include "game/rest_3d.h"
 #include "game/rest_3b.h"
 #include "game/rest_4f.h"
+#include "game/effect/world_map.h"
+#include "game/effect/effect_kind_0f.h"
+#include "game/effect/effect_kind_09.h"
 #include "game/rest_4e.h"
+#include "game/core/title.h"
+#include "game/community/commu_music.h"
 #include "game/rest_4d.h"
+#include "game/community/commu_name.h"
+#include "game/community/commu.h"
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
+#include "game/community/commu_tail.h"
+#include "game/community/commu_board.h"
 #include "game/shell.h"
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
@@ -1021,6 +1059,7 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E1B's); no module patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    EffectKind11_Inject();
     Effect1G_Inject();          // round 13 group E1G (0x594060..0x594D8A: the item-trade screen's rest - its fourth
                                 // run step, its leave state and steps, the backdrop, list, ingredient and count
                                 // windows, the ingredient test, the row count - and Item_DrawIcon): its clones' calls
@@ -1032,6 +1071,7 @@ void InjectAll() {
                                 // recorders, its seven state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject, whose self-test copies 0x46F2B0 and 0x46F7D0; no module
                                 // patches bytes inside its 30 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind27_Inject();
     Effect1E_Inject();          // round 13 group E1E (0x528CD0..0x52A6B0: the leader's state 9, LeaderPanel_Stages'
                                 // stages 2..9 and five of stage 1's steps): its clones' calls re-aimed at the scenario
                                 // harness's recorders, its eight steps tables swapped for the fuzz only; after
@@ -1049,6 +1089,9 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E1C's); no module patches bytes inside its 53 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    EffectKind20_Inject();
+    EffectKind1d_Inject();
+    EffectKind1c_Inject();
     Effect2G_Inject();          // round 13 group E2G (0x47DBE0..0x47FD92: effect kinds 0x15, 0x54, 0x55, 0x57, 0x5A,
                                 // 0x5B, 0x66 and kind 0x18's sub-kind 0x20 - dispatchers, states, draws - and the
                                 // dispatchers of kinds 0x5D..0x5F): its clones' calls re-aimed at the scenario harness's
@@ -1060,16 +1103,26 @@ void InjectAll() {
                                 // state tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E2B's) and Effect1C_Inject (EffectKind1E_ShardInit, called by name); no
                                 // module patches bytes inside its 52 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind3b_Inject();
+    EffectKind38_Inject();
+    EffectKind35_Inject();
+    EffectKind33_Inject();
+    EffectKind2f_Inject();
     Effect2D_Inject();          // round 13 group E2D (0x4771B0..0x4789C1: effect kinds 0x45..0x49, their dispatchers,
                                 // states and draw helpers): its clones' calls re-aimed at the scenario harness's
                                 // recorders, its ten state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject (none of its eight rows is E2D's); no module patches
                                 // bytes inside its 54 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind46_Inject();
+    EffectKind45_Inject();
     Effect2C_Inject();          // round 13 group E2C (0x474F40..0x4771A5: effect kinds 0x3E, 0x3F, 0x40, 0x42, 0x43,
                                 // 0x44 and 0x6B, their dispatchers, states and draw helpers): its clones' calls
                                 // re-aimed at the scenario harness's recorders, its nine tables swapped for the fuzz
                                 // only; after ScenarioHarnessEkh_Inject (none of its eight is E2C's); no module
                                 // patches bytes inside its 53 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectKind44_Inject();
+    EffectKind43_Inject();
+    EffectKind3d_Inject();
     Effect2F_Inject();          // round 13 group E2F (0x47B7D0..0x47DBD1: effect kinds 0x4F, 0x50, 0x51, 0x52, 0x53,
                                 // 0x56 and kind 0x4E's disc): its clones' calls re-aimed at the scenario harness's
                                 // recorders, its eight state tables swapped for the fuzz only; after
@@ -1086,6 +1139,13 @@ void InjectAll() {
                                 // the fuzz only; after ScenarioHarnessEkh_Inject, whose self-test copies 0x472770,
                                 // and Effect1C_Inject, whose kinds 0x1C / 0x1D call 0x471D10 and 0x471E20; no module
                                 // patches bytes inside its 65 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    EffectSpecks_Inject();
+    EffectKind2e_Inject();
+    EffectKind2d_Inject();
+    EffectKind2b_Inject();
+    EffectKind2a_Inject();
+    EffectKind29_Inject();
+    EffectKind28_Inject();
     Effect3B_Inject();          // round 13 group E3B (0x4823D0..0x48404A: effect kinds 0x63, 0x65, 0x67, 0x69, 0x6C -
                                 // dispatchers, states, draws): its clones' calls re-aimed at the scenario harness's
                                 // recorders, its nine state tables swapped for the fuzz only; after
@@ -1347,6 +1407,11 @@ void InjectAll() {
                                 // every effect group's (they call its functions by the addresses they had); before
                                 // FishingText_Arm; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    EffectShards_Inject();
+    EffectKind34_Inject();
+    EffectKind21_Inject();
+    EffectKind17_Inject();
+    EffectKind06_Inject();
     Rest3G_Inject();            // round 14 wave-three group R3G (0x4925C0..0x5171FB: effect kinds 0xAC, 0xAD, 0xAE,
                                 // 0xBA's leftover states, a screen triangle's winding, the boss actors' placement,
                                 // game modes 8..11's dispatchers and steps, Quake's vertex lift, area 109's switch,
@@ -1385,17 +1450,24 @@ void InjectAll() {
                                 // Config draws ours reads in place (DIV-0011, DIV-0017, DIV-0026, DIV-0051); ours
                                 // that call it (effect_1a, event_leader, rest_2f) call it by the address it had;
                                 // before FishingText_Arm
+    WorldMap_Inject();
+    EffectKind0f_Inject();
+    EffectKind09_Inject();
     Rest4E_Inject();            // round 14 wave-four group R4E (0x45E870..0x460CAD: the community band's panels,
                                 // name commits, track list, item screen and ranked lists): its clones' calls
                                 // re-aimed at the scenario harness's recorders, seven .data tables swapped for the
                                 // fuzz only; after every harness's inject; R4B and R4D call it by the address it
                                 // had; before FishingText_Arm; no module patches bytes inside its 48 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    Title_Inject();
+    CommuMusic_Inject();
     Rest4D_Inject();            // round 14 wave-four group R4D (0x45C400..0x45E86E: the community's games 7
                                 // and 8 - CommuDraw, CommuName - and the board R4C draws with): its clones' calls
                                 // re-aimed at the scenario harness's recorders, eleven .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    CommuName_Inject();
+    Commu_Inject();
     Rest4A_Inject();            // round 14 wave-four group R4A (0x452DD0..0x456D4F: six battle targeting helpers,
                                 // Field_RunSlot and its CLUT copy, the community's simulation and its objects'
                                 // poses, twelve Field_ObjectTriggers entries): its clones' calls re-aimed at the
@@ -1403,6 +1475,8 @@ void InjectAll() {
                                 // (battle_sprites, battle_e1, battle_e2, frame_callees, area_w4d, mode_states) call
                                 // it by the address it had; before FishingText_Arm; no module patches bytes inside
                                 // its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    FieldTrigger01_Inject();
+    CommuSim_Inject();
     Rest4C_Inject();            // round 14 wave-four group R4C (0x459EE0..0x45C3F3: the community band's two games
                                 // with a stake, entries 0 and 1 of R4B's game table 0x652A84, their nine state tables
                                 // and draw helpers, Commu_PushSubscreen): its clones' calls re-aimed at the scenario
@@ -1414,6 +1488,8 @@ void InjectAll() {
                                 // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    CommuTail_Inject();
+    CommuBoard_Inject();
     SoundRest_Inject();         // the platform round's group PS (Sound_StopMusic, Sound_ResumeAll, Sound_MusicPlaying,
                                 // Sound_PauseAll, SndBuf_SetVolume, Music_Halt, Music_Resume, SndStream_IsPlaying,
                                 // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound

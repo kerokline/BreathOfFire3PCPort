@@ -12,91 +12,6 @@
 // Gfx_UnpackNext, hand that to Gfx_LoadImage, and then claim the space by
 // advancing Gfx_UnpackNext to the next multiple of four.
 
-// original 0x461FC0. Six 5-bit values to a dword, bit 15 unused, one byte out
-// for each.
-//
-// As the original has it: whole dwords are unpacked, so up to four bytes past
-// the total are written; the total is signed, and so is the remainder that
-// rounds it - a negative total (one of w, h negative) unpacks nothing and
-// moves Gfx_UnpackNext BACK.
-extern "C" void __cdecl Gfx_UploadPacked5(const void* packed, const short* rect) {
-    int total = (rect[3] * rect[2]) << 1;
-    if (total > 0) {
-        unsigned char* out = Gfx_UnpackNext;
-        auto* in = static_cast<const std::uint8_t*>(packed);
-        for (std::uint32_t groups = (static_cast<std::uint32_t>(total) + 5) / 6; groups != 0; --groups) {
-            std::uint32_t v;
-            std::memcpy(&v, in, 4);
-            in += 4;
-            out[0] = v & 0x1F; v >>= 5;
-            out[1] = v & 0x1F; v >>= 5;
-            out[2] = v & 0x1F; v >>= 6;
-            out[3] = v & 0x1F; v >>= 5;
-            out[4] = v & 0x1F; v >>= 5;
-            out[5] = v & 0x1F;
-            out += 6;
-        }
-    }
-    Gfx_LoadImage(rect, Gfx_UnpackNext);
-    const int rem = total % 4;   // truncating, as the original's and/dec/or/inc idiom
-    if (rem != 0) total = total - rem + 4;
-    Gfx_UnpackNext += total;
-}
-
-// original 0x462070. LZSS with a 512-byte window: a flag byte, low bit first,
-// then for each bit a literal byte (1) or a two-byte match (0) - window offset
-// b0 | (b1 & 0xF0) << 4, length (b1 & 0x0F) + 3. The first four bytes of the
-// packed data are skipped.
-//
-// As the original has it: a match is copied whole even if it runs past the
-// total, so up to 17 bytes more than the total are written; the total is
-// compared unsigned, and a negative one never ends.
-//
-// One thing is NOT as the original has it, because the original does not have
-// it: it zeroes 0x1EE bytes of the window and leaves the last 18 as whatever
-// the stack held, so a stream that reads those before writing them decodes
-// differently from call to call (docs/asset-loading-path.md section 2). Here
-// they are zero. A valid stream cannot tell. Not in the ledger for that reason:
-// there is no original behaviour to differ from - if shipped data is ever
-// found that reads them, that changes, and this is where to look.
-extern "C" void __cdecl Gfx_UploadLzss(const void* packed, const short* rect) {
-    std::uint8_t window[0x200] = {};
-    std::uint32_t total = static_cast<std::uint32_t>((rect[3] * rect[2]) << 1);
-    auto* in = static_cast<const std::uint8_t*>(packed) + 4;
-    unsigned char* out = Gfx_UnpackNext;
-    std::uint32_t r = 0x1EE, flags = 0, count = 0;
-
-    if (total != 0) {
-        do {
-            flags = (flags & 0xFFFF) >> 1;
-            if ((flags & 0x100) == 0) flags = *in++ | 0xFF00u;
-            if (flags & 1) {
-                const std::uint8_t c = *in++;
-                *out++ = c;
-                ++count;
-                window[r] = c;
-                r = (r + 1) & 0x1FF;
-            } else {
-                const std::uint32_t b0 = in[0], b1 = in[1];
-                in += 2;
-                const std::uint32_t offset = b0 | ((b1 & 0xF0) << 4);
-                const std::uint32_t last = (b1 & 0x0F) + 2;
-                count += last + 1;
-                for (std::uint32_t k = 0; k <= last; ++k) {
-                    const std::uint8_t c = window[(offset + k) & 0x1FF];
-                    *out++ = c;
-                    window[r] = c;
-                    r = (r + 1) & 0x1FF;
-                }
-            }
-        } while (count < total);
-    }
-
-    Gfx_LoadImage(rect, Gfx_UnpackNext);
-    if (total & 3) total += 4 - (total & 3);
-    Gfx_UnpackNext += total;
-}
-
 // --- BOF3X_SHADOW=gfx_unpack: start-up differential fuzz against clones ---------
 // (docs/SCAFFOLDING.md section 2.) The clones' call is re-aimed at the original
 // Gfx_LoadImage address, which is ours by now, so both sides upload alike.
@@ -216,6 +131,4 @@ void GfxUnpack_Inject() {
                   "their own output", g_literals, g_matches, g_overlapping);
         if (bad) bof3::Fatal("gfx_unpack differs from the original in %u self-test rounds", bad);
     }
-    BOF3_INJECT(Gfx_UploadPacked5);
-    BOF3_INJECT(Gfx_UploadLzss);
 }

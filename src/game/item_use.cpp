@@ -464,30 +464,6 @@ extern "C" void __cdecl MsgBox_SysChoice8F(void) { SysMessage(15); }
 // ===========================================================================
 // The pad auto-repeat
 
-// original 0x461EB0 (PSX 0x8014E534): a new press among the bits asked for
-// starts a 12-frame wait and latches Input_Held; while a latched bit stays
-// held the wait counts down and re-fires every 3 frames. The answer is the
-// dword at Input_Held - Input_Previous in the upper half, as the original
-// loads it - with the low word 0 when nothing fires.
-extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
-    const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
-    if (static_cast<std::uint16_t>(pressed) != 0) {
-        ItemUse_RepeatTimer = 0xC;
-        item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
-        return held;
-    }
-    if ((item_use::Word(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
-        const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
-        ItemUse_RepeatTimer = timer;
-        if (timer == 0) {
-            ItemUse_RepeatTimer = 3;
-            item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
-            return held;
-        }
-    }
-    return held & 0xFFFF0000u;
-}
-
 // ===========================================================================
 
 void ItemUse_Inject() {
@@ -550,5 +526,4 @@ void ItemUse_Inject() {
     BOF3_INJECT(MsgBox_SysChoice8D);
     BOF3_INJECT(MsgBox_SysChoice8E);
     BOF3_INJECT(MsgBox_SysChoice8F);
-    BOF3_INJECT(Input_AutoRepeat);
 }
