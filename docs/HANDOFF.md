@@ -393,10 +393,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    refuses nothing**: `move_funcs.py --map-only` wrote `analysis/tu_moves.tsv` (26,189 rows, every impl
    function, now tracked). **Gate on the tip:** i686 `--exceptions ... --exception-classes
    data-layout,i686-fold,i686-inline,i686-convention` 0 differ (153 excepted, 93 promoted); x86_64
-   `--exceptions` 0 differ (280 excepted, 61 promoted); both self-test suites clean on h's and k's tips. **Owed
-   the owner:** (1) the first i686 code change of the round has no played route behind it yet - the state-hash
-   A/B of the ten routes against the `orig4` pairs (running 2026-11-09 from `slb1108\ab\proof_b0.sh`), or a
-   play of the branch build. Row 572 answered 2026-11-09: field_4 stays one file. **Next:**
+   `--exceptions` 0 differ (280 excepted, 61 promoted); both self-test suites clean on h's and k's tips. **The
+   state-hash proof passed** (2026-11-09, `slb1108\ab\REPORT.md`): the tip build on the ten routes against
+   the `orig4` pairs reads the accepted proof's pages plus documented noise, and against main 7f215457's own
+   build (base2) is identical but for noise. Row 572 answered: field_4 stays one file. **A main-side
+   finding, not this round's:** the shop route's signature moved between b7bd1d29 (2026-10-29) and 7f215457 -
+   `0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode transition one frame apart after the
+   `r2` confirm at recipe frame 2579 (`Transition_Busy`, `ModeFlow_TransitionKind`, `ItemUse_RepeatTimer` 7
+   against 0); main's own build shows it, so a PR among 170..213 did it - bisect main's merges on
+   `tools/recipes/shop.txt` with the state hash to name it, then ledger or fix. **Next:**
    the moves B1..B5 (round doc 4: groups by `.text` range, parallel, merged one at a time with the gate after
    each), then stages C/D/E. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line

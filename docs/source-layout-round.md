@@ -1291,9 +1291,22 @@ is expected; the doc says so.
    `gMoveScript` (4cc947cd; 19 sources say `using namespace move_script`,
    five hold their own `g`). Both self-test suites clean; the state-hash A/B
    was not run (its runs need the foreground and the main checkout's
-   reference pairs) - the first i686 code change of the round is excepted
-   by class and construction, not yet by a played route. Not promoted, for
-   the mover never reports them: the `=` rows WalkDatFile,
+   reference pairs). **The proof, run later that morning with the owner
+   away** (`slb1108\ab\REPORT.md`): the tip build on the exe host, the
+   ten routes against the `orig4` pairs. Seven routes read the accepted
+   proof's page set (2026-10-29) or that set plus the documented between-runs
+   noise (VRAM shadow, the sound page, `0x937000`, the display pair at one
+   tick); field_menu's first run had the display pair from tick 1110 and its
+   re-run the accepted eight exactly; shop shows three pages no past proof
+   had (`0x66C000`, `0x7E1000`, `0x7C9000`, ticks 2714..2757: a mode
+   transition one frame apart and `ItemUse_RepeatTimer` 7 against 0, read
+   from raw dumps), deterministic over three runs - and **main 7f215457's own
+   build shows the same three at the same ticks**: ours against that
+   baseline differs only in sound / VRAM noise on shop and is identical on
+   all 1409 ticks of field_menu. The shift is main's, between b7bd1d29 and
+   7f215457 (PRs 170..213), for a bisect on the shop route; not this round's.
+   The first i686 code change of the round has its played routes. Not
+   promoted, for the mover never reports them: the `=` rows WalkDatFile,
    g_desert_directions, g_reading_row(_any), Draw, LiveDraw.
 17. **The sparkle macro family** (magic_s16.cpp): `MS16_SPARKLES` is invoked
    four times and defines 40 functions, ten per spell, which the mover can
