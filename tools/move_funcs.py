@@ -1077,6 +1077,8 @@ def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) ->
 def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
     th = header_of(t)
     stem = Path(t).stem
+    if stem in ci.KEYWORDS:              # menu/char.cpp: `namespace char::at` is no namespace name
+        stem += "_"
     inject = target_inject_name(t)
     aliases = sorted(set(e["aliases"].values()))
     exists = (ROOT / t).exists()
