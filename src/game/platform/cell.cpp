@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/tex_cells.h"
 #include "game/tex_cells_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"

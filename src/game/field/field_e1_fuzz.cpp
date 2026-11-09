@@ -20,7 +20,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

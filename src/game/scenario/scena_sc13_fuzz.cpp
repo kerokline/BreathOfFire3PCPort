@@ -14,7 +14,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/scena_sc13.h"
 #include "game/scena_sc13_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

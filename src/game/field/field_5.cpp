@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/event_ops.h"
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"

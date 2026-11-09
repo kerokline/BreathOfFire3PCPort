@@ -8,10 +8,8 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_items.h"
 #include "game/battle_items_callees.h"
 #include "game/magic_harness.h"
-#include "game/magic_s15.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"

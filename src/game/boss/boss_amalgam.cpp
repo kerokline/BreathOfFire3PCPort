@@ -6,7 +6,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
-#include "game/boss_sc.h"
 #include "game/boss_sc_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"

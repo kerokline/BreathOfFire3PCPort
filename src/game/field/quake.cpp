@@ -5,14 +5,12 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e6.h"
 #include "game/battle_e6_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"
 #include "game/draw_pool.h"
 #include "game/field/quake_callees.h"
 #include "game/magic_harness.h"
-#include "game/magic_s23.h"
 #include "game/magic_s23_callees.h"
 #include "game/map_rim.h"
 #include "game/move_script_bytes.h"

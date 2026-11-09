@@ -11,11 +11,9 @@
 #include "game/battle/battle_action_callees.h"
 #include "game/battle_actions.h"
 #include "game/battle_actions_callees.h"
-#include "game/battle_e1.h"
 #include "game/battle_e1_callees.h"
 #include "game/battle_phases.h"
 #include "game/battle_phases_callees.h"
-#include "game/battle_setup.h"
 #include "game/battle_setup_callees.h"
 #include "game/battle_turn_steps.h"
 #include "game/battle_turn_steps_callees.h"
@@ -25,7 +23,6 @@
 #include "game/psp_code.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "game/sound.h"
 #include "game/sound_st.h"
@@ -350,6 +347,42 @@ unsigned long DispatchRest3a(const char* who, U table, unsigned index, unsigned 
 }
 
 }  // namespace
+
+// battle_setup's callee seam, moved here from battle_setup.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_setup {
+namespace {
+
+template <typename F> F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorAbsent.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorCanAct.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetPending.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessage.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessageAt.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kStatusTint.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPartyName.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyName.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kWakeRoll.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetHpChange.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kEnemyOutpaces.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)),
+    Sprite_ReleaseTint,
+    Msg_SystemPtr,
+    Window_Alloc,
+    Rand,
+    Battle_ActorSkipped,
+    Battle_OpenMsgWindow,
+    Battle_ClearStatus,
+    Battle_ActorStanding,
+    Battle_PartyOutpaces,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_setup
 
 // original 0x42E990 (no PSX twin paired): phase 1's entry. A tail jump
 // through Battle_InputSteps 0x64AE28 by the step 0x904AA1: Battle_RoundStart,

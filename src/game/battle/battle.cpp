@@ -6,16 +6,13 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
-#include "game/battle_fx_tasks.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"

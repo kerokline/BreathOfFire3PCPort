@@ -14,7 +14,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/area_backdrop.h"
 #include "game/area_backdrop_callees.h"
 #include "game/area_slope.h"
 #include "game/battle_draw.h"
@@ -44,17 +43,13 @@
 #include "game/map_layers.h"
 #include "game/map_layers_callees.h"
 #include "game/map_rim.h"
-#include "game/map_scroll.h"
 #include "game/map_scroll_callees.h"
 #include "game/map_view.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/prim.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/scena_sx.h"
-#include "game/scena_sx2.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -1056,6 +1051,20 @@ world_map::U LongWorldMap(const unsigned char* p) {
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 
 }  // namespace
+
+// map_scroll's callee seam, moved here from map_scroll.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace map_scroll {
+
+const Callees kOriginals = {
+    DrawItemPool_ReleaseCell, MapView_CellToMap,
+    Gte_SetGeomScreen, Gte_SetGeomOffset, Gte_SetBackColor, Gpu_SetPolyFT4, Gpu_SetShadeTex, AreaMap_Elevation,
+    AreaMap_BakePatches, AreaMap_SetupEntries, MapView_PlaceRuns,
+    AreaMap_ClutCycleStart, AreaMap_ApplyPatch,
+};
+Callees g = kOriginals;
+
+}  // namespace map_scroll
 
 // original 0x56E6C0: the view's frame (PSX FUN_801532A0). Called by the field
 // frame entries 0x517200 / 0x517240.

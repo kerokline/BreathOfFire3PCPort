@@ -28,7 +28,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_2g.h"
 #include "game/rest_2g_callees.h"
 #include "game/rest_2h.h"
 #include "game/rest_2h_callees.h"
@@ -36,7 +35,6 @@
 #include "game/text_advance.h"
 #include "game/text_pairs.h"
 #include "game/widescreen.h"
-#include "game/window_kinds.h"
 #include "game/window_kinds_callees.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
@@ -518,6 +516,26 @@ short S(const unsigned char* at) { return static_cast<short>(Word(at)); }
 int Scale(int v, int max) { return v * 55 / max; }
 
 }  // namespace
+
+}  // namespace window_kinds
+
+// window_kinds's callee seam, moved here from window_kinds.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace window_kinds {
+
+const Callees kOriginals = {
+    BattleWin_DrawMessageBox,
+    Text_DrawAt,
+    BattleWin_DrawMessage,
+    BattleMsg_Advance,
+    Window_FreeCurrent,
+    {As<Handler>(::bof3::Code(bof3::addr::BattleWin_BannerSlideIn)), As<Handler>(::bof3::Code(kNop.v)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_BannerSlideOut))},
+    {As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageWait)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageSlideIn)),
+     As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageShow)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageSlideOut))},
+    {As<Handler>(::bof3::Code(kResultKinds[0])), As<Handler>(::bof3::Code(kResultKinds[1])), nullptr, nullptr, As<Handler>(::bof3::Code(kResultKinds[4])),
+     As<Handler>(::bof3::Code(kResultKinds[5]))},
+};
+Callees g = kOriginals;
 
 }  // namespace window_kinds
 

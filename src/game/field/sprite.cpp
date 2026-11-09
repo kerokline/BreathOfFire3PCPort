@@ -12,7 +12,6 @@
 #include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/cheats.h"
-#include "game/field_hidden.h"
 #include "game/field_hidden_callees.h"
 #include "game/layering.h"
 #include "game/move_script_bytes.h"

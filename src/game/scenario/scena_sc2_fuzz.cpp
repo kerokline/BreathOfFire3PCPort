@@ -16,7 +16,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
-#include "game/scena_sc2.h"
 #include "game/scena_sc2_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

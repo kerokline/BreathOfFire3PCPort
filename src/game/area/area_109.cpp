@@ -8,7 +8,6 @@
 #include "game/area/area_109_callees.h"
 #include "game/cheats.h"
 #include "game/draw_pool.h"
-#include "game/effect_5a.h"
 #include "game/effect_5a_callees.h"
 #include "game/map_rim.h"
 #include "game/move_script_bytes.h"

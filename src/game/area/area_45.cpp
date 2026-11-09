@@ -9,7 +9,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w1b.h"
 #include "game/area_w1b_callees.h"
 #include "game/labels.h"
 #include "game/move_script_bytes.h"

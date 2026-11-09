@@ -6,7 +6,6 @@
 #include <windows.h>
 
 #include "bof3/symbols.gen.h"
-#include "game/tex_cells.h"
 #include "game/tex_cells_callees.h"
 #include "game/tex_page.h"
 #include "game/tex_page_callees.h"

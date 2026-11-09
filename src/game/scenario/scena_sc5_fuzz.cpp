@@ -12,7 +12,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/scena_sc5.h"
 #include "game/scena_sc5_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

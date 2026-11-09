@@ -7,12 +7,10 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_odds.h"
 #include "game/battle_odds_callees.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/magic_harness.h"
-#include "game/magic_s12.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"

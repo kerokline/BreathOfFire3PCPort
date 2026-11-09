@@ -8,17 +8,12 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/battle/battle_3_callees.h"
-#include "game/battle_actor_copies.h"
 #include "game/battle_actor_copies_callees.h"
-#include "game/battle_damage.h"
 #include "game/battle_damage_callees.h"
-#include "game/battle_e4.h"
 #include "game/battle_e4_callees.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
 #include "game/battle_misc.h"
 #include "game/battle_misc_callees.h"
-#include "game/battle_setup.h"
 #include "game/battle_setup_callees.h"
 #include "game/battle_text.h"
 #include "game/battle_window_draw.h"
@@ -30,7 +25,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
 #include "game/text_pairs.h"
 #include "game/widescreen.h"
@@ -434,6 +428,75 @@ int Percent(int value, int percent, int cap) {
 }
 
 }  // namespace
+
+// battle_actor_copies's callee seam, moved here from battle_actor_copies.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_actor_copies {
+namespace {
+
+template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+using F0 = U (__cdecl*)();
+using F1 = U (__cdecl*)(U);
+using F2 = U (__cdecl*)(U, U);
+using F3 = U (__cdecl*)(U, U, U);
+
+}  // namespace
+
+const Callees kOriginals = {
+    As<F2>(BattleBanner_SetMessage),
+    As<F1>(Battle_DefaultTarget),
+    Fn<F1>(::bof3::Code(kPrevTarget.v)),
+    As<F3>(Battle_WrapIndex),
+    As<F1>(Input_AutoRepeat),
+    As<F1>(Sound_PlayEffect),
+    As<F0>(ItemMenu_SetupForActor),
+    As<F3>(Char_AbilityList),
+    As<F1>(Msg_SystemPtr),
+    As<F0>(ItemMenu_CanUseSelected),
+    As<F0>(Battle_ReturnTrue),
+    As<F0>(ItemMenu_FreeWindows),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_actor_copies
+
+// battle_damage's callee seam, moved here from battle_damage.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_damage {
+namespace {
+
+template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_ActorCanAct,
+    Battle_ActorCanCommand,
+    Battle_LevelClass,
+    Battle_CalcDamage,
+    Battle_BaseDamage,
+    Battle_ScaleDamage,
+    Battle_ElementAffinity,
+    EnemyAI_RowDone,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleBanner_Add)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_StatusResisted80)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_InflictStatus)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_ClearStatus)),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_HitOrMissParty)),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_HitOrMissEnemy)),
+    Fn<int (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PartyDefenceMean)),
+    Fn<int (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_PsiStatusDeathAffinity)),
+    Rand,
+    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::EnemyAI_OtherRowsDone)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_damage
 
 // original 0x442FA0 (PSX 0x801D74DC): the party row - the frame of edge
 // pieces and tiles sized by the member count 0x904AB0 at (x, y), then per

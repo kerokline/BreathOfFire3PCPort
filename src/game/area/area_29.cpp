@@ -9,7 +9,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/worldmap_area.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -35,6 +34,49 @@ namespace {
 using U = std::uint32_t;
 
 }  // namespace
+
+// worldmap_area's callee seam, moved here from worldmap_area.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace worldmap_area {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Rand,
+    AreaMap_Elevation,
+    Fn<void (__cdecl*)(int, int, int)>(::bof3::Code(kSetCell.v)),
+    ScriptFlags_Set40,
+    Fn<void (__cdecl*)()>(::bof3::Code(kFlagsClear40.v)),
+    Msg_OpenScript,
+    AreaMap_ByteAt,
+    Sprite_SetAnimation,
+    WorldMap_PinSprite,
+    Sprite_QueueOverlay,
+    Effect_Release,
+    WorldMap_FrameStep,
+    WorldMapHud_BoxStep,
+    WorldMap_DrawHud,
+    WorldMap_RecordIndex,
+    Sprite_SetAnimationBank,
+    Sprite_ScriptTick,
+    Sprite_UpdateScreen,
+    Gpu_SetPolyFT4,
+    Gpu_SetShadeTex,
+    Gpu_SetSemiTrans,
+    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
+                       long*)>(&Gte_RotTransPers4),
+    Gte_PrimDepths4_10,
+    Prim_SetTexture,
+    Gfx_CommitPrim,
+    MapView_ItemHalfAt,
+    MapView_LinkPrimAt,
+};
+Callees g = kOriginals;
+
+}  // namespace worldmap_area
 
 // original 0x4037B0 (area 29's descriptor init, +0x40 of 0x5EE270, called by
 // Area_Enter; PSX 0x801F2D2C, the sibling's names/area_records.toml): a five-

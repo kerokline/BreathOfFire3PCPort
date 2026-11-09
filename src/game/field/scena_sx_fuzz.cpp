@@ -37,7 +37,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
-#include "game/scena_sx.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

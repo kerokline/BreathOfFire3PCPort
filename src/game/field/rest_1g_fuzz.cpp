@@ -16,7 +16,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
-#include "game/rest_1g.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"

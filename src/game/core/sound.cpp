@@ -19,7 +19,6 @@
 #include "game/cheats.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
-#include "game/display_env.h"
 #include "game/display_env_callees.h"
 #include "game/lang_layout.h"
 #include "game/mode_flow.h"
@@ -31,7 +30,6 @@
 #include "game/records.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
-#include "game/scena_sx2.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shop_states2.h"
@@ -288,6 +286,17 @@ std::uint32_t Dword(std::uint32_t address) {
 // sound.cpp's five are (common/asm_name.h); the one caller (Game_WndProc,
 // ours) does not read it.
 extern "C" int __cdecl Sound_PauseAllEax(void) BOF3_ASM_NAME(Sound_PauseAll);
+
+// display_env's callee seam, moved here from display_env.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace display_env {
+
+const Callees kOriginals = {
+    Gfx_Present, Gfx_ClearPresent, D3d_SetBackColor, Crt_malloc, Crt_free, SndBuf_Release, SndBuf_FromWave,
+};
+Callees g = kOriginals;
+
+}  // namespace display_env
 
 // original 0x587740: a sound effect - the PSX SE_Play's cue of up to four
 // chord voices, bank:id alike, on DirectSound buffers. The cue is the four

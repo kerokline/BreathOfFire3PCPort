@@ -77,7 +77,6 @@ void __cdecl PartyAction_SideProbes(void);
 
 }  // extern "C"
 
-void Rest0A_Inject();
 
 namespace rest_0a {
 // BOF3X_SHADOW=rest_0a: the start-up fuzz, rest_0a_fuzz.cpp. Clones the seven

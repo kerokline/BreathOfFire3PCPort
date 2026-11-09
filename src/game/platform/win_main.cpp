@@ -65,7 +65,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
-#include "game/fmv_play.h"
 #include "game/msgbox.h"
 #include "game/pause_text.h"
 #include "game/quick_menu.h"

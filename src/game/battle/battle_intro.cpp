@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
 #include "game/battle_phases.h"
 #include "game/battle_phases_callees.h"
@@ -73,6 +72,34 @@ unsigned char* Window(unsigned index) { return battle_phases::At(::bof3::Img(Win
 int S8(std::uint32_t address) { return static_cast<signed char>(BBattlePhases(address)); }
 
 }  // namespace
+
+// battle_flow's callee seam, moved here from battle_flow.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_flow {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+constexpr ::bof3::image::CodeVa kBossFxDispatch{bof3::addr::BattleBossFx_Dispatch};
+
+}  // namespace
+
+const Callees kOriginals = {
+    // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
+    // same values by name, every entry through bof3::addr (kBossFxDispatch above).
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleStart_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::BattleInput_Dispatch)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleCommit_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::Battle_ActionPhase)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleRoundEnd_Step)), Fn<Handler>(::bof3::Code(bof3::addr::BattleEnd_Step))},
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleFx_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::BattleMagicFx_Dispatch)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleMagicRow_Run)), Fn<Handler>(::bof3::Code(kBossFxDispatch.v))},
+    BattleTask_Create, Battle_RollDrops, Battle_DrawNumber,
+    Sprite_UpdateScreen, Sprite_EnsureAnimation, Sprite_ScriptTick, Sprite_ScriptTickOnce, Rand,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRemoveFromTurnOrder.v)), Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetFlagBit.v)),
+    Sprite_ReleaseTint, Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kClearTurnBit.v)), LoadDatFile, Crt_sprintf,
+    Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_GetClut, Gpu_SetSprt,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_flow
 
 // original 0x42E370 (no PSX twin paired): state 5 of the battle mode's state
 // table 0x656A84 (reached by the tail jump at 0x495E98), once a frame. The

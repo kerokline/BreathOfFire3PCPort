@@ -14,7 +14,6 @@
 #include "game/battle_text.h"
 #include "game/d3d_lines.h"
 #include "game/field_blocked.h"
-#include "game/field_c3.h"
 #include "game/field_c3_callees.h"
 #include "game/field_frame.h"
 #include "game/field_misc.h"
@@ -22,9 +21,7 @@
 #include "game/field_objects.h"
 #include "game/labels.h"
 #include "game/map_rim.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/object_kinds.h"
@@ -358,6 +355,19 @@ unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags,
 template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
 }  // namespace
+
+// move_cmds's callee seam, moved here from move_cmds.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace move_cmds {
+
+const Callees kOriginals = {
+    AreaMap_Elevation, Math_Ratan2, ScriptContext_Reset, MapView_SetElevation, MoveCmd_AttachOffset,
+    MoveScript_ObjectKind, MoveCmd_Detach, MoveCmd_AttachMove, MoveCmd_HandlePosition, PartySet_Load, Party_Join,
+    AreaMap_Slope,
+};
+Callees g = kOriginals;
+
+}  // namespace move_cmds
 
 // original 0x517200: the field's frame (PSX FUN_8019A1B8, call for call).
 extern "C" void __cdecl Field_Frame(void) {

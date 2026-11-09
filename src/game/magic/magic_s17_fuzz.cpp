@@ -17,7 +17,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_s17.h"
 #include "game/move_script_bytes.h"
 
 namespace magic_s17 {

@@ -24,7 +24,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
 #include "hook/log.h"
 

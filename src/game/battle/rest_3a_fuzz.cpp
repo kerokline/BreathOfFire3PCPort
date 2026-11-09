@@ -20,7 +20,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "hook/log.h"
 

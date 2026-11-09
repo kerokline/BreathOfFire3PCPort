@@ -30,7 +30,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/task_sched.h"
 #include "game/task_sched_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"

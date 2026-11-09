@@ -6,7 +6,6 @@
 #include <emmintrin.h>
 
 #include "bof3/symbols.gen.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/psx_gpu.h"
@@ -14,7 +13,6 @@
 #include "game/psx_gte_float.h"
 #include "game/psx_gte_matrix.h"
 #include "game/psx_gte_transform.h"
-#include "game/psx_rest.h"
 #include "game/psx_rest_callees.h"
 #include "game/record_views.h"
 #include "game/records.h"

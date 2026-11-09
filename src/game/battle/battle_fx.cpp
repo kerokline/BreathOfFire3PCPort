@@ -8,20 +8,15 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle/battle_fx_callees.h"
-#include "game/battle_e2.h"
 #include "game/battle_e2_callees.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
-#include "game/battle_fx_tasks.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"
-#include "game/effect_4a.h"
 #include "game/effect_4a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -396,6 +391,53 @@ void TintTile() {
 }
 
 }  // namespace
+
+// battle_fx_tasks's callee seam, moved here from battle_fx_tasks.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_fx_tasks {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+Handler H(std::uint32_t address) { return Fn<Handler>(::bof3::CodePlace(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
+    // entries the boss round made ours read their names (BareRet in both stack tables,
+    // Boss26Fx_Dispatch - BattleFx_Dispatch's slot 8, group BSF's); the values are
+    // unchanged. The rest keep the round-eight form, raw (the fuzz's kFxImm / kMagicImm
+    // key on the same values). Rebound 2026-09-29 (round twelve group BE2): slots 9, 10,
+    // 13, 14 and 17 and the watch's state 3 read BE2's names, the values unchanged.
+    {H(bof3::addr::BareRet), H(bof3::addr::BattleFx_DamagePopup), H(bof3::addr::BattleFxFlash_Dispatch), H(bof3::addr::BattleFx_PoseTask), H(bof3::addr::BattleFxTint_Dispatch), H(bof3::addr::BattleFxAnim_Dispatch), H(bof3::addr::BattleFx_ActorWatch),
+     H(bof3::addr::BattleFx_Follow), H(bof3::addr::Boss26Fx_Dispatch), H(bof3::addr::BattleFx_GridMark), H(bof3::addr::BattleFx_ListHand), H(bof3::addr::BattleFxReform_Dispatch), H(bof3::addr::BattleFxRestore_Dispatch), H(bof3::addr::BattleFx_Win18Cursor),
+     H(bof3::addr::BattleFx_Win19Cursor), H(bof3::addr::BattleFxDash_Dispatch), H(bof3::addr::BattleFxPose_Dispatch), H(bof3::addr::BattleFx_RestoreMemberTask),
+     H(bof3::addr::BattleFxTrail_Dispatch)},   // slots 15, 16, 18 (BE6) and 9, 10, 13, 14, 17 (BE2) rebound 2026-09-29, round twelve: the values unchanged
+    {H(bof3::addr::BareRet), H(bof3::addr::SuperComboChild_Task), H(bof3::addr::BuffPopupAt_Task), H(bof3::addr::PentagramChild_Task), H(bof3::addr::PollenMote_Task), H(bof3::addr::BuffFx_Dispatch), H(bof3::addr::EvilEyeChild_Task), H(bof3::addr::Magic114_ChildTask),
+     H(bof3::addr::BenedictionChild_Task), H(bof3::addr::BonebreakChild_Task), H(bof3::addr::FxFunnel_Dispatch), H(bof3::addr::Fx104_Child), H(bof3::addr::MyollnirChild_Task), H(bof3::addr::LeechOrb_Dispatch), H(bof3::addr::LightningBolt_Task), H(bof3::addr::WhelpBreathChild_Task),
+     H(bof3::addr::SpellRagnarok_Child), H(bof3::addr::TsunamiChild_Task), H(bof3::addr::IdentifyChild_Task), H(bof3::addr::ChillChild_Task), H(bof3::addr::JoltBolt_Task), H(bof3::addr::FrostRing_Task), H(bof3::addr::FxRing_Task), H(bof3::addr::IceShard_Task),
+     H(bof3::addr::IntimidateChild_Task), H(bof3::addr::SpellSleep_Child), H(bof3::addr::SpellConfuse_Child), H(bof3::addr::FxSpiral_Dispatch), H(bof3::addr::ForetellChild_Task), H(bof3::addr::BarrierPart_Dispatch), H(bof3::addr::DreamBreathMote_Task), H(bof3::addr::Magic008Double_Task),
+     H(bof3::addr::Magic088_Child), H(bof3::addr::Magic017Image_Task), H(bof3::addr::ShieldAura_Dispatch), H(bof3::addr::KickImage_Task), H(bof3::addr::Magic074_ActorDispatch), H(bof3::addr::PurifyMote_Dispatch), H(bof3::addr::Magic073_ActorDispatch), H(bof3::addr::Magic087_Child),
+     H(bof3::addr::Magic092_Child), H(bof3::addr::SnapWave_Task), H(bof3::addr::ChlorineChild_Task), H(bof3::addr::DrainOrb_Dispatch), H(bof3::addr::HowlingChild_Task), H(bof3::addr::SimoonFx_Dispatch), H(bof3::addr::Magic020Child_Task), H(bof3::addr::BurnFlame_Task),
+     H(bof3::addr::Magic115_ChildTask), H(bof3::addr::BoneDartChild_Task), H(bof3::addr::ElemBreathChild_Task), H(bof3::addr::Fx105_Child), H(bof3::addr::EbonfireRing_Task), H(bof3::addr::ThunderClapBolt_Task), H(bof3::addr::WallOfFireChild_Task), H(bof3::addr::BlitzBolt_Task),
+     H(bof3::addr::BreathBeam_Task), H(bof3::addr::InfluenceChild_Task), H(bof3::addr::WeretigerChild_Task), H(bof3::addr::FocusChild_Task), H(bof3::addr::EnlightenChild_Task), H(bof3::addr::BerserkChild_Task), H(bof3::addr::CounterChild_Task), H(bof3::addr::SanctuaryRing_Dispatch),
+     H(bof3::addr::TornadoFunnel_Dispatch), H(bof3::addr::BoneDanceChild_Task), H(bof3::addr::RottenBreathChild_Task), H(bof3::addr::FxDim_Dispatch), H(bof3::addr::AccessionChild_Task), H(bof3::addr::StealClone_Dispatch), H(bof3::addr::ElemStrikeChild_Task), H(bof3::addr::LastResortChild_Task),
+     H(bof3::addr::BuffPopup_Task), H(bof3::addr::NueStompChild_Task), H(bof3::addr::CelerityChild_Task), H(bof3::addr::CoronaChild_Task), H(bof3::addr::BlizzardShard_Task), H(bof3::addr::FxScorch_Dispatch), H(bof3::addr::ShadowBreathFx_Task), H(bof3::addr::JumpChild_Task),
+     H(bof3::addr::OvumChild_Task), H(bof3::addr::MagicBallChild_Task), H(bof3::addr::MightyChopChild_Task), H(bof3::addr::MindSwordChild_Task), H(bof3::addr::TimedBlowCopy_Task), H(bof3::addr::SacrificeChild_Task), H(bof3::addr::MainCannonChild_Task), H(bof3::addr::Magic111Child_Task),
+     H(bof3::addr::Magic159Child_Task), H(bof3::addr::WarShoutChild_Task), H(bof3::addr::DragonBreathBeam_Task), H(bof3::addr::Port_DroppedCall), H(bof3::addr::DivineBreathFx_Task), H(bof3::addr::HeadCrackerRock_Task), H(bof3::addr::LavaburstChild_Task), H(bof3::addr::MeteorStrikeRock_Task),
+     H(bof3::addr::CombustionChild_Task), H(bof3::addr::GeoBreathChild_Task), H(bof3::addr::ReviveHalo_Dispatch), H(bof3::addr::TempestFlash_Task), H(bof3::addr::DoomBreathOrb_Task), H(bof3::addr::Magic225Veil_Task), H(bof3::addr::VenomChild_Task), H(bof3::addr::AuraBreathDome_Task),
+     H(bof3::addr::SuddenDeathChild_Task), H(bof3::addr::KaiserChild_Task), H(bof3::addr::HolocaustBeam_Task), H(bof3::addr::Magic213Actor_Task), H(bof3::addr::InkPuff_Task), H(bof3::addr::InkInkActor_Task)},
+    {H(bof3::addr::BattleFx_PopupStart), H(bof3::addr::BattleFx_PopupHold), H(bof3::addr::BattleFx_PopupRise), H(bof3::addr::BattleFx_PopupBounce), H(bof3::addr::BattleFx_PopupEnd)},
+    {H(bof3::addr::BattleFx_PoseStart), H(bof3::addr::BattleFx_PosePlay)},
+    {H(bof3::addr::BattleFx_ActorWatchTest), H(bof3::addr::BattleFx_WatchIconStart), H(bof3::addr::Sprite_StateRestart), H(bof3::addr::BattleFx_WatchIcon), H(bof3::addr::BattleFx_WatchRecheck)},
+    {H(bof3::addr::BattleFx_FollowOwner)},
+    BattleFx_RollingDigits, Battle_DrawNumber, Battle_DrawLabel, BattleTask_FreeCurrent, Battle_ActorIsOut,
+    Sprite_SetAnimation, Sprite_QueueOverlay, Sprite_ScriptTick, Sprite_UpdateScreen, ScriptFlags_Set40,
+    Fn<void (__cdecl*)()>(::bof3::Code(kAfterAreaScript.v)), Transition_Start,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_fx_tasks
 
 // original 0x432B70 (PSX 0x801E5BE4 by the catalogue's pairing, not read):
 // state +1 of the running slot through a five-entry stack table (start,

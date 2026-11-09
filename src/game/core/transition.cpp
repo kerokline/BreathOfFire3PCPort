@@ -17,7 +17,6 @@
 #include "game/mode_flow_callees.h"
 #include "game/mode_rest.h"
 #include "game/mode_rest_callees.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
 #include "game/mode_tasks.h"
 #include "game/move_script_bytes.h"
@@ -342,6 +341,36 @@ void MenuModeEnter(int file) {
 }
 
 }  // namespace
+
+// mode_states's callee seam, moved here from mode_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace mode_states {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    {MsgBox_SysChoice80, MsgBox_SysChoice81, MsgBox_SysChoice82, MsgBox_SysChoice83, MsgBox_SysChoice84,
+     MsgBox_SysChoice85, MsgBox_SysChoice86, MsgBox_SysChoice87, MsgBox_SysChoice88, MsgBox_SysChoice89,
+     MsgBox_SysChoice8A, MsgBox_SysChoice8B, MsgBox_SysChoice8C, MsgBox_SysChoice8D, MsgBox_SysChoice8E,
+     MsgBox_SysChoice8F},
+    {0x4981F1, 0x4983F1},
+    Look_Return, Field_LoadingFrame, Menu_Frame,
+    Field_Frame, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripCopyRow, Sprite_FaceDirection,
+    Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
+    AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects,
+    MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
+    Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
+    Sprite_ShadeFadeBegin, Sprite_ShadeFadeStep,
+    Flags_Test, Flags_Set, ScriptFlags_Set40, Music_LoadFile, Music_FadeOutStop, Sound_PlayEffect,
+    Effect_FindFree, Scenario_CallA, AreaMap_SetupEntries, MoveCmd_TestFB, Field_ChangeArea,
+    Menu_DrawHand,
+};
+Callees g = kOriginals;
+
+}  // namespace mode_states
 
 // original 0x495040 (PSX 0x8014EB68): unless Transition_Busy is set (a
 // transition already running), the kind to the word 0x66C828 and task 2

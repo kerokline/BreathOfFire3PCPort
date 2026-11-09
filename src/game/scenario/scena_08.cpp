@@ -11,7 +11,6 @@
 #include "game/records.h"
 #include "game/scena_calls.h"
 #include "game/scena_calls_callees.h"
-#include "game/scena_se.h"
 #include "game/scena_se_callees.h"
 #include "game/scenario/scena_08_callees.h"
 #include "game/scenario_harness.h"

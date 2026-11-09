@@ -15,11 +15,9 @@
 #include "game/core/title_callees.h"
 #include "game/draw_emit.h"
 #include "game/faerie_name.h"
-#include "game/field_c1.h"
 #include "game/field_c1_callees.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
-#include "game/item_use.h"
 #include "game/item_use_callees.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
@@ -264,6 +262,33 @@ void OpenMessage(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
 void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(Config_WindowColour)); }
 
 }  // namespace
+
+// item_use's callee seam, moved here from item_use.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace item_use {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Char_HealHp,
+    Char_HealAp,
+    Char_ClearStatus,
+    Stat_AddCap999,
+    Stat_AddCap99,
+    Stat_AddClamped,
+    Party_Count,
+    Rand,
+    Char_RecalcStats,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
+    Flags_Test,
+    Fn<void (__cdecl*)()>(::bof3::Code(kSystemChoice.v)),
+};
+Callees g = kOriginals;
+
+}  // namespace item_use
 
 // The item window's frame at its slide: a box 0x118 x 0x13 flags 0xF2 at (0x14,
 // 0x12 - 12 slide) and its outline 0x113 x 0xF at (0x16, 0x14 - 12 slide), the

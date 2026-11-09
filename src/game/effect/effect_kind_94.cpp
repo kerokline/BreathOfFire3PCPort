@@ -7,7 +7,6 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_4d.h"
 #include "game/effect_4d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"

@@ -21,7 +21,6 @@
 #include "game/records.h"
 #include "game/rest_2a.h"
 #include "game/rest_2a_callees.h"
-#include "game/scena_sx.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"

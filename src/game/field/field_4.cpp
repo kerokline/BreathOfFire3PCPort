@@ -10,11 +10,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/event_leader.h"
 #include "game/event_leader_callees.h"
-#include "game/event_ops.h"
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/field/field_4_callees.h"
-#include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/field_event.h"
 #include "game/field_event_callees.h"
@@ -236,6 +234,72 @@ void Dispatch(const std::uint32_t* table, unsigned index) {
 using u32 = std::uint32_t;
 
 }  // namespace
+
+// event_ops's callee seam, moved here from event_ops.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace event_ops {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const std::uint32_t kStepHandlers[kStepCases] = {
+    bof3::addr::Area36_StepHook, bof3::addr::Area42_StepHook, bof3::addr::Area46_StepHook, bof3::addr::Area49_StepHook, bof3::addr::Area59_StepHook, bof3::addr::Area75_StepHook, bof3::addr::Area76_StepDisarmTail5, bof3::addr::Area97_StepHook, bof3::addr::Area100_StepHook, bof3::addr::Area105_StepHook,
+    bof3::addr::Area106_StepHook, bof3::addr::Area112_StepHook, bof3::addr::Area116_StepHook, bof3::addr::Area135_StepHook, bof3::addr::Area140_StepHook, bof3::addr::Area143_StepHook, bof3::addr::Area145_StepHook, bof3::addr::Area146_StepHook, bof3::addr::Area150_StepHook, bof3::addr::Area170_StepHook,
+    bof3::addr::Area171_StepHook, bof3::addr::Area172_StepHook, bof3::addr::Scenario_NoHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook,
+    bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area191_StepHook, bof3::addr::Area192_StepHook, bof3::addr::Area193_StepHook, bof3::addr::Area197_StepHook,
+};
+const std::uint32_t kArriveHandlers[kArriveCases] = {
+    bof3::addr::Area40_ArriveHook, bof3::addr::Area48_ArriveHook, bof3::addr::Area111_ArriveHook, bof3::addr::Area148_ArriveHook, bof3::addr::Area167_ArriveHook, bof3::addr::Area169_ArriveHook, bof3::addr::Area171_ArriveHook, bof3::addr::Area173_ArriveHook,
+};
+const Callees kOriginals = {
+    Field_LeaderTalkTest, Field_LeaderSwapTest, Field_LeaderMenuTest, Field_LeaderCheckTest,
+    Field_LeaderRequest4Test, Field_LeaderRequest9Test,
+    Field_LeaderDirection, Field_LeaderStepTarget, Field_LeaderPushObjects, Field_LeaderPushCount,
+    Field_LeaderSetPace, Field_EncounterDue, Field_LeaderStepTick, Field_LeaderEffectTest, Field_LeaderStepCell,
+    Party_CanSwap, Field_EffectAhead, Area_PassageAhead, Field_FacingObject, Field_ObjectInPath, Field_CellAround,
+    Field_CellAroundNear, Field_LeaderTalkTo, Scenario_StepHook, Scenario_ArriveHook, Area_StepHook,
+    Area_ArriveHook, Area_ReturnGate,
+    reinterpret_cast<const ::bof3::Slot32<const ChapterHooks>*>(static_cast<std::uintptr_t>(::bof3::Img(Scenario_Hooks_addr))),
+    Field_LeaderAnimation, Sprite_ClearSteps, Sprite_EnsureAnimation, AreaMap_ByteAt, Field_EncounterThresholdRoll,
+    Party_Count, Area_ZoneAt, Rand, Sound_PlayEffect, Area_LinkAt, MapView_GroundAt, Sprite_ScriptTick,
+    Sprite_ObjectAt, Sprite_PointInReach, Field_ChangeArea, Flags_Test, Flags_Clear, EventObj_Reset,
+    Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, Sprite_SetAnimation,
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kFaceObject.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kEncounterArea.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(fn::kExitGateway.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kExitFromCell.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(fn::kCellAroundLarge.v)),
+    Fn<int (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kCellHook.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(fn::kSetCell.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kPartyVisible.v)),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned, unsigned)>(::bof3::Code(fn::kMemberFits.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderMove.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderFollow.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(fn::kLeaderGround.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(fn::kStepCode.v)),
+    Fn<long (__cdecl*)(long, long, std::uint32_t)>(::bof3::Code(fn::kSlopeAt.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(fn::kTestFB.v)),
+    {Fn<Hook>(::bof3::CodePlace(kStepHandlers[0])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[1])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[2])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[3])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[4])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[5])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[6])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[7])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[8])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[9])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[10])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[11])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[12])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[13])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[14])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[15])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[16])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[17])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[18])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[19])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[20])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[21])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[22])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[23])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[24])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[25])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[26])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[27])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[28])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[29])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[30])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[31])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[32])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[33])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[34])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[35])),
+     Fn<Hook>(::bof3::CodePlace(kStepHandlers[36])), Fn<Hook>(::bof3::CodePlace(kStepHandlers[37]))},
+    {Fn<Hook>(::bof3::CodePlace(kArriveHandlers[0])), Fn<Hook>(::bof3::CodePlace(kArriveHandlers[1])), Fn<Hook>(::bof3::CodePlace(kArriveHandlers[2])),
+     Fn<Hook>(::bof3::CodePlace(kArriveHandlers[3])), Fn<Hook>(::bof3::CodePlace(kArriveHandlers[4])), Fn<Hook>(::bof3::CodePlace(kArriveHandlers[5])),
+     Fn<Hook>(::bof3::CodePlace(kArriveHandlers[6])), Fn<Hook>(::bof3::CodePlace(kArriveHandlers[7]))},
+};
+Callees g = kOriginals;
+
+}  // namespace event_ops
 
 // original 0x52D8F0: the leader's frame (PSX 0x801B10F0), called by
 // Field_MembersFrame for member 0 and by Field_PartyFirstFrame.

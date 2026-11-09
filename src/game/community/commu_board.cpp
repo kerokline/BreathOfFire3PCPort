@@ -13,7 +13,6 @@
 #include "game/move_script_bytes.h"
 #include "game/rest_4b.h"
 #include "game/rest_4b_callees.h"
-#include "game/rest_4c.h"
 #include "game/rest_4c_callees.h"
 #include "game/rest_4d.h"
 #include "game/rest_4d_callees.h"

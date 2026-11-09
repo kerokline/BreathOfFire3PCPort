@@ -15,7 +15,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_s19.h"
 #include "game/move_script_bytes.h"
 
 // Ours, called through MH_CALL by one another (magic_s19.cpp).

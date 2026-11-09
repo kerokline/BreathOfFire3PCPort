@@ -11,7 +11,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_steal.h"
 
 namespace magic_steal {
 namespace {

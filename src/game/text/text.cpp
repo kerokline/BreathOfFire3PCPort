@@ -21,7 +21,6 @@
 #include "game/menu_verbs.h"
 #include "game/menu_windows.h"
 #include "game/menu_windows_callees.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/msgbox.h"

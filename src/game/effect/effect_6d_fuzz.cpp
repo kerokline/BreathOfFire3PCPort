@@ -15,7 +15,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_6d.h"
 #include "game/effect_6d_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

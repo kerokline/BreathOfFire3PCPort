@@ -19,7 +19,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w2e.h"
 #include "game/area_w2e_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

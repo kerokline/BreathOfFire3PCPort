@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_3c.h"
 #include "game/effect_3c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"

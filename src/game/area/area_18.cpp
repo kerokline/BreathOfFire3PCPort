@@ -6,7 +6,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w0b.h"
 #include "game/area_w0b_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"

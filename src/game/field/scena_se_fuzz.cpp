@@ -22,7 +22,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
-#include "game/scena_se.h"
 #include "game/scena_se_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

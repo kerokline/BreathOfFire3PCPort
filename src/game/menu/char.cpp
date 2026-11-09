@@ -7,11 +7,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw.h"
 #include "game/battle_window_draw_callees.h"
-#include "game/char_stats.h"
 #include "game/char_stats_callees.h"
-#include "game/game_last.h"
 #include "game/game_last_callees.h"
-#include "game/item_use.h"
 #include "game/item_use_callees.h"
 #include "game/list_title.h"
 #include "game/map_rim.h"
@@ -21,10 +18,7 @@
 #include "game/records.h"
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
-#include "game/scena_se.h"
 #include "game/scena_se_callees.h"
-#include "game/scena_sx.h"
-#include "game/scena_sx2.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -184,6 +178,29 @@ using move_script::SetLong;
 constexpr auto& AtScenaSx2 = move_script::At;
 
 }  // namespace
+
+// char_stats's callee seam, moved here from char_stats.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace char_stats {
+
+const Callees kOriginals = {
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_SetPolyFT4,
+    Gpu_SetSprt,
+    Stat_AddClamped,
+    Stat_AddCap99,
+    Stat_AddResist,
+    Stat_AddCap100,
+    Char_ApplyWeapon,
+    Char_ApplyArmour,
+    Char_ApplyAccessories,
+    Char_ApplyTraits,
+    Char_RecalcStats,
+};
+Callees g = kOriginals;
+
+}  // namespace char_stats
 
 // original 0x5903F0 (PSX 0x80164EC8, re-laid): a 16 x 16 icon (15 x 15 past
 // 20) from the menu texture as a POLY_FT4 at (x, y) sized w x h, shade r = g

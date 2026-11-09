@@ -23,7 +23,6 @@
 #include "game/d3d_lines.h"
 #include "game/dat_load.h"
 #include "game/display_setup.h"
-#include "game/fmv_play.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/menu_draw_helpers.h"

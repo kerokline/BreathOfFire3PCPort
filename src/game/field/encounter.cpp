@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/field_hidden.h"
 #include "game/field_hidden_callees.h"
 #include "game/inventory_ops.h"
 #include "game/inventory_ops_callees.h"

@@ -18,7 +18,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/effect_4a.h"
 #include "game/effect_4a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

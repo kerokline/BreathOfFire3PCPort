@@ -7,7 +7,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/file_io.h"
 #include "game/shell.h"
 #include "game/shell_callees.h"
 #include "hook/detour.h"

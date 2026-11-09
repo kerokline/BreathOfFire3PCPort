@@ -8,7 +8,6 @@
 #include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_spawn.h"
 #include "game/cheats.h"
 #include "game/draw_pool.h"
 #include "game/map_rim.h"

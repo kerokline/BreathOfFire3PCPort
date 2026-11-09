@@ -19,7 +19,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e6.h"
 #include "game/battle_e6_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"

@@ -9,7 +9,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/worldmap_area.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"

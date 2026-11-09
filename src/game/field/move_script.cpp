@@ -15,7 +15,6 @@
 #include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_groups.h"
 #include "game/move_script.h"

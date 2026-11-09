@@ -21,15 +21,12 @@
 #include "game/d3d_list_callees.h"
 #include "game/d3d_rest.h"
 #include "game/d3d_rest_callees.h"
-#include "game/display_env.h"
 #include "game/display_env_callees.h"
 #include "game/display_setup.h"
 #include "game/field_misc.h"
 #include "game/field_misc_callees.h"
-#include "game/fmv_play.h"
 #include "game/game_clock.h"
 #include "game/gfx_clut.h"
-#include "game/gfx_image.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_vram_ops.h"
 #include "game/glyph_draw.h"
@@ -39,7 +36,6 @@
 #include "game/map_rim.h"
 #include "game/msgbox.h"
 #include "game/pause_text.h"
-#include "game/psx_rest.h"
 #include "game/psx_rest_callees.h"
 #include "game/quad_far_edge.h"
 #include "game/quick_menu.h"
@@ -54,7 +50,6 @@
 #include "game/sprite_draw.h"
 #include "game/sprt_draw.h"
 #include "game/sprt_draw_callees.h"
-#include "game/tex_cells.h"
 #include "game/tex_cells_callees.h"
 #include "game/tex_page.h"
 #include "game/tex_page_callees.h"
@@ -1741,6 +1736,55 @@ U Generation(U row_address) { return Long(row_address); }
 }  // namespace
 
 }  // namespace tex_page
+
+// psx_rest's callee seam, moved here from psx_rest.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace psx_rest {
+namespace {
+
+// Win32 through the game's own import slots, as the originals call it.
+template <class Fn>
+Fn Import(U slot) {
+    std::uint32_t word;   // the import slot is a 32-bit word: Windows' function on i686, its thunk on x86-64 (design 4)
+    std::memcpy(&word, At(slot), sizeof word);
+    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+}
+unsigned long __stdcall ImportSetTextColor(void* hdc, unsigned long color) {
+    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(::bof3::Img(PsxRest_ImportSetTextColor_addr))(hdc, color);
+}
+int __stdcall ImportSetBkMode(void* hdc, int mode) {
+    return Import<int (__stdcall*)(void*, int)>(::bof3::Img(PsxRest_ImportSetBkMode_addr))(hdc, mode);
+}
+int __stdcall ImportTextOutA(void* hdc, int x, int y, const char* text, int n) {
+    return Import<int (__stdcall*)(void*, int, int, const char*, int)>(::bof3::Img(PsxRest_ImportTextOutA_addr))(hdc, x, y, text, n);
+}
+int __stdcall ImportMessageBoxA(void* hwnd, const char* text, const char* caption, unsigned type) {
+    return Import<int (__stdcall*)(void*, const char*, const char*, unsigned)>(::bof3::Img(PsxRest_ImportMessageBoxA_addr))(hwnd, text, caption,
+                                                                                                  type);
+}
+
+}  // namespace
+
+const Callees kOriginals = {
+    Gfx_FreeClutRows, Gfx_ReleaseTexCache, Font_ReleaseTexCache, Display_ReleaseOrphans, Display_ReleaseBackdrop,
+    D3d_FreeCellTextures, D3d_ReleaseAfterDraw,
+    Crt_free, D3d_FreeCellTexture, SndStream_Stop, Music_Release,
+    ImportSetTextColor, ImportSetBkMode, ImportTextOutA, ImportMessageBoxA,
+};
+Callees g = kOriginals;
+
+}  // namespace psx_rest
+
+// tex_cells's callee seam, moved here from tex_cells.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace tex_cells {
+
+const Callees kOriginals = {
+    Font_UnpackGlyph, Cell_Unpack4, Cell_Unpack8, Cell_Unpack4Flip, Cell_Unpack8Flip, Gfx_ClutPixels,
+};
+Callees g = kOriginals;
+
+}  // namespace tex_cells
 
 // original 0x59E650. Fills rect with one BYTE, then drops the textures under
 // it. As the original has it:

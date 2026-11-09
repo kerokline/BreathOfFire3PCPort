@@ -5,9 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e3.h"
 #include "game/battle_e3_callees.h"
-#include "game/battle_obj_states.h"
 #include "game/battle_obj_states_callees.h"
 #include "game/battle_windows.h"
 #include "game/battle_windows_callees.h"
@@ -186,6 +184,27 @@ unsigned char* Sprite() { return Sprite_Current; }
 unsigned char* MemberBattleWindows(unsigned i) { return battle_windows::At(::bof3::Img(ObjTrio_addr) + battle_windows::at::kObjectStride * i); }
 
 }  // namespace
+
+// battle_obj_states's callee seam, moved here from battle_obj_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_obj_states {
+namespace {
+
+const std::uint32_t* Table(std::uint32_t address) { return reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Table(::bof3::Img(BattleObj_StateTable_addr) + 0x34), Table(::bof3::Img(BattleObj_StateTable_addr) + 0x3c), Table(::bof3::Img(BattleObj_StateTable_addr) + 0x68), Table(::bof3::Img(BattleObj_SwingSubs_addr)),
+    Table(::bof3::Img(BattleObj_CastSubs_addr)), Table(::bof3::Img(BattleObj_CastDoneSubs_addr)), Table(::bof3::Img(BattleObj_State12Subs_addr)),
+    BattleObj_EndAction,
+    BattleObj_PickPose, BattleObj_ScriptTick, BattleObj_ScriptTickOnce, AreaMap_Elevation, Sprite_EnsureAnimation,
+    Sprite_SetTint, Tint_Release, Battle_RollPendingFlag, Rand, Battle_PlayActorCue, BattleTask_Create,
+    Battle_SetTargetFlag40, File_LoadDone, Battle_LoadSoundByKey, Battle_ClearActorBit,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_obj_states
 
 // original 0x441100: each of the three party objects 0x802D40 + 0x14C i made
 // Field_State and Sprite_Current, then its state step (the third a tail jump,

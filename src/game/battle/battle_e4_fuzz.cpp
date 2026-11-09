@@ -23,7 +23,6 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e4.h"
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"

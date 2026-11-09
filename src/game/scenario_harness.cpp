@@ -39,8 +39,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_gte.h"
-#include "game/effect_5d.h"
-#include "game/effect_5f.h"
+// (game/effect_5d.h and game/effect_5f.h went with their shells in the source-layout round's stage C;
+// these two lines keep the file's line numbers, which the 64-bit Low32() messages carry, until stage E.)
 #include "game/effect_4b.h"
 #include "game/effect_2f.h"
 #include "game/effect_1b.h"

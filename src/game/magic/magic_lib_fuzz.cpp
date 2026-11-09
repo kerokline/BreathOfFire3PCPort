@@ -13,7 +13,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_lib.h"
 #include "game/move_script_bytes.h"
 
 namespace magic_lib {

@@ -18,7 +18,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_5b.h"
 #include "game/effect_5b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

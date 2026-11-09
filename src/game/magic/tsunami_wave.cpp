@@ -8,7 +8,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/draw_pool.h"
 #include "game/magic_harness.h"
-#include "game/magic_s14.h"
 #include "game/map_rim.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

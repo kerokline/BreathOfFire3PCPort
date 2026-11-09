@@ -4,7 +4,6 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
-#include "game/area_011.h"
 #include "game/area_011_callees.h"
 #include "game/area_harness.h"
 #include "game/move_script_bytes.h"

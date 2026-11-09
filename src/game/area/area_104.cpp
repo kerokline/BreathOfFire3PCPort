@@ -7,7 +7,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w2e.h"
 #include "game/area_w2e_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"
@@ -15,7 +14,6 @@
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "game/world_map.h"
-#include "game/worldmap_area.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"

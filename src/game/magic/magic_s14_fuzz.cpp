@@ -29,7 +29,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_s14.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"

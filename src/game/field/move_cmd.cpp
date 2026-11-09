@@ -10,7 +10,6 @@
 #include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

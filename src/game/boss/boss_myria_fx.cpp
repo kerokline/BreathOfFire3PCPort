@@ -5,11 +5,9 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e3.h"
 #include "game/battle_e3_callees.h"
 #include "game/boss/boss_myria_fx_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_sj.h"
 #include "game/boss_sj_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

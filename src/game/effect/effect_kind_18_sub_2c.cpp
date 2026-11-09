@@ -6,9 +6,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect/effect_kind_18_sub_2c_callees.h"
-#include "game/effect_5g.h"
 #include "game/effect_5g_callees.h"
-#include "game/effect_6a.h"
 #include "game/effect_6a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

@@ -13,7 +13,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
-#include "game/boss_spawn.h"
 #include "game/move_script_bytes.h"
 
 namespace boss_spawn {

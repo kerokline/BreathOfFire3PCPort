@@ -7,12 +7,9 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/boss/boss_08_callees.h"
-#include "game/boss_h.h"
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_sb.h"
 #include "game/boss_sb_callees.h"
-#include "game/boss_sc.h"
 #include "game/boss_sc_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"

@@ -5,12 +5,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/labels.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/scena_sc1.h"
 #include "game/scena_sc1_callees.h"
 #include "game/scenario_harness.h"
 #include "game/sound_sp.h"

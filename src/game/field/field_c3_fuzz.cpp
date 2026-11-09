@@ -20,7 +20,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/field_c3.h"
 #include "game/field_c3_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

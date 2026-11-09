@@ -7,10 +7,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/boss/boss_torast_callees.h"
-#include "game/boss_h.h"
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_sb.h"
 #include "game/boss_sb_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

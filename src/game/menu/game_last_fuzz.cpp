@@ -12,7 +12,6 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
-#include "game/game_last.h"
 #include "game/game_last_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/log.h"
