@@ -76,15 +76,15 @@ namespace {
 
 using namespace world_map;
 
-unsigned char* AtWorldMap(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U WordWorldMap(const unsigned char* p) {
+unsigned char* AtWorldMap(world_map::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+world_map::U WordWorldMap(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
 std::int32_t ShortWorldMap(const unsigned char* p) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(WordWorldMap(p))); }
-U LongWorldMap(const unsigned char* p) {
-    U v;
+world_map::U LongWorldMap(const unsigned char* p) {
+    world_map::U v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
@@ -144,7 +144,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
     records::EffectObject* object = rv::As<records::EffectObject>(Object());
     switch (object->step) {
     case 0:
-        g.state0();
+        world_map::g.state0();
         return;
     case 1:
         object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) + 0x10;
@@ -157,7 +157,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
             object->step = 3;
         }
         object = rv::As<records::EffectObject>(Object());
-        g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
+        world_map::g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
         return;
     case 3:
         object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) - 0x10;
@@ -170,7 +170,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
             object->step = 1;
             object = rv::As<records::EffectObject>(Object());
         }
-        g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
+        world_map::g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
         return;
     default:
         bof3::Fatal("WorldMap_FrameStep: the map task's state byte is %u, past its four-entry table", object->step);
@@ -203,27 +203,27 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
     if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
-    g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
-    g.commit_prim(1, 0xC);
-    g.draw_sprite(x, y, 0);
+    world_map::g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
+    world_map::g.commit_prim(1, 0xC);
+    world_map::g.draw_sprite(x, y, 0);
     const unsigned char cell =
-        g.byte_at(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
+        world_map::g.byte_at(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     const bool withheld1 =
         cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
-    if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 6, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
+    if (!withheld1) world_map::g.draw_sprite(x + 0x30, y, 1);
+    world_map_legend::Key(world_map::g.draw_sprite, ::bof3::Img(kButtonTable), 6, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
-    if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 8, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
+    if (!withheld2) world_map::g.draw_sprite(x + 0x30, y + 0x10, 2);
+    world_map_legend::Key(world_map::g.draw_sprite, ::bof3::Img(kButtonTable), 8, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
-        g.cell_event(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
+        world_map::g.cell_event(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     bool third = event != 0;
     if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
-    if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
+    if (third) world_map::g.draw_sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
-    g.draw_needle(x + 0x18, y + 0x18);
+    world_map::g.draw_needle(x + 0x18, y + 0x18);
 }
 
 // original 0x404560 (PSX 0x801F39D8): one sprite of the dial page at (x, y):
@@ -245,11 +245,11 @@ unsigned char g_dial_semi = 0;
 }  // namespace world_map_dial
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(int x, int y, unsigned index) {
-    g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
-    g.commit_prim(1, 0xC);
+    world_map::g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
+    world_map::g.commit_prim(1, 0xC);
     unsigned char* const prim = PacketNext();
-    g.set_sprt(prim);
-    g.set_semi_trans(prim, (world_map_dial::g_dial_semi != 0 || (index & 0xFF) != 0) ? 1u : 0u);
+    world_map::g.set_sprt(prim);
+    world_map::g.set_semi_trans(prim, (world_map_dial::g_dial_semi != 0 || (index & 0xFF) != 0) ? 1u : 0u);
     PutFloat(prim + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
     prim[4] = prim[5] = prim[6] = 0x80;
@@ -259,7 +259,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
     rv::As<records::GpuSprt>(prim)->h = entry[1];
     prim[0x14] = entry[2];
     prim[0x15] = entry[3];
-    g.commit_prim(1, 0x1C);
+    world_map::g.commit_prim(1, 0x1C);
 }
 
 // original 0x404620 (PSX 0x801F40C4): the HUD at (x, y), nothing unless
@@ -270,10 +270,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
 // sprites. The return (Text_DrawAt's) is not read by the three callers.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int x, int y) {
     if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
-    g.draw_sprite(x, y, 4);
-    g.draw_sprite(x + 0x80, y, 5);
+    world_map::g.draw_sprite(x, y, 4);
+    world_map::g.draw_sprite(x + 0x80, y, 5);
     const unsigned char* text = AtWorldMap(::bof3::Img(kAreaText) + (LongWorldMap(AtWorldMap(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
-    g.text_draw_at(x + 4, y + 4, 0, 0xFF, text);
+    world_map::g.text_draw_at(x + 4, y + 4, 0, 0xFF, text);
 }
 
 // original 0x408530 (PSX 0x801F3ECC): the compass needle in the dial at (x, y)
@@ -339,7 +339,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
 // * 2) * 0x48, the buffer index read after MapView_ItemAt - or 0 when the
 // cell has none. The whole of MapView_ItemAt's eax is the item.
 extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(long x, long y) {
-    const U item = static_cast<U>(g.item_at(x, y));
+    const world_map::U item = static_cast<world_map::U>(world_map::g.item_at(x, y));
     if (item == 0) return nullptr;
     return AtWorldMap(at::DrawItemsAt() + (AtWorldMap(at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
 }
@@ -365,24 +365,24 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt()));
     row += static_cast<signed char>(dy) + 2;
     if (row < 0 || row >= 0x38) return;
-    const U bytes = size & 0xFF;
-    const U prim = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
+    const world_map::U bytes = size & 0xFF;
+    const world_map::U prim = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
     // Tooling only (BOF3X_DRAWORDER): the walk's log names a frame node by its
     // row alone; this says who linked it.
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
                   Low32(__builtin_return_address(0)));
-    const U bound = (static_cast<U>(AtWorldMap(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
+    const world_map::U bound = (static_cast<world_map::U>(AtWorldMap(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
                       Low32(__builtin_return_address(0)));
         return;
     }
-    const U slot_index = static_cast<U>(row) * 6u;
+    const world_map::U slot_index = static_cast<world_map::U>(row) * 6u;
     unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u);
-    g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
-    const U next = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
+    world_map::g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
+    const world_map::U next = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
     PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(AtWorldMap(at::Gfx_PacketNextAt()), next + bytes);
 }
