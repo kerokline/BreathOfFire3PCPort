@@ -82,10 +82,10 @@ namespace {
 unsigned char B(std::uint32_t address) { return battle_actions::At(address)[0]; }
 void SetB(std::uint32_t address, unsigned v) { battle_actions::At(address)[0] = static_cast<unsigned char>(v); }
 unsigned char* PtrAt(std::uint32_t address) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_actions::Long(battle_actions::At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+    battle_actions::SetLong(battle_actions::At(address), static_cast<std::int32_t>(Low32(p)));
 }
 std::int32_t L(std::uint32_t address) { return battle_actions::Long(battle_actions::At(address)); }
 

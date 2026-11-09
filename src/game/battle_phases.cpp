@@ -67,10 +67,10 @@ namespace {
 
 unsigned char& BBattlePhases(std::uint32_t address) { return *battle_phases::At(address); }
 unsigned char* PtrAtBattlePhases(std::uint32_t address) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_phases::Long(battle_phases::At(address)))));
 }
 void SetPtrAtBattlePhases(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+    battle_phases::SetLong(battle_phases::At(address), static_cast<std::int32_t>(Low32(p)));
 }
 unsigned char* MemberBattlePhases(unsigned index) { return battle_phases::At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
 unsigned char* EnemyObject(unsigned index) { return battle_phases::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }

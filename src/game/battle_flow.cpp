@@ -74,7 +74,7 @@ unsigned char* PtrAtBattleFlow(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(address)))));
 }
 void SetPtrAtBattleFlow(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+    battle_flow::SetLong(battle_flow::At(address), static_cast<std::int32_t>(Low32(p)));
 }
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
