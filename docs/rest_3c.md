@@ -13,6 +13,8 @@ instruction with capstone and fuzzed through the boss harness's engine frame
 count, 1 an equivalent mutant with its near variant refused (section 5).
 Fuzz-only: no recorded route enters any of the 61 (section 8).
 
+**Source layout (2026-11-09):** the 61 functions this group took live in the file of their translation unit now: `src/game/effect/effect.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_3c.cpp` itself is retired. A `src/game/rest_3c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3c.cpp:LINE` answers it.
+
 The band is one thing: **61 consecutive slots of `Effect_Handlers`**
 (`0x64E73C`, 130 entries, named in round twelve), the table
 `Effect_ApplyResult` (ours, `battle_damage.cpp`) calls with no argument

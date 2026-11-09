@@ -9,6 +9,8 @@ divergence; the two state dispatchers abort past their tables and area 189's
 step aborts on a divisor of 0, where the original would jump into data or
 fault (section 6).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/area/area_189.cpp`, `src/game/area/area_191.cpp`, `src/game/area/area_188.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_w4e.cpp` itself is retired. A `src/game/area_w4e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w4e.cpp:LINE` answers it.
+
 Group AR4E of round ten's sixth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 18). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)): 51

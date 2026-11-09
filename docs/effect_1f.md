@@ -11,6 +11,8 @@ capstone and fuzzed through the scenario harness in effect mode
 120,000 rounds, 0 mismatches (in this worktree). 92 controls planted one at a time: 90 refused by a count, 1 refused only by a fault with a near variant refused by a count, 1 equivalent mutant with a near variant refused (section 6a). Fuzz only: no
 recorded route enters any of them (section 9). No divergence.
 
+**Source layout (2026-11-09):** the 15 functions this group took live in the file of their translation unit now: `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_1f.cpp` itself is retired. A `src/game/effect_1f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1f.cpp:LINE` answers it.
+
 | Function | Entry | Bytes | Reached by | PSX twin |
 |---|---|--:|---|---|
 | `ChoiceMenu_Run` | `0x52A6C0` | 0xE | cell `0x6602EC` (entry 3 of E1E's `0x52A420` table `0x6602E0`) | - |

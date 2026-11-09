@@ -6,6 +6,8 @@ through the shared harness: 86,000 rounds, 0 mismatches; `BOF3X_SHADOW='*'`
 exit 0. 108 negative controls: 102 refused by a count (exit 3), each in the function it touches; 6 not refused, all re-reads that nothing in the game can tell apart (section 6). No recorded route casts either spell: fuzz only
 until the owner's eye.
 
+**Source layout (2026-11-09):** the 43 functions this group took live in the files of their translation units now: `src/game/magic/shield_spark.cpp`, `src/game/magic/barrier.cpp`, `src/game/magic/barrier_ring.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s19.cpp` itself is retired. A `src/game/magic_s19.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s19.cpp:LINE` answers it.
+
 Group S19 of round nine's first spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4),
 taken with the shared harness ([`magic_harness.md`](magic_harness.md)).

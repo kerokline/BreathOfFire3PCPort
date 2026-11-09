@@ -12,6 +12,8 @@ capstone and fuzzed through the scenario harness in field mode
 refused, 2 equivalent mutants not refused, each with its near variant
 refused (section 6). No recorded route enters any of the 46 (section 9).
 
+**Source layout (2026-11-09):** the 46 functions this group took live in the file of their translation unit now: `src/game/field/party_action.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1d.cpp` itself is retired. A `src/game/rest_1d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1d.cpp:LINE` answers it.
+
 The band is one thing: **the dispatchers and state handlers of party sets 9,
 10, 11 and 12** (and one dispatcher of set 13) under the two tables the field
 core indexes by the party set (`Field_ActionBySet` `0x6609D0`, leader state

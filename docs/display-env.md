@@ -7,6 +7,8 @@ faithful, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=display_env`,
 defect. Through the batch `ab26` with round six - attract captures 55 of 55,
 oracle and dump identical ([`takeover-queue-round5.md`](takeover-queue-round5.md) status))
 
+**Source layout (2026-11-09):** the 8 functions this group took live in the files of their translation units now: `src/game/platform/gpu_2.cpp`, `src/game/platform/d3d.cpp`, `src/game/core/sound.cpp` ([`source-layout.md`](source-layout.md)). `src/game/display_env.cpp` itself is retired. A `src/game/display_env.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/display_env.cpp:LINE` answers it.
+
 The fifth round's queue ([`takeover-queue-round5.md`](takeover-queue-round5.md))
 gave group S the PSX library's display calls as the port implements them over
 DirectDraw and Direct3D, and `Snd_LoadBank`, which group Q

@@ -14,6 +14,8 @@ refused by a fault only and replaced by in-table variants that are refused,
 1 (C74) not refused first - the fuzz's fault, fixed. 22 state tables named
 (section 2). No recorded route enters any of the 49 (section 9): fuzz only.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/field/party_action.cpp`, `src/game/field/member.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1a.cpp` itself is retired. A `src/game/rest_1a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1a.cpp:LINE` answers it.
+
 The band `0x51BA80..0x51D70C` is one thing: the field core's party-member
 states 4, 6 and 8 (`Member_States` `0x65F960`, `Field_MemberFrame`'s by +1)
 and the field actions of party sets 0, 1 and 2 - the dispatchers that reach

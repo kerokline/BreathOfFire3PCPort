@@ -12,6 +12,8 @@ harness in field mode ([`scenario_harness.md`](scenario_harness.md) section
 a time: 52 refused, 1 equivalent mutant not refused, its near variant refused
 (section 6). No recorded route enters any of the seven (section 9).
 
+**Source layout (2026-11-09):** the 7 functions this group took live in the file of their translation unit now: `src/game/field/party_action.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_0a.cpp` itself is retired. A `src/game/rest_0a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_0a.cpp:LINE` answers it.
+
 | Function | Entry | Bytes | Answers | Call sites (`E8`) |
 |---|---|--:|---|--:|
 | `PartyAction_TargetAhead` | `0x51C390` | 0x9F | al: 0 / 1 | 36 |

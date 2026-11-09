@@ -9,6 +9,8 @@ fuzz; faithful, no divergence; five latent defects of Capcom's written down
 (section 4), one of them, TILE_1's single point, in a recorded route. Not yet through the state
 hash or a live run - the coordinator's, after the merge.)
 
+**Source layout (2026-11-09):** the 10 functions this group took live in the file of their translation unit now: `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/d3d_rest.cpp` still held of ours is `src/game/platform/d3d_rest.cpp` now. A `src/game/d3d_rest.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/d3d_rest.cpp:LINE` answers it.
+
 [`platform-read-pass.md`](platform-read-pass.md) section 2 found eight
 starts of Capcom's renderer still alive under ours: the five Direct3D
 primitive handlers of `Gfx_DrawOTag`'s second table that no earlier group

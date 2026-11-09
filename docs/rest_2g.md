@@ -12,6 +12,8 @@ unchanged): 192,000 rounds, **0 mismatches**, narrow and under
 tables named. Fuzz only here: one function is entered by the traced routes
 (section 8).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the file of their translation unit now: `src/game/menu/menu_list.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_2g.cpp` itself is retired. A `src/game/rest_2g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2g.cpp:LINE` answers it.
+
 **What the band is.** Not "boot: text, windows and menus" in general: every
 row is a handler, kind or state of a window record (`WindowRecords`
 `0x803160`, 22 of `0x24`) that `Field_RunTaskRecords` runs with `0x905B84`

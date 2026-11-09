@@ -14,6 +14,8 @@ divergence**; every row is effect code, the nine `hypothesis` rows among them
 (section 9). **Fuzz only**: no recorded route enters any of the 49
 (section 10).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_a0.cpp`, `src/game/effect/effect_kind_9c.cpp`, `src/game/effect/effect_kind_9a.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/effect_4e.cpp` itself is retired. A `src/game/effect_4e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4e.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x9B: a ring of sixteen quads round the point that rises and stays | 5 | `Effect_KindHandlers[0x9B]` (`0x6555BC`), `EffectKind9B_States` `0x655190` (3) |

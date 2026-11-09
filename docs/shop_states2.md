@@ -2,6 +2,8 @@
 
 **Status:** IN PROGRESS (2026-09-25)
 
+**Source layout (2026-11-09):** the 24 functions this group took live in the files of their translation units now: `src/game/shop/shop_trade.cpp`, `src/game/core/sound.cpp`, `src/game/shop/shared_list.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/shop_states2.cpp` still held of ours is `src/game/shop/shop_states2.cpp` now. A `src/game/shop_states2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/shop_states2.cpp:LINE` answers it.
+
 Group DG of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Twenty-four
 functions are ours (`src/game/shop_states2.cpp`). Each is fuzzed headless

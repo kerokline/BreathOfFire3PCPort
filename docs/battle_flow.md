@@ -6,6 +6,8 @@ Capcom's with every call re-aimed at a recorder: 21,000 rounds, 0 mismatches.
 92 negative controls were planted: 91 were refused by a count, and one was a
 change that changes nothing. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class).
 
+**Source layout (2026-11-09):** the 21 functions this group took live in the files of their translation units now: `src/game/battle/enemy_op.cpp`, `src/game/battle/battle_task.cpp`, `src/game/battle/battle_3.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/battle_flow.cpp` itself is retired. A `src/game/battle_flow.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_flow.cpp:LINE` answers it.
+
 This is group BB of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. One Capcom

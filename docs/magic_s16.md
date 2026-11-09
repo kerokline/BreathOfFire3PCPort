@@ -8,6 +8,8 @@ rounds of the answers check (section 4); 72 of 72 negative controls refused
 by a count (exit 3). Fuzz only: no recorded route casts any of them
 (section 8).
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the file of their translation unit now: `src/game/magic/sparkle.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s16.cpp` itself is retired. A `src/game/magic_s16.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s16.cpp:LINE` answers it.
+
 Group S16 of round nine's first spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 

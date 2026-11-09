@@ -11,6 +11,8 @@ instruction with capstone: the cut's 36 rows for R3D, every one a function
 6). Two live routes enter five of them by the call traces under
 `analysis/calltrace` (section 11); the rest are fuzz-only.
 
+**Source layout (2026-11-09):** the 36 functions this group took live in the files of their translation units now: `src/game/effect/effect.cpp`, `src/game/battle/dragon_cmd.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_3d.cpp` itself is retired. A `src/game/rest_3d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3d.cpp:LINE` answers it.
+
 Names are this group's, from what the code does and who calls it. Only two
 of the 36 have a PSX twin in `analysis/pairs_propagated.json` (`0x44F030`,
 `0x44FF00`); the sibling's `names/*.toml` and `symbols.toml` name neither.

@@ -10,6 +10,8 @@ controls, 46 refused by a count and 4 that change nothing.
 No divergence; one latent defect written down
 ([`known-defects.md`](known-defects.md) D33).
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the file of their translation unit now: `src/game/field/field_6.cpp` ([`source-layout.md`](source-layout.md)). `src/game/event_objs.cpp` itself is retired. A `src/game/event_objs.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/event_objs.cpp:LINE` answers it.
+
 The sixth parallel round's group V2: the functions around `0x534590`..
 `0x536670` that the owner's shop route reaches and the attract sequence does
 not (`analysis/shop_catalog.md`, call counts from

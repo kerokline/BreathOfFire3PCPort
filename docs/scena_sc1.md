@@ -9,6 +9,8 @@ near variants are refused (section 5). `BOF3X_SHADOW='*'` exits 0 (3,574
 injects in this worktree). Fuzz only: no recorded route plays chapter 1
 (section 8). No divergence.
 
+**Source layout (2026-11-09):** the 42 functions this group took live in the file of their translation unit now: `src/game/scenario/scena_01_2.cpp` ([`source-layout.md`](source-layout.md)). `src/game/scena_sc1.cpp` itself is retired. A `src/game/scena_sc1.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc1.cpp:LINE` answers it.
+
 Group SC1 of round ten's first wave ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1),
 the band `0x539AD0..0x53DDA0`, on the plan of
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md). Every claim about

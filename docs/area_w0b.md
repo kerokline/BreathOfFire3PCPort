@@ -6,6 +6,8 @@ the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
 0 mismatches in 256,000 rounds; 94 controls planted, 94 refused by a count (section 13). Fuzz only: no
 recorded route enters any of the ten areas (section 12). No divergence.
 
+**Source layout (2026-11-09):** the 61 functions this group took live in the files of their translation units now: `src/game/area/area_16.cpp`, `src/game/area/area_26.cpp`, `src/game/area/area_22.cpp` and 5 more ([`source-layout.md`](source-layout.md)). `src/game/area_w0b.cpp` itself is retired. A `src/game/area_w0b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w0b.cpp:LINE` answers it.
+
 Group AR0B of round ten's second wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 6): the band
 `0x401B80..0x403400`, whole areas as `tools/area_rows.py --groups` cut them.

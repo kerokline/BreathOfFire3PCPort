@@ -16,6 +16,8 @@ enters any of the 62 (section 9). Every row is effect code: the cut's three
 dispatcher, a sub-kind's draw and a sub-kind dispatcher - all taken, none left
 original.
 
+**Source layout (2026-11-09):** the 62 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_10.cpp`, `src/game/effect/effect_kind_18_sub_17.cpp`, `src/game/effect/effect_kind_18_sub_12.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/effect_5c.cpp` itself is retired. A `src/game/effect_5c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5c.cpp:LINE` answers it.
+
 Every function is kind 0x18's: `Effect_RunObjects` (ours) makes each live
 record of `Effect_Objects` `Sprite_Current` and calls
 `Effect_KindHandlers[+5]`; kind 0x18's handler `EffectKind18_Run` jumps

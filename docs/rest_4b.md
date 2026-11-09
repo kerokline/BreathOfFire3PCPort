@@ -13,6 +13,8 @@ mutants not refused, each with its near variant refused (section 6). **Fuzz only
 no recorded route enters the faerie village, and the catalog shows no row of
 this wave reached (section 9); the owner records a route once the code is ours.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the files of their translation units now: `src/game/community/commu_board.cpp`, `src/game/community/commu_tail.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/rest_4b.cpp` still held of ours is `src/game/community/rest_4b.cpp` now. A `src/game/rest_4b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4b.cpp:LINE` answers it.
+
 The band is two things. **Field_ModeTailKinds 14, 21..26 and 60** (the field's
 tail kinds, `Field_ModeTailKinds` `0x662CE8` by the s8 `0x9039F3`): seven
 dispatchers on the s8 tail state `0x9039F4` and the states they reach - loads

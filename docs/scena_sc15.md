@@ -8,6 +8,8 @@ in five `Run`s, one per chapter byte: **0 mismatches in 516,000 rounds**;
 only: no recorded route plays chapters 15, 17, 18 or 19, and the attract
 cycle does not reach chapter 16's slot 1 (section 8).
 
+**Source layout (2026-11-09):** the 89 functions this group took live in the files of their translation units now: `src/game/scenario/scena_17.cpp`, `src/game/scenario/scena_15_2.cpp`, `src/game/scenario/scena_19.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/scena_sc15.cpp` still held of ours is `src/game/scenario/scena_sc15.cpp` now. A `src/game/scena_sc15.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc15.cpp:LINE` answers it.
+
 Group SC15 of round ten's third wave ([`takeover-queue-round10.md`](takeover-queue-round10.md)
 §9; the plan [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3).
 

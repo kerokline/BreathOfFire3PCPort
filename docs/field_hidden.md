@@ -7,6 +7,8 @@ headless against a copy of Capcom's with every call re-aimed at a recorder:
 the one function it touches, and two were changes that change nothing. Not yet through a live check: the
 coordinator's worldmap and combat A/B after the merge.
 
+**Source layout (2026-11-09):** the 15 functions this group took live in the files of their translation units now: `src/game/field/party_action.cpp`, `src/game/field/sprite.cpp`, `src/game/field/encounter.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/field_hidden.cpp` itself is retired. A `src/game/field_hidden.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_hidden.cpp:LINE` answers it.
+
 Group DE of the eighth round ([`takeover-queue-round8.md`](takeover-queue-round8.md)).
 Every function is a faithful replacement, so no `DIVERGENCE.md` entry is
 owed. Two latent defects of the original are described (section 7) and kept.

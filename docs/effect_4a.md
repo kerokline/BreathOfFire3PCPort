@@ -12,6 +12,8 @@ harness in effect mode ([`scenario_harness.md`](scenario_harness.md) section
 8) without edits to it: 204,000 rounds, 0 mismatches; 100 of 100 controls refused, by a count or (one) by ours' abort. **Fuzz
 only**: no recorded route enters any of the 50 effect functions (section 9).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_82.cpp`, `src/game/effect/effect_kind_85.cpp`, `src/game/effect/effect_kind_84.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/effect_4a.cpp` itself is retired. A `src/game/effect_4a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4a.cpp:LINE` answers it.
+
 Every row is effect code. One is also battle code: **`0x433640`
 (`Sprite_StateRestart`, a `hypothesis` row) is a one-line state** - `+1 = 0` -
 that `EffectKind83_States[12]` and the stack table of the battle's

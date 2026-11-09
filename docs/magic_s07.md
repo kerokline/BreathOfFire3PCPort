@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 118,000 rounds. 274 negative controls: 271 refused by a count (exit 3), one by a fault (B7) and one by a hang (E48), each with a near variant refused by a count, and one equivalent mutant (B65, section 6). Nothing recorded
 casts these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 59 functions this group took live in the files of their translation units now: `src/game/magic/focus_aura.cpp`, `src/game/magic/bonebreak_mote.cpp`, `src/game/magic/enlighten_rays.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s07.cpp` itself is retired. A `src/game/magic_s07.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s07.cpp:LINE` answers it.
+
 Round nine, third spell wave, group S07
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

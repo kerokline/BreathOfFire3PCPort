@@ -7,6 +7,8 @@ refused. **Not yet through the live check**: the world-map route captured
 wide and narrow, which runs after the merge, is what checks the widened sky
 (DIV-0041) and the faithful narrow one pixel for pixel.
 
+**Source layout (2026-11-09):** the 6 functions this group took live in the files of their translation units now: `src/game/field/area_map.cpp`, `src/game/platform/magic_080.cpp`, `src/game/area/area_87.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_backdrop.cpp` itself is retired. A `src/game/area_backdrop.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_backdrop.cpp:LINE` answers it.
+
 Group 2 of the world-map wave ([`world-map.md`](world-map.md) §4): the three
 handlers of `AreaMap_EntryHandlers` `0x66329C` that
 [`map-layers.md`](map-layers.md) took the table's pass and entry 0 from but

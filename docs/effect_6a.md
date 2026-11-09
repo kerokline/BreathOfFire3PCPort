@@ -13,6 +13,8 @@ route enters any of the 48 (section 9). Every row is effect code (no
 `hypothesis` row in the group; none left original). No full-frame fill in
 the band (no DIV-0041 site); no divergence.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_2d.cpp`, `src/game/effect/effect_kind_18_sub_2e.cpp`, `src/game/effect/effect_kind_18_sub_30.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/effect_6a.cpp` itself is retired. A `src/game/effect_6a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_6a.cpp:LINE` answers it.
+
 All are sub-kinds of effect kind 0x18: `EffectKind18_Run` (`0x46D830`, ours)
 jumps through `EffectKind18_States` by `+1`, which `EffectKind18_Start` copies
 from `+0xB`. Seven sub-kinds of the band dispatch again by `+2` through a

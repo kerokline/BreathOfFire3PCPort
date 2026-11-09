@@ -11,6 +11,8 @@ harness's **field** mode (used unchanged): 294,000 rounds, **0 mismatches**;
 139 of 144 controls refused, the other five equivalent mutants with a near variant refused (section 5); `BOF3X_SHADOW='*'` exit 0, narrow and with `BOF3X_WIDE=1`. Fifteen `.data` tables named. Fuzz only: no recorded
 trace enters any of the 49 (section 9).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/field/field_ability_2.cpp`, `src/game/menu/window.cpp`, `src/game/menu/config_menu.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_2f.cpp` still held of ours is `src/game/field/rest_2f.cpp` now. A `src/game/rest_2f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2f.cpp:LINE` answers it.
+
 **What the band is** (by the code; the screens' names are
 [`menu-screens.md`](menu-screens.md)'s, from the owner's walk of the menu; no
 gameplay fact is stated from memory):

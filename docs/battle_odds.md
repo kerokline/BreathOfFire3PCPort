@@ -8,6 +8,8 @@ fuzzed against Capcom's at start-up (`BOF3X_SHADOW=battle_odds`, 48,000
 rounds, 0 mismatches). There are 49 negative controls: 48 refused by a comparison, 1 a change that changes nothing (section 3.1). With `BOF3X_SHADOW='*'` the self-test exits 0 with 1,034 injects. No divergence. The live check
 (the combat route) is the coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 10 functions this group took live in the files of their translation units now: `src/game/battle/battle_banner.cpp`, `src/game/effect/effect.cpp`, `src/game/magic/celerity_spark.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/battle_odds.cpp` itself is retired. A `src/game/battle_odds.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_odds.cpp:LINE` answers it.
+
 This is group CK of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md), "CK"). The queue
 calls it "banner, effect result, sparkle and the odd ones": two handlers of

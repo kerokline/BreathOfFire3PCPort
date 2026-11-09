@@ -7,6 +7,8 @@ a copy of Capcom's with every call re-aimed at a recorder, 31 negative
 controls all refused. **Not yet through the live batch check** - that runs
 centrally after the merge (section 6).
 
+**Source layout (2026-11-09):** the 6 functions this group took live in the files of their translation units now: `src/game/core/title.cpp`, `src/game/core/transition.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/mode_tasks.cpp` still held of ours is `src/game/core/mode_tasks.cpp` now. A `src/game/mode_tasks.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/mode_tasks.cpp:LINE` answers it.
+
 [`attract-remaining.md`](attract-remaining.md) section 4.3 catalogued this
 layer as "the task at `0x4621C0` and its state table ... what each state is
 ... is unread". This document reads it. The machinery under it - four

@@ -14,6 +14,8 @@ controls refused (section 6).
 Six `.data` tables named. Fuzz only here; two recorded routes reach the fish
 (section 9).
 
+**Source layout (2026-11-09):** the 45 functions this group took live in the file of their translation unit now: `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1g.cpp` itself is retired. A `src/game/rest_1g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1g.cpp:LINE` answers it.
+
 **What the band is.** Not the party sets' field actions: everything here is
 the fishing spot's code ([`fishing-text.md`](fishing-text.md) places the
 machine; the names below say what the code does, not what the player sees -

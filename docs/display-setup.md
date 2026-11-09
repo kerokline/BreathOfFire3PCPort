@@ -5,6 +5,8 @@ taken over, nothing in `symbols.toml` changed; the interface in §3 is what a
 replacement backend must honour. §7 answers the coordinator's addendum on
 `D3d_AfterDraw`.)
 
+**Source layout (2026-11-09):** the 1 function this group took live in the file of their translation unit now: `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/display_setup.cpp` still held of ours is `src/game/platform/display_setup.cpp` now. A `src/game/display_setup.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/display_setup.cpp:LINE` answers it.
+
 All addresses are `BOF3.exe`. Disassembly by capstone over the image
 (`tools/pe_disasm.py`'s section mapping; a scratch copy that takes a start and
 an end), the Ghidra decompiler over project `BoF3PC` for the control flow of

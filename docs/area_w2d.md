@@ -9,6 +9,8 @@ state-table dispatchers abort past their tables and the two divides abort
 on a zero divisor, where the original would jump into data or fault
 (section 6).
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/area/area_100.cpp`, `src/game/area/area_99.cpp`, `src/game/area/area_98.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/area_w2d.cpp` itself is retired. A `src/game/area_w2d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w2d.cpp:LINE` answers it.
+
 Group AR2D of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 12). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

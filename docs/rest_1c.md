@@ -11,6 +11,8 @@ through the scenario harness in field mode
 204,000 rounds, 0 mismatches. 101 controls planted one at a time: 97 refused by a count, 3 refused only by a crash (re-planted inside the tables and refused by a count), 1 equivalent mutant not refused, its near variant refused (section 6). No recorded route enters any of the
 51 (section 8): fuzz only.
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the file of their translation unit now: `src/game/field/party_action.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1c.cpp` itself is retired. A `src/game/rest_1c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1c.cpp:LINE` answers it.
+
 The band is **one thing**: the field actions of party sets 6, 7, 8 and part of
 9 - what `Field_FormActions` (`0x660A44`, state 6 of the leader) and
 `Field_ActionBySet` (`0x6609D0`, state 10) reach for those sets, through a

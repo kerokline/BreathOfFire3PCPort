@@ -10,6 +10,8 @@ its own; DIV-0041's widened bound inside `0x59B440` is read back and kept
 (section 4). Not yet seen live: the coordinator's shop and combat A/B after
 the merge is the check.
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the files of their translation units now: `src/game/shop/shop_win_2.cpp`, `src/game/shop/shop_win.cpp`, `src/game/battle/battle_menu_win.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/menu_draw_helpers.cpp` still held of ours is `src/game/shop/menu_draw_helpers.cpp` now. A `src/game/menu_draw_helpers.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/menu_draw_helpers.cpp:LINE` answers it.
+
 Group DI of the eighth round's wave B
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)): record handlers 7
 and 8 of `Field_RunTaskRecords` - two `jmp [table + kind * 4]` stubs - and

@@ -6,6 +6,8 @@ the shared harness, which this group extended for functions that take
 arguments and answer; 106 negative controls, every one refused by a count (exit 3). No recorded route calls any of them:
 fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the file of their translation unit now: `src/game/magic/magic_fx_4.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_lib.cpp` itself is retired. A `src/game/magic_lib.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_lib.cpp:LINE` answers it.
+
 Group L of round nine ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
 first wave). The unit `LIBRARY` of `tools/magic_rows.py`: the code linked
 after MAGIC226/227 and before MAGIC080 that the BMAGIC overlays call - up to

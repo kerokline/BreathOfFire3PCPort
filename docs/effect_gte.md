@@ -12,6 +12,8 @@ and fuzzed through the scenario harness in field mode
 3 equivalent mutants not refused, each with a near variant refused (section
 6). Two of the four are entered by the whelpBoss route (section 9).
 
+**Source layout (2026-11-09):** the 4 functions this group took live in the file of their translation unit now: `src/game/effect/effect_gte.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_gte.cpp` still held of ours is `src/game/effect/effect_gte_ours.cpp` now. A `src/game/effect_gte.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_gte.cpp:LINE` answers it.
+
 | Function | Entry | Bytes | PSX twin | Call sites (`E8`) |
 |---|---|--:|---|--:|
 | `EffectGte_LoadMapCamera` | `0x494060` | 0xAB | `0x801B0E10` | 113 |

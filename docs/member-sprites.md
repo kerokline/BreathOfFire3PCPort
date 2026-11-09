@@ -10,6 +10,8 @@ Capcom's with every call out re-aimed at a recorder; 48 negative controls,
 46 refused by a count of mismatching rounds, 2 not refused and shown to be
 changes that change nothing (section 5). **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35; section 7 had it owed.
 
+**Source layout (2026-11-09):** the 21 functions this group took live in the files of their translation units now: `src/game/field/member.cpp`, `src/game/field/field_core.cpp` ([`source-layout.md`](source-layout.md)). `src/game/member_sprites.cpp` itself is retired. A `src/game/member_sprites.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/member_sprites.cpp:LINE` answers it.
+
 Source: [`src/game/member_sprites.cpp`](../src/game/member_sprites.cpp),
 [`member_sprites_callees.h`](../src/game/member_sprites_callees.h),
 [`member_sprites_fuzz.cpp`](../src/game/member_sprites_fuzz.cpp). Shadow name

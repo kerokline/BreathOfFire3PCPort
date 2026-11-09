@@ -17,6 +17,8 @@ coordinator's amendment of DIV-0041. No new `.data` table: every state table
 the functions sit in was named by round thirteen. **Fuzz only**: no recorded
 route enters any of the 50 (section 9).
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_a8.cpp`, `src/game/effect/effect_kind_a0.cpp`, `src/game/effect/effect_kind_9e.cpp` and 4 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_3f.cpp` still held of ours is `src/game/effect/rest_3f.cpp` now. A `src/game/rest_3f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3f.cpp:LINE` answers it.
+
 Every row is effect code. What round thirteen left here: the states of kinds
 whose dispatchers E3A, E4E and E4F took, and the draws those states and their
 neighbours call.

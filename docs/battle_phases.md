@@ -7,6 +7,8 @@ Capcom's with every call re-aimed at a recorder: 18,000 rounds, 0
 mismatches. 140 negative controls were planted: 139 were refused by a count, and one is a change that changes nothing (section 4). The live check (the combat A/B) is the
 coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 18 functions this group took live in the files of their translation units now: `src/game/battle/battle_action.cpp`, `src/game/battle/battle_intro.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_phases.cpp` still held of ours is `src/game/battle/battle_phases.cpp` now. A `src/game/battle_phases.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_phases.cpp:LINE` answers it.
+
 This is group CA of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. The model is

@@ -7,6 +7,8 @@ the area harness ([`area_harness.md`](area_harness.md)): 0 mismatches in
 Fuzz only: no recorded route reaches any of the 52 (section 8). No
 divergence.
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/area/area_104.cpp`, `src/game/area/area_106.cpp`, `src/game/area/area_105.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_w2e.cpp` itself is retired. A `src/game/area_w2e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w2e.cpp:LINE` answers it.
+
 Group AR2E of round ten's fifth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 15): the
 band `0x4146C0..0x4168E0`, whole areas as `tools/area_rows.py --groups` cut

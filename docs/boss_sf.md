@@ -9,6 +9,8 @@ functions (the Paralyzer and Head Cracker rows, `Magic_Rows` 123 and 128)
 were ours already; nothing here calls them. Fuzz only: no recorded route
 reaches a boss fight.
 
+**Source layout (2026-11-09):** the 54 functions this group took live in the files of their translation units now: `src/game/boss/boss_myria.cpp`, `src/game/boss/boss_gazer.cpp`, `src/game/boss/boss_gazer_fx.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sf.cpp` itself is retired. A `src/game/boss_sf.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sf.cpp:LINE` answers it.
+
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
 records), not memory of the game. Which fight a set-up is comes from the
 tool's rows; nothing here says what happens in a fight.

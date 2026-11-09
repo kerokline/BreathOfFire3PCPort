@@ -5,6 +5,8 @@
 through the shared harness with 0 mismatches; 134 of 134 negative controls refused. No
 recorded route casts any of the three: fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/magic/magic_087.cpp`, `src/game/magic/magic_088.cpp`, `src/game/magic/magic_092.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/magic_s20.cpp` still held of ours is `src/game/magic/magic_s20.cpp` now. A `src/game/magic_s20.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s20.cpp:LINE` answers it.
+
 Round nine, first spell wave, group S20
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 Three `Magic_Rows` overlays, taken whole through the harness

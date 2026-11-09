@@ -6,6 +6,8 @@ headless against a byte copy of Capcom's with every call re-aimed at a
 recorder: **25 x 2,000 rounds, about 420,000 stand-in calls, 0 mismatches**;
 **80 negative controls, 76 refused by a count, 4 not refused - each a change that changes nothing** (section 6). No divergence. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class).
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the files of their translation units now: `src/game/field/encounter.cpp`, `src/game/field/field_6.cpp`, `src/game/field/field_4.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/inventory_ops.cpp` still held of ours is `src/game/field/inventory_ops.cpp` now. A `src/game/inventory_ops.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/inventory_ops.cpp:LINE` answers it.
+
 Group BI of the seventh round ([`takeover-queue-round7.md`](takeover-queue-round7.md)),
 "inventory operations and the event-script bits on the way". Read, it is
 neither. The seventeen `0x5920E0..0x592E30` are **the random encounter's

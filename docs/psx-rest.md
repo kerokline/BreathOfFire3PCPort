@@ -6,6 +6,8 @@ functions ours in [`src/game/psx_rest.cpp`](../src/game/psx_rest.cpp),
 faithful, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=psx_rest`,
 0 mismatches, 42 of 42 controls refused), headless only; no divergence, no new defect; not live-checked)
 
+**Source layout (2026-11-09):** the 17 functions this group took live in the files of their translation units now: `src/game/platform/d3d.cpp`, `src/game/platform/gpu.cpp`, `src/game/platform/gte.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/psx_rest.cpp` itself is retired. A `src/game/psx_rest.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/psx_rest.cpp:LINE` answers it.
+
 [`platform-read-pass.md`](platform-read-pass.md) section 2 left seventeen
 starts of the PSX library layer alive under ours: one entered by a route,
 sixteen held - called by address from bodies of ours at exit, on an error, or

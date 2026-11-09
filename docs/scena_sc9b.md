@@ -6,6 +6,8 @@ through the scenario harness ([`scenario_harness.md`](scenario_harness.md)):
 0 mismatches in 378,000 (6,000 a function) rounds; 165 of 165 negative controls refused, at least one per function. Fuzz only: no recorded route
 reaches chapter 9 or 10 (section 8).
 
+**Source layout (2026-11-09):** the 63 functions this group took live in the files of their translation units now: `src/game/scenario/scena_10_3.cpp`, `src/game/scenario/scena_09_2.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/scena_sc9b.cpp` still held of ours is `src/game/scenario/scena_sc9b.cpp` now. A `src/game/scena_sc9b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc9b.cpp:LINE` answers it.
+
 Group SC9b of round ten's third wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §9,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3), one stage:

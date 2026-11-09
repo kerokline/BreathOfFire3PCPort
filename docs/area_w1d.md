@@ -7,6 +7,8 @@ the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
 (section 4). Fuzz only: no recorded route reaches the band (section 8). No
 divergence; the two state dispatchers abort past their tables (section 6).
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the files of their translation units now: `src/game/area/area_56.cpp`, `src/game/area/area_59.cpp`, `src/game/area/area_57.cpp` and 5 more ([`source-layout.md`](source-layout.md)). `src/game/area_w1d.cpp` itself is retired. A `src/game/area_w1d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w1d.cpp:LINE` answers it.
+
 Group AR1D of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 12). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

@@ -5,6 +5,8 @@ three functions ours, fuzzed headless against copies of Capcom's bytes and
 against DIV-0010's old re-aimed copies, 32 negative controls refused; through the batch
 `ab26` - [`takeover-queue-round6.md`](takeover-queue-round6.md) status)
 
+**Source layout (2026-11-09):** the 3 functions this group took live in the file of their translation unit now: `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/sprt_draw.cpp` still held of ours is `src/game/platform/sprt_draw.cpp` now. A `src/game/sprt_draw.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/sprt_draw.cpp:LINE` answers it.
+
 `D3d_DrawSprt` `0x5A2300`, `D3d_DrawSprt8` `0x5A2520` and `D3d_DrawSprt16`
 `0x5A2710` draw the PSX's `SPRT`, `SPRT_8` and `SPRT_16` under Direct3D:
 every menu numeral, the 8 x 8 font, the menu's panel pieces. Since

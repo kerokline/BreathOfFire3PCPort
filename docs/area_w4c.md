@@ -8,6 +8,8 @@ area (section 5). No divergence; where the original writes through an effect
 slot past the 20 effect records or calls through its two-entry stack table
 past its end, ours aborts with a message (section 6).
 
+**Source layout (2026-11-09):** the 39 functions this group took live in the files of their translation units now: `src/game/area/area_174.cpp`, `src/game/area/area_173.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_w4c.cpp` itself is retired. A `src/game/area_w4c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w4c.cpp:LINE` answers it.
+
 Group AR4C of round ten's sixth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 18). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)): 39

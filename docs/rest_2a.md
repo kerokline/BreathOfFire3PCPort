@@ -13,6 +13,8 @@ capstone and fuzzed through the scenario harness in field mode
 refused, 1 an equivalent mutant with its near variant refused (section 6).
 No recorded route enters any of the 22 (section 9).
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the files of their translation units now: `src/game/scenario/linked_object.cpp`, `src/game/field/mode_11.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_2a.cpp` itself is retired. A `src/game/rest_2a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2a.cpp:LINE` answers it.
+
 **The band is not scenario code**, whatever the cut's classes said (18 of
 its 19 rows `hypothesis`, 11 "Boot: Scena15" hidden in
 `Scena15_RecordWord`'s catalog extent). It is four field-engine helpers and

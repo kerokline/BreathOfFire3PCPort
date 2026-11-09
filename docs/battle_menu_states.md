@@ -5,6 +5,8 @@
 Capcom's with every call re-aimed at a recorder: 15,000 rounds, 0
 mismatches. 74 negative controls were planted, and all 74 were refused by a count.
 
+**Source layout (2026-11-09):** the 15 functions this group took live in the file of their translation unit now: `src/game/battle/battle_item_cmd.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_menu_states.cpp` itself is retired. A `src/game/battle_menu_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_menu_states.cpp:LINE` answers it.
+
 This is group CI of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. No Capcom defect

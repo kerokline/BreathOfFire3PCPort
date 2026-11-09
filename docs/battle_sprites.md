@@ -5,6 +5,8 @@ BG, [`takeover-queue-round7.md`](takeover-queue-round7.md)), fuzzed headless
 against byte copies of Capcom's, 70 negative controls all refused; the self-test with `BOF3X_SHADOW='*'`
 passes. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 6 had it owed.
 
+**Source layout (2026-11-09):** the 32 functions this group took live in the files of their translation units now: `src/game/battle/dragon_cmd.cpp`, `src/game/field/field_2.cpp`, `src/game/battle/battle_4.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/battle_sprites.cpp` still held of ours is `src/game/battle/battle_sprites.cpp` now. A `src/game/battle_sprites.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_sprites.cpp:LINE` answers it.
+
 Source: [`src/game/battle_sprites.cpp`](../src/game/battle_sprites.cpp),
 [`battle_sprites_callees.h`](../src/game/battle_sprites_callees.h),
 [`battle_sprites_fuzz.cpp`](../src/game/battle_sprites_fuzz.cpp). Shadow name

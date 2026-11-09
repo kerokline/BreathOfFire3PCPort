@@ -12,6 +12,8 @@ instruction with capstone and fuzzed through the scenario harness's field mode
 360,000 rounds, 0 mismatches. **146 controls planted** one at a time: 144 refused by a count, the other two equivalent mutants whose near variants are refused (section 6). **Fuzz only**: no recorded route
 enters the faerie village (section 9). No divergence; no full-frame fill.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the file of their translation unit now: `src/game/community/commu_board.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_4c.cpp` itself is retired. A `src/game/rest_4c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4c.cpp:LINE` answers it.
+
 The band is two of the four games R4B's game table `0x652A84` holds (the field
 hook's state 2: R4B's `0x652A70[2]`, `0x457340`, jumps through `0x652A84` by
 the byte `0x9039F5`), and the draw helpers both share:

@@ -13,6 +13,8 @@ the cut does not list). Fuzzed through the scenario harness in effect mode
 Seven state tables named. No divergence; no ledger entry. Live coverage:
 **none** - fuzz only (section 6).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_0f.cpp`, `src/game/effect/effect_kind_11.cpp`, `src/game/effect/effect_kind_06.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/effect_1b.cpp` still held of ours is `src/game/effect/effect_1b.cpp` now. A `src/game/effect_1b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1b.cpp:LINE` answers it.
+
 ## 1. What the band is
 
 `0x4672F0..0x46A5F2`: effect kind 0xF's states 26..40 (the kind's dispatcher

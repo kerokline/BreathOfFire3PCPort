@@ -7,6 +7,8 @@ log), and a fake device of its own; no divergence; through the batch `ab26` with
 round six ([`takeover-queue-round5.md`](takeover-queue-round5.md) status). Two latent defects written down,
 D31 and D32)
 
+**Source layout (2026-11-09):** the 11 functions this group took live in the files of their translation units now: `src/game/platform/d3d.cpp`, `src/game/platform/cell.cpp`, `src/game/text/tex.cpp` ([`source-layout.md`](source-layout.md)). `src/game/tex_cells.cpp` itself is retired. A `src/game/tex_cells.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/tex_cells.cpp:LINE` answers it.
+
 The field's sprites and the port's Chinese text are not drawn from VRAM the
 way the PlayStation drew them: each is composed into a small Direct3D texture
 first and cached. A glyph (24 x 24, 4 bits a texel) becomes a 32 x 32

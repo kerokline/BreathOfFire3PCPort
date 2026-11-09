@@ -11,6 +11,8 @@ capstone and fuzzed through the scenario harness in field mode
 306,000 rounds, 0 mismatches. 118 controls planted one at a time: 117 refused, 1 equivalent mutant not refused with its near variant refused (section 6). No recorded trace enters any
 of the 51 (section 9). No ledger entry is needed.
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/menu/master_quit.cpp`, `src/game/field/field_ability.cpp`, `src/game/field/field_menu_status.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_2d.cpp` still held of ours is `src/game/field/rest_2d.cpp` now. A `src/game/rest_2d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2d.cpp:LINE` answers it.
+
 The band is two things, each one thing:
 
 - **`0x5869A0..0x587732`: the screen a master opens** - the machine on the

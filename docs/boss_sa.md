@@ -8,6 +8,8 @@ to its last instruction with capstone and fuzzed through the boss harness
 0 mismatches; 139 controls planted, 139 refused, every one by a count (section 4). Fuzz only: no recorded route
 reaches a boss fight.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/boss/boss_nue.cpp`, `src/game/boss/boss_gary.cpp`, `src/game/boss/boss_weretigr.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sa.cpp` itself is retired. A `src/game/boss_sa.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sa.cpp:LINE` answers it.
+
 The group's units (`tools/boss_rows.py --groups`, 2026-09-28): `K06`, `K07`,
 `B01`, `K01`, `K39`, `K02`, `K46`, `B02`, `B03`, `B39` - the band from
 `0x437A10` to `0x43828F`, and kind 39's ten at `0x43D3D0..0x43D662`, which

@@ -6,6 +6,8 @@ the shared harness with 0 mismatches over 96,000 rounds; 156 of 158 negative con
 Nothing recorded casts these spells, so this is fuzz only until the owner
 sees them cast.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/magic/magic_114.cpp`, `src/game/magic/magic_115.cpp`, `src/game/magic/magic_117.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s26.cpp` itself is retired. A `src/game/magic_s26.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s26.cpp:LINE` answers it.
+
 Round nine, second wave, group S26
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6a).
 It takes three `Magic_Rows` overlays:

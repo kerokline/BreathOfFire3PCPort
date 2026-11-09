@@ -17,6 +17,8 @@ and with `BOF3X_WIDE=1` (section 5). Controls: **133 planted, 133 refused** (sec
 **Five `.data` tables named** (section 3). **Fuzz only**: no recorded route
 enters any of the 52 (section 10).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_09.cpp`, `src/game/core/title.cpp`, `src/game/effect/effect_kind_0f.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_4f.cpp` still held of ours is `src/game/effect/rest_4f.cpp` now. A `src/game/rest_4f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4f.cpp:LINE` answers it.
+
 **The band is not the community village.** The cut's columns proposed scenario
 banks (SCENA), text and windows and effect-kind tables; read, the band holds two
 things:

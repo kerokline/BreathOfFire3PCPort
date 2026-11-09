@@ -8,6 +8,8 @@ through the boss harness ([`boss_harness.md`](boss_harness.md)) without
 edits to it: 13 `Run`s, 318,000 rounds, 0 mismatches. 145 controls planted, all refused by a count (one, C128b, an equivalent mutant the harness refuses for its own reason - section 6). Fuzz
 only: no recorded route reaches a boss fight.
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/boss/boss_nina.cpp`, `src/game/boss/boss_amalgam.cpp`, `src/game/boss/boss_balio.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sc.cpp` itself is retired. A `src/game/boss_sc.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sc.cpp:LINE` answers it.
+
 Enemy and fight names below are `tools/boss_rows.py --disc`'s (the US disc's
 area records), not memory of the game; where the tool leaves a fight open
 (B46) it stays open.

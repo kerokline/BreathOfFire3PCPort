@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 52,000 rounds. 174 of 174 negative controls refused, every one by a count (exit 3). Nothing recorded casts
 these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 26 functions this group took live in the files of their translation units now: `src/game/magic/nue_stomp_child.cpp`, `src/game/field/jump_child.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s01.cpp` itself is retired. A `src/game/magic_s01.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s01.cpp:LINE` answers it.
+
 Round nine, third spell wave, group S01
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

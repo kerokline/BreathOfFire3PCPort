@@ -5,6 +5,8 @@
 headless against a copy of Capcom's with every call re-aimed at a recorder;
 99 negative controls, all 99 refused by a count. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 7 had it owed.
 
+**Source layout (2026-11-09):** the 18 functions this group took live in the files of their translation units now: `src/game/battle/battle_3.cpp`, `src/game/effect/effect.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_damage.cpp` itself is retired. A `src/game/battle_damage.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_damage.cpp:LINE` answers it.
+
 Group BE of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The battle engine
 is the PSX's `BATTLE.EMI` overlays compiled into the exe; every function here

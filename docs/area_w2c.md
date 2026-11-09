@@ -9,6 +9,8 @@ areas' unchecked reads stay in `.data` and are kept, and area 91's handler 0
 aborts where the original would loop forever or jump through its
 descriptor (section 6).
 
+**Source layout (2026-11-09):** the 45 functions this group took live in the files of their translation units now: `src/game/area/area_94.cpp`, `src/game/area/area_91.cpp`, `src/game/area/area_92.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_w2c.cpp` itself is retired. A `src/game/area_w2c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w2c.cpp:LINE` answers it.
+
 Group AR2C of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 12). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

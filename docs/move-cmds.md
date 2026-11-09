@@ -8,6 +8,8 @@ negative controls, 74 refused by a count and 2 that change nothing. **Through th
 batch `ab24`.** No divergence; two latent defects written down
 ([`known-defects.md`](known-defects.md) D14, D15).
 
+**Source layout (2026-11-09):** the 16 functions this group took live in the files of their translation units now: `src/game/field/move_script.cpp`, `src/game/field/move_cmd.cpp`, `src/game/field/event_cond.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/move_cmds.cpp` itself is retired. A `src/game/move_cmds.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/move_cmds.cpp:LINE` answers it.
+
 **2026-10-10: a sixteenth, `MoveCmd_Move` `0x578C10`** - the last function
 of the game's own code that was still Capcom's (section 8). Fuzzed (0
 mismatches, 14 controls refused), self-tested narrow and wide; not live-run,

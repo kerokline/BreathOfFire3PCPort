@@ -14,6 +14,8 @@ in effect mode ([`scenario_harness.md`](scenario_harness.md) section 8)
 without edits to it: 208,000 rounds, 0 mismatches; 116 of 117 controls refused, the other an equivalent mutant whose near variant is refused. **Fuzz
 only**: no recorded route enters any of the 52 (section 9).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_1c.cpp`, `src/game/effect/effect_kind_18_sub_17.cpp`, `src/game/effect/effect_kind_18_sub_22.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_5d.cpp` itself is retired. A `src/game/effect_5d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5d.cpp:LINE` answers it.
+
 Every row is effect code, the three `hypothesis` rows (`0x504F70`, `0x505AB0`,
 `0x505E20`) among them - each a sub-kind's dispatcher. Kind 0x18
 (`Effect_KindHandlers[0x18]`, ours: `EffectKind18_Run` `0x46D830`) jumps

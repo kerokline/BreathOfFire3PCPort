@@ -6,6 +6,8 @@ through the shared harness with 0 mismatches over 98,000 rounds, and
 all 142 planted controls are refused (section 6). No recorded route casts these spells, so they stay
 fuzz-only until the owner casts them.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/magic/shadow_mote.cpp`, `src/game/magic/breath_mote.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s29.cpp` itself is retired. A `src/game/magic_s29.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s29.cpp:LINE` answers it.
+
 Group S29 of round nine, second wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4 and
 §6a), taken with the spell harness ([`magic_harness.md`](magic_harness.md))

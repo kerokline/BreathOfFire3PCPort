@@ -7,6 +7,8 @@ Capcom's (`BOF3X_SHADOW=mode_states`, 43,500 rounds, 0 mismatches), with
 injects. No divergence. The live check (the shop and world-map routes' A/B)
 is the coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the files of their translation units now: `src/game/core/transition.cpp`, `src/game/field/field_core.cpp`, `src/game/field/field_3.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/mode_states.cpp` itself is retired. A `src/game/mode_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/mode_states.cpp:LINE` answers it.
+
 Group DB of the eighth round's wave B
 ([`takeover-queue-round8.md`](takeover-queue-round8.md), "DB"). The queue
 listed 21 entries; **20 are functions and are ours; `0x497C30` is not a

@@ -5,6 +5,8 @@
 headless against a copy of Capcom's with every call re-aimed at a recorder;
 72 negative controls, 71 refused by a count and one by a fault (with a counting twin). **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 7 had it owed.
 
+**Source layout (2026-11-09):** the 24 functions this group took live in the files of their translation units now: `src/game/magic/sparkle.cpp`, `src/game/magic/magic_fx_4.cpp`, `src/game/platform/gpu.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/battle_items.cpp` itself is retired. A `src/game/battle_items.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_items.cpp:LINE` answers it.
+
 Group BH of the seventh round ([`takeover-queue-round7.md`](takeover-queue-round7.md)).
 The queue called it "the battle item menu"; read, none of it is a menu. It is
 the **effect side of using an item in battle**: the Healing Herb's sparkles

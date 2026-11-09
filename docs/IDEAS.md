@@ -104,6 +104,8 @@ rule ([`README.md`](README.md)) here too.
 | I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
 | I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind |
 | I59 | Two battle repairs from the review of Red Herring's notes: Escape's enemy agility (it reads the wrong objects, and on the PC leftovers from earlier fights) and the skills' turn priority (the learn difficulty removes it) | game behaviour / battle | HIGH | open 2026-11-08 (the owner): put off, nothing built |
+| I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | open 2026-11-09 (the owner: "dissolve later", "the cleanup round") |
+| I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
 
 ---
 
@@ -2489,3 +2491,35 @@ The two divisors are D177's and do not change.
 
 ### Outcome
 _(2026-11-08) open; read, nothing built._
+
+## I60 — The source layout's cleanup round: dissolve the files of ours
+
+**Ask (2026-11-09, the owner):** at stage C of the source-layout round, "move whole, dissolve later"; and of the two calls carried from stage B, "handle them in the cleanup round".
+**Kind:** tooling / source. **Feasibility:** HIGH (each step is gated by `codegen_same.py`).   **Gated on:** stage D's proof of the source-layout round ([`source-layout-round.md`](source-layout-round.md) 6).
+
+Stage C found that 159 of the 336 group files stage B left were not shells: they hold code of ours. 158 moved whole into their folders ([`source-layout.md`](source-layout.md) 3; `crt_rest.cpp`, the runtime's, stays flat). What the cleanup round does with them, and what else waits for it:
+
+- **A divergence's switch and its arming** (175 variables of ours in 89 files, most of them a switch: `battle_e5.cpp` is `g_store_ask_word` and the `PatchBytes` that arms DIV-0162, read by one function in `battle/dragon_cmd.cpp`): the variable goes beside the function that reads it, the arming into that file's `_Inject()`, after the group's self-test as it is now. The readers go from `.refptr` back to direct.
+- **A self-test written in the file** (109 files, `gfx_flush.cpp` the first): the file becomes the group's fuzz file under that name.
+- **The callee seams still in a file of ours** (36): to the file of the group's lowest function, as stage C did for the 28 in pure shells (`tools/retire_shells.py`).
+- **A module of ours** (`widescreen`, `layering`, `dat_cache`, `msgbox`, the sound files, 37 that never held a function of Capcom's): stays a file; the six named `<group>_ours.cpp` get names of their own.
+- **`-fno-auto-import`** (B3's measurement: every `refptr` exception row goes; a new baseline and a check of the DLL's data imports) and **the 34 register-allocation `inline` rows** (32 x86_64, 2 i686), both the owner's to accept there.
+- **The mover's superseded fixes**: `tools/move_funcs.py` on `main` is group B3's; B5's (`df5c19ce`, `cff3a6a0`, `984b1478`) and B2's (`35518a3e`, `2e28ee7d`, `25f8d0eb`) are in the history but were lost at the merges, and none applies as a patch. Stage C did not run the mover; a round that does reconciles it first.
+- **The two comment lines in `scenario_harness.cpp`** that keep its line numbers, the 12 group headers that still declare functions `symbols.gen.h` declares, the `<group>_callees.h` remnants, then **I48's comments** (stage E).
+
+**First concrete step, when wanted:** a new gate baseline at the stage D tip; then one switch by hand (`battle_e5`'s) to fix the shape, and a tool for the rest.
+
+### Outcome
+_(2026-11-09) open; the census is in the round doc's "Stage C as run"._
+
+## I61 — A fuzz table per unit file
+
+**Ask (2026-11-09, the owner's call C2):** the fuzz files move whole beside their code; the split per new file is deferred.
+**Kind:** tooling / source. **Feasibility:** MEDIUM.   **Gated on:** I60 (the written-in self-tests become fuzz files first).
+
+A takeover group's fuzz file is one table driven by one harness object (`Group`: its regions, callees and recorders), and a group's functions now sit in several unit files. One fuzz file per unit file needs a registry that assembles each group's table from pieces at start-up, or a harness per unit file with the regions shared. The rows name functions by their `symbols.gen.h` declarations, so they work where they are; what the split buys is a reader finding a function's fuzz rows beside it.
+
+**First concrete step, when wanted:** count the rows per (group, unit file) from `analysis/tu_moves.tsv`; pick the harness with the fewest shared regions (`area_harness`) and split one group.
+
+### Outcome
+_(2026-11-09) open; nothing built._

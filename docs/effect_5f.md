@@ -19,6 +19,8 @@ original never writes** (`EffectKind18Sub4B_Run`'s stack word, section 7):
 ours takes the quad's own x there, and the fuzz levels those words on both
 sides. The coordinator's and the owner's to ledger.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_42.cpp`, `src/game/effect/effect_kind_18_sub_29.cpp`, `src/game/effect/effect_kind_18_sub_2a.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_5f.cpp` itself is retired. A `src/game/effect_5f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5f.cpp:LINE` answers it.
+
 | Sub-kind | Functions | Reached through |
 |---|--:|---|
 | 0x27: a textured panel on the ground at a cell (two placements), sliding by `+0x30` (to -0x100) when the leader enters the cell's gate and back once the leader is two cells away | 7 | `EffectKind18_States[0x27]` (`0x654108`), `EffectKind18Sub27_States` `0x65E890` (5) by `+2` |

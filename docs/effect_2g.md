@@ -11,6 +11,8 @@ with capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
 232,000 rounds, 0 mismatches; 78 of 80 controls refused by a count, the two others equivalent mutants whose near variants are refused. **Fuzz only**: no recorded route enters any of the 58 (section 9).
 
+**Source layout (2026-11-09):** the 58 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_54.cpp`, `src/game/effect/effect_kind_66.cpp`, `src/game/effect/effect_kind_5d.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/effect_2g.cpp` still held of ours is `src/game/effect/effect_2g.cpp` now. A `src/game/effect_2g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2g.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x66: a window (area 135's choice spawns it, `+6` the answer) - grows over eight frames, stands with the message and two or three textured pieces, shrinks away | 9 | `Effect_KindHandlers[0x66]` (`0x6554E8`), `EffectKind66_States` `0x654758` (6) |

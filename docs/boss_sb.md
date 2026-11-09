@@ -7,6 +7,8 @@ through the boss harness ([`boss_harness.md`](boss_harness.md)), 15 `Run`s,
 0 mismatches; 124 controls planted, 124 refused by a count, none by a `Fatal`, none equivalent. Fuzz only: no recorded route reaches a boss
 fight. The first group to use the harness's `kSetup` shape (section 3).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/boss/boss_04.cpp`, `src/game/boss/boss_08.cpp`, `src/game/boss/boss_engineer.cpp` and 8 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sb.cpp` itself is retired. A `src/game/boss_sb.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sb.cpp:LINE` answers it.
+
 Enemy and fight names below are `tools/boss_rows.py --disc`'s (the US disc's
 area records, 2026-09-28), not memory of the game. Which fight a set-up is
 comes from the tool's rows; nothing here says what happens in a fight beyond

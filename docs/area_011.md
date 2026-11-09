@@ -6,6 +6,8 @@ the area harness ([`area_harness.md`](area_harness.md)): 0 mismatches in
 12,000 rounds; 20 controls planted, 18 refused by a count, 1 refused then hung (replaced), 1 equivalent with its near variant refused (section 4). Fuzz only: no recorded route enters area 11
 (section 6). No divergence; no new defect.
 
+**Source layout (2026-11-09):** the 3 functions this group took live in the file of their translation unit now: `src/game/area/area_11.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_011.cpp` itself is retired. A `src/game/area_011.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_011.cpp:LINE` answers it.
+
 Group ARH of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1), as the proof
 of the area harness ([`takeover-queue-areas.md`](takeover-queue-areas.md)

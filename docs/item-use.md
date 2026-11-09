@@ -7,6 +7,8 @@ against a copy of Capcom's with every call re-aimed at a recorder;
 centrally after the merge (section 8). Nothing here is reached by the
 attract sequence.
 
+**Source layout (2026-11-09):** the 59 functions this group took live in the files of their translation units now: `src/game/menu/item_use.cpp`, `src/game/text/msg_box.cpp`, `src/game/menu/char.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/item_use.cpp` itself is retired. A `src/game/item_use.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/item_use.cpp:LINE` answers it.
+
 Group P of the fourth parallel round
 ([`takeover-queue-round4.md`](takeover-queue-round4.md)). The queue called
 it "the title's hidden cluster": 33 pointer-reached functions after

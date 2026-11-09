@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)), with no edit to
 the harness: 0 mismatches in 128,000 rounds. 206 negative controls, 205 refused by a count (exit 3), one an equivalent mutant (section 10). Fuzz only:
 no recorded route casts any of them (section 11).
 
+**Source layout (2026-11-09):** the 64 functions this group took live in the files of their translation units now: `src/game/magic/bone_dance.cpp`, `src/game/magic/rotten_breath_mote.cpp`, `src/game/magic/holocaust_beam.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_c2.cpp` itself is retired. A `src/game/magic_c2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_c2.cpp:LINE` answers it.
+
 Group C2 of round nine's second spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6a):
 the four overlays of the enemy-only skills that TCRF reports something about

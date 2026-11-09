@@ -2,6 +2,8 @@
 
 **Status:** IN PROGRESS (verified 2026-09-22)
 
+**Source layout (2026-11-09):** the 44 functions this group took live in the files of their translation units now: `src/game/text/msg_box.cpp`, `src/game/text/text.cpp`, `src/game/battle/battle_menu_win.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/msgbox.cpp` still held of ours is `src/game/text/msgbox.cpp` now. A `src/game/msgbox.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/msgbox.cpp:LINE` answers it.
+
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
 **2026-10-03 (fix wave, group GS):** a forty-fourth, the grow / shrink draw

@@ -10,6 +10,8 @@ mismatches. 81 negative controls were planted, one wrong behaviour each: all 81 
 refused by a count (section 4). The `BOF3X_SHADOW='*'` self-test exited 0
 with `inject: 1043 ours`.
 
+**Source layout (2026-11-09):** the 19 functions this group took live in the files of their translation units now: `src/game/battle/battle_fx.cpp`, `src/game/battle/battle_task.cpp`, `src/game/battle/enemy_op.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/battle_fx_tasks.cpp` itself is retired. A `src/game/battle_fx_tasks.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_fx_tasks.cpp:LINE` answers it.
+
 This is group CE of the eighth parallel round. Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. No defect of the
 original was found beyond the unchecked table indices every stack-table

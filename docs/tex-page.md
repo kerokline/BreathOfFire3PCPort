@@ -6,6 +6,8 @@ DirectDraw, `src/game/ddraw_fuzz.*`; no divergence; through the batch `ab26` wit
 round six ([`takeover-queue-round5.md`](takeover-queue-round5.md) status). One latent defect written down,
 D30)
 
+**Source layout (2026-11-09):** the 8 functions this group took live in the files of their translation units now: `src/game/platform/d3d.cpp`, `src/game/text/tex.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/tex_page.cpp` still held of ours is `src/game/platform/tex_page.cpp` now. A `src/game/tex_page.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/tex_page.cpp:LINE` answers it.
+
 Every texture the Direct3D draw binds for a textured PSX primitive is a
 256 x 256 copy of a piece of the VRAM shadow, converted to the display's
 pixel format and cached per PSX texture page. This group took over the two

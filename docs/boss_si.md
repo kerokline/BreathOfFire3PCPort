@@ -8,6 +8,8 @@ through the boss harness ([`boss_harness.md`](boss_harness.md)) without
 edits to it: twenty `Run`s, 0 mismatches; 138 controls planted, 135 refused by a count, 3 equivalent with their near variants refused (section 4). Fuzz only: no
 recorded route reaches a boss fight.
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/boss/boss_sample_4.cpp`, `src/game/boss/boss_arwan.cpp`, `src/game/boss/boss_ammonite.cpp` and 6 more ([`source-layout.md`](source-layout.md)). `src/game/boss_si.cpp` itself is retired. A `src/game/boss_si.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_si.cpp:LINE` answers it.
+
 The group's units (`tools/boss_rows.py --groups`, the cut of 2026-09-28):
 `B37`, `K45`, `K51`, `B38`, `B44`, `K47`, `K60`, `B40`, `B53`, `K49`, `B42`,
 `K52`, `K56`, `B45`, `B49`, `K57`, `B50`, `K58`, `B51`, `F7`. The group column

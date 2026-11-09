@@ -11,6 +11,8 @@ fuzzed through the scenario harness in effect mode
 324,000 rounds, 0 mismatches. 148 controls planted one at a time, 145 refused by a count, three equivalent mutants each with a near variant refused. **Fuzz only**: no recorded
 route enters any of the 54 (section 9).
 
+**Source layout (2026-11-09):** the 54 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_48.cpp`, `src/game/effect/effect_kind_45.cpp`, `src/game/effect/effect_kind_46.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_2d.cpp` still held of ours is `src/game/effect/effect_2d.cpp` now. A `src/game/effect_2d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2d.cpp:LINE` answers it.
+
 Every row is effect code, the two `hypothesis` rows (`0x477E10`, `0x4780D0`)
 included: kind 0x47's dispatcher and its state 1.
 

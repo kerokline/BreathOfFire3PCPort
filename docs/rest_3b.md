@@ -13,6 +13,8 @@ rounds, 0 mismatches. **116 controls planted** one at a time: 114 refused by a c
 (section 8); the other 58 had no `entries_logic.txt` line until this group's,
 so no trace says whether play reaches them: fuzz only here.
 
+**Source layout (2026-11-09):** the 64 functions this group took live in the files of their translation units now: `src/game/effect/effect.cpp`, `src/game/battle/battle_item_cmd.cpp`, `src/game/battle/battle_3.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_3b.cpp` itself is retired. A `src/game/rest_3b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3b.cpp:LINE` answers it.
+
 The band is three things in address order:
 
 - **The result screen's EXP** (`0x4468B0..0x4469E5`): `BattleResult_AddExp`

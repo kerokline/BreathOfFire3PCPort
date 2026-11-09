@@ -7,6 +7,8 @@ against a byte-copy of Capcom's at start-up (`BOF3X_SHADOW=field_frame`,
 through the batch check in game** (the frame hash, the oracle, the captures);
 that runs centrally after the parallel takeovers merge.
 
+**Source layout (2026-11-09):** the 12 functions this group took live in the files of their translation units now: `src/game/field/field_3.cpp`, `src/game/field/event_cond.cpp`, `src/game/field/sprite_2.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/field_frame.cpp` still held of ours is `src/game/field/field_frame.cpp` now. A `src/game/field_frame.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_frame.cpp:LINE` answers it.
+
 With these, the field's frame is ours from its entry to `Sprite_DrawPass`,
 except for what the entries call that belongs to other groups: the kind-2
 object's runner (`Kind2_Run`), the map (`AreaMap_Frame`,

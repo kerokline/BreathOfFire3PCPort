@@ -11,6 +11,8 @@ and its handler 5 aborts where its last write would land outside the grid,
 where the original would jump into data, fault or write past its table
 (section 6).
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/area/area_108.cpp`, `src/game/area/area_111.cpp`, `src/game/area/area_112.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/area_w2f.cpp` itself is retired. A `src/game/area_w2f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w2f.cpp:LINE` answers it.
+
 Group AR2F of round ten's fifth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 15; the
 tool's `--groups` prints it as its `AR2B` row at `2c9c92f`). The band is the

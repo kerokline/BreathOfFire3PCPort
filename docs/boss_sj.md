@@ -10,6 +10,8 @@ already (the spell round's row 128) and nothing here calls it. **The first
 users of the harness's `kTask` shape.** Fuzz only: no recorded route
 reaches a boss fight. No divergence.
 
+**Source layout (2026-11-09):** the 44 functions this group took live in the files of their translation units now: `src/game/boss/boss_myria_fx.cpp`, `src/game/boss/boss_d_lord.cpp`, `src/game/boss/boss_shroom.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sj.cpp` itself is retired. A `src/game/boss_sj.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sj.cpp:LINE` answers it.
+
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
 records), not memory of the game. Which fight a set-up is comes from the
 tool's rows; nothing here says what happens in a fight.

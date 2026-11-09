@@ -14,6 +14,8 @@ route enters any of the 50 (section 9). Every row is effect code: the four
 `hypothesis` rows of the cut (`0x48B850`, `0x48B870`, `0x48BFB0`, `0x48C0E0`)
 are kind 0x8E's dot pool and kinds 0x93's and 0x99's dispatchers - taken.
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_8f.cpp`, `src/game/effect/effect_kind_8e.cpp`, `src/game/effect/effect_kind_8d.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_4c.cpp` itself is retired. A `src/game/effect_4c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4c.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x8D: a camera pull - `Camera_Distance` 0x1C80, a full-screen tint (E4D's `0x48CA90`) held, then drawn in by 0x2A a frame as the tint fades; its end steps the byte after `MoveScript_Var7` | 5 | `Effect_KindHandlers[0x8D]` (`0x655584`), `EffectKind8D_States` `0x654FA4` (4) |

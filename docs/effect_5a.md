@@ -15,6 +15,8 @@ fuzzed through the scenario harness in effect mode
 220,000 rounds, 0 mismatches; 55 of 55 controls refused by a count. **Fuzz
 only**: no recorded route's first-call trace enters any of them (section 9).
 
+**Source layout (2026-11-09):** the 55 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18.cpp`, `src/game/effect/effect_kind_18_sub_0d.cpp`, `src/game/platform/magic_080.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_5a.cpp` itself is retired. A `src/game/effect_5a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5a.cpp:LINE` answers it.
+
 Every row is effect code, every tier `evidence`; no row is a `hypothesis` row
 and none is not effect code. Kind 0x18 is one kind with many sub-kinds:
 `EffectKind18_Start` (ours, `worldmap_area.md` section 6) copies the record's

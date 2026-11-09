@@ -2,6 +2,8 @@
 
 **Status:** IN PROGRESS (2026-09-23)
 
+**Source layout (2026-11-09):** the 7 functions this group took live in the files of their translation units now: `src/game/area/world_map_33.cpp`, `src/game/field/area_map.cpp`, `src/game/area/area_45.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/world_map.cpp` still held of ours is `src/game/area/world_map_ours.cpp` now. A `src/game/world_map.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/world_map.cpp:LINE` answers it.
+
 The owner recorded a route through the world map on 2026-09-23
 (`tools/recipes/worldMapAndAreaTransition.txt`, save 3, 2,143 frames,
 [`input-script.md`](input-script.md) §5a): the title, slot 3, out of the town

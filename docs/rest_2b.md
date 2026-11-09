@@ -17,6 +17,8 @@ were edited** (one token each, section 10): taking `Effect_Spawn` /
 change lets `'*'` pass. **One latent defect is a ledger entry, DIV-0073**
 (section 7, L1; entered 2026-10-04 and kept by the owner the same day).
 
+**Source layout (2026-11-09):** the 38 functions this group took live in the files of their translation units now: `src/game/minigame/shisu.cpp`, `src/game/field/event_cond.cpp`, `src/game/menu/menu_2.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_2b.cpp` still held of ours is `src/game/minigame/rest_2b.cpp` now. A `src/game/rest_2b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2b.cpp:LINE` answers it.
+
 **What the band is.** By the code, four things:
 
 - **`Effect_Spawn` / `Effect_SpawnAt`** (`0x57CE10`, `0x57CE80`): the two

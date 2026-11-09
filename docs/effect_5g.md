@@ -14,6 +14,8 @@ original). **DIV-0041's listed fill `0x50B4B5` is in this band** (sub-kind
 0x36, section 2): it now draws through `Widescreen_FillX` /
 `Widescreen_Fill`; no new ledger entry (the coordinator amends DIV-0041).
 
+**Source layout (2026-11-09):** the 24 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_2c.cpp`, `src/game/effect/effect_kind_18_sub_2b.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_5g.cpp` itself is retired. A `src/game/effect_5g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5g.cpp:LINE` answers it.
+
 All five are sub-kinds of effect kind 0x18: `EffectKind18_Run` (`0x46D830`,
 ours) jumps through `EffectKind18_States` by `+1`, which `EffectKind18_Start`
 copies from `+0xB`. Four of them dispatch again by `+2` through a table of

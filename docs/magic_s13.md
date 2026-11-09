@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 50,000 rounds. 152 of 153 negative controls refused (151 by a count, one by a fault with its near variant refused by a count), one equivalent with its near variant refused. Nothing recorded casts
 this spell, so this is fuzz only until the owner sees it cast.
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the file of their translation unit now: `src/game/magic/sudden_death_child.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s13.cpp` itself is retired. A `src/game/magic_s13.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s13.cpp:LINE` answers it.
+
 Round nine, fourth spell wave, group S13
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 
