@@ -3,3 +3,7 @@
 #pragma once
 
 void TextImmediate_Inject();
+
+namespace text_immediate {
+extern const unsigned char*(__cdecl* g_draw_at)(int, int, int, int, const unsigned char*);   // defined in text_immediate.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace text_immediate

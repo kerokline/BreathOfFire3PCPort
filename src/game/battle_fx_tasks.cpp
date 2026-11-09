@@ -31,9 +31,6 @@ namespace battle_fx_tasks {
 
 using move_script::At;
 using move_script::Long;
-using move_script::SetLong;
-using move_script::SetWord;
-using move_script::Word;
 
 namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
@@ -81,27 +78,16 @@ using namespace battle_fx_tasks;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return Low32(p); }
 // A pointer the original keeps in a dword, read afresh.
-unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
+unsigned char* PtrAtBattleFxTasks(std::uint32_t address) { return battle_fx_tasks::At(static_cast<std::uint32_t>(battle_fx_tasks::Long(battle_fx_tasks::At(address)))); }
 // The battle-task slot being run (0x93B8C4), and a slot's owner (+0x80).
 unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent.Native()); }
-unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
 // Sprite_Current, read afresh at every use.
 unsigned char* Sc() { return Sprite_Current; }
 // The running slot is a battle task; Sprite_Current is the slot too while
 // BattleTask_RunAll runs it (docs/battle_fx_tasks.md 1).
 
-// An actor's flag dword: a member's ObjTrio +0x130, an enemy's +0x110 (its
-// low byte's bit 7 is set while a popup of its is up). As the original has
-// it, the enemy index (actor - 3) is not checked, and the arithmetic is the
-// original's 32-bit wrap.
-unsigned char* ActorFlagByte(unsigned actor) {
-    if (actor <= 2) return At(::bof3::Img(ObjTrio_addr) + 0x130 + actor * at::kMemberSize);
-    return At(::bof3::Img(Battle_Enemies_addr) + 0x110 + (actor - 3u) * at::kEnemySize);
-}
-
-void CallIndex(const Handler* table, unsigned n, unsigned index, const char* who) {
+void CallIndex(const battle_fx_tasks::Handler* table, unsigned n, unsigned index, const char* who) {
     if (index >= n) bof3::Fatal("%s: index %u, past the %u-entry table the original builds on its stack", who, index, n);
     table[index]();
 }
@@ -112,429 +98,28 @@ void CallIndex(const Handler* table, unsigned n, unsigned index, const char* who
 // The three kinds
 // ===========================================================================
 
-// original 0x4352A0 (no PSX twin paired): battle-task kind 0. Entry +5 of the
-// running slot (0x93B8C4) of a nineteen-entry table the original builds on
-// its stack: 0x437CC0 (a bare ret), the damage popup 0x432B70, 0x432F90, the
-// pose task 0x433190, 0x4332B0, 0x433380, the actor watch 0x433460, the
-// follower 0x4337F0, then 0x43C740 .. 0x452B60 (unread).
-//
-// As the original has it: the index is not checked; 19..255 would call
-// through the words above the table on the original's stack. Ours aborts
-// instead (CLAUDE.md rule 4, as battle_flow's BattleTask_RunAll).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_Dispatch(void) {
-    CallIndex(g.fx, 19, Cur()[5], "BattleFx_Dispatch");
-}
-
-// original 0x435350 (no PSX twin paired): battle-task kind 1, the magic
-// effects BattleTask_Create(1, n)'s callers start. Entry +5 of the running
-// slot of a 110-entry table the original builds on its stack (0x1B8 bytes):
-// 0x437CC0 first, then the effects (battle_fx_tasks_callees.h). Unchecked as
-// kind 0's; ours aborts past 109.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicFx_Dispatch(void) {
-    CallIndex(g.magic_fx, 110, Cur()[5], "BattleMagicFx_Dispatch");
-}
-
-// original 0x4378B0 (no PSX twin paired): battle-task kind 2, the task
-// Battle_StartItemMagic / Battle_StartAbilityMagic start with a magic row as
-// its parameter. While the round flags 0x904AA8 have 0x800, it tail-jumps to
-// the code pointer of row Sprite_Current +5 of Magic_Rows (0x64C2B8 + 8 row
-// + 4, the dword after the row's DAT file); otherwise it returns.
-//
-// As the original has it: the row is read through Sprite_Current, not the
-// slot pointer, and not checked; ours aborts past row 150 (the table's 151
-// rows all hold .text pointers; row 151's is 0x9A1A9B1B, not code).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicRow_Run(void) {
-    if ((static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v)))) & 0x800) == 0) return;
-    const unsigned row = Sc()[5];
-    if (row >= at::kMagicRowCount) bof3::Fatal("BattleMagicRow_Run: row %u, past Magic_Rows' 151", row);
-    reinterpret_cast<Handler>(PtrAt(::bof3::Img(at::kMagicRows.v) + row * 8 + 4))();
-}
-
 // ===========================================================================
 // Kind 0, effect 1: the damage-number popup
 // ===========================================================================
-
-// original 0x432B70 (PSX 0x801E5BE4 by the catalogue's pairing, not read):
-// state +1 of the running slot through a five-entry stack table (start,
-// hold, rise, bounce, end - 0x432C40 .. 0x432EA0); then, while
-// Sprite_Current's bit 0 is set, the slot's face by its mode +7 (a 4-entry
-// jump table at 0x432C28):
-//   0  a number: during states 0..2 the rolling digits (BattleFx_RollingDigits
-//      with the CLUT row +0x27), from state 3 on Battle_DrawNumber(+0x36 - 12,
-//      +0x3A, +0x27, the value +0x60);
-//   1, 2, 3  a 24 x 8 label: Battle_DrawLabel(+0x36, +0x3A, +0x27, cell 2, 1, 0).
-// Modes above 3 draw nothing.
-//
-// As the original has it: the slot pointer is re-read after the state call
-// and Sprite_Current tested then; the state index is not checked (ours
-// aborts past 4). The registers it pushes carry the upper bits of whatever
-// they held before - the slot's or Sprite_Current's address above a byte or
-// a word; the callees read only the byte or the word, and ours pushes the
-// same bits.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_DamagePopup(void) {
-    CallIndex(g.popup, 5, rv::As<records::BattleTask>(Cur())->state, "BattleFx_DamagePopup");
-    const unsigned char* const sp = Sc();
-    const std::uint32_t sc = Address(sp);
-    if ((sp[0] & 1) == 0) return;
-    unsigned char* const t = Cur();
-    auto* const task_rec = rv::As<records::BattleTask>(t);
-    const std::uint32_t ta = Address(t);
-    switch (task_rec->mode) {
-    case 0:
-        if (task_rec->state < 3) {
-            g.rolling_digits((ta & 0xFFFFFF00u) | task_rec->clut);
-            return;
-        }
-        g.draw_number(static_cast<int>((sc & 0xFFFF0000u) | ((task_rec->x_whole - 0xCu) & 0xFFFFu)),
-                      static_cast<int>(task_rec->z_whole), (sc & 0xFFFFFF00u) | task_rec->clut, Word(t + 0x60));
-        return;
-    case 1:
-    case 2:
-    case 3:
-        g.draw_label(static_cast<int>((ta & 0xFFFF0000u) | task_rec->x_whole),
-                     static_cast<int>((sc & 0xFFFF0000u) | task_rec->z_whole), task_rec->clut, 3u - task_rec->mode);
-        return;
-    default:
-        return;
-    }
-}
-
-// original 0x432C40 (state 0; inside 0x432B70's catalogue extent, so it was
-// never listed on its own): the popup placed over its owner (+0x80) and
-// sized.
-//   - x +0x36 and y +0x3A: the owner's +0x2E / +0x30 plus a signed offset -
-//     for a member (owner +5 <= 2) the s8 pair at 0x64DF70 by (owner +0x2C)
-//     * 4 + owner +8; for an enemy its object's s8 +0xF2 / +0xF3.
-//   - y 9 higher when +0xB is 1.
-//   - the digit count +0xA: 2 for a value (+0x60, s32) of 100 or more, 1 for
-//     10 or more, else 0 (the original divides by 100, then by 10, signed).
-//   - the owner's flag byte (a member's +0x130, an enemy's +0x110) |= 0x80.
-//   - the timer +9 = 8, the digit phase +0x32 = 0, the state + 1.
-//
-// As the original has it: the slot and the owner are re-read between x and
-// y, the enemy index is not checked, and the count is stored through the
-// slot pointer read before the owner's flag.
-extern "C" void __cdecl BattleFx_PopupStart(void) {
-    unsigned char* s = Cur();
-    unsigned char* o = OwnerOf(s);
-    unsigned actor = o[5];
-    if (actor <= 2) {
-        std::uint32_t k = Word(o + 0x2C) * 4u + o[8];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + k * 2)[0])) + Word(o + 0x2E));
-        s = Cur();
-        o = OwnerOf(s);
-        k = Word(o + 0x2C) * 4u + o[8];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + 1 + k * 2)[0])) + Word(o + 0x30));
-    } else {
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(Battle_Enemies_addr) + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
-                              Word(o + 0x2E));
-        s = Cur();
-        o = OwnerOf(s);
-        actor = o[5];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(Battle_Enemies_addr) + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
-                              Word(o + 0x30));
-    }
-    unsigned char* d = Cur();
-    records::BattleTask* task_d = rv::As<records::BattleTask>(d);
-    if (d[0xB] == 1) {
-        rv::Store<unsigned>(task_d->z_whole, task_d->z_whole - 9u);
-        d = Cur();
-        task_d = rv::As<records::BattleTask>(d);
-    }
-    const std::int32_t value = task_d->value;
-    const unsigned char digits = value / 100 > 0 ? 2 : value / 10 > 0 ? 1 : 0;
-    unsigned char* const flag = ActorFlagByte(OwnerOf(d)[5]);
-    flag[0] = static_cast<unsigned char>(flag[0] | 0x80);
-    task_d->digits = digits;
-    rv::As<records::BattleTask>(Cur())->timer = 8;
-    rv::As<records::BattleTask>(Cur())->digit_phase = 0;
-    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
-}
-
-// original 0x432DB0 (state 1): the timer +9 counts down; on the frame it is
-// found 0 (it wraps to 0xFF first) the state + 1 and the timer 4.
-extern "C" void __cdecl BattleFx_PopupHold(void) {
-    auto* const task_rec = rv::As<records::BattleTask>(Cur());
-    const unsigned char timer = task_rec->timer;
-    task_rec->timer = static_cast<unsigned char>(timer - 1);
-    if (timer != 0) return;
-    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
-    rv::As<records::BattleTask>(Cur())->timer = 4;
-}
-
-// original 0x432DE0 (state 2): the dword +0x38 + 0x40000 (y +0x3A down 4)
-// every frame; the timer as the hold's, and when it was 0: the state + 1,
-// the velocity +0xC = 0x8000 (x, 16.16) and +0x10 = -6.0 (y), and the start
-// +0x1C / +0x18 = the s16 y / x.
-extern "C" void __cdecl BattleFx_PopupRise(void) {
-    unsigned char* s = Cur();
-    records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
-    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + 0x40000u);
-    s = Cur();
-    task_rec = rv::As<records::BattleTask>(s);
-    const unsigned char timer = task_rec->timer;
-    task_rec->timer = static_cast<unsigned char>(timer - 1);
-    if (timer != 0) return;
-    rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
-    rv::As<records::BattleTask>(Cur())->step_x = 0x8000;
-    rv::As<records::BattleTask>(Cur())->step_z = static_cast<std::int32_t>(0xFFFA0000u);
-    s = Cur();
-    task_rec = rv::As<records::BattleTask>(s);
-    task_rec->work_1c = static_cast<short>(task_rec->z_whole);
-    s = Cur();
-    task_rec = rv::As<records::BattleTask>(s);
-    task_rec->work_18 = static_cast<short>(task_rec->x_whole);
-}
-
-// original 0x432E50 (state 3): the bounce. It ends - timer 10, state + 1 -
-// once y +0x3A is back to or below its start (+0x1C <= the s16 y) while x has
-// moved (+0x18 != the s16 x); otherwise the 16.16 position +0x34 / +0x38
-// moves by the velocity +0xC / +0x10, and +0x10 gains 0x14000 (1.25).
-//
-// As the original has it: the three adds are 32-bit and wrap; the slot is
-// re-read before the second and the third.
-extern "C" void __cdecl BattleFx_PopupBounce(void) {
-    unsigned char* s = Cur();
-    records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
-    if (!(task_rec->work_1c > static_cast<short>(task_rec->z_whole)) && task_rec->work_18 != static_cast<short>(task_rec->x_whole)) {
-        task_rec->timer = 0xA;
-        rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
-        return;
-    }
-    task_rec->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->x) + static_cast<std::uint32_t>(task_rec->step_x));
-    s = Cur();
-    task_rec = rv::As<records::BattleTask>(s);
-    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + static_cast<std::uint32_t>(task_rec->step_z));
-    s = Cur();
-    task_rec = rv::As<records::BattleTask>(s);
-    task_rec->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->step_z) + 0x14000u);
-}
-
-// original 0x432EA0 (state 4): the timer as the hold's; when it was 0 the
-// owner's flag byte loses 0x80 again and the slot is freed
-// (BattleTask_FreeCurrent, tail-jumped to).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PopupEnd(void) {
-    auto* const task_rec = rv::As<records::BattleTask>(Cur());
-    const unsigned char timer = task_rec->timer;
-    task_rec->timer = static_cast<unsigned char>(timer - 1);
-    if (timer != 0) return;
-    unsigned char* const flag = ActorFlagByte(OwnerOf(Cur())[5]);
-    flag[0] = static_cast<unsigned char>(flag[0] & 0x7F);
-    g.free_current();
-}
 
 // ===========================================================================
 // Kind 0, effect 3: the pose task
 // ===========================================================================
 
-// original 0x433190 (no PSX twin paired): the sprite animation set pointer
-// 0x9039D8 = 0x8C5D80 around state Sprite_Current +1 of a two-entry stack
-// table (0x4331D0, 0x433290), and 0x8B3580 after it.
-//
-// As the original has it: the pointer is set before the index is read and
-// put back unconditionally; the index is not checked (ours aborts past 1).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseTask(void) {
-    auto* const task_rec = rv::As<records::BattleTask>(Sc());
-    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetBattle.v));
-    CallIndex(g.pose, 2, task_rec->state, "BattleFx_PoseTask");
-    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetField.v));
-}
-
-// original 0x4331D0 (state 0): Sprite_Current's draw bytes - +0x29 = 0, +0x25
-// = 0x1D, +0x26 = 0, +0x24 = 0x84, the CLUT row +0x27 = byte 0x64B058 [mode
-// +7] - 0x50, +0x28 = 0, the word +0x2C = 0, +0x2B = 0; the flip +0x2A = 1
-// when (mode 6: +8 odd; any other mode: +8 is 1 or 2), else 0; the state + 1;
-// then Sprite_SetAnimation(byte 0x64B064 [mode * 2 + (+8 >> 1)]) and
-// Sprite_QueueOverlay (tail-jumped to).
-//
-// As the original has it: Sprite_Current is re-read for every store; neither
-// table index is checked (both tables are constant data in the image).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(void) {
-    Sc()[0x29] = 0;
-    Sc()[0x25] = 0x1D;
-    Sc()[0x26] = 0;
-    Sc()[0x24] = 0x84;
-    {
-        unsigned char* const sc = Sc();
-        auto* const task_rec = rv::As<records::BattleTask>(sc);
-        task_rec->clut = static_cast<unsigned char>(At(::bof3::Img(at::kPoseClut.v) + sc[7])[0] - 0x50);
-    }
-    Sc()[0x28] = 0;
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
-    Sc()[0x2B] = 0;
-    {
-        unsigned char* const sc = Sc();
-        const unsigned mode = sc[7], b = sc[8];
-        if (mode == 6) sc[0x2A] = (b & 1) != 0 ? 1 : 0;
-        else sc[0x2A] = b == 1 || b == 2 ? 1 : 0;
-    }
-    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
-    unsigned char* const sc = Sc();
-    g.set_animation(At(::bof3::Img(at::kPoseAnim.v) + (sc[8] >> 1) + sc[7] * 2u)[0]);
-    g.queue_overlay();
-}
-
-// original 0x433290 (state 1): Sprite_ScriptTick; the slot freed when it
-// answers non-zero (the animation ended), else Sprite_QueueOverlay - each
-// tail-jumped to.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PosePlay(void) {
-    if (g.script_tick() != 0) g.free_current();
-    else g.queue_overlay();
-}
-
-// original 0x4332E0: Sprite_Current's timer +9 = 0 and its state + 1. State
-// 0 of 0x4332B0's stack table (kind 0, effect 4), and entry 0 of the .data
-// state table at 0x65C3A0 whose other three entries are 0x4FB010, 0x4FB050,
-// 0x4FB070 (group CJ's magic effect).
-extern "C" void __cdecl BattleFx_StepReset(void) {
-    Sc()[9] = 0;
-    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
-}
-
 // ===========================================================================
 // Kind 0, effect 6: the actor watch
 // ===========================================================================
-
-// original 0x433460 (no PSX twin paired): nothing in phase 5 (byte
-// 0x904AA0); otherwise state Sprite_Current +1 of a five-entry stack table -
-// 0x4334C0, then 0x433550, Sprite_StateRestart 0x433640 (E4A's), BattleFx_WatchIcon 0x433650 (group BE2's),
-// 0x433790 (unread) - with the
-// animation set pointer 0x9039D8 at 0x8C5D80 around it, as the pose task.
-//
-// As the original has it: the phase is read before Sprite_Current; the
-// index is not checked (ours aborts past 4).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(void) {
-    if (At(::bof3::Img(at::kPhase.v))[0] == 5) return;
-    auto* const task_rec = rv::As<records::BattleTask>(Sc());
-    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetBattle.v));
-    CallIndex(g.watch, 5, task_rec->state, "BattleFx_ActorWatch");
-    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetField.v));
-}
-
-// original 0x4334C0 (state 0): waits on its owner's actor (the owner
-// 0x93B940's +5). Nothing while the round flags have 0x400 and the actor is
-// byte 0x904B34, or while Battle_ActorIsOut(actor); otherwise the state + 1
-// once the actor's status byte (a member's ObjTrio +0x90, an enemy's +0x92)
-// has any of 0x58.
-//
-// As the original has it: the owner pointer is read before the flags test
-// and again after Battle_ActorIsOut, and the actor is re-read from it then -
-// the branch (member or enemy) is the one taken before the call, and the
-// enemy index is not checked. Battle_ActorIsOut is handed the owner's
-// address with the actor in its low byte; it reads the byte.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchTest(void) {
-    const std::uint32_t flags = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v))));
-    const unsigned char* o = PtrAt(::bof3::Img(at::kTaskOwner.v));
-    if ((flags & 0x400) != 0 && o[5] == At(::bof3::Img(at::kTurnGate.v))[0]) return;
-    const unsigned actor = o[5];
-    const unsigned arg = (Address(o) & 0xFFFFFF00u) | actor;
-    if (actor <= 2) {
-        if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
-        if ((At(::bof3::Img(ObjTrio_addr) + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
-    } else {
-        if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
-        if ((At(::bof3::Img(Battle_Enemies_addr) + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
-    }
-    rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
-}
 
 // ===========================================================================
 // Kind 0, effect 7: the follower
 // ===========================================================================
 
-// original 0x4337F0 (no PSX twin paired): state Sprite_Current +1 of a
-// one-entry stack table, 0x433810. Any state but 0 would call through the
-// original's stack; ours aborts.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_Follow(void) {
-    CallIndex(g.follow, 1, rv::As<records::BattleTask>(Sc())->state, "BattleFx_Follow");
-}
-
-// original 0x433810 (PSX 0x801E722C; not 0x800A5360, the pairing's guess):
-// Sprite_Current takes its owner's (0x93B940) place and look - byte +0 with
-// 0x20 added, then +0x48, the dwords +0x40 / +0x44, the words +0x58 / +0x5A,
-// the bytes +0x4B / +0x4A / +0x49, the dwords +0x4C / +0x50 / +0x54, the
-// bytes +0x27 / +0x28 / +0x2A, the dwords +0x34 / +0x38 / +0x3C, in that
-// order; Sprite_UpdateScreen; then the slot is freed when the owner's bit 0
-// is clear, and freed (again, tail-jumped) outside phase 1.
-//
-// As the original has it: both pointers are re-read for every copy, the
-// owner again after Sprite_UpdateScreen, the phase after the first free; a
-// dead owner outside phase 1 frees the slot twice.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner(void) {
-    struct Copy { unsigned char offset, size; };
-    static constexpr Copy kCopies[] = {{0x48, 1}, {0x40, 4}, {0x44, 4}, {0x58, 2}, {0x5A, 2}, {0x4B, 1}, {0x4A, 1},
-                                       {0x49, 1}, {0x4C, 4}, {0x50, 4}, {0x54, 4}, {0x27, 1}, {0x28, 1}, {0x2A, 1},
-                                       {0x34, 4}, {0x38, 4}, {0x3C, 4}};
-    {
-        const unsigned char b = PtrAt(::bof3::Img(at::kTaskOwner.v))[0];
-        rv::As<records::BattleTask>(Sc())->flags = static_cast<unsigned char>(b | 0x20);
-    }
-    for (const Copy& c : kCopies) {
-        const unsigned char* const o = PtrAt(::bof3::Img(at::kTaskOwner.v));
-        unsigned char* const sc = Sc();
-        if (c.size == 1) sc[c.offset] = o[c.offset];
-        else if (c.size == 2) SetWord(sc + c.offset, Word(o + c.offset));
-        else SetLong(sc + c.offset, Long(o + c.offset));
-    }
-    g.update_screen();
-    if ((PtrAt(::bof3::Img(at::kTaskOwner.v))[0] & 1) == 0) g.free_current();
-    if (At(::bof3::Img(at::kPhase.v))[0] != 1) g.free_current();
-}
-
 // ===========================================================================
 // The round hooks
 // ===========================================================================
-
-// original 0x437720 (no PSX twin paired): stored at 0x904B64 by the enemy
-// state 0x436110 (group CF's) and called by 0x431320 (group CC's). With bit 0
-// of 0x904AE8 and the previous area (0x802290) 0xBD: MoveScript_Var7 = 1,
-// the byte after it 0x19, ScriptFlags_Set40, then 0x446E20 (tail-jumped to,
-// unread). The name is from what it tests; what area 0xBD is was not looked
-// up.
-//
-// As the original has it: the flag byte is read once, before the area word.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Script(void) {
-    if ((Battle_EndFlags & 1) == 0) return;
-    if (AreaW2c_LastArea != 0xBD) return;
-    MoveScript_Var7 = 1;
-    At(::bof3::Img(MoveScript_Var7_addr) + 1)[0] = 0x19;
-    g.script_flags_set40();
-    g.after_area_script();
-}
-
-// original 0x437750 (no PSX twin paired): stored at 0x904B68 by the same
-// state and called by 0x4317B0 (group CC's). With the same two conditions:
-// Transition_Start(4), then byte 0x904AA2 + 1 (read after the call).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Transition(void) {
-    if ((Battle_EndFlags & 1) == 0) return;
-    if (AreaW2c_LastArea != 0xBD) return;
-    g.transition_start(4);
-    BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
-}
 
 // ===========================================================================
 
 void BattleFxTasks_Inject() {
     if (bof3::WantsShadow("battle_fx_tasks")) battle_fx_tasks::SelfTest();
-    BOF3_INJECT(BattleFx_Dispatch);
-    BOF3_INJECT(BattleMagicFx_Dispatch);
-    BOF3_INJECT(BattleMagicRow_Run);
-    BOF3_INJECT(BattleFx_DamagePopup);
-    BOF3_INJECT(BattleFx_PopupStart);
-    BOF3_INJECT(BattleFx_PopupHold);
-    BOF3_INJECT(BattleFx_PopupRise);
-    BOF3_INJECT(BattleFx_PopupBounce);
-    BOF3_INJECT(BattleFx_PopupEnd);
-    BOF3_INJECT(BattleFx_PoseTask);
-    BOF3_INJECT(BattleFx_PoseStart);
-    BOF3_INJECT(BattleFx_PosePlay);
-    BOF3_INJECT(BattleFx_StepReset);
-    BOF3_INJECT(BattleFx_ActorWatch);
-    BOF3_INJECT(BattleFx_ActorWatchTest);
-    BOF3_INJECT(BattleFx_Follow);
-    BOF3_INJECT(BattleFx_FollowOwner);
-    BOF3_INJECT(BattleHook_Area189Script);
-    BOF3_INJECT(BattleHook_Area189Transition);
 }

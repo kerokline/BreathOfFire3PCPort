@@ -4,3 +4,7 @@
 #pragma once
 
 void GfxTexCache_Inject();
+
+namespace gfx_texcache {
+extern void(__cdecl* g_original_clone)(const short*, int);   // defined in gfx_texcache.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace gfx_texcache

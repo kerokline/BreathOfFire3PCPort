@@ -12,3 +12,13 @@ namespace scena_sc9a {
 // original before ScenaSc9a_Inject patches it.
 void SelfTest();
 }  // namespace scena_sc9a
+
+#include <cstdint>
+
+// defined in scena_sc9a.cpp at file scope (named here for a moved reader: source-layout B6)
+void CameraHop(unsigned char next, std::int32_t x, std::int32_t z);
+void CameraLand(unsigned char next);
+bool Tick();
+unsigned char Take11();
+void SetAndEnd(unsigned flag);
+void SweepAt(unsigned char wait, std::uint16_t delta, unsigned char limit, std::uint16_t final, unsigned char next);

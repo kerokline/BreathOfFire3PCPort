@@ -33,94 +33,10 @@ struct PixelFormat {
 };
 static_assert(sizeof(PixelFormat) == sizeof(unsigned long) * Gfx_PixelFormat_count);
 
-const PixelFormat& Format() { return *reinterpret_cast<const PixelFormat*>(Gfx_PixelFormat); }
-
 std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x); }
 
-// x86 shr takes its count modulo 32; say so rather than leave it to the compiler.
-std::uint32_t Shr(std::uint32_t v, std::uint32_t count) { return v >> (count & 31); }
-
-bool g_stp_test = false;   // the self-test's: DIV-0160's rule without the backend
-
 }  // namespace
-
-// original 0x59EBB0. Converts w cells of VRAM row y, from x, into the row's
-// buffer. As the original has it: nothing is checked - not y against the 512
-// rows, not x + w against the buffer's 1,024 cells; and the generation moves
-// on even when w <= 0 converts nothing.
-//
-// PSX meaning carried over: cell 0 is transparent and stays 0, and any other
-// cell that the display format would round to 0 is forced to 1, so that it
-// stays opaque.
-//
-// DIVERGENCE DIV-0160 (docs/stp-blend.md): Capcom's gives every non-zero cell
-// the opaque bits, so bit 15 - which on the PlayStation picks the texels a
-// semi-transparent primitive blends - is lost. While the textures carry it
-// (render::StpTexels), a cell with bit 15 set gets no opaque bits: its colour
-// with alpha clear, still forced to 1 if it would round to 0, so it is never
-// read as transparent (render_shim.h). Cells without bit 15 are unchanged.
-extern "C" void __cdecl Gfx_ConvertRow(int x, int y, int w) {
-    ClutRow& row = Rows()[y];
-    if (row.pixels == nullptr) row.pixels = Crt_malloc(0x1000);
-
-    const PixelFormat& f = Format();
-    auto* out = static_cast<std::uint8_t*>(row.pixels) + (x << (f.bytes_per_pixel >> 1));
-    const std::uint16_t* src = ShadowCell(x, y);
-    const bool stp = g_stp_test || render::StpTexels();   // DIV-0160
-    for (int n = 0; n < w; ++n) {
-        const std::uint32_t v = src[n];
-        std::uint32_t p = (Shr((v & 0x3E0) << 14, f.g_shift) & f.g_mask) |
-                          (Shr((v & 0x1F) << 19, f.r_shift) & f.r_mask) |
-                          (Shr((v & 0x7C00) << 9, f.b_shift) & f.b_mask);
-        const std::uint32_t opaque = stp && (v & 0x8000) ? 0 : f.opaque_bits;
-        if (p != 0) p |= opaque;
-        else if (v != 0) p = 1 | opaque;
-        if (f.bytes_per_pixel == 2) {
-            const auto p16 = static_cast<std::uint16_t>(p);
-            std::memcpy(out, &p16, 2);
-            out += 2;
-        } else {
-            std::memcpy(out, &p, 4);
-            out += 4;
-        }
-    }
-    ++row.generation;
-}
-
-// original 0x59EB00. Gfx_LoadImage's sibling for data that is mostly unchanged
-// from frame to frame: a row is copied, and converted, only if it differs from
-// what the shadow already holds. It does not invalidate textures.
-//
-// As the original has it: no bounds check at all, where Gfx_LoadImage has two;
-// the row bound and the x and w handed on are read from the rect again on
-// every row, the row length once.
-extern "C" void __cdecl Gfx_LoadImageIfChanged(const short* rect, const void* pixels) {
-    int y = rect[1];
-    const std::uint32_t row_bytes = static_cast<std::uint32_t>(rect[2] << 1);
-    auto* dst = reinterpret_cast<std::uint8_t*>(ShadowCell(rect[0], y));
-    auto* src = static_cast<const std::uint8_t*>(pixels);
-    for (; y < rect[3] + rect[1]; ++y) {
-        if (std::memcmp(dst, src, row_bytes) != 0) {
-            std::memcpy(dst, src, row_bytes);
-            Gfx_ConvertRow(rect[0], y, rect[2]);
-        }
-        src += row_bytes;
-        dst += 0x800;
-    }
-}
-
-// original 0x5A04C0. The converted colours of a CLUT, by PSX CLUT id: x / 16 in
-// the low six bits, y above. Converts the first 256 cells of the row if the row
-// has never been wanted before. As the original has it, y is not checked, and
-// an id can name a row up to 1,023.
-extern "C" void* __cdecl Gfx_ClutPixels(unsigned clut_id) {
-    clut_id &= 0xFFFF;
-    const unsigned y = clut_id >> 6;
-    const unsigned x = (clut_id & 0x3F) << 4;
-    if (Rows()[y].pixels == nullptr) Gfx_ConvertRow(0, static_cast<int>(y), 0x100);
-    return static_cast<std::uint8_t*>(Rows()[y].pixels) + (x << (Format().bytes_per_pixel >> 1));
-}
-
+namespace gfx_clut { bool g_stp_test = false; }   // the self-test's: DIV-0160's rule without the backend
 // --- BOF3X_SHADOW: a start-up differential fuzz against clones -----------------
 // (docs/SCAFFOLDING.md section 2). The DLL is injected before the game has run:
 // the shadow, the row table and the pixel format are all still zero, and the
@@ -234,9 +150,9 @@ void SelfTest(ConvertRowFn their_convert, LoadFn their_load, ClutFn their_clut) 
         for (int pass = 0; pass < 2; ++pass) {
             PutState(y0);
             std::memcpy(ShadowCell(0, y0), g_shadow_in[0], sizeof g_shadow_in[0]);
-            g_stp_test = pass == 1;
+            gfx_clut::g_stp_test = pass == 1;
             (pass ? &Gfx_ConvertRow : their_convert)(x, y0, w);
-            g_stp_test = false;
+            gfx_clut::g_stp_test = false;
             if (pass == 0) std::memcpy(g_buffers_theirs[0], g_buffers[0], sizeof g_buffers_theirs[0]);
         }
         const unsigned bpp = format->bytes_per_pixel;
@@ -283,7 +199,4 @@ void GfxClut_Inject() {
         SelfTest(reinterpret_cast<ConvertRowFn>(convert), reinterpret_cast<LoadFn>(load),
                  reinterpret_cast<ClutFn>(clut));
     }
-    BOF3_INJECT(Gfx_ConvertRow);
-    BOF3_INJECT(Gfx_LoadImageIfChanged);
-    BOF3_INJECT(Gfx_ClutPixels);
 }

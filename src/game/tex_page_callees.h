@@ -36,6 +36,7 @@ struct Callees {
 
 extern const Callees kOriginals;
 extern Callees g;
+extern std::uint32_t g_direct_opaque;   // defined in tex_page.cpp, armed by TexPage_Inject (named here for a moved reader: source-layout B0)
 
 void SelfTest();   // tex_page_fuzz.cpp
 

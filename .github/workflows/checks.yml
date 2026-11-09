@@ -56,6 +56,12 @@
 #                           block, a naked function, an `unsigned long`, a
 #                           `%p` print - beyond the ones analysis/width_census.tsv
 #                           lists (docs/x64-build-round.md 3, XA1)
+#   tools/tu_renames.py     the source-layout round's rename record,
+#     --check               analysis/tu_renames.tsv: every row well formed,
+#                           its source file in the tree (or moved, by
+#                           analysis/tu_moves.tsv), each helper, constant or
+#                           variable rename done in its file
+#                           (docs/source-layout-round.md 7a)
 #   tools/bgm/host         the SPU model's and the sequencer's unit tests
 #                           (spu_tests, seq_tests) on synthetic samples and songs
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
@@ -133,6 +139,9 @@ jobs:
 
       - name: The width census - no new site in a live file that assumes a 32-bit pointer (no game data)
         run: python tools/width_census.py --check
+
+      - name: The source-layout round's rename record - every rename done in its file (no game data)
+        run: python tools/tu_renames.py --check
 
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system

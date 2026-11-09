@@ -19,45 +19,7 @@ namespace {
 
 using namespace move_script;
 
-using AreaHandler = void (__cdecl*)();
-
-// Sprite_Current may be a Sprite_Objects record or another family whose
-// first 0x80 bytes are a sprite object's (an ObjTrio member, the kind-2
-// object), so only that part is named: rv::Current<records::SpriteHead>()
-// (C2 audit frs F3; typed-data-round.md 3, "C2 audit as run").
-using CounterOp = signed char (__cdecl*)(const unsigned char*);
-using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, unsigned char);
-
-// Every callee that is not one of these three, through pointers so that the
-// start-up fuzz can stand recording functions in for them - for the
-// original's copy and for ours alike. The two tables the flow pass calls
-// through (the area's handlers, MoveScript_CounterOps) are read from memory,
-// as the original reads them; the fuzz swaps their contents instead.
-struct Callees {
-    int (__cdecl* kind)();
-    void (__cdecl* move)(unsigned char*, unsigned char);
-    void (__cdecl* move_kind2)(unsigned char);
-    GroupFn group6, group8, group9, group_c, group_d, group_e;
-    void (__cdecl* group_b)(unsigned char*, const unsigned char*);
-    unsigned short (__cdecl* find_label)(unsigned char*, unsigned char, const unsigned char*);
-    int (__cdecl* variable)(unsigned char);
-    void (__cdecl* trio_clear)();
-    void (__cdecl* trio_set)();
-    long (__cdecl* elevation)(long, long);
-    void (__cdecl* set_animation)(unsigned char);
-    void (__cdecl* set_animation_at)(unsigned char, unsigned short);
-    void (__cdecl* flags_clear)();
-    void (__cdecl* flags_set)();
-    int (__cdecl* wait_test)(unsigned char, unsigned char);
-    unsigned char (__cdecl* tick_once)();
-    unsigned short (__cdecl* peek)();
-    void (__cdecl* sound)(unsigned short);
-    void (__cdecl* op_f7)(long, long, unsigned char, unsigned char*);
-    void (__cdecl* attach)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
-    unsigned char (__cdecl* test_fb)(short, short);
-    unsigned char (__cdecl* test_fc)(short, short);
-};
-const Callees kOriginals = {
+const CalleesMoveScript kOriginalsMoveScript = {
     MoveScript_ObjectKind, MoveCmd_Move, MoveCmd_MoveKind2,
     MoveScript_Group6, MoveScript_Group8, MoveScript_Group9, MoveScript_GroupC, MoveScript_GroupD, MoveScript_GroupE,
     MoveScript_GroupB, MoveScript_FindLabel, MoveScript_Variable, ObjTrio_ClearBit40, ObjTrio_SetBit40,
@@ -65,355 +27,12 @@ const Callees kOriginals = {
     MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
     MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
 };
-Callees g = kOriginals;
-
-// Ops 0D and F3 place an object: the coordinate words of Sprite_Current, or
-// of Sprite_Kind2 itself on the kind-2 path.
-void PlaceAndGround(unsigned char* sprite, const unsigned char* operands) {
-    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->x_whole, operands[1]);
-    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->x_frac, operands[2] ? 0x8000u : 0u);
-    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->z_whole, operands[3]);
-    rv::Store<unsigned>(rv::As<records::SpriteHead>(sprite)->z_frac, operands[4] ? 0x8000u : 0u);
-}
-
-}  // namespace
-
-// original 0x576E00: the flow-control pass that runs before every step
-// (PSX FUN_801A9F94). It loops until the byte at the position has a high
-// nibble other than 0x00, 0xA0 and 0xB0, and returns `value` - replaced by
-// Sprite_Current[8] after op 03 and by 0xFF after op 0D on the kind-2 path.
-//
-// As the original has it: byte 00 is not one of the cases and loops for ever
-// on the same position (unreachable by the fuzz; by reading); the position is
-// read again after every call that could move it, and every position store
-// is 16 bits; the area number indexes Area_Descriptors unchecked.
-extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const unsigned char* script, unsigned char value) {
-    unsigned char result = value;
-    for (;;) {
-        const std::uint16_t pos = Pos(object);
-        const unsigned char* const p = script + pos;
-        const unsigned char op = p[0];
-        const unsigned group = op & 0xF0u;
-        if (group >= 0x10) {
-            if (group == 0xA0) {
-                const auto ops = reinterpret_cast<const ::bof3::CodeSlot<CounterOp>*>(MoveScript_CounterOps);   // 32-bit code words
-                const signed char skip = ops[op & 3](p);
-                if (skip < 0) return result;
-                SetPos(object, Pos(object) + static_cast<unsigned>(skip) + 1u);
-            } else if (group == 0xB0) {
-                g.group_b(object, script);
-                SetPos(object, Pos(object) + 1u);
-            } else {
-                return result;
-            }
-            continue;
-        }
-
-        switch (op) {
-        case 0x01: {   // 01 hi lo: jump by hi:lo, or to label lo when hi's top two bits are 01
-            const unsigned char hi = p[1];
-            const unsigned target = static_cast<unsigned>(hi) << 8 | p[2];
-            if ((hi & 0xC0) == 0x40) {
-                SetPos(object, target);
-                SetPos(object, g.find_label(object, p[2], script));
-            } else {
-                SetPos(object, target + pos);
-            }
-            break;
-        }
-        case 0x02: {   // 02 d n: loop back by d, n times, counting in object +2
-            const unsigned char counter = object[2];
-            if (counter == 0) {
-                object[2] = p[2];
-                SetPos(object, pos + static_cast<unsigned>(static_cast<signed char>(p[1])));
-            } else {
-                object[2] = static_cast<unsigned char>(counter - 1);
-                if (object[2] == 0) SetPos(object, pos + 3u);
-                else SetPos(object, pos + static_cast<unsigned>(static_cast<signed char>(p[1])));
-            }
-            break;
-        }
-        case 0x03: {   // 03 n: the area's handler n
-            const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-            const auto handlers = static_cast<std::uint32_t>(Long(descriptor + 0x3C));   // a table of 32-bit code words
-            const auto* const table = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(handlers));
-            reinterpret_cast<AreaHandler>(static_cast<std::uintptr_t>(Long(table + 4u * p[1])))();
-            result = rv::Current<records::SpriteHead>()->direction;
-            SetPos(object, Pos(object) + 2u);
-            break;
-        }
-        case 0x04: case 0x05: case 0x06: case 0x07: case 0x08: case 0x09: {
-            // op a b l1h l1l l2h l2l: compare, then go to label l1l or l2l. The
-            // even ops take a as a constant, the odd ones as a variable.
-            const int want = (op & 1) ? g.variable(p[1]) : p[1];
-            const int have = g.variable(script[Pos(object) + 2u]);
-            bool first;
-            if (op <= 0x05) first = have == want;
-            else if (op <= 0x07) first = have < want;
-            else first = (want & have) != 0;
-            const unsigned at = Pos(object);
-            const unsigned char hi = script[at + (first ? 3u : 5u)];
-            const unsigned char lo = script[at + (first ? 4u : 6u)];
-            SetPos(object, static_cast<unsigned>(hi) << 8 | lo);
-            SetPos(object, g.find_label(object, lo, script));
-            break;
-        }
-        case 0x0A:
-            SetPos(object, pos + 2u);
-            break;
-        case 0x0B:
-            SetPos(object, 0);
-            break;
-        case 0x0C:
-            if (p[1]) g.trio_clear();
-            else g.trio_set();
-            SetPos(object, Pos(object) + 2u);
-            break;
-        case 0x0D: {   // 0D x xh z zh: place at (x.xh, z.zh) and take the ground's elevation
-            if (g.kind() == 2) {
-                PlaceAndGround(rv::Bytes(&Sprite_Kind2), script + Pos(object));
-                rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(Sprite_Kind2.x, Sprite_Kind2.z)));
-                result = 0xFF;
-            } else {
-                PlaceAndGround(Sprite_Current, script + Pos(object));
-                wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
-                const long h = g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z);
-                rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(h));
-            }
-            SetPos(object, Pos(object) + 5u);
-            break;
-        }
-        case 0x0E: case 0x0F: {   // op a key flags [start]: an animation, by number or by the field's state
-            const unsigned char animation = op == 0x0E
-                ? p[1] : MoveScript_AnimByState[p[1] * 11u + Field_State[0x89]];
-            object[0] |= 0x40;
-            rv::Current<records::SpriteHead>()->flags2 |= 8;
-            if (script[Pos(object) + 3u] & 1) rv::Current<records::SpriteHead>()->flags |= 0x10;
-            else rv::Current<records::SpriteHead>()->flags &= 0xEF;
-            rv::Current<records::SpriteHead>()->flip = script[Pos(object) + 2u];
-            const unsigned at = Pos(object);
-            if (script[at + 3] & 2) {
-                g.set_animation_at(animation, script[at + 4]);
-                SetPos(object, Pos(object) + 1u);
-                SetPos(object, Pos(object) + 4u);
-            } else {
-                g.set_animation(animation);
-                SetPos(object, Pos(object) + 4u);
-            }
-            break;
-        }
-        default:
-            break;   // 00: the same position again, for ever
-        }
-    }
-}
-
-// original 0x577760: the 0xF0 group (PSX FUN_801AADE8), called by the step
-// with the position on the op; the step adds one after it. Returns `value`,
-// replaced by b1 for F2 / F3 / FA and b6 for F7; F9 returns 0xFF while it
-// waits, else Sprite_Current[8] & 7.
-//
-// As the original has it: F3 divides by Sprite_Current[9] times object +7 on
-// one path and by (0x80 / MoveScript_F3Divisor) times Sprite_Kind2 +0x87 on
-// the other, unguarded - a zero there faults, as the original does (by
-// reading; the fuzz keeps them non-zero); the kind-2 path shifts a 16-bit
-// difference into the top half, so a difference past 0x7FFF wraps.
-extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const unsigned char* script, unsigned char value) {
-    const std::uint16_t pos = Pos(object);
-    const unsigned char* const p = script + pos;
-    if (p[0] < 0xF0) return value;   // unreachable from the step
-    switch (p[0]) {
-    case 0xF0:
-        g.flags_clear();
-        return value;
-    case 0xF1:
-        g.flags_set();
-        return value;
-    case 0xF2: case 0xFA: case 0xF3: {
-        value = p[1];
-        object[7] = p[2];
-        const bool moves = p[2] != 0;
-        if (p[0] == 0xF2) {
-            if (moves) {
-                if (g.kind() == 2) g.move_kind2(value);
-                else g.move(object, value);
-            }
-            SetPos(object, Pos(object) + 2u);
-        } else if (p[0] == 0xFA) {
-            if (moves) {
-                if (g.kind() == 2) {
-                    g.move_kind2(value);
-                    MoveScript_FAWord = 0;
-                    object[0] |= 0x40;
-                } else {
-                    g.move(object, value);
-                    object[0] |= 0x80;
-                }
-            }
-            rv::Current<records::SpriteHead>()->step_y = 0;
-            const unsigned at = Pos(object);
-            rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
-            SetPos(object, Pos(object) + 4u);
-        } else if (moves) {   // F3 d m th tl: move toward height th.tl, over the move's frames
-            if (g.kind() != 2) {
-                g.move(object, value);
-                const unsigned at = Pos(object);
-                const auto target = static_cast<std::int16_t>(script[at + 3] << 8 | script[at + 4]);
-                records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-                const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
-                const std::int32_t frames = static_cast<std::int32_t>(sprite->step_frames) * object[7];
-                sprite->step_y = rise / frames;
-                object[0] |= 0x80;
-                SetPos(object, Pos(object) + 4u);
-            } else {
-                unsigned char* const scratch = Scratch();
-                SetWord(scratch, rv::Current<records::SpriteHead>()->height_whole);
-                const unsigned at = Pos(object);
-                SetWord(scratch + 2, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
-                g.move_kind2(value);
-                const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2.move_steps;
-                const std::int32_t rise = static_cast<std::int16_t>(Word(scratch + 2)) - static_cast<std::int16_t>(Word(scratch));
-                rv::Store<std::int32_t>(Sprite_Kind2.step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
-                object[0] |= 0x40;
-                SetPos(object, Pos(object) + 4u);
-            }
-        } else {
-            SetPos(object, Pos(object) + 4u);
-        }
-        return value;
-    }
-    case 0xF4: {   // F4 th tl n: rise to th.tl over n frames (0 counts as 1)
-        object[0] |= 0x80;
-        rv::Current<records::SpriteHead>()->step_frames = p[3];
-        if (rv::Current<records::SpriteHead>()->step_frames == 0) rv::Current<records::SpriteHead>()->step_frames = 1;
-        records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const unsigned at = Pos(object);
-        const auto target = static_cast<std::int16_t>(script[at + 1] << 8 | script[at + 2]);
-        const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
-        sprite->step_y = rise / static_cast<std::int32_t>(sprite->step_frames);
-        rv::Current<records::SpriteHead>()->step_x = 0;
-        rv::Current<records::SpriteHead>()->step_z = 0;
-        SetPos(object, Pos(object) + 3u);
-        return value;
-    }
-    case 0xF5:
-        object[0] &= 0x7F;
-        return value;
-    case 0xF6:
-        MoveScript_Var7 = static_cast<signed char>(p[1]);
-        SetPos(object, Pos(object) + 1u);
-        return value;
-    case 0xF7: {
-        const long x = static_cast<long>((static_cast<unsigned>(p[1]) << 8 | p[2]) << 8);
-        const long z = static_cast<long>((static_cast<unsigned>(p[3]) << 8 | p[4]) << 8);
-        g.op_f7(x, z, p[5], object);
-        value = script[Pos(object) + 6u];
-        if (g.kind() == 1) object[7] = 1;
-        SetPos(object, Pos(object) + 6u);
-        return value;
-    }
-    case 0xF8:
-        g.attach(object, p[1], p[2], p[3], p[4]);
-        SetPos(object, Pos(object) + 1u);
-        return value;
-    case 0xF9:
-        if (g.wait_test(p[1], p[2]) != 0) {
-            SetPos(object, Pos(object) - 1u);
-            return 0xFF;
-        }
-        SetPos(object, Pos(object) + 2u);
-        return static_cast<unsigned char>(rv::Current<records::SpriteHead>()->direction & 7);
-    case 0xFB: case 0xFC: {
-        unsigned char* const sprite = Sprite_Current;
-        const auto x = static_cast<short>(rv::As<records::SpriteHead>(sprite)->x_whole), z = static_cast<short>(rv::As<records::SpriteHead>(sprite)->z_whole);
-        if ((p[0] == 0xFB ? g.test_fb : g.test_fc)(x, z)) g.sound(0x103);
-        return value;
-    }
-    case 0xFD:
-        if (!g.tick_once()) {
-            rv::Current<records::SpriteHead>()->flags2 |= 0x20;
-            SetPos(object, Pos(object) - 1u);
-        }
-        return value;
-    case 0xFE:
-        if (Field_Request != 3) {
-            const std::uint16_t next = g.peek();
-            SetWord(Scratch(), next);
-            if (rv::Current<records::SpriteHead>()->script_pos != next) {
-                const unsigned at = Pos(object);
-                if (next == script[at + 2]) g.sound(static_cast<unsigned short>(script[at + 1] + 0x200u));
-            }
-        }
-        SetPos(object, Pos(object) + 2u);
-        return value;
-    default:   // FF: the end - the script stays on it
-        SetPos(object, pos - 1u);
-        return value;
-    }
-}
-
-// original 0x576B50: one step of an object's movement script (PSX
-// FUN_801A9D38). The flow pass first, then one op by its high nibble, then
-// position + 1 - read again after the op, since every handler may move it.
-// Returns al: the flow pass's value, the op's group for 0x10-0x4F, or what
-// the group handler returned.
-extern "C" unsigned char __cdecl MoveScript_Step(unsigned char* object, const unsigned char* script) {
-    const unsigned char start = rv::Current<records::SpriteHead>()->direction;
-    MoveScript_Object = object;
-    unsigned char result = MoveScript_Flow(object, script, start);
-    const std::uint16_t pos = Pos(object);
-    const unsigned char op = script[pos];
-    if (wide_staging::Step(object, script, result)) return result;   // DIV-0122 / 0123: a site's walk, rewritten (wide only)
-    switch (op & 0xF0) {
-    case 0x10: case 0x20: case 0x30: case 0x40: {   // move in direction (op - 0x10) >> 3, op & 7 steps
-        result = static_cast<unsigned char>(static_cast<unsigned char>(op - 0x10) >> 3);
-        object[7] = op & 7;
-        if (op & 7) {
-            if (g.kind() == 2) g.move_kind2(result);
-            else g.move(object, result);
-        }
-        break;
-    }
-    case 0x50:
-        object[1] = op & 0xF;
-        break;
-    case 0x60: result = g.group6(object, script, result); break;
-    case 0x80: result = g.group8(object, script, result); break;
-    case 0x90: result = g.group9(object, script, result); break;
-    case 0xC0: result = g.group_c(object, script, result); break;
-    case 0xD0: result = g.group_d(object, script, result); break;
-    case 0xE0: result = g.group_e(object, script, result); break;
-    case 0xF0: result = MoveScript_GroupF(object, script, result); break;
-    case 0xA0:   // A0-AF that the flow pass stopped on: stay
-        SetPos(object, pos - 1u);
-        break;
-    default:     // 0x70, and the high nibbles the flow pass never stops on
-        break;
-    }
-    SetPos(object, Pos(object) + 1u);
-    return result;
-}
-
+}  namespace move_script { CalleesMoveScript gMoveScript = kOriginalsMoveScript; }
 // originals 0x57C460, 0x57C480, 0x57C4A0: the counters of flow ops A0..AF,
 // reached through MoveScript_CounterOps by op & 3. Counter (op >> 2) & 3 of
 // the four bytes at 0x903848, below the PSX scratchpad's words. Set returns 1
 // (skip the operand), test 1 when the counter equals the operand and -1 -
 // stop here - when not, step 0 (no operand).
-namespace {
-unsigned char* Counter(const unsigned char* op) { return Scratch() - 8 + ((op[0] >> 2) & 3); }
-}  // namespace
-extern "C" signed char __cdecl MoveScript_CounterSet(const unsigned char* op) {
-    *Counter(op) = op[1];
-    return 1;
-}
-extern "C" signed char __cdecl MoveScript_CounterTest(const unsigned char* op) {
-    return *Counter(op) == op[1] ? 1 : -1;
-}
-extern "C" signed char __cdecl MoveScript_CounterStep(const unsigned char* op) {
-    ++*Counter(op);
-    return 0;
-}
-
 namespace {
 
 // --- BOF3X_SHADOW=move_script: a differential fuzz, once at start-up ---------
@@ -568,7 +187,7 @@ const auto kAreaStubs = AreaStubs(std::make_index_sequence<256>());
 void* const kCounterStubs[4] = {reinterpret_cast<void*>(&StubCounter<0>), reinterpret_cast<void*>(&StubCounter<1>),
                                 reinterpret_cast<void*>(&StubCounter<2>), reinterpret_cast<void*>(&StubCounter<3>)};
 
-const Callees kStubs = {
+const CalleesMoveScript kStubs = {
     StubKind, StubMove, StubMoveKind2,
     StubGroup<6>, StubGroup<8>, StubGroup<9>, StubGroup<12>, StubGroup<13>, StubGroup<14>,
     StubGroupB, StubFindLabel, StubVariable, StubTrioClear, StubTrioSet,
@@ -736,7 +355,7 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
     const void* const area_table = kAreaStubs.data();
     std::memcpy(g_descriptor + 0x3C, &area_table, sizeof area_table);
     Field_State = g_state;
-    g = kStubs;
+    move_script::gMoveScript = kStubs;
 
     unsigned bad = 0, flow_ops = 0, log_calls = 0, kind2_rounds = 0;
     unsigned dispatched[16] = {}, group_f[16] = {};   // what the step's own dispatch saw
@@ -784,7 +403,7 @@ void SelfTest(unsigned char (__cdecl* theirs)(unsigned char*, const unsigned cha
                       "position %04X / %04X, log %u / %u", round, start, their_out.result, our_out.result,
                       Pos(their_out.object), Pos(our_out.object), their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    move_script::gMoveScript = kOriginalsMoveScript;
     std::memcpy(MoveScript_CounterOps, saved_counter_ops, sizeof saved_counter_ops);
     Field_State = saved_state;
     Apply(saved);
@@ -881,10 +500,4 @@ void MoveScript_Inject() {
                                  bof3::CloneOriginal("MoveScript_CounterStep", 0x57C4A0, 0x1F)};
         CounterSelfTest(theirs);
     }
-    BOF3_INJECT(MoveScript_Step);
-    BOF3_INJECT(MoveScript_Flow);
-    BOF3_INJECT(MoveScript_GroupF);
-    BOF3_INJECT(MoveScript_CounterSet);
-    BOF3_INJECT(MoveScript_CounterTest);
-    BOF3_INJECT(MoveScript_CounterStep);
 }

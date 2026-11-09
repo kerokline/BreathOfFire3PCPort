@@ -21,10 +21,10 @@ constexpr std::uint32_t kMovedRoom = 0x8000;
 std::uint8_t* ArenaPool() {
     return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)) + kPoolTag;
 }
-
+}  // namespace
 // Where Msg_SystemPtr reads. The arena until MsgPool_Relocate is called.
-std::uint8_t* g_pool;
-
+namespace msg_pool { std::uint8_t* g_pool; }
+namespace {
 // --- BOF3X_SHADOW=msg_pool -------------------------------------------------
 // Twelve instructions, no calls, no jumps: a byte-copy runs anywhere, and
 // reads the arena whatever ours does. The arena window is filled with noise
@@ -52,22 +52,22 @@ void SelfTest(SystemPtrFn theirs) {
     std::memcpy(moved, arena, kReach);
     static const unsigned kSeeds[] = {0, 1, 0x7FF, 0x800, 0xFFF, 0x1000, 0x1FFF, 0x2000, 0x2FFF, 0x3000, 0x3FFE, 0x3FFF};
 
-    std::uint8_t* const before = g_pool;
+    std::uint8_t* const before = msg_pool::g_pool;
     unsigned bad = 0;
     const unsigned rounds = 20000;
     for (unsigned n = 0; n < rounds; ++n) {
         const unsigned index = (n % 4 == 0) ? kSeeds[next() % (sizeof kSeeds / sizeof kSeeds[0])] : next() & 0x3FFF;
         const unsigned id = (next() & 0xFFFF0000u) | ((next() & 3) << 14) | index;
         const auto their_off = theirs(id) - arena;
-        g_pool = arena;  // in place, as the original
+        msg_pool::g_pool = arena;  // in place, as the original
         const auto ours_off = Msg_SystemPtr(id) - arena;
-        g_pool = moved;  // and relocated: the same offset into the copy
+        msg_pool::g_pool = moved;  // and relocated: the same offset into the copy
         const auto moved_off = Msg_SystemPtr(id) - moved;
         if ((their_off != ours_off || their_off != moved_off) && ++bad <= 8)
             bof3::Log("shadow      Msg_SystemPtr self-test MISMATCH id %08X: %d / %d / %d", id,
                       (int)their_off, (int)ours_off, (int)moved_off);
     }
-    g_pool = before;
+    msg_pool::g_pool = before;
     std::memcpy(arena, saved, kPoolRoom);
     bof3::Log("shadow      Msg_SystemPtr self-test: %u ids, in place and relocated, %u MISMATCHES", rounds, bad);
     if (bad) bof3::Fatal("Msg_SystemPtr differs from the original in %u of %u rounds", bad, rounds);
@@ -75,45 +75,28 @@ void SelfTest(SystemPtrFn theirs) {
 
 }  // namespace
 
-// original 0x497740. The low word of the argument is the id; bits 14-15 pick
-// one of four header dwords, each the offset of a u16 offset table; the rest
-// indexes it. No bound on either, as in the original.
-//
-// DIVERGENCE DIV-0007: the pool's base is a variable. Unrelocated it is the
-// original's constant and the result is the original's.
-extern "C" const unsigned char* __cdecl Msg_SystemPtr(unsigned id) {
-    id &= 0xFFFF;
-    std::uint32_t table;
-    std::memcpy(&table, g_pool + (id >> 14) * 4, sizeof table);
-    const std::uint8_t* block = g_pool + table;
-    std::uint16_t off;
-    std::memcpy(&off, block + 2 * (id & 0x3FFF), sizeof off);
-    return block + off;
-}
-
 std::uint8_t* MsgPool_Moved(std::uint32_t* bytes) {
-    *bytes = g_pool && g_pool != ArenaPool() ? kMovedRoom : 0;
-    return *bytes ? g_pool : nullptr;
+    *bytes = msg_pool::g_pool && msg_pool::g_pool != ArenaPool() ? kMovedRoom : 0;
+    return *bytes ? msg_pool::g_pool : nullptr;
 }
 
 void MsgPool_Relocate() {
     static std::uint8_t pool[kMovedRoom];
-    g_pool = pool;
+    msg_pool::g_pool = pool;
     bof3::Log("DIV-0007: system pool relocated out of the arena, to %p", (void*)pool);
 }
 
 bool MsgPool_TakeChunk(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
-    if (g_pool == ArenaPool() || tag != kPoolTag) return false;
+    if (msg_pool::g_pool == ArenaPool() || tag != kPoolTag) return false;
     if (size > kMovedRoom) bof3::Fatal("system pool chunk of 0x%X bytes, room is 0x%X", (unsigned)size, (unsigned)kMovedRoom);
-    std::memcpy(g_pool, payload, size);
+    std::memcpy(msg_pool::g_pool, payload, size);
     return true;
 }
 
 void MsgPool_Inject() {
-    g_pool = ArenaPool();
+    msg_pool::g_pool = ArenaPool();
     // 0x497740..0x49776B: no calls, no jumps (disasm 2026-09-20).
     if (bof3::WantsShadow("msg_pool"))
         SelfTest(reinterpret_cast<SystemPtrFn>(
             bof3::CloneOriginal("Msg_SystemPtr", bof3::addr::Msg_SystemPtr, 0x2B)));
-    BOF3_INJECT(Msg_SystemPtr);
 }

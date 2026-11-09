@@ -6,7 +6,10 @@
 // use). docs/window-task.md.
 #pragma once
 
+#include <cstdint>
+
 void WindowTask_Inject();
+extern std::uint8_t g_keep_stopping_none;   // defined in window_task.cpp, armed by WindowTask_Inject (named here for a moved reader: source-layout B0)
 // DIV-0143: Area_PickMusic keeps no track while the kept one fades to a stop -
 // after every module's self-test, which all ran Capcom's keep.
 void AreaKeepStoppingNone_Arm();

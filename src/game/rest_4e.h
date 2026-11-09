@@ -21,9 +21,13 @@
 // group's inject and its fuzz.
 #pragma once
 
+#include <cstdint>
+
 void Rest4E_Inject();
 
 namespace rest_4e {
+extern std::uint8_t g_faerie_name_end;   // defined in rest_4e.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_west_cause_column;   // defined in rest_4e.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=rest_4e: the start-up fuzz, rest_4e_fuzz.cpp. Clones the 48
 // originals before Rest4E_Inject patches them.
 void SelfTest();

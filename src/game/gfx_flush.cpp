@@ -12,47 +12,6 @@
 // The two things WinMain's loop does to VRAM on a RENDERED frame, before the
 // draw (docs/call-trace.md section 6): game logic only queues and marks.
 
-// original 0x454960. The CLUT strip - VRAM rows 480..511, 256 cells wide - is
-// kept by game logic in the DAT arena and marked dirty; here it goes up,
-// row by changed row.
-extern "C" void __cdecl Gfx_FlushDirtyStrip(void) {
-    if (Gfx_ClutStripDirty == 0) return;
-    const short rect[4] = {0, 0x1E0, 0x100, 0x20};
-    Gfx_LoadImageIfChanged(rect, Gfx_ClutStrip);
-    Gfx_ClutStripDirty = 0;
-}
-
-// original 0x461F00. Each queued record: s16 w, s16 h, u32 kind, then data.
-// Kind 1 is 5-bit packed, kind 2 LZSS, anything else raw cells.
-//
-// As the original has it: the index is a byte; the count is read again after
-// every record rather than once; and nothing bounds either against the 20
-// slots the arrays have (docs/known-defects.md D4 - DIV-0004 is the fix, and
-// it is in Gfx_BeginFrame, not here).
-extern "C" void __cdecl Gfx_FlushUploadQueue(void) {
-    for (std::uint8_t i = 0; i < Gfx_UploadQueueCount; ++i) {
-        const unsigned char* record = Gfx_UploadQueueRecord[i];
-        short rect[4];
-        rect[0] = static_cast<short>(Gfx_UploadQueueX[i]);
-        rect[1] = static_cast<short>(Gfx_UploadQueueY[i]);
-        std::memcpy(&rect[2], record, 4);
-        std::uint32_t kind;
-        std::memcpy(&kind, record + 4, 4);
-        {   // BOF3X_POSELOG=1: every upload (the facing investigation, issue #142's side thread)
-            static int on = -1;
-            if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
-            if (on == 1)
-                bof3::Log("poselog     frame %lu upload %u/%u at %d,%d size %dx%d kind %lu record %08lX", static_cast<unsigned long>(Frame_Counter),
-                          static_cast<unsigned>(i), static_cast<unsigned>(Gfx_UploadQueueCount), rect[0], rect[1], rect[2], rect[3],
-                          static_cast<unsigned long>(kind), static_cast<unsigned long>(Low32(record)));
-        }
-        if (kind == 1) Gfx_UploadPacked5(record + 8, rect);
-        else if (kind == 2) Gfx_UploadLzss(record + 8, rect);
-        else Gfx_LoadImage(rect, record + 8);
-    }
-    Gfx_UploadQueueCount = 0;
-}
-
 // --- BOF3X_SHADOW=gfx_flush: start-up differential fuzz against clones ----------
 // (docs/SCAFFOLDING.md section 2.) Here the clones' calls are re-aimed at the
 // ORIGINAL addresses, so both sides reach the same callees - ours where we own
@@ -247,6 +206,4 @@ void GfxFlush_Inject() {
         const unsigned bad = FuzzQueue(reinterpret_cast<Fn>(queue)) + FuzzStrip(reinterpret_cast<Fn>(strip));
         if (bad) bof3::Fatal("gfx_flush differs from the original in %u self-test rounds", bad);
     }
-    BOF3_INJECT(Gfx_FlushDirtyStrip);
-    BOF3_INJECT(Gfx_FlushUploadQueue);
 }

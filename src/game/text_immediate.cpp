@@ -10,8 +10,6 @@
 
 namespace {
 
-// The original's advance is 12: add ebp, 0xC at 0x5962E5 (TextAdvance_Of's default).
-constexpr int kLine = 13;       // 0x59620B: add eax, 0xD
 constexpr std::uint32_t kCharacterRecord = 0xA4;
 constexpr std::uint32_t kTextRecord = 0x20;
 
@@ -19,9 +17,9 @@ constexpr std::uint32_t kTextRecord = 0x20;
 // through a pointer the fuzz can aim at a recorder - for the original's copy
 // and for ours alike.
 using DrawAtFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-DrawAtFn g_draw_at = Text_DrawAt;
-
-const std::uint8_t* At(std::uint32_t address) {
+}  namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
+namespace {
+const std::uint8_t* AtTextImmediate(std::uint32_t address) {
     return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
 }
 
@@ -82,8 +80,8 @@ void SelfTest(void* clone) {
         {::bof3::Img(bof3::addr::Text_Records), 4 * kTextRecord, {}},
         {::bof3::Img(bof3::addr::MessagePools), 0x400, {}},
     };
-    for (Region& r : regions) std::memcpy(r.saved, At(r.address), r.size);
-    auto* const script = const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::MessagePools)));
+    for (Region& r : regions) std::memcpy(r.saved, AtTextImmediate(r.address), r.size);
+    auto* const script = const_cast<std::uint8_t*>(AtTextImmediate(::bof3::Img(bof3::addr::MessagePools)));
 
     std::uint32_t rng = 0x165667B1u;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
@@ -106,17 +104,17 @@ void SelfTest(void* clone) {
         out[at] = 0;
     };
 
-    g_draw_at = &RecordDraw;
+    text_immediate::g_draw_at = &RecordDraw;
     unsigned bad = 0, draws = 0;
     const unsigned rounds = 6000;
     for (unsigned n = 0; n < rounds; ++n) {
         // Names and records of every length around their counts (9, 9, 0x20,
         // 0x10), so that both ways out of a substitution are taken: the NUL
         // and the count.
-        fill(const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::Text_CurrentName))), 16, static_cast<int>(next() % 14));
+        fill(const_cast<std::uint8_t*>(AtTextImmediate(::bof3::Img(bof3::addr::Text_CurrentName))), 16, static_cast<int>(next() % 14));
         for (int i = 0; i < 4; ++i) {
-            fill(const_cast<std::uint8_t*>(At(::bof3::Img(CharacterRecords_addr))) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
-            fill(const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::Text_Records))) + i * kTextRecord, kTextRecord, static_cast<int>(next() % 40));
+            fill(const_cast<std::uint8_t*>(AtTextImmediate(::bof3::Img(CharacterRecords_addr))) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
+            fill(const_cast<std::uint8_t*>(AtTextImmediate(::bof3::Img(bof3::addr::Text_Records))) + i * kTextRecord, kTextRecord, static_cast<int>(next() % 40));
         }
         const std::uint32_t table = 0x10 + (next() % 8) * 2;
         std::memcpy(script + 4, &table, sizeof table);
@@ -155,8 +153,8 @@ void SelfTest(void* clone) {
             bof3::Log("shadow      Text_DrawImmediate self-test MISMATCH round %u: ret %+d, draws %u / %u", n,
                       (int)(b.ret - a.ret), a.n, b.n);
     }
-    g_draw_at = Text_DrawAt;
-    for (Region& r : regions) std::memcpy(const_cast<std::uint8_t*>(At(r.address)), r.saved, r.size);
+    text_immediate::g_draw_at = Text_DrawAt;
+    for (Region& r : regions) std::memcpy(const_cast<std::uint8_t*>(AtTextImmediate(r.address)), r.saved, r.size);
     bof3::Log("shadow      Text_DrawImmediate self-test: %u strings, %u characters through the stand-in, %u MISMATCHES; "
               "the return and every draw's x, y, colour, count and text pointer compared", rounds, draws, bad);
     if (bad) bof3::Fatal("Text_DrawImmediate differs from the original in %u of %u rounds", bad, rounds);
@@ -164,115 +162,9 @@ void SelfTest(void* clone) {
 
 }  // namespace
 
-// original 0x5961C0, the PSX Text_DrawImmediate's twin (sibling
-// TEXT_ENGINE.md: "y += 0x0D (immediate)"): draws `text` at (x, y), one
-// Text_DrawAt call a character, and returns one past the NUL that ended it.
-// Two callers; the choice lists - yes / no, the camp menu - are drawn by it.
-//
-//   0x00      end - or, inside a substitution, back to the byte after it
-//   0x01      newline: x = the x given, y += 13
-//   0x03      substitute the current character's name, up to 9 characters
-//   0x04 nn   substitute character record nn's name, up to 9
-//   0x05 nn   colour nn        0x06   colour 0
-//   0x07 nn   substitute 32-byte record nn, up to 0x20 characters
-//   0x08 nn   substitute message nn of the table the script block's dword +4
-//             points at, up to 0x10 characters
-//   0x09      skipped
-//   the rest, 0x02 included: a character, two bytes if the first has bit 7
-//
-// As the original has it:
-//   - one resume pointer and one count, not a stack: a substitution inside a
-//     substitution resumes after the INNER control, in the inner string;
-//   - the count is of characters drawn, controls are free, and a string that
-//     ends by its NUL before the count also ends the substitution;
-///   - 0x08 starts the inserted message at its second byte: where the other
-//     substitutions load their address less one and then step on to it
-//     (lea esi, [eax + 0x904CDF] / inc esi), this one adds the message's
-//     offset and steps all the same (add esi, ecx / inc esi, 0x5962AA). By
-//     the look of it a slip; whether any shipped text reaches it is unknown.
-//     Found by the fuzz, not by the read;
-//   - the colour handed to Text_DrawAt is a byte; the original pushes the
-//     dword around it, three bytes of stale stack that Text_DrawString never
-//     reads. Ours passes them as zero.
-//
-// DIVERGENCE DIV-0006: x advances by the glyph's entry in the overlay font's
-// advance table where the original adds 12. With no table loaded,
-// TextAdvance_Of is 12 and this is the original.
-extern "C" const unsigned char* __cdecl Text_DrawImmediate(int x_arg, int y, const unsigned char* text) {
-    int x = x_arg;
-    bool substituting = false;
-    const unsigned char* resume = nullptr;
-    std::uint8_t left = 0, colour = 0;
-
-    auto substitute = [&](const unsigned char* control_end, const std::uint8_t* with, std::uint8_t count) {
-        substituting = true;
-        resume = control_end;   // the last byte of the control: text goes on one past it
-        left = count;
-        text = with;
-    };
-
-    for (;;) {
-        const std::uint8_t c = text[0];
-        switch (c) {
-        case 0x00:
-            if (!substituting) return text + 1;
-            text = resume + 1;
-            substituting = false;
-            continue;
-        case 0x01:
-            x = x_arg;
-            y += kLine;
-            ++text;
-            continue;
-        case 0x03:
-            substitute(text, At(::bof3::Img(bof3::addr::Text_CurrentName)), 9);
-            continue;
-        case 0x04:
-            substitute(text + 1, At(::bof3::Img(CharacterRecords_addr)) + text[1] * kCharacterRecord, 9);
-            continue;
-        case 0x05:
-            colour = text[1];
-            text += 2;
-            continue;
-        case 0x06:
-            colour = 0;
-            ++text;
-            continue;
-        case 0x07:
-            substitute(text + 1, At(::bof3::Img(bof3::addr::Text_Records)) + text[1] * kTextRecord, 0x20);
-            continue;
-        case 0x08: {
-            std::uint32_t table_at;
-            std::memcpy(&table_at, At(::bof3::Img(bof3::addr::MessagePools)) + 4, sizeof table_at);
-            const std::uint8_t* table = At(::bof3::Img(bof3::addr::MessagePools)) + table_at;
-            std::uint16_t off;
-            std::memcpy(&off, table + 2 * text[1], sizeof off);
-            substitute(text + 1, table + off + 1, 0x10);  // from its SECOND byte: see above
-            continue;
-        }
-        case 0x09:
-            ++text;
-            continue;
-        default:
-            break;
-        }
-
-        g_draw_at(x, y, colour, 1, text);
-        const int advance = TextAdvance_Of(text);  // DIV-0006; 12 in the original
-        if (text[0] & 0x80) ++text;
-        if (substituting && --left == 0) {
-            text = resume;
-            substituting = false;
-        }
-        x += advance;
-        ++text;
-    }
-}
-
 void TextImmediate_Inject() {
     if (bof3::WantsShadow("text_immediate")) {
         const bof3::CloneCall calls[] = {{kDrawCall, reinterpret_cast<const void*>(&RecordDraw)}};
         SelfTest(bof3::CloneOriginal("Text_DrawImmediate", bof3::addr::Text_DrawImmediate, kSize, calls, 1));
     }
-    BOF3_INJECT(Text_DrawImmediate);
 }

@@ -55,6 +55,7 @@ The assumption under all of these - a unit's functions are contiguous in
     python tools/tu_census.py --exe bof3/BOF3.exe            # write the TSV and the sheet
     python tools/tu_census.py --exe bof3/BOF3.exe --report   # the measurements
     python tools/tu_census.py --check                        # CI: the TSV covers every impl function
+                                                             # (impl the row's, or moved: its proposed file)
 
 `--check` reads only `symbols.toml` and the TSV (no game file), so CI can run
 it. The facts read out of the binary are cached in
@@ -80,6 +81,7 @@ LOCAL_SPAN = 12                             # a static read inside this many fun
 TSV = os.path.join(ROOT, 'analysis', 'tu_layout.tsv')
 SHEET = os.path.join(ROOT, 'analysis', 'tu_layout_sheet.md')
 PSX_TSV = os.path.join(ROOT, 'analysis', 'tu_psx.tsv')   # SL2's table (tools/tu_psx.py)
+JOINS_TSV = os.path.join(ROOT, 'analysis', 'tu_joins.tsv')   # the owner's joins (round doc 7b item 9)
 
 
 def load_psx_units(path):
@@ -98,7 +100,7 @@ def load_psx_units(path):
                 head = cols
                 continue
             r = dict(zip(head, cols))
-            out[int(r['pc'], 16)] = (r['psx_unit'], r['agreement'])
+            out[int(r['pc'], 16)] = (r['psx_unit'], r['agreement'], r.get('psx', ''))
     return out
 
 
@@ -107,16 +109,18 @@ def psx_checks(M, units, psx):
     functions this unit shares with another of our units - a cut SL2 does
     not support. {unit index: [(psx_unit, [other unit ids])]}."""
     where = collections.defaultdict(set)      # psx unit -> our unit indices
-    size = collections.Counter()
+    twins = collections.defaultdict(set)      # psx unit -> distinct PSX functions twinned
     for k, u in enumerate(units):
         for i in range(u['lo'], u['hi'] + 1):
             p = psx.get(M.g[i]['pc'])
-            if p:
+            if p and p[0]:                    # an empty unit key is "no PSX unit", not one unit
                 where[p[0]].add(k)
-                size[p[0]] += 1
+                twins[p[0]].add(p[2] if len(p) > 2 and p[2] else M.g[i]['pc'])
     out = collections.defaultdict(list)
     for pu, ks in where.items():
-        if size[pu] >= 2 and len(ks) > 1:
+        # two or more *PlayStation* functions: two PC copies twinned to one PSX function are
+        # one function (2026-11-08: 14 one-function flags read that way before)
+        if len(twins[pu]) >= 2 and len(ks) > 1:
             for k in ks:
                 out[k].append((pu, sorted(unit_id(M, units[x]) for x in ks if x != k)))
     return out
@@ -776,10 +780,33 @@ def unit_range(M, u):
     return lo, hi
 
 
-def proposals(M, units, names, hard):
+def load_owner_joins(path):
+    """analysis/tu_joins.tsv: (unit_a first pc, unit_b first pc) -> reason. The owner's
+    decision to put two neighbouring units in one file, whatever the rules say."""
+    out = {}
+    if not path or not os.path.exists(path):
+        return out
+    with open(path, encoding='utf-8') as fh:
+        for line in fh:
+            if line.startswith('#') or line.startswith('unit_a\t') or not line.strip():
+                continue
+            a, b, decided, reason = line.rstrip('\n').split('\t')[:4]
+            out[(int(a, 16), int(b, 16))] = f'the owner ({decided}): {reason}'
+    return out
+
+
+def proposals(M, units, names, hard, owner_joins=None):
     """Stand alone, or join neighbours in one file, with the reason. A unit is
     never split. Returns per unit (file, proposal, reason)."""
     hard_edges = {i for i, j, *_ in hard if j == i + 1}
+
+    def back_order(u, v):
+        """a PSX back-order cut between u and v: one image, the PlayStation
+        linked v's code before u's, so they were two objects there (the
+        owner, 2026-11-08: such units stand alone whatever their names)"""
+        return any(u['lo'] <= i <= u['hi'] and v['lo'] <= j <= v['hi'] and 'psx back' in why
+                   for i, j, kind, why in hard)
+
     groups = [[0]]
     reasons = {}
     for k in range(1, len(units)):
@@ -787,11 +814,16 @@ def proposals(M, units, names, hard):
         ha = head(M.g[units[k - 1]['lo']]['name'])
         hb = head(M.g[units[k]['lo']]['name'])
         why = None
-        if a['sub'] == b['sub'] == 'boss':
-            why = "bosses together (the owner's example)"
+        key = (M.g[units[k - 1]['lo']]['pc'], M.g[units[k]['lo']]['pc'])
+        if owner_joins and key in owner_joins:
+            why = owner_joins[key]
+        # boss units stand alone (the owner, 2026-11-08): the units are cut one
+        # or two bosses each and their PSX twins sit one overlay per boss
+        elif a['sub'] == b['sub'] == 'boss':
+            why = None
         elif {ha, hb} <= {'Font', 'Glyph'}:
             why = "fonts together (the owner's example)"
-        elif a['sub'] == b['sub'] and a['stem'] == b['stem']:
+        elif a['sub'] == b['sub'] and a['stem'] == b['stem'] and (a['sub'] == 'area' or not back_order(units[k - 1], units[k])):
             why = f'the same names ({a["stem"]})' if a['sub'] != 'area' else f'one area ({a["stem"]})'
         elif (a['sub'] == b['sub'] and b['sub'] != 'area' and units[k - 1]['hi'] not in hard_edges
               and (units[k]['hi'] == units[k]['lo']
@@ -862,7 +894,7 @@ def rows(M, B, units, files, psx=None):
                                     unit_lo=f'{lo:#x}', unit_hi=f'{hi:#x}', confidence=how,
                                     evidence=f'{ev}; link {linkage(M, u, i)}',
                                     impl=f.get('impl', ''), proposed_file=files[k][0],
-                                    psx_unit_agreement=(':'.join(psx[f['pc']]) if f['pc'] in psx else ''))
+                                    psx_unit_agreement=(':'.join(psx[f['pc']][:2]) if f['pc'] in psx else ''))
     return res
 
 
@@ -1059,7 +1091,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
     L = []
     L.append('# The source-layout round: the owner\'s layout sheet (SL1)\n')
     L.append('**Status:** PROPOSAL, written by `tools/tu_census.py` from `bof3/BOF3.exe` and '
-             '`symbols.toml` (2026-11-07). The owner decides each row before stage B '
+             '`symbols.toml` (2026-11-07; split into two tables 2026-11-08). The owner decides each row before stage B '
              '([`docs/source-layout-round.md`](../docs/source-layout-round.md) 7, calls 1-3). '
              'Addresses, our names and counts only.\n')
     L.append('How to read a row: a **unit** is one object file of the 2001 link, as the table recovers it '
@@ -1079,8 +1111,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
                  f'two or more functions whose twins this table puts in more than one unit - a cut the '
                  f'PlayStation does not support, worth a look before the moves. {len(pchk)} of '
                  f'{len(units)} units carry one; empty means none.\n')
-    L.append('| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |')
-    L.append('|---|---|---|---|---|---|---|---|---|---|---|')
+    rows = []
     for k, u in enumerate(units):
         lo, hi = unit_range(M, u)
         c = collections.Counter()
@@ -1088,10 +1119,30 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
             c[how] += b - a + 1
         n = names[k]
         f = files[k]
-        L.append(f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
-                 f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
-                 f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
-                 + '; '.join(f"`{pu}` also in {', '.join(o)}" for pu, o in pchk.get(k, [])) + ' |')
+        call = bool(pchk.get(k))    # every join class was decided on 2026-11-08 (round doc 7b item 9)
+        rows.append((call, f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
+                     f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
+                     f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
+                     + '; '.join(f"`{pu}` also in {', '.join(o)}" for pu, o in pchk.get(k, [])) + ' |'))
+    # Two tables (the owner's ask of 2026-11-08): the rows that want a call first - a *join* (a choice
+    # between one file and several) or a PSX check (a cut the PlayStation does not support) - then the
+    # rows with one recommended layout, a *stand alone* that no neighbour and no PlayStation unit
+    # contests. The row number (#) is the unit's index in both tables, so a reference to a row holds.
+    header = ['| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |',
+              '|---|---|---|---|---|---|---|---|---|---|---|']
+    want = [r for call, r in rows if call]
+    settled = [r for call, r in rows if not call]
+    joins = sum(1 for k in range(len(units)) if files[k][1].startswith('join'))
+    L.append(f'## Rows that want a call ({len(want)})\n')
+    L.append(f'A PSX check: a PlayStation unit whose twins this table puts in more than one unit. '
+             f'(The join proposals were all decided by the owner on 2026-11-08, round doc 7b item 9: '
+             f'{joins} join rows stand as proposed and sit in the second table.)\n')
+    L.extend(header + want)
+    L.append(f'\n## Rows with one recommended layout ({len(settled)})\n')
+    L.append('A *stand alone* unit that no PlayStation unit contests, or a *join* the owner approved '
+             '(one area, a one-function unit, the same names where the PlayStation link order agrees): '
+             'these rows need no call.\n')
+    L.extend(header + settled)
     with open(path, 'w', newline='\n', encoding='utf-8') as fh:
         fh.write('\n'.join(L) + '\n')
 
@@ -1115,12 +1166,13 @@ def check(tsv, symbols):
             bad.append(f'{pc:#x} {f["name"]} ({f["impl"]}) has no row')
         elif r['name'] != f['name']:
             bad.append(f'{pc:#x} row names {r["name"]}, symbols.toml {f["name"]}')
-        elif r['impl'] != f['impl']:
+        elif f['impl'] not in (r['impl'], r['proposed_file']):
+            # a stage B move puts the function in its proposed file; the row's impl keeps where it was
             bad.append(f'{pc:#x} {f["name"]}: row impl {r["impl"]}, symbols.toml {f["impl"]} (rerun the tool)')
     for pc in have:
         if pc not in want:
             bad.append(f'{pc:#x} {have[pc]["name"]} has a row but no impl in symbols.toml')
-    moved = sum(1 for pc, r in have.items() if pc in want and r['proposed_file'] != r['impl'])
+    moved = sum(1 for pc, r in have.items() if pc in want and r['proposed_file'] != want[pc]['impl'])
     for b in bad[:40]:
         print('tu_census --check:', b)
     if bad:
@@ -1141,6 +1193,7 @@ def main():
     ap.add_argument('--uncertain', type=int, default=0, help='print the N least certain boundaries')
     ap.add_argument('--refresh', action='store_true', help='read the binary again, not the cache')
     ap.add_argument('--check', action='store_true', help='CI: the TSV covers every impl function')
+    ap.add_argument('--joins', default=JOINS_TSV, help="the owner's joins of neighbouring units ('' to skip)")
     ap.add_argument('--psx', default=PSX_TSV, help="SL2's tu_psx.tsv, joined into the table and the sheet ('' to skip)")
     a = ap.parse_args()
     if a.check:
@@ -1151,7 +1204,7 @@ def main():
     B = build(M)
     units, tally, blocked = place(M, B)
     names = unit_names(M, units)
-    files, groups = proposals(M, units, names, B['hard'])
+    files, groups = proposals(M, units, names, B['hard'], load_owner_joins(a.joins))
     psx = load_psx_units(a.psx)
     rowmap = rows(M, B, units, files, psx)
     pchk = psx_checks(M, units, psx)

@@ -5,4 +5,6 @@
 // screen updates). docs/frame-callees.md.
 #pragma once
 
+#include "game/frame_callees_callees.h"
+
 void FrameCallees_Inject();

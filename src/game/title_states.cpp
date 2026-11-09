@@ -19,10 +19,7 @@
 namespace {
 
 using move_script::At;
-using move_script::Long;
-using move_script::SetLong;
 using move_script::SetWord;
-using move_script::Word;
 
 // Bytes the handlers touch that have no name (docs/title-states.md has the
 // PSX twin of each).
@@ -30,425 +27,27 @@ constexpr ::bof3::image::Va kPlayClock{0x9040C8};      // four bytes zeroed star
 // kPartyCombo: now AreaW0b_PartySet (symbols.toml). 0xFF when the demo ends (PSX 0x80145020)
 // kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
 constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
-// kScenarioFlags: now Chapter_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
-// kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
-// kSubInitTable: now Scenario_SubInitTable (symbols.toml). 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
-// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
-constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};      // task 0's entry for the demo (the field task)
-constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};      // task 0's entry for the title menu
 constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
-const std::uint32_t kCondFlags = Low32(Cond_Flags);
 
-// DIVERGENCE DIV-0131 (D256): on a PSP base (a PSP-only install, the cache's
-// base_policy "psp") the title's logo pages are the PSP's own art, laid out
-// for the PSP's own code, which Capcom's PlayStation rectangles cut wrongly:
-// the text's lower piece starts 11 rows earlier and is 10 wider, the emblem
-// carries a caption under it, and the art holds its own TM. These are where
-// the PSP's pieces lie in its pages (measured from the pages' pixels,
-// 2026-10-17; docs/psp-title-framing.md), and where each goes against
-// Capcom's set origins: the upper text piece 3 left of set C's x, the lower
-// piece at the upper's x + 224 and y + 5 (the F's strokes join there), the
-// emblem 30 right of set B's x. Our measurement, not a copied table. Set while
-// the start-up fuzz has finished; the fuzz compares Capcom's layout.
-struct PspRect {
-    unsigned char u, v;
-    std::uint16_t w, h;
-};
-constexpr PspRect kPspTextUpper = {0, 0, 224, 116};    // "BREATH OF F", the left wing
-constexpr PspRect kPspTextLower = {0, 117, 106, 102};  // "IRE", the right wing, the art's TM
-constexpr PspRect kPspEmblem = {0, 0, 202, 122};       // the "III" emblem, without the caption below it
-constexpr int kPspTextDx = -3, kPspLowerDx = 224, kPspLowerDy = 5, kPspEmblemDx = 30;
-bool g_psp_title = false;
-
-// Every callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them. Five are ours (Title_FadeMusic,
-// Title_StopMusic, Title_DrawBadge, Scenario_Start, Scenario_Load), called
-// through here all the same so that each function is tested alone.
-// Field_ModeDispatch belongs to another file and is called through its
-// address.
-struct Callees {
-    void (__cdecl* dropped)(unsigned char);
-    void (__cdecl* load_dat)(int);
-    int (__cdecl* load_done)();
-    void (__cdecl* sleep)(int);
-    void (__cdecl* clut_restore)();
-    void (__cdecl* music_play)(unsigned int, int);
-    void (__cdecl* transition)(unsigned char);
-    void (__cdecl* fade_music)();
-    void (__cdecl* stop_music)();
-    void (__cdecl* effect_clear)();
-    void (__cdecl* scenario_start)(int);
-    void (__cdecl* task_create)(int, void*);
-    void (__cdecl* music_fade_out)(int);
-    void (__cdecl* music_fade_stop)(int);
-    void (__cdecl* badge)();
-    void (__cdecl* task_exit)();
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
-    void (__cdecl* commit)(unsigned, unsigned);
-    unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
-    void (__cdecl* shade)(unsigned char*, unsigned char);
-    void (__cdecl* scenario_load)();
-    void (__cdecl* loading_frame)();
-    void (__cdecl* mode_dispatch)();
-};
-const Callees kOriginals = {
+}  namespace title_states { bool g_psp_title = false; }
+namespace {
+const title_states::CalleesTitleStates kOriginalsTitleStates = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
     Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
-Callees g = kOriginals;
-
-// Task 0's state word, +0 of its record: 0 while no task 0 runs.
-std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
-
-// The 16-bit words the handlers count with, as the original's `inc word` /
-// `dec word` in memory: wrapping at 0x10000.
-// Capcom's sprite `index` (its palette and the rest of its record), its
-// rectangle replaced by `r` (DIV-0131).
-unsigned char* PspSprite(int x, int y, unsigned index, const PspRect& r, unsigned slot, unsigned semi) {
-    unsigned char* const prim = g.sprite(x, y, index, slot, semi);
-    prim[0x14] = r.u;
-    prim[0x15] = r.v;
-    SetWord(prim + 0x18, r.w);
-    SetWord(prim + 0x1A, r.h);
-    return prim;
-}
-
-void BumpState() { Title_State = static_cast<std::uint16_t>(Title_State + 1); }
-
-}  // namespace
-
-// original 0x462200: Title_States entry 0 (PSX 0x801D0C90). Loads the title's
-// DAT, then starts the backdrop's fade-in and the title music.
+}  namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
 //
-// As the original has it: Port_DroppedCall(2) first (the PSX's call there,
-// emptied by the port); the wait on File_LoadDone sleeps a frame at a time,
-// asked first before any sleep (on the PC it is always done); the CLUT strip
-// restored and Gfx_ClutStripDirty counted up - not set to 1 - after the
-// load; the state word read after the calls.
-extern "C" void __cdecl Title_StateLoad(void) {
-    g.dropped(2);
-    g.load_dat(0x136);
-    while (g.load_done() == 0) g.sleep(1);
-    g.clut_restore();
-    Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
-    g.music_play(0x8D, 8);
-    BumpState();
-    Title_Fade = 1;
-    Title_Scroll = 0xC8;
-    Title_Bright = 0;
-    Title_LogoState = 0;
-    Title_LogoShadeA = 0;
-    Title_LogoShadeB = 0;
-    Title_StartArmed = 1;
-}
-
-// original 0x462290: entry 1 (PSX 0x801D0D5C). Waits for the backdrop's
-// fade-in to finish (Title_DrawBackdrop sets fade 2), then holds 360 frames.
-extern "C" void __cdecl Title_StateFadeIn(void) {
-    if (Title_Fade != 2) return;
-    BumpState();
-    Title_Timer = 0x168;
-}
-
-// original 0x4622B0: entry 2 (PSX 0x801D0D94). Counts the hold down; at 0 the
-// backdrop fades out, the logo in, and the logo holds 900 frames.
 //
-// As the original has it: the timer is decremented as a u16 before the test,
-// so a timer of 0 wraps to 0xFFFF and holds 65,535 frames more
-// (Title_CheckStart sets it to 1 to cut the hold short, never 0).
-extern "C" void __cdecl Title_StateBackdrop(void) {
-    Title_Timer = static_cast<std::uint16_t>(Title_Timer - 1);
-    if (Title_Timer != 0) return;
-    BumpState();
-    Title_Fade = 3;
-    Title_LogoState = 1;
-    Title_Timer = 0x384;
-}
-
-// original 0x4622E0: entry 3 (PSX 0x801D0DF0). Counts the logo's hold down; at
-// 0 starts the screen transition and fades the music.
 //
-// As the original has it: the state word is read after the two calls.
-extern "C" void __cdecl Title_StateLogo(void) {
-    Title_Timer = static_cast<std::uint16_t>(Title_Timer - 1);
-    if (Title_Timer != 0) return;
-    g.transition(0);
-    g.fade_music();
-    BumpState();
-}
-
-// original 0x462300: entry 4 (PSX 0x801D0E54). Once no transition holds the
-// wait word, starts the demo: the title's fades off, the music stopped, the
-// effect objects cleared, the play clock and the draw-pass flags zeroed,
-// scenario chapter 0x10 started and task 0 created on the field task.
 //
-// As the original has it: Port_DroppedCall(0)'s pushed argument stays on the
-// stack under Scenario_Start's until one `add esp, 0x10` - no callee reads
-// past its own. Scenario_Start runs on task 1's stack and may sleep there
-// while its DAT loads (on the PC it never does).
-extern "C" void __cdecl Title_StateStartDemo(void) {
-    if (Transition_Busy != 0) return;
-    Title_Fade = 0;
-    Title_LogoState = 0;
-    Title_StartArmed = 0;
-    g.stop_music();
-    g.dropped(0);
-    g.effect_clear();
-    At(::bof3::Img(kPlayClock.v))[3] = 0;
-    At(::bof3::Img(kPlayClock.v))[2] = 0;
-    At(::bof3::Img(kPlayClock.v))[1] = 0;
-    At(::bof3::Img(kPlayClock.v))[0] = 0;
-    Draw_PassFlags = 0;
-    g.scenario_start(0x10);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
-    BumpState();
-}
-
-// original 0x462370: entry 5 (PSX 0x801D0F00), every frame of the demo. When
-// task 0 has ended, back to the title (state 0). Start pressed during it (with
-// the load done and no wait) ends the demo: MoveScript_Var7 1, transition 4,
-// the music faded out. Then the corner badge (a tail jump in the original).
 //
-// As the original has it: the state set to 0 returns without the badge; the
-// pad is read as the dword at Input_Pressed and only bit 0x800 tested.
-extern "C" void __cdecl Title_StateDemo(void) {
-    if (TaskZeroState() == 0) {
-        Title_State = 0;
-        return;
-    }
-    if (g.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
-        MoveScript_Var7 = 1;
-        g.transition(4);
-        g.music_fade_stop(8);
-        BumpState();
-    }
-    g.badge();
-}
-
-// original 0x4623D0: entry 6 (PSX 0x801D0FB8), after Start ended the demo:
-// when task 0 is gone, the party combination byte 0xFF and back to state 0;
-// until then the badge (a tail jump).
-extern "C" void __cdecl Title_StateDemoEnd(void) {
-    if (TaskZeroState() == 0) {
-        AreaW0b_PartySet = 0xFF;
-        Title_State = 0;
-        return;
-    }
-    g.badge();
-}
-
-// original 0x4623F0: entry 7 (PSX 0x801D1000), after Start on the logo: once
-// no transition holds the wait word, stops the music, creates task 0 on the
-// title menu 0x588E70 and ends task 1.
 //
-// As the original has it: Task_Exit is a tail jump that never returns - it
-// clears this task's record and enters the scheduler on the scheduler's own
-// stack, abandoning task 1's (this frame included). A stand-in that returns
-// makes this return, as the original's jump would to its caller.
-extern "C" void __cdecl Title_StateMenu(void) {
-    if (Transition_Busy != 0) return;
-    g.stop_music();
-    g.dropped(0);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
-    g.task_exit();
-}
-
-// original 0x4624B0: fade the music out over 0x10 frames, unless none plays
-// (PSX 0x801D1134, which fades through a per-track table).
-extern "C" void __cdecl Title_FadeMusic(void) {
-    if (Music_Track != 0xFF) g.music_fade_out(0x10);
-}
-
-// original 0x4624D0: fade out and stop over 0xA frames, and forget the track,
-// unless none plays (PSX 0x801D1184).
 //
-// As the original has it: 0xFF is stored after the call, whatever the call
-// left there.
-extern "C" void __cdecl Title_StopMusic(void) {
-    if (Music_Track == 0xFF) return;
-    g.music_fade_stop(0xA);
-    Music_Track = 0xFF;
-}
-
-// original 0x4624F0: the demo's corner badge (PSX 0x801D11E4) - sprite 0xA at
-// (0xC0, 4) while Title_BadgeOn and bit-anything Draw_PassFlags are set. The
-// badge goes off for good once the field runs its area change (Field_Request
-// 5 in Game_Mode 2) with no transition waiting.
 //
-// As the original has it: the three tests in that order, Field_Request and
-// Title_BadgeOn as bytes, Game_Mode and the wait word as words; the packet
-// cursor read for the draw mode at the call. The PSX asks a video-mode
-// function for the tpage; the port always takes 0x9D.
-extern "C" void __cdecl Title_DrawBadge(void) {
-    if (Field_Request == 5 && Game_Mode == 2 && Transition_Busy == 0) Title_BadgeOn = 0;
-    if (Draw_PassFlags == 0 || Title_BadgeOn == 0) return;
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0x9D, 0);
-    g.commit(2, 0xC);
-    g.sprite(0xC0, 4, 0xA, 2, 0);
-}
-
-// original 0x462820: the logo's first set (PSX 0x801D12CC): sprite 1 through
-// OT slot 1, sprites 8 and 9 through slot 2, each semi-transparent by `flag`
-// and shaded `shade`; then, once the backdrop is gone and the logo shown,
-// sprite 7 blinking - the "press Start" prompt, by where it appears
-// (hypothesis) - on Title_BlinkCount, a 64-frame triangle from 0 to 0x7C and
-// back from 0x80 to 4.
 //
-// As the original has it: flag and shade are dwords whose low byte alone is
-// read (Title_Sprite masks the one, Prim_SetShade stores the other as a
-// byte; ours are masked here because a Capcom caller leaves the upper bytes
-// stale); the packet cursor is read again for the second draw mode, after
-// the first sprite's commit moved it; Title_Fade and Title_LogoState are read
-// after the three sprites; the counter is incremented as a word in memory and
-// its low byte read back; the blinking sprite is opaque and not shaded
-// through Prim_SetShade - its three colour bytes are written here.
-extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
-    const unsigned semi = flag & 0xFF;
-    const auto level = static_cast<unsigned char>(shade);
-    if (!g_psp_title) {   // DIV-0131: the PSP's art carries its own TM; the mark sprite is not drawn
-        g.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
-        g.commit(1, 0xC);
-        g.shade(g.sprite(0x106, 0x82, 1, 1, semi), level);
-    }
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xBD, 0);
-    g.commit(2, 0xC);
-    g.shade(g.sprite(0x14, 0xD0, 8, 2, semi), level);
-    g.shade(g.sprite(0xA4, 0xD0, 9, 2, semi), level);
-    if (Title_Fade != 0 || Title_LogoState != 2) {
-        Title_BlinkCount = 0;
-        return;
-    }
-    unsigned char* const prim = g.sprite(0x30, 0xB8, 7, 2, 0);
-    Title_BlinkCount = static_cast<std::uint16_t>(Title_BlinkCount + 1);
-    const unsigned count = Title_BlinkCount & 0xFFu;
-    const unsigned step = (count & 0x1Fu) << 2;
-    const auto blink = static_cast<unsigned char>((count & 0x20u) ? 0x80u - step : step);
-    prim[4] = blink;
-    prim[5] = blink;
-    prim[6] = blink;
-}
-
-// original 0x462930: the logo's third set (PSX 0x801D1494): while `flag`
-// (the logo still fading), sprites 0xF and 0x10 semi-transparent at x and
-// x + 0xE0 under tpage 0xD9; always sprites 4 and 5 there under tpage 0xB9,
-// semi-transparent by `flag`; all four shaded `shade`.
 //
-// As the original has it: the flag's low byte decides the first pair (`test
-// bl, bl`); x + 0xE0 is 32-bit arithmetic, taken as s16 by Title_Sprite; the
-// packet cursor read at each draw mode.
-extern "C" void __cdecl Title_DrawSetC(int x, int y, unsigned flag, unsigned shade) {
-    const unsigned semi = flag & 0xFF;
-    const auto level = static_cast<unsigned char>(shade);
-    if (g_psp_title) {   // DIV-0131: the PSP's pieces, same sprites and pages
-        const int ux = x + kPspTextDx, lx = ux + kPspLowerDx, ly = y + kPspLowerDy;
-        if (semi != 0) {
-            g.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
-            g.commit(2, 0xC);
-            g.shade(PspSprite(ux, y, 0xF, kPspTextUpper, 2, 1), level);
-            g.shade(PspSprite(lx, ly, 0x10, kPspTextLower, 2, 1), level);
-        }
-        g.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
-        g.commit(2, 0xC);
-        g.shade(PspSprite(ux, y, 4, kPspTextUpper, 2, semi), level);
-        g.shade(PspSprite(lx, ly, 5, kPspTextLower, 2, semi), level);
-        return;
-    }
-    const int right = static_cast<int>(static_cast<unsigned>(x) + 0xE0u);
-    if (semi != 0) {
-        g.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
-        g.commit(2, 0xC);
-        g.shade(g.sprite(x, y, 0xF, 2, 1), level);
-        g.shade(g.sprite(right, y, 0x10, 2, 1), level);
-    }
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
-    g.commit(2, 0xC);
-    g.shade(g.sprite(x, y, 4, 2, semi), level);
-    g.shade(g.sprite(right, y, 5, 2, semi), level);
-}
-
-// original 0x462A00: the logo's second set (PSX 0x801D1664): sprites 2 at
-// (x, y) and 3 at (x + 0xF0, y + 0x70) under tpage 0xBB, semi-transparent by
-// `flag`, shaded `shade`.
-extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned shade) {
-    const unsigned semi = flag & 0xFF;
-    const auto level = static_cast<unsigned char>(shade);
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xBB, 0);
-    g.commit(2, 0xC);
-    if (g_psp_title) {   // DIV-0131: the emblem alone; the PSP's page has nothing under sprite 3's rectangle
-        g.shade(PspSprite(x + kPspEmblemDx, y, 2, kPspEmblem, 2, semi), level);
-        return;
-    }
-    g.shade(g.sprite(x, y, 2, 2, semi), level);
-    g.shade(g.sprite(static_cast<int>(static_cast<unsigned>(x) + 0xF0u), static_cast<int>(static_cast<unsigned>(y) + 0x70u),
-                     3, 2, semi),
-            level);
-}
-
-// original 0x56D5E0: start scenario chapter `chapter` (PSX 0x801A870C). The
-// chapter byte is Cond_ByteFA (PSX 0x8014686C, the index into the scenario
-// vtable table the dispatcher Field_ModeDispatch reads); the scenario's
-// state bytes after it are cleared, and the chapter's own Cond_Flags dword
-// zeroed and remembered at 0x929ED0. Then its DAT (0x306 + chapter), a wait
-// for it - a field frame without the event script each frame, unless no
-// area is loaded (Game_AreaNumber 0xFFFF) or an area change is pending
-// (Field_Request 5) - and the scenario's first frame (a tail jump).
-//
-// As the original has it: the argument's low byte only, sign-extended for
-// the Cond_Flags index, so chapters 0x80..0xFF reach below Cond_Flags; no
-// bounds check. The bytes 0x8034E1..0x8034E9 are zeroed whatever the chapter
-// (MoveScript_Var7 is 0x8034E4, Field_StepCountPrev 0x8034E8). File_LoadDone
-// is asked before any frame; on the PC it is always done, so the loop body
-// never runs.
-extern "C" void __cdecl Scenario_Start(int chapter) {
-    const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = At(::bof3::Img(kScenarioBytes.v));
-    s[0] = static_cast<unsigned char>(c);
-    s[2] = 0;
-    s[3] = 0;
-    s[4] = 0;
-    SetWord(s + 6, 0);
-    s[5] = 0;
-    s[1] = 0;
-    SetWord(s + 8, 0);
-    const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
-    SetLong(At(flags), 0);
-    Chapter_FlagRow = static_cast<std::int32_t>(flags);
-    g.scenario_load();
-    while (g.load_done() == 0) {
-        if (Game_AreaNumber != 0xFFFF && Field_Request != 5) g.loading_frame();
-        g.sleep(1);
-    }
-    g.mode_dispatch();
-}
-
-// original 0x56D670: the current chapter's DAT (PSX 0x801A880C, which loads
-// 0x295 + chapter, SCENA<chapter>.EMI). As the original has it: the chapter
-// byte sign-extended.
-extern "C" void __cdecl Scenario_Load(void) {
-    g.load_dat(static_cast<int>(Cond_ByteFA) + 0x306);
-}
-
-// original 0x56D8C0: state 0 of the dispatcher 0x56D8B0 (PSX 0x801A8C34):
-// its state byte to 1 so the next frame runs entry 1 (0x56D920), the six
-// bytes and two words around it zeroed, and 16 bytes of the story flags
-// (Cond_Flags + 0xA0) seeded from the table at 0x662CD8.
-//
-// As the original has it: four dword copies (the PSX copies bytewise); the
-// table and the flags do not overlap, so the order is unobservable.
-extern "C" void __cdecl Scenario_SubInit(void) {
-    unsigned char* const s = At(::bof3::Img(ScenaSc7_DrawPool_addr));
-    s[2] = 1;
-    s[0] = 0;
-    s[3] = 0;
-    s[4] = 0;
-    SetWord(s + 6, 0);
-    s[5] = 0;
-    s[1] = 0;
-    SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(::bof3::Img(Cond_Flags_addr) + 0xa0 + i), Long(At(::bof3::Img(Scenario_SubInitTable_addr) + i)));
-}
 
 namespace {
 
@@ -587,7 +186,7 @@ void __cdecl StubModeDispatch() { Record(26, static_cast<unsigned char>(Cond_Byt
 // The stand-ins take bytes as dwords and mask them: the copies push whole
 // registers.
 template <typename T> T As(const void* p) { return reinterpret_cast<T>(const_cast<void*>(p)); }
-const Callees kStubs = {
+const title_states::CalleesTitleStates kStubs = {
     As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubDropped)), StubLoadDat, StubLoadDone, StubSleep, StubClutRestore,
     StubMusicPlay, As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubTransition)), StubFadeMusic, StubStopMusic,
     StubEffectClear, StubScenarioStart, StubTaskCreate, StubMusicFadeOut, StubMusicFadeStop, StubBadge, StubTaskExit,
@@ -838,7 +437,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     unsigned char* const saved_packet = Gfx_PacketNext;
     Gfx_PacketNext = g_prim;
     Capture(saved);
-    g = kStubs;
+    title_states::gTitleStates = kStubs;
 
     const void* const ours[kCount] = {
         reinterpret_cast<const void*>(&Title_StateLoad), reinterpret_cast<const void*>(&Title_StateFadeIn),
@@ -878,7 +477,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
                           their_out.log_n, our_out.log_n);
         }
     }
-    g = kOriginals;
+    title_states::gTitleStates = kOriginalsTitleStates;
     Apply(saved);
     Gfx_PacketNext = saved_packet;
     bof3::Log("shadow      title_states self-test: %u rounds (%u per function), %u calls to the stand-ins, %u MISMATCHES; "
@@ -912,23 +511,6 @@ void TitleStates_Inject() {
         }
         SelfTest(clones);
     }
-    g_psp_title = psp_code::PspBase();
-    if (g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
-    BOF3_INJECT(Title_StateLoad);
-    BOF3_INJECT(Title_StateFadeIn);
-    BOF3_INJECT(Title_StateBackdrop);
-    BOF3_INJECT(Title_StateLogo);
-    BOF3_INJECT(Title_StateStartDemo);
-    BOF3_INJECT(Title_StateDemo);
-    BOF3_INJECT(Title_StateDemoEnd);
-    BOF3_INJECT(Title_StateMenu);
-    BOF3_INJECT(Title_FadeMusic);
-    BOF3_INJECT(Title_StopMusic);
-    BOF3_INJECT(Title_DrawBadge);
-    BOF3_INJECT(Title_DrawSetA);
-    BOF3_INJECT(Title_DrawSetC);
-    BOF3_INJECT(Title_DrawSetB);
-    BOF3_INJECT(Scenario_Start);
-    BOF3_INJECT(Scenario_Load);
-    BOF3_INJECT(Scenario_SubInit);
+    title_states::g_psp_title = psp_code::PspBase();
+    if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
 }

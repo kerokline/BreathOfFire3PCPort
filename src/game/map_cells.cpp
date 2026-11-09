@@ -34,28 +34,10 @@ template <class T> T Get(const unsigned char* p, unsigned offset) {
 
 constexpr unsigned kPrimBytes = 0x48;   // a POLY_FT4 as the port lays it out
 
-int S8(unsigned v) { return static_cast<signed char>(v); }
-
 // Where MapCell_DrawRising gets its random numbers: Capcom's Rand, except
 // during the start-up fuzz, which runs before the exe's C runtime is set up
 // (the launcher loads us into a suspended process) and so cannot call it.
 int (__cdecl* g_rand)(void) = Rand;
-
-// A vertex dword of MapCell_DrawQuads: the s8 at byte 3 and the s8 at byte 2,
-// each doubled, about the cell's origin; the low word is the third coordinate.
-// The sums are the original's 32-bit ones, stored as words.
-//
-// DIV-0023: the fourth word is 0, as DIV-0021 zeros the matrix product's
-// padding (the owner's call). The original builds these on its stack and
-// never writes that word, so Gte_LoadVertex and Gte_LoadVertices3 carry stale
-// stack into the top halves of Gte_Vertices[1], [3] and [5], which no
-// instruction in the image reads.
-void QuadVertex(short* v, std::uint32_t dword, std::uint32_t x0, std::uint32_t y0) {
-    v[0] = static_cast<short>(x0 + 2u * static_cast<std::uint32_t>(S8(dword >> 24)));
-    v[1] = static_cast<short>(y0 + 2u * static_cast<std::uint32_t>(S8(dword >> 16)));
-    v[2] = static_cast<short>(dword);
-    v[3] = 0;
-}
 
 }  // namespace
 
@@ -64,196 +46,6 @@ map_cells::RandFn map_cells::SwapRand(RandFn rand) {
     const RandFn was = g_rand;
     g_rand = rand;
     return was;
-}
-
-// original 0x56FF00 (PSX 0x80156938): a record's condition. The high byte of the u16 `code`
-// is the kind, the low byte its operand:
-//   0x00..0x1F   bit (operand) of Cond_Flags + 8 * kind
-//   0x20..0x3F   the same bit of row kind & 0x1F, complemented
-//   0xFF         (code & 1) XOR Cond_ByteFF - the whole byte, not 0 or 1
-//   0xFE / 0xFD  operand == / != Cond_ByteFE / Cond_ByteFD
-//   0xFC         (Game_Mode == 7 or Field_Request == 4) XOR (code & 1)
-//   0xFB         ((Cond_AngleFB - 0x200) & 0xFFF) <= 0x800, XOR (code & 1)
-//   0xFA         operand == Cond_ByteFA sign-extended, so never at 0x80 and up
-//   anything else, 0x40 included, code & 1.
-// Only the low 16 bits are read: the callers push ax with stale bits above.
-// The value is al; two callers widen it with movsx, so all eight bits count.
-extern "C" unsigned char __cdecl Area_TestCondition(unsigned long code) {
-    const unsigned kind = code & 0xFF00u, operand = code & 0xFFu, low = code & 1u;
-    switch (kind) {
-        case 0x4000: return static_cast<unsigned char>(low);
-        case 0xFF00: return static_cast<unsigned char>(low ^ Cond_ByteFF);
-        case 0xFE00: return operand == Cond_ByteFE;
-        case 0xFD00: return operand != Cond_ByteFD;
-        case 0xFC00: return static_cast<unsigned char>(((Game_Mode == 7) | (Field_Request == 4)) ^ low);
-        case 0xFB00: return static_cast<unsigned char>((((Cond_AngleFB - 0x200u) & 0xFFFu) <= 0x800u) ^ low);
-        case 0xFA00: return static_cast<int>(operand) == static_cast<int>(Cond_ByteFA);
-        default: break;
-    }
-    if (kind < 0x2000) return Flags_Test(Cond_Flags + 8u * (kind >> 8), code);
-    if (kind < 0x4000) return Flags_Test(Cond_Flags + 8u * ((code >> 8) & 0x1Fu), code) == 0;
-    return static_cast<unsigned char>(low);
-}
-
-// original 0x5720C0: the ground's elevation at (x, y), both 16.16. The cell
-// is the high words' in a grid AreaMap_Header bytes 0 by 1; outside it the
-// answer is 0 in the low half and the header's own top half above - kept, for
-// a caller that reads eax. Inside, with h(dx, dy) a neighbour's height byte
-// (at AreaMap_Header + AreaMap_HeightBase * 4, one per cell) times
-// MapView_HeightScale and c[k] byte k of the cell's AreaMap_Corners dword
-// onward, by quadrant - bit 15 of x, bit 15 of y:
-//   neither   (c[1] + c[2] + 2 * h) << 4, in full precision
-//   x only    max(c[1] + c[3] + 2h, c[4] + c[6] + 2h(1, 0)) << 4
-//   y only    max(c[2] + c[3] + 2h, c[4w] + c[4w + 1] + 2h(0, 1)) << 4
-//   both      the largest of c[3] + h, c[6] + h(1, 0), c[4w + 4] + h(1, 1),
-//             c[4w + 1] + h(0, 1), << 5
-// Kept as the original has it: past the first quadrant each height is its
-// multiplication's low byte, and each corner-plus-height a byte sum, before
-// they are widened as signed.
-extern "C" long __cdecl AreaMap_Elevation(long x, long y) {
-    std::uint32_t header;
-    std::memcpy(&header, AreaMap_Header, 4);
-    const auto cx = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
-    const auto cy = static_cast<short>(static_cast<std::uint32_t>(y) >> 16);
-    const unsigned width = header & 0xFFu;
-    if (cy >= static_cast<short>((header >> 8) & 0xFFu) || cx >= static_cast<short>(width) || cy < 0 || cx < 0)
-        return static_cast<long>(header & 0xFFFF0000u);
-    const int cell = cx + cy * static_cast<int>(width);
-    const unsigned char* h = AreaMap_Header + static_cast<unsigned>(AreaMap_HeightBase) * 4u + cell;
-    const unsigned char* c = reinterpret_cast<const unsigned char*>(&AreaMap_Corners) + cell * 4;
-    const unsigned scale = MapView_HeightScale;
-    const bool half_x = (x & 0x8000) != 0, half_y = (y & 0x8000) != 0;
-    if (!half_x && !half_y) return (S8(c[2]) + S8(h[0]) * static_cast<int>(scale) * 2 + S8(c[1])) * 16;
-    // imul r/m8: only the product's low byte is kept.
-    auto height = [&](unsigned at) { return static_cast<unsigned char>(h[at] * scale); };
-    if (half_x != half_y) {
-        const unsigned char here = height(0);
-        unsigned char a, b, d, e;
-        if (half_x) {
-            a = static_cast<unsigned char>(c[1] + here);
-            b = static_cast<unsigned char>(c[3] + here);
-            const unsigned char next = height(1);
-            d = static_cast<unsigned char>(c[4] + next);
-            e = static_cast<unsigned char>(c[6] + next);
-        } else {
-            a = static_cast<unsigned char>(c[2] + here);
-            b = static_cast<unsigned char>(c[3] + here);
-            const unsigned char next = height(width);
-            d = static_cast<unsigned char>(c[4 * width] + next);
-            e = static_cast<unsigned char>(c[4 * width + 1] + next);
-        }
-        const int second = S8(e) + S8(d), first = S8(b) + S8(a);
-        return (first > second ? first : second) * 16;
-    }
-    const int p0 = S8(static_cast<unsigned char>(c[3] + height(0)));
-    const int p1 = S8(static_cast<unsigned char>(c[6] + height(1)));
-    const int p2 = S8(static_cast<unsigned char>(c[4 * width + 4] + height(width + 1)));
-    const int p3 = S8(static_cast<unsigned char>(c[4 * width + 1] + height(width)));
-    if (p0 >= p3 && p0 >= p2 && p0 >= p1) return p0 * 32;
-    if (p1 >= p3 && p1 >= p2) return p1 * 32;
-    return (p2 < p3 ? p3 : p2) * 32;
-}
-
-// original 0x570020: a map cell's textured quads. Unless the record's
-// condition (its low word) says no, or its byte +2 is 1, walks five-dword
-// subrecords from +4 until a count that starts at 1 and adds 5 each equals
-// byte +2 again: four vertices, then a Prim_SetTexture word. The cell's origin
-// is ((b1 - 0x80) * 128, (b0 - 0x80) * 128). The first vertex alone goes
-// through Gte_Rtps and to the primitive at Gfx_PacketNext; the quad is drawn
-// only if that point is inside -100 < x < 420, -150 < y < 300 - a POLY_FT4
-// committed to slot 4, or 7 with bit 30 of the word, when bit 14 is set, else
-// to Draw_OtSlot, or 6 with bit 30. 12,183 calls a whole attract cycle.
-//
-// Kept as the original has it: a culled quad still leaves its first screen
-// point at +8 of the packet; a byte +2 that is not 1 + 5n never stops the
-// walk (read, not run: the fuzz only builds lengths of 1 + 5n).
-static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (Area_TestCondition(Get<std::uint16_t>(record, 0)) == 0) return;
-    const std::uint32_t x0 = (b1 - 0x80u) << 7, y0 = (b0 - 0x80u) << 7;
-    if (record[2] == 1) return;
-    unsigned count = 1;
-    for (const unsigned char* sub = record + 4;; sub += 0x14) {
-        alignas(4) short first[4];
-        QuadVertex(first, Get<std::uint32_t>(sub, 0), x0, y0);
-        Gte_LoadVertex(reinterpret_cast<const unsigned long*>(first));
-        Gte_Rtps();
-        unsigned char* const prim = Gfx_PacketNext;
-        Gte_StoreScreenXY(reinterpret_cast<unsigned long*>(prim + 8));
-        const float sx = Get<float>(prim, 8), sy = Get<float>(prim, 0xC);
-        const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
-        if (sx > -100.0f - cull && sx < 420.0f + cull && sy > -150.0f && sy < 300.0f) {
-            Gpu_SetPolyFT4(prim);
-            Gpu_SetShadeTex(prim, 0);
-            alignas(4) short rest[12];
-            for (unsigned k = 0; k < 3; ++k) QuadVertex(rest + 4 * k, Get<std::uint32_t>(sub, 4 + 4 * k), x0, y0);
-            Gte_LoadVertices3(reinterpret_cast<const unsigned long*>(rest));
-            const std::uint32_t texture = Get<std::uint32_t>(sub, 0x10);
-            Prim_SetTexture(texture, prim, 1);
-            Gte_Rtpt();
-            unsigned slot;
-            if (texture & 0x4000u) slot = texture & 0x40000000u ? 7u : 4u;
-            else slot = texture & 0x40000000u ? 6u : Draw_OtSlot;
-            if (draw_order::g_on) draw_order::g_ctx.texture = texture;   // BOF3X_DRAWORDER, diagnostic only
-            Gfx_CommitPrim(slot, kPrimBytes);
-            Gte_StoreScreenXY3(reinterpret_cast<unsigned long*>(prim + 0x18), reinterpret_cast<unsigned long*>(prim + 0x28),
-                               reinterpret_cast<unsigned long*>(prim + 0x38));
-            Gte_PrimDepths4_10(prim);
-        }
-        count += 5;
-        if (count == record[2]) return;
-    }
-}
-
-// original 0x570660: eight flat squares stacked on a map cell, redrawn each
-// frame with one Rand each. The record is not read. For square i = 0..7, with
-// f = Frame_Counter & 7:
-//   half-side   0x20 + 0x20 * i + 4f + (Rand() & 3)
-//   centre      ((b1 - 0x81) * 128 + s, (b0 - 0x80) * 128 - s), where the
-//               sway s = |16 - ((Frame_Counter >> 8) & 0x1F)| * (f + 8i) / 10
-//   third       -(AreaMap_Elevation(b1 - 1, b0) / 2) - 8 * (f + 8i)
-//   texture     0xBA009124, shade ((0x3F - 8i - f) / 4) in bits 19..22
-// The corners go through Prim_VertexScratch, whose fourth words are left as
-// they were, into Gte_RotTransPers4; each square is committed to
-// Draw_OtSlot. 5,098 calls a whole attract cycle.
-//
-// Kept as the original has it: the arithmetic is 32-bit on whatever b1 and b0
-// hold and each coordinate is stored as its low word; the elevation is halved
-// as an s16, so the header's top half that an off-grid answer carries is lost.
-//
-// DIV-0041's random split (docs/ultrawide-rand.md): the random number is map_cells::RisingRand's
-// - Capcom's Rand for every cell the original walks, the draw-only generator
-// for a cell only DIV-0041's lowered inset adds. Narrow, always Rand.
-static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
-    static_cast<void>(record);
-    const long elevation = AreaMap_Elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16));
-    const int base = -(static_cast<short>(elevation) / 2);
-    const unsigned phase = Frame_Counter & 7u;
-    const std::uint32_t x0 = (b1 - 0x81u) << 7, y0 = (b0 - 0x80u) << 7;
-    short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
-    for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const prim = Gfx_PacketNext;
-        Gpu_SetPolyFT4(prim);
-        Gpu_SetShadeTex(prim, 0);
-        const std::uint32_t half = (static_cast<std::uint32_t>(map_cells::RisingRand()) & 3u) + 4u * phase + 0x20u + 0x20u * i;
-        int swing = 16 - static_cast<int>((Frame_Counter >> 8) & 0x1Fu);
-        if (swing < 0) swing = -swing;
-        const auto sway = static_cast<std::uint32_t>(swing * static_cast<int>(phase + 8u * i) / 10);
-        const auto left = static_cast<short>(x0 + sway - half), right = static_cast<short>(x0 + sway + half);
-        const auto top = static_cast<short>(y0 - sway - half), bottom = static_cast<short>(y0 - sway + half);
-        const auto depth = static_cast<short>(base - 8 * static_cast<int>(phase + 8u * i));
-        v[0] = left;   v[1] = top;     v[2] = depth;
-        v[4] = right;  v[5] = top;     v[6] = depth;
-        v[8] = left;   v[9] = bottom;  v[10] = depth;
-        v[12] = right; v[13] = bottom; v[14] = depth;
-        long unused;
-        Gte_RotTransPers4(v + 4, v + 8, v + 12, v, reinterpret_cast<float*>(prim + 0x18), reinterpret_cast<float*>(prim + 0x28),
-                          reinterpret_cast<float*>(prim + 0x38), reinterpret_cast<float*>(prim + 8), &unused);
-        Gte_StoreDepthF4(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
-                         reinterpret_cast<float*>(prim + 0x40), reinterpret_cast<float*>(prim + 0x10));
-        const unsigned shade = static_cast<unsigned>(static_cast<int>(0x3F - 8 * i - phase) / 4);
-        Prim_SetTexture((shade << 19) | 0xBA009124u, prim, 1);
-        Gfx_CommitPrim(Draw_OtSlot, kPrimBytes);
-    }
 }
 
 namespace {
@@ -643,113 +435,19 @@ namespace {
 // runtime's at Crt_GetPtd() + 0x14 - there by the time the game draws). Ours
 // is what the game keeps. DIV-0023's pad words are taken as
 // the fuzz takes them.
-
+}  // namespace
 // DIV-0041's random split: a band cell's rising squares are checked against a clone whose Rand
 // call is aimed at the draw-only generator, as ours draws them; both seeds are
 // in the compared state, so either side touching the wrong one is a mismatch.
-HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr;
+namespace map_cells { HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr; }  namespace {
 constexpr unsigned kLiveGte = 0x380, kLiveWindow = 0x1000;
-
-struct LiveState {
-    unsigned char gte[kLiveGte];
-    unsigned char scratch[0x20];
-    unsigned char* packet_next;
-    unsigned long* ot[8];
-    unsigned long tails[8];
-    std::uint32_t seed;
-    std::uint32_t band_seed;   // DIV-0041's random split: the draw-only generator's (wide_rand.h)
-    unsigned char window[kLiveWindow];
-};
-struct LiveCounts {
-    unsigned calls, mismatches, padding, committed;
-} g_live[2];
 
 unsigned char* LiveGte() { return reinterpret_cast<unsigned char*>(&Gte_RampFar); }
 unsigned LiveGteSize() {
     return static_cast<unsigned>(reinterpret_cast<unsigned char*>(&Gte_Depth) + 4 - LiveGte());
 }
 
-// The tails are read through `tails_at` - the input's pointers - on every
-// capture, so that each side's links are seen where they were made.
-void LiveCapture(LiveState& s, unsigned char* window_at, unsigned window, std::uint32_t* seed,
-                 unsigned long* const* tails_at) {
-    std::memset(&s, 0, sizeof s);
-    std::memcpy(s.gte, LiveGte(), LiveGteSize());
-    std::memcpy(s.scratch, Prim_VertexScratch, sizeof s.scratch);
-    s.packet_next = Gfx_PacketNext;
-    for (unsigned k = 0; k < 8; ++k) {
-        s.ot[k] = Gfx_OtPointers[k];
-        s.tails[k] = tails_at[k] ? *tails_at[k] : 0;
-    }
-    s.seed = *seed;
-    s.band_seed = *wide_rand::DrawOnlySeed();
-    std::memcpy(s.window, window_at, window);
-}
-void LiveApply(const LiveState& s, unsigned char* window_at, unsigned window, std::uint32_t* seed) {
-    std::memcpy(LiveGte(), s.gte, LiveGteSize());
-    std::memcpy(Prim_VertexScratch, s.scratch, sizeof s.scratch);
-    Gfx_PacketNext = s.packet_next;
-    for (unsigned k = 0; k < 8; ++k) Gfx_OtPointers[k] = s.ot[k];
-    for (unsigned k = 0; k < 8; ++k)
-        if (s.ot[k]) *s.ot[k] = s.tails[k];
-    *seed = s.seed;
-    *wide_rand::DrawOnlySeed() = s.band_seed;
-    std::memcpy(window_at, s.window, window);
-}
-
-void Live(unsigned which, HandlerFn theirs, void (*ours)(const unsigned char*, unsigned, unsigned),
-          const unsigned char* record, unsigned b1, unsigned b0) {
-    static LiveState input, their_out, our_out;
-    static const char* const kName[2] = {"MapCell_DrawQuads", "MapCell_DrawRising"};
-    unsigned char* const window_at = Gfx_PacketNext;
-    const auto room = static_cast<unsigned>(Gfx_PacketPools + 0x20000 - window_at);
-    const unsigned window = room < kLiveWindow ? room : kLiveWindow;
-    auto* seed = crt_rest::RandSeedCell();
-    unsigned long* tails_at[8];
-    for (unsigned k = 0; k < 8; ++k) tails_at[k] = Gfx_OtPointers[k];
-
-    LiveCapture(input, window_at, window, seed, tails_at);
-    theirs(record, b1, b0);
-    LiveCapture(their_out, window_at, window, seed, tails_at);
-    LiveApply(input, window_at, window, seed);
-    ours(record, b1, b0);
-    LiveCapture(our_out, window_at, window, seed, tails_at);
-
-    LiveCounts& c = g_live[which];
-    ++c.calls;
-    c.committed += static_cast<unsigned>(our_out.packet_next - input.packet_next) / kPrimBytes;
-    const unsigned pad_at = static_cast<unsigned>(reinterpret_cast<unsigned char*>(Gte_Vertices) - LiveGte());
-    for (unsigned slot = 1; slot < 6; slot += 2) {
-        unsigned char* our_pad = our_out.gte + pad_at + 4 * slot + 2;
-        const unsigned char* their_pad = their_out.gte + pad_at + 4 * slot + 2;
-        if (std::memcmp(our_pad, their_pad, 2) == 0 || our_pad[0] != 0 || our_pad[1] != 0) continue;
-        ++c.padding;
-        std::memcpy(our_pad, their_pad, 2);
-    }
-    if (std::memcmp(&their_out, &our_out, sizeof our_out) != 0 && ++c.mismatches <= 8) {
-        const auto* a = reinterpret_cast<const unsigned char*>(&their_out);
-        const auto* b = reinterpret_cast<const unsigned char*>(&our_out);
-        unsigned first = 0;
-        while (a[first] == b[first]) ++first;
-        bof3::Log("shadow      %s live MISMATCH: call %u, b1 %X, b0 %X, first difference at state +0x%X (%02X / %02X)",
-                  kName[which], c.calls, b1, b0, first, a[first], b[first]);
-    }
-    if (c.calls == 1 || c.calls % 1024 == 0)
-        bof3::Log("shadow      %s live: %u calls, %u primitives committed, %u MISMATCHES; a vertex pad word "
-                  "differed %u times (DIV-0023, not counted)",
-                  kName[which], c.calls, c.committed, c.mismatches, c.padding);
-}
-
 }  // namespace
-
-extern "C" void __cdecl MapCell_DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (g_quads_live) Live(0, g_quads_live, DrawQuads, record, b1, b0);
-    else DrawQuads(record, b1, b0);
-}
-extern "C" void __cdecl MapCell_DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (g_rising_live) Live(1, wide_rand::Band() ? g_rising_band_live : g_rising_live, DrawRising, record, b1, b0);
-    else DrawRising(record, b1, b0);
-}
 
 void MapCells_Inject() {
     // Called BEFORE every module that owns a callee of these four: the
@@ -788,21 +486,17 @@ void MapCells_Inject() {
         // quads' clone is the fuzz's; the rising squares' needs Capcom's Rand,
         // which by then has its C runtime.
         if (LiveGteSize() > kLiveGte) bof3::Fatal("map_cells: the GTE's globals are 0x%X bytes", LiveGteSize());
-        g_quads_live = reinterpret_cast<HandlerFn>(const_cast<void*>(quads));
+        map_cells::g_quads_live = reinterpret_cast<HandlerFn>(const_cast<void*>(quads));
         const bof3::CloneCall live_rising_calls[] = {{0x20, elevation}, {0x86, nullptr},  {0x8E, nullptr},  {0x93, nullptr},
                                                      {0x184, nullptr},  {0x199, nullptr}, {0x1C2, nullptr}, {0x1D0, nullptr}};
-        g_rising_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
+        map_cells::g_rising_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
             "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, live_rising_calls,
             sizeof live_rising_calls / sizeof live_rising_calls[0])));
         const bof3::CloneCall band_rising_calls[] = {{0x20, elevation}, {0x86, nullptr},  {0x8E, nullptr},
                                                      {0x93, reinterpret_cast<const void*>(&wide_rand::DrawOnly)},
                                                      {0x184, nullptr},  {0x199, nullptr}, {0x1C2, nullptr}, {0x1D0, nullptr}};
-        g_rising_band_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
+        map_cells::g_rising_band_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
             "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, band_rising_calls,
             sizeof band_rising_calls / sizeof band_rising_calls[0])));
     }
-    BOF3_INJECT(Area_TestCondition);
-    BOF3_INJECT(AreaMap_Elevation);
-    BOF3_INJECT(MapCell_DrawQuads);
-    BOF3_INJECT(MapCell_DrawRising);
 }

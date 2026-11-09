@@ -3,6 +3,8 @@
 // (docs/window-modes.md, DIV-0032..0034).
 #pragma once
 
+#include <cstdint>
+
 void WinMain_Inject();
 
 // DIV-0033: false while the game runs without being the foreground
@@ -17,3 +19,11 @@ bool WinMain_InputAllowed();
 // DIV-0033's switch: true unless BOF3X_BACKGROUND=0. Read by Fmv_WndProc
 // (DIV-0049), whose pause on deactivation follows it.
 bool WinMain_Background();
+
+namespace win_main {
+extern bool g_background;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_foreground;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint8_t g_capcom_movie_only;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint8_t g_pad_reset;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_loop_ours;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace win_main

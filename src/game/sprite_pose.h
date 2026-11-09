@@ -8,6 +8,7 @@
 void SpritePose_Inject();
 
 namespace sprite_pose {
+extern std::uint8_t g_reach_word;   // defined in sprite_pose.cpp (source-layout B0: promoted for a moved reader)
 
 // The data the ten read, none of it named in symbols.toml yet; each is
 // described where it is used (sprite_pose.cpp) and in docs/sprite-pose.md §3.

@@ -45,43 +45,6 @@ void Draw();
 
 }  // namespace
 
-// original 0x5A6780: the cell table is empty again. Once a logic frame.
-extern "C" void __cdecl SpriteCell_Reset() { SpriteCell_Count = 0; }
-
-// original 0x5A6790: one cell record, at SpriteCell_Table[SpriteCell_Count],
-// and its index. Byte +3 packs the size as ((h & 0xF8) << 1 | w >> 3) in a
-// byte - so a height of 128 or more loses its top bit, as the original has it.
-// No bound on the count, as the original has it; SpriteCell_Reset is the only
-// thing that lowers it.
-extern "C" unsigned long __cdecl SpriteCell_Add(unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v,
-                                                unsigned w, unsigned h) {
-    const unsigned long index = SpriteCell_Count;
-    unsigned char* cell = SpriteCell_Table + index * kCellBytes;
-    Put<std::uint16_t>(cell, 0, static_cast<std::uint16_t>(x));
-    cell[2] = static_cast<unsigned char>(y);
-    cell[3] = static_cast<unsigned char>(((h & 0xF8) << 1) | ((w & 0xFF) >> 3));
-    Put<std::uint16_t>(cell, 4, static_cast<std::uint16_t>(flags));
-    cell[6] = static_cast<unsigned char>(u);
-    cell[7] = static_cast<unsigned char>(v);
-    SpriteCell_Count = index + 1;
-    return index;
-}
-
-// original 0x593860: the current object's CLUT word, to *out. Byte +0x27 is
-// its palette and byte +0x28 how the palettes share the CLUT rows: 2^s to a
-// row, s = 4, 0, 3, 2 for +0x28 = 0..3 and 1 for anything above - so column
-// (palette mod 2^s) * 256 / 2^s texels, row 0x1E0 + palette / 2^s, or 0x1F0
-// + with bit 2 of +0x24. (The original is a four-way jump table.)
-extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
-    const unsigned char* object = Sprite_Current;
-    static const unsigned char kShift[4] = {4, 0, 3, 2};
-    const unsigned row = ((object[0x24] & 4u) | 0x78u) << 2;
-    const unsigned shift = object[0x28] < 4 ? kShift[object[0x28]] : 1u;
-    const unsigned palette = object[0x27];
-    const unsigned column = ((palette & ((1u << shift) - 1)) << (8 - shift)) >> 4;
-    *out = static_cast<unsigned short>(((row + (palette >> shift)) << 6) | (column & 0x3F));
-}
-
 // original 0x5935B0: the current object, drawn. In order:
 //   - bit 6 of byte 0 set: nothing;
 //   - bit 7 of +0x24 clear and +0x48 == 1: the scale at +0x40 and +0x44 is
@@ -99,12 +62,10 @@ extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
 //     ordering-table slot +0x29, 0x20 bytes.
 // The scale goes through x87 in the original as an integer times 2^-16: the
 // product is exact at any precision, so one rounding to float either way.
-namespace {
-
 // DIV-0142's capture log lines so far (the first 64 are logged); the
 // self-test's captures are not counted (reset after CaptureSelfTest).
-unsigned g_capture_logged = 0;
-
+namespace sprite_draw { unsigned g_capture_logged = 0; }
+namespace {
 // The cull, and the off-screen flag it leaves in bit 7 of byte 0: true when
 // the object is to be drawn. The original has one bound for both, x in
 // [-0x40, 0x180] and y in [-0x40, 0x130]. Ours moves each x end out by its
@@ -127,11 +88,8 @@ bool Cull(unsigned char* object, short x, short y, int draw, int flag) {
     else object[0] &= 0x7F;
     return !(y_out || x > 0x180 + draw || x < -0x40 - draw);
 }
-
-int g_draw_columns = -1, g_flag_columns = -1;   // the self-test's: -1 is Sprite_Draw's own
-
 }  // namespace
-
+namespace sprite_draw { int g_draw_columns = -1, g_flag_columns = -1; }   // the self-test's: -1 is Sprite_Draw's own
 std::uint32_t g_sprite_capture = 0;   // DIV-0142; 1 through PatchBytes("SpriteCapture") in SpriteDraw_Inject
 
 namespace {
@@ -157,8 +115,8 @@ namespace {
 // then Gfx_InvalidateTextures over it, which also drops a DIV-0125 grab there.
 constexpr int kCapX = 0x340, kCapY = 0x100, kCapW = 0xC0, kCapH = 0x100;
 constexpr int kCanvas = 0x140, kCanvasOrigin = 0x80;   // cell offsets are s8, sizes up to 32
-std::uint16_t g_canvas[kCanvas][kCanvas];
-
+}  namespace sprite_draw { std::uint16_t g_canvas[kCanvas][kCanvas]; }
+namespace {
 unsigned BlendChannel(unsigned back, unsigned front, unsigned abr) {
     int v;
     switch (abr) {
@@ -171,16 +129,16 @@ unsigned BlendChannel(unsigned back, unsigned front, unsigned abr) {
 }
 
 int Clamp(int v, int n) { return v < 0 ? 0 : v > n ? n : v; }   // a screen row or column to the draw area's
-
-void Capture(unsigned char* object) {
+}  // namespace
+namespace sprite_draw { void Capture(unsigned char* object) {
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
     Put<short>(object, 0x2E, static_cast<short>(x + kCapX));
     Put<short>(object, 0x30, static_cast<short>(y + 0x10 + 240 * (Gfx_BufferIndex ^ 1)));
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
     if (count == 0) {
-        if (g_capture_logged < 64 && ++g_capture_logged)
-            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", g_capture_logged, x, y,
+        if (sprite_draw::g_capture_logged < 64 && ++sprite_draw::g_capture_logged)
+            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", sprite_draw::g_capture_logged, x, y,
                       (unsigned)object[8], (unsigned)Get<std::uint16_t>(object, 0x5A));
         return;
     }
@@ -231,7 +189,7 @@ void Capture(unsigned char* object) {
                 const unsigned b = src[(byte0 + (eight ? t : t >> 1)) & 0x7FF];
                 const unsigned index = eight ? b : (t & 1 ? b >> 4 : b & 0xF);
                 const std::uint16_t c = palette[index];
-                if (c != 0) g_canvas[cy + r + kCanvasOrigin][cx + k + kCanvasOrigin] = c;
+                if (c != 0) sprite_draw::g_canvas[cy + r + kCanvasOrigin][cx + k + kCanvasOrigin] = c;
             }
         }
         if (cx < left) left = cx;
@@ -267,7 +225,7 @@ void Capture(unsigned char* object) {
                 const float fx = (p + 0.5f - x0) / sx;
                 if (fx < 0.0f || fx >= static_cast<float>(right - left)) continue;
                 const int px = mirror ? right - 1 - static_cast<int>(fx) : left + static_cast<int>(fx);
-                const unsigned c = g_canvas[py + kCanvasOrigin][px + kCanvasOrigin];
+                const unsigned c = sprite_draw::g_canvas[py + kCanvasOrigin][px + kCanvasOrigin];
                 if (c == 0) continue;
                 unsigned ch[3] = {c & 0x1Fu, (c >> 5) & 0x1Fu, (c >> 10) & 0x1Fu};
                 for (int n = 0; n < 3; ++n) {
@@ -284,7 +242,7 @@ void Capture(unsigned char* object) {
         }
     }
     for (int r = top; r < bottom; ++r)
-        std::memset(&g_canvas[r + kCanvasOrigin][left + kCanvasOrigin], 0, static_cast<size_t>(right - left) * 2);
+        std::memset(&sprite_draw::g_canvas[r + kCanvasOrigin][left + kCanvasOrigin], 0, static_cast<size_t>(right - left) * 2);
     const short rect[4] = {kCapX, kCapY, kCapW, kCapH};
     Gfx_InvalidateTextures(rect, 0);
     // One line per distinct capture (a sprite captured again at the same point
@@ -297,12 +255,12 @@ void Capture(unsigned char* object) {
     for (const Seen& e : seen)
         if (e.x == x && e.y == y && e.count == count && e.written == written && e.clut == clut) same = true;
     if (!same) seen[seen_next++ & 7] = Seen{x, y, count, written, clut};
-    if (!same && g_capture_logged < 64 && ++g_capture_logged)
+    if (!same && sprite_draw::g_capture_logged < 64 && ++sprite_draw::g_capture_logged)
         bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, shade %02X %02X %02X, into VRAM (0x%X, 0x%X), %u texels non-zero (clut 0x%04X, tpage byte %02X, v base %02X, anim %u)",
-                  g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", shade[0], shade[1],
+                  sprite_draw::g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", shade[0], shade[1],
                   shade[2], kCapX + x, kCapY + y, written, clut, object[0x25], object[0x26], (unsigned)object[8]);
-}
-
+} }
+namespace {
 void Draw() {
     unsigned char* object = Sprite_Current;
     if (object[0] & 0x40) return;
@@ -318,18 +276,18 @@ void Draw() {
         Put<long>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
-    const int draw = g_draw_columns >= 0 ? g_draw_columns : static_cast<int>(Widescreen_Fill());
-    if (!Cull(object, x, y, draw, g_flag_columns >= 0 ? g_flag_columns : 0)) return;
+    const int draw = sprite_draw::g_draw_columns >= 0 ? sprite_draw::g_draw_columns : static_cast<int>(Widescreen_Fill());
+    if (!Cull(object, x, y, draw, sprite_draw::g_flag_columns >= 0 ? sprite_draw::g_flag_columns : 0)) return;
     if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142: the PSX's draw into VRAM, before any screen test
-        Capture(object);
+        sprite_draw::Capture(object);
         return;
     }
     if (wide_staging::Hide(object)) return;   // DIV-0124: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
     if (count == 0) {
-        if (g_capture_logged < 64 && ++g_capture_logged)
-            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", g_capture_logged, x, y,
+        if (sprite_draw::g_capture_logged < 64 && ++sprite_draw::g_capture_logged)
+            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", sprite_draw::g_capture_logged, x, y,
                       (unsigned)object[8], (unsigned)Get<std::uint16_t>(object, 0x5A));
         return;
     }
@@ -376,98 +334,13 @@ void Draw() {
 // joins with the tail it links from. Ours is what the game keeps.
 
 using DrawFn = void (__cdecl*)();
-DrawFn g_draw_clone = nullptr;
-struct {
-    unsigned calls, drawn, cells, mismatches;
-} g_counts;
-
-struct LiveState {
-    unsigned char object[0x80];
-    unsigned char prim[kPrimBytes];
-    unsigned char* packet_next;
-    unsigned long count;
-    unsigned char cells[256 * kCellBytes];
-    unsigned long slot_word, tail_word;
-};
-
-struct LivePlace {
-    unsigned char* object;
-    unsigned char* prim;
-    unsigned char* cells;
-    unsigned long* slot;
-    unsigned long* tail;
-};
-
-void LiveCapture(LiveState& s, const LivePlace& at) {
-    std::memcpy(s.object, at.object, sizeof s.object);
-    std::memcpy(s.prim, at.prim, sizeof s.prim);
-    s.packet_next = Gfx_PacketNext;
-    s.count = SpriteCell_Count;
-    std::memcpy(s.cells, at.cells, sizeof s.cells);
-    s.slot_word = *at.slot;
-    s.tail_word = at.tail ? *at.tail : 0;
-}
-void LiveApply(const LiveState& s, const LivePlace& at) {
-    std::memcpy(at.object, s.object, sizeof s.object);
-    std::memcpy(at.prim, s.prim, sizeof s.prim);
-    Gfx_PacketNext = s.packet_next;
-    SpriteCell_Count = s.count;
-    std::memcpy(at.cells, s.cells, sizeof s.cells);
-    *at.slot = s.slot_word;
-    if (at.tail) *at.tail = s.tail_word;
-}
-
-void LiveDraw() {
-    static LiveState input, theirs, ours;
-    unsigned char* object = Sprite_Current;
-    if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142's capture is not Capcom's: not compared
-        Draw();
-        return;
-    }
-    LivePlace at;
-    at.object = object;
-    at.prim = Gfx_PacketNext;
-    at.cells = SpriteCell_Table + SpriteCell_Count * kCellBytes;
-    at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
-    at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
-    LiveCapture(input, at);
-    g_draw_clone();
-    LiveCapture(theirs, at);
-    LiveApply(input, at);
-    Draw();
-    LiveCapture(ours, at);
-    ++g_counts.calls;
-    if (ours.count != input.count) {
-        ++g_counts.drawn;
-        g_counts.cells += ours.count - input.count;
-    }
-    if (std::memcmp(&theirs, &ours, sizeof ours) != 0 && ++g_counts.mismatches <= 8) {
-        const auto* a = reinterpret_cast<const unsigned char*>(&theirs);
-        const auto* b = reinterpret_cast<const unsigned char*>(&ours);
-        unsigned first = 0;
-        while (a[first] == b[first]) ++first;
-        bof3::Log("shadow      Sprite_Draw live MISMATCH: call %u, first difference at state +0x%X (%02X / %02X)",
-                  g_counts.calls, first, a[first], b[first]);
-    }
-    if (g_counts.calls == 1 || g_counts.calls % 1024 == 0)
-        bof3::Log("shadow      Sprite_Draw live: %u calls, %u drawn with %u cells, %u MISMATCHES", g_counts.calls,
-                  g_counts.drawn, g_counts.cells, g_counts.mismatches);
-}
-
-}  // namespace
-
-void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
+}  namespace sprite_draw { DrawFn g_draw_clone = nullptr; }  void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
     const int x0 = Clamp(x, 0x400), x1 = Clamp(x + w, 0x400), y0 = Clamp(y, 0x200), y1 = Clamp(y + h, 0x200);
     if (x1 <= x0 || y1 <= y0) return;
     for (int r = y0; r < y1; ++r) std::memset(&Gfx_VramShadow[(r << 10) + x0], 0, static_cast<size_t>(x1 - x0) * 2);
     const short rect[4] = {static_cast<short>(x0), static_cast<short>(y0), static_cast<short>(x1 - x0),
                            static_cast<short>(y1 - y0)};
     Gfx_InvalidateTextures(rect, 0);
-}
-
-extern "C" void __cdecl Sprite_Draw() {
-    if (g_draw_clone) LiveDraw();
-    else Draw();
 }
 
 namespace {
@@ -495,9 +368,9 @@ constexpr unsigned kMaxCount = 0x200;                                  // Sprite
 constexpr unsigned kCellWindow = (kMaxCount + 255) * kCellBytes;       // what one call can reach
 constexpr unsigned kFrameBytes = 0x100 + 1 + 255 * kPartBytes;
 constexpr unsigned kWindow = 0x40;
-
-unsigned long g_tails[8];
-
+}  // namespace
+namespace sprite_draw { unsigned long g_tails[8]; }
+namespace sprite_draw {
 struct State {
     alignas(4) unsigned char object[0x80];
     alignas(4) unsigned char frame[kFrameBytes];
@@ -510,29 +383,29 @@ struct State {
     unsigned char* current;
     unsigned char window[kWindow];   // the pool, from packet_next as it was on the way in
 };
-
-State g_live;   // the object and frame the calls see: Sprite_Current points in here
-
-void Capture(State& s, const unsigned char* window_at) {
-    std::memcpy(s.object, g_live.object, sizeof s.object);
-    std::memcpy(s.frame, g_live.frame, sizeof s.frame);
+}  // namespace sprite_draw
+namespace sprite_draw { State g_live; }   // the object and frame the calls see: Sprite_Current points in here
+namespace {
+void Capture(sprite_draw::State& s, const unsigned char* window_at) {
+    std::memcpy(s.object, sprite_draw::g_live.object, sizeof s.object);
+    std::memcpy(s.frame, sprite_draw::g_live.frame, sizeof s.frame);
     std::memcpy(s.cells, SpriteCell_Table, kCellWindow);
     s.cell_count = SpriteCell_Count;
     s.packet_next = Gfx_PacketNext;
     std::memcpy(s.ot, Gfx_OtPointers, sizeof s.ot);
-    std::memcpy(s.tails, g_tails, sizeof s.tails);
+    std::memcpy(s.tails, sprite_draw::g_tails, sizeof s.tails);
     s.buffer_index = Gfx_BufferIndex;
     s.current = Sprite_Current;
     if (window_at) std::memcpy(s.window, window_at, kWindow);
 }
-void Apply(const State& s, unsigned char* window_at) {
-    std::memcpy(g_live.object, s.object, sizeof s.object);
-    std::memcpy(g_live.frame, s.frame, sizeof s.frame);
+void Apply(const sprite_draw::State& s, unsigned char* window_at) {
+    std::memcpy(sprite_draw::g_live.object, s.object, sizeof s.object);
+    std::memcpy(sprite_draw::g_live.frame, s.frame, sizeof s.frame);
     std::memcpy(SpriteCell_Table, s.cells, kCellWindow);
     SpriteCell_Count = s.cell_count;
     Gfx_PacketNext = s.packet_next;
     std::memcpy(Gfx_OtPointers, s.ot, sizeof s.ot);
-    std::memcpy(g_tails, s.tails, sizeof s.tails);
+    std::memcpy(sprite_draw::g_tails, s.tails, sizeof s.tails);
     Gfx_BufferIndex = s.buffer_index;
     Sprite_Current = s.current;
     if (window_at) std::memcpy(window_at, s.window, kWindow);
@@ -543,7 +416,7 @@ using AddFn = unsigned long (__cdecl*)(unsigned, unsigned, unsigned, unsigned, u
 
 void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_add) {
     constexpr unsigned kRounds = 24000;
-    static State saved, input, their_out, our_out;
+    static sprite_draw::State saved, input, their_out, our_out;
     Capture(saved, nullptr);
     static unsigned char saved_pool[2 * 0x10000];
     std::memcpy(saved_pool, Gfx_PacketPools, sizeof saved_pool);
@@ -576,13 +449,13 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
         Put<short>(object, 0x30, edge(-0x40, 0x130));
         const unsigned offset = next() % 0x100;
         Put<std::uint16_t>(object, 0x5A, static_cast<std::uint16_t>(offset));
-        Put<const unsigned char*>(object, 0x54, g_live.frame);
+        Put<const unsigned char*>(object, 0x54, sprite_draw::g_live.frame);
         input.frame[offset] = static_cast<unsigned char>(next() % 4 == 0 ? next() : next() % 8);
         object[0x29] = static_cast<unsigned char>(next() % 8);   // the ninth slot is somebody else's memory
         input.cell_count = next() % kMaxCount;
-        input.current = g_live.object;
+        input.current = sprite_draw::g_live.object;
         input.buffer_index = static_cast<unsigned char>(next() % 2);
-        for (unsigned k = 0; k < 8; ++k) input.ot[k] = &g_tails[next() % 8];
+        for (unsigned k = 0; k < 8; ++k) input.ot[k] = &sprite_draw::g_tails[next() % 8];
         const std::uint32_t pool = next() % 2 ? 0x10000u : 0u;
         std::uint32_t at = next() % (0x10000u - kWindow - 0x200u);
         if (next() % 4 == 0) at = 0x10000u - 0x54u - 0x40u + next() % 0x40u;
@@ -659,13 +532,13 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
             if ((x > 0x180 || x < -0x40) && x <= 0x180 + columns && x >= -0x40 - columns) ++band;
             const unsigned offset = next() % 0x100;
             Put<std::uint16_t>(object, 0x5A, static_cast<std::uint16_t>(offset));
-            Put<const unsigned char*>(object, 0x54, g_live.frame);
+            Put<const unsigned char*>(object, 0x54, sprite_draw::g_live.frame);
             input.frame[offset] = static_cast<unsigned char>(next() % 8);
             object[0x29] = static_cast<unsigned char>(next() % 8);
             input.cell_count = next() % kMaxCount;
-            input.current = g_live.object;
+            input.current = sprite_draw::g_live.object;
             input.buffer_index = static_cast<unsigned char>(next() % 2);
-            for (unsigned k = 0; k < 8; ++k) input.ot[k] = &g_tails[next() % 8];
+            for (unsigned k = 0; k < 8; ++k) input.ot[k] = &sprite_draw::g_tails[next() % 8];
             input.packet_next = Gfx_PacketPools + (next() % 2 ? 0x10000u : 0u) + next() % (0x10000u - kWindow - 0x200u);
             unsigned char* const window_at = input.packet_next;
             unsigned char object_out[3][0x80];
@@ -676,12 +549,12 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
                     theirs();
                     SetControlWord(saved_word);
                 } else {
-                    g_draw_columns = columns;
-                    g_flag_columns = pass == 1 ? 0 : columns;
+                    sprite_draw::g_draw_columns = columns;
+                    sprite_draw::g_flag_columns = pass == 1 ? 0 : columns;
                     Sprite_Draw();
-                    g_draw_columns = g_flag_columns = -1;
+                    sprite_draw::g_draw_columns = sprite_draw::g_flag_columns = -1;
                 }
-                std::memcpy(object_out[pass], g_live.object, sizeof object_out[pass]);
+                std::memcpy(object_out[pass], sprite_draw::g_live.object, sizeof object_out[pass]);
             }
             if (std::memcmp(object_out[0], object_out[1], sizeof object_out[0]) != 0 && ++split_bad <= 8)
                 bof3::Log("shadow      sprite_draw flag split MISMATCH: round %u, x %d y %d: byte 0 %02X / %02X", round, x,
@@ -694,15 +567,15 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
     unsigned clut_bad = 0;
     constexpr unsigned kClutRounds = 65536;
     for (unsigned round = 0; round < kClutRounds; ++round) {
-        for (auto& b : g_live.object) b = static_cast<unsigned char>(next());
-        g_live.object[0x28] = static_cast<unsigned char>(round % 8 < 6 ? round % 8 : next());
-        Sprite_Current = g_live.object;
+        for (auto& b : sprite_draw::g_live.object) b = static_cast<unsigned char>(next());
+        sprite_draw::g_live.object[0x28] = static_cast<unsigned char>(round % 8 < 6 ? round % 8 : next());
+        Sprite_Current = sprite_draw::g_live.object;
         unsigned short theirs_word = static_cast<unsigned short>(next()), ours_word = theirs_word;
         their_clut(&theirs_word);
         Sprite_ClutWord(&ours_word);
         if (theirs_word != ours_word && ++clut_bad <= 8)
             bof3::Log("shadow      Sprite_ClutWord self-test MISMATCH: +0x24 %02X +0x27 %02X +0x28 %02X: %04X / %04X",
-                      g_live.object[0x24], g_live.object[0x27], g_live.object[0x28], theirs_word, ours_word);
+                      sprite_draw::g_live.object[0x24], sprite_draw::g_live.object[0x27], sprite_draw::g_live.object[0x28], theirs_word, ours_word);
     }
 
     // SpriteCell_Add alone: every argument random, whole dwords - Sprite_Draw
@@ -894,13 +767,13 @@ void SpriteDraw_Inject() {
         void* clut = bof3::CloneOriginal("Sprite_ClutWord", bof3::addr::Sprite_ClutWord, 0xD5);
         const bof3::CloneCall calls[] = {{0xBA, nullptr}, {0xC3, clut}, {0x1B3, add}, {0x281, nullptr}, {0x292, nullptr}};
         void* draw = bof3::CloneOriginal("Sprite_Draw", bof3::addr::Sprite_Draw, 0x2AB, calls, 5);
-        g_draw_clone = nullptr;
+        sprite_draw::g_draw_clone = nullptr;
         SelfTest(reinterpret_cast<DrawFn>(draw), reinterpret_cast<ClutFn>(clut), reinterpret_cast<DrawFn>(reset),
                  reinterpret_cast<AddFn>(add));
         CaptureSelfTest();
-        g_capture_logged = 0;
+        sprite_draw::g_capture_logged = 0;
         // From here on Sprite_Draw compares every live call against the clone.
-        g_draw_clone = reinterpret_cast<DrawFn>(draw);
+        sprite_draw::g_draw_clone = reinterpret_cast<DrawFn>(draw);
     }
     {
         // DIV-0142: armed after the fuzz, which compares Capcom's rule.
@@ -910,8 +783,4 @@ void SpriteDraw_Inject() {
         bof3::Log("DIV-0142    a sprite with +0x24 bit 3 is drawn into VRAM (0x340, 0x100) as on the PlayStation (on "
                   "unless the line above says OFF)");
     }
-    BOF3_INJECT(SpriteCell_Reset);
-    BOF3_INJECT(SpriteCell_Add);
-    BOF3_INJECT(Sprite_ClutWord);
-    BOF3_INJECT(Sprite_Draw);
 }

@@ -4,4 +4,6 @@
 // 0x531F10, with 0x531DB0). docs/field-blocked.md.
 #pragma once
 
+#include "game/field_blocked_callees.h"
+
 void FieldBlocked_Inject();

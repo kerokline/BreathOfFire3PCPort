@@ -169,57 +169,6 @@ void SelfTestSetElevation(SetElevationFn theirs) {
 
 }  // namespace
 
-// original 0x56F910 (PSX 0x80154C7C). Which map cell the view's cell (row, col) shows, as two
-// bytes to out - or 0, 0 for none. The view is isometric: going down a row
-// moves half a cell in x and in y, going along a column one cell in x and
-// back one in y.
-//
-// As the original has it: the outermost ring of the map never shows (0 < x <
-// width - 1), a cell whose word is 0 does not show, and "none" and the map
-// cell (0, 0) are the same answer - which costs nothing, (0, 0) being in the
-// ring. Only the low bytes of x and y are kept; with a width and height of one
-// byte each, nothing is lost.
-extern "C" void __cdecl MapView_CellToMap(int row, int col, unsigned char* out) {
-    const int x = MapView_Origin[0] + col + (row + 1) / 2;
-    const int y = MapView_Origin[1] + row / 2 - col;
-    const int width = AreaMap_Header[0], height = AreaMap_Header[1];
-    const unsigned offset = static_cast<unsigned>(AreaMap_Header[2] | (AreaMap_Header[3] << 8));
-    if (x > 0 && x < width - 1 && y > 0 && y < height - 1) {
-        const auto* cells = reinterpret_cast<const unsigned short*>(AreaMap_Header);
-        if (cells[static_cast<unsigned>(x + width * y) + offset * 2] != 0) {
-            out[0] = static_cast<unsigned char>(x);
-            out[1] = static_cast<unsigned char>(y);
-            return;
-        }
-    }
-    out[0] = 0;
-    out[1] = 0;
-}
-
-// original 0x536700 (PSX 0x80167628). The area map's byte for a cell. No bounds check; the
-// arguments are 16 bits, signed.
-extern "C" unsigned char __cdecl AreaMap_ByteAt(short x, short y) {
-    return AreaMap_Bytes[x + y * static_cast<int>(AreaMap_Header[0])];
-}
-
-// original 0x5725F0 (PSX 0x80155A94). Sets the view's elevation and asks for a redraw; unless
-// the area's header word +0x1E is set, the offset moves by two for every unit
-// the elevation changed.
-//
-// The original takes the difference from all 32 bits of the argument and the
-// stored elevation from its low 16; since the offset is itself 16 bits the
-// first cannot show, and a build that differed there passed the fuzz.
-extern "C" void __cdecl MapView_SetElevation(int value) {
-    std::uint16_t fixed;
-    std::memcpy(&fixed, AreaMap_Header + 0x1E, sizeof fixed);
-    if (fixed == 0) {
-        const std::uint32_t moved = (static_cast<std::uint32_t>(MapView_Elevation) - static_cast<std::uint32_t>(value)) << 1;
-        MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset + moved);
-    }
-    MapView_Elevation = static_cast<short>(value);
-    MapView_Redraw = 2;
-}
-
 void MapView_Inject() {
     // 0x56F910..0x56F9A0: no calls, every jump internal. 0x536700..0x536722:
     // no calls, no jumps. 0x5725F0..0x57261F: no calls, one jump, internal
@@ -232,7 +181,4 @@ void MapView_Inject() {
         SelfTestSetElevation(reinterpret_cast<SetElevationFn>(
             bof3::CloneOriginal("MapView_SetElevation", bof3::addr::MapView_SetElevation, 0x30)));
     }
-    BOF3_INJECT(MapView_CellToMap);
-    BOF3_INJECT(AreaMap_ByteAt);
-    BOF3_INJECT(MapView_SetElevation);
 }

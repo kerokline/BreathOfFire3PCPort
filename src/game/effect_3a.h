@@ -10,6 +10,7 @@
 void Effect3A_Inject();
 
 namespace effect_3a {
+extern unsigned char g_pixel_room;   // defined in effect_3a.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=effect_3a: the start-up fuzz, effect_3a_fuzz.cpp. Clones every
 // original before Effect3A_Inject patches it.
 void SelfTest();

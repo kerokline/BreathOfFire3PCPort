@@ -83,39 +83,6 @@ void SelfTestRecordSwap(RecordSwapFn theirs) {
 
 }  // namespace
 
-// original 0x593530. Exchanges two entries of the sprite draw list, for the
-// bubble sort at the head of 0x593060.
-//
-// As the original has it: only the low byte of each index counts - the caller
-// pushes whole registers of which it set one byte - and nothing holds that
-// byte to the list's 40 entries.
-extern "C" void __cdecl Sprite_DrawListSwap(unsigned i, unsigned j) {
-    i &= 0xFF;
-    j &= 0xFF;
-    unsigned char* const at_i = Sprite_DrawList[i];
-    unsigned char* const at_j = Sprite_DrawList[j];
-    Sprite_DrawList[j] = at_i;
-    Sprite_DrawList[i] = at_j;
-}
-
-// original 0x593570. Exchanges two 12-byte draw records, for the per-layer
-// bubble sort in 0x593060 - the hottest unnamed logic function of the attract
-// run, 421,058 calls.
-//
-// As the original has it, in its order: all of b is read; then a is copied to
-// b a dword at a time; then what was read goes to a. The game passes
-// neighbouring records, which do not overlap; for records that do, this order
-// is the result.
-extern "C" void __cdecl Sprite_DrawRecordSwap(unsigned long* a, unsigned long* b) {
-    const unsigned long b0 = b[0], b1 = b[1], b2 = b[2];
-    b[0] = a[0];
-    b[1] = a[1];
-    b[2] = a[2];
-    a[0] = b0;
-    a[1] = b1;
-    a[2] = b2;
-}
-
 void SpriteOrder_Inject() {
     // 0x593530..0x593565 and 0x593570..0x5935A4: no calls and no jumps at all
     // (disasm 2026-09-20).
@@ -125,6 +92,4 @@ void SpriteOrder_Inject() {
         SelfTestRecordSwap(reinterpret_cast<RecordSwapFn>(
             bof3::CloneOriginal("Sprite_DrawRecordSwap", bof3::addr::Sprite_DrawRecordSwap, 0x35)));
     }
-    BOF3_INJECT(Sprite_DrawListSwap);
-    BOF3_INJECT(Sprite_DrawRecordSwap);
 }

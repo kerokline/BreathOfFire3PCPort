@@ -22,26 +22,17 @@ namespace {
 // text_draw.h. Starts at the original's value, so a run with no overlay
 // never sees a different number.
 constexpr unsigned kOriginalGlyphLimit = 0xA00;
-unsigned g_glyph_limit = kOriginalGlyphLimit;
+}  namespace text_draw { unsigned g_glyph_limit = kOriginalGlyphLimit; }  namespace {
 unsigned g_glyph_count = 0;   // the loaded table's glyphs, as TextDraw_SetGlyphCount was last told
-constexpr int kCell = 12;
 constexpr int kRecordBytes = 0x20;
 
 // Text_EmitGlyph is not ours, and cannot run in a start-up test (it commits a
 // primitive), so it is called through a pointer the fuzz can aim at a
 // recorder - for the original's copy and for ours alike.
 using EmitFn = void (__cdecl*)(int, int, int, int, int, int, int);
-EmitFn g_emit = Text_EmitGlyph;
-
-const std::uint8_t* ClipPairs() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_ClipPairs)); }
+}  namespace text_draw { EmitFn g_emit = Text_EmitGlyph; }
+namespace {
 const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_Records)); }
-
-// The original's answer to a glyph index above 0xA00: `mov dx, 0x1000` /
-// `in al, dx` (0x516C9B), a privileged instruction, which in user mode is a
-// fault. Ours is the same instruction, so the crash reporter sees what it
-// would have seen. Should the fault ever be resumed, the original goes on to
-// draw the glyph; so does the caller of this.
-void GlyphTrap() { __asm__ volatile("mov $0x1000, %%dx\n\tin %%dx, %%al" : : : "eax", "edx"); }
 
 unsigned ClutOf(unsigned color) { return 0x7800u | (color & 0xFu); }
 
@@ -86,7 +77,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
                 why, (unsigned)reinterpret_cast<std::uintptr_t>(p), (unsigned)Game_AreaNumber, p[0], p[1], p[2], p[3],
                 p[4], p[5], p[6]);
 }
-
+}  // namespace
 // --- BOF3X_TEXTLOG: which string is drawn from where ----------------------------
 // Diagnostic only, off unless the variable is set: each distinct (caller,
 // string address) pair is logged once, with the string's first bytes - the
@@ -96,33 +87,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
 // drawn through Text_DrawAt shows 0x516B61. Reading Text_DrawAt's caller off
 // the stack, three slots above our first argument, was tried on 2026-09-21
 // and came back wrong as built; unfixed, so not claimed.
-bool g_textlog = false;
-constexpr unsigned kTextLogSlots = 4096;
-std::uint64_t g_textlog_seen[kTextLogSlots];
-unsigned g_textlog_count = 0;
-
-void TextLog(std::uint32_t caller, const unsigned char* text) {
-    const std::uint64_t key = (static_cast<std::uint64_t>(caller) << 32) | reinterpret_cast<std::uintptr_t>(text);
-    unsigned h = static_cast<unsigned>((key * 0x9E3779B97F4A7C15ull) >> 52) % kTextLogSlots;
-    for (unsigned probe = 0; probe < kTextLogSlots; ++probe, h = (h + 1) % kTextLogSlots) {
-        if (g_textlog_seen[h] == key) return;
-        if (g_textlog_seen[h] == 0) {
-            if (g_textlog_count + 1 >= kTextLogSlots) return;   // full: stop logging, keep drawing
-            g_textlog_seen[h] = key;
-            ++g_textlog_count;
-            char hex[3 * 16 + 1] = {};
-            for (unsigned i = 0; i < 16 && text[i]; ++i) {
-                static const char digits[] = "0123456789ABCDEF";
-                hex[i * 3] = digits[text[i] >> 4];
-                hex[i * 3 + 1] = digits[text[i] & 0xF];
-                hex[i * 3 + 2] = ' ';
-            }
-            bof3::Log("textlog     caller 0x%08X text 0x%08X frame %u: %s", (unsigned)caller,
-                      (unsigned)reinterpret_cast<std::uintptr_t>(text), (unsigned)Frame_Counter, hex);
-            return;
-        }
-    }
-}
+namespace text_draw { bool g_textlog = false; }  namespace {
 
 // --- BOF3X_SHADOW=text_draw ----------------------------------------------------
 // The clone: 0x516B70..0x516D50, body, jump table and byte table. The jump
@@ -182,7 +147,7 @@ void SelfTest(void* clone) {
     const short saved_pen[3] = {Text_PenX, Text_PenY, Text_LineX};
     unsigned char* const saved_packet = Gfx_PacketNext;
     Gfx_PacketNext = prim;
-    g_emit = &RecordEmit;
+    text_draw::g_emit = &RecordEmit;
 
     std::uint32_t rng = 0x27D4EB2Fu;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
@@ -198,7 +163,7 @@ void SelfTest(void* clone) {
         if (r == 4) { out[0] = 0x20; return 1; }
         if (r < 8) {
             static const unsigned kSeeds[] = {0x000, 0x001, 0x0FF, 0x100, 0x992, 0x993, 0x9FF, 0xA00};
-            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (g_glyph_limit + 1);
+            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (text_draw::g_glyph_limit + 1);
             // A zero second byte is left in: the glyph is drawn and the loop's
             // look-ahead then ends the string, the same on both sides. (Forcing
             // it non-zero once turned the seed 0xA00 into 0xA01 - the trap.)
@@ -250,7 +215,7 @@ void SelfTest(void* clone) {
                       n, (int)(b.ret - a.ret), a.n, b.n, a.pen[0], a.pen[1], b.pen[0], b.pen[1]);
     }
 
-    g_emit = Text_EmitGlyph;
+    text_draw::g_emit = Text_EmitGlyph;
     Gfx_PacketNext = saved_packet;
     Text_PenX = saved_pen[0]; Text_PenY = saved_pen[1]; Text_LineX = saved_pen[2];
     std::memcpy(records, saved_records, sizeof saved_records);
@@ -277,153 +242,9 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out) {
     return false;
 }
 
-// original 0x516B70. Draws `text` at the pen (Text_PenX, Text_PenY) until a
-// NUL or until `count` characters - a byte - have gone by.
-//
-//   0x01        newline: pen y += 12, pen x = Text_LineX
-//   0x05 nn     remember the colour byte, take nn
-//   0x06        take the remembered colour byte back (0 if none was)
-//   0x07 nn     draw the record Text_Records + nn * 32, up to 32 characters,
-//               by recursion, in the current colour byte
-//   0x20        advance, draw nothing
-//   >= 0x80     two bytes: glyph ((b0 & 0x7F) << 8) + b1
-//   the rest    glyph b - 0x26 as 16 bits - so 0x02..0x04, 0x08..0x1F and
-//               0x21..0x25 wrap past 0xA00 and trap, as any glyph above it
-//
-// As the original has it:
-//   - (u, v), the clip pair picked by the colour byte's high nibble, is read
-//     once on entry; 0x05 and 0x06 change the CLUT and not the clip;
-//   - the remembered colour is one byte per call, not a stack, and a record
-//     drawn by 0x07 starts with none of its own;
-//   - a control's argument counts as a character of its own against `count`
-//     only in that the loop looks at the byte after it: every pass, glyph or
-//     control, costs one;
-//   - the loop ends on the byte AFTER the one it handled being NUL, so a
-//     two-byte code or an argument whose last byte is 0 ends the string, and
-//     the first byte is the only one tested before anything is drawn;
-//   - the return is one past the byte the loop stopped at: past the NUL, or,
-//     when `count` ran out, past the first character it did not draw.
-//
-// DIVERGENCE DIV-0006: the pen advances by the glyph's entry in the overlay
-// font's advance table where the original adds 12. With no table loaded -
-// every shipped file - TextAdvance_Of is 12 and this is the original.
-//
-// DIVERGENCE (DIV-0140, the button unification round's DT-2;
-// docs/button-dialogue.md 4): a button mention in the area text block - a
-// layer's button code, or the PC's colour cue with no layer - is drawn as the
-// button the Config has put its role on (ButtonText_Code / _Cue, button_text.h):
-// the `05 cc` takes that button's colour and the icon its glyph, the pen
-// advancing by the drawn glyph's width, so the rest of the line re-flows as
-// the layer's widths do. Nothing else changes: the same bytes are walked,
-// every pass costs what it cost, the return is the same. When the drawn
-// button is the one the text shows, and under BOF3X_ORIGINAL=ButtonText, the
-// draw is the one above.
-extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsigned count_arg,
-                                                        const unsigned char* text) {
-    if (g_textlog) {
-        TextLog(Low32(__builtin_return_address(0)), text);
-    }
-    unsigned color = color_arg;                     // only the low byte is ever read
-    auto count = static_cast<std::uint8_t>(count_arg);
-    unsigned clut = ClutOf(color);
-    const std::uint8_t* pair = ClipPairs() + ((color & 0xFF) >> 4) * 2;
-    const int u = pair[0], v = pair[1];
-    std::uint8_t remembered = 0;
-    // DIV-0140: 1 after a button code that resolved (its `05 cc` next), 2 once
-    // the drawn colour is taken (the glyph next); `icon` is what to draw.
-    int button = 0;
-    button_text::Icon icon;
-
-    if (text[0] == 0) return text + 1;
-    do {
-        if (count == 0) break;
-        const std::uint8_t c = text[0];
-        bool glyph = c > 0x20;
-        if (!glyph) {
-            switch (c) {
-            case 0x00:
-                break;
-            case 0x01:
-                Text_PenY = static_cast<short>(Text_PenY + kCell);
-                Text_PenX = Text_LineX;
-                break;
-            case 0x05: {
-                const std::uint8_t* const control = text;
-                ++text;
-                remembered = static_cast<std::uint8_t>(color);
-                color = (color & ~0xFFu) | text[0];
-                clut = ClutOf(color);
-                // DIV-0140: a button code's own colour stands as the text has
-                // it (06 takes it back at once); the `05 cc` after it, or a
-                // colour cue, takes the drawn button's colour instead.
-                if (button == 1 || (button == 0 && ButtonText_Cue(control, icon))) {
-                    color = (color & ~0xFFu) | icon.colour;
-                    clut = ClutOf(color);
-                    button = 2;
-                } else if (button == 0 && ButtonText_Code(control, icon)) {
-                    button = 1;
-                }
-                break;
-            }
-            case 0x06:
-                color = (color & ~0xFFu) | remembered;
-                clut = ClutOf(color);
-                break;
-            case 0x07:
-                ++text;
-                Text_DrawString(color, kRecordBytes, Records() + text[0] * kRecordBytes);
-                break;
-            case 0x20:
-                Text_PenX = static_cast<short>(Text_PenX + TextAdvance_Of(text));  // DIV-0006
-                break;
-            default:
-                glyph = true;
-                break;
-            }
-        }
-        if (glyph) {
-            // DIV-0140: the drawn button's glyph in the fallback's place; the
-            // walk still steps over the fallback's own bytes.
-            const std::uint8_t* const first = button == 2 ? icon.glyph : text;
-            button = 0;
-            std::uint16_t index;
-            if (first[0] & 0x80) {
-                index = static_cast<std::uint16_t>(((first[0] & 0x7F) << 8) + first[1]);
-            } else {
-                index = static_cast<std::uint16_t>(first[0] - 0x26);
-            }
-            if (c & 0x80) ++text;
-            if (index > g_glyph_limit) GlyphTrap();
-            std::uint32_t pa, pb;
-            if (TextPair_Of(index, &pa, &pb)) {
-                // DIV-0057: a pair code is its two glyphs, the second one the
-                // first's advance on. It counts as two characters, but draws
-                // whole even when one is left (the message box asks for 1).
-                const auto a = static_cast<std::uint16_t>(pa), b = static_cast<std::uint16_t>(pb);
-                if (a > g_glyph_limit || b > g_glyph_limit) GlyphTrap();
-                std::memcpy(Gfx_PacketNext + 0x16, &a, sizeof a);
-                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
-                       kCell - v, u, v, static_cast<int>(clut));
-                std::memcpy(Gfx_PacketNext + 0x16, &b, sizeof b);
-                g_emit(static_cast<std::uint16_t>(Text_PenX + TextAdvance_OfGlyph(a)),
-                       static_cast<std::uint16_t>(Text_PenY), kCell, kCell - v, u, v, static_cast<int>(clut));
-                if (count > 1) --count;
-            } else {
-                std::memcpy(Gfx_PacketNext + 0x16, &index, sizeof index);
-                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
-                       kCell - v, u, v, static_cast<int>(clut));
-            }
-            Text_PenX = static_cast<short>(Text_PenX + TextAdvance_Of(first));  // DIV-0006
-        }
-        ++text;
-        --count;
-    } while (text[0] != 0);
-    return text + 1;
-}
-
 void TextDraw_SetGlyphCount(unsigned glyphs) {
     g_glyph_count = glyphs;
-    g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
+    text_draw::g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
 }
 
 unsigned TextDraw_GlyphCount() { return g_glyph_count; }
@@ -433,10 +254,9 @@ void TextDraw_Inject() {
         const bof3::CloneCall calls[] = {{kEmitCall, reinterpret_cast<const void*>(&RecordEmit)}};
         SelfTest(bof3::CloneOriginal("Text_DrawString", bof3::addr::Text_DrawString, kSize, calls, 1));
     }
-    BOF3_INJECT(Text_DrawString);
     char flag[8];
-    g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
-    if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
+    text_draw::g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
+    if (text_draw::g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }
 
 // --- DT-2 (DIV-0140): the self-test and the switch ---------------------------------
@@ -527,11 +347,11 @@ void ButtonTextSelfTest() {
     std::uint8_t* const tail = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(::bof3::Img(kPool + kPoolRoom - 0x40)));
     std::memcpy(saved_pool, tail, sizeof saved_pool);
     Gfx_PacketNext = prim;
-    g_emit = &RecordEmit;
+    text_draw::g_emit = &RecordEmit;
     // A layer's table holds DIV-0051's L1 / R1 at 0xA69 / 0xA6A; the shipped
     // one, loaded at a self-test, stops at 0x992 and the guard would trap.
-    const unsigned saved_limit = g_glyph_limit;
-    g_glyph_limit = 0xFFF;
+    const unsigned saved_limit = text_draw::g_glyph_limit;
+    text_draw::g_glyph_limit = 0xFFF;
     Game_AreaNumber = 30;
     g_bt.sigma = &TestSigma;
 
@@ -662,8 +482,8 @@ void ButtonTextSelfTest() {
     g_button_text = saved_on;
     Game_AreaNumber = saved_area;
     std::memcpy(tail, saved_pool, sizeof saved_pool);
-    g_emit = Text_EmitGlyph;
-    g_glyph_limit = saved_limit;
+    text_draw::g_emit = Text_EmitGlyph;
+    text_draw::g_glyph_limit = saved_limit;
     Gfx_PacketNext = saved_packet;
     Text_PenX = saved_pen[0];
     Text_PenY = saved_pen[1];

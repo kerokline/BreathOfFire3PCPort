@@ -3,4 +3,6 @@
 // docs/movement-script.md.
 #pragma once
 
+#include "game/move_script_callees.h"
+
 void MoveScript_Inject();

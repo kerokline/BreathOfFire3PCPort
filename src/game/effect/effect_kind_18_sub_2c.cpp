@@ -1,0 +1,496 @@
+// Moved here by tools/move_funcs.py from effect_5g.cpp, effect_6a.cpp (docs/source-layout-round.md).
+#include "game/effect/effect_kind_18_sub_2c.h"
+
+#include <bit>
+#include <cstdint>
+
+#include "bof3/symbols.gen.h"
+#include "game/effect/effect_kind_18_sub_2c_callees.h"
+#include "game/effect_5g.h"
+#include "game/effect_5g_callees.h"
+#include "game/effect_6a.h"
+#include "game/effect_6a_callees.h"
+#include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
+#include "game/scenario_harness.h"
+#include "game/widescreen.h"
+#include "hook/detour.h"
+#include "hook/log.h"
+
+namespace {
+
+namespace at = effect_kind_18_sub_2c::at;
+
+}  // namespace
+
+namespace {
+
+using U = std::uint32_t;
+
+using move_script::At;
+
+using move_script::Long;
+
+using move_script::SetWord;
+
+using move_script::Word;
+
+using Handler = scenario_harness::Handler;
+
+unsigned char* S() { return Sprite_Current; }
+
+U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
+
+std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+
+U AddressOf(const void* p) { return Low32(p); }
+
+unsigned char* Vertices() { return reinterpret_cast<unsigned char*>(Prim_VertexScratch); }
+
+const short* Vertex(unsigned i) { return reinterpret_cast<const short*>(Vertices() + 8 * i); }
+
+// mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + 2]; jmp [table + eax
+// * 4]: the table's `entries` handlers read in place (the fuzz swaps the cells
+// for recorders); a Fatal past them, where the original jumps through the dword
+// after - another table or data.
+void Dispatch(const char* who, U table, unsigned entries) {
+    const unsigned sub = Sprite_Current[2];
+    if (sub >= entries)
+        bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
+                    "after (docs/effect_5g.md section 6)",
+                    who, sub, entries, (unsigned)table);
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * sub))))();
+}
+
+// The variant the spawn's x cell (+0x36, movsx) names, checked against the
+// room its tables have.
+U Variant(const char* who, const unsigned char* s, unsigned room) {
+    const std::int32_t v = S16(s + 0x36);
+    if (v < 0 || v >= static_cast<std::int32_t>(room))
+        bof3::Fatal("%s: the variant +0x36 is %d, past the %u its tables have room for - the original reads on into "
+                    "the next table (docs/effect_5g.md section 6)",
+                    who, (int)v, room);
+    return static_cast<U>(v);
+}
+
+// cdq; xor eax, edx; sub eax, edx; cmp eax, n; jg: |d| as the original
+// computes it - 0x80000000 stays itself, negative, and so counts as near.
+std::int32_t Abs(U d) {
+    const U m = static_cast<std::int32_t>(d) < 0 ? 0xFFFFFFFFu : 0u;
+    return static_cast<std::int32_t>((d ^ m) - m);
+}
+
+// A point against a cell's centre on one axis: point - ((cell + 1) << 16 |
+// 0x8000) (inc; shl 16; or dh, 0x80).
+U FromCentre(U point, std::int32_t cell) { return point - ((static_cast<U>(cell + 1) << 16) | 0x8000u); }
+
+// ... and against its edge: point - (cell << 16).
+U FromEdge(U point, std::int32_t cell) { return point - (static_cast<U>(cell) << 16); }
+
+// The tests every waiting state makes: |a| within `first`, then |b| or |b -
+// 0x10000| within `second` (the cell or the one past it).
+bool Within(U a, std::int32_t first, U b, std::int32_t second) {
+    if (Abs(a) > first) return false;
+    if (Abs(b) <= second) return true;
+    return Abs(b - 0x10000u) <= second;
+}
+
+U LeaderX() { return static_cast<std::uint32_t>(ObjTrio[0].x); }
+
+U LeaderZ() { return static_cast<std::uint32_t>(ObjTrio[0].z); }
+
+// The leader at the record's cell: across the x axis first (the centre), then
+// z - or, for +8 set (sub-kinds 0x2C / 0x4A), z first, then x.
+bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {
+    const std::int32_t cx = S16(s + 0x36), cz = S16(s + 0x3A);
+    if (z_first) return Within(FromCentre(LeaderZ(), cz), first, FromEdge(LeaderX(), cx), second);
+    return Within(FromCentre(LeaderX(), cx), first, FromEdge(LeaderZ(), cz), second);
+}
+
+// Any of the three party records in use (+0 set) at the record's cell: z
+// against the edge within `first`, then x (sub-kind 0x3A). Every record is
+// tested; none ends the loop early.
+bool PartyAt(const unsigned char* s, std::int32_t first, std::int32_t second) {
+    bool any = false;
+    for (unsigned m = 0; m < at::kTrioCount; ++m) {
+        const unsigned char* const r = rv::Bytes(&ObjTrio[m]);
+        auto* const ro = rv::AsConst<records::PartyMember>(r);
+        if (r[0] == 0) continue;
+        if (Within(FromEdge(static_cast<std::uint32_t>(ro->z), S16(s + 0x3A)), first, FromEdge(static_cast<std::uint32_t>(ro->x), S16(s + 0x36)), second))
+            any = true;
+    }
+    return any;
+}
+
+// A vertex's ground point: (s16 + 0x4000) << 9, the 16.16 the map reads.
+long Ground(const unsigned char* word) { return static_cast<long>(static_cast<U>(S16(word) + 0x4000) << 9); }
+
+// -(height / 2) - +0x3E, the low word (movsx; cdq; sub; sar 1; neg; sub ax).
+U Lift(long height, const unsigned char* s) {
+    const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2;
+    return 0u - static_cast<U>(half) - Word(s + 0x3E);
+}
+
+// The four corners' heights from the ground under them, as every panel draw
+// lifts them: corners 0 and 2 at vertex 0's point (two reads, the top 0x180
+// above), corners 1 and 3 at vertex 1's, Sprite_Current read after each call.
+void Grounded() {
+    unsigned char* const v = Vertices();
+    const long x0 = Ground(v), y0 = Ground(v + 2);
+    long h = SH_CALL(AreaMap_Elevation)(x0, y0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Lift(h, S()) - 0x180u);
+    h = SH_CALL(AreaMap_Elevation)(x0, y0);
+    const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Lift(h, S()));
+    h = SH_CALL(AreaMap_Elevation)(x1, y1);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Lift(h, S()) - 0x180u);
+    h = SH_CALL(AreaMap_Elevation)(x1, y1);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, Lift(h, S()));
+}
+
+// The quad's four corners projected into the POLY_FT4 at p, its depths set.
+// The original also pushes a tenth pointer (a flag local) the projection
+// does not read.
+void Project(unsigned char* p) {
+    long depth;
+    SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
+                               reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
+                               reinterpret_cast<float*>(p + 0x38), &depth);
+    SH_CALL(Gte_PrimDepths4_10)(p);
+}
+
+// The draw mode the panels put first: Gpu_SetDrawMode(prim, 0, 0, 0x95, 0).
+void PanelMode(unsigned char* prim) { SH_CALL(Gpu_SetDrawMode)(prim, 0, 0, 0x95, 0); }
+
+// The variant's cell, height and texture as sub-kinds 0x2C and 0x4A place it
+// (0x50B540 / 0x50BFF0 alike): +8 = whether the spawn's z cell is 0, the cell
+// from the table, the lift at the cell's ground into +0x3E, the texture into
+// +0x20, the slide +0x30 0. Answers the variant.
+U Place2C(const char* who) {
+    unsigned char* s = S();
+    s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
+    const U v = Variant(who, s, at::kSub2CVariants);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub2CCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub2CCells.v) + 2 * v + 1)[0]);
+    const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
+    const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
+    s = S();
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - static_cast<U>(half)) - Word(At(::bof3::Img(at::kSub2CHeights.v) + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, UL(At(::bof3::Img(at::kSub2CTextures.v) + 4 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
+    return v;
+}
+
+// A slide of +0x30 by `by`; answers whether it has reached `end` (>= when
+// opening, <= 0 when closing; signed words).
+bool Opened(std::int32_t end) {
+    unsigned char* const s = S();
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + 0x10u);
+    return S16(S() + 0x30) >= end;
+}
+
+bool Closed() {
+    unsigned char* const s = S();
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 - 0x10u);
+    return S16(S() + 0x30) <= 0;
+}
+
+// Closed: the sound unless a message is up (Field_Request), +2 = 1 (read after
+// the sound).
+void Shut(unsigned sound) {
+    if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(sound));
+    S()[2] = 1;
+}
+
+}  // namespace
+
+// The pair as the closed and opening states draw it: side 0 at dy 1, side 1 at
+// dy 2; as the open ones: dy 0 and 3.
+void Sub3APair(int dy0, int dy1) {
+    SH_CALL(EffectKind18Sub3A_DrawPanel)(0, dy0);
+    SH_CALL(EffectKind18Sub3A_DrawPanel)(1, dy1);
+}
+
+// original 0x50B520 (hidden in 0x50B220): jmp [EffectKind18Sub2C_States + +2 *
+// 4], unbounded.
+extern "C" void __cdecl EffectKind18Sub2C_Run(void) {
+    Dispatch("EffectKind18Sub2C_Run", AddressOf(EffectKind18Sub2C_States), EffectKind18Sub2C_States_count);
+}
+
+// original 0x50B540 (sub-state 0): Place2C, +2 up; the leader already at the
+// cell's front (the axis +8 names first): the slide 0x80 and +2 = 3. The draw.
+extern "C" void __cdecl EffectKind18Sub2C_Place(void) {
+    Place2C("EffectKind18Sub2C_Place");
+    unsigned char* const s = S();
+    s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (LeaderAt(s, s[8] != 0, 0x8000, 0x10000)) {
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x80);
+        s[2] = 3;
+    }
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50B6A0 (sub-state 1): the leader at the cell's front: sound 0x200
+// unless a message is up, +2 up (read after the sound). The draw.
+extern "C" void __cdecl EffectKind18Sub2C_WaitNear(void) {
+    unsigned char* s = S();
+    if (LeaderAt(s, s[8] != 0, 0x8000, 0x10000)) {
+        if (Field_Request == 0) {
+            SH_CALL(Sound_PlayEffect)(effect_5g::at::kSoundOpen);
+            s = S();
+        }
+        s[2] = static_cast<unsigned char>(s[2] + 1);
+    }
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50B780 (sub-state 2, and EffectKind18Sub4A_States' third): the
+// slide up 0x10; at 0x80 +2 up. A tail jump to the draw.
+extern "C" void __cdecl EffectKind18Sub2C_Open(void) {
+    if (Opened(0x80)) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50B7A0 (sub-state 3): once the leader is two cells away, +2 up.
+// The draw.
+extern "C" void __cdecl EffectKind18Sub2C_WaitFar(void) {
+    unsigned char* const s = S();
+    if (!LeaderAt(s, s[8] != 0, 0x20000, 0x20000)) s[2] = static_cast<unsigned char>(s[2] + 1);
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50B870 (sub-state 4): the slide down 0x10; at 0 or below sound
+// 0x201 unless a message is up and +2 = 1. A tail jump to the draw.
+extern "C" void __cdecl EffectKind18Sub2C_Close(void) {
+    if (Closed()) Shut(effect_5g::at::kSoundShut);
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50B8B0 (sub-kinds 0x2C's and 0x4A's draw: called by 0x2C's states
+// and 0x4A's first, a tail jump from 0x2C's third and E6A's EffectKind18Sub4A_WaitCond, and
+// EffectKind18Sub4A_States' fourth entry itself): with +8 the panels lie across
+// z - their y (+0x3A << 7) - 0x3FC0 - and slide along x; without, across x and
+// slide along z. Two quads, side 0 and 1: a draw mode (page 0x95) linked at
+// the record's point (+0x34, +0x38) with dy -1 (0xC); the corners slid by
+// +0x30 times the side's sign (kSub2CSides), their heights from the ground;
+// projected, the texture (+0x20 + side) | (+8 << 21), linked likewise (0x48).
+extern "C" void __cdecl EffectKind18Sub2C_Draw(void) {
+    unsigned char* const v = Vertices();
+    {
+        unsigned char* const s = S();
+        if (s[8] != 0) {
+            const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
+            SetWord(v + 0x1A, y);
+            SetWord(v + 0x12, y);
+            SetWord(v + 0xA, y);
+            SetWord(v + 2, y);
+        } else {
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
+            SetWord(v + 0x18, x);
+            SetWord(v + 0x10, x);
+            SetWord(v + 8, x);
+            SetWord(v, x);
+        }
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
+        SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->height_whole);
+    }
+    for (U side = 0; side < 2; ++side) {
+        PanelMode(Gfx_PacketNext);
+        {
+            unsigned char* const s = S();
+            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), -1, 0xC);
+        }
+        unsigned char* const p = Gfx_PacketNext;
+        SH_CALL(Gpu_SetPolyFT4)(p);
+        SH_CALL(Gpu_SetShadeTex)(p, 0);
+        unsigned char* const s = S();
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub2CSides.v))[side])));
+        const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
+        if (s[8] != 0) {
+            const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
+            SetWord(v + 0x10, x - slide - 0x4040u);
+            SetWord(v, x - slide - 0x4040u);
+            SetWord(v + 0x18, x - slide - 0x3FC0u);
+            SetWord(v + 8, x - slide - 0x3FC0u);
+        } else {
+            const U y = (rv::As<records::EffectObject>(s)->z_whole - side) << 7;
+            SetWord(v + 0x12, y + slide - 0x3F40u);
+            SetWord(v + 2, y + slide - 0x3F40u);
+            SetWord(v + 0x1A, y + slide - 0x3FC0u);
+            SetWord(v + 0xA, y + slide - 0x3FC0u);
+        }
+        Grounded();
+        Project(p);
+        {
+            unsigned char* const r = S();
+            SH_CALL(Prim_SetTexture)((static_cast<std::uint32_t>(rv::As<records::EffectObject>(r)->work_20) + side) | (static_cast<U>(r[8]) << 21), p, 1);
+        }
+        unsigned char* const r = S();
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(r)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(r)->z), -1, 0x48);
+    }
+}
+
+// original 0x50BB90 (hidden in 0x50B8B0): jmp [EffectKind18Sub3A_States + +2 *
+// 4], unbounded.
+extern "C" void __cdecl EffectKind18Sub3A_Run(void) {
+    Dispatch("EffectKind18Sub3A_Run", AddressOf(EffectKind18Sub3A_States), EffectKind18Sub3A_States_count);
+}
+
+// original 0x50BBB0 (sub-state 0): +8 = 1, the lift +0x3E 0, the texture
+// 0x28709126 into +0x20, the slide 0, +2 up. The pair at dy 1 and 2.
+extern "C" void __cdecl EffectKind18Sub3A_Start(void) {
+    S()[8] = 1;
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, 0x28709126u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
+    S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    Sub3APair(1, 2);
+}
+
+// original 0x50BC00 (sub-state 1): any party member in use within 1.5 cells of
+// the cell's edge along z and on the cell or the next along x: sound 0x202
+// unless a message is up, +2 up (read after the sound). The pair at dy 1, 2.
+extern "C" void __cdecl EffectKind18Sub3A_WaitParty(void) {
+    unsigned char* s = S();
+    if (PartyAt(s, 0x18000, 0x10000)) {
+        if (Field_Request == 0) {
+            SH_CALL(Sound_PlayEffect)(at::kSoundOpen3A);
+            s = S();
+        }
+        s[2] = static_cast<unsigned char>(s[2] + 1);
+    }
+    Sub3APair(1, 2);
+}
+
+// original 0x50BCB0 (sub-state 2): the slide up 0x10; at 0x80 +2 up. The pair
+// at dy 0 and 3.
+extern "C" void __cdecl EffectKind18Sub3A_Open(void) {
+    if (Opened(0x80)) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    Sub3APair(0, 3);
+}
+
+// original 0x50BCE0 (sub-state 3): no party member within 2.5 cells along z and
+// two along x: +2 up. The pair at dy 0 and 3.
+extern "C" void __cdecl EffectKind18Sub3A_WaitClear(void) {
+    unsigned char* const s = S();
+    if (!PartyAt(s, 0x28000, 0x20000)) s[2] = static_cast<unsigned char>(s[2] + 1);
+    Sub3APair(0, 3);
+}
+
+// original 0x50BD70 (sub-state 4): the slide down 0x10; at 0 or below sound
+// 0x203 unless a message is up and +2 = 1. The pair at dy 1 and 2.
+extern "C" void __cdecl EffectKind18Sub3A_Close(void) {
+    if (Closed()) Shut(at::kSoundShut3A);
+    Sub3APair(1, 2);
+}
+
+// original 0x50BDC0 (sub-kind 0x3A's draw, called twice by each of its states:
+// side 0 and 1): one quad across x at side's column - x ((side + +0x36) << 7)
+// minus the slide +0x30 times kSub3ASides[side], - 0x4040 / - 0x3FC0; y ((+0x3A
+// - 0x80) << 7) - after a draw mode (page 0x95) linked at the record's point
+// with `dy` (0xC); the heights from the ground; projected, the texture +0x20 +
+// side, linked with `dy` (0x48).
+extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
+    unsigned char* const v = Vertices();
+    {
+        unsigned char* const s = S();
+        if (side >= effect_5g::at::kSidesRoom)
+            bof3::Fatal("EffectKind18Sub3A_DrawPanel: side %u, past the %u bytes of 0x%X - the original reads on into "
+                        "EffectKind18Sub4A_States (docs/effect_5g.md section 6)",
+                        side, effect_5g::at::kSidesRoom, at::kSub3ASides.v);
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub3ASides.v))[side])));
+        const U slide = sign * Word(s + 0x30);
+        const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x - slide - 0x4040u);
+        SetWord(v, x - slide - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x - slide - 0x3FC0u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x - slide - 0x3FC0u);
+        const U y = (rv::As<records::EffectObject>(s)->z_whole - 0x80u) << 7;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
+    }
+    PanelMode(Gfx_PacketNext);
+    {
+        unsigned char* const s = S();
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), dy, 0xC);
+    }
+    Grounded();
+    unsigned char* const p = Gfx_PacketNext;
+    SH_CALL(Gpu_SetPolyFT4)(p);
+    SH_CALL(Gpu_SetShadeTex)(p, 0);
+    Project(p);
+    SH_CALL(Prim_SetTexture)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) + side, p, 1);
+    unsigned char* const s = S();
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), dy, 0x48);
+}
+
+// original 0x50BFD0 (hidden in 0x50BDC0): jmp [EffectKind18Sub4A_States + +2 *
+// 4], unbounded.
+extern "C" void __cdecl EffectKind18Sub4A_Run(void) {
+    Dispatch("EffectKind18Sub4A_Run", AddressOf(EffectKind18Sub4A_States), EffectKind18Sub4A_States_count);
+}
+
+// original 0x50BFF0 (sub-state 0): Place2C; +0xB the variant's byte of
+// kSub4ASubKinds; the variant's map byte written at the cell and the cell past
+// it along z (AreaMap_SetByte(x, z, b), AreaMap_SetByte(x, z + 1, b), each
+// read afresh), +2 up. The draw.
+extern "C" void __cdecl EffectKind18Sub4A_Place(void) {
+    const U v = Place2C("EffectKind18Sub4A_Place");
+    S()[0xB] = At(::bof3::Img(at::kSub4ASubKinds.v) + 4 * v)[0];
+    const unsigned char* const mark = At(::bof3::Img(at::kSub4AMarks.v) + 4 * v);
+    {
+        unsigned char* const s = S();
+        SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, rv::As<records::EffectObject>(s)->z_whole, mark[0]);
+    }
+    {
+        unsigned char* const s = S();
+        SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, (rv::As<records::EffectObject>(s)->z_whole + 1u) & 0xFFFFu, mark[0]);
+    }
+    unsigned char* const s = S();
+    s[2] = static_cast<unsigned char>(s[2] + 1);
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+// original 0x50C0D0 (hidden in E5G's 0x50BDC0): when +0xB has a bit set in
+// Cond_ByteFE and Field_Request is not 2: AreaMap_SetByte(+0x36, +0x3A, 0xA1)
+// and (+0x36, +0x3A + 1, 0xA1) (Sprite_Current read again for the second),
+// sound 0x200 unless a message is up (Field_Request read again), +2 up. A tail
+// jump to sub-kind 0x2C's draw either way.
+extern "C" void __cdecl EffectKind18Sub4A_WaitCond(void) {
+    {
+        unsigned char* s = S();
+        if ((s[0xB] & Cond_ByteFE) != 0 && Field_Request != 2) {
+            SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, rv::As<records::EffectObject>(s)->z_whole, at::kMapOpen);
+            s = S();
+            SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, (rv::As<records::EffectObject>(s)->z_whole + 1u) & 0xFFFFu, at::kMapOpen);
+            if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(effect_6a::at::kSoundOpen);
+            S()[2] = static_cast<unsigned char>(S()[2] + 1);
+        }
+    }
+    SH_CALL(EffectKind18Sub2C_Draw)();
+}
+
+void EffectKind18Sub2c_Inject() {
+    BOF3_INJECT(EffectKind18Sub2C_Run);
+    BOF3_INJECT(EffectKind18Sub2C_Place);
+    BOF3_INJECT(EffectKind18Sub2C_WaitNear);
+    BOF3_INJECT(EffectKind18Sub2C_Open);
+    BOF3_INJECT(EffectKind18Sub2C_WaitFar);
+    BOF3_INJECT(EffectKind18Sub2C_Close);
+    BOF3_INJECT(EffectKind18Sub2C_Draw);
+    BOF3_INJECT(EffectKind18Sub3A_Run);
+    BOF3_INJECT(EffectKind18Sub3A_Start);
+    BOF3_INJECT(EffectKind18Sub3A_WaitParty);
+    BOF3_INJECT(EffectKind18Sub3A_Open);
+    BOF3_INJECT(EffectKind18Sub3A_WaitClear);
+    BOF3_INJECT(EffectKind18Sub3A_Close);
+    BOF3_INJECT(EffectKind18Sub3A_DrawPanel);
+    BOF3_INJECT(EffectKind18Sub4A_Run);
+    BOF3_INJECT(EffectKind18Sub4A_Place);
+    BOF3_INJECT(EffectKind18Sub4A_WaitCond);
+}

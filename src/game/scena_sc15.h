@@ -7,6 +7,10 @@
 // (scenario_harness.h). docs/scena_sc15.md.
 #pragma once
 
+#include <cstdint>
+
+#include <vector>
+
 void ScenaSc15_Inject();
 
 // DIVERGENCE DIV-0148: the language layer's kind 17 (FIRST.DAT, dat_load.cpp's
@@ -16,6 +20,8 @@ void ScenaSc15_Inject();
 void ScenaSc15_RollApply(unsigned tag, const unsigned char* payload, unsigned size);
 
 namespace scena_sc15 {
+extern unsigned char g_fin_night;   // defined in scena_sc15.cpp (source-layout B0: promoted for a moved reader)
+extern std::vector<std::uint32_t> g_roll_lines;   // defined in scena_sc15.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=scena_sc15: the start-up fuzz, scena_sc15_fuzz.cpp. Clones every
 // original before ScenaSc15_Inject patches it.
 void SelfTest();

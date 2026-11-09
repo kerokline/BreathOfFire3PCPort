@@ -26,7 +26,6 @@ constexpr unsigned kHold = 0x4A;       // u8, ticks left on this step
 constexpr unsigned kScript = 0x50;     // const u8*, null for none
 constexpr unsigned kFrames = 0x54;     // const u16*
 constexpr unsigned kPosition = 0x58;   // u16 byte index into the steps
-constexpr unsigned kFrame = 0x5A;      // u16, the current step's frame word
 
 template <class T> T Get(const unsigned char* object, unsigned at) {
     // A pointer-typed field is a 32-bit word of the image on every width.
@@ -47,20 +46,6 @@ template <class T> void Put(unsigned char* object, unsigned at, T v) {
     } else {
         std::memcpy(object + at, &v, sizeof v);
     }
-}
-
-// The part Sprite_ScriptTick and Sprite_ScriptTickOnce share: the hold has run
-// out and the script has not. Follows a jump if there is one - the original's
-// return value says whether there was - and takes the step.
-unsigned char NextStep(unsigned char* object, std::uint16_t position) {
-    unsigned char jumped = 0;
-    const unsigned char* at = Get<const unsigned char*>(object, kScript) + position;
-    if (at[0] >= 0x80) {
-        Put<std::uint16_t>(object, kPosition, static_cast<std::uint16_t>(at[1] * 2));
-        jumped = 1;
-    }
-    Sprite_ScriptStep();
-    return jumped;
 }
 
 // --- BOF3X_SHADOW=sprite_anim: a differential fuzz, once at start-up -----------
@@ -146,70 +131,6 @@ void SelfTest(const Originals& theirs) {
 
 }  // namespace
 
-// original 0x589350 (PSX 0x8014D804). Begins the script kScript points at, from byte `position`
-// of its steps: reads the step count out of the header, moves kScript past the
-// header, finds the frame words behind the last step, and takes the first step.
-//
-// As the original has it: no check for a null script, and `position` is
-// neither checked against the step count nor made even.
-extern "C" void __cdecl Sprite_ScriptStart(unsigned short position) {
-    unsigned char* const object = Sprite_Current;
-    const unsigned char* script = Get<const unsigned char*>(object, kScript);
-    object[kSteps] = script[1];
-    script += 2;
-    Put<const unsigned char*>(object, kScript, script);
-    Put<std::uint16_t>(object, kPosition, position);
-    Put<const unsigned char*>(object, kFrames, script + object[kSteps] * 2);
-    Sprite_ScriptStep();
-}
-
-// original 0x5893A0 (PSX 0x8014D86C). One tick of a script that repeats: counts the hold down,
-// and when it runs out takes the next step - from the top again after the last
-// one. Returns 1 when it wrapped round or followed a jump, else 0.
-extern "C" unsigned char __cdecl Sprite_ScriptTick(void) {
-    unsigned char* const object = Sprite_Current;
-    if (--object[kHold] != 0) return 0;
-    const std::uint16_t position = Get<std::uint16_t>(object, kPosition);
-    if (position >> 1 == object[kSteps]) {
-        Put<std::uint16_t>(object, kPosition, 0);
-        Sprite_ScriptStep();
-        return 1;
-    }
-    return NextStep(object, position);
-}
-
-// original 0x589410 (PSX 0x8014D9E0). One tick of a script that plays once: as above, but past
-// the last step it takes no step - it sets the hold back to 1, so that every
-// later tick lands here again - and returns 1.
-extern "C" unsigned char __cdecl Sprite_ScriptTickOnce(void) {
-    unsigned char* const object = Sprite_Current;
-    if (--object[kHold] != 0) return 0;
-    const std::uint16_t position = Get<std::uint16_t>(object, kPosition);
-    if (position >> 1 == object[kSteps]) {
-        object[kHold] = 1;
-        return 1;
-    }
-    return NextStep(object, position);
-}
-
-// original 0x589470 (PSX 0x8014DA8C). Takes the step at kPosition: its first byte is the hold,
-// its second picks the frame word. An object with no script is left alone.
-//
-// As the original has it: the position is 16 bits and wraps, between the two
-// reads too; nothing checks it, or the frame number, against anything.
-extern "C" void __cdecl Sprite_ScriptStep(void) {
-    unsigned char* const object = Sprite_Current;
-    const auto* script = Get<const unsigned char*>(object, kScript);
-    if (script == nullptr) return;
-    std::uint16_t position = Get<std::uint16_t>(object, kPosition);
-    object[kHold] = script[position];
-    ++position;
-    const std::uint8_t frame = script[position];
-    ++position;
-    Put<std::uint16_t>(object, kPosition, position);
-    Put<std::uint16_t>(object, kFrame, Get<const unsigned short*>(object, kFrames)[frame]);
-}
-
 void SpriteAnim_Inject() {
     // 0x589350..0x5894CF: four functions and padding; every relative transfer
     // in the block - three calls and a tail jump to 0x589470 - lands inside it
@@ -225,8 +146,4 @@ void SpriteAnim_Inject() {
                 reinterpret_cast<void (__cdecl*)()>(at(bof3::addr::Sprite_ScriptStep))});
         }
     }
-    BOF3_INJECT(Sprite_ScriptStart);
-    BOF3_INJECT(Sprite_ScriptTick);
-    BOF3_INJECT(Sprite_ScriptTickOnce);
-    BOF3_INJECT(Sprite_ScriptStep);
 }

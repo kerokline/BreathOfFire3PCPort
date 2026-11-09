@@ -6,7 +6,10 @@
 // the wait). docs/battle_phases.md.
 #pragma once
 
+#include <cstdint>
+
 namespace battle_phases {
+extern std::uint8_t g_init_pick_clear;   // defined in battle_phases.cpp (source-layout B0: promoted for a moved reader)
 // The start-up differential fuzz (battle_phases_fuzz.cpp, hosted only;
 // BOF3X_SHADOW=battle_phases).
 void SelfTest();

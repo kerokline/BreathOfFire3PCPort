@@ -8,6 +8,9 @@
 void MapCells_Inject();
 
 namespace map_cells {
+extern void(__cdecl* g_quads_live)(const unsigned char*, unsigned, unsigned);   // defined in map_cells.cpp (source-layout B0: promoted for a moved reader)
+extern void(__cdecl* g_rising_live)(const unsigned char*, unsigned, unsigned);   // defined in map_cells.cpp (source-layout B0: promoted for a moved reader)
+extern void(__cdecl* g_rising_band_live)(const unsigned char*, unsigned, unsigned);   // defined in map_cells.cpp (source-layout B0: promoted for a moved reader)
 
 // DIV-0041's random split (docs/ultrawide-rand.md): the random number MapCell_DrawRising takes
 // for each of its eight squares - Capcom's Rand, or for a band cell

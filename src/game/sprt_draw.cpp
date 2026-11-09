@@ -123,158 +123,10 @@ void SetFarTableScale(U k) {
 
 namespace {
 
-unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Word(const unsigned char* p) {
-    std::uint16_t v;
-    std::memcpy(&v, p, sizeof v);
-    return v;
-}
-U Long(const unsigned char* p) {
-    U v;
-    std::memcpy(&v, p, sizeof v);
-    return v;
-}
-float Float(const unsigned char* p) {
-    float v;
-    std::memcpy(&v, p, sizeof v);
-    return v;
-}
-float FloatAt(U address) { return Float(At(address)); }
-void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-
 // --- the x87 sequences, as the original executes them ------------------------
-
-// fld a; fmul b; fstp
-inline float X87Mul(float a, float b) {
-    float r;
-    __asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-    return r;
-}
-// fld a; fdiv b; fstp
-inline float X87Div(float a, float b) {
-    float r;
-    __asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-    return r;
-}
-// fld a; fstp - a copy, except that a signalling NaN comes out quiet
-inline float X87Pass(float a) {
-    float r;
-    __asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
-    return r;
-}
-// fld a; fadd b; fmul c; fstp - (a + b) * c, one rounding after each
-inline float X87AddMul(float a, float b, float c) {
-    float r;
-    __asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
-    return r;
-}
-// fild i; fadd b; fmul c; fstp - (i + b) * c
-inline float X87IntAddMul(std::int32_t i, float b, float c) {
-    float r;
-    __asm__ volatile("fildl %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(i), "m"(b), "m"(c) : "st");
-    return r;
-}
-
-// D3d_Device, read afresh before the COM call as the original does.
-void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
-void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-
-unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
-
-// The body all three share. `size_at` is 0 for SPRT - the size is the
-// primitive's u16 w +0x18 and h +0x1A, pushed through fild - or the address of
-// the fixed size's float, 8.0 or 16.0, with `extent` 8 or 16 its far index.
-//
-// The primitive (Menu_DrawPiece 0x57D860 builds a SPRT, the 8 x 8 font 0x517090
-// a SPRT_8): r, g, b, code at +4..+7; float x +8, y +0xC, z +0x10; u8 u +0x14,
-// v +0x15; u16 CLUT +0x16; SPRT only: u16 w +0x18, h +0x1A.
-//
-// Corners, in the strip order: (x, y), (x + w, y), (x, y + h), (x + w, y + h),
-// each times the scale; texture (near u, near v), (far u, near v), (near u,
-// far v), (far u, far v). Every one of the 0x80 bytes is written. The far
-// edges' sums are made on the x87 before the multiply, and the copies the
-// original makes by `mov` (the second corner's sy, the fourth's sx, the
-// repeated texture coordinates) are the same bits here.
-//
-// Every read of the primitive, the scales and the tables is between the
-// colour helper and the texture bind, as in the original; the code byte and
-// Gfx_DrawTpage are read again for the blend after the texture and the two
-// bare rets - kept, since a callee could change either.
-long DrawSprite(const unsigned char* prim, U size_at, U extent) {
-    unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF, &diffuse, &specular);
-
-    const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
-    const U u = prim[0x14], v = prim[0x15];
-    const float left = X87Mul(D3d_ScaleX, x);
-    const float top = X87Mul(D3d_ScaleY, y);
-    const float near_u = X87Pass(FloatAt(::bof3::Img(kTexCoords) + u * 4)), near_v = X87Pass(FloatAt(::bof3::Img(kTexCoords) + v * 4));
-    float right, bottom;
-    U far_j_u, far_j_v;
-    if (size_at == 0) {
-        // u16, zero-extended: a w of 0x8000 or more is a wide sprite, never a
-        // negative one.
-        const U w = Word(prim + 0x18), h = Word(prim + 0x1A);
-        right = X87IntAddMul(static_cast<std::int32_t>(w), x, D3d_ScaleX);
-        bottom = X87IntAddMul(static_cast<std::int32_t>(h), y, D3d_ScaleY);
-        far_j_u = u + w;
-        far_j_v = v + h;
-    } else {
-        right = X87AddMul(x, FloatAt(size_at), D3d_ScaleX);
-        bottom = X87AddMul(y, FloatAt(size_at), D3d_ScaleY);
-        far_j_u = u + extent;
-        far_j_v = v + extent;
-    }
-    // The far edge: Capcom's tc[j - 1], or DIV-0010's g_far[j]. Not bounded,
-    // in either (D37): the address is 32-bit arithmetic, as the original's
-    // [reg * 4 + disp32].
-    const U base = g_far_base;
-    const float far_u = X87Pass(FloatAt(base + far_j_u * 4));
-    const float far_v = X87Pass(FloatAt(base + far_j_v * 4));
-    const float sz = X87Pass(z);
-    const float rhw = X87Div(FloatAt(kRhwNumerator), z);
-
-    const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
-    const float us[4] = {near_u, far_u, near_u, far_u}, vs[4] = {near_v, near_v, far_v, far_v};
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
-        PutFloat(out + 0x00, xs[i]);
-        PutFloat(out + 0x04, ys[i]);
-        PutFloat(out + 0x08, sz);
-        PutFloat(out + 0x0C, rhw);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
-        PutLong(out + 0x14, static_cast<U>(specular));
-        PutFloat(out + 0x18, us[i]);
-        PutFloat(out + 0x1C, vs[i]);
-    }
-
-    g.bind_texture(Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF, Word(prim + 0x16));
-    g.ret_only(1);
-    g.ret_only(1);
-    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
-    g.set_shade(1);   // flat
-    // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0);
-    // its result is the handler's (the draw 0x59EE50 does not read it).
-    void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
-    // Not kept: the original lets the colour helper write the diffuse into
-    // the caller's pushed `prim` slot, which the caller pops unread, and uses
-    // a local as fild's operand.
-}
 
 }  // namespace
 }  // namespace sprt_draw
-
-// 0x5A2300, code 0x64 (SPRT): a sprite of any size, w and h from the primitive.
-long D3d_DrawSprt(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, 0, 0); }
-
-// 0x5A2520, code 0x74 (SPRT_8): an 8 x 8 sprite - x + 8.0 from 0x5C41CC.
-long D3d_DrawSprt8(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kEight, 8); }
-
-// 0x5A2710, code 0x7C (SPRT_16): a 16 x 16 sprite - x + 16.0 from 0x5C41D0.
-long D3d_DrawSprt16(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kSixteen, 16); }
 
 void SprtDraw_SetScale(unsigned k) { sprt_draw::SetFarTableScale(k); }
 
@@ -286,9 +138,6 @@ void SprtDraw_Inject() {
     // BOF3_INJECT below (their callers reach them through the draw's jump
     // table), so this module's place in inject_all.cpp does not matter.
     if (bof3::WantsShadow("sprt_draw")) SelfTest();
-    BOF3_INJECT(D3d_DrawSprt);
-    BOF3_INJECT(D3d_DrawSprt8);
-    BOF3_INJECT(D3d_DrawSprt16);
 
     // DIVERGENCE DIV-0010: the far texture edge from our table. Patched into
     // our own base so that it has a name of its own for BOF3X_ORIGINAL.

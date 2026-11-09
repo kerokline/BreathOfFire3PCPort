@@ -50,229 +50,25 @@ bool NibbleBlocks(unsigned nibble) {
     default: return false;
     }
 }
-std::uint16_t BlockingNibbles() {
-    static const std::uint16_t mask = [] {
-        std::uint16_t m = 0;
-        for (unsigned nibble = 0; nibble < 16; ++nibble)
-            if (NibbleBlocks(nibble)) m = static_cast<std::uint16_t>(m | 1u << nibble);
-        return m;
-    }();
-    return mask;
-}
 
-// Only al of a byte result is meaningful: the originals (and the recorders
-// standing in for them in the fuzz) leave the rest of eax undefined.
-using ObjectFn = std::uint32_t (__cdecl*)(unsigned char*);
-using PointFn = std::uint32_t (__cdecl*)(long, long, unsigned);   // x, y, a direction or a margin
-unsigned char Al(std::uint32_t eax) { return static_cast<unsigned char>(eax); }
-
-// Every callee, through pointers, so that the start-up fuzz can stand
-// recording functions in for them - for the originals' copies and for ours
-// alike. Ours among them are tested alone.
-struct Callees {
-    ObjectFn map_ahead;                                              // Field_MapBlockedAhead
-    PointFn object_at;                                               // Sprite_ObjectAt
-    PointFn member_at;                                               // Party_MemberAt
-    PointFn wide;                                                    // AreaMap_BlockedWide
-    PointFn narrow;                                                  // AreaMap_BlockedNarrow (Capcom's)
-    std::uint32_t (__cdecl* cell)(short, short);                     // AreaMap_CellBlocked
-    std::uint32_t (__cdecl* steep)(long, long);                      // AreaMap_TooSteep
-    std::uint32_t (__cdecl* byte_at)(short, short);                  // AreaMap_ByteAt
-    long (__cdecl* slope)(long, long, unsigned long);                // AreaMap_Slope
-    long (__cdecl* probe)(long, long);                               // Field_ProbeHeight
-    long (__cdecl* elevation)(long, long);                           // AreaMap_Elevation
-    // Sprite_PointInReach, with the height as the dword the originals pass
-    // (it reads the low 16 bits).
-    std::uint32_t (__cdecl* reach)(long, long, long, unsigned, const unsigned char*);
-};
-template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
-Callees Originals() {
-    Callees c{};
-    c.map_ahead = As<ObjectFn>(&Field_MapBlockedAhead);
-    c.object_at = As<PointFn>(&Sprite_ObjectAt);
-    c.member_at = As<PointFn>(&Party_MemberAt);
-    c.wide = As<PointFn>(&AreaMap_BlockedWide);
-    c.narrow = As<PointFn>(AreaMap_BlockedNarrow);
-    c.cell = As<decltype(c.cell)>(&AreaMap_CellBlocked);
-    c.steep = As<decltype(c.steep)>(&AreaMap_TooSteep);
-    c.byte_at = As<decltype(c.byte_at)>(&AreaMap_ByteAt);
+template <typename T, typename F> T AsFieldBlocked(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+field_blocked::CalleesFieldBlocked Originals() {
+    field_blocked::CalleesFieldBlocked c{};
+    c.map_ahead = AsFieldBlocked<field_blocked::ObjectFn>(&Field_MapBlockedAhead);
+    c.object_at = AsFieldBlocked<field_blocked::PointFn>(&Sprite_ObjectAt);
+    c.member_at = AsFieldBlocked<field_blocked::PointFn>(&Party_MemberAt);
+    c.wide = AsFieldBlocked<field_blocked::PointFn>(&AreaMap_BlockedWide);
+    c.narrow = AsFieldBlocked<field_blocked::PointFn>(AreaMap_BlockedNarrow);
+    c.cell = AsFieldBlocked<decltype(c.cell)>(&AreaMap_CellBlocked);
+    c.steep = AsFieldBlocked<decltype(c.steep)>(&AreaMap_TooSteep);
+    c.byte_at = AsFieldBlocked<decltype(c.byte_at)>(&AreaMap_ByteAt);
     c.slope = &AreaMap_Slope;
     c.probe = &Field_ProbeHeight;
     c.elevation = &AreaMap_Elevation;
-    c.reach = As<decltype(c.reach)>(&Sprite_PointInReach);
+    c.reach = AsFieldBlocked<decltype(c.reach)>(&Sprite_PointInReach);
     return c;
 }
-Callees g = Originals();
-
-// The point `n` steps ahead in direction d & 7: 32-bit wrapping, as the
-// originals' add and imul.
-std::uint32_t StepX(unsigned d, std::uint32_t n) { return static_cast<std::uint32_t>(Field_DirectionSteps[(d & 7) * 2]) * n; }
-std::uint32_t StepY(unsigned d, std::uint32_t n) { return static_cast<std::uint32_t>(Field_DirectionSteps[(d & 7) * 2 + 1]) * n; }
-long Ahead(const unsigned char* object, unsigned at, std::uint32_t step) {
-    return static_cast<long>(static_cast<std::uint32_t>(Long(object + at)) + step);
-}
-
-// Sprite_ObjectAt and Party_MemberAt: the first object of `count` from `first`
-// (`size` apart) that is not Sprite_Current (re-read for each), is in use
-// (byte +0) and - for the sprite lists - not skipped by +7 bit 0x80, and for
-// which Sprite_PointInReach says (x, y, h) is within `margin` of it. The count
-// is re-read after each object; `count_at` null means a fixed count.
-unsigned char FirstInReach(unsigned char* first, unsigned size, unsigned count, const unsigned char* count_at, bool skip_flag7,
-                           long x, long y, long h, unsigned margin, unsigned char base) {
-    for (unsigned i = 0; i < (count_at ? *count_at : count); ++i) {
-        const unsigned char* const object = first + i * size;
-        if (object == Sprite_Current) continue;
-        if (object[0] == 0) continue;
-        if (skip_flag7 && (object[7] & 0x80)) continue;
-        if (Al(g.reach(x, y, h, margin, object))) return static_cast<unsigned char>(base + i);
-    }
-    return 0xFF;
-}
-
-}  // namespace
-
-// original 0x518080 (PSX FUN_801A2AEC): the point one step ahead of the object
-// - its position plus the step of ITS direction, taken before any call - is
-// blocked by the map (for a sprite of Sprite_Current's size and direction), by
-// a sprite object, or by a party member. The size is re-read from
-// Sprite_Current for each object test, as the original re-reads it.
-extern "C" unsigned char __cdecl Field_ObjectBlockedAhead(unsigned char* object) {
-    const unsigned d = object[8] & 7;
-    const long x = Ahead(object, 0x34, StepX(d, 1));
-    const long y = Ahead(object, 0x38, StepY(d, 1));
-    if (Al(g.map_ahead(object))) return 1;
-    if (Al(g.object_at(x, y, Sprite_Current[0x70])) != 0xFF) return 1;
-    return Al(g.member_at(x, y, Sprite_Current[0x70])) != 0xFF ? 1 : 0;
-}
-
-// original 0x519670 (PSX FUN_801A4AD0): the same without the map.
-extern "C" unsigned char __cdecl Field_ObjectBlocked(unsigned char* object) {
-    const unsigned d = object[8] & 7;
-    const long x = Ahead(object, 0x34, StepX(d, 1));
-    const long y = Ahead(object, 0x38, StepY(d, 1));
-    if (Al(g.object_at(x, y, Sprite_Current[0x70])) != 0xFF) return 1;
-    return Al(g.member_at(x, y, Sprite_Current[0x70])) != 0xFF ? 1 : 0;
-}
-
-// original 0x518100 (PSX FUN_801A2BC8): the map test, (size + 1) steps ahead -
-// the object's position, but Sprite_Current's direction and size. A sized
-// sprite goes to AreaMap_BlockedWide, a size-0 one to AreaMap_BlockedNarrow
-// (Capcom's, unreached by the attract cycle). The original passes the
-// direction as a dword whose low byte alone it stored - the rest is whatever
-// its stack slot held - and both callees mask it to a byte; ours passes 0
-// above it.
-extern "C" unsigned char __cdecl Field_MapBlockedAhead(unsigned char* object) {
-    const unsigned d = Sprite_Current[8] & 7;
-    const unsigned char size = Sprite_Current[0x70];
-    const std::uint32_t n = size + 1u;
-    const long x = Ahead(object, 0x34, StepX(d, n));
-    const long y = Ahead(object, 0x38, StepY(d, n));
-    return Al(size != 0 ? g.wide(x, y, d) : g.narrow(x, y, d));
-}
-
-// original 0x518180 (PSX FUN_801A2C64, not 0x801A2EE0 as psx_pair.py paired
-// it): for a sized sprite, whether its leading edge at (x, y) can move in
-// `direction`. Only the four axes (odd directions) are tested; any other byte
-// is blocked. With X, Y the cell (the high words) and fx, fy the fractions:
-//   1: row Y;                              cells X, X+1 and, if fx == 0, X-1
-//   5: row Y+1 if fy != 0, else row Y;     the same cells
-//   7: column X;                           cells Y, Y+1 and, if fy == 0, Y-1
-//   3: column X+1 if fx != 0, else X;      the same cells
-// then AreaMap_TooSteep at (x, y) and half a cell to either side across the
-// direction (x +- 0x8000 for rows, y +- 0x8000 for columns). The results are
-// summed as a byte (so 0x80 + 0x80 would be open - the callees return 0 or 1)
-// and the sum's non-zero-ness returned. Cell coordinates are 16-bit: X + 1
-// wraps as the original's low word does (the dwords it pushes carry the
-// neighbouring argument's bytes above them; AreaMap_ByteAt reads 16 bits).
-extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned direction) {
-    const auto ux = static_cast<std::uint32_t>(x), uy = static_cast<std::uint32_t>(y);
-    const auto cx = static_cast<short>(ux >> 16), cy = static_cast<short>(uy >> 16);
-    const bool fx = (ux & 0xFFFFu) != 0, fy = (uy & 0xFFFFu) != 0;
-    const auto plus = [](short v, int by) { return static_cast<short>(static_cast<std::uint16_t>(v + by)); };
-    unsigned char sum = 0;
-    switch (direction & 0xFF) {
-    case 1:
-    case 5: {
-        const short row = (direction & 0xFF) == 5 && fy ? plus(cy, 1) : cy;
-        sum = static_cast<unsigned char>(sum + Al(g.cell(cx, row)));
-        sum = static_cast<unsigned char>(sum + Al(g.cell(plus(cx, 1), row)));
-        if (!fx) sum = static_cast<unsigned char>(sum + Al(g.cell(plus(cx, -1), row)));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(x, y)));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(static_cast<long>(ux + 0x8000u), y)));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(static_cast<long>(ux - 0x8000u), y)));
-        break;
-    }
-    case 3:
-    case 7: {
-        const short column = (direction & 0xFF) == 3 && fx ? plus(cx, 1) : cx;
-        sum = static_cast<unsigned char>(sum + Al(g.cell(column, cy)));
-        sum = static_cast<unsigned char>(sum + Al(g.cell(column, plus(cy, 1))));
-        if (!fy) sum = static_cast<unsigned char>(sum + Al(g.cell(column, plus(cy, -1))));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(x, y)));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(x, static_cast<long>(uy + 0x8000u))));
-        sum = static_cast<unsigned char>(sum + Al(g.steep(x, static_cast<long>(uy - 0x8000u))));
-        break;
-    }
-    default:
-        return 1;   // 0, the diagonals and anything past 7, by the jump table's bound
-    }
-    return sum != 0 ? 1 : 0;
-}
-
-// original 0x518620 (PSX FUN_801A3100): whether the map cell (x, y) stops a
-// step, by the high nibble of its AreaMap_Bytes byte.
-extern "C" unsigned char __cdecl AreaMap_CellBlocked(short x, short y) {
-    const unsigned nibble = (Al(g.byte_at(x, y)) >> 4) & 0xF;
-    return (BlockingNibbles() >> nibble) & 1u;
-}
-
-// original 0x518760 (PSX FUN_801A31F4): whether the ground at (x, y) is too
-// steep - AreaMap_Slope for Sprite_Current's direction, sloped (scratch byte
-// 0, read after the call) and more than 0x40 in its low 16 bits, signed. The
-// original's direction dword carries its caller's ecx above the byte;
-// AreaMap_Slope reads the byte alone (and, the byte being 0..7, never indexes
-// past its four corners).
-extern "C" unsigned char __cdecl AreaMap_TooSteep(long x, long y) {
-    const unsigned d = Sprite_Current[8] & 7;
-    const long slope = g.slope(x, y, d);
-    if (Scratch()[0] == 0) return 0;
-    return static_cast<short>(slope) > 0x40 ? 1 : 0;
-}
-
-// original 0x531DB0 (PSX 0x801BECF0): the height to test a point at - the
-// ground's there, unless it is more than 0x100 above or below Sprite_Current's
-// own (s16 +0x3E, read after the call), then Sprite_Current's. 16 bits,
-// zero-extended as the original's eax is.
-extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
-    const long ground = g.elevation(x, y);
-    const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
-    const auto there = static_cast<short>(ground);
-    int distance = own - there;
-    if (distance < 0) distance = -distance;
-    return static_cast<long>(static_cast<std::uint16_t>(distance > 0x100 ? own : there));
-}
-
-// original 0x531CF0 (PSX 0x801BEE0C): the sprite object at (x, y) - within
-// `margin` by Sprite_PointInReach at the probe height - as its index in
-// Sprite_Objects, or 0x1E + its index in Sprite_ObjectsExtra; 0xFF for none.
-// Skips Sprite_Current, objects not in use, and those with +7 bit 0x80. The
-// original stores the height over its own y argument slot (the calls take y
-// from a register); cdecl gives the caller no claim on that slot and no
-// caller reads it back (docs/field-blocked.md section 2), so ours does not.
-extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin) {
-    const long h = g.probe(x, y);
-    const unsigned char found = FirstInReach(rv::Bytes(Sprite_Objects), kObjectSize, kObjects, nullptr, true, x, y, h, margin, 0);
-    if (found != 0xFF) return found;
-    return FirstInReach(rv::Bytes(Sprite_ObjectsExtra), kObjectSize, kExtra, nullptr, true, x, y, h, margin, 0x1E);
-}
-
-// original 0x531F10 (PSX 0x801BF0B8): the same over the party's records -
-// Field_MemberCount of ObjTrio's, re-read after each - without the +7 test.
-extern "C" unsigned char __cdecl Party_MemberAt(long x, long y, unsigned margin) {
-    const long h = g.probe(x, y);
-    return FirstInReach(rv::Bytes(ObjTrio), kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
-}
-
+}  namespace field_blocked { CalleesFieldBlocked gFieldBlocked = Originals(); }
 namespace {
 
 // --- BOF3X_SHADOW=field_blocked: a differential fuzz, once at start-up -------
@@ -397,13 +193,13 @@ std::uint32_t __cdecl StubReach(long x, long y, long h, unsigned margin, const u
     return (Hash(15) & 0xFFFFFF00u) | (yes ? (Hash(16) >> 8 & 0xFF) | 1 : 0);
 }
 
-Callees Stubs() {
-    Callees s{};
+field_blocked::CalleesFieldBlocked Stubs() {
+    field_blocked::CalleesFieldBlocked s{};
     s.map_ahead = StubMapAhead;
-    s.object_at = As<PointFn>(&StubObjectAt);
-    s.member_at = As<PointFn>(&StubMemberAt);
-    s.wide = As<PointFn>(&StubWide);
-    s.narrow = As<PointFn>(&StubNarrow);
+    s.object_at = AsFieldBlocked<field_blocked::PointFn>(&StubObjectAt);
+    s.member_at = AsFieldBlocked<field_blocked::PointFn>(&StubMemberAt);
+    s.wide = AsFieldBlocked<field_blocked::PointFn>(&StubWide);
+    s.narrow = AsFieldBlocked<field_blocked::PointFn>(&StubNarrow);
     s.cell = StubCell;
     s.steep = StubSteep;
     s.byte_at = StubByteAt;
@@ -596,7 +392,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     static State saved, input, their_out, our_out;
     Capture(saved, 0);
     unsigned char* const saved_object = g_current_object;
-    g = Stubs();
+    field_blocked::gFieldBlocked = Stubs();
 
     unsigned bad = 0, calls = 0, per[kCount] = {}, blocked[kCount] = {};
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -620,7 +416,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      field_blocked self-test MISMATCH: round %u, %s, log %u / %u, result 0x%X / 0x%X", round, kClones[k].name,
                       their_out.log_n, our_out.log_n, (unsigned)their_out.result, (unsigned)our_out.result);
     }
-    g = Originals();
+    field_blocked::gFieldBlocked = Originals();
     Apply(saved);
     g_current_object = saved_object;
     bof3::Log("shadow      field_blocked self-test: %u rounds (%u per function, %u functions), %u calls to the stand-ins, %u MISMATCHES; "
@@ -665,13 +461,4 @@ void FieldBlocked_Inject() {
         Relocate(clones[kCell], 0x518620, 0x40, {0x29, 0x34, 3});
         SelfTest(clones);
     }
-    BOF3_INJECT(Field_ObjectBlockedAhead);
-    BOF3_INJECT(Field_ObjectBlocked);
-    BOF3_INJECT(Field_MapBlockedAhead);
-    BOF3_INJECT(AreaMap_BlockedWide);
-    BOF3_INJECT(AreaMap_CellBlocked);
-    BOF3_INJECT(AreaMap_TooSteep);
-    BOF3_INJECT(Sprite_ObjectAt);
-    BOF3_INJECT(Field_ProbeHeight);
-    BOF3_INJECT(Party_MemberAt);
 }

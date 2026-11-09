@@ -12,9 +12,9 @@
 namespace {
 
 constexpr unsigned kObjectSize = 0xA4;
-constexpr unsigned kObjects = 30, kExtra = 4;
-static_assert(kObjectSize * kObjects == (Sprite_Objects_count * sizeof(records::SpriteObject)));
-static_assert(kObjectSize * kExtra == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
+constexpr unsigned kObjectsSpriteFind = 30, kExtraSpriteFind = 4;
+static_assert(kObjectSize * kObjectsSpriteFind == (Sprite_Objects_count * sizeof(records::SpriteObject)));
+static_assert(kObjectSize * kExtraSpriteFind == (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)));
 
 // The fields of a sprite object this file reads; the rest is unread.
 constexpr unsigned kFlags = 0x00;     // u8, bit 0: in use
@@ -27,7 +27,7 @@ constexpr unsigned kY = 0x38;         // s32
 constexpr unsigned kZ = 0x3E;         // s16
 constexpr unsigned kRecord = 0x54;    // const u8*: +2 s8 reach, +3 bit 0x10 "not this one"
 
-template <class T> T Get(const unsigned char* at, unsigned offset) {
+template <class T> T GetSpriteFind(const unsigned char* at, unsigned offset) {
     // A pointer-typed field is a 32-bit word of the image on every width.
     if constexpr (std::is_pointer_v<T>) {
         std::uint32_t w;
@@ -39,7 +39,7 @@ template <class T> T Get(const unsigned char* at, unsigned offset) {
         return v;
     }
 }
-template <class T> void Put(unsigned char* at, unsigned offset, T v) {
+template <class T> void PutSpriteFind(unsigned char* at, unsigned offset, T v) {
     if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
         const std::uint32_t w = Low32(v);
         std::memcpy(at + offset, &w, sizeof w);
@@ -59,20 +59,6 @@ std::int32_t WrappingDistance(std::int32_t a, std::int32_t b) {
 std::int32_t ReachOf(const unsigned char* record) {
     const std::int32_t reach8 = static_cast<signed char>(record[2]);
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reach8) << 15);
-}
-
-bool Qualifies(const unsigned char* object, const unsigned char* current) {
-    if (!(object[kFlags] & 1)) return false;
-    if (!(object[kFlags24] & 0x40)) return false;
-    if (object[kType] != 0x0A) return false;
-    if (object == current) return false;
-    const auto* record = Get<const unsigned char*>(object, kRecord);
-    if (record[3] & 0x10) return false;
-    const std::int32_t reach = ReachOf(record);
-    if (WrappingDistance(Get<std::int32_t>(current, kX), Get<std::int32_t>(object, kX)) > reach) return false;
-    if (WrappingDistance(Get<std::int32_t>(current, kY), Get<std::int32_t>(object, kY)) > reach) return false;
-    const int dz = Get<std::int16_t>(current, kZ) - Get<std::int16_t>(object, kZ);
-    return (dz < 0 ? -dz : dz) <= 0x300;
 }
 
 // --- BOF3X_SHADOW=sprite_find: a differential fuzz, once at start-up -----------
@@ -111,11 +97,11 @@ void Fill(unsigned char* object, unsigned likely, std::int32_t cx, std::int32_t 
     if (Rng() % likely) object[kFlags24] |= 0x40;
     if (Rng() % likely) object[kType] = 0x0A;
     const unsigned char* record = g_records[Rng() % 8];
-    Put<const unsigned char*>(object, kRecord, record);
-    Put<std::int32_t>(object, kX, Near(cx, ReachOf(record)));
-    Put<std::int32_t>(object, kY, Near(cy, ReachOf(record)));
+    PutSpriteFind<const unsigned char*>(object, kRecord, record);
+    PutSpriteFind<std::int32_t>(object, kX, Near(cx, ReachOf(record)));
+    PutSpriteFind<std::int32_t>(object, kY, Near(cy, ReachOf(record)));
     static const int kDz[] = {0, 0x300, 0x301, -0x300, -0x301, 0x100, -0x100, 0x7000};
-    Put<std::int16_t>(object, kZ, static_cast<std::int16_t>(cz + kDz[Rng() % 8]));
+    PutSpriteFind<std::int16_t>(object, kZ, static_cast<std::int16_t>(cz + kDz[Rng() % 8]));
 }
 
 void SelfTest(FindFn theirs) {
@@ -135,21 +121,21 @@ void SelfTest(FindFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;   // 1: nothing leans; 12: nearly everything does
-        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtraSpriteFind; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
 
-        const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
+        const unsigned where = Rng() % (kObjectsSpriteFind + kExtraSpriteFind + 4);
+        unsigned char* const current = where < kObjectsSpriteFind ? rv::Bytes(&Sprite_Objects[where]) : where < kObjectsSpriteFind + kExtraSpriteFind ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjectsSpriteFind) * kObjectSize
                                      : outside;
-        Put<std::int32_t>(current, kX, cx);
-        Put<std::int32_t>(current, kY, cy);
-        Put<std::int16_t>(current, kZ, cz);
+        PutSpriteFind<std::int32_t>(current, kX, cx);
+        PutSpriteFind<std::int32_t>(current, kY, cy);
+        PutSpriteFind<std::int16_t>(current, kZ, cz);
         Sprite_Current = current;
 
         const unsigned char their_result = theirs();
         const unsigned char our_result = Sprite_FindNearby();
         if (our_result == 0xFF) ++none;
-        else if (our_result < kObjects) ++first;
+        else if (our_result < kObjectsSpriteFind) ++first;
         else ++extra;
         if (their_result != our_result && ++bad <= 8)
             bof3::Log("shadow      Sprite_FindNearby self-test MISMATCH round %u: %u vs ours %u",
@@ -177,8 +163,8 @@ void SelfTestPointInReach(PointFn theirs) {
         unsigned char object[kObjectSize];
         for (auto& b : object) b = static_cast<unsigned char>(Rng());
         if (Rng() % 2) object[0x09] = static_cast<unsigned char>(Rng() % 4);
-        if (Rng() % 2) { Put<std::int32_t>(object, 0x0C, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000);
-                         Put<std::int32_t>(object, 0x10, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000); }
+        if (Rng() % 2) { PutSpriteFind<std::int32_t>(object, 0x0C, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000);
+                         PutSpriteFind<std::int32_t>(object, 0x10, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000); }
         const int margin = Rng() % 8 == 0 ? static_cast<int>(Rng()) : static_cast<int>(Rng() % 300) - 280;
         const std::uint32_t reach = object[0x70] + static_cast<std::uint32_t>(margin) + 2u;
         auto offset = [&](unsigned shift) -> std::uint32_t {
@@ -194,10 +180,10 @@ void SelfTestPointInReach(PointFn theirs) {
             }
         };
         const std::uint32_t steps = object[0x09];
-        const int x = static_cast<int>(Get<std::uint32_t>(object, kX) + Get<std::uint32_t>(object, 0x0C) * steps + offset(15));
-        const int y = static_cast<int>(Get<std::uint32_t>(object, kY) + Get<std::uint32_t>(object, 0x10) * steps + offset(15));
+        const int x = static_cast<int>(GetSpriteFind<std::uint32_t>(object, kX) + GetSpriteFind<std::uint32_t>(object, 0x0C) * steps + offset(15));
+        const int y = static_cast<int>(GetSpriteFind<std::uint32_t>(object, kY) + GetSpriteFind<std::uint32_t>(object, 0x10) * steps + offset(15));
         const unsigned z = (Rng() & 0xFFFF0000u) |
-            static_cast<std::uint16_t>(Get<std::uint16_t>(object, kZ) + (Rng() % 3 ? offset(7) % 0x4000 : offset(7)));
+            static_cast<std::uint16_t>(GetSpriteFind<std::uint16_t>(object, kZ) + (Rng() % 3 ? offset(7) % 0x4000 : offset(7)));
 
         const unsigned char their_result = theirs(x, y, z, margin, object);
         const unsigned char our_result =
@@ -224,7 +210,7 @@ void SelfTestObjectByHandle(HandleFn theirs) {
     unsigned bad = 0, calls = 0;
     for (unsigned layout = 0; layout < kLayouts; ++layout) {
         const unsigned lean = layout % 4;   // 0: no type-0x0A objects at all
-        for (unsigned i = 0; i < kObjects; ++i)
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i)
             Sprite_Objects[i].type =
                 lean && Rng() % 4 < lean ? 0x0A : static_cast<unsigned char>(Rng() | 1u);
         for (unsigned handle = 0; handle < 0x100; ++handle, ++calls) {
@@ -271,23 +257,23 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         const std::int32_t cx = static_cast<std::int32_t>(Rng()), cy = static_cast<std::int32_t>(Rng());
         const std::int16_t cz = static_cast<std::int16_t>(Rng());
         const unsigned likely = 1 + Rng() % 12;
-        for (unsigned i = 0; i < kObjects; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
-        for (unsigned i = 0; i < kExtra; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kObjectsSpriteFind; ++i) Fill(rv::Bytes(&Sprite_Objects[i]), likely, cx, cy, cz);
+        for (unsigned i = 0; i < kExtraSpriteFind; ++i) Fill(rv::Bytes(&Sprite_ObjectsExtra[i]), likely, cx, cy, cz);
         for (auto& b : outside) b = static_cast<unsigned char>(Rng());
 
-        const unsigned where = Rng() % (kObjects + kExtra + 4);
-        unsigned char* const current = where < kObjects ? rv::Bytes(&Sprite_Objects[where]) : where < kObjects + kExtra ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjects) * kObjectSize
+        const unsigned where = Rng() % (kObjectsSpriteFind + kExtraSpriteFind + 4);
+        unsigned char* const current = where < kObjectsSpriteFind ? rv::Bytes(&Sprite_Objects[where]) : where < kObjectsSpriteFind + kExtraSpriteFind ? reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (where - kObjectsSpriteFind) * kObjectSize
                                      : outside;
-        Put<std::int32_t>(current, kX, cx);
-        Put<std::int32_t>(current, kY, cy);
-        Put<std::int16_t>(current, kZ, cz);
+        PutSpriteFind<std::int32_t>(current, kX, cx);
+        PutSpriteFind<std::int32_t>(current, kY, cy);
+        PutSpriteFind<std::int16_t>(current, kZ, cz);
         // A handle whose number stays inside the 34 objects: a larger one reads
         // game memory past Sprite_ObjectsExtra, which is the same for both but
         // not ours to vary. Without bit 7 the number is (h & 0x3F) + 30, with
         // it h & 0x3F; out-of-range ones are folded back, keeping bits 6 and 7.
         unsigned char handle = kHandles[Rng() % sizeof kHandles];
         if (Rng() % 2) handle = static_cast<unsigned char>(Rng());
-        const unsigned limit = handle & 0x80 ? kObjects + kExtra : kExtra;
+        const unsigned limit = handle & 0x80 ? kObjectsSpriteFind + kExtraSpriteFind : kExtraSpriteFind;
         if ((handle & 0x3Fu) >= limit) handle = static_cast<unsigned char>((handle & 0xC0u) | ((handle & 0x3Fu) % limit));
         current[kHandle] = handle;
         if (Rng() % 2) current[kFlags24] |= 0x20; else current[kFlags24] &= ~0x20;
@@ -315,10 +301,10 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
         if (!same && ++bad <= 8)
             bof3::Log("shadow      Sprite_InheritDrawKey self-test MISMATCH round %u: handle %02X, attached %u, "
                       "+0x32 %04X vs ours %04X", round, handle, (current[kFlags24] & 0x20) ? 1u : 0u,
-                      Get<std::uint16_t>(where < kObjects ? their_a + where * kObjectSize
-                                         : where < kObjects + kExtra ? their_b + (where - kObjects) * kObjectSize
+                      GetSpriteFind<std::uint16_t>(where < kObjectsSpriteFind ? their_a + where * kObjectSize
+                                         : where < kObjectsSpriteFind + kExtraSpriteFind ? their_b + (where - kObjectsSpriteFind) * kObjectSize
                                          : their_out, kDrawKey),
-                      Get<std::uint16_t>(current, kDrawKey));
+                      GetSpriteFind<std::uint16_t>(current, kDrawKey));
     }
     std::memcpy(Sprite_Objects, saved_a, sizeof saved_a);
     std::memcpy(Sprite_ObjectsExtra, saved_b, sizeof saved_b);
@@ -330,43 +316,7 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
 
 }  // namespace
 
-// original 0x589660. The number of the first sprite object of type 0x0A, other
-// than the current one, that has the current one within its reach - the reach
-// is the found object's, from the record at its +0x54 - or 0xFF. Objects are
-// numbered 0..29 in Sprite_Objects and 30..33 in Sprite_ObjectsExtra, the
-// numbering 0x57C0A0 uses too.
 //
-// As the original has it: x and y differences are 32-bit and wrap, and an
-// absolute difference of 0x80000000 counts as within any reach; z is 16-bit
-// and its limit is a fixed 0x300.
-extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
-    const unsigned char* const current = Sprite_Current;
-    for (unsigned i = 0; i < kObjects; ++i)
-        if (Qualifies(rv::Bytes(&Sprite_Objects[i]), current)) return static_cast<unsigned char>(i);
-    for (unsigned i = 0; i < kExtra; ++i)
-        if (Qualifies(rv::Bytes(&Sprite_ObjectsExtra[i]), current)) return static_cast<unsigned char>(i + kObjects);
-    return 0xFF;
-}
-
-// original 0x531C70. Whether the point (x, y, z) is within the object's reach -
-// byte +0x70, widened by `margin` and 2 - of where the object is about to be:
-// its position less dword +0xC (and +0x10) times byte +9.
-//
-// As the original has it: z is compared inclusively and x and y exclusively;
-// everything wraps in 32 bits, and an absolute difference of 0x80000000 counts
-// as within any reach.
-extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int margin, const unsigned char* object) {
-    const std::uint32_t reach = static_cast<std::uint32_t>(object[0x70]) + static_cast<std::uint32_t>(margin) + 2u;
-    const int dz = Get<std::int16_t>(object, kZ) - z;
-    if ((dz < 0 ? -dz : dz) > static_cast<std::int32_t>(reach << 7)) return 0;
-    const std::uint32_t steps = object[0x09];
-    const std::int32_t limit = static_cast<std::int32_t>(reach << 15);
-    const std::uint32_t ax = static_cast<std::uint32_t>(x) - Get<std::uint32_t>(object, 0x0C) * steps;
-    if (WrappingDistance(static_cast<std::int32_t>(ax), Get<std::int32_t>(object, kX)) >= limit) return 0;
-    const std::uint32_t ay = static_cast<std::uint32_t>(y) - Get<std::uint32_t>(object, 0x10) * steps;
-    if (WrappingDistance(static_cast<std::int32_t>(ay), Get<std::int32_t>(object, kY)) >= limit) return 0;
-    return 1;
-}
 
 // original 0x57C0A0 (PSX 0x8015BEE4). The object number an attachment handle names - the byte
 // the movement-script command F8 07 stores at +0x18 - in Sprite_FindNearby's
@@ -386,45 +336,18 @@ namespace {
 
 unsigned char ObjectByHandle(unsigned char handle) {
     const unsigned char n = handle & 0x3F;
-    return handle & 0x80 ? n : static_cast<unsigned char>(n + kObjects);
+    return handle & 0x80 ? n : static_cast<unsigned char>(n + kObjectsSpriteFind);
 }
-
+}  // namespace
 // --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
 // clone first, then ours from the same state, and the results are compared.
-HandleFn g_handle_live = nullptr;
-InheritFn g_inherit_live = nullptr;
+namespace sprite_find { HandleFn g_handle_live = nullptr; }
+namespace sprite_find { InheritFn g_inherit_live = nullptr; }  namespace {
 struct LiveCounts { unsigned calls, bit7, mismatches; } g_live_handle, g_live_inherit;
 
 void LiveReport(const char* name, const LiveCounts& c) {
     if (c.calls == 1 || c.calls % 4096 == 0)
         bof3::Log("shadow      %s live: %u calls (%u with bit 7), %u MISMATCHES", name, c.calls, c.bit7, c.mismatches);
-}
-
-}  // namespace
-
-extern "C" unsigned char __cdecl Sprite_ObjectByHandle(unsigned char handle) {
-    const unsigned char ours = ObjectByHandle(handle);
-    if (g_handle_live) {
-        const unsigned char theirs = g_handle_live(handle);
-        LiveCounts& c = g_live_handle;
-        ++c.calls;
-        if (handle & 0x80) ++c.bit7;
-        if (theirs != ours && ++c.mismatches <= 8)
-            bof3::Log("shadow      Sprite_ObjectByHandle live MISMATCH: call %u, handle %02X: %u / %u", c.calls, handle,
-                      theirs, ours);
-        LiveReport("Sprite_ObjectByHandle", c);
-    }
-    return ours;
-}
-
-namespace {
-
-// An object number as Sprite_InheritDrawKey turns it into an address: signed,
-// 30 and above into Sprite_ObjectsExtra, and no bound on either side.
-const unsigned char* ObjectByNumber(unsigned char number) {
-    const int n = static_cast<signed char>(number);
-    return n >= static_cast<int>(kObjects) ? rv::Bytes(Sprite_ObjectsExtra) + (n - static_cast<int>(kObjects)) * static_cast<int>(kObjectSize)
-                                           : rv::Bytes(Sprite_Objects) + n * static_cast<int>(kObjectSize);
 }
 
 }  // namespace
@@ -438,40 +361,6 @@ const unsigned char* ObjectByNumber(unsigned char number) {
 // As the original has it: the number is compared signed, and on the attached
 // path is not checked for 0xFF; neither can arise from Sprite_ObjectByHandle,
 // whose results are 0..0x5D. A number past 33 reads past Sprite_ObjectsExtra.
-namespace {
-
-void InheritDrawKey() {
-    unsigned char number;
-    if (Sprite_Current[kFlags24] & 0x20) {
-        number = ObjectByHandle(Sprite_Current[kHandle]);
-    } else {
-        number = Sprite_FindNearby();
-        if (number == 0xFF) return;
-    }
-    Put<std::uint16_t>(Sprite_Current, kDrawKey, Get<std::uint16_t>(ObjectByNumber(number), kDrawKey));
-}
-
-}  // namespace
-
-extern "C" void __cdecl Sprite_InheritDrawKey(void) {
-    if (!g_inherit_live) return InheritDrawKey();
-    // The one store either makes is the current object's +0x32.
-    unsigned char* const current = Sprite_Current;
-    const std::uint16_t before = Get<std::uint16_t>(current, kDrawKey);
-    g_inherit_live();
-    const std::uint16_t theirs = Get<std::uint16_t>(current, kDrawKey);
-    Put<std::uint16_t>(current, kDrawKey, before);
-    InheritDrawKey();
-    const std::uint16_t ours = Get<std::uint16_t>(current, kDrawKey);
-    LiveCounts& c = g_live_inherit;
-    ++c.calls;
-    if ((current[kFlags24] & 0x20) && (current[kHandle] & 0x80)) ++c.bit7;
-    if (theirs != ours && ++c.mismatches <= 8)
-        bof3::Log("shadow      Sprite_InheritDrawKey live MISMATCH: call %u, attached %u handle %02X: +0x32 %04X / %04X",
-                  c.calls, (current[kFlags24] & 0x20) ? 1u : 0u, current[kHandle], theirs, ours);
-    LiveReport("Sprite_InheritDrawKey", c);
-}
-
 void SpriteFind_Inject() {
     // 0x589660..0x589769, 0x531C70..0x531CEF and 0x57C0A0..0x57C0E9: no
     // calls, every jump internal (disasm 2026-09-20, 2026-09-21).
@@ -490,11 +379,7 @@ void SpriteFind_Inject() {
         SelfTestInheritDrawKey(reinterpret_cast<InheritFn>(inherit));
         // Live from here on. The clones are the ones the fuzz used: the draw
         // key's calls reach the clones of the handle lookup and the search.
-        g_handle_live = reinterpret_cast<HandleFn>(handle);
-        g_inherit_live = reinterpret_cast<InheritFn>(inherit);
+        sprite_find::g_handle_live = reinterpret_cast<HandleFn>(handle);
+        sprite_find::g_inherit_live = reinterpret_cast<InheritFn>(inherit);
     }
-    BOF3_INJECT(Sprite_FindNearby);
-    BOF3_INJECT(Sprite_PointInReach);
-    BOF3_INJECT(Sprite_ObjectByHandle);
-    BOF3_INJECT(Sprite_InheritDrawKey);
 }
