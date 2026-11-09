@@ -388,11 +388,11 @@ unsigned char ObjectByHandle(unsigned char handle) {
     const unsigned char n = handle & 0x3F;
     return handle & 0x80 ? n : static_cast<unsigned char>(n + kObjectsSpriteFind);
 }
-
+}  // namespace
 // --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
 // clone first, then ours from the same state, and the results are compared.
-HandleFn g_handle_live = nullptr;
-InheritFn g_inherit_live = nullptr;
+namespace sprite_find { HandleFn g_handle_live = nullptr; }
+namespace sprite_find { InheritFn g_inherit_live = nullptr; }  namespace {
 struct LiveCounts { unsigned calls, bit7, mismatches; } g_live_handle, g_live_inherit;
 
 void LiveReport(const char* name, const LiveCounts& c) {
@@ -404,8 +404,8 @@ void LiveReport(const char* name, const LiveCounts& c) {
 
 extern "C" unsigned char __cdecl Sprite_ObjectByHandle(unsigned char handle) {
     const unsigned char ours = ObjectByHandle(handle);
-    if (g_handle_live) {
-        const unsigned char theirs = g_handle_live(handle);
+    if (sprite_find::g_handle_live) {
+        const unsigned char theirs = sprite_find::g_handle_live(handle);
         LiveCounts& c = g_live_handle;
         ++c.calls;
         if (handle & 0x80) ++c.bit7;
@@ -454,11 +454,11 @@ void InheritDrawKey() {
 }  // namespace
 
 extern "C" void __cdecl Sprite_InheritDrawKey(void) {
-    if (!g_inherit_live) return InheritDrawKey();
+    if (!sprite_find::g_inherit_live) return InheritDrawKey();
     // The one store either makes is the current object's +0x32.
     unsigned char* const current = Sprite_Current;
     const std::uint16_t before = GetSpriteFind<std::uint16_t>(current, kDrawKey);
-    g_inherit_live();
+    sprite_find::g_inherit_live();
     const std::uint16_t theirs = GetSpriteFind<std::uint16_t>(current, kDrawKey);
     PutSpriteFind<std::uint16_t>(current, kDrawKey, before);
     InheritDrawKey();
@@ -490,8 +490,8 @@ void SpriteFind_Inject() {
         SelfTestInheritDrawKey(reinterpret_cast<InheritFn>(inherit));
         // Live from here on. The clones are the ones the fuzz used: the draw
         // key's calls reach the clones of the handle lookup and the search.
-        g_handle_live = reinterpret_cast<HandleFn>(handle);
-        g_inherit_live = reinterpret_cast<InheritFn>(inherit);
+        sprite_find::g_handle_live = reinterpret_cast<HandleFn>(handle);
+        sprite_find::g_inherit_live = reinterpret_cast<InheritFn>(inherit);
     }
     BOF3_INJECT(Sprite_FindNearby);
     BOF3_INJECT(Sprite_PointInReach);

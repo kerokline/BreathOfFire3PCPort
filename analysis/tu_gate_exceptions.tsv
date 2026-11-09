@@ -78,3 +78,7 @@ _ZN13psx_gte_float12g_ramp_cloneE	x64-indirect	B0 promotion of psx_gte_float.cpp
 _ZN13psx_gte_float19g_perspective_cloneE	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW _ZN13psx_gte_float19g_perspective_cloneE  (bss)	
 _ZN12_GLOBAL__N_16g_liveE	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW local:1ca3b97042e0  (named _ZN12_GLOBAL__N_16g_liveE)	
 _ZN12_GLOBAL__N_111PerspectiveEPfS0_Pl	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW local:d1d9ef903289  (named _ZN12_GLOBAL__N_111PerspectiveEPfS0_Pl)	
+Sprite_InheritDrawKey	x64-indirect	B0 promotion of sprite_find.cpp's g_handle_live and g_inherit_live: DIFFER Sprite_InheritDrawKey  first at instruction 0: 'push rsi' -> 'push r14'	
+Sprite_ObjectByHandle	x64-indirect	B0 promotion of sprite_find.cpp's g_handle_live and g_inherit_live: DIFFER Sprite_ObjectByHandle  first at instruction 0: 'mov eax, ecx' -> 'push rsi'	
+_ZN11sprite_find13g_handle_liveE	x64-indirect	B0 promotion of sprite_find.cpp's g_handle_live and g_inherit_live: NEW _ZN11sprite_find13g_handle_liveE  (bss)	
+_ZN11sprite_find14g_inherit_liveE	x64-indirect	B0 promotion of sprite_find.cpp's g_handle_live and g_inherit_live: NEW _ZN11sprite_find14g_inherit_liveE  (bss)	
