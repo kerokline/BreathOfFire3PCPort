@@ -506,7 +506,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
             *shade = 0;
             continue;
         }
-        U root = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
+        U root = static_cast<U>(SH_AT(long (__cdecl*)(long), effect_2e::at::kSqrt.v)(static_cast<long>(dot)));
         if (static_cast<std::int32_t>(root) > 0xFFF) root = 0xFFF;
         *shade = static_cast<unsigned char>(Sar(root, 7));
     }
