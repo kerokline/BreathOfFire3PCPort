@@ -966,7 +966,8 @@ is expected; the doc says so.
      @r14:local#...' -> 'call @r14:__ZN5sound10ResumeSkipEjiij'`, two
      register arguments become four on the stack.
    **Two calls on the moves themselves, the owner's of 2026-11-09 morning
-   on group B1's report (`slb1109eports1.md` 5), both recommended by
+   on group B1's report (`slb1109
+eports1.md` 5), both recommended by
    the coordinator and taken:**
    - `refptr` (both widths, a class of its own; a row may name the data
      symbol): a moved function reads a global its old file defines. Inside
@@ -991,6 +992,28 @@ is expected; the doc says so.
      `Area117_MembersFrame`, i686 `mov ecx, 0; jmp @local#3ba97da06e19` (a
      thunk) -> the helper's 204 instructions in place; B1 has 27 such
      functions and 12 helper bodies GONE or NEW.
+   **Three readings of the gate, the coordinator's on B2's, B5's and B6's
+   reports (2026-11-09 afternoon), tool changes rather than classes:**
+   - an exception table (`GCC_except_table*`, paired with its function through
+     the `.eh_frame` FDE that names it as its LSDA) or a function-local static
+     (`_ZZ...E...`) **follows its function**: not counted when the function is
+     a changed `_Inject()` under `--inject-ok` (B2's four tables belonged to
+     `SaveMenu_Inject` and `DatLoad_Inject`, whose `BOF3_INJECT` lines moved
+     out), excepted by the row that excepts the function (B6's tables and
+     `PsxGteFloat_Inject`'s `entries`); the gate prints `belongs to F`;
+   - a plain load or store at an absolute address reads a pooled constant
+     **as wide as its operand** (`movsd` 8, `movaps` 16), not to the pool's
+     next anchor, which a move changes (B6's `Display_ReleaseBackdrop`,
+     `MoveCmd_Op87Start`; B5's `EffectKind18Sub45_DrawRing`); an indexed
+     access, a `lea` and a push still read the whole item;
+   - `data-layout` **covers a move's placement too**, not only a promotion's:
+     a file-local or a bss symbol whose neighbours moved changes extent or
+     hash, and its readers differ only in that reference (B6's
+     `g_trade_confirm_layout` `zero[15]` -> `zero[1]`, `map_layers`'
+     `g_file_sides` no longer paired with its file-local once a reader moved
+     out, `D3dDraw_CellsShadowWritten`'s byte; B5's `EnemyAI_TurnCheck`, whose
+     37-entry jump table is read to the next anchor, one word into the next
+     table). The class's rows stay what they were: the symbol, or a reader.
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
    --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr`
    (the other classes' rows are read but never used there), the x86_64 gate
