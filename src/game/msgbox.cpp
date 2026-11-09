@@ -1829,23 +1829,6 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
     MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));
 }
 
-// original 0x59E2D0 (PSX 0x80159874). Claims window record `slot` (stride
-// 0x24 off 0x803160) for `kind` if its first byte is free.
-//
-// As the original has it: the slot is masked to a byte for the index but the
-// ANSWER is the argument dword - unchanged on success, with its low byte
-// forced to 0xFF on failure (`or al, 0xFF`), so a caller that passes a slot
-// with high bytes set gets them back. No bound on the slot.
-extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
-    unsigned char* const rec = msgbox::At(::bof3::Img(WindowRecords_addr) + (slot & 0xFF) * 0x24u);
-    if (rec[0] != 0) return slot | 0xFFu;
-    rec[0] = 1;
-    rec[1] = static_cast<unsigned char>(kind);
-    rec[2] = 0;
-    rec[3] = 0;
-    return slot;
-}
-
 // original 0x516B30 (PSX 0x8014F6BC). The port's general text draw, 341 callers: it plants the
 // pen and hands the string to Text_DrawString.
 //
@@ -1999,7 +1982,6 @@ void MsgBox_Inject() {
     BOF3_INJECT(MsgBox_RiseStart);
     BOF3_INJECT(MsgBox_RiseStep);
     BOF3_INJECT(MsgBox_EffectDraw);
-    BOF3_INJECT(Window_Alloc);
     BOF3_INJECT(Text_DrawAt);
     BOF3_INJECT(Text_EmitGlyph);
     // The reading row needs the walk and the printer both ours.

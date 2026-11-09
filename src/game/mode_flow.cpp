@@ -492,135 +492,6 @@ extern "C" void __cdecl Game_ClockTick(void) {
     CountDown(::bof3::Img(Rest3c_Byte660_addr));
 }
 
-// original 0x594E60: entering an area, once per area change from
-// GameMode_Enter (PSX 0x801A0AA8, callers pairing). docs/mode-flow.md
-// section 4 has it step by step.
-//
-// As the original has it: flag 0x80 of the entry flags sets or clears bit 15
-// of Field_ScriptFlags2 at once and is kept (the original writes it over the
-// flags' own argument slot) for the end; the area's DAT is loaded only when
-// the area number differs AND Field_Request is 5; the flags go on whole to
-// Field_PartySetUp; Area_Descriptors[Game_AreaNumber] is read afresh after
-// every call; an area whose descriptor has no colour matrix at +0x38 gets
-// the default one at 0x6BE090 and the light pair at 0x663B20; the scenario
-// chapter steps by one with 0x10 skipped (to 0x11) when Field_StatusBits has
-// bit 7; the descriptor's +0x40, when not null, is called with nothing.
-extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) {
-    const bool drop_in = (flags & 0x80) != 0;
-    if (drop_in) Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x8000);
-    else Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0x7FFF);
-    mode_flow::g.effect_clear();
-    mode_flow::g.tint_reset();
-    const std::uint16_t previous = Game_AreaNumber;
-    const unsigned char zone = Cond_ByteFD;
-    const long kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
-    AreaW2c_LastArea = previous;
-    AreaW1a_EntryZone = zone;
-    mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x220), kind2_z);
-    mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x21c), kind2_x);
-    const unsigned char track = AreaW1f_MusicCurrent;
-    if (track != 0xFF) mode_flow::g.music_play(track, 8);
-    else Music_Track = 0xFF;
-    if (Game_AreaNumber != static_cast<std::uint16_t>(area) && Field_Request == 5) {
-        Game_AreaNumber = static_cast<std::uint16_t>(area);
-        mode_flow::g.load_dat(static_cast<int>((area & 0xFFFF) + 3));
-        while (mode_flow::g.load_done() == 0) mode_flow::g.sleep(1);
-        AreaDataReload_OnLoad(area & 0xFFFF);   // DIV-0182: the area's own .data as the disc holds it
-        Field_InputFlags = Area_Descriptors[Game_AreaNumber][0x32];
-        mode_flow::g.clut_restore();
-        Gfx_ClutStripDirty = 1;
-    }
-    mode_flow::g.party_set_up(x, z, flags);
-    Cond_ByteFD = mode_flow::g.zone_id(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh))));
-    mode_flow::g.view_reset();
-    const auto colour = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38));
-    if (colour != 0) {
-        mode_flow::g.colour_matrix(Fn<const unsigned long*>(colour));
-        const unsigned char* const own = Fn<const unsigned char*>(
-            static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38)));
-        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), mode_flow::Long(own + 0x20));   // Light_Angles
-        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(own + 0x24));
-    } else {
-        mode_flow::g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(mode_flow::at::kDefaultColour)));
-        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
-        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(mode_flow::At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
-    }
-    if (Field_StatusBits & 0x80) {
-        auto chapter = static_cast<unsigned char>(Cond_ByteFA + 1);
-        Cond_ByteFA = static_cast<signed char>(chapter);
-        if (chapter == 0x10) {
-            chapter = 0x11;
-            Cond_ByteFA = 0x11;
-        }
-        mode_flow::g.scenario_start(chapter);
-    }
-    mode_flow::g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber]))));
-    const auto hook = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x40));
-    if (hook != 0) Fn<mode_flow::Handler>(hook)();
-    mode_flow::g.flags_clear(mode_flow::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
-    mode_flow::At(::bof3::Img(0x8034E2))[0] = 1;   // Field_StatusBits + 1
-    mode_flow::g.mode_dispatch();
-    mode_flow::g.first_frame();
-
-    const std::uint16_t bits = Field_ScriptFlags2;
-    if (bits & 0x8000) {
-        if (drop_in) {
-            EventLeader_PendingFlag = 0;
-            mode_flow::g.place_party(flags & ~0x80u);
-            Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFEF);
-            mode_flow::g.members_frame();
-        }
-    } else if (!(Field_ScriptFlags & 0x800)) {
-        bool walked = true;
-        if (bits & 0x80) mode_flow::g.entry_walk(1, x, z);
-        else if (bits & 0x100) mode_flow::g.entry_walk(2, x, z);
-        else if (bits & 0x200) mode_flow::g.entry_walk(3, x, z);
-        else if (Field_MemberCount > 1) {
-            mode_flow::g.entry_walk(0, x, z);
-            if (!(Field_ScriptFlags & 0x800) && !(Field_ScriptFlags2 & 0x8000))
-                mode_flow::g.test_fb(static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh)))), static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh)))));
-        } else {
-            walked = false;
-        }
-        if (walked) {
-            const unsigned char members = Field_MemberCount;
-            if (members > 1) {
-                auto v = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x12);
-                if (members == 3) v = static_cast<std::uint16_t>(v | 4);
-                Field_ScriptFlags2 = static_cast<std::uint16_t>(v & 0xEE7F);
-                return;
-            }
-        }
-    }
-    Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xEE7F);
-}
-
-// original 0x595160 (PSX 0x801A0F90, gap pairing): the party walks in from
-// the area's edge - the walk on, its direction, a zero, the point (x, z);
-// with a direction bit 3 of Field_ScriptFlags2 set; each of Field_MemberCount
-// members' two walk bytes: the direction's pose from 0x66ADBC, and bit 1.
-//
-// As the original has it: the direction is the argument's low byte; the pose
-// table is indexed by it unchecked (callers pass 0..3); the member count is
-// read once, as a byte.
-extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
-    const auto dir = static_cast<unsigned char>(direction);
-    if (dir != 0) Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 8);
-    EventLeader_PendingX = x;
-    const unsigned members = Field_MemberCount;
-    EventLeader_PendingFlag = 1;
-    mode_flow::At(::bof3::Img(EventLeader_PendingFlag_addr))[1] = dir;
-    mode_flow::At(::bof3::Img(EventLeader_PendingFlag_addr))[2] = 0;
-    EventLeader_PendingZ = z;
-    if (members == 0) return;
-    const unsigned char pose = mode_flow::At(::bof3::Img(mode_flow::at::kWalkPoses))[dir];
-    for (unsigned i = 0; i < members; ++i) {
-        unsigned char* const m = mode_flow::At(::bof3::Img(ObjTrio_addr) + 0x137 + i * 0x14C);
-        m[0] = pose;
-        m[1] = static_cast<unsigned char>(m[1] | 2);
-    }
-}
-
 // original 0x59E330 (PSX 0x8015990C, the JP executable): every window
 // record's in-use, handler, kind, state and pass bytes (+0..+3, +0xF)
 // zeroed, and the pass the walk starts from. No calls.
@@ -637,22 +508,6 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
 // PatchBytes("WindowResetFull") in ModeFlow_Inject, after the self-test,
 // which compared Capcom's five-field reset.
 namespace mode_flow { std::uint8_t g_reset_full = 0; }
-
-extern "C" void __cdecl Window_ResetAll(void) {
-    for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = mode_flow::At(::bof3::Img(WindowRecords_addr) + i * 0x24);
-        if (mode_flow::g_reset_full) {
-            std::memset(r, 0, 0x20);
-            continue;
-        }
-        r[0] = 0;
-        r[1] = 0;
-        r[2] = 0;
-        r[3] = 0;
-        r[0xF] = 0;
-    }
-    BossSa_WindowPass = 0;
-}
 
 // ===========================================================================
 // Boot (0x496B60, 0x496C90) and the small resets
@@ -801,9 +656,6 @@ void ModeFlow_Inject() {
     BOF3_INJECT(GameMode_Enter);
     BOF3_INJECT(Field_WaitTransition);
     BOF3_INJECT(Game_ClockTick);
-    BOF3_INJECT(Area_Enter);
-    BOF3_INJECT(Area_EntryWalk);
-    BOF3_INJECT(Window_ResetAll);
     BOF3_INJECT(Boot_Task);
     BOF3_INJECT(Title_LoadTask);
     BOF3_INJECT(File_LoadDone);

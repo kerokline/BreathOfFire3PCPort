@@ -46,61 +46,6 @@ Callees g = kOriginals;
 
 namespace {
 
-unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Long(U address) {
-    U v;
-    std::memcpy(&v, At(address), sizeof v);
-    return v;
-}
-U Word(U address) {
-    std::uint16_t v;
-    std::memcpy(&v, At(address), sizeof v);
-    return v;
-}
-void PutWord(U address, U v) {
-    const std::uint16_t w = static_cast<std::uint16_t>(v);
-    std::memcpy(At(address), &w, sizeof w);
-}
-
-void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
-    void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
-    reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
-}
-
-// Codes 0xE0..0xE3 and 0xE8..0xEB, both tables: the PSX draw mode. Byte +6 bit
-// 0 to Gfx_DrawEnable (which the NEXT draw tests on entry), bit 1 to 0x7DED16,
-// the tpage word +4 to Gfx_DrawTpage, and the 8 bytes a non-null +8 points at to
-// Gfx_TexCacheKey.
-void DrawMode(U p) {
-    Gfx_DrawEnable = At(p + 6)[0] & 1;
-    At(::bof3::Img(Gfx_DrawEnable_addr) - 1)[0] = (At(p + 6)[0] >> 1) & 1;
-    Gfx_DrawTpage = Word(p + 4);
-    const U key = Long(p + 8);
-    if (key != 0) {
-        Gfx_TexCacheKey[0] = Long(key);
-        Gfx_TexCacheKey[1] = Long(key + 4);
-    }
-}
-// Codes 0xF0..0xF3: Gfx_TexCacheKey from the 8 bytes +8 points at - not
-// checked for null, as the original does not.
-void TexKey(U p) {
-    const U key = Long(p + 8);
-    Gfx_TexCacheKey[0] = Long(key);
-    Gfx_TexCacheKey[1] = Long(key + 4);
-}
-// Codes 0xEC..0xEF: a VRAM move, the rect at +8, the destination +0x10, +0x14.
-// DIV-0125 (render/fb_grab.h), after the original's move and not in
-// it: a move out of a display buffer also has the backend grab that part of
-// the picture drawn so far, as the PlayStation's GPU would have moved it. The
-// rectangle is read before the move, which clips it in place.
-void MoveImage(U p) {
-    auto* rect = reinterpret_cast<short*>(At(p + 8));
-    const int x = rect[0], y = rect[1], w = rect[2], h = rect[3];
-    const int to_x = static_cast<int>(Long(p + 0x10)), to_y = static_cast<int>(Long(p + 0x14));
-    g.move_image(rect, to_x, to_y);
-    render::MoveFromFrame(x, y, w, h, to_x, to_y);
-}
-
 // A primitive's entry by its index, (code & 0xFC) - 0x20: the switch the
 // compiler made the two byte tables of (kSoftBytes, 0xD1 bytes; kD3dBytes,
 // 0xD5) - the draw's logic, ours since the function is (docs/operand-store.md).
@@ -137,33 +82,6 @@ U Entry(U index, bool software) {
     }
 }
 
-// One primitive: (code & 0xFC) - 0x20, unsigned, through the byte table to an
-// entry. Entries 0..20 are handlers; the software table's 21..23 and the
-// Direct3D table's 21..24 are the cases above; the last entry of each is none.
-void Dispatch(U p, bool software) {
-    const U index = (At(p + 7)[0] & 0xFCu) - 0x20u;
-    if (index > (software ? 0xD0u : 0xD4u)) return;
-    const U entry = Entry(index, software);
-    if (entry < kHandlers) {
-        if (stp_census::g_on && !software) stp_census::Note(p);   // BOF3X_STPCENSUS, diagnostic only: reads, draws nothing
-        (software ? g.soft : g.d3d)[entry](At(p));
-        return;
-    }
-    switch (entry) {
-    case 21: DrawMode(p); return;
-    case 22: MoveImage(p); return;
-    case 23: TexKey(p); return;
-    case 24:
-        if (!software) g.alpha_modulate(At(p + 8)[0] ^ 1u);
-        return;
-    case 25:
-        if (!software) return;
-        break;
-    default: break;
-    }
-    bof3::Fatal("Gfx_DrawOTag: byte table entry %u at code 0x%02X", (unsigned)entry, (unsigned)At(p + 7)[0]);
-}
-
 }  // namespace
 
 void Operands() {
@@ -177,41 +95,3 @@ void Operands() {
 
 using namespace d3d_list;
 
-// 0x59EE50, called once a rendered frame from WinMain (0x4FCE6F) with the
-// ordering table. Nothing at all unless Gfx_DrawEnable. Gfx_RenderFlags bit 0
-// (read once) picks the software surfaces' table; otherwise the walk is inside
-// BeginScene / EndScene and uses the Direct3D table. The walk: from the table
-// pointer, while the link word is not -1, follow it - a link with its top byte
-// set is masked to 24 bits and the node it reaches is NOT drawn (known-defects
-// D4), a clean one is drawn - and read the drawn node's link after its handler.
-// Then every glyph texture and every cell texture is marked unused, and if
-// anything set the word 0x7CADEA during the draw (it is cleared on entry),
-// D3d_AfterDraw 0x59F580 runs (a tail jump in the original; it reads no
-// argument).
-void Gfx_DrawOTag(unsigned long* ot) {
-    if (Gfx_DrawEnable == 0) return;
-    if (draw_order::g_on) draw_order::LogWalk(ot);   // BOF3X_DRAWORDER, diagnostic only: reads the table, draws nothing
-    if (D3d_AfterDrawRequest != 0) {
-        // Whether D3d_AfterDraw's request ever fires is unmeasured (display-setup.md section 7): say so once.
-        static bool seen;
-        if (!seen) {
-            seen = true;
-            bof3::Log("Gfx_DrawOTag: D3d_AfterDrawRequest was set on entry (first time)");
-        }
-        D3d_AfterDrawRequest = 0;
-    }
-    const bool software = (Gfx_RenderFlags & 1) != 0;
-    if (!software) d3d_list::Scene(0x24);
-    if (stp_census::g_on && !software) stp_census::Frame();
-    d3d_list::U node = Low32(ot);
-    while (d3d_list::Long(node) != 0xFFFFFFFFu) {
-        d3d_list::U p = d3d_list::Long(node);
-        if (p & 0xFF000000u) p &= 0xFFFFFFu;
-        else Dispatch(p, software);
-        node = p;
-    }
-    if (!software) d3d_list::Scene(0x28);
-    for (d3d_list::U a = ::bof3::Img(kFontInUse); a < ::bof3::Img(kFontInUseEnd); a += 0x14) d3d_list::PutWord(a, 0);
-    for (d3d_list::U a = ::bof3::Img(kCellInUse); a < ::bof3::Img(kCellInUseEnd); a += 0x28) d3d_list::PutWord(a, 0);
-    if (D3d_AfterDrawRequest != 0) d3d_list::g.after_draw();
-}

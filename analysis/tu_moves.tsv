@@ -12,12 +12,15 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	g	copied		src/game/area_backdrop.cpp	32	32	32	src/game/platform/magic_080.cpp	d3e6abb3
 	Dword	local		src/game/area_backdrop.cpp	34	34	38	src/game/field/area_map.cpp	d3e6abb3
 	Word	local		src/game/area_backdrop.cpp	39	39	43	src/game/field/area_map.cpp	d3e6abb3
+	WordAreaBackdrop	local		src/game/area_backdrop.cpp	39	39	43	src/game/field/area_map.cpp	c39b54d6
 	SetWord	local		src/game/area_backdrop.cpp	44	44	47	src/game/field/area_map.cpp	d3e6abb3
+	SetWordAreaBackdrop	local		src/game/area_backdrop.cpp	44	44	47	src/game/field/area_map.cpp	c39b54d6
 	SetDword	copied		src/game/area_backdrop.cpp	48	48	48	src/game/field/area_map.cpp	d3e6abb3
 	SetDword	copied		src/game/area_backdrop.cpp	48	48	48	src/game/platform/magic_080.cpp	d3e6abb3
 	SetFloat	copied		src/game/area_backdrop.cpp	49	49	49	src/game/field/area_map.cpp	d3e6abb3
 	SetFloat	copied		src/game/area_backdrop.cpp	49	49	49	src/game/platform/magic_080.cpp	d3e6abb3
 	At	local		src/game/area_backdrop.cpp	50	50	50	src/game/field/area_map.cpp	d3e6abb3
+	AtAreaBackdrop	local		src/game/area_backdrop.cpp	50	50	50	src/game/field/area_map.cpp	c39b54d6
 	Channel	local		src/game/area_backdrop.cpp	52	54	56	src/game/field/area_map.cpp	d3e6abb3
 	kTrioStride/kTrioPosition/kTrioSlot/kTrioFlags	local		src/game/area_backdrop.cpp	58	62	62	src/game/field/area_map.cpp	d3e6abb3
 	kFourthFlags	local		src/game/area_backdrop.cpp	63	70	70	src/game/field/area_map.cpp	d3e6abb3
@@ -4128,6 +4131,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetWord	copied		src/game/battle_e7.cpp	55	55	55	src/game/menu/menu_list.cpp	d3e6abb3
 	B	copied		src/game/battle_e7.cpp	58	58	58	src/game/battle/battle_menu_win.cpp	d3e6abb3
 	B	copied		src/game/battle_e7.cpp	58	58	58	src/game/menu/menu_list.cpp	d3e6abb3
+	BBattleE7	copied		src/game/battle_e7.cpp	58	58	58	src/game/battle/battle_menu_win.cpp	c39b54d6
+	BBattleE7	copied		src/game/battle_e7.cpp	58	58	58	src/game/menu/menu_list.cpp	c39b54d6
 	Win	local		src/game/battle_e7.cpp	59	60	60	src/game/menu/menu_list.cpp	d3e6abb3
 	S16	local		src/game/battle_e7.cpp	61	61	61	src/game/menu/menu_list.cpp	d3e6abb3
 	W	copied		src/game/battle_e7.cpp	62	62	62	src/game/battle/battle_menu_win.cpp	d3e6abb3
@@ -4297,6 +4302,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Word	copied		src/game/battle_items.cpp	42	42	42	src/game/magic/sparkle.cpp	d3e6abb3
 	As	copied		src/game/battle_items.cpp	46	46	46	src/game/magic/fx_disc_fan.cpp	d3e6abb3
 	kPointZeroOne	local		src/game/battle_items.cpp	98	100	100	src/game/platform/gpu.cpp	d3e6abb3
+	kPointZeroOneBattleItems	local		src/game/battle_items.cpp	98	100	100	src/game/platform/gpu.cpp	c39b54d6
 	PutDword	local		src/game/battle_items.cpp	102	102	102	src/game/platform/gpu.cpp	d3e6abb3
 	CurBattleItems	local		src/game/battle_items.cpp	104	106	106	src/game/magic/sparkle.cpp	d3e6abb3
 	Actor	copied		src/game/battle_items.cpp	107	107	107	src/game/magic/magic_fx_4.cpp	d3e6abb3
@@ -4323,6 +4329,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	MethodBattleItems	local		src/game/battle_items.cpp	148	152	156	src/game/platform/music.cpp	d3e6abb3
 	StreamBuffer	local		src/game/battle_items.cpp	157	157	157	src/game/platform/music.cpp	d3e6abb3
 	kBufferLost	local		src/game/battle_items.cpp	158	158	158	src/game/platform/music.cpp	d3e6abb3
+	kBufferLostBattleItems	local		src/game/battle_items.cpp	158	158	158	src/game/platform/music.cpp	c39b54d6
 0x5A75F0	Gpu_SetPolyG3	func	tu_5a7540	src/game/battle_items.cpp	165	166	169	src/game/platform/gpu.cpp	d3e6abb3
 0x5A76B0	Gpu_SetLineG2	func	tu_5a7540	src/game/battle_items.cpp	170	171	175	src/game/platform/gpu.cpp	d3e6abb3
 0x5A76D0	Gpu_SetLineG3	func	tu_5a7540	src/game/battle_items.cpp	176	179	182	src/game/platform/gpu.cpp	d3e6abb3
@@ -6366,6 +6373,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kFontCache	local		src/game/display_setup.cpp	58	58	58	src/game/platform/d3d.cpp	d3e6abb3
 	kFontCacheBytes/kFontEntry	local		src/game/display_setup.cpp	59	59	59	src/game/platform/d3d.cpp	d3e6abb3
 	kBackdropBlock	local		src/game/display_setup.cpp	60	60	60	src/game/platform/d3d.cpp	d3e6abb3
+	kBackdropBlockDisplaySetup	local		src/game/display_setup.cpp	60	60	60	src/game/platform/d3d.cpp	c39b54d6
 	kBackdropBytes	local		src/game/display_setup.cpp	61	61	61	src/game/platform/d3d.cpp	d3e6abb3
 	kAfterDrawBytes	local		src/game/display_setup.cpp	62	63	63	src/game/platform/d3d.cpp	d3e6abb3
 	kCellCacheBytes	local		src/game/display_setup.cpp	64	65	65	src/game/platform/d3d.cpp	d3e6abb3
@@ -6989,6 +6997,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	NumberText	local		src/game/effect_1g.cpp	79	79	79	src/game/menu/item_trade.cpp	d3e6abb3
 	NumberFormat	local		src/game/effect_1g.cpp	80	80	80	src/game/menu/item_trade.cpp	d3e6abb3
 	TradeBox	local		src/game/effect_1g.cpp	82	83	83	src/game/menu/item_trade.cpp	d3e6abb3
+	TradeBoxEffect1g	local		src/game/effect_1g.cpp	82	83	83	src/game/menu/item_trade.cpp	c39b54d6
 	PieceMode	local		src/game/effect_1g.cpp	84	84	84	src/game/menu/item_trade.cpp	d3e6abb3
 	Piece	local		src/game/effect_1g.cpp	85	85	85	src/game/menu/item_trade.cpp	d3e6abb3
 	Quad	local		src/game/effect_1g.cpp	86	86	86	src/game/menu/item_trade.cpp	d3e6abb3
@@ -11330,6 +11339,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	g	copied		src/game/event_script.cpp	48	48	48	src/game/field/event_script.cpp	d3e6abb3
 	At	copied		src/game/event_script.cpp	50	50	50	src/game/field/event_op.cpp	d3e6abb3
 	At	copied		src/game/event_script.cpp	50	50	50	src/game/field/event_script.cpp	d3e6abb3
+	AtEventScript	copied		src/game/event_script.cpp	50	50	50	src/game/field/event_op.cpp	c39b54d6
+	AtEventScript	copied		src/game/event_script.cpp	50	50	50	src/game/field/event_script.cpp	c39b54d6
 	SetWord	local		src/game/event_script.cpp	51	51	54	src/game/field/event_script.cpp	d3e6abb3
 	Dword	copied		src/game/event_script.cpp	55	55	59	src/game/field/event_cond.cpp	d3e6abb3
 	Dword	copied		src/game/event_script.cpp	55	55	59	src/game/field/event_op.cpp	d3e6abb3
@@ -12319,6 +12330,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x585500	SharedList_DrawMember	func	tu_584180	src/game/field_s.cpp	1796	1810	1843	src/game/shop/shared_list.cpp	d3e6abb3
 0x5857E0	SharedList_Sort	func	tu_584180	src/game/field_s.cpp	1845	1848	1851	src/game/shop/shared_list.cpp	d3e6abb3
 0x5857F0	SharedList_Compact	func	tu_584180	src/game/field_s.cpp	1853	1857	1863	src/game/shop/shared_list.cpp	d3e6abb3
+	SortShared	local		src/game/field_s.cpp	1865	1867	1877	src/game/shop/shared_list.cpp	c39b54d6
 0x585840	SharedList_SortCostDown	func	tu_584180	src/game/field_s.cpp	1879	1882	1885	src/game/shop/shared_list.cpp	d3e6abb3
 0x5858C0	SharedList_SortCostUp	func	tu_584180	src/game/field_s.cpp	1887	1889	1892	src/game/shop/shared_list.cpp	d3e6abb3
 0x585940	SharedList_DrawItemCount	func	tu_584180	src/game/field_s.cpp	1894	1899	1908	src/game/shop/shared_list.cpp	d3e6abb3
@@ -19811,7 +19823,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x57C7A0	ScriptFlags_Clear40	func	tu_57b780	src/game/map_field_objects.cpp	702	707	719	src/game/field/event_cond.cpp	d3e6abb3
 	Dword	local		src/game/map_layers.cpp	54	54	58	src/game/field/area_map.cpp	d3e6abb3
 	Word	copied		src/game/map_layers.cpp	59	59	63	src/game/field/area_map.cpp	d3e6abb3
+	WordMapLayers	copied		src/game/map_layers.cpp	59	59	63	src/game/field/area_map.cpp	c39b54d6
 	SetWord	local		src/game/map_layers.cpp	64	64	67	src/game/field/area_map.cpp	d3e6abb3
+	SetWordMapLayers	local		src/game/map_layers.cpp	64	64	67	src/game/field/area_map.cpp	c39b54d6
 	SetDword	local		src/game/map_layers.cpp	68	68	68	src/game/field/area_map.cpp	d3e6abb3
 	Address	local		src/game/map_layers.cpp	69	69	69	src/game/field/area_map.cpp	d3e6abb3
 	S8MapLayers	copied		src/game/map_layers.cpp	70	70	70	src/game/field/area_map.cpp	d3e6abb3
@@ -19837,7 +19851,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	gMapScroll	local		src/game/map_scroll.cpp	39	39	39	src/game/field/area_map.cpp	d3e6abb3
 	Dword	local		src/game/map_scroll.cpp	41	41	45	src/game/field/area_map.cpp	d3e6abb3
 	Word	local		src/game/map_scroll.cpp	46	46	50	src/game/field/area_map.cpp	d3e6abb3
+	WordMapScroll	local		src/game/map_scroll.cpp	46	46	50	src/game/field/area_map.cpp	c39b54d6
 	SetWord	local		src/game/map_scroll.cpp	51	51	54	src/game/field/area_map.cpp	d3e6abb3
+	SetWordMapScroll	local		src/game/map_scroll.cpp	51	51	54	src/game/field/area_map.cpp	c39b54d6
 	SetDword	local		src/game/map_scroll.cpp	55	55	55	src/game/field/area_map.cpp	d3e6abb3
 	CellMapScroll	local		src/game/map_scroll.cpp	57	58	60	src/game/field/area_map.cpp	d3e6abb3
 	NextRow	local		src/game/map_scroll.cpp	62	64	64	src/game/field/area_map.cpp	d3e6abb3
@@ -19920,6 +19936,12 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Rec	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/menu/window_2.cpp	d3e6abb3
 	Rec	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/shop/shop_win.cpp	d3e6abb3
 	Rec	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/shop/shop_win_2.cpp	d3e6abb3
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/battle/battle_menu_win.cpp	c39b54d6
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/menu/menu_list.cpp	c39b54d6
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/menu/menu_win.cpp	c39b54d6
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/menu/window_2.cpp	c39b54d6
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/shop/shop_win.cpp	c39b54d6
+	RecMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	80	80	82	src/game/shop/shop_win_2.cpp	c39b54d6
 	S	copied		src/game/menu_draw_helpers.cpp	84	88	88	src/game/battle/battle_menu_win.cpp	d3e6abb3
 	S	copied		src/game/menu_draw_helpers.cpp	84	88	88	src/game/menu/menu_win.cpp	d3e6abb3
 	S	copied		src/game/menu_draw_helpers.cpp	84	88	88	src/game/shop/shop_win.cpp	d3e6abb3
@@ -20423,6 +20445,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x462A70	Prim_SetShade	func	tu_45fe60	src/game/prim.cpp	124	126	130	src/game/core/title.cpp	d3e6abb3
 0x572A00	Prim_SetTexture	func	tu_5722d0	src/game/prim.cpp	132	169	227	src/game/field/area_map.cpp	d3e6abb3
 	kPointZeroOne	local		src/game/psx_gpu.cpp	12	14	14	src/game/platform/gpu.cpp	d3e6abb3
+	kPointZeroOnePsxGpu	local		src/game/psx_gpu.cpp	12	14	14	src/game/platform/gpu.cpp	c39b54d6
 	kLinkFlag	copied		src/game/psx_gpu.cpp	15	15	15	src/game/platform/gpu.cpp	d3e6abb3
 	kLinkFlag	copied		src/game/psx_gpu.cpp	15	15	15	src/game/platform/gpu_2.cpp	d3e6abb3
 	PutDword	local		src/game/psx_gpu.cpp	17	17	17	src/game/platform/gpu.cpp	d3e6abb3
@@ -21856,6 +21879,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Key	local		src/game/rest_2g.cpp	57	57	57	src/game/menu/menu_list.cpp	d3e6abb3
 	BRest2g	local		src/game/rest_2g.cpp	58	58	58	src/game/menu/menu_list.cpp	d3e6abb3
 	S	local		src/game/rest_2g.cpp	59	59	59	src/game/menu/menu_list.cpp	d3e6abb3
+	SRest2g	local		src/game/rest_2g.cpp	59	59	59	src/game/menu/menu_list.cpp	c39b54d6
 	Sx	local		src/game/rest_2g.cpp	60	60	60	src/game/menu/menu_list.cpp	d3e6abb3
 	RecRest2g	local		src/game/rest_2g.cpp	62	65	67	src/game/menu/menu_list.cpp	d3e6abb3
 	State	local		src/game/rest_2g.cpp	69	73	80	src/game/menu/menu_list.cpp	d3e6abb3
@@ -21938,6 +21962,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	L	copied		src/game/rest_2h.cpp	82	82	82	src/game/battle/battle_menu_win.cpp	d3e6abb3
 	L	copied		src/game/rest_2h.cpp	82	82	82	src/game/menu/menu_list.cpp	d3e6abb3
 	L	copied		src/game/rest_2h.cpp	82	82	82	src/game/shop/shop_win_2.cpp	d3e6abb3
+	LRest2h	copied		src/game/rest_2h.cpp	82	82	82	src/game/battle/battle_menu_win.cpp	c39b54d6
+	LRest2h	copied		src/game/rest_2h.cpp	82	82	82	src/game/menu/menu_list.cpp	c39b54d6
+	LRest2h	copied		src/game/rest_2h.cpp	82	82	82	src/game/shop/shop_win_2.cpp	c39b54d6
 	S8Rest2h	copied		src/game/rest_2h.cpp	83	83	83	src/game/battle/battle_menu_win.cpp	d3e6abb3
 	S8Rest2h	copied		src/game/rest_2h.cpp	83	83	83	src/game/menu/menu_list.cpp	d3e6abb3
 	S8Rest2h	copied		src/game/rest_2h.cpp	83	83	83	src/game/shop/shop_win_2.cpp	d3e6abb3
@@ -23551,6 +23578,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	LongSaveMenu	copied		src/game/save_menu.cpp	109	109	113	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	LongSaveMenu	copied		src/game/save_menu.cpp	109	109	113	src/game/core/sound.cpp	d3e6abb3
 	PutLong	copied		src/game/save_menu.cpp	114	114	114	src/game/core/sound.cpp	d3e6abb3
+	PutLongSaveMenu	copied		src/game/save_menu.cpp	114	114	114	src/game/core/sound.cpp	c39b54d6
 	PutFloat	local		src/game/save_menu.cpp	115	115	115	src/game/core/sound.cpp	d3e6abb3
 	Packet	copied		src/game/save_menu.cpp	122	122	122	src/game/core/sound.cpp	d3e6abb3
 	Packet	copied		src/game/save_menu.cpp	122	122	122	src/game/shop/field_save.cpp	d3e6abb3
@@ -25311,6 +25339,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Counter	local		src/game/scena_sc9b.cpp	61	61	61	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	SetCounter	copied		src/game/scena_sc9b.cpp	62	62	62	src/game/scenario/scena_09_2.cpp	d3e6abb3
 	SetCounter	copied		src/game/scena_sc9b.cpp	62	62	62	src/game/scenario/scena_10_3.cpp	d3e6abb3
+	SetCounterScenaSc9b	copied		src/game/scena_sc9b.cpp	62	62	62	src/game/scenario/scena_09_2.cpp	c39b54d6
+	SetCounterScenaSc9b	copied		src/game/scena_sc9b.cpp	62	62	62	src/game/scenario/scena_10_3.cpp	c39b54d6
 	BumpCounter	local		src/game/scena_sc9b.cpp	63	63	63	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	Step	local		src/game/scena_sc9b.cpp	64	64	64	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	SetStep	copied		src/game/scena_sc9b.cpp	65	65	65	src/game/scenario/scena_09_2.cpp	d3e6abb3
@@ -25329,13 +25359,17 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	TimerDone	local		src/game/scena_sc9b.cpp	74	75	78	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	ScriptOrByte	copied		src/game/scena_sc9b.cpp	79	80	80	src/game/scenario/scena_09_2.cpp	d3e6abb3
 	ScriptOrByte	copied		src/game/scena_sc9b.cpp	79	80	80	src/game/scenario/scena_10_3.cpp	d3e6abb3
+	ScriptOrByteScenaSc9b	copied		src/game/scena_sc9b.cpp	79	80	80	src/game/scenario/scena_09_2.cpp	c39b54d6
+	ScriptOrByteScenaSc9b	copied		src/game/scena_sc9b.cpp	79	80	80	src/game/scenario/scena_10_3.cpp	c39b54d6
 	ScriptAnd	local		src/game/scena_sc9b.cpp	81	81	81	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	Redraw	local		src/game/scena_sc9b.cpp	82	82	82	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	SpriteCurrent	local		src/game/scena_sc9b.cpp	83	83	83	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	MemberByte	local		src/game/scena_sc9b.cpp	84	84	84	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	LeaderKind	local		src/game/scena_sc9b.cpp	85	85	85	src/game/scenario/scena_09_2.cpp	d3e6abb3
 	ClearCounters	local		src/game/scena_sc9b.cpp	87	88	90	src/game/scenario/scena_09_2.cpp	d3e6abb3
+	ClearCountersScenaSc9b	local		src/game/scena_sc9b.cpp	87	88	90	src/game/scenario/scena_09_2.cpp	c39b54d6
 	ClearCounters123	local		src/game/scena_sc9b.cpp	91	91	93	src/game/scenario/scena_09_2.cpp	d3e6abb3
+	ClearCounters123ScenaSc9b	local		src/game/scena_sc9b.cpp	91	91	93	src/game/scenario/scena_09_2.cpp	c39b54d6
 	Bits	copied		src/game/scena_sc9b.cpp	95	97	97	src/game/scenario/scena_09_2.cpp	d3e6abb3
 	Bits	copied		src/game/scena_sc9b.cpp	95	97	97	src/game/scenario/scena_10_3.cpp	d3e6abb3
 	Flag	copied		src/game/scena_sc9b.cpp	98	98	98	src/game/scenario/scena_09_2.cpp	d3e6abb3
@@ -25887,6 +25921,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kBltColorFillWait	local		src/game/tex_cells.cpp	87	87	87	src/game/platform/d3d.cpp	d3e6abb3
 	kSrcBltKey	local		src/game/tex_cells.cpp	88	88	88	src/game/platform/d3d.cpp	d3e6abb3
 	kNoRect	local		src/game/tex_cells.cpp	89	89	89	src/game/platform/d3d.cpp	d3e6abb3
+	Desc	local		src/game/tex_cells.cpp	91	92	96	src/game/platform/d3d.cpp	c39b54d6
 	Rect	local		src/game/tex_cells.cpp	98	98	100	src/game/platform/d3d.cpp	d3e6abb3
 	CellUnpack	local		src/game/tex_cells.cpp	102	114	147	src/game/platform/cell.cpp	d3e6abb3
 	ScaledHeight	local		src/game/tex_cells.cpp	149	154	172	src/game/platform/d3d.cpp	d3e6abb3
@@ -25920,6 +25955,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kBltWait	local		src/game/tex_page.cpp	85	85	85	src/game/platform/d3d.cpp	d3e6abb3
 	kSrcBltKey	local		src/game/tex_page.cpp	86	86	86	src/game/platform/d3d.cpp	d3e6abb3
 	kNoRect	local		src/game/tex_page.cpp	87	87	87	src/game/platform/d3d.cpp	d3e6abb3
+	Desc	local		src/game/tex_page.cpp	89	93	97	src/game/platform/d3d.cpp	c39b54d6
 	Rect	local		src/game/tex_page.cpp	99	100	102	src/game/platform/d3d.cpp	d3e6abb3
 	Packer	local		src/game/tex_page.cpp	104	109	118	src/game/text/tex.cpp	d3e6abb3
 	ConvertIndexed	local		src/game/tex_page.cpp	120	130	165	src/game/text/tex.cpp	d3e6abb3

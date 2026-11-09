@@ -31,6 +31,7 @@
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
+#include "game/platform/gfx.h"
 #include "game/map_cells.h"
 #include "game/map_layers.h"
 #include "game/map_scroll.h"
@@ -44,6 +45,7 @@
 #include "game/menu_verbs.h"
 #include "game/mode_tasks.h"
 #include "game/field_modes.h"
+#include "game/scenario/clut_strip.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/move_script.h"
@@ -83,6 +85,7 @@
 #include "game/text_draw.h"
 #include "game/text_immediate.h"
 #include "game/field_frame.h"
+#include "game/field/sprite_2.h"
 #include "game/title_states.h"
 #include "game/frame_callees.h"
 #include "game/field_event.h"
@@ -105,6 +108,8 @@
 #include "game/display_env.h"
 #include "game/tex_page.h"
 #include "game/tex_cells.h"
+#include "game/text/tex.h"
+#include "game/platform/cell.h"
 #include "game/event_objs.h"
 #include "game/char_stats.h"
 #include "game/battle_result.h"
@@ -114,6 +119,7 @@
 #include "game/save_menu.h"
 #include "game/quick_menu.h"
 #include "game/event_ops.h"
+#include "game/field/event_op.h"
 #include "game/menu_windows.h"
 #include "game/shoulder_glyphs.h"
 #include "game/display_setup.h"
@@ -136,15 +142,23 @@
 #include "game/battle_turn_steps.h"
 #include "game/magic_fx_reached.h"
 #include "game/menu_draw_helpers.h"
+#include "game/shop/shop_win.h"
+#include "game/menu/window_2.h"
+#include "game/menu/menu_win.h"
 #include "game/menu_lists.h"
 #include "game/shop_states.h"
+#include "game/shop/shop_mode.h"
 #include "game/worldmap_area.h"
 #include "game/field_hidden.h"
+#include "game/field/sprite.h"
+#include "game/field/encounter.h"
+#include "game/effect/effect_2.h"
 #include "game/event_leader.h"
 #include "game/mode_states.h"
 #include "game/shop_states2.h"
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
+#include "game/core/task.h"
 #include "game/magic_steal.h"
 #include "game/magic_lib.h"
 #include "game/magic_s16.h"
@@ -196,25 +210,43 @@
 #include "game/scena_se.h"
 #include "game/scena_calls.h"
 #include "game/scena_sc11.h"
+#include "game/scenario/scena_11.h"
 #include "game/scena_sc3.h"
+#include "game/scenario/scena_04_2.h"
+#include "game/scenario/scena_03.h"
 #include "game/scena_sc1.h"
 #include "game/scena_sc12.h"
+#include "game/scenario/scena_12_2.h"
 #include "game/scena_sc9a.h"
 #include "game/area_w0a.h"
 #include "game/scena_sc6.h"
+#include "game/scenario/scena_06_3.h"
 #include "game/area_w0c.h"
 #include "game/area_w1a.h"
 #include "game/scena_sc7.h"
+#include "game/scenario/scena_08_2.h"
+#include "game/scenario/scena_07_2.h"
 #include "game/scena_sc5.h"
+#include "game/scenario/scena_05_2.h"
 #include "game/scena_sx.h"
 #include "game/area_w1b.h"
 #include "game/scena_sc9b.h"
+#include "game/scenario/scena_10_3.h"
+#include "game/scenario/scena_09_2.h"
 #include "game/area_w1c.h"
 #include "game/area_w2b.h"
 #include "game/scena_sc15.h"
+#include "game/scenario/scena_19.h"
+#include "game/scenario/scena_18.h"
+#include "game/scenario/scena_17.h"
+#include "game/scenario/scena_16_2.h"
+#include "game/scenario/scena_15_2.h"
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
+#include "game/scenario/scena_14_2.h"
+#include "game/scenario/scena_13_2.h"
 #include "game/scena_sx2.h"
+#include "game/core/sound.h"
 #include "game/scenario_harness_fh.h"
 #include "game/scenario_harness_ekh.h"
 #include "game/effect_1e.h"
@@ -262,9 +294,14 @@
 #include "game/field_c2.h"
 #include "game/field_s.h"
 #include "game/field_e2.h"
+#include "game/field/area_map.h"
 #include "game/field_c3.h"
 #include "game/field_e1.h"
 #include "game/field_o.h"
+#include "game/menu/menu.h"
+#include "game/field/move_script.h"
+#include "game/field/move_cmd.h"
+#include "game/field/event_script.h"
 #include "game/field_c1.h"
 #include "game/effect_gte.h"
 #include "game/effect_1f.h"
@@ -312,14 +349,37 @@
 #include "game/rest_2a.h"
 #include "game/rest_2g.h"
 #include "game/rest_2d.h"
+#include "game/menu/master_quit.h"
+#include "game/field/field_menu_status.h"
+#include "game/field/field_menu.h"
+#include "game/field/field_ability.h"
 #include "game/rest_2e.h"
 #include "game/rest_2h.h"
+#include "game/shop/shop_win_2.h"
+#include "game/platform/d_input.h"
+#include "game/menu/menu_list.h"
+#include "game/battle/battle_menu_win.h"
 #include "game/rest_2f.h"
+#include "game/menu/window.h"
+#include "game/menu/config_menu.h"
+#include "game/field/field_ability_2.h"
 #include "game/rest_3f.h"
 #include "game/rest_2c.h"
+#include "game/shop/shop_trade.h"
+#include "game/shop/shop_resist.h"
+#include "game/shop/shop_browse.h"
+#include "game/shop/shared_list.h"
+#include "game/shop/field_save.h"
+#include "game/menu/master_talk_2.h"
+#include "game/menu/master_talk.h"
+#include "game/field/party_form.h"
 #include "game/rest_3g.h"
 #include "game/rest_4a.h"
 #include "game/rest_2b.h"
+#include "game/minigame/shisu.h"
+#include "game/menu/menu_2.h"
+#include "game/field/field_7.h"
+#include "game/field/event_cond.h"
 #include "game/rest_3a.h"
 #include "game/rest_3c.h"
 #include "game/rest_3e.h"
@@ -331,10 +391,19 @@
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
 #include "game/shell.h"
+#include "game/platform/file.h"
+#include "game/platform/cfg.h"
 #include "game/psx_rest.h"
+#include "game/platform/music.h"
+#include "game/platform/gte.h"
+#include "game/platform/gpu_2.h"
+#include "game/platform/gpu.h"
+#include "game/platform/d3d.h"
 #include "game/mode_rest.h"
 #include "game/crt_rest.h"
 #include "game/game_last.h"
+#include "game/menu/item_trade.h"
+#include "game/menu/char.h"
 #include "hook/detour.h"
 #include "hook/exe_own.h"
 
@@ -363,6 +432,7 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    Gfx_Inject();
     GfxFilter_Inject();
     Cheats_Inject();            // DIV-0045 / DIV-0046, BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL: nothing when unset
     PspCode_Inject();           // DIV-0108: BOF3X_PSP, or the cache's base_policy; before the battle modules
@@ -390,6 +460,7 @@ void InjectAll() {
     PsxGte_Inject();
     PsxGteFloat_Inject();
     FieldFrame_Inject();        // every call of its clones re-aimed, the handler table swapped: order does not matter
+    Sprite2_Inject();
     Kind2Object_Inject();       // likewise, its jump tables re-aimed
     AreaSlope_Inject();         // no calls out
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
@@ -399,6 +470,7 @@ void InjectAll() {
     FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
     FieldModes_Inject();        // every call of its clones re-aimed, every table it reads swapped: order does not matter
+    ClutStrip_Inject();
     MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
     FieldEvent_Inject();        // every call of its clones re-aimed at a recorder: any slot will do
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
@@ -430,6 +502,8 @@ void InjectAll() {
                                 // helper and converter copies, DirectDraw a fake: order does not matter
     TexCells_Inject();          // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper copies, DirectDraw and the device fakes: order does not matter
+    Tex_Inject();
+    Cell_Inject();
     EventObjs_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
     CharStats_Inject();         // every call of its clones re-aimed at a recorder, its seven jump tables
                                 // relocated in the copies, the trait lists swapped: order does not matter
@@ -444,6 +518,7 @@ void InjectAll() {
                                 // for recorders and Shop_Equip's relocated in the copy: order does not matter
     EventOps_Inject();          // every call of its clones re-aimed at a recorder, three jump tables relocated
                                 // and the chapter table operand moved in the copies: order does not matter
+    EventOp_Inject();
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
@@ -512,15 +587,22 @@ void InjectAll() {
     MenuDrawHelpers_Inject();   // round 8 group DI: every call of its clones re-aimed at a recorder and its eleven
                                 // .data dispatch tables swapped for recorders: order does not matter, except that it
                                 // runs after Widescreen_Inject, whose bound inside 0x59B440 ours reads back
+    ShopWin_Inject();
+    Window2_Inject();
+    MenuWin_Inject();
     MenuLists_Inject();         // round 8 group DH: every call of its clones re-aimed at a recorder and its eight
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
     ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
                                 // dispatch tables' entries swapped for recorders: order does not matter
+    ShopMode_Inject();
     WorldmapArea_Inject();      // round 8 group DA: every call and tail jmp of its clones re-aimed at a recorder
                                 // and its seven .data dispatch tables swapped for recorders: order does not matter
                                 // (it clones its thirty before injecting them; WorldMap_Inject cloned 0x404160 earlier)
     FieldHidden_Inject();       // round 8 group DE: every call of its clones re-aimed at a recorder and its two
                                 // .data tables' entries swapped for recorders: order does not matter
+    Sprite_Inject();
+    Encounter_Inject();
+    Effect2_Inject();
     EventLeader_Inject();       // round 8 group DC: every call of its clones re-aimed at a recorder and its five
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
     ModeStates_Inject();        // round 8 group DB: every call of its clones re-aimed at a recorder, the system
@@ -535,6 +617,7 @@ void InjectAll() {
                                 // nothing) and run on the fuzz's own stacks; no module patches bytes inside it:
                                 // order does not matter (other clones' calls to Task_Sleep and the rest are
                                 // re-aimed at their own recorders, and a call site keeps its target either way)
+    Task_Inject();
     MagicSteal_Inject();        // round 9 group SH (the spell harness): its clones' calls and stack-table immediates
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
@@ -713,15 +796,19 @@ void InjectAll() {
     ScenaSc11_Inject();         // round 10 group SC11 (scenario chapter 11): its clones' calls re-aimed at the scenario
                                 // harness's recorders, its three .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 30 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena11_Inject();
     ScenaSc3_Inject();          // round 10 group SC3 (scenario chapters 3 and 4): its clones' calls re-aimed at the
                                 // scenario harness's recorders, its tables swapped for the fuzz only; no module
                                 // patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena042_Inject();
+    Scena03_Inject();
     ScenaSc1_Inject();          // round 10 group SC1 (scenario chapter 1's bank): its clones' calls re-aimed at the
                                 // scenario harness's recorders, its three .data tables swapped for the fuzz only;
                                 // no module patches bytes inside its 42: order does not matter
     ScenaSc12_Inject();         // round 10 group SC12 (scenario chapter 12's first block, 0x55E4E0..0x561DB0):
                                 // no module patches bytes inside its 24 (DIVERGENCE.md, cheats.cpp): order does
                                 // not matter
+    Scena122_Inject();
     ScenaCalls_Inject();        // round 10 group CALLS (the chapter call tables' 98 entries, 0x519890..0x51AC50):
                                 // its clones' calls re-aimed at the scenario harness's recorders; no module patches
                                 // bytes inside its 98 (DIVERGENCE.md, cheats.cpp): order does not matter
@@ -735,6 +822,7 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders, its tables swapped for the
                                 // fuzz only; no module patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp):
                                 // order does not matter
+    Scena063_Inject();
     AreaW0c_Inject();           // round 10 group AR0C (world 0, areas 27..29 and 32..37): its clones' calls
                                 // re-aimed at the area harness's recorders, its five .data state tables swapped
                                 // for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
@@ -743,8 +831,11 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders, its tables swapped for the
                                 // fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md, cheats.cpp):
                                 // order does not matter
+    Scena082_Inject();
+    Scena072_Inject();
     ScenaSc5_Inject();          // round 10 group SC5 (scenario chapter 5's bank, 0x546390..0x54A910): no module
                                 // patches bytes inside its 35 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena052_Inject();
     ScenaSx_Inject();           // round 10 group SX (the engine callees the chapters and areas call by raw address,
                                 // eighteen): its clones' calls re-aimed at the scenario harness's recorders; no
                                 // module patches bytes inside its 18 (DIVERGENCE.md, cheats.cpp): order does not
@@ -756,6 +847,8 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the scenario harness's recorders, its tables swapped
                                 // for the fuzz only; no module patches bytes inside its 63 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    Scena103_Inject();
+    Scena092_Inject();
     AreaW1c_Inject();           // round 10 group AR1C (world 1, areas 48..52, 0x408FF0..0x40AB00): its clones' calls
                                 // re-aimed at the area harness's recorders; no module patches bytes inside its 57
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
@@ -763,6 +856,11 @@ void InjectAll() {
                                 // slot 1 0x56C080; chapters 17..19, 0x56C130..0x56D5E0): its clones' calls re-aimed at
                                 // the scenario harness's recorders, its tables swapped for the fuzz only; no module
                                 // patches bytes inside its 89 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena19_Inject();
+    Scena18_Inject();
+    Scena17_Inject();
+    Scena162_Inject();
+    Scena152_Inject();
     AreaW1a_Inject();           // round 10 group AR1A (world 1, areas 38..41, 0x4053B0..0x406650): its clones' calls
                                 // re-aimed at the area harness's recorders, areas 39 and 41's state tables swapped
                                 // for the fuzz only; no module patches bytes inside its 48 (DIVERGENCE.md,
@@ -798,6 +896,8 @@ void InjectAll() {
                                 // order does not matter
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
                                 // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena142_Inject();
+    Scena132_Inject();
     AreaW3a_Inject();           // round 10 group AR3A (world 3, areas 115..119, 0x418BE0..0x41A9D0): its clones' calls
                                 // re-aimed at the area harness's recorders, area 115's and 116's .data state tables
                                 // swapped for the fuzz only; no module patches bytes inside its 56 (DIVERGENCE.md,
@@ -970,6 +1070,7 @@ void InjectAll() {
                                 // clones' calls re-aimed at the scenario harness's recorders, its dispatch tables
                                 // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
                                 // 0x5343C0, 0x534420, 0x56E020 and 0x5728D0; no module patches bytes inside its 51
+    AreaMap_Inject();
     FieldC3_Inject();           // round 12 group FC3 (object steering, op E7, the fade cases, mode 8's and 11's
                                 // frames, the field core's state-2 sub-states 0, 1, 3..8 and their steps;
                                 // 0x5172C0..0x5195F9, 0x525390..0x526DAF): its clones' calls re-aimed at the scenario
@@ -990,6 +1091,9 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders; after ScenarioHarnessFh_Inject,
                                 // whose self-test copies 0x57C1A0, 0x57C230, 0x57C8E0 (FO's); after YesNoLayout_Inject,
                                 // whose DIV-0029 byte at 0x576A48 Menu_DrawSaveSlot reads back
+    Menu_Inject();
+    MoveCmd_Inject();
+    EventScript_Inject();
     FieldC1_Inject();           // round 12 group FC1 (the field core's first half, 0x461800 and 0x469D10..0x46BBF0:
                                 // the Config row label, effect kinds 4, 0x14, 0x17, 0x19, 0x1B, 0x30..0x32, 0x37,
                                 // 0x3C and two of kind 6's ticks): its clones' calls re-aimed at the scenario
@@ -1261,6 +1365,9 @@ void InjectAll() {
                                 // harness's recorders, its seven tables swapped for the fuzz only; after every
                                 // harness's inject; ours that call Effect_Spawn / _SpawnAt call them by name; no
                                 // module patches bytes inside its 38 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Menu2_Inject();
+    Field7_Inject();
+    EventCond_Inject();
     Rest1E_Inject();            // round 14 group R1E (0x5226D0..0x523EC2: the field actions of party sets 13, 14,
                                 // 15 and set 16's forms 0 and 1 - the dispatchers by the form word and the state
                                 // bytes, the turn-and-probe, resolve, cell-pickup and strike states): its clones'
@@ -1296,6 +1403,10 @@ void InjectAll() {
                                 // and FieldAbility_Effects for typed stand-ins; after every harness's inject and after
                                 // YesNoLayout_Inject, whose DIV-0027 re-aims two call sites inside MasterScreen_AskYesNo
                                 // (ours reads where they reach; the fuzz runs that one only with them unpatched)
+    MasterQuit_Inject();
+    FieldMenuStatus_Inject();
+    FieldMenu_Inject();
+    FieldAbility_Inject();
     Rest2E_Inject();            // round 14 wave-two group R2E (0x58B1D0..0x58ED3F: the field menu's Items arrange
                                 // steps, discard and use states and sorts, the Equipment and Ability screens): its
                                 // clones' calls re-aimed at the scenario harness's recorders, its five tables swapped
@@ -1310,12 +1421,19 @@ void InjectAll() {
                                 // the fuzz only; after every harness's inject; after MenuFrame_Inject (DIV-0011) and
                                 // BattleDraw_Inject (DIV-0059), whose call sites inside 0x59AA80 / 0x59DBF0 ours reads,
                                 // and Widescreen_Inject (DIV-0041), whose bound inside 0x59C130 ours reads back
+    ShopWin2_Inject();
+    DInput_Inject();
+    MenuList_Inject();
+    BattleMenuWin_Inject();
     Rest2F_Inject();            // round 14 wave-two group R2F (0x58ED40..0x596F98: the field menu's Tactics and
                                 // Config steps, the Ability screen's helpers, window-record handlers 1 and 2 and
                                 // window kind 1): its clones' calls re-aimed at the scenario harness's recorders, its
                                 // 15 state tables swapped for the fuzz only; after Widescreen_Inject (DIV-0041's
                                 // bound inside MenuSlide_LeftOff170, read back) and BattleDraw_Inject (DIV-0059's
                                 // title call inside Win2_DrawItemList, read back) and every harness's inject
+    Window_Inject();
+    ConfigMenu_Inject();
+    FieldAbility2_Inject();
     Rest2C_Inject();            // round 14 wave-two group R2C (0x57F340..0x58699F: the inn's, save point's and rest's
                                 // last states, the save block's builder and Save_QuickWrite, the shop's browse and
                                 // sell modes and four ShopMode dispatchers, the master's talk and its panels, the
@@ -1325,6 +1443,15 @@ void InjectAll() {
                                 // call it by the address it had; before FishingText_Arm; no module patches bytes
                                 // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
                                 // yes_no_layout.cpp)
+    ShopTrade_Inject();
+    ShopResist_Inject();
+    ShopBrowse_Inject();
+    SharedList_Inject();
+    FieldSave_Inject();
+    Shisu_Inject();
+    MasterTalk2_Inject();
+    MasterTalk_Inject();
+    PartyForm_Inject();
     Rest3A_Inject();            // round 14 wave-three group R3A (0x404180..0x4378AA: area 33's world-map frame
                                 // states, BATE's root and three equipment helpers, BattleEnd_Steps[2] / [3] and
                                 // ExitSteps[3], kind-0 battle-task slots 2, 4, 5, 11, 12 and the actor watch's
@@ -1419,24 +1546,34 @@ void InjectAll() {
                                 // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound
                                 // faked; after every module that calls them (by name, or by the address they had);
                                 // before FishingText_Arm; no module patches bytes inside its nine
+    Sound_Inject();
     Shell_Inject();             // the platform round's group PW (the seven "Windows shell" starts: Input_Latch,
                                 // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
                                 // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
                                 // clones them; before FishingText_Arm (docs/shell.md)
+    File_Inject();
+    Cfg_Inject();
     PsxRest_Inject();           // the platform round's group PL (docs/psx-rest.md: three libgpu setters, the texture
                                 // window, SquareRoot0, ApplyMatrixSV and the teardown chain): every caller of the
                                 // seventeen is ours and calls them by address, so after every module whose fuzz
                                 // stands them in or runs Capcom's
+    Music_Inject();
+    Gte_Inject();
+    Gpu2_Inject();
+    Gpu_Inject();
     D3dRest_Inject();           // the platform round's group PH (docs/d3d-rest.md): the renderer's live remainder - five
                                 // Direct3D handlers, POLY_FT3's two helpers, D3d_SetAlphaModulate, D3d_AfterDraw,
                                 // Gfx_StoreImage; Gfx_DrawOTag reaches them by the addresses they had; its clones' calls
                                 // re-aimed at its own recorders; before FishingText_Arm
+    D3d_Inject();
     ModeRest_Inject();          // platform round step 2, group PM (GameMode_Handlers 3..6 and the steps of modes 3 and
                                 // 5, 0x495BB0..0x496226, and Sound_MusicPlaying 0x587C20): its clones' calls re-aimed
                                 // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
                                 // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
     GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
+    ItemTrade_Inject();
+    Char_Inject();
     CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins

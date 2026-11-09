@@ -44,29 +44,14 @@ Callees g = kOriginals;
 
 namespace {
 
-constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
-
 // Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
-
-// A pointer held in a dword of the game's memory, and pointer arithmetic done
-// in 32 bits as the original's `add` / `lea` do it.
-unsigned char* Ptr(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
-unsigned char* Offset(const unsigned char* base, std::uint32_t by) {
-    return At(Low32(base) + by);
-}
 
 }  // namespace
 }  // namespace sprite_pose
 
 using namespace sprite_pose;
-
-// original 0x5891F0 (PSX 0x8014D5AC): Sprite_SetAnimationAt(animation, 0).
-// The original pushes its whole argument dword; the callee reads its low byte.
-extern "C" void __cdecl Sprite_SetAnimation(unsigned char animation) {
-    sprite_pose::g.set_animation_at(animation, 0);
-}
 
 // original 0x589200 (PSX 0x8014D5D0, branch for branch): sets the current
 // sprite's animation and starts its script at step `start`.
@@ -93,127 +78,6 @@ extern "C" void __cdecl Sprite_SetAnimation(unsigned char animation) {
 // that moves it moves the rest of this. `start` is passed on as 16 bits, which
 // is what Sprite_ScriptStart reads of the dword the original pushes.
 
-// BOF3X_POSELOG=1: instrumentation for the facing investigation (issue #142's side thread) - every
-// Sprite_SetAnimationAt and Sprite_SetFrameQueueUpload on a party member's sprite (ObjTrio) logged.
-static bool PoseLogOn() {
-    static int on = -1;
-    if (on < 0) {
-        char v[8];
-        on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1';
-    }
-    return on == 1;
-}
-static void PoseLog(const char* what, const void* object, unsigned a, unsigned b) {
-    const std::uintptr_t o = reinterpret_cast<std::uintptr_t>(object);
-    if (o < ::bof3::Img(0x802D40u) || o >= ::bof3::Img(0x802D40u) + 3u * 0x14Cu) return;
-    const unsigned char* const s = static_cast<const unsigned char*>(object);
-    std::uint32_t anim_data, script;
-    std::memcpy(&anim_data, s + 0x4C, 4);
-    std::memcpy(&script, s + 0x50, 4);
-    bof3::Log("poselog     frame %lu %s trio %u a %u b %u | flags %02X type %u facing %u draw %02X slot %u row %u flip %u col %u anim %u data %08X script %08X",
-              static_cast<unsigned long>(Frame_Counter), what, static_cast<unsigned>((o - ::bof3::Img(0x802D40u)) / 0x14Cu), a, b,
-              s[0], s[6], s[8], s[0x24], s[0x25], s[0x26], s[0x2A], s[0x2C], s[0x4B], anim_data, script);
-}
-extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned short start) {
-    if (PoseLogOn()) PoseLog("SetAnimationAt in ", Sprite_Current, animation, start);
-    if (animation & 0x80) {
-        records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
-        if (!(sprite->draw_flags & 2)) {
-            const unsigned row = (AreaW0b_PartySet & 0x7Fu) * 3u;
-            sprite->angle[0] = static_cast<unsigned char>(MoveScript_EffectArg[0xc + row + sprite->column]);
-            sprite = rv::Current<records::SpriteObject>();
-            sprite->angle[1] = sprite->tex_row;
-            sprite = rv::Current<records::SpriteObject>();
-            sprite->draw_flags = static_cast<unsigned char>(sprite->draw_flags ^ 3);
-            sprite = rv::Current<records::SpriteObject>();
-        }
-        const std::uint32_t member = static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0]));
-        const unsigned char* const record = Offset(sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kMemberAnimations) + member * 4u), (animation & 0x7Fu) * 4u);
-        sprite_pose::g.set_bank(move_script::Word(record));
-        rv::Current<records::SpriteObject>()->animation = record[2];
-        rv::Current<records::SpriteObject>()->flip = record[3];
-    } else {
-        records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
-        const unsigned char flags = sprite->draw_flags;
-        if (flags & 2) {
-            const unsigned char kept = static_cast<unsigned char>(flags & 0xFC);
-            const std::int32_t slot = static_cast<std::int32_t>(sprite->angle[1]) / 80;
-            sprite_pose::g.member_sprite(rv::Bytes(sprite)[0x64], static_cast<std::uint32_t>(slot));
-            sprite = rv::Current<records::SpriteObject>();
-            sprite->draw_flags = static_cast<unsigned char>(sprite->draw_flags | kept);
-            sprite = rv::Current<records::SpriteObject>();
-        }
-        sprite->animation = animation;
-    }
-    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
-    if (PoseLogOn()) PoseLog("SetAnimationAt mid", sprite, animation, start);
-    if (sprite->draw_flags & 1) {
-        sprite_pose::g.queue_upload(sprite->animation);
-        sprite_pose::g.script_start(start);
-        return;
-    }
-    const unsigned char* const offsets = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kFrameOffsets));
-    const unsigned char* const table = Offset(offsets, static_cast<std::uint32_t>(move_script::Long(offsets + sprite->column * 4u)));
-    sprite->script = static_cast<std::int32_t>(Low32(Offset(table, move_script::Word(table + sprite->animation * 2u))));
-    sprite_pose::g.script_start(start);
-}
-
-// original 0x589330 (PSX 0x8014D7C8): 1 if the current sprite already plays
-// `animation` (nothing done), else Sprite_SetAnimation and 0. The original's
-// result is al; the rest of eax is whatever the path left there (the argument's
-// upper bytes, or the callee's), which no caller reads as a number
-// (docs/sprite-pose.md §2).
-extern "C" unsigned char __cdecl Sprite_EnsureAnimation(unsigned char animation) {
-    if (rv::Current<records::SpriteObject>()->animation == animation) return 1;
-    sprite_pose::g.set_animation(animation);
-    return 0;
-}
-
-// original 0x5894D0 (PSX 0x8014DAFC, term for term): the current sprite's
-// frame `frame` (a byte) from its animation data at +0x4C - a header of three
-// offsets from the data: the images' offset table [0], the script words [8],
-// the 3-byte frame entries [0xC]. Unless +0x00 bit 1: the frame's image is
-// queued for upload - x = the texture slot +0x25 * 64 (slots above 0x10 wrap
-// to the lower half: slot - 0x10, and y + 0x100), y = +0x26, the record the
-// image table names - and Gfx_UploadQueueCount goes up by one.
-//
-// As the original has it - the known defect D4: **the append has no bound**.
-// The queue's arrays have 20 slots and the count is a byte; entries 20 and up
-// land in the next array and beyond, and the count wraps at 256. Kept
-// faithfully (docs/known-defects.md D4; DIV-0004 drains the queue instead).
-// The count is re-read for the increment, as the original re-reads it.
-//
-// Always: +0x2A = the entry's third byte (through the object pointer read on
-// entry), and +0x50 = the script words plus the u16 the entry's second byte
-// picks - which is also the return value. Both entry bytes are read after the
-// queue's stores, in the original's order.
-extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
-    records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
-    const unsigned char* const data = move_script::At(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->anim_data)));
-    const unsigned char* const entry = Offset(data, static_cast<std::uint32_t>(move_script::Long(data + 0xC)) + (frame & 0xFFu) * 3u);
-    const unsigned char* const images = Offset(data, static_cast<std::uint32_t>(move_script::Long(data)));
-    const unsigned char* const words = Offset(data, static_cast<std::uint32_t>(move_script::Long(data + 8)));
-    if (!(sprite->flags & 2)) {
-        const unsigned slot = sprite->tex_slot;
-        const unsigned count = Gfx_UploadQueueCount;
-        if (slot > 0x10) {
-            move_script::SetWord(move_script::At(::bof3::Img(Gfx_UploadQueueX_addr) + count * 2u), (slot - 0x10u) << 6);
-            move_script::SetWord(move_script::At(::bof3::Img(Gfx_UploadQueueY_addr) + count * 2u), sprite->tex_row + 0x100u);
-        } else {
-            move_script::SetWord(move_script::At(::bof3::Img(Gfx_UploadQueueX_addr) + count * 2u), slot << 6);
-            move_script::SetWord(move_script::At(::bof3::Img(Gfx_UploadQueueY_addr) + count * 2u), sprite->tex_row);
-        }
-        const unsigned char* const image = Offset(images, static_cast<std::uint32_t>(move_script::Long(images + entry[0] * 4u)));
-        move_script::SetLong(move_script::At(::bof3::Img(Gfx_UploadQueueRecord_addr) + count * 4u), static_cast<std::int32_t>(Low32(image)));
-        Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
-    }
-    if (PoseLogOn()) PoseLog("QueueUpload entry ", sprite, frame, entry[0] | entry[1] << 8 | entry[2] << 16);
-    sprite->flip = entry[2];
-    unsigned char* const script = Offset(words, move_script::Word(words + entry[1] * 2u));
-    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(Low32(script));
-    return script;
-}
-
 // original 0x589590 (PSX 0x8014DC30): finds `bank` among the bank records
 // (kBankTable, 8 bytes each: u16 the bank, then +2 +4 +5 +6 +7 bytes; as many
 // as the low byte of the dword at kBankCount, read once) and gives the current
@@ -235,92 +99,6 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
 // the PSX does.
 namespace sprite_pose { std::uint8_t g_reach_word = 0; }
 
-extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
-    const unsigned count = static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(sprite_pose::at::kBankCount)))) & 0xFFu;
-    const unsigned char* const table = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable));
-    unsigned i = 0;
-    for (;; ++i) {
-        if (i >= count) return 1;
-        if (move_script::Word(table + i * 8u) == bank) break;
-    }
-    rv::Current<records::SpriteObject>()->tex_slot = table[i * 8u + 4];
-    rv::Current<records::SpriteObject>()->tex_row = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 5];
-    rv::Current<records::SpriteObject>()->clut = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 2];
-    rv::Current<records::SpriteObject>()->clut_mode = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 6];
-    const unsigned column = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 7];
-    rv::Current<records::SpriteObject>()->column = column;
-    rv::Current<records::SpriteObject>()->reach = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->reach)) & 0xFFFFFF00u);
-    unsigned char* sprite = Sprite_Current;
-    const unsigned char first = move_script::At(::bof3::Img(sprite_pose::at::kBankBytes))[bank * 2u];
-    if (sprite_pose::g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sprite)->reach, first);
-    else sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | first);
-    const unsigned char second = move_script::At(::bof3::Img(sprite_pose::at::kBankBytes))[bank * 2u + 1];
-    rv::Current<records::SpriteObject>()->key_class = second;
-    return 0;
-}
-
-// original 0x57C4C0 (PSX 0x8015C4B4, branch for branch): turns the current
-// sprite to face `direction`. Types 8 and up do not turn; type 6 takes the
-// direction as an animation (Sprite_EnsureAnimation(direction) straight).
-// Otherwise the pair kDirectionAnimations[direction * 2] gives the animation
-// and +0x2A (stored first); then:
-//   - byte +0xA1 of Field_ActiveMember is 0xFF: Sprite_EnsureAnimation(it);
-//   - the sprite already plays it: nothing more;
-//   - animations 5 and 6: Sprite_SetAnimationAt(it, +0xA1) - they start at
-//     the step the active member's byte names;
-//   - any other: Sprite_SetAnimation(it).
-// As the original has it: the direction indexes the pair table unchecked,
-// and Field_ActiveMember is not checked for null.
-extern "C" void __cdecl Sprite_FaceDirection(unsigned char direction) {
-    const unsigned char type = rv::Current<records::SpriteObject>()->type;
-    if (type >= 8) return;
-    if (type == 6) {
-        sprite_pose::g.ensure_animation(direction);
-        return;
-    }
-    const unsigned pair = direction * 2u;
-    rv::Current<records::SpriteObject>()->flip = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair + 1];
-    const unsigned char start = Field_ActiveMember[0xA1];
-    const unsigned char animation = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair];
-    if (start == 0xFF) {
-        sprite_pose::g.ensure_animation(animation);
-        return;
-    }
-    if (rv::Current<records::SpriteObject>()->animation == animation) return;
-    if (animation == 5 || animation == 6) {
-        sprite_pose::g.set_animation_at(animation, start);
-        return;
-    }
-    sprite_pose::g.set_animation(animation);
-}
-
-// original 0x589810 (PSX 0x8019701C): the first of the 20 Effect_Objects whose
-// byte +0 is 0, or 0xFF when all are in use.
-extern "C" unsigned char __cdecl Effect_FindFree(void) {
-    for (unsigned i = 0; i < kEffects; ++i)
-        if (Effect_Objects[i].flags == 0) return static_cast<unsigned char>(i);
-    return 0xFF;
-}
-
-// original 0x589840 (PSX 0x80197070): bytes 0..4 of the current object to 0,
-// the pointer re-read before each store as the original does.
-extern "C" void __cdecl Effect_Release(void) {
-    for (unsigned i = 0; i < 5; ++i) Sprite_Current[i] = 0;
-}
-
-// original 0x589870 (PSX 0x801970C0): bytes 0..4 of effect object `index` to
-// 0. As the original has it: the index is not checked against the 20 - up to
-// 255 reaches 0x7F80 bytes past the pool.
-extern "C" void __cdecl Effect_ReleaseAt(unsigned char index) {
-    unsigned char* const object = rv::Bytes(&Effect_Objects[index]);
-    for (unsigned i = 0; i < 5; ++i) object[i] = 0;
-}
-
-// original 0x5898A0 (PSX 0x8019711C): Effect_ReleaseAt for each of the 20.
-extern "C" void __cdecl Effect_ClearAll(void) {
-    for (unsigned i = 0; i < kEffects; ++i) sprite_pose::g.release_at(static_cast<unsigned char>(i));
-}
-
 void SpritePose_Inject() {
     if (bof3::WantsShadow("sprite_pose")) sprite_pose::SelfTest();
     {
@@ -329,14 +107,4 @@ void SpritePose_Inject() {
         bof3::PatchBytes("SpriteReachWord", Low32(&sprite_pose::g_reach_word), &was, &is, 1);
         bof3::Log("DIV-0164    the bank setter stores the sprite's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
     }
-    BOF3_INJECT(Sprite_SetAnimation);
-    BOF3_INJECT(Sprite_SetAnimationAt);
-    BOF3_INJECT(Sprite_EnsureAnimation);
-    BOF3_INJECT(Sprite_SetFrameQueueUpload);
-    BOF3_INJECT(Sprite_SetAnimationBank);
-    BOF3_INJECT(Sprite_FaceDirection);
-    BOF3_INJECT(Effect_FindFree);
-    BOF3_INJECT(Effect_Release);
-    BOF3_INJECT(Effect_ReleaseAt);
-    BOF3_INJECT(Effect_ClearAll);
 }

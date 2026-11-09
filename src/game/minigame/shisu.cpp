@@ -1,0 +1,1025 @@
+// Moved here by tools/move_funcs.py from rest_2b.cpp, rest_2c.cpp (docs/source-layout-round.md).
+#include "game/minigame/shisu.h"
+
+#include <cstdint>
+#include <cstring>
+#include <type_traits>
+#include <windows.h>
+
+#include "bof3/symbols.gen.h"
+#include "game/cheats.h"
+#include "game/move_script_bytes.h"
+#include "game/rdata_consts.h"
+#include "game/record_views.h"
+#include "game/records.h"
+#include "game/rest_2b.h"
+#include "game/rest_2b_callees.h"
+#include "game/rest_2c.h"
+#include "game/rest_2c_callees.h"
+#include "game/scenario_harness.h"
+#include "hook/detour.h"
+#include "hook/log.h"
+#include "input/sigma.h"
+
+namespace {
+
+namespace at = rest_2c::at;
+
+}  // namespace
+
+namespace {
+
+using U = std::uint32_t;
+
+using move_script::At;
+
+using move_script::Long;
+
+using move_script::SetLong;
+
+using move_script::SetWord;
+
+using move_script::Word;
+
+using Handler = void (__cdecl*)();
+
+// The menu block (docs/scenario_harness.md section 7.3).
+// kMode: now BattleE1_Mode (symbols.toml). u8: Shisu_Modes' index
+// kState: now FieldS_State (symbols.toml). u8: the mode's state
+// kStep: now FieldS_Step (symbols.toml). u8: Shisu_ShowSteps' index
+constexpr ::bof3::image::Va kTimer{0x929F04};         // u8: the show's fade level
+
+// The screen's own cells 0x9399E0..0x9399FF.
+constexpr ::bof3::image::Va kOwned{0x9399E0};         // u8 x 4: the four items' counts (Inventory_Count)
+
+constexpr ::bof3::image::Va kGiven{0x9399E4};         // u8 x 4: how many of each the player put in
+
+// The two models (0x80 bytes each, read as Sprite_Current records): +1 the
+// state, +6 the "done" flag the steps wait on, +0x34 / +0x38 / +0x3C x, z, y
+// (16.16), +0x40 the scale, +0x48 "no scale", +0x50 the quads, +0x54 the
+// model's header (count byte +0, flags +3), +0x5D..+0x5F the colour, +0x64 /
+// +0x68 / +0x6C the angles.
+constexpr ::bof3::image::Va kModelA{0x9398E0};
+
+constexpr ::bof3::image::Va kModelB{0x939960};
+
+// kADone: now Rest2c_FigureDone (symbols.toml).
+// kAY: now Rest2c_FigureY (symbols.toml).
+// kAAngle: now Rest2c_FigureAngle (symbols.toml).
+// kAState: now Rest2b_ModelAState (symbols.toml).
+constexpr ::bof3::image::Va kAColour = kModelA + 0x5D;
+
+// kBScale: now Rest2c_FigureLift (symbols.toml).
+// kBState: now Rest2b_ModelBState (symbols.toml).
+// kBDone: now Rest2b_ModelBDone (symbols.toml).
+// kBY: now Rest2b_ModelBY (symbols.toml).
+// kBColour: now Rest2b_ModelBRgb (symbols.toml).
+// kBAngle: now Rest2b_ModelBAngle (symbols.toml).
+constexpr ::bof3::image::Va kSavedB{0x6BC878};        // u8 x 3: model B's colour while the show fades
+
+constexpr ::bof3::image::Va kSavedA{0x6BC87C};        // u8 x 3: model A's
+
+// kModelFile: now Rest2b_ModelFile (symbols.toml). pointer: the two models' headers (+0, +8) and quad pointers (+4, +0xC)
+// kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml). u8 (save data) the scale index is read from:
+// entry 0x15 of Fish_RecordSizes 0x9040EC, the player's record mackerel size
+// kBackdrop: now Config_Background (symbols.toml). u8: Config's Background, Menu_DrawBackdrop's kind
+// kStyle: now Config_WindowColour (symbols.toml). s8: the window style (its colour row)
+// kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 0x40 bytes a style: the window colour's first word
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scenario step the result hands over
+constexpr ::bof3::image::Va kCounterB{0x90384B};      // u8: the chapter's counter byte (1 low score, 2 high)
+
+// WindowRecords (0x803160, 0x24 a record): records 0..3 are this screen's.
+constexpr ::bof3::image::Va kWin0{0x803160};
+
+constexpr ::bof3::image::Va kWin1{0x803184};
+
+constexpr ::bof3::image::Va kWin2{0x8031A8};
+
+constexpr ::bof3::image::Va kWin3{0x8031CC};
+
+constexpr ::bof3::image::Va kMessage{0x803194};       // u16: record 1 +0x10, the message the screen shows
+
+// Image floats (.rdata, read in place): the screen-space offsets the model's
+// projected x and y are moved by.
+constexpr rdata::Const kOffsetX{0x5C4278};
+
+constexpr rdata::Const kOffsetY{0x5C4274};
+
+unsigned char& BRest2b(U address) { return move_script::At(address)[0]; }
+
+U W(U address) { return Word(At(address)); }
+
+void SetW(U address, U v) { SetWord(At(address), v); }
+
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
+
+void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+
+U Key(const void* p) { return Low32(p); }
+
+template <class T> T Get(const unsigned char* p, unsigned offset) {
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, p + offset, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, p + offset, sizeof v);
+        return v;
+    }
+}
+
+template <class T> void PutRest2b(unsigned char* p, unsigned offset, T v) {
+    if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
+        const std::uint32_t w = Low32(v);
+        std::memcpy(p + offset, &w, sizeof w);
+    } else {
+        std::memcpy(p + offset, &v, sizeof v);
+    }
+}
+
+// jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
+// (the fuzz swaps the cells for recorders); a Fatal past them, where the
+// original jumps through the dword after.
+void Run(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+    if (index >= entries)
+        bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
+                    "(docs/rest_2b.md section 7)",
+                    who, byte, index, entries, (unsigned)Key(table));
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+}
+
+// --- the callees ------------------------------------------------------------------------
+void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
+
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
+
+void Models() {
+    SH_CALL(Shisu_ModelBDispatch)();
+    SH_CALL(Shisu_ModelADispatch)();
+}
+
+// While a show has run, model A stands on model B: A's y = B's scale * 0xA00
+// + B's y (32-bit, wrapping).
+void StackModels() {
+    if (Rest2b_Rounds != 0) Rest2c_FigureY = Rest2c_FigureLift * 0xA00u + Rest2b_ModelBY;
+}
+
+unsigned char Max(unsigned char a, unsigned char b) { return a > b ? a : b; }
+
+}  // namespace
+
+// The six colour bytes: each kept one or the timer, the larger.
+static void Brighten(unsigned char t) {
+    const unsigned char a0 = BRest2b(::bof3::Img(kSavedA.v)), a1 = BRest2b(::bof3::Img(kSavedA.v) + 1);
+    Rest2c_FigureRgb = Max(a0, t);
+    BRest2b(::bof3::Img(kAColour.v) + 1) = Max(a1, t);
+    BRest2b(::bof3::Img(kAColour.v) + 2) = Max(BRest2b(::bof3::Img(kSavedA.v) + 2), t);
+    const unsigned char b0 = BRest2b(::bof3::Img(kSavedB.v)), b1 = BRest2b(::bof3::Img(kSavedB.v) + 1);
+    Rest2b_ModelBRgb[0] = Max(b0, t);
+    Rest2b_ModelBRgb[1] = Max(b1, t);
+    Rest2b_ModelBRgb[2] = Max(BRest2b(::bof3::Img(kSavedB.v) + 2), t);
+}
+
+namespace {
+
+// (term >= ... ) the score's ramp: q = num / den toward zero; den - edge > 0
+// gives q, else 200 - q; below 0, 0. den 0: 0.
+std::int32_t Ramp(std::int32_t den, std::int32_t edge, std::int32_t num) {
+    if (den == 0) return 0;
+    const std::int32_t q = num / den;
+    const std::int32_t v = den - edge > 0 ? q : 200 - q;
+    return v < 0 ? 0 : v;
+}
+
+std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
+
+constexpr auto& AtRest2c = move_script::At;
+
+unsigned char& BRest2c(U address) { return *AtRest2c(address); }
+
+U LRest2c(U address) { return static_cast<U>(Long(AtRest2c(address))); }
+
+}  // namespace
+
+// original 0x57DFF0: jmp through Shisu_Modes by the menu mode 0x929F00
+// (read as a dword & 0xFF), unchecked (ours aborts past its 5).
+extern "C" void __cdecl Shisu_ModeDispatch(void) {
+    Run("Shisu_ModeDispatch (0x57DFF0)", Shisu_Modes, Shisu_Modes_count, BattleE1_Mode, "the menu mode 0x929F00");
+}
+
+// original 0x57E010: Shisu_Modes[0] - the counts; the side, cursor, rounds and
+// the four given counts 0; the scale index from Shisu_ScaleIndex; the models
+// set up; then the mode up one with its state and step 0.
+extern "C" void __cdecl Shisu_Begin(void) {
+    SH_CALL(Shisu_CountItems)();
+    Rest2b_Side = 0;
+    Rest2b_Cursor = 0;
+    Rest2b_Rounds = 0;
+    for (unsigned i = 0; i < 4; ++i) BRest2b(::bof3::Img(kGiven.v) + i) = 0;
+    const unsigned char level = SH_CALL(Shisu_ScaleIndex)();
+    Rest2c_FigureScaleIndex = level;
+    SH_CALL(Shisu_InitModels)();
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
+    FieldS_Step = 0;
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
+}
+
+// original 0x57E070: Shisu_Modes[1] - jmp through Shisu_OpenStates by the
+// state 0x929F01, unchecked (ours aborts past its 2).
+extern "C" void __cdecl Shisu_OpenDispatch(void) {
+    Run("Shisu_OpenDispatch (0x57E070)", Shisu_OpenStates, Shisu_OpenStates_count, FieldS_State, "the menu state 0x929F01");
+}
+
+// original 0x57E080: Shisu_OpenStates[0] - Transition_Start(3), the windows
+// set up, the state up one.
+extern "C" void __cdecl Shisu_OpenFade(void) {
+    SH_CALL(Transition_Start)(3);
+    SH_CALL(Shisu_SetupWindows)();
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
+}
+
+// original 0x57E0A0: Shisu_OpenStates[1] - the backdrop; once the wait word is
+// 0, the message 0x2B, the mode up one and its state 0.
+extern "C" void __cdecl Shisu_OpenWait(void) {
+    Backdrop();
+    if (Transition_Busy != 0) return;
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
+    SetW(::bof3::Img(kMessage.v), 0x2B);
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
+}
+
+// original 0x57E0E0: Shisu_Modes[3] - jmp through Shisu_CloseStates by the
+// state, unchecked (ours aborts past its 2).
+extern "C" void __cdecl Shisu_CloseDispatch(void) {
+    Run("Shisu_CloseDispatch (0x57E0E0)", Shisu_CloseStates, Shisu_CloseStates_count, FieldS_State, "the menu state 0x929F01");
+}
+
+// original 0x57E0F0: Shisu_CloseStates[0] - the backdrop, Transition_Start(2),
+// the windows' flags for closing, the state up one.
+extern "C" void __cdecl Shisu_CloseFade(void) {
+    Backdrop();
+    SH_CALL(Transition_Start)(2);
+    SH_CALL(Shisu_CloseWindows)();
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
+}
+
+// original 0x57E120: Shisu_CloseStates[1] - while the wait word is set, the
+// backdrop; once it is 0, the mode up one with its state 0 and windows 1..3's
+// first bytes 0.
+extern "C" void __cdecl Shisu_CloseWait(void) {
+    if (Transition_Busy != 0) {
+        Backdrop();
+        return;
+    }
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
+    WindowRecords[1].in_use = 0;
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
+    WindowRecords[2].in_use = 0;
+    WindowRecords[3].in_use = 0;
+}
+
+// original 0x57E160 (PSX 0x801D1018): Shisu_Modes[4] - with no show run, the
+// scenario step 0x8034E5 = 5. Else the four items taken by the counts given
+// (Inventory_Remove(0, item, count), a fourth word 0 pushed), the step 0x14,
+// the score; a score of 0x32 or less sets the counter byte 0x90384B to 1, a
+// higher one to 2 and the rank 0x903F6A to 0 (below 0x5A), 1 (0x78), 2
+// (0x96), 3 (0xAA), 4 (0xB4) or 5. Then Window_ResetAll and Game_Step up one.
+// DIVERGENCE DIV-0188: under BOF3X_NO_FAIL a score below 0xB4 is raised to
+// 0xB4 (stored at 0x9399FC, as Shisu_Score stores it) before it is ranked -
+// the counter 2 and the rank 5, the best prize, whatever was put in. The four
+// terms at 0x9399EC.. are left as scored.
+extern "C" void __cdecl Shisu_Result(void) {
+    if (Rest2b_Rounds == 0) {
+        MoveScript_PartyRecords[0x65] = 5;
+    } else {
+        static const unsigned char kItems[4] = {0x4D, 0x23, 0x24, 0x56};
+        for (unsigned i = 0; i < 4; ++i) SH_CALL(Inventory_Remove)(0, kItems[i], BRest2b(::bof3::Img(kGiven.v) + i));
+        MoveScript_PartyRecords[0x65] = 0x14;
+        SH_CALL(Shisu_Score)();
+        if (Cheats_MinigameNoFail() && static_cast<std::int32_t>(Rest2b_Score) < 0xB4) Rest2b_Score = 0xB4;
+        const auto score = static_cast<std::int32_t>(Rest2b_Score);
+        if (score <= 0x32) {
+            BRest2b(::bof3::Img(kCounterB.v)) = 1;
+        } else {
+            BRest2b(::bof3::Img(kCounterB.v)) = 2;
+            unsigned char rank;
+            if (score < 0x5A) rank = 0;
+            else if (score < 0x78) rank = 1;
+            else if (score < 0x96) rank = 2;
+            else if (score < 0xAA) rank = 3;
+            else rank = score >= 0xB4 ? 5 : 4;
+            AreaW3c_ItemPick = rank;
+        }
+    }
+    SH_CALL(Window_ResetAll)();
+    Game_Step = static_cast<unsigned short>(Game_Step + 1);
+}
+
+// original 0x57E290: Shisu_Modes[2] - the backdrop, then jmp through
+// Shisu_PickStates by the state (read after it), unchecked (ours aborts past
+// its 3).
+extern "C" void __cdecl Shisu_PickDispatch(void) {
+    Backdrop();
+    Run("Shisu_PickDispatch (0x57E290)", Shisu_PickStates, Shisu_PickStates_count, FieldS_State, "the menu state 0x929F01");
+}
+
+// original 0x57E2B0: Shisu_PickStates[0] - Input_AutoRepeat(Input_Pressed &
+// 0xF000): 0xA000 flips the side (sound 0x101, message 0x2B + side); 0x1000 /
+// 0x4000 go to the counts with the cursor at 3 / 0 (sound 0x100, message
+// 0x2A). Else, the confirm buttons pressed on side 0: eight shows run - sound
+// 0x107; some run - sound 0x103 and the rounds up one; none - with the first
+// two counts given, sound 0x103 and the state up two (to the show), else
+// sound 0x107 and message 0x31. The confirm buttons on side 1, or the cancel
+// buttons: sound 0x103, the mode up one (closing). Then window 0's place by
+// the side, model A stacked on B, the two models' states.
+extern "C" void __cdecl Shisu_PickSide(void) {
+    const U repeat = SH_CALL(Input_AutoRepeat)(static_cast<unsigned>(Input_Pressed) & 0xF000u);
+    const unsigned hi = (repeat >> 8) & 0xFF;
+    if (hi & 0xA0) {
+        Sound(0x101);
+        const auto side = static_cast<unsigned char>(Rest2b_Side ^ 1);
+        Rest2b_Side = side;
+        SetW(::bof3::Img(kMessage.v), side + 0x2Bu);
+    } else if (hi & 0x10) {
+        Sound(0x100);
+        const unsigned char state = FieldS_State;
+        SetW(::bof3::Img(kMessage.v), 0x2A);
+        FieldS_State = static_cast<unsigned char>(state + 1);
+        Rest2b_Cursor = 3;
+    } else if (hi & 0x40) {
+        Sound(0x100);
+        const unsigned char state = FieldS_State;
+        SetW(::bof3::Img(kMessage.v), 0x2A);
+        FieldS_State = static_cast<unsigned char>(state + 1);
+        Rest2b_Cursor = 0;
+    } else {
+        const unsigned pressed = Input_Pressed;
+        const unsigned confirm = Field_ConfirmButtons & pressed;
+        const unsigned char side = Rest2b_Side;
+        if (confirm != 0 && side == 0) {
+            const unsigned char rounds = Rest2b_Rounds;
+            if (rounds >= 8) {
+                Sound(0x107);
+            } else if (rounds != 0) {
+                Sound(0x103);
+                Rest2b_Rounds = static_cast<unsigned char>(Rest2b_Rounds + 1);
+            } else if (Rest2b_Given[0] != 0 && Rest2b_Given[1] != 0) {
+                Sound(0x103);
+                FieldS_State = static_cast<unsigned char>(FieldS_State + 2);
+            } else {
+                Sound(0x107);
+                SetW(::bof3::Img(kMessage.v), 0x31);
+            }
+        } else if (confirm != 0 || (Field_CancelButtons & pressed) != 0) {
+            Sound(0x103);
+            const unsigned char mode = BattleE1_Mode;
+            FieldS_State = 0;
+            BattleE1_Mode = static_cast<unsigned char>(mode + 1);
+        }
+    }
+    const unsigned side = Rest2b_Side;
+    WindowRecords[0].in_use = 1;
+    const U base = L(::bof3::Img(kWin2.v) + 4);
+    WindowRecords[0].x = side * 0x30u + base;
+    WindowRecords[0].y = W(::bof3::Img(kWin2.v) + 6) + 4u;
+    StackModels();
+    Models();
+}
+
+// original 0x57E490: Shisu_PickStates[1] - Input_AutoRepeat(Input_Pressed &
+// 0x5000); any button: message 0x2A. 0x1000 / 0x4000 move the cursor up /
+// down (sound 0x100); off the top or past row 3: message 0x2B + side, the
+// cursor 0xFF and the state down one. Else, confirm without cancel: row r
+// takes one of item r into the given counts - row 0 at most one, rows 1..3 at
+// most 0x14; row 2 wants row 1 given (message 0x2F), row 3 row 0 (0x30); none
+// left: message 0x2E; full: 0x2D; each refusal sound 0x107, each take sound
+// 0x103 (row 0's first sets model A's state to 1, row 1's model B's). Then
+// window 0 at the cursor's row and the records' cursor bytes, model A stacked,
+// the two models' states.
+extern "C" void __cdecl Shisu_PickCounts(void) {
+    const U repeat = SH_CALL(Input_AutoRepeat)(static_cast<unsigned>(Input_Pressed) & 0x5000u);
+    const unsigned pressed = Input_Pressed;
+    if (pressed != 0) SetW(::bof3::Img(kMessage.v), 0x2A);
+    const unsigned hi = (repeat >> 8) & 0xFF;
+    auto back = [] {
+        SetW(::bof3::Img(kMessage.v), Rest2b_Side + 0x2Bu);
+        const unsigned char state = FieldS_State;
+        Rest2b_Cursor = 0xFF;
+        FieldS_State = static_cast<unsigned char>(state - 1);
+    };
+    auto refuse = [](unsigned message) {
+        SetW(::bof3::Img(kMessage.v), message);
+        Sound(0x107);
+    };
+    if (hi & 0x10) {
+        Sound(0x100);
+        const auto c = static_cast<unsigned char>(Rest2b_Cursor - 1);
+        Rest2b_Cursor = c;
+        if (static_cast<signed char>(c) < 0) back();
+    } else if (hi & 0x40) {
+        Sound(0x100);
+        const auto c = static_cast<unsigned char>(Rest2b_Cursor + 1);
+        Rest2b_Cursor = c;
+        if (c > 3) back();
+    } else if ((Field_CancelButtons & pressed) == 0 && (Field_ConfirmButtons & pressed) != 0) {
+        switch (Rest2b_Cursor) {
+        case 0:
+            if (Rest2b_Owned[0] == 0) refuse(0x2E);
+            else if (Rest2b_Given[0] >= 1) refuse(0x2D);
+            else {
+                const unsigned char given = Rest2b_Given[0], owned = Rest2b_Owned[0];
+                Rest2b_ModelAState = 1;
+                Rest2b_Given[0] = static_cast<unsigned char>(given + 1);
+                Rest2b_Owned[0] = static_cast<unsigned char>(owned - 1);
+                Sound(0x103);
+            }
+            break;
+        case 1:
+            if (Rest2b_Owned[1] == 0) refuse(0x2E);
+            else if (Rest2b_Given[1] >= 0x14) refuse(0x2D);
+            else {
+                if (Rest2b_Given[1] == 0) Rest2b_ModelBState = 1;
+                const unsigned char owned = Rest2b_Owned[1], given = Rest2b_Given[1];
+                Rest2b_Given[1] = static_cast<unsigned char>(given + 1);
+                Rest2b_Owned[1] = static_cast<unsigned char>(owned - 1);
+                Sound(0x103);
+            }
+            break;
+        case 2:
+            if (Rest2b_Given[1] == 0) refuse(0x2F);
+            else if (Rest2b_Owned[2] == 0) refuse(0x2E);
+            else if (Rest2b_Given[2] >= 0x14) refuse(0x2D);
+            else {
+                const unsigned char owned = Rest2b_Owned[2], given = Rest2b_Given[2];
+                Rest2b_Given[2] = static_cast<unsigned char>(given + 1);
+                Rest2b_Owned[2] = static_cast<unsigned char>(owned - 1);
+                Sound(0x103);
+            }
+            break;
+        case 3:
+            if (Rest2b_Given[0] == 0) refuse(0x30);
+            else if (Rest2b_Owned[3] == 0) refuse(0x2E);
+            else if (Rest2b_Given[3] >= 0x14) refuse(0x2D);
+            else {
+                const unsigned char owned = Rest2b_Owned[3], given = Rest2b_Given[3];
+                Rest2b_Given[3] = static_cast<unsigned char>(given + 1);
+                Rest2b_Owned[3] = static_cast<unsigned char>(owned - 1);
+                Sound(0x103);
+            }
+            break;
+        default: break;   // the original's `cmp eax, 3; ja`: nothing
+        }
+    }
+    const U base = L(::bof3::Img(kWin3.v) + 4);
+    const unsigned char c = Rest2b_Cursor;
+    WindowRecords[0].in_use = 1;
+    WindowRecords[0].x = base + 7u;
+    BRest2b(::bof3::Img(kWin0.v) + 0xA) = c;
+    BRest2b(::bof3::Img(kWin3.v) + 0xA) = c;
+    WindowRecords[0].y = (c + 2u) * 13u + static_cast<std::uint32_t>(WindowRecords[3].y);
+    StackModels();
+    Models();
+}
+
+// original 0x57E720 (no list had it; Shisu_PickStates[2]): call through
+// Shisu_ShowSteps by the step 0x929F02, unchecked (ours aborts past its 5),
+// then the two models' states.
+extern "C" void __cdecl Shisu_PickShow(void) {
+    Run("Shisu_PickShow (0x57E720)", Shisu_ShowSteps, Shisu_ShowSteps_count, FieldS_Step, "the menu step 0x929F02");
+    Models();
+}
+
+// original 0x57E740: Shisu_ShowSteps[0] - both models to state 2 (squaring
+// their turn), the step up one.
+extern "C" void __cdecl Shisu_ShowStart(void) {
+    Rest2b_ModelAState = 2;
+    Rest2b_ModelBState = 2;
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
+}
+
+// original 0x57E760: Shisu_ShowSteps[1] - both done: both to state 3 (the
+// drop), the step up one.
+extern "C" void __cdecl Shisu_ShowDrop(void) {
+    if (Rest2c_FigureDone == 0 || Rest2b_ModelBDone == 0) return;
+    Rest2b_ModelAState = 3;
+    Rest2b_ModelBState = 3;
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
+}
+
+// original 0x57E790: Shisu_ShowSteps[2] - both landed: both to state 4 (still),
+// their colours kept at 0x6BC87C (A) and 0x6BC878 (B), the timer 0, the step
+// up one.
+extern "C" void __cdecl Shisu_ShowLanded(void) {
+    if (Rest2c_FigureDone == 0 || Rest2b_ModelBDone == 0) return;
+    const unsigned char a1 = BRest2b(::bof3::Img(kAColour.v) + 1), a2 = BRest2b(::bof3::Img(kAColour.v) + 2);
+    Rest2b_ModelAState = 4;
+    Rest2b_ModelBState = 4;
+    BRest2b(::bof3::Img(kSavedA.v)) = Rest2c_FigureRgb;
+    BRest2b(::bof3::Img(kSavedB.v)) = Rest2b_ModelBRgb[0];
+    const unsigned char step = FieldS_Step;
+    BRest2b(::bof3::Img(kSavedA.v) + 1) = a1;
+    const unsigned char b1 = Rest2b_ModelBRgb[1];
+    BRest2b(::bof3::Img(kSavedA.v) + 2) = a2;
+    const unsigned char b2 = Rest2b_ModelBRgb[2];
+    BRest2b(::bof3::Img(kSavedB.v) + 1) = b1;
+    BRest2b(::bof3::Img(kSavedB.v) + 2) = b2;
+    BRest2b(::bof3::Img(kTimer.v)) = 0;
+    FieldS_Step = static_cast<unsigned char>(step + 1);
+}
+
+// original 0x57E810: Shisu_ShowSteps[3] - every colour byte at least the
+// timer; at 0x80 sound 0x200 (the timer read again after it); the timer up 8,
+// and when it wraps to 0, 0xF8 and the step up one.
+extern "C" void __cdecl Shisu_ShowFlash(void) {
+    unsigned char t = BRest2b(::bof3::Img(kTimer.v));
+    Brighten(t);
+    if (t == 0x80) {
+        Sound(0x200);
+        t = BRest2b(::bof3::Img(kTimer.v));
+    }
+    t = static_cast<unsigned char>(t + 8);
+    BRest2b(::bof3::Img(kTimer.v)) = t;
+    if (t == 0) {
+        const unsigned char step = FieldS_Step;
+        BRest2b(::bof3::Img(kTimer.v)) = 0xF8;
+        FieldS_Step = static_cast<unsigned char>(step + 1);
+    }
+}
+
+// original 0x57E8C0: Shisu_ShowSteps[4] - the same floor, the timer down 8;
+// at 0 the kept colours back, model A to state 5 and B to 1 (turning), the
+// rounds up one, the state down two (to the pick) and the step 0.
+extern "C" void __cdecl Shisu_ShowFade(void) {
+    const unsigned char t = BRest2b(::bof3::Img(kTimer.v));
+    const unsigned char a0 = BRest2b(::bof3::Img(kSavedA.v)), a1 = BRest2b(::bof3::Img(kSavedA.v) + 1);
+    Rest2c_FigureRgb = Max(a0, t);
+    BRest2b(::bof3::Img(kAColour.v) + 1) = Max(a1, t);
+    BRest2b(::bof3::Img(kAColour.v) + 2) = Max(BRest2b(::bof3::Img(kSavedA.v) + 2), t);
+    const unsigned char b0 = BRest2b(::bof3::Img(kSavedB.v)), b1 = BRest2b(::bof3::Img(kSavedB.v) + 1);
+    Rest2b_ModelBRgb[0] = Max(b0, t);
+    Rest2b_ModelBRgb[1] = Max(b1, t);
+    const unsigned char b2 = BRest2b(::bof3::Img(kSavedB.v) + 2);
+    Rest2b_ModelBRgb[2] = Max(b2, t);
+    const auto now = static_cast<unsigned char>(t - 8);
+    BRest2b(::bof3::Img(kTimer.v)) = now;
+    if (now != 0) return;
+    const unsigned char a2 = BRest2b(::bof3::Img(kSavedA.v) + 2);
+    Rest2b_ModelBRgb[0] = b0;
+    const unsigned char rounds = Rest2b_Rounds;
+    BRest2b(::bof3::Img(kAColour.v) + 2) = a2;
+    const unsigned char state = FieldS_State;
+    Rest2c_FigureRgb = a0;
+    BRest2b(::bof3::Img(kAColour.v) + 1) = a1;
+    Rest2b_ModelBRgb[1] = b1;
+    Rest2b_ModelBRgb[2] = b2;
+    Rest2b_ModelAState = 5;
+    Rest2b_ModelBState = 1;
+    Rest2b_Rounds = static_cast<unsigned char>(rounds + 1);
+    FieldS_State = static_cast<unsigned char>(state - 2);
+    FieldS_Step = 0;
+}
+
+// original 0x57E9A0: the four counts - Inventory_Count(0, item, 0)'s al for
+// the items 0x4D, 0x23, 0x24, 0x56 into 0x9399E0..0x9399E3.
+extern "C" void __cdecl Shisu_CountItems(void) {
+    static const unsigned char kItems[4] = {0x4D, 0x23, 0x24, 0x56};
+    for (unsigned i = 0; i < 4; ++i) {
+        const unsigned short n = SH_CALL(Inventory_Count)(0, kItems[i], 0);
+        BRest2b(::bof3::Img(kOwned.v) + i) = static_cast<unsigned char>(n);
+    }
+}
+
+// original 0x57E9F0: WindowRecords 0..3 for the screen (bytes and words as
+// stored; record 3's +0x20 the counts' address 0x9399E0).
+extern "C" void __cdecl Shisu_SetupWindows(void) {
+    WindowRecords[0].in_use = 0;
+    WindowRecords[0].kind = 0;
+    WindowRecords[0].x = 0;
+    WindowRecords[0].y = 0;
+    SetW(::bof3::Img(kWin1.v) + 6, 0xFF9C);
+    SetW(::bof3::Img(kWin2.v) + 6, 0xFF9C);
+    WindowRecords[0].handler = 1;
+    WindowRecords[0].state = 2;
+    WindowRecords[1].in_use = 1;
+    BRest2b(::bof3::Img(kWin1.v) + 1) = 1;
+    BRest2b(::bof3::Img(kWin1.v) + 2) = 1;
+    BRest2b(::bof3::Img(kWin1.v) + 3) = 2;
+    SetW(::bof3::Img(kWin1.v) + 4, 0x14);
+    WindowRecords[2].in_use = 1;
+    BRest2b(::bof3::Img(kWin2.v) + 1) = 1;
+    BRest2b(::bof3::Img(kWin2.v) + 2) = 2;
+    BRest2b(::bof3::Img(kWin2.v) + 3) = 2;
+    SetW(::bof3::Img(kWin2.v) + 4, 0x70);
+    BRest2b(::bof3::Img(kWin2.v) + 0xA) = 8;
+    BRest2b(::bof3::Img(kWin2.v) + 0xB) = 0xFF;
+    WindowRecords[3].in_use = 1;
+    WindowRecords[3].handler = 1;
+    WindowRecords[3].kind = 3;
+    WindowRecords[3].state = 2;
+    WindowRecords[3].x = 0xFF88;
+    WindowRecords[3].y = 0x3F;
+    BRest2b(::bof3::Img(kWin3.v) + 0xA) = 0xFF;
+    SetL(::bof3::Img(kWin3.v) + 0x20, ::bof3::Img(Rest2b_Owned_addr));
+}
+
+// original 0x57EAC0: window 0's first byte 0, windows 1..3's +3 = 1.
+extern "C" void __cdecl Shisu_CloseWindows(void) {
+    WindowRecords[0].in_use = 0;
+    BRest2b(::bof3::Img(kWin1.v) + 3) = 1;
+    BRest2b(::bof3::Img(kWin2.v) + 3) = 1;
+    WindowRecords[3].state = 1;
+}
+
+// original 0x57EAE0: the byte 0x904101 to a scale index - below 0x26: 9, 0x28:
+// 0xA, 0x2D: 0xB, 0x32: 0xC, 0x3C: 0xD, 0x41: 0xE, 0x44: 0xF, else 0x10 (al;
+// the rest of eax the caller's).
+extern "C" unsigned char __cdecl Shisu_ScaleIndex(void) {
+    const unsigned char v = Rest2b_SavedScaleIndex;
+    if (v < 0x26) return 9;
+    if (v < 0x28) return 0xA;
+    if (v < 0x2D) return 0xB;
+    if (v < 0x32) return 0xC;
+    if (v < 0x3C) return 0xD;
+    if (v < 0x41) return 0xE;
+    return v < 0x44 ? 0xF : 0x10;
+}
+
+// original 0x57EB20: the score. With L the scale index, g1..g3 the given
+// counts (g0, the mackerel's, is not read) and n the rounds: A = ramp(4 L, 5 (g1 - n), 500 (g1 - n)), B =
+// ramp(g1, 4 g2, 400 g2), C = 25 n + 0x32 for n below 2 else 0x96 - 25 n
+// (below 0, 0), D = ramp(g2 + L, g3 - n + g1, 100 (g3 - n + g1)); each of A,
+// B, C, D at 0x9399EC.. and the score 0x9399FC = (16 D + 10 L A + (C B / 100)
+// g1) / 100, every division toward zero, every product 32-bit.
+extern "C" void __cdecl Shisu_Score(void) {
+    const std::int32_t level = Rest2c_FigureScaleIndex;
+    const std::int32_t g1 = Rest2b_Given[1];
+    const std::int32_t rounds = Rest2b_Rounds;
+    const std::int32_t d = g1 - rounds;
+    const std::int32_t a = Ramp(4 * level, 5 * d, 500 * d);
+    Rest2b_ScoreA = static_cast<U>(a);
+    const std::int32_t g2 = Rest2b_Given[2];
+    const std::int32_t b = Ramp(g1, 4 * g2, 400 * g2);
+    Rest2b_ScoreB = static_cast<U>(b);
+    std::int32_t c = 2 - rounds > 0 ? 25 * rounds + 0x32 : 0x96 - 25 * rounds;
+    if (c < 0) c = 0;
+    Rest2b_ScoreC = static_cast<U>(c);
+    const std::int32_t e = Rest2b_Given[3] - rounds + g1;
+    const std::int32_t dd = Ramp(g2 + level, e, 100 * e);
+    Rest2b_ScoreD = static_cast<U>(dd);
+    const U la = static_cast<U>(level) * Rest2b_ScoreA;
+    const U cb = static_cast<U>(c) * Rest2b_ScoreB;
+    const U part = static_cast<U>(S(cb) / 100) * static_cast<U>(g1);
+    const U total = static_cast<U>(dd) * 16u + la * 10u + part;
+    Rest2b_Score = static_cast<U>(S(total) / 100);
+}
+
+// original 0x57ECC0: the two models from the file 0x628C88 - B's header the
+// file, its quads the file's +4 dword; A's header the file + 8, its quads the
+// dword at +0xC; each at the kind-2 sprite's x, z (Field_Kind2X / Z), state 0,
+// scale 0x1000, +0x48 0, angles 0, colour 0x80 x 3; B's y the elevation there
+// less 0x200, A's plus 0x200 (each << 16). The file pointer and the place are
+// read again after the first elevation.
+extern "C" void __cdecl Shisu_InitModels(void) {
+    const U file = Rest2b_ModelFile;
+    const long kz = Field_Kind2Z;
+    SetL(::bof3::Img(kModelB.v) + 0x54, file);
+    SetL(::bof3::Img(kModelB.v) + 0x50, L(file + 4));
+    const long kx = Field_Kind2X;
+    Rest2b_ModelBState = 0;
+    BRest2b(::bof3::Img(kModelB.v) + 0x48) = 0;
+    Rest2c_FigureLift = 0x1000;
+    SetL(::bof3::Img(kModelB.v) + 0x64, 0);
+    SetL(::bof3::Img(kModelB.v) + 0x68, 0);
+    Rest2b_ModelBAngle = 0;
+    Rest2b_ModelBRgb[0] = 0x80;
+    Rest2b_ModelBRgb[1] = 0x80;
+    Rest2b_ModelBRgb[2] = 0x80;
+    SetL(::bof3::Img(kModelB.v) + 0x34, static_cast<U>(kx));
+    SetL(::bof3::Img(kModelB.v) + 0x38, static_cast<U>(kz));
+    const long hb = SH_CALL(AreaMap_Elevation)(kx, kz);
+    const U file2 = Rest2b_ModelFile;
+    Rest2b_ModelBY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(hb))) - 0x200u) << 16;
+    const long kz2 = Field_Kind2Z;
+    SetL(::bof3::Img(kModelA.v) + 0x54, file2 + 8);
+    SetL(::bof3::Img(kModelA.v) + 0x50, L(file2 + 8 + 4));
+    const long kx2 = Field_Kind2X;
+    Rest2b_ModelAState = 0;
+    BRest2b(::bof3::Img(kModelA.v) + 0x48) = 0;
+    SetL(::bof3::Img(kModelA.v) + 0x40, 0x1000);
+    SetL(::bof3::Img(kModelA.v) + 0x64, 0);
+    SetL(::bof3::Img(kModelA.v) + 0x68, 0);
+    Rest2c_FigureAngle = 0;
+    Rest2c_FigureRgb = 0x80;
+    BRest2b(::bof3::Img(kAColour.v) + 1) = 0x80;
+    BRest2b(::bof3::Img(kAColour.v) + 2) = 0x80;
+    SetL(::bof3::Img(kModelA.v) + 0x34, static_cast<U>(kx2));
+    SetL(::bof3::Img(kModelA.v) + 0x38, static_cast<U>(kz2));
+    const long ha = SH_CALL(AreaMap_Elevation)(kx2, kz2);
+    Rest2c_FigureY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ha))) + 0x200u) << 16;
+}
+
+// original 0x57EDD0: jmp through Shisu_ModelBStates by model B's state
+// 0x939961, unchecked (ours aborts past its 5).
+extern "C" void __cdecl Shisu_ModelBDispatch(void) {
+    Run("Shisu_ModelBDispatch (0x57EDD0)", Shisu_ModelBStates, Shisu_ModelBStates_count, Rest2b_ModelBState,
+        "model B's state 0x939961");
+}
+
+// original 0x57EDE0: Shisu_ModelBStates[1] - model B's angle +0x6C up 0x20, then
+// its draw (a tail jmp).
+extern "C" void __cdecl Shisu_ModelBTurn(void) {
+    Rest2b_ModelBAngle = Rest2b_ModelBAngle + 0x20u;
+    SH_CALL(Shisu_ModelBDraw)();
+}
+
+// original 0x57EDF0 (no list had it; the tail of four of model B's states):
+// model B's scale from Shisu_ModelScales by g1 - rounds held to 1..0x14
+// (signed bytes); its colour lifted by 3 g2 in red and green and lowered by 3
+// g2 in blue (each byte's sum taken only below 0xFF / above 0, else 0xFF / 0),
+// the model drawn, the three colour bytes put back.
+extern "C" void __cdecl Shisu_ModelBDraw(void) {
+    auto d = static_cast<signed char>(Rest2b_Given[1] - Rest2b_Rounds);
+    if (d < 1) d = 1;
+    else if (d > 0x14) d = 0x14;
+    const unsigned char kept_g = Rest2b_ModelBRgb[1];
+    const unsigned char g2 = Rest2b_Given[2];
+    const auto scale = static_cast<U>(Shisu_ModelScales[d]);
+    const unsigned char kept_b = Rest2b_ModelBRgb[2];
+    Rest2c_FigureLift = scale;
+    const unsigned char kept_r = Rest2b_ModelBRgb[0];
+    const int three = g2 * 3;
+    const auto up = static_cast<unsigned char>(g2 * 3);
+    if (0xFF - kept_r > three) Rest2b_ModelBRgb[0] = static_cast<unsigned char>(kept_r + up);
+    else Rest2b_ModelBRgb[0] = 0xFF;
+    const unsigned char g = Rest2b_ModelBRgb[1];
+    if (0xFF - g > three) Rest2b_ModelBRgb[1] = static_cast<unsigned char>(g + up);
+    else Rest2b_ModelBRgb[1] = 0xFF;
+    const unsigned char bl = Rest2b_ModelBRgb[2];
+    if (bl > three) Rest2b_ModelBRgb[2] = static_cast<unsigned char>(bl - up);
+    else Rest2b_ModelBRgb[2] = 0;
+    SH_CALL(Shisu_DrawModel)(At(::bof3::Img(kModelB.v)));
+    Rest2b_ModelBRgb[0] = kept_r;
+    Rest2b_ModelBRgb[1] = kept_g;
+    Rest2b_ModelBRgb[2] = kept_b;
+}
+
+// original 0x57EEF0 (PSX 0x801D2308): a model record's quads, drawn with the
+// record as Sprite_Current (the caller's put back at the end) - Sprite_AddDrawRecords'
+// set-up (Gte_PushMatrix, Sprite_ObjectMatrix, the scale when +0x48 is 0, the
+// light direction, Camera_LoadMatrix) with its light matrix a LOCAL of which
+// Light_ObjectDirection fills the first three shorts; then per quad of the
+// count (the s8 at the header's +0, widened to a u16) a POLY_FT4 at the packet
+// cursor: Gte_RotTransPers4 of the four vertices copied to Prim_VertexScratch,
+// Gte_PrimDepths4_10, the screen offsets 0x5C4278 / 0x5C4274 added to each x /
+// y, the record's colour (lit through Gte_NormalColor when the header's flags
+// have 0x80), the page (Gpu_GetTPage(0, mode & 3, 0x2C0, 0x100), mode the
+// flags when they have 0x40, else 2), the CLUT (the quad's s16 +0 << 4, row
+// 0x1E3), semi-transparency by mode bit 6, and Gfx_CommitPrim(1, 0x48) only
+// when 0x4941B0 finds the first three corners wound forward (ax > 0).
+//
+// The light matrix's other 26 bytes are the stack's (no instruction writes
+// them) and go into Gte_Matrix2 through Gte_SetMatrix2; ours zeroes them
+// (DIV-0073; docs/rest_2b.md section 7, L1). A negative count draws some 65,000 quads,
+// as the original would.
+extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
+    unsigned char* const old = Sprite_Current;
+    Sprite_Current = record;
+    SH_CALL(Gte_PushMatrix)();
+    const auto count = static_cast<std::uint16_t>(static_cast<std::int16_t>(
+        static_cast<signed char>(Get<const unsigned char*>(Sprite_Current, 0x54)[0])));
+    alignas(4) short matrix[16];
+    SH_CALL(Sprite_ObjectMatrix)(matrix);
+    SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
+    if (Sprite_Current[0x48] == 0) {
+        const long s = Get<long>(Sprite_Current, 0x40);
+        const long scale[3] = {s, s, s};
+        SH_CALL(Gte_ScaleMatrix)(matrix, scale);
+    }
+    alignas(4) short view[16];
+    std::memcpy(view, matrix, sizeof view);
+    alignas(4) short light[16] = {};
+    SH_CALL(Light_ObjectDirection)(light, reinterpret_cast<const long*>(Sprite_Current + 0x64));
+    SH_CALL(Camera_LoadMatrix)(view);
+    SH_CALL(Gte_SetMatrix2)(reinterpret_cast<const unsigned long*>(light));
+    const unsigned char flags = Get<const unsigned char*>(Sprite_Current, 0x54)[3];
+    const unsigned mode = flags & 0x40 ? flags : 2u;
+    const unsigned char* quad = Get<const unsigned char*>(Sprite_Current, 0x50);
+    const unsigned tpage = SH_CALL(Gpu_GetTPage)(0, mode & 3, 0x2C0, 0x100);
+    if (count != 0) {
+        const unsigned semi = (mode >> 6) & 1;
+        short* const v = reinterpret_cast<short*>(Prim_VertexScratch);
+        for (unsigned n = count; n != 0; --n) {
+            unsigned char* const p = Gfx_PacketNext;
+            SH_CALL(Gpu_SetPolyFT4)(p);
+            for (unsigned i = 0; i < 12; ++i) v[i / 3 * 4 + i % 3] = Get<short>(quad, 2 + 2 * i);
+            const long normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
+            for (unsigned k = 0; k < 4; ++k) PutRest2b<std::uint16_t>(p, 0x14 + 0x10 * k, Get<std::uint16_t>(quad, 0x20 + 2 * k));
+            long depth;
+            SH_CALL(Gte_RotTransPers4)(v, v + 4, v + 8, v + 12, reinterpret_cast<float*>(p + 8),
+                                       reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
+                                       reinterpret_cast<float*>(p + 0x38), &depth);
+            SH_CALL(Gte_PrimDepths4_10)(p);
+            for (unsigned k = 0; k < 4; ++k) {
+                PutRest2b<float>(p, 8 + 0x10 * k, Get<float>(p, 8 + 0x10 * k) + Get<float>(At(kOffsetX), 0));
+                PutRest2b<float>(p, 0xC + 0x10 * k, Get<float>(p, 0xC + 0x10 * k) + Get<float>(At(kOffsetY), 0));
+            }
+            p[4] = Sprite_Current[0x5D];
+            p[5] = Sprite_Current[0x5E];
+            p[6] = Sprite_Current[0x5F];
+            if (Get<const unsigned char*>(Sprite_Current, 0x54)[3] & 0x80) {
+                SH_CALL(Gte_VectorNormalS)(normal, reinterpret_cast<short*>(Prim_VertexScratch));
+                const unsigned char* const s = Sprite_Current;
+                const unsigned char colour[4] = {s[0x5D], s[0x5E], s[0x5F], p[7]};
+                SH_CALL(Gte_NormalColor)(reinterpret_cast<short*>(Prim_VertexScratch), colour, p + 4);
+            }
+            PutRest2b<std::uint16_t>(p, 0x26, static_cast<std::uint16_t>(tpage));
+            const int clut_x = static_cast<int>(static_cast<unsigned>(static_cast<int>(Get<short>(quad, 0))) << 4);
+            const unsigned clut = SH_CALL(Gpu_GetClut)(clut_x, 0x1E3);
+            PutRest2b<std::uint16_t>(p, 0x16, static_cast<std::uint16_t>(clut));
+            SH_CALL(Gpu_SetSemiTrans)(p, semi);
+            using Winding = int (__cdecl*)(const float*, const float*, const float*);
+            const int wound = SH_AT(Winding, rest_2b::at::kWinding.v)(
+                reinterpret_cast<const float*>(p + 8), reinterpret_cast<const float*>(p + 0x18),
+                reinterpret_cast<const float*>(p + 0x28));
+            if (static_cast<short>(wound) > 0) SH_CALL(Gfx_CommitPrim)(1, 0x48);
+            quad += 0x28;
+        }
+    }
+    SH_CALL(Gte_PopMatrix)();
+    Sprite_Current = old;
+}
+
+// original 0x57F270: Shisu_ModelBStates[2] - model B's angle not a whole turn
+// (low 12 bits set): (angle + 0x40) & 0xFC0 and its done flag 0; a whole turn:
+// done 1. Then its draw.
+extern "C" void __cdecl Shisu_ModelBSquare(void) {
+    const U angle = Rest2b_ModelBAngle;
+    if (angle & 0xFFF) {
+        Rest2b_ModelBDone = 0;
+        Rest2b_ModelBAngle = (angle + 0x40) & 0xFC0;
+    } else {
+        Rest2b_ModelBDone = 1;
+    }
+    SH_CALL(Shisu_ModelBDraw)();
+}
+
+// original 0x57F2A0: Shisu_ModelBStates[3] - model B's y up 0x200000; above
+// the elevation at the kind-2 sprite's place (<< 16, signed): on it (asked
+// again) and done 1; else done 0. Then its draw.
+extern "C" void __cdecl Shisu_ModelBDrop(void) {
+    const long kz = Field_Kind2Z;
+    const long kx = Field_Kind2X;
+    Rest2b_ModelBY = Rest2b_ModelBY + 0x200000u;
+    const long h = SH_CALL(AreaMap_Elevation)(kx, kz);
+    const auto ground = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(h))) << 16);
+    if (static_cast<std::int32_t>(Rest2b_ModelBY) > ground) {
+        const long kz2 = Field_Kind2Z;
+        const long kx2 = Field_Kind2X;
+        const long h2 = SH_CALL(AreaMap_Elevation)(kx2, kz2);
+        Rest2b_ModelBDone = 1;
+        Rest2b_ModelBY = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(h2))) << 16;
+    } else {
+        Rest2b_ModelBDone = 0;
+    }
+    SH_CALL(Shisu_ModelBDraw)();
+}
+
+// original 0x57F310: Shisu_ModelBStates[4] - model B's draw (a tail jmp).
+extern "C" void __cdecl Shisu_ModelBStill(void) { SH_CALL(Shisu_ModelBDraw)(); }
+
+// original 0x57F320: jmp through MasterFigure_States by model A's state
+// 0x9398E1, unchecked (ours aborts past its 6).
+extern "C" void __cdecl Shisu_ModelADispatch(void) {
+    Run("Shisu_ModelADispatch (0x57F320)", MasterFigure_States, MasterFigure_States_count, Rest2b_ModelAState,
+        "model A's state 0x9398E1");
+}
+
+// original 0x57F330: MasterFigure_States[1] - model A's angle +0x6C down 0x20,
+// then its draw (a tail jmp to R2C's 0x57F340).
+extern "C" void __cdecl Shisu_ModelATurn(void) {
+    Rest2c_FigureAngle = Rest2c_FigureAngle - 0x20u;
+    SH_AT(Handler, rest_2b::at::kModelADraw.v)();
+}
+
+#pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)
+
+// original 0x57F340: the record drawn by R2B's 0x57EEF0 with its colour
+// (+0x5D, +0x5E, +0x5F) faded for the draw and put back after it. The scale
+// +0x40 is the dword the scale index +0x10B names (0x663D7C, read in place).
+// With s the fade step +0x107 and t = 3 * s: the first byte s * 3 lower when
+// it is above t (signed int compare), else 0; the second s * 3 higher when
+// 0xFF less it is above t, else 0xFF; the third as the first. Each is a byte
+// operation (imul's low byte added).
+extern "C" void __cdecl MasterFigure_DrawFaded(void) {
+    const unsigned char r = Rest2c_FigureRgb, g = BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1), b = BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2);
+    Rest2c_FigureScale = LRest2c(::bof3::Img(rest_2c::at::kScaleTable.v) + 4u * Rest2c_FigureScaleIndex);
+    const unsigned char step = Rest2c_FigureFade;
+    const int t = 3 * step;
+    const auto down = static_cast<unsigned char>(step * 0xFDu);   // imul 0xFD's low byte
+    Rest2c_FigureRgb = static_cast<int>(r) > t ? static_cast<unsigned char>(r + down) : 0;
+    BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1) = 0xFF - static_cast<int>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1)) > t
+                                ? static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1) + static_cast<unsigned char>(step * 3u))
+                                : 0xFF;
+    BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) = static_cast<int>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2)) > t ? static_cast<unsigned char>(BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) + down)
+                                                                         : 0;
+    SH_AT(void (__cdecl*)(U), rest_2c::at::kFigureDraw.v)(::bof3::Img(rest_2c::at::kFigure.v));
+    Rest2c_FigureRgb = r;
+    BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 1) = g;
+    BRest2c(::bof3::Img(rest_2c::at::kFigureRgb.v) + 2) = b;
+}
+
+// original 0x57F420, MasterFigure_States[2]: the angle +0x6C, when its low
+// twelve bits are not 0, 0x40 less and kept to 0xFC0 (+6 = 0); else +6 = 1.
+// Then the faded draw (a tail jump in the original).
+extern "C" void __cdecl MasterFigure_TurnHome(void) {
+    const U angle = Rest2c_FigureAngle;
+    if ((angle & 0xFFF) != 0) {
+        Rest2c_FigureDone = 0;
+        Rest2c_FigureAngle = (angle - 0x40) & 0xFC0;
+    } else {
+        Rest2c_FigureDone = 1;
+    }
+    SH_CALL(MasterFigure_DrawFaded)();
+}
+
+// original 0x57F450, MasterFigure_States[3]: the target height is
+// AreaMap_Elevation(Field_Kind2X, Field_Kind2Z) as a short in the high half
+// plus +0xC0 * 0xA00; the height +0x3C moves by ((the elevation again, as a
+// short, + 0x200) << 16 less the target) / 16 (signed, toward 0) downward.
+// Below the target: set to it and +6 = 1; else +6 = 0. Then the faded draw.
+// The second call reads both coordinates again.
+extern "C" void __cdecl MasterFigure_Settle(void) {
+    const long first = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const U target = (static_cast<U>(static_cast<int>(static_cast<short>(first))) << 16) + Rest2c_FigureLift * 0xA00u;
+    const long second = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const U top = (static_cast<U>(static_cast<int>(static_cast<short>(second))) + 0x200u) << 16;
+    const int fall = static_cast<int>(top - target) / 16;
+    const U y = Rest2c_FigureY - static_cast<U>(fall);
+    Rest2c_FigureY = y;
+    if (static_cast<int>(y) < static_cast<int>(target)) {
+        Rest2c_FigureY = target;
+        Rest2c_FigureDone = 1;
+    } else {
+        Rest2c_FigureDone = 0;
+    }
+    SH_CALL(MasterFigure_DrawFaded)();
+}
+
+// original 0x57F4E0, MasterFigure_States[4]: the faded draw alone (a tail jump).
+extern "C" void __cdecl MasterFigure_Hold(void) { SH_CALL(MasterFigure_DrawFaded)(); }
+
+// original 0x57F4F0, MasterFigure_States[5]: the angle + 0x20 (R2B's
+// 0x57F330, entry 1, takes 0x20 off), then the faded draw.
+extern "C" void __cdecl MasterFigure_TurnOn(void) {
+    Rest2c_FigureAngle = Rest2c_FigureAngle + 0x20;
+    SH_CALL(MasterFigure_DrawFaded)();
+}
+
+#pragma clang attribute pop
+
+void Shisu_Inject() {
+    BOF3_INJECT(Shisu_ModeDispatch);
+    BOF3_INJECT(Shisu_Begin);
+    BOF3_INJECT(Shisu_OpenDispatch);
+    BOF3_INJECT(Shisu_OpenFade);
+    BOF3_INJECT(Shisu_OpenWait);
+    BOF3_INJECT(Shisu_CloseDispatch);
+    BOF3_INJECT(Shisu_CloseFade);
+    BOF3_INJECT(Shisu_CloseWait);
+    BOF3_INJECT(Shisu_Result);
+    BOF3_INJECT(Shisu_PickDispatch);
+    BOF3_INJECT(Shisu_PickSide);
+    BOF3_INJECT(Shisu_PickCounts);
+    BOF3_INJECT(Shisu_PickShow);
+    BOF3_INJECT(Shisu_ShowStart);
+    BOF3_INJECT(Shisu_ShowDrop);
+    BOF3_INJECT(Shisu_ShowLanded);
+    BOF3_INJECT(Shisu_ShowFlash);
+    BOF3_INJECT(Shisu_ShowFade);
+    BOF3_INJECT(Shisu_CountItems);
+    BOF3_INJECT(Shisu_SetupWindows);
+    BOF3_INJECT(Shisu_CloseWindows);
+    BOF3_INJECT(Shisu_ScaleIndex);
+    BOF3_INJECT(Shisu_Score);
+    BOF3_INJECT(Shisu_InitModels);
+    BOF3_INJECT(Shisu_ModelBDispatch);
+    BOF3_INJECT(Shisu_ModelBTurn);
+    BOF3_INJECT(Shisu_ModelBDraw);
+    BOF3_INJECT(Shisu_DrawModel);
+    BOF3_INJECT(Shisu_ModelBSquare);
+    BOF3_INJECT(Shisu_ModelBDrop);
+    BOF3_INJECT(Shisu_ModelBStill);
+    BOF3_INJECT(Shisu_ModelADispatch);
+    BOF3_INJECT(Shisu_ModelATurn);
+    BOF3_INJECT(MasterFigure_DrawFaded);
+    BOF3_INJECT(MasterFigure_TurnHome);
+    BOF3_INJECT(MasterFigure_Settle);
+    BOF3_INJECT(MasterFigure_Hold);
+    BOF3_INJECT(MasterFigure_TurnOn);
+}

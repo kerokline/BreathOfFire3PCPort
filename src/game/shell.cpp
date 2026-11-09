@@ -156,16 +156,6 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
 #endif
 }
 
-// original 0x5A9880; sole caller Cfg_Load. The 32 dwords of Key_TableDefault
-// to Key_Table, first to last (rep movsd; the two do not overlap) - the
-// table as the engine's rule makes it (input::DefaultKeyTable), which
-// Shell_MapDefaultKeys found equal to BOF3.exe's where there is a file.
-extern "C" void __cdecl Cfg_SetDefaultKeys(void) {
-    unsigned char rule[0x80];
-    bof3x::input::DefaultKeyTable(rule, sizeof rule);
-    std::memcpy(At(::bof3::Img(Key_Table_addr)), rule, sizeof rule);
-}
-
 // Key_TableDefault 0x66C648 written from the engine's rule at map time, so
 // that Capcom's code paths that read it (hosted, under BOF3X_ORIGINAL, and the
 // shell fuzz's clone) see it too; first compared with BOF3.exe's 0x80 bytes -
@@ -208,38 +198,6 @@ extern "C" void __cdecl Input_Latch(void) {
     Input2_Previous = was2;
     Input2_Held = now2;
     Input2_Pressed = static_cast<std::uint16_t>((was2 ^ now2) & now2);
-}
-
-// original 0x5A72C0; sole caller WinMain (ours), with CAPCOM.AVI and BOF3.EXE.
-// The local file opens: closed again, the root emptied (byte 0 of
-// File_CdRootBuf to 0, so File_Open's paths are relative), 1. Otherwise each
-// drive letter C..L in turn goes into byte 0 of the root "C:\", and on a
-// CD-ROM drive (GetDriveTypeA, read from its import slot once, before the
-// loop) the disc file is tried at root + name: found, closed, 1, the root
-// left naming the drive. None: 0, the root left at L. The path is built in a
-// 0x50-byte buffer as the original's; WinMain's two names fit it.
-extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file) {
-    void* const local = g.open(local_file, Str(::bof3::Img(kModeRb.v)));
-    if (local != nullptr) {
-        g.close(local);
-        File_CdRootBuf[0] = 0;
-        return 1;
-    }
-    std::uint32_t drive_type_word;   // the import slot is a 32-bit word (the function, or its thunk on x86-64)
-    std::memcpy(&drive_type_word, At(g.drive_type_slot), sizeof drive_type_word);
-    const auto drive_type = reinterpret_cast<DriveTypeFn>(static_cast<std::uintptr_t>(drive_type_word));
-    char path[0x50];
-    for (U i = 0; i < 10; ++i) {
-        File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);
-        if (drive_type(Str(::bof3::Img(File_CdRootBuf_addr))) != kDriveCdrom) continue;
-        g.format(path, Str(::bof3::Img(kRootFormat.v)), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
-        void* const disc = g.open(path, Str(::bof3::Img(kModeRb.v)));
-        if (disc != nullptr) {
-            g.close(disc);
-            return 1;
-        }
-    }
-    return 0;
 }
 
 // Game_Init's body. Returns where the entry below jumps: Task_SetStackBase.
@@ -323,6 +281,4 @@ void Shell_Inject() {
     BOF3_INJECT(Game_Init);
     BOF3_INJECT(Gfx_InitBufferBlock);
     BOF3_INJECT(Gfx_LinkOTags);
-    BOF3_INJECT(Disc_Probe);
-    BOF3_INJECT(Cfg_SetDefaultKeys);
 }

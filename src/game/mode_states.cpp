@@ -866,28 +866,6 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // The window cursor
 // ===========================================================================
 
-// original 0x5960D0 (no PSX twin paired; PSX 0x8015ABC8): the window kind 2's cursor, a tail
-// jump from its state 2 (0x595C44) - Menu_DrawHand at the window 0x905B84's
-// x + 4 and at its y plus the list set's first row and the row stride times
-// the cursor's row: record 0x7DEE65 of the 6-byte table 0x66AE2C (+2 the
-// first row, +4 the stride), the s8 row 0x7DEE67; the window's +4 / +6 are
-// 12.4 words.
-//
-// As the original has it: the window words are shifted as signed 16 bits
-// and the product and sums are 16-bit; the upper halves of both coordinates
-// are the registers' leftovers in the original, and Menu_DrawHand reads the
-// low words only, so ours passes them zero-extended.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(void) {
-    const unsigned set = MenuWindows_ListSet;
-    const unsigned char* const rows = mode_states::At(::bof3::Img(mode_states::at::kCursorRows) + set * 6);
-    const short row = AreaW0c_ChoiceAnswer;
-    const unsigned char* const w = reinterpret_cast<const unsigned char*>(BattleWinStates_Current);
-    const unsigned y = (mode_states::Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(mode_states::Word(w + 6)) >> 4) +
-                        mode_states::Word(rows + 2)) & 0xFFFF;
-    const unsigned x = (static_cast<unsigned>(static_cast<short>(mode_states::Word(w + 4)) >> 4) + 4) & 0xFFFF;
-    mode_states::g.draw_hand(static_cast<int>(x), static_cast<int>(y), 0);
-}
-
 // ===========================================================================
 
 void ModeStates_Inject() {
@@ -911,5 +889,4 @@ void ModeStates_Inject() {
     BOF3_INJECT(Scena01_Frame);
     BOF3_INJECT(Scena01_EnterArea);
     BOF3_INJECT(Scena01_StepHook);
-    BOF3_INJECT(Window_DrawCursor);
 }

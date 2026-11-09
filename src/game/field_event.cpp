@@ -382,27 +382,6 @@ extern "C" void __cdecl Field_MemberTimers(void) {
     if (Field_ActorStates[state->char_index * kActorBytes] & 0x20) rv::Bytes(state)[0x125] = 0x28;
 }
 
-// original 0x572590 (PSX 0x8015598C): MapView_HeightScale = 1 for the object
-// at 0x905DA0 with its +0xB bit 0, or for any other Sprite_Current when
-// Field_State +0x138 bit 0 is set; otherwise left as it is.
-extern "C" void __cdecl MapView_CheckHeightScale(void) {
-    unsigned char* const c = Sprite_Current;
-    if (c == At(::bof3::Img(FieldEvent_Object905DA0_addr))) {
-        if (c[0xB] & 1) MapView_HeightScale = 1;
-        return;
-    }
-    if (Field_State[0x138] & 1) MapView_HeightScale = 1;
-}
-
-// original 0x572570 (PSX 0x801559E4): the ground at (x, z), with the height
-// scale set for the call and cleared after it.
-extern "C" long __cdecl MapView_GroundAt(long x, long z) {
-    field_event::g.height_check();
-    const long ground = field_event::g.elevation(x, z);
-    MapView_HeightScale = 0;
-    return ground;
-}
-
 // original 0x454DC0 (PSX 0x80197718): every tint record of `sprite` released,
 // the 32 records of MoveScript_TintRecords in order, compared as whole dwords.
 extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
@@ -906,7 +885,5 @@ void FieldEvent_Inject() {
     BOF3_INJECT(PartySet_LoadSecond);
     BOF3_INJECT(PartySet_Find);
     BOF3_INJECT(PartySet_Select);
-    BOF3_INJECT(MapView_GroundAt);
-    BOF3_INJECT(MapView_CheckHeightScale);
     BOF3_INJECT(Sprite_ReleaseTint);
 }

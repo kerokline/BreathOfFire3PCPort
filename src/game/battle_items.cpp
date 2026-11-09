@@ -95,12 +95,6 @@ using namespace battle_items;
 
 namespace {
 
-// What the setters leave at +0x10 and every 0x10 after it: the float 0.01, as
-// psx_gpu.cpp's do (docs/psx-library-layer.md section 1).
-constexpr std::uint32_t kPointZeroOneBattleItems = 0x3C23D70Au;
-
-void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v); }
-
 // The sparkle being updated, and the battle actor the effect plays on - each
 // read from its cell every time the original reads it.
 unsigned char* CurBattleItems() { return battle_items::At(BattleItems_SparkleCurrent); }   // the slot's 32-bit word, a place
@@ -145,46 +139,10 @@ std::uint32_t AnimationInPointer(const unsigned char* actor, unsigned offset) {
     return v;
 }
 
-// A method of the IDirectSoundBuffer the SND stream holds, by the 32-bit
-// vtable offset: entry offset / 4, as sound_callees.h's Method<> reads it,
-// so the index is right where an entry is 8 bytes (an object of ours on
-// x86-64; docs/x64-build-design.md 6.1).
-template <typename F> F MethodBattleItems(void* object, unsigned offset) {
-    void* const* vtable;
-    std::memcpy(&vtable, object, sizeof vtable);
-    return reinterpret_cast<F>(vtable[offset / 4]);
-}
-::bof3::Slot32<void>& StreamBuffer() { return SndStream_Buffer; }   // the 4-byte slot, read and written as one
-constexpr long kBufferLostBattleItems = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
-
 }  // namespace
 
 // ===========================================================================
 // The PSX primitive setters (libgpu's, on the port's wider primitives)
-
-// original 0x5A75F0 (PSX SetPolyG3 0x8017B2F4): code 0x30, 0.01 per vertex.
-extern "C" void __cdecl Gpu_SetPolyG3(unsigned char* prim) {
-    prim[7] = 0x30;
-    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOneBattleItems);
-}
-// original 0x5A76B0 (PSX SetLineG2 0x8017B40C): code 0x50, two vertices.
-extern "C" void __cdecl Gpu_SetLineG2(unsigned char* prim) {
-    prim[7] = 0x50;
-    PutDword(prim + 0x10, kPointZeroOneBattleItems);
-    PutDword(prim + 0x20, kPointZeroOneBattleItems);
-}
-// original 0x5A76D0 (PSX SetLineG3 0x8017B440): code 0x58, three vertices.
-// The PSX's also stores the polyline's terminator 0x55555555; the port's
-// primitive has none.
-extern "C" void __cdecl Gpu_SetLineG3(unsigned char* prim) {
-    prim[7] = 0x58;
-    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOneBattleItems);
-}
-// original 0x5A7750 (PSX SetTile1 0x8017B3A8): code 0x68, one vertex.
-extern "C" void __cdecl Gpu_SetTile1(unsigned char* prim) {
-    prim[7] = 0x68;
-    PutDword(prim + 0x10, kPointZeroOneBattleItems);
-}
 
 // ===========================================================================
 // The Healing Herb's sparkles (MAGIC070.EMI)
@@ -753,55 +711,10 @@ extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
 // ===========================================================================
 // The SND stream
 
-// original 0x5A7140: nothing without Snd_Device. Else the playing stream
-// stopped, a buffer made of the WAV image and kept at 0x7DE3C8,
-// SetCurrentPosition(0) and Play; a lost buffer (DSERR_BUFFERLOST) gets the
-// wave's data written again (SndBuf_Write restores it) and a second Play.
-extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
-    if (sound::MusicLogOn())  // the voice stream's line in the music log (BOF3X_MUSIC_LOG=1; sound.cpp)
-        bof3::Log("music_log   f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-                  __builtin_return_address(0));
-    if (Snd_Device == nullptr) return;
-    battle_items::g.stream_stop();
-    void* const buffer = battle_items::g.create_from_wave(wave);
-    StreamBuffer() = buffer;
-    if (buffer == nullptr) return;
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
-    void* b = StreamBuffer();
-    if (MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLostBattleItems)
-        return;
-    const unsigned char* data = nullptr;
-    const unsigned size = battle_items::g.find_data(wave, &data);
-    battle_items::g.buffer_write(StreamBuffer(), data, 0, size);
-    b = StreamBuffer();
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
-}
-
-// original 0x5A71C0: the stream's buffer, if any, stopped when GetStatus says
-// it plays (bit 0), released, and forgotten. The original's status word is
-// an uninitialised local that GetStatus fills; ours starts at 0.
-extern "C" void __cdecl SndStream_Stop(void) {
-    void* b = StreamBuffer();
-    if (b == nullptr) return;
-    unsigned long status = 0;
-    MethodBattleItems<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
-    if (status & 1) {
-        b = StreamBuffer();
-        MethodBattleItems<long (__stdcall*)(void*)>(b, 0x48)(b);
-    }
-    b = StreamBuffer();
-    MethodBattleItems<unsigned long (__stdcall*)(void*)>(b, 8)(b);
-    StreamBuffer() = nullptr;
-}
-
 // ===========================================================================
 
 void BattleItems_Inject() {
     if (bof3::WantsShadow("battle_items")) battle_items::SelfTest();
-    BOF3_INJECT(Gpu_SetPolyG3);
-    BOF3_INJECT(Gpu_SetLineG2);
-    BOF3_INJECT(Gpu_SetLineG3);
-    BOF3_INJECT(Gpu_SetTile1);
     BOF3_INJECT(Sparkle_Dispatch);
     BOF3_INJECT(Sparkle_Launch);
     BOF3_INJECT(Sparkle_Rise);
@@ -820,6 +733,4 @@ void BattleItems_Inject() {
     BOF3_INJECT(BattleActor_Flash);
     BOF3_INJECT(BattleActor_PlaySound);
     BOF3_INJECT(BattleActor_FxSize);
-    BOF3_INJECT(SndStream_Play);
-    BOF3_INJECT(SndStream_Stop);
 }

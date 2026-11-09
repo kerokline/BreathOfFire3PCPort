@@ -45,43 +45,6 @@ void Draw();
 
 }  // namespace
 
-// original 0x5A6780: the cell table is empty again. Once a logic frame.
-extern "C" void __cdecl SpriteCell_Reset() { SpriteCell_Count = 0; }
-
-// original 0x5A6790: one cell record, at SpriteCell_Table[SpriteCell_Count],
-// and its index. Byte +3 packs the size as ((h & 0xF8) << 1 | w >> 3) in a
-// byte - so a height of 128 or more loses its top bit, as the original has it.
-// No bound on the count, as the original has it; SpriteCell_Reset is the only
-// thing that lowers it.
-extern "C" unsigned long __cdecl SpriteCell_Add(unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v,
-                                                unsigned w, unsigned h) {
-    const unsigned long index = SpriteCell_Count;
-    unsigned char* cell = SpriteCell_Table + index * kCellBytes;
-    Put<std::uint16_t>(cell, 0, static_cast<std::uint16_t>(x));
-    cell[2] = static_cast<unsigned char>(y);
-    cell[3] = static_cast<unsigned char>(((h & 0xF8) << 1) | ((w & 0xFF) >> 3));
-    Put<std::uint16_t>(cell, 4, static_cast<std::uint16_t>(flags));
-    cell[6] = static_cast<unsigned char>(u);
-    cell[7] = static_cast<unsigned char>(v);
-    SpriteCell_Count = index + 1;
-    return index;
-}
-
-// original 0x593860: the current object's CLUT word, to *out. Byte +0x27 is
-// its palette and byte +0x28 how the palettes share the CLUT rows: 2^s to a
-// row, s = 4, 0, 3, 2 for +0x28 = 0..3 and 1 for anything above - so column
-// (palette mod 2^s) * 256 / 2^s texels, row 0x1E0 + palette / 2^s, or 0x1F0
-// + with bit 2 of +0x24. (The original is a four-way jump table.)
-extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
-    const unsigned char* object = Sprite_Current;
-    static const unsigned char kShift[4] = {4, 0, 3, 2};
-    const unsigned row = ((object[0x24] & 4u) | 0x78u) << 2;
-    const unsigned shift = object[0x28] < 4 ? kShift[object[0x28]] : 1u;
-    const unsigned palette = object[0x27];
-    const unsigned column = ((palette & ((1u << shift) - 1)) << (8 - shift)) >> 4;
-    *out = static_cast<unsigned short>(((row + (palette >> shift)) << 6) | (column & 0x3F));
-}
-
 // original 0x5935B0: the current object, drawn. In order:
 //   - bit 6 of byte 0 set: nothing;
 //   - bit 7 of +0x24 clear and +0x48 == 1: the scale at +0x40 and +0x44 is
@@ -99,8 +62,6 @@ extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
 //     ordering-table slot +0x29, 0x20 bytes.
 // The scale goes through x87 in the original as an integer times 2^-16: the
 // product is exact at any precision, so one rounding to float either way.
-namespace {
-}  // namespace
 // DIV-0142's capture log lines so far (the first 64 are logged); the
 // self-test's captures are not counted (reset after CaptureSelfTest).
 namespace sprite_draw { unsigned g_capture_logged = 0; }
@@ -129,9 +90,6 @@ bool Cull(unsigned char* object, short x, short y, int draw, int flag) {
 }
 }  // namespace
 namespace sprite_draw { int g_draw_columns = -1, g_flag_columns = -1; }   // the self-test's: -1 is Sprite_Draw's own
-namespace {
-}  // namespace
-
 std::uint32_t g_sprite_capture = 0;   // DIV-0142; 1 through PatchBytes("SpriteCapture") in SpriteDraw_Inject
 
 namespace {
@@ -376,98 +334,13 @@ void Draw() {
 // joins with the tail it links from. Ours is what the game keeps.
 
 using DrawFn = void (__cdecl*)();
-}  namespace sprite_draw { DrawFn g_draw_clone = nullptr; }  namespace {
-struct {
-    unsigned calls, drawn, cells, mismatches;
-} g_counts;
-
-struct LiveState {
-    unsigned char object[0x80];
-    unsigned char prim[kPrimBytes];
-    unsigned char* packet_next;
-    unsigned long count;
-    unsigned char cells[256 * kCellBytes];
-    unsigned long slot_word, tail_word;
-};
-
-struct LivePlace {
-    unsigned char* object;
-    unsigned char* prim;
-    unsigned char* cells;
-    unsigned long* slot;
-    unsigned long* tail;
-};
-
-void LiveCapture(LiveState& s, const LivePlace& at) {
-    std::memcpy(s.object, at.object, sizeof s.object);
-    std::memcpy(s.prim, at.prim, sizeof s.prim);
-    s.packet_next = Gfx_PacketNext;
-    s.count = SpriteCell_Count;
-    std::memcpy(s.cells, at.cells, sizeof s.cells);
-    s.slot_word = *at.slot;
-    s.tail_word = at.tail ? *at.tail : 0;
-}
-void LiveApply(const LiveState& s, const LivePlace& at) {
-    std::memcpy(at.object, s.object, sizeof s.object);
-    std::memcpy(at.prim, s.prim, sizeof s.prim);
-    Gfx_PacketNext = s.packet_next;
-    SpriteCell_Count = s.count;
-    std::memcpy(at.cells, s.cells, sizeof s.cells);
-    *at.slot = s.slot_word;
-    if (at.tail) *at.tail = s.tail_word;
-}
-
-void LiveDraw() {
-    static LiveState input, theirs, ours;
-    unsigned char* object = Sprite_Current;
-    if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142's capture is not Capcom's: not compared
-        Draw();
-        return;
-    }
-    LivePlace at;
-    at.object = object;
-    at.prim = Gfx_PacketNext;
-    at.cells = SpriteCell_Table + SpriteCell_Count * kCellBytes;
-    at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
-    at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
-    LiveCapture(input, at);
-    sprite_draw::g_draw_clone();
-    LiveCapture(theirs, at);
-    LiveApply(input, at);
-    Draw();
-    LiveCapture(ours, at);
-    ++g_counts.calls;
-    if (ours.count != input.count) {
-        ++g_counts.drawn;
-        g_counts.cells += ours.count - input.count;
-    }
-    if (std::memcmp(&theirs, &ours, sizeof ours) != 0 && ++g_counts.mismatches <= 8) {
-        const auto* a = reinterpret_cast<const unsigned char*>(&theirs);
-        const auto* b = reinterpret_cast<const unsigned char*>(&ours);
-        unsigned first = 0;
-        while (a[first] == b[first]) ++first;
-        bof3::Log("shadow      Sprite_Draw live MISMATCH: call %u, first difference at state +0x%X (%02X / %02X)",
-                  g_counts.calls, first, a[first], b[first]);
-    }
-    if (g_counts.calls == 1 || g_counts.calls % 1024 == 0)
-        bof3::Log("shadow      Sprite_Draw live: %u calls, %u drawn with %u cells, %u MISMATCHES", g_counts.calls,
-                  g_counts.drawn, g_counts.cells, g_counts.mismatches);
-}
-
-}  // namespace
-
-void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
+}  namespace sprite_draw { DrawFn g_draw_clone = nullptr; }  void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
     const int x0 = Clamp(x, 0x400), x1 = Clamp(x + w, 0x400), y0 = Clamp(y, 0x200), y1 = Clamp(y + h, 0x200);
     if (x1 <= x0 || y1 <= y0) return;
     for (int r = y0; r < y1; ++r) std::memset(&Gfx_VramShadow[(r << 10) + x0], 0, static_cast<size_t>(x1 - x0) * 2);
     const short rect[4] = {static_cast<short>(x0), static_cast<short>(y0), static_cast<short>(x1 - x0),
                            static_cast<short>(y1 - y0)};
     Gfx_InvalidateTextures(rect, 0);
-}
-
-extern "C" void __cdecl Sprite_Draw() {
-    if (sprite_draw::g_draw_clone) LiveDraw();
-    else Draw();
 }
 
 namespace {
@@ -910,8 +783,4 @@ void SpriteDraw_Inject() {
         bof3::Log("DIV-0142    a sprite with +0x24 bit 3 is drawn into VRAM (0x340, 0x100) as on the PlayStation (on "
                   "unless the line above says OFF)");
     }
-    BOF3_INJECT(SpriteCell_Reset);
-    BOF3_INJECT(SpriteCell_Add);
-    BOF3_INJECT(Sprite_ClutWord);
-    BOF3_INJECT(Sprite_Draw);
 }

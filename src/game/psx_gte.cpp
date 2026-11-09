@@ -97,26 +97,6 @@ void SelfTest(Entry* entries, unsigned n) {
 
 }  // namespace
 
-// original 0x5A7BF0. out = (matrix . vector) >> 12: the rotation part of a PSX
-// MATRIX, nine s16 at 4096 to the unit, times an SVECTOR. The most-called
-// function of the attract run, 2,625,115 times.
-//
-// As the original has it: sums in 32 bits, wrapping; arithmetic shifts;
-// everything read before anything is written, so out may be the vector.
-extern "C" void __cdecl Gte_ApplyMatrix(const short* matrix, const short* vector, long* out) {
-    const std::int32_t x = vector[0], y = vector[1], z = vector[2];
-    std::int32_t row[3];
-    for (int r = 0; r < 3; ++r) {
-        const std::uint32_t sum = static_cast<std::uint32_t>(matrix[3 * r] * x) +
-                                  static_cast<std::uint32_t>(matrix[3 * r + 1] * y) +
-                                  static_cast<std::uint32_t>(matrix[3 * r + 2] * z);
-        row[r] = static_cast<std::int32_t>(sum) >> 12;
-    }
-    out[0] = row[0];
-    out[1] = row[1];
-    out[2] = row[2];
-}
-
 namespace psx_gte {
 // DIV-0178 (docs/issue-121-lift-stall.md 8): 1 through
 // PatchBytes("ApplyMatrixLVExact") in PsxGte_Inject, after the fuzz, which
@@ -124,138 +104,6 @@ namespace psx_gte {
 // set, its products are exact, as the PlayStation's libgte computes them.
 std::uint32_t g_lv_exact = 0;
 }  // namespace psx_gte
-
-// original 0x5A7CF0: the same with a VECTOR in - 32-bit components, so here the
-// products wrap too. libgte ApplyMatrixLV.
-//
-// DIV-0178: the PlayStation's ApplyMatrixLV (SLPS 0x80179390, Psy-Q
-// MTX_004.OBJ) splits each component into v >> 15 and v & 0x7FFF, runs the
-// high parts through MVMVA unshifted and the low parts shifted by 12, and
-// sums them (high << 3): the exact (m . v) >> 12 of a 64-bit product. The
-// port multiplies in 32 bits, so a component past 8 units (0x80000) against
-// a matrix entry of 0x1000 wraps negative - area 99's console flash, whose
-// arms are 15 units long, folds over the horizon at the frame a product
-// crosses 2^31 (issue #121's second report, known-defects D358). With the
-// switch armed the product is 64-bit; the shift and the stores are the same.
-extern "C" void __cdecl Gte_ApplyMatrixLV(const short* matrix, const long* vector, long* out) {
-    if (psx_gte::g_lv_exact) {
-        const std::int64_t x = vector[0], y = vector[1], z = vector[2];
-        std::int32_t row[3];
-        for (int r = 0; r < 3; ++r) {
-            const std::int64_t sum = matrix[3 * r] * x + matrix[3 * r + 1] * y + matrix[3 * r + 2] * z;
-            row[r] = static_cast<std::int32_t>(sum >> 12);
-        }
-        out[0] = row[0];
-        out[1] = row[1];
-        out[2] = row[2];
-        return;
-    }
-    const std::uint32_t x = static_cast<std::uint32_t>(vector[0]), y = static_cast<std::uint32_t>(vector[1]),
-                        z = static_cast<std::uint32_t>(vector[2]);
-    std::int32_t row[3];
-    for (int r = 0; r < 3; ++r) {
-        const std::uint32_t sum = static_cast<std::uint32_t>(static_cast<std::int32_t>(matrix[3 * r])) * x +
-                                  static_cast<std::uint32_t>(static_cast<std::int32_t>(matrix[3 * r + 1])) * y +
-                                  static_cast<std::uint32_t>(static_cast<std::int32_t>(matrix[3 * r + 2])) * z;
-        row[r] = static_cast<std::int32_t>(sum) >> 12;
-    }
-    out[0] = row[0];
-    out[1] = row[1];
-    out[2] = row[2];
-}
-
-// original 0x5A81B0: libgte TransposeMatrix, one s16 at a time, each read and
-// then stored, in this order - so that `out == in` gives what the original
-// gives, which is not the transpose.
-extern "C" void __cdecl Gte_TransposeMatrix(const short* in, short* out) {
-    static const unsigned char kFrom[9] = {0, 3, 6, 1, 4, 7, 2, 5, 8};
-    for (unsigned i = 0; i < 9; ++i) {
-        const short v = in[kFrom[i]];
-        out[i] = v;
-    }
-}
-
-// original 0x5A8200: the current matrix applied to an SVECTOR, rotation and
-// then translation. libgte RotTrans, without its flag argument.
-extern "C" void __cdecl Gte_RotTrans(const short* vector, long* out) {
-    Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix), vector, out);
-    const long rotated[3] = {out[0], out[1], out[2]};
-    out[0] = rotated[0] + static_cast<long>(Gte_Matrix[5]);
-    out[1] = rotated[1] + static_cast<long>(Gte_Matrix[6]);
-    out[2] = rotated[2] + static_cast<long>(Gte_Matrix[7]);
-}
-
-// originals 0x5A8DE0, 0x5A8E00, 0x5A8DA0: libgte SetRotMatrix and
-// SetTransMatrix - the two halves of Gte_Matrix from a PSX MATRIX - and the
-// same for the second matrix, whole.
-extern "C" void __cdecl Gte_SetRotMatrix(const unsigned long* matrix) { std::memmove(Gte_Matrix, matrix, 5 * 4); }
-extern "C" void __cdecl Gte_SetTransMatrix(const unsigned long* matrix) {
-    Gte_Matrix[5] = matrix[5];
-    Gte_Matrix[6] = matrix[6];
-    Gte_Matrix[7] = matrix[7];
-}
-extern "C" void __cdecl Gte_SetMatrix2(const unsigned long* matrix) { std::memmove(Gte_Matrix2, matrix, 8 * 4); }
-
-// original 0x5A8100: libgte TransMatrix - a MATRIX's translation from a VECTOR.
-extern "C" void __cdecl Gte_TransMatrix(unsigned long* matrix, const unsigned long* vector) {
-    matrix[5] = vector[0];
-    matrix[6] = vector[1];
-    matrix[7] = vector[2];
-}
-
-// originals 0x5A7B90, 0x5A7BC0: libgte PushMatrix and PopMatrix, with room for
-// twenty where the PSX had one. A push onto a full stack and a pop from an
-// empty one do nothing, silently.
-extern "C" void __cdecl Gte_PushMatrix(void) {
-    const long depth = Gte_MatrixDepth;
-    if (depth >= kStackDepth) return;
-    // A negative depth passes the signed test and indexes below the stack, as
-    // the original's does.
-    std::memcpy(reinterpret_cast<unsigned char*>(Gte_MatrixStack) + static_cast<std::uint32_t>(depth) * 0x20u,
-                Gte_Matrix, 0x20);
-    Gte_MatrixDepth = depth + 1;
-}
-extern "C" void __cdecl Gte_PopMatrix(void) {
-    long depth = Gte_MatrixDepth;
-    if (depth <= 0) return;
-    Gte_MatrixDepth = --depth;
-    std::memcpy(Gte_Matrix, reinterpret_cast<unsigned char*>(Gte_MatrixStack) + static_cast<std::uint32_t>(depth) * 0x20u,
-                0x20);
-}
-
-// originals 0x5A8E30, 0x5A8E50. One vertex into the middle slot; or three,
-// the first into the middle slot, the second into the first, the third into
-// the last.
-extern "C" void __cdecl Gte_LoadVertex(const unsigned long* vertex) {
-    Gte_Vertices[2] = vertex[0];
-    Gte_Vertices[3] = vertex[1];
-}
-extern "C" void __cdecl Gte_LoadVertices3(const unsigned long* vertices) {
-    Gte_Vertices[2] = vertices[0];
-    Gte_Vertices[3] = vertices[1];
-    Gte_Vertices[0] = vertices[2];
-    Gte_Vertices[1] = vertices[3];
-    Gte_Vertices[4] = vertices[4];
-    Gte_Vertices[5] = vertices[5];
-}
-
-// originals 0x5A90B0, 0x5A90D0: the newest screen point; or all three, oldest
-// first, a dword at a time in this order - which matters if the outs overlap.
-extern "C" void __cdecl Gte_StoreScreenXY(unsigned long* out) {
-    out[0] = Gte_ScreenXY[4];
-    out[1] = Gte_ScreenXY[5];
-}
-extern "C" void __cdecl Gte_StoreScreenXY3(unsigned long* out0, unsigned long* out1, unsigned long* out2) {
-    out0[0] = Gte_ScreenXY[0];
-    out0[1] = Gte_ScreenXY[1];
-    out1[0] = Gte_ScreenXY[2];
-    out1[1] = Gte_ScreenXY[3];
-    out2[0] = Gte_ScreenXY[4];
-    out2[1] = Gte_ScreenXY[5];
-}
-
-// original 0x5A94B0.
-extern "C" void __cdecl Gte_StoreDepthQuarter(long* out) { *out = Gte_Depth >> 2; }
 
 void PsxGte_Inject() {
     // Every one: no calls, jumps internal or none (disasm 2026-09-20).
@@ -287,19 +135,4 @@ void PsxGte_Inject() {
                          Low32(&psx_gte::g_lv_exact), was, is, 4);
         bof3::Log("DIV-0178    Gte_ApplyMatrixLV's products are exact, as the PlayStation's libgte computes them (on unless the line above says OFF)");
     }
-    BOF3_INJECT(Gte_ApplyMatrix);
-    BOF3_INJECT(Gte_SetRotMatrix);
-    BOF3_INJECT(Gte_SetTransMatrix);
-    BOF3_INJECT(Gte_SetMatrix2);
-    BOF3_INJECT(Gte_TransMatrix);
-    BOF3_INJECT(Gte_PushMatrix);
-    BOF3_INJECT(Gte_PopMatrix);
-    BOF3_INJECT(Gte_LoadVertex);
-    BOF3_INJECT(Gte_LoadVertices3);
-    BOF3_INJECT(Gte_StoreScreenXY);
-    BOF3_INJECT(Gte_StoreScreenXY3);
-    BOF3_INJECT(Gte_StoreDepthQuarter);
-    BOF3_INJECT(Gte_ApplyMatrixLV);
-    BOF3_INJECT(Gte_TransposeMatrix);
-    BOF3_INJECT(Gte_RotTrans);
 }

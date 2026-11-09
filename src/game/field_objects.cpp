@@ -225,35 +225,6 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
     rv::Current<records::SpriteObject>()->direction &= 7;
 }
 
-// original 0x578EB0: an attachment's offset (PSX FUN_801AD1DC) - vector
-// `index` of the area descriptor's +0x0C table, turned by Sprite_Current's
-// angles through the GTE; out = (x << 9, y << 9, -z * 2).
-extern "C" void __cdecl MoveCmd_AttachOffset(long* out, unsigned char index) {
-    field_objects::g.push_matrix();
-    const unsigned char* const sprite = Sprite_Current;
-    short vector[4];
-    vector[0] = static_cast<short>(Word(sprite + 0x64));
-    vector[1] = static_cast<short>(Word(sprite + 0x68));
-    vector[2] = static_cast<short>(Word(sprite + 0x6C));
-    unsigned long matrix[8];
-    field_objects::g.rot_matrix(vector, reinterpret_cast<short*>(matrix));
-    const unsigned long zero[3] = {0, 0, 0};
-    field_objects::g.trans_matrix(matrix, zero);
-    field_objects::g.set_rot(matrix);
-    field_objects::g.set_trans(matrix);
-    const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    const short* const vectors = reinterpret_cast<const short*>(At(static_cast<std::uint32_t>(Long(descriptor + 0xC))));   // a 32-bit word
-    vector[0] = vectors[index * 3u];
-    vector[1] = vectors[index * 3u + 1];
-    vector[2] = vectors[index * 3u + 2];
-    long turned[3];
-    field_objects::g.rot_trans(vector, turned);
-    out[0] = static_cast<long>(static_cast<std::uint32_t>(turned[0]) << 9);
-    out[1] = static_cast<long>(static_cast<std::uint32_t>(turned[1]) << 9);
-    out[2] = static_cast<long>((0u - static_cast<std::uint32_t>(turned[2])) << 1);
-    field_objects::g.pop_matrix();
-}
-
 namespace {
 
 // --- BOF3X_SHADOW=field_objects: a differential fuzz, once at start-up ------
@@ -562,5 +533,4 @@ void FieldObjects_Inject() {
     BOF3_INJECT(Party_ApplyRecord);
     BOF3_INJECT(Field_ObjectSettle);
     BOF3_INJECT(Field_ObjectFollow);
-    BOF3_INJECT(MoveCmd_AttachOffset);
 }

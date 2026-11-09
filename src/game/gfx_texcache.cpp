@@ -127,46 +127,6 @@ TexCacheEntry* Table() { return reinterpret_cast<TexCacheEntry*>(Gfx_TexCache); 
 
 using Original = void (__cdecl*)(const short*, int);
 }  namespace gfx_texcache { Original g_original_clone = nullptr; }  namespace {
-TexCacheEntry g_plan[kEntries];
-
-struct {
-    unsigned calls, mode0, mode1, mismatches;
-    unsigned dropped, closed_up, staled, would_release;
-} g_shadow;
-
-void ShadowReport(const char* why) {
-    bof3::Log("shadow      Gfx_InvalidateTextures %s: %u calls (%u mode 0, %u mode non-zero), "
-              "%u MISMATCHES; ours dropped %u, closed up %u, staled %u, would release %u",
-              why, g_shadow.calls, g_shadow.mode0, g_shadow.mode1, g_shadow.mismatches,
-              g_shadow.dropped, g_shadow.closed_up, g_shadow.staled, g_shadow.would_release);
-}
-
-void ShadowCall(const short* rect, int mode) {
-    const short r[4] = {rect[0], rect[1], rect[2], rect[3]};
-    std::memcpy(g_plan, Table(), sizeof g_plan);
-    unsigned releases = 0;
-    const Tally t = Invalidate(g_plan, r, mode, [&](ComObject*) { ++releases; });
-
-    gfx_texcache::g_original_clone(rect, mode);
-
-    ++g_shadow.calls;
-    ++(mode == 0 ? g_shadow.mode0 : g_shadow.mode1);
-    g_shadow.dropped += t.dropped;
-    g_shadow.closed_up += t.closed_up;
-    g_shadow.staled += t.staled;
-    g_shadow.would_release += releases;
-    if (std::memcmp(g_plan, Table(), sizeof g_plan) != 0) {
-        if (++g_shadow.mismatches <= 8) {
-            int first = 0;
-            while (std::memcmp(&g_plan[first], &Table()[first], sizeof(TexCacheEntry)) == 0) ++first;
-            bof3::Log("shadow      Gfx_InvalidateTextures MISMATCH call %u: rect {%d,%d,%d,%d} mode %d, "
-                      "first differing entry %d (page %d slot %d): ours state %u, original state %u",
-                      g_shadow.calls, r[0], r[1], r[2], r[3], mode, first, first / kPerPage,
-                      first % kPerPage, g_plan[first].state, Table()[first].state);
-        }
-    }
-    if (g_shadow.calls == 1 || g_shadow.calls % 256 == 0) ShadowReport("so far");
-}
 
 // --- the same switch, once at start-up: a differential fuzz ---------------------
 // The attract sequence only ever calls with mode 0 and never makes the second
@@ -328,53 +288,6 @@ void SelfTestFind(FindFn theirs) {
 
 }  // namespace
 
-// original 0x5A0830. The slot, 0..31, of the page's entry for this texture, or
-// 32 if it has none. A texture is identified by Gfx_TexCacheKey - eight bytes
-// the draw sets first - and, unless it is 15-bit, by its CLUT id.
-//
-// It is also where a palette change reaches a texture: a hit whose CLUT row
-// has been converted again since the entry was built (Gfx_ClutRows generation)
-// is marked stale on the way out. Not for 15-bit textures, which have no CLUT.
-//
-// As the original has it: only bit 1 of mode is looked at, so 3 is 15-bit too;
-// 4-bit and 8-bit entries are not told apart; the CLUT id is compared as 32
-// bits against a 16-bit field, so an id with high bits set never hits; and
-// clut >> 6 indexes Gfx_ClutRows unchecked, up to row 1,023 of 512.
-extern "C" int __cdecl Gfx_TexCacheFind(int page, int clut, int mode) {
-    TexCacheEntry* own = Table() + page * kPerPage;
-    for (int i = 0; i < kPerPage; ++i) {
-        TexCacheEntry& e = own[i];
-        if (e.state == 0) return kPerPage;
-        if (std::memcmp(e.key, Gfx_TexCacheKey, sizeof e.key) != 0) continue;
-        if (mode & 2) {
-            if (e.mode == 2) return i;
-            continue;
-        }
-        if (static_cast<int>(e.clut) != clut) continue;
-        struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
-        if (e.generation != reinterpret_cast<const Row*>(Gfx_ClutRows)[clut >> 6].generation) e.state = 2;
-        return i;
-    }
-    return kPerPage;
-}
-
-// original 0x59E700. Throws away (mode 0) or marks stale (mode non-zero) every
-// cached texture built from the VRAM cells under rect: four s16, x y w h.
-// Callers: Gfx_LoadImage and 0x59E6EA (the end of a row-by-row fill of the
-// shadow) with mode 0; 0x59EA5C, after 0x5AA5D6 has been given the shadow and a
-// rect, with mode 1.
-extern "C" void __cdecl Gfx_InvalidateTextures(const short* rect, int mode) {
-    // DIV-0125 (render/fb_grab.h), not in the original: every write of
-    // the VRAM shadow passes here, and ends any frame-buffer grab it covers.
-    render::ShadowWritten(rect[0], rect[1], rect[2], rect[3]);
-    D3dDraw_CellsShadowWritten(rect[0], rect[1], rect[2], rect[3]);   // DIV-0181
-    if (gfx_texcache::g_original_clone) {
-        ShadowCall(rect, mode);
-        return;
-    }
-    Invalidate(Table(), rect, mode, [](ComObject* o) { o->vtbl->release(o); });
-}
-
 void GfxTexCache_Inject() {
     // 0x59E700..0x59E925: every jump stays inside, and its only calls are
     // through the import slot 0x5C4168 and through vtables (disasm 2026-09-19).
@@ -382,12 +295,10 @@ void GfxTexCache_Inject() {
         gfx_texcache::g_original_clone = reinterpret_cast<Original>(bof3::CloneOriginal(
             "Gfx_InvalidateTextures", bof3::addr::Gfx_InvalidateTextures, 0x226));
     if (gfx_texcache::g_original_clone) SelfTest();
-    BOF3_INJECT(Gfx_InvalidateTextures);
 
     // 0x5A0830..0x5A0901: every jump stays inside, and it calls nothing
     // (disasm 2026-09-19).
     if (bof3::WantsShadow("Gfx_TexCacheFind"))
         SelfTestFind(reinterpret_cast<FindFn>(
             bof3::CloneOriginal("Gfx_TexCacheFind", bof3::addr::Gfx_TexCacheFind, 0xD2)));
-    BOF3_INJECT(Gfx_TexCacheFind);
 }

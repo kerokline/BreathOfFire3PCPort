@@ -61,20 +61,6 @@ std::int32_t ReachOf(const unsigned char* record) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reach8) << 15);
 }
 
-bool Qualifies(const unsigned char* object, const unsigned char* current) {
-    if (!(object[kFlags] & 1)) return false;
-    if (!(object[kFlags24] & 0x40)) return false;
-    if (object[kType] != 0x0A) return false;
-    if (object == current) return false;
-    const auto* record = GetSpriteFind<const unsigned char*>(object, kRecord);
-    if (record[3] & 0x10) return false;
-    const std::int32_t reach = ReachOf(record);
-    if (WrappingDistance(GetSpriteFind<std::int32_t>(current, kX), GetSpriteFind<std::int32_t>(object, kX)) > reach) return false;
-    if (WrappingDistance(GetSpriteFind<std::int32_t>(current, kY), GetSpriteFind<std::int32_t>(object, kY)) > reach) return false;
-    const int dz = GetSpriteFind<std::int16_t>(current, kZ) - GetSpriteFind<std::int16_t>(object, kZ);
-    return (dz < 0 ? -dz : dz) <= 0x300;
-}
-
 // --- BOF3X_SHADOW=sprite_find: a differential fuzz, once at start-up -----------
 // No calls, every jump internal: a byte-copy runs in place against the same
 // arrays. The fuzz owns both arrays and Sprite_Current for its duration and
@@ -330,24 +316,6 @@ void SelfTestInheritDrawKey(InheritFn theirs) {
 
 }  // namespace
 
-// original 0x589660. The number of the first sprite object of type 0x0A, other
-// than the current one, that has the current one within its reach - the reach
-// is the found object's, from the record at its +0x54 - or 0xFF. Objects are
-// numbered 0..29 in Sprite_Objects and 30..33 in Sprite_ObjectsExtra, the
-// numbering 0x57C0A0 uses too.
-//
-// As the original has it: x and y differences are 32-bit and wrap, and an
-// absolute difference of 0x80000000 counts as within any reach; z is 16-bit
-// and its limit is a fixed 0x300.
-extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
-    const unsigned char* const current = Sprite_Current;
-    for (unsigned i = 0; i < kObjectsSpriteFind; ++i)
-        if (Qualifies(rv::Bytes(&Sprite_Objects[i]), current)) return static_cast<unsigned char>(i);
-    for (unsigned i = 0; i < kExtraSpriteFind; ++i)
-        if (Qualifies(rv::Bytes(&Sprite_ObjectsExtra[i]), current)) return static_cast<unsigned char>(i + kObjectsSpriteFind);
-    return 0xFF;
-}
-
 // original 0x531C70. Whether the point (x, y, z) is within the object's reach -
 // byte +0x70, widened by `margin` and 2 - of where the object is about to be:
 // its position less dword +0xC (and +0x10) times byte +9.
@@ -402,33 +370,6 @@ void LiveReport(const char* name, const LiveCounts& c) {
 
 }  // namespace
 
-extern "C" unsigned char __cdecl Sprite_ObjectByHandle(unsigned char handle) {
-    const unsigned char ours = ObjectByHandle(handle);
-    if (sprite_find::g_handle_live) {
-        const unsigned char theirs = sprite_find::g_handle_live(handle);
-        LiveCounts& c = g_live_handle;
-        ++c.calls;
-        if (handle & 0x80) ++c.bit7;
-        if (theirs != ours && ++c.mismatches <= 8)
-            bof3::Log("shadow      Sprite_ObjectByHandle live MISMATCH: call %u, handle %02X: %u / %u", c.calls, handle,
-                      theirs, ours);
-        LiveReport("Sprite_ObjectByHandle", c);
-    }
-    return ours;
-}
-
-namespace {
-
-// An object number as Sprite_InheritDrawKey turns it into an address: signed,
-// 30 and above into Sprite_ObjectsExtra, and no bound on either side.
-const unsigned char* ObjectByNumber(unsigned char number) {
-    const int n = static_cast<signed char>(number);
-    return n >= static_cast<int>(kObjectsSpriteFind) ? rv::Bytes(Sprite_ObjectsExtra) + (n - static_cast<int>(kObjectsSpriteFind)) * static_cast<int>(kObjectSize)
-                                           : rv::Bytes(Sprite_Objects) + n * static_cast<int>(kObjectSize);
-}
-
-}  // namespace
-
 // original 0x589770. The current object takes the draw key (+0x32: layer,
 // then order within it) of the object it is attached to - bit 0x20 of +0x24,
 // the handle at +0x18 - or else of the first type-0x0A object it is near
@@ -438,40 +379,6 @@ const unsigned char* ObjectByNumber(unsigned char number) {
 // As the original has it: the number is compared signed, and on the attached
 // path is not checked for 0xFF; neither can arise from Sprite_ObjectByHandle,
 // whose results are 0..0x5D. A number past 33 reads past Sprite_ObjectsExtra.
-namespace {
-
-void InheritDrawKey() {
-    unsigned char number;
-    if (Sprite_Current[kFlags24] & 0x20) {
-        number = ObjectByHandle(Sprite_Current[kHandle]);
-    } else {
-        number = Sprite_FindNearby();
-        if (number == 0xFF) return;
-    }
-    PutSpriteFind<std::uint16_t>(Sprite_Current, kDrawKey, GetSpriteFind<std::uint16_t>(ObjectByNumber(number), kDrawKey));
-}
-
-}  // namespace
-
-extern "C" void __cdecl Sprite_InheritDrawKey(void) {
-    if (!sprite_find::g_inherit_live) return InheritDrawKey();
-    // The one store either makes is the current object's +0x32.
-    unsigned char* const current = Sprite_Current;
-    const std::uint16_t before = GetSpriteFind<std::uint16_t>(current, kDrawKey);
-    sprite_find::g_inherit_live();
-    const std::uint16_t theirs = GetSpriteFind<std::uint16_t>(current, kDrawKey);
-    PutSpriteFind<std::uint16_t>(current, kDrawKey, before);
-    InheritDrawKey();
-    const std::uint16_t ours = GetSpriteFind<std::uint16_t>(current, kDrawKey);
-    LiveCounts& c = g_live_inherit;
-    ++c.calls;
-    if ((current[kFlags24] & 0x20) && (current[kHandle] & 0x80)) ++c.bit7;
-    if (theirs != ours && ++c.mismatches <= 8)
-        bof3::Log("shadow      Sprite_InheritDrawKey live MISMATCH: call %u, attached %u handle %02X: +0x32 %04X / %04X",
-                  c.calls, (current[kFlags24] & 0x20) ? 1u : 0u, current[kHandle], theirs, ours);
-    LiveReport("Sprite_InheritDrawKey", c);
-}
-
 void SpriteFind_Inject() {
     // 0x589660..0x589769, 0x531C70..0x531CEF and 0x57C0A0..0x57C0E9: no
     // calls, every jump internal (disasm 2026-09-20, 2026-09-21).
@@ -493,8 +400,5 @@ void SpriteFind_Inject() {
         sprite_find::g_handle_live = reinterpret_cast<HandleFn>(handle);
         sprite_find::g_inherit_live = reinterpret_cast<InheritFn>(inherit);
     }
-    BOF3_INJECT(Sprite_FindNearby);
     BOF3_INJECT(Sprite_PointInReach);
-    BOF3_INJECT(Sprite_ObjectByHandle);
-    BOF3_INJECT(Sprite_InheritDrawKey);
 }

@@ -95,46 +95,6 @@ void SelfTestSort(VoidFn theirs) {
 
 }  // namespace
 
-// original 0x56F5B0 (PSX 0x80154780). Empties two of each layer's three draw lists, for the
-// display buffer being built: first = null, last = the head itself, so that
-// the first append lands in `first` through `last` like any other.
-//
-// As the original has it: 0x38 layers where 0x593060 walks 0x37, the third
-// list of each layer left alone, and the buffer index taken as a whole byte.
-extern "C" void __cdecl DrawLayers_Reset(void) {
-    auto* layer = reinterpret_cast<unsigned char*>(DrawLayers) + Gfx_BufferIndex * 8u;
-    for (unsigned i = 0; i < kLayers; ++i, layer += kLayerBytes) {
-        for (unsigned char* head = layer; head != layer + 0x20; head += 0x10) {
-            const std::uint32_t none = 0, self = Low32(head);
-            std::memcpy(head, &none, 4);
-            std::memcpy(head + 4, &self, 4);
-        }
-    }
-    // DIV-0041 (wide-ring): the grown ring's layer -1 record and its table
-    // too, for every caller (AreaMapBD_BuildView's area among them).
-    if (map_rim::Active()) map_rim::ExtraReset(Gfx_BufferIndex);
-}
-
-// original 0x56F5F0 (PSX 0x801547F0). Orders the draw table by layer and then key - the high 16
-// bits of each entry - for 0x593060 to merge with the sprite list.
-//
-// As the original has it: an exchange sort, each entry against every later
-// one, so entries with equal keys do not keep their order; and every exchange
-// leaves the value it moved up in Scratch_Swap, the game's all-purpose swap
-// temporary, where a memory comparison would miss it if we did not.
-extern "C" void __cdecl DrawTable_Sort(void) {
-    const unsigned count = DrawTable_Count;
-    for (unsigned i = 0; i < count; ++i) {
-        for (unsigned j = i + 1; j < count; ++j) {
-            const unsigned long a = DrawTable[i], b = DrawTable[j];
-            if ((a & 0xFFFF0000u) <= (b & 0xFFFF0000u)) continue;
-            DrawTable[i] = b;
-            Scratch_Swap = a;
-            DrawTable[j] = a;
-        }
-    }
-}
-
 void DrawLayers_Inject() {
     // 0x56F5B0..0x56F5E1 and 0x56F5F0..0x56F665: no calls, every jump
     // internal (disasm 2026-09-20).
@@ -144,6 +104,4 @@ void DrawLayers_Inject() {
         SelfTestSort(reinterpret_cast<VoidFn>(
             bof3::CloneOriginal("DrawTable_Sort", bof3::addr::DrawTable_Sort, 0x76)));
     }
-    BOF3_INJECT(DrawLayers_Reset);
-    BOF3_INJECT(DrawTable_Sort);
 }
