@@ -121,6 +121,14 @@ void SelfTestTexture(SetTextureFn theirs) {
 
 }  // namespace
 
+// original 0x462A70. One level to bytes +4, +5 and +6 - where a PSX GPU
+// primitive keeps r0, g0, b0 - leaving +7, the primitive's code, alone.
+extern "C" void __cdecl Prim_SetShade(unsigned char* prim, unsigned char level) {
+    prim[4] = level;
+    prim[5] = level;
+    prim[6] = level;
+}
+
 // original 0x572A00. Texture a run of `count` POLY_FT4s of 0x48 bytes from one
 // packed word - the texture of a cell of the field view's map, and of much
 // else (91 call sites). The word, bit by bit:
@@ -223,6 +231,7 @@ void Prim_Inject() {
     if (bof3::WantsShadow("prim"))
         SelfTest(reinterpret_cast<SetShadeFn>(
             bof3::CloneOriginal("Prim_SetShade", bof3::addr::Prim_SetShade, 0x12)));
+    BOF3_INJECT(Prim_SetShade);
     if (bof3::WantsShadow("prim")) {
         // 0x572A00..0x572EC8: calls at these offsets, capstone 2026-09-21 -
         // eight to _ftol 0x5B9550, one to Gpu_SetSemiTrans 0x5A7780. No jump

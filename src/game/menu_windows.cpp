@@ -177,6 +177,44 @@ void PiecePage(int page_x) {
 // ===========================================================================
 // The message box's two small helpers
 
+// original 0x497710 (PSX 0x801503AC, the sibling's Msg_OpenSystem): the
+// string of system message id, as the box's base and stepper pointer, the
+// message index its low 16 bits, and MsgBox_Reset.
+//
+// The reading row (docs/reading-row.md 3): the composed copy of the message
+// when the pool's side chunk has one (MsgBox_ReadingRowSystem); none loaded,
+// the original.
+extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
+    const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, menu_windows::g.msg_system_ptr(id));
+    Msgbox_Base = Addr(text);
+    MenuWindows_ListText = Addr(text);
+    move_script::SetWord(menu_windows::At(::bof3::Img(at::kMessage.v)), id);
+    menu_windows::g.msgbox_reset();
+}
+
+// original 0x498D20: the "there is more" arrow under the message box, an 8 x 8
+// SPRT at (u 0xD0, v 0xF8) of page (0x3C0, 0) under abr 1, shown only while
+// bit 5 of Frame_Counter is set - so it blinks, 32 frames on and 32 off. x and
+// y are read as 16-bit (movsx).
+extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
+    if (!(menu_windows::At(::bof3::Img(Frame_Counter_addr))[0] & 0x20)) return;
+    const unsigned tpage = menu_windows::g.get_tpage(0, 1, 0x3C0, 0);
+    menu_windows::g.draw_mode(Next(), 0, 0, tpage & 0xFFFF, 0);
+    menu_windows::g.commit(1, 0xC);
+    unsigned char* const p = Next();
+    menu_windows::g.set_sprt(p);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, menu_windows::g.get_clut(0xC0, 0x1E0));
+    p[4] = p[5] = p[6] = 0x80;
+    Put(p + 8, F(S16MenuWindows(x)));
+    Put(p + 0xC, F(S16MenuWindows(y)));
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 8);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
+    p[0x14] = 0xD0;
+    p[0x15] = 0xF8;
+    menu_windows::g.set_semi(p, 1);
+    menu_windows::g.commit(1, 0x1C);
+}
+
 // ===========================================================================
 // The two small fonts (known-defects.md D1 names both)
 
@@ -1638,6 +1676,8 @@ void MenuWindows_Inject() {
         bof3::Log("DIV-0165    Menu_DrawBox and Menu_DrawIcon8 take x and y as signed words (on unless the line above says OFF)");
     }
 
+    BOF3_INJECT(Msg_OpenSystem);
+    BOF3_INJECT(MsgBox_DrawArrow);
     BOF3_INJECT(Text_DrawFont12);
     BOF3_INJECT(Text_DrawFont8);
     BOF3_INJECT(Window_Kind2List);

@@ -86,6 +86,24 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 
 }  // namespace
 
+// original 0x469FE0 (PSX 0x8019BBB8): Effect_FindFree; with a record (al not 0xFF), its +0 1
+// (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0 EffectKind04_HoldTick, which counts
+// +9 down a frame and at 0 clears story flag 0x1C and releases the record),
+// +9 the argument's low byte (the frames); then Flags_Set(0x904030, 0x1C).
+// No record: nothing, the flag not set either. Areas 49, 77, 86, 112, 117,
+// 118 and Area109_SwitchHook 0x4FEEB0 call it, each with 0xF; Area49_CellHook
+// answers 0 while flag 0x1C is set (a switch's cool-down). PSX 0x8019BBB8
+// (pairs_propagated "gap74").
+extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
+    const unsigned i = SH_CALL(Effect_FindFree)();
+    if (i == 0xFF) return;
+    unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
+    e[0] = 1;
+    e[5] = 4;
+    e[9] = static_cast<unsigned char>(frames);
+    SH_CALL(Flags_Set)(AtScenaSx2(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
+}
+
 // original 0x532FD0: Sprite_Current placed at (x, z) plus the event battle's
 // formation offset for a slot, then grounded (Party_PlaceForBattle's one
 // callee). The group g is the byte 0x904060, plus 1 at two members, plus 4 at
@@ -271,6 +289,7 @@ extern "C" void __cdecl Gpu_SetSprt16(unsigned char* prim) {
 
 void ScenaSx2_Inject() {
     if (bof3::WantsShadow("scena_sx2")) scena_sx2::SelfTest();
+    BOF3_INJECT(Effect_HoldFlag1C);
     BOF3_INJECT(Party_PlaceInFormation);
     BOF3_INJECT(AreaMap_SetHeight);
     BOF3_INJECT(Flags_Toggle);
