@@ -1080,6 +1080,24 @@ is expected; the doc says so.
    the source's own anonymous namespace: the body means a named namespace's
    function, so pass 1b writes those as `move_script::At`. The other 58 are
    real file-locals: item 13.
+   **Passes 1b, 2 and 3 (the same night):** 1b wrote 117 of those 120 pairs
+   (806 qualifiers, 149 rows; the other 3 sit in helper copies two sources
+   hold identically, below); pass 2 took the 13 files group g had edited
+   (465 qualifiers in 10 files, 61 rows; kind2_object, map_layers and
+   win_main hold only file-locals) and the identical helper copies whose
+   every holder means `move_script` (L, Ptr, SetW, W: 16 copies qualified
+   alike in one commit, 49 rows, so the mover still keeps one); pass 3 the
+   four sources outside both lists (9 qualifiers, 7 rows). The check also
+   learnt that a type alias every namespace spells the same is one entity
+   (4b5bb959, [namespace.udir]/6: 19 `U`/`Handler`/`Com*` lines). Totals:
+   761 `qualify` rows, 6,380 qualifiers, every changed line the old one plus
+   `X::`, no line count changed, gates 0 differ at both widths after every
+   batch, the hosted self-test clean each time. **62 ambiguity lines are
+   left** (`slb1108\reports\q_remainder.tsv`, one row each): 28 on the
+   owner's 58 file-locals (item 13), 22 on helper copies whose holders mean
+   different namespaces (item 13 too), 9 on file-locals in group g's files
+   that g did not promote, 7 the check over-counts (a local variable or
+   parameter named `g`), 1 gfx_texcache's own `Rect` struct.
 12. **The commit trailer:** the groups' commits carry `Co-Authored-By: Claude
    Opus 5.5` (the model that did the work), the coordinator's `Claude Fable
    5.1`; both are signed off. Left as they are unless the owner wants one.
@@ -1097,7 +1115,22 @@ is expected; the doc says so.
    s did; the gate reads a file-local by its body, so the name is free), or
    wrap the block in `namespace <stem> {` and qualify. Aliases of the same
    type are not ambiguous in C++ ([namespace.udir]: the same entity), so the
-   check could learn that and the 29 would mostly fall away by themselves.
+   check learnt that the same night (19 lines fell; the `Handler` aliases
+   left are two different function-pointer types). Two more classes of the
+   same shape, decided together: (b) file-locals in group g's files that g
+   did not promote (field_blocked `As`/`Callees`/`g`, kind2_object
+   `Callees`/`g`, object_kinds `g`, title_states `g`, win_main `U`), and
+   (c) a helper several sources hold as identical text that the mover keeps
+   once, where the holders mean different namespaces (`B` in 27 files, 26 of
+   them `move_script` and battle_actor_copies its own; `PtrAt`/`SetPtrAt`
+   between battle_actions, battle_phases and battle_flow; `Format`/`PrintBuf`
+   between battle_window_draw and menu_windows; `S16`, `Byte`, `StepX`,
+   `StepZ`, `S`): qualifying one copy breaks the identity, so the odd holder
+   wants its own spelling (a rename) or the copies qualified alike where the
+   odd one's namespace is in fact the same function. The recommendation is
+   the rename for all three classes: it is B0's existing kind, the gate
+   reads a file-local by its body so the name is free, and it needs no
+   qualifier in the bodies.
 14. **win_main `g_capcom_movie_only`** (DIV-0202, main's PR #212, landed after
    group s decided its rows): a file-static state variable with no decision
    row. Promote it (a `data-layout` row if the gate asks) or keep it local

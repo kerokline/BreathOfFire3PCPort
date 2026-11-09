@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B waits on the owner's read of the sheet, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch and waits on three small owner calls before the moves, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -371,19 +371,31 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    as 8,870 differences before), `PROMOTED`, the macro-made functions in the mover; group s's 135 state and
    global decisions, applied where the code stays identical (23 declarations, 39 promotions, 1 seam) and 62
    blocked with their first difference; both self-test suites pass; 35 PlayStation twin claims re-pointed to
-   their own overlay (`symbols.toml`). **The sheet is decided** (7b item 9, 2026-11-08 evening): stand-alone
-   units confirmed, one-area and one-function-unit joins stand, bosses one file per unit, same-names joins stand
-   except across a PlayStation back-order seam (`battle_4`/`battle_5`, `field_4..7`, `gpu`/`gpu_2` stand alone);
-   `analysis/tu_layout_sheet.md` has 661 units in 617 files, its first table the 71 PSX-flag rows only. **Gate on
-   the tip:** i686 `--by-function --anonymous-locals` 0 differ; x86_64 with `--exceptions` 0 differ. **The
-   owner's, before B1..B5** (7b): the PSX flags that are one overlay's own code and row 585's extent (item 9);
-   the gate classes for shared state (62 rows, item 10); the qualification pass for 50 ambiguous targets (item
-   11). **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
+   their own overlay (`symbols.toml`). **The sheet is decided** (7b item 9, 2026-11-08 evening and night):
+   stand-alone units confirmed, one-area and one-function-unit joins stand, bosses one file per unit, same-names
+   joins stand except across a PlayStation back-order seam (`battle_4`/`battle_5`, `gpu`/`gpu_2` stand alone),
+   the six neighbour pairs the PlayStation held in one unit joined by the owner's table `analysis/tu_joins.tsv`
+   (bone_dance, field_6/7, area_map/kind_2); `analysis/tu_layout_sheet.md` has 659 units in 612 files, its
+   first table the 67 PSX-flag rows, every one classified. **The shared-state gate classes** (item 10, group g):
+   `data-layout` (both widths) and `x64-indirect` (x86_64) in `codegen_same.py`, `--exception-classes`, 42 of
+   the 62 blocked rows applied with 191 exception rows, 20 stay blocked (class 1, the function promotions,
+   the alias seams). **The qualification pass** (item 11, group q, four passes): 761 `qualify` rows, 6,380
+   `X::` qualifiers on their own lines, the mover's ambiguity check fixed to count bare names only and to
+   know same-type aliases; 62 ambiguity lines left, every one in `slb1108\reports\q_remainder.tsv`. **Gate
+   on the tip:** i686 `--exceptions ... --exception-classes data-layout` 0 differ (52 excepted, 78 promoted);
+   x86_64 `--exceptions` 0 differ (198 excepted, 56 promoted); both self-test suites clean. **The owner's,
+   before B1..B5** (7b): the 58 real file-locals plus g's unpromoted ones and the mixed helper copies - the
+   recommendation is a rename (item 13); win_main `g_capcom_movie_only` wants a decision row (item 14); whether
+   class 3 means the narrow form only (item 15); row 572's extent (item 9). Then `move_funcs.py --map-only`
+   and the moves. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
    as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
    (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
-   legitimately changes when a twin claim is corrected. Worktrees `slb1108\r1..r4, c, t, s, a, p` are removable
-   after the merge into `main`.
+   legitimately changes when a twin claim is corrected; the mover's check counted `X::name` as a use of `name`,
+   so a qualification pass could never lower it (fixed); a brief's assumption that a file-local cannot be
+   qualified sent 178 rows to the owner of which 120 were `using X::name;` declarations - classify before
+   declaring a thing impossible. Worktrees `slb1108\r1..r4, c, t, s, a, p, g, q` are removable after the merge
+   into `main`.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
