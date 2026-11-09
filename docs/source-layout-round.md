@@ -918,6 +918,37 @@ is expected; the doc says so.
    `codegen_same.py` gains `--exceptions FILE` to apply the list (stage B's
    first tooling change, with B0).
 
+   **Two more classes, by the owner's call 10 (2026-11-08 night, 7b item
+   10: "Create an exception class for the two that are changing").** Both
+   come from a promotion of shared state (group a's classes 2 and 3,
+   section 4) and are `codegen_same.py --exceptions` classes, entered here
+   with their first cases:
+   - `data-layout` (both widths): a promoted variable is placed elsewhere in
+     its `.data` / `.bss`, so a neighbouring file-local changes extent or
+     hash and its readers differ only in the reference to that local. A row
+     names the data or bss symbol, or a reader function whose only
+     difference is that reference; it is the one class that may except a
+     DATA or BSS line. First case: `msgbox.cpp`'s `g_text_faster`, i686
+     `BSS msgbox::ruby::g_hidden ... 'zero[1]' -> 'zero[4]'`.
+   - `x64-indirect` (x86_64 only, never used on an i386 build): an internal
+     function pointer that x86_64 folded to a direct call goes through the
+     pointer once the variable is external, its branch offsets a byte
+     longer. A row names the caller, or the pointer itself: folded, it had
+     no data symbol on x86_64, so the promoted one reads NEW (data). First
+     case: `text_immediate.cpp`'s `g_draw_at`, `Text_DrawImmediate` `call
+     @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:_ZN14text_immediate9g_draw_atE`,
+     and `NEW _ZN14text_immediate9g_draw_atE (data)`.
+   The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
+   --exception-classes data-layout` (the other classes' rows are read but
+   never used there), the x86_64 gate with the file and no restriction.
+   **Class 1** (the i686 optimiser folds or shrinks an internal global:
+   `win_main`'s `g_background`, `msg_pool`'s `g_pool`, `map_layers`'
+   `g_side_dup`) **and class 4** (the 8 function promotions, which change
+   inlining on i686) **are not gate classes and stay refused**: those
+   variables and functions stay file-local, their rows in
+   `analysis/tu_renames.tsv` keep `BLOCKED`, and their readers move with
+   them in B1..B5.
+
 ### 7b. Open after stage B0 (2026-11-08), the owner's
 
 9. **The sheet's 212 rows that want a call** (`analysis/tu_layout_sheet.md`,

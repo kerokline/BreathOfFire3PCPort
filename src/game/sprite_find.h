@@ -3,3 +3,8 @@
 #pragma once
 
 void SpriteFind_Inject();
+
+namespace sprite_find {
+extern unsigned char(__cdecl* g_handle_live)(unsigned);   // defined in sprite_find.cpp (source-layout B0: promoted for a moved reader)
+extern void(__cdecl* g_inherit_live)();   // defined in sprite_find.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace sprite_find

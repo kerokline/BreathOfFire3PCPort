@@ -16,6 +16,8 @@ class SnapshotReader;
 }  // namespace bof3
 
 namespace map_layers {
+extern unsigned char g_file_sides[256*256];   // defined in map_layers.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_side_zero_release;   // defined in map_layers.cpp (source-layout B0: promoted for a moved reader)
 
 // The quicksave (SP-G, docs/quicksave.md, the graphics participant): DIV-0085's side faces as
 // the area file loaded them, in the graphics participant's record.

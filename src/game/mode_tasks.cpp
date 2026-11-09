@@ -38,47 +38,15 @@ constexpr std::uint32_t kMemberByte2 = 0x802FE3;     // 0x80145FD7, 0x80146117 -
 // kMenuBlock: now BattleE1_Mode (symbols.toml). the menu's state block (docs/menu-screens.md)
 constexpr std::uint32_t kMode11Bytes = 0x905DA0;     // five bytes set entering mode 11 (PSX 0x80146268)
 
-// Every callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them - for the originals' copies and for ours
-// alike. Four of them are this file's (Title_CheckStart, Title_DrawBackdrop,
-// Title_DrawLogo and Title_Sprite), called through here all the same so that
-// each function is tested alone; Title_FadeMusic, Title_DrawSetA/B/C,
-// Field_ModeDispatch and Field_Frame are ours in other files (title_states,
-// field_modes, field_frame); Gpu_SetSprt, Gpu_SetSemiTrans, Gpu_SetDrawMode
-// and Gfx_CommitPrim are other files'.
-struct Callees {
-    void (__cdecl* clear_private)();
-    void (__cdecl* sleep)(int);
-    void (__cdecl* check_start)();
-    void (__cdecl* backdrop)();
-    void (__cdecl* logo)();
-    int (__cdecl* load_done)();
-    void (__cdecl* transition)(unsigned char);
-    void (__cdecl* fade_music)();
-    void (__cdecl* effect)(unsigned short);
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
-    void (__cdecl* commit)(unsigned, unsigned);
-    unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
-    void (__cdecl* set_sprt)(unsigned char*);
-    void (__cdecl* semi_trans)(unsigned char*, unsigned);
-    void (__cdecl* set_a)(unsigned, unsigned);
-    void (__cdecl* set_b)(int, int, unsigned, unsigned);
-    void (__cdecl* set_c)(int, int, unsigned, unsigned);
-    void (__cdecl* event_dispatch)();
-    void (__cdecl* field_frame)();
-    void (__cdecl* wait_transition)(unsigned char);
-    void (__cdecl* music_fade)(int);
-    void (__cdecl* music_stop)(int);
-};
-const Callees kOriginals = {
+const mode_tasks::Callees kOriginals = {
     Task_ClearPrivate, Task_Sleep, Title_CheckStart, Title_DrawBackdrop, Title_DrawLogo, File_LoadDone,
     Transition_Start, Title_FadeMusic, Sound_PlayEffect, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite,
     Gpu_SetSprt, Gpu_SetSemiTrans, Title_DrawSetA, Title_DrawSetB, Title_DrawSetC,
     Field_ModeDispatch, Field_Frame,
     Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
 };
-Callees g = kOriginals;
-
+}  namespace mode_tasks { Callees g = kOriginals; }
+namespace {
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
 std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
 
@@ -96,13 +64,13 @@ std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Reco
 extern "C" void __cdecl Title_Task(void) {
     Title_State = 0;
     Title_Step = 0;
-    g.clear_private();
+    mode_tasks::g.clear_private();
     for (;;) {
-        g.sleep(1);
-        g.check_start();
+        mode_tasks::g.sleep(1);
+        mode_tasks::g.check_start();
         reinterpret_cast<void (__cdecl*)()>(Title_States[Title_State].Native())();
-        g.backdrop();
-        g.logo();
+        mode_tasks::g.backdrop();
+        mode_tasks::g.logo();
     }
 }
 
@@ -122,7 +90,7 @@ extern "C" void __cdecl Title_Task(void) {
 extern "C" void __cdecl Title_CheckStart(void) {
     if (Title_StartArmed == 0) return;
     if (!(Input_Pressed & 0x800)) return;
-    if (g.load_done() == 0) return;
+    if (mode_tasks::g.load_done() == 0) return;
     if (Transition_Busy != 0) return;
     if (TaskZeroState() != 0) return;
     if (Title_State <= 2) {
@@ -132,9 +100,9 @@ extern "C" void __cdecl Title_CheckStart(void) {
     }
     if (Title_Fade != 0) return;
     if (Title_LogoState != 2) return;
-    g.transition(0);
-    g.fade_music();
-    g.effect(0x105);
+    mode_tasks::g.transition(0);
+    mode_tasks::g.fade_music();
+    mode_tasks::g.effect(0x105);
     Title_StartArmed = 0;
     Title_State = 7;
 }
@@ -152,8 +120,8 @@ extern "C" void __cdecl Title_CheckStart(void) {
 // stores no caller reads (all five callers only pop them).
 extern "C" unsigned char* __cdecl Title_Sprite(int x, int y, unsigned index, unsigned slot, unsigned semi) {
     unsigned char* const prim = Gfx_PacketNext;
-    g.set_sprt(prim);
-    g.semi_trans(prim, semi & 0xFF);
+    mode_tasks::g.set_sprt(prim);
+    mode_tasks::g.semi_trans(prim, semi & 0xFF);
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0x80;
@@ -167,7 +135,7 @@ extern "C" unsigned char* __cdecl Title_Sprite(int x, int y, unsigned index, uns
     rv::As<records::GpuSprt>(prim)->w = Word(entry + 4);
     rv::As<records::GpuSprt>(prim)->h = Word(entry + 6);
     rv::As<records::GpuSprt>(prim)->clut = static_cast<unsigned>(Word(entry + 8)) << 6;
-    g.commit(slot, 0x1C);
+    mode_tasks::g.commit(slot, 0x1C);
     return prim;
 }
 
@@ -221,9 +189,9 @@ extern "C" void __cdecl Title_DrawBackdrop(void) {
             Title_Bright = 0x80;
             if (fade == 0) continue;
         }
-        g.draw_mode(Gfx_PacketNext, 0, 0, ((page & 0x3C0) | 0x2000) >> 6, 0);
-        g.commit(2, 0xC);
-        unsigned char* const prim = g.sprite(static_cast<int>(column * 255 + left), 0x18, column + 0xB, 2, 0);
+        mode_tasks::g.draw_mode(Gfx_PacketNext, 0, 0, ((page & 0x3C0) | 0x2000) >> 6, 0);
+        mode_tasks::g.commit(2, 0xC);
+        unsigned char* const prim = mode_tasks::g.sprite(static_cast<int>(column * 255 + left), 0x18, column + 0xB, 2, 0);
         prim[4] = static_cast<unsigned char>(Title_Bright);
         prim[5] = static_cast<unsigned char>(Title_Bright);
         prim[6] = static_cast<unsigned char>(Title_Bright);
@@ -263,9 +231,9 @@ extern "C" void __cdecl Title_DrawLogo(void) {
     } else if (state == 0) {
         return;
     }
-    g.set_a(flag_b, static_cast<unsigned char>(Title_LogoShadeB));
-    g.set_b(0x1A, 0x18, flag_b, static_cast<unsigned char>(Title_LogoShadeB));
-    g.set_c(-6, 0x1C, flag_a, static_cast<unsigned char>(Title_LogoShadeA));
+    mode_tasks::g.set_a(flag_b, static_cast<unsigned char>(Title_LogoShadeB));
+    mode_tasks::g.set_b(0x1A, 0x18, flag_b, static_cast<unsigned char>(Title_LogoShadeB));
+    mode_tasks::g.set_c(-6, 0x1C, flag_a, static_cast<unsigned char>(Title_LogoShadeA));
 }
 
 // original 0x4959F0 (PSX 0x80198378): Game_Mode 2, the field (PSX GAME.EMI section 0,
@@ -280,12 +248,12 @@ extern "C" void __cdecl Title_DrawLogo(void) {
 // reads the byte). The PSX's case 5 also started the next area's music; the
 // port fades instead (docs/mode-tasks.md section 3).
 extern "C" void __cdecl GameMode_Field(void) {
-    g.event_dispatch();
-    g.field_frame();
+    mode_tasks::g.event_dispatch();
+    mode_tasks::g.field_frame();
     switch (Field_Request) {
     case 1:   // the menu
-        g.transition(2);
-        g.wait_transition(0);
+        mode_tasks::g.transition(2);
+        mode_tasks::g.wait_transition(0);
         Game_Step = 0;
         Game_Mode = 3;
         return;
@@ -312,16 +280,16 @@ extern "C" void __cdecl GameMode_Field(void) {
         unsigned char track = Music_Track;
         At(::bof3::Img(Field_ScriptFlags2_addr))[0] |= 0x40;
         if (track != 0xFF && AreaW1f_MusicCurrent != track) {
-            g.music_fade(0x10);
+            mode_tasks::g.music_fade(0x10);
             track = Music_Track;
         }
         const unsigned char kind = ModeFlow_AreaTransition;
         if (kind != 0xFF) {
-            g.transition(kind);
-            g.wait_transition(0);
+            mode_tasks::g.transition(kind);
+            mode_tasks::g.wait_transition(0);
             track = Music_Track;
         }
-        if (track != 0xFF && AreaW1f_MusicCurrent != track) g.music_stop(0xA);
+        if (track != 0xFF && AreaW1f_MusicCurrent != track) mode_tasks::g.music_stop(0xA);
         Game_Mode = 1;
         return;
     }
@@ -481,7 +449,7 @@ void __cdecl StubMusicFade(int frames) {
 }
 void __cdecl StubMusicStop(int frames) { Record(34, static_cast<std::uint32_t>(frames)); DisturbField(); }
 
-const Callees kStubs = {StubClearPrivate, StubSleep, StubCheckStart, StubBackdrop, StubLogo, StubLoadDone, StubTransition,
+const mode_tasks::Callees kStubs = {StubClearPrivate, StubSleep, StubCheckStart, StubBackdrop, StubLogo, StubLoadDone, StubTransition,
                         StubFadeMusic, StubEffect, StubDrawMode, StubCommit, StubSprite, StubSetSprt, StubSemiTrans,
                         StubSetA, StubSetB, StubSetC, StubEventDispatch, StubFieldFrame, StubWaitTransition,
                         StubMusicFade, StubMusicStop};
@@ -716,7 +684,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     void* saved_table[8];
     std::memcpy(saved_table, Title_States, sizeof saved_table);
     std::memcpy(Title_States, kHandlers, sizeof kHandlers);
-    g = kStubs;
+    mode_tasks::g = kStubs;
 
     const void* const ours[kCount] = {
         reinterpret_cast<const void*>(&Title_Task), reinterpret_cast<const void*>(&Title_CheckStart),
@@ -755,7 +723,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      mode_tasks self-test MISMATCH: round %u, %s, log %u / %u", round, kClones[k].name,
                       their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    mode_tasks::g = kOriginals;
     std::memcpy(Title_States, saved_table, sizeof saved_table);
     Apply(saved);
     Gfx_PacketNext = saved_packet;

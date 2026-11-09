@@ -58,8 +58,8 @@ constexpr PspRect kPspTextUpper = {0, 0, 224, 116};    // "BREATH OF F", the lef
 constexpr PspRect kPspTextLower = {0, 117, 106, 102};  // "IRE", the right wing, the art's TM
 constexpr PspRect kPspEmblem = {0, 0, 202, 122};       // the "III" emblem, without the caption below it
 constexpr int kPspTextDx = -3, kPspLowerDx = 224, kPspLowerDy = 5, kPspEmblemDx = 30;
-bool g_psp_title = false;
-
+}  namespace title_states { bool g_psp_title = false; }
+namespace {
 // Every callee, through pointers so that the start-up fuzz can stand
 // recording functions in for them. Five are ours (Title_FadeMusic,
 // Title_StopMusic, Title_DrawBadge, Scenario_Start, Scenario_Load), called
@@ -307,7 +307,7 @@ extern "C" void __cdecl Title_DrawBadge(void) {
 extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
-    if (!g_psp_title) {   // DIV-0131: the PSP's art carries its own TM; the mark sprite is not drawn
+    if (!title_states::g_psp_title) {   // DIV-0131: the PSP's art carries its own TM; the mark sprite is not drawn
         g.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
         g.commit(1, 0xC);
         g.shade(g.sprite(0x106, 0x82, 1, 1, semi), level);
@@ -341,7 +341,7 @@ extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
 extern "C" void __cdecl Title_DrawSetC(int x, int y, unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
-    if (g_psp_title) {   // DIV-0131: the PSP's pieces, same sprites and pages
+    if (title_states::g_psp_title) {   // DIV-0131: the PSP's pieces, same sprites and pages
         const int ux = x + kPspTextDx, lx = ux + kPspLowerDx, ly = y + kPspLowerDy;
         if (semi != 0) {
             g.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
@@ -376,7 +376,7 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
     const auto level = static_cast<unsigned char>(shade);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xBB, 0);
     g.commit(2, 0xC);
-    if (g_psp_title) {   // DIV-0131: the emblem alone; the PSP's page has nothing under sprite 3's rectangle
+    if (title_states::g_psp_title) {   // DIV-0131: the emblem alone; the PSP's page has nothing under sprite 3's rectangle
         g.shade(PspSprite(x + kPspEmblemDx, y, 2, kPspEmblem, 2, semi), level);
         return;
     }
@@ -912,8 +912,8 @@ void TitleStates_Inject() {
         }
         SelfTest(clones);
     }
-    g_psp_title = psp_code::PspBase();
-    if (g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
+    title_states::g_psp_title = psp_code::PspBase();
+    if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

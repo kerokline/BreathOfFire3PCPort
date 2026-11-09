@@ -10,3 +10,7 @@ void SpriteDraw_Inject();
 // clipped to VRAM, and the textures over it dropped - a capture slot made as
 // empty as the PlayStation's page is before something reads it.
 void SpriteCapture_ClearSlot(int x, int y, int w, int h);
+
+namespace sprite_draw {
+extern void(__cdecl* g_draw_clone)();   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace sprite_draw

@@ -186,13 +186,13 @@ void PutTexel(unsigned char* out, const unsigned char* uv) {
     PutFloat(out + 0x18, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[0] * 4u)));
     PutFloat(out + 0x1C, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[1] * 4u)));
 }
-
+}  // namespace
 // DIVERGENCE DIV-0199 (D198): a screen-rectangle quad's texture edges
 // (game/quad_far_edge.h), by the draw's filter,
 // over the four vertices just written; uv the first corner's u, v bytes and
 // `stride` the primitive's corner size. Off (0) until D3dDraw_Inject, after the
 // self-tests, and under BOF3X_ORIGINAL=QuadFarEdge.
-std::uint8_t g_quad_far = 0;
+std::uint8_t g_quad_far = 0;  namespace {
 void QuadFarEdge(const unsigned char* uv, U stride) {
     if (!g_quad_far) return;
     float x[4], y[4], tu[4], tv[4];
@@ -524,8 +524,8 @@ long D3d_DrawCellSprite(const unsigned char* prim) {
 void D3d_FreeCellTexture(int slot);
 namespace {
 std::uint8_t g_cell_vram = 0;   // 1 through PatchBytes("CellTextureVram") in D3dDraw_Inject
-struct CellFoot { int valid, x0, y0, x1, y1; };   // halfword columns, rows; inclusive
-CellFoot g_cell_foot[128];
+}  // namespace
+namespace d3d_draw { CellFoot g_cell_foot[128]; }  namespace {
 bool PoseLogOn() {
     static int on = -1;
     if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
@@ -549,7 +549,7 @@ void NoteCellFoot(U slot, unsigned first, unsigned count) {
         if (x1 > f.x1) f.x1 = x1;
         if (y1 > f.y1) f.y1 = y1;
     }
-    g_cell_foot[slot] = f;
+    d3d_draw::g_cell_foot[slot] = f;
     if (PoseLogOn() && f.valid)
         bof3::Log("poselog     frame %lu cell build entry %u cells %u..+%u foot %d,%d..%d,%d", static_cast<unsigned long>(Frame_Counter),
                   static_cast<unsigned>(slot), first, count, f.x0, f.y0, f.x1, f.y1);
@@ -560,7 +560,7 @@ void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
     if (!g_cell_vram) return;
     const int x1 = x + w - 1, y1 = y + h - 1;
     for (U i = 0; i < kCellEntries; ++i) {
-        CellFoot& f = g_cell_foot[i];
+        CellFoot& f = d3d_draw::g_cell_foot[i];
         if (!f.valid) continue;
         if (f.x1 < x || f.x0 > x1 || f.y1 < y || f.y0 > y1) continue;
         if (Long(At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry)) != 0) {
@@ -630,7 +630,7 @@ void D3dDraw_Inject() {
     {
         // DIV-0181: cell textures follow VRAM uploads. After the self-tests, whose
         // fuzzed builds noted footprints over fake entries: those are forgotten here.
-        std::memset(g_cell_foot, 0, sizeof g_cell_foot);
+        std::memset(d3d_draw::g_cell_foot, 0, sizeof d3d_draw::g_cell_foot);
         const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("CellTextureVram", Low32(&g_cell_vram), &was, &is, 1);
         bof3::Log("DIV-0181    a cell texture is rebuilt after an upload over its cells (on unless the line above says OFF)");
@@ -639,9 +639,9 @@ void D3dDraw_Inject() {
         // DIV-0199: the textured quads' far texture edge, after the self-tests
         // (which compare Capcom's texture coordinates).
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("QuadFarEdge", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_quad_far)), &was, &is, 1);
+        bof3::PatchBytes("QuadFarEdge", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&d3d_draw::g_quad_far)), &was, &is, 1);
         bof3::Log("DIV-0199    a screen-rectangle textured quad samples the texels the PlayStation draws: %s",
-                  g_quad_far ? "on" : "OFF (BOF3X_ORIGINAL=QuadFarEdge)");
+                  d3d_draw::g_quad_far ? "on" : "OFF (BOF3X_ORIGINAL=QuadFarEdge)");
     }
     d3d_list::Operands();   // Gfx_DrawOTag's byte tables, ours, against the code's (docs/operand-store.md)
     BOF3_INJECT(Gfx_DrawOTag);

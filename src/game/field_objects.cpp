@@ -26,39 +26,14 @@ using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-// Every callee, through pointers so that the start-up fuzz can stand recording
-// functions in for them - for the original's copies and for ours alike. Two
-// of them are ours (the motion and the settle below); the fuzz tests each of
-// the four alone.
-struct CalleesFieldObjects {
-    unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
-    void (__cdecl* pose_wait)(unsigned char*);
-    unsigned char (__cdecl* blocked)(unsigned char*);
-    void (__cdecl* move)(unsigned char*, unsigned char);
-    void (__cdecl* settle)(unsigned char*, unsigned char);
-    void (__cdecl* motion)(unsigned char*);
-    long (__cdecl* elevation)(long, long);
-    void (__cdecl* party_apply)(unsigned char*);
-    void (__cdecl* party_move)(unsigned char*, unsigned char);
-    unsigned char (__cdecl* by_handle)(unsigned char);
-    void (__cdecl* attach_offset)(long*, unsigned char);
-    void (__cdecl* update)(unsigned char*);
-    void (__cdecl* push_matrix)();
-    short* (__cdecl* rot_matrix)(const short*, short*);
-    void (__cdecl* trans_matrix)(unsigned long*, const unsigned long*);
-    void (__cdecl* set_rot)(const unsigned long*);
-    void (__cdecl* set_trans)(const unsigned long*);
-    void (__cdecl* rot_trans)(const short*, long*);
-    void (__cdecl* pop_matrix)();
-};
-const CalleesFieldObjects kOriginalsFieldObjects = {
+const field_objects::CalleesFieldObjects kOriginalsFieldObjects = {
     MoveScript_Step, Sprite_SetPoseWait, Field_ObjectBlocked, MoveCmd_Move, Field_ObjectSettle,
     Field_ObjectMotion, AreaMap_Elevation, Party_ApplyRecord, Party_MoveMember,
     Sprite_ObjectByHandle, MoveCmd_AttachOffset, Field_ObjectUpdate, Gte_PushMatrix, Gte_RotMatrix,
     Gte_TransMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix,
 };
-CalleesFieldObjects g = kOriginalsFieldObjects;
-
+}  namespace field_objects { CalleesFieldObjects g = kOriginalsFieldObjects; }
+namespace {
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
     const auto distance = static_cast<std::int32_t>(Low32(Field_ActiveMember.Native()) - Address(rv::Bytes(Sprite_ObjectsExtra)));
@@ -91,8 +66,8 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
             if (speed_index != 0) {
                 const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
                 const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x10));   // a table of 32-bit places
-                const unsigned char result = g.step(context, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * obj->area_script)))));
-                if (obj->pose_wait) g.pose_wait(context);
+                const unsigned char result = field_objects::g.step(context, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * obj->area_script)))));
+                if (obj->pose_wait) field_objects::g.pose_wait(context);
                 if (result == 0xFF) return;
                 if (rv::Current<records::SpriteObject>()->direction != result) {
                     rv::Current<records::SpriteObject>()->direction = result;
@@ -101,7 +76,7 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
                 if (obj->move_steps != 0) {   // the step began a timed move
                     Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
                     --obj->move_steps;
-                    if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && g.blocked(object)) {
+                    if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && field_objects::g.blocked(object)) {
                         rv::Current<records::SpriteObject>()->direction &= 7;
                         context[0] |= 0x18;
                         obj->script_position = position;
@@ -125,7 +100,7 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
                 }
             }
         } else {   // steps left: the next one, unless blocked
-            if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && g.blocked(object)) {
+            if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && field_objects::g.blocked(object)) {
                 rv::Current<records::SpriteObject>()->direction &= 7;
                 obj->context |= 0x18;
                 rv::Current<records::SpriteObject>()->step_frames = 0;
@@ -133,13 +108,13 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
             }
             Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
             --obj->move_steps;
-            g.move(context, rv::Current<records::SpriteObject>()->direction & 7);
+            field_objects::g.move(context, rv::Current<records::SpriteObject>()->direction & 7);
             rv::Current<records::SpriteObject>()->direction |= 8;
             context[0] |= 8;
         }
-        g.settle(object, direction);
+        field_objects::g.settle(object, direction);
     }
-    g.motion(object);
+    field_objects::g.motion(object);
 }
 
 // original 0x518980: the timed move's motion, every frame (PSX FUN_801A3544).
@@ -155,14 +130,14 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
         --rv::Current<records::SpriteObject>()->step_frames;
         if (rv::Current<records::SpriteObject>()->step_frames == 0) {   // arrived
             if (!(context[0] & 0x80))
-                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
+                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(field_objects::g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
             obj->counter = 0;
             const unsigned char after = Sprite_Current[2];
             if (static_cast<int>(after) - 1 < 3) {
                 const auto frames = static_cast<unsigned char>((after & 3) * 0x1E);
                 obj->pose_wait = frames;
                 if (frames != 0) {   // a wait of 30, 60 or 90 frames in pose 5
-                    g.pose_wait(context);
+                    field_objects::g.pose_wait(context);
                     if (!(rv::Current<records::SpriteObject>()->flags2 & 8)) {
                         rv::Current<records::SpriteObject>()->direction &= 7;
                         context[0] |= 8;
@@ -172,7 +147,7 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
             }
         }
     }
-    g.party_apply(context);
+    field_objects::g.party_apply(context);
     if (Field_Request != 2) {
         if (rv::Current<records::SpriteObject>()->step_frames > Sprite_Current[0xA]) context[0] &= 0xEF;
         else context[0] |= 0x10;
@@ -209,7 +184,7 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
     if (sprite->type == 0x0A) {
         if (sprite->step_frames == 0) return;
         if (!(Field_ActiveMember[0x80] & 8)) return;
-        g.party_move(object, sprite->direction & 7);
+        field_objects::g.party_move(object, sprite->direction & 7);
         obj->context &= 0xF7;
         return;
     }
@@ -233,7 +208,7 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
 // Sprite_Objects[n], or Sprite_ObjectsExtra[n - 0x1E] - the PSX's one array
 // of 0x98-byte objects is two of 0xA4 on the PC.
 extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
-    const unsigned char n = g.by_handle(Sprite_Current[0x18]);
+    const unsigned char n = field_objects::g.by_handle(Sprite_Current[0x18]);
     const unsigned char* const other = n >= 0x1E ? rv::Bytes(&Sprite_ObjectsExtra[n - 0x1Eu]) : rv::Bytes(&Sprite_Objects[n]);
     if (rv::Current<records::SpriteObject>()->step_frames == 0) {
         rv::Current<records::SpriteObject>()->draw_flags |= 0x20;
@@ -241,12 +216,12 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
         if (rv::Current<records::SpriteObject>()->type != 0x0A)
             for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) SetLong(Sprite_Current + at, Long(other + at));
         long offset[3];
-        g.attach_offset(offset, Sprite_Current[0x1C]);
+        field_objects::g.attach_offset(offset, Sprite_Current[0x1C]);
         rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) + static_cast<std::uint32_t>(offset[0]));
         rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) + static_cast<std::uint32_t>(offset[1]));
         rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + static_cast<std::uint16_t>(offset[2])));
     }
-    g.update(object);
+    field_objects::g.update(object);
     rv::Current<records::SpriteObject>()->direction &= 7;
 }
 
@@ -254,29 +229,29 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
 // `index` of the area descriptor's +0x0C table, turned by Sprite_Current's
 // angles through the GTE; out = (x << 9, y << 9, -z * 2).
 extern "C" void __cdecl MoveCmd_AttachOffset(long* out, unsigned char index) {
-    g.push_matrix();
+    field_objects::g.push_matrix();
     const unsigned char* const sprite = Sprite_Current;
     short vector[4];
     vector[0] = static_cast<short>(Word(sprite + 0x64));
     vector[1] = static_cast<short>(Word(sprite + 0x68));
     vector[2] = static_cast<short>(Word(sprite + 0x6C));
     unsigned long matrix[8];
-    g.rot_matrix(vector, reinterpret_cast<short*>(matrix));
+    field_objects::g.rot_matrix(vector, reinterpret_cast<short*>(matrix));
     const unsigned long zero[3] = {0, 0, 0};
-    g.trans_matrix(matrix, zero);
-    g.set_rot(matrix);
-    g.set_trans(matrix);
+    field_objects::g.trans_matrix(matrix, zero);
+    field_objects::g.set_rot(matrix);
+    field_objects::g.set_trans(matrix);
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     const short* const vectors = reinterpret_cast<const short*>(At(static_cast<std::uint32_t>(Long(descriptor + 0xC))));   // a 32-bit word
     vector[0] = vectors[index * 3u];
     vector[1] = vectors[index * 3u + 1];
     vector[2] = vectors[index * 3u + 2];
     long turned[3];
-    g.rot_trans(vector, turned);
+    field_objects::g.rot_trans(vector, turned);
     out[0] = static_cast<long>(static_cast<std::uint32_t>(turned[0]) << 9);
     out[1] = static_cast<long>(static_cast<std::uint32_t>(turned[1]) << 9);
     out[2] = static_cast<long>((0u - static_cast<std::uint32_t>(turned[2])) << 1);
-    g.pop_matrix();
+    field_objects::g.pop_matrix();
 }
 
 namespace {
@@ -386,7 +361,7 @@ void __cdecl StubRotTrans(const short* v, long* out) {
     Record(19, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]) << 16 | static_cast<std::uint16_t>(v[2]));
     for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<long>(Hash() * (j + 7));
 }
-const CalleesFieldObjects kStubs = {StubStep, StubPoseWait, StubBlocked, StubMove, StubSettle, StubMotion, StubElevation, StubPartyApply, StubPartyMove,
+const field_objects::CalleesFieldObjects kStubs = {StubStep, StubPoseWait, StubBlocked, StubMove, StubSettle, StubMotion, StubElevation, StubPartyApply, StubPartyMove,
                         StubByHandle, StubAttachOffset, StubUpdate, StubPush, StubRotMatrix, StubTransMatrix, StubSetRot, StubSetTrans,
                         StubRotTrans, StubPop};
 
@@ -502,7 +477,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     for (unsigned i = 0; i < 256; ++i) g_scripts[i] = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x10000u + i * 0x40u));
     const short* const vectors = g_vectors;
     std::memcpy(g_descriptor + 0xC, &vectors, sizeof vectors);
-    g = kStubs;
+    field_objects::g = kStubs;
 
     unsigned bad = 0, calls = 0, per[kCount] = {};
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -560,7 +535,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      field_objects self-test MISMATCH: round %u, %s, log %u / %u", round, kClones[k].name,
                       their_out.log_n, our_out.log_n);
     }
-    g = kOriginalsFieldObjects;
+    field_objects::g = kOriginalsFieldObjects;
     Apply(saved);
     bof3::Log("shadow      field_objects self-test: %u rounds (%u per function), %u calls to the stand-ins, %u MISMATCHES; "
               "the object, sprite, Sprite_Kind2, party objects and records, scratch bytes, Field_Request and the stand-ins' "

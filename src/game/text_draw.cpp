@@ -31,8 +31,8 @@ constexpr int kRecordBytes = 0x20;
 // primitive), so it is called through a pointer the fuzz can aim at a
 // recorder - for the original's copy and for ours alike.
 using EmitFn = void (__cdecl*)(int, int, int, int, int, int, int);
-EmitFn g_emit = Text_EmitGlyph;
-
+}  namespace text_draw { EmitFn g_emit = Text_EmitGlyph; }
+namespace {
 const std::uint8_t* ClipPairs() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_ClipPairs)); }
 const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_Records)); }
 
@@ -86,7 +86,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
                 why, (unsigned)reinterpret_cast<std::uintptr_t>(p), (unsigned)Game_AreaNumber, p[0], p[1], p[2], p[3],
                 p[4], p[5], p[6]);
 }
-
+}  // namespace
 // --- BOF3X_TEXTLOG: which string is drawn from where ----------------------------
 // Diagnostic only, off unless the variable is set: each distinct (caller,
 // string address) pair is logged once, with the string's first bytes - the
@@ -96,7 +96,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
 // drawn through Text_DrawAt shows 0x516B61. Reading Text_DrawAt's caller off
 // the stack, three slots above our first argument, was tried on 2026-09-21
 // and came back wrong as built; unfixed, so not claimed.
-bool g_textlog = false;
+namespace text_draw { bool g_textlog = false; }  namespace {
 constexpr unsigned kTextLogSlots = 4096;
 std::uint64_t g_textlog_seen[kTextLogSlots];
 unsigned g_textlog_count = 0;
@@ -182,7 +182,7 @@ void SelfTest(void* clone) {
     const short saved_pen[3] = {Text_PenX, Text_PenY, Text_LineX};
     unsigned char* const saved_packet = Gfx_PacketNext;
     Gfx_PacketNext = prim;
-    g_emit = &RecordEmit;
+    text_draw::g_emit = &RecordEmit;
 
     std::uint32_t rng = 0x27D4EB2Fu;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
@@ -250,7 +250,7 @@ void SelfTest(void* clone) {
                       n, (int)(b.ret - a.ret), a.n, b.n, a.pen[0], a.pen[1], b.pen[0], b.pen[1]);
     }
 
-    g_emit = Text_EmitGlyph;
+    text_draw::g_emit = Text_EmitGlyph;
     Gfx_PacketNext = saved_packet;
     Text_PenX = saved_pen[0]; Text_PenY = saved_pen[1]; Text_LineX = saved_pen[2];
     std::memcpy(records, saved_records, sizeof saved_records);
@@ -320,7 +320,7 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out) {
 // draw is the one above.
 extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsigned count_arg,
                                                         const unsigned char* text) {
-    if (g_textlog) {
+    if (text_draw::g_textlog) {
         TextLog(Low32(__builtin_return_address(0)), text);
     }
     unsigned color = color_arg;                     // only the low byte is ever read
@@ -402,15 +402,15 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
                 const auto a = static_cast<std::uint16_t>(pa), b = static_cast<std::uint16_t>(pb);
                 if (a > text_draw::g_glyph_limit || b > text_draw::g_glyph_limit) GlyphTrap();
                 std::memcpy(Gfx_PacketNext + 0x16, &a, sizeof a);
-                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
+                text_draw::g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
                        kCell - v, u, v, static_cast<int>(clut));
                 std::memcpy(Gfx_PacketNext + 0x16, &b, sizeof b);
-                g_emit(static_cast<std::uint16_t>(Text_PenX + TextAdvance_OfGlyph(a)),
+                text_draw::g_emit(static_cast<std::uint16_t>(Text_PenX + TextAdvance_OfGlyph(a)),
                        static_cast<std::uint16_t>(Text_PenY), kCell, kCell - v, u, v, static_cast<int>(clut));
                 if (count > 1) --count;
             } else {
                 std::memcpy(Gfx_PacketNext + 0x16, &index, sizeof index);
-                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
+                text_draw::g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
                        kCell - v, u, v, static_cast<int>(clut));
             }
             Text_PenX = static_cast<short>(Text_PenX + TextAdvance_Of(first));  // DIV-0006
@@ -435,8 +435,8 @@ void TextDraw_Inject() {
     }
     BOF3_INJECT(Text_DrawString);
     char flag[8];
-    g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
-    if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
+    text_draw::g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
+    if (text_draw::g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }
 
 // --- DT-2 (DIV-0140): the self-test and the switch ---------------------------------
@@ -527,7 +527,7 @@ void ButtonTextSelfTest() {
     std::uint8_t* const tail = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(::bof3::Img(kPool + kPoolRoom - 0x40)));
     std::memcpy(saved_pool, tail, sizeof saved_pool);
     Gfx_PacketNext = prim;
-    g_emit = &RecordEmit;
+    text_draw::g_emit = &RecordEmit;
     // A layer's table holds DIV-0051's L1 / R1 at 0xA69 / 0xA6A; the shipped
     // one, loaded at a self-test, stops at 0x992 and the guard would trap.
     const unsigned saved_limit = text_draw::g_glyph_limit;
@@ -662,7 +662,7 @@ void ButtonTextSelfTest() {
     g_button_text = saved_on;
     Game_AreaNumber = saved_area;
     std::memcpy(tail, saved_pool, sizeof saved_pool);
-    g_emit = Text_EmitGlyph;
+    text_draw::g_emit = Text_EmitGlyph;
     text_draw::g_glyph_limit = saved_limit;
     Gfx_PacketNext = saved_packet;
     Text_PenX = saved_pen[0];

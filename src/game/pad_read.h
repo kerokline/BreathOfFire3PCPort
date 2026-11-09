@@ -17,5 +17,6 @@ void PadRead_Inject();
 bool PadRead_AnyInputDown();
 
 namespace pad_read {
+extern bof3x::input::Layout g_layout;   // defined in pad_read.cpp (source-layout B0: promoted for a moved reader)
 extern std::vector<bof3x::input::PadBinding> g_pad_map;   // defined in pad_read.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace pad_read

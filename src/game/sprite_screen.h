@@ -2,4 +2,6 @@
 // 0x5890E0. docs/movement-script.md section 1b.
 #pragma once
 
+#include "game/sprite_screen_callees.h"
+
 void SpriteScreen_Inject();

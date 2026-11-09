@@ -89,8 +89,8 @@ void ReadKeyboard() {
 // default of DIV-0050, or BOF3X_PAD from the launcher (bof3x.ini `pad.*`).
 
 using input::Layout;
-
-Layout g_layout = Layout::kPositional;
+}  // namespace
+namespace pad_read { Layout g_layout = Layout::kPositional; }  namespace {
 }  namespace pad_read { std::vector<input::PadBinding> g_pad_map; }
 namespace {
 void PadLogLine(const char* line) { bof3::Log("%s", line); }
@@ -124,7 +124,7 @@ void LoadPadMap() {
     } else if (n >= sizeof text) {
         bof3::Log("pad: BOF3X_PAD too long (%lu); the default map", static_cast<unsigned long>(n));
     }
-    g_layout = LayoutFromEnv(layout);
+    pad_read::g_layout = LayoutFromEnv(layout);
 }
 
 unsigned PadWord() {
@@ -165,7 +165,7 @@ void LoadKeyTable() {
 void StartSdl() {
     if (input::PadSdl_Started()) return;
     LoadPadMap();
-    input::PadSdl_Start(g_layout, &PadLogLine);
+    input::PadSdl_Start(pad_read::g_layout, &PadLogLine);
 }
 
 void StopSdl() { input::PadSdl_Stop(); }

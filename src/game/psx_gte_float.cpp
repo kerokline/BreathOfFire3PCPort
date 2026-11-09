@@ -132,9 +132,9 @@ void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
 
 using RampFn = long (__cdecl*)(long);
 using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
-RampFn g_ramp_clone = nullptr;
-PerspectiveFn g_perspective_clone = nullptr;
-
+}  namespace psx_gte_float { RampFn g_ramp_clone = nullptr; }
+namespace psx_gte_float { PerspectiveFn g_perspective_clone = nullptr; }
+namespace {
 struct {
     unsigned ramp_calls, perspective_calls, mismatches;
     unsigned branch[3];
@@ -342,9 +342,9 @@ void SelfTest(Entry* entries, unsigned n) {
 // original 0x5A8340: where a depth lies between two planes, 0 to 0x1000 - the
 // GTE's depth-cue interpolation factor by its shape. Truncated, not rounded.
 extern "C" long __cdecl Gte_DepthRamp(long value) {
-    if (!g_ramp_clone) return DepthRamp(value);
+    if (!psx_gte_float::g_ramp_clone) return DepthRamp(value);
     LiveCountWord();
-    const long theirs = g_ramp_clone(value);
+    const long theirs = psx_gte_float::g_ramp_clone(value);
     const long ours = DepthRamp(value);
     ++g_live.ramp_calls;
     if (theirs != ours && ++g_live.mismatches <= 8)
@@ -358,11 +358,11 @@ extern "C" long __cdecl Gte_DepthRamp(long value) {
 // view space, to a screen position in FLOATS - where the PSX had two s16 - and
 // a depth. 2.5 million calls an attract run.
 extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, long* sz) {
-    if (!g_perspective_clone) { Perspective(sx, sy, sz); return; }
+    if (!psx_gte_float::g_perspective_clone) { Perspective(sx, sy, sz); return; }
     LiveCountWord();
     ++g_live.branch[Gte_Transformed[2] >= Gte_NearZ ? 0 : Gte_Transformed[2] <= 0 ? 1 : 2];
     std::uint32_t their_bits[3] = {0, 0, 0}, our_bits[3];
-    g_perspective_clone(reinterpret_cast<float*>(&their_bits[0]), reinterpret_cast<float*>(&their_bits[1]),
+    psx_gte_float::g_perspective_clone(reinterpret_cast<float*>(&their_bits[0]), reinterpret_cast<float*>(&their_bits[1]),
                         reinterpret_cast<long*>(&their_bits[2]));
     Perspective(sx, sy, sz);
     std::memcpy(&our_bits[0], sx, 4);
@@ -465,8 +465,8 @@ void PsxGteFloat_Inject() {
         }
         SelfTest(entries, sizeof entries / sizeof entries[0]);
         // From here on the two wrappers above compare every live call.
-        g_ramp_clone = reinterpret_cast<RampFn>(reinterpret_cast<void*>(entries[0].theirs));
-        g_perspective_clone = reinterpret_cast<PerspectiveFn>(reinterpret_cast<void*>(entries[1].theirs));
+        psx_gte_float::g_ramp_clone = reinterpret_cast<RampFn>(reinterpret_cast<void*>(entries[0].theirs));
+        psx_gte_float::g_perspective_clone = reinterpret_cast<PerspectiveFn>(reinterpret_cast<void*>(entries[1].theirs));
     }
     BOF3_INJECT(Gte_DepthRamp);
     BOF3_INJECT(Gte_Perspective);

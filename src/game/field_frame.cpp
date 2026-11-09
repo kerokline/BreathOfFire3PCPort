@@ -40,39 +40,21 @@ const unsigned char* Record54(const unsigned char* sprite) {
     std::memcpy(&p, sprite + 0x54, sizeof p);
     return At(p);
 }
-
-// DIVERGENCE DIV-0041 (ultrawide round, group UC2, docs/ultrawide-culls-fix.md
-// section 2): a type-0x0A sprite in the wide picture's bands. Sprite_ProjectA
-// keeps Capcom's margins for the off-screen flag and for its place on
-// Sprite_DrawList, so every list the original builds is built the same (the
-// list holds 40, and a band sprite taking a slot could push out one the
-// original draws - and that one's flag, which Sprite_Draw writes, would go
-// stale). A sprite the original leaves off the list for x alone, but inside
-// the margins moved out by the columns, is noted here instead, and
-// Field_DrawFrame puts it on the list just before the draw pass, in whatever
-// slots the frame left. Its flag is already set (Sprite_Draw sets it again at
-// its own bound, which lies inside the margins), and the scale dwords +0x40 /
-// +0x44 Sprite_Draw writes are put back after the pass. A model sprite (+0x24
-// bit 6, drawn through Sprite_AddDrawRecords) is not noted: it stays culled
-// at Capcom's margins. Empty while the fills are unarmed (every fuzz).
-struct BandSprite {
-    unsigned char* sprite;
-    unsigned char scale[8];
-};
-BandSprite g_band[0x28];
-unsigned g_band_count, g_band_added;
+}  // namespace
+namespace field_frame { BandSprite g_band[0x28]; }
+namespace field_frame { unsigned g_band_count, g_band_added; }  namespace {
 int g_band_fill = -1;   // the self-test's columns; -1 is Widescreen_Fill()
 
 void BandNote(unsigned char* sprite) {
-    if (g_band_count < sizeof g_band / sizeof g_band[0]) g_band[g_band_count++].sprite = sprite;
+    if (field_frame::g_band_count < sizeof field_frame::g_band / sizeof field_frame::g_band[0]) field_frame::g_band[field_frame::g_band_count++].sprite = sprite;
 }
 
 // Just before the draw pass: each noted sprite still flagged off screen, still
 // not a model and not already on the list, appended while the list has room.
 void BandAppend() {
-    g_band_added = 0;
-    for (unsigned i = 0; i < g_band_count; ++i) {
-        BandSprite& b = g_band[i];
+    field_frame::g_band_added = 0;
+    for (unsigned i = 0; i < field_frame::g_band_count; ++i) {
+        field_frame::BandSprite& b = field_frame::g_band[i];
         if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40) || (b.sprite[0x24] & 0x40)) continue;
         const unsigned char n = Sprite_DrawListCount;
         if (n >= 0x28) break;
@@ -82,13 +64,13 @@ void BandAppend() {
         std::memcpy(b.scale, b.sprite + 0x40, sizeof b.scale);
         Sprite_DrawList[n] = b.sprite;
         Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
-        g_band[g_band_added++] = b;
+        field_frame::g_band[field_frame::g_band_added++] = b;
     }
-    g_band_count = 0;
+    field_frame::g_band_count = 0;
 }
 void BandRestore() {
-    for (unsigned i = 0; i < g_band_added; ++i) std::memcpy(g_band[i].sprite + 0x40, g_band[i].scale, sizeof g_band[i].scale);
-    g_band_added = 0;
+    for (unsigned i = 0; i < field_frame::g_band_added; ++i) std::memcpy(field_frame::g_band[i].sprite + 0x40, field_frame::g_band[i].scale, sizeof field_frame::g_band[i].scale);
+    field_frame::g_band_added = 0;
 }
 
 using Handler = void (__cdecl*)(unsigned char*);
@@ -96,58 +78,9 @@ void CallHandler(unsigned char* object) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Field_ObjectHandlers[object[1]]))(object);
 }
 
-// Every callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them - for the original's copies and for ours
-// alike, so that each of the twelve is tested alone. The ones this file
-// implements are here too, called through the same pointers.
-struct CalleesFieldFrame {
-    // the entries' calls, in 0x517240's order
-    void (__cdecl* mode_dispatch)();
-    void (__cdecl* task_records)();
-    void (__cdecl* kind2)();
-    void (__cdecl* extra_frame)();
-    void (__cdecl* members)();
-    void (__cdecl* objects)();
-    void (__cdecl* area_map)();
-    void (__cdecl* extra_screens)();
-    void (__cdecl* party_screens)();
-    void (__cdecl* objects_screen)();
-    void (__cdecl* effects)();
-    void (__cdecl* slots)();
-    void (__cdecl* tint)();
-    void (__cdecl* draw)();
-    // Field_MembersFrame's
-    void (__cdecl* pending)();
-    void (__cdecl* leader)();
-    void (__cdecl* member)();
-    // the screen updates'
-    void (__cdecl* screen_a)();
-    void (__cdecl* update_screen)();
-    void (__cdecl* project_a)();
-    // the object frames'
-    unsigned char (__cdecl* turn_target)(unsigned char*);
-    void (__cdecl* face)(unsigned char);
-    void (__cdecl* idle)(unsigned char*);
-    void (__cdecl* linked)();
-    void (__cdecl* idle_long)(unsigned char*);
-    unsigned char (__cdecl* tick)();
-    unsigned char (__cdecl* tick_once)();
-    // Sprite_ProjectA's
-    void (__cdecl* inherit_key)();
-    void (__cdecl* load_vertex)(const unsigned long*);
-    void (__cdecl* rtps)();
-    void (__cdecl* store_xy)(unsigned long*);
-    void (__cdecl* store_depth)(long*);
-    // the frame's draw
-    void (__cdecl* header_pass)();
-    void (__cdecl* overlays)();
-    void (__cdecl* draw_pass)();
-    void (__cdecl* swap)(unsigned long, unsigned long);
-    void (__cdecl* sprite_draw)();
-};
 // MoveScript_SetTurnTarget returns 0 or 1 in al (0x517EAA, 0x517F21), which
 // Field_ObjectsFrame tests.
-const CalleesFieldFrame kOriginals = {
+const field_frame::CalleesFieldFrame kOriginals = {
     Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
     AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots,
     MoveScript_TintFrame, Field_DrawFrame,
@@ -159,8 +92,8 @@ const CalleesFieldFrame kOriginals = {
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,
     AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, Sprite_SwapOverlays, Sprite_Draw,
 };
-CalleesFieldFrame g = kOriginals;
-
+}  namespace field_frame { CalleesFieldFrame g = kOriginals; }
+namespace {
 // `fld dword` then `fstp dword`: exact, except that a signalling NaN comes
 // back quiet (bit 22 set). As sprite_screen.cpp's.
 std::uint32_t ThroughX87(std::uint32_t bits) {
@@ -189,37 +122,37 @@ std::uint32_t FloatBits(std::int16_t v) {
 
 // original 0x517200: the field's frame (PSX FUN_8019A1B8, call for call).
 extern "C" void __cdecl Field_Frame(void) {
-    g.kind2();
-    g.extra_frame();
-    g.members();
-    g.objects();
-    g.area_map();
-    g.extra_screens();
-    g.party_screens();
-    g.objects_screen();
-    g.effects();
-    g.slots();
-    g.tint();
-    g.draw();   // a tail jmp in the original
+    field_frame::g.kind2();
+    field_frame::g.extra_frame();
+    field_frame::g.members();
+    field_frame::g.objects();
+    field_frame::g.area_map();
+    field_frame::g.extra_screens();
+    field_frame::g.party_screens();
+    field_frame::g.objects_screen();
+    field_frame::g.effects();
+    field_frame::g.slots();
+    field_frame::g.tint();
+    field_frame::g.draw();   // a tail jmp in the original
 }
 
 // original 0x517240 (PSX 0x8019A230): the same frame with the area's mode dispatch and the
 // task records first (PSX FUN_8019A230, call for call).
 extern "C" void __cdecl Field_FrameScripted(void) {
-    g.mode_dispatch();
-    g.task_records();
-    g.kind2();
-    g.extra_frame();
-    g.members();
-    g.objects();
-    g.area_map();
-    g.extra_screens();
-    g.party_screens();
-    g.objects_screen();
-    g.effects();
-    g.slots();
-    g.tint();
-    g.draw();   // a tail jmp in the original
+    field_frame::g.mode_dispatch();
+    field_frame::g.task_records();
+    field_frame::g.kind2();
+    field_frame::g.extra_frame();
+    field_frame::g.members();
+    field_frame::g.objects();
+    field_frame::g.area_map();
+    field_frame::g.extra_screens();
+    field_frame::g.party_screens();
+    field_frame::g.objects_screen();
+    field_frame::g.effects();
+    field_frame::g.slots();
+    field_frame::g.tint();
+    field_frame::g.draw();   // a tail jmp in the original
 }
 
 // original 0x517350: the party members' frames (PSX FUN_8019A440). Bit n of
@@ -228,24 +161,24 @@ extern "C" void __cdecl Field_FrameScripted(void) {
 // run two, as the original has it. Flags and count are re-read after every
 // call, as the original's loads are.
 extern "C" void __cdecl Field_MembersFrame(void) {
-    g.pending();
+    field_frame::g.pending();
     const auto held = [] { return static_cast<unsigned char>(Field_ScriptFlags2 | Field_ScriptFlags); };
     if (!(held() & 1)) {
         Field_State = rv::Bytes(ObjTrio);
         Sprite_Current = rv::Bytes(ObjTrio);
-        g.leader();
+        field_frame::g.leader();
     }
     if (Field_MemberCount <= 1) return;
     if (!(held() & 2)) {
         Field_State = rv::Bytes(&ObjTrio[1]);
         Sprite_Current = rv::Bytes(&ObjTrio[1]);
-        g.member();
+        field_frame::g.member();
     }
     if (Field_MemberCount != 3) return;
     if (!(held() & 4)) {
         Field_State = rv::Bytes(&ObjTrio[2]);
         Sprite_Current = rv::Bytes(&ObjTrio[2]);
-        g.member();   // a tail jmp in the original
+        field_frame::g.member();   // a tail jmp in the original
     }
 }
 
@@ -264,8 +197,8 @@ extern "C" void __cdecl Field_ObjectsScreen(void) {
         } else {
             object[0x29] = (object[0x24] & 0x10) ? 4 : Draw_OtSlot;
         }
-        if (rv::Current<records::SpriteObject>()->type == 0x0A) g.screen_a();
-        else g.update_screen();
+        if (rv::Current<records::SpriteObject>()->type == 0x0A) field_frame::g.screen_a();
+        else field_frame::g.update_screen();
     }
 }
 
@@ -293,27 +226,27 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
         const unsigned char flags = context[0];
         if (timed == 0 && (flags & 0x20)) {
             if (flags & 0x10) {
-                const unsigned char turned = g.turn_target(context);
+                const unsigned char turned = field_frame::g.turn_target(context);
                 records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
                 if (turned != 0 && !(sprite->flags2 & 8)) {
                     object[0x85] = static_cast<unsigned char>(sprite->direction & 7);
                     if (sprite->flags2 & 2) {
-                        g.face(static_cast<unsigned char>(sprite->direction & 7));
+                        field_frame::g.face(static_cast<unsigned char>(sprite->direction & 7));
                     } else {   // turn to face ObjTrio's first member
                         sprite->direction = static_cast<unsigned char>((ObjTrio[0].direction ^ 4) & 7);
-                        g.face(rv::Current<records::SpriteObject>()->direction);
+                        field_frame::g.face(rv::Current<records::SpriteObject>()->direction);
                     }
                     if (rv::Current<records::SpriteObject>()->state == 0x0A) object[0x85] |= 1;
                 }
             } else {
-                g.idle(object);
+                field_frame::g.idle(object);
             }
         } else {
             if (context[0] & 1) {
-                g.linked();
+                field_frame::g.linked();
                 continue;
             }
-            if (Word(object + 0x9C) > 0x1E && timed == 0) g.idle_long(object);
+            if (Word(object + 0x9C) > 0x1E && timed == 0) field_frame::g.idle_long(object);
             else CallHandler(object);
         }
         records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
@@ -321,15 +254,15 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
         const unsigned char after = context[0];
         if (after & 0x40) {
             if (sprite->flags2 & 0x20) continue;
-            if (sprite->flags & 0x10) g.tick();
-            else g.tick_once();
+            if (sprite->flags & 0x10) field_frame::g.tick();
+            else field_frame::g.tick_once();
         } else if (after & 8) {
-            g.face(sprite->direction);
+            field_frame::g.face(sprite->direction);
             context[0] &= 0xF7;
         } else if (!(sprite->flags2 & 0x20)) {
             const int extra = static_cast<int>(object[0x84]) - 2;
             const unsigned ticks = (extra < 0 ? 0u : static_cast<unsigned>(extra) & 0xFF) + 1;
-            for (unsigned i = 0; i < ticks; ++i) g.tick();
+            for (unsigned i = 0; i < ticks; ++i) field_frame::g.tick();
         }
     }
     Field_StepCountPrev = Field_StepCount;
@@ -343,7 +276,7 @@ extern "C" void __cdecl Party_ExtraScreens(void) {
     for (unsigned n = kExtra; n != 0; --n, object += kObjectBytes) {
         Sprite_Current = object;
         const unsigned char f = object[0];
-        if ((f & 1) && !(f & 0x40)) g.screen_a();
+        if ((f & 1) && !(f & 0x40)) field_frame::g.screen_a();
     }
 }
 
@@ -359,10 +292,10 @@ extern "C" void __cdecl Party_ExtraFrame(void) {
         unsigned char* const context = object + 0x80;
         const unsigned char flags = context[0];
         if (object[9] == 0 && (flags & 0x20)) {
-            if (flags & 0x10) g.turn_target(context);
-            else g.idle(object);
+            if (flags & 0x10) field_frame::g.turn_target(context);
+            else field_frame::g.idle(object);
         } else if (context[0] & 1) {
-            g.linked();
+            field_frame::g.linked();
         } else {
             CallHandler(object);
         }
@@ -376,7 +309,7 @@ extern "C" void __cdecl Sprite_UpdateScreenA(void) {
     records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x10) sprite->ot_slot = 4;
     else sprite->ot_slot = (Record54(rv::Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
-    g.project_a();
+    field_frame::g.project_a();
 }
 
 // original 0x57B860: a type-0x0A sprite's draw key, screen position and depth,
@@ -410,7 +343,7 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     sprite->draw_key = sprite->draw_key | low;
     sprite = rv::Current<records::SpriteHead>();
     if (!(Record54(rv::Bytes(sprite))[3] & 0x10)) {
-        g.inherit_key();
+        field_frame::g.inherit_key();
         sprite = rv::Current<records::SpriteHead>();
     }
     short vertex[4];
@@ -420,11 +353,11 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     vertex[3] = 0;   // DIV-0023
     unsigned long vertex_words[2];
     std::memcpy(vertex_words, vertex, sizeof vertex_words);
-    g.load_vertex(vertex_words);
-    g.rtps();
+    field_frame::g.load_vertex(vertex_words);
+    field_frame::g.rtps();
     unsigned long screen[2];
-    g.store_xy(screen);
-    g.store_depth(reinterpret_cast<long*>(Sprite_Current + 0x60));
+    field_frame::g.store_xy(screen);
+    field_frame::g.store_depth(reinterpret_cast<long*>(Sprite_Current + 0x60));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
@@ -452,10 +385,10 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
 // original 0x592F00: the draw at the end of the field's frame (PSX
 // FUN_8014B948), and both sprite lists emptied for the next.
 extern "C" void __cdecl Field_DrawFrame(void) {
-    g.header_pass();
-    g.overlays();
+    field_frame::g.header_pass();
+    field_frame::g.overlays();
     BandAppend();    // DIV-0041 (UC2): the band's type-0x0A sprites, in the slots left
-    g.draw_pass();
+    field_frame::g.draw_pass();
     BandRestore();
     Sprite_OverlayListCount = 0;
     Sprite_DrawListCount = 0;
@@ -480,7 +413,7 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
                 const auto here = static_cast<std::int16_t>(Word(Sprite_OverlayList[j] + 0x3E));
                 const auto before = static_cast<std::int16_t>(Word(Sprite_OverlayList[j - 1] + 0x3E));
                 if (here < before) {
-                    g.swap(j, static_cast<unsigned char>(j - 1));
+                    field_frame::g.swap(j, static_cast<unsigned char>(j - 1));
                     count = Sprite_OverlayListCount;
                 }
             }
@@ -495,7 +428,7 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
         SetLong(sprite + 0x74, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(sprite + 0x2E)))));
         rv::Current<records::SpriteObject>()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(rv::Current<records::SpriteObject>()->screen_y))));
         Widescreen_SweepBefore(sprite);   // DIV-0041 (I38): a marked sweep drawn at its mapped x
-        g.sprite_draw();
+        field_frame::g.sprite_draw();
         Widescreen_SweepAfter(sprite);    // ... and Capcom's +0x74 put back
         ++i;
     } while (i < Sprite_OverlayListCount);
@@ -666,7 +599,7 @@ void __cdecl StubSpriteDraw() {
     if (h % 5 == 0) Sprite_Current = Pool(h >> 12);
 }
 
-const CalleesFieldFrame kStubs = {
+const field_frame::CalleesFieldFrame kStubs = {
     StubVoid<13>, StubVoid<14>, StubVoid<1>, StubVoid<2>, StubVoid<3>, StubVoid<4>, StubVoid<5>, StubVoid<6>,
     StubVoid<7>, StubVoid<8>, StubVoid<9>, StubVoid<10>, StubVoid<11>, StubVoid<12>,
     StubVoid<15>, StubVoid<16>, StubVoid<17>,
@@ -882,15 +815,15 @@ BandCheck BandSelfTest(void* theirs) {
         unsigned noted = 0;
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
-            g_band_count = 0;
+            field_frame::g_band_count = 0;
             if (pass) g_band_fill = static_cast<int>(out.columns);
             reinterpret_cast<void (__cdecl*)()>(pass ? reinterpret_cast<void*>(&Sprite_ProjectA) : theirs)();
             g_band_fill = -1;
-            if (pass) noted = g_band_count;
+            if (pass) noted = field_frame::g_band_count;
             Capture(pass ? our_out : their_out);
         }
         out.noted += noted;
-        g_band_count = 0;
+        field_frame::g_band_count = 0;
         if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++out.bad <= 8)
             bof3::Log("shadow      field_frame DIV-0041 band MISMATCH: round %u", round);
         ++out.rounds;
@@ -909,18 +842,18 @@ BandCheck BandSelfTest(void* theirs) {
     for (unsigned i = 0; i < 0x26; ++i) Sprite_DrawList[i] = objects[0];
     Sprite_DrawList[7] = objects[5];   // already listed
     Sprite_DrawListCount = 0x26;
-    g_band_count = 0;
+    field_frame::g_band_count = 0;
     static const unsigned kNoted[] = {1, 3, 4, 5, 2, 6};
     for (const unsigned i : kNoted) BandNote(objects[i]);
     BandAppend();
     bool ok = Sprite_DrawListCount == 0x28 && Sprite_DrawList[0x26] == objects[1] && Sprite_DrawList[0x27] == objects[2] &&
-              g_band_added == 2 && g_band_count == 0;
+              field_frame::g_band_added == 2 && field_frame::g_band_count == 0;
     for (unsigned i = 0; i < 0x26; ++i) ok = ok && Sprite_DrawList[i] == (i == 7 ? objects[5] : objects[0]);
     for (unsigned i = 0; i < 8; ++i) std::memset(objects[i] + 0x40, 0xEE, 8);   // the draw's scale writes
     BandRestore();
     for (unsigned i = 1; i <= 2; ++i)
         for (unsigned k = 0; k < 8; ++k) ok = ok && objects[i][0x40 + k] == static_cast<unsigned char>(0x10 * i + k);
-    ok = ok && objects[6][0x40] == 0xEE && objects[5][0x40] == 0xEE && g_band_added == 0;   // never appended: untouched
+    ok = ok && objects[6][0x40] == 0xEE && objects[5][0x40] == 0xEE && field_frame::g_band_added == 0;   // never appended: untouched
     out.append_ok = ok;
     return out;
 }
@@ -935,7 +868,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     unsigned long saved_handlers[11];
     std::memcpy(saved_handlers, Field_ObjectHandlers, sizeof saved_handlers);
     for (unsigned k = 0; k < 11; ++k) Field_ObjectHandlers[k] = Address(kHandlerStubs[k]);
-    g = kStubs;
+    field_frame::g = kStubs;
     const void* const ours[kCount] = {
         reinterpret_cast<Raw>(&Field_Frame), reinterpret_cast<Raw>(&Field_FrameScripted), reinterpret_cast<Raw>(&Field_MembersFrame),
         reinterpret_cast<Raw>(&Field_ObjectsScreen), reinterpret_cast<Raw>(&Field_ObjectsFrame), reinterpret_cast<Raw>(&Party_ExtraScreens),
@@ -990,7 +923,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
         }
     }
     const BandCheck band = BandSelfTest(theirs[8]);
-    g = kOriginals;
+    field_frame::g = kOriginals;
     std::memcpy(Field_ObjectHandlers, saved_handlers, sizeof saved_handlers);
     Apply(saved);
     if (band.run)
