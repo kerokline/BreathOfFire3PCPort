@@ -522,16 +522,21 @@ class Normaliser:
                     + (" " + ",".join(f"{o - start:X}={d}" for o, d in notes) if notes else ""))
         # The roots differ in length, so what follows a path in its section sits elsewhere and its
         # alignment padding changes. Not compared: the zeros that end the run (the padding before the next
-        # anchor) and, past the section's first path, the length of a zero run that follows a printable
-        # byte (a string's NUL and the padding after it), shown as `~`; a relocation's offset there is
-        # not compared either (its order and target are).
+        # anchor) and the length of a zero run that follows two or more printable bytes (a string's NUL
+        # and the padding after it), shown as `~`; a relocation's offset past the section's first path is
+        # not compared either (its order and target are). The fold reads the run alone, wherever it sits:
+        # it once applied past the first path only, so a table that sat after its file's path in one
+        # build and before it in the other (a moved function's `static constexpr` table, B2's
+        # `HeadCracker_Task::kPhases`) rendered two ways with the same bytes; and it folded after one
+        # printable byte, so a pointer or a small integer whose low byte read as a letter (`e0 fc 43 00`)
+        # was taken for a string.
         fr = self.first_root(secn)
         parts: list[str] = []
         i, n = 0, len(data)
         chunk = bytearray()
         while i < n:
-            if (data[i] == 0 and fr is not None and start + i >= fr and i > 0
-                    and 0x20 <= data[i - 1] < 0x7F):
+            if (data[i] == 0 and i > 1
+                    and 0x20 <= data[i - 1] < 0x7F and 0x20 <= data[i - 2] < 0x7F):
                 j = i
                 while j < n and data[j] == 0:
                     j += 1
