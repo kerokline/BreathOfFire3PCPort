@@ -81,15 +81,15 @@ namespace {
 
 using namespace battle_draw;
 
-unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const void* p) { return Low32(p); }
-U Word(const unsigned char* p) {
+unsigned char* At(battle_draw::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+battle_draw::U Addr(const void* p) { return Low32(p); }
+battle_draw::U Word(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-U Long(const unsigned char* p) {
-    U v;
+battle_draw::U Long(const unsigned char* p) {
+    battle_draw::U v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
@@ -98,15 +98,15 @@ float Float(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void PutWord(unsigned char* p, U v) {
+void PutWord(unsigned char* p, battle_draw::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
+void PutLong(unsigned char* p, battle_draw::U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char Byte(U address) { return At(address)[0]; }
-std::int32_t S8(U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
-std::int32_t S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
+unsigned char Byte(battle_draw::U address) { return At(address)[0]; }
+std::int32_t S8(battle_draw::U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
+std::int32_t S16(battle_draw::U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 
 // --- the x87 sequences, as the handlers execute them (d3d_draw.cpp and
 // field_misc.cpp have the same; each rounds to the control word's precision
@@ -126,40 +126,40 @@ inline float X87Div(float a, float b) {
 
 // D3d_Device, read afresh before every COM call as the original does.
 void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
-void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
-using Com3 = long(__stdcall*)(void*, U, U);
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-long SetTexture(U stage, U texture) {
+void* Method(void** device, battle_draw::U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
+using Com3 = long(__stdcall*)(void*, battle_draw::U, battle_draw::U);
+using Com6 = long(__stdcall*)(void*, battle_draw::U, battle_draw::U, battle_draw::U, battle_draw::U, battle_draw::U);
+long SetTexture(battle_draw::U stage, battle_draw::U texture) {
     void** device = Device();
     return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
 }
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVertices(U type, U count) {
+long DrawVertices(battle_draw::U type, battle_draw::U count) {
     void** device = Device();
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
-unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
-U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
+unsigned char* Vertex(battle_draw::U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+battle_draw::U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z; the diffuse as given. Specular, tu and tv are not written.
-void PutCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
+void PutCorner(unsigned char* out, const unsigned char* xyz, battle_draw::U diffuse) {
     PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
     PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
     PutLong(out + 0x08, Long(xyz + 8));
-    PutFloat(out + 0x0C, X87Div(Float(At(kRhwNumerator)), Float(xyz + 8)));
+    PutFloat(out + 0x0C, X87Div(Float(At(battle_draw::kRhwNumerator)), Float(xyz + 8)));
     PutLong(out + 0x10, diffuse);
 }
 
 // The Gouraud handlers' shared shape: n colours (r, g, b at +4 + i * 0x10, the
 // code byte +7 and the mode read again for each), all before any corner; then
 // n corners of 0x10 bytes from +8 (float x, y, z).
-void GouraudCorners(const unsigned char* prim, U n) {
+void GouraudCorners(const unsigned char* prim, battle_draw::U n) {
     unsigned long diffuse[3];
-    for (U i = 0; i < n; ++i) {
+    for (battle_draw::U i = 0; i < n; ++i) {
         const unsigned char* const rgb = prim + 4 + i * 0x10;
-        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawMode(), &diffuse[i], nullptr);
+        battle_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawMode(), &diffuse[i], nullptr);
     }
-    for (U i = 0; i < n; ++i) PutCorner(Vertex(i), prim + 8 + i * 0x10, static_cast<U>(diffuse[i]));
+    for (battle_draw::U i = 0; i < n; ++i) PutCorner(Vertex(i), prim + 8 + i * 0x10, static_cast<battle_draw::U>(diffuse[i]));
 }
 
 }  // namespace
@@ -182,10 +182,10 @@ extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
     PutLong(Vertex(3) + 8, 0);
     SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(0);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(2);   // Gouraud
+    battle_draw::g.ret_only(0);
+    battle_draw::g.ret_only(0);
+    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_shade(2);   // Gouraud
     return DrawVertices(4, 3);   // TRIANGLELIST
 }
 
@@ -195,10 +195,10 @@ extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
 extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
     GouraudCorners(prim, 2);
     SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(1);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(2);
+    battle_draw::g.ret_only(0);
+    battle_draw::g.ret_only(1);
+    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_shade(2);
     return d3d_lines::g_wide ? d3d_lines::DrawWide(2) : DrawVertices(3, 2);   // LINESTRIP; DIV-0079 the quads
 }
 
@@ -207,10 +207,10 @@ extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
 extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
     SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(1);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(2);
+    battle_draw::g.ret_only(0);
+    battle_draw::g.ret_only(1);
+    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_shade(2);
     return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVertices(3, 3);   // LINESTRIP; DIV-0079 the quads
 }
 
@@ -282,13 +282,13 @@ bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(Config_WindowColour));
+    battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
-    const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
-    const U category = w[0xA];
-    U items = Long(At(::bof3::Img(kInventory.v) + category * 4)) + top;
-    U counts = Long(At(::bof3::Img(kCounts.v) + category * 4)) + top;   // 0 + top for key items: not read then
-    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->y)) + 0x1Au;
+    const unsigned char top = battle_draw::g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
+    const battle_draw::U category = w[0xA];
+    battle_draw::U items = Long(At(::bof3::Img(kInventory.v) + category * 4)) + top;
+    battle_draw::U counts = Long(At(::bof3::Img(kCounts.v) + category * 4)) + top;   // 0 + top for key items: not read then
+    battle_draw::U row = static_cast<std::uint16_t>(S8(offset) + static_cast<battle_draw::U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
         const unsigned char item = At(items)[0];
@@ -296,21 +296,21 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
             unsigned char dim = 1;
             if (w[9] == 0) {
                 const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
-                dim = g.can_use(w[8], member, w[0xA], item) ? 0 : 1;
+                dim = battle_draw::g.can_use(w[8], member, w[0xA], item) ? 0 : 1;
             }
             unsigned char colour = dim ? 7 : 0;
-            const U here = static_cast<U>(i) + w[0xB];
-            const U cursor = w[0xD];
+            const battle_draw::U here = static_cast<battle_draw::U>(i) + w[0xB];
+            const battle_draw::U cursor = w[0xD];
             if (here == cursor) colour = 2;
             const unsigned char row_category = w[0xA];
             const unsigned char count = row_category == 4 ? 1 : At(counts)[0];
-            const int x = static_cast<int>(static_cast<U>(window_rec->x)) + 7;
+            const int x = static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7;
             if (here == cursor || here == w[0xC]) {
-                if (colour != 7) g.item_row(x, static_cast<int>(row), 7, row_category, At(items)[0], count, 1);
-                g.item_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, w[0xA],
+                if (colour != 7) battle_draw::g.item_row(x, static_cast<int>(row), 7, row_category, At(items)[0], count, 1);
+                battle_draw::g.item_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, w[0xA],
                            At(items)[0], count, dim);
             } else {
-                g.item_row(x, static_cast<int>(row), colour, row_category, At(items)[0], count, dim);
+                battle_draw::g.item_row(x, static_cast<int>(row), colour, row_category, At(items)[0], count, dim);
             }
         }
         ++items;
@@ -318,41 +318,41 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
+    battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(Config_WindowColour));
+    battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const unsigned char* const label = At(Long(At(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
-        const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
-        const unsigned n = g.char_count(label);
-        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<U>(window_rec->x))), y, grey,
+        const int y = static_cast<int>(static_cast<battle_draw::U>(window_rec->y)) + 7;
+        const unsigned n = battle_draw::g.char_count(label);
+        battle_draw::g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<battle_draw::U>(window_rec->x))), y, grey,
                        0x10, label);
     }
     {
         const unsigned char cat = w[0xA];
         const unsigned room = cat != 4 ? 0x80 : 0x20;
-        const unsigned have = g.count_used(cat) & 0xFFu;
-        g.sprintf_(reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(At(::bof3::Img(kFmt3d3d.v))), have, room);
+        const unsigned have = battle_draw::g.count_used(cat) & 0xFFu;
+        battle_draw::g.sprintf_(reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(At(::bof3::Img(kFmt3d3d.v))), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        g.font8(static_cast<U>(window_rec->x) + 0x55, static_cast<U>(window_rec->y) + 0x7A, grey, At(::bof3::Img(kPrintBuf.v)));
+        battle_draw::g.font8(static_cast<battle_draw::U>(window_rec->x) + 0x55, static_cast<battle_draw::U>(window_rec->y) + 0x7A, grey, At(::bof3::Img(kPrintBuf.v)));
     }
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[0x10] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[0x10] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
-        const U t = Word(w + 0x10);
+        const battle_draw::U t = Word(w + 0x10);
         PutWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
     }
-    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x28, static_cast<U>(window_rec->y), 1, 1);
-    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + b * 8 + 0x18, 4, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 0x16, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x70, 0x18, 1);
-    g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + 0x78, 0x19, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 8, static_cast<U>(window_rec->y) + 0x78, 0x1A, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x50, static_cast<U>(window_rec->y) + 0x78, 0x1B, 1);
-    for (int b = 0; b < 6; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x58, static_cast<U>(window_rec->y) + 0x78, 0x1C, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x88, static_cast<U>(window_rec->y) + 0x78, 0x1D, 1);
-    g.scroll_bar(At(Long(At(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 7, 0x80,
+    for (int b = 0; b < 10; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 0x28, static_cast<battle_draw::U>(window_rec->y), 1, 1);
+    for (int b = 0; b < 12; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y) + b * 8 + 0x18, 4, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x18, 0x16, 1);
+    for (int b = 0; b < 9; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x70, 0x18, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x19, 1);
+    for (int b = 0; b < 9; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 8, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1A, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x50, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1B, 1);
+    for (int b = 0; b < 6; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 0x58, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1C, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x88, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1D, 1);
+    battle_draw::g.scroll_bar(At(Long(At(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x18, 7, 0x80,
                  0x5C);
 }
 
@@ -379,66 +379,66 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
 // and the scroll bar over the list's 10 entries.
 extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(Config_WindowColour));
+    battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(Config_WindowColour));
     unsigned char offset = 0, moving = 0;
-    const unsigned char top = g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);
-    U ids = Addr(g.skill_list(w[0xA], w[0xB], 1)) + top;
-    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->y)) + 0x1Au;
+    const unsigned char top = battle_draw::g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);
+    battle_draw::U ids = Addr(battle_draw::g.skill_list(w[0xA], w[0xB], 1)) + top;
+    battle_draw::U row = static_cast<std::uint16_t>(S8(offset) + static_cast<battle_draw::U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
         const unsigned char id = At(ids)[0];
         if (id != 0) {
-            const unsigned char usable = static_cast<unsigned char>(g.skill_usable(w[8], static_cast<unsigned char>(BattleActorCopies_ItemActor), id));
+            const unsigned char usable = static_cast<unsigned char>(battle_draw::g.skill_usable(w[8], static_cast<unsigned char>(BattleActorCopies_ItemActor), id));
             const unsigned char dim = usable == 0 ? 1 : 0;
             unsigned char colour = dim ? 7 : 0;
             if (i == w[0xD]) colour = 2;
-            const unsigned cost = g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), At(ids)[0], 1) & 0xFFu;
-            const unsigned icon = g.skill_icon(At(ids)[0]) & 0xFFu;
+            const unsigned cost = battle_draw::g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), At(ids)[0], 1) & 0xFFu;
+            const unsigned icon = battle_draw::g.skill_icon(At(ids)[0]) & 0xFFu;
             const std::int32_t here = static_cast<std::int32_t>(i) + S16(Word(w + 0x10));
             const unsigned char* const record = At(::bof3::Img(kSkillRecords.v) + At(ids)[0] * 0x18u);
             if (here == static_cast<std::int32_t>(w[0xD]) || here == static_cast<std::int32_t>(w[0xC])) {
-                if (colour != 7) g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
-                g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
+                if (colour != 7) battle_draw::g.skill_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
+                battle_draw::g.skill_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
                             dim);
             } else {
-                g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row), colour, icon, record, cost, dim);
+                battle_draw::g.skill_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row), colour, icon, record, cost, dim);
             }
         }
         ++ids;
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
+    battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char* const label =
             At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
-        const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
-        const U length = static_cast<U>(std::strlen(reinterpret_cast<const char*>(label)));
-        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<U>(window_rec->x)), y, 0, 0x10, label);
+        const int y = static_cast<int>(static_cast<battle_draw::U>(window_rec->y)) + 7;
+        const battle_draw::U length = static_cast<battle_draw::U>(std::strlen(reinterpret_cast<const char*>(label)));
+        battle_draw::g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<battle_draw::U>(window_rec->x)), y, 0, 0x10, label);
     }
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[9] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[9] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
         const unsigned char t = w[9];
         w[9] = (t & 0xF0) ? static_cast<unsigned char>(t - 0x10) : 0;
     }
-    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x28, static_cast<U>(window_rec->y), 1, 1);
-    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + b * 8 + 0x18, 4, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 0x16, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
-    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x70, 0x18, 1);
-    g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + 0x78, 0x19, 1);
-    for (int b = 0; b < 17; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 8, static_cast<U>(window_rec->y) + 0x78, 0x1A, 1);
+    for (int b = 0; b < 10; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 0x28, static_cast<battle_draw::U>(window_rec->y), 1, 1);
+    for (int b = 0; b < 12; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y) + b * 8 + 0x18, 4, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x18, 0x16, 1);
+    for (int b = 0; b < 9; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x70, 0x18, 1);
+    battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x19, 1);
+    for (int b = 0; b < 17; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 8, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1A, 1);
     if (Word(w + 0x14) != 0) {
-        g.piece(static_cast<U>(window_rec->x) + 8, static_cast<U>(window_rec->y), 0x32, 1);
-        g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y), 0x33, 1);
+        battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 8, static_cast<battle_draw::U>(window_rec->y), 0x32, 1);
+        battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y), 0x33, 1);
     }
     {
         // x, y and the top read before the list lookup, as the original's
-        const int x = static_cast<int>(static_cast<U>(window_rec->x)) + 0x90, y = static_cast<int>(static_cast<U>(window_rec->y)) + 0x18;
+        const int x = static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 0x90, y = static_cast<int>(static_cast<battle_draw::U>(window_rec->y)) + 0x18;
         const unsigned char first = w[0x10];
-        const unsigned char* const list = g.skill_list(w[0xA], w[0xB], 1);
-        g.scroll_bar(list, first, x, y, 7, 0xA, 0x5C);
+        const unsigned char* const list = battle_draw::g.skill_list(w[0xA], w[0xB], 1);
+        battle_draw::g.scroll_bar(list, first, x, y, 7, 0xA, 0x5C);
     }
 }
 
@@ -455,8 +455,8 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
 // so nothing can rely on it: ours is void.
 extern "C" void __cdecl AreaMap_TintClut(int level) {
     if (Field_StatusBits & 1) return;
-    g.clut_adjust(0xFFFF, 0xFFF, level, level, level);
-    g.clut_cycle();
+    battle_draw::g.clut_adjust(0xFFFF, 0xFFF, level, level, level);
+    battle_draw::g.clut_cycle();
 }
 
 void BattleDraw_Inject() {
