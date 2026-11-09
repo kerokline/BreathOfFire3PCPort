@@ -1228,11 +1228,11 @@ extern "C" void __cdecl EffectKind82_Wait(void) {
         s[1] = 0x16;
         s = S();
     }
-    if (B(::bof3::Img(at::kCounterC.v)) == 0x80) {
+    if (B(::bof3::Img(effect_3d::at::kCounterC.v)) == 0x80) {
         s[1] = 0x17;
         s = S();
     }
-    switch (B(::bof3::Img(at::kCounterB.v))) {
+    switch (B(::bof3::Img(effect_3d::at::kCounterB.v))) {
     case 3: s[1] = 6; return;
     case 4: s[1] = 4; return;
     case 5: s[1] = 2; return;
