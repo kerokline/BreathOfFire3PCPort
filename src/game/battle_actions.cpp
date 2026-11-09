@@ -79,21 +79,21 @@ using namespace battle_actions;
 
 namespace {
 
-unsigned char B(std::uint32_t address) { return At(address)[0]; }
-void SetB(std::uint32_t address, unsigned v) { At(address)[0] = static_cast<unsigned char>(v); }
+unsigned char B(std::uint32_t address) { return battle_actions::At(address)[0]; }
+void SetB(std::uint32_t address, unsigned v) { battle_actions::At(address)[0] = static_cast<unsigned char>(v); }
 unsigned char* PtrAt(std::uint32_t address) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_actions::Long(battle_actions::At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+    battle_actions::SetLong(battle_actions::At(address), static_cast<std::int32_t>(Low32(p)));
 }
-std::int32_t L(std::uint32_t address) { return Long(At(address)); }
+std::int32_t L(std::uint32_t address) { return battle_actions::Long(battle_actions::At(address)); }
 
 // The actor objects, by the actor byte: a member's (0..2), or an enemy's
 // (actor - 3, as a 32-bit difference - the originals' `sub eax, 3` after
 // `and eax, 0xFF`).
-unsigned char* Party(unsigned actor) { return At(::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned actor) { return At(::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+unsigned char* Party(unsigned actor) { return battle_actions::At(::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride); }
+unsigned char* Enemy(unsigned actor) { return battle_actions::At(::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // One entry of a step table in .data, read afresh; the byte picks it and is
 // not checked (a byte past the table's count reaches the next table's
@@ -117,19 +117,19 @@ void SetMemberBlock(std::uint32_t block, unsigned actor) {
     SetPtrAt(block + at::kBAction, o + 0x124);
     SetPtrAt(block + at::kBObject, o);
     const unsigned stand = member_rec->direction + member_rec->char_id * 4u;
-    const unsigned char* const pair = At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + stand * 2);
-    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(pair[0])) + static_cast<std::uint16_t>(member_rec->screen_x));
-    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(pair[1])) + static_cast<std::uint16_t>(member_rec->screen_y));
-    SetWord(At(block + at::kBZ), member_rec->draw_key);
+    const unsigned char* const pair = battle_actions::At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + stand * 2);
+    battle_actions::SetWord(battle_actions::At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(pair[0])) + static_cast<std::uint16_t>(member_rec->screen_x));
+    battle_actions::SetWord(battle_actions::At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(pair[1])) + static_cast<std::uint16_t>(member_rec->screen_y));
+    battle_actions::SetWord(battle_actions::At(block + at::kBZ), member_rec->draw_key);
 }
 void SetEnemyBlock(std::uint32_t block, unsigned actor) {
     unsigned char* const o = Enemy(actor);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
     SetPtrAt(block + at::kBAction, o + 0x104);
     SetPtrAt(block + at::kBObject, o);
-    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(o[0xF2])) + static_cast<std::uint16_t>(enemy_rec->screen_x));
-    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(o[0xF3])) + static_cast<std::uint16_t>(enemy_rec->screen_y));
-    SetWord(At(block + at::kBZ), enemy_rec->draw_key);
+    battle_actions::SetWord(battle_actions::At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(o[0xF2])) + static_cast<std::uint16_t>(enemy_rec->screen_x));
+    battle_actions::SetWord(battle_actions::At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(o[0xF3])) + static_cast<std::uint16_t>(enemy_rec->screen_y));
+    battle_actions::SetWord(battle_actions::At(block + at::kBZ), enemy_rec->draw_key);
 }
 
 // The actor's effective stat block (a member's +0xA0, an enemy's +0xB0; the
@@ -137,15 +137,15 @@ void SetEnemyBlock(std::uint32_t block, unsigned actor) {
 // 0x939FE0, 32 bytes.
 void CopyStats(unsigned actor) {
     const unsigned a = actor & 0xFF;
-    std::memmove(At(::bof3::Img(at::kStats.v)), a < 3 ? Party(a) + 0xA0 : Enemy(a) + 0xB0, 32);
+    std::memmove(battle_actions::At(::bof3::Img(at::kStats.v)), a < 3 ? Party(a) + 0xA0 : Enemy(a) + 0xB0, 32);
 }
 
 // A system message as a banner, as the kind-2 enemy and both checks show one: the message
 // window opened, then a kind-2 banner of the system message `id`, timer 0x2D.
 void SystemBanner(unsigned id) {
-    g.open_msg_window();
-    const unsigned char* const text = g.msg(id);
-    g.banner_add(2, 0, 0, 0x2D, reinterpret_cast<const char*>(text));
+    battle_actions::g.open_msg_window();
+    const unsigned char* const text = battle_actions::g.msg(id);
+    battle_actions::g.banner_add(2, 0, 0, 0x2D, reinterpret_cast<const char*>(text));
 }
 }  // namespace
 // DIVERGENCE DIV-0179, the unlearned skill in blue (BOF3X_UNLEARNED_BLUE=1,
@@ -168,15 +168,15 @@ constexpr unsigned kBannerColour = 0xA, kBlue = 3;
 void UnlearnedBlue(unsigned long entry, unsigned actor, unsigned id) {
     if (!battle_actions::g_unlearned_blue || entry % 0xC != 0) return;
     if (actor <= 2) return;
-    if ((Word(At(::bof3::Img(at::kAbilityRecords.v) + id * 24 + 0x14)) & 0x200) == 0) return;
+    if ((battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbilityRecords.v) + id * 24 + 0x14)) & 0x200) == 0) return;
     if (Battle_ActionBitSet(id & 0xFF) != 0) return;
     SetB(::bof3::Img(kBannerPool.v) + entry + kBannerColour, kBlue);
 }
 
 // The enemy's name record (+0x80, 12 bytes) into Text_Records[0], zeroed first.
 void EnemyNameToText0(const unsigned char* record) {
-    std::memset(At(::bof3::Img(at::kText0.v)), 0, 32);
-    std::memcpy(At(::bof3::Img(at::kText0.v)), record, 12);
+    std::memset(battle_actions::At(::bof3::Img(at::kText0.v)), 0, 32);
+    std::memcpy(battle_actions::At(::bof3::Img(at::kText0.v)), record, 12);
 }
 
 // A member's or an enemy's u16 at +0x90 / +0x92 (status) and AP +0x9A / +0xA6.
@@ -203,7 +203,7 @@ Standing ActorStanding(unsigned actor) {
 extern "C" void __cdecl Battle_ActionPhase(void) {
     Step(::bof3::Img(BattleAction_Steps_addr), BattleActions_Step)();
     if ((Field_CancelButtons & Input_Held) != 0)
-        SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFFEFu);
+        battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(at::kRoundFlags.v))) & 0xFFEFu);
 }
 
 // original 0x42F250 (PSX 0x801D2B14): step 0, a tail jump through
@@ -267,8 +267,8 @@ extern "C" void __cdecl Battle_BeginAction(void) {
         BossSe_RoundSlot = i;
     }
     const unsigned actor = B(::bof3::Img(at::kQueue.v) + i);
-    if (actor < 3) g.member_auto_target(actor);
-    else g.enemy_pick_action((actor - 3) & 0xFF);
+    if (actor < 3) battle_actions::g.member_auto_target(actor);
+    else battle_actions::g.enemy_pick_action((actor - 3) & 0xFF);
     SetB(::bof3::Img(at::kActor.v), actor);
     if (actor < 3) SetMemberBlock(::bof3::Img(at::kActor.v), actor);
     else SetEnemyBlock(::bof3::Img(at::kActor.v), actor);
@@ -301,7 +301,7 @@ extern "C" void __cdecl BattleAction_EnterKind(void) {
 //
 // As the original has it: both bytes are read after Battle_ClearActingFlags.
 extern "C" void __cdecl BattleAction_KindPlain(void) {
-    g.clear_acting_flags();
+    battle_actions::g.clear_acting_flags();
     if (BattleE4_Step2 == 2 && B(::bof3::Img(at::kActor.v)) >= 3) {
         EnemyNameToText0(Enemy(B(::bof3::Img(at::kActor.v))) + 0x80);
         SystemBanner(0x7F);
@@ -317,7 +317,7 @@ extern "C" void __cdecl BattleAction_KindPlain(void) {
 //
 // As the original has it: the object pointer 0x904B3C is read after the call.
 extern "C" void __cdecl BattleAction_KindOne(void) {
-    g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
+    battle_actions::g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
     PtrAt(::bof3::Img(at::kActor.v) + at::kBObject)[1] = 4;
     SetB(::bof3::Img(at::kPhase.v), 3);
     BattleActions_Step = 2;
@@ -350,9 +350,9 @@ extern "C" void __cdecl BattleAction_KindOne(void) {
 // banner and before the cost; the id is re-read at each test; the cost's
 // actor is the one read before (not re-read after Skill_ApCost).
 extern "C" void __cdecl BattleAction_AbilityCheck(void) {
-    SetWord(At(::bof3::Img(at::kAbility.v)), Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
-    if (g.action_suits_target() != 0) {
-        g.remove_from_turn_order(B(::bof3::Img(at::kActor.v)));
+    battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kAbility.v)), battle_actions::Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
+    if (battle_actions::g.action_suits_target() != 0) {
+        battle_actions::g.remove_from_turn_order(B(::bof3::Img(at::kActor.v)));
         const unsigned a = B(::bof3::Img(at::kActor.v));
         SetB(::bof3::Img(at::kPhase.v), 3);
         auto* const member_rec = rv::As<records::PartyMember>(Party(a));
@@ -364,27 +364,27 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     }
     unsigned long banner = 0x15;   // DIV-0179: no banner, as BattleBanner_Add's "every entry taken"
     unsigned named = 0;
-    if (Word(At(::bof3::Img(at::kAbility.v))) != 0x97) {
-        const unsigned id = Word(At(::bof3::Img(at::kAbility.v)));
+    if (battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v))) != 0x97) {
+        const unsigned id = battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v)));
         WindowRecords[4].state = 1;
-        g.str_copy_n(reinterpret_cast<char*>(At(::bof3::Img(at::kNameBuf.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kAbilityRecords.v) + id * 24)), 0x10);
-        banner = g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(At(::bof3::Img(at::kNameBuf.v))));
+        battle_actions::g.str_copy_n(reinterpret_cast<char*>(battle_actions::At(::bof3::Img(at::kNameBuf.v))), reinterpret_cast<const char*>(battle_actions::At(::bof3::Img(at::kAbilityRecords.v) + id * 24)), 0x10);
+        banner = battle_actions::g.banner_add(1, 1, 0, 0x3C, reinterpret_cast<const char*>(battle_actions::At(::bof3::Img(at::kNameBuf.v))));
         named = id;
     }
     const unsigned a = B(::bof3::Img(at::kActor.v));
     UnlearnedBlue(banner, a, named);
     const Standing s = ActorStanding(a);
-    if ((s.status & 0x10) != 0 && (At(::bof3::Img(at::kAbilityRecords.v) + Word(At(::bof3::Img(at::kAbility.v))) * 24u + 0x15)[0] & 4) != 0) {
+    if ((s.status & 0x10) != 0 && (battle_actions::At(::bof3::Img(at::kAbilityRecords.v) + battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v))) * 24u + 0x15)[0] & 4) != 0) {
         SystemBanner(0x37);
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
         return;
     }
     unsigned char cost;
-    if (Word(At(::bof3::Img(at::kAbility.v))) != 0x97) {
+    if (battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v))) != 0x97) {
         const unsigned id = B(::bof3::Img(at::kAbility.v));
         const unsigned who = a <= 2 ? rv::As<records::PartyMember>(Party(a))->actor : rv::As<records::BattleEnemy>(Enemy(a))->actor;
-        cost = g.skill_ap_cost(who, id, 1);
+        cost = battle_actions::g.skill_ap_cost(who, id, 1);
     } else {
         cost = BattleActions_ApCost;
     }
@@ -396,7 +396,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         return;
     }
     BossSb_Countdown = 0;
-    if (g.pick_flag8_member() == 0) SetB(::bof3::Img(at::kRoundFlags.v), B(::bof3::Img(at::kRoundFlags.v)) | 0x20);
+    if (battle_actions::g.pick_flag8_member() == 0) SetB(::bof3::Img(at::kRoundFlags.v), B(::bof3::Img(at::kRoundFlags.v)) | 0x20);
     BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
@@ -415,19 +415,19 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
 extern "C" void __cdecl BattleAction_AbilityCommit(void) {
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x20) == 0) return;
     unsigned char* const o = PtrAt(::bof3::Img(at::kActor.v) + at::kBObject);
-    SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFFDFu);
+    battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(at::kRoundFlags.v))) & 0xFFDFu);
     o[1] = 7;
     PtrAt(::bof3::Img(at::kActor.v) + at::kBObject)[2] = 0;
-    g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
+    battle_actions::g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
     BattleE3_SoundSet = B(::bof3::Img(at::kAbility.v));
-    const unsigned id = Word(At(::bof3::Img(at::kAbility.v)));
+    const unsigned id = battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v)));
     if (id == 0x24 || id == 0x25 || id == 0x8C) {
-        const unsigned t = g.pick_target();
+        const unsigned t = battle_actions::g.pick_target();
         SetB(::bof3::Img(at::kTarget.v), t);
         if (t <= 2) SetMemberBlock(::bof3::Img(at::kTarget.v), t);
         else SetEnemyBlock(::bof3::Img(at::kTarget.v), t);
     }
-    g.load_for_ability(B(::bof3::Img(at::kAbility.v)));
+    battle_actions::g.load_for_ability(B(::bof3::Img(at::kAbility.v)));
     BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
@@ -435,10 +435,10 @@ extern "C" void __cdecl BattleAction_AbilityCommit(void) {
 // Battle_StartAbilityMagic(the action record's +2 byte, the actor object)
 // and the action goes to step 2 with both sub-steps 0.
 extern "C" void __cdecl BattleAction_AbilityStart(void) {
-    if (g.file_load_done() == 0) return;
+    if (battle_actions::g.file_load_done() == 0) return;
     const unsigned id = PtrAt(::bof3::Img(at::kActor.v) + at::kBAction)[2];
     const unsigned owner = static_cast<std::uint32_t>(L(::bof3::Img(at::kActor.v) + at::kBObject));
-    g.start_ability_magic(id, owner);
+    battle_actions::g.start_ability_magic(id, owner);
     SetB(::bof3::Img(at::kPhase.v), 3);
     BattleActions_Step = 2;
     BattleE4_Step2 = 0;
@@ -460,10 +460,10 @@ extern "C" void __cdecl BattleAction_AbilityStart(void) {
 // As the original has it: the actor byte is re-read for each call and after
 // them; the record pointer is re-read after Battle_ItemSuitsTarget.
 extern "C" void __cdecl BattleAction_ItemCheck(void) {
-    SetWord(At(::bof3::Img(at::kAbility.v)), Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
-    if (g.item_suits_target() != 0) {
-        g.return_queued_item(B(::bof3::Img(at::kActor.v)));
-        g.remove_from_turn_order(B(::bof3::Img(at::kActor.v)));
+    battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kAbility.v)), battle_actions::Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
+    if (battle_actions::g.item_suits_target() != 0) {
+        battle_actions::g.return_queued_item(B(::bof3::Img(at::kActor.v)));
+        battle_actions::g.remove_from_turn_order(B(::bof3::Img(at::kActor.v)));
         const unsigned a = B(::bof3::Img(at::kActor.v));
         SetB(::bof3::Img(at::kPhase.v), 3);
         BattleActions_Step = 0;
@@ -475,9 +475,9 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
     }
     const unsigned char* const r = PtrAt(::bof3::Img(at::kActor.v) + at::kBAction);
     const unsigned item = r[2], category = r[3];
-    const unsigned char* const name = g.item_name(category, item);
-    g.str_copy_n(reinterpret_cast<char*>(At(::bof3::Img(at::kNameBuf.v))), reinterpret_cast<const char*>(name), 0x10);
-    g.banner_add(1, 1, 0, 0x1E, reinterpret_cast<const char*>(At(::bof3::Img(at::kNameBuf.v))));
+    const unsigned char* const name = battle_actions::g.item_name(category, item);
+    battle_actions::g.str_copy_n(reinterpret_cast<char*>(battle_actions::At(::bof3::Img(at::kNameBuf.v))), reinterpret_cast<const char*>(name), 0x10);
+    battle_actions::g.banner_add(1, 1, 0, 0x1E, reinterpret_cast<const char*>(battle_actions::At(::bof3::Img(at::kNameBuf.v))));
     const unsigned sub2 = BattleE4_Step3;
     BossSb_Countdown = 0;
     WindowRecords[4].state = 1;
@@ -489,8 +489,8 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
 // record's u16 +2, read after the bit), and 0x904AA3 counts one.
 extern "C" void __cdecl BattleAction_ItemCommit(void) {
     PtrAt(::bof3::Img(at::kActor.v) + at::kBObject)[1] = 0xC;
-    g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
-    g.load_for_item(Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
+    battle_actions::g.set_actor_bit(B(::bof3::Img(at::kActor.v)));
+    battle_actions::g.load_for_item(battle_actions::Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2));
     BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
@@ -498,10 +498,10 @@ extern "C" void __cdecl BattleAction_ItemCommit(void) {
 // Battle_StartItemMagic(the record's u16 +2, the actor object) and step 2
 // with both sub-steps 0.
 extern "C" void __cdecl BattleAction_ItemStart(void) {
-    if (g.file_load_done() == 0) return;
-    const unsigned id = Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2);
+    if (battle_actions::g.file_load_done() == 0) return;
+    const unsigned id = battle_actions::Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2);
     const unsigned owner = static_cast<std::uint32_t>(L(::bof3::Img(at::kActor.v) + at::kBObject));
-    g.start_item_magic(id, owner);
+    battle_actions::g.start_item_magic(id, owner);
     SetB(::bof3::Img(at::kPhase.v), 3);
     BattleActions_Step = 2;
     BattleE4_Step2 = 0;
@@ -528,7 +528,7 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
         member_rec->step = 0;
         member_rec->state3 = 0;
         member_rec->state4 = 0;
-        g.set_actor_bit(a);
+        battle_actions::g.set_actor_bit(a);
     }
     for (unsigned a = 3; a <= 10; ++a) {
         unsigned char* const o = Enemy(a);
@@ -538,9 +538,9 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
         enemy_rec->step = 0;
         enemy_rec->state3 = 0;
         enemy_rec->state4 = 0;
-        g.set_actor_bit(a);
+        battle_actions::g.set_actor_bit(a);
     }
-    if (g.any_flag_f0() != 0) return;
+    if (battle_actions::g.any_flag_f0() != 0) return;
     if (BattleActions_Pending != 0) return;
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 4) == 0) return;
     BattleE4_Step2 = BattleE4_Step2 + 1;
@@ -575,14 +575,14 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
     const unsigned kind = B(::bof3::Img(at::kActor.v) + at::kBKind);
     bool has_file = false;
     if (kind == 4) {
-        const unsigned row = At(::bof3::Img(at::kAbilityRows.v) + Word(At(::bof3::Img(at::kAbility.v))))[0];
-        has_file = Word(At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
+        const unsigned row = battle_actions::At(::bof3::Img(at::kAbilityRows.v) + battle_actions::Word(battle_actions::At(::bof3::Img(at::kAbility.v))))[0];
+        has_file = battle_actions::Word(battle_actions::At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
     } else if (kind == 5) {
-        const unsigned w = Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2);
+        const unsigned w = battle_actions::Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2);
         const unsigned row = PtrAt(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
-        has_file = Word(At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
+        has_file = battle_actions::Word(battle_actions::At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
     }
-    if (has_file) g.load_dat(0xD0);
+    if (has_file) battle_actions::g.load_dat(0xD0);
     BattleE4_Step2 = BattleE4_Step2 + 1;
 }
 
@@ -593,12 +593,12 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
 // As the original has it: 0x904AAA is read after File_LoadDone; the stores
 // come before the row copy.
 extern "C" void __cdecl BattleAction_EffectLoaded(void) {
-    if (g.file_load_done() == 0) return;
+    if (battle_actions::g.file_load_done() == 0) return;
     if (EventBattle_Id != 0) EventHook(4);
-    SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFBFFu);
+    battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(at::kRoundFlags.v))) & 0xFBFFu);
     BattleActions_Step = 3;
     BattleE4_Step2 = 0;
-    g.clut_copy_row(0x1A);
+    battle_actions::g.clut_copy_row(0x1A);
 }
 
 // ===========================================================================
@@ -611,7 +611,7 @@ extern "C" void __cdecl BattleAction_EffectLoaded(void) {
 extern "C" void __cdecl BattleAction_AfterSettle(void) {
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 4) == 0) return;
     if (BattleActions_Pending != 0) return;
-    if (g.settle_flag8() != 0) {
+    if (battle_actions::g.settle_flag8() != 0) {
         const unsigned sub = BattleE4_Step2;
         BossSb_Countdown = 0;
         BattleE4_Step2 = sub + 1;
@@ -640,10 +640,10 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
         return;
     }
     const unsigned e = B(::bof3::Img(at::kMsgList.v) + n * 4);
-    EnemyNameToText0(At(::bof3::Img(Battle_Enemies_addr) + e * at::kEnemyStride + 0x80));
-    const unsigned id = Word(At(::bof3::Img(at::kMsgList.v) + n * 4 + 2));
-    const unsigned char* const text = g.msg(id);
-    g.queue_push(1, 0, Low32(text));
+    EnemyNameToText0(battle_actions::At(::bof3::Img(Battle_Enemies_addr) + e * at::kEnemyStride + 0x80));
+    const unsigned id = battle_actions::Word(battle_actions::At(::bof3::Img(at::kMsgList.v) + n * 4 + 2));
+    const unsigned char* const text = battle_actions::g.msg(id);
+    battle_actions::g.queue_push(1, 0, Low32(text));
     BattleE5_EnemyMessageCount = BattleE5_EnemyMessageCount - 1;
 }
 
@@ -674,7 +674,7 @@ extern "C" void __cdecl BattleAction_End(void) {
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 4) == 0) return;
     if (BattleActions_Pending != 0) return;
     const unsigned char event = EventBattle_Id;
-    SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xD7FBu);
+    battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(at::kRoundFlags.v))) & 0xD7FBu);
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
     if (event != 0) EventHook(0);
@@ -683,20 +683,20 @@ extern "C" void __cdecl BattleAction_End(void) {
         BattleActions_Step = 2;
         return;
     }
-    g.clear_acting_flags();
-    if ((L(::bof3::Img(at::kRoundFlags.v)) & 0x1000) != 0) SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xEFFFu);
+    battle_actions::g.clear_acting_flags();
+    if ((L(::bof3::Img(at::kRoundFlags.v)) & 0x1000) != 0) battle_actions::SetWord(battle_actions::At(::bof3::Img(at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(at::kRoundFlags.v))) & 0xEFFFu);
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x40) != 0) {
         unsigned char actor[0x10], target[0x10];
-        std::memcpy(actor, At(::bof3::Img(at::kActor.v)), sizeof actor);
-        std::memcpy(target, At(::bof3::Img(at::kTarget.v)), sizeof target);
-        std::memcpy(At(::bof3::Img(at::kActor.v)), target, sizeof target);
-        std::memcpy(At(::bof3::Img(at::kTarget.v)), actor, sizeof actor);
+        std::memcpy(actor, battle_actions::At(::bof3::Img(at::kActor.v)), sizeof actor);
+        std::memcpy(target, battle_actions::At(::bof3::Img(at::kTarget.v)), sizeof target);
+        std::memcpy(battle_actions::At(::bof3::Img(at::kActor.v)), target, sizeof target);
+        std::memcpy(battle_actions::At(::bof3::Img(at::kTarget.v)), actor, sizeof actor);
         SetB(::bof3::Img(at::kActor.v) + at::kBKind, 1);
         const unsigned a = B(::bof3::Img(at::kActor.v));
-        const std::uint32_t flags = static_cast<std::uint32_t>(Long(a <= 2 ? Party(a) + 0x130 : Enemy(a) + 0x110));
+        const std::uint32_t flags = static_cast<std::uint32_t>(battle_actions::Long(a <= 2 ? Party(a) + 0x130 : Enemy(a) + 0x110));
         CopyStats(a);
         const std::uint32_t text = static_cast<std::uint32_t>(L((flags & 0x8000) != 0 ? ::bof3::Img(BattleActions_TextCounter_addr) : ::bof3::Img(BattleActions_TextMiss_addr)));
-        g.banner_add(1, 0, 0, 0xF, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
+        battle_actions::g.banner_add(1, 0, 0, 0xF, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
         WindowRecords[4].state = 1;
         BattleActions_Step = 0;
         BattleE4_Step2 = 1;
