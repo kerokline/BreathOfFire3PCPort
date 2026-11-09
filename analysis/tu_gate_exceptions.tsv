@@ -55,3 +55,8 @@ Sprite_DrawPass	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_recor
 _ZN9draw_pass13g_add_recordsE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass13g_add_recordsE  (data)	
 _ZN9draw_pass6g_drawE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass6g_drawE  (data)	
 _ZN9draw_pass6g_openE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass6g_openE  (data)	
+Gfx_InvalidateTextures	x64-indirect	B0 promotion of gfx_texcache.cpp's g_original_clone: DIFFER Gfx_InvalidateTextures  first at instruction 8: 'sub rsp, 0x78' -> 'sub rsp, 0xf8'	
+_Z18GfxTexCache_Injectv	x64-indirect	B0 promotion of gfx_texcache.cpp's g_original_clone: DIFFER _Z18GfxTexCache_Injectv  first at instruction 0: 'sub rsp, 0x28' -> 'push r15'	
+_ZN12gfx_texcache16g_original_cloneE	x64-indirect	B0 promotion of gfx_texcache.cpp's g_original_clone: NEW _ZN12gfx_texcache16g_original_cloneE  (bss)	
+_ZN12_GLOBAL__N_111g_fake_vtblE	x64-indirect	B0 promotion of gfx_texcache.cpp's g_original_clone: NEW local:7f59ead30614  (named _ZN12_GLOBAL__N_111g_fake_vtblE)	
+_ZN12_GLOBAL__N_111FakeReleaseEPNS_9ComObjectE	x64-indirect	B0 promotion of gfx_texcache.cpp's g_original_clone: NEW local:e995ca1b0782  (named _ZN12_GLOBAL__N_111FakeReleaseEPNS_9ComObjectE)	

@@ -126,7 +126,7 @@ TexCacheEntry* Table() { return reinterpret_cast<TexCacheEntry*>(Gfx_TexCache); 
 // What this cannot see is the ORDER of Releases - only which entries went.
 
 using Original = void (__cdecl*)(const short*, int);
-Original g_original_clone = nullptr;
+}  namespace gfx_texcache { Original g_original_clone = nullptr; }  namespace {
 TexCacheEntry g_plan[kEntries];
 
 struct {
@@ -147,7 +147,7 @@ void ShadowCall(const short* rect, int mode) {
     unsigned releases = 0;
     const Tally t = Invalidate(g_plan, r, mode, [&](ComObject*) { ++releases; });
 
-    g_original_clone(rect, mode);
+    gfx_texcache::g_original_clone(rect, mode);
 
     ++g_shadow.calls;
     ++(mode == 0 ? g_shadow.mode0 : g_shadow.mode1);
@@ -250,7 +250,7 @@ void SelfTest() {
 
         std::memcpy(Table(), g_input, sizeof g_input);
         g_release_n = 0;
-        g_original_clone(rect, mode);
+        gfx_texcache::g_original_clone(rect, mode);
         std::memcpy(g_theirs, Table(), sizeof g_theirs);
         const unsigned their_n = g_release_n;
         std::memcpy(g_their_log, g_release_log, sizeof g_their_log);
@@ -368,7 +368,7 @@ extern "C" void __cdecl Gfx_InvalidateTextures(const short* rect, int mode) {
     // the VRAM shadow passes here, and ends any frame-buffer grab it covers.
     render::ShadowWritten(rect[0], rect[1], rect[2], rect[3]);
     D3dDraw_CellsShadowWritten(rect[0], rect[1], rect[2], rect[3]);   // DIV-0181
-    if (g_original_clone) {
+    if (gfx_texcache::g_original_clone) {
         ShadowCall(rect, mode);
         return;
     }
@@ -379,9 +379,9 @@ void GfxTexCache_Inject() {
     // 0x59E700..0x59E925: every jump stays inside, and its only calls are
     // through the import slot 0x5C4168 and through vtables (disasm 2026-09-19).
     if (bof3::WantsShadow("Gfx_InvalidateTextures"))
-        g_original_clone = reinterpret_cast<Original>(bof3::CloneOriginal(
+        gfx_texcache::g_original_clone = reinterpret_cast<Original>(bof3::CloneOriginal(
             "Gfx_InvalidateTextures", bof3::addr::Gfx_InvalidateTextures, 0x226));
-    if (g_original_clone) SelfTest();
+    if (gfx_texcache::g_original_clone) SelfTest();
     BOF3_INJECT(Gfx_InvalidateTextures);
 
     // 0x5A0830..0x5A0901: every jump stays inside, and it calls nothing
