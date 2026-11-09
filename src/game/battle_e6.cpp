@@ -684,15 +684,15 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
         if (s[0xB] != 0) s[0xB] = static_cast<unsigned char>(s[0xB] - 1);
     }
     const unsigned target = B(::bof3::Img(battle_e6::at::kTarget.v));
-    int near;
+    int is_near;
     if (target <= 2) {
         BH_CALL(MagicFx_StepToward)(PartyBattleE6(target), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v))), 0x10000);
+        is_near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v))), 0x10000);
     } else {
         BH_CALL(MagicFx_StepToward)(EnemyBattleE6(target - 3), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(EnemyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v)) - 3u), 0x10000);
+        is_near = BH_CALL(MagicFx_NearSprite3D)(EnemyBattleE6(B(::bof3::Img(battle_e6::at::kTarget.v)) - 3u), 0x10000);
     }
-    if (near != 0) {
+    if (is_near != 0) {
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x44));
         BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(battle_e6::at::kTarget.v)));
         rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
