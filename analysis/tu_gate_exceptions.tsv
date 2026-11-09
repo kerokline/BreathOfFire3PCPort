@@ -105,3 +105,6 @@ MoveScript_GroupC	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam:
 MoveScript_GroupD	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupD  first at instruction 11: 'ja .+238' -> 'ja .+23C'	
 MoveScript_GroupE	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupE  first at instruction 11: 'ja .+3A9' -> 'ja .+3B8'	
 _ZN11move_groups1gE	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: NEW _ZN11move_groups1gE  (data)	
+Sprite_QueueOverlay	x64-indirect	B0 promotion of sprite_screen.cpp's Callees g seam: DIFFER Sprite_QueueOverlay  first at instruction 6: 'ja .+58' -> 'ja .+59'	
+Sprite_UpdateScreen	x64-indirect	B0 promotion of sprite_screen.cpp's Callees g seam: DIFFER Sprite_UpdateScreen  first at instruction 34: 'jb .+D9' -> 'jb .+9C'	
+_ZN13sprite_screen1gE	x64-indirect	B0 promotion of sprite_screen.cpp's Callees g seam: NEW _ZN13sprite_screen1gE  (data)	

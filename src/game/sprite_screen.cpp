@@ -26,17 +26,9 @@ using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-// The callees, through pointers so that the start-up fuzz can stand recording
-// functions in for them.
-struct Callees {
-    void (__cdecl* inherit_key)();
-    long (__cdecl* project)(const short*, unsigned long*, long*);
-    void (__cdecl* dropped)(unsigned char);
-    void (__cdecl* overlay)();
-};
-const Callees kOriginals = {Sprite_InheritDrawKey, Gte_RotTransPers, Port_DroppedCall, Sprite_QueueOverlay};
-Callees g = kOriginals;
-
+const sprite_screen::Callees kOriginals = {Sprite_InheritDrawKey, Gte_RotTransPers, Port_DroppedCall, Sprite_QueueOverlay};
+}  namespace sprite_screen { Callees g = kOriginals; }
+namespace {
 // `fld dword` then `fstp dword`: exact, except that a signalling NaN comes
 // back quiet (bit 22 set) - the only change the x87 makes to a float it moves.
 std::uint32_t ThroughX87(std::uint32_t bits) {
@@ -62,7 +54,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     if (n >= 30) return;
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
-    if (rv::Current<records::SpriteHead>()->flags & 8) g.dropped(0);
+    if (rv::Current<records::SpriteHead>()->flags & 8) sprite_screen::g.dropped(0);
     if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0171 (PSX US 0x80161454)
 }
 
@@ -80,7 +72,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
 extern "C" void __cdecl Sprite_UpdateScreen(void) {
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     if (sprite->draw_flags & 0x80) {
-        g.overlay();
+        sprite_screen::g.overlay();
         return;
     }
     const unsigned x_whole = sprite->x_frac == 0, z_whole = sprite->z_frac == 0;
@@ -107,7 +99,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
         low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     }
     sprite->draw_key = sprite->draw_key | low;
-    g.inherit_key();
+    sprite_screen::g.inherit_key();
 
     sprite = rv::Current<records::SpriteHead>();
     short vertex[4];
@@ -116,7 +108,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
     unsigned long screen[2];
     long depth_cue;
-    const long depth = g.project(vertex, screen, &depth_cue);
+    const long depth = sprite_screen::g.project(vertex, screen, &depth_cue);
     rv::Current<records::SpriteHead>()->depth = depth;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
@@ -129,7 +121,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
     Sprite_DrawList[n] = drawn;
     band_census::Seen(drawn);   // BOF3X_BANDLOG, an instrument: reads only (band_census.h)
-    if (drawn[0] & 8) g.dropped(0);
+    if (drawn[0] & 8) sprite_screen::g.dropped(0);
     if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0171 (PSX US 0x80161454)
 }
 
@@ -193,7 +185,7 @@ long __cdecl StubProject(const short* v, unsigned long* sxy, long* p) {
 }
 void __cdecl StubDropped(unsigned char) { Record(3); }
 void __cdecl StubOverlay() { Record(4); }
-const Callees kStubs = {StubInheritKey, StubProject, StubDropped, StubOverlay};
+const sprite_screen::Callees kStubs = {StubInheritKey, StubProject, StubDropped, StubOverlay};
 
 constexpr ::bof3::image::CodeVa kUpdate{0x588F20};
 constexpr ::bof3::image::CodeVa kOverlay{0x5890E0};
@@ -250,7 +242,7 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
     if (region_bytes != kRegionBytes) bof3::Fatal("sprite_screen: regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
     static State saved, input, their_out, our_out;
     Capture(saved);
-    g = kStubs;
+    sprite_screen::g = kStubs;
     unsigned bad = 0, in_range = 0, listed = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
         const bool overlay_only = round % 4 == 3;
@@ -286,7 +278,7 @@ void SelfTest(Fn theirs_update, Fn theirs_overlay) {
             bof3::Log("shadow      sprite_screen self-test MISMATCH: round %u, %s, log %u / %u", round,
                       overlay_only ? "Sprite_QueueOverlay" : "Sprite_UpdateScreen", their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    sprite_screen::g = kOriginals;
     Apply(saved);
     bof3::Log("shadow      sprite_screen self-test: %u rounds, %u with the flag byte's bit 7 clear after, %u appended to "
               "Sprite_DrawList, %u MISMATCHES; the sprite, both lists and counts, the view origin and the stand-ins' log "
