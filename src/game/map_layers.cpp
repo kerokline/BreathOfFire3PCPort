@@ -67,11 +67,11 @@ void SetWord(unsigned char* p, unsigned v) {
 }
 void SetDword(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
 std::uint32_t Address(const void* p) { return Low32(p); }
-int S8(unsigned v) { return static_cast<signed char>(v); }
+int S8MapLayers(unsigned v) { return static_cast<signed char>(v); }
 unsigned Width() { return AreaMap_Header[0]; }
 
 // A corner byte as a vertex's third coordinate: -(s8) * 16, as a word.
-short Height(unsigned char corner) { return static_cast<short>(-S8(corner) * 16); }
+short Height(unsigned char corner) { return static_cast<short>(-S8MapLayers(corner) * 16); }
 
 unsigned char* Corners() { return reinterpret_cast<unsigned char*>(&AreaMap_Corners); }
 unsigned char* Item(unsigned index) { return draw_pool::Items() + index * 0x90u; }
@@ -326,12 +326,12 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         item = Item(index);
         // A side item for each neighbour whose near corners stand lower -
         // the next cell's (+0x7E), the one below's (+0x8E).
-        if (S8(corner[6]) < S8(corner[3]) || S8(corner[4]) < S8(corner[1])) {
+        if (S8MapLayers(corner[6]) < S8MapLayers(corner[3]) || S8MapLayers(corner[4]) < S8MapLayers(corner[1])) {
             SetWord(item + 0x7E, map_layers::g.alloc());
             corner = MapView_CornerPtr;
         }
         const unsigned char* const below = corner + Width() * 4u;
-        if (S8(below[1]) < S8(corner[3]) || S8(below[0]) < S8(corner[2])) SetWord(item + 0x8E, map_layers::g.alloc());
+        if (S8MapLayers(below[1]) < S8MapLayers(corner[3]) || S8MapLayers(below[0]) < S8MapLayers(corner[2])) SetWord(item + 0x8E, map_layers::g.alloc());
         const unsigned flags = map_layers::g.cell_textures(cell[0], cell[1], item, Gfx_BufferIndex);
         SetWord(cell + 2, Word(cell + 2) | flags);
         SetWord(item + 0x36, Gfx_BufferIndex == 0 ? 2 : 1);
@@ -656,7 +656,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
         short h1, h2;
         if (odd) {
             const unsigned char* const left = corners - 4;
-            if (S8(left[1]) > S8(corners[0]) || S8(left[3]) > S8(corners[2])) {
+            if (S8MapLayers(left[1]) > S8MapLayers(corners[0]) || S8MapLayers(left[3]) > S8MapLayers(corners[2])) {
                 h1 = Height(left[1]);
                 h2 = Height(left[3]);
             } else {
@@ -665,7 +665,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
             }
         } else {
             const unsigned char* const up = corners - Width() * 4u;
-            if (S8(up[2]) > S8(corners[0]) || S8(up[3]) > S8(corners[1])) {
+            if (S8MapLayers(up[2]) > S8MapLayers(corners[0]) || S8MapLayers(up[3]) > S8MapLayers(corners[1])) {
                 h1 = Height(up[2]);
                 h2 = Height(up[3]);
             } else {
@@ -782,8 +782,8 @@ void SnapshotSides() {
         for (unsigned x = 0; x < width; ++x) {
             const unsigned char* const c = corners + (z * width + x) * 4u;
             const unsigned char* const below = c + width * 4u;
-            const bool east = S8(c[6]) < S8(c[3]) || S8(c[4]) < S8(c[1]);
-            const bool south = S8(below[1]) < S8(c[3]) || S8(below[0]) < S8(c[2]);
+            const bool east = S8MapLayers(c[6]) < S8MapLayers(c[3]) || S8MapLayers(c[4]) < S8MapLayers(c[1]);
+            const bool south = S8MapLayers(below[1]) < S8MapLayers(c[3]) || S8MapLayers(below[0]) < S8MapLayers(c[2]);
             const unsigned tile = Word(tiles + (z * width + x) * 2u);
             const bool short_run = tile != 0 && next_used[tile] > tile && next_used[tile] - tile <= 2;
             g_file_sides[z * width + x] =
