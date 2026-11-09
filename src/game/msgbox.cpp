@@ -735,68 +735,6 @@ extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
     return slot;
 }
 
-// original 0x516B30 (PSX 0x8014F6BC). The port's general text draw, 341 callers: it plants the
-// pen and hands the string to Text_DrawString.
-//
-// As the original has it: x is taken as a WORD and stored to both the pen and
-// the line start; y is incremented as a dword and stored as a word, so a y of
-// 0xFFFF draws at 0; the colour and the count go on unchanged.
-extern "C" const unsigned char* __cdecl Text_DrawAt(int x, int y, int color, int count,
-                                                    const unsigned char* text) {
-    Text_PenX = static_cast<short>(x);
-    Text_LineX = static_cast<short>(x);
-    Text_PenY = static_cast<short>(y + 1);
-    return msgbox::g.draw_string(static_cast<unsigned>(color), static_cast<unsigned>(count), text);
-}
-
-// original 0x516D50. One glyph: fills the POLY_FT4-shaped record at
-// Gfx_PacketNext and hands it on. Its only caller is Text_DrawString, as
-// (pen x, pen y, 12, 12 - v, u, v, clut).
-//
-// As the original has it: the texture window is a flat 12 units wide (0 and
-// 12 in every u) and `u` is the row - what DIV-0010 named, in the config
-// screen's words, "the texture extent fixed at 0xC whatever the quad"; the
-// three shade bytes are 0x80; the v coordinates are u and (u - v + 12) as
-// BYTES, so they wrap; the corners are (x, y + u), (x + w, y + u),
-// (x, y + h + u), (x + w, y + h + u), each stored as a word; the primitive
-// pointer is re-read from Gfx_PacketNext before every single store, which
-// nothing between them can change; +0x16 (the glyph index) is the caller's.
-//
-// This is faithful - no divergence. DIV-0010 is the config screen's own
-// stand-in for Text_DrawAt (src/game/config_text.cpp), not a change here.
-extern "C" void __cdecl Text_EmitGlyph(int x, int y, int w, int h, int u, int v, int clut) {
-    unsigned char* const p = Gfx_PacketNext;
-    const auto row = static_cast<unsigned char>(u);
-    const auto far_row = static_cast<unsigned char>(u - v + 12);
-    const auto put = [](unsigned char* at, unsigned value) {
-        const auto word = static_cast<std::uint16_t>(value);
-        std::memcpy(at, &word, sizeof word);
-    };
-    put(p + 0x0E, static_cast<unsigned>(clut));
-    p[4] = 0x80;
-    p[5] = 0x80;
-    p[6] = 0x80;
-    p[0x0C] = 0;
-    p[0x0D] = row;
-    p[0x14] = 0x0C;
-    p[0x15] = row;
-    p[0x1C] = 0;
-    p[0x1D] = far_row;
-    p[0x24] = 0x0C;
-    p[0x25] = far_row;
-    put(p + 0x08, static_cast<unsigned>(x));
-    put(p + 0x0A, static_cast<unsigned>(y + u));
-    put(p + 0x10, static_cast<unsigned>(x + w));
-    put(p + 0x12, static_cast<unsigned>(y + u));
-    put(p + 0x18, static_cast<unsigned>(x));
-    put(p + 0x1A, static_cast<unsigned>(y + h + u));
-    put(p + 0x20, static_cast<unsigned>(x + w));
-    put(p + 0x22, static_cast<unsigned>(y + h + u));
-    msgbox::g.set_code6c(p);
-    msgbox::g.set_semitrans(p, 1);
-    msgbox::g.commit(1, 0x28);
-}
-
 namespace {
 MsgBoxDraw* g_record;
 unsigned g_record_max, g_record_n;
@@ -848,8 +786,6 @@ void MsgBox_Inject() {
         bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
     }
     BOF3_INJECT(Window_Alloc);
-    BOF3_INJECT(Text_DrawAt);
-    BOF3_INJECT(Text_EmitGlyph);
     // The reading row needs the walk and the printer both ours.
     ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
     // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.

@@ -74,19 +74,6 @@ U SpriteCurrent() { return Long(AtBattleOdds(battle_odds::at::Sprite_CurrentAt()
 // table index), +2 a second counter, +9 a countdown, +0xA a tint record,
 // +0xB a byte the waits test.
 
-// original 0x4F7350: once +0xB is 0 - Battle_SetTargetFlag40(the byte
-// kFlagTarget; pushed in ecx, whose upper bits are the entry's, and the callee
-// reads the low byte), kRoundFlags |= 4, and a tail jump to
-// BattleTask_FreeCurrent, whose eax is returned. Otherwise eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_Finish(void) {
-    const U s = SpriteCurrent();
-    if (AtBattleOdds(s + 0xB)[0] != 0) return s;
-    g.set_flag40(AtBattleOdds(::bof3::Img(kFlagTarget.v))[0]);
-    AtBattleOdds(::bof3::Img(kRoundFlags.v))[0] = static_cast<unsigned char>(AtBattleOdds(::bof3::Img(kRoundFlags.v))[0] | 4);
-    return g.free_task();
-}
-
 void BattleOdds_Inject() {
     if (bof3::WantsShadow("battle_odds")) battle_odds::SelfTest();
-    BOF3_INJECT(BattleFx_Finish);
 }

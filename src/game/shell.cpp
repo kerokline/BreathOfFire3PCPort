@@ -55,13 +55,6 @@ namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const volatile void* p) { return Low32(p); }
-U Long(U address) {
-    U v;
-    std::memcpy(&v, At(address), sizeof v);
-    return v;
-}
 
 }  // namespace
 }  // namespace shell
@@ -120,42 +113,6 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
         g.default_keys();
 }
 
-// original 0x4FD030; sole caller WinMain (0x4FCBFE; ours since) before the window.
-// The original's frame - 0x3C bytes, edi and esi saved under it - laid out
-// here so that what Cfg_SetKeyTable copies past the frame is what it was:
-// the return address and the caller's bytes above it. A pair by width
-// (docs/x64-asm-policy.md 8 unit 7), not C++: the shell fuzz compares the
-// frame and everything above it, which a compiler-placed local cannot
-// reproduce. The x86_64 half lays a 0x3C-byte frame above the 32 bytes of
-// home space the callee may write (rsp+0x20..+0x5C of a 0x68-byte frame,
-// which keeps rsp at 0 mod 16 for the call); the bytes the copy runs past
-// are then this frame's pad, the return address and the caller's, as on
-// i686 - and with DIV-0078's own table on, as it is after Shell_Inject, the
-// copy never leaves the table.
-extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
-#if defined(__i386__)
-    asm("subl $0x3C, %esp\n\t"
-        "pushl %edi\n\t"
-        "pushl %esi\n\t"
-        "leal 8(%esp), %eax\n\t"
-        "pushl %eax\n\t"
-        "call " BOF3_SYM(Shell_CfgLoadFrame) "\n\t"
-        "addl $4, %esp\n\t"
-        "popl %esi\n\t"
-        "popl %edi\n\t"
-        "addl $0x3C, %esp\n\t"
-        "ret");
-#elif defined(__x86_64__)
-    asm("subq $0x68, %rsp\n\t"
-        "leaq 0x20(%rsp), %rcx\n\t"
-        "call " BOF3_SYM(Shell_CfgLoadFrame) "\n\t"
-        "addq $0x68, %rsp\n\t"
-        "ret");
-#else
-#error "Cfg_Load: no frame for this architecture"
-#endif
-}
-
 // original 0x5A9880; sole caller Cfg_Load. The 32 dwords of Key_TableDefault
 // to Key_Table, first to last (rep movsd; the two do not overlap) - the
 // table as the engine's rule makes it (input::DefaultKeyTable), which
@@ -189,25 +146,6 @@ void Shell_MapDefaultKeys() {
     bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)Key_TableDefault_addr,
               (unsigned)bof3x::input::DefaultKeys().size(),
               present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");
-}
-
-// original 0x4FC6A0; called once a pass of WinMain's message loop
-// (InputScript_Latch's DeviceLatch, or Capcom's WinMain at 0x4FCDDE). Pad_Read's
-// low word is pad 1: Input_Previous gets Input_Held as it stood after the
-// read, Input_Held the new word, Input_Pressed the bits that went down. The
-// high word - which Pad_Read never sets - the same for pad 2 at 0x7E1BF0.
-extern "C" void __cdecl Input_Latch(void) {
-    const U word = g.pad_read();
-    const std::uint16_t now1 = static_cast<std::uint16_t>(word);
-    const std::uint16_t was1 = Input_Held;
-    Input_Held = now1;
-    Input_Previous = was1;
-    Input_Pressed = static_cast<std::uint16_t>((was1 ^ now1) & now1);
-    const std::uint16_t now2 = static_cast<std::uint16_t>(word >> 16);
-    const std::uint16_t was2 = Input2_Held;
-    Input2_Previous = was2;
-    Input2_Held = now2;
-    Input2_Pressed = static_cast<std::uint16_t>((was2 ^ now2) & now2);
 }
 
 // original 0x5A72C0; sole caller WinMain (ours), with CAPCOM.AVI and BOF3.EXE.
@@ -265,49 +203,6 @@ extern "C" void* __cdecl Shell_GameInitBody(void) {
     return reinterpret_cast<void*>(g.set_stack_base);
 }
 
-// original 0x4FD110; sole caller WinMain after Display_Setup. The GTE's
-// geometry, the pad devices, the sound set-up, the two double-buffer blocks
-// (block 0 draws at y 0 and shows y 240, block 1 the other way round), buffer
-// 0 current, the frame begun, the quit flag down - and then a jmp, not a call,
-// to Task_SetStackBase, so that the task stacks hang from the stack pointer
-// this was entered with: the body runs as a call, and the jump is made from
-// here - a C++ tail call since the 64-bit build round (docs/x64-asm-policy.md
-// 8 unit 7), which on i686 is the same `call; jmp *%eax` as the asm it
-// replaces (codegen_same.py: 0 differ) and on x86-64 the same shape for
-// rsp; musttail refuses to compile where the jump would not be one.
-extern "C" void __cdecl Game_Init(void) {
-    using Tail = void (__cdecl*)();
-    const Tail tail = reinterpret_cast<Tail>(Shell_GameInitBody());
-    [[clang::musttail]] return tail();
-}
-
-// original 0x4FD200; Game_Init's, once for each block. The block's ordering
-// table cleared (ClearOTagR, eight slots at +0x70), then its DRAWENV's isbg
-// byte (+0x2C) 1 and clear colour (+0x2D..+0x2F) black. The eax the original
-// leaves (Gpu_ClearOTagR's, al 0) is not read by its caller.
-extern "C" void __cdecl Gfx_InitBufferBlock(unsigned char* block) {
-    g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
-    block[0x2C] = 1;
-    block[0x2D] = 0;
-    block[0x2E] = 0;
-    block[0x2F] = 0;
-}
-
-// original 0x4FD290; WinMain once a frame, after the frame's logic. For slot
-// i of 8: Gpu_AddPrim(the current block's slot i, the list head Gfx_OtHeads[
-// Gfx_BufferIndex * 8 + i], Gfx_OtPointers[i]) - the head spliced onto the
-// table, the table's old link stored where the frame's packets of that slot
-// end. Gfx_OtPointers[i], the buffer index (a byte) and Gfx_CurrentEnv are all
-// read afresh each pass, after the call before.
-extern "C" void __cdecl Gfx_LinkOTags(void) {
-    for (U i = 0; i < kOtSlots; ++i) {
-        const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
-        const U buffer = Gfx_BufferIndex;
-        const U block = Addr(Gfx_CurrentEnv);
-        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));
-    }
-}
-
 void Shell_Inject() {
     if (!bof3::IsExeHost()) Shell_MapDefaultKeys();   // the exe host's is at map time (exe_host.cpp step 3)
     if (bof3::WantsShadow("shell")) shell::SelfTest();
@@ -318,11 +213,6 @@ void Shell_Inject() {
                          &was, &is, 1);
         bof3::Log("DIV-0078    BOF3.CFG's key lines scan into a 32-entry table of our own; lines past it are ignored");
     }
-    BOF3_INJECT(Input_Latch);
-    BOF3_INJECT(Cfg_Load);
-    BOF3_INJECT(Game_Init);
-    BOF3_INJECT(Gfx_InitBufferBlock);
-    BOF3_INJECT(Gfx_LinkOTags);
     BOF3_INJECT(Disc_Probe);
     BOF3_INJECT(Cfg_SetDefaultKeys);
 }

@@ -120,27 +120,6 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-// `fld dword` then the CRT's _ftol 0x5B9550: truncation through a 64-bit
-// fistp, whose NaN and out-of-range answer is the integer indefinite
-// 0x8000000000000000 - so 0 in the low word the caller keeps. As
-// field_frame.cpp's.
-std::uint16_t Ftol16(std::uint32_t bits) {
-    float v;
-    std::memcpy(&v, &bits, sizeof v);
-    if (!(v > -9.2233720368547758e18f && v < 9.2233720368547758e18f)) return 0;   // NaN included
-    return static_cast<std::uint16_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
-}
-
-// `mov al, [eax + 8]; add al, dl; push eax`: the actor's animation byte plus
-// the offset, in the low byte of the actor's own pointer. In inline assembly
-// because clang 22.1.8 folds the C++ spelling of a pointer's high bytes
-// merged with a byte read through it (docs/event-ops.md section 8).
-std::uint32_t AnimationInPointer(const unsigned char* actor, unsigned offset) {
-    std::uint32_t v = Low32(actor);
-    __asm__ volatile("movb 8(%1), %b0\n\taddb %b2, %b0" : "+q"(v) : "r"(actor), "q"(offset) : "memory", "cc");
-    return v;
-}
-
 // A method of the IDirectSoundBuffer the SND stream holds, by the 32-bit
 // vtable offset: entry offset / 4, as sound_callees.h's Method<> reads it,
 // so the index is right where an entry is 8 bytes (an object of ours on
@@ -190,97 +169,6 @@ extern "C" void __cdecl Gpu_SetTile1(unsigned char* prim) {
 
 // ===========================================================================
 // The battle actor's helpers (BATTLE.EMI section 15 on the PSX)
-
-// original 0x4FB830 (PSX 0x800ABEC0): with Sprite_Current the effect's actor
-// (0x93B940) for the call and put back after, a party member (0x904B34 below
-// 3) gets Sprite_SetAnimation(its +8 + offset), an enemy 0x435A20(the index,
-// arg). As the original has it: the animation byte goes in the low byte of
-// the actor's own pointer, pushed whole; the enemy's index in the low byte of
-// the caller's ecx (0x435A20 reads only that byte).
-extern "C" void __cdecl BattleActor_SetAnimation(unsigned offset, unsigned arg) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
-    unsigned char* const actor = Actor();
-    unsigned char* const saved = Sprite_Current;
-    Sprite_Current = actor;
-    if (index < 3) battle_items::g.set_animation(AnimationInPointer(actor, offset));
-    else battle_items::g.enemy_animation(index, arg);
-    Sprite_Current = saved;
-}
-
-// original 0x4FBD10 (PSX 0x800AC68C): Sprite_Current's screen point. The
-// actor's (x >> 9 - 0x4000, z >> 9 - 0x4000, -(height / 2)) projected into a
-// TILE_1 at Gfx_PacketNext - never committed, used for its vertex - and the
-// float x / y truncated (the CRT's _ftol) to +0x2E / +0x30. The PSX reads the
-// integer screen point back the same way.
-extern "C" void __cdecl BattleActor_UpdateScreenXY(void) {
-    const unsigned char* const sc = Sprite_Current;
-    unsigned char* const p = Gfx_PacketNext;
-    short v[4];
-    v[0] = static_cast<short>((battle_items::Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((battle_items::Long(sc + 0x38) >> 9) - 0x4000);
-    v[2] = static_cast<short>(-(S16BattleItems(sc + 0x3E) / 2));
-    v[3] = 0;
-    battle_items::g.set_tile1(p);
-    long depth, flag;
-    battle_items::g.rtp(v, reinterpret_cast<float*>(p + 8), &depth, &flag);
-    battle_items::g.store_depth(reinterpret_cast<float*>(p + 0x10));
-    battle_items::SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(battle_items::Long(p + 8))));
-    battle_items::SetWord(Sprite_Current + 0x30, Ftol16(static_cast<std::uint32_t>(battle_items::Long(p + 0xC))));
-}
-
-// original 0x4FBDB0 (PSX 0x800AC73C): unless actor `index` is out
-// (0x4456C0), a party member with +0x90 bit 7 or an enemy with +0x92 bit 7
-// is tinted (-6, -10, 0, 0).
-extern "C" void __cdecl BattleActor_Flash(unsigned index) {
-    if (battle_items::g.is_out(index) != 0) return;
-    const unsigned i = index & 0xFF;
-    if (i < 3) {
-        unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride);
-        if (r[0x90] & 0x80) battle_items::g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
-        return;
-    }
-    unsigned char* const r = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (i - 3) * at::kEnemyStride);
-    if (r[0x92] & 0x80) battle_items::g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
-}
-
-// original 0x4FC030 (PSX 0x800ACBC0): the acting actor's sound. A party
-// member becomes Field_State, then its sound `first` + 1 (unless first is 0)
-// and `second` (unless 0) through 0x446A50; an enemy plays its record's cue
-// word (+0xF8's) through 0x437450 when 0x904AAA is set, else Sound_PlayById
-// 0x600 + 2 * its type byte +0xF0. The arguments' low bytes are what is read.
-extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
-    if (index < 3) {
-        Field_State = battle_items::At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
-        const auto a = static_cast<unsigned char>(first);
-        if (a != 0) battle_items::g.actor_sound(static_cast<unsigned char>(a + 1));
-        if (static_cast<unsigned char>(second) != 0) battle_items::g.actor_sound(second);
-        return;
-    }
-    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride));
-    if (EventBattle_Id != 0) {
-        const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
-        battle_items::g.enemy_sound(battle_items::Word(cue));
-    } else {
-        battle_items::g.play_by_id(enemy_rec->data_id * 2u + 0x600);
-    }
-}
-
-// original 0x4FC1F0: the acting actor's effect size (callers store it to
-// Sprite_Current +9, which the effect draws scale by). A party member: the
-// byte of 0x65C3F8 by 0x904B89 when its +0x134 has bit 1, else of 0x65C3EC by
-// its +0x89; an enemy: the byte at 0x8C5652 + 0x8C * its type. Only al is
-// defined in the original's answer; all ten callers store al.
-extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
-    if (index < 3) {
-        const unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
-        if (r[0x134] & 2) return battle_items::At(::bof3::Img(at::kFxSizeAltTable.v))[BattlePhases_B89];
-        return battle_items::At(::bof3::Img(at::kFxSizeTable.v))[r[0x89]];
-    }
-    const unsigned char type = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride + 0xF0)[0];
-    return battle_items::At(::bof3::Img(at::kEnemyFxSize.v) + type * 0x8Cu)[0];
-}
 
 // ===========================================================================
 // The SND stream
@@ -334,11 +222,6 @@ void BattleItems_Inject() {
     BOF3_INJECT(Gpu_SetLineG2);
     BOF3_INJECT(Gpu_SetLineG3);
     BOF3_INJECT(Gpu_SetTile1);
-    BOF3_INJECT(BattleActor_SetAnimation);
-    BOF3_INJECT(BattleActor_UpdateScreenXY);
-    BOF3_INJECT(BattleActor_Flash);
-    BOF3_INJECT(BattleActor_PlaySound);
-    BOF3_INJECT(BattleActor_FxSize);
     BOF3_INJECT(SndStream_Play);
     BOF3_INJECT(SndStream_Stop);
 }

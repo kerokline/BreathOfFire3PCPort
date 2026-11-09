@@ -135,42 +135,10 @@ void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 // ===========================================================================
 // The backdrop dim
 
-// original 0x4FAFF0: the dim task (kind 1, parameter 0x43): a jmp through
-// FxDim_Phases 0x65C3A0 by +1, read in place, unchecked (entry 0 is
-// 0x4332E0, group CE's; the fifth word is 0).
-MFX_EXPORT void __cdecl FxDim_Dispatch(void) { Entry(::bof3::Img(FxDim_Phases_addr), Sprite_Current[1])(); }
-
-// original 0x4FB010: +9 down; at -6 the phase on; the map's CLUTs tinted by
-// +9 (signed).
-MFX_EXPORT void __cdecl FxDim_Down(void) {
-    Bump(Sprite_Current[9], -1);
-    unsigned char* const sc = Sprite_Current;
-    if (sc[9] == 0xFA) Bump(sc[1], 1);
-    magic_fx_reached::g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
-}
-
-// original 0x4FB050: held until 0x904AA8 bit 2 (the effect is done), then
-// the phase on.
-MFX_EXPORT void __cdecl FxDim_Hold(void) {
-    if (magic_fx_reached::At(::bof3::Img(at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
-}
-
-// original 0x4FB070: +9 up; at 0 the task freed; the CLUTs tinted by +9
-// (signed), read after the free.
-MFX_EXPORT void __cdecl FxDim_Up(void) {
-    Bump(Sprite_Current[9], 1);
-    if (Sprite_Current[9] == 0) magic_fx_reached::g.free_current();
-    magic_fx_reached::g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
-}
-
 #undef MFX_EXPORT
 
 // ===========================================================================
 
 void MagicFxReached_Inject() {
     if (bof3::WantsShadow("magic_fx_reached")) magic_fx_reached::SelfTest();
-    BOF3_INJECT(FxDim_Dispatch);
-    BOF3_INJECT(FxDim_Down);
-    BOF3_INJECT(FxDim_Hold);
-    BOF3_INJECT(FxDim_Up);
 }

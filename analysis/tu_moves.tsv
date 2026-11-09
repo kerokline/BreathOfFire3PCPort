@@ -9365,6 +9365,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetWord	copied		src/game/effect_5a.cpp	59	59	59	src/game/effect/effect_kind_18_sub_0d.cpp	d3e6abb3
 	Word	copied		src/game/effect_5a.cpp	60	60	60	src/game/area/area_109.cpp	d3e6abb3
 	Word	copied		src/game/effect_5a.cpp	60	60	60	src/game/effect/effect_kind_18.cpp	d3e6abb3
+	S	local		src/game/effect_5a.cpp	61	61	61	src/game/platform/magic_080.cpp	675b4476
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/area/area_109.cpp	d3e6abb3
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/effect/effect_kind_18.cpp	d3e6abb3
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/effect/effect_kind_18_sub_0d.cpp	d3e6abb3
@@ -9650,6 +9651,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_17.cpp	d3e6abb3
+	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
@@ -9696,7 +9698,11 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	DispatchEffect5c	copied		src/game/effect_5c.cpp	110	114	121	src/game/effect/effect_kind_18_sub_17.cpp	d3e6abb3
 	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
 	SetCell	local		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_10.cpp	0b4e2a18
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
 	SetCorner	local		src/game/effect_5c.cpp	128	128	128	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 	Sub50Variant	local		src/game/effect_5c.cpp	130	131	137	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
 	Sub50Byte	local		src/game/effect_5c.cpp	138	138	144	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
@@ -9747,8 +9753,18 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x502670	EffectKind18Sub58_DrawColumn	func	tu_501ba0	src/game/effect_5c.cpp	825	832	867	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	Sub11Done	local		src/game/effect_5c.cpp	875	877	881	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Sub12Done	local		src/game/effect_5c.cpp	882	882	882	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	TileCells	copied		src/game/effect_5c.cpp	883	884	887	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	TileCells	copied		src/game/effect_5c.cpp	883	884	887	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
 	Tiles	copied		src/game/effect_5c.cpp	888	891	916	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Tiles	copied		src/game/effect_5c.cpp	888	891	916	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	TileStart	copied		src/game/effect_5c.cpp	917	919	928	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	TileStart	copied		src/game/effect_5c.cpp	917	919	928	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
+	TileWait	copied		src/game/effect_5c.cpp	929	931	941	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	TileWait	copied		src/game/effect_5c.cpp	929	931	941	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
+	TileOpen	copied		src/game/effect_5c.cpp	942	943	951	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	TileOpen	copied		src/game/effect_5c.cpp	942	943	951	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
+	TileSink	copied		src/game/effect_5c.cpp	952	954	961	src/game/effect/effect_kind_18_sub_11.cpp	0b4e2a18
+	TileSink	copied		src/game/effect_5c.cpp	952	954	961	src/game/effect/effect_kind_18_sub_12.cpp	0b4e2a18
 	Draw11	local		src/game/effect_5c.cpp	962	962	962	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Draw12	local		src/game/effect_5c.cpp	963	963	963	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 0x502810	EffectKind18Sub11_Run	func	tu_502810	src/game/effect_5c.cpp	966	968	970	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
@@ -10375,6 +10391,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x50B7A0	EffectKind18Sub2C_WaitFar	func	tu_50b520	src/game/effect_5g.cpp	532	534	538	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50B870	EffectKind18Sub2C_Close	func	tu_50b520	src/game/effect_5g.cpp	540	542	545	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BB90	EffectKind18Sub3A_Run	func	tu_50b520	src/game/effect_5g.cpp	552	554	556	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
+	Sub3APair	local		src/game/effect_5g.cpp	558	560	563	src/game/effect/effect_kind_18_sub_2c.cpp	0b4e2a18
 0x50BBB0	EffectKind18Sub3A_Start	func	tu_50b520	src/game/effect_5g.cpp	565	567	574	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BC00	EffectKind18Sub3A_WaitParty	func	tu_50b520	src/game/effect_5g.cpp	576	579	589	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BCB0	EffectKind18Sub3A_Open	func	tu_50b520	src/game/effect_5g.cpp	591	593	596	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
@@ -11209,18 +11226,23 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x437420	EnemyOp_HitPose	func	tu_435830	src/game/enemy_ai_ops.cpp	515	520	525	src/game/battle/enemy_op.cpp	d3e6abb3
 	At	copied		src/game/event_leader.cpp	35	35	35	src/game/field/field_4.cpp	d3e6abb3
 	At	copied		src/game/event_leader.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3
+	At	local		src/game/event_leader.cpp	35	35	35	src/game/field/field_4.cpp	d3b6c112
 	Long	local		src/game/event_leader.cpp	36	36	36	src/game/field/field_4.cpp	d3e6abb3
 	SetWord	local		src/game/event_leader.cpp	38	38	38	src/game/field/field_4.cpp	d3e6abb3
 	Word	copied		src/game/event_leader.cpp	39	39	39	src/game/field/field_4.cpp	d3e6abb3
 	Word	copied		src/game/event_leader.cpp	39	39	39	src/game/field/field_6.cpp	d3e6abb3
+	Word	local		src/game/event_leader.cpp	39	39	39	src/game/field/field_4.cpp	d3b6c112
 	ByteEventLeader	local		src/game/event_leader.cpp	79	79	79	src/game/field/field_4.cpp	d3e6abb3
 	Table	local		src/game/event_leader.cpp	81	84	86	src/game/field/field_4.cpp	d3e6abb3
+	TableEventLeader	local		src/game/event_leader.cpp	81	84	86	src/game/field/field_4.cpp	d3b6c112
 	Member	copied		src/game/event_leader.cpp	88	88	88	src/game/field/field_4.cpp	d3e6abb3
 	Member	copied		src/game/event_leader.cpp	88	88	88	src/game/field/field_6.cpp	d3e6abb3
+	Member	local		src/game/event_leader.cpp	88	88	88	src/game/field/field_4.cpp	d3b6c112
 	StepXEventLeader	local		src/game/event_leader.cpp	90	92	92	src/game/field/field_4.cpp	d3e6abb3
 	StepZEventLeader	local		src/game/event_leader.cpp	93	93	93	src/game/field/field_4.cpp	d3e6abb3
 	Abs	copied		src/game/event_leader.cpp	95	97	100	src/game/field/field_4.cpp	d3e6abb3
 	Abs	copied		src/game/event_leader.cpp	95	97	100	src/game/field/field_6.cpp	d3e6abb3
+	Abs	local		src/game/event_leader.cpp	95	97	100	src/game/field/field_4.cpp	d3b6c112
 	FormationX	local		src/game/event_leader.cpp	102	104	107	src/game/field/field_4.cpp	d3e6abb3
 	FormationZ	local		src/game/event_leader.cpp	108	108	111	src/game/field/field_4.cpp	d3e6abb3
 	SetShade	local		src/game/event_leader.cpp	113	115	123	src/game/field/field_4.cpp	d3e6abb3
@@ -11304,8 +11326,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Word	copied		src/game/event_ops.cpp	40	40	40	src/game/field/field_6.cpp	d3e6abb3
 	Word	copied		src/game/event_ops.cpp	40	40	40	src/game/field/field_7.cpp	d3e6abb3
 	AddressEventOps	local		src/game/event_ops.cpp	108	108	108	src/game/field/field_4.cpp	d3e6abb3
+	Byte	local		src/game/event_ops.cpp	108	108	108	src/game/field/field_4.cpp	d3b6c112
 	Byte	copied		src/game/event_ops.cpp	109	109	109	src/game/field/field_4.cpp	d3e6abb3
 	Byte	copied		src/game/event_ops.cpp	109	109	109	src/game/field/field_6.cpp	d3e6abb3
+	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	local		src/game/event_ops.cpp	110	112	112	src/game/field/field_4.cpp	d3b6c112
 	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	copied		src/game/event_ops.cpp	111	113	113	src/game/field/field_4.cpp	d3e6abb3
 	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	copied		src/game/event_ops.cpp	111	113	113	src/game/field/field_6.cpp	d3e6abb3
 	Count	local		src/game/event_ops.cpp	115	116	120	src/game/field/event_op.cpp	d3e6abb3
@@ -11317,16 +11341,20 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Extra	copied		src/game/event_ops.cpp	125	125	125	src/game/field/field_5.cpp	d3e6abb3
 	Extra	copied		src/game/event_ops.cpp	125	125	125	src/game/field/field_6.cpp	d3e6abb3
 	Coordinate	local		src/game/event_ops.cpp	134	136	138	src/game/field/event_op.cpp	d3e6abb3
+	StepX	local		src/game/event_ops.cpp	139	141	141	src/game/field/field_4.cpp	d3b6c112
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_4.cpp	d3e6abb3
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_5.cpp	d3e6abb3
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_6.cpp	d3e6abb3
+	StepZ	local		src/game/event_ops.cpp	142	142	142	src/game/field/field_4.cpp	d3b6c112
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_4.cpp	d3e6abb3
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_5.cpp	d3e6abb3
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_6.cpp	d3e6abb3
 	WalkX	local		src/game/event_ops.cpp	144	144	144	src/game/field/field_4.cpp	d3e6abb3
+	CellDX	local		src/game/event_ops.cpp	145	146	146	src/game/field/field_4.cpp	d3b6c112
 	WalkZ	local		src/game/event_ops.cpp	145	145	145	src/game/field/field_4.cpp	d3e6abb3
 	CellDX	copied		src/game/event_ops.cpp	146	147	147	src/game/field/field_4.cpp	d3e6abb3
 	CellDX	copied		src/game/event_ops.cpp	146	147	147	src/game/field/field_5.cpp	d3e6abb3
+	CellDZ	local		src/game/event_ops.cpp	147	147	147	src/game/field/field_4.cpp	d3b6c112
 	CellDZ	copied		src/game/event_ops.cpp	148	148	148	src/game/field/field_4.cpp	d3e6abb3
 	CellDZ	copied		src/game/event_ops.cpp	148	148	148	src/game/field/field_5.cpp	d3e6abb3
 	Whole	copied		src/game/event_ops.cpp	150	152	152	src/game/field/field_4.cpp	d3e6abb3
@@ -11432,6 +11460,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kMemberSize	copied		src/game/field_blocked.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3
 	NibbleBlocks	copied		src/game/field_blocked.cpp	39	47	52	src/game/field/field_3.cpp	d3e6abb3
 	BlockingNibbles	local		src/game/field_blocked.cpp	53	53	61	src/game/field/field_3.cpp	d3e6abb3
+	Al	local		src/game/field_blocked.cpp	54	56	56	src/game/field/field_6.cpp	70f276da
 	Al	copied		src/game/field_blocked.cpp	63	65	65	src/game/field/field_3.cpp	d3e6abb3
 	Al	copied		src/game/field_blocked.cpp	63	65	65	src/game/field/field_6.cpp	d3e6abb3
 	StepX	local		src/game/field_blocked.cpp	86	88	88	src/game/field/field_3.cpp	d3e6abb3
@@ -11715,21 +11744,29 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x526D30	FieldCore_RecoilBlink	func	tu_525370	src/game/field_c3.cpp	1103	1104	1126	src/game/field/field_core.cpp	d3e6abb3
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	d3e6abb3
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/leader_panel.cpp	d3e6abb3
+	SetLong	local		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	70f276da
+	BFieldE1	local		src/game/field_e1.cpp	69	69	69	src/game/field/field_4.cpp	d3b6c112
+	W	local		src/game/field_e1.cpp	70	70	70	src/game/field/field_4.cpp	d3b6c112
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_4.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_6.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/leader_panel.cpp	d3e6abb3
+	L	local		src/game/field_e1.cpp	72	72	72	src/game/field/field_4.cpp	d3b6c112
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/field_4.cpp	d3e6abb3
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/field_6.cpp	d3e6abb3
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/leader_panel.cpp	d3e6abb3
+	Sc	local		src/game/field_e1.cpp	74	74	74	src/game/field/field_4.cpp	d3b6c112
+	Fs	local		src/game/field_e1.cpp	75	75	75	src/game/field/field_4.cpp	d3b6c112
 	L	copied		src/game/field_e1.cpp	75	75	75	src/game/field/field_4.cpp	d3e6abb3
 	L	copied		src/game/field_e1.cpp	75	75	75	src/game/field/field_6.cpp	d3e6abb3
 	KeyFieldE1	local		src/game/field_e1.cpp	76	76	76	src/game/field/leader_panel.cpp	d3e6abb3
+	S16	local		src/game/field_e1.cpp	78	80	80	src/game/field/field_4.cpp	d3b6c112
 	Sc	copied		src/game/field_e1.cpp	78	78	78	src/game/field/field_4.cpp	d3e6abb3
 	Sc	copied		src/game/field_e1.cpp	78	78	78	src/game/field/field_6.cpp	d3e6abb3
 	Fs	copied		src/game/field_e1.cpp	79	79	79	src/game/field/field_4.cpp	d3e6abb3
 	Fs	copied		src/game/field_e1.cpp	79	79	79	src/game/field/field_6.cpp	d3e6abb3
 	MemberFieldE1	local		src/game/field_e1.cpp	80	80	80	src/game/field/field_6.cpp	d3e6abb3
 	ObjectFieldE1	local		src/game/field_e1.cpp	81	81	81	src/game/field/field_4.cpp	d3e6abb3
+	Abs32	local		src/game/field_e1.cpp	82	84	88	src/game/field/field_4.cpp	d3b6c112
 	S16	copied		src/game/field_e1.cpp	83	85	85	src/game/field/field_4.cpp	d3e6abb3
 	S16	copied		src/game/field_e1.cpp	83	85	85	src/game/field/field_6.cpp	d3e6abb3
 	Abs32	copied		src/game/field_e1.cpp	87	89	93	src/game/field/field_4.cpp	d3e6abb3
@@ -11926,8 +11963,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	ConfirmLayout	local		src/game/field_e2.cpp	1862	1862	1885	src/game/menu/item_trade.cpp	d3e6abb3
 0x593E60	ItemTrade_Confirm	func	tu_593950	src/game/field_e2.cpp	1889	1899	1943	src/game/menu/item_trade.cpp	d3e6abb3
 	gFieldEvent	local		src/game/field_event.cpp	70	70	70	src/game/field/mode_11.cpp	d3e6abb3
+	HandlerFieldEvent	local		src/game/field_event.cpp	71	71	71	src/game/field/field_4.cpp	d3b6c112
 	HandlerFieldEvent	copied		src/game/field_event.cpp	72	72	72	src/game/field/field_4.cpp	d3e6abb3
 	HandlerFieldEvent	copied		src/game/field_event.cpp	72	72	72	src/game/field/field_6.cpp	d3e6abb3
+	kMemberBytes/kActorBytes	local		src/game/field_event.cpp	73	73	73	src/game/field/field_4.cpp	d3b6c112
 	kMemberBytes/kActorBytes	copied		src/game/field_event.cpp	74	74	74	src/game/field/field_4.cpp	d3e6abb3
 	kMemberBytes/kActorBytes	copied		src/game/field_event.cpp	74	74	74	src/game/field/field_6.cpp	d3e6abb3
 	Address	copied		src/game/field_event.cpp	76	76	76	src/game/field/field_2.cpp	d3e6abb3
@@ -11935,6 +11974,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Address	copied		src/game/field_event.cpp	76	76	76	src/game/field/mode_11.cpp	d3e6abb3
 	Member	copied		src/game/field_event.cpp	77	77	77	src/game/field/field_6.cpp	d3e6abb3
 	Member	copied		src/game/field_event.cpp	77	77	77	src/game/field/mode_11.cpp	d3e6abb3
+	Dispatch	local		src/game/field_event.cpp	78	78	80	src/game/field/field_4.cpp	d3b6c112
 	Actor	local		src/game/field_event.cpp	79	82	82	src/game/field/field_6.cpp	d3e6abb3
 	Dispatch	copied		src/game/field_event.cpp	83	83	85	src/game/field/field_4.cpp	d3e6abb3
 	Dispatch	copied		src/game/field_event.cpp	83	83	85	src/game/field/field_6.cpp	d3e6abb3
@@ -19581,6 +19621,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/combustion_flash.cpp	d3e6abb3
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	UMagicS37	copied		src/game/magic_s37.cpp	99	99	99	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/combustion_glow.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/combustion_mote.cpp	d3e6abb3
@@ -19588,6 +19629,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/combustion_flash.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	AddLong	local		src/game/magic_s37.cpp	101	101	101	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/combustion_glow.cpp	d3e6abb3
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/combustion_mote.cpp	d3e6abb3
@@ -19614,7 +19656,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/battle/combustion_mote.cpp	d3e6abb3
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	TaskSlot	local		src/game/magic_s37.cpp	109	109	109	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	SignedShl2	local		src/game/magic_s37.cpp	110	111	111	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	NewTask	local		src/game/magic_s37.cpp	113	113	113	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	PutFloat	local		src/game/magic_s37.cpp	113	114	117	src/game/magic/combustion_flash.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_s37.cpp	119	119	119	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_s37.cpp	119	119	119	src/game/magic/combustion.cpp	d3e6abb3
@@ -19692,6 +19736,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/battle/combustion_glow.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/battle/combustion_mote.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	LinkAtSprite	local		src/game/magic_s37.cpp	222	223	228	src/game/battle/combustion_mote.cpp	092c87cc
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/battle/combustion_mote.cpp	d3e6abb3
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/magic/combustion_flash.cpp	d3e6abb3
@@ -19700,10 +19745,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	LinkAtSprite	copied		src/game/magic_s37.cpp	227	228	233	src/game/battle/combustion_mote.cpp	d3e6abb3
 	LinkAtSprite	copied		src/game/magic_s37.cpp	227	228	233	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Matrix	copied		src/game/magic_s37.cpp	235	237	240	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	DrawGlowFan	local		src/game/magic_s37.cpp	238	243	269	src/game/battle/combustion_glow.cpp	092c87cc
 	DrawGlowFan	copied		src/game/magic_s37.cpp	243	248	274	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawGlowFan	copied		src/game/magic_s37.cpp	243	248	274	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	DrawRingBand	local		src/game/magic_s37.cpp	271	274	322	src/game/battle/combustion_glow.cpp	092c87cc
 	DrawRingBand	copied		src/game/magic_s37.cpp	276	279	327	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawRingBand	copied		src/game/magic_s37.cpp	276	279	327	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	DrawTexturedQuad	local		src/game/magic_s37.cpp	324	329	364	src/game/battle/combustion_mote.cpp	092c87cc
 	DrawTexturedQuad	copied		src/game/magic_s37.cpp	329	334	369	src/game/battle/combustion_mote.cpp	d3e6abb3
 	DrawTexturedQuad	copied		src/game/magic_s37.cpp	329	334	369	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	S37_EXPORT	copied		src/game/magic_s37.cpp	373	373	373	src/game/battle/battle_fx_2.cpp	d3e6abb3
@@ -19811,10 +19859,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	TargetByte	copied		src/game/magic_s38.cpp	95	95	95	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	ActorByte	local		src/game/magic_s38.cpp	96	96	96	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	SW	copied		src/game/magic_s38.cpp	98	98	98	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SW	local		src/game/magic_s38.cpp	98	98	98	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SS	copied		src/game/magic_s38.cpp	99	99	99	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SS	local		src/game/magic_s38.cpp	99	99	99	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SB	copied		src/game/magic_s38.cpp	100	100	100	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	SB	copied		src/game/magic_s38.cpp	100	100	100	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_s38.cpp	101	101	101	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SetSW	local		src/game/magic_s38.cpp	101	101	101	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SD	local		src/game/magic_s38.cpp	102	102	102	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	SetSD	local		src/game/magic_s38.cpp	103	103	103	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	VW	local		src/game/magic_s38.cpp	105	105	105	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
@@ -19938,11 +19989,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4FA670	MeteorStrikeRecord_Task	func	tu_4f9de0	src/game/magic_s38.cpp	1297	1299	1302	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA690	MeteorStrikeChip_Run	func	tu_4f9de0	src/game/magic_s38.cpp	1304	1307	1315	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA6C0	MeteorStrikeChip_Launch	func	tu_4f9de0	src/game/magic_s38.cpp	1317	1321	1348	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	ChipDrift	local		src/game/magic_s38.cpp	1350	1353	1377	src/game/magic/meteor_strike_rock.cpp	092c87cc
 0x4FA790	MeteorStrikeChip_Rise	func	tu_4f9de0	src/game/magic_s38.cpp	1379	1381	1395	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA860	MeteorStrikeChip_Fall	func	tu_4f9de0	src/game/magic_s38.cpp	1397	1399	1409	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA910	MeteorStrikeChip_Draw	func	tu_4f9de0	src/game/magic_s38.cpp	1411	1416	1458	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAB70	MeteorStrikeTrail_Run	func	tu_4f9de0	src/game/magic_s38.cpp	1460	1463	1472	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FABB0	MeteorStrikeTrail_Start	func	tu_4f9de0	src/game/magic_s38.cpp	1474	1477	1488	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	TrailFollow	local		src/game/magic_s38.cpp	1490	1491	1496	src/game/magic/meteor_strike_rock.cpp	092c87cc
 0x4FAC40	MeteorStrikeTrail_Follow	func	tu_4f9de0	src/game/magic_s38.cpp	1498	1499	1503	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAC90	MeteorStrikeTrail_Fade	func	tu_4f9de0	src/game/magic_s38.cpp	1505	1508	1515	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAD00	MeteorStrikeTrail_Draw	func	tu_4f9de0	src/game/magic_s38.cpp	1517	1523	1590	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
@@ -20966,6 +21019,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x51F0E0	PartyAction5_Form1Again	func	tu_51be90	src/game/rest_1b.cpp	476	479	484	src/game/field/party_action.cpp	d3e6abb3
 0x51F130	PartyAction5_Form1Wait	func	tu_51be90	src/game/rest_1b.cpp	486	490	494	src/game/field/party_action.cpp	d3e6abb3
 	U	local		src/game/rest_1c.cpp	46	46	46	src/game/field/party_action.cpp	d3e6abb3
+	U	copied		src/game/rest_1c.cpp	46	46	46	src/game/field/party_action.cpp	0b4e2a18
 	At	local		src/game/rest_1c.cpp	47	47	47	src/game/field/party_action.cpp	d3e6abb3
 	Long	local		src/game/rest_1c.cpp	48	48	48	src/game/field/party_action.cpp	d3e6abb3
 	SetLong	local		src/game/rest_1c.cpp	49	49	49	src/game/field/party_action.cpp	d3e6abb3
@@ -26252,6 +26306,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kStrCapcomAvi	local		src/game/win_main.cpp	105	105	105	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrBof3Exe	local		src/game/win_main.cpp	106	106	106	src/game/platform/magic_080.cpp	d3e6abb3
 	Str	local		src/game/win_main.cpp	107	107	107	src/game/platform/magic_080.cpp	d3e6abb3
+	StrWinMain	local		src/game/win_main.cpp	107	107	107	src/game/platform/magic_080.cpp	675b4476
 	kFirstFrameMs	local		src/game/win_main.cpp	109	111	111	src/game/platform/magic_080.cpp	d3e6abb3
 	kFrameMs	local		src/game/win_main.cpp	112	121	121	src/game/platform/magic_080.cpp	d3e6abb3
 	g_frame_ms	local		src/game/win_main.cpp	122	122	122	src/game/platform/magic_080.cpp	d3e6abb3
@@ -26260,9 +26315,12 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	g_fps_log	local		src/game/win_main.cpp	136	136	136	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrSpeed2	local		src/game/win_main.cpp	137	137	137	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrSpeed1	local		src/game/win_main.cpp	138	138	138	src/game/platform/magic_080.cpp	d3e6abb3
+	kStrFrameSaved	local		src/game/win_main.cpp	139	139	139	src/game/platform/magic_080.cpp	675b4476
+	kStrFrameNotSaved	local		src/game/win_main.cpp	140	140	140	src/game/platform/magic_080.cpp	675b4476
 	kEnvBase	local		src/game/win_main.cpp	141	141	141	src/game/platform/magic_080.cpp	d3e6abb3
 	kEnvStride	local		src/game/win_main.cpp	142	142	142	src/game/platform/magic_080.cpp	d3e6abb3
 	kOverlayFrames	copied		src/game/win_main.cpp	143	143	143	src/game/platform/magic_080.cpp	d3e6abb3
+	kOverlayFrames	local		src/game/win_main.cpp	143	143	143	src/game/platform/magic_080.cpp	675b4476
 	kMaxDebtMs	local		src/game/win_main.cpp	145	146	146	src/game/platform/magic_080.cpp	d3e6abb3
 	kWindowedStyle	local		src/game/win_main.cpp	148	150	150	src/game/platform/magic_080.cpp	d3e6abb3
 	kBorderlessStyle	local		src/game/win_main.cpp	151	151	151	src/game/platform/magic_080.cpp	d3e6abb3
@@ -26279,6 +26337,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Overlay	local		src/game/win_main.cpp	271	271	274	src/game/platform/magic_080.cpp	d3e6abb3
 	g_pad_reset_held	local		src/game/win_main.cpp	286	286	286	src/game/platform/magic_080.cpp	d3e6abb3
 	PadReset_Frame	local		src/game/win_main.cpp	294	294	307	src/game/platform/magic_080.cpp	d3e6abb3
+	SaveFrameBesideDll	local		src/game/win_main.cpp	314	316	329	src/game/platform/magic_080.cpp	675b4476
 0x4FCAC0	Cursor_Sync	func	tu_4fc330	src/game/win_main.cpp	331	331	341	src/game/platform/magic_080.cpp	d3e6abb3
 0x5A5130	Display_WindowMoved	func	tu_59e650	src/game/win_main.cpp	343	343	348	src/game/platform/d3d.cpp	d3e6abb3
 0x5A6690	Display_DeviceName	func	tu_59e650	src/game/win_main.cpp	350	350	352	src/game/platform/d3d.cpp	d3e6abb3
