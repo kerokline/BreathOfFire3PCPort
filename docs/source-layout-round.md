@@ -965,7 +965,39 @@ is expected; the doc says so.
    (the "one area" call). With every join class decided, the sheet's first
    table holds the PSX checks only: 71 rows want a call, 590 are settled,
    617 proposed files. Still open: the PSX flags that are one overlay's own
-   code (71 rows carry a flag, most of them common code), row 585.
+   code (71 rows carried a flag before the Celerity re-point), row 585: both read below.
+   **The PSX flags, read again after the merge of `main` (2026-11-08 night;
+   `slb1108\reports\psx_flags_units_1108.txt`, `psx_flags_rows_1108.txt`, the
+   classifier of the PlayStation read run over the regenerated tables).** 67
+   rows carry a flag. *32 are common code* (28 masked-identical copies in
+   other overlays, 4 near-copies): a shared helper whose twin was paired to
+   one overlay's copy; no cut. *2 are a double claim* (AREA091: two PC copies,
+   `Area91_EffectRings` and `EffectKind18Sub21_DrawSpiral`, both twinned to
+   one 1,028-byte function; no cut). *33 rows, 16 units, are one overlay's
+   own code*, in four classes. (a) An area overlay that compiled its effect
+   kind beside its area script (AREA068, 082, 085, 091, 098, 168; 12 rows):
+   the PC links every effect kind in the effect range, far from the area
+   code, so on the PC they are separate objects and the proposal (apart)
+   stands. (b) Cleared by an approved join (SCENA16, SCENA17; 4 rows): the
+   flag is per unit, the file is one. (c) A helper far from the unit that
+   claims it (MAGIC004's `Magic008_DrawFlash`, MAGIC065's
+   `MagicFx_EndWhenIdle`, SCENA13's `ClutStrip_Restore`, AREA049's
+   `Area34_SpawnEffect51`, BATTLE u371's `Battle_Start*Magic` against
+   `BossActor_Clear`, main u005's `Sprite_UpdateScreen*` against
+   `Field_DrawFrame`; 13 rows): not neighbours on the PC; apart. (d)
+   **Neighbouring PC units that the PlayStation holds in one unit** (6
+   rows): `magic/bone_dance` | `battle/bone_dance_follow` (rows 392-393; the
+   census's cut there is a back-order read against a twin of unknown image,
+   `BattleFx_FreeTask` at `0x800C2120`, so it is weak); `field/field_6` |
+   `field/field_7` (574-575) and `field/area_map` | `field/kind_2` (604-605),
+   both a back-order within one image against a strong PSX window join -
+   the two readings contradict, and the owner's back-order call keeps them
+   apart. `BattleFx_TintActor` was re-pointed to MAGIC062's exact copy and
+   the Celerity spell became one unit of 18, as PSX MAGIC062 u001 has it.
+   **Row 572** (`tu_52d8f0`, `field/field_4`, 70 functions, the old row 585):
+   the US decompilation's unit boundary falls inside it at
+   `Field_ActionState`; a unit is never split by the sheet's rule, so this
+   stays as one file unless the owner says otherwise.
 10. **The gate for shared state** (group a's three classes, section 4): a
    promotion that changes the object is refused today. Do classes 2 (data
    layout) and 3 (an x86_64 indirect call through a now-external pointer)
