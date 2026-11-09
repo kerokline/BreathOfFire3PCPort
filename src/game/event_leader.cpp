@@ -76,7 +76,7 @@ using namespace event_leader;
 
 namespace {
 
-unsigned char& ByteEventLeader(std::uint32_t a) { return *At(a); }
+unsigned char& ByteEventLeader(std::uint32_t a) { return *event_leader::At(a); }
 
 // A .data dispatch table, read at the call as the original reads it: the
 // index is a whole byte and unchecked, so an index past the end calls what
@@ -89,8 +89,8 @@ unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // Field_DirectionSteps' pair for a direction - a whole byte into a table of
 // eight, as the original indexes it.
-std::uint32_t StepXEventLeader(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
-std::uint32_t StepZEventLeader(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
+std::uint32_t StepXEventLeader(unsigned d) { return static_cast<std::uint32_t>(event_leader::Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
+std::uint32_t StepZEventLeader(unsigned d) { return static_cast<std::uint32_t>(event_leader::Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
 
 // `cdq / xor / sub`: the absolute value with the original's wrap (the most
 // negative dword stays negative).
