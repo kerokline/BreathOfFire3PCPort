@@ -533,6 +533,8 @@ class Normaliser:
                 j = i
                 while j < n and data[j] == 0:
                     j += 1
+                if j == n:
+                    break       # the zeros that end the run: stripped below, whether past the first path or not
                 parts.append(unroot(bytes(chunk), self.roots).hex() + "~")
                 chunk = bytearray()
                 i = j
