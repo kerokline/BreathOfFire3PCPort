@@ -964,8 +964,8 @@ is expected; the doc says so.
    now refuses a same-names join across a `psx back` cut, areas excepted
    (the "one area" call). With every join class decided, the sheet's first
    table holds the PSX checks only: 71 rows want a call, 590 are settled,
-   617 proposed files. Still open: the PSX flags that are one overlay's own
-   code (71 rows carried a flag before the Celerity re-point), row 585: both read below.
+   617 proposed files (71 flagged rows then; 67 after the Celerity re-point
+   below). The PSX flags and row 585 are read next.
    **The PSX flags, read again after the merge of `main` (2026-11-08 night;
    `slb1108\reports\psx_flags_units_1108.txt`, `psx_flags_rows_1108.txt`, the
    classifier of the PlayStation read run over the regenerated tables).** 67
