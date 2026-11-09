@@ -52,8 +52,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-U LRest3a(U address) { return static_cast<U>(Long(At(address))); }
-unsigned char* PtrAtRest3a(U cell) { return At(LRest3a(cell)); }
+U LRest3a(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
+unsigned char* PtrAtRest3a(U cell) { return move_script::At(LRest3a(cell)); }
 U Addr(const void* p) { return Low32(p); }
 short S16Rest3a(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
@@ -91,7 +91,7 @@ void CallStack(const char* who, const U* table, unsigned n, unsigned index) {
 // original writes into the window records (docs/rest_3a.md section 7).
 unsigned char* MemberForWrite(unsigned index, const char* who) {
     if (index > 2) bof3::Fatal("%s: the member index is %u, past ObjTrio's three - the original writes on past them", who, index);
-    return At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize);
+    return move_script::At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize);
 }
 
 }  // namespace
@@ -387,9 +387,9 @@ void FlashTile() {
     const unsigned char actor = B(::bof3::Img(at::kActor.v));
     unsigned colour;
     if (actor < 3)
-        colour = (Word(Slot() + 0x10) * 0x421u) & 0xFFFF;
+        colour = (move_script::Word(Slot() + 0x10) * 0x421u) & 0xFFFF;
     else
-        colour = (Word(Slot() + 0x10) << 10) & 0xFFFF;
+        colour = (move_script::Word(Slot() + 0x10) << 10) & 0xFFFF;
     BH_CALL(BattleWin_DrawTileRgb)(0, 0, 0xB, static_cast<int>(colour), 1);
 }
 }  // namespace
@@ -410,8 +410,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Banner
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
     unsigned char* const s = Slot();
     B(::bof3::Img(0x8031F3)) = 1;
-    SetLong(s + 0xC, 0x100);
-    SetLong(Slot() + 0x10, 0);
+    move_script::SetLong(s + 0xC, 0x100);
+    move_script::SetLong(Slot() + 0x10, 0);
     Slot()[9] = 2;
     unsigned char* const t = Slot();
     t[1] = static_cast<unsigned char>(t[1] + 1);
@@ -421,11 +421,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Banner
 // the flash's tile; the slot's +0x10 up 8; MapView_Redraw = 2; +9 counted
 // down, at 0 +1 up and +9 = 2.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Rise(void) {
-    const unsigned zoom = Word(Slot() + 0xC);
+    const unsigned zoom = move_script::Word(Slot() + 0xC);
     Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - zoom;
     FlashTile();
     unsigned char* s = Slot();
-    SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) + 8));
+    move_script::SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) + 8));
     s = Slot();
     MapView_Redraw = 2;
     if (s[9] != 0) {
@@ -440,11 +440,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Rise(v
 // down 8; MapView_Redraw = 2; +9 counted down, at 0 a tail jmp to
 // BattleTask_FreeCurrent.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Fall(void) {
-    const unsigned zoom = Word(Slot() + 0xC);
+    const unsigned zoom = move_script::Word(Slot() + 0xC);
     Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) + zoom;
     FlashTile();
     unsigned char* s = Slot();
-    SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) - 8));
+    move_script::SetLong(s + 0x10, static_cast<std::int32_t>(LRest3a(Addr(s + 0x10)) - 8));
     s = Slot();
     MapView_Redraw = 2;
     if (s[9] != 0) {
@@ -568,7 +568,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_WatchIconSt
     Sc()[0x48] = 0;
     rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->scale_y, 0x10000);
     rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->scale_x, 0x10000);
-    SetLong(Sc() + 0xC, 0);
+    move_script::SetLong(Sc() + 0xC, 0);
     rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->work_18, 0x666);
     Sc()[0xA] = 0x3C;
     BH_CALL(BattleFx_PlaceOverOwner)();
@@ -652,14 +652,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reloa
     unsigned char* const owner = OwnerRest3a();
     unsigned char* const kept = Sc();
     Sprite_Current = owner;
-    SetLong(At(::bof3::Img(Field_State_addr)), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
+    move_script::SetLong(move_script::At(::bof3::Img(Field_State_addr)), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(owner[8] + 4));
     BH_CALL(Sprite_ReleaseTint)(MemberForWrite(Sc()[5], "BattleFxReform_Reload"));
     const unsigned palette = Sc()[5];
     MemberForWrite(palette, "BattleFxReform_Reload");   // the palette slot is the member's: past 2 it writes on
-    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (palette << 6))), 0);
+    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (palette << 6))), 0);
     const unsigned member = Sc()[5];
-    BH_CALL(Battle_StatusTint)(Word(At(::bof3::Img(ObjTrio_addr) + 0x90 + member * at::kMemberSize)));
+    BH_CALL(Battle_StatusTint)(move_script::Word(move_script::At(::bof3::Img(ObjTrio_addr) + 0x90 + member * at::kMemberSize)));
     BH_CALL(Sprite_SetClutStp)();
     unsigned char* const field = Field_State;
     rv::As<records::PartyMember>(field)->flags_134 = static_cast<std::int32_t>(rv::As<records::PartyMember>(field)->flags_134 & 0xFFFFFFFEu);
@@ -736,7 +736,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Load
         if (set >= at::kPartySetCount)
             bof3::Fatal("BattleFxRestore_LoadDat: party set %u, past the %u entries of 0x%X (docs/rest_3a.md section 7)", set,
                         at::kPartySetCount, (unsigned)table);
-        BH_CALL(LoadDatFile)(static_cast<int>(Word(At(table + set * 2))));
+        BH_CALL(LoadDatFile)(static_cast<int>(move_script::Word(move_script::At(table + set * 2))));
     }
     unsigned char* const s = Sc();
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -784,7 +784,7 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
         bof3::Fatal("%s: actor %u is no enemy (3..10) - the original runs BattleEnemy_SetAnimation on a record outside the "
                     "eight (docs/rest_3a.md section 7)",
                     who, actor & 0xFF);
-    return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize);
+    return move_script::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize);
 }
 }  // namespace
 
@@ -827,8 +827,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnima
 // on a whelp slot past the eight records (section 7).
 extern "C" void __cdecl NewGame_InitCharacters(void) {
     for (unsigned n = 0; n < 7; ++n) {
-        unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + n * at::kCharSize);
-        std::memcpy(record, At(::bof3::Img(Char_DefaultRecords_addr) + n * at::kCharSize), at::kCharSize);
+        unsigned char* const record = move_script::At(::bof3::Img(CharacterRecords_addr) + n * at::kCharSize);
+        std::memcpy(record, move_script::At(::bof3::Img(Char_DefaultRecords_addr) + n * at::kCharSize), at::kCharSize);
         const std::int32_t level = record[0xA];
         const unsigned divisor = B(::bof3::Img(at::kLevelDivisors.v) + 2 * n);
         if (divisor == 0) bof3::Fatal("NewGame_InitCharacters: record %u's divisor is 0 - the original faults", n);
@@ -840,7 +840,7 @@ extern "C" void __cdecl NewGame_InitCharacters(void) {
     const unsigned slot = Char_WhelpSlot;
     if (slot >= at::kCharCount)
         bof3::Fatal("NewGame_InitCharacters: Char_WhelpSlot is %u, past the %u records - the original writes on", slot, at::kCharCount);
-    std::memcpy(At(::bof3::Img(CharacterRecords_addr) + slot * at::kCharSize), At(::bof3::Img(at::kWhelpRecord.v)), at::kCharSize);
+    std::memcpy(move_script::At(::bof3::Img(CharacterRecords_addr) + slot * at::kCharSize), move_script::At(::bof3::Img(at::kWhelpRecord.v)), at::kCharSize);
 }
 
 // ============================================================================
