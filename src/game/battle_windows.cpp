@@ -87,7 +87,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
-unsigned char* PtrBattleWindows(std::uint32_t at) { return battle_windows::At(static_cast<std::uint32_t>(Long(battle_windows::At(at)))); }
+unsigned char* PtrBattleWindows(std::uint32_t at) { return battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(at)))); }
 unsigned char* CurrentBattleWindows() { return PtrBattleWindows(::bof3::Img(at::kCurrent.v)); }
 unsigned char* FieldState() { return Field_State; }
 unsigned char* Sprite() { return Sprite_Current; }
@@ -104,7 +104,7 @@ void PutFloat(unsigned char* at, std::int32_t v) {
 struct Rgb { unsigned r, g, b; };
 Rgb WindowRgb() {
     const int row = Config_WindowColour;
-    const unsigned w = Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
+    const unsigned w = move_script::Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
     return {(w & 0x1F) << 3, ((w >> 5) & 0x1F) << 3, ((w >> 10) & 0x1F) << 3};
 }
 
@@ -318,7 +318,7 @@ unsigned ArmShade(unsigned j) {
 // 0x904AC1 / 0x904AC2 are set. The selection is re-read after each icon;
 // the shade stays what the last arm set when the selection is 5 or more.
 extern "C" void __cdecl BattleWin_DrawCommandCross(int x, int y) {
-    std::uint32_t sel = static_cast<std::uint32_t>(Long(battle_windows::At(::bof3::Img(at::kCrossSel.v))));
+    std::uint32_t sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(at::kCrossSel.v))));
     unsigned shade = 0;
     for (unsigned j = 0; j < 5; ++j) {
         if (j == (sel & 0xFF)) continue;
@@ -329,7 +329,7 @@ extern "C" void __cdecl BattleWin_DrawCommandCross(int x, int y) {
         const unsigned size = static_cast<unsigned char>(grow + 0x10);
         battle_windows::g.icon(j, static_cast<unsigned>(x + arm[0] - static_cast<int>(half)),
                static_cast<unsigned>(y + arm[1] - static_cast<int>(half)), size, size, shade);
-        sel = static_cast<std::uint32_t>(Long(battle_windows::At(::bof3::Img(at::kCrossSel.v))));
+        sel = static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(at::kCrossSel.v))));
     }
     const unsigned k = sel & 0xFF;
     if (k < 5) shade = ArmShade(k);
@@ -463,8 +463,8 @@ extern "C" void __cdecl BattleWin_DrawMediumBox(int x, int y) { PlainBox(x, y, 0
 extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     OpenDrawMode(0);
     const unsigned i = k & 0xFF;
-    const int y = Word(battle_windows::At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i + 2));
-    const int x = Word(battle_windows::At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i));
+    const int y = move_script::Word(battle_windows::At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i + 2));
+    const int x = move_script::Word(battle_windows::At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i));
     const Rgb c = WindowRgb();
     battle_windows::g.draw_tile(x, y + 2, 5, 1);
     battle_windows::g.draw_edge(x, y, 0xA, 1);
@@ -473,7 +473,7 @@ extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     battle_windows::g.line_semi1(x + 2, y + 3, x + 2, y + 0x10, c.r, c.g, c.b);
     battle_windows::g.line_semi0(x + 0x25, y + 2, x + 0x25, y + 0x10, c.r, c.g, c.b);
     battle_windows::g.line_semi0(x + 2, y + 0x10, x + 0x25, y + 0x10, c.r, c.g, c.b);
-    const auto* const label = battle_windows::At(static_cast<std::uint32_t>(Long(battle_windows::At(::bof3::Img(Battle_CommandLabelPointers_addr) + 4 * i))));
+    const auto* const label = battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(Battle_CommandLabelPointers_addr) + 4 * i))));
     battle_windows::g.text_draw_at(x + 8, y + 3, 0, 8, label);
 }
 
@@ -508,7 +508,7 @@ void EnemyGauge(int x, int y, std::uint32_t enemy) {
 // darker (clamped at 0).
 extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     OpenDrawMode(0);
-    const unsigned w = Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
+    const unsigned w = move_script::Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
                                   Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
@@ -530,7 +530,7 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
 extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     OpenDrawMode(0);
     const int row = Config_WindowColour;
-    const unsigned w = Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
+    const unsigned w = move_script::Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     battle_windows::g.draw_tile(x, y + 2, 8, 1);
@@ -555,7 +555,7 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
 // 0, the two outer lines and the two inner ones 0x10 darker.
 extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     OpenDrawMode(0);
-    const unsigned w = Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
+    const unsigned w = move_script::Word(battle_windows::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
                                   Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     battle_windows::g.draw_tile(x + 4, y + 8, 8, 1);
@@ -639,7 +639,7 @@ extern "C" void __cdecl BattleWin_DrawMessage() {
     const records::WindowRecord* win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     battle_windows::g.message_box(win->x, win->y);
     const unsigned index = BattleWindows_MsgHead;
-    const auto* const text = battle_windows::At(static_cast<std::uint32_t>(Long(battle_windows::At(::bof3::Img(at::kMsgRing.v) + 8 * index))));
+    const auto* const text = battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(at::kMsgRing.v) + 8 * index))));
     win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     battle_windows::g.text_draw_at(static_cast<std::uint16_t>(win->x + 4), static_cast<std::uint16_t>(win->y + 3), 0, 0xFF,
                    text);
