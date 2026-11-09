@@ -12,6 +12,7 @@
 void Sound_Inject();
 
 namespace sound {
+std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsigned size);   // defined in sound.cpp (source-layout B0: promoted, one definition)
 extern std::uint32_t g_stop_unseen;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
 extern std::uint32_t g_fade_frame;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
 extern std::uint32_t g_fade_per_frame;   // defined in sound.cpp (named here for a moved reader: source-layout B0)
@@ -73,7 +74,13 @@ struct Resume {
     unsigned pending_track = 0;
     std::uint32_t pending_sample = 0;
 };
+struct RestoreSkip {
+    bool armed = false;
+    std::uint32_t sample = 0;
+    std::uint32_t reached = 0;  // where the skip landed (the restore's log)
+};
 extern Loop g_loop;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 extern Ring g_ring;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 extern Resume g_resume;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
+extern RestoreSkip g_restore_skip;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sound

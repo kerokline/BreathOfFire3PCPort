@@ -742,16 +742,16 @@ namespace {
 // is advanced to the sample heard at the take, whatever stream it is - a BGM
 // track or Sound_LoadStream's - by ResumeSkip, as DIV-0092's resume advances
 // a track. Armed only inside the restore, for the one Music_Start it makes.
-struct RestoreSkip {
-    bool armed = false;
-    std::uint32_t sample = 0;
-    std::uint32_t reached = 0;  // where the skip landed (the restore's log)
-};
-RestoreSkip g_restore_skip;
+// (RestoreSkip, its type, is in sound.h with Loop, Ring and Resume: source-layout B0)
 
+
+
+}  // namespace
+namespace sound { RestoreSkip g_restore_skip; }
+namespace {
 constexpr std::uint32_t kFrameSamples = 1152;  // every frame of the game's MP3s (bgm-comparison.md 6.1)
 constexpr std::uint32_t kHalfSamples = kHalf / 4;
-
+}  // namespace
 // Music_Start's resume, after the stream is set up and before its first half
 // is decoded: the stream advanced `target` samples. The sequenced song by
 // FastForward; the MP3 by decoding through Music_Decode into a scratch buffer
@@ -759,7 +759,7 @@ constexpr std::uint32_t kHalfSamples = kHalf / 4;
 // leaves the decoder as the first pass left it, bit for bit; the decoders
 // seek to 0 alone). Past a once-only song's end: from the top. The stream
 // sample reached.
-std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsigned size) {
+namespace sound { std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsigned size) {
     if (music_seq::Active()) {
         if (music_seq::FastForward(target)) return target;
         music_seq::Begin();
@@ -785,9 +785,9 @@ std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsign
     }
     Music_Loops = saved_loops;
     return reached;
-}
+} }
 
-}  // namespace
+
 
 // original 0x5A6CC0: starts the music stream from a BGM file in memory:
 // whatever was streaming released, the file copied (the decoder reads it from
@@ -822,16 +822,16 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
     sound::g_ring.track_stream = file == Music_File && size == static_cast<unsigned>(Music_FileSize);
     sound::g_ring.track = Music_LoadedTrack;
     sound::g_ring.written = 0;
-    if (g_restore_skip.armed) {  // the quicksave's rebuild (SOUND): the sample heard at the take
-        g_restore_skip.armed = false;
+    if (sound::g_restore_skip.armed) {  // the quicksave's rebuild (SOUND): the sample heard at the take
+        sound::g_restore_skip.armed = false;
         const int loop_track = !music_seq::Active() && loops && sound::g_ring.track_stream ? Music_LoadedTrack : -1;
-        sound::g_ring.written = ResumeSkip(g_restore_skip.sample, loops, loop_track, size);
-        g_restore_skip.reached = sound::g_ring.written;
+        sound::g_ring.written = sound::ResumeSkip(sound::g_restore_skip.sample, loops, loop_track, size);
+        sound::g_restore_skip.reached = sound::g_ring.written;
     } else if (sound::g_resume.pending) {
         sound::g_resume.pending = false;
         if (sound::g_ring.track_stream && Music_LoadedTrack == static_cast<int>(sound::g_resume.pending_track)) {
             const int loop_track = !music_seq::Active() && loops && sound::g_ring.track_stream ? Music_LoadedTrack : -1;
-            sound::g_ring.written = ResumeSkip(sound::g_resume.pending_sample, loops, loop_track, size);
+            sound::g_ring.written = sound::ResumeSkip(sound::g_resume.pending_sample, loops, loop_track, size);
             MUSIC_LOG("resume track %u at sample %u%s", Frame_Counter, sound::g_resume.pending_track, sound::g_ring.written,
                       sound::g_ring.written == sound::g_resume.pending_sample ? "" : " (asked past its end: from the top)");
         }
@@ -1460,7 +1460,7 @@ bool RtCase(const music_loops::Row* row, bool loops, std::uint32_t heard, std::u
     Music_Loops = loops;
     const std::vector<std::uint32_t> top = RtStream(expect_at + length);
     RtFresh(row);
-    *reached = ResumeSkip(folded, loops, -1, 0);
+    *reached = sound::ResumeSkip(folded, loops, -1, 0);
     Music_Loops = loops;
     const std::vector<std::uint32_t> resumed = RtStream(length);
     bool ok = true;
@@ -1962,19 +1962,19 @@ void SnapRestore(bof3::SnapshotReader& r) {
     const std::uint32_t data_bytes = r.Get<std::uint32_t>();
     std::vector<unsigned char> data(data_bytes);
     if (data_bytes) r.Get(data.data(), data_bytes);
-    g_restore_skip.reached = 0;
+    sound::g_restore_skip.reached = 0;
     unsigned start_ms = 0;  // what Music_Start took: the skip's decode to the sample heard (D406's measure)
     if (kind != kMusicNone) {
         if (kind == kMusicTrack && !file) bof3::Fatal("quicksave SOUND: the take's stream is a track with no Music_File");
         sound::g_resume.pending = false;  // the record's comes back below; the rebuild's skip is its own
-        g_restore_skip.armed = true;
-        g_restore_skip.sample = folded;
+        sound::g_restore_skip.armed = true;
+        sound::g_restore_skip.sample = folded;
         const auto start_at = std::chrono::steady_clock::now();
         if (kind == kMusicTrack) g.music_start(Music_File, static_cast<unsigned>(Music_FileSize), loops);
         else g.music_start(data.data(), data_bytes, loops);
         start_ms = static_cast<unsigned>(
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_at).count());
-        g_restore_skip.armed = false;  // Music_Start without a device does nothing
+        sound::g_restore_skip.armed = false;  // Music_Start without a device does nothing
         if (Music_Buffer) {
             SetVolumeBits(Dword(Address(&Music_Volume)));
             if (finished) {  // a once-only stream past its end: zeros until the pump's next notification stops it
@@ -2011,7 +2011,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
     bof3::Log("quicksave   SOUND restored: %u banks rebuilt, %u looping voices restarted, voice stream %s, music %s%s "
               "at sample %u (asked %u, heard %u%s; its start took %u ms)",
               banks, restarted, voice_state, kind == kMusicNone ? "none" : kind == kMusicTrack ? "track" : "stream",
-              kind == kMusicNone || playing ? "" : " (stopped)", g_restore_skip.reached, folded, heard,
+              kind == kMusicNone || playing ? "" : " (stopped)", sound::g_restore_skip.reached, folded, heard,
               trusted || kind == kMusicNone ? "" : ", untrusted", start_ms);
 }
 
@@ -2495,8 +2495,8 @@ int __cdecl TmLoad(unsigned track) {
     return 0;
 }
 void __cdecl TmStart(const void* file, unsigned size, int loops) {
-    g_starts.push_back({file, size, loops, g_restore_skip.armed, g_restore_skip.sample});
-    if (g_restore_skip.armed) g_restore_skip.armed = false, g_restore_skip.reached = g_restore_skip.sample;
+    g_starts.push_back({file, size, loops, sound::g_restore_skip.armed, sound::g_restore_skip.sample});
+    if (sound::g_restore_skip.armed) sound::g_restore_skip.armed = false, sound::g_restore_skip.reached = sound::g_restore_skip.sample;
     Music_Buffer = FakeCreate(nullptr);
     Music_Data = std::malloc(size);
     Music_Loops = loops;
