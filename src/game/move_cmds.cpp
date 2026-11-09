@@ -32,7 +32,7 @@ namespace {
 using namespace move_script;
 using namespace move_cmds;
 
-std::uint32_t Address(const volatile void* p) { return Low32(p); }
+std::uint32_t AddressMoveCmds(const volatile void* p) { return Low32(p); }
 std::int32_t Add(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b));
 }
@@ -51,7 +51,7 @@ unsigned char* Kind2() { return rv::Bytes(&Sprite_Kind2); }
 
 // The angle a party member turns to for a direction: Sprite_DirectionAngles,
 // read at any index as the original reads it (the table has 8).
-std::uint16_t DirectionAngle(unsigned char direction) { return move_script::Word(move_script::At(Address(Sprite_DirectionAngles) + direction * 2u)); }
+std::uint16_t DirectionAngle(unsigned char direction) { return move_script::Word(move_script::At(AddressMoveCmds(Sprite_DirectionAngles) + direction * 2u)); }
 
 // Math_Ratan2's doubles, bit for bit the image's (the fuzz checks them).
 constexpr double kScale = 2048.0;
@@ -119,13 +119,13 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
     std::int32_t tilt_x = static_cast<std::int32_t>(sprite->angle[0]);
     std::int32_t tilt_y = static_cast<std::int32_t>(sprite->angle[1]);
-    const std::int32_t index = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_ObjectsExtra))) / 0xA4;
+    const std::int32_t index = static_cast<std::int32_t>(AddressMoveCmds(object) - AddressMoveCmds(rv::Bytes(Sprite_ObjectsExtra))) / 0xA4;
     signed char slot = static_cast<signed char>(index & 0xFF);
     if (slot < 0) slot = 4;
     unsigned char* const record = MoveScript_PartyRecords + slot * 16;
     if (record[0] & 1) return;
     if (Add(sprite->step_z, sprite->step_x) != 0) {
-        const unsigned char* const step = move_script::At(Address(Field_DirectionSteps) + direction * 8u);
+        const unsigned char* const step = move_script::At(AddressMoveCmds(Field_DirectionSteps) + direction * 8u);
         const long ground = move_cmds::g.elevation(Add(move_script::Long(step), sprite->x), Add(move_script::Long(step + 4), sprite->z));
         sprite = rv::Current<records::SpriteHead>();
         const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - sprite->height_whole);
@@ -184,7 +184,7 @@ extern "C" void __cdecl Sprite_SetPoseWait(unsigned char* context) {
 extern "C" void __cdecl MoveCmd_MoveKind2(unsigned char direction) {
     unsigned char* const k2 = Kind2();
     const unsigned multiplier = (direction == 2 || direction == 6) ? 4 : 8;
-    const unsigned char speed = At(Address(Field_MoveSpeeds))[k2[kK2Speed]];
+    const unsigned char speed = At(AddressMoveCmds(Field_MoveSpeeds))[k2[kK2Speed]];
     const auto divisor = static_cast<short>(static_cast<std::uint16_t>(speed * multiplier));
     MoveScript_F3Divisor = divisor;
     const std::int32_t per_frame = 0x80 / static_cast<std::int32_t>(divisor);
@@ -457,12 +457,12 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
 // the four Sprite_ObjectsExtra.
 // As the original has it: anything else returns the pointer itself.
 extern "C" int __cdecl MoveScript_ObjectKind(void) {
-    const std::uint32_t sprite = Address(Sprite_Current);
-    if (sprite == Address(rv::Bytes(&Sprite_Kind2))) return 2;
-    const std::uint32_t trio = Address(rv::Bytes(ObjTrio));
+    const std::uint32_t sprite = AddressMoveCmds(Sprite_Current);
+    if (sprite == AddressMoveCmds(rv::Bytes(&Sprite_Kind2))) return 2;
+    const std::uint32_t trio = AddressMoveCmds(rv::Bytes(ObjTrio));
     if (sprite == trio || sprite == trio + 0x14C || sprite == trio + 0x298) return 1;
-    if (sprite >= Address(rv::Bytes(Sprite_Objects)) && sprite < Address(rv::Bytes(Sprite_Objects)) + (Sprite_Objects_count * sizeof(records::SpriteObject))) return 0;
-    if (sprite >= Address(rv::Bytes(Sprite_ObjectsExtra)) && sprite < Address(rv::Bytes(Sprite_ObjectsExtra)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))) return 3;
+    if (sprite >= AddressMoveCmds(rv::Bytes(Sprite_Objects)) && sprite < AddressMoveCmds(rv::Bytes(Sprite_Objects)) + (Sprite_Objects_count * sizeof(records::SpriteObject))) return 0;
+    if (sprite >= AddressMoveCmds(rv::Bytes(Sprite_ObjectsExtra)) && sprite < AddressMoveCmds(rv::Bytes(Sprite_ObjectsExtra)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))) return 3;
     return static_cast<int>(sprite);
 }
 

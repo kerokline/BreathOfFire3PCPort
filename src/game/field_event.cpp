@@ -67,7 +67,7 @@ Callees g = kOriginals;
 namespace {
 
 using namespace move_script;
-using field_event::g;
+constexpr auto& gFieldEvent = field_event::g;
 namespace at = field_event::at;
 using HandlerFieldEvent = field_event::Handler;
 
@@ -352,14 +352,14 @@ extern "C" void __cdecl Member_ClearState(unsigned member) {
 extern "C" void __cdecl Party_ClearAll(void) {
     for (unsigned i = 0; i < 3; ++i) {
         Member(i)[0] = 0;
-        g.clear_state(i);
+        gFieldEvent.clear_state(i);
     }
 }
 
 // original 0x5367A0 (PSX 0x80167704): the state of each member that is on cleared.
 extern "C" void __cdecl Party_ClearActive(void) {
     for (unsigned i = 0; i < 3; ++i)
-        if (Member(i)[0] != 0) g.clear_state(i);
+        if (Member(i)[0] != 0) gFieldEvent.clear_state(i);
 }
 
 // original 0x534010 (PSX 0x801C2838).
@@ -815,7 +815,7 @@ extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned 
             if (row >= limit) break;
         }
     }
-    g.set_error();
+    gFieldEvent.set_error();
     return result;
 }
 
@@ -827,10 +827,10 @@ extern "C" void __cdecl PartySet_Select(unsigned set_arg, unsigned mode_arg) {
     const unsigned set = set_arg & 0xFF, mode = mode_arg & 0xFF;
     if (mode != 3) *At(::bof3::Img(AreaW0b_PartySet_addr)) = static_cast<unsigned char>(mode == 0 ? set | 0x80 : set);
     switch (mode) {
-    case 0: g.load_dat(set + 0x2C2); break;
-    case 1: g.load_dat(set + 0xFC); break;
-    case 2: g.load_dat(set + 0x10F); break;
-    case 3: g.load_dat(set + 0x2D5); break;
+    case 0: gFieldEvent.load_dat(set + 0x2C2); break;
+    case 1: gFieldEvent.load_dat(set + 0xFC); break;
+    case 2: gFieldEvent.load_dat(set + 0x10F); break;
+    case 3: gFieldEvent.load_dat(set + 0x2D5); break;
     default: break;
     }
 }
@@ -838,16 +838,16 @@ extern "C" void __cdecl PartySet_Select(unsigned set_arg, unsigned mode_arg) {
 // original 0x536850: the set for a, b, c selected with mode 3 (its file
 // without recording it) unless it is the current one.
 extern "C" void __cdecl PartySet_LoadFirst(unsigned a, unsigned b, unsigned c) {
-    const unsigned char set = g.find(a, b, c);
-    if ((AreaW0b_PartySet & 0x7F) != set) g.select(set, 3);
+    const unsigned char set = gFieldEvent.find(a, b, c);
+    if ((AreaW0b_PartySet & 0x7F) != set) gFieldEvent.select(set, 3);
 }
 
 // original 0x536890: the set for a, b, c selected with `mode` unless
 // 0x90412C already holds it as that mode would record it.
 extern "C" void __cdecl PartySet_LoadSecond(unsigned a, unsigned b, unsigned c, unsigned mode) {
-    const unsigned char set = g.find(a, b, c);
+    const unsigned char set = gFieldEvent.find(a, b, c);
     const unsigned want = (mode & 0xFF) != 0 ? set : (set | 0x80u);
-    if (AreaW0b_PartySet != want) g.select(set, mode);
+    if (AreaW0b_PartySet != want) gFieldEvent.select(set, mode);
 }
 
 // original 0x5367E0: the party set for a, b, c loaded - first with mode 3
@@ -857,16 +857,16 @@ extern "C" void __cdecl PartySet_LoadSecond(unsigned a, unsigned b, unsigned c, 
 // a load already done costs no frame.
 extern "C" void __cdecl PartySet_Load(unsigned a, unsigned b, unsigned c, unsigned mode) {
     if ((mode & 0xFF) == 0) {
-        g.load_first(a, b, c);
-        if (g.load_done() == 0) {
-            do g.sleep(1);
-            while (g.load_done() == 0);
+        gFieldEvent.load_first(a, b, c);
+        if (gFieldEvent.load_done() == 0) {
+            do gFieldEvent.sleep(1);
+            while (gFieldEvent.load_done() == 0);
         }
     }
-    g.load_second(a, b, c, mode);
-    if (g.load_done() == 0) {
-        do g.sleep(1);
-        while (g.load_done() == 0);
+    gFieldEvent.load_second(a, b, c, mode);
+    if (gFieldEvent.load_done() == 0) {
+        do gFieldEvent.sleep(1);
+        while (gFieldEvent.load_done() == 0);
     }
 }
 

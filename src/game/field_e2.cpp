@@ -58,7 +58,7 @@ U Key(const void* p) { return Low32(p); }
 // The record views (game/record_views.h): the leader helpers run on the leader,
 // an ObjTrio record, and Field_State is one.
 U LongAt(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
-int S8(unsigned v) { return static_cast<signed char>(v); }
+int S8FieldE2(unsigned v) { return static_cast<signed char>(v); }
 int S16FieldE2(unsigned v) { return static_cast<short>(v); }
 // `sub; cdq; xor; sub`: the 32-bit difference's magnitude, wrapping as the
 // original's (the magnitude of 0x80000000 is itself, negative).
@@ -1442,8 +1442,8 @@ namespace {
 // doubled, about the cell's origin, and the low word; the fourth word 0
 // (DIV-0023, as map_cells.cpp's QuadVertex).
 void QuadVertex(short* v, U dword, U x0, U y0) {
-    v[0] = static_cast<short>(x0 + 2u * static_cast<U>(S8(dword >> 24)));
-    v[1] = static_cast<short>(y0 + 2u * static_cast<U>(S8(dword >> 16)));
+    v[0] = static_cast<short>(x0 + 2u * static_cast<U>(S8FieldE2(dword >> 24)));
+    v[1] = static_cast<short>(y0 + 2u * static_cast<U>(S8FieldE2(dword >> 16)));
     v[2] = static_cast<short>(dword);
     v[3] = 0;
 }
@@ -1567,8 +1567,8 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
     const U d1 = LongAt(record + 4), d2 = LongAt(record + 8);
     const U counter = Frame_Counter & 0xFFFu;
     alignas(4) short centre[4];
-    centre[0] = static_cast<short>((static_cast<U>(static_cast<std::uint16_t>(S8(d1 >> 24))) + ((b1 - 0x80u) << 6)) << 1);
-    centre[1] = static_cast<short>((static_cast<U>(static_cast<std::uint16_t>(S8(d1 >> 16))) + ((b0 - 0x80u) << 6)) << 1);
+    centre[0] = static_cast<short>((static_cast<U>(static_cast<std::uint16_t>(S8FieldE2(d1 >> 24))) + ((b1 - 0x80u) << 6)) << 1);
+    centre[1] = static_cast<short>((static_cast<U>(static_cast<std::uint16_t>(S8FieldE2(d1 >> 16))) + ((b0 - 0x80u) << 6)) << 1);
     centre[2] = static_cast<short>(d1);
     centre[3] = 0;
     const U spin[3] = {((d2 >> 20) & 0x3FFu) * counter * 4u, ((d2 >> 10) & 0x3FFu) * counter * 4u, (d2 & 0x3FFu) * counter * 4u};
@@ -1723,7 +1723,7 @@ extern "C" void __cdecl ItemTrade_Run(void) {
     SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if (pick & 0xC0) return;
-    SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8(pick)) + 0x51u), 0);
+    SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8FieldE2(pick)) + 0x51u), 0);
 }
 
 // original 0x593A30 (ItemTrade_RunSteps[0]; PSX 0x800F51BC): the pick. Up and down
@@ -1777,7 +1777,7 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
     TradeBox();
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if ((pick & 0xC0) == 0) {
-        const U record = TradeRecord(S8(pick));
+        const U record = TradeRecord(S8FieldE2(pick));
         const unsigned help = SH_CALL(Item_HelpMessage)(BFieldE2(record + 1), BFieldE2(record));
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(help);
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, text);
@@ -1819,7 +1819,7 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     // with more than 227 held no s8 does, and the original loops for ever.
     if (held > 227) bof3::Fatal("ItemTrade_PickCount: %u held - no quantity brings the sum to 99 (the original never ends)", (unsigned)held);
     unsigned char q = static_cast<unsigned char>(Effect1g_TradeQuantity);
-    while (static_cast<int>(S8(q)) + static_cast<int>(held) > 0x63) q = static_cast<unsigned char>(q - 1);
+    while (static_cast<int>(S8FieldE2(q)) + static_cast<int>(held) > 0x63) q = static_cast<unsigned char>(q - 1);
     Effect1g_TradeQuantity = q;
     if (q != old) SH_CALL(Sound_PlayEffect)(0x100);
     const std::uint16_t pressed = Input_Pressed;
@@ -1914,7 +1914,7 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
                 SH_CALL(Sound_PlayEffect)(0x105);
                 const auto pick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) & 0xBF);
                 Effect1g_TradePick = pick;
-                const U record = TradeRecord(S8(pick));
+                const U record = TradeRecord(S8FieldE2(pick));
                 SH_CALL(Inventory_Add)(BFieldE2(record + 1), BFieldE2(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
                 SH_AT(void (__cdecl*)(), at::kTradeTake.v)();
                 Effect1g_TradeQuantity = 1;
