@@ -226,7 +226,7 @@ Field_ObjectsScreen	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_ban
 Party_ExtraFrame	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Party_ExtraFrame  first at instruction 0: 'push r14' -> 'push r15'	126072d9
 Party_ExtraScreens	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Party_ExtraScreens  first at instruction 2: 'push rbx' -> 'sub rsp, 0x28'	126072d9
 Sprite_DrawOverlays	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Sprite_DrawOverlays  first at instruction 11: 'je .+118' -> 'je .+F9'	126072d9
-Sprite_ProjectA	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Sprite_ProjectA  first at instruction 53: 'jne .+BD' -> 'jne .+BE'	126072d9
+Sprite_ProjectA	i686-fold	B0 promotion of field_frame.cpp's g_band_fill (group h, call 16): x86_64 Sprite_ProjectA gains 'mov eax, dword ptr [rip] @r4:_ZN11field_frame11g_band_fillE', 'test eax, eax', 'jns .+224' at 142 (the folded -1's test back), beside the x64-indirect calls through g it already carried; i686 identical; re-classed from x64-indirect. Was: B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Sprite_ProjectA  first at instruction 53: 'jne .+BD' -> 'jne .+BE'	
 Sprite_UpdateScreenA	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: DIFFER Sprite_UpdateScreenA  first at instruction 14: 'jmp @r4:Sprite_ProjectA' -> 'jmp qword ptr [rip + 0x98] @r4:_ZN11field_frame1gE'	126072d9
 _ZN11field_frame1gE	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW _ZN11field_frame1gE  (data)	126072d9
 _ZN11field_frame12g_band_countE	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW _ZN11field_frame12g_band_countE  (bss)	126072d9
@@ -245,5 +245,6 @@ _ZN8win_main12g_foregroundE	i686-fold	B0 promotion of win_main.cpp's g_backgroun
 __Z13MsgPool_MovedPj	i686-fold	B0 promotion of msg_pool.cpp's g_pool: DIFFER __Z13MsgPool_MovedPj  first at instruction 0: 'push edi' -> 'mov eax, dword ptr [esp + 4]'	912242cb
 _Z13MsgPool_MovedPj	i686-fold	B0 promotion of msg_pool.cpp's g_pool: DIFFER _Z13MsgPool_MovedPj  first at instruction 0: 'mov rdx, qword ptr [rip] @r4:local#cf2dbf477932' -> 'mov rax, qword ptr [rip] @r4:local#cf2dbf477932'	912242cb
 _ZN10map_layers10g_side_dupE	i686-fold	B0 promotion of map_layers.cpp's g_side_dup: NEW _ZN10map_layers10g_side_dupE  (bss; x86_64, the promoted bool not paired with its GONE file-local)	9f0cc695
-Gfx_ConvertRow	i686-fold	B0 promotion of gfx_clut.cpp's g_stp_test: DIFFER Gfx_ConvertRow  first at instruction 10: 'mov ebx, edx' -> 'mov edi, edx'	
-_ZN8gfx_clut10g_stp_testE	i686-fold	B0 promotion of gfx_clut.cpp's g_stp_test: NEW _ZN8gfx_clut10g_stp_testE  (bss)	
+Gfx_ConvertRow	i686-fold	B0 promotion of gfx_clut.cpp's g_stp_test: DIFFER Gfx_ConvertRow  first at instruction 10: 'mov ebx, edx' -> 'mov edi, edx'	d51d35dc
+_ZN8gfx_clut10g_stp_testE	i686-fold	B0 promotion of gfx_clut.cpp's g_stp_test: NEW _ZN8gfx_clut10g_stp_testE  (bss)	d51d35dc
+_ZN11field_frame11g_band_fillE	i686-fold	B0 promotion of field_frame.cpp's g_band_fill: NEW _ZN11field_frame11g_band_fillE  (data)	
