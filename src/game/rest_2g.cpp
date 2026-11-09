@@ -56,8 +56,8 @@ using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return Low32(p); }
 unsigned char BRest2g(U address) { return move_script::At(address)[0]; }
-short S(const unsigned char* p) { return static_cast<short>(move_script::Word(p)); }
-std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
+short SRest2g(const unsigned char* p) { return static_cast<short>(move_script::Word(p)); }
+std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(SRest2g(p)); }
 
 // The record the window layer is running, re-read from 0x905B84 wherever the
 // original re-reads it. Volatile so that ours cannot cache it either: the
@@ -103,7 +103,7 @@ void Slide(unsigned off, int step, short bound, Past past) {
     unsigned char* const moved = RecRest2g();
     move_script::SetWord(moved + off, move_script::Word(moved + off) + static_cast<unsigned>(step));
     unsigned char* const r = RecRest2g();
-    const short v = S(r + off);
+    const short v = SRest2g(r + off);
     const bool hold = past == Past::kAbove ? v > bound : past == Past::kAtOrAbove ? v >= bound : past == Past::kBelow ? v < bound : v <= bound;
     if (!hold) return;
     move_script::SetWord(r + off, static_cast<std::uint16_t>(bound));
@@ -120,7 +120,7 @@ short Imm16Bound(U operand) { return Widescreen_SlideLogic(Widescreen_SlideBound
 // (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 void SlideOff(int step, U operand, Past past) {
     const short bound = Imm32Bound(operand);
-    const short x_read = S(RecRest2g() + 4);
+    const short x_read = SRest2g(RecRest2g() + 4);
     Slide(4, step, bound, past);
     Widescreen_SlideHeld(RecRest2g(), x_read, bound);
 }
@@ -224,7 +224,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
 extern "C" void __cdecl GeneWin_GridSlideIn(void) {
     SH_CALL(GeneWin_DrawGrid)();
     unsigned char* const r = RecRest2g();
-    const short x = S(r + 4);
+    const short x = SRest2g(r + 4);
     if (r[0xA] == 0) rv::As<records::WindowRecord>(r)->x = x > 0x42 ? static_cast<unsigned>(x - 0x20) : 0x42u;
     else rv::As<records::WindowRecord>(r)->x = x < 0x42 ? static_cast<unsigned>(x + 0x20) : 0x42u;
 }
@@ -247,7 +247,7 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
     SH_CALL(GeneWin_DrawGrid)();
     Widescreen_SlideUndraw(RecRest2g());
     unsigned char* const r = RecRest2g();
-    const short x = S(r + 4);
+    const short x = SRest2g(r + 4);
     if (r[0xA] == 0) {
         if (x >= Imm16Bound(rest_2g::at::kGridOutRight.v)) {
             SH_CALL(Window_FreeCurrent)();

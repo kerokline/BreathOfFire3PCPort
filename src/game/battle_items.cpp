@@ -97,7 +97,7 @@ namespace {
 
 // What the setters leave at +0x10 and every 0x10 after it: the float 0.01, as
 // psx_gpu.cpp's do (docs/psx-library-layer.md section 1).
-constexpr std::uint32_t kPointZeroOne = 0x3C23D70Au;
+constexpr std::uint32_t kPointZeroOneBattleItems = 0x3C23D70Au;
 
 void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v); }
 
@@ -155,7 +155,7 @@ template <typename F> F MethodBattleItems(void* object, unsigned offset) {
     return reinterpret_cast<F>(vtable[offset / 4]);
 }
 ::bof3::Slot32<void>& StreamBuffer() { return SndStream_Buffer; }   // the 4-byte slot, read and written as one
-constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
+constexpr long kBufferLostBattleItems = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
 
 }  // namespace
 
@@ -165,25 +165,25 @@ constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLO
 // original 0x5A75F0 (PSX SetPolyG3 0x8017B2F4): code 0x30, 0.01 per vertex.
 extern "C" void __cdecl Gpu_SetPolyG3(unsigned char* prim) {
     prim[7] = 0x30;
-    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOne);
+    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOneBattleItems);
 }
 // original 0x5A76B0 (PSX SetLineG2 0x8017B40C): code 0x50, two vertices.
 extern "C" void __cdecl Gpu_SetLineG2(unsigned char* prim) {
     prim[7] = 0x50;
-    PutDword(prim + 0x10, kPointZeroOne);
-    PutDword(prim + 0x20, kPointZeroOne);
+    PutDword(prim + 0x10, kPointZeroOneBattleItems);
+    PutDword(prim + 0x20, kPointZeroOneBattleItems);
 }
 // original 0x5A76D0 (PSX SetLineG3 0x8017B440): code 0x58, three vertices.
 // The PSX's also stores the polyline's terminator 0x55555555; the port's
 // primitive has none.
 extern "C" void __cdecl Gpu_SetLineG3(unsigned char* prim) {
     prim[7] = 0x58;
-    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOne);
+    for (unsigned k = 0x10; k <= 0x30; k += 0x10) PutDword(prim + k, kPointZeroOneBattleItems);
 }
 // original 0x5A7750 (PSX SetTile1 0x8017B3A8): code 0x68, one vertex.
 extern "C" void __cdecl Gpu_SetTile1(unsigned char* prim) {
     prim[7] = 0x68;
-    PutDword(prim + 0x10, kPointZeroOne);
+    PutDword(prim + 0x10, kPointZeroOneBattleItems);
 }
 
 // ===========================================================================
@@ -768,7 +768,7 @@ extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
     if (buffer == nullptr) return;
     MethodBattleItems<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
     void* b = StreamBuffer();
-    if (MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+    if (MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLostBattleItems)
         return;
     const unsigned char* data = nullptr;
     const unsigned size = battle_items::g.find_data(wave, &data);

@@ -57,7 +57,7 @@ constexpr U kTexCacheBytes = 0x6000;
 constexpr U kClutRowsBytes = 0x1000;
 constexpr ::bof3::image::Va kFontCache{0x7C9F50};
 constexpr U kFontCacheBytes = 0xA00, kFontEntry = 0x14;
-constexpr ::bof3::image::Va kBackdropBlock{0x6BE9F8};
+constexpr ::bof3::image::Va kBackdropBlockDisplaySetup{0x6BE9F8};
 constexpr U kBackdropBytes = 0x1C;
 // kAfterDrawBlock: now D3d_CaptureReady (symbols.toml).
 constexpr U kAfterDrawBytes = 0x1C;
@@ -235,7 +235,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     Zero(::bof3::Img(Gfx_ClutRows_addr), kClutRowsBytes);
     Zero(::bof3::Img(Font_TexCache_addr), kFontCacheBytes);
     for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWordDisplaySetup(::bof3::Img(kFontCache.v) + i * kFontEntry, 0xFFFF);
-    Zero(::bof3::Img(kBackdropBlock.v), kBackdropBytes);
+    Zero(::bof3::Img(kBackdropBlockDisplaySetup.v), kBackdropBytes);
     Zero(::bof3::Img(D3d_CaptureReady_addr), kAfterDrawBytes);
     Zero(::bof3::Img(D3d_CellTexCache_addr), kCellCacheBytes);
     Zero(::bof3::Img(Gfx_PixelFormat_addr), 3 * kPixelFormatRecord);

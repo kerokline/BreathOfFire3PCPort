@@ -36,18 +36,18 @@ std::uint32_t Dword(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-unsigned Word(const unsigned char* p) {
+unsigned WordAreaBackdrop(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void SetWord(unsigned char* p, unsigned v) {
+void SetWordAreaBackdrop(unsigned char* p, unsigned v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
 void SetDword(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
 void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+unsigned char* AtAreaBackdrop(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 // A 5-bit colour channel of a packed entry colour, as the PSX's 15-bit
 // (r, g, b) unpacked to 8 bits: the original's `and al, 0x1F; shl al, 3`.
@@ -215,16 +215,16 @@ extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
 // or above f, so a list without one runs on (read, not run: the fuzz ends
 // every list with 0xFF).
 extern "C" void __cdecl AreaMap_TextureCycle(const unsigned char* entry) {
-    if (area_backdrop::g.test(Word(entry + 4)) == 0) return;
+    if (area_backdrop::g.test(WordAreaBackdrop(entry + 4)) == 0) return;
     const unsigned frame = Frame_Counter % (entry[0] + 1u);
     const unsigned char* pair = entry + 8;
     while (static_cast<int>(frame) > static_cast<int>(pair[3])) pair += 8;
     const std::uint32_t a = Dword(pair), b = Dword(pair + 4);
     unsigned char rect[8];
-    SetWord(rect, (((a >> 16) & 0xFu) << 7) + ((b >> 9) & 0x7Fu) + 0x140u);
-    SetWord(rect + 2, (b & 0xFFu) + 0x100u);
-    SetWord(rect + 4, pair[7]);
-    SetWord(rect + 6, pair[6] + 1u);
+    SetWordAreaBackdrop(rect, (((a >> 16) & 0xFu) << 7) + ((b >> 9) & 0x7Fu) + 0x140u);
+    SetWordAreaBackdrop(rect + 2, (b & 0xFFu) + 0x100u);
+    SetWordAreaBackdrop(rect + 4, pair[7]);
+    SetWordAreaBackdrop(rect + 6, pair[6] + 1u);
     const std::uint32_t x = (((a >> 20) & 0xFu) << 7) + ((a >> 9) & 0x7Fu) + 0x140u;
     const std::uint32_t y = (a & 0xFFu) + 0x100u;
     area_backdrop::g.set_draw_move(Gfx_PacketNext, rect, x, y);
@@ -266,7 +266,7 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
                 object[kTrioSlot] = Draw_OtSlot;
             }
         }
-        unsigned char* const fourth = At(::bof3::Img(FieldEvent_Object905DA0_addr));
+        unsigned char* const fourth = AtAreaBackdrop(::bof3::Img(FieldEvent_Object905DA0_addr));
         if (!inside(fourth + kTrioPosition)) continue;
         if (zone[0] & 1) fourth[kFourthFlags] |= 1;
         else fourth[kFourthFlags] &= 0xFE;

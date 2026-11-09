@@ -43,12 +43,12 @@ std::uint32_t Dword(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-unsigned Word(const unsigned char* p) {
+unsigned WordMapScroll(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void SetWord(unsigned char* p, unsigned v) {
+void SetWordMapScroll(unsigned char* p, unsigned v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
@@ -228,8 +228,8 @@ extern "C" void __cdecl Field_ViewReset(void) {
         unsigned char* const quad = draw_pool::Items() + q * 0x48u;
         gMapScroll.set_poly_ft4(quad);
         gMapScroll.set_shade_tex(quad, 0);
-        SetWord(quad + 0x36, 0);
-        SetWord(quad + 0x46, 0);
+        SetWordMapScroll(quad + 0x36, 0);
+        SetWordMapScroll(quad + 0x46, 0);
     }
     Camera_Angles[0] = static_cast<short>(0xFD56);
     Camera_Angles[1] = 0;
@@ -238,7 +238,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
     SetDword(drawn, Dword(angles));
     const auto kind2_z = static_cast<std::int32_t>(Field_Kind2Z);
     const auto kind2_x = static_cast<std::int32_t>(Field_Kind2X);
-    SetWord(angles + 4, 0x200);   // Cond_AngleFB's low word, the yaw
+    SetWordMapScroll(angles + 4, 0x200);   // Cond_AngleFB's low word, the yaw
     SetDword(drawn + 4, Dword(angles + 4));
     // Draw item 0 - the "none" index - has its eight screen points cleared.
     for (const unsigned at : {0x08u, 0x0Cu, 0x18u, 0x1Cu, 0x28u, 0x2Cu, 0x38u, 0x3Cu, 0x50u, 0x54u, 0x60u, 0x64u, 0x70u,
@@ -277,7 +277,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
     for (int row = 0; row < 0x38; ++row) {
         for (int column = 0; column < 0x1C; ++column) {
             unsigned char* const cell = CellMapScroll(row, column);
-            SetWord(cell + 2, 0);
+            SetWordMapScroll(cell + 2, 0);
             gMapScroll.cell_to_map(row, column, cell);
         }
     }
@@ -322,10 +322,10 @@ extern "C" void __cdecl AreaMap_BakePatches(void) {
                 do {
                     const std::uint32_t r = Dword(record);
                     const std::uint32_t width = AreaMap_Header[0];
-                    const std::uint32_t offset = Word(AreaMap_Header + 2);
+                    const std::uint32_t offset = WordMapScroll(AreaMap_Header + 2);
                     const std::uint32_t cell = (r & 0xFFu) * width + ((r >> 8) & 0xFFu) + offset * 2u;
                     record += 0xC;
-                    const std::uint32_t tile = Word(AreaMap_Header + cell * 2u);
+                    const std::uint32_t tile = WordMapScroll(AreaMap_Header + cell * 2u);
                     const auto area = static_cast<std::int32_t>(AreaMap_Header[1] * width + 1u);
                     const std::uint32_t slot =
                         ((r >> 16) & 0xFu) + static_cast<std::uint32_t>(area / 2) + offset + tile;

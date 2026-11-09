@@ -166,12 +166,12 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     // unsigned). On the way, the first entry not used this frame.
     int free_slot = -1;
     glyph_draw::U i;
-    for (i = 0; i < kEntries; ++i) {
+    for (i = 0; i < glyph_draw::kEntries; ++i) {
         const unsigned char* e = glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry);
         if (glyph_draw::Word(e) == glyph && glyph_draw::Word(e + 2) == clut && glyph_draw::Long(e + 4) == glyph_draw::Long(glyph_draw::At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8))) break;
         if (free_slot == -1 && glyph_draw::Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
     }
-    if (i == kEntries && free_slot != -1) {
+    if (i == glyph_draw::kEntries && free_slot != -1) {
         i = static_cast<glyph_draw::U>(free_slot);
         if (Gfx_RenderFlags & 1) {
             glyph_draw::g.build_texture(free_slot, glyph, clut);

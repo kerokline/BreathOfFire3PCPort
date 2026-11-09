@@ -79,7 +79,7 @@ constexpr auto& WordRest2h = move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char& BRest2h(U address) { return *AtRest2h(address); }
-U L(U address) { return static_cast<U>(LongRest2h(AtRest2h(address))); }
+U LRest2h(U address) { return static_cast<U>(LongRest2h(AtRest2h(address))); }
 int S8Rest2h(unsigned v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 U Key(const void* p) { return Low32(p); }
 
@@ -100,7 +100,7 @@ void StepRest2h(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the window's step +3 is %u, past the %u entries of 0x%X - the original jumps through the "
                     "dword after (docs/rest_2h.md section 7)",
                     who, index, entries, (unsigned)::bof3::VaOf(table));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2h(table + 4 * index)))();
 }
 
 // A slide: x (+4) or y (+6) moved by `by`; past `bound` (signed 16-bit; `below`
@@ -356,12 +356,12 @@ extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
     const unsigned n0 = Rest2h_RowCount;
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 3, 0x65, static_cast<int>((n0 << 4) + 0x19), 0, style);
-    SH_CALL(Text_DrawAt)(XRest2h(w) + 0x1E, YRest2h(w) + 7, 0, 0xFF, AtRest2h(L(::bof3::Img(rest_2h::at::kRowText.v))));
+    SH_CALL(Text_DrawAt)(XRest2h(w) + 0x1E, YRest2h(w) + 7, 0, 0xFF, AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kRowText.v))));
     Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kRowPiecesA.v));
     unsigned char i = 0;
     if (Rest2h_RowCount != 0) {
         do {
-            const unsigned char* const text = AtRest2h(L(::bof3::Img(rest_2h::at::kRowText.v) + 4u * BRest2h(::bof3::Img(rest_2h::at::kRowOrder.v) + i)));
+            const unsigned char* const text = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kRowText.v) + 4u * BRest2h(::bof3::Img(rest_2h::at::kRowOrder.v) + i)));
             const int dy = static_cast<int>(i) << 4;
             if (i == w[0xB]) {
                 SH_CALL(Text_DrawAt)(XRest2h(w) + 7, YRest2h(w) + dy + 0x1A, 7, 0xFF, text);
@@ -562,7 +562,7 @@ extern "C" unsigned char __cdecl MasterWin_Available(unsigned index) {
         bof3::Fatal("MasterWin_Available (0x59C780): master %u past the %u lists of 0x%X - the original reads the next "
                     ".data as a pointer (docs/rest_2h.md section 7)",
                     k, rest_2h::at::kMasterCount, (unsigned)MasterWin_Requirements_addr);
-    const unsigned char* p = AtRest2h(L(::bof3::Img(rest_2h::at::kRequirements.v) + 4 * k));
+    const unsigned char* p = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kRequirements.v) + 4 * k));
     while (*p != 0xFF) {
         if (SH_CALL(MasterWin_SkillKnown)(*p) == 0) return 0;
         ++p;
@@ -747,8 +747,8 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     else if (slot <= 4) w[8] = 3;
     else w[8] = 1;
     const unsigned cat = w[8];
-    const unsigned char* ids = AtRest2h(L(::bof3::Img(rest_2h::at::kIdLists.v) + 4 * cat));
-    const unsigned char* counts = AtRest2h(L(::bof3::Img(rest_2h::at::kCountLists.v) + 4 * cat));
+    const unsigned char* ids = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kIdLists.v) + 4 * cat));
+    const unsigned char* counts = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kCountLists.v) + 4 * cat));
     unsigned char n = 0;
     for (unsigned k = 0; k < 0x80; ++k, ++ids, ++counts) {
         const unsigned id = *ids;
@@ -789,7 +789,7 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 0x7A, 0x99, 8, 0, Style());
     const unsigned title_cat = w[8];
     const int title_y = YRest2h(w) + 7;
-    const unsigned char* const title = AtRest2h(L(::bof3::Img(rest_2h::at::kUseTitles.v) + 4 * title_cat));
+    const unsigned char* const title = AtRest2h(LRest2h(::bof3::Img(rest_2h::at::kUseTitles.v) + 4 * title_cat));
     const unsigned char length = SH_CALL(Text_CharCount)(title);
     using DrawAt = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
     SH_WORD(DrawAt, ListTitle_SiteDraw())(6 * (0xD - static_cast<int>(length)) + XRest2h(w), title_y, 0, 0x10, title);

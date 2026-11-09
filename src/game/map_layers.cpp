@@ -56,12 +56,12 @@ std::uint32_t Dword(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-unsigned Word(const unsigned char* p) {
+unsigned WordMapLayers(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void SetWord(unsigned char* p, unsigned v) {
+void SetWordMapLayers(unsigned char* p, unsigned v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
@@ -185,7 +185,7 @@ extern "C" void __cdecl AreaMap_Frame(void) {
     auto* const angles = reinterpret_cast<unsigned char*>(Camera_Angles);
     auto* const drawn = reinterpret_cast<unsigned char*>(Camera_AnglesDrawn);
     const std::uint32_t angles_xy = Dword(angles), angles_z = Dword(angles + 4);
-    if (Word(angles) != Word(drawn) || Word(angles + 2) != Word(drawn + 2) || Word(angles + 4) != Word(drawn + 4)) {
+    if (WordMapLayers(angles) != WordMapLayers(drawn) || WordMapLayers(angles + 2) != WordMapLayers(drawn + 2) || WordMapLayers(angles + 4) != WordMapLayers(drawn + 4)) {
         MapView_Redraw = 3;
         SetDword(drawn, angles_xy);
         SetDword(drawn + 4, angles_z);
@@ -257,7 +257,7 @@ int Columns(std::uint32_t inset) { return static_cast<std::int32_t>((0xEu - inse
 // A side triangle's list: list 0 of layer `layer` when the cell word's `bit` is
 // set, else list 1 - as LastOf's list-and-buffer.
 std::uint32_t SideSub(const unsigned char* cell, unsigned shift) {
-    return ((~Word(cell + 2) >> shift) & 2u) + Gfx_BufferIndex;
+    return ((~WordMapLayers(cell + 2) >> shift) & 2u) + Gfx_BufferIndex;
 }
 
 // One cell of the view, drawn into layer `layer` (0..0x36; under DIV-0041's
@@ -286,27 +286,27 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         return;
     }
 
-    std::uint32_t index = Word(cell + 2) & 0xFFFu;
+    std::uint32_t index = WordMapLayers(cell + 2) & 0xFFFu;
     unsigned char* item;
     if (index != 0) {
         item = Item(index);
-        const unsigned pending = Word(item + 0x36);
+        const unsigned pending = WordMapLayers(item + 0x36);
         if (pending != 0) {
             map_layers::g.cell_textures(cell[0], cell[1], item, pending - 1);
-            SetWord(item + 0x36, 0);
+            SetWordMapLayers(item + 0x36, 0);
         }
     } else {
         const unsigned short got = map_layers::g.alloc();
-        SetWord(cell + 2, got);
+        SetWordMapLayers(cell + 2, got);
         index = got;
-        if (got != 0 && (Word(Item(got) + 0x7E) != 0 || Word(Item(got) + 0x8E) != 0)) {
+        if (got != 0 && (WordMapLayers(Item(got) + 0x7E) != 0 || WordMapLayers(Item(got) + 0x8E) != 0)) {
             // Diagnostic (2026-10-07): a fresh item still carrying side words.
             static unsigned logged = 0;
             if (logged < 40) {
                 ++logged;
                 bof3::Log("map_layers: frame %u: cell %u,%u given item %u with stale side words next %u below %u",
-                          (unsigned)Frame_Counter, (unsigned)cell[0], (unsigned)cell[1], got, Word(Item(got) + 0x7E),
-                          Word(Item(got) + 0x8E));
+                          (unsigned)Frame_Counter, (unsigned)cell[0], (unsigned)cell[1], got, WordMapLayers(Item(got) + 0x7E),
+                          WordMapLayers(Item(got) + 0x8E));
             }
         }
         if (index == 0) {
@@ -327,14 +327,14 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         // A side item for each neighbour whose near corners stand lower -
         // the next cell's (+0x7E), the one below's (+0x8E).
         if (S8MapLayers(corner[6]) < S8MapLayers(corner[3]) || S8MapLayers(corner[4]) < S8MapLayers(corner[1])) {
-            SetWord(item + 0x7E, map_layers::g.alloc());
+            SetWordMapLayers(item + 0x7E, map_layers::g.alloc());
             corner = MapView_CornerPtr;
         }
         const unsigned char* const below = corner + Width() * 4u;
-        if (S8MapLayers(below[1]) < S8MapLayers(corner[3]) || S8MapLayers(below[0]) < S8MapLayers(corner[2])) SetWord(item + 0x8E, map_layers::g.alloc());
+        if (S8MapLayers(below[1]) < S8MapLayers(corner[3]) || S8MapLayers(below[0]) < S8MapLayers(corner[2])) SetWordMapLayers(item + 0x8E, map_layers::g.alloc());
         const unsigned flags = map_layers::g.cell_textures(cell[0], cell[1], item, Gfx_BufferIndex);
-        SetWord(cell + 2, Word(cell + 2) | flags);
-        SetWord(item + 0x36, Gfx_BufferIndex == 0 ? 2 : 1);
+        SetWordMapLayers(cell + 2, WordMapLayers(cell + 2) | flags);
+        SetWordMapLayers(item + 0x36, Gfx_BufferIndex == 0 ? 2 : 1);
     }
 
     // The cell's quad: its first screen point from above, the other three
@@ -356,7 +356,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     unsigned char* const quad = Quad(index, Gfx_BufferIndex);
     map_layers::g.rtpt();
 
-    const unsigned word = Word(cell + 2);
+    const unsigned word = WordMapLayers(cell + 2);
     if (word & 0x8000u) {
         if (word & 0x4000u) {   // list 0 of the layer before (layer 0 for the first)
             // DIV-0041's grown ring: the first is layer -1, as the PSP's.
@@ -384,7 +384,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         if (layer < 0) {
             // DIV-0041's grown ring: DrawTable's key holds the layer in a byte
             // above layer 0's, so layer -1's cells are map_rim's table.
-            map_rim::ExtraTablePush(*scratch, Word(cell + 2) & 0xFFFu);
+            map_rim::ExtraTablePush(*scratch, WordMapLayers(cell + 2) & 0xFFFu);
         } else {
             const std::uint32_t key = ((static_cast<std::uint32_t>(layer) << 8) | *scratch) << 16;
             // Diagnostic only, no behaviour: the byte count wraps at 256 and the
@@ -397,7 +397,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
                               (unsigned)cell[0], (unsigned)cell[1], layer);
                 }
             }
-            DrawTable[DrawTable_Count] = key | (Word(cell + 2) & 0xFFFu);
+            DrawTable[DrawTable_Count] = key | (WordMapLayers(cell + 2) & 0xFFFu);
             DrawTable_Count = static_cast<unsigned char>(DrawTable_Count + 1);
             ++g_table_adds;
         }
@@ -416,11 +416,11 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     // (+0x8E), each from two corners of the neighbour and the quad's own
     // vertex 2, left in the scratch.
     float unused;
-    const unsigned next_item = Word(item + 0x7E);
-    if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
+    const unsigned next_item = WordMapLayers(item + 0x7E);
+    if (draw_order::Tagging() && (next_item != 0 || WordMapLayers(item + 0x8E) != 0)) {
         const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr.Native());
         bof3::Log("map_layers: cell %u,%u layer %d item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
-                  (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
+                  (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, WordMapLayers(item + 0x8E), c[0], c[1], c[2], c[3],
                   MapView_ScreenXY[0], MapView_ScreenXY[1]);
     }
     if (next_item != 0) {
@@ -445,7 +445,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
                     reinterpret_cast<unsigned long*>(MapView_ScreenXY));
         map_layers::g.depth_f3(reinterpret_cast<float*>(side + 0x40), reinterpret_cast<float*>(side + 0x30), &unused);
     }
-    const unsigned below_item = Word(item + 0x8E);
+    const unsigned below_item = WordMapLayers(item + 0x8E);
     if (below_item != 0) {
         unsigned char* const side = Quad(below_item, Gfx_BufferIndex);
         std::memcpy(side + 8, quad + 0x28, 12);
@@ -551,8 +551,8 @@ extern "C" void __cdecl MapView_Build(void) {
 extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigned char* item, unsigned buffer) {
     const std::uint32_t header = Dword(AreaMap_Header);
     const std::uint32_t width = header & 0xFFu;
-    const unsigned offset = Word(AreaMap_Header + 2);
-    const unsigned tile = Word(AreaMap_Header + (x + width * y + offset * 2u) * 2u);
+    const unsigned offset = WordMapLayers(AreaMap_Header + 2);
+    const unsigned tile = WordMapLayers(AreaMap_Header + (x + width * y + offset * 2u) * 2u);
     if (tile == 0) return 0;
     const auto height = static_cast<std::int32_t>((header >> 8) & 0xFFu);
     const std::int32_t half = (height * static_cast<std::int32_t>(width) + 1) / 2;
@@ -565,7 +565,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     unsigned flags = ((static_cast<std::int32_t>(top) >> 15) & 0x8000) | (top & 0x4000u);
     map_layers::g.set_texture(top, item + buffer * 0x48u, 1);
     texture += 4;
-    const unsigned below = Word(item + 0x8E);
+    const unsigned below = WordMapLayers(item + 0x8E);
     if (below != 0) {
         if (Dword(texture) == 0 && map_layers::g_side_zero_release) {
             // BOF3X_SIDE_ZERO=1, an experiment (2026-10-07, off by default): a
@@ -575,7 +575,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
             if (draw_order::Tagging())
                 bof3::Log("map_layers: cell %u,%u: the below side's texture word is 0, released", x, y);
             map_layers::g.release(static_cast<unsigned short>(below));
-            SetWord(item + 0x8E, 0);
+            SetWordMapLayers(item + 0x8E, 0);
             texture += 4;
         } else {
             if (draw_order::Tagging())
@@ -586,7 +586,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
             texture += 4;
         }
     }
-    const unsigned next = Word(item + 0x7E);
+    const unsigned next = WordMapLayers(item + 0x7E);
     if (map_layers::g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
         // DIV-0085 (D239): the tile carries a word for the one side the file's
         // heights give this cell and no third; the second side exists only
@@ -610,7 +610,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
             bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
         if (Dword(texture) == 0) {
             map_layers::g.release(static_cast<unsigned short>(next));
-            SetWord(item + 0x7E, 0);
+            SetWordMapLayers(item + 0x7E, 0);
             return flags;
         }
         map_layers::g.set_texture(Dword(texture), Quad(next, buffer), 1);
@@ -699,7 +699,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
 extern "C" void __cdecl AreaMap_ClutCycle(const unsigned char* entry) {
     const unsigned frame = Frame_Counter % (Dword(entry) & 0xFFFFu) + 1;
     const unsigned char* p = entry + 4;
-    if (map_layers::g.test(Word(p)) == 0) return;
+    if (map_layers::g.test(WordMapLayers(p)) == 0) return;
     for (;;) {
         p += 4;
         const auto at = static_cast<int>(Dword(p) >> 24);
@@ -764,14 +764,14 @@ namespace map_layers {
 void SnapshotSides() {
     if (!g_side_dup) return;  // not armed: no self-test's map is read
     const unsigned width = Width(), depth = AreaMap_Header[1];
-    const unsigned offset = Word(AreaMap_Header + 2);
+    const unsigned offset = WordMapLayers(AreaMap_Header + 2);
     const unsigned half = (depth * width + 1) / 2;
     const unsigned char* const tiles = AreaMap_Header + offset * 4u;
     static std::uint8_t used[0x10000];
     static std::uint32_t next_used[0x10000];
     std::memset(used, 0, sizeof used);
-    for (unsigned i = 0; i < width * depth; ++i) used[Word(tiles + i * 2u)] = 1;
-    const unsigned end = Word(AreaMap_Header + 4);
+    for (unsigned i = 0; i < width * depth; ++i) used[WordMapLayers(tiles + i * 2u)] = 1;
+    const unsigned end = WordMapLayers(AreaMap_Header + 4);
     std::uint32_t after = end > offset + half ? end - offset - half : 0x10000u;
     for (unsigned t = 0x10000; t-- > 0;) {
         next_used[t] = after;
@@ -784,7 +784,7 @@ void SnapshotSides() {
             const unsigned char* const below = c + width * 4u;
             const bool east = S8MapLayers(c[6]) < S8MapLayers(c[3]) || S8MapLayers(c[4]) < S8MapLayers(c[1]);
             const bool south = S8MapLayers(below[1]) < S8MapLayers(c[3]) || S8MapLayers(below[0]) < S8MapLayers(c[2]);
-            const unsigned tile = Word(tiles + (z * width + x) * 2u);
+            const unsigned tile = WordMapLayers(tiles + (z * width + x) * 2u);
             const bool short_run = tile != 0 && next_used[tile] > tile && next_used[tile] - tile <= 2;
             g_file_sides[z * width + x] =
                 static_cast<unsigned char>(south != east && short_run ? (south ? 1 : 2) : 0);

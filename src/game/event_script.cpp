@@ -47,7 +47,7 @@ namespace {
 
 using event_script::g;
 
-unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+unsigned char* AtEventScript(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 void SetWord(unsigned char* p, unsigned v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
@@ -61,13 +61,13 @@ std::uint32_t Dword(const unsigned char* p) {
 // The count and the bank word (see the top of the file).
 short Count() {
     short v;
-    std::memcpy(&v, At(::bof3::Img(SharedScratch_addr)), sizeof v);
+    std::memcpy(&v, AtEventScript(::bof3::Img(SharedScratch_addr)), sizeof v);
     return v;
 }
 void SetCount(unsigned v) { SharedScratch.w_00 = v; }
 unsigned short Bank() {
     unsigned short v;
-    std::memcpy(&v, At(::bof3::Img(SharedScratch_addr)) + 2, sizeof v);
+    std::memcpy(&v, AtEventScript(::bof3::Img(SharedScratch_addr)) + 2, sizeof v);
     return v;
 }
 void SetBank(unsigned v) { SharedScratch.w_02 = v; }
@@ -110,7 +110,7 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor) {
 extern "C" void __cdecl EventScript_Run(const unsigned char* script) {
     EventScript_FlagBank = static_cast<unsigned short>(static_cast<short>(Cond_ByteFA));
     const unsigned char* at = script;
-    while (*at != 0xFF) at = *at < 0xF0 ? g.op(at) : g.control(at);
+    while (*at != 0xFF) at = *at < 0xF0 ? event_script::g.op(at) : event_script::g.control(at);
 }
 
 // original 0x579F30: one op below F0 (PSX FUN_801A5C00). The handler by the
@@ -118,7 +118,7 @@ extern "C" void __cdecl EventScript_Run(const unsigned char* script) {
 // then the op's length by the high nibble of the byte read AGAIN, after the
 // handler.
 extern "C" const unsigned char* __cdecl EventScript_Op(const unsigned char* at) {
-    g.handlers[at[0] >> 4](at);
+    event_script::g.handlers[at[0] >> 4](at);
     wide_staging::Placed(at);   // DIV-0122: a site's placement, its start moved out (wide only)
     return at + EventScript_OpLengths[at[0] >> 4];
 }
@@ -127,9 +127,9 @@ extern "C" const unsigned char* __cdecl EventScript_Op(const unsigned char* at) 
 // F0 F1 F4 F9 FA - and any byte below F0 - comes back where it was.
 extern "C" const unsigned char* __cdecl EventScript_Control(const unsigned char* at) {
     switch (at[0]) {
-    case 0xF0: return g.if_(at + 1);
-    case 0xF1: return g.if_not(at + 1);
-    case 0xF4: return g.switch_(at + 1);
+    case 0xF0: return event_script::g.if_(at + 1);
+    case 0xF1: return event_script::g.if_not(at + 1);
+    case 0xF4: return event_script::g.switch_(at + 1);
     case 0xF9:
         EventScript_FlagBank = at[1];
         return at + 2;
@@ -154,14 +154,14 @@ const unsigned char* If(const unsigned char* at, bool run_on_true) {
     unsigned char depth = 0, else_seen = 0;
     const unsigned char* q = at;
     const unsigned c = *q++;
-    const bool answer = (g.conditions[c & 0x1F](&q) & 0xFF) != 0;
+    const bool answer = (event_script::g.conditions[c & 0x1F](&q) & 0xFF) != 0;
     ++depth;
     ++q;
     const bool run_first = answer == run_on_true;
     for (;;) {
         if (depth == 0 && *q == 0xFE) return q + 1;
         const bool run = (else_seen == 0) == run_first;
-        q = run ? g.run_step(q, &else_seen, &depth) : g.skip_step(q, &else_seen, &depth);
+        q = run ? event_script::g.run_step(q, &else_seen, &depth) : event_script::g.skip_step(q, &else_seen, &depth);
     }
 }
 
@@ -178,8 +178,8 @@ extern "C" const unsigned char* __cdecl EventScript_IfNot(const unsigned char* a
 extern "C" const unsigned char* __cdecl EventScript_IfRunStep(const unsigned char* at, unsigned char* else_seen,
                                                              unsigned char* depth) {
     const unsigned char b = *at;
-    if (b < 0xF0) return g.op(at);
-    if (b < 0xFD) return g.control(at);
+    if (b < 0xF0) return event_script::g.op(at);
+    if (b < 0xFD) return event_script::g.control(at);
     if (b == 0xFE) {
         --*depth;
         return at;
@@ -195,7 +195,7 @@ extern "C" const unsigned char* __cdecl EventScript_IfSkipStep(const unsigned ch
                                                               unsigned char* depth) {
     const unsigned char b = *at;
     if (b < 0xF0) return at + EventScript_OpLengths[b >> 4];
-    if (b < 0xFD) return g.skip_control(at);
+    if (b < 0xFD) return event_script::g.skip_control(at);
     if (b == 0xFE) {
         --*depth;
         return at;
@@ -211,8 +211,8 @@ extern "C" const unsigned char* __cdecl EventScript_IfSkipStep(const unsigned ch
 extern "C" const unsigned char* __cdecl EventScript_SkipControl(const unsigned char* at) {
     switch (at[0]) {
     case 0xF0:
-    case 0xF1: return g.skip_if(at);
-    case 0xF4: return g.skip_switch(at);
+    case 0xF1: return event_script::g.skip_if(at);
+    case 0xF4: return event_script::g.skip_switch(at);
     case 0xF9: return at + 2;
     case 0xFA: return at + 1;
     default: return at;
@@ -237,24 +237,24 @@ extern "C" const unsigned char* __cdecl EventScript_Switch(const unsigned char* 
         if (b == 0xF6) {
             ++q;
             bool ran = false;
-            if (open && (g.conditions[c](&q) & 0xFF) != 0) {
+            if (open && (event_script::g.conditions[c](&q) & 0xFF) != 0) {
                 ++q;
-                q = g.case_run(q);
+                q = event_script::g.case_run(q);
                 open = false;
                 ran = true;
             }
             if (!ran) {
                 ++q;
-                q = g.case_skip(q);
+                q = event_script::g.case_skip(q);
             }
         }
         if (*q != 0xF7) continue;
         ++q;
         if (open) {
-            q = g.case_run(q);
+            q = event_script::g.case_run(q);
             open = false;
         } else {
-            q = g.case_skip(q);
+            q = event_script::g.case_skip(q);
         }
     }
 }
@@ -267,7 +267,7 @@ extern "C" const unsigned char* __cdecl EventScript_CaseRun(const unsigned char*
     do {
         const unsigned char b = *at;
         if (b < 0xF0) {
-            at = g.op(at);
+            at = event_script::g.op(at);
             continue;
         }
         switch (b) {
@@ -275,7 +275,7 @@ extern "C" const unsigned char* __cdecl EventScript_CaseRun(const unsigned char*
         case 0xF1:
         case 0xF4:
         case 0xF9:
-        case 0xFA: at = g.control(at); break;
+        case 0xFA: at = event_script::g.control(at); break;
         case 0xF6: at += 2; break;
         case 0xF7: at += 1; break;
         case 0xF8:
@@ -304,7 +304,7 @@ extern "C" const unsigned char* __cdecl EventScript_CaseSkip(const unsigned char
         case 0xF1:
         case 0xF4:
         case 0xF9:
-        case 0xFA: at = g.skip_control(at); break;
+        case 0xFA: at = event_script::g.skip_control(at); break;
         case 0xF6: return at;
         case 0xF7: at += 1; break;
         case 0xF8:
@@ -469,7 +469,7 @@ extern "C" void __cdecl Area_RunPlacement(const unsigned char* script) {
     SetCount(0);
     for (unsigned i = 0; i < 4; ++i) Extra(i)[0] = 0;
     SetBank(4);
-    g.run(script);
+    event_script::g.run(script);
     const short n = Count();
     if (n >= 30) return;
     SetCount(30);   // stored before the loop, as the original stores it
@@ -528,15 +528,15 @@ void Place(const unsigned char* op, bool two) {
     Sprite_Current = o;
     Field_ActiveMember = o;
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
-    g.reset();
-    g.set_bank(Bank());
+    event_script::g.reset();
+    event_script::g.set_bank(Bank());
     Sprite_Current[0] = 1;
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->x, Coordinate(op[6], op[7]));
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x));
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->z, Coordinate(op[8], op[9]));
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z));
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
-    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+    const long elevation = event_script::g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
                                        static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[0xA];
@@ -554,13 +554,13 @@ void Place(const unsigned char* op, bool two) {
     n[0x84] = op[0xB];
     if (two) n[0x83] = op[0x10];
     n[0xA0] = 0x7F;
-    g.set_flags(op + 0xD);
+    event_script::g.set_flags(op + 0xD);
     if (op[3] & 0x80) Sprite_Current[0] |= 0x20;
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5F] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5C] = op[3] & 0xF;
-    g.face();
+    event_script::g.face();
     SetCount(static_cast<unsigned>(Count() + 1));
 }
 
@@ -626,18 +626,18 @@ namespace event_script { std::uint8_t g_reach_word = 0; }
 
 extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    unsigned char* const table = At(Dword(descriptor + 8));   // a 32-bit word
+    unsigned char* const table = AtEventScript(Dword(descriptor + 8));   // a 32-bit word
     unsigned char* const entry = table + op[9] * 8u;
     unsigned char* const o = Extra(op[0xB]);
     Sprite_Current = o;
     Field_ActiveMember = Extra(op[0xB]);
     o[8] = op[0] & 0xF;
-    g.reset();
-    g.clear_record(op[0xB]);
-    g.init_entry(entry);
+    event_script::g.reset();
+    event_script::g.clear_record(op[0xB]);
+    event_script::g.init_entry(entry);
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->x, Coordinate(op[1], op[2]));
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->z, Coordinate(op[3], op[4]));
-    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+    const long elevation = event_script::g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
                                        static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[5];
@@ -648,7 +648,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     rv::Current<records::SpriteObject>()->work_18 = 0;
     {
         unsigned char* const sc = Sprite_Current;
-        unsigned char* const source = At(Dword(sc + 0x54));   // a 32-bit word
+        unsigned char* const source = AtEventScript(Dword(sc + 0x54));   // a 32-bit word
         if (event_script::g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sc)->reach, source[2]);
         else sc[0x70] = source[2];
     }
@@ -659,7 +659,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     Extra(op[0xB])[0x84] = op[6];
     rv::Store<unsigned>(rv::As<records::SpriteObject>(Extra(op[0xB]))->trigger_word, static_cast<unsigned>(op[0xC]) << 8 | op[0xD]);
     Extra(op[0xB])[0xA0] = 0x7F;
-    g.set_flags(op + 8);
+    event_script::g.set_flags(op + 8);
     Sprite_Current[0x5D] = 0x80;
     Sprite_Current[0x5F] = 0x80;
     Sprite_Current[0x5E] = 0x80;
@@ -670,7 +670,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
 // high nibble (always 0xC), then Kind2_Place(op[1]) (PSX FUN_801A82B8).
 extern "C" void __cdecl EventOp_Cx(const unsigned char* op) {
     Sprite_Kind2.type = op[0] >> 4;
-    g.kind2_place(op[1]);
+    event_script::g.kind2_place(op[1]);
 }
 
 // --- the flags --------------------------------------------------------------------------

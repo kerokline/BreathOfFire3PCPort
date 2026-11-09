@@ -11,7 +11,7 @@ namespace {
 
 // What the setters leave at +0x10 and on: the float 0.01, as its bits. The
 // PSX primitives have no such field; the port's are wider, and unread.
-constexpr std::uint32_t kPointZeroOne = 0x3C23D70Au;
+constexpr std::uint32_t kPointZeroOnePsxGpu = 0x3C23D70Au;
 constexpr std::uint32_t kLinkFlag = 0x80000000u;
 
 void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v); }
@@ -126,31 +126,31 @@ extern "C" void __cdecl Gpu_LinkPrim(unsigned long* tail, unsigned long item) { 
 // GPU code to byte +7, and for three of them 0.01 to a float per vertex.
 extern "C" void __cdecl Gpu_SetPolyFT4(unsigned char* prim) {
     prim[7] = 0x2C;
-    for (unsigned at = 0x10; at <= 0x40; at += 0x10) PutDword(prim + at, kPointZeroOne);
+    for (unsigned at = 0x10; at <= 0x40; at += 0x10) PutDword(prim + at, kPointZeroOnePsxGpu);
 }
 // originals 0x5A7630, 0x5A7690, 0x5A7740 - the three the window layer wants
 // (docs/window-task.md): a shaded textured quad at a 0x14-byte vertex stride,
 // a four-point line at 0xC, and a tile with one vertex.
 extern "C" void __cdecl Gpu_SetPolyGT4(unsigned char* prim) {
     prim[7] = 0x3C;
-    for (unsigned at = 0x10; at <= 0x4C; at += 0x14) PutDword(prim + at, kPointZeroOne);
+    for (unsigned at = 0x10; at <= 0x4C; at += 0x14) PutDword(prim + at, kPointZeroOnePsxGpu);
 }
 extern "C" void __cdecl Gpu_SetLineF4(unsigned char* prim) {
     prim[7] = 0x4C;
-    for (unsigned at = 0x10; at <= 0x34; at += 0xC) PutDword(prim + at, kPointZeroOne);
+    for (unsigned at = 0x10; at <= 0x34; at += 0xC) PutDword(prim + at, kPointZeroOnePsxGpu);
 }
 extern "C" void __cdecl Gpu_SetTile(unsigned char* prim) {
     prim[7] = 0x60;
-    PutDword(prim + 0x10, kPointZeroOne);
+    PutDword(prim + 0x10, kPointZeroOnePsxGpu);
 }
 extern "C" void __cdecl Gpu_SetLineF2(unsigned char* prim) {
     prim[7] = 0x40;
-    PutDword(prim + 0x10, kPointZeroOne);
-    PutDword(prim + 0x1C, kPointZeroOne);
+    PutDword(prim + 0x10, kPointZeroOnePsxGpu);
+    PutDword(prim + 0x1C, kPointZeroOnePsxGpu);
 }
 extern "C" void __cdecl Gpu_SetSprt(unsigned char* prim) {
     prim[7] = 0x64;
-    PutDword(prim + 0x10, kPointZeroOne);
+    PutDword(prim + 0x10, kPointZeroOnePsxGpu);
 }
 extern "C" void __cdecl Gpu_SetCode6C(unsigned char* prim) { prim[7] = 0x6C; }
 extern "C" void __cdecl Gpu_SetCode84(unsigned char* prim) { prim[7] = 0x84; }

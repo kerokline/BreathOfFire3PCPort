@@ -55,7 +55,7 @@ using move_script::Long;
 using move_script::SetWord;
 // move_script::Word is named in full here (step B0, analysis/tu_renames.tsv)
 
-unsigned char& B(U address) { return move_script::At(address)[0]; }
+unsigned char& BBattleE7(U address) { return move_script::At(address)[0]; }
 // The record 0x905B84 names, read afresh wherever the original reads it.
 unsigned char* Win() { return move_script::At(BattleWinStates_Current); }
 std::int32_t S16(unsigned v) { return static_cast<std::int16_t>(v); }
@@ -126,9 +126,9 @@ void OpenTasks(const char* who, unsigned param, unsigned rows) {
 // A row's cost: the cost bytes of its three indices (0xFF none after the
 // first), added as bytes.
 unsigned RowCost(const unsigned char* row) {
-    unsigned cost = B(::bof3::Img(battle_e7::at::kCostTable.v) + row[0]);
-    if (row[1] != 0xFF) cost = (cost + B(::bof3::Img(battle_e7::at::kCostTable.v) + row[1])) & 0xFF;
-    if (row[2] != 0xFF) cost = (cost + B(::bof3::Img(battle_e7::at::kCostTable.v) + row[2])) & 0xFF;
+    unsigned cost = BBattleE7(::bof3::Img(battle_e7::at::kCostTable.v) + row[0]);
+    if (row[1] != 0xFF) cost = (cost + BBattleE7(::bof3::Img(battle_e7::at::kCostTable.v) + row[1])) & 0xFF;
+    if (row[2] != 0xFF) cost = (cost + BBattleE7(::bof3::Img(battle_e7::at::kCostTable.v) + row[2])) & 0xFF;
     return cost;
 }
 // 7 when the menu actor's AP (+0x9A of the member its +5 names) is below the
@@ -208,7 +208,7 @@ extern "C" void __cdecl BattleResultWin_DrawLevelUp(void) {
     const unsigned char* rec = Win();
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned row = rec[0xA] * 99u + rec[0xB];
-        const unsigned ability = B(::bof3::Img(battle_e7::at::kLevelTable.v) + 6 + k + row * 8);
+        const unsigned ability = BBattleE7(::bof3::Img(battle_e7::at::kLevelTable.v) + 6 + k + row * 8);
         if (ability == 0) continue;
         BH_CALL(Crt_sprintf)(Buf(::bof3::Img(battle_e7::at::kLevelBufs.v) + 0xC0 + 0x20 * k), Str(::bof3::Img(battle_e7::at::kFmtAbility.v)),
                              Str(::bof3::Img(battle_e7::at::kAbilityRecords.v) + ability * 24));
@@ -228,7 +228,7 @@ extern "C" void __cdecl BattleResultWin_DrawLevelUp(void) {
 extern "C" void __cdecl BattleResultWin_DrawItem(U x, U y, U colour, U category, U item, U count, U dim) {
     if ((item & 0xFF) == 0 || (count & 0xFF) == 0) return;
     const unsigned kind = BH_CALL(Item_IconKind)(category, item);
-    BH_CALL(Menu_DrawIcon8)(static_cast<int>(x), static_cast<int>(y + 2), B(::bof3::Img(battle_e7::at::kIconKinds.v) + (kind & 0xFF)),
+    BH_CALL(Menu_DrawIcon8)(static_cast<int>(x), static_cast<int>(y + 2), BBattleE7(::bof3::Img(battle_e7::at::kIconKinds.v) + (kind & 0xFF)),
                             static_cast<int>(dim));
     const unsigned char* const name = BH_CALL(Item_NamePtr)(category, item);
     const unsigned n = BH_CALL(Text_CharCount)(name);
@@ -251,7 +251,7 @@ extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
     for (unsigned i = 0; (i & 0xFF) < Battle_DropCount; i = (i + 1) & 0xFF) {
         const unsigned word = W(move_script::At(::bof3::Img(battle_e7::at::kDropItems.v) + 2 * i));
         if (word == 0) continue;
-        const unsigned count = B(::bof3::Img(battle_e7::at::kDropCounts.v) + i);
+        const unsigned count = BBattleE7(::bof3::Img(battle_e7::at::kDropCounts.v) + i);
         auto* const win2 = rv::As<records::WindowRecord>(Win());
         const U y = ((13u * (i >> 1) + static_cast<unsigned>(win2->y)) & 0xFFFF) + 4;
         const U x = ((138u * (i & 1) + static_cast<unsigned>(win2->x)) & 0xFFFF) + 5;
@@ -441,7 +441,7 @@ extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
     OpenPage(1, 0x340, 0x100);
     unsigned char* const p = Gfx_PacketNext;
     auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: Gpu_SetSprt below starts it
-    const unsigned v = B(::bof3::Img(battle_e7::at::kFormCells.v) + (form & 0xFF));
+    const unsigned v = BBattleE7(::bof3::Img(battle_e7::at::kFormCells.v) + (form & 0xFF));
     rv::Store<unsigned>(sprt->clut, BH_CALL(Gpu_GetClut)(static_cast<int>(v << 4), 0x1FA));
     p[4] = p[5] = p[6] = 0x80;
     PutFloat(p + 8, S16(x));
@@ -531,7 +531,7 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
     const unsigned char* rec = Win();
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9], 0);
-    for (unsigned k = 0; k < 6; ++k) B(::bof3::Img(battle_e7::at::kScrollMarks.v) + k) = static_cast<unsigned char>(B(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + 4 * k) + 1);
+    for (unsigned k = 0; k < 6; ++k) BBattleE7(::bof3::Img(battle_e7::at::kScrollMarks.v) + k) = static_cast<unsigned char>(BBattleE7(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawScrollBar)(move_script::At(::bof3::Img(battle_e7::at::kScrollMarks.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
@@ -550,13 +550,13 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
                                  static_cast<int>(colour), Text(::bof3::Img(battle_e7::at::kPrintBuf.v)));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        const unsigned form = B(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4));
+        const unsigned form = BBattleE7(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4));
         if (form == 0xFF) continue;
         BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->x) + 0x10, static_cast<unsigned>(win->y) + (i << 5) + 0x18, form & 0x1F);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        const unsigned f = B(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
-        const unsigned char* const label = BH_CALL(Msg_SystemPtr)(B(::bof3::Img(battle_e7::at::kFormLabels.v) + f));
+        const unsigned f = BBattleE7(::bof3::Img(battle_e7::at::kGeneList.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
+        const unsigned char* const label = BH_CALL(Msg_SystemPtr)(BBattleE7(::bof3::Img(battle_e7::at::kFormLabels.v) + f));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
         BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->x) + 0x10), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D), colour,
@@ -586,7 +586,7 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9], 1);
     for (unsigned k = 0; k < 12; ++k)
-        B(::bof3::Img(battle_e7::at::kScrollMarks2.v) + k) = static_cast<unsigned char>(B(::bof3::Img(battle_e7::at::kGeneList2.v) + 3 + 4 * k) + 1);
+        BBattleE7(::bof3::Img(battle_e7::at::kScrollMarks2.v) + k) = static_cast<unsigned char>(BBattleE7(::bof3::Img(battle_e7::at::kGeneList2.v) + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     BH_CALL(Menu_DrawScrollBar)(move_script::At(::bof3::Img(battle_e7::at::kScrollMarks2.v)), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
@@ -603,8 +603,8 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
         BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->x) + 0x10, static_cast<unsigned>(win->y) + (i << 5) + 0x18, form & 0x1F);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        const unsigned f = B(::bof3::Img(battle_e7::at::kGeneList2.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
-        const unsigned char* const label = BH_CALL(Msg_SystemPtr)(B(::bof3::Img(battle_e7::at::kFormLabels.v) + f));
+        const unsigned f = BBattleE7(::bof3::Img(battle_e7::at::kGeneList2.v) + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
+        const unsigned char* const label = BH_CALL(Msg_SystemPtr)(BBattleE7(::bof3::Img(battle_e7::at::kFormLabels.v) + f));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
         BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->x) + 0x10), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D), colour,
@@ -854,12 +854,12 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     move_script::SetWord(rec + 0x10, 0);
     int text_y = yi + 0x55, icon_y = yi + 0x57;
     for (unsigned r = 0; r < 6; ++r) {
-        const unsigned category = B(::bof3::Img(battle_e7::at::kEquipCategories.v) + r);
+        const unsigned category = BBattleE7(::bof3::Img(battle_e7::at::kEquipCategories.v) + r);
         const unsigned char* const name = BH_CALL(Item_NamePtr)(category, items[r]);
         unsigned colour = 0;
         if (r == rec[0xB]) colour = 2;
         if (rec[0xD] & 2) {
-            const unsigned slot = B(::bof3::Img(battle_e7::at::kPartyOrder.v) + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
+            const unsigned slot = BBattleE7(::bof3::Img(battle_e7::at::kPartyOrder.v) + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
             const unsigned who = Character_IndexById[slot];
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;
@@ -868,7 +868,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
             }
         }
         if (colour != 7) {
-            BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, B(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), 1);
+            BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), 1);
             const unsigned m = BH_CALL(Text_CharCount)(name);
             BH_CALL(Text_DrawAt)(xi + 0x11, text_y, 7, static_cast<int>(m), name);
         }
@@ -877,7 +877,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
             text_y -= 2;
             icon_y -= 2;
         }
-        BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, B(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), colour == 7 ? 1 : 0);
+        BH_CALL(Menu_DrawIcon8)(xi + 6, icon_y, BBattleE7(::bof3::Img(battle_e7::at::kEquipIcons.v) + r), colour == 7 ? 1 : 0);
         const unsigned m = BH_CALL(Text_CharCount)(name);
         BH_CALL(Text_DrawAt)(xi + 0x11, text_y, static_cast<int>(colour), static_cast<int>(m), name);
         if (r == rec[0xB] || r == rec[0xA]) {
