@@ -120,7 +120,7 @@ S33_EXPORT void __cdecl MightyChop_Task(void) {
 S33_EXPORT void __cdecl MightyChop_Start(void) {
     MH_CALL(BattleActor_SetAnimation)(0xC, 2);
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x52) & 0xFFu;
-    const unsigned actor = Mem(::bof3::Img(at::kActor))[0];
+    const unsigned actor = Mem(::bof3::Img(magic_harness::at::kActor))[0];
     const unsigned char* const record = actor < 3 ? PartyRecord(actor) : EnemyRecord(actor);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
