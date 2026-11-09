@@ -15928,7 +15928,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tables: state 2 of 0x4CC970's table stack (docs/install-gap-pairs.md)"
 ret = "unsigned long"
 params = "void"
-impl = "src/game/battle_odds.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-25, 0x4F7350..0x4F7377 (0x28 bytes), one call (0x4530D0 Battle_SetTargetFlag40 at +0x13) and a tail jmp (0x4351F0 BattleTask_FreeCurrent at +0x22): Sprite_Current +0xB not 0: ret, eax Sprite_Current; 0: SetTargetFlag40(byte 0x904B44, in ecx with the entry's upper bits - the callee masks), byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. In 45 stack tables (0x49C3E7 .. 0x4F9E06). Combat route: reached."
 # ---------------------------------------------------------------------------
@@ -45477,7 +45477,7 @@ pc = 0x4F7380
 name = "CombustionChild_Task"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F7380..0x4F7391 (0x12 bytes), group S37, cdecl: no calls: jmp [0x65C28C + 4 x byte +1] (CombustionChild_Kinds, four), unchecked. The kind-1 task of parameter 0x60. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45486,7 +45486,7 @@ pc = 0x4F73A0
 name = "CombustionSprite_Run"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F73A0..0x4F73E1 (0x42 bytes), group S37, cdecl: a table call and two calls: 0x9039D8 0x8E3580; call [0x65C29C + 4 x byte +2] (CombustionSprite_Steps, six), unchecked; when bit 0 of +0 is set and +2 is not 0 BattleActor_UpdateScreenXY, Sprite_UpdateScreen; 0x9039D8 0x8B3580. Entry 0 of CombustionChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45495,7 +45495,7 @@ pc = 0x4F73F0
 name = "CombustionSprite_Start"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F73F0..0x4F7513 (0x124 bytes), group S37, cdecl: one call: +9 -= 1; at 0 +0x14 0x7800000, +0x20 0x600000, +0x34 / +0x38 the owner's, +0x3C the owner's + +0x14; sprite fields (+0x25 0x1D, +0x27 0x1A, +0x28 1, +0x40 / +0x44 0x10000, +0x48 2, +0x29 4, +0x2B 1, the rest 0); Sprite_SetAnimation(0); +9 0x10, +2 += 1. Entry 0 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45504,7 +45504,7 @@ pc = 0x4F7520
 name = "CombustionSprite_Fall"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F7520..0x4F75D6 (0xB7 bytes), group S37, cdecl: two callees: +0x14 -= +0x20, +0x3C = owner +0x3C + +0x14; +9 -= 1; at 0 Sound_PlayById(0x101), eight BattleTask_Create(1, 0x60), unchecked: +0x80 the owner, +1 2, +0xB the number, the owner's +0xB += 1; Camera_Angles[0] += 0x14; +9 8, +2 += 1. Entry 1 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45513,7 +45513,7 @@ pc = 0x4F75E0
 name = "CombustionSprite_Shake"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F75E0..0x4F7626 (0x47 bytes), group S37, cdecl: no calls: Camera_Angles[0] += 0x14 when +9 is odd, -= 0x14 when even; +9 -= 1; at 0 Camera_Angles[0] 0xFD56, +9 0x16, +2 += 1. Entry 2 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45522,7 +45522,7 @@ pc = 0x4F7630
 name = "CombustionSprite_Flash"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F7630..0x4F76DC (0xAD bytes), group S37, cdecl: two calls: +9 -= 1; at 0 Sound_PlayById(0x102); BattleTask_Create(1, 0x60): +0x80 the owner, +1 3, the owner's +0xB += 1; +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0x40, +9 0xC, +2 += 1. Entry 3 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 
@@ -45531,7 +45531,7 @@ pc = 0x4F76E0
 name = "CombustionSprite_Fade"
 ret = "void"
 params = "void"
-impl = "src/game/magic_s37.cpp"
+impl = "src/game/battle/battle_fx_2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x4F76E0..0x4F7743 (0x64 bytes), group S37, cdecl: a tail jmp: +0x5D..+0x5F += 0xF0; dword +0x40 += 0x1000, then += 0x800 again (+0x44 untouched); at +0x5D 0x80 the owner's +0xB -= 1, jmp BattleTask_FreeCurrent. Entry 5 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
 

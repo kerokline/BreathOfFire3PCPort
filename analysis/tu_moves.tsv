@@ -19376,6 +19376,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/combustion_flash.cpp	d3e6abb3
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Inc	copied		src/game/magic_s37.cpp	99	99	99	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	UMagicS37	copied		src/game/magic_s37.cpp	99	99	99	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/combustion_glow.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/battle/combustion_mote.cpp	d3e6abb3
@@ -19383,6 +19384,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/combustion_flash.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s37.cpp	100	100	100	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	AddLong	local		src/game/magic_s37.cpp	101	101	101	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/combustion_glow.cpp	d3e6abb3
 	U	copied		src/game/magic_s37.cpp	101	101	101	src/game/battle/combustion_mote.cpp	d3e6abb3
@@ -19409,7 +19411,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/battle/combustion_mote.cpp	d3e6abb3
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Mul	copied		src/game/magic_s37.cpp	108	109	109	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	TaskSlot	local		src/game/magic_s37.cpp	109	109	109	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	SignedShl2	local		src/game/magic_s37.cpp	110	111	111	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	NewTask	local		src/game/magic_s37.cpp	113	113	113	src/game/battle/battle_fx_2.cpp	ce7b4fd9
 	PutFloat	local		src/game/magic_s37.cpp	113	114	117	src/game/magic/combustion_flash.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_s37.cpp	119	119	119	src/game/battle/battle_fx_2.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_s37.cpp	119	119	119	src/game/magic/combustion.cpp	d3e6abb3

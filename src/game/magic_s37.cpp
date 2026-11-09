@@ -98,7 +98,6 @@ void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t UMagicS37(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 std::uint32_t Key(const void* p) { return Low32(p); }
-void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(UMagicS37(LongMagicS37(at)) + v)); }
 void CopyLong(unsigned char* to, const unsigned char* from) { SetLong(to, LongMagicS37(from)); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
@@ -106,11 +105,9 @@ int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) 
 // `imul` alone: the 32-bit product, wrapped.
 std::uint32_t Mul(int a, int b) { return static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 unsigned char* MagmaRecord(unsigned index) { return Mem(::bof3::Img(MagmaBreath_Pool_addr) + index * 0x84u); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
-unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
 int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
 int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
 void Sound(unsigned id) { MH_CALL(Sound_PlayById)(static_cast<unsigned short>(id)); }
@@ -551,150 +548,6 @@ S37_EXPORT void __cdecl MagicFx_FreeCurrentRecord(void) {
 // ===========================================================================
 // MAGIC222 (row 133, Combustion read one id down)
 
-// original 0x4F7380: the children's kind-1 task, a jmp through
-// CombustionChild_Kinds (four: the sprite, the glow, a mote, the flash) by
-// +1, unchecked.
-S37_EXPORT void __cdecl CombustionChild_Task(void) {
-    static constexpr std::uint32_t kKinds[4] = {addr::CombustionSprite_Run, addr::CombustionGlow_Run,
-                                                addr::CombustionMote_Run, addr::CombustionFlash_Run};
-    Dispatch(kKinds, 4, Sc()[1], "CombustionChild_Task");
-}
-
-// original 0x4F73A0: with the frame-offset table the effects', a call through
-// CombustionSprite_Steps (six: _Start, _Fall, _Shake, _Flash, MAGIC226/227's
-// 0x4FA390, _Fade) by +2; then while bit 0 of +0 is set and +2 is not 0 the
-// screen point and the sprite on the screen; the battle's table back.
-S37_EXPORT void __cdecl CombustionSprite_Run(void) {
-    static constexpr std::uint32_t kSteps[6] = {addr::CombustionSprite_Start, addr::CombustionSprite_Fall,
-                                                addr::CombustionSprite_Shake, addr::CombustionSprite_Flash,
-                                                addr::MeteorStrikeRock_Hide,  addr::CombustionSprite_Fade};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
-    Dispatch(kSteps, 6, Sc()[2], "CombustionSprite_Run");
-    const unsigned char* const s = Sc();
-    if ((s[0] & 1) != 0 && s[2] != 0) {
-        MH_CALL(BattleActor_UpdateScreenXY)();
-        MH_CALL(Sprite_UpdateScreen)();
-    }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
-}
-
-// original 0x4F73F0: +9 down; at 0 the sprite starts 0x7800000 over its
-// owner's point, falling by 0x600000; its sprite fields, animation 0; +9 0x10,
-// +2 on.
-S37_EXPORT void __cdecl CombustionSprite_Start(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    {
-        unsigned char* const s = Sc();
-        rv::Store(rv::As<records::BattleTask>(s)->step_y, 0x7800000);
-        rv::Store(rv::As<records::BattleTask>(s)->work_20, 0x600000);
-        CopyLong(s + 0x34, Owner() + 0x34);
-        CopyLong(s + 0x38, Owner() + 0x38);
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(UMagicS37(rv::As<records::SpriteHead>(Owner())->height) + UMagicS37(rv::As<records::BattleTask>(s)->step_y)));
-        s[0x25] = 0x1D;
-        s[0x26] = 0;
-        s[0x27] = 0x1A;
-        s[0x28] = 1;
-        rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x10000);
-        rv::Store(rv::As<records::BattleTask>(s)->scale_y, 0x10000);
-        s[0x48] = 2;
-        s[0x5D] = 0;
-        s[0x5E] = 0;
-        s[0x5F] = 0;
-        s[0x5C] = 0;
-        s[0x2A] = 0;
-        s[0x29] = 4;
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
-        s[0x2B] = 1;
-        s[0x24] = 0;
-    }
-    MH_CALL(Sprite_SetAnimation)(0);
-    Sc()[9] = 0x10;
-    Inc(Sc()[2]);
-}
-
-// original 0x4F7520: the height +0x14 down by the fall +0x20, set over the
-// owner's; +9 down; at 0 sound 0x101, eight motes (kind 1, 0x60; +0x80 the
-// owner, +1 2, +0xB the number; the owner's count up), the camera's first
-// angle up by 0x14, +9 8, +2 on.
-S37_EXPORT void __cdecl CombustionSprite_Fall(void) {
-    {
-        unsigned char* const s = Sc();
-        rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(UMagicS37(rv::As<records::BattleTask>(s)->step_y) - UMagicS37(rv::As<records::BattleTask>(s)->work_20)));
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(UMagicS37(rv::As<records::SpriteHead>(Owner())->height) + UMagicS37(rv::As<records::BattleTask>(s)->step_y)));
-        Dec(s[9]);
-        if (s[9] != 0) return;
-    }
-    Sound(0x101);
-    for (unsigned i = 0; i < 8; ++i) {
-        const unsigned slot = NewTask(0x60);
-        unsigned char* const owner = Owner();
-        unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-        tchild->owner = static_cast<std::int32_t>(Key(owner));
-        child[1] = 2;
-        child[0xB] = static_cast<unsigned char>(i);
-        Inc(owner[0xB]);
-    }
-    unsigned char* const s = Sc();
-    Camera_Angles[0] = static_cast<short>(Camera_Angles[0] + 0x14);
-    s[9] = 8;
-    Inc(Sc()[2]);
-}
-
-// original 0x4F75E0: the camera's first angle up by 0x14 on odd +9, down on
-// even; +9 down, at 0 the angle 0xFD56, +9 0x16, +2 on.
-S37_EXPORT void __cdecl CombustionSprite_Shake(void) {
-    unsigned char* const s = Sc();
-    Camera_Angles[0] = static_cast<short>(Camera_Angles[0] + ((s[9] & 1) != 0 ? 0x14 : -0x14));
-    Dec(s[9]);
-    if (Sc()[9] != 0) return;
-    Camera_Angles[0] = static_cast<short>(0xFD56);
-    Sc()[9] = 0x16;
-    Inc(Sc()[2]);
-}
-
-// original 0x4F7630: +9 down; at 0 sound 0x102, the flash (kind 1, 0x60;
-// +0x80 the owner, +1 3; the owner's count up); the sprite's +0 bit 0x20,
-// +0x5C 1, +0x5D..+0x5F 0x40; +9 0xC, +2 on.
-S37_EXPORT void __cdecl CombustionSprite_Flash(void) {
-    Dec(Sc()[9]);
-    if (Sc()[9] != 0) return;
-    Sound(0x102);
-    {
-        const unsigned slot = NewTask(0x60);
-        unsigned char* const owner = Owner();
-        unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-        tchild->owner = static_cast<std::int32_t>(Key(owner));
-        child[1] = 3;
-        Inc(owner[0xB]);
-    }
-    unsigned char* const s = Sc();
-    s[0] = static_cast<unsigned char>(s[0] | 0x20);
-    s[0x5C] = 1;
-    s[0x5D] = 0x40;
-    s[0x5E] = 0x40;
-    s[0x5F] = 0x40;
-    s[9] = 0xC;
-    Inc(s[2]);
-}
-
-// original 0x4F76E0: +0x5D..+0x5F down by 0x10 each (add 0xF0), the scale
-// +0x40 up by 0x1000 and again by 0x800 (+0x44 untouched); at +0x5D 0x80 the
-// owner's count +0xB down and the task freed (a tail jmp).
-S37_EXPORT void __cdecl CombustionSprite_Fade(void) {
-    unsigned char* const s = Sc();
-    s[0x5D] = static_cast<unsigned char>(s[0x5D] + 0xF0);
-    s[0x5E] = static_cast<unsigned char>(s[0x5E] + 0xF0);
-    s[0x5F] = static_cast<unsigned char>(s[0x5F] + 0xF0);
-    AddLong(s + 0x40, 0x1000);
-    AddLong(s + 0x40, 0x800);
-    if (s[0x5D] != 0x80) return;
-    Dec(Owner()[0xB]);
-    MH_CALL(BattleTask_FreeCurrent)();
-}
-
 void MagicS37_Inject() {
     if (bof3::WantsShadow("magic_s37")) magic_s37::SelfTest();
     BOF3_INJECT(MagmaBreath_Task);
@@ -711,11 +564,4 @@ void MagicS37_Inject() {
     BOF3_INJECT(MagmaBreathRecord_DrawGlow);
     BOF3_INJECT(MagmaBreath_PoolAlloc);
     BOF3_INJECT(MagicFx_FreeCurrentRecord);
-    BOF3_INJECT(CombustionChild_Task);
-    BOF3_INJECT(CombustionSprite_Run);
-    BOF3_INJECT(CombustionSprite_Start);
-    BOF3_INJECT(CombustionSprite_Fall);
-    BOF3_INJECT(CombustionSprite_Shake);
-    BOF3_INJECT(CombustionSprite_Flash);
-    BOF3_INJECT(CombustionSprite_Fade);
 }

@@ -191,6 +191,7 @@
 #include "game/magic_s34.h"
 #include "game/magic_s36.h"
 #include "game/magic_s37.h"
+#include "game/battle/battle_fx_2.h"
 #include "game/magic/combustion_flash.h"
 #include "game/battle/combustion_mote.h"
 #include "game/battle/combustion_glow.h"
@@ -775,6 +776,7 @@ void InjectAll() {
                                 // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BattleFx2_Inject();
     CombustionFlash_Inject();
     CombustionMote_Inject();
     CombustionGlow_Inject();
