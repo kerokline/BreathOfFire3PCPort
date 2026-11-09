@@ -1867,12 +1867,12 @@ extern "C" void __cdecl SharedList_Compact(void) {
 template <typename Swap> void SortShared(Swap swap) {
     for (U limit = 0x7F; limit != 0; --limit)
         for (U i = 0; i < limit; ++i) {
-            const U e = ::bof3::Img(at::kSharedList) + i;
+            const U e = ::bof3::Img(field_s::at::kSharedList) + i;
             const unsigned char a = B(e);
             if (a == 0) continue;
             const unsigned char b = B(e + 1);
             if (b == 0) continue;
-            if (swap(B(::bof3::Img(at::kAbilityRecords) + 24u * a + 0x12), B(::bof3::Img(at::kAbilityRecords) + 24u * b + 0x12))) SwapBytes(e, e + 1);
+            if (swap(B(::bof3::Img(field_s::at::kAbilityRecords) + 24u * a + 0x12), B(::bof3::Img(field_s::at::kAbilityRecords) + 24u * b + 0x12))) SwapBytes(e, e + 1);
         }
 }
 
