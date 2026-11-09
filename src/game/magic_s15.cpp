@@ -84,13 +84,13 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
-unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
-unsigned TargetIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF; }
+unsigned ActorIndex() { return static_cast<unsigned>(move_script::Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
+unsigned TargetIndex() { return static_cast<unsigned>(move_script::Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
+std::uint16_t SW(unsigned k) { return move_script::Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { move_script::SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
@@ -1411,7 +1411,7 @@ S15_EXPORT void __cdecl Influence_SpawnMarks(void) {
         if (TargetIndex() == i) continue;
         const unsigned char* const r = PartyRecord(i);
         const records::PartyMember* const tr = rv::AsConst<records::PartyMember>(r);
-        const std::uint32_t bits = static_cast<std::uint32_t>(Long(r + 0x134));
+        const std::uint32_t bits = static_cast<std::uint32_t>(move_script::Long(r + 0x134));
         if (tr->intel > 1 && (r[0x90] & 0x20) == 0 && (bits & 0x4000) == 0 && (bits & 1) == 0) continue;
         SpawnMark(i, count);
     }
