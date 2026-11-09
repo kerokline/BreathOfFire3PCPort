@@ -51,3 +51,7 @@ _ZN12_GLOBAL__N_19AddressOfEPKv	low32-site	B0 rename in effect_2c.cpp: a renamed
 _ZN12_GLOBAL__N_110StagedReadEPKcPhPv	low32-site	B0 rename in save_menu.cpp: a renamed file-local helper that calls Low32() (its message string holds __builtin_FUNCTION(), so the body changed with the name); i686 identical	
 Text_DrawImmediate	x64-indirect	B0 promotion of text_immediate.cpp's g_draw_at: DIFFER Text_DrawImmediate  first at instruction 29: 'jne .+192' -> 'jne .+193' (instruction 89: 'call @r4:Text_DrawAt' -> 'call qword ptr [rip] @r4:_ZN14text_immediate9g_draw_atE')	
 _ZN14text_immediate9g_draw_atE	x64-indirect	B0 promotion of text_immediate.cpp's g_draw_at: NEW    _ZN14text_immediate9g_draw_atE  (data, in bof3x.dir/src/game/text_immediate.cpp.obj)	
+Sprite_DrawPass	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: DIFFER Sprite_DrawPass  first at instruction 107: 'je .+1FD' -> 'je .+1FE'	
+_ZN9draw_pass13g_add_recordsE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass13g_add_recordsE  (data)	
+_ZN9draw_pass6g_drawE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass6g_drawE  (data)	
+_ZN9draw_pass6g_openE	x64-indirect	B0 promotion of draw_pass.cpp's g_open, g_add_records and g_draw: NEW _ZN9draw_pass6g_openE  (data)	

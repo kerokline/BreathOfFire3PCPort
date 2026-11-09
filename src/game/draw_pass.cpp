@@ -33,10 +33,10 @@ std::int32_t Long(const unsigned char* object, unsigned offset) {
 using OpenFn = void (__cdecl*)(int);
 using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
 using DrawFn = void (__cdecl*)();
-OpenFn g_open = DrawLayer_Open;
-AddRecordsFn g_add_records = Sprite_AddDrawRecords;
-DrawFn g_draw = Sprite_Draw;
-
+}  namespace draw_pass { OpenFn g_open = DrawLayer_Open; }
+namespace draw_pass { AddRecordsFn g_add_records = Sprite_AddDrawRecords; }
+namespace draw_pass { DrawFn g_draw = Sprite_Draw; }
+namespace {
 // A layer's 0x30 bytes are three (first, last) pairs per buffer; the pass
 // appends the third, which Gfx_FrameNodes names.
 unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
@@ -151,7 +151,7 @@ void SelfTest(DrawFn theirs) {
     constexpr unsigned kRounds = 3000;
     static State saved, input, their_out, our_out;
     Capture(saved, nullptr);
-    g_open = &StubOpen; g_add_records = &StubAddRecords; g_draw = &StubDraw;
+    draw_pass::g_open = &StubOpen; draw_pass::g_add_records = &StubAddRecords; draw_pass::g_draw = &StubDraw;
 
     std::uint32_t rng = 0x27D4EB2Fu;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
@@ -217,7 +217,7 @@ void SelfTest(DrawFn theirs) {
                       "slot %u, log %u / %u", round, input.list_count, input.table_count, input.flags, input.slot,
                       their_out.log_n, our_out.log_n);
     }
-    g_open = DrawLayer_Open; g_add_records = Sprite_AddDrawRecords; g_draw = Sprite_Draw;
+    draw_pass::g_open = DrawLayer_Open; draw_pass::g_add_records = Sprite_AddDrawRecords; draw_pass::g_draw = Sprite_Draw;
     Apply(saved, nullptr);
     std::memset(g_log, 0, sizeof g_log);
     bof3::Log("shadow      draw_pass self-test: %u rounds, %u sprites (%u neighbours with equal keys after the sort), "
@@ -324,7 +324,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
     const bool grown = map_rim::Drawn();   // DIV-0041 (wide-ring), above
     if (grown) GrownLayerAbove();
     for (unsigned layer = 0; layer < 0x37; ++layer) {
-        if (Draw_PassFlags & 4) g_open(static_cast<int>(layer));
+        if (Draw_PassFlags & 4) draw_pass::g_open(static_cast<int>(layer));
         if (Draw_PassFlags & 0x10) {
             const unsigned long first = FrameNode(layer)[0];
             if (first != 0) {
@@ -375,7 +375,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     Sprite_Current = object;
                     unsigned long* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
                     if (object[0x24] & 0x40) {
-                        const unsigned char added = static_cast<unsigned char>(g_add_records(record));
+                        const unsigned char added = static_cast<unsigned char>(draw_pass::g_add_records(record));
                         records = static_cast<unsigned char>(records + added);
                         // What the model drew, kept for the next pass's Defer (layering.h, issue 141).
                         if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
@@ -416,7 +416,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                             draw_order::Set(draw_order::kSprite, layer, Key(Sprite_Current),
                                             static_cast<unsigned>(record[0]));
                         if (layering::g_mode == layering::kFloor) layering::BeforeSprite();   // what it draws (layering.h)
-                        g_draw();
+                        draw_pass::g_draw();
                         if (draw_order::g_on) draw_order::Clear();
                         // What it drew, kept; the table faerie's sides again (layering.h, D300).
                         if (layering::g_mode == layering::kFloor) layering::AfterSprite(Sprite_Current);
