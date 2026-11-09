@@ -15205,7 +15205,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	LinkAt	local		src/game/magic_s12.cpp	189	189	194	src/game/magic/celerity_spark.cpp	d3e6abb3
 	Text	local		src/game/magic_s12.cpp	196	199	199	src/game/magic/identify.cpp	d3e6abb3
 	DrawAt	local		src/game/magic_s12.cpp	200	200	202	src/game/magic/identify.cpp	d3e6abb3
+	DrawAt	copied		src/game/magic_s12.cpp	200	200	202	src/game/magic/identify.cpp	be7100bb
 	CharCount	local		src/game/magic_s12.cpp	203	203	203	src/game/magic/identify.cpp	d3e6abb3
+	CharCount	copied		src/game/magic_s12.cpp	203	203	203	src/game/magic/identify.cpp	be7100bb
 	DrawCentred	local		src/game/magic_s12.cpp	204	206	206	src/game/magic/identify.cpp	d3e6abb3
 	DrawSmallWords	local		src/game/magic_s12.cpp	211	219	227	src/game/magic/identify.cpp	d3e6abb3
 	DrawHeading	local		src/game/magic_s12.cpp	228	235	243	src/game/magic/identify.cpp	d3e6abb3
@@ -15991,6 +15993,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Cos	copied		src/game/magic_s18.cpp	148	148	148	src/game/magic/buff_spike.cpp	d3e6abb3
 	Cos	copied		src/game/magic_s18.cpp	148	148	148	src/game/magic/drain_orb_a.cpp	d3e6abb3
 	Shade3	local		src/game/magic_s18.cpp	150	152	156	src/game/magic/drain_orb_a.cpp	d3e6abb3
+	OrbTask	local		src/game/magic_s18.cpp	158	161	168	src/game/magic/drain_orb_a.cpp	be7100bb
 	PlaceAt	local		src/game/magic_s18.cpp	170	171	175	src/game/magic/drain_orb_a.cpp	d3e6abb3
 	MS18_EXPORT	copied		src/game/magic_s18.cpp	179	179	179	src/game/magic/buff_spike.cpp	d3e6abb3
 	MS18_EXPORT	copied		src/game/magic_s18.cpp	179	179	179	src/game/magic/drain_orb_a.cpp	d3e6abb3
@@ -16878,6 +16881,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4CCAA0	FxFunnel_Dispatch	func	tu_4cc970	src/game/magic_s23.cpp	259	261	261	src/game/magic/fx_funnel.cpp	d3e6abb3
 0x4CCAC0	FxFunnel_Task	func	tu_4cc970	src/game/magic_s23.cpp	263	266	276	src/game/magic/fx_funnel.cpp	d3e6abb3
 0x4CCB10	FxFunnel_Wait	func	tu_4cc970	src/game/magic_s23.cpp	278	285	330	src/game/magic/fx_funnel.cpp	d3e6abb3
+	Spin	local		src/game/magic_s23.cpp	332	334	337	src/game/magic/fx_funnel.cpp	be7100bb
 0x4CCC90	FxFunnel_Approach	func	tu_4cc970	src/game/magic_s23.cpp	339	342	349	src/game/magic/fx_funnel.cpp	d3e6abb3
 0x4CCD30	FxFunnel_Orbit	func	tu_4cc970	src/game/magic_s23.cpp	351	355	382	src/game/magic/fx_funnel.cpp	d3e6abb3
 0x4CCE40	FxFunnel_Rise	func	tu_4cc970	src/game/magic_s23.cpp	384	387	407	src/game/magic/fx_funnel.cpp	d3e6abb3
@@ -16893,6 +16897,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4CDA00	FxSpiral_Dispatch	func	tu_4cd6b0	src/game/magic_s23.cpp	654	656	656	src/game/magic/fx_spiral.cpp	d3e6abb3
 0x4CDA20	FxSpiral_Task	func	tu_4cd6b0	src/game/magic_s23.cpp	658	661	668	src/game/magic/fx_spiral.cpp	d3e6abb3
 0x4CDA60	FxSpiral_Wait	func	tu_4cd6b0	src/game/magic_s23.cpp	670	675	700	src/game/magic/fx_spiral.cpp	d3e6abb3
+	Bob	local		src/game/magic_s23.cpp	702	704	710	src/game/magic/fx_spiral.cpp	be7100bb
 0x4CDB30	FxSpiral_Grow	func	tu_4cd6b0	src/game/magic_s23.cpp	712	713	717	src/game/magic/fx_spiral.cpp	d3e6abb3
 0x4CDB90	FxSpiral_Hold	func	tu_4cd6b0	src/game/magic_s23.cpp	719	722	737	src/game/magic/fx_spiral.cpp	d3e6abb3
 0x4CDC50	FxSpiral_Spread	func	tu_4cd6b0	src/game/magic_s23.cpp	739	741	750	src/game/magic/fx_spiral.cpp	d3e6abb3
@@ -16916,8 +16921,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4CFD20	SimoonDust_Task	func	tu_4cf5f0	src/game/magic_s23.cpp	1261	1264	1269	src/game/magic/simoon_dust.cpp	d3e6abb3
 0x4CFD50	SimoonDust_Wait	func	tu_4cf5f0	src/game/magic_s23.cpp	1271	1274	1286	src/game/magic/simoon_dust.cpp	d3e6abb3
 0x4CFDE0	SimoonDust_Rise	func	tu_4cf5f0	src/game/magic_s23.cpp	1288	1290	1295	src/game/magic/simoon_dust.cpp	d3e6abb3
+	Arc	local		src/game/magic_s23.cpp	1297	1298	1301	src/game/magic/simoon_dust.cpp	be7100bb
 0x4CFE10	SimoonDust_Arc	func	tu_4cf5f0	src/game/magic_s23.cpp	1303	1305	1310	src/game/magic/simoon_dust.cpp	d3e6abb3
 0x4CFE50	SimoonDust_Fall	func	tu_4cf5f0	src/game/magic_s23.cpp	1312	1314	1326	src/game/magic/simoon_dust.cpp	d3e6abb3
+	DustCorner	local		src/game/magic_s23.cpp	1328	1330	1334	src/game/magic/simoon_dust.cpp	be7100bb
 0x4CFEB0	SimoonDust_Draw	func	tu_4cf5f0	src/game/magic_s23.cpp	1336	1343	1390	src/game/magic/simoon_dust.cpp	d3e6abb3
 0x4D0200	SimoonFan_Task	func	tu_4cf5f0	src/game/magic_s23.cpp	1392	1396	1403	src/game/magic/simoon_dust.cpp	d3e6abb3
 0x4D0240	SimoonFan_Start	func	tu_4cf5f0	src/game/magic_s23.cpp	1405	1407	1415	src/game/magic/simoon_dust.cpp	d3e6abb3
@@ -17150,6 +17157,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Sar12	copied		src/game/magic_s25.cpp	82	82	82	src/game/magic/spell_ragnarok.cpp	d3e6abb3
 	Sar12	copied		src/game/magic_s25.cpp	82	82	82	src/game/magic/spell_sleep.cpp	d3e6abb3
 	Shl	copied		src/game/magic_s25.cpp	83	83	83	src/game/magic/spell_sleep.cpp	d3e6abb3
+	Shl	local		src/game/magic_s25.cpp	83	83	83	src/game/magic/spell_sleep.cpp	be7100bb
 	Bump	copied		src/game/magic_s25.cpp	85	85	85	src/game/magic/spell_confuse.cpp	d3e6abb3
 	Bump	copied		src/game/magic_s25.cpp	85	85	85	src/game/magic/spell_depress.cpp	d3e6abb3
 	Bump	copied		src/game/magic_s25.cpp	85	85	85	src/game/magic/spell_ragnarok.cpp	d3e6abb3
@@ -17208,8 +17216,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4D2F40	SpellSleep_PushSwayMatrix	func	tu_4d2d80	src/game/magic_s25.cpp	280	283	298	src/game/magic/spell_sleep.cpp	d3e6abb3
 0x4D3030	SpellSleep_DrawStem	func	tu_4d2d80	src/game/magic_s25.cpp	300	303	332	src/game/magic/spell_sleep.cpp	d3e6abb3
 0x4D3160	SpellSleep_DrawFan	func	tu_4d2d80	src/game/magic_s25.cpp	334	340	390	src/game/magic/spell_sleep.cpp	d3e6abb3
+	DomePoint	local		src/game/magic_s25.cpp	392	395	404	src/game/magic/spell_sleep.cpp	be7100bb
 0x4D3350	SpellSleep_DrawDome	func	tu_4d2d80	src/game/magic_s25.cpp	406	411	470	src/game/magic/spell_sleep.cpp	d3e6abb3
 0x4D36C0	SpellSleep_PushTurnMatrix	func	tu_4d2d80	src/game/magic_s25.cpp	472	474	480	src/game/magic/spell_sleep.cpp	d3e6abb3
+	TrailAngle	local		src/game/magic_s25.cpp	482	484	487	src/game/magic/spell_sleep.cpp	be7100bb
 0x4D3770	SpellSleep_DrawTrail	func	tu_4d2d80	src/game/magic_s25.cpp	489	493	576	src/game/magic/spell_sleep.cpp	d3e6abb3
 0x4D3A40	SpellSleep_DrawTrailLines	func	tu_4d2d80	src/game/magic_s25.cpp	578	583	650	src/game/magic/spell_sleep.cpp	d3e6abb3
 0x4D3CB0	SpellSleep_DrawShadowFan	func	tu_4d2d80	src/game/magic_s25.cpp	652	657	705	src/game/magic/spell_sleep.cpp	d3e6abb3
@@ -17225,6 +17235,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4D41B0	SpellConfuse_PushFacingMatrix	func	tu_4d3ea0	src/game/magic_s25.cpp	831	835	848	src/game/magic/spell_confuse.cpp	d3e6abb3
 0x4D4300	SpellConfuse_DrawRays	func	tu_4d3ea0	src/game/magic_s25.cpp	850	855	905	src/game/magic/spell_confuse.cpp	d3e6abb3
 0x4D4510	SpellConfuse_PushSpinMatrix	func	tu_4d3ea0	src/game/magic_s25.cpp	907	910	925	src/game/magic/spell_confuse.cpp	d3e6abb3
+	RadiusQuad	local		src/game/magic_s25.cpp	927	929	938	src/game/magic/spell_confuse.cpp	be7100bb
+	QuadShade	local		src/game/magic_s25.cpp	939	940	952	src/game/magic/spell_confuse.cpp	be7100bb
 0x4D45F0	SpellConfuse_DrawQuads	func	tu_4d3ea0	src/game/magic_s25.cpp	954	958	992	src/game/magic/spell_confuse.cpp	d3e6abb3
 0x4D49E0	SpellDepress_Task	func	tu_4d49e0	src/game/magic_s25.cpp	997	999	1005	src/game/magic/spell_depress.cpp	d3e6abb3
 0x4D4A20	SpellDepress_Start	func	tu_4d49e0	src/game/magic_s25.cpp	1007	1014	1049	src/game/magic/spell_depress.cpp	d3e6abb3
@@ -17244,6 +17256,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4D5780	SpellRagnarok_Child	func	tu_4d5300	src/game/magic_s25.cpp	1368	1370	1372	src/game/magic/spell_ragnarok.cpp	d3e6abb3
 0x4D57A0	SpellRagnarok_SpriteChild	func	tu_4d5300	src/game/magic_s25.cpp	1374	1379	1385	src/game/magic/spell_ragnarok.cpp	d3e6abb3
 0x4D57E0	SpellRagnarok_SpriteInit	func	tu_4d5300	src/game/magic_s25.cpp	1387	1391	1412	src/game/magic/spell_ragnarok.cpp	d3e6abb3
+	Jitter	local		src/game/magic_s25.cpp	1414	1415	1418	src/game/magic/spell_ragnarok.cpp	be7100bb
 0x4D58C0	SpellRagnarok_SpriteRise	func	tu_4d5300	src/game/magic_s25.cpp	1420	1422	1428	src/game/magic/spell_ragnarok.cpp	d3e6abb3
 0x4D5910	SpellRagnarok_SpriteClimb	func	tu_4d5300	src/game/magic_s25.cpp	1430	1432	1439	src/game/magic/spell_ragnarok.cpp	d3e6abb3
 0x4D5960	SpellRagnarok_SpriteLeave	func	tu_4d5300	src/game/magic_s25.cpp	1441	1443	1450	src/game/magic/spell_ragnarok.cpp	d3e6abb3
@@ -17611,6 +17624,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetSW	copied		src/game/magic_s28.cpp	67	67	67	src/game/magic/breath_beam.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_s28.cpp	67	67	67	src/game/magic/breath_mote.cpp	d3e6abb3
 	AddSW	copied		src/game/magic_s28.cpp	68	68	68	src/game/magic/breath_mote.cpp	d3e6abb3
+	AddSW	copied		src/game/magic_s28.cpp	68	68	68	src/game/magic/breath_beam.cpp	be7100bb
 	VW	local		src/game/magic_s28.cpp	69	69	69	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetVW	local		src/game/magic_s28.cpp	70	70	70	src/game/magic/breath_mote.cpp	d3e6abb3
 	S16	copied		src/game/magic_s28.cpp	72	72	72	src/game/magic/breath_beam.cpp	d3e6abb3
@@ -17634,6 +17648,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Sin	copied		src/game/magic_s28.cpp	90	90	90	src/game/magic/breath_beam.cpp	d3e6abb3
 	Sin	copied		src/game/magic_s28.cpp	90	90	90	src/game/magic/breath_mote.cpp	d3e6abb3
 	Cos	copied		src/game/magic_s28.cpp	91	91	91	src/game/magic/breath_mote.cpp	d3e6abb3
+	Cos	copied		src/game/magic_s28.cpp	91	91	91	src/game/magic/breath_beam.cpp	be7100bb
 	Ratan2	copied		src/game/magic_s28.cpp	92	92	92	src/game/magic/breath_beam.cpp	d3e6abb3
 	Ratan2	copied		src/game/magic_s28.cpp	92	92	92	src/game/magic/breath_mote.cpp	d3e6abb3
 	Commit	copied		src/game/magic_s28.cpp	93	93	93	src/game/magic/breath_beam.cpp	d3e6abb3
@@ -17669,6 +17684,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4DDC70	BreathBeam_Hold	func	tu_4dd8b0	src/game/magic_s28.cpp	325	326	329	src/game/magic/breath_beam.cpp	d3e6abb3
 0x4DDC90	BreathBeam_Fade	func	tu_4dd8b0	src/game/magic_s28.cpp	331	333	340	src/game/magic/breath_beam.cpp	d3e6abb3
 	BeamStep	copied		src/game/magic_s28.cpp	342	347	350	src/game/magic/breath_beam.cpp	d3e6abb3
+	BeamStep	local		src/game/magic_s28.cpp	342	347	350	src/game/magic/breath_beam.cpp	be7100bb
+	BeamWalk	local		src/game/magic_s28.cpp	351	351	364	src/game/magic/breath_beam.cpp	be7100bb
+	BeamStart	local		src/game/magic_s28.cpp	365	365	371	src/game/magic/breath_beam.cpp	be7100bb
+	BeamVertex	local		src/game/magic_s28.cpp	372	373	378	src/game/magic/breath_beam.cpp	be7100bb
 0x4DDCE0	BreathBeam_DrawTextured	func	tu_4dd8b0	src/game/magic_s28.cpp	380	385	432	src/game/magic/breath_beam.cpp	d3e6abb3
 0x4DE370	BreathBeam_DrawGlow	func	tu_4dd8b0	src/game/magic_s28.cpp	434	439	477	src/game/magic/breath_beam.cpp	d3e6abb3
 0x4DE8C0	Icebreath_Task	func	tu_4de8c0	src/game/magic_s28.cpp	482	485	493	src/game/magic/breath_mote.cpp	d3e6abb3
