@@ -32,3 +32,7 @@ const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* p
 // `repeat`, a held key's auto-repeat - whether the reading rows' glyphs are
 // drawn. The layout, the reveal and the pages are the same either way.
 bool MsgBox_ReadingRowKey(unsigned vk, bool repeat);
+
+namespace msgbox {
+extern bool g_text_faster;   // defined in msgbox.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace msgbox
