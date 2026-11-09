@@ -3,3 +3,6 @@ unit_a	unit_b	decided	reason
 0x4AE7C0	0x4AEE90	2026-11-08	PSX MAGIC057 u014 holds both; the census's cut is a back-order read against a twin of unknown image (BattleFx_FreeTask)
 0x531120	0x532FD0	2026-11-08	PSX GAME.EMI u505 holds both (window join); the owner joined it over the back-order cut
 0x56E6C0	0x5722D0	2026-11-08	PSX main u107 holds both (window join of 20); the owner joined it over the back-order cut
+0x4B8A90	0x4BA460	2026-11-09	the MS16_SPARKLES macro family: 40 functions in MAGIC071..074 that the mover can move only together with the macro (7b item 17); the PlayStation had four overlays each with its own copy, the PC source has one
+0x4BA460	0x4BAF90	2026-11-09	item 17, the same family
+0x4BAF90	0x4BBD60	2026-11-09	item 17, the same family
