@@ -319,12 +319,7 @@ const mh::Region kRegions[] = {
     {0x903800, 4},                    // Camera_ShiftY
     {at::kR, 0x10},       // the effect scratch 0x903850..0x90385F
     {Prim_VertexScratch_addr, 0x20},  // Prim_VertexScratch
-    // Gte_RampFar .. Gte_Depth, but for Gte_Matrix + 0x12..0x13, the PSX MATRIX's two padding bytes
-    // after m[3][3]: the original's PushMatrix copies them from uninitialised stack, so they are
-    // undefined on both sides. The gte.cpp functions' frames changed in stage B of the source-layout
-    // round (the `inline` gate class), and the garbage no longer matches (B6 report, 2026-11-09).
-    {Gte_RampFar_addr, Gte_Matrix_addr + 0x12 - Gte_RampFar_addr},
-    {Gte_Matrix_addr + 0x14, Gte_RampFar_addr + kGteSize - (Gte_Matrix_addr + 0x14)},
+    {Gte_RampFar_addr, kGteSize},
     {0x905E40, 0x30},                 // Camera_Matrix, the view's cell words, MapView_Redraw
     {Gfx_PacketNext_addr, 4},
     {0, kPrimBytes},                  // g_prims: its address is filled in by SelfTest
