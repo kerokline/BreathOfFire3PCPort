@@ -76,7 +76,7 @@ using namespace event_leader;
 
 namespace {
 
-unsigned char& Byte(std::uint32_t a) { return *At(a); }
+unsigned char& ByteEventLeader(std::uint32_t a) { return *At(a); }
 
 // A .data dispatch table, read at the call as the original reads it: the
 // index is a whole byte and unchecked, so an index past the end calls what
@@ -89,8 +89,8 @@ unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // Field_DirectionSteps' pair for a direction - a whole byte into a table of
 // eight, as the original indexes it.
-std::uint32_t StepX(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
-std::uint32_t StepZ(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
+std::uint32_t StepXEventLeader(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
+std::uint32_t StepZEventLeader(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
 
 // `cdq / xor / sub`: the absolute value with the original's wrap (the most
 // negative dword stays negative).
@@ -195,8 +195,8 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
             Area_EnterTransition = 0xC;
             return;
         }
-        if (Byte(::bof3::Img(at::kFlags2Hi)) & 0x20) {
-            Byte(::bof3::Img(at::kFlagsHi)) |= 1;
+        if (ByteEventLeader(::bof3::Img(at::kFlags2Hi)) & 0x20) {
+            ByteEventLeader(::bof3::Img(at::kFlagsHi)) |= 1;
             stop = true;
         } else {
             {
@@ -214,8 +214,8 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (input & 2) {
             const unsigned char d = sc[8];
             const std::uint32_t n = sc[0x70];
-            const std::uint32_t x = StepX(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
-            const std::uint32_t z = StepZ(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z);
+            const std::uint32_t x = StepXEventLeader(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
+            const std::uint32_t z = StepZEventLeader(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z);
             const std::uint32_t edge_x = (static_cast<std::uint32_t>(AreaMap_Header[0]) - 3u) << 16;
             const std::uint32_t edge_z = (static_cast<std::uint32_t>(AreaMap_Header[1]) - 3u) << 16;
             if (x == 0x20000 || z == 0x20000 || x == edge_x || z == edge_z) {
@@ -252,12 +252,12 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
                 const std::int32_t z = event_leader::Long(event_leader::At(::bof3::Img(AreaW2d_ReturnPoint_addr) + 4));
                 const std::int32_t x = static_cast<std::int32_t>(AreaW2d_ReturnPoint);
                 const unsigned short area = event_leader::Word(event_leader::At(::bof3::Img(AreaW2d_ReturnPoint_addr) + 8));
-                Byte(::bof3::Img(at::kReturnPoint) + 0xA) = 0;
+                ByteEventLeader(::bof3::Img(at::kReturnPoint) + 0xA) = 0;
                 event_leader::g.change_area(area, x, z, 4);
                 return;
             }
         }
-        if (Byte(::bof3::Img(at::kFlags2Lo)) & 0x20) {
+        if (ByteEventLeader(::bof3::Img(at::kFlags2Lo)) & 0x20) {
             Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x20);
             event_leader::g.jump_start();
             Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
@@ -274,11 +274,11 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         const unsigned char input2 = Field_InputFlags;
         MoveScript_F3Divisor = 0;
         MoveScript_FAWord = 0;
-        if (!(input2 & 1) && !(Byte(::bof3::Img(at::kFlags2Lo)) & 0x60) && event_leader::g.encounter_due()) {
+        if (!(input2 & 1) && !(ByteEventLeader(::bof3::Img(at::kFlags2Lo)) & 0x60) && event_leader::g.encounter_due()) {
             Field_State[0x128] = 3;
             event_leader::g.ensure_animation(Sprite_Current[8]);
             unsigned char* const s = Sprite_Current;
-            Byte(::bof3::Img(at::kFlags2Hi)) |= 0x10;
+            ByteEventLeader(::bof3::Img(at::kFlags2Hi)) |= 0x10;
             s[1] = 5;
             Sprite_Current[2] = 0;
             return;
@@ -291,7 +291,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         if (!stop) {
             event_leader::g.bit80_tick();
-            if (!(Byte(::bof3::Img(at::kFlagsHi)) & 1) && !(Byte(::bof3::Img(at::kFlags2Lo)) & 0x40) &&
+            if (!(ByteEventLeader(::bof3::Img(at::kFlagsHi)) & 1) && !(ByteEventLeader(::bof3::Img(at::kFlags2Lo)) & 0x40) &&
                 (Field_InputHeld & (event_leader::Word(event_leader::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)) | 0xF000u)) != 0) {
                 event_leader::g.leader_walk();
                 return;
