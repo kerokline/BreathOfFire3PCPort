@@ -933,9 +933,11 @@ is expected; the doc says so.
    - `x64-indirect` (x86_64 only, never used on an i386 build): an internal
      function pointer that x86_64 folded to a direct call goes through the
      pointer once the variable is external, its branch offsets a byte
-     longer. A row names the caller. First case: `text_immediate.cpp`'s
-     `g_draw_at`, `Text_DrawImmediate` `call @r4:Text_DrawAt` -> `call qword
-     ptr [rip] @r4:_ZN14text_immediate9g_draw_atE`.
+     longer. A row names the caller, or the pointer itself: folded, it had
+     no data symbol on x86_64, so the promoted one reads NEW (data). First
+     case: `text_immediate.cpp`'s `g_draw_at`, `Text_DrawImmediate` `call
+     @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:_ZN14text_immediate9g_draw_atE`,
+     and `NEW _ZN14text_immediate9g_draw_atE (data)`.
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
    --exception-classes data-layout` (the other classes' rows are read but
    never used there), the x86_64 gate with the file and no restriction.

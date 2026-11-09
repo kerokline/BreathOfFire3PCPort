@@ -6,7 +6,7 @@
 # rename of the caller changes); data-layout (both widths, call 10; a promoted variable is placed elsewhere
 # in .data/.bss, so a neighbouring file-local and its readers' reference to it differ; a row may name a data
 # or bss symbol); x64-indirect (x86_64 only, call 10; a folded internal function pointer is called through
-# once external). The i686 gate passes --exception-classes data-layout, so its code stays exact but for that
+# once external; a row names the caller or the pointer, which reads NEW). The i686 gate passes --exception-classes data-layout, so its code stays exact but for that
 # class. A new class needs the coordinator's entry in the round doc with its first case. Read by
 # tools/codegen_same.py --exceptions.
 symbol	class	reason	commit

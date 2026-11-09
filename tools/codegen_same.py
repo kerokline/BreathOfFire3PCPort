@@ -118,17 +118,17 @@ The classes:
   variable is placed elsewhere in its .data / .bss, so a neighbouring
   file-local changes extent or hash, and its readers differ only in the
   reference to that local. A row names the data or bss symbol (mangled, or
-  a name a `local:<hash>` key lists) or a reader function; this is the one
-  class that may except a DATA or BSS line;
+  a name a `local:<hash>` key lists) or a reader function;
 - `x64-indirect` (x86_64 only; call 10): an internal function pointer that
   x86_64 folded to a direct call goes through the pointer once the variable
   is external (`call @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:..g_draw_at`,
-  branch offsets a byte longer). A row names the caller. Never used on an
-  i386 build.
+  branch offsets a byte longer). A row names the caller, or the pointer
+  itself: folded, it had no data symbol, so the promoted one reads NEW. Never
+  used on an i386 build.
 
 The symbol is the name the line prints (for a `local:<hash>` key, any of the
-names it lists). A data or bss line is excepted by a `data-layout` row only;
-an inject line never. --exception-classes limits which classes may except:
+names it lists). A data or bss line is excepted by a `data-layout` or an
+`x64-indirect` row only (DATA_CLASSES); an inject line never. --exception-classes limits which classes may except:
 the rows of the other classes are read (and checked) but never used, and
 never reported as unused. The i686 gate runs with `--exception-classes
 data-layout`; the x86_64 gate with every class (no flag, the default). A row
@@ -722,7 +722,7 @@ def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
 
 
 EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect")
-DATA_CLASSES = ("data-layout",)       # the classes that may except a DATA or BSS line
+DATA_CLASSES = ("data-layout", "x64-indirect")  # the classes that may except a DATA, BSS or data NEW/GONE line
 X64_ONLY_CLASSES = ("x64-indirect",)  # never used on an i386 build
 
 
