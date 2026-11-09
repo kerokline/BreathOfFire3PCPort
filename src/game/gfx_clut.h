@@ -3,3 +3,7 @@
 #pragma once
 
 void GfxClut_Inject();
+
+namespace gfx_clut {
+extern bool g_stp_test;   // defined in gfx_clut.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace gfx_clut
