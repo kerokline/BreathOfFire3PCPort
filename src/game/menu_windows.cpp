@@ -218,87 +218,6 @@ extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
 // ===========================================================================
 // The two small fonts (known-defects.md D1 names both)
 
-// original 0x516F60 (PSX 0x8015002C): a string in the 12 x 12 font of page
-// (0x2F), 21 cells to a row: u = (c % 21) * 12, v = (c / 21) * 12 as bytes, the
-// CLUT word 0x7800 | (colour & 0x3F), semi-transparent. y is drawn one below
-// the y given. A byte 0x0A is a newline: y + 12 and x back to the x given; 0x20
-// and 0 draw nothing; every byte, drawn or not, moves the pen 12.
-//
-// As the original has it: after a newline the next character is drawn 12
-// right of the x given, since the newline's own byte moves the pen too; the
-// test for the end is on the byte AFTER the one just handled, so a string
-// that starts with its NUL goes on to the byte after it; a byte of 0x80 or
-// more is one cell like any other. x and y are drawn as 16-bit.
-extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned char* text) {
-    std::int32_t pen_y = y + 1;
-    menu_windows::g.draw_mode(Next(), 0, 0, 0x2F, 0);
-    menu_windows::g.commit(1, 0xC);
-    const unsigned clut = (colour & 0x3F) | 0x7800;
-    std::uint32_t pen_x = static_cast<std::uint32_t>(x);
-    unsigned char* p = Next();
-    for (;;) {
-        const unsigned char c = text[0];
-        if (c == 0x0A) {
-            pen_y += 0xC;
-            pen_x = static_cast<std::uint32_t>(x);
-        } else if (c != 0x20 && c != 0) {
-            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
-            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0xC);
-            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0xC);
-            p[4] = p[5] = p[6] = 0x80;
-            p[0x14] = static_cast<unsigned char>((c % 21) * 12);
-            p[0x15] = static_cast<unsigned char>((c / 21) * 12);
-            Put(p + 8, F(S16MenuWindows(pen_x)));
-            Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
-            menu_windows::g.set_sprt(p);
-            menu_windows::g.set_semi(p, 1);
-            menu_windows::g.commit(1, 0x1C);
-            p = Next();
-        }
-        const unsigned char after = text[1];
-        pen_x += 0xC;
-        ++text;
-        if (after == 0) break;
-    }
-}
-
-// original 0x517090 (PSX 0x801501C0): the same in the 8 x 8 font, SPRT_8
-// (Gpu_SetSprt8), 32 cells to a row from 0x20: u = ((c - 0x20) % 32) * 8,
-// v = ((c - 0x20) / 32) * 8, both as C divides (toward zero) and kept as
-// bytes; y as given; newline y + 8; every byte moves the pen 8. The same
-// quirks as Text_DrawFont12. Its the menus' numerals (every "%3d" here).
-extern "C" void __cdecl Text_DrawFont8(int x, int y, int colour, const unsigned char* text) {
-    std::int32_t pen_y = y;
-    menu_windows::g.draw_mode(Next(), 0, 0, 0x2F, 0);
-    menu_windows::g.commit(1, 0xC);
-    const unsigned clut = (colour & 0x3F) | 0x7800;
-    std::uint32_t pen_x = static_cast<std::uint32_t>(x);
-    unsigned char* p = Next();
-    for (;;) {
-        const unsigned char c = text[0];
-        if (c == 0x0A) {
-            pen_y += 8;
-            pen_x = static_cast<std::uint32_t>(x);
-        } else if (c != 0x20 && c != 0) {
-            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
-            p[4] = p[5] = p[6] = 0x80;
-            const int cell = static_cast<int>(c) - 0x20;
-            p[0x14] = static_cast<unsigned char>((cell % 32) * 8);
-            p[0x15] = static_cast<unsigned char>((cell / 32) * 8);
-            Put(p + 8, F(S16MenuWindows(pen_x)));
-            Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
-            menu_windows::g.set_sprt8(p);
-            menu_windows::g.set_semi(p, 1);
-            menu_windows::g.commit(1, 0x18);
-            p = Next();
-        }
-        const unsigned char after = text[1];
-        pen_x += 8;
-        ++text;
-        if (after == 0) break;
-    }
-}
-
 // original 0x596020 (PSX 0x8015AA88): window kind 2's list (Window_Kind2Frame,
 // docs/window-task.md): items 0 .. the s8 at 0x7DEE66 inclusive, each through
 // Text_DrawImmediate at the current window record's (x >> 4, y >> 4) - s16
@@ -1678,8 +1597,6 @@ void MenuWindows_Inject() {
 
     BOF3_INJECT(Msg_OpenSystem);
     BOF3_INJECT(MsgBox_DrawArrow);
-    BOF3_INJECT(Text_DrawFont12);
-    BOF3_INJECT(Text_DrawFont8);
     BOF3_INJECT(Window_Kind2List);
     BOF3_INJECT(Menu_DrawEquipPanel);
     BOF3_INJECT(Menu_DrawCursorBox);

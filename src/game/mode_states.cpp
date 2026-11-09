@@ -268,22 +268,6 @@ extern "C" void __cdecl Shop_Open(void) {
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
 }
 
-// original 0x517300 (no PSX twin paired; PSX 0x8019A398): the shop's step 1, once a frame -
-// the field drawn without its objects' logic (AreaMap_Frame,
-// Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen,
-// Effect_RunObjects, Field_DrawFrame, Field_RunTaskRecords), then a tail
-// jump into the shop overlay's state dispatch 0x57F500 (group DF's).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
-    mode_states::g.areamap_frame();
-    mode_states::g.extra_screens();
-    mode_states::g.update_screens();
-    mode_states::g.objects_screen();
-    mode_states::g.run_effects();
-    mode_states::g.draw_frame();
-    mode_states::g.task_records();
-    mode_states::g.shop_states();
-}
-
 // original 0x496390 (no PSX twin paired; PSX 0x801993D8): the shop's step 2. The party
 // combination byte 0x90412C gets bit 7, and the sound bank 0x2C2 + its low
 // seven bits is loaded (the area's own, which the shop's file replaced) with
@@ -309,32 +293,6 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
 // ===========================================================================
 // The field's per-frame entries
 // ===========================================================================
-
-// original 0x517290 (PSX 0x8019A2B8): a field frame without the event
-// script and without the objects' logic, for the frames a load waits -
-// AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens,
-// Field_ObjectsScreen, Effect_RunObjects, MoveScript_TintFrame, then a tail
-// jump to Field_DrawFrame. Sixteen callers (the mode handlers' waits,
-// Scenario_Start, 0x544B1D, 0x551C60, 0x56D645).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Field_LoadingFrame(void) {
-    mode_states::g.areamap_frame();
-    mode_states::g.extra_screens();
-    mode_states::g.update_screens();
-    mode_states::g.objects_screen();
-    mode_states::g.run_effects();
-    mode_states::g.tint_frame();
-    mode_states::g.draw_frame();
-}
-
-// original 0x5172F0 (PSX 0x8019A368): the field menu's frame (mode 3's
-// step 1, GameMode_Handlers' neighbour 0x656A74 entry 1) - Field_ModeDispatch,
-// the menu's state dispatch 0x589970 (group DH's), then a tail jump to
-// Field_RunTaskRecords.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
-    mode_states::g.mode_dispatch();
-    mode_states::g.menu_states();
-    mode_states::g.task_records();
-}
 
 // original 0x496830 (no PSX twin paired; PSX 0x80199C38): Field_WaitTransition with the menu's
 // frame - called by mode 3's steps 0 and 2 after Transition_Start(3) / (2).
@@ -398,105 +356,9 @@ extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_Sys
 // The 8 px UI string draw
 // ===========================================================================
 
-// original 0x516E70 (PSX 0x8014FD78, the catalogue's pairing): the small
-// UI font - up to `count` characters of `text` at (x, y), each an 8 x 8
-// quad through Text_EmitGlyph (x, y, 8, 8 - v, u, v, clut) with u and v from
-// the byte pair 0x65F5A8[colour >> 4] and the CLUT 0x7800 | (colour & 0xF),
-// the glyph index to word +0x16 of the primitive at Gfx_PacketNext first.
-// 0x01 is a newline (x back, y + 9), 0x20 a blank 8 wide, a byte with bit 7
-// the first of a two-byte code ((b0 & 0x7F) << 8 | b1), any other byte glyph
-// b - 0x26. Returns one past the NUL that ended the text, or one past the
-// next byte when the count ran out. This is the draw the shipped Chinese
-// menus' small text goes through (docs/dialogue-localisation.md sections 4
-// and 9, DIV-0016's 8 x 8 set).
-//
-// As the original has it: colour and count are the arguments' low bytes; x
-// and y are whole ints, the pen x reset to the argument; a newline and a
-// blank use up the count like a glyph; the text byte after each character
-// and the primitive pointer are read afresh after the glyph's call; a text
-// that starts with its NUL returns text + 1 whatever the count; there is no
-// glyph bound here (Text_DrawString's 0xA00 test is not in this draw).
-extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned colour, unsigned count, const unsigned char* text) {
-    const unsigned c = colour & 0xFF;
-    const unsigned char* const uv = mode_states::At(::bof3::Img(mode_states::at::kSmallUV) + (c >> 4) * 2);
-    const unsigned u = uv[0], v = uv[1];
-    const int clut = static_cast<int>(0x7800u | (c & 0xF));
-    const unsigned char* p = text;
-    unsigned char ch = p[0];
-    if (ch == 0) return p + 1;
-    int pen_x = x, pen_y = y;
-    unsigned char left = static_cast<unsigned char>(count);
-    for (;;) {
-        if (left == 0) return p + 1;
-        if (ch == 1) {
-            pen_x = x;
-            pen_y += 9;
-        } else if (ch == 0x20) {
-            pen_x += 8;
-        } else {
-            unsigned glyph;
-            if ((ch & 0x80) != 0) {
-                glyph = ((ch & 0x7Fu) << 8) + p[1];
-                ++p;
-            } else {
-                glyph = (ch - 0x26u) & 0xFFFF;
-                // DIVERGENCE DIV-0064: the status words under a language
-                // overlay, from its 8 x 8 set.
-                if (const unsigned small = Labels_SmallGlyph(p)) glyph = small;
-            }
-            rv::Store<unsigned>(rv::As<records::GpuGlyph>(Gfx_PacketNext)->glyph, glyph);
-            mode_states::g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);
-            pen_x += 8;
-        }
-        ch = p[1];
-        ++p;
-        --left;
-        if (ch == 0) return p + 1;
-    }
-}
-
 // ===========================================================================
 // The field core: state 2 and its fade
 // ===========================================================================
-
-// original 0x525370 (PSX 0x801B79B8): state 2 of both the members' state
-// table 0x65F960 and the leader's 0x660918 - a tail jump through
-// FieldCore_State2Steps 0x66011C on Sprite_Current +2 (9 entries:
-// 0x525390, 0x5257A0, FieldCore_Fade, 0x525960, 0x525CA0, 0x5261E0,
-// 0x526490, 0x526A90, 0x526B80). Unchecked, the byte read afresh.
-extern "C" void __cdecl FieldCore_State2(void) { Entry(::bof3::Img(FieldCore_State2Steps_addr), Sprite_Current[2])(); }
-
-// original 0x5258B0 (PSX 0x801B8264): sub-state 2 of state 2 - a tail jump
-// through FieldCore_FadeSteps 0x660158 on Sprite_Current +3 (0
-// FieldCore_FadeBegin, 1 FieldCore_FadeStep). Unchecked: 2 would run
-// 0x525960's table, the words after.
-extern "C" void __cdecl FieldCore_Fade(void) { Entry(::bof3::Img(FieldCore_FadeSteps_addr), Sprite_Current[3])(); }
-
-// original 0x5258D0 (PSX 0x801B82A8): the fade's first frame -
-// Sprite_ShadeFadeBegin, then the shade bytes +0x5D..+0x5F 0x80 and +0x5C 1,
-// Field_State +0x137 = 7, +0 bit 6 cleared and +3 = 1, all through
-// Sprite_Current read afresh at each store.
-extern "C" void __cdecl FieldCore_FadeBegin(void) {
-    mode_states::g.shade_begin();
-    Sprite_Current[0x5D] = 0x80;
-    Sprite_Current[0x5E] = 0x80;
-    Sprite_Current[0x5F] = 0x80;
-    Sprite_Current[0x5C] = 1;
-    Field_State[0x137] = 7;
-    Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
-    Sprite_Current[3] = 1;
-}
-
-// original 0x525920 (PSX 0x801B833C): each later frame of the fade -
-// Sprite_ShadeFadeStep(8), and once it answers non-zero, Field_State +0x137
-// = 0 and the object back to state 1, sub-states 0 (+1 = 1, +2 = +3 = 0).
-extern "C" void __cdecl FieldCore_FadeStep(void) {
-    if (mode_states::g.shade_step(8) == 0) return;
-    Field_State[0x137] = 0;
-    Sprite_Current[1] = 1;
-    Sprite_Current[2] = 0;
-    Sprite_Current[3] = 0;
-}
 
 // ===========================================================================
 // Scenario chapter 1
@@ -900,14 +762,6 @@ void ModeStates_Inject() {
     BOF3_INJECT(Look_PadControl);
     BOF3_INJECT(Look_Return);
     BOF3_INJECT(MsgBox_SystemChoice);
-    BOF3_INJECT(Text_DrawSmall);
-    BOF3_INJECT(Field_LoadingFrame);
-    BOF3_INJECT(Menu_Frame);
-    BOF3_INJECT(Shop_Frame);
-    BOF3_INJECT(FieldCore_State2);
-    BOF3_INJECT(FieldCore_Fade);
-    BOF3_INJECT(FieldCore_FadeBegin);
-    BOF3_INJECT(FieldCore_FadeStep);
     BOF3_INJECT(Scena01_Frame);
     BOF3_INJECT(Scena01_EnterArea);
     BOF3_INJECT(Scena01_StepHook);

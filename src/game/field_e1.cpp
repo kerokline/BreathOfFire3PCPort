@@ -73,7 +73,6 @@ unsigned char& BFieldE1(std::uint32_t a) { return *move_script::At(a); }
 std::uint16_t W(std::uint32_t a) { return move_script::Word(move_script::At(a)); }
 void SetW(std::uint32_t a, unsigned v) { move_script::SetWord(move_script::At(a), v); }
 std::int32_t L(std::uint32_t a) { return move_script::Long(move_script::At(a)); }
-std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
@@ -95,23 +94,8 @@ std::int32_t Abs32(std::int32_t v) {
 // --- the callees nobody owns, and FE2's, by address -----------------------------
 using Void0 = void (__cdecl*)();
 using Byte0 = unsigned char (__cdecl*)();
-void DrawMode(unsigned index, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(index, slot); }
-unsigned char* DrawSprite(unsigned sprite, unsigned slot, int x, int y) {
-    return SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(sprite, slot, x, y);
-}
-unsigned KindPoints(unsigned kind, unsigned count) { return SH_AT(unsigned (__cdecl*)(unsigned, unsigned), at::kKindPoints.v)(kind, count); }
-unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal.v)(); }
-void DrawQuad(int x, int y, unsigned height, unsigned which) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad.v)(x, y, height, which);
-}
 void Fe2(std::uint32_t address) { SH_WORD(Void0, address)(); }
 unsigned char Fe2Al(std::uint32_t address) { return SH_WORD(Byte0, address)(); }
-
-void TextFieldE1(int x, int y, int colour, int count, std::uint32_t text) {
-    SH_CALL(Text_DrawAt)(x, y, colour, count, move_script::At(text));
-}
-// A script-pool message: MessagePools + its u16 offset.
-std::uint32_t PoolText(std::uint32_t offset_cell) { return ::bof3::Img(field_e1::at::kPools) + W(offset_cell); }
 
 // A .data dispatch table read in place: the index is a whole byte and
 // unchecked, as the original's; where the entry is not code (past the run of
@@ -135,189 +119,9 @@ bool ScriptFlag8() { return ((BFieldE1(::bof3::Img(field_e1::at::kFlags2Lo)) | B
 
 // --- the panel draws (callers 0x466BE0..0x4670C0, 0x528A90..0x52A420: Capcom's) ----
 
-// original 0x52D080 (PSX 0x801E0F28): the draw mode (0, 1); panel sprites 0 at (x + 8, y) and
-// 1 at (x + 0x108, y).
-extern "C" void __cdecl FieldPanel_DrawHeader(int x, int y) {
-    DrawMode(0, 1);
-    DrawSprite(0, 1, x + 8, y);
-    DrawSprite(1, 1, x + 0x108, y);
-}
-
-// original 0x52D0C0 (PSX 0x801E0FA4): the draw mode (1, 1), panel sprite 2 at (x, y); unless
-// the kind is 0xFF, the primitive's CLUT word +0x16 = ((kind >> 4) + 0x1EB) <<
-// 6 | (kind & 0xF), u +0x14 = (kind & 3) << 6, v +0x15 = (kind >> 2) * 0x28
-// (a byte).
-extern "C" void __cdecl FieldPanel_DrawKindIcon(int x, int y, unsigned kind) {
-    DrawMode(1, 1);
-    unsigned char* const p = DrawSprite(2, 1, x, y);
-    const auto k = static_cast<unsigned char>(kind);
-    if (k == 0xFF) return;
-    move_script::SetWord(p + 0x16, ((static_cast<unsigned>(k >> 4) + 0x1EB) << 6) | (k & 0xFu));
-    p[0x14] = static_cast<unsigned char>((k & 3u) << 6);
-    p[0x15] = static_cast<unsigned char>((k >> 2) * 0x28u);
-}
-
-// original 0x52D140: a kind's row `row` - the draw mode (0, 1); sprites 3 at
-// (0x68, 0x42 - row * 20), 4 at (0x20 - row * 25, 0x70), 5 at (0xE0 + row *
-// 25, 0x70); the name into the text scratch 0x904BA0 (kind 0x16 its own
-// 16 bytes, 0xFF eight '?' and a NUL, any other the 22-byte record's first 16)
-// drawn at (0x70, 0x45 - row * 20); unless 0xFF, the count and the kind's
-// points for it (0x52CE60) printed and drawn at (0x27 - row * 25, 0x73) and
-// (0xE7 + row * 25, 0x73).
-extern "C" void __cdecl FieldPanel_DrawKindRow(unsigned kind, unsigned count, unsigned row) {
-    const auto k = static_cast<unsigned char>(kind);
-    const int r = static_cast<unsigned char>(row);
-    DrawMode(0, 1);
-    DrawSprite(3, 1, 0x68, 0x42 - r * 20);
-    DrawSprite(4, 1, 0x20 - r * 25, 0x70);
-    DrawSprite(5, 1, 0xE0 + r * 25, 0x70);
-    unsigned char* const name = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
-    if (k == 0x16) {
-        std::memcpy(name, move_script::At(::bof3::Img(AreaW0b_ItemNameKey_addr)), 16);
-    } else if (k == 0xFF) {
-        std::memset(name, '?', 8);
-        name[8] = 0;
-    } else {
-        std::memcpy(name, move_script::At(::bof3::Img(at::kKindNames) + k * 22u), 16);
-    }
-    TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
-    if (k == 0xFF) return;
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))),
-                         static_cast<unsigned>(static_cast<unsigned char>(count)));
-    TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
-    const unsigned points = KindPoints(kind, static_cast<unsigned char>(count)) & 0xFFFFu;
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))), points);
-    TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
-}
-
-// original 0x52D320: the draw mode (3, 1); sprites 6 at (x, y) and 7 at
-// (x + 0x58, y); the total 0x52CED0 against the thirteen thresholds the
-// original builds on its stack - the rank is the first it is below, written
-// to 0x9045F4 - and the rank's record (four bytes, also built on the stack):
-// its sprite at (x + 0x1D, y + 0x1D), and sprite 0x48 at (x + b1 + 0x1D, y +
-// 0x21) when b2, again at (x + b1 + 0x24, y + 0x21) when b3; the total printed
-// at (x + 0x3D, y + 9).
-// As the original has it: the last threshold is 0xFFFF and the compare is
-// "below", so a total of 0xFFFF walks on past the thresholds into the frame;
-// ours aborts there.
-extern "C" void __cdecl FieldPanel_DrawTotal(int x, int y) {
-    static const std::uint16_t kThresholds[13] = {100, 300, 500, 1000, 1500, 2000, 3000, 4000, 5000, 7000, 9000, 9500, 0xFFFF};
-    static const unsigned char kRanks[13][4] = {
-        {8, 0x38, 0, 0},   {8, 0x38, 1, 0},   {8, 0x38, 1, 1},   {9, 0x3A, 0, 0}, {9, 0x3A, 1, 0},
-        {9, 0x3A, 1, 1},   {0xA, 0x49, 0, 0}, {0xA, 0x49, 1, 0}, {0xA, 0x49, 1, 1}, {0xB, 0x4E, 0, 0},
-        {0xB, 0x4E, 1, 0}, {0xB, 0x4E, 1, 1}, {0x49, 0x28, 0, 0},
-    };
-    DrawMode(3, 1);
-    DrawSprite(6, 1, x, y);
-    DrawSprite(7, 1, x + 0x58, y);
-    const auto total = static_cast<std::uint16_t>(KindTotal());
-    unsigned rank = 0;
-    while (total >= kThresholds[rank]) {
-        if (++rank == 13)
-            bof3::Fatal("FieldPanel_DrawTotal: a total of 0x%X is at or above every threshold (the original walks its stack past them)",
-                        (unsigned)total);
-    }
-    FieldE1_Rank = static_cast<unsigned char>(rank);
-    const unsigned char* const r = kRanks[rank];
-    DrawSprite(r[0], 1, x + 0x1D, y + 0x1D);
-    if (r[2] != 0) {
-        const int shifted = x + r[1];
-        DrawSprite(0x48, 1, shifted + 0x1D, y + 0x21);
-        if (r[3] != 0) DrawSprite(0x48, 1, shifted + 0x24, y + 0x21);
-    }
-    unsigned char* const text = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kTotalFormat))),
-                         static_cast<unsigned>(total));
-    TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
-}
-
-// original 0x52D560 (PSX 0x801E1684): the draw mode (3, 1), sprite 0xC at (x, y); unless the
-// id's word is 0xFFFF, the script pool's message `id` at (x + 0xA, y + 8).
-extern "C" void __cdecl FieldPanel_DrawMessage(int x, int y, unsigned id) {
-    DrawMode(3, 1);
-    DrawSprite(0xC, 1, x, y);
-    const auto message = static_cast<std::uint16_t>(id);
-    if (message == 0xFFFF) return;
-    TextFieldE1(x + 0xA, y + 8, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + message * 2u));
-}
-
-// original 0x52D5C0 (PSX 0x801E1734): the draw mode (4, 2); a tile at the packet cursor - its
-// colour 0x20 0x20 0x20, (0, 0), 320.0 x 240.0 (floats) -, half-transparent
-// (mode 1), committed to slot 2 (0x1C bytes).
-extern "C" void __cdecl FieldPanel_DrawShade(void) {
-    DrawMode(4, 2);
-    unsigned char* const p = Gfx_PacketNext;
-    SH_CALL(Gpu_SetTile)(p);
-    p[6] = 0x20;
-    p[5] = 0x20;
-    p[4] = 0x20;
-    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
-    SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
-    SetLong(p + 0x18, 0x43700000);
-    SH_CALL(Gpu_SetSemiTrans)(p, 1);
-    SH_CALL(Gfx_CommitPrim)(2, 0x1C);
-}
-
 // The sprite frame of a panel window: its top row (0x25, 0x26 x `across`,
 // 0x27, 0x28) at y, the two sides (0x468950) from y + 0x18 over `side`, the
 // bottom row (0x30, 0x31 x `bottom`, 0x32) at y + `low`.
-namespace {
-void Frame(int x, int y, unsigned across, int top_end, int right, unsigned side, int low, unsigned bottom) {
-    DrawMode(9, 1);
-    DrawSprite(0x25, 1, x, y);
-    for (unsigned i = 0; i < across; ++i) DrawSprite(0x26, 1, x + static_cast<int>(i) * 8 + 0x20, y);
-    DrawSprite(0x27, 1, x + top_end, y);
-    DrawSprite(0x28, 1, x + right, y);
-    DrawQuad(x, y + 0x18, side, 0);
-    DrawQuad(x + right, y + 0x18, side, 1);
-    DrawSprite(0x30, 1, x, y + low);
-    for (unsigned i = 0; i < bottom; ++i) DrawSprite(0x31, 1, x + static_cast<int>(i) * 8 + 8, y + low);
-    DrawSprite(0x32, 1, x + right, y + low);
-}
-}  // namespace
-
-// original 0x52D610: Menu_DrawBox(x, y + 1, 0x64, 0x38, 0x80, the style
-// 0x903A5A); the frame (8 across, the sides 0x20 high, the bottom at + 0x38);
-// the script pool's messages by the words 0x8035FA at (x + 0x28, y + 6),
-// 0x8035FC at (x + 6, y + 0x19) and 0x8035FE at (x + 6, y + 0x29).
-extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, static_cast<unsigned char>(Config_WindowColour));
-    Frame(x, y, 8, 0x48, 0x60, 0x20, 0x38, 0xB);
-    TextFieldE1(x + 0x28, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7A));
-    TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7C));
-    TextFieldE1(x + 6, y + 0x29, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x7E));
-}
-
-// original 0x52D750: Menu_DrawBox(x, y + 1, 0xB3, 0x42, 0x80, the style); the
-// frame (15 across, the sides 0x28 high, the bottom at + 0x40); the messages
-// by 0x8035F8 at (x + 0x32, y + 6) and 0x803602 at (x + 6, y + 0x19).
-extern "C" void __cdecl FieldPanel_DrawBox2(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, static_cast<unsigned char>(Config_WindowColour));
-    Frame(x, y, 0xF, 0x98, 0xB0, 0x28, 0x40, 0x15);
-    TextFieldE1(x + 0x32, y + 6, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x78));
-    TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(field_e1::at::kPools) + 0x82));
-}
-
-// original 0x52D880: for each id 0x38..0x4D, the slots of the consumables'
-// list (Inventory_IdLists[0], 128) holding it with the count 99 counted; al 1
-// when there are 22 or more (a duplicate slot counts twice).
-extern "C" unsigned char __cdecl Inventory_Holds38To4DAt99(void) {
-    int n = 0;
-    for (unsigned id = 0x38; id < 0x4E; ++id)
-        for (unsigned i = 0; i < 0x80; ++i)
-            if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
-    return n >= 0x16 ? 1 : 0;
-}
-
-// original 0x52D8C0: while 0x939A28 and Frame_Counter bit 3, the draw mode
-// (3, 1) and sprite 0x47 at (0x1A, 0x5C).
-extern "C" void __cdecl FieldPanel_DrawBlink(void) {
-    if (Effect1e_Blink == 0 || (Frame_Counter & 8) == 0) return;
-    DrawMode(3, 1);
-    DrawSprite(0x47, 1, 0x1A, 0x5C);
-}
-
 // --- the way, the leader's states ---------------------------------------------------
 
 // original 0x52EC20: whether the way from the leader to (x, z) is open - from
@@ -1037,16 +841,6 @@ extern "C" unsigned char __cdecl Field_PendingRelease(unsigned kind) {
 
 void FieldE1_Inject() {
     if (bof3::WantsShadow("field_e1")) field_e1::SelfTest();
-    BOF3_INJECT(FieldPanel_DrawHeader);
-    BOF3_INJECT(FieldPanel_DrawKindIcon);
-    BOF3_INJECT(FieldPanel_DrawKindRow);
-    BOF3_INJECT(FieldPanel_DrawTotal);
-    BOF3_INJECT(FieldPanel_DrawMessage);
-    BOF3_INJECT(FieldPanel_DrawShade);
-    BOF3_INJECT(FieldPanel_DrawBox3);
-    BOF3_INJECT(FieldPanel_DrawBox2);
-    BOF3_INJECT(Inventory_Holds38To4DAt99);
-    BOF3_INJECT(FieldPanel_DrawBlink);
     BOF3_INJECT(Field_PathClear);
     BOF3_INJECT(Field_FormActionState);
     BOF3_INJECT(PartyAction_ScriptEnd);
