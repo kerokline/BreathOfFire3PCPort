@@ -1023,7 +1023,7 @@ extern "C" void __cdecl EffectKind9A_BackX(void) { Kind9ANudge(0x34, 0xFFFFFC00u
 // original 0x48DF70 (state 7): at the counter 0x903848 = 0x28 a tail jump to
 // Effect_Release; else +1 = 0 (another nudge).
 extern "C" void __cdecl EffectKind9A_Repeat(void) {
-    if (At(::bof3::Img(at::kCounter.v))[0] == at::kKind9AEnd) {
+    if (At(::bof3::Img(effect_4d::at::kCounter.v))[0] == at::kKind9AEnd) {
         SH_CALL(Effect_Release)();
         return;
     }
