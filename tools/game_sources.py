@@ -22,6 +22,10 @@ orders what it found:
    goes after the last game file, by path. A file's position depends only
    on the tree, so the result is the same whichever group's merge came
    first.
+3. A file that moved whole (stage C: a fuzz file or a group's remainder,
+   the map's `file` rows, tools/retire_shells.py) takes the place its old
+   path has in the order file, and what rule 2 placed after the old path
+   stays after it.
 
     python tools/game_sources.py adopt              # once: CMakeLists.txt's list -> the order file
     python tools/game_sources.py emit --found F --out O   # cmake/game_sources.cmake runs this
@@ -76,8 +80,26 @@ def provenance(map_path: Path) -> dict[str, tuple[int, str]]:
     return out
 
 
-def ordered(found: list[str], order: list[str], prov: dict[str, tuple[int, str]]) -> list[str]:
+def moved_whole(map_path: Path) -> dict[str, str]:
+    """old_path -> new_path of the files that moved whole (the map's `file` rows, stage C)."""
+    out: dict[str, str] = {}
+    if not map_path.exists():
+        return out
+    with open(map_path, encoding="utf-8", newline="") as f:
+        for r in csv.DictReader((l for l in f if not l.startswith("#")), delimiter="	"):
+            if r.get("kind") == "file" and r.get("new_path"):
+                out[r["old_path"]] = r["new_path"]
+    return out
+
+
+def ordered(found: list[str], order: list[str], prov: dict[str, tuple[int, str]],
+            whole: dict[str, str] | None = None) -> list[str]:
     on_disk = set(found)
+    # a file that moved whole keeps its place: its line in the order file names it where it is now,
+    # and what was placed after its old path stays after it
+    whole = {o: n for o, n in (whole or {}).items() if n in on_disk and o not in on_disk}
+    order = [whole.get(p, p) for p in order]
+    prov = {p: (pc, whole.get(old, old)) for p, (pc, old) in prov.items()}
     known = set(order)
     new = sorted(p for p in on_disk if p not in known)
     after: dict[str, list[tuple[int, str]]] = {}
@@ -167,7 +189,7 @@ def main() -> int:
         return adopt()
     found = ([l.strip() for l in a.found.read_text(encoding="utf-8").splitlines() if l.strip()]
              if a.found else found_now())
-    result = ordered(found, read_order(a.order), provenance(a.map))
+    result = ordered(found, read_order(a.order), provenance(a.map), moved_whole(a.map))
     if a.mode == "list":
         print("\n".join(result))
         return 0

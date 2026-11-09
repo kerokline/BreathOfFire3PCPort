@@ -91,7 +91,15 @@ class Lookup:
         self.rows = load_map(map_path)
         self.by_old: dict[str, list[dict]] = {}
         self.by_name: dict[str, list[dict]] = {}
+        self.whole: dict[str, str] = {}      # a file that moved whole: old path -> where it is now (stage C)
+        self.retired: set[str] = set()       # a pure shell, deleted in stage C
         for r in self.rows:
+            if r["kind"] == "file":
+                self.whole[r["old_path"]] = r["new_path"]
+                continue
+            if r["kind"] == "shell":
+                self.retired.add(r["old_path"])
+                continue
             self.by_old.setdefault(r["old_path"], []).append(r)
             self.by_name.setdefault(r["name"], []).append(r)
 
@@ -109,17 +117,23 @@ class Lookup:
 
     def resolve(self, path: str, line: int | None) -> tuple[bool, str]:
         rows = self.by_old.get(path, [])
-        exists = (ROOT / path).exists()
+        here = self.whole.get(path, path)     # the file itself, where it is now
+        exists = (ROOT / here).exists()
+        moved = f" (the file moved whole from {path})" if here != path else ""
         if line is None:
             if exists:
-                return True, path + (" (some of its items moved: " + ", ".join(sorted({r["new_path"] for r in rows})) + ")"
-                                     if rows else "")
+                return True, here + moved + (" (some of its items moved: " + ", ".join(sorted({r["new_path"] for r in rows})) + ")"
+                                             if rows else "")
             if rows:
                 return True, f"{path} is gone; its items went to " + ", ".join(sorted({r["new_path"] for r in rows}))
+            if path in self.retired:
+                return True, f"{path} is gone: a shell stage C retired, nothing of Capcom's left in it"
             return False, "no such file, and no move came from it"
         if not rows:
             if exists:
-                return True, f"{path}:{line} (no move touched the file)"
+                return True, f"{here}:{line}" + (moved or " (no move touched the file)")
+            if path in self.retired:
+                return False, f"{path} is gone (a shell stage C retired) and line {line} was in no moved item"
             return False, "no such file, and no move came from it"
         hits = [r for r in rows if int(r["old_first"]) <= line <= int(r["old_last"])]
         if hits:
@@ -129,7 +143,7 @@ class Lookup:
             if now is None:
                 return False, f"{r['kind']} {r['name']}{pc} moved to {r['new_path']} but is not found there now"
             if r["kind"] == "copied":        # the original stayed; the target holds a copy
-                stay = self.where(r["name"], path) if exists else None
+                stay = self.where(r["name"], here) if exists else None
                 copies = sorted({x["new_path"] for x in hits if x["name"] == r["name"]})
                 return True, (f"local {r['name']}, " + (f"still {stay}" if stay else "gone from it")
                               + f"; copied to {', '.join(copies)}")
@@ -149,7 +163,7 @@ class Lookup:
                     if it is not None and it.kind == "pp" else "in no item (a file comment or a blank line)")
             return False, f"line {line} of {path} at {base} is {what}, in a file a move touched"
         name = it.names[0]
-        now = self.where(name, path if exists else None)
+        now = self.where(name, here if exists else None)
         if now is None:
             return False, f"{name} (line {line} at {base}) is not found in the tree now"
         return True, f"{it.kind} {name} (line {line} at {base}), now {now}"
