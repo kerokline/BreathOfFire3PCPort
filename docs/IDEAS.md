@@ -103,6 +103,7 @@ rule ([`README.md`](README.md)) here too.
 | I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
 | I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
 | I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind |
+| I59 | Two battle repairs from the review of Red Herring's notes: Escape's enemy agility (it reads the wrong objects, and on the PC leftovers from earlier fights) and the skills' turn priority (the learn difficulty removes it) | game behaviour / battle | HIGH | open 2026-11-08 (the owner): put off, nothing built |
 
 ---
 
@@ -2471,3 +2472,20 @@ So the exe's tables are not a duplicate of anything in `DAT/`. They sat inside t
 
 ### Outcome
 _(2026-11-06) open; the measurement above, nothing built._
+
+## I59 — Two battle repairs: Escape's enemy agility and the skills' turn priority
+
+**Ask (2026-11-08, the owner):** after the review of Red Herring's notes, fix both, then put off: recorded here, nothing built.
+**Kind:** game behaviour / battle. **Feasibility:** HIGH (each is a few lines behind a switch).   **Gated on:** the owner's word and the choice in the first item. Each needs a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built.
+
+**1. Escape's enemy agility (D182).** `Escape_Roll` `0x44A010` (`src/game/battle_e4.cpp`, PSX `0x80098278`) loops actors 3..10 and reads object `actor`, not `actor - 3`. So the fight's first enemies are skipped, and with three or fewer enemies only unused objects are read. On the PlayStation those reload as zero each battle, so the enemies' mean is 0 and the sum is wrong the same way on every console. On the PC they are static `.bss` and hold the agility of an earlier fight of four or more enemies (read in code, not measured). Red Herring's notes describe the PlayStation side as a truncated average. Two targets, and the choice changes the balance:
+
+- **Match the PlayStation:** clear the unused objects at spawn, or read 0 for them. Ends the dependence on earlier fights and changes nothing else. Small fights stay as easy to leave as on the console.
+- **What the code meant:** read `actor - 3`, the real mean. Escape gets harder in most small fights, on every release's terms. Objects 8..10 (past the eight enemies) stop being read as well.
+
+The two divisors are D177's and do not change.
+
+**2. Turn priority for skills.** `Battle_BuildTurnOrder` `0x4450E0` (`src/game/battle_damage.cpp`, PSX `0x801DAAB4`) gives a queued ability a bonus by comparing the whole byte at `NameTable_Abilities + 1` with 0, 1 and 3. The byte holds the class in its low nibble and the learn difficulty in its high nibble, so any difficulty above 0 loses the bonus. 97 of the 140 class 3 abilities lose it, and the counts are the same in `BOF3.exe`. The repair is to compare `kind & 0xF`. The PlayStation has the same test, so this departs from every release. Red Herring's `Mechanics/Battle/Turns.md` states the rule; that Capcom did not mean it is an inference.
+
+### Outcome
+_(2026-11-08) open; read, nothing built._
