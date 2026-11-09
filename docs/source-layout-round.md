@@ -1684,6 +1684,25 @@ eports1.md` 5), both recommended by
    imports); the 32 x86_64 and 2 i686 `inline` rows B3 flagged as register
    allocation only.
 
+**Answered by the owner on 2026-11-09**, before stage C began:
+
+1. **C1: the lowest-pc file.** A retired shell's seam goes into the new file
+   that holds its group's lowest function.
+2. **C2: whole.** A fuzz file moves whole beside its code; the split per new
+   file is an IDEAS item.
+3. **The shared headers stay flat** this round.
+4. **Both carried calls wait** for the cleanup round, after stage D
+   ("Lets handle them in the cleanup round / Round D"): `-fno-auto-import`
+   and the register-allocation `inline` rows.
+5. **The remainders move whole and are dissolved later.** The census taken
+   before the tool was written (section 5, "Stage C as run") found that only
+   177 of the 336 flat group files are pure shells; the other 159 still hold
+   code of ours (a divergence switch and its arming, a self-test written in
+   the file, a whole module). The owner's call: stage C retires the 177 and
+   moves each of the 159 unchanged into the folder most of its functions
+   went to; homing each switch beside the function that reads it is the
+   cleanup round's.
+
 ## 8. Ownership, merge order, numbering
 
 | File or area | Owner |
