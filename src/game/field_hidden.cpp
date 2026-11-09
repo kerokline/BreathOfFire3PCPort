@@ -108,7 +108,7 @@ unsigned char* Effect(unsigned index) { return rv::Bytes(Effect_Objects) + (inde
 // any object whose first 0x80 bytes are a sprite object's.
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrIn(const unsigned char* at) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(at))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_hidden::Long(at))));
 }
 // The animation offset of a direction as the original computes it: (d - 1)
 // / 2 as a signed division (cdq, sub, sar), so direction 0 gives 0.
@@ -372,7 +372,7 @@ FH_EXPORT unsigned char __cdecl Field_CellPickup(unsigned x, unsigned z) {
 // As the original has it: Sprite_Current and its +0x50 are re-read for every
 // byte, so a copy over either is seen; +5 is unchecked.
 FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, unsigned size) {
-    g.frame_upload(frame);
+    field_hidden::g.frame_upload(frame);
     const unsigned n = size & 0xFFFF;
     unsigned char* const to = buffer + static_cast<std::uint32_t>(Sprite_Current[5]) * n;
     for (unsigned i = 0; i < n; ++i) to[i] = PtrIn(Sprite_Current + 0x50)[i];
@@ -384,22 +384,22 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
 // the script restarted where it was; else +0x4B = the animation and
 // Sprite_ScriptStart(0).
 FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set, unsigned size) {
-    g.copy_frames(animation, set, size);
+    field_hidden::g.copy_frames(animation, set, size);
     records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     if (s->animation == static_cast<unsigned char>(animation)) {
-        g.script_start(static_cast<std::uint16_t>(Word(rv::Bytes(s) + 0x58) - 2));
+        field_hidden::g.script_start(static_cast<std::uint16_t>(field_hidden::Word(rv::Bytes(s) + 0x58) - 2));
         return;
     }
     s->animation = static_cast<unsigned char>(animation);
-    g.script_start(0);
+    field_hidden::g.script_start(0);
 }
 
 // original 0x5891C0 (PSX 0x8014D558): Sprite_CopyFrames(animation, buffer, size), +0x4B = the
 // animation, Sprite_ScriptStart(position) - the dword as given.
 FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position, unsigned char* buffer, unsigned size) {
-    g.copy_frames(animation, buffer, size);
+    field_hidden::g.copy_frames(animation, buffer, size);
     rv::Current<records::SpriteObject>()->animation = static_cast<unsigned char>(animation);
-    g.script_start(position);
+    field_hidden::g.script_start(position);
 }
 
 // ===========================================================================
@@ -415,7 +415,7 @@ FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position,
 // As the original has it: the words are stored before the dwords are read
 // back for the call; the op is read after each store.
 FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
-    const unsigned char i = Al(g.effect_free());
+    const unsigned char i = Al(field_hidden::g.effect_free());
     if (i == 0xFF) return;
     records::EffectObject* const e = rv::As<records::EffectObject>(Effect(i));
     e->flags = 1;
@@ -424,7 +424,7 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     e->x_frac = op[2] != 0 ? 0x8000 : 0;
     e->z_whole = op[5];
     e->z_frac = op[4] != 0 ? 0x8000 : 0;
-    const long h = g.elevation(e->x, e->z);
+    const long h = field_hidden::g.elevation(e->x, e->z);
     e->height_whole = static_cast<std::uint16_t>(h);
     rv::Bytes(e)[0xB] = op[6];
 }
@@ -439,7 +439,7 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
 //
 // As the original has it: the sum is a byte and wraps.
 FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
-    const unsigned char roll = static_cast<unsigned char>((Al(static_cast<std::uint32_t>(g.rand())) & 0xF) + 1);
+    const unsigned char roll = static_cast<unsigned char>((Al(static_cast<std::uint32_t>(field_hidden::g.rand())) & 0xF) + 1);
     unsigned char sum = 0;
     for (unsigned char row = 0; row < 8; ++row) {
         sum = static_cast<unsigned char>(sum + Byte(::bof3::Img(at::kRows) + 8 + row * 9u));
@@ -462,7 +462,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
             slot[0] = 0;
             continue;
         }
-        const int roll = (g.rand() & 0xF) + 1;
+        const int roll = (field_hidden::g.rand() & 0xF) + 1;
         if (roll > static_cast<int>(Byte(::bof3::Img(at::kSlotChance) + k))) {
             slot[0] = 0;
         } else {
@@ -504,23 +504,23 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         BossSi_CentreX = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) & 0xFFFF8000u);
         BossSi_CentreZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u);
     }
-    const unsigned row = Al(g.pick_row());
+    const unsigned row = Al(field_hidden::g.pick_row());
     const unsigned char* const picked = At(::bof3::Img(Encounter_Rows_addr) + row * 9);
     FieldHidden_RowUsed = static_cast<std::int32_t>(Low32(picked));
-    const unsigned char count = Al(g.fill_slots(picked));
+    const unsigned char count = Al(field_hidden::g.fill_slots(picked));
     FieldHidden_EnemyCount = count;
     if (count == 0) return 0;
     At(::bof3::Img(at::kBattleFacing))[0] = FieldHidden_Facing;
-    if (Al(g.place_party()) == 0 || Al(g.place_enemies()) == 0 || Al(g.reachable()) == 0) answer = 0;
-    g.push_matrix();
-    g.aim_camera(FieldHidden_Facing);
-    for (unsigned char m = 0; m < Al(g.party_count(1)); ++m) {
+    if (Al(field_hidden::g.place_party()) == 0 || Al(field_hidden::g.place_enemies()) == 0 || Al(field_hidden::g.reachable()) == 0) answer = 0;
+    field_hidden::g.push_matrix();
+    field_hidden::g.aim_camera(FieldHidden_Facing);
+    for (unsigned char m = 0; m < Al(field_hidden::g.party_count(1)); ++m) {
         const long x = Long(At(::bof3::Img(at::kMemberPos) + m * 8u));
         const long z = Long(At(::bof3::Img(at::kMemberPos) + m * 8u + 4));
         const unsigned char id = Byte(::bof3::Img(at::kPartyList2) + m);
         const unsigned wide = (id == 2 || id == 6) ? 1u : 0u;
-        if (Al(g.on_screen(x, z, (facing & 0xFFFFFF00u) | wide, 0x20)) == 0) {
-            g.pop_matrix();
+        if (Al(field_hidden::g.on_screen(x, z, (facing & 0xFFFFFF00u) | wide, 0x20)) == 0) {
+            field_hidden::g.pop_matrix();
             return 0;
         }
     }
@@ -528,13 +528,13 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * at::kEnemyStride);
         const unsigned char* const kind = At(::bof3::Img(at::kKinds) + slot[1] * at::kKindStride);
         if (slot[0] == 0) continue;
-        if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
+        if (Al(field_hidden::g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
             slot[0] = 0;
             FieldHidden_Placed = static_cast<unsigned char>(FieldHidden_Placed - 1);
         }
     }
     const unsigned char placed = FieldHidden_Placed;
-    g.pop_matrix();
+    field_hidden::g.pop_matrix();
     return placed != 0 ? answer : 0;
 }
 

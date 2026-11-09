@@ -54,8 +54,8 @@ namespace {
 
 using namespace battle_odds;
 
-unsigned char* AtBattleOdds(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U WordBattleOdds(const unsigned char* p) {
+unsigned char* AtBattleOdds(battle_odds::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+battle_odds::U WordBattleOdds(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
@@ -70,7 +70,7 @@ void PutWord(unsigned char* p, U v) {
     std::memcpy(p, &w, sizeof w);
 }
 
-U BannerCurrent() { return BattleMisc_BannerCurrent; }
+battle_odds::U BannerCurrent() { return BattleMisc_BannerCurrent; }
 U SpriteCurrent() { return Long(AtBattleOdds(at::Sprite_CurrentAt())); }
 unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
 
@@ -96,11 +96,11 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
         e = AtBattleOdds(BannerCurrent());
         if (WordBattleOdds(e + 8) == 0) {
             e[0] = 0;
-            const U entry = BannerCurrent();
+            const battle_odds::U entry = BannerCurrent();
             const unsigned char kinds = BattleMisc_BannerKinds;
             const unsigned char kind = AtBattleOdds(entry + 1)[0];
             BattleMisc_BannerKinds = static_cast<unsigned char>(kinds & static_cast<unsigned char>(~kind));
-            const U eax = g.none_of_kind(1);
+            const battle_odds::U eax = battle_odds::g.none_of_kind(1);
             if (eax & 0xFF) WindowRecords[4].state = 0;
             return eax;
         }
@@ -120,14 +120,14 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
     unsigned char* e = AtBattleOdds(BannerCurrent());
     const unsigned char kinds = BattleMisc_BannerKinds;
     BattleMisc_BannerKinds = static_cast<unsigned char>(kinds | e[1]);
-    const U timer = WordBattleOdds(e + 8);
+    const battle_odds::U timer = WordBattleOdds(e + 8);
     if (timer != 0xFF) {
         PutWord(e + 8, timer - 1);
         e = AtBattleOdds(BannerCurrent());
     }
     if (WordBattleOdds(e + 8) == 0) {
         e[0] = 0;
-        const U eax = g.none_of_kind(4);
+        const battle_odds::U eax = battle_odds::g.none_of_kind(4);
         if (eax & 0xFF) WindowRecords[0].state = 2;
         return eax;
     }
@@ -141,8 +141,8 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
 // (word +4 of *kResult) = -20, a heal of 20 (positive is damage,
 // Effect_ApplyResult). eax the record pointer.
 extern "C" unsigned long __cdecl Effect_Heal20(void) {
-    const U result = BattleDamage_Result;
-    rv::Store<U>(rv::As<records::ActionRecord>(AtBattleOdds(result))->hp_change, 0xFFEC);  // the result record (records::ActionRecord)
+    const battle_odds::U result = BattleDamage_Result;
+    rv::Store<battle_odds::U>(rv::As<records::ActionRecord>(AtBattleOdds(result))->hp_change, 0xFFEC);  // the result record (records::ActionRecord)
     return result;
 }
 
@@ -154,11 +154,11 @@ extern "C" unsigned long __cdecl Effect_Heal20(void) {
 // low bytes only. eax is Battle_CalcDamage's with the low word halved; the
 // result pointer is read after the call.
 extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
-    const U target = AtBattleOdds(::bof3::Img(kTarget.v))[0];
-    const U actor = AtBattleOdds(::bof3::Img(kActing.v))[0];
-    const U amount = g.calc_damage(actor, target, 0xFFFF);
-    const U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
-    rv::Store<U>(rv::As<records::ActionRecord>(AtBattleOdds(BattleDamage_Result))->hp_change, half);
+    const battle_odds::U target = AtBattleOdds(::bof3::Img(kTarget.v))[0];
+    const battle_odds::U actor = AtBattleOdds(::bof3::Img(kActing.v))[0];
+    const battle_odds::U amount = battle_odds::g.calc_damage(actor, target, 0xFFFF);
+    const battle_odds::U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
+    rv::Store<battle_odds::U>(rv::As<records::ActionRecord>(AtBattleOdds(BattleDamage_Result))->hp_change, half);
     return (amount & 0xFFFF0000u) | half;
 }
 

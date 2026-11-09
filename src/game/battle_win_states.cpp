@@ -85,16 +85,16 @@ using namespace battle_win_states;
 namespace {
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
-unsigned char* Current() { return At(BattleWinStates_Current); }
-const unsigned char* Target() { return At(BattleActorCopies_Command); }
+unsigned char* Current() { return battle_win_states::At(BattleWinStates_Current); }
+const unsigned char* Target() { return battle_win_states::At(BattleActorCopies_Command); }
 bool Choosing() { return BattleE4_Picking != 0; }
-int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]); }
+int S8(std::uint32_t address) { return static_cast<signed char>(battle_win_states::At(address)[0]); }
 
 // Enemy slot t's record: 0x93B9E0 + 0x128 * (t - 3), the subtraction at full
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
-unsigned char* Enemy(unsigned slot) { return At(::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * (slot - 3u)); }
+unsigned char* Enemy(unsigned slot) { return battle_win_states::At(::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
-unsigned char* MemberBattleWinStates(unsigned m) { return At(::bof3::Img(ObjTrio_addr) + at::kMemberStride * m); }
+unsigned char* MemberBattleWinStates(unsigned m) { return battle_win_states::At(::bof3::Img(ObjTrio_addr) + at::kMemberStride * m); }
 // Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
 // its typed view, starts 0x80 before.
 
@@ -126,7 +126,7 @@ void LowFlag(unsigned char* status, unsigned value, unsigned top) {
     if (value < (top >> 2))
         status[1] = static_cast<unsigned char>(status[1] | 0x20);
     else
-        SetWord(status, Word(status) & 0xDFFFu);
+        battle_win_states::SetWord(status, battle_win_states::Word(status) & 0xDFFFu);
 }
 
 // The target banner's x offset: 0x64E2BC for side bytes 0 and 3, else 0x64E2BE.
@@ -145,7 +145,7 @@ int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(::bof3::Img(at:
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_Run() {
     const unsigned kind = rv::As<records::WindowRecord>(Current())->kind;
     if (kind >= 8) PastTable("BattleWin_Run", "kind", kind, 8);
-    Run(g.kinds[kind]);
+    Run(battle_win_states::g.kinds[kind]);
 }
 
 // original 0x597000: kind 0 (the party row) by its state +3: 0x597030,
@@ -153,28 +153,28 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_Run() {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_PartyRowStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_PartyRowStates", "state", state, 3);
-    Run(g.party[state]);
+    Run(battle_win_states::g.party[state]);
 }
 
 // original 0x597090: kind 1 (the command cross): 0x5970C0, 0x597160, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_CrossStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_CrossStates", "state", state, 3);
-    Run(g.cross[state]);
+    Run(battle_win_states::g.cross[state]);
 }
 
 // original 0x5971B0: kind 2 (the command label): idle, 0x5971E0, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_LabelStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_LabelStates", "state", state, 3);
-    Run(g.label[state]);
+    Run(battle_win_states::g.label[state]);
 }
 
 // original 0x597200: kind 3 (the action banner): idle, 0x597230, idle.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_BannerStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_BannerStates", "state", state, 3);
-    Run(g.banner[state]);
+    Run(battle_win_states::g.banner[state]);
 }
 
 // original 0x597320: kind 4 (an enemy's gauge, slot +0xA = 3..8): its state
@@ -186,14 +186,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_BannerStat
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_EnemyGaugeStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 4) PastTable("BattleWin_EnemyGaugeStates", "state", state, 4);
-    Run(g.enemy[state]);
+    Run(battle_win_states::g.enemy[state]);
     unsigned char* w = Current();
     unsigned char* e = Enemy(w[0xA]);
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(e - 0x80);
-    g.dispatch_kind(Addr(w + 0xB), Addr(e + 0x30), Addr(w + 0x1C), Addr(w + 0x14), Addr(e + 0x24), Addr(w + 0xD),
+    battle_win_states::g.dispatch_kind(Addr(w + 0xB), Addr(e + 0x30), Addr(w + 0x1C), Addr(w + 0x14), Addr(e + 0x24), Addr(w + 0xD),
                     Addr(w + 0x18), Addr(w + 8));
     w = Current();
-    if (g.actor_is_out(w[0xA]) != 0) {
+    if (battle_win_states::g.actor_is_out(w[0xA]) != 0) {
         w = Current();
         if (w[0xD] == 0) w[3] = 3;
     }
@@ -212,16 +212,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_EnemyGauge
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_MemberGaugeStates() {
     const unsigned state = rv::As<records::WindowRecord>(Current())->state;
     if (state >= 3) PastTable("BattleWin_MemberGaugeStates", "state", state, 3);
-    Run(g.member[state]);
+    Run(battle_win_states::g.member[state]);
     unsigned char* w = Current();
     unsigned char* m = MemberBattleWinStates(w[0xA]);
     records::PartyMember* member_rec = rv::As<records::PartyMember>(m);
-    g.dispatch_kind(Addr(w + 0xB), Addr(m + 0xA0), Addr(w + 0x1C), Addr(w + 0x14), Addr(m + 0x98), Addr(w + 0xD),
+    battle_win_states::g.dispatch_kind(Addr(w + 0xB), Addr(m + 0xA0), Addr(w + 0x1C), Addr(w + 0x14), Addr(m + 0x98), Addr(w + 0xD),
                     Addr(w + 0x18), Addr(w + 8));
     w = Current();
     m = MemberBattleWinStates(w[0xA]);
     member_rec = rv::As<records::PartyMember>(m);
-    g.dispatch_kind(Addr(w + 0xC), Addr(m + 0xA2), Addr(w + 0x1E), Addr(w + 0x16), Addr(m + 0x9A), Addr(w + 0xE),
+    battle_win_states::g.dispatch_kind(Addr(w + 0xC), Addr(m + 0xA2), Addr(w + 0x1E), Addr(w + 0x16), Addr(m + 0x9A), Addr(w + 0xE),
                     Addr(w + 0x1A), Addr(w + 9));
     w = Current();
     m = MemberBattleWinStates(w[0xA]);
@@ -244,13 +244,13 @@ extern "C" void __cdecl BattleWin_PartyRowSlideIn() {
         win->y = static_cast<unsigned>(y - 4);
     }
     win = rv::As<records::WindowRecord>(Current());
-    g.party_status(win->x, win->y);
+    battle_win_states::g.party_status(win->x, win->y);
 }
 
 // original 0x597070: state 1 - the row drawn where it is.
 extern "C" void __cdecl BattleWin_PartyRowDraw() {
     auto* const win = rv::As<records::WindowRecord>(Current());
-    g.party_status(win->x, win->y);
+    battle_win_states::g.party_status(win->x, win->y);
 }
 
 // ===========================================================================
@@ -263,20 +263,20 @@ extern "C" void __cdecl BattleWin_PartyRowDraw() {
 // (re-read) is 0, the state steps on; else all seven growths lose 1.
 extern "C" void __cdecl BattleWin_CrossGrow() {
     for (unsigned i = 0; i < 5; ++i) {
-        const unsigned grow = At(::bof3::Img(at::kCrossGrow.v) + i)[0];
+        const unsigned grow = battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i)[0];
         const unsigned size = (0x10u - grow) & 0xFFu;
         const unsigned half = grow >> 1;
-        const unsigned char* const arm = At(::bof3::Img(at::kCrossArms.v) + 2 * i);
+        const unsigned char* const arm = battle_win_states::At(::bof3::Img(at::kCrossArms.v) + 2 * i);
         auto* const win = rv::As<records::WindowRecord>(Current());
         const unsigned y = win->y + arm[1] + half;
         const unsigned x = win->x + arm[0] + half;
-        g.icon(i, x, y, size, size, 0x80);
+        battle_win_states::g.icon(i, x, y, size, size, 0x80);
     }
-    if (At(::bof3::Img(at::kCrossGrow.v))[0] == 0) {
+    if (battle_win_states::At(::bof3::Img(at::kCrossGrow.v))[0] == 0) {
         ++rv::As<records::WindowRecord>(Current())->state;
         return;
     }
-    for (unsigned i = 0; i < 7; ++i) --At(::bof3::Img(at::kCrossGrow.v) + i)[0];
+    for (unsigned i = 0; i < 7; ++i) --battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i)[0];
 }
 
 // original 0x597160: state 1 - the selected arm's growth (the selection
@@ -285,8 +285,8 @@ extern "C" void __cdecl BattleWin_CrossGrow() {
 // cross drawn at the window's +4 / +6.
 extern "C" void __cdecl BattleWin_CrossFrame() {
     for (unsigned i = 0; i < 7; ++i) {
-        const unsigned sel = At(::bof3::Img(at::kCrossSel.v))[0];
-        unsigned char* const grow = At(::bof3::Img(at::kCrossGrow.v) + i);
+        const unsigned sel = battle_win_states::At(::bof3::Img(at::kCrossSel.v))[0];
+        unsigned char* const grow = battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i);
         if (sel == i) {
             if (*grow < 8) *grow = static_cast<unsigned char>(*grow + 2);
         } else if (*grow != 0) {
@@ -294,7 +294,7 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
         }
     }
     auto* const win = rv::As<records::WindowRecord>(Current());
-    g.command_cross(win->x, win->y);
+    battle_win_states::g.command_cross(win->x, win->y);
 }
 
 // ===========================================================================
@@ -304,7 +304,7 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
 // the byte 0x903A5D is set.
 extern "C" void __cdecl BattleWin_LabelFrame() {
     if (BattleWinStates_LabelGate != 0) return;
-    g.command_label(At(::bof3::Img(at::kCrossSel.v))[0]);
+    battle_win_states::g.command_label(battle_win_states::At(::bof3::Img(at::kCrossSel.v))[0]);
 }
 
 // ===========================================================================
@@ -349,27 +349,27 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const auto text = [](std::uint32_t off) {
-        return At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kBanners.v) + 4 + off))));
+        return battle_win_states::At(static_cast<std::uint32_t>(battle_win_states::Long(battle_win_states::At(::bof3::Img(at::kBanners.v) + 4 + off))));
     };
-    const unsigned n = g.glyph_count(text(at::kBannerStride * w[0xA]));
+    const unsigned n = battle_win_states::g.glyph_count(text(at::kBannerStride * w[0xA]));
     w = Current();
     win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kBannerStride * w[0xA];
-    const bool wide = At(::bof3::Img(at::kBanners.v) + 2 + off)[0] != 0;
+    const bool wide = battle_win_states::At(::bof3::Img(at::kBanners.v) + 2 + off)[0] != 0;
     const unsigned x = win->x, y = win->y;
     if (wide) {
-        g.medium_box(static_cast<std::uint16_t>(x - 0x10), y);
+        battle_win_states::g.medium_box(static_cast<std::uint16_t>(x - 0x10), y);
     } else {
-        g.small_box(x, y);
+        battle_win_states::g.small_box(x, y);
     }
     w = Current();
     win = rv::As<records::WindowRecord>(w);
     const std::uint32_t o = at::kBannerStride * w[0xA];
     // eax: the record offset with its low byte replaced by the colour
-    const unsigned colour = (o & ~0xFFu) | At(::bof3::Img(at::kBanners.v) + 0xA + o)[0];
+    const unsigned colour = (o & ~0xFFu) | battle_win_states::At(::bof3::Img(at::kBanners.v) + 0xA + o)[0];
     const unsigned ty = static_cast<std::uint16_t>(win->y + 3);
     const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->x, n, wide, text(o)));
-    g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), BannerTextCount(wide), text(o));
+    battle_win_states::g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), BannerTextCount(wide), text(o));
 }
 
 // ===========================================================================
@@ -401,11 +401,11 @@ extern "C" void __cdecl BattleWin_EnemyGaugeOpen() {
 extern "C" void __cdecl BattleWin_EnemyGaugeFrame() {
     const unsigned char* w = Current();
     auto* const win = rv::AsConst<records::WindowRecord>(w);
-    g.enemy_status(win->x, win->y, w[0xA]);
+    battle_win_states::g.enemy_status(win->x, win->y, w[0xA]);
     if (!Choosing()) return;
     const unsigned char t = Target()[0];
-    if (t == Current()[0xA]) g.flag_advance();
-    if (Target()[0] & 0x40) g.flag_advance();
+    if (t == Current()[0xA]) battle_win_states::g.flag_advance();
+    if (Target()[0] & 0x40) battle_win_states::g.flag_advance();
 }
 
 // original 0x597510: state 2 - the enemy's target banner. Its place: the
@@ -419,15 +419,15 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
     const std::uint32_t e = ::bof3::Img(Battle_Enemies_addr) + 0x80 + off;
-    const int dx = SideDx(At(e - 0x78)[0]);
-    win->x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
-    const unsigned y = static_cast<unsigned>(S8(e + 0x73) + Word(At(e - 0x50)) + 0xC);
+    const int dx = SideDx(battle_win_states::At(e - 0x78)[0]);
+    win->x = static_cast<unsigned>(S8(e + 0x72) + battle_win_states::Word(battle_win_states::At(e - 0x52)) + dx);
+    const unsigned y = static_cast<unsigned>(S8(e + 0x73) + battle_win_states::Word(battle_win_states::At(e - 0x50)) + 0xC);
     rv::As<records::WindowRecord>(Current())->y = y;
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    g.target_enemy(win->x, win->y, w[0xA]);
+    battle_win_states::g.target_enemy(win->x, win->y, w[0xA]);
     if (!Choosing()) {
-        g.restore_back();
+        battle_win_states::g.restore_back();
         return;
     }
     const unsigned char t = Target()[0];
@@ -436,7 +436,7 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     } else if (t & 0x40) {
         return;
     }
-    g.restore_back();
+    battle_win_states::g.restore_back();
 }
 
 // ===========================================================================
@@ -486,12 +486,12 @@ extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
 // the state on, and one with 0x80 (all members) steps it on too.
 extern "C" void __cdecl BattleWin_MemberGaugeWait() {
     if (!Choosing()) return;
-    if (g.actor_is_out(Current()[0xA]) != 0) {
-        if (g.return_true() == 0 && g.return_true() == 0) return;
+    if (battle_win_states::g.actor_is_out(Current()[0xA]) != 0) {
+        if (battle_win_states::g.return_true() == 0 && battle_win_states::g.return_true() == 0) return;
     }
     const unsigned char t = Target()[0];
-    if (t == Current()[0xA]) g.flag_advance();
-    if (Target()[0] & 0x80) g.flag_advance();
+    if (t == Current()[0xA]) battle_win_states::g.flag_advance();
+    if (Target()[0] & 0x80) battle_win_states::g.flag_advance();
 }
 
 // original 0x5978B0: state 2 - the member's target banner. Its place: the
@@ -527,7 +527,7 @@ extern "C" void __cdecl BattleWin_MemberTargetFrame() {
         --rv::As<records::WindowRecord>(Current())->state;
         return;
     }
-    g.target_member(win->x, win->y, w[0xA]);
+    battle_win_states::g.target_member(win->x, win->y, w[0xA]);
 }
 
 // ===========================================================================

@@ -64,7 +64,7 @@ namespace {
 // working copy, the id's low byte indexes it, unchecked.
 unsigned char* CharRecord(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride) : At(::bof3::Img(at::kWorkRecords.v) + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? item_use::At(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride) : item_use::At(::bof3::Img(at::kWorkRecords.v) + i * at::kWorkStride);
 }
 
 // Either answer is a records::CharRecord: the persistent record 0x903A70 + i
@@ -299,7 +299,7 @@ extern "C" unsigned char __cdecl Char_HealHp(unsigned id, unsigned amount, unsig
     rv::Store<unsigned>(r->hp, r->hp + amount);
     if (r->hp > r->stats.max_hp || static_cast<std::uint16_t>(amount) == 0)
         rv::Store<unsigned>(r->hp, r->stats.max_hp);
-    if (static_cast<std::uint16_t>(r->stats.max_hp >> 2) <= r->hp) g.clear_status(id, 0x2000, battle);
+    if (static_cast<std::uint16_t>(r->stats.max_hp >> 2) <= r->hp) item_use::g.clear_status(id, 0x2000, battle);
     return 1;
 }
 
@@ -317,11 +317,11 @@ extern "C" unsigned char __cdecl Char_HealAp(unsigned id, unsigned amount, unsig
 // bits), 999 if above, 1.
 extern "C" unsigned char __cdecl Stat_AddCap999(unsigned short* stat, unsigned amount) {
     auto* const p = reinterpret_cast<unsigned char*>(stat);
-    const std::uint16_t v = Word(p);
+    const std::uint16_t v = item_use::Word(p);
     if (v == 999) return 0;
     const auto sum = static_cast<std::uint16_t>(v + amount);
-    SetWord(p, sum);
-    if (sum > 999) SetWord(p, 999);
+    item_use::SetWord(p, sum);
+    if (sum > 999) item_use::SetWord(p, 999);
     return 1;
 }
 
@@ -343,21 +343,21 @@ extern "C" unsigned char __cdecl Stat_AddCap99(unsigned char* stat, unsigned amo
 extern "C" short __cdecl Stat_AddClamped(unsigned short* stat, unsigned delta) {
     auto* const p = reinterpret_cast<unsigned char*>(stat);
     const auto d = static_cast<std::int16_t>(delta);
-    const std::uint16_t v = Word(p);
+    const std::uint16_t v = item_use::Word(p);
     if (d > 0) {
         if (v == 999) return 0;
         const auto sum = static_cast<std::uint16_t>(v + static_cast<std::uint16_t>(d));
-        SetWord(p, sum);
+        item_use::SetWord(p, sum);
         if (sum <= 999) return 0;
-        SetWord(p, 999);
+        item_use::SetWord(p, 999);
         return static_cast<short>(999 - v);
     }
     if (d == 0) return 0;
     if (v == 0) return 0;
     const auto sum = static_cast<std::uint16_t>(v + static_cast<std::uint16_t>(d));
-    SetWord(p, sum);
+    item_use::SetWord(p, sum);
     if (static_cast<std::int16_t>(sum) >= 0) return 0;
-    SetWord(p, 0);
+    item_use::SetWord(p, 0);
     return static_cast<short>(-static_cast<int>(v));
 }
 
@@ -385,7 +385,7 @@ void CommitChoice() {
         const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));   // 32-bit code words
         table[id]();
     } else {
-        g.system_choice();
+        item_use::g.system_choice();
     }
 }
 }  // namespace
@@ -395,7 +395,7 @@ void CommitChoice() {
 // window 0's state 1 and the next sub-state, else sub-state 7.
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
-    const bool more = Word(At(::bof3::Img(at::kMessage.v))) != 0xFFFF;
+    const bool more = item_use::Word(item_use::At(::bof3::Img(at::kMessage.v))) != 0xFFFF;
     WindowRecords[1].state = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
@@ -426,13 +426,13 @@ namespace {
 // pair or the one before, as the original does. Returns the cursor.
 int SysMessage(unsigned k) {
     const int cursor = AreaW0c_ChoiceAnswer;
-    SetWord(At(::bof3::Img(at::kMessage.v)), Word(At(::bof3::Img(at::kSysMessages.v) + 4 * k + 2 * cursor)));
+    item_use::SetWord(item_use::At(::bof3::Img(at::kMessage.v)), item_use::Word(item_use::At(::bof3::Img(at::kSysMessages.v) + 4 * k + 2 * cursor)));
     return cursor;
 }
 void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
     const int cursor = SysMessage(k);
-    if (cursor == 0) At(::bof3::Img(at::kSysCounter.v))[0] = if0;
-    else if (cursor == 1) At(::bof3::Img(at::kSysCounter.v))[0] = if1;
+    if (cursor == 0) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if0;
+    else if (cursor == 1) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if1;
 }
 }  // namespace
 
@@ -473,15 +473,15 @@ extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
     const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
     if (static_cast<std::uint16_t>(pressed) != 0) {
         ItemUse_RepeatTimer = 0xC;
-        SetWord(At(::bof3::Img(at::kRepeatLatch.v)), held);
+        item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
         return held;
     }
-    if ((Word(At(::bof3::Img(at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
+    if ((item_use::Word(item_use::At(::bof3::Img(at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
         const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
         ItemUse_RepeatTimer = timer;
         if (timer == 0) {
             ItemUse_RepeatTimer = 3;
-            SetWord(At(::bof3::Img(at::kRepeatLatch.v)), held);
+            item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
             return held;
         }
     }

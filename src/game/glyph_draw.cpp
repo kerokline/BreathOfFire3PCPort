@@ -100,22 +100,22 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // Two locals the colour helper fills; it always writes both (it is handed
     // a non-null specular pointer).
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], 0, &diffuse, &specular);
+    glyph_draw::g.prim_color(prim[4], prim[5], prim[6], prim[7], 0, &diffuse, &specular);
 
     // The four corners: sx, sy = the primitive's x, y times the scale, no
     // half-pixel offset; sz 0.99 and rhw 0.1 as immediates; the colour pair.
     // Each product is exact before it is rounded to float (a 16-bit integer
     // times a float), so x87 and SSE agree whatever the precision control.
-    unsigned char* v = At(::bof3::Img(D3d_Vertices_addr));
-    for (U i = 0; i < 4; ++i) {
+    unsigned char* v = glyph_draw::At(::bof3::Img(D3d_Vertices_addr));
+    for (glyph_draw::U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
-        PutFloat(out + 0x00, static_cast<float>(Short(in + 8)) * D3d_ScaleX);
-        PutFloat(out + 0x04, static_cast<float>(Short(in + 0xA)) * D3d_ScaleY);
-        PutLong(out + 0x08, kSz);
-        PutLong(out + 0x0C, kRhw);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
-        PutLong(out + 0x14, static_cast<U>(specular));
+        glyph_draw::PutFloat(out + 0x00, static_cast<float>(glyph_draw::Short(in + 8)) * D3d_ScaleX);
+        glyph_draw::PutFloat(out + 0x04, static_cast<float>(glyph_draw::Short(in + 0xA)) * D3d_ScaleY);
+        glyph_draw::PutLong(out + 0x08, kSz);
+        glyph_draw::PutLong(out + 0x0C, kRhw);
+        glyph_draw::PutLong(out + 0x10, static_cast<glyph_draw::U>(diffuse));
+        glyph_draw::PutLong(out + 0x14, static_cast<glyph_draw::U>(specular));
     }
     // The texture coordinates: the byte u, v doubled (the glyph texture holds
     // each PSX texel as 2 x 2) times the double 1/32 at 0x5C4618 - the 24 x 24
@@ -125,31 +125,31 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // scale) on both the near and the far edge, so the texel-per-pixel scale
     // is kept; g_texel_inset is the switch (GlyphTexelCentres), 0 for
     // Capcom's arithmetic.
-    const double inv32 = *reinterpret_cast<const double*>(At(kInv32));
+    const double inv32 = *reinterpret_cast<const double*>(glyph_draw::At(kInv32));
     const double inset_u = g_texel_inset != 0.0f ? TexelInset(D3d_ScaleX) : 0.0;
     const double inset_v = g_texel_inset != 0.0f ? TexelInset(D3d_ScaleY) : 0.0;
-    for (U i = 0; i < 4; ++i) {
+    for (glyph_draw::U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
-        PutFloat(out + 0x18, static_cast<float>((2.0 * in[0xC] + inset_u) * inv32));
-        PutFloat(out + 0x1C, static_cast<float>((2.0 * in[0xD] + inset_v) * inv32));
+        glyph_draw::PutFloat(out + 0x18, static_cast<float>((2.0 * in[0xC] + inset_u) * inv32));
+        glyph_draw::PutFloat(out + 0x1C, static_cast<float>((2.0 * in[0xD] + inset_v) * inv32));
     }
 
     // The glyph's texture (its return is not read), then the state: two calls
     // of a bare ret, the blend for the primitive's code - re-read from the
     // primitive - and flat shading. The blend's alpha enable is then turned
     // off again here, unconditionally: glyphs draw unblended.
-    g.glyph_texture(Word(prim + 0x16), Word(prim + 0xE));
-    g.ret_only(1);
-    g.ret_only(1);
-    g.set_blend(prim[7], 0);
-    g.set_shade(1);
-    void** device = Device();
-    reinterpret_cast<Com3>(Method(device, 0x58))(device, 0x1B, 0);   // SetRenderState(ALPHABLENDENABLE, FALSE)
-    device = Device();
+    glyph_draw::g.glyph_texture(glyph_draw::Word(prim + 0x16), glyph_draw::Word(prim + 0xE));
+    glyph_draw::g.ret_only(1);
+    glyph_draw::g.ret_only(1);
+    glyph_draw::g.set_blend(prim[7], 0);
+    glyph_draw::g.set_shade(1);
+    void** device = glyph_draw::Device();
+    reinterpret_cast<glyph_draw::Com3>(glyph_draw::Method(device, 0x58))(device, 0x1B, 0);   // SetRenderState(ALPHABLENDENABLE, FALSE)
+    device = glyph_draw::Device();
     // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vertices, 4, 0); its
     // result is the handler's (the caller 0x59F1B4 does not read it).
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
+    return reinterpret_cast<glyph_draw::Com6>(glyph_draw::Method(device, 0x70))(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
     // Not kept: the original computes every fild's operand in its own
     // argument slot, so the caller's pushed `prim` comes back as 2 * the last
     // v. The caller pops it unread (`add esp, 4` at 0x59F1B9).
@@ -165,23 +165,23 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     // built from equal to the CLUT row's now (Gfx_ClutRows, row clut >> 6,
     // unsigned). On the way, the first entry not used this frame.
     int free_slot = -1;
-    U i;
+    glyph_draw::U i;
     for (i = 0; i < kEntries; ++i) {
-        const unsigned char* e = At(::bof3::Img(Font_TexCache_addr) + i * kEntry);
-        if (Word(e) == glyph && Word(e + 2) == clut && Long(e + 4) == Long(At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8))) break;
-        if (free_slot == -1 && Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
+        const unsigned char* e = glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry);
+        if (glyph_draw::Word(e) == glyph && glyph_draw::Word(e + 2) == clut && glyph_draw::Long(e + 4) == glyph_draw::Long(glyph_draw::At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8))) break;
+        if (free_slot == -1 && glyph_draw::Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
     }
     if (i == kEntries && free_slot != -1) {
-        i = static_cast<U>(free_slot);
+        i = static_cast<glyph_draw::U>(free_slot);
         if (Gfx_RenderFlags & 1) {
-            g.build_texture(free_slot, glyph, clut);
+            glyph_draw::g.build_texture(free_slot, glyph, clut);
         } else {
             // A texture is built outside the scene.
-            void** device = Device();
-            reinterpret_cast<Com1>(Method(device, 0x28))(device);   // EndScene
-            g.build_texture(free_slot, glyph, clut);
-            device = Device();
-            reinterpret_cast<Com1>(Method(device, 0x24))(device);   // BeginScene
+            void** device = glyph_draw::Device();
+            reinterpret_cast<Com1>(glyph_draw::Method(device, 0x28))(device);   // EndScene
+            glyph_draw::g.build_texture(free_slot, glyph, clut);
+            device = glyph_draw::Device();
+            reinterpret_cast<Com1>(glyph_draw::Method(device, 0x24))(device);   // BeginScene
         }
     }
     // Kept, and D18 in docs/known-defects.md: with all 128 entries used this
@@ -190,11 +190,11 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     // (0x7CA95C) as a texture, and the in-use word lands on the low half of
     // vertex 0's sz (0x7CA960). The addresses below reach exactly those bytes.
     if (!(Gfx_RenderFlags & 1)) {
-        void** device = Device();
-        reinterpret_cast<Com3>(Method(device, 0x98))(device, 0, Long(At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0xC))); // SetTexture(0, tex)
+        void** device = glyph_draw::Device();
+        reinterpret_cast<glyph_draw::Com3>(glyph_draw::Method(device, 0x98))(device, 0, glyph_draw::Long(glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0xC))); // SetTexture(0, tex)
     }
-    At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x10)[0] = 1;
-    At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x11)[0] = 0;
+    glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x10)[0] = 1;
+    glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x11)[0] = 0;
     return static_cast<int>(i);
 }
 

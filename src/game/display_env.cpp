@@ -93,7 +93,7 @@ using namespace display_env;
 // the double buffer's two environments differ in nothing else (0x4FD110).
 // The eax the original leaves is not read by its caller.
 void Gpu_PutDispEnv(const unsigned char* env) {
-    if (Word(::bof3::Img(kDispEnv.v) + 2) != Word(Addr(env) + 2)) g.present();
+    if (Word(::bof3::Img(kDispEnv.v) + 2) != Word(Addr(env) + 2)) display_env::g.present();
     CopyDwords(::bof3::Img(Gpu_DispEnv_addr), Addr(env), 5);
 }
 
@@ -108,11 +108,11 @@ void Gpu_PutDispEnv(const unsigned char* env) {
 // D3d_SetBackColor masks them off (0x5A5084, 0x5A5089, 0x5A509F), so ours
 // passes them zero-extended.
 void Gpu_PutDrawEnv(const unsigned char* env) {
-    const U e = Addr(env);
-    const U r = At(e + 0x19)[0];
-    if (Gpu_DrawEnv[0x19] != r || Gpu_DrawEnv[0x1a] != At(e + 0x1A)[0] ||
-        Gpu_DrawEnv[0x1b] != At(e + 0x1B)[0])
-        g.set_back_color(r, At(e + 0x1A)[0], At(e + 0x1B)[0]);
+    const display_env::U e = Addr(env);
+    const display_env::U r = display_env::At(e + 0x19)[0];
+    if (Gpu_DrawEnv[0x19] != r || Gpu_DrawEnv[0x1a] != display_env::At(e + 0x1A)[0] ||
+        Gpu_DrawEnv[0x1b] != display_env::At(e + 0x1B)[0])
+        display_env::g.set_back_color(r, display_env::At(e + 0x1A)[0], display_env::At(e + 0x1B)[0]);
     CopyDwords(::bof3::Img(Gpu_DrawEnv_addr), e, 0x17);
 }
 
@@ -121,11 +121,11 @@ void Gpu_PutDrawEnv(const unsigned char* env) {
 // library's (SLPS 0x8017AF5C) also zeroes the screen rect and the three flag
 // bytes, which the port's never reads. Returns env.
 unsigned char* Gpu_SetDefDispEnv(unsigned char* env, int x, int y, int w, int h) {
-    const U e = Addr(env);
-    PutWord(e, static_cast<U>(x));
-    PutWord(e + 2, static_cast<U>(y));
-    PutWord(e + 4, static_cast<U>(w));
-    PutWord(e + 6, static_cast<U>(h));
+    const display_env::U e = Addr(env);
+    display_env::PutWord(e, static_cast<display_env::U>(x));
+    display_env::PutWord(e + 2, static_cast<display_env::U>(y));
+    display_env::PutWord(e + 4, static_cast<display_env::U>(w));
+    display_env::PutWord(e + 6, static_cast<display_env::U>(h));
     return env;
 }
 
@@ -136,18 +136,18 @@ unsigned char* Gpu_SetDefDispEnv(unsigned char* env, int x, int y, int w, int h)
 // to {x, y}, tpage 0x0A and the window to zeros; dfe there depends on the
 // height). The stores in the original's order. Returns env.
 unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h) {
-    const U e = Addr(env);
-    PutWord(e, static_cast<U>(x));
-    PutWord(e + 4, static_cast<U>(w));
-    At(e + 0x16)[0] = 1;
-    At(e + 0x17)[0] = 1;
-    PutWord(e + 2, static_cast<U>(y));
-    PutLong(e + 0x18, 0);
-    PutWord(e + 0x0C, 0);
-    PutWord(e + 0x0E, 0);
-    PutWord(e + 6, static_cast<U>(h));
-    PutWord(e + 0x10, 0x100);
-    PutWord(e + 0x12, 0x100);
+    const display_env::U e = Addr(env);
+    display_env::PutWord(e, static_cast<display_env::U>(x));
+    display_env::PutWord(e + 4, static_cast<display_env::U>(w));
+    display_env::At(e + 0x16)[0] = 1;
+    display_env::At(e + 0x17)[0] = 1;
+    display_env::PutWord(e + 2, static_cast<display_env::U>(y));
+    display_env::PutLong(e + 0x18, 0);
+    display_env::PutWord(e + 0x0C, 0);
+    display_env::PutWord(e + 0x0E, 0);
+    display_env::PutWord(e + 6, static_cast<display_env::U>(h));
+    display_env::PutWord(e + 0x10, 0x100);
+    display_env::PutWord(e + 0x12, 0x100);
     return env;
 }
 
@@ -160,19 +160,19 @@ unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h)
 // (Gpu_DrawEnv +0x18, read after the present) is set, Gfx_ClearPresent(1)
 // clears the back buffer for the next frame. Nothing else is checked.
 void Gfx_Present(void) {
-    const U flags = Long(::bof3::Img(kRenderFlags.v));
+    const display_env::U flags = display_env::Long(::bof3::Img(display_env::kRenderFlags.v));
     void* const primary = DDraw_Primary;
     long result;
     if (flags & 0x200)
-        result = Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait,
+        result = display_env::Method<ComBlt>(primary, display_env::kBlt)(primary, display_env::At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, display_env::At(::bof3::Img(Gfx_ScreenRect_addr)), display_env::kBltWait,
                                                nullptr);
     else
-        result = Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
+        result = display_env::Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
     if (result == kSurfaceLost) {
         void* const again = DDraw_Primary;
-        Method<ComCall>(again, kRestore)(again);
+        display_env::Method<display_env::ComCall>(again, kRestore)(again);
     }
-    if (Gpu_DrawEnv[0x18] != 0) g.clear_present(1);
+    if (Gpu_DrawEnv[0x18] != 0) display_env::g.clear_present(1);
 }
 
 // 0x59ECE0; sole caller Gfx_Present, with 1. Only the low byte of flags is
@@ -184,13 +184,13 @@ void Gfx_ClearPresent(unsigned flags) {
     const unsigned char f = static_cast<unsigned char>(flags);
     if (f & 1) ClearBack();
     if (!(f & 2)) return;
-    const U render = Long(::bof3::Img(kRenderFlags.v));
+    const display_env::U render = display_env::Long(::bof3::Img(display_env::kRenderFlags.v));
     void* const primary = DDraw_Primary;
     if (render & 0x200) {
-        Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait, nullptr);
+        display_env::Method<ComBlt>(primary, display_env::kBlt)(primary, display_env::At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, display_env::At(::bof3::Img(Gfx_ScreenRect_addr)), display_env::kBltWait, nullptr);
         return;
     }
-    Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
+    display_env::Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
     ClearBack();
 }
 
@@ -207,23 +207,23 @@ void Gfx_ClearPresent(unsigned flags) {
 void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
     void* const material = D3d_BackMaterial;
     if (material == nullptr) return;
-    if (Long(::bof3::Img(kViewport.v)) == 0) return;
-    const double k = Float(kInverse255At);
+    if (display_env::Long(::bof3::Img(kViewport.v)) == 0) return;
+    const double k = display_env::Float(kInverse255At);
     const float c[3] = {static_cast<float>((r & 0xFF) * k), static_cast<float>((g & 0xFF) * k),
                         static_cast<float>((b & 0xFF) * k)};
     const float one = 1.0f;
     unsigned char m[kMaterialBytes];
     std::memset(m, 0, sizeof m);
-    const U size = kMaterialBytes, ramp = 0x20;
+    const display_env::U size = kMaterialBytes, ramp = 0x20;
     std::memcpy(m, &size, 4);
     std::memcpy(m + 0x04, c, 12);        // diffuse
     std::memcpy(m + 0x10, &one, 4);
     std::memcpy(m + 0x14, c, 12);        // ambient
     std::memcpy(m + 0x20, &one, 4);
     std::memcpy(m + 0x4C, &ramp, 4);     // dwRampSize
-    Method<ComPointer>(material, kSetMaterial)(material, m);
+    display_env::Method<ComPointer>(material, kSetMaterial)(material, m);
     void* const viewport = D3d_Viewport;
-    Method<ComValue>(viewport, kSetBackground)(viewport, D3d_BackMaterialHandle);
+    display_env::Method<ComValue>(viewport, kSetBackground)(viewport, D3d_BackMaterialHandle);
 }
 
 // 0x587CD0; callers LoadDatFile (0x454704, ours) and 0x4547E9, for each
@@ -240,36 +240,36 @@ void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
 // from the record each time) and its buffer SndBuf_FromWave of that. An
 // entry whose offset is 0 keeps the buffer dword the payload's head carried.
 void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
-    const U record = ::bof3::Img(Sound_Banks_addr) + (static_cast<U>(bank) - 1u) * kBankBytes;
-    const U old = Long(record + kBankHeader);
+    const display_env::U record = ::bof3::Img(Sound_Banks_addr) + (static_cast<display_env::U>(bank) - 1u) * display_env::kBankBytes;
+    const display_env::U old = display_env::Long(record + kBankHeader);
     if (old != 0) {
-        g.free(At(old));
-        for (U i = 0; i < 64; ++i) {
-            const U entry = record + kVoices + 4 + i * 8;
-            const U buffer = Long(entry);
+        display_env::g.free(display_env::At(old));
+        for (display_env::U i = 0; i < 64; ++i) {
+            const display_env::U entry = record + display_env::kVoices + 4 + i * 8;
+            const display_env::U buffer = display_env::Long(entry);
             if (buffer == 0) continue;
-            sound_sp::Released(At(buffer));   // DIV-0171 / 0172's remembered voices (ours; nothing of Capcom's)
+            sound_sp::Released(display_env::At(buffer));   // DIV-0171 / 0172's remembered voices (ours; nothing of Capcom's)
             sound_st::Released(buffer);       // DIV-0174's remembered one-shots
-            g.release(At(buffer));
-            const U now = Long(entry);
-            for (U c = ::bof3::Img(Sound_Channels_addr); c < ::bof3::Img(kChannelsEnd); c += 4)
-                if (Long(c) == now) PutLong(c, 0);
+            display_env::g.release(display_env::At(buffer));
+            const display_env::U now = display_env::Long(entry);
+            for (display_env::U c = ::bof3::Img(Sound_Channels_addr); c < ::bof3::Img(display_env::kChannelsEnd); c += 4)
+                if (display_env::Long(c) == now) PutLong(c, 0);
         }
     }
-    const U src = Addr(payload);
+    const display_env::U src = Addr(payload);
     CopyDwords(record, src, kBankHeader / 4);
-    const U bytes = static_cast<U>(size) - kBankHeader;
-    const U data = Addr(g.malloc(bytes));
+    const display_env::U bytes = static_cast<display_env::U>(size) - kBankHeader;
+    const display_env::U data = Addr(display_env::g.malloc(bytes));
     PutLong(record + kBankHeader, data);
     CopyDwords(data, src + kBankHeader, bytes >> 2);
-    for (U i = bytes & ~3u; i < bytes; ++i) At(data)[i] = At(src + kBankHeader)[i];
-    for (U i = 0; i < 64; ++i) {
-        const U entry = record + kVoices + i * 8;
-        const U offset = Long(entry);
+    for (display_env::U i = bytes & ~3u; i < bytes; ++i) display_env::At(data)[i] = display_env::At(src + kBankHeader)[i];
+    for (display_env::U i = 0; i < 64; ++i) {
+        const display_env::U entry = record + display_env::kVoices + i * 8;
+        const display_env::U offset = display_env::Long(entry);
         if (offset == 0) continue;
-        const U sample = Long(record + kBankHeader) + offset - kBankHeader;
+        const display_env::U sample = display_env::Long(record + kBankHeader) + offset - kBankHeader;
         PutLong(entry, sample);
-        PutLong(entry + 4, Addr(g.from_wave(At(sample))));
+        PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
     }
 }
 

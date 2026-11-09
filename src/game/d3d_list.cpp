@@ -201,17 +201,17 @@ void Gfx_DrawOTag(unsigned long* ot) {
         D3d_AfterDrawRequest = 0;
     }
     const bool software = (Gfx_RenderFlags & 1) != 0;
-    if (!software) Scene(0x24);
+    if (!software) d3d_list::Scene(0x24);
     if (stp_census::g_on && !software) stp_census::Frame();
-    U node = Low32(ot);
-    while (Long(node) != 0xFFFFFFFFu) {
-        U p = Long(node);
+    d3d_list::U node = Low32(ot);
+    while (d3d_list::Long(node) != 0xFFFFFFFFu) {
+        d3d_list::U p = d3d_list::Long(node);
         if (p & 0xFF000000u) p &= 0xFFFFFFu;
         else Dispatch(p, software);
         node = p;
     }
-    if (!software) Scene(0x28);
-    for (U a = ::bof3::Img(kFontInUse); a < ::bof3::Img(kFontInUseEnd); a += 0x14) PutWord(a, 0);
-    for (U a = ::bof3::Img(kCellInUse); a < ::bof3::Img(kCellInUseEnd); a += 0x28) PutWord(a, 0);
-    if (D3d_AfterDrawRequest != 0) g.after_draw();
+    if (!software) d3d_list::Scene(0x28);
+    for (d3d_list::U a = ::bof3::Img(kFontInUse); a < ::bof3::Img(kFontInUseEnd); a += 0x14) d3d_list::PutWord(a, 0);
+    for (d3d_list::U a = ::bof3::Img(kCellInUse); a < ::bof3::Img(kCellInUseEnd); a += 0x28) d3d_list::PutWord(a, 0);
+    if (D3d_AfterDrawRequest != 0) d3d_list::g.after_draw();
 }

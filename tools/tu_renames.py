@@ -18,7 +18,7 @@ exactly these tab-separated columns:
     source_file   the file the item is defined in (src/...), as at the rename
     old_name      the item's name before
     new_name      its name after (`=` for a decision that keeps the name)
-    kind          helper | constant | variable | state | macro | global
+    kind          helper | constant | variable | state | macro | global | qualify
     reason        why: the clash it removes (the two sources, the target), or the decision
     target_file   the file the two sources' items meet in (the move's target)
     other_source  the other source whose item of that name differs
@@ -44,12 +44,20 @@ exactly these tab-separated columns:
   source_file has been moved away, new_name must be defined in one of the
   files the map moved its items into (the old name is not looked for: a
   target may hold another source's item of that name);
-- kind state, global and macro are decisions: shape only.
+- kind state, global and macro are decisions: shape only;
+- for kind qualify - a name two sources' `using namespace` lines would make
+  ambiguous in a target, written qualified in the source's bodies (the
+  qualification pass, the round's 7b item 11) - new_name is `ns::old_name`,
+  target_file and other_source (the other namespaces, comma-separated) are
+  given, and new_name is named in source_file's code (or, the file moved
+  away, in one of the files it moved into).
 
 --fill: each row with an empty commit gets the first commit on the current
 branch that changed the number of `new_name`s in source_file
 (`git log --reverse -S<new_name> -- <source_file>`), short to 8 digits; a
-row whose new_name is `=` gets the commit that added the row to the table.
+row whose new_name is `=` gets the commit that added the row to the table;
+a qualify row gets the newest such commit (an older one may have named it
+in full already).
 A row git finds nothing for is listed and left empty (commit the rename
 first). Only the commit column of such rows changes; a second run changes
 nothing.
@@ -72,7 +80,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TABLE = ROOT / "analysis" / "tu_renames.tsv"
 MOVES = ROOT / "analysis" / "tu_moves.tsv"
 COLUMNS = ["source_file", "old_name", "new_name", "kind", "reason", "target_file", "other_source", "commit"]
-KINDS = ("helper", "constant", "variable", "state", "macro", "global")
+KINDS = ("helper", "constant", "variable", "state", "macro", "global", "qualify")
 RENAMES = ("helper", "constant", "variable")
 DEFINING = ("func", "type", "alias", "typedef", "using", "pp")
 
@@ -143,6 +151,15 @@ def defined_names(path: str, local_only: bool = False) -> set[str]:
     return _defined[path][1 if local_only else 0]
 
 
+def named_in_full(path: str, qualified: str) -> bool:
+    """`ns::name` written in the file's code (comments and strings left out; spacing free)."""
+    want = [t for t in re.split(r"(::)", qualified) if t]
+    toks = [t.text for t in ci.lex((ROOT / path).read_text(encoding="utf-8").replace("\r\n", "\n"))
+            if t.kind in ("id", "punct")]
+    n = len(want)
+    return any(toks[i:i + n] == want for i in range(len(toks) - n + 1))
+
+
 def check(path: Path) -> int:
     lines, header, rows, problems = read_table(path)
     moves = moved_paths()
@@ -168,6 +185,12 @@ def check(path: Path) -> int:
             for c in ("target_file", "other_source"):
                 if not r[c]:
                     bad.append(f"{c} is empty (a rename names the clash it removes)")
+        if r["kind"] == "qualify":
+            if not r["new_name"].endswith("::" + r["old_name"]) or r["new_name"] == "::" + r["old_name"]:
+                bad.append(f"a qualification's new name is ns::{r['old_name']}")
+            for c in ("target_file", "other_source"):
+                if not r[c]:
+                    bad.append(f"{c} is empty (a qualification names the ambiguity it removes)")
         if r["commit"]:
             if not re.fullmatch(r"[0-9a-f]{7,40}", r["commit"]):
                 bad.append(f"commit {r['commit']!r} is not a commit hash")
@@ -200,6 +223,10 @@ def check(path: Path) -> int:
                 if "::" not in r["new_name"] and not any(r["new_name"] in defined_names(p) for p in homes):
                     bad.append(f"{r['new_name']} is defined in none of the files {src} moved into "
                                f"({', '.join(homes) or 'none in the tree'})")
+        if not bad and r["kind"] == "qualify":
+            homes = [src] if exists else sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+            if not any(named_in_full(p, r["new_name"]) for p in homes):
+                bad.append(f"{r['new_name']} is not named in {src if exists else ', '.join(homes) or 'the tree'}")
         for b in bad:
             problems.append(f"{where}: {b}: {lines[i]}")
     for p in problems:
@@ -212,6 +239,8 @@ def first_commit(r: dict, table: Path) -> str:
     if r["new_name"] == "=":
         needle = "\t".join([r["source_file"], r["old_name"], r["new_name"], r["kind"]])
         out = git("log", "--reverse", "--format=%H", "-S" + needle, "--", rel(table))
+    elif r["kind"] == "qualify":
+        out = git("log", "--format=%H", "-S" + r["new_name"], "--", r["source_file"])
     else:
         out = git("log", "--reverse", "--format=%H", "-S" + r["new_name"], "--", r["source_file"])
     first = out.splitlines()[0] if out else ""

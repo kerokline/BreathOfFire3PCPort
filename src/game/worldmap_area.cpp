@@ -113,7 +113,7 @@ unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16WorldmapArea(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]` do: the index is not checked.
-Handler EntryWorldmapArea(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(address))))); }
+Handler EntryWorldmapArea(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(worldmap_area::Long(worldmap_area::At(address))))); }
 
 // The region box's leave test the HUD machine's states share (0x404274 ..
 // 0x404297 and its copies): the map's mode byte set while the object's +0xB
@@ -174,17 +174,17 @@ extern "C" void __cdecl Area29_PickFieldObject(void) {
 extern "C" void __cdecl Area33_ClearCellsA(void) {
     static constexpr unsigned char kRows[] = {0x1C, 0x1D, 0x1F, 0x20};
     for (const unsigned char z : kRows) {
-        g.set_cell(0x3A, z, 0);
-        g.set_cell(0x3B, z, 0);
+        worldmap_area::g.set_cell(0x3A, z, 0);
+        worldmap_area::g.set_cell(0x3B, z, 0);
     }
 }
 
 // original 0x403D40 (area 33's handler 1; PSX 0x801F2CD0): the cells (0x11,
 // 0x15), (0x11, 0x16) and (0x12, 0x16) to 0.
 extern "C" void __cdecl Area33_ClearCellsB(void) {
-    g.set_cell(0x11, 0x15, 0);
-    g.set_cell(0x11, 0x16, 0);
-    g.set_cell(0x12, 0x16, 0);
+    worldmap_area::g.set_cell(0x11, 0x15, 0);
+    worldmap_area::g.set_cell(0x11, 0x16, 0);
+    worldmap_area::g.set_cell(0x12, 0x16, 0);
 }
 
 // original 0x403D70 (WorldMap_FieldHooks 0x662DF0 entry 1 - 0x56DE30 calls
@@ -201,20 +201,20 @@ extern "C" void __cdecl Area33_ClearCellsB(void) {
 extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
     const auto state = AreaW0c_TailState;
     if (state == 0) {
-        g.flags_set40();
+        worldmap_area::g.flags_set40();
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
         for (U a = ::bof3::Img(WorldMap33_PlaceMessages_addr); a < ::bof3::Img(at::kPlaceMessagesEnd); a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + static_cast<signed char>(Cond_ByteFA);
         const unsigned message = Word(At(::bof3::Img(WorldMap33_PlaceMessages_addr) + static_cast<U>(index * 2)));
-        g.open_script(static_cast<unsigned short>(message));
+        worldmap_area::g.open_script(static_cast<unsigned short>(message));
         const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         Field_Request = 2;
         AreaW0c_TailState = next;
     } else if (state == 1) {
         if (Field_Request == 2) return;
-        g.flags_clear40();
+        worldmap_area::g.flags_clear40();
         AreaW0a_TailKind = 0;
         AreaW0c_TailState = 0;
         AreaW0c_TailSub = 0;
@@ -245,9 +245,9 @@ extern "C" void __cdecl WorldMap33_PlateRun(void) {
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(Cur())->work_0c, x);
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(Cur())->work_10, z);
     unsigned char kind;
-    if (g.byte_at(x, z) == 0xA1) kind = 1;
-    else if (g.byte_at(x, z) == 0xA0) kind = 2;
-    else if (g.byte_at(x, z) == 0xAE) kind = 3;
+    if (worldmap_area::g.byte_at(x, z) == 0xA1) kind = 1;
+    else if (worldmap_area::g.byte_at(x, z) == 0xA0) kind = 2;
+    else if (worldmap_area::g.byte_at(x, z) == 0xAE) kind = 3;
     else if ((Field_ScriptFlags2 & 0x1000) != 0) kind = 4;
     else kind = 0;
     Cur()[0xB] = kind;
@@ -292,7 +292,7 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_y, 0x10000);
     Cur()[0x48] = 2;
     rv::As<records::EffectObject>(Cur())->timer = 8;
-    g.set_animation(static_cast<unsigned char>(animation));
+    worldmap_area::g.set_animation(static_cast<unsigned char>(animation));
     rv::As<records::EffectObject>(Cur())->state = 2;
 }
 
@@ -300,7 +300,7 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
 // 0x2000; +9 - 1, and at 0: +0x48 = 0, +1 = 3 (the hold); then a tail jump to
 // Sprite_QueueOverlay. Eight frames from 0 to 0x10000.
 extern "C" void __cdecl WorldMap33_PlateGrow(void) {
-    g.pin_sprite();
+    worldmap_area::g.pin_sprite();
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::EffectObject>(Cur())->scale_x) + 0x2000));
     rv::As<records::EffectObject>(Cur())->timer = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->timer - 1);
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
@@ -308,7 +308,7 @@ extern "C" void __cdecl WorldMap33_PlateGrow(void) {
         rv::Bytes(o)[0x48] = 0;
         rv::As<records::EffectObject>(Cur())->state = 3;
     }
-    g.queue_overlay();
+    worldmap_area::g.queue_overlay();
 }
 
 // original 0x404080 (WorldMap33_PlateStates 3): WorldMap_PinSprite; unless
@@ -317,7 +317,7 @@ extern "C" void __cdecl WorldMap33_PlateGrow(void) {
 // kind shown is 1 and +0x18 is not the place 0x937F82 (zero-extended); then a
 // tail jump to Sprite_QueueOverlay.
 extern "C" void __cdecl WorldMap33_PlateHold(void) {
-    g.pin_sprite();
+    worldmap_area::g.pin_sprite();
     if (Game_Mode != 1) {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
@@ -329,7 +329,7 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
             rv::As<records::EffectObject>(Cur())->state = 4;
         }
     }
-    g.queue_overlay();
+    worldmap_area::g.queue_overlay();
 }
 
 // original 0x4040E0 (WorldMap33_PlateStates 4): WorldMap_PinSprite; +0x40 -=
@@ -337,16 +337,16 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
 // Field_Request 5 a tail jump to Effect_Release, else +0x48 = 0 and +1 = 1
 // (the show again), with no overlay that frame.
 extern "C" void __cdecl WorldMap33_PlateShrink(void) {
-    g.pin_sprite();
+    worldmap_area::g.pin_sprite();
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::EffectObject>(Cur())->scale_x) - 0x2000));
     rv::As<records::EffectObject>(Cur())->timer = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->timer - 1);
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     if (o->timer != 0) {
-        g.queue_overlay();
+        worldmap_area::g.queue_overlay();
         return;
     }
     if (Field_Request == 5) {
-        g.effect_release();
+        worldmap_area::g.effect_release();
         return;
     }
     rv::Bytes(o)[0x48] = 0;
@@ -373,8 +373,8 @@ extern "C" void __cdecl WorldMapHud_Start(void) {
 // WorldMap_FrameStep (the dial's slide, byte +2), then WorldMapHud_BoxStep
 // (the region box's, byte +3).
 extern "C" void __cdecl WorldMapHud_Frame(void) {
-    g.frame_step();
-    g.box_step();
+    worldmap_area::g.frame_step();
+    worldmap_area::g.box_step();
 }
 
 // original 0x411310 (WorldMap_FrameStep's state 0, table 0x5EF5F8; the same
@@ -420,7 +420,7 @@ extern "C" void __cdecl WorldMapHud_BoxSlideIn(void) {
         rv::Bytes(o)[3] = 3;
         o = rv::As<records::EffectObject>(Cur());
     }
-    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
+    worldmap_area::g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // original 0x4042C0 (WorldMapHud_BoxStates 2): while +0xB is 0 the counter
@@ -440,7 +440,7 @@ extern "C" void __cdecl WorldMapHud_BoxHold(void) {
         rv::Bytes(o)[3] = static_cast<unsigned char>(rv::Bytes(o)[3] + 1);
         o = rv::As<records::EffectObject>(Cur());
     }
-    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
+    worldmap_area::g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // original 0x404330 (WorldMapHud_BoxStates 3): y +0x30 += 10; at 0xF0 and
@@ -458,7 +458,7 @@ extern "C" void __cdecl WorldMapHud_BoxSlideOut(void) {
         rv::Bytes(o)[3] = 1;
         o = rv::As<records::EffectObject>(Cur());
     }
-    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
+    worldmap_area::g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // ===========================================================================
@@ -516,8 +516,8 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     }
 
     unsigned char* const prim = Gfx_PacketNext;
-    g.set_poly_ft4(prim);
-    g.set_shade_tex(prim, 0);
+    worldmap_area::g.set_poly_ft4(prim);
+    worldmap_area::g.set_shade_tex(prim, 0);
     o = rv::As<records::EffectObject>(Cur());
     const std::int32_t side = 2 - e;   // 4 - b
     std::int32_t r = 15 - static_cast<std::int32_t>(Frame_Counter & 0x1F);
@@ -540,23 +540,23 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     rv::As<records::SVector>(v)[3].z = 0xFD00;
     long depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
-    g.rot_trans_pers4(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
+    worldmap_area::g.rot_trans_pers4(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                       reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
-    g.prim_depths(prim);
-    g.set_texture(static_cast<U>(e) | 0xBB509100u, prim, 1);
-    g.commit_prim(4, 0x48);
+    worldmap_area::g.prim_depths(prim);
+    worldmap_area::g.set_texture(static_cast<U>(e) | 0xBB509100u, prim, 1);
+    worldmap_area::g.commit_prim(4, 0x48);
 
     const std::int32_t rows = 9 - 4 * e;   // 17 - 4b
     const std::int32_t columns = 4 * side; // 16 - 4b
     for (std::int32_t j = 0; j < rows; ++j) {
         for (std::int32_t i = 0; i < columns; ++i) {
             o = rv::As<records::EffectObject>(Cur());
-            unsigned char* const item = g.item_half_at(S16WorldmapArea(rv::Bytes(o) + 0x36) + i + e - 2, S16WorldmapArea(rv::Bytes(o) + 0x3A) + j + e - 2);
+            unsigned char* const item = worldmap_area::g.item_half_at(S16WorldmapArea(rv::Bytes(o) + 0x36) + i + e - 2, S16WorldmapArea(rv::Bytes(o) + 0x3A) + j + e - 2);
             if (item == nullptr) continue;
             unsigned char* const q = Gfx_PacketNext;
-            g.set_poly_ft4(q);
-            g.set_shade_tex(q, 0);
-            g.set_semi_trans(q, 1);
+            worldmap_area::g.set_poly_ft4(q);
+            worldmap_area::g.set_shade_tex(q, 0);
+            worldmap_area::g.set_semi_trans(q, 1);
             std::memcpy(q + 0x08, item + 0x08, 12);
             std::memcpy(q + 0x18, item + 0x18, 12);
             std::memcpy(q + 0x28, item + 0x28, 12);
@@ -580,7 +580,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
             o = rv::As<records::EffectObject>(Cur());
             const U x = static_cast<U>(S16WorldmapArea(rv::Bytes(o) + 0x36) + i + e - 2) << 16;
             const U z = static_cast<U>(S16WorldmapArea(rv::Bytes(o) + 0x3A) + j + e - 2) << 16;
-            g.link_prim_at(x, z, 1, 0x48);
+            worldmap_area::g.link_prim_at(x, z, 1, 0x48);
         }
     }
 }
@@ -645,8 +645,8 @@ extern "C" void __cdecl EffectKind06_Run(void) { EntryWorldmapArea(::bof3::Img(E
 extern "C" void __cdecl EffectKind06_Start(void) {
     g.set_bank(0x18);
     Cur()[0x48] = 0;
-    rv::As<records::EffectObject>(Cur())->screen_x = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_x) + Word(Cur() + 0xC);
-    rv::As<records::EffectObject>(Cur())->screen_y = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_y) - Word(Cur() + 0x10);
+    rv::As<records::EffectObject>(Cur())->screen_x = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_x) + worldmap_area::Word(Cur() + 0xC);
+    rv::As<records::EffectObject>(Cur())->screen_y = static_cast<std::uint16_t>(rv::As<records::EffectObject>(Cur())->screen_y) - worldmap_area::Word(Cur() + 0x10);
     Cur()[0x24] = 0;
     Cur()[0x2A] = 0;
     Cur()[0x29] = 2;
@@ -665,7 +665,7 @@ extern "C" void __cdecl EffectKind06_Start(void) {
         rv::As<records::EffectObject>(Cur())->shade[0] = 0;
         rv::As<records::EffectObject>(Cur())->timer = 0x10;
     }
-    g.set_animation(At(::bof3::Img(EffectKind06_Anims_addr) + rv::As<records::EffectObject>(Cur())->param)[0]);
+    g.set_animation(worldmap_area::At(::bof3::Img(EffectKind06_Anims_addr) + rv::As<records::EffectObject>(Cur())->param)[0]);
     rv::As<records::EffectObject>(Cur())->state = 1;
 }
 

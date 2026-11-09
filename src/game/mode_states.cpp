@@ -68,9 +68,9 @@ std::uint32_t Address(const void* p) { return Low32(p); }
 
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
-Handler Entry(std::uint32_t table, int index) {
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(
-        static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
+mode_states::Handler Entry(std::uint32_t table, int index) {
+    return reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(
+        static_cast<std::uint32_t>(mode_states::Long(mode_states::At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
 
 // A byte argument read from its stack slot: the callers push whole
@@ -80,8 +80,8 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // The camera words: yaw Camera_Angles[0] and the pitch word Camera_Angles[2]
 // (Cond_AngleFB's low half), and their copies Light_AnglesCopy[0] / [2].
 constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
-short Signed16(std::uint32_t address) { return static_cast<short>(Word(At(address))); }
-void AddWordModeStates(std::uint32_t address, int delta) { SetWord(At(address), Word(At(address)) + static_cast<unsigned>(delta)); }
+short Signed16(std::uint32_t address) { return static_cast<short>(mode_states::Word(mode_states::At(address))); }
+void AddWordModeStates(std::uint32_t address, int delta) { mode_states::SetWord(mode_states::At(address), mode_states::Word(mode_states::At(address)) + static_cast<unsigned>(delta)); }
 
 // The field's load wait: File_LoadDone asked first, then a frame's sleep and
 // the question again until it answers non-zero.
@@ -90,9 +90,9 @@ void WaitLoad() {
 }
 // The same with a loading frame before each sleep (the mode handlers').
 void WaitLoadFramed() {
-    while (g.load_done() == 0) {
-        g.loading_frame();
-        g.sleep(1);
+    while (mode_states::g.load_done() == 0) {
+        mode_states::g.loading_frame();
+        mode_states::g.sleep(1);
     }
 }
 
@@ -138,7 +138,7 @@ bool PlaceEffect(unsigned char kind) {
 // to 21 past it); the held word is read once.
 extern "C" void __cdecl Look_PadControl(void) {
     const unsigned held = Input_Held;
-    if ((Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f006)) & held & 0xFFFF) == 0) {
+    if ((mode_states::Word(mode_states::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f006)) & held & 0xFFFF) == 0) {
         const short pitch = Signed16(::bof3::Img(kPitch));
         if (pitch > 0x200) {
             ModeStates_LookTurn = 0;
@@ -188,29 +188,29 @@ extern "C" void __cdecl Look_Return(void) {
     if (pitch == 0x200) return;
     if (ModeStates_LookTurn == 0) {
         if (pitch <= 0x200) {
-            SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
+            mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
             Light_AnglesCopy[2] = 0x200;
             return;
         }
         AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
-        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch - 0x16));
+        mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch - 0x16));
         return;
     }
     if (pitch >= 0x200) {
-        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
+        mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
         Light_AnglesCopy[2] = 0x200;
         return;
     }
     AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
-    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch + 0x16));
+    mode_states::SetWord(mode_states::At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch + 0x16));
 }
 
 // original 0x496250 (no PSX twin paired): mode 6's step 1 - Look_Return, and
 // with the camera back at yaw 0xFD56 and pitch 0x200, mode 2 (the field)
 // with Field_Request and Game_Step 0.
 extern "C" void __cdecl GameMode_LookEnd(void) {
-    g.look_return();
-    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) {
+    mode_states::g.look_return();
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && mode_states::Word(mode_states::At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) {
         Game_Mode = 2;
         Field_Request = 0;
         Game_Step = 0;
@@ -244,27 +244,27 @@ extern "C" void __cdecl Shop_Open(void) {
     if (index >= 0) {
         unsigned char* const o = rv::Bytes(Sprite_Objects) + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
         Sprite_Current = o;
-        if (Long(o + 0x18) == 9) {
+        if (mode_states::Long(o + 0x18) == 9) {
             Game_Mode = 2;
             Game_Step = 0;
             Field_Request = 0;
             if ((o[7] & 8) == 0) {
                 o[8] = o[0x85];
-                g.face_direction(Sprite_Current[8]);
+                mode_states::g.face_direction(Sprite_Current[8]);
                 o[0x80] = static_cast<unsigned char>(o[0x80] | 8);
             }
             o[0x80] = static_cast<unsigned char>(o[0x80] & ~0x20u);
             Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFEFF);
-            g.field_frame();
+            mode_states::g.field_frame();
             return;
         }
     }
-    g.load_dat(0x31B);
+    mode_states::g.load_dat(0x31B);
     WaitLoadFramed();
-    g.clut_copy_row(1);
-    g.clut_copy_row(2);
+    mode_states::g.clut_copy_row(1);
+    mode_states::g.clut_copy_row(2);
     Gfx_ClutStripDirty = 1;
-    g.field_frame();
+    mode_states::g.field_frame();
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
 }
 
@@ -274,14 +274,14 @@ extern "C" void __cdecl Shop_Open(void) {
 // Effect_RunObjects, Field_DrawFrame, Field_RunTaskRecords), then a tail
 // jump into the shop overlay's state dispatch 0x57F500 (group DF's).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
-    g.areamap_frame();
-    g.extra_screens();
-    g.update_screens();
-    g.objects_screen();
-    g.run_effects();
-    g.draw_frame();
-    g.task_records();
-    g.shop_states();
+    mode_states::g.areamap_frame();
+    mode_states::g.extra_screens();
+    mode_states::g.update_screens();
+    mode_states::g.objects_screen();
+    mode_states::g.run_effects();
+    mode_states::g.draw_frame();
+    mode_states::g.task_records();
+    mode_states::g.shop_states();
 }
 
 // original 0x496390 (no PSX twin paired; PSX 0x801993D8): the shop's step 2. The party
@@ -293,17 +293,17 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
     const unsigned char combo = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
     AreaW0b_PartySet = combo;
-    g.bank_file((combo & 0x7Fu) + 0x2C2);
+    mode_states::g.bank_file((combo & 0x7Fu) + 0x2C2);
     WaitLoadFramed();
     if ((Field_InputFlags & 0x10) != 0) {
-        g.load_dat(0x12A);
+        mode_states::g.load_dat(0x12A);
         WaitLoadFramed();
-        g.after_shop();
+        mode_states::g.after_shop();
     }
     Game_Mode = 2;
     Game_Step = 0;
     Field_Request = 0;
-    g.field_frame();
+    mode_states::g.field_frame();
 }
 
 // ===========================================================================
@@ -317,13 +317,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
 // jump to Field_DrawFrame. Sixteen callers (the mode handlers' waits,
 // Scenario_Start, 0x544B1D, 0x551C60, 0x56D645).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Field_LoadingFrame(void) {
-    g.areamap_frame();
-    g.extra_screens();
-    g.update_screens();
-    g.objects_screen();
-    g.run_effects();
-    g.tint_frame();
-    g.draw_frame();
+    mode_states::g.areamap_frame();
+    mode_states::g.extra_screens();
+    mode_states::g.update_screens();
+    mode_states::g.objects_screen();
+    mode_states::g.run_effects();
+    mode_states::g.tint_frame();
+    mode_states::g.draw_frame();
 }
 
 // original 0x5172F0 (PSX 0x8019A368): the field menu's frame (mode 3's
@@ -331,9 +331,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Field_LoadingFrame(v
 // the menu's state dispatch 0x589970 (group DH's), then a tail jump to
 // Field_RunTaskRecords.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
-    g.mode_dispatch();
-    g.menu_states();
-    g.task_records();
+    mode_states::g.mode_dispatch();
+    mode_states::g.menu_states();
+    mode_states::g.task_records();
 }
 
 // original 0x496830 (no PSX twin paired; PSX 0x80199C38): Field_WaitTransition with the menu's
@@ -346,12 +346,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
-        g.sleep(1);
+        mode_states::g.sleep(1);
         if (Transition_Busy == 0 && run == 0) {
-            g.sleep(1);
+            mode_states::g.sleep(1);
             return;
         }
-        g.menu_frame();
+        mode_states::g.menu_frame();
         if (Transition_Busy == 0) return;
     }
 }
@@ -379,13 +379,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(
 extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_SystemChoice(void) {
     const unsigned id = ItemUse_ChoiceId;
     if (id - 0x80u < 16u) {
-        g.choice[id - 0x80u]();
+        mode_states::g.choice[id - 0x80u]();
         return;
     }
     if (id == 0x90) {
         const std::uint32_t resume = Address(__builtin_return_address(0));
-        if (resume == g.tails[0] || resume == g.tails[1]) {
-            reinterpret_cast<Handler>(static_cast<std::uintptr_t>(resume))();
+        if (resume == mode_states::g.tails[0] || resume == mode_states::g.tails[1]) {
+            reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
             return;
         }
         bof3::Fatal("MsgBox_SystemChoice: choice id 0x90 calls its caller's resume point 0x%X, not a commit's tail",
@@ -418,7 +418,7 @@ extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_Sys
 // glyph bound here (Text_DrawString's 0xA00 test is not in this draw).
 extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned colour, unsigned count, const unsigned char* text) {
     const unsigned c = colour & 0xFF;
-    const unsigned char* const uv = At(::bof3::Img(at::kSmallUV) + (c >> 4) * 2);
+    const unsigned char* const uv = mode_states::At(::bof3::Img(at::kSmallUV) + (c >> 4) * 2);
     const unsigned u = uv[0], v = uv[1];
     const int clut = static_cast<int>(0x7800u | (c & 0xF));
     const unsigned char* p = text;
@@ -445,7 +445,7 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
                 if (const unsigned small = Labels_SmallGlyph(p)) glyph = small;
             }
             rv::Store<unsigned>(rv::As<records::GpuGlyph>(Gfx_PacketNext)->glyph, glyph);
-            g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);
+            mode_states::g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);
             pen_x += 8;
         }
         ch = p[1];
@@ -879,13 +879,13 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // low words only, so ours passes them zero-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(void) {
     const unsigned set = MenuWindows_ListSet;
-    const unsigned char* const rows = At(::bof3::Img(at::kCursorRows) + set * 6);
+    const unsigned char* const rows = mode_states::At(::bof3::Img(at::kCursorRows) + set * 6);
     const short row = AreaW0c_ChoiceAnswer;
     const unsigned char* const w = reinterpret_cast<const unsigned char*>(BattleWinStates_Current);
-    const unsigned y = (Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(Word(w + 6)) >> 4) +
-                        Word(rows + 2)) & 0xFFFF;
-    const unsigned x = (static_cast<unsigned>(static_cast<short>(Word(w + 4)) >> 4) + 4) & 0xFFFF;
-    g.draw_hand(static_cast<int>(x), static_cast<int>(y), 0);
+    const unsigned y = (mode_states::Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(mode_states::Word(w + 6)) >> 4) +
+                        mode_states::Word(rows + 2)) & 0xFFFF;
+    const unsigned x = (static_cast<unsigned>(static_cast<short>(mode_states::Word(w + 4)) >> 4) + 4) & 0xFFFF;
+    mode_states::g.draw_hand(static_cast<int>(x), static_cast<int>(y), 0);
 }
 
 // ===========================================================================
