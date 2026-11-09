@@ -188,7 +188,7 @@ extern "C" void __cdecl Msg_OpenSystem(unsigned id) {
     const unsigned char* const text = MsgBox_ReadingRowSystem(id & 0xFFFFu, menu_windows::g.msg_system_ptr(id));
     Msgbox_Base = Addr(text);
     MenuWindows_ListText = Addr(text);
-    move_script::SetWord(menu_windows::At(::bof3::Img(at::kMessage.v)), id);
+    move_script::SetWord(menu_windows::At(::bof3::Img(menu_windows::at::kMessage.v)), id);
     menu_windows::g.msgbox_reset();
 }
 
