@@ -376,7 +376,7 @@ void Draw() {
 // joins with the tail it links from. Ours is what the game keeps.
 
 using DrawFn = void (__cdecl*)();
-DrawFn g_draw_clone = nullptr;
+}  namespace sprite_draw { DrawFn g_draw_clone = nullptr; }  namespace {
 struct {
     unsigned calls, drawn, cells, mismatches;
 } g_counts;
@@ -431,7 +431,7 @@ void LiveDraw() {
     at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
     at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
     LiveCapture(input, at);
-    g_draw_clone();
+    sprite_draw::g_draw_clone();
     LiveCapture(theirs, at);
     LiveApply(input, at);
     Draw();
@@ -466,7 +466,7 @@ void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
 }
 
 extern "C" void __cdecl Sprite_Draw() {
-    if (g_draw_clone) LiveDraw();
+    if (sprite_draw::g_draw_clone) LiveDraw();
     else Draw();
 }
 
@@ -894,13 +894,13 @@ void SpriteDraw_Inject() {
         void* clut = bof3::CloneOriginal("Sprite_ClutWord", bof3::addr::Sprite_ClutWord, 0xD5);
         const bof3::CloneCall calls[] = {{0xBA, nullptr}, {0xC3, clut}, {0x1B3, add}, {0x281, nullptr}, {0x292, nullptr}};
         void* draw = bof3::CloneOriginal("Sprite_Draw", bof3::addr::Sprite_Draw, 0x2AB, calls, 5);
-        g_draw_clone = nullptr;
+        sprite_draw::g_draw_clone = nullptr;
         SelfTest(reinterpret_cast<DrawFn>(draw), reinterpret_cast<ClutFn>(clut), reinterpret_cast<DrawFn>(reset),
                  reinterpret_cast<AddFn>(add));
         CaptureSelfTest();
         g_capture_logged = 0;
         // From here on Sprite_Draw compares every live call against the clone.
-        g_draw_clone = reinterpret_cast<DrawFn>(draw);
+        sprite_draw::g_draw_clone = reinterpret_cast<DrawFn>(draw);
     }
     {
         // DIV-0142: armed after the fuzz, which compares Capcom's rule.
