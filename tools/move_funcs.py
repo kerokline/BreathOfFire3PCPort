@@ -892,6 +892,8 @@ def main() -> int:
         kept = []
         for s, it, how in provided:
             body = code_tokens(it)       # the same code with other comments or spacing is the same item
+            if at_qualified(it):         # ... unless its bare `at::` names another namespace in each source
+                body += " /* at = " + (plans[s].alias_at or "+".join(plans[s].dir_at)) + " */"
             scope = "::".join(n for n in it.ns if n)
             keys = [(scope, n) for n in it.names]
             if keys and all(any(b == body for _, b, _ in seen.get(k, ())) for k in keys):
