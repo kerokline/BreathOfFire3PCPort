@@ -1014,8 +1014,18 @@ eports1.md` 5), both recommended by
      out, `D3dDraw_CellsShadowWritten`'s byte; B5's `EnemyAI_TurnCheck`, whose
      37-entry jump table is read to the next anchor, one word into the next
      table). The class's rows stay what they were: the symbol, or a reader.
+   - `harness` (both widths, the coordinator's class, 2026-11-09): hosted
+     test code changed on purpose during the round - a `*_fuzz.cpp` or
+     `*_harness.cpp` function, its tables or its `_GLOBAL__sub_I_*` - never a
+     game function. First case: `magic_harness::Run`, which gained the region
+     skip that leaves the PSX MATRIX's two padding bytes out of magic_s23's
+     compare (the original's PushMatrix copies them from uninitialised stack
+     into Gte_Matrix and the 20-slot Gte_MatrixStack; the gte.cpp frames
+     changed under `inline`, so the garbage no longer matched; group B6). The
+     skips live in a table beside the regions, so `Region` and every other
+     group's tables stay byte for byte.
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
-   --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr`
+   --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness`
    (the other classes' rows are read but never used there), the x86_64 gate
    with the file and no restriction; both with `--inject-ok` from stage B
    on, since every move registers its functions from a new `_Inject()`.
