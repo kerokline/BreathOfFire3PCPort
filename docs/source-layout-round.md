@@ -965,10 +965,37 @@ is expected; the doc says so.
      exception table). First case: sound's `ResumeSkip`, `_Music_Start 'call
      @r14:local#...' -> 'call @r14:__ZN5sound10ResumeSkipEjiij'`, two
      register arguments become four on the stack.
+   **Two calls on the moves themselves, the owner's of 2026-11-09 morning
+   on group B1's report (`slb1109eports1.md` 5), both recommended by
+   the coordinator and taken:**
+   - `refptr` (both widths, a class of its own; a row may name the data
+     symbol): a moved function reads a global its old file defines. Inside
+     that file clang addressed it directly; from another file llvm-mingw's
+     auto-import loads it through the pointer stub `.refptr.X` first - one
+     load more, the same symbol, the same value (`-fno-auto-import` would
+     make every such read direct, but changes the whole build and its
+     baseline, so it is not this round's). A row names the reader, or the
+     `.refptr.` symbol, which reads NEW. First case: `Battle_PhaseDispatch`,
+     moved from `battle_flow.cpp` to `battle/battle_intro.cpp`, i686 `jae
+     .+3F; call dword ptr [eax*4] @r6:__ZN11battle_flow1gE` -> `jae .+41;
+     mov ecx, dword ptr [0] @r6:.refptr.__ZN11battle_flow1gE; call dword
+     ptr [ecx + eax*4]`, and `NEW .refptr.__ZN11battle_flow1gE` (data). B1
+     alone has 24 such readers at i686 and 28 at x86_64, over seven
+     variables (`battle_phases::g`, `battle_flow::g`, `worldmap_area::g`,
+     `world_map::g`, `battle_phases::g_init_pick_clear`,
+     `world_map_dial::g_dial_semi`, `area_w3d::g_place_marker`).
+   - `inline` reaches i686 for a move (call 8 had kept the i686 gate exact):
+     a helper our wave file shared, which Capcom's units did not, has fewer
+     callers in each new file, so i686 inlines it or stops - the same
+     mechanism the class already names on x86_64. First case:
+     `Area117_MembersFrame`, i686 `mov ecx, 0; jmp @local#3ba97da06e19` (a
+     thunk) -> the helper's 204 instructions in place; B1 has 27 such
+     functions and 12 helper bodies GONE or NEW.
    The i686 gate runs with `--exceptions analysis/tu_gate_exceptions.tsv
-   --exception-classes data-layout,i686-fold,i686-inline,i686-convention` (the other
-   classes' rows are read but never used there), the x86_64 gate with the
-   file and no restriction.
+   --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr`
+   (the other classes' rows are read but never used there), the x86_64 gate
+   with the file and no restriction; both with `--inject-ok` from stage B
+   on, since every move registers its functions from a new `_Inject()`.
    **Class 1** (the i686 optimiser folds or shrinks an internal global:
    `win_main`'s `g_background`, `msg_pool`'s `g_pool`, `map_layers`'
    `g_side_dup`) **and class 4** (the 8 function promotions, which change
