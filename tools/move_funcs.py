@@ -1305,8 +1305,21 @@ def switch_start(it: ci.Item) -> int:
     return it.start
 
 
+_inject_names: dict[str, str] = {}
+
+
 def target_inject_name(t: str) -> str:
-    return camel(Path(t).stem) + "_Inject"
+    """<TStem>_Inject - or, when another file of the same stem exists (the source a move leaves
+    behind, src/game/battle_result.cpp beside the target src/game/battle/battle_result.cpp, whose own
+    BattleResult_Inject stays), <Folder><TStem>_Inject, so the two do not link as one symbol. Read
+    once per target, before anything is written, so every caller in a run agrees."""
+    if t not in _inject_names:
+        name = camel(Path(t).stem) + "_Inject"
+        mine = (ROOT / t).resolve()
+        if any(q.resolve() != mine for q in (ROOT / "src").rglob(Path(t).name)):
+            name = camel(Path(t).parent.name) + name
+        _inject_names[t] = name
+    return _inject_names[t]
 
 
 def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) -> None:
