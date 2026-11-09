@@ -3,6 +3,8 @@
 // (docs/window-modes.md, DIV-0032..0034).
 #pragma once
 
+#include <cstdint>
+
 void WinMain_Inject();
 
 // DIV-0033: false while the game runs without being the foreground
@@ -19,5 +21,6 @@ bool WinMain_InputAllowed();
 bool WinMain_Background();
 
 namespace win_main {
+extern std::uint8_t g_pad_reset;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
 extern bool g_loop_ours;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace win_main
