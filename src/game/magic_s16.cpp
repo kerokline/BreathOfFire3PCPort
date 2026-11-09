@@ -409,14 +409,14 @@ void Free(const Pool& p) {
 // becomes the current sparkle, its +0x28 the owner 0x93B940 for the dispatch,
 // and the owner is put back after each (saved once, after the phase).
 void Walk(const Pool& p, Fn0 dispatch) {
-    const std::int32_t saved = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
+    const std::int32_t saved = move_script::Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < p.count; ++i) {
         unsigned char* const s = Record(p, i);
         if ((s[kFlags] & 1) == 0) continue;
-        SetLong(Mem(p.current), PtrValueMagicS16(s));
-        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), Long(s + kOwnerOf));
+        move_script::SetLong(Mem(p.current), PtrValueMagicS16(s));
+        move_script::SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), move_script::Long(s + kOwnerOf));
         MH_CALL(dispatch)();
-        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), saved);
+        move_script::SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), saved);
     }
 }
 
@@ -446,7 +446,7 @@ template <typename Kind> void MakeSparkles(const Pool& p, Kind kind) {
         const unsigned char a = MH_CALL(p.alloc)();
         if (a != 0xFF) {
             unsigned char* const s = Record(p, a);
-            SetLong(s + kOwnerOf, PtrValueMagicS16(Sprite_Current));
+            move_script::SetLong(s + kOwnerOf, PtrValueMagicS16(Sprite_Current));
             s[kType] = 0;
             s[kPhase] = 0;
             const int r = MH_CALL(Rand)();
