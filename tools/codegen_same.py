@@ -139,7 +139,9 @@ whose class is not a known one, a name in --exception-classes that is not
 one, a row without a symbol and a class, or a file without the header, is
 an error: the line is printed and the exit is 2, before anything is
 compared. A listed symbol of a class in use that did not differ is reported
-on an `unused exception` line (not an error: a stale row, to prune by hand).
+on an `unused exception` line (not an error: a stale row, to prune by hand);
+a row whose symbol neither build defines (a data-layout row is read at both
+widths, and names one width's symbol) is only counted, on one line.
 """
 
 from __future__ import annotations
@@ -902,9 +904,19 @@ def by_function(a) -> int:
           + (f"; {injects} inject registrations changed (--inject-ok)" if injects else "")
           + (f"; {excepts} excepted (--exceptions)" if excepts else "")
           + (f"; {promoted} promoted to external linkage, the same body" if promoted else ""))
+    # a row of a class in use whose symbol neither build defines names the other width's symbol (or a
+    # gone one): counted, not listed - a data-layout row is read at both widths, by each width's name
+    defined = {n for t in (base, new) for k, e in t.items() for n in [k] + sorted(e["names"])}
+    foreign = 0
     for sym, x in sorted(exceptions.items()):
         if not x["used"] and x["class"] in allowed:
+            if sym.split("@", 1)[0] not in defined:
+                foreign += 1
+                continue
             print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")
+    if foreign:
+        print(f"codegen_same: {foreign} exception rows of a class in use name no symbol of either build "
+              f"(the other width's names, or gone): not listed")
     if bn == 0 or nn == 0:
         print("codegen_same: nothing compared (no function in one of the builds)")
         return 2
