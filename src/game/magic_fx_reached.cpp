@@ -129,15 +129,6 @@ void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 // ===========================================================================
 // The steal
 
-// original 0x4F52D0 (the last phase of the steal and of the effect at
-// 0x4F50B0): once the message window is down, 0x904AA8 bit 2 and the task
-// freed (a tail jmp in the original).
-MFX_EXPORT void __cdecl MagicFx_EndWhenIdle(void) {
-    if (BattleE1_MessageUp != 0) return;
-    At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kFlags))[0] | 4);
-    g.free_current();
-}
-
 // ===========================================================================
 // The Healing Herb's task and the sparkle update (MAGIC070.EMI)
 
@@ -178,7 +169,6 @@ MFX_EXPORT void __cdecl FxDim_Up(void) {
 
 void MagicFxReached_Inject() {
     if (bof3::WantsShadow("magic_fx_reached")) magic_fx_reached::SelfTest();
-    BOF3_INJECT(MagicFx_EndWhenIdle);
     BOF3_INJECT(FxDim_Dispatch);
     BOF3_INJECT(FxDim_Down);
     BOF3_INJECT(FxDim_Hold);

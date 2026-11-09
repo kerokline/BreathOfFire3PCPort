@@ -12573,12 +12573,15 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Long	copied		src/game/magic_c1.cpp	48	48	48	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	Long	copied		src/game/magic_c1.cpp	48	48	48	src/game/magic/pentagram.cpp	d3e6abb3
 	Long	copied		src/game/magic_c1.cpp	48	48	48	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	Long	local		src/game/magic_c1.cpp	48	48	48	src/game/magic/magic_213_mote.cpp	ea3f6def
 	SetLong	copied		src/game/magic_c1.cpp	49	49	49	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_c1.cpp	49	49	49	src/game/magic/pentagram.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_c1.cpp	49	49	49	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	SetLong	local		src/game/magic_c1.cpp	49	49	49	src/game/magic/magic_213_mote.cpp	ea3f6def
 	SetWord	copied		src/game/magic_c1.cpp	50	50	50	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_c1.cpp	50	50	50	src/game/magic/pentagram.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_c1.cpp	50	50	50	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	SetWord	local		src/game/magic_c1.cpp	50	50	50	src/game/magic/magic_213_mote.cpp	ea3f6def
 	Word	copied		src/game/magic_c1.cpp	51	51	51	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	Word	copied		src/game/magic_c1.cpp	51	51	51	src/game/magic/pentagram.cpp	d3e6abb3
 	Word	copied		src/game/magic_c1.cpp	51	51	51	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12586,6 +12589,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kS	copied		src/game/magic_c1.cpp	53	57	57	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	kS	copied		src/game/magic_c1.cpp	53	57	57	src/game/magic/pentagram.cpp	d3e6abb3
 	kS	copied		src/game/magic_c1.cpp	53	57	57	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	kS	local		src/game/magic_c1.cpp	53	57	57	src/game/magic/magic_213_mote.cpp	ea3f6def
 	Sc	copied		src/game/magic_c1.cpp	60	60	60	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	Sc	copied		src/game/magic_c1.cpp	60	60	60	src/game/magic/pentagram.cpp	d3e6abb3
 	Sc	copied		src/game/magic_c1.cpp	60	60	60	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12594,6 +12598,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Owner	copied		src/game/magic_c1.cpp	61	61	61	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	Owner	copied		src/game/magic_c1.cpp	61	61	61	src/game/magic/pentagram.cpp	d3e6abb3
 	Owner	copied		src/game/magic_c1.cpp	61	61	61	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	Owner	local		src/game/magic_c1.cpp	61	61	61	src/game/magic/magic_213_mote.cpp	ea3f6def
 	Source	copied		src/game/magic_c1.cpp	62	62	62	src/game/magic/pentagram.cpp	d3e6abb3
 	Source	copied		src/game/magic_c1.cpp	62	62	62	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	Source	copied		src/game/magic_c1.cpp	62	62	62	src/game/magic/white_flag.cpp	d3e6abb3
@@ -12603,7 +12608,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	TargetByte	copied		src/game/magic_c1.cpp	63	63	63	src/game/magic/white_flag.cpp	d3e6abb3
 	TargetByte	copied		src/game/magic_c1.cpp	63	63	63	src/game/platform/magic_080.cpp	d3e6abb3
 	SD	local		src/game/magic_c1.cpp	65	65	65	src/game/magic/pentagram.cpp	d3e6abb3
+	SW	local		src/game/magic_c1.cpp	65	65	65	src/game/magic/magic_213_mote.cpp	ea3f6def
 	SetSD	local		src/game/magic_c1.cpp	66	66	66	src/game/magic/pentagram.cpp	d3e6abb3
+	SetSW	local		src/game/magic_c1.cpp	66	66	66	src/game/magic/magic_213_mote.cpp	ea3f6def
 	SB	local		src/game/magic_c1.cpp	67	67	67	src/game/magic/wall_of_fire_child.cpp	db510830
 	SW	copied		src/game/magic_c1.cpp	67	67	67	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	SW	copied		src/game/magic_c1.cpp	67	67	67	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12628,10 +12635,14 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Dec	copied		src/game/magic_c1.cpp	78	78	78	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	Dec	copied		src/game/magic_c1.cpp	78	78	78	src/game/magic/white_flag.cpp	d3e6abb3
 	Dec	copied		src/game/magic_c1.cpp	78	78	78	src/game/platform/magic_080.cpp	d3e6abb3
+	TaskSlot	local		src/game/magic_c1.cpp	78	78	78	src/game/magic/magic_213_mote.cpp	ea3f6def
+	Addr	local		src/game/magic_c1.cpp	79	79	79	src/game/magic/magic_213_mote.cpp	ea3f6def
 	Mul12	copied		src/game/magic_c1.cpp	80	81	81	src/game/magic/pentagram.cpp	d3e6abb3
 	Mul12	copied		src/game/magic_c1.cpp	80	81	81	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	ActorRecord	local		src/game/magic_c1.cpp	81	84	86	src/game/magic/magic_213_mote.cpp	ea3f6def
 	PutFloat	copied		src/game/magic_c1.cpp	83	84	87	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	PutFloat	copied		src/game/magic_c1.cpp	83	84	87	src/game/platform/magic_080.cpp	d3e6abb3
+	NewTask	local		src/game/magic_c1.cpp	89	89	89	src/game/magic/magic_213_mote.cpp	ea3f6def
 	TaskSlot	copied		src/game/magic_c1.cpp	89	89	89	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_c1.cpp	89	89	89	src/game/magic/pentagram.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_c1.cpp	89	89	89	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12640,6 +12651,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Addr	copied		src/game/magic_c1.cpp	90	90	90	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	ActorRecord	copied		src/game/magic_c1.cpp	92	95	97	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	ActorRecord	copied		src/game/magic_c1.cpp	92	95	97	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	ByteFn	local		src/game/magic_c1.cpp	95	95	95	src/game/magic/magic_213_mote.cpp	ea3f6def
 	RandCall	copied		src/game/magic_c1.cpp	99	99	99	src/game/magic/pentagram.cpp	d3e6abb3
 	RandCall	copied		src/game/magic_c1.cpp	99	99	99	src/game/platform/magic_080.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_c1.cpp	100	100	100	src/game/magic/magic_213_mote.cpp	d3e6abb3
@@ -12657,11 +12669,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Call0	copied		src/game/magic_c1.cpp	108	108	108	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	Call0	copied		src/game/magic_c1.cpp	108	108	108	src/game/platform/magic_080.cpp	d3e6abb3
 	kTurnOffset	local		src/game/magic_c1.cpp	110	111	111	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
+	CellCall	local		src/game/magic_c1.cpp	116	119	122	src/game/magic/magic_213_mote.cpp	ea3f6def
 	PastTable	copied		src/game/magic_c1.cpp	120	120	122	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_c1.cpp	120	120	122	src/game/magic/pentagram.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_c1.cpp	120	120	122	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_c1.cpp	120	120	122	src/game/magic/white_flag.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_c1.cpp	120	120	122	src/game/platform/magic_080.cpp	d3e6abb3
+	ClutCopy	local		src/game/magic_c1.cpp	124	128	131	src/game/magic/magic_213_mote.cpp	ea3f6def
 	StackCall	copied		src/game/magic_c1.cpp	124	125	128	src/game/magic/magic_213_mote.cpp	d3e6abb3
 	StackCall	copied		src/game/magic_c1.cpp	124	125	128	src/game/magic/pentagram.cpp	d3e6abb3
 	StackCall	copied		src/game/magic_c1.cpp	124	125	128	src/game/magic/wall_of_fire_child.cpp	d3e6abb3
@@ -12696,8 +12710,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4FC3C0	Magic080_Run	func	tu_4fc330	src/game/magic_c1.cpp	236	239	251	src/game/platform/magic_080.cpp	d3e6abb3
 0x4FC420	Magic080_DrawText	func	tu_4fc330	src/game/magic_c1.cpp	253	258	287	src/game/platform/magic_080.cpp	d3e6abb3
 0x4FC540	Magic080_DrawGlyphs	func	tu_4fc330	src/game/magic_c1.cpp	289	292	321	src/game/platform/magic_080.cpp	d3e6abb3
+	WalkPool	local		src/game/magic_c1.cpp	293	297	310	src/game/magic/magic_213_mote.cpp	ea3f6def
+	ClearPool	local		src/game/magic_c1.cpp	312	312	319	src/game/magic/magic_213_mote.cpp	ea3f6def
+	SpawnOnActors	local		src/game/magic_c1.cpp	321	326	342	src/game/magic/magic_213_mote.cpp	ea3f6def
 0x4D67F0	Pentagram_Task	func	tu_4d67f0	src/game/magic_c1.cpp	326	329	339	src/game/magic/pentagram.cpp	d3e6abb3
 0x4D6860	Pentagram_Start	func	tu_4d67f0	src/game/magic_c1.cpp	341	346	364	src/game/magic/pentagram.cpp	d3e6abb3
+	SpawnRecords	local		src/game/magic_c1.cpp	344	348	360	src/game/magic/magic_213_mote.cpp	ea3f6def
+	PoolAlloc	local		src/game/magic_c1.cpp	362	364	372	src/game/magic/magic_213_mote.cpp	ea3f6def
 	NewChild	local		src/game/magic_c1.cpp	368	373	389	src/game/magic/pentagram.cpp	d3e6abb3
 0x4D6900	Pentagram_Rings	func	tu_4d67f0	src/game/magic_c1.cpp	393	395	401	src/game/magic/pentagram.cpp	d3e6abb3
 0x4D6A30	Pentagram_Star	func	tu_4d67f0	src/game/magic_c1.cpp	403	405	409	src/game/magic/pentagram.cpp	d3e6abb3

@@ -135,6 +135,7 @@
 #include "game/battle_actor_copies.h"
 #include "game/battle_turn_steps.h"
 #include "game/magic_fx_reached.h"
+#include "game/magic/magic_fx_3.h"
 #include "game/magic/fx_disc_fan.h"
 #include "game/menu_draw_helpers.h"
 #include "game/menu_lists.h"
@@ -147,6 +148,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic/skill_steal.h"
 #include "game/magic_lib.h"
 #include "game/magic_s16.h"
 #include "game/magic_s18.h"
@@ -219,6 +221,7 @@
 #include "game/magic/rotten_breath_mote.h"
 #include "game/magic/bone_dance.h"
 #include "game/magic_c1.h"
+#include "game/magic/magic_213_mote.h"
 #include "game/magic/pentagram.h"
 #include "game/magic_s01.h"
 #include "game/magic_s06.h"
@@ -285,9 +288,21 @@
 #include "game/magic/accession_bolt.h"
 #include "game/magic/accession.h"
 #include "game/magic_s34.h"
+#include "game/magic/transfer_mote.h"
+#include "game/magic/timed_blow.h"
+#include "game/magic/monopolize_mote.h"
+#include "game/magic/magic_159_child.h"
+#include "game/magic/charm_mote.h"
 #include "game/magic_s36.h"
+#include "game/magic/magic_ball.h"
+#include "game/magic/intimidate_trail.h"
+#include "game/magic/aura_breath_dome.h"
 #include "game/magic_s37.h"
+#include "game/magic/magma_breath_record.h"
 #include "game/magic_s35.h"
+#include "game/magic/last_resort_beam.h"
+#include "game/magic/cure_mote.h"
+#include "game/magic/benediction_child.h"
 #include "game/magic_s38.h"
 #include "game/area_011.h"
 #include "game/area_cell_hook.h"
@@ -610,6 +625,7 @@ void InjectAll() {
                                 // order does not matter
     MagicFxReached_Inject();    // round 8 group CJ: every call of its clones re-aimed at a recorder, its five stack
                                 // tables re-aimed in the copies and three .data tables swapped: order does not matter
+    MagicFx3_Inject();
     FxDiscFan_Inject();
     MenuDrawHelpers_Inject();   // round 8 group DI: every call of its clones re-aimed at a recorder and its eleven
                                 // .data dispatch tables swapped for recorders: order does not matter, except that it
@@ -641,6 +657,7 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    SkillSteal_Inject();
     MagicLib_Inject();          // round 9 group L (the effect library): its clones' calls and the popup tasks'
                                 // stack-table immediates re-aimed at the shared harness's recorders; no module
                                 // patches bytes inside its 25: order does not matter
@@ -763,6 +780,7 @@ void InjectAll() {
                                 // clones' calls, stack-table immediates and fifteen .data tables re-aimed at the
                                 // shared harness's recorders; no module patches bytes inside its 62: order does
                                 // not matter
+    Magic213Mote_Inject();
     Pentagram_Inject();
     MagicS01_Inject();          // round 9 group S01 (MAGIC001: rows 1 and 105, Nue Stomp and Jump): its clones'
                                 // calls and stack-table immediates re-aimed at the shared harness's recorders, its
@@ -879,18 +897,30 @@ void InjectAll() {
                                 // Transfer, Monopolize): its clones' calls and stack-table immediates re-aimed at the
                                 // shared harness's recorders, its eight .data tables swapped for the fuzz only; no
                                 // module patches bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
+    TransferMote_Inject();
+    TimedBlow_Inject();
+    MonopolizeMote_Inject();
+    Magic159Child_Inject();
+    CharmMote_Inject();
     MagicS36_Inject();          // round 9 group S36 (MAGIC172, 173, 218: Magic Ball, Intimidate, Aura Breath): its
                                 // clones' calls and stack-table immediates re-aimed, its eight .data tables swapped
                                 // for the fuzz only; no module patches bytes inside its 45 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    MagicBall_Inject();
+    IntimidateTrail_Inject();
+    AuraBreathDome_Inject();
     MagicS37_Inject();          // round 9 group S37 (MAGIC219, 220/221, 222: Magma Breath, Geo / Gaea's Breath,
                                 // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagmaBreathRecord_Inject();
     MagicS35_Inject();          // round 9 group S35 (MAGIC167, 168, 169: Last Resort, Cure, Benediction): its
                                 // clones' calls and stack-table immediates re-aimed at the shared harness's recorders,
                                 // its six .data tables swapped for the fuzz only; no module patches bytes inside its 46
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    LastResortBeam_Inject();
+    CureMote_Inject();
+    BenedictionChild_Inject();
     MagicS38_Inject();          // round 9 group S38 (MAGIC223, 225, 226/227: Tempest / Hurricane, an unlabelled id,
                                 // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module

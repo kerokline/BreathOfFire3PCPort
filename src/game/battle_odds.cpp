@@ -177,17 +177,6 @@ extern "C" unsigned long __cdecl BattleFx_SetSize(void) {
     return Low32(s);
 }
 
-// original 0x4EE8A0: once +0xB is 4 or below (unsigned), +9 = 8 and the next
-// state. eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_WaitStep4(void) {
-    unsigned char* s = Sprite();
-    if (s[0xB] > 4) return Low32(s);
-    s[9] = 8;
-    s = Sprite();
-    s[1] = static_cast<unsigned char>(s[1] + 1);
-    return Low32(s);
-}
-
 // original 0x4F7350: once +0xB is 0 - Battle_SetTargetFlag40(the byte
 // kFlagTarget; pushed in ecx, whose upper bits are the entry's, and the callee
 // reads the low byte), kRoundFlags |= 4, and a tail jump to
@@ -207,6 +196,5 @@ void BattleOdds_Inject() {
     BOF3_INJECT(Effect_Heal20);
     BOF3_INJECT(Effect_HalfAttack);
     BOF3_INJECT(BattleFx_SetSize);
-    BOF3_INJECT(BattleFx_WaitStep4);
     BOF3_INJECT(BattleFx_Finish);
 }
