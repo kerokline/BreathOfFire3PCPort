@@ -130,10 +130,10 @@ using HookFn = void (__cdecl*)(int);
 // instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
     const unsigned char event = EventBattle_Id;
-    std::uint32_t phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(at::kPhase.v))));
+    std::uint32_t phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(battle_flow::at::kPhase.v))));
     if (event != 0 && (phase & 0xFF) != 0) {
-        reinterpret_cast<HookFn>(PtrAtBattleFlow(::bof3::Img(at::kEventHook.v)))(3);
-        phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(at::kPhase.v))));
+        reinterpret_cast<HookFn>(PtrAtBattleFlow(::bof3::Img(battle_flow::at::kEventHook.v)))(3);
+        phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(battle_flow::at::kPhase.v))));
     }
     const unsigned index = phase & 0xFF;
     if (index >= 6) bof3::Fatal("Battle_PhaseDispatch: phase %u, past the six-entry table", index);

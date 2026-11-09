@@ -72,9 +72,9 @@ unsigned char* PtrAtBattlePhases(std::uint32_t address) {
 void SetPtrAtBattlePhases(std::uint32_t address, const unsigned char* p) {
     battle_phases::SetLong(battle_phases::At(address), static_cast<std::int32_t>(Low32(p)));
 }
-unsigned char* MemberBattlePhases(unsigned index) { return battle_phases::At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
-unsigned char* EnemyObject(unsigned index) { return battle_phases::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
-unsigned char* Window(unsigned index) { return battle_phases::At(::bof3::Img(WindowRecords_addr) + index * at::kWindowSize); }
+unsigned char* MemberBattlePhases(unsigned index) { return battle_phases::At(::bof3::Img(ObjTrio_addr) + index * battle_phases::at::kMemberSize); }
+unsigned char* EnemyObject(unsigned index) { return battle_phases::At(::bof3::Img(Battle_Enemies_addr) + index * battle_phases::at::kEnemySize); }
+unsigned char* Window(unsigned index) { return battle_phases::At(::bof3::Img(WindowRecords_addr) + index * battle_phases::at::kWindowSize); }
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.
 unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
@@ -105,8 +105,8 @@ void JumpThrough(std::uint32_t table, unsigned index) {
 // party's extra screens, the effects, the field slots, the tint, the window
 // tasks, and a tail jump to Field_DrawFrame.
 extern "C" void __cdecl Battle_Frame(void) {
-    if ((BBattlePhases(::bof3::Img(at::kRoundFlags.v)) & 2) == 0) {
-        const unsigned phase = BBattlePhases(::bof3::Img(at::kPhase.v));
+    if ((BBattlePhases(::bof3::Img(battle_phases::at::kRoundFlags.v)) & 2) == 0) {
+        const unsigned phase = BBattlePhases(::bof3::Img(battle_phases::at::kPhase.v));
         const bool window_held = WindowRecords[0].in_use != 0 && phase != 5;
         const bool flag_held = (BattleMisc_BannerKinds & 2) != 0 && phase != 5;
         if (!window_held && !flag_held) battle_phases::g.phase_dispatch();
@@ -189,30 +189,30 @@ void BattlePhases_ArmPickClear() {
 
 extern "C" void __cdecl Battle_Init(void) {
     battle_phases::g.banner_clear_all();
-    const unsigned count = BBattlePhases(::bof3::Img(at::kActorCount.v));
+    const unsigned count = BBattlePhases(::bof3::Img(battle_phases::at::kActorCount.v));
     Battle_PartyStanding = 0;
     if (count != 0) {
         unsigned i = 0;
         do {
             if (battle_phases::g.actor_is_out(i) == 0) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
             ++i;
-        } while (i < BBattlePhases(::bof3::Img(at::kActorCount.v)));
+        } while (i < BBattlePhases(::bof3::Img(battle_phases::at::kActorCount.v)));
     }
     BattleE4_MenuActor = reinterpret_cast<records::PartyMember*>(MemberBattlePhases(0));
     BossSb_Countdown = 0;
     BattleE5_GeneRow = 0;
     BattleE1_Roster = 0;
-    BBattlePhases(::bof3::Img(at::kCommand.v)) = 0;
-    BBattlePhases(::bof3::Img(at::kCrossGrow.v)) = 8;
-    battle_phases::SetWord(battle_phases::At(::bof3::Img(at::kRoundFlags.v)), 0);
+    BBattlePhases(::bof3::Img(battle_phases::at::kCommand.v)) = 0;
+    BBattlePhases(::bof3::Img(battle_phases::at::kCrossGrow.v)) = 8;
+    battle_phases::SetWord(battle_phases::At(::bof3::Img(battle_phases::at::kRoundFlags.v)), 0);
     Battle_EndFlags = 0;
-    battle_phases::SetLong(battle_phases::At(::bof3::Img(at::kTurnCounter.v)), 1);
+    battle_phases::SetLong(battle_phases::At(::bof3::Img(battle_phases::at::kTurnCounter.v)), 1);
     BattleFlow_ZennyTotal = 0;
     Battle_ExpTotal = 0;
     BattlePhases_AE6 = 0;
     BossSe_Script = 0;
     BattlePhases_B7A = 0;
-    battle_phases::SetWord(battle_phases::At(::bof3::Img(at::kB98.v)), 0);
+    battle_phases::SetWord(battle_phases::At(::bof3::Img(battle_phases::at::kB98.v)), 0);
     Battle_DropCount = 0;
     BattleActions_Pending = 0;
     BattlePhases_B8B = 0;
@@ -269,7 +269,7 @@ extern "C" void __cdecl Battle_Init(void) {
     if (EventBattle_Id == 0) battle_phases::g.load_dat(static_cast<int>(Game_AreaNumber + 0x15D));
     const unsigned char event = EventBattle_Id;
     for (unsigned i = 0; i < 4; ++i) battle_phases::SetLong(battle_phases::At(::bof3::Img(BattlePhases_B24_addr) + 4 * i), 0);
-    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAtBattlePhases(::bof3::Img(at::kEventHook.v)))(6);
+    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAtBattlePhases(::bof3::Img(battle_phases::at::kEventHook.v)))(6);
     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
 }
 
@@ -300,7 +300,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleIntro_Dispatch
 // record is then 0xFF's, past the 64 (0x80551C..).
 extern "C" void __cdecl BattleIntro_OpenWindows(void) {
     BattleWindows_MsgHead = 0;
-    BBattlePhases(::bof3::Img(at::kC2A0.v) + 1) = 0;
+    BBattlePhases(::bof3::Img(battle_phases::at::kC2A0.v) + 1) = 0;
     auto* const window_first = rv::As<records::WindowRecord>(Window(battle_phases::g.window_alloc(0x14, 3) & 0xFF));
     window_first->kind = 7;
     window_first->state = 0;
@@ -317,9 +317,9 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
         const unsigned pair = (member_rec->direction + member_rec->char_id * 4u) * 2u;
         window_rec->kind = 5;
         window_rec->state = 0;
-        const unsigned facing = ((BBattlePhases(::bof3::Img(at::kFacing.v)) ^ 2u) >> 1) * 2u;
-        window_rec->x = static_cast<unsigned>(S8(::bof3::Img(at::kFacingOffsets.v) + facing) + S8(::bof3::Img(at::kStatusOffsets.v) + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
-        window_rec->y = static_cast<unsigned>(S8(::bof3::Img(at::kStatusOffsets.v) + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
+        const unsigned facing = ((BBattlePhases(::bof3::Img(battle_phases::at::kFacing.v)) ^ 2u) >> 1) * 2u;
+        window_rec->x = static_cast<unsigned>(S8(::bof3::Img(battle_phases::at::kFacingOffsets.v) + facing) + S8(::bof3::Img(battle_phases::at::kStatusOffsets.v) + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
+        window_rec->y = static_cast<unsigned>(S8(::bof3::Img(battle_phases::at::kStatusOffsets.v) + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
         w[0xA] = static_cast<unsigned char>(m);
         w[8] = 0;
         w[9] = 0;
@@ -343,13 +343,13 @@ extern "C" void __cdecl BattleIntro_PrepareCross(void) {
     battle_phases::g.open_sub1(0);
     if (BattlePhases_Initiative >= 2) {
         rv::As<records::WindowRecord>(Window(2))->state = 2;
-        battle_phases::SetLong(battle_phases::At(::bof3::Img(at::kCrossGrow.v)), 0);
-        battle_phases::SetWord(battle_phases::At(::bof3::Img(at::kCrossGrow.v) + 4), 0);
-        BBattlePhases(::bof3::Img(at::kCrossGrow.v) + 6) = 0;
+        battle_phases::SetLong(battle_phases::At(::bof3::Img(battle_phases::at::kCrossGrow.v)), 0);
+        battle_phases::SetWord(battle_phases::At(::bof3::Img(battle_phases::at::kCrossGrow.v) + 4), 0);
+        BBattlePhases(::bof3::Img(battle_phases::at::kCrossGrow.v) + 6) = 0;
     } else {
-        battle_phases::SetLong(battle_phases::At(::bof3::Img(at::kCrossGrow.v)), 0x10101010);
-        battle_phases::SetWord(battle_phases::At(::bof3::Img(at::kCrossGrow.v) + 4), 0x1010);
-        BBattlePhases(::bof3::Img(at::kCrossGrow.v) + 6) = 0x10;
+        battle_phases::SetLong(battle_phases::At(::bof3::Img(battle_phases::at::kCrossGrow.v)), 0x10101010);
+        battle_phases::SetWord(battle_phases::At(::bof3::Img(battle_phases::at::kCrossGrow.v) + 4), 0x1010);
+        BBattlePhases(::bof3::Img(battle_phases::at::kCrossGrow.v) + 6) = 0x10;
     }
     BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
@@ -364,7 +364,7 @@ extern "C" void __cdecl BattleIntro_Finish(void) {
     if (battle_phases::g.file_load_done() == 0) return;
     battle_phases::g.open_sub2(BattlePhases_Initiative >= 2 ? 2u : 1u);
     battle_phases::g.open_sub3(2);
-    BBattlePhases(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(BBattlePhases(::bof3::Img(at::kPhase.v)) + 1);
+    BBattlePhases(::bof3::Img(battle_phases::at::kPhase.v)) = static_cast<unsigned char>(BBattlePhases(::bof3::Img(battle_phases::at::kPhase.v)) + 1);
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
 }

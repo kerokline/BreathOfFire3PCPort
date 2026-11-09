@@ -204,7 +204,7 @@ extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
         worldmap_area::g.flags_set40();
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
-        for (U a = ::bof3::Img(WorldMap33_PlaceMessages_addr); a < ::bof3::Img(at::kPlaceMessagesEnd); a += 0x20, ++row)
+        for (U a = ::bof3::Img(WorldMap33_PlaceMessages_addr); a < ::bof3::Img(worldmap_area::at::kPlaceMessagesEnd); a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + static_cast<signed char>(Cond_ByteFA);
         const unsigned message = Word(At(::bof3::Img(WorldMap33_PlaceMessages_addr) + static_cast<U>(index * 2)));
@@ -507,10 +507,10 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
         o->z_whole = 0xFFF8;
         o = rv::As<records::EffectObject>(Cur());
     }
-    std::int32_t dx = S16WorldmapArea(At(::bof3::Img(at::kLeaderCellX))) - S16WorldmapArea(rv::Bytes(o) + 0x36);
+    std::int32_t dx = S16WorldmapArea(At(::bof3::Img(worldmap_area::at::kLeaderCellX))) - S16WorldmapArea(rv::Bytes(o) + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16WorldmapArea(At(::bof3::Img(at::kLeaderCellZ))) - S16WorldmapArea(rv::Bytes(o) + 0x3A);
+        std::int32_t dz = S16WorldmapArea(At(::bof3::Img(worldmap_area::at::kLeaderCellZ))) - S16WorldmapArea(rv::Bytes(o) + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }

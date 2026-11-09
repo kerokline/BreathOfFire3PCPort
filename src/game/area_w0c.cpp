@@ -435,7 +435,7 @@ extern "C" void __cdecl Area32_SpawnEffect50Far(void) { SpawnEffect50(0x8000, 0x
 // Sprite_Current[1] - 0x4253C0 (shared by ten world maps), Area33_Record08Start,
 // 0x40C490 (shared).
 extern "C" void __cdecl Area33_Record08Run(void) {
-    StateEntry("Area33_Record08Run", ::bof3::Img(WorldMap33_Record08States_addr), at::kRecord08StateCount, Sprite_Current[1])();
+    StateEntry("Area33_Record08Run", ::bof3::Img(WorldMap33_Record08States_addr), area_w0c::at::kRecord08StateCount, Sprite_Current[1])();
 }
 
 // original 0x4046A0 (WorldMap33_Record08States[1]): animation bank 0x46;
@@ -482,7 +482,7 @@ extern "C" void __cdecl Area33_Record08Start(void) {
 // Sprite_Current[1] - Area33_Record04Start, 0x408990 (shared by ten world
 // maps).
 extern "C" void __cdecl Area33_Record04Run(void) {
-    StateEntry("Area33_Record04Run", ::bof3::Img(WorldMap33_Record04States_addr), at::kRecord04StateCount, Sprite_Current[1])();
+    StateEntry("Area33_Record04Run", ::bof3::Img(WorldMap33_Record04States_addr), area_w0c::at::kRecord04StateCount, Sprite_Current[1])();
 }
 
 // original 0x404820 (WorldMap33_Record04States[0]): with CharacterRecords

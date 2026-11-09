@@ -90,11 +90,11 @@ world_map::U LongWorldMap(const unsigned char* p) {
 }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char* Object() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Sprite_CurrentAt()))); }
+unsigned char* Object() { return AtWorldMap(LongWorldMap(AtWorldMap(world_map::at::Sprite_CurrentAt()))); }
 
 // The map task's object, Object(), is an effect record: its frame runs from
 // WorldMapHud_Frame, effect kind 0x58's handler, on the effect record.
-unsigned char* PacketNext() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()))); }
+unsigned char* PacketNext() { return AtWorldMap(LongWorldMap(AtWorldMap(world_map::at::Gfx_PacketNextAt()))); }
 
 // The needle's corner arithmetic, as the original's x87 executes it: the
 // integer offset loaded with fild, the corner's float loaded over it, the
@@ -201,7 +201,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
 // that precede them; the index the original pushes for a lit key carries the
 // button word's upper bytes, which the sprite draw masks off.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
-    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
+    if (!(AtWorldMap(world_map::at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     world_map::g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
     world_map::g.commit_prim(1, 0xC);
@@ -209,7 +209,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     const unsigned char cell =
         world_map::g.byte_at(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     const bool withheld1 =
-        cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
+        cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (WordWorldMap(AtWorldMap(world_map::at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) world_map::g.draw_sprite(x + 0x30, y, 1);
     world_map_legend::Key(world_map::g.draw_sprite, ::bof3::Img(kButtonTable), 6, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
@@ -218,9 +218,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     const unsigned char event =
         world_map::g.cell_event(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
     bool third = event != 0;
-    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
+    if (!third) third = (WordWorldMap(AtWorldMap(world_map::at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
-    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
+    if (!third) third = (WordWorldMap(AtWorldMap(world_map::at::Field_ScriptFlagsAt())) & 0x4000) != 0;
     if (third) world_map::g.draw_sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
     world_map::g.draw_needle(x + 0x18, y + 0x18);
@@ -269,7 +269,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
 // 0x803588 - the area's 0x80010000 section's word +8, read after the two
 // sprites. The return (Text_DrawAt's) is not read by the three callers.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int x, int y) {
-    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
+    if (!(AtWorldMap(world_map::at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     world_map::g.draw_sprite(x, y, 4);
     world_map::g.draw_sprite(x + 0x80, y, 5);
     const unsigned char* text = AtWorldMap(::bof3::Img(kAreaText) + (LongWorldMap(AtWorldMap(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
@@ -290,14 +290,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(int x, int y) {
     g.push_matrix();
     alignas(4) unsigned char matrix[0x20];
-    g.rot_matrix(reinterpret_cast<const short*>(AtWorldMap(at::Camera_AnglesAt())), reinterpret_cast<short*>(matrix));
+    g.rot_matrix(reinterpret_cast<const short*>(AtWorldMap(world_map::at::Camera_AnglesAt())), reinterpret_cast<short*>(matrix));
     PutLong(matrix + 0x14, 0);
     PutLong(matrix + 0x18, 0);
     PutLong(matrix + 0x1C, 0);
     g.set_rot_matrix(reinterpret_cast<const unsigned long*>(matrix));
     g.set_trans_matrix(reinterpret_cast<const unsigned long*>(matrix));
     unsigned char* const prim = PacketNext();
-    unsigned char* const scratch = AtWorldMap(at::Prim_VertexScratchAt());
+    unsigned char* const scratch = AtWorldMap(world_map::at::Prim_VertexScratchAt());
     rv::As<records::SVector>(scratch)[0].x = 0xFFF6;   // (-10, 0, 0)
     rv::As<records::SVector>(scratch)[0].y = 0;
     rv::As<records::SVector>(scratch)[0].z = 0;

@@ -890,17 +890,17 @@ void DrawDrift(const WorldMapTables& t) {
 // 0x407B40): PlaceMessage over area 87's tables - ten place rows 0x6124CC,
 // cell records 0x611CC0, name sets of (id, four items) 0x61260C, four text
 // rows.
-extern "C" void __cdecl Area87_PlaceMessage(void) { PlaceMessage(at::kWm87); }
+extern "C" void __cdecl Area87_PlaceMessage(void) { PlaceMessage(area_w2b::at::kWm87); }
 // original 0x40FDE0 (WorldMap_Records[4] +0; area 45's 0x407CC0): PlateRun
 // through Area87_PlateStates 0x61261C.
-extern "C" void __cdecl Area87_PlateRun(void) { PlateRun(at::kWm87); }
+extern "C" void __cdecl Area87_PlateRun(void) { PlateRun(area_w2b::at::kWm87); }
 // original 0x40FEC0 (Area87_PlateStates 0; area 45's 0x407DA0): PlateStart
 // with bank 0x156 (pushed as an imm32: the function is 3 bytes longer than
 // area 45's).
-extern "C" void __cdecl Area87_PlateStart(void) { PlateStart(at::kWm87); }
+extern "C" void __cdecl Area87_PlateStart(void) { PlateStart(area_w2b::at::kWm87); }
 // original 0x40FF20 (Area87_PlateStates 1; area 45's 0x407DF0): PlateShow
 // over Area87_PlateAnims 0x611C98 (ten entries).
-extern "C" void __cdecl Area87_PlateShow(void) { PlateShow(at::kWm87); }
+extern "C" void __cdecl Area87_PlateShow(void) { PlateShow(area_w2b::at::kWm87); }
 // original 0x410070 (Area87_PlateStates 2; area 45's 0x407F40): PlateGrow.
 extern "C" void __cdecl Area87_PlateGrow(void) { PlateGrow(); }
 // original 0x4100C0 (Area87_PlateStates 3; area 45's 0x407F90): PlateHold.
@@ -909,58 +909,58 @@ extern "C" void __cdecl Area87_PlateHold(void) { PlateHold(); }
 extern "C" void __cdecl Area87_PlateShrink(void) { PlateShrink(); }
 // original 0x410170 (record 4 +0xC; area 45's 0x408040): Area87_HudStates
 // 0x612630 by +1 - WorldMapHud_Start (shared), Area87_HudFrame.
-extern "C" void __cdecl Area87_HudRun(void) { StateEntry("Area87", "HudRun", at::kWm87.hud_states, 2, Cur()[1])(); }
+extern "C" void __cdecl Area87_HudRun(void) { StateEntry("Area87", "HudRun", area_w2b::at::kWm87.hud_states, 2, Cur()[1])(); }
 // original 0x410190 (Area87_HudStates 1): `call 0x4101A0; jmp 0x410270` - the
 // frame's slide, then the region box's.
 extern "C" void __cdecl Area87_HudFrame(void) {
-    area_harness::Phase(at::kWm87.fn_frame_step)();
-    area_harness::Phase(at::kWm87.fn_box_step)();
+    area_harness::Phase(area_w2b::at::kWm87.fn_frame_step)();
+    area_harness::Phase(area_w2b::at::kWm87.fn_box_step)();
 }
 // original 0x4101A0 (called by Area87_HudFrame): Area87_FrameStates 0x612638
 // by +2 - WorldMap_FrameWait (shared), _FrameSlideIn, _FrameHold,
 // _FrameSlideOut. A tail jump; ours aborts past the four entries.
-extern "C" void __cdecl Area87_FrameStep(void) { StateEntry("Area87", "FrameStep", at::kWm87.frame_states, 4, Cur()[2])(); }
+extern "C" void __cdecl Area87_FrameStep(void) { StateEntry("Area87", "FrameStep", area_w2b::at::kWm87.frame_states, 4, Cur()[2])(); }
 // original 0x4101C0 (Area87_FrameStates 1): FrameSlideIn, then a tail jump to
 // Area87_FrameHold 0x4101F0.
-extern "C" void __cdecl Area87_FrameSlideIn(void) { FrameSlideIn(at::kWm87); }
+extern "C" void __cdecl Area87_FrameSlideIn(void) { FrameSlideIn(area_w2b::at::kWm87); }
 // original 0x4101F0 (Area87_FrameStates 2): FrameHold, drawing through
 // Area87_DrawFrame 0x4103D0.
-extern "C" void __cdecl Area87_FrameHold(void) { FrameHold(at::kWm87); }
+extern "C" void __cdecl Area87_FrameHold(void) { FrameHold(area_w2b::at::kWm87); }
 // original 0x410220 (Area87_FrameStates 3): FrameSlideOut.
-extern "C" void __cdecl Area87_FrameSlideOut(void) { FrameSlideOut(at::kWm87); }
+extern "C" void __cdecl Area87_FrameSlideOut(void) { FrameSlideOut(area_w2b::at::kWm87); }
 // original 0x410270 (called by Area87_HudFrame): Area87_BoxStates 0x612648
 // by +3 - WorldMapHud_BoxWait (shared), _BoxSlideIn, _BoxHold, _BoxSlideOut.
-extern "C" void __cdecl Area87_BoxStep(void) { StateEntry("Area87", "BoxStep", at::kWm87.box_states, 4, Cur()[3])(); }
+extern "C" void __cdecl Area87_BoxStep(void) { StateEntry("Area87", "BoxStep", area_w2b::at::kWm87.box_states, 4, Cur()[3])(); }
 // original 0x410290 (Area87_BoxStates 1): BoxSlideIn, drawing through
 // Area87_DrawHud 0x410660.
-extern "C" void __cdecl Area87_BoxSlideIn(void) { BoxSlideIn(at::kWm87); }
+extern "C" void __cdecl Area87_BoxSlideIn(void) { BoxSlideIn(area_w2b::at::kWm87); }
 // original 0x410300 (Area87_BoxStates 2): BoxHold.
-extern "C" void __cdecl Area87_BoxHold(void) { BoxHold(at::kWm87); }
+extern "C" void __cdecl Area87_BoxHold(void) { BoxHold(area_w2b::at::kWm87); }
 // original 0x410370 (Area87_BoxStates 3): BoxSlideOut.
-extern "C" void __cdecl Area87_BoxSlideOut(void) { BoxSlideOut(at::kWm87); }
+extern "C" void __cdecl Area87_BoxSlideOut(void) { BoxSlideOut(area_w2b::at::kWm87); }
 // original 0x4103D0 (called by the frame states): DrawFrame over
 // Area87_Buttons 0x6126B0, drawing through Area87_DrawSprite 0x4105A0.
-extern "C" void __cdecl Area87_DrawFrame(int x, int y) { DrawFrame(at::kWm87, x, y); }
+extern "C" void __cdecl Area87_DrawFrame(int x, int y) { DrawFrame(area_w2b::at::kWm87, x, y); }
 // original 0x4105A0: DrawSprite over Area87_Sprites 0x612658.
-extern "C" void __cdecl Area87_DrawSprite(int x, int y, unsigned index) { DrawSprite(at::kWm87, x, y, index); }
+extern "C" void __cdecl Area87_DrawSprite(int x, int y, unsigned index) { DrawSprite(area_w2b::at::kWm87, x, y, index); }
 // original 0x410660 (called by the box states): DrawHud, the label's offset
 // the low word of the dword 0x803580.
-extern "C" void __cdecl Area87_DrawHud(int x, int y) { DrawHud(at::kWm87, x, y); }
+extern "C" void __cdecl Area87_DrawHud(int x, int y) { DrawHud(area_w2b::at::kWm87, x, y); }
 // original 0x4106C0 (record 4 +8): Area87_Record8States 0x6126C8 by +1 -
 // 0x4253C0 and 0x40C490 (the copies' shared states, not this group's)
 // around Area87_Record8Place.
-extern "C" void __cdecl Area87_Record8Run(void) { StateEntry("Area87", "Record8Run", at::kWm87.record8_states, 3, Cur()[1])(); }
+extern "C" void __cdecl Area87_Record8Run(void) { StateEntry("Area87", "Record8Run", area_w2b::at::kWm87.record8_states, 3, Cur()[1])(); }
 // original 0x4106E0 (Area87_Record8States 1): Record8Place over
 // Area87_Directions 0x6126D4 and Area87_Record8Anims 0x6126E4.
-extern "C" void __cdecl Area87_Record8Place(void) { Record8Place(at::kWm87); }
+extern "C" void __cdecl Area87_Record8Place(void) { Record8Place(area_w2b::at::kWm87); }
 // original 0x410840 (record 4 +4): Area87_Record4States 0x6126EC by +1 -
 // Area87_Record4MarkCell, then Area45_Record4Tick 0x408990 (shared).
-extern "C" void __cdecl Area87_Record4Run(void) { StateEntry("Area87", "Record4Run", at::kWm87.record4_states, 2, Cur()[1])(); }
+extern "C" void __cdecl Area87_Record4Run(void) { StateEntry("Area87", "Record4Run", area_w2b::at::kWm87.record4_states, 2, Cur()[1])(); }
 // original 0x410860 (Area87_Record4States 0): Record4MarkCell over the cell
 // records 0x611CC0.
-extern "C" void __cdecl Area87_Record4MarkCell(void) { Record4MarkCell(at::kWm87); }
+extern "C" void __cdecl Area87_Record4MarkCell(void) { Record4MarkCell(area_w2b::at::kWm87); }
 // original 0x410920 (record 4 +0x10): DrawDrift over Area87_DriftUV 0x6126F4.
-extern "C" void __cdecl Area87_DrawDrift(void) { DrawDrift(at::kWm87); }
+extern "C" void __cdecl Area87_DrawDrift(void) { DrawDrift(area_w2b::at::kWm87); }
 
 // ===========================================================================
 // Area 88: the world map's sixth copy (WorldMap_Records record 5; the
@@ -972,15 +972,15 @@ extern "C" void __cdecl Area87_DrawDrift(void) { DrawDrift(at::kWm87); }
 // 0x612E94, cell records 0x61271C, name sets of (id, eleven items) 0x612F74
 // (a stride of 12, the lea ecx, [ebp + ebp*2] and lea edi, [ecx*4 + ..] the
 // four bytes longer than area 45's), eleven text rows (to 0x904E40).
-extern "C" void __cdecl Area88_PlaceMessage(void) { PlaceMessage(at::kWm88); }
+extern "C" void __cdecl Area88_PlaceMessage(void) { PlaceMessage(area_w2b::at::kWm88); }
 // original 0x410F10 (WorldMap_Records[5] +0): PlateRun through
 // Area88_PlateStates 0x612F98.
-extern "C" void __cdecl Area88_PlateRun(void) { PlateRun(at::kWm88); }
+extern "C" void __cdecl Area88_PlateRun(void) { PlateRun(area_w2b::at::kWm88); }
 // original 0x410FF0 (Area88_PlateStates 0): PlateStart with bank 0x157.
-extern "C" void __cdecl Area88_PlateStart(void) { PlateStart(at::kWm88); }
+extern "C" void __cdecl Area88_PlateStart(void) { PlateStart(area_w2b::at::kWm88); }
 // original 0x411050 (Area88_PlateStates 1): PlateShow over Area88_PlateAnims
 // 0x612700 (seven entries).
-extern "C" void __cdecl Area88_PlateShow(void) { PlateShow(at::kWm88); }
+extern "C" void __cdecl Area88_PlateShow(void) { PlateShow(area_w2b::at::kWm88); }
 // original 0x4111A0 (Area88_PlateStates 2): PlateGrow.
 extern "C" void __cdecl Area88_PlateGrow(void) { PlateGrow(); }
 // original 0x4111F0 (Area88_PlateStates 3): PlateHold.
@@ -988,46 +988,46 @@ extern "C" void __cdecl Area88_PlateHold(void) { PlateHold(); }
 // original 0x411250 (Area88_PlateStates 4): PlateShrink.
 extern "C" void __cdecl Area88_PlateShrink(void) { PlateShrink(); }
 // original 0x4112C0 (record 5 +0xC): Area88_HudStates 0x612FAC by +1.
-extern "C" void __cdecl Area88_HudRun(void) { StateEntry("Area88", "HudRun", at::kWm88.hud_states, 2, Cur()[1])(); }
+extern "C" void __cdecl Area88_HudRun(void) { StateEntry("Area88", "HudRun", area_w2b::at::kWm88.hud_states, 2, Cur()[1])(); }
 // original 0x4112E0 (Area88_HudStates 1): `call 0x4112F0; jmp 0x4113F0`.
 extern "C" void __cdecl Area88_HudFrame(void) {
-    area_harness::Phase(at::kWm88.fn_frame_step)();
-    area_harness::Phase(at::kWm88.fn_box_step)();
+    area_harness::Phase(area_w2b::at::kWm88.fn_frame_step)();
+    area_harness::Phase(area_w2b::at::kWm88.fn_box_step)();
 }
 // original 0x4112F0: Area88_FrameStates 0x612FB4 by +2 (entry 0
 // WorldMap_FrameWait 0x411310, the next address).
-extern "C" void __cdecl Area88_FrameStep(void) { StateEntry("Area88", "FrameStep", at::kWm88.frame_states, 4, Cur()[2])(); }
+extern "C" void __cdecl Area88_FrameStep(void) { StateEntry("Area88", "FrameStep", area_w2b::at::kWm88.frame_states, 4, Cur()[2])(); }
 // original 0x411340 (Area88_FrameStates 1): FrameSlideIn, then Area88_FrameHold.
-extern "C" void __cdecl Area88_FrameSlideIn(void) { FrameSlideIn(at::kWm88); }
+extern "C" void __cdecl Area88_FrameSlideIn(void) { FrameSlideIn(area_w2b::at::kWm88); }
 // original 0x411370 (Area88_FrameStates 2): FrameHold through Area88_DrawFrame.
-extern "C" void __cdecl Area88_FrameHold(void) { FrameHold(at::kWm88); }
+extern "C" void __cdecl Area88_FrameHold(void) { FrameHold(area_w2b::at::kWm88); }
 // original 0x4113A0 (Area88_FrameStates 3): FrameSlideOut.
-extern "C" void __cdecl Area88_FrameSlideOut(void) { FrameSlideOut(at::kWm88); }
+extern "C" void __cdecl Area88_FrameSlideOut(void) { FrameSlideOut(area_w2b::at::kWm88); }
 // original 0x4113F0: Area88_BoxStates 0x612FC4 by +3.
-extern "C" void __cdecl Area88_BoxStep(void) { StateEntry("Area88", "BoxStep", at::kWm88.box_states, 4, Cur()[3])(); }
+extern "C" void __cdecl Area88_BoxStep(void) { StateEntry("Area88", "BoxStep", area_w2b::at::kWm88.box_states, 4, Cur()[3])(); }
 // original 0x411410 (Area88_BoxStates 1): BoxSlideIn through Area88_DrawHud.
-extern "C" void __cdecl Area88_BoxSlideIn(void) { BoxSlideIn(at::kWm88); }
+extern "C" void __cdecl Area88_BoxSlideIn(void) { BoxSlideIn(area_w2b::at::kWm88); }
 // original 0x411480 (Area88_BoxStates 2): BoxHold.
-extern "C" void __cdecl Area88_BoxHold(void) { BoxHold(at::kWm88); }
+extern "C" void __cdecl Area88_BoxHold(void) { BoxHold(area_w2b::at::kWm88); }
 // original 0x4114F0 (Area88_BoxStates 3): BoxSlideOut.
-extern "C" void __cdecl Area88_BoxSlideOut(void) { BoxSlideOut(at::kWm88); }
+extern "C" void __cdecl Area88_BoxSlideOut(void) { BoxSlideOut(area_w2b::at::kWm88); }
 // original 0x411550: DrawFrame over Area88_Buttons 0x61302C.
-extern "C" void __cdecl Area88_DrawFrame(int x, int y) { DrawFrame(at::kWm88, x, y); }
+extern "C" void __cdecl Area88_DrawFrame(int x, int y) { DrawFrame(area_w2b::at::kWm88, x, y); }
 // original 0x411720: DrawSprite over Area88_Sprites 0x612FD4.
-extern "C" void __cdecl Area88_DrawSprite(int x, int y, unsigned index) { DrawSprite(at::kWm88, x, y, index); }
+extern "C" void __cdecl Area88_DrawSprite(int x, int y, unsigned index) { DrawSprite(area_w2b::at::kWm88, x, y, index); }
 // original 0x4117E0: DrawHud, the label's offset the low word of 0x803580.
-extern "C" void __cdecl Area88_DrawHud(int x, int y) { DrawHud(at::kWm88, x, y); }
+extern "C" void __cdecl Area88_DrawHud(int x, int y) { DrawHud(area_w2b::at::kWm88, x, y); }
 // original 0x411840 (record 5 +8): Area88_Record8States 0x613044 by +1.
-extern "C" void __cdecl Area88_Record8Run(void) { StateEntry("Area88", "Record8Run", at::kWm88.record8_states, 3, Cur()[1])(); }
+extern "C" void __cdecl Area88_Record8Run(void) { StateEntry("Area88", "Record8Run", area_w2b::at::kWm88.record8_states, 3, Cur()[1])(); }
 // original 0x411860 (Area88_Record8States 1): Record8Place over
 // Area88_Directions 0x613050 and Area88_Record8Anims 0x613060.
-extern "C" void __cdecl Area88_Record8Place(void) { Record8Place(at::kWm88); }
+extern "C" void __cdecl Area88_Record8Place(void) { Record8Place(area_w2b::at::kWm88); }
 // original 0x4119C0 (record 5 +4): Area88_Record4States 0x613068 by +1.
-extern "C" void __cdecl Area88_Record4Run(void) { StateEntry("Area88", "Record4Run", at::kWm88.record4_states, 2, Cur()[1])(); }
+extern "C" void __cdecl Area88_Record4Run(void) { StateEntry("Area88", "Record4Run", area_w2b::at::kWm88.record4_states, 2, Cur()[1])(); }
 // original 0x4119E0 (Area88_Record4States 0): Record4MarkCell over 0x61271C.
-extern "C" void __cdecl Area88_Record4MarkCell(void) { Record4MarkCell(at::kWm88); }
+extern "C" void __cdecl Area88_Record4MarkCell(void) { Record4MarkCell(area_w2b::at::kWm88); }
 // original 0x411AA0 (record 5 +0x10): DrawDrift over Area88_DriftUV 0x613070.
-extern "C" void __cdecl Area88_DrawDrift(void) { DrawDrift(at::kWm88); }
+extern "C" void __cdecl Area88_DrawDrift(void) { DrawDrift(area_w2b::at::kWm88); }
 
 // ===========================================================================
 

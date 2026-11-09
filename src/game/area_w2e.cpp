@@ -462,11 +462,11 @@ void DrawHud(const WorldMapTables& t, int x, int y) {
 // original 0x414760 (WorldMap_Records[6] +0; area 87's 0x40FDE0; PSX
 // 0x801F2FB0): PlateRun through Area104_PlateStates 0x61BB7C (entry 0
 // 0x41ACD0, outside the band).
-extern "C" void __cdecl Area104_PlateRun(void) { PlateRun(at::kWm104); }
+extern "C" void __cdecl Area104_PlateRun(void) { PlateRun(area_w2e::at::kWm104); }
 // original 0x414840 (Area104_PlateStates 1; area 87's 0x40FF20): PlateShow
 // over Area104_PlateAnims 0x61B4F0 (one entry, place 0x65, then a zero
 // record).
-extern "C" void __cdecl Area104_PlateShow(void) { PlateShow(at::kWm104); }
+extern "C" void __cdecl Area104_PlateShow(void) { PlateShow(area_w2e::at::kWm104); }
 // original 0x414990 (Area104_PlateStates 2): PlateGrow.
 extern "C" void __cdecl Area104_PlateGrow(void) { PlateGrow(); }
 // original 0x4149E0 (Area104_PlateStates 3): PlateHold.
@@ -475,43 +475,43 @@ extern "C" void __cdecl Area104_PlateHold(void) { PlateHold(); }
 extern "C" void __cdecl Area104_PlateShrink(void) { PlateShrink(); }
 // original 0x414A90 (record 6 +0xC; PSX 0x801F34E0): Area104_HudStates
 // 0x61BB90 by +1 - WorldMapHud_Start (shared), Area104_HudFrame.
-extern "C" void __cdecl Area104_HudRun(void) { StateEntry("Area104", "HudRun", at::kWm104.hud_states, 2, Cur()[1])(); }
+extern "C" void __cdecl Area104_HudRun(void) { StateEntry("Area104", "HudRun", area_w2e::at::kWm104.hud_states, 2, Cur()[1])(); }
 // original 0x414AB0 (Area104_HudStates 1): `call 0x414AC0; jmp 0x414B90` -
 // the frame's slide, then the region box's.
 extern "C" void __cdecl Area104_HudFrame(void) {
-    area_harness::Phase(at::kWm104.fn_frame_step)();
-    area_harness::Phase(at::kWm104.fn_box_step)();
+    area_harness::Phase(area_w2e::at::kWm104.fn_frame_step)();
+    area_harness::Phase(area_w2e::at::kWm104.fn_box_step)();
 }
 // original 0x414AC0: Area104_FrameStates 0x61BB98 by +2 - WorldMap_FrameWait
 // (shared), _FrameSlideIn, _FrameHold, _FrameSlideOut. A tail jump; ours
 // aborts past the four entries.
-extern "C" void __cdecl Area104_FrameStep(void) { StateEntry("Area104", "FrameStep", at::kWm104.frame_states, 4, Cur()[2])(); }
+extern "C" void __cdecl Area104_FrameStep(void) { StateEntry("Area104", "FrameStep", area_w2e::at::kWm104.frame_states, 4, Cur()[2])(); }
 // original 0x414AE0 (Area104_FrameStates 1): FrameSlideIn, then a tail jump
 // to Area104_FrameHold 0x414B10.
-extern "C" void __cdecl Area104_FrameSlideIn(void) { FrameSlideIn(at::kWm104); }
+extern "C" void __cdecl Area104_FrameSlideIn(void) { FrameSlideIn(area_w2e::at::kWm104); }
 // original 0x414B10 (Area104_FrameStates 2): FrameHold, drawing through
 // Area104_DrawFrame 0x414D30.
-extern "C" void __cdecl Area104_FrameHold(void) { FrameHold(at::kWm104); }
+extern "C" void __cdecl Area104_FrameHold(void) { FrameHold(area_w2e::at::kWm104); }
 // original 0x414B40 (Area104_FrameStates 3): FrameSlideOut.
-extern "C" void __cdecl Area104_FrameSlideOut(void) { FrameSlideOut(at::kWm104); }
+extern "C" void __cdecl Area104_FrameSlideOut(void) { FrameSlideOut(area_w2e::at::kWm104); }
 // original 0x414B90: Area104_BoxStates 0x61BBA8 by +3 - WorldMapHud_BoxWait
 // (0x414BB0, round eight's, the next function), _BoxSlideIn, _BoxHold,
 // _BoxSlideOut.
-extern "C" void __cdecl Area104_BoxStep(void) { StateEntry("Area104", "BoxStep", at::kWm104.box_states, 4, Cur()[3])(); }
+extern "C" void __cdecl Area104_BoxStep(void) { StateEntry("Area104", "BoxStep", area_w2e::at::kWm104.box_states, 4, Cur()[3])(); }
 // original 0x414BF0 (Area104_BoxStates 1): BoxSlideIn, drawing through
 // Area104_DrawHud 0x414FC0.
-extern "C" void __cdecl Area104_BoxSlideIn(void) { BoxSlideIn(at::kWm104); }
+extern "C" void __cdecl Area104_BoxSlideIn(void) { BoxSlideIn(area_w2e::at::kWm104); }
 // original 0x414C60 (Area104_BoxStates 2): BoxHold.
-extern "C" void __cdecl Area104_BoxHold(void) { BoxHold(at::kWm104); }
+extern "C" void __cdecl Area104_BoxHold(void) { BoxHold(area_w2e::at::kWm104); }
 // original 0x414CD0 (Area104_BoxStates 3): BoxSlideOut.
-extern "C" void __cdecl Area104_BoxSlideOut(void) { BoxSlideOut(at::kWm104); }
+extern "C" void __cdecl Area104_BoxSlideOut(void) { BoxSlideOut(area_w2e::at::kWm104); }
 // original 0x414D30: DrawFrame over Area104_Buttons 0x61BC10, drawing through
 // Area104_DrawSprite 0x414F00.
-extern "C" void __cdecl Area104_DrawFrame(int x, int y) { DrawFrame(at::kWm104, x, y); }
+extern "C" void __cdecl Area104_DrawFrame(int x, int y) { DrawFrame(area_w2e::at::kWm104, x, y); }
 // original 0x414F00: DrawSprite over Area104_Sprites 0x61BBB8.
-extern "C" void __cdecl Area104_DrawSprite(int x, int y, unsigned index) { DrawSprite(at::kWm104, x, y, index); }
+extern "C" void __cdecl Area104_DrawSprite(int x, int y, unsigned index) { DrawSprite(area_w2e::at::kWm104, x, y, index); }
 // original 0x414FC0: DrawHud, the label's offset the low word of 0x803580.
-extern "C" void __cdecl Area104_DrawHud(int x, int y) { DrawHud(at::kWm104, x, y); }
+extern "C" void __cdecl Area104_DrawHud(int x, int y) { DrawHud(area_w2e::at::kWm104, x, y); }
 
 // ===========================================================================
 // Area 104: the leader controller (leader state 12 in area 104)
@@ -523,7 +523,7 @@ extern "C" void __cdecl Area104_DrawHud(int x, int y) { DrawHud(at::kWm104, x, y
 // next dwords are kind 0x5C's states), then a tail jump to
 // Area104_LeaderCharge.
 extern "C" void __cdecl Area104_LeaderRun(void) {
-    StateEntry("Area104", "LeaderRun", ::bof3::Img(Area104_LeaderStates_addr), at::kA104LeaderStateCount, Cur()[2])();
+    StateEntry("Area104", "LeaderRun", ::bof3::Img(Area104_LeaderStates_addr), area_w2e::at::kA104LeaderStateCount, Cur()[2])();
     area_harness::Phase(kLeaderCharge.v)();
 }
 
@@ -555,13 +555,13 @@ extern "C" void __cdecl Area104_LeaderRun(void) {
 extern "C" void __cdecl Area104_LeaderIdle(void) {
     if (AH_AT(AnswerFn, kStartOnObject121.v)() != 0) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
-    if ((B(::bof3::Img(at::kScriptFlags2.v)) & 0x40) != 0) return;
+    if ((B(::bof3::Img(area_w2e::at::kScriptFlags2.v)) & 0x40) != 0) return;
     if (Field_Request != 0) return;
     if (Cur()[0xA] != 0) return;
     if (Field_InputHeld != 0) {
         unsigned char* const state = Field_State;
         const U actor = state[0x148];
-        if ((B(::bof3::Img(at::kActorStates.v) + actor * at::kActorStride) & 0x20) == 0) state[0x136] = 0;
+        if ((B(::bof3::Img(area_w2e::at::kActorStates.v) + actor * area_w2e::at::kActorStride) & 0x20) == 0) state[0x136] = 0;
     }
     if (AH_CALL(Field_LeaderCellEvent)() != 0) return;
     if (AH_AT(AnswerFn, area_w2e::kMenuButton121.v)() != 0) return;
@@ -740,7 +740,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
     if ((Field_InputFlags & 1) != 0) {
         const auto cell = [] { return AH_CALL(AreaMap_ByteAt)(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole)); };
         if (cell() == 0xAF) {
-            AH_CALL(Field_ChangeArea)(AreaW0b_Place, at::kPendingX, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            AH_CALL(Field_ChangeArea)(AreaW0b_Place, area_w2e::at::kPendingX, static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
             ModeFlow_AreaTransition = 0;
             Area_EnterTransition = 0xC;
             return;
@@ -756,7 +756,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
         return;
     }
     AH_CALL(Field_Bit80Tick)();
-    if ((Field_ScriptFlags & 0x100) == 0 && (B(::bof3::Img(at::kScriptFlags2.v)) & 0x40) == 0) {
+    if ((Field_ScriptFlags & 0x100) == 0 && (B(::bof3::Img(area_w2e::at::kScriptFlags2.v)) & 0x40) == 0) {
         const U keys = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) | Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)) | 0xF000u) & 0xFFFF;
         if ((Field_InputHeld & keys) != 0) {
             area_harness::Phase(kLeaderIdle.v)();
@@ -838,7 +838,7 @@ extern "C" void __cdecl Area104_LeaderCharge(void) {
 // _Kind5CTurn, _Kind5CSpin, _Kind5CRise and 0x41C5B0 (area 121's). A tail
 // jump; ours aborts past the five entries.
 extern "C" void __cdecl Area104_Kind5CRun(void) {
-    StateEntry("Area104", "Kind5CRun", ::bof3::Img(Area104_Kind5CStates_addr), at::kA104Kind5CStateCount, Cur()[1])();
+    StateEntry("Area104", "Kind5CRun", ::bof3::Img(Area104_Kind5CStates_addr), area_w2e::at::kA104Kind5CStateCount, Cur()[1])();
 }
 
 // original 0x4157A0 (Area104_Kind5CStates 0): +8 = the leader's facing;
@@ -853,7 +853,7 @@ extern "C" void __cdecl Area104_Kind5CStart(void) {
     const U area = Game_AreaNumber;
     if (area >= 200) bof3::Fatal("Area104_Kind5CStart: area %u is past Area_Descriptors' 200", static_cast<unsigned>(area));
     const U descriptor = static_cast<U>(Long(At(::bof3::Img(Area_Descriptors_addr) + area * 4)));
-    AH_CALL(Sprite_InitFromEntry)(At(static_cast<U>(Long(At(descriptor + 8))) + at::kA104EntryPlus8));
+    AH_CALL(Sprite_InitFromEntry)(At(static_cast<U>(Long(At(descriptor + 8))) + area_w2e::at::kA104EntryPlus8));
     Cur()[0x5D] = 0x80;
     Cur()[0x5E] = 0x80;
     Cur()[0x5F] = 0x80;
@@ -1148,10 +1148,10 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     digit = static_cast<signed char>(digit + static_cast<signed char>((frames % 3) * 3));
     if (digit < 0) digit = 0;
     else if (digit > 9) digit = 9;
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kCountdownText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountdownFormat.v))),
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(area_w2e::at::kCountdownText.v))), reinterpret_cast<const char*>(At(::bof3::Img(area_w2e::at::kCountdownFormat.v))),
                          static_cast<U>(c[9]), frames / 3, static_cast<std::int32_t>(digit));
     const bool blink = Cur()[9] < 10 && (Frame_Counter & 4) != 0;
-    AH_CALL(Text_DrawFont12)(0x84, 0x30, blink ? 2 : 0, At(::bof3::Img(at::kCountdownText.v)));
+    AH_CALL(Text_DrawFont12)(0x84, 0x30, blink ? 2 : 0, At(::bof3::Img(area_w2e::at::kCountdownText.v)));
     area_harness::Phase(kDrawPanel.v)();
 
     // the ring
@@ -1229,7 +1229,7 @@ extern "C" void __cdecl Area104_DrawPanel(void) {
     quad[4] = quad[5] = quad[6] = 0x80;
     AH_CALL(Gfx_CommitPrim)(2, 0x48);
     const auto f3 = AH_AT(PrimFn, area_w2e::kSetPolyF3.v);
-    for (U row = ::bof3::Img(Area104_PanelTris_addr); row < ::bof3::Img(at::kPanelTrisEnd.v); row += 0xC) {
+    for (U row = ::bof3::Img(Area104_PanelTris_addr); row < ::bof3::Img(area_w2e::at::kPanelTrisEnd.v); row += 0xC) {
         unsigned char* const prim = Gfx_PacketNext;
         f3(prim);
         AH_CALL(Gpu_SetSemiTrans)(prim, 1);
@@ -1271,7 +1271,7 @@ extern "C" void __cdecl Area104_BuildMinimap(void) {
         }
     }
     const unsigned slot = Gfx_UploadQueueCount;
-    if (slot >= at::kUploadSlots) bof3::Fatal("Area104_BuildMinimap: upload slot %u is past the queue's %u", slot, at::kUploadSlots);
+    if (slot >= area_w2e::at::kUploadSlots) bof3::Fatal("Area104_BuildMinimap: upload slot %u is past the queue's %u", slot, area_w2e::at::kUploadSlots);
     SetWord(At(::bof3::Img(Gfx_UploadQueueX_addr) + slot * 2), 0x380);
     SetWord(At(::bof3::Img(Gfx_UploadQueueY_addr) + slot * 2), 0x100);
     SetLong(At(::bof3::Img(Gfx_UploadQueueRecord_addr) + slot * 4), static_cast<std::int32_t>(::bof3::Img(Gfx_UnpackScratch_addr)));
@@ -1341,7 +1341,7 @@ extern "C" unsigned char __cdecl Area105_StepHook(U, U z) {
     if (Cond_ByteFA >= 0xA) return 0;
     if (Cond_ByteFD != 0) return 0;
     const unsigned char facing = ObjTrio[0].direction;
-    at::kFoundX = facing;
+    area_w2e::at::kFoundX = facing;
     if (facing == 0 || facing == 1 || facing == 2) return 0;
     if (static_cast<std::int16_t>(z >> 16) <= 0x1D) return 0;
     Set40();
