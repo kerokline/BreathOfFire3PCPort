@@ -60,7 +60,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 U Key(const void* p) { return Low32(p); }
 unsigned char* PtrAt(U cell) { return move_script::At(static_cast<U>(move_script::Long(move_script::At(cell)))); }
 void SetPtrAt(U cell, const void* p) { SetLong(move_script::At(cell), static_cast<std::int32_t>(Key(p))); }

@@ -123,7 +123,7 @@ constexpr unsigned kSpriteCount = 30;
 
 unsigned char* S() { return Sprite_Current; }
 unsigned char* AM() { return Field_ActiveMember; }
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 std::int32_t LRest1g(U address) { return Long(At(address)); }
 void SetLRest1g(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U WRest1g(U address) { return Word(At(address)); }

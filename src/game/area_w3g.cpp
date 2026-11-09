@@ -68,7 +68,7 @@ unsigned char* EffectAt(U slot) { return At(::bof3::Img(Effect_Objects_addr) + s
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 void Disarm() {
     AreaW0a_TailKind = 0;
     AreaW0c_TailState = 0;

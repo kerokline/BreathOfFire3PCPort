@@ -53,7 +53,7 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 

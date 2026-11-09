@@ -76,7 +76,7 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U Key(const void* p) { return Low32(p); }
