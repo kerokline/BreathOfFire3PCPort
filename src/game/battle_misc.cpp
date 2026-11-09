@@ -83,31 +83,31 @@ namespace {
 
 using namespace battle_misc;
 
-unsigned char* AtBattleMisc(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U WordBattleMisc(const unsigned char* p) {
+unsigned char* AtBattleMisc(battle_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+battle_misc::U WordBattleMisc(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-U LongBattleMisc(const unsigned char* p) {
-    U v;
+battle_misc::U LongBattleMisc(const unsigned char* p) {
+    battle_misc::U v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void PutWord(unsigned char* p, U v) {
+void PutWord(unsigned char* p, battle_misc::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-U Addr(const void* p) { return Low32(p); }
+void PutLong(unsigned char* p, battle_misc::U v) { std::memcpy(p, &v, sizeof v); }
+battle_misc::U Addr(const void* p) { return Low32(p); }
 
-U SpriteCurrent() { return LongBattleMisc(AtBattleMisc(at::Sprite_CurrentAt())); }
-void SetSpriteCurrent(U v) { PutLong(AtBattleMisc(at::Sprite_CurrentAt()), v); }
-U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
-unsigned char* Banner(U i) { return AtBattleMisc(::bof3::Img(kBanners.v) + i * 0xC); }
+battle_misc::U SpriteCurrent() { return LongBattleMisc(AtBattleMisc(at::Sprite_CurrentAt())); }
+void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(at::Sprite_CurrentAt()), v); }
+battle_misc::U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
+unsigned char* Banner(battle_misc::U i) { return AtBattleMisc(::bof3::Img(battle_misc::kBanners.v) + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
-U Context(U slot) { return ::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * kContextStride; }
+battle_misc::U Context(battle_misc::U slot) { return ::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * kContextStride; }
 
 }  // namespace
 
@@ -146,10 +146,10 @@ extern "C" void __cdecl Battle_PulseStep(void) {
 // [..]); Sound_PlayEffect reads the low word. Returns its eax, which one of the
 // thirteen callers (0x4FC079) returns on.
 extern "C" unsigned long __cdecl Battle_PlayActorCue(unsigned cue) {
-    const U record = LongBattleMisc(AtBattleMisc(at::Field_StateAt()));
-    const U index = WordBattleMisc(AtBattleMisc(record + 0x2C)) + (cue & 0xFF) * 3;
-    const U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
-    return g.play_effect(id);
+    const battle_misc::U record = LongBattleMisc(AtBattleMisc(at::Field_StateAt()));
+    const battle_misc::U index = WordBattleMisc(AtBattleMisc(record + 0x2C)) + (cue & 0xFF) * 3;
+    const battle_misc::U id = (record & 0xFFFF0000u) | WordBattleMisc(AtBattleMisc(::bof3::Img(kCueTable.v) + index * 2));
+    return battle_misc::g.play_effect(id);
 }
 
 // original 0x446BB0 (PSX 0x801DDA7C): when bit 7 of the status argument is set,
@@ -186,9 +186,9 @@ extern "C" __attribute__((naked)) unsigned long __cdecl Battle_StatusTint(unsign
 // the call), +9 = 0, +0x34 / +0x38 / +0x3C the object's position dwords, each
 // read just before it is stored. Its one caller (0x446C30) does not read eax.
 extern "C" void __cdecl Battle_InitActorContext(void) {
-    const U slot = g.alloc_context(0, 6);
+    const battle_misc::U slot = battle_misc::g.alloc_context(0, 6);
     unsigned char* const context = AtBattleMisc(Context(slot));
-    const U object = SpriteCurrent();
+    const battle_misc::U object = SpriteCurrent();
     PutLong(context + 0x80, object);
     context[9] = 0;
     PutLong(context + 0x34, LongBattleMisc(AtBattleMisc(object + 0x34)));
@@ -202,24 +202,24 @@ extern "C" void __cdecl Battle_InitActorContext(void) {
 // Field_State (party) or kCurrentEnemy (enemies) and gets Battle_InitActorContext;
 // any other still takes a slot, 0x435180(0, 0), so slots stay in actor order.
 extern "C" void __cdecl Battle_InitActorContexts(void) {
-    for (U i = 0; i < 3; ++i) {
-        const U object = at::ObjTrioAt() + i * kPartyStride;
+    for (battle_misc::U i = 0; i < 3; ++i) {
+        const battle_misc::U object = at::ObjTrioAt() + i * kPartyStride;
         if (AtBattleMisc(object)[0] & 1) {
             SetSpriteCurrent(object);
             PutLong(AtBattleMisc(at::Field_StateAt()), object);
-            g.init_context();
+            battle_misc::g.init_context();
         } else {
-            g.alloc_context(0, 0);
+            battle_misc::g.alloc_context(0, 0);
         }
     }
-    for (U i = 0; i < 8; ++i) {
-        const U object = ::bof3::Img(Battle_Enemies_addr) + i * kEnemyStride;
+    for (battle_misc::U i = 0; i < 8; ++i) {
+        const battle_misc::U object = ::bof3::Img(Battle_Enemies_addr) + i * kEnemyStride;
         if (AtBattleMisc(object)[0] & 1) {
             SetSpriteCurrent(object);
             BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(static_cast<std::uintptr_t>(object));
-            g.init_context();
+            battle_misc::g.init_context();
         } else {
-            g.alloc_context(0, 0);
+            battle_misc::g.alloc_context(0, 0);
         }
     }
 }
@@ -236,21 +236,21 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
 // context pointer, or 0x4456C0's eax when that actor was passed over, with
 // al = 11.
 extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
-    U eax = 0;
-    for (U index = 0; index <= 10; ++index) {
-        U object;
+    battle_misc::U eax = 0;
+    for (battle_misc::U index = 0; index <= 10; ++index) {
+        battle_misc::U object;
         if (index <= 2) {
             object = at::ObjTrioAt() + index * kPartyStride;
             if (!(AtBattleMisc(object)[0] & 1) || (AtBattleMisc(object + 0x134)[0] & 8)) continue;
         } else {
             object = ::bof3::Img(Battle_Enemies_addr) + (index - 3) * kEnemyStride;
-            eax = g.actor_out(index);
+            eax = battle_misc::g.actor_out(index);
             if ((eax & 0xFF) != 0 || (AtBattleMisc(object + 0x114)[0] & 8)) continue;
         }
-        const U slot = g.alloc_context(0, 7);
+        const battle_misc::U slot = battle_misc::g.alloc_context(0, 7);
         SetSpriteCurrent(object);
-        const U context = Context(slot);
-        for (U k = 0; k < 0x80; k += 4) PutLong(AtBattleMisc(context + k), LongBattleMisc(AtBattleMisc(object + k)));
+        const battle_misc::U context = Context(slot);
+        for (battle_misc::U k = 0; k < 0x80; k += 4) PutLong(AtBattleMisc(context + k), LongBattleMisc(AtBattleMisc(object + k)));
         PutLong(AtBattleMisc(context + 0x80), object);
         unsigned char* const c = AtBattleMisc(context);
         c[6] = 0;
@@ -275,20 +275,20 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
 // shifted down, logically); a -1 there: al 1; else Sound_LoadStream(its low half
 // + 0x1000), al 0. The four callers test al.
 extern "C" unsigned char __cdecl Battle_LoadSoundByKey(unsigned key, unsigned set) {
-    U p = LongBattleMisc(AtBattleMisc(::bof3::Img(kSoundLists.v) + (set & 0xFF) * 4));
+    battle_misc::U p = LongBattleMisc(AtBattleMisc(::bof3::Img(kSoundLists.v) + (set & 0xFF) * 4));
     if (p == 0) return 1;
-    U e = LongBattleMisc(AtBattleMisc(p));
+    battle_misc::U e = LongBattleMisc(AtBattleMisc(p));
     if (e != 0xFFFFFFFFu) {
-        const U want = key & 0xFF;
+        const battle_misc::U want = key & 0xFF;
         while ((e >> 16) != want) {
             e = LongBattleMisc(AtBattleMisc(p + 4));
             p += 4;
             if (e == 0xFFFFFFFFu) break;
         }
     }
-    const U entry = LongBattleMisc(AtBattleMisc(p));
+    const battle_misc::U entry = LongBattleMisc(AtBattleMisc(p));
     if (entry == 0xFFFFFFFFu) return 1;
-    g.load_stream((entry & 0xFFFF) + 0x1000);
+    battle_misc::g.load_stream((entry & 0xFFFF) + 0x1000);
     return 0;
 }
 
@@ -297,12 +297,12 @@ extern "C" unsigned char __cdecl Battle_LoadSoundByKey(unsigned key, unsigned se
 // the x86 shift count, as the PSX sllv's. eax is 1 << n, or its complement,
 // which callers such as 0x42FBE0 push on with a word written over the low half.
 extern "C" unsigned long __cdecl Battle_SetActorBit(unsigned actor) {
-    const U bit = 1u << (actor & 31);
+    const battle_misc::U bit = 1u << (actor & 31);
     BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) | bit;
     return bit;
 }
 extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
-    const U mask = ~(1u << (actor & 31));
+    const battle_misc::U mask = ~(1u << (actor & 31));
     BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) & mask;
     return mask;
 }
@@ -318,10 +318,10 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // mov al); the first call's carry the entry's stale eax and ecx, which
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
-    const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
-    const U item = AtBattleMisc(list + AtBattleMisc(::bof3::Img(WindowRecords_addr) + 0x24c)[0])[0];
-    const U high = list & 0xFFFF0000u;
-    const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
+    const battle_misc::U list = battle_misc::g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
+    const battle_misc::U item = AtBattleMisc(list + AtBattleMisc(::bof3::Img(WindowRecords_addr) + 0x24c)[0])[0];
+    const battle_misc::U high = list & 0xFFFF0000u;
+    const battle_misc::U usable = battle_misc::g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
     return (usable & 0xFF) == 0;
 }
 
@@ -334,14 +334,14 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // then 0x80340C = 0, 0x80340E = 0, kItemActor = the actor byte read again,
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
-    const U acting = Low32(BattleE4_MenuActor.Native());
+    const battle_misc::U acting = Low32(BattleE4_MenuActor.Native());
     unsigned char* const w = AtBattleMisc(::bof3::Img(Window16_addr));
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;
     window_rec->handler = 8;
     window_rec->kind = 2;
     window_rec->state = 2;
-    const U actor = AtBattleMisc(acting + 5)[0];
+    const battle_misc::U actor = AtBattleMisc(acting + 5)[0];
     w[0xA] = static_cast<unsigned char>(actor);
     w[0xD] = 0xFF;
     const unsigned char page = AtBattleMisc(::bof3::Img(kActorPages.v) + actor * 3)[0];
@@ -350,7 +350,7 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     w[9] = 0;
     PutWord(w + 0x10, AtBattleMisc(::bof3::Img(kActorPages.v) + 1 + actor * 3)[0]);
     w[0xC] = AtBattleMisc(::bof3::Img(kActorPages.v) + 2 + actor * 3)[0];
-    const U flags = LongBattleMisc(AtBattleMisc(BattleActorCopies_Command + 0x10));
+    const battle_misc::U flags = LongBattleMisc(AtBattleMisc(BattleActorCopies_Command + 0x10));
     PutWord(w + 0x14, ((flags & 2) && !(flags & 0x20000)) ? 2 : 0);
     window_rec->x = 0x140;
     window_rec->y = 0x3F;
@@ -401,10 +401,10 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
 // not re-read) and Window_FreeCurrent called. Two of the callers tail-jump
 // here, so the last call's eax is returned.
 extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
-    U eax = 0;
-    for (U k = 0; k < 4; ++k) {
+    battle_misc::U eax = 0;
+    for (battle_misc::U k = 0; k < 4; ++k) {
         BattleWinStates_Current = ::bof3::Img(Window16_addr) + k * 0x24;
-        eax = g.free_window();
+        eax = battle_misc::g.free_window();
     }
     return eax;
 }
@@ -424,17 +424,17 @@ extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
 // push are constants 1 and 2 (docs/battle_misc.md section 1).
 extern "C" void __cdecl BattleBanner_Dispatch(void) {
     BattleMisc_BannerKinds = 0;
-    for (U layer = 0; layer < 2; ++layer) {
-        for (U i = 0; i < 8; ++i) {
+    for (battle_misc::U layer = 0; layer < 2; ++layer) {
+        for (battle_misc::U i = 0; i < 8; ++i) {
             unsigned char* const entry = Banner(i);
             BattleMisc_BannerCurrent = Addr(entry);
             if (entry[0] == 0) continue;
             if (entry[3] != layer) continue;
             if (BattleMisc_BannerKinds & entry[1]) continue;
             SharedScratch.b_00 = static_cast<unsigned char>(i);
-            const U kind = entry[1];
+            const battle_misc::U kind = entry[1];
             if (kind >= 5) bof3::Fatal("banner entry %u has kind %u; the original's stack table holds five", i, kind);
-            g.banner[kind]();
+            battle_misc::g.banner[kind]();
         }
     }
 }
@@ -443,7 +443,7 @@ namespace {
 // The shared fill of BattleBanner_Add and BattleBanner_Set: +0 |= 1, +1 kind,
 // +2 b2, +3 layer, word +8 the timer's byte, +4 the text, +0xA = 0, in the
 // original's order.
-void FillBanner(unsigned char* entry, U kind, U b2, U layer, U timer, U text) {
+void FillBanner(unsigned char* entry, battle_misc::U kind, battle_misc::U b2, battle_misc::U layer, battle_misc::U timer, battle_misc::U text) {
     entry[0] = static_cast<unsigned char>(entry[0] | 1);
     entry[1] = static_cast<unsigned char>(kind);
     entry[2] = static_cast<unsigned char>(b2);
@@ -461,7 +461,7 @@ void FillBanner(unsigned char* entry, U kind, U b2, U layer, U timer, U text) {
 // overwrite al before returning, so ours returns the register.
 extern "C" unsigned long __cdecl BattleBanner_Add(unsigned kind, unsigned b2, unsigned layer, unsigned timer,
                                                   const char* text) {
-    for (U i = 2; i < 8; ++i) {
+    for (battle_misc::U i = 2; i < 8; ++i) {
         if (Banner(i)[0] != 0) continue;
         FillBanner(Banner(i), kind, b2, layer, timer, Addr(text));
         return i * 12;
@@ -480,19 +480,19 @@ extern "C" unsigned long __cdecl BattleBanner_Set(unsigned slot, unsigned kind, 
 // original 0x44A810 (PSX 0x801DE7CC): bytes +0, +1 and +2 of all 8 entries to 0.
 // eax is the walk's pointer past the last entry, 0x93B941.
 extern "C" unsigned long __cdecl BattleBanner_ClearAll(void) {
-    for (U i = 0; i < 8; ++i) {
+    for (battle_misc::U i = 0; i < 8; ++i) {
         Banner(i)[0] = 0;
         Banner(i)[1] = 0;
         Banner(i)[2] = 0;
     }
-    return ::bof3::Img(kBanners.v) + 1 + 8 * 12;
+    return ::bof3::Img(battle_misc::kBanners.v) + 1 + 8 * 12;
 }
 
 // original 0x44A830 (PSX 0x801DE820 BattleBanner_NoneOfKind): al 0 when an active
 // entry's kind byte is kind & 0xFF, else 1 - and eax is exactly that (the
 // upper bits are the entry offset's, which is below 0x100).
 extern "C" unsigned char __cdecl BattleBanner_NoneOfKind(unsigned kind) {
-    for (U i = 0; i < 8; ++i)
+    for (battle_misc::U i = 0; i < 8; ++i)
         if (Banner(i)[0] != 0 && Banner(i)[1] == (kind & 0xFF)) return 0;
     return 1;
 }
@@ -501,11 +501,11 @@ extern "C" unsigned char __cdecl BattleBanner_NoneOfKind(unsigned kind) {
 // on what it indexes) gets +0 = a, +1 = b, dword +4 = value; kQueueWrite =
 // (index + 1) & 0xF. eax the entry's offset, index * 8 (0x42FF2F returns it).
 extern "C" unsigned long __cdecl BattleQueue_Push(unsigned a, unsigned b, unsigned long value) {
-    const U index = BattleActorCopies_QueueWrite;
+    const battle_misc::U index = BattleActorCopies_QueueWrite;
     unsigned char* const entry = AtBattleMisc(::bof3::Img(kQueue.v) + index * 8);
     entry[0] = static_cast<unsigned char>(a);
     entry[1] = static_cast<unsigned char>(b);
-    PutLong(entry + 4, static_cast<U>(value));
+    PutLong(entry + 4, static_cast<battle_misc::U>(value));
     BattleActorCopies_QueueWrite = static_cast<unsigned char>((index + 1) & 0xF);
     return index * 8;
 }
@@ -522,7 +522,7 @@ extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
 // DIVERGENCE DIV-0052: 12 bytes, the US release's count, once a language
 // overlay has repointed the table at its longer words (src/game/battle_text.cpp).
 extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
-    const U eax = g.copy_n(::bof3::Img(kBannerText.v), LongBattleMisc(AtBattleMisc(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
+    const battle_misc::U eax = battle_misc::g.copy_n(::bof3::Img(kBannerText.v), LongBattleMisc(AtBattleMisc(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
     Banner(0)[2] = static_cast<unsigned char>(b2);
     return eax;
 }
@@ -536,19 +536,19 @@ extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned 
 // rep movsb). Then BattleBanner_Set(0, 1, 1, 0, 0xFF, kBannerText), whose eax
 // is returned.
 extern "C" unsigned long __cdecl BattleBanner_ShowName(const unsigned char* actor) {
-    g.copy_n(::bof3::Img(kBannerText.v), Addr(actor) + 0x80, 8);
+    battle_misc::g.copy_n(::bof3::Img(kBannerText.v), Addr(actor) + 0x80, 8);
     if (BattlePhases_B7A != 0) {
-        const U src = BattleMisc_NameSuffix;
-        U n = 0;
+        const battle_misc::U src = BattleMisc_NameSuffix;
+        battle_misc::U n = 0;
         while (AtBattleMisc(src + n)[0] != 0) ++n;
         ++n;
-        U dst = ::bof3::Img(kBannerText.v);
+        battle_misc::U dst = ::bof3::Img(kBannerText.v);
         while (AtBattleMisc(dst)[0] != 0) ++dst;
-        U k = 0;
+        battle_misc::U k = 0;
         for (; k + 4 <= (n & ~3u); k += 4) PutLong(AtBattleMisc(dst + k), LongBattleMisc(AtBattleMisc(src + k)));
-        for (U r = 0; r < (n & 3); ++r, ++k) AtBattleMisc(dst + k)[0] = AtBattleMisc(src + k)[0];
+        for (battle_misc::U r = 0; r < (n & 3); ++r, ++k) AtBattleMisc(dst + k)[0] = AtBattleMisc(src + k)[0];
     }
-    return g.banner_set(0, 1, 1, 0, 0xFF, ::bof3::Img(kBannerText.v));
+    return battle_misc::g.banner_set(0, 1, 1, 0, 0xFF, ::bof3::Img(kBannerText.v));
 }
 
 // --- the enemy AI's per-turn rows -------------------------------------------------------
@@ -557,10 +557,10 @@ namespace {
 // Rows that fire once: EnemyAI_RowDone(actor, row) - skipped when al is set -
 // then EnemyAI_ApplyAction and EnemyAI_SetRowDone(.., row, 1), each handed the
 // current enemy read again. `actor` is what the row's test used.
-void FireRow(U actor, U row_address, U row) {
-    if (g.ai_row_done(actor, row) & 0xFF) return;
-    g.ai_apply(CurrentEnemy(), row_address);
-    g.ai_set_done(CurrentEnemy(), row, 1);
+void FireRow(battle_misc::U actor, battle_misc::U row_address, battle_misc::U row) {
+    if (battle_misc::g.ai_row_done(actor, row) & 0xFF) return;
+    battle_misc::g.ai_apply(CurrentEnemy(), row_address);
+    battle_misc::g.ai_set_done(CurrentEnemy(), row, 1);
 }
 }  // namespace
 
@@ -583,15 +583,15 @@ void FireRow(U actor, U row_address, U row) {
 // whose upper bytes are the caller's ecx (the original keeps it in its pushed
 // ecx slot); both callees read its low byte.
 extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
-    static constexpr U kMasks[9] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80};
-    for (U i = 0; i < 4; ++i) {
-        const U actor = CurrentEnemy();
-        const U row = ::bof3::Img(kAiScripts.v) + AtBattleMisc(actor + 0xF0)[0] * 0x8Cu + i * 16;
-        const U op = AtBattleMisc(row)[0];
-        const U acting = AtBattleMisc(::bof3::Img(kActingKind.v))[0];
+    static constexpr battle_misc::U kMasks[9] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80};
+    for (battle_misc::U i = 0; i < 4; ++i) {
+        const battle_misc::U actor = CurrentEnemy();
+        const battle_misc::U row = ::bof3::Img(kAiScripts.v) + AtBattleMisc(actor + 0xF0)[0] * 0x8Cu + i * 16;
+        const battle_misc::U op = AtBattleMisc(row)[0];
+        const battle_misc::U acting = AtBattleMisc(::bof3::Img(kActingKind.v))[0];
         switch (op) {
         case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
-            if (g.ai_condition(kMasks[op]) & 0xFF) FireRow(CurrentEnemy(), row, i);
+            if (battle_misc::g.ai_condition(kMasks[op]) & 0xFF) FireRow(CurrentEnemy(), row, i);
             break;
         case 9:
             if (acting == 4 && WordBattleMisc(AtBattleMisc(actor + 0x108)) != 0) FireRow(actor, row, i);
@@ -609,10 +609,10 @@ extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
             if (AtBattleMisc(actor + 0xAA)[0] == 0) FireRow(actor, row, i);
             break;
         case 0x21: case 0x22: case 0x23:
-            if (g.ai_condition(1u << (op - 0x21)) & 0xFF) g.ai_apply(CurrentEnemy(), row);
+            if (battle_misc::g.ai_condition(1u << (op - 0x21)) & 0xFF) battle_misc::g.ai_apply(CurrentEnemy(), row);
             break;
         case 0x24:
-            if (acting == 1 && WordBattleMisc(AtBattleMisc(actor + 0x108)) != 0) g.ai_apply(actor, row);
+            if (acting == 1 && WordBattleMisc(AtBattleMisc(actor + 0x108)) != 0) battle_misc::g.ai_apply(actor, row);
             break;
         case 0x25:
             if (static_cast<std::int32_t>(WordBattleMisc(AtBattleMisc(actor + 0xA4))) <=
@@ -623,7 +623,7 @@ extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
             break;
         }
     }
-    return g.ai_finish();
+    return battle_misc::g.ai_finish();
 }
 
 // --- a string copy and the objects' screen pass ----------------------------------------------
@@ -652,14 +652,14 @@ extern "C" char* __cdecl Str_CopyN(char* dst, const char* src, unsigned n) {
 // Sprite_UpdateScreenSlot for the rest. The type is read once per object.
 // Called from the battle's frame (0x42E3D1), which calls on at once.
 extern "C" void __cdecl Sprite_UpdateObjectScreens(void) {
-    for (U i = 0; i < 30; ++i) {
-        const U object = at::Sprite_ObjectsAt() + i * 0xA4;
+    for (battle_misc::U i = 0; i < 30; ++i) {
+        const battle_misc::U object = at::Sprite_ObjectsAt() + i * 0xA4;
         SetSpriteCurrent(object);
         const unsigned char type = AtBattleMisc(object + 6)[0];
         if (type < 8 && type != 7) continue;
         if (!(AtBattleMisc(object)[0] & 1)) continue;
-        if (type == 0xA) g.update_screen_a();
-        else if (type != 9) g.update_screen_slot();
+        if (type == 0xA) battle_misc::g.update_screen_a();
+        else if (type != 9) battle_misc::g.update_screen_slot();
     }
 }
 
