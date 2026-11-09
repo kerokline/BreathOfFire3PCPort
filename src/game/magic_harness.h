@@ -190,7 +190,14 @@ struct Callee {
 // swapped for recorders while the fuzz runs, then put back.
 struct DataTable { std::uint32_t at; unsigned entries; };
 
-struct Region { std::uint32_t at, size; };
+// A block of state both passes start from and are compared on. skip_len > 0 leaves
+// bytes [skip_off + k * skip_stride, + skip_len) out of the compare (not of the copy)
+// for every k whose bytes fit inside the region; skip_stride 0 is once. For bytes the
+// originals leave undefined (a copy of uninitialised stack). Zero: every byte compared.
+struct Region {
+    std::uint32_t at, size;
+    std::uint32_t skip_off = 0, skip_len = 0, skip_stride = 0;
+};
 
 struct Group {
     const char* shadow;             // the BOF3X_SHADOW name, and the log's

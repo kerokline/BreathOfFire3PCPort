@@ -369,6 +369,11 @@ Region g_regions[kMaxRegions];
 unsigned g_region_n;
 constexpr unsigned kMaxBytes = 0x10000;
 
+// 1 where a state byte is compared, 0 where its region's skip leaves it out; g_skipped
+// counts the 0s (none: the plain memcmp).
+unsigned char g_compared[kMaxBytes];
+unsigned g_skipped;
+
 struct State {
     unsigned char memory[kMaxBytes];
     Entry log[kLog];
@@ -397,14 +402,14 @@ void Apply(const State& s) {
     g_salt = 0;
     g_rand_pending = g_rand_first;
 }
-bool Same(const State& a, const State& b) {
-    return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, Used(a.log_n) * sizeof(Entry)) == 0;
-}
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
-        if (a.memory[i] != b.memory[i]) return i;
+        if (a.memory[i] != b.memory[i] && g_compared[i]) return i;
     return g_bytes;
+}
+bool Same(const State& a, const State& b) {
+    const bool memory = g_skipped ? FirstDifference(a, b) == g_bytes : std::memcmp(a.memory, b.memory, g_bytes) == 0;
+    return a.log_n == b.log_n && memory && std::memcmp(a.log, b.log, Used(a.log_n) * sizeof(Entry)) == 0;
 }
 unsigned FirstLogDifference(const State& a, const State& b) {
     const unsigned n = Used(a.log_n < b.log_n ? a.log_n : b.log_n);
@@ -573,6 +578,17 @@ void Run(const Group& group) {
     g_bytes = 0;
     for (unsigned i = 0; i < g_region_n; ++i) g_bytes += g_regions[i].size;
     if (g_bytes > kMaxBytes) bof3::Fatal("magic_harness: %s: the regions are %u bytes, the state holds %u", group.shadow, g_bytes, kMaxBytes);
+    std::memset(g_compared, 1, g_bytes);
+    g_skipped = 0;
+    for (unsigned i = 0, n = 0; i < g_region_n; n += g_regions[i].size, ++i) {
+        const Region& r = g_regions[i];
+        if (!r.skip_len) continue;
+        for (std::uint32_t off = r.skip_off; off + r.skip_len <= r.size; off += r.skip_stride) {
+            std::memset(g_compared + n + off, 0, r.skip_len);
+            g_skipped += r.skip_len;
+            if (!r.skip_stride) break;
+        }
+    }
 
     // the copies, every call out re-aimed at its recorder, the stack tables' immediates too
     static void* clones[256];
