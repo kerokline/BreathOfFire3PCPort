@@ -99,7 +99,7 @@ unsigned char* Enemy(unsigned actor) { return battle_actions::At(::bof3::Img(Bat
 // not checked (a byte past the table's count reaches the next table's
 // entries, or its data, as in the original).
 using Handler = void (__cdecl*)();
-Handler Step(std::uint32_t table, unsigned index) {
+Handler StepBattleActions(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(L(table + (index & 0xFF) * 4))));
 }
 using HookFn = void (__cdecl*)(int);
@@ -201,7 +201,7 @@ Standing ActorStanding(unsigned actor) {
 // As the original has it: both words are read after the step; the step byte
 // is not checked.
 extern "C" void __cdecl Battle_ActionPhase(void) {
-    Step(::bof3::Img(BattleAction_Steps_addr), BattleActions_Step)();
+    StepBattleActions(::bof3::Img(BattleAction_Steps_addr), BattleActions_Step)();
     if ((Field_CancelButtons & Input_Held) != 0)
         battle_actions::SetWord(battle_actions::At(::bof3::Img(battle_actions::at::kRoundFlags.v)), battle_actions::Word(battle_actions::At(::bof3::Img(battle_actions::at::kRoundFlags.v))) & 0xFFEFu);
 }
@@ -209,31 +209,31 @@ extern "C" void __cdecl Battle_ActionPhase(void) {
 // original 0x42F250 (PSX 0x801D2B14): step 0, a tail jump through
 // BattleAction_BeginSteps (0x64AE94) by 0x904AA2: 0 Battle_BeginAction, 1
 // BattleAction_EnterKind.
-extern "C" void __cdecl BattleAction_BeginStep(void) { Step(::bof3::Img(BattleAction_BeginSteps_addr), BattleE4_Step2)(); }
+extern "C" void __cdecl BattleAction_BeginStep(void) { StepBattleActions(::bof3::Img(BattleAction_BeginSteps_addr), BattleE4_Step2)(); }
 
 // original 0x42F500 (PSX 0x801D300C): step 1, a tail jump through
 // BattleAction_KindSteps (0x64AE9C) by 0x904AA2, which BattleAction_EnterKind
 // set to the command kind: 0 and 2 BattleAction_KindPlain, 1
 // BattleAction_KindOne, 3 BattleAction_Kind3Dispatch 0x42F5E0 (BE1's), 4 BattleAction_AbilityStep,
 // 5 BattleAction_ItemStep.
-extern "C" void __cdecl BattleAction_KindStep(void) { Step(::bof3::Img(BattleAction_KindSteps_addr), BattleE4_Step2)(); }
+extern "C" void __cdecl BattleAction_KindStep(void) { StepBattleActions(::bof3::Img(BattleAction_KindSteps_addr), BattleE4_Step2)(); }
 
 // original 0x42F670 (PSX 0x801D32C0): kind 4's, through
 // BattleAction_AbilitySteps (0x64AEBC) by 0x904AA3.
-extern "C" void __cdecl BattleAction_AbilityStep(void) { Step(::bof3::Img(BattleAction_AbilitySteps_addr), BattleE4_Step3)(); }
+extern "C" void __cdecl BattleAction_AbilityStep(void) { StepBattleActions(::bof3::Img(BattleAction_AbilitySteps_addr), BattleE4_Step3)(); }
 
 // original 0x42FAF0 (PSX 0x801D3A08): kind 5's, through BattleAction_ItemSteps
 // (0x64AF08) by 0x904AA3.
-extern "C" void __cdecl BattleAction_ItemStep(void) { Step(::bof3::Img(BattleAction_ItemSteps_addr), BattleE4_Step3)(); }
+extern "C" void __cdecl BattleAction_ItemStep(void) { StepBattleActions(::bof3::Img(BattleAction_ItemSteps_addr), BattleE4_Step3)(); }
 
 // original 0x42FC50 (PSX 0x801D3C68): step 2, through BattleAction_EffectSteps
 // (0x64AF14) by 0x904AA2.
-extern "C" void __cdecl BattleAction_EffectStep(void) { Step(::bof3::Img(BattleAction_EffectSteps_addr), BattleE4_Step2)(); }
+extern "C" void __cdecl BattleAction_EffectStep(void) { StepBattleActions(::bof3::Img(BattleAction_EffectSteps_addr), BattleE4_Step2)(); }
 
 // original 0x42FDD0 (PSX 0x801D3FCC): step 3, through BattleAction_AfterSteps
 // (0x64AF20) by 0x904AA2: 0 BattleAction_AfterSettle, 1 BattleAction_AbilityNotice 0x42FE20 (BE1's),
 // 2 BattleAction_EnemyMessages.
-extern "C" void __cdecl BattleAction_AfterStep(void) { Step(::bof3::Img(BattleAction_AfterSteps_addr), BattleE4_Step2)(); }
+extern "C" void __cdecl BattleAction_AfterStep(void) { StepBattleActions(::bof3::Img(BattleAction_AfterSteps_addr), BattleE4_Step2)(); }
 
 // ===========================================================================
 // Step 0: the next actor
