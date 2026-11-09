@@ -6,3 +6,5 @@
 #pragma once
 
 void BattleWinStates_Inject();
+
+extern unsigned char g_banner_centre;   // defined in battle_win_states.cpp (named here for a moved reader: source-layout B6)

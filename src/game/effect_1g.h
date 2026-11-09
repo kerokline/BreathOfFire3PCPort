@@ -31,3 +31,5 @@ struct BackdropSpan {
 unsigned ItemTrade_BackdropQuads(unsigned columns);
 BackdropSpan ItemTrade_BackdropSpan(unsigned quad, unsigned columns);
 }  // namespace effect_1g
+
+extern unsigned char g_trade_leave_layout;   // defined in effect_1g.cpp (named here for a moved reader: source-layout B6)

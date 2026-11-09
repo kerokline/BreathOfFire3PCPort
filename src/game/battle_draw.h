@@ -4,3 +4,5 @@
 #pragma once
 
 void BattleDraw_Inject();
+
+extern unsigned char g_list_title_centre;   // defined in battle_draw.cpp (named here for a moved reader: source-layout B6)

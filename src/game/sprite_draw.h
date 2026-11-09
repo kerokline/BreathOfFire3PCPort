@@ -24,3 +24,5 @@ extern unsigned long g_tails[8];   // defined in sprite_draw.cpp (source-layout 
 struct State;   // the self-test's snapshot, defined in sprite_draw.cpp (its size needs the file's constants)
 extern State g_live;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sprite_draw
+
+extern std::uint32_t g_sprite_capture;   // defined in sprite_draw.cpp (named here for a moved reader: source-layout B6)

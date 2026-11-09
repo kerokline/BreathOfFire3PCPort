@@ -84,3 +84,8 @@ extern Ring g_ring;   // defined in sound.cpp (source-layout B0: promoted for a 
 extern Resume g_resume;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 extern RestoreSkip g_restore_skip;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sound
+
+namespace sound {
+void FinishStoppingFade();   // defined in sound.cpp (named here for a moved reader: source-layout B6)
+void RingLog();   // defined in sound.cpp (named here for a moved reader: source-layout B6)
+}  // namespace sound
