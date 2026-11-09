@@ -147,6 +147,7 @@
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
 #include "game/magic_lib.h"
+#include "game/magic/magic_fx_4.h"
 #include "game/magic_s16.h"
 #include "game/magic_s18.h"
 #include "game/magic_s21.h"
@@ -187,10 +188,15 @@
 #include "game/magic_s34.h"
 #include "game/magic_s36.h"
 #include "game/magic_s37.h"
+#include "game/magic/combustion_flash.h"
+#include "game/battle/combustion_mote.h"
+#include "game/battle/combustion_glow.h"
 #include "game/magic/geo_breath_child.h"
 #include "game/magic/combustion.h"
 #include "game/magic_s35.h"
 #include "game/magic_s38.h"
+#include "game/magic/meteor_strike_rock.h"
+#include "game/magic/magic_225_veil.h"
 #include "game/area_011.h"
 #include "game/area_cell_hook.h"
 #include "game/area_w0b.h"
@@ -544,6 +550,7 @@ void InjectAll() {
     MagicLib_Inject();          // round 9 group L (the effect library): its clones' calls and the popup tasks'
                                 // stack-table immediates re-aimed at the shared harness's recorders; no module
                                 // patches bytes inside its 25: order does not matter
+    MagicFx4_Inject();
     MagicS16_Inject();          // round 9 group S16 (MAGIC071..074): its clones' calls, stack-table immediates and
                                 // four .data dispatch cells re-aimed at the harness's recorders; no module patches
                                 // bytes inside its sixty (DIV-0046's masks are Pilfer's and Steal's): order does
@@ -688,6 +695,9 @@ void InjectAll() {
                                 // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    CombustionFlash_Inject();
+    CombustionMote_Inject();
+    CombustionGlow_Inject();
     GeoBreathChild_Inject();
     Combustion_Inject();
     MagicS35_Inject();          // round 9 group S35 (MAGIC167, 168, 169: Last Resort, Cure, Benediction): its
@@ -698,6 +708,8 @@ void InjectAll() {
                                 // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MeteorStrikeRock_Inject();
+    Magic225Veil_Inject();
     Area011_Inject();           // round 10 group ARH (area 11: two handlers and the init, the area harness's proof):
                                 // its clones' calls re-aimed at the area harness's recorders; no module patches
                                 // bytes inside its 3 (DIVERGENCE.md, cheats.cpp): order does not matter

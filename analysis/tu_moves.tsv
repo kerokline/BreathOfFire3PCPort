@@ -19469,6 +19469,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/battle/combustion_glow.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/battle/combustion_mote.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s37.cpp	219	220	224	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	LinkAtSprite	local		src/game/magic_s37.cpp	222	223	228	src/game/battle/combustion_mote.cpp	092c87cc
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/battle/combustion_mote.cpp	d3e6abb3
 	DrawMode	copied		src/game/magic_s37.cpp	225	226	226	src/game/magic/combustion_flash.cpp	d3e6abb3
@@ -19477,10 +19478,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	LinkAtSprite	copied		src/game/magic_s37.cpp	227	228	233	src/game/battle/combustion_mote.cpp	d3e6abb3
 	LinkAtSprite	copied		src/game/magic_s37.cpp	227	228	233	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	Matrix	copied		src/game/magic_s37.cpp	235	237	240	src/game/magic/magma_breath_record.cpp	d3e6abb3
+	DrawGlowFan	local		src/game/magic_s37.cpp	238	243	269	src/game/battle/combustion_glow.cpp	092c87cc
 	DrawGlowFan	copied		src/game/magic_s37.cpp	243	248	274	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawGlowFan	copied		src/game/magic_s37.cpp	243	248	274	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	DrawRingBand	local		src/game/magic_s37.cpp	271	274	322	src/game/battle/combustion_glow.cpp	092c87cc
 	DrawRingBand	copied		src/game/magic_s37.cpp	276	279	327	src/game/battle/combustion_glow.cpp	d3e6abb3
 	DrawRingBand	copied		src/game/magic_s37.cpp	276	279	327	src/game/magic/geo_breath_child.cpp	d3e6abb3
+	DrawTexturedQuad	local		src/game/magic_s37.cpp	324	329	364	src/game/battle/combustion_mote.cpp	092c87cc
 	DrawTexturedQuad	copied		src/game/magic_s37.cpp	329	334	369	src/game/battle/combustion_mote.cpp	d3e6abb3
 	DrawTexturedQuad	copied		src/game/magic_s37.cpp	329	334	369	src/game/magic/geo_breath_child.cpp	d3e6abb3
 	S37_EXPORT	copied		src/game/magic_s37.cpp	373	373	373	src/game/battle/battle_fx_2.cpp	d3e6abb3
@@ -19588,10 +19592,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	TargetByte	copied		src/game/magic_s38.cpp	95	95	95	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	ActorByte	local		src/game/magic_s38.cpp	96	96	96	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	SW	copied		src/game/magic_s38.cpp	98	98	98	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SW	local		src/game/magic_s38.cpp	98	98	98	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SS	copied		src/game/magic_s38.cpp	99	99	99	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SS	local		src/game/magic_s38.cpp	99	99	99	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SB	copied		src/game/magic_s38.cpp	100	100	100	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	SB	copied		src/game/magic_s38.cpp	100	100	100	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_s38.cpp	101	101	101	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	SetSW	local		src/game/magic_s38.cpp	101	101	101	src/game/magic/meteor_strike_rock.cpp	092c87cc
 	SD	local		src/game/magic_s38.cpp	102	102	102	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	SetSD	local		src/game/magic_s38.cpp	103	103	103	src/game/magic/magic_225_veil.cpp	d3e6abb3
 	VW	local		src/game/magic_s38.cpp	105	105	105	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
@@ -19715,11 +19722,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4FA670	MeteorStrikeRecord_Task	func	tu_4f9de0	src/game/magic_s38.cpp	1297	1299	1302	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA690	MeteorStrikeChip_Run	func	tu_4f9de0	src/game/magic_s38.cpp	1304	1307	1315	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA6C0	MeteorStrikeChip_Launch	func	tu_4f9de0	src/game/magic_s38.cpp	1317	1321	1348	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	ChipDrift	local		src/game/magic_s38.cpp	1350	1353	1377	src/game/magic/meteor_strike_rock.cpp	092c87cc
 0x4FA790	MeteorStrikeChip_Rise	func	tu_4f9de0	src/game/magic_s38.cpp	1379	1381	1395	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA860	MeteorStrikeChip_Fall	func	tu_4f9de0	src/game/magic_s38.cpp	1397	1399	1409	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FA910	MeteorStrikeChip_Draw	func	tu_4f9de0	src/game/magic_s38.cpp	1411	1416	1458	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAB70	MeteorStrikeTrail_Run	func	tu_4f9de0	src/game/magic_s38.cpp	1460	1463	1472	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FABB0	MeteorStrikeTrail_Start	func	tu_4f9de0	src/game/magic_s38.cpp	1474	1477	1488	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
+	TrailFollow	local		src/game/magic_s38.cpp	1490	1491	1496	src/game/magic/meteor_strike_rock.cpp	092c87cc
 0x4FAC40	MeteorStrikeTrail_Follow	func	tu_4f9de0	src/game/magic_s38.cpp	1498	1499	1503	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAC90	MeteorStrikeTrail_Fade	func	tu_4f9de0	src/game/magic_s38.cpp	1505	1508	1515	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
 0x4FAD00	MeteorStrikeTrail_Draw	func	tu_4f9de0	src/game/magic_s38.cpp	1517	1523	1590	src/game/magic/meteor_strike_rock.cpp	d3e6abb3
