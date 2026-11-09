@@ -72,3 +72,9 @@ _ZZN12_GLOBAL__N_14LiveEjPFvPKhjjES3_S1_jjE5input	x64-indirect	B0 promotion of m
 _ZZN12_GLOBAL__N_14LiveEjPFvPKhjjES3_S1_jjE5kName	x64-indirect	B0 promotion of map_cells.cpp's g_quads_live, g_rising_live and g_rising_band_live: NEW local:d342af4e8c66  (named _ZZN12_GLOBAL__N_14LiveEjPFvPKhjjES3_S1_jjE5kName)	
 _ZZN12_GLOBAL__N_14LiveEjPFvPKhjjES3_S1_jjE7our_out	x64-indirect	B0 promotion of map_cells.cpp's g_quads_live, g_rising_live and g_rising_band_live: NEW local:d57e0962744a  (named _ZZN12_GLOBAL__N_14LiveEjPFvPKhjjES3_S1_jjE7our_out)	
 _ZN12_GLOBAL__N_111LiveCaptureERNS_9LiveStateEPhjPjPKPm	x64-indirect	B0 promotion of map_cells.cpp's g_quads_live, g_rising_live and g_rising_band_live: NEW local:db2968ee8f3b  (named _ZN12_GLOBAL__N_111LiveCaptureERNS_9LiveStateEPhjPjPKPm)	
+Gte_DepthRamp	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: DIFFER Gte_DepthRamp  first at instruction 0: 'mov rax, qword ptr gs:[0x60]' -> 'push r15'	
+Gte_Perspective	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: DIFFER Gte_Perspective  first at instruction 0: 'push rsi' -> 'push r15'	
+_ZN13psx_gte_float12g_ramp_cloneE	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW _ZN13psx_gte_float12g_ramp_cloneE  (bss)	
+_ZN13psx_gte_float19g_perspective_cloneE	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW _ZN13psx_gte_float19g_perspective_cloneE  (bss)	
+_ZN12_GLOBAL__N_16g_liveE	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW local:1ca3b97042e0  (named _ZN12_GLOBAL__N_16g_liveE)	
+_ZN12_GLOBAL__N_111PerspectiveEPfS0_Pl	x64-indirect	B0 promotion of psx_gte_float.cpp's g_perspective_clone and g_ramp_clone: NEW local:d1d9ef903289  (named _ZN12_GLOBAL__N_111PerspectiveEPfS0_Pl)	
