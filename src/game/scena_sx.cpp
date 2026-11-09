@@ -69,7 +69,6 @@ unsigned char* MemberRecord(unsigned char id) { return RecordScenaSx(Character_I
 int S8(unsigned char b) { return static_cast<signed char>(b); }
 
 }  // namespace
-    const auto id = static_cast<unsigned char>(id_arg);
 
 void ScenaSx_Inject() {
     if (bof3::WantsShadow("scena_sx")) scena_sx::SelfTest();
