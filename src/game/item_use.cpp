@@ -473,15 +473,15 @@ extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
     const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
     if (static_cast<std::uint16_t>(pressed) != 0) {
         ItemUse_RepeatTimer = 0xC;
-        item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
+        item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
         return held;
     }
-    if ((item_use::Word(item_use::At(::bof3::Img(at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
+    if ((item_use::Word(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
         const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
         ItemUse_RepeatTimer = timer;
         if (timer == 0) {
             ItemUse_RepeatTimer = 3;
-            item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
+            item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kRepeatLatch.v)), held);
             return held;
         }
     }
