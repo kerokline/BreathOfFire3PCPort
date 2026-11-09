@@ -41,16 +41,16 @@ Callees map_layers::g = kOriginals;
 namespace {
 
 // map_layers::g: named in full below (source-layout B0, a clash on g)
-
-bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
-
+}  // namespace
+namespace map_layers { bool g_side_zero_release; }   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
+namespace {
 // DIV-0085: 0 until ArmSideDup (and with BOF3X_SIDE_DUP=0), so every self-test
 // compares Capcom's walk. g_file_sides: per map cell (z * width + x), 1 when the
 // heights as the area file loaded them give it a south side only, 2 an east
 // side only - and its tile carries no third word - else 0 (SnapshotSides).
 bool g_side_dup;
-unsigned char g_file_sides[256 * 256];
-
+}  namespace map_layers { unsigned char g_file_sides[256 * 256]; }
+namespace {
 std::uint32_t Dword(const unsigned char* p) {
     std::uint32_t v;
     std::memcpy(&v, p, sizeof v);
@@ -567,7 +567,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     texture += 4;
     const unsigned below = Word(item + 0x8E);
     if (below != 0) {
-        if (Dword(texture) == 0 && g_side_zero_release) {
+        if (Dword(texture) == 0 && map_layers::g_side_zero_release) {
             // BOF3X_SIDE_ZERO=1, an experiment (2026-10-07, off by default): a
             // below side the map gives word 0 is released like the +0x7E one;
             // the original draws it with that word. Not the owner's streaks
@@ -593,7 +593,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
         // because the heights moved since (AREA060's sky effect), and the
         // dword the original would give it is the next tile's own. Both
         // sides take the one side word.
-        const unsigned file = g_file_sides[y * width + x];
+        const unsigned file = map_layers::g_file_sides[y * width + x];
         if (file == 1 || file == 2) {
             texture -= 4;
             static unsigned logged = 0;
@@ -739,8 +739,8 @@ void MapLayers_Inject() {
         // unless BOF3X_SIDE_ZERO=1; DIV-0085 "Reversible?" names it.
         if (n >= sizeof text || (n != 0 && !((text[0] == '0' || text[0] == '1') && text[1] == 0)))
             bof3::Fatal("BOF3X_SIDE_ZERO must be 0 or 1");
-        g_side_zero_release = n == 1 && text[0] == '1';
-        if (g_side_zero_release)
+        map_layers::g_side_zero_release = n == 1 && text[0] == '1';
+        if (map_layers::g_side_zero_release)
             bof3::Log("map_layers: a side face with texture word 0 is not drawn (BOF3X_SIDE_ZERO=1, an experiment)");
     }
     BOF3_INJECT(AreaMap_Frame);
