@@ -154,7 +154,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
 // original 0x452660: nothing while any actor is pending (the word 0x904B82);
 // then the effect-done bit and the slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl RestoreForm_Wait(void) {
-    if (Word(Mem(::bof3::Img(BattleActions_Pending_addr))) != 0) return;
+    if (move_script::Word(Mem(::bof3::Img(BattleActions_Pending_addr))) != 0) return;
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
