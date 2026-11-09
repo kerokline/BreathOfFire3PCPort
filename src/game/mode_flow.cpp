@@ -69,14 +69,14 @@ namespace {
 // stores them 0x90393F, 3E, 3D, 0x9038AF, AE, AD with nothing in between.
 void SetFadeHold(unsigned char v) {
     for (unsigned i = 0; i < 3; ++i) {
-        At(::bof3::Img(ModeFlow_FadeHoldA_addr))[i] = v;
-        At(::bof3::Img(ModeFlow_FadeHoldB_addr))[i] = v;
+        mode_flow::At(::bof3::Img(ModeFlow_FadeHoldA_addr))[i] = v;
+        mode_flow::At(::bof3::Img(ModeFlow_FadeHoldB_addr))[i] = v;
     }
 }
 
 // The 16-bit words the camera transitions add to in memory: `add word`, so
 // wrapping at 0x10000 and never carrying into the next word.
-void AddWord(std::uint32_t address, int delta) { SetWord(At(address), static_cast<unsigned>(Word(At(address)) + delta)); }
+void AddWord(std::uint32_t address, int delta) { mode_flow::SetWord(mode_flow::At(address), static_cast<unsigned>(mode_flow::Word(mode_flow::At(address)) + delta)); }
 constexpr std::uint32_t kCameraYaw = 0x929EC8;     // Camera_Angles[0]
 constexpr std::uint32_t kCameraAngle = 0x929ECC;   // Cond_AngleFB's low word
 
@@ -103,7 +103,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 extern "C" void __cdecl Transition_Start(unsigned char kind) {
     if (Transition_Busy != 0) return;
     ModeFlow_TransitionKind = SlotByte(kind);
-    g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
+    mode_flow::g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
 }
 
 // original 0x495070: task 2's body (PSX 0x8014EC28). Builds a 21-entry table
@@ -118,7 +118,7 @@ extern "C" void __cdecl Transition_Start(unsigned char kind) {
 extern "C" void __cdecl Transition_Task(void) {
     const unsigned kind = ModeFlow_TransitionKind;
     if (kind >= 21) bof3::Fatal("Transition_Task: kind %u, past the 21-entry table", kind);
-    g.transitions[kind]();
+    mode_flow::g.transitions[kind]();
 }
 
 // original 0x495620: a fade through a subtractive full-screen tile (the
@@ -134,9 +134,9 @@ extern "C" void __cdecl Transition_Task(void) {
 extern "C" void __cdecl Transition_FadeSub(int step, unsigned semi, unsigned slot) {
     const bool out = static_cast<short>(step) > 0;
     std::int32_t level = out ? 0 : 0x7FFF;
-    while (g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 2) == 0) g.sleep(1);
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 2) == 0) mode_flow::g.sleep(1);
     if (out) SetFadeHold(0);
-    g.task_exit();
+    mode_flow::g.task_exit();
 }
 
 // original 0x4956A0: the same through an additive tile (blend mode 1), so
@@ -147,9 +147,9 @@ extern "C" void __cdecl Transition_FadeAdd(int step, unsigned semi, unsigned slo
     const bool out = static_cast<short>(step) > 0;
     std::int32_t level = out ? 0 : 0x7FFF;
     if (!out) SetFadeHold(0);
-    while (g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 1) == 0) g.sleep(1);
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, semi, slot, 1) == 0) mode_flow::g.sleep(1);
     if (out) SetFadeHold(0xFF);
-    g.task_exit();
+    mode_flow::g.task_exit();
 }
 
 // original 0x495750: one frame of a fade - a draw mode under tpage
@@ -166,23 +166,23 @@ extern "C" void __cdecl Transition_FadeAdd(int step, unsigned semi, unsigned slo
 // 320.0 and 240.0 (the PC tile's floats); the level is read before the
 // primitive is built and added to after the second commit, as a 16-bit word.
 extern "C" unsigned char __cdecl Transition_DrawTile(short* level, int step, unsigned semi, unsigned slot, unsigned abr) {
-    const unsigned tpage = g.get_tpage(1, abr & 0xFF, 0x140, 0);
-    g.draw_mode(Gfx_PacketNext, 0, 0, tpage & 0xFFFF, 0);
-    g.commit(slot, 0xC);
+    const unsigned tpage = mode_flow::g.get_tpage(1, abr & 0xFF, 0x140, 0);
+    mode_flow::g.draw_mode(Gfx_PacketNext, 0, 0, tpage & 0xFFFF, 0);
+    mode_flow::g.commit(slot, 0xC);
     unsigned char* const tile = Gfx_PacketNext;
-    g.set_tile(tile);
+    mode_flow::g.set_tile(tile);
     const auto grey = static_cast<unsigned char>(static_cast<short>(*level) >> 7);
     tile[6] = grey;
     tile[5] = grey;
     tile[4] = grey;
     // DIV-0041: under a wide picture the fade covers it whole, (-53, 0) 426 x 240.
     const float wide = static_cast<float>(Widescreen_Live());
-    SetLong(tile + 8, std::bit_cast<std::uint32_t>(0.0f - wide));   // x; 0.0f - wide, not -wide, which is -0.0f when wide is 0
-    SetLong(tile + 0xC, 0);
-    SetLong(tile + 0x14, std::bit_cast<std::uint32_t>(320.0f + 2 * wide));   // 0x43A00000, 320.0f
-    SetLong(tile + 0x18, 0x43700000);   // 240.0f
-    g.set_semi(tile, semi & 0xFF);
-    g.commit(slot, 0x1C);
+    mode_flow::SetLong(tile + 8, std::bit_cast<std::uint32_t>(0.0f - wide));   // x; 0.0f - wide, not -wide, which is -0.0f when wide is 0
+    mode_flow::SetLong(tile + 0xC, 0);
+    mode_flow::SetLong(tile + 0x14, std::bit_cast<std::uint32_t>(320.0f + 2 * wide));   // 0x43A00000, 320.0f
+    mode_flow::SetLong(tile + 0x18, 0x43700000);   // 240.0f
+    mode_flow::g.set_semi(tile, semi & 0xFF);
+    mode_flow::g.commit(slot, 0x1C);
     *level = static_cast<short>(static_cast<std::uint16_t>(*level) + static_cast<std::uint16_t>(step));
     return static_cast<short>(*level) < 0 ? 1 : 0;
 }
@@ -195,14 +195,14 @@ namespace {
 // redraw; the frame the fade finishes, nothing moves.
 void SwingOut(int step) {
     std::int32_t level = 0;
-    while (g.draw_tile(reinterpret_cast<short*>(&level), step, 1, 0, 2) == 0) {
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), step, 1, 0, 2) == 0) {
         AddWord(::bof3::Img(kCameraYaw), 0xB);
         AddWord(::bof3::Img(kCameraAngle), 0xB);
         Camera_Distance = static_cast<short>(Camera_Distance - 0x32);
         MapView_Redraw = 2;
-        g.sleep(1);
+        mode_flow::g.sleep(1);
     }
-    g.task_exit();
+    mode_flow::g.task_exit();
 }
 
 // Kinds 11 and 18: the mirror. The camera is put at yaw 0xFEAB, angle 0x355;
@@ -218,13 +218,13 @@ void SwingOut(int step) {
 void SwingIn() {
     std::int32_t level = 0x7FFF;
     Camera_Angles[0] = 0xFEAB;
-    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
+    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
     MapView_Redraw = 2;
     for (int i = 0; i < 5; ++i) {
-        g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
-        g.sleep(1);
+        mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+        mode_flow::g.sleep(1);
     }
-    unsigned char done = g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+    unsigned char done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
     for (;;) {
         const auto distance = static_cast<std::uint16_t>(Camera_Distance + 0x32);
         AddWord(::bof3::Img(kCameraYaw), -0xB);
@@ -232,13 +232,13 @@ void SwingIn() {
         Camera_Distance = static_cast<short>(distance);
         MapView_Redraw = 2;
         if (distance == 0x5DC) break;
-        g.sleep(1);
-        if (done == 0) done = g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
+        mode_flow::g.sleep(1);
+        if (done == 0) done = mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
     }
     Camera_Angles[0] = 0xFD56;
-    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
+    mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
     MapView_Redraw = 2;
-    g.task_exit();
+    mode_flow::g.task_exit();
 }
 
 }  // namespace
@@ -248,16 +248,16 @@ void SwingIn() {
 // or from black) or FadeAdd (additive, to or from white) with a step - 0x800
 // is 16 frames, 0x400 32, 0x200 64, 0x100 128, 0x2000 4 - semi 1 and slot 0.
 // None of them is reached by the attract sequence except kinds 0 and 1.
-extern "C" void __cdecl Transition_Kind00(void) { g.fade_sub(0x800, 1, 0); }     // 0x495130: to black
-extern "C" void __cdecl Transition_Kind01(void) { g.fade_sub(-0x800, 1, 0); }    // 0x495150: from black
-extern "C" void __cdecl Transition_Kind02(void) { g.fade_sub(0x2000, 1, 0); }    // 0x495170
-extern "C" void __cdecl Transition_Kind03(void) { g.fade_sub(-0x2000, 1, 0); }   // 0x495190
-extern "C" void __cdecl Transition_Kind04(void) { g.fade_sub(0x400, 1, 0); }     // 0x4951B0
-extern "C" void __cdecl Transition_Kind05(void) { g.fade_sub(-0x400, 1, 0); }    // 0x4951D0
-extern "C" void __cdecl Transition_Kind06(void) { g.fade_sub(0x800, 1, 2); }     // 0x4951F0: into OT slot 2
-extern "C" void __cdecl Transition_Kind07(void) { g.fade_sub(-0x800, 1, 2); }    // 0x495210
-extern "C" void __cdecl Transition_Kind08(void) { g.fade_add(0x800, 1, 0); }     // 0x495230: to white
-extern "C" void __cdecl Transition_Kind09(void) { g.fade_add(-0x800, 1, 0); }    // 0x495250: from white
+extern "C" void __cdecl Transition_Kind00(void) { mode_flow::g.fade_sub(0x800, 1, 0); }     // 0x495130: to black
+extern "C" void __cdecl Transition_Kind01(void) { mode_flow::g.fade_sub(-0x800, 1, 0); }    // 0x495150: from black
+extern "C" void __cdecl Transition_Kind02(void) { mode_flow::g.fade_sub(0x2000, 1, 0); }    // 0x495170
+extern "C" void __cdecl Transition_Kind03(void) { mode_flow::g.fade_sub(-0x2000, 1, 0); }   // 0x495190
+extern "C" void __cdecl Transition_Kind04(void) { mode_flow::g.fade_sub(0x400, 1, 0); }     // 0x4951B0
+extern "C" void __cdecl Transition_Kind05(void) { mode_flow::g.fade_sub(-0x400, 1, 0); }    // 0x4951D0
+extern "C" void __cdecl Transition_Kind06(void) { mode_flow::g.fade_sub(0x800, 1, 2); }     // 0x4951F0: into OT slot 2
+extern "C" void __cdecl Transition_Kind07(void) { mode_flow::g.fade_sub(-0x800, 1, 2); }    // 0x495210
+extern "C" void __cdecl Transition_Kind08(void) { mode_flow::g.fade_add(0x800, 1, 0); }     // 0x495230: to white
+extern "C" void __cdecl Transition_Kind09(void) { mode_flow::g.fade_add(-0x800, 1, 0); }    // 0x495250: from white
 extern "C" void __cdecl Transition_Kind10(void) { SwingOut(0x400); }             // 0x495270
 extern "C" void __cdecl Transition_Kind11(void) { SwingIn(); }                   // 0x4952D0
 // 0x4953A0: the camera distance put at 0x5DC and the view asked to redraw
@@ -265,15 +265,15 @@ extern "C" void __cdecl Transition_Kind11(void) { SwingIn(); }                  
 extern "C" void __cdecl Transition_Kind12(void) {
     Camera_Distance = 0x5DC;
     MapView_Redraw = 2;
-    g.fade_sub(-0x800, 1, 0);
+    mode_flow::g.fade_sub(-0x800, 1, 0);
 }
-extern "C" void __cdecl Transition_Kind13(void) { g.fade_sub(0x200, 1, 0); }     // 0x4953D0
-extern "C" void __cdecl Transition_Kind14(void) { g.fade_sub(-0x200, 1, 0); }    // 0x4953F0
-extern "C" void __cdecl Transition_Kind15(void) { g.fade_add(0x200, 1, 0); }     // 0x495410
-extern "C" void __cdecl Transition_Kind16(void) { g.fade_add(-0x200, 1, 0); }    // 0x495430
+extern "C" void __cdecl Transition_Kind13(void) { mode_flow::g.fade_sub(0x200, 1, 0); }     // 0x4953D0
+extern "C" void __cdecl Transition_Kind14(void) { mode_flow::g.fade_sub(-0x200, 1, 0); }    // 0x4953F0
+extern "C" void __cdecl Transition_Kind15(void) { mode_flow::g.fade_add(0x200, 1, 0); }     // 0x495410
+extern "C" void __cdecl Transition_Kind16(void) { mode_flow::g.fade_add(-0x200, 1, 0); }    // 0x495430
 extern "C" void __cdecl Transition_Kind17(void) { SwingOut(0x200); }             // 0x495450
 extern "C" void __cdecl Transition_Kind18(void) { SwingIn(); }                   // 0x4954B0, byte for byte kind 11's
-extern "C" void __cdecl Transition_Kind19(void) { g.fade_sub(0x100, 1, 0); }     // 0x495580
+extern "C" void __cdecl Transition_Kind19(void) { mode_flow::g.fade_sub(0x100, 1, 0); }     // 0x495580
 // 0x4955A0: a 16-frame fade to black (subtractive) while the angle word spins
 // by 0x20 a frame, kept inside 0..0xFFF; then the hold bytes zeroed.
 //
@@ -281,12 +281,12 @@ extern "C" void __cdecl Transition_Kind19(void) { g.fade_sub(0x100, 1, 0); }    
 // a word - its upper word is left alone.
 extern "C" void __cdecl Transition_Kind20(void) {
     std::int32_t level = 0;
-    while (g.draw_tile(reinterpret_cast<short*>(&level), 0x800, 1, 0, 2) == 0) {
-        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), (Cond_AngleFB + 0x20u) & 0xFFFu);
-        g.sleep(1);
+    while (mode_flow::g.draw_tile(reinterpret_cast<short*>(&level), 0x800, 1, 0, 2) == 0) {
+        mode_flow::SetWord(mode_flow::At(::bof3::Img(Cond_AngleFB_addr)), (Cond_AngleFB + 0x20u) & 0xFFFu);
+        mode_flow::g.sleep(1);
     }
     SetFadeHold(0);
-    g.task_exit();
+    mode_flow::g.task_exit();
 }
 
 // ===========================================================================
@@ -305,12 +305,12 @@ extern "C" void __cdecl Transition_Kind20(void) {
 extern "C" void __cdecl Field_Task(void) {
     Game_Mode = 0;
     Game_Step = 0;
-    g.clear_private();
-    g.window_reset();
+    mode_flow::g.clear_private();
+    mode_flow::g.window_reset();
     for (;;) {
-        reinterpret_cast<Handler>(GameMode_Handlers[Game_Mode].Native())();
-        g.clock_tick();
-        g.sleep(1);
+        reinterpret_cast<mode_flow::Handler>(GameMode_Handlers[Game_Mode].Native())();
+        mode_flow::g.clock_tick();
+        mode_flow::g.sleep(1);
     }
 }
 
@@ -328,13 +328,13 @@ extern "C" void __cdecl Field_Task(void) {
 extern "C" void __cdecl GameMode_Start(void) {
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
-    g.party_load(0);
-    const unsigned char flags = At(::bof3::Img(FieldModes_Pending_addr))[3];
-    const std::int32_t z = Long(At(::bof3::Img(FieldModes_Pending_addr) + 8));
-    const std::int32_t x = Long(At(::bof3::Img(FieldModes_Pending_addr) + 4));
+    mode_flow::g.party_load(0);
+    const unsigned char flags = mode_flow::At(::bof3::Img(FieldModes_Pending_addr))[3];
+    const std::int32_t z = mode_flow::Long(mode_flow::At(::bof3::Img(FieldModes_Pending_addr) + 8));
+    const std::int32_t x = mode_flow::Long(mode_flow::At(::bof3::Img(FieldModes_Pending_addr) + 4));
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
-    At(::bof3::Img(0x905B82))[0] = 0;   // Field_StepCount + 2
+    mode_flow::At(::bof3::Img(0x905B82))[0] = 0;   // Field_StepCount + 2
     Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
     Sprite_Kind2.step = 0;
     Sprite_Kind2.state3 = 0;
@@ -343,8 +343,8 @@ extern "C" void __cdecl GameMode_Start(void) {
     Area189_StepsSinceEvent = 0;   // the byte after Field_MemberCount
     Area189_EventsInRow = 0;
     Game_AreaNumber = 0xFFFF;
-    g.change_area(area, x, z, flags);
-    const unsigned char* const clock = At(::bof3::Img(at::kClock));
+    mode_flow::g.change_area(area, x, z, flags);
+    const unsigned char* const clock = mode_flow::At(::bof3::Img(at::kClock));
     if (clock[3] != 0 || clock[2] != 0 || clock[1] != 0 || clock[0] != 0) {
         // DIV-0092: a loaded game plays the track the save holds; a save with no
         // track (0xFF - the port's F12 save, written while the music was off)
@@ -377,7 +377,7 @@ extern "C" void __cdecl GameMode_Enter(void) {
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
     const std::int32_t x = at::kPendingX;
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
-    g.area_enter(AreaW0b_Place, x, z, flags);
+    mode_flow::g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {
         Game_Mode = 8;
         return;
@@ -386,16 +386,16 @@ extern "C" void __cdecl GameMode_Enter(void) {
     if (kind == 0xFE) {
         Draw_PassFlags = 0;
     } else if (kind != 0xFF) {
-        g.transition(kind);
-        g.wait_transition(1);
-        if (Field_InputFlags & 1) g.entry_point(Word(At(::bof3::Img(at::kKind2XHigh))), Word(At(::bof3::Img(at::kKind2ZHigh))));
+        mode_flow::g.transition(kind);
+        mode_flow::g.wait_transition(1);
+        if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh))));
     }
     const bool bit0 = (Field_InputFlags & 1) != 0;
     const std::uint16_t area = Game_AreaNumber;
     if (bit0) ModeFlow_AreaTransition = 0xA;
     else if (area == 0xBD) ModeFlow_AreaTransition = 0x14;
     else ModeFlow_AreaTransition = 0;
-    if (area != 0xBD) g.zone_roll(1);
+    if (area != 0xBD) mode_flow::g.zone_roll(1);
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFBF);
     Field_Request = 0;
     Game_Mode = 2;
@@ -412,12 +412,12 @@ extern "C" void __cdecl GameMode_Enter(void) {
 extern "C" void __cdecl Field_WaitTransition(unsigned char run_argument) {
     const unsigned char run = SlotByte(run_argument);
     for (;;) {
-        g.sleep(1);
+        mode_flow::g.sleep(1);
         if (Transition_Busy == 0 && run == 0) {
-            g.sleep(1);
+            mode_flow::g.sleep(1);
             return;
         }
-        g.field_frame();
+        mode_flow::g.field_frame();
         if (Transition_Busy == 0) return;
     }
 }
@@ -441,7 +441,7 @@ namespace {
 // all-zero by itself, it runs 0:00:00 round every 30 frames (the PSX's
 // 0x80199D9C is the same).
 void CountDown(std::uint32_t address) {
-    unsigned char* const t = At(address);
+    unsigned char* const t = mode_flow::At(address);
     const unsigned char hours = t[0];
     if (hours == 0 && t[1] == 0 && t[2] == 0 && t[3] == 0) return;
     t[3] = static_cast<unsigned char>(t[3] - 1);
@@ -463,7 +463,7 @@ void CountDown(std::uint32_t address) {
 }  // namespace
 extern "C" void __cdecl Game_ClockTick(void) {
     if (Field_Request == 9) return;
-    unsigned char* const c = At(::bof3::Img(at::kClock));
+    unsigned char* const c = mode_flow::At(::bof3::Img(at::kClock));
     const unsigned char hours = c[0], minutes = c[1], seconds = c[2];
     if (!(hours == 0x63 && minutes == 0x3B && seconds == minutes)) {
         const auto frames = static_cast<unsigned char>(c[3] + 1);
@@ -509,41 +509,41 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     const bool drop_in = (flags & 0x80) != 0;
     if (drop_in) Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x8000);
     else Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0x7FFF);
-    g.effect_clear();
-    g.tint_reset();
+    mode_flow::g.effect_clear();
+    mode_flow::g.tint_reset();
     const std::uint16_t previous = Game_AreaNumber;
     const unsigned char zone = Cond_ByteFD;
     const long kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
     AreaW2c_LastArea = previous;
     AreaW1a_EntryZone = zone;
-    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x220), kind2_z);
-    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x21c), kind2_x);
+    mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x220), kind2_z);
+    mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x21c), kind2_x);
     const unsigned char track = AreaW1f_MusicCurrent;
-    if (track != 0xFF) g.music_play(track, 8);
+    if (track != 0xFF) mode_flow::g.music_play(track, 8);
     else Music_Track = 0xFF;
     if (Game_AreaNumber != static_cast<std::uint16_t>(area) && Field_Request == 5) {
         Game_AreaNumber = static_cast<std::uint16_t>(area);
-        g.load_dat(static_cast<int>((area & 0xFFFF) + 3));
-        while (g.load_done() == 0) g.sleep(1);
+        mode_flow::g.load_dat(static_cast<int>((area & 0xFFFF) + 3));
+        while (mode_flow::g.load_done() == 0) mode_flow::g.sleep(1);
         AreaDataReload_OnLoad(area & 0xFFFF);   // DIV-0182: the area's own .data as the disc holds it
         Field_InputFlags = Area_Descriptors[Game_AreaNumber][0x32];
-        g.clut_restore();
+        mode_flow::g.clut_restore();
         Gfx_ClutStripDirty = 1;
     }
-    g.party_set_up(x, z, flags);
-    Cond_ByteFD = g.zone_id(Word(At(::bof3::Img(at::kKind2XHigh))), Word(At(::bof3::Img(at::kKind2ZHigh))));
-    g.view_reset();
-    const auto colour = static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x38));
+    mode_flow::g.party_set_up(x, z, flags);
+    Cond_ByteFD = mode_flow::g.zone_id(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh))));
+    mode_flow::g.view_reset();
+    const auto colour = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38));
     if (colour != 0) {
-        g.colour_matrix(Fn<const unsigned long*>(colour));
+        mode_flow::g.colour_matrix(Fn<const unsigned long*>(colour));
         const unsigned char* const own = Fn<const unsigned char*>(
-            static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x38)));
-        SetLong(At(::bof3::Img(0x903598)), Long(own + 0x20));   // Light_Angles
-        SetLong(At(::bof3::Img(0x90359C)), Long(own + 0x24));
+            static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38)));
+        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), mode_flow::Long(own + 0x20));   // Light_Angles
+        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(own + 0x24));
     } else {
-        g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(at::kDefaultColour)));
-        SetLong(At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
-        SetLong(At(::bof3::Img(0x90359C)), Long(At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
+        mode_flow::g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(at::kDefaultColour)));
+        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
+        mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(mode_flow::At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
     }
     if (Field_StatusBits & 0x80) {
         auto chapter = static_cast<unsigned char>(Cond_ByteFA + 1);
@@ -552,33 +552,33 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
             chapter = 0x11;
             Cond_ByteFA = 0x11;
         }
-        g.scenario_start(chapter);
+        mode_flow::g.scenario_start(chapter);
     }
-    g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber]))));
-    const auto hook = static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x40));
-    if (hook != 0) Fn<Handler>(hook)();
-    g.flags_clear(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
-    At(::bof3::Img(0x8034E2))[0] = 1;   // Field_StatusBits + 1
-    g.mode_dispatch();
-    g.first_frame();
+    mode_flow::g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber]))));
+    const auto hook = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x40));
+    if (hook != 0) Fn<mode_flow::Handler>(hook)();
+    mode_flow::g.flags_clear(mode_flow::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
+    mode_flow::At(::bof3::Img(0x8034E2))[0] = 1;   // Field_StatusBits + 1
+    mode_flow::g.mode_dispatch();
+    mode_flow::g.first_frame();
 
     const std::uint16_t bits = Field_ScriptFlags2;
     if (bits & 0x8000) {
         if (drop_in) {
             EventLeader_PendingFlag = 0;
-            g.place_party(flags & ~0x80u);
+            mode_flow::g.place_party(flags & ~0x80u);
             Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFEF);
-            g.members_frame();
+            mode_flow::g.members_frame();
         }
     } else if (!(Field_ScriptFlags & 0x800)) {
         bool walked = true;
-        if (bits & 0x80) g.entry_walk(1, x, z);
-        else if (bits & 0x100) g.entry_walk(2, x, z);
-        else if (bits & 0x200) g.entry_walk(3, x, z);
+        if (bits & 0x80) mode_flow::g.entry_walk(1, x, z);
+        else if (bits & 0x100) mode_flow::g.entry_walk(2, x, z);
+        else if (bits & 0x200) mode_flow::g.entry_walk(3, x, z);
         else if (Field_MemberCount > 1) {
-            g.entry_walk(0, x, z);
+            mode_flow::g.entry_walk(0, x, z);
             if (!(Field_ScriptFlags & 0x800) && !(Field_ScriptFlags2 & 0x8000))
-                g.test_fb(static_cast<short>(Word(At(::bof3::Img(at::kKind2XHigh)))), static_cast<short>(Word(At(::bof3::Img(at::kKind2ZHigh)))));
+                mode_flow::g.test_fb(static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh)))), static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh)))));
         } else {
             walked = false;
         }
@@ -609,13 +609,13 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
     EventLeader_PendingX = x;
     const unsigned members = Field_MemberCount;
     EventLeader_PendingFlag = 1;
-    At(::bof3::Img(EventLeader_PendingFlag_addr))[1] = dir;
-    At(::bof3::Img(EventLeader_PendingFlag_addr))[2] = 0;
+    mode_flow::At(::bof3::Img(EventLeader_PendingFlag_addr))[1] = dir;
+    mode_flow::At(::bof3::Img(EventLeader_PendingFlag_addr))[2] = 0;
     EventLeader_PendingZ = z;
     if (members == 0) return;
-    const unsigned char pose = At(::bof3::Img(at::kWalkPoses))[dir];
+    const unsigned char pose = mode_flow::At(::bof3::Img(at::kWalkPoses))[dir];
     for (unsigned i = 0; i < members; ++i) {
-        unsigned char* const m = At(::bof3::Img(ObjTrio_addr) + 0x137 + i * 0x14C);
+        unsigned char* const m = mode_flow::At(::bof3::Img(ObjTrio_addr) + 0x137 + i * 0x14C);
         m[0] = pose;
         m[1] = static_cast<unsigned char>(m[1] | 2);
     }
@@ -640,7 +640,7 @@ namespace mode_flow { std::uint8_t g_reset_full = 0; }
 
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = At(::bof3::Img(WindowRecords_addr) + i * 0x24);
+        unsigned char* const r = mode_flow::At(::bof3::Img(WindowRecords_addr) + i * 0x24);
         if (mode_flow::g_reset_full) {
             std::memset(r, 0, 0x20);
             continue;
@@ -678,12 +678,12 @@ extern "C" void __cdecl Window_ResetAll(void) {
 // it in game, but the frame hash does - batch ab24's one differing frame,
 // frame 1 - so the compiler's tail call is turned off here.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
-    g.clear_rect(0, 0, 0x400, 0x200);
-    g.dropped(0);
-    g.load_dat(0x225);
-    while (g.load_done() == 0) g.sleep(1);
-    std::memset(At(::bof3::Img(at::kBootClear)), 0, at::kBootClearBytes);
-    std::memcpy(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000), At(::bof3::Img(ModeFlow_ButtonDefaults_addr)), 0x12);
+    mode_flow::g.clear_rect(0, 0, 0x400, 0x200);
+    mode_flow::g.dropped(0);
+    mode_flow::g.load_dat(0x225);
+    while (mode_flow::g.load_done() == 0) mode_flow::g.sleep(1);
+    std::memset(mode_flow::At(::bof3::Img(at::kBootClear)), 0, at::kBootClearBytes);
+    std::memcpy(mode_flow::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000), mode_flow::At(::bof3::Img(ModeFlow_ButtonDefaults_addr)), 0x12);
     // DIV-0133 and DIV-0134 (docs/button-sigma.md): the release's starting
     // words by source, then words 7 / 8 as Speak's and Action's and the
     // table - nothing until sigma::Arm, after every module's self-test.
@@ -691,28 +691,28 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     AreaW0b_PartySet = 0xFF;
     Field_ScriptFlags = 0;
     Field_ScriptFlags2 = 0;
-    unsigned char* const config = At(::bof3::Img(ModeFlow_ConfigBytes_addr));
+    unsigned char* const config = mode_flow::At(::bof3::Img(ModeFlow_ConfigBytes_addr));
     config[0] = 1;
     for (unsigned i = 1; i < 7; ++i) config[i] = 0;
-    g.window_reset();
-    g.tint_reset();
-    g.slots_release();
+    mode_flow::g.window_reset();
+    mode_flow::g.tint_reset();
+    mode_flow::g.slots_release();
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     BattleE2_AnimSet = ::bof3::Img(0x8B3580);
-    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
-    g.clut_restore();
+    mode_flow::SetLong(mode_flow::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
+    mode_flow::g.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
-    g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
-    g.task_exit();
+    mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
+    mode_flow::g.task_exit();
 }
 
 // original 0x496C90: task 1's first body - DAT 0x226 loaded and waited for,
 // then a tail jump into Title_Task (which never returns).
 extern "C" void __cdecl Title_LoadTask(void) {
-    g.load_dat(0x226);
-    while (g.load_done() == 0) g.sleep(1);
-    g.title_task();
+    mode_flow::g.load_dat(0x226);
+    while (mode_flow::g.load_done() == 0) mode_flow::g.sleep(1);
+    mode_flow::g.title_task();
 }
 
 // original 0x454810: `mov eax, 1; ret`. Where the PSX polled its CD load
@@ -726,7 +726,7 @@ extern "C" int __cdecl File_LoadDone(void) { return 1; }
 // rows 28..31 come out zero too. The PSX zeroes the same four rows first.
 // Gfx_ClutStripDirty is not touched.
 extern "C" void __cdecl Gfx_ClutStripRestore(void) {
-    std::memset(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3800), 0, 0x800);
+    std::memset(mode_flow::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3800), 0, 0x800);
     std::memcpy(Gfx_ClutStrip, Gfx_ClutStripSource, 0x4000);
 }
 
@@ -734,7 +734,7 @@ extern "C" void __cdecl Gfx_ClutStripRestore(void) {
 // zeroed, then 16 dwords from 0x7E06A0 set to -1.
 extern "C" void __cdecl MoveScript_TintReset(void) {
     for (unsigned i = 0; i < 32; ++i) MoveScript_TintRecords[i * 12] = 0;
-    for (unsigned i = 0; i < 16; ++i) SetLong(At(::bof3::Img(at::kTintMarks) + i * 4), -1);
+    for (unsigned i = 0; i < 16; ++i) mode_flow::SetLong(mode_flow::At(::bof3::Img(at::kTintMarks) + i * 4), -1);
 }
 
 // original 0x454A50 (PSX 0x8014E378): the Field_Slots record `slot` (its low
@@ -747,7 +747,7 @@ extern "C" void __cdecl Field_SlotRelease(unsigned slot) {
 
 // original 0x454AB0: Field_SlotRelease for each of the eight slots.
 extern "C" void __cdecl Field_SlotsReleaseAll(void) {
-    for (unsigned i = 0; i < 8; ++i) g.slot_release(i);
+    for (unsigned i = 0; i < 8; ++i) mode_flow::g.slot_release(i);
 }
 
 // original 0x461E10 (PSX 0x8014E458): a RECT {x, y, w, h} of 16-bit words on
@@ -757,7 +757,7 @@ extern "C" void __cdecl Field_SlotsReleaseAll(void) {
 // pushed that Gfx_ClearImage does not read (the PSX ClearImage's blue).
 extern "C" void __cdecl Gfx_ClearRect(int x, int y, int w, int h) {
     short rect[4] = {static_cast<short>(x), static_cast<short>(y), static_cast<short>(w), static_cast<short>(h)};
-    g.clear_image(rect, 0, 0);
+    mode_flow::g.clear_image(rect, 0, 0);
 }
 
 // ===========================================================================
