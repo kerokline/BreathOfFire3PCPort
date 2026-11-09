@@ -7,6 +7,10 @@
 
 void BossSg_Inject();
 
+// The Weretigr trail's shade (boss_sg.cpp, external linkage, ours): declared for
+// boss/boss_weretigr_fx.cpp, where its two callers moved (source-layout round, group b2).
+void Shade();
+
 namespace boss_sg {
 // BOF3X_SHADOW=boss_sg: the start-up fuzz, boss_sg_fuzz.cpp - one
 // boss_harness::Run per fight, kind and effect task (BOF3X_BSG_RUN=<unit> runs
