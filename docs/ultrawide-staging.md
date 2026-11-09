@@ -44,7 +44,7 @@ the kind-0 chunk). Areas 175..185 are the community, the faerie village
 `Msg_OpenScript` as an immediate in those areas, no placement word `+0x88`
 and no talk script `Dx` names it; the movement-script talk ops do: `E0 t` /
 `E3 t` / `E1 d t` store message `t` in the object's word `+0x88` and call
-`MoveScript_SetTurnTarget` `0x517E90`, which opens it (`move_groups.cpp`
+`Field_ObjectTalk` `0x517E90`, which opens it (`move_groups.cpp`
 `MoveScript_GroupE`; `symbols.toml`). One script in the eleven areas has
 `E3` with 28: area 175 `+0x10[5]` at `0x641B1C`, offset `+0xCA`, run by the
 object the placement script puts down (hidden, placement flags bit 0) under

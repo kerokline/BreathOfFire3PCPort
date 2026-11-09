@@ -1307,7 +1307,7 @@ extern "C" void __cdecl BattleEquip_OpenUse(void) {
 // over 0x904AB1): Escape_Chance of the difference; state 2 when Rand's low six
 // bits are not above it, else 2 with 0x904AE4 == 1 and 1 without. As the
 // original has it: the enemies' sum reads object actor (not actor - 3) - the
-// objects 3..10, five of them past the eight - while Battle_ActorIsOut is asked
+// objects 3..10, three of them past the eight - while Battle_ActorIsOut is asked
 // of the actor; and both divisors are unchecked (ours aborts at 0).
 extern "C" void __cdecl Escape_Roll(void) {
     const auto tries = static_cast<unsigned char>(BattlePhases_AE6 + 1);

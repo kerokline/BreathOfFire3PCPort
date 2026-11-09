@@ -527,3 +527,9 @@ round-thirteen state. No file of another group of this round refers to the
 lacked and the smaller extents `0052B1B0 48` and `0052B6C0 84` beside the
 catalogue's host lines (`92`, `12C2`). The other 13 were already listed with
 the extents read here.
+
+## 12. The fishing records' fields (2026-11-08)
+
+From the US fishing overlay and the group's code. Rod: `+0` cast speed, `+1`
+sweep, `+2` distance, `+3` cursor size, `+4..+6` speeds, `+7` the held-reel
+speed, `+8` / `+9` the snap values. Lure: `+0`, `+4`, `+8` float rates.

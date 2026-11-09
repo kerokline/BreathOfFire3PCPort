@@ -105,8 +105,8 @@ would call its own return address; ours aborts (CLAUDE.md rule 4).
 | 4 / 5 | `0x4951B0` / `0x4951D0` | `FadeSub(+-0x400, 1, 0)`, 32 frames |
 | 6 / 7 | `0x4951F0` / `0x495210` | `FadeSub(+-0x800, 1, 2)` - into OT slot 2 |
 | 8 / 9 | `0x495230` / `0x495250` | `FadeAdd(+-0x800, 1, 0)`: to / from white |
-| 10 / 17 | `0x495270` / `0x495450` | fade to black (step 0x400 / 0x200) while the camera swings away: each frame the tile is not done, yaw (`Camera_Angles[0]`) and the angle word (`Cond_AngleFB`'s low word) + 11, `Camera_Distance` - 50, `MapView_Redraw` 2 |
-| 11 / 18 | `0x4952D0` / `0x4954B0` | the swing back (byte for byte the same body): yaw `0xFEAB`, angle `0x355`; five frames of fade-in whatever the tile says; then each frame yaw and angle - 11 and distance + 50 until it **equals** `0x5DC`, the tile drawn until done; then yaw `0xFD56`, angle `0x200` |
+| 10 / 17 | `0x495270` / `0x495450` | fade to black (step 0x400 / 0x200) while the camera swings away: each frame the tile is not done, pitch (`Camera_Angles[0]`) and the angle word (`Cond_AngleFB`'s low word) + 11, `Camera_Distance` - 50, `MapView_Redraw` 2 |
+| 11 / 18 | `0x4952D0` / `0x4954B0` | the swing back (byte for byte the same body): pitch `0xFEAB`, angle `0x355`; five frames of fade-in whatever the tile says; then each frame pitch and angle - 11 and distance + 50 until it **equals** `0x5DC`, the tile drawn until done; then pitch `0xFD56`, angle `0x200` |
 | 12 | `0x4953A0` | distance `0x5DC` and a redraw, then `FadeSub(-0x800, 1, 0)` |
 | 13 / 14 | `0x4953D0` / `0x4953F0` | `FadeSub(+-0x200, 1, 0)`, 64 frames |
 | 15 / 16 | `0x495410` / `0x495430` | `FadeAdd(+-0x200, 1, 0)` |

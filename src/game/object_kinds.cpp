@@ -60,8 +60,8 @@ struct Callees {
     void (__cdecl* turn)(unsigned char*);
     void (__cdecl* settle)(unsigned char*, unsigned char);
     void (__cdecl* motion)(unsigned char*);
-    unsigned char (__cdecl* approach)(unsigned char*);
-    unsigned char (__cdecl* avoid)(unsigned char*);
+    unsigned char (__cdecl* flee)(unsigned char*);
+    unsigned char (__cdecl* chase)(unsigned char*);
     unsigned char (__cdecl* best)(unsigned char*, unsigned char);
     unsigned char (__cdecl* blocked_ahead)(unsigned char*);
     void (__cdecl* move)(unsigned char*, unsigned char);
@@ -83,8 +83,8 @@ Callees Originals() {
             Field_ObjectTurn,
             Field_ObjectSettle,
             Field_ObjectMotion,
-            Field_ObjectApproachDirection,
-            Field_ObjectAvoidDirection,
+            Field_ObjectFleeDirection,
+            Field_ObjectChaseDirection,
             Field_ObjectBestDirection,
             Field_ObjectBlockedAhead,
             MoveCmd_Move,
@@ -156,10 +156,10 @@ void Wander(unsigned char* object, bool home) {
     TurnOrCancel(object, direction, turn, turn_to);
 }
 
-// Entries 1 and 2: toward the leader or away from it. With no steps left and
+// Entries 1 and 2: away from the leader or toward it. With no steps left and
 // no speed they return before the settle and the motion, which the wander
 // kinds do not (the PSX's twins alike).
-void Chase(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*), unsigned char toward) {
+void LeaderMove(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*), unsigned char farthest) {
     auto* const obj = rv::As<records::SpriteObject>(object);
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     Pace(object, 0, 1);
@@ -178,7 +178,7 @@ void Chase(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*),
         }
     } else {
         Pace(object, speed, 2);
-        turn_to = g.best(object, toward);
+        turn_to = g.best(object, farthest);
         --obj->move_steps;
     }
     const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0;
@@ -252,11 +252,11 @@ unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags,
 // original 0x517640, entry 0 (PSX FUN_801A1AEC): a random walk.
 extern "C" void __cdecl Field_ObjectWander(unsigned char* object) { Wander(object, false); }
 
-// original 0x517790, entry 1 (PSX FUN_801A1D04): toward the leader.
-extern "C" void __cdecl Field_ObjectApproach(unsigned char* object) { Chase(object, g.approach, 1); }
+// original 0x517790, entry 1 (PSX FUN_801A1D04): away from the leader.
+extern "C" void __cdecl Field_ObjectFlee(unsigned char* object) { LeaderMove(object, g.flee, 1); }
 
-// original 0x517900, entry 2 (PSX FUN_801A1F2C): away from the leader.
-extern "C" void __cdecl Field_ObjectAvoid(unsigned char* object) { Chase(object, g.avoid, 0); }
+// original 0x517900, entry 2 (PSX FUN_801A1F2C): toward the leader.
+extern "C" void __cdecl Field_ObjectChase(unsigned char* object) { LeaderMove(object, g.chase, 0); }
 
 // original 0x517A70, entry 3 (PSX FUN_801A2154): a random walk inside the
 // home box object +0x8E / +0x92, half-widths +0x98 / +0x9A.
@@ -509,7 +509,7 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
 // context +8 is a script (bit 15, the area descriptor's +4 table), a system
 // message (bit 13) or a script message. The word is read again after the
 // script, which may change it; the one found on entry is put back.
-extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context) {
+extern "C" unsigned char __cdecl Field_ObjectTalk(unsigned char* context) {
     const std::uint16_t word = Word(context + 8);
     context[0] &= 0xEF;
     if (word == 0xFFFF) return 0;
@@ -609,8 +609,8 @@ unsigned char __cdecl StubInHome(unsigned char* o) { Record(5, Id(o)); return st
 void __cdecl StubTurn(unsigned char* o) { Record(6, Id(o)); Disturb(); }
 void __cdecl StubSettle(unsigned char* o, unsigned d) { Record(7, Id(o), d & 0xFF); }
 void __cdecl StubMotion(unsigned char* o) { Record(8, Id(o)); }
-unsigned char __cdecl StubApproach(unsigned char* o) { Record(9, Id(o)); Disturb(); return Direction(); }
-unsigned char __cdecl StubAvoid(unsigned char* o) { Record(10, Id(o)); Disturb(); return Direction(); }
+unsigned char __cdecl StubFlee(unsigned char* o) { Record(9, Id(o)); Disturb(); return Direction(); }
+unsigned char __cdecl StubChase(unsigned char* o) { Record(10, Id(o)); Disturb(); return Direction(); }
 unsigned char __cdecl StubBest(unsigned char* o, unsigned toward) { Record(11, Id(o), toward & 0xFF); Disturb(); return Direction(); }
 unsigned char __cdecl StubBlockedAhead(unsigned char* o) { Record(12, Id(o), Sprite_Current[8]); Disturb(); return static_cast<unsigned char>(Hash() % 2 ? Hash() | 1 : 0); }
 void __cdecl StubMove(unsigned char* c, unsigned d) { Record(13, Id(c), d & 0xFF); Disturb(); }
@@ -637,8 +637,8 @@ Callees Stubs() {
     s.turn = StubTurn;
     s.settle = As<decltype(s.settle)>(&StubSettle);
     s.motion = StubMotion;
-    s.approach = StubApproach;
-    s.avoid = StubAvoid;
+    s.flee = StubFlee;
+    s.chase = StubChase;
     s.best = As<decltype(s.best)>(&StubBest);
     s.blocked_ahead = StubBlockedAhead;
     s.move = As<decltype(s.move)>(&StubMove);
@@ -663,8 +663,8 @@ const void* StubFor(std::uint32_t target) {
     case 0x5196E0: return f(&StubTurn);
     case 0x518D10: return f(&StubSettle);
     case 0x518980: return f(&StubMotion);
-    case 0x518E20: return f(&StubApproach);
-    case 0x518ED0: return f(&StubAvoid);
+    case 0x518E20: return f(&StubFlee);
+    case 0x518ED0: return f(&StubChase);
     case 0x518F80: return f(&StubBest);
     case 0x518080: return f(&StubBlockedAhead);
     case 0x578C10: return f(&StubMove);
@@ -695,9 +695,9 @@ constexpr std::uint32_t kFadeSize = 0x249, kFadeInOffset = 0x130;
 const Clone kClones[] = {
     {"Field_ObjectWander", 0x517640, 0x14F,
      {{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
-    {"Field_ObjectApproach", 0x517790, 0x16A,
+    {"Field_ObjectFlee", 0x517790, 0x16A,
      {{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
-    {"Field_ObjectAvoid", 0x517900, 0x16A,
+    {"Field_ObjectChase", 0x517900, 0x16A,
      {{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
     {"Field_ObjectWanderHome", 0x517A70, 0x173,
      {{0x7a, 0x518dd0}, {0x8f, 0x5b93d2}, {0xc0, 0x518ca0}, {0xdd, 0x518000}, {0x129, 0x5196e0}, {0x15e, 0x518d10}, {0x167, 0x518980}}, 7, {0x20, 0x6e, 0xaa}, 3},
@@ -709,7 +709,7 @@ const Clone kClones[] = {
     {"Field_ObjectLinked", 0x519600, 0x6F, {{0x35, 0x537540}, {0x68, 0x537540}}, 2, {}, 0},
     {"Field_ObjectIdleLong", 0x518B40, 0x15A, {{0x52, 0x5187c0}, {0x8f, 0x518080}, {0xad, 0x518000}, {0x12e, 0x578c10}}, 4, {}, 0},
     {"Field_ObjectIdle", 0x517F30, 0xA7, {{0x1c, 0x56d6b0}}, 1, {}, 0},
-    {"MoveScript_SetTurnTarget", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
+    {"Field_ObjectTalk", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
     {"Field_Pace0", 0x5187C0, 0x32, {}, 0, {}, 0},
     {"Field_Pace4", 0x518800, 0x71, {}, 0, {}, 0},
     {"Field_Pace5", 0x518880, 0x71, {}, 0, {}, 0},
@@ -720,7 +720,7 @@ const Clone kClones[] = {
 };
 constexpr unsigned kCount = sizeof kClones / sizeof kClones[0];
 enum : unsigned {
-    kWander, kApproach, kAvoid, kWanderHome, kWait, kStill, kFadeOut, kFadeIn, kTurn, kLinked, kIdleLong, kIdle, kTalk,
+    kWander, kFlee, kChase, kWanderHome, kWait, kStill, kFadeOut, kFadeIn, kTurn, kLinked, kIdleLong, kIdle, kTalk,
     kPace0, kPace4, kPace5, kPace6, kOpenDirection, kRandomTurn, kInHome
 };
 static_assert(kInHome + 1 == kCount, "one enumerator per clone");
@@ -805,8 +805,8 @@ const void* Ours(unsigned k) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (k) {
     case kWander: return f(&Field_ObjectWander);
-    case kApproach: return f(&Field_ObjectApproach);
-    case kAvoid: return f(&Field_ObjectAvoid);
+    case kFlee: return f(&Field_ObjectFlee);
+    case kChase: return f(&Field_ObjectChase);
     case kWanderHome: return f(&Field_ObjectWanderHome);
     case kWait: return f(&Field_ObjectWait);
     case kStill: return f(&Field_ObjectStill);
@@ -816,7 +816,7 @@ const void* Ours(unsigned k) {
     case kLinked: return f(&Field_ObjectLinked);
     case kIdleLong: return f(&Field_ObjectIdleLong);
     case kIdle: return f(&Field_ObjectIdle);
-    case kTalk: return f(&MoveScript_SetTurnTarget);
+    case kTalk: return f(&Field_ObjectTalk);
     case kPace0: return f(&Field_Pace0);
     case kPace4: return f(&Field_Pace4);
     case kPace5: return f(&Field_Pace5);
@@ -992,8 +992,8 @@ void ObjectKinds_Inject() {
         SelfTest(clones);
     }
     BOF3_INJECT(Field_ObjectWander);
-    BOF3_INJECT(Field_ObjectApproach);
-    BOF3_INJECT(Field_ObjectAvoid);
+    BOF3_INJECT(Field_ObjectFlee);
+    BOF3_INJECT(Field_ObjectChase);
     BOF3_INJECT(Field_ObjectWanderHome);
     BOF3_INJECT(Field_ObjectWait);
     BOF3_INJECT(Field_ObjectStill);
@@ -1003,7 +1003,7 @@ void ObjectKinds_Inject() {
     BOF3_INJECT(Field_ObjectLinked);
     BOF3_INJECT(Field_ObjectIdleLong);
     BOF3_INJECT(Field_ObjectIdle);
-    BOF3_INJECT(MoveScript_SetTurnTarget);
+    BOF3_INJECT(Field_ObjectTalk);
     BOF3_INJECT(Field_Pace0);
     BOF3_INJECT(Field_Pace4);
     BOF3_INJECT(Field_Pace5);

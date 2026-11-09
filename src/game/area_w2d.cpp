@@ -777,12 +777,12 @@ extern "C" void __cdecl Area100_EffectB7Ring(void) {
 
 // original 0x4144E0 (area 103 +0x3C[0]; PSX 0x801F560C): the script object's
 // word +8 = Area103_FirstListedMember + 2 (16 bits: none makes 0x101),
-// MoveScript_SetTurnTarget(it), its bit 0x10 cleared; then its bit 0x20
+// Field_ObjectTalk(it), its bit 0x10 cleared; then its bit 0x20
 // cleared when the running object's +7 has bit 4, else set.
 extern "C" void __cdecl Area103_TalkByMember(void) {
     const unsigned char row = AH_CALL(Area103_FirstListedMember)();
     SetWord(MoveScript_Object + 8, static_cast<unsigned>(row) + 2);
-    AH_CALL(MoveScript_SetTurnTarget)(MoveScript_Object);
+    AH_CALL(Field_ObjectTalk)(MoveScript_Object);
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] & 0xEF);
     const unsigned char bits = Sprite_Current[7];
     unsigned char* const obj = MoveScript_Object;

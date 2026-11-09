@@ -425,3 +425,18 @@ The 48 extents were present for 34 starts already; appended 14 lines
 (2026-10-05): the twelve triggers, `0x4563B0 2C4` beside the existing `2C9`
 (padding), and `0x456AF0 23` beside the host line `0x456AF0 34E`, which
 covers the twelve triggers: **the coordinator splits it** at the round's end.
+
+## 12. What the community's fields mean (2026-11-08)
+
+Section 1 left the meanings unstated. Read from the US `COMMU` overlays and
+Frost's matching C, and set against this group's code:
+
+- Faerie traits `+0x10..+0x13`: power, constitution, culture, intellect.
+- `0x9046CA` food, `0x9046CC` culture, `0x9046CB` jobs unlocked,
+  `0x9046CD` / `0x9046CE` clear and build power. These two are snapshots from
+  the last village visit, while the count gate is live.
+- Rooms: 4 scholar, 5 merchant, 6 inn, 7 gift shop, 8 fortune teller,
+  9 explorer, 0xA antiques, 0xB music, 0xC casino, 0xD copy shop.
+- `CommuSim_TickKind9`, `D`, `5`, `B`: explore, copy, merchant, music. Copy
+  statuses are `0x1_..0x4_`, the record's `+2` / `+3`.
+- Spawning needs food above four per faerie.

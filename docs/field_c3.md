@@ -40,8 +40,8 @@ re-reads both after each call, and ours does the same.
 | `Mode8_Step5` | `0x517330` | 0xA | mode 8's step table `0x656AB8[5]` | `0x42D710` (the dispatch on the menu byte `0x929F00`), tail `Field_RunTaskRecords` |
 | `Mode8_Step8` | `0x517340` | 0xA | `0x656AB8[8]` | `0x57DFF0` (the other dispatch on `0x929F00`), tail `Field_RunTaskRecords` |
 | `MoveCmd_OpE7` | `0x518B20` | 0x19 | `MoveScript_GroupE` (op E7) | `Field_ObjectHandlers[n & 0xFF](Field_ActiveMember)` |
-| `Field_ObjectApproachDirection` | `0x518E20` | 0xA3 | `Field_ObjectApproach` | the leader (`ObjTrio +0x34 / +0x38`) within `s`'s half-widths `object +0x98 / +0x9A` (`|d| >> 16`, signed): `Field_ObjectBestDirection(object, 1)` - 0xFF clears `s[9]` and answers 0xFF, a new direction becomes `s[8]` with `object +0x80` bit 3 - answering `s[8]`; else `Field_ObjectRandomTurn`, `Field_ObjectOpenDirection`'s `al` |
-| `Field_ObjectAvoidDirection` | `0x518ED0` | 0xA5 | `Field_ObjectAvoid` | the same with `toward` 0 (the differences taken the other way round; the absolute values agree) |
+| `Field_ObjectFleeDirection` | `0x518E20` | 0xA3 | `Field_ObjectFlee` | the leader (`ObjTrio +0x34 / +0x38`) within `s`'s half-widths `object +0x98 / +0x9A` (`|d| >> 16`, signed): `Field_ObjectBestDirection(object, 1)` - 0xFF clears `s[9]` and answers 0xFF, a new direction becomes `s[8]` with `object +0x80` bit 3 - answering `s[8]`; else `Field_ObjectRandomTurn`, `Field_ObjectOpenDirection`'s `al` |
+| `Field_ObjectChaseDirection` | `0x518ED0` | 0xA5 | `Field_ObjectChase` | the same with `farthest` 0 (the differences taken the other way round; the absolute values agree) |
 | `Field_ObjectBestDirection` | `0x518F80` | 0x11C | the four above | the leader's point one pace on (`ObjTrio +9` times `+0xC / +0x10`); `s[8]` made odd; four quarter turns, each not `Field_ObjectBlockedAhead` scored by the sum of the two distances from the step to the point, the **largest kept for `toward` not 0, the smallest for 0** (unsigned, in `object +0x94`); the kept facing, 0xFF for none |
 | `Field_ObjectFadeOutStart` | `0x5193D0` | 0x39 | `Field_ObjectFadeOutSteps[0]` | `Sprite_SetTint(s, 0x1F, 0x1F, 0x1F, 1)` into `Field_ActiveMember +0x9F`, `s[0]` bit 6 off, `s[4] = 1` |
 | `Field_ObjectFadeOutStep` | `0x519410` | 0xC6 | `Field_ObjectFadeOutSteps[1]` | the tint record's `+2..+4` down to 0; at a signed sum of 0 `Tint_Release`, the member's `+0x80` bit 1 off, `s[1] = s[3]`, `s[4] = 0` |
@@ -50,12 +50,12 @@ re-reads both after each call, and ours does the same.
 
 **`Field_ObjectBestDirection`, read whole this time:** the 2026-09-22
 reading (its first 60 instructions) had the keeping the other way round;
-the code keeps the **farthest** step for `toward` 1 (`Field_ObjectApproach`'s
+the code keeps the **farthest** step for `farthest` 1 (`Field_ObjectFlee`'s
 call) and the nearest for 0 (`jae` / `jbe` on `object +0x94` started at 0 and
-0x1000000). The names `Field_ObjectApproach*` / `Avoid*` are the callers'
-table slots' (entries 1 and 2 of `Field_ObjectHandlers`), kept; what the
-objects look like doing it is the owner's to say. The evidence strings say
-so.
+0x1000000). The names `Field_ObjectFlee*` / `Chase*` follow what the code does
+(renamed 2026-11-08 from `Approach` / `Avoid`, which had it backwards:
+[`object-kinds.md`](object-kinds.md) section 9); the parameter is `farthest`
+since then, `toward` before.
 
 ### 1.2 The field core's state 2 (`0x525390..0x526DAF`)
 
@@ -171,7 +171,7 @@ never jump through `Field_ObjectFadeOutSteps` / `Field_ObjectFadeInSteps`.
 With `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn` the originals'
 jumps reach these four, ours, the same code.
 
-`eax` on return: `Field_ObjectApproachDirection`, `_AvoidDirection`,
+`eax` on return: `Field_ObjectFleeDirection`, `_ChaseDirection`,
 `_BestDirection`, `FieldCore_TileD0Probe` and `FieldCore_TileD0Slope` answer
 in `al`, which their callers read; every other is `void` - the dispatchers'
 callers (`FieldCore_State2`, ours; `0x496430` and mode 11's steps) drop
@@ -302,13 +302,13 @@ No equivalent mutant was met.
 | C4 | `Mode8_Step8` | Field_RunTaskRecords skipped | 3000 |
 | C5 | `MoveCmd_OpE7` | Sprite_Current passed for the member | 2252 |
 | C6 | `MoveCmd_OpE7` | the neighbouring handler | 3000 |
-| C7 | `Field_ObjectApproachDirection` | toward 0 | 558 |
-| C8 | `Field_ObjectAvoidDirection` | toward 1 | 535 |
-| C9 | `Field_ObjectApproachDirection` | the x half-width test >= | 119 (also `Field_ObjectAvoidDirection` 118) |
-| C10 | `Field_ObjectApproachDirection` | the z test against the x half-width | 589 (also `Field_ObjectAvoidDirection` 555) |
-| C11 | `Field_ObjectApproachDirection` | +9 kept at 0xFF | 42 (also `Field_ObjectAvoidDirection` 46) |
-| C12 | `Field_ObjectApproachDirection` | context bit 2 for 3 | 318 (also `Field_ObjectAvoidDirection` 309) |
-| C13 | `Field_ObjectApproachDirection` | dz from the leader x | 520 (also `Field_ObjectAvoidDirection` 490) |
+| C7 | `Field_ObjectFleeDirection` | farthest 0 | 558 |
+| C8 | `Field_ObjectChaseDirection` | farthest 1 | 535 |
+| C9 | `Field_ObjectFleeDirection` | the x half-width test >= | 119 (also `Field_ObjectChaseDirection` 118) |
+| C10 | `Field_ObjectFleeDirection` | the z test against the x half-width | 589 (also `Field_ObjectChaseDirection` 555) |
+| C11 | `Field_ObjectFleeDirection` | +9 kept at 0xFF | 42 (also `Field_ObjectChaseDirection` 46) |
+| C12 | `Field_ObjectFleeDirection` | context bit 2 for 3 | 318 (also `Field_ObjectChaseDirection` 309) |
+| C13 | `Field_ObjectFleeDirection` | dz from the leader x | 520 (also `Field_ObjectChaseDirection` 490) |
 | C14 | `Field_ObjectBestDirection` | the kept comparison reversed | 2423 |
 | C15 | `Field_ObjectBestDirection` | no odd start | 1315 |
 | C16 | `Field_ObjectBestDirection` | +0x94 start 0xFFFFFF | 1506 |
@@ -584,7 +584,7 @@ These are RT's `--edges` twelve (FH's 7.6 table) and the three unowned.
 | `Mode11_FieldFrame` | Capcom's mode-11 steps `0x496790`, `0x4967C0` (call), `0x4967B0` (jmp) - in no group |
 | `Mode8_Step5`, `Mode8_Step8` | mode 8's step table `0x656AB8`, read by Capcom's `0x496430` |
 | `MoveCmd_OpE7` | ours: `MoveScript_GroupE` (`move_groups.cpp`), by name |
-| `Field_ObjectApproachDirection`, `_AvoidDirection`, `_BestDirection` | ours: `Field_ObjectApproach`, `Field_ObjectAvoid` (`object_kinds.cpp`), by name |
+| `Field_ObjectFleeDirection`, `_ChaseDirection`, `_BestDirection` | ours: `Field_ObjectFlee`, `Field_ObjectChase` (`object_kinds.cpp`), by name |
 | the four fade cases | `Field_ObjectFadeOutSteps` / `Field_ObjectFadeInSteps`, read only by the original hosts |
 | `FieldCore_ScriptMove`, `FieldCore_Attached`, the seven dispatchers | `FieldCore_State2Steps`, read in place by ours' `FieldCore_State2` |
 | everything else | this group's own tables and calls |
@@ -597,7 +597,7 @@ stub cases, `CallSite` rows and its fade-table patch expectations
 runs, `scenario_harness_fh.cpp`'s copy of `0x525CC0` - which is why
 `FieldC3_Inject` runs after `ScenarioHarnessFh_Inject`), and comments
 (`mode_states.cpp`, `mode_states_callees.h`, `area_w4f.cpp`). The callers
-that are ours (`MoveScript_GroupE`, `Field_ObjectApproach` / `Avoid`) already
+that are ours (`MoveScript_GroupE`, `Field_ObjectFlee` / `Chase`) already
 call by name, and the name now binds to ours. A note for the fold: a data
 name with a `ctype` is a macro, so `bof3::addr::<table>` does not compile for
 it - the fuzz names the tables by `Key(<name>)`.

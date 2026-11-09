@@ -9301,8 +9301,9 @@ site	src/game/rest_2d.cpp	134	uintptr	-	live	std::uintptr_t	-	return reinterpret
 site	src/game/rest_2d.cpp	134	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
 site	src/game/rest_2d.cpp	143	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
 site	src/game/rest_2d.cpp	143	widen	code_place	live	::bof3::CodePlace(target)	Fn [fn]	reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
-site	src/game/rest_2d.cpp	639	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
-site	src/game/rest_2d.cpp	639	widen	word_read	live	static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
+site	src/game/rest_2d.cpp	644	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
+site	src/game/rest_2d.cpp	644	widen	word_read	live	static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
+site	src/game/rest_2d.cpp	1257	low32	object_ours	live	&g_field_heal_party	Low32	bof3::PatchBytes(" ", Low32(&g_field_heal_party), &was, &is, 1);
 site	src/game/rest_2d_fuzz.cpp	43	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_2d_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_2d_fuzz.cpp	44	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -17430,6 +17431,7 @@ file	src/game/rest_2c_fuzz.cpp	fuzz	narrow_call	func_ours	1
 file	src/game/rest_2c_fuzz.cpp	fuzz	narrow_call	image_local	1
 file	src/game/rest_2c_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/rest_2c_fuzz.cpp	fuzz	widen	param	1
+file	src/game/rest_2d.cpp	live	low32	object_ours	1
 file	src/game/rest_2d.cpp	live	uintptr	-	4
 file	src/game/rest_2d.cpp	live	widen	code_place	2
 file	src/game/rest_2d.cpp	live	widen	word_read	2
@@ -18396,8 +18398,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	14740
-#count sites_live	10523
+#count sites	14741
+#count sites_live	10524
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -18634,9 +18636,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	478
-#count low32_live	470
-#count low32_live_files	283
+#count low32	479
+#count low32_live	471
+#count low32_live_files	284
 #count low32_fuzz	8
 #count low32_fuzz_files	1
 #count low32_crt	1
@@ -18654,9 +18656,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	101
 #count low32_image_local_live	101
 #count low32_image_local_live_files	60
-#count low32_object_ours	85
-#count low32_object_ours_live	85
-#count low32_object_ours_live_files	65
+#count low32_object_ours	86
+#count low32_object_ours_live	86
+#count low32_object_ours_live_files	66
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14

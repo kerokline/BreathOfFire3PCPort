@@ -145,7 +145,7 @@ struct Callees {
     void (__cdecl* swap)(unsigned long, unsigned long);
     void (__cdecl* sprite_draw)();
 };
-// MoveScript_SetTurnTarget returns 0 or 1 in al (0x517EAA, 0x517F21), which
+// Field_ObjectTalk returns 0 or 1 in al (0x517EAA, 0x517F21), which
 // Field_ObjectsFrame tests.
 const Callees kOriginals = {
     Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
@@ -153,7 +153,7 @@ const Callees kOriginals = {
     MoveScript_TintFrame, Field_DrawFrame,
     Field_PendingJump, Field_LeaderFrame, Field_MemberFrame,
     Sprite_UpdateScreenA, Sprite_UpdateScreen, Sprite_ProjectA,
-    MoveScript_SetTurnTarget,
+    Field_ObjectTalk,
     Sprite_FaceDirection, Field_ObjectIdle, Field_ObjectLinked, Field_ObjectIdleLong, Sprite_ScriptTick,
     Sprite_ScriptTickOnce,
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,

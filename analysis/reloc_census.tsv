@@ -7390,7 +7390,7 @@ site	src/game/field_frame.cpp	706	addr_eq	case	0x52D8F0	0x52d8f0	code	hosted	fie
 site	src/game/field_frame.cpp	707	addr_eq	case	0x51AC50	0x51ac50	code	hosted	field	-	Field_MemberFrame	symbol	case 0x51AC50: return f(&StubVoid<17>);
 site	src/game/field_frame.cpp	708	addr_eq	case	0x57B830	0x57b830	code	hosted	field	-	Sprite_UpdateScreenA	symbol	case 0x57B830: return f(&StubVoid<18>);
 site	src/game/field_frame.cpp	709	addr_eq	case	0x588F20	0x588f20	code	hosted	field	-	Sprite_UpdateScreen	symbol	case 0x588F20: return f(&StubVoid<19>);
-site	src/game/field_frame.cpp	710	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	MoveScript_SetTurnTarget	symbol	case 0x517E90: return f(&StubTurnTarget);
+site	src/game/field_frame.cpp	710	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	Field_ObjectTalk	symbol	case 0x517E90: return f(&StubTurnTarget);
 site	src/game/field_frame.cpp	711	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	field	-	Sprite_FaceDirection	symbol	case 0x57C4C0: return f(&StubFace);
 site	src/game/field_frame.cpp	712	addr_eq	case	0x517F30	0x517f30	code	hosted	field	-	Field_ObjectIdle	symbol	case 0x517F30: return f(&StubObject<22>);
 site	src/game/field_frame.cpp	713	addr_eq	case	0x519600	0x519600	code	hosted	field	-	Field_ObjectLinked	symbol	case 0x519600: return f(&StubVoid<23>);
@@ -7441,7 +7441,7 @@ site	src/game/field_frame.cpp	744	code_literal	literal	0x52d8f0	0x52d8f0	code	ga
 site	src/game/field_frame.cpp	744	code_literal	literal	0x533760	0x533760	code	game	field	init	Field_PendingJump	symbol	constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
 site	src/game/field_frame.cpp	745	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
 site	src/game/field_frame.cpp	745	code_literal	literal	0x588f20	0x588f20	code	game	field	init	Sprite_UpdateScreen	symbol	constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
-site	src/game/field_frame.cpp	746	code_literal	literal	0x517e90	0x517e90	code	game	field	init	MoveScript_SetTurnTarget	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+site	src/game/field_frame.cpp	746	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
 site	src/game/field_frame.cpp	746	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
 site	src/game/field_frame.cpp	746	code_literal	literal	0x518b40	0x518b40	code	game	field	init	Field_ObjectIdleLong	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
 site	src/game/field_frame.cpp	746	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
@@ -7451,7 +7451,7 @@ site	src/game/field_frame.cpp	747	code_literal	literal	0x5893a0	0x5893a0	code	ga
 site	src/game/field_frame.cpp	747	code_literal	literal	0x5893a0	0x5893a0	code	game	field	init	Sprite_ScriptTick	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
 site	src/game/field_frame.cpp	747	code_literal	literal	0x589410	0x589410	code	game	field	init	Sprite_ScriptTickOnce	symbol	{0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
 site	src/game/field_frame.cpp	748	code_literal	literal	0x57b830	0x57b830	code	game	field	init	Sprite_UpdateScreenA	symbol	constexpr Call kExtraScreensCalls[] = {{0x1c, 0x57b830}};
-site	src/game/field_frame.cpp	749	code_literal	literal	0x517e90	0x517e90	code	game	field	init	MoveScript_SetTurnTarget	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
+site	src/game/field_frame.cpp	749	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
 site	src/game/field_frame.cpp	749	code_literal	literal	0x517f30	0x517f30	code	game	field	init	Field_ObjectIdle	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
 site	src/game/field_frame.cpp	749	code_literal	literal	0x519600	0x519600	code	game	field	init	Field_ObjectLinked	symbol	constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
 site	src/game/field_frame.cpp	750	code_literal	literal	0x57b860	0x57b860	code	game	field	init	Sprite_ProjectA	symbol	constexpr Call kScreenACalls[] = {{0x29, 0x57b860}};
@@ -12440,7 +12440,7 @@ site	src/game/move_cmds_callees.h	34	const_def	literal	kScaleAt	0x5c4658	data	ga
 site	src/game/move_cmds_callees.h	35	const_def	literal	kInversePiAt	0x5c4650	data	game	field	module	MoveCmds_InversePi	-	constexpr rdata::Const kInversePiAt{0x5C4650};
 site	src/game/move_groups.cpp	742	addr_eq	case	0x57C840	0x57c840	code	hosted	field	-	MoveScript_ObjectKind	symbol	case 0x57C840: return f(&StubKind);
 site	src/game/move_groups.cpp	743	addr_eq	case	0x57C4C0	0x57c4c0	code	hosted	field	-	Sprite_FaceDirection	symbol	case 0x57C4C0: return f(&StubFace);
-site	src/game/move_groups.cpp	744	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	MoveScript_SetTurnTarget	symbol	case 0x517E90: return f(&StubTurnTarget);
+site	src/game/move_groups.cpp	744	addr_eq	case	0x517E90	0x517e90	code	hosted	field	-	Field_ObjectTalk	symbol	case 0x517E90: return f(&StubTurnTarget);
 site	src/game/move_groups.cpp	745	addr_eq	case	0x518B20	0x518b20	code	hosted	field	-	MoveCmd_OpE7	symbol	case 0x518B20: return f(&StubOpE7);
 site	src/game/move_groups.cpp	746	addr_eq	case	0x57C8E0	0x57c8e0	code	hosted	field	-	MoveCmd_OpE9	symbol	case 0x57C8E0: return f(&StubOpE9);
 site	src/game/move_groups.cpp	747	addr_eq	case	0x454CC0	0x454cc0	code	hosted	field	-	Sprite_SetTint	symbol	case 0x454CC0: return f(&StubTint);
@@ -12480,8 +12480,8 @@ site	src/game/move_groups.cpp	787	code_literal	literal	0x587b40	0x587b40	code	ga
 site	src/game/move_groups.cpp	787	code_literal	literal	0x587ba0	0x587ba0	code	game	field	init	Music_FadeIn	symbol	{0xb8, 0x4df820}, {0xc9, 0x587b40}, {0xde, 0x587ba0}, {0xf3, 0x587be0}, {0x117, 0x587900}, {0x135, 0x587900},
 site	src/game/move_groups.cpp	787	code_literal	literal	0x587be0	0x587be0	code	game	field	init	Music_FadeOut	symbol	{0xb8, 0x4df820}, {0xc9, 0x587b40}, {0xde, 0x587ba0}, {0xf3, 0x587be0}, {0x117, 0x587900}, {0x135, 0x587900},
 site	src/game/move_groups.cpp	788	code_literal	literal	0x587ae0	0x587ae0	code	game	field	init	Music_Play	symbol	{0x14c, 0x587ae0}};
-site	src/game/move_groups.cpp	789	code_literal	literal	0x517e90	0x517e90	code	game	field	init	MoveScript_SetTurnTarget	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
-site	src/game/move_groups.cpp	789	code_literal	literal	0x517e90	0x517e90	code	game	field	init	MoveScript_SetTurnTarget	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
+site	src/game/move_groups.cpp	789	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
+site	src/game/move_groups.cpp	789	code_literal	literal	0x517e90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
 site	src/game/move_groups.cpp	789	code_literal	literal	0x518b20	0x518b20	code	game	field	init	MoveCmd_OpE7	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
 site	src/game/move_groups.cpp	789	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
 site	src/game/move_groups.cpp	789	code_literal	literal	0x57c4c0	0x57c4c0	code	game	field	init	Sprite_FaceDirection	symbol	constexpr Call kCallsE[] = {{0x42, 0x57c4c0}, {0x58, 0x517e90}, {0xa8, 0x57c4c0}, {0xd8, 0x517e90}, {0x164, 0x518b20}, {0x199, 0x57c8e0},
@@ -12750,8 +12750,8 @@ site	src/game/object_kinds.cpp	663	addr_eq	case	0x518000	0x518000	code	hosted	fi
 site	src/game/object_kinds.cpp	664	addr_eq	case	0x5196E0	0x5196e0	code	hosted	field	-	Field_ObjectTurn	symbol	case 0x5196E0: return f(&StubTurn);
 site	src/game/object_kinds.cpp	665	addr_eq	case	0x518D10	0x518d10	code	hosted	field	-	Field_ObjectSettle	symbol	case 0x518D10: return f(&StubSettle);
 site	src/game/object_kinds.cpp	666	addr_eq	case	0x518980	0x518980	code	hosted	field	-	Field_ObjectMotion	symbol	case 0x518980: return f(&StubMotion);
-site	src/game/object_kinds.cpp	667	addr_eq	case	0x518E20	0x518e20	code	hosted	field	-	Field_ObjectApproachDirection	symbol	case 0x518E20: return f(&StubApproach);
-site	src/game/object_kinds.cpp	668	addr_eq	case	0x518ED0	0x518ed0	code	hosted	field	-	Field_ObjectAvoidDirection	symbol	case 0x518ED0: return f(&StubAvoid);
+site	src/game/object_kinds.cpp	667	addr_eq	case	0x518E20	0x518e20	code	hosted	field	-	Field_ObjectFleeDirection	symbol	case 0x518E20: return f(&StubApproach);
+site	src/game/object_kinds.cpp	668	addr_eq	case	0x518ED0	0x518ed0	code	hosted	field	-	Field_ObjectChaseDirection	symbol	case 0x518ED0: return f(&StubAvoid);
 site	src/game/object_kinds.cpp	669	addr_eq	case	0x518F80	0x518f80	code	hosted	field	-	Field_ObjectBestDirection	symbol	case 0x518F80: return f(&StubBest);
 site	src/game/object_kinds.cpp	670	addr_eq	case	0x518080	0x518080	code	hosted	field	-	Field_ObjectBlockedAhead	symbol	case 0x518080: return f(&StubBlockedAhead);
 site	src/game/object_kinds.cpp	671	addr_eq	case	0x578C10	0x578c10	code	hosted	field	-	MoveCmd_Move	symbol	case 0x578C10: return f(&StubMove);
@@ -12770,17 +12770,17 @@ site	src/game/object_kinds.cpp	698	code_literal	literal	0x518d10	0x518d10	code	g
 site	src/game/object_kinds.cpp	698	code_literal	literal	0x518dd0	0x518dd0	code	game	field	init	Field_ObjectRandomTurn	symbol	{{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
 site	src/game/object_kinds.cpp	698	code_literal	literal	0x5196e0	0x5196e0	code	game	field	init	Field_ObjectTurn	symbol	{{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
 site	src/game/object_kinds.cpp	698	code_literal	literal	0x5b93d2	0x5b93d2	code	game	field	init	Rand	symbol	{{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
-site	src/game/object_kinds.cpp	699	code_literal	literal	0x517790	0x517790	code	game	field	init	Field_ObjectApproach	symbol	{" ", 0x517790, 0x16A,
+site	src/game/object_kinds.cpp	699	code_literal	literal	0x517790	0x517790	code	game	field	init	Field_ObjectFlee	symbol	{" ", 0x517790, 0x16A,
 site	src/game/object_kinds.cpp	700	code_literal	literal	0x518980	0x518980	code	game	field	init	Field_ObjectMotion	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	700	code_literal	literal	0x518d10	0x518d10	code	game	field	init	Field_ObjectSettle	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
-site	src/game/object_kinds.cpp	700	code_literal	literal	0x518e20	0x518e20	code	game	field	init	Field_ObjectApproachDirection	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
+site	src/game/object_kinds.cpp	700	code_literal	literal	0x518e20	0x518e20	code	game	field	init	Field_ObjectFleeDirection	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	700	code_literal	literal	0x518f80	0x518f80	code	game	field	init	Field_ObjectBestDirection	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	700	code_literal	literal	0x5196e0	0x5196e0	code	game	field	init	Field_ObjectTurn	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	700	code_literal	literal	0x5b93d2	0x5b93d2	code	game	field	init	Rand	symbol	{{0x82, 0x518e20}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
-site	src/game/object_kinds.cpp	701	code_literal	literal	0x517900	0x517900	code	game	field	init	Field_ObjectAvoid	symbol	{" ", 0x517900, 0x16A,
+site	src/game/object_kinds.cpp	701	code_literal	literal	0x517900	0x517900	code	game	field	init	Field_ObjectChase	symbol	{" ", 0x517900, 0x16A,
 site	src/game/object_kinds.cpp	702	code_literal	literal	0x518980	0x518980	code	game	field	init	Field_ObjectMotion	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	702	code_literal	literal	0x518d10	0x518d10	code	game	field	init	Field_ObjectSettle	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
-site	src/game/object_kinds.cpp	702	code_literal	literal	0x518ed0	0x518ed0	code	game	field	init	Field_ObjectAvoidDirection	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
+site	src/game/object_kinds.cpp	702	code_literal	literal	0x518ed0	0x518ed0	code	game	field	init	Field_ObjectChaseDirection	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	702	code_literal	literal	0x518f80	0x518f80	code	game	field	init	Field_ObjectBestDirection	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	702	code_literal	literal	0x5196e0	0x5196e0	code	game	field	init	Field_ObjectTurn	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
 site	src/game/object_kinds.cpp	702	code_literal	literal	0x5b93d2	0x5b93d2	code	game	field	init	Rand	symbol	{{0x82, 0x518ed0}, {0x98, 0x5b93d2}, {0xba, 0x518f80}, {0x121, 0x5196e0}, {0x155, 0x518d10}, {0x15e, 0x518980}}, 6, {0x20, 0x72, 0xb3}, 3},
@@ -12814,7 +12814,7 @@ site	src/game/object_kinds.cpp	712	code_literal	literal	0x517F30	0x517f30	code	g
 site	src/game/object_kinds.cpp	712	code_literal	literal	0x56d6b0	0x56d6b0	code	game	field	init	Field_ObjectTrigger	symbol	{" ", 0x517F30, 0xA7, {{0x1c, 0x56d6b0}}, 1, {}, 0},
 site	src/game/object_kinds.cpp	713	code_literal	literal	0x4976d0	0x4976d0	code	game	field	init	Msg_OpenScript	symbol	{" ", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
 site	src/game/object_kinds.cpp	713	code_literal	literal	0x497710	0x497710	code	game	field	init	Msg_OpenSystem	symbol	{" ", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
-site	src/game/object_kinds.cpp	713	code_literal	literal	0x517E90	0x517e90	code	game	field	init	MoveScript_SetTurnTarget	symbol	{" ", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
+site	src/game/object_kinds.cpp	713	code_literal	literal	0x517E90	0x517e90	code	game	field	init	Field_ObjectTalk	symbol	{" ", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
 site	src/game/object_kinds.cpp	713	code_literal	literal	0x5797c0	0x5797c0	code	game	field	init	EventScript_Run	symbol	{" ", 0x517E90, 0x95, {{0x3f, 0x5797c0}, {0x56, 0x4976d0}, {0x63, 0x497710}}, 3, {}, 0},
 site	src/game/object_kinds.cpp	714	code_literal	literal	0x5187C0	0x5187c0	code	game	field	init	Field_Pace0	symbol	{" ", 0x5187C0, 0x32, {}, 0, {}, 0},
 site	src/game/object_kinds.cpp	715	code_literal	literal	0x518800	0x518800	code	game	field	init	Field_Pace4	symbol	{" ", 0x518800, 0x71, {}, 0, {}, 0},
