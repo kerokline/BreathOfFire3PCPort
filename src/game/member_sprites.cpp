@@ -74,12 +74,12 @@ constexpr std::uint32_t kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // Member i by address, i unchecked (the original indexes past the three).
-unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * kMemberBytes); }
+unsigned char* Member(unsigned i) { return move_script::At(Address(rv::Bytes(ObjTrio)) + i * kMemberBytes); }
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
-unsigned char& Cell(unsigned i) { return At(::bof3::Img(at::kCells.v))[i & 0xFF]; }
-std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
+unsigned char& Cell(unsigned i) { return move_script::At(::bof3::Img(at::kCells.v))[i & 0xFF]; }
+std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(move_script::Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
@@ -96,8 +96,8 @@ std::int32_t Half(std::uint32_t v) {
 // A 16-bit value as the upper half of a 16.16 long.
 std::uint32_t High(unsigned v) { return (v & 0xFFFF) << 16; }
 // The two longs of a direction's row, index unchecked.
-std::uint32_t RowX(std::uint32_t table, unsigned dir) { return U(At(table + dir * 8)); }
-std::uint32_t RowZ(std::uint32_t table, unsigned dir) { return U(At(table + dir * 8 + 4)); }
+std::uint32_t RowX(std::uint32_t table, unsigned dir) { return U(move_script::At(table + dir * 8)); }
+std::uint32_t RowZ(std::uint32_t table, unsigned dir) { return U(move_script::At(table + dir * 8 + 4)); }
 // The low bytes of the two flag words, ORed (`mov al, [0x905BA4]; or al, [0x9039A2]`).
 unsigned FlagsLow() { return (Field_ScriptFlags2 | Field_ScriptFlags) & 0xFF; }
 
@@ -644,7 +644,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     const records::PartyMember* c = rv::Current<records::PartyMember>();
     const unsigned char facing = c->direction;
     if (c->x_frac != 0 && c->z_frac != 0) return 1;
-    const unsigned char* const offsets = At(::bof3::Img(at::kCellOffsets.v)) + facing * 2u;
+    const unsigned char* const offsets = move_script::At(::bof3::Img(at::kCellOffsets.v)) + facing * 2u;
     const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + c->z_whole);
     const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + c->x_whole);
     g.read_cells(ahead_x, ahead_z);
