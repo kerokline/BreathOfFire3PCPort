@@ -104,7 +104,7 @@ constexpr const char* kInsertDisc = "Please insert the Breath of Fire III disc."
 constexpr const char* kError = "Breath of Fire III";
 constexpr ::bof3::image::Va kStrCapcomAvi{0x65DAB8};    // "CAPCOM.AVI"
 constexpr ::bof3::image::Va kStrBof3Exe{0x65DAC4};      // "BOF3.EXE"
-const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
 
 // The pacing constants (.rdata): the first deadline's offset, the frame
 // period, and the wrap the float deadline is held under.
@@ -498,7 +498,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         if (wparam == VK_F12) {
             Save_QuickWrite();
             Overlay_Frames = kOverlayFrames;
-            Overlay_Text = Str(::bof3::Img(kStrSaveOk.v));
+            Overlay_Text = StrWinMain(::bof3::Img(kStrSaveOk.v));
             return 0;
         }
         // F11: the frame to a file (render::SaveFrame). Tooling, not a
@@ -565,7 +565,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         }
     }
 
-    if (!bof3::orig::Disc_Probe(Str(::bof3::Img(kStrCapcomAvi.v)), Str(::bof3::Img(kStrBof3Exe.v)))) {
+    if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
         // DIVERGENCE DIV-0100: the probe's local test is CAPCOM.AVI in the
         // game directory; a disc-only install (.data from a disc-built cache,
         // docs/disc-only-install.md) has the movie only when the importer
@@ -591,11 +591,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     wc.style = 0;
     wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
     wc.hInstance = hinstance;
-    wc.hIcon = LoadIconA(hinstance, Str(::bof3::Img(kStrIcon.v)));
+    wc.hIcon = LoadIconA(hinstance, StrWinMain(::bof3::Img(kStrIcon.v)));
     wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
     wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
     wc.lpszMenuName = nullptr;
-    wc.lpszClassName = Str(::bof3::Img(kStrClass.v));
+    wc.lpszClassName = StrWinMain(::bof3::Img(kStrClass.v));
     if (!RegisterClassA(&wc)) return -1;
 
     bof3::orig::Cfg_Load();
@@ -611,7 +611,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     // DIV-0032: the window in its mode's style and placement.
     RECT r = Cfg_Fullscreen ? BorderlessRect(nullptr) : WindowedRect();
     const DWORD style = Cfg_Fullscreen ? kBorderlessStyle : kWindowedStyle;
-    HWND hwnd = CreateWindowExA(0, Str(::bof3::Img(kStrClass.v)), kTitle, style, r.left, r.top, r.right - r.left,
+    HWND hwnd = CreateWindowExA(0, StrWinMain(::bof3::Img(kStrClass.v)), kTitle, style, r.left, r.top, r.right - r.left,
                                 r.bottom - r.top, nullptr, nullptr, hinstance, nullptr);
     Game_Hwnd = hwnd;
     bof3::Log("DIV-0032    window %s: %ld,%ld %ld x %ld%s", Cfg_Fullscreen ? "borderless" : "windowed", r.left, r.top,
@@ -620,8 +620,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     UpdateWindow(hwnd);
     Cursor_Sync();
 
-    bof3::orig::Fmv_Play(Str(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
-    if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(Str(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
+    bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
+    if (!win_main::g_capcom_movie_only) bof3::orig::Fmv_Play(StrWinMain(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
     bof3::Log("WinMain: FMVs done, quit flag %d", Game_QuitFlag);
 
     // A quit during the FMVs returns at once (0x4FCD3A): nothing is set up,
@@ -755,7 +755,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 }
                 if (last_tick - last_fps_tick > 1000) {
                     last_fps_tick = last_tick;
-                    Crt_sprintf(fps, Str(::bof3::Img(kStrFrameRate.v)), frames_drawn);
+                    Crt_sprintf(fps, StrWinMain(::bof3::Img(kStrFrameRate.v)), frames_drawn);
                     if (g_fps_log) {
                         const double ms = 1000.0 / static_cast<double>(qpf.QuadPart);
                         const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);

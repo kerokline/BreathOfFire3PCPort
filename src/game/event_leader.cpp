@@ -81,7 +81,7 @@ unsigned char& ByteEventLeader(std::uint32_t a) { return *event_leader::At(a); }
 // A .data dispatch table, read at the call as the original reads it: the
 // index is a whole byte and unchecked, so an index past the end calls what
 // the next table holds (docs/event_leader.md section 3).
-const ::bof3::CodeSlot<Handler>* Table(std::uint32_t address) {   // 32-bit code words
+const ::bof3::CodeSlot<Handler>* TableEventLeader(std::uint32_t address) {   // 32-bit code words
     return reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(address));
 }
 
@@ -310,7 +310,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
 
 // original 0x52E9D0 (PSX 0x801B2AE0): the leader's state 3 (Field_LeaderSwapTest sets it) - a
 // tail jump through the five sub-states at 0x660968 by Sprite_Current +2.
-extern "C" void __cdecl Field_SwapState(void) { Table(::bof3::Img(Field_SwapSteps_addr))[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_SwapState(void) { TableEventLeader(::bof3::Img(Field_SwapSteps_addr))[Sprite_Current[2]](); }
 
 // original 0x52E9F0: sub-state 0 - each member in turn (Sprite_Current set to
 // it) looks for its spot: the leader, and every member while ObjTrio +0x138
@@ -591,7 +591,7 @@ extern "C" void __cdecl Field_SwapEnd(void) {
 
 // original 0x52F390 (PSX 0x801B39B4): state 4 (Field_LeaderMenuTest sets it) - a tail jump
 // through 0x66097C's two sub-states.
-extern "C" void __cdecl Field_MenuState(void) { Table(::bof3::Img(Field_MenuSteps_addr))[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_MenuState(void) { TableEventLeader(::bof3::Img(Field_MenuSteps_addr))[Sprite_Current[2]](); }
 
 // original 0x52F3B0 (PSX 0x801B39F8): sub-state 0 - sub-state 1 and Field_Request 1 (the menu).
 extern "C" void __cdecl Field_MenuOpen(void) {
@@ -613,7 +613,7 @@ extern "C" void __cdecl Field_MenuWait(void) {
 
 // original 0x52F400 (PSX 0x801B3A68): state 5 (Field_LeaderStepLands sets it when
 // Field_EncounterDue) - a tail jump through 0x660984's two sub-states.
-extern "C" void __cdecl Field_EncounterState(void) { Table(::bof3::Img(Field_EncounterSteps_addr))[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_EncounterState(void) { TableEventLeader(::bof3::Img(Field_EncounterSteps_addr))[Sprite_Current[2]](); }
 
 // original 0x52F420 (PSX 0x801B3AAC): sub-state 0 - outside an event battle (0x904AAA 0),
 // Encounter_RollInitiative; in one, every member after the leader cleared
@@ -667,7 +667,7 @@ extern "C" void __cdecl Field_EncounterWait(void) {
 // original 0x52F5E0 (PSX 0x801B3D88): state 7 (Field_LeaderTalkTest sets it on a passage) -
 // one of 0x66098C's four sub-states, then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_PassageState(void) {
-    Table(::bof3::Img(Field_PassageSteps_addr))[Sprite_Current[2]]();
+    TableEventLeader(::bof3::Img(Field_PassageSteps_addr))[Sprite_Current[2]]();
     event_leader::g.script_tick();
 }
 
@@ -782,7 +782,7 @@ extern "C" void __cdecl Field_PassageEnd(void) {
 // party set (0x90412C & 0x7F); then, when it left Field_State +0x137 at 0,
 // the pose, member 0 cleared and state 1.
 extern "C" void __cdecl Field_ActionState(void) {
-    Table(::bof3::Img(Field_ActionBySet_addr))[AreaW0b_PartySet & 0x7F]();
+    TableEventLeader(::bof3::Img(Field_ActionBySet_addr))[AreaW0b_PartySet & 0x7F]();
     if (Field_State[0x137] != 0) return;
     event_leader::g.ensure_animation(Sprite_Current[8]);
     event_leader::g.clear_state(0);

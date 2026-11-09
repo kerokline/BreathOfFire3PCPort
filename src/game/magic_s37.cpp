@@ -96,9 +96,9 @@ const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::
 short S16(const unsigned char* at) { return static_cast<short>(move_script::Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
-std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
+std::uint32_t UMagicS37(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 std::uint32_t Key(const void* p) { return Low32(p); }
-void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(LongMagicS37(at)) + v)); }
+void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(UMagicS37(LongMagicS37(at)) + v)); }
 void CopyLong(unsigned char* to, const unsigned char* from) { SetLong(to, LongMagicS37(from)); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
@@ -335,9 +335,9 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(ts->step_x) + U(rv::As<records::SpriteHead>(actor)->x));
-        ts->z = static_cast<std::int32_t>(U(ts->step_z) + U(rv::As<records::SpriteHead>(actor)->z));
-        rv::Store(ts->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(actor)->height) + 0x800000u));
+        ts->x = static_cast<std::int32_t>(UMagicS37(ts->step_x) + UMagicS37(rv::As<records::SpriteHead>(actor)->x));
+        ts->z = static_cast<std::int32_t>(UMagicS37(ts->step_z) + UMagicS37(rv::As<records::SpriteHead>(actor)->z));
+        rv::Store(ts->height, static_cast<std::int32_t>(UMagicS37(rv::As<records::SpriteHead>(actor)->height) + 0x800000u));
         const unsigned b = s[0xB];
         SetSD(0, ((b >> 3) + 2) << 4);
         const std::uint32_t angle = (((b >> 3) + (b & 7) * 2) & 0xF) << 8;
@@ -345,12 +345,12 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
         v = Sin(static_cast<int>(angle));
     }
     {
-        const std::uint32_t x = Mul(v, SD(0)) + U(rv::As<records::SpriteHead>(Owner())->x);
+        const std::uint32_t x = Mul(v, SD(0)) + UMagicS37(rv::As<records::SpriteHead>(Owner())->x);
         rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(x));
     }
     v = Cos(SD(4));
     {
-        const std::uint32_t z = Mul(v, SD(0)) + U(rv::As<records::SpriteHead>(Owner())->z);
+        const std::uint32_t z = Mul(v, SD(0)) + UMagicS37(rv::As<records::SpriteHead>(Owner())->z);
         rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(z));
     }
     CopyLong(Sc() + 0x14, Owner() + 0x3C);
@@ -377,8 +377,8 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const auto dz = static_cast<std::int32_t>(U(ts->step_z) - U(ts->z));
-        const auto dx = static_cast<std::int32_t>(U(ts->step_x) - U(ts->x));
+        const auto dz = static_cast<std::int32_t>(UMagicS37(ts->step_z) - UMagicS37(ts->z));
+        const auto dx = static_cast<std::int32_t>(UMagicS37(ts->step_x) - UMagicS37(ts->x));
         const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         rv::Current<records::BattleTask>()->work_18 = angle;
     }
@@ -413,23 +413,23 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Fly(void) {
         px = ts->step_x;
         pz = ts->step_z;
         CopyLong(s + 0x1C, s + 0x18);
-        const auto dz = static_cast<std::int32_t>(U(pz) - U(ts->z));
-        const auto dx = static_cast<std::int32_t>(U(px) - U(ts->x));
+        const auto dz = static_cast<std::int32_t>(UMagicS37(pz) - UMagicS37(ts->z));
+        const auto dx = static_cast<std::int32_t>(UMagicS37(px) - UMagicS37(ts->x));
         x = (px >> 9) - 0x4000;
         z = (pz >> 9) - 0x4000;
-        y = (static_cast<short>(U(h) >> 16) + 0xC0) >> 1;
+        y = (static_cast<short>(UMagicS37(h) >> 16) + 0xC0) >> 1;
         const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         rv::Current<records::BattleTask>()->work_18 = angle;
     }
-    MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x40);
-    if (MH_CALL(MagicFx_NearPoint)(U(px), U(pz), 0x8000) != 0) {
+    MH_CALL(MagicFx_StepTowardPoint)(UMagicS37(x), UMagicS37(z), UMagicS37(y), 0, 0x40);
+    if (MH_CALL(MagicFx_NearPoint)(UMagicS37(px), UMagicS37(pz), 0x8000) != 0) {
         Inc(Sc()[2]);
         return;
     }
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->work_1c = static_cast<std::int32_t>((U(ts->work_1c) & 0xFFF) - (U(ts->work_18) & 0xFFF));
-    if (ts->work_1c < 0) ts->work_1c = static_cast<std::int32_t>(0u - U(ts->work_1c));
+    ts->work_1c = static_cast<std::int32_t>((UMagicS37(ts->work_1c) & 0xFFF) - (UMagicS37(ts->work_18) & 0xFFF));
+    if (ts->work_1c < 0) ts->work_1c = static_cast<std::int32_t>(0u - UMagicS37(ts->work_1c));
     const std::int32_t turned = ts->work_1c;
     if (turned > 0x600 && turned < 0xA00) Inc(s[2]);
 }
@@ -480,7 +480,7 @@ S37_EXPORT void __cdecl MagicFx_PushRecordMatrix(void) {
         v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
         v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
         const int height = S16(Owner() + 0x3E);
-        v[2] = static_cast<short>(-(static_cast<int>(U(height) - U(height >> 31)) >> 1));
+        v[2] = static_cast<short>(-(static_cast<int>(UMagicS37(height) - UMagicS37(height >> 31)) >> 1));
         v[3] = 0;
     }
     Matrix m;
@@ -590,7 +590,7 @@ S37_EXPORT void __cdecl CombustionSprite_Start(void) {
         rv::Store(rv::As<records::BattleTask>(s)->work_20, 0x600000);
         CopyLong(s + 0x34, Owner() + 0x34);
         CopyLong(s + 0x38, Owner() + 0x38);
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->height) + U(rv::As<records::BattleTask>(s)->step_y)));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(UMagicS37(rv::As<records::SpriteHead>(Owner())->height) + UMagicS37(rv::As<records::BattleTask>(s)->step_y)));
         s[0x25] = 0x1D;
         s[0x26] = 0;
         s[0x27] = 0x1A;
@@ -620,8 +620,8 @@ S37_EXPORT void __cdecl CombustionSprite_Start(void) {
 S37_EXPORT void __cdecl CombustionSprite_Fall(void) {
     {
         unsigned char* const s = Sc();
-        rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(U(rv::As<records::BattleTask>(s)->step_y) - U(rv::As<records::BattleTask>(s)->work_20)));
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->height) + U(rv::As<records::BattleTask>(s)->step_y)));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(UMagicS37(rv::As<records::BattleTask>(s)->step_y) - UMagicS37(rv::As<records::BattleTask>(s)->work_20)));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(UMagicS37(rv::As<records::SpriteHead>(Owner())->height) + UMagicS37(rv::As<records::BattleTask>(s)->step_y)));
         Dec(s[9]);
         if (s[9] != 0) return;
     }
