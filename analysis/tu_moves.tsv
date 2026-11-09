@@ -17657,78 +17657,110 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4DD4B0	DragonBreathBeam_DrawLinesB	func	tu_4dc110	src/game/magic_s27.cpp	1435	1436	1436	src/game/battle/dragon_breath_beam.cpp	d3e6abb3
 	Mem	copied		src/game/magic_s28.cpp	47	47	47	src/game/magic/breath_beam.cpp	d3e6abb3
 	Mem	copied		src/game/magic_s28.cpp	47	47	47	src/game/magic/breath_mote.cpp	d3e6abb3
+	Mem	local		src/game/magic_s28.cpp	47	47	47	src/game/magic/breath_mote.cpp	2745a0a0
 	Pointer	copied		src/game/magic_s28.cpp	48	48	48	src/game/magic/breath_beam.cpp	d3e6abb3
 	Pointer	copied		src/game/magic_s28.cpp	48	48	48	src/game/magic/breath_mote.cpp	d3e6abb3
+	Pointer	local		src/game/magic_s28.cpp	48	48	48	src/game/magic/breath_mote.cpp	2745a0a0
 	Long	copied		src/game/magic_s28.cpp	49	49	49	src/game/magic/breath_beam.cpp	d3e6abb3
 	Long	copied		src/game/magic_s28.cpp	49	49	49	src/game/magic/breath_mote.cpp	d3e6abb3
+	Long	local		src/game/magic_s28.cpp	49	49	49	src/game/magic/breath_mote.cpp	2745a0a0
 	SetLong	local		src/game/magic_s28.cpp	50	50	50	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_s28.cpp	51	51	51	src/game/magic/breath_beam.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_s28.cpp	51	51	51	src/game/magic/breath_mote.cpp	d3e6abb3
+	SetWord	local		src/game/magic_s28.cpp	51	51	51	src/game/magic/breath_mote.cpp	2745a0a0
 	Word	copied		src/game/magic_s28.cpp	52	52	52	src/game/magic/breath_beam.cpp	d3e6abb3
 	Word	copied		src/game/magic_s28.cpp	52	52	52	src/game/magic/breath_mote.cpp	d3e6abb3
+	Word	local		src/game/magic_s28.cpp	52	52	52	src/game/magic/breath_mote.cpp	2745a0a0
 	kS	copied		src/game/magic_s28.cpp	54	58	58	src/game/magic/breath_beam.cpp	d3e6abb3
 	kS	copied		src/game/magic_s28.cpp	54	58	58	src/game/magic/breath_mote.cpp	d3e6abb3
+	kS	local		src/game/magic_s28.cpp	54	58	58	src/game/magic/breath_mote.cpp	2745a0a0
 	Sc	copied		src/game/magic_s28.cpp	61	61	61	src/game/magic/breath_beam.cpp	d3e6abb3
 	Sc	copied		src/game/magic_s28.cpp	61	61	61	src/game/magic/breath_mote.cpp	d3e6abb3
+	Sc	local		src/game/magic_s28.cpp	61	61	61	src/game/magic/breath_mote.cpp	2745a0a0
 	Owner	copied		src/game/magic_s28.cpp	62	62	62	src/game/magic/breath_beam.cpp	d3e6abb3
 	Owner	copied		src/game/magic_s28.cpp	62	62	62	src/game/magic/breath_mote.cpp	d3e6abb3
+	Owner	local		src/game/magic_s28.cpp	62	62	62	src/game/magic/breath_mote.cpp	2745a0a0
 	TargetByte	copied		src/game/magic_s28.cpp	63	63	63	src/game/magic/breath_beam.cpp	d3e6abb3
 	TargetByte	copied		src/game/magic_s28.cpp	63	63	63	src/game/magic/breath_mote.cpp	d3e6abb3
+	TargetByte	local		src/game/magic_s28.cpp	63	63	63	src/game/magic/breath_mote.cpp	2745a0a0
 	SW	copied		src/game/magic_s28.cpp	65	65	65	src/game/magic/breath_beam.cpp	d3e6abb3
 	SW	copied		src/game/magic_s28.cpp	65	65	65	src/game/magic/breath_mote.cpp	d3e6abb3
+	SW	local		src/game/magic_s28.cpp	65	65	65	src/game/magic/breath_mote.cpp	2745a0a0
 	SS	copied		src/game/magic_s28.cpp	66	66	66	src/game/magic/breath_beam.cpp	d3e6abb3
 	SS	copied		src/game/magic_s28.cpp	66	66	66	src/game/magic/breath_mote.cpp	d3e6abb3
+	SS	local		src/game/magic_s28.cpp	66	66	66	src/game/magic/breath_mote.cpp	2745a0a0
 	SetSW	copied		src/game/magic_s28.cpp	67	67	67	src/game/magic/breath_beam.cpp	d3e6abb3
 	SetSW	copied		src/game/magic_s28.cpp	67	67	67	src/game/magic/breath_mote.cpp	d3e6abb3
+	SetSW	local		src/game/magic_s28.cpp	67	67	67	src/game/magic/breath_mote.cpp	2745a0a0
 	AddSW	copied		src/game/magic_s28.cpp	68	68	68	src/game/magic/breath_mote.cpp	d3e6abb3
 	AddSW	copied		src/game/magic_s28.cpp	68	68	68	src/game/magic/breath_beam.cpp	be7100bb
+	AddSW	local		src/game/magic_s28.cpp	68	68	68	src/game/magic/breath_mote.cpp	2745a0a0
 	VW	local		src/game/magic_s28.cpp	69	69	69	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetVW	local		src/game/magic_s28.cpp	70	70	70	src/game/magic/breath_mote.cpp	d3e6abb3
 	S16	copied		src/game/magic_s28.cpp	72	72	72	src/game/magic/breath_beam.cpp	d3e6abb3
 	S16	copied		src/game/magic_s28.cpp	72	72	72	src/game/magic/breath_mote.cpp	d3e6abb3
+	S16	local		src/game/magic_s28.cpp	72	72	72	src/game/magic/breath_mote.cpp	2745a0a0
 	U8	copied		src/game/magic_s28.cpp	73	73	73	src/game/magic/breath_beam.cpp	d3e6abb3
 	U8	copied		src/game/magic_s28.cpp	73	73	73	src/game/magic/breath_mote.cpp	d3e6abb3
+	U8	local		src/game/magic_s28.cpp	73	73	73	src/game/magic/breath_mote.cpp	2745a0a0
 	Inc	copied		src/game/magic_s28.cpp	74	74	74	src/game/magic/breath_beam.cpp	d3e6abb3
 	Inc	copied		src/game/magic_s28.cpp	74	74	74	src/game/magic/breath_mote.cpp	d3e6abb3
+	Inc	local		src/game/magic_s28.cpp	74	74	74	src/game/magic/breath_mote.cpp	2745a0a0
 	Dec	copied		src/game/magic_s28.cpp	75	75	75	src/game/magic/breath_beam.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s28.cpp	75	75	75	src/game/magic/breath_mote.cpp	d3e6abb3
+	Dec	local		src/game/magic_s28.cpp	75	75	75	src/game/magic/breath_mote.cpp	2745a0a0
 	Addr	copied		src/game/magic_s28.cpp	76	76	76	src/game/magic/breath_beam.cpp	d3e6abb3
 	Addr	copied		src/game/magic_s28.cpp	76	76	76	src/game/magic/breath_mote.cpp	d3e6abb3
+	Addr	local		src/game/magic_s28.cpp	76	76	76	src/game/magic/breath_mote.cpp	2745a0a0
 	Mul	copied		src/game/magic_s28.cpp	78	79	81	src/game/magic/breath_beam.cpp	d3e6abb3
 	Mul	copied		src/game/magic_s28.cpp	78	79	81	src/game/magic/breath_mote.cpp	d3e6abb3
+	Mul	local		src/game/magic_s28.cpp	78	79	81	src/game/magic/breath_mote.cpp	2745a0a0
 	Shl	copied		src/game/magic_s28.cpp	82	82	82	src/game/magic/breath_beam.cpp	d3e6abb3
 	Shl	copied		src/game/magic_s28.cpp	82	82	82	src/game/magic/breath_mote.cpp	d3e6abb3
+	Shl	local		src/game/magic_s28.cpp	82	82	82	src/game/magic/breath_mote.cpp	2745a0a0
 	Sar	copied		src/game/magic_s28.cpp	83	83	83	src/game/magic/breath_beam.cpp	d3e6abb3
 	Sar	copied		src/game/magic_s28.cpp	83	83	83	src/game/magic/breath_mote.cpp	d3e6abb3
+	Sar	local		src/game/magic_s28.cpp	83	83	83	src/game/magic/breath_mote.cpp	2745a0a0
 	PutF	copied		src/game/magic_s28.cpp	84	85	88	src/game/magic/breath_beam.cpp	d3e6abb3
 	PutF	copied		src/game/magic_s28.cpp	84	85	88	src/game/magic/breath_mote.cpp	d3e6abb3
+	PutF	local		src/game/magic_s28.cpp	84	85	88	src/game/magic/breath_mote.cpp	2745a0a0
 	Sin	copied		src/game/magic_s28.cpp	90	90	90	src/game/magic/breath_beam.cpp	d3e6abb3
 	Sin	copied		src/game/magic_s28.cpp	90	90	90	src/game/magic/breath_mote.cpp	d3e6abb3
+	Sin	local		src/game/magic_s28.cpp	90	90	90	src/game/magic/breath_mote.cpp	2745a0a0
 	Cos	copied		src/game/magic_s28.cpp	91	91	91	src/game/magic/breath_mote.cpp	d3e6abb3
 	Cos	copied		src/game/magic_s28.cpp	91	91	91	src/game/magic/breath_beam.cpp	be7100bb
+	Cos	local		src/game/magic_s28.cpp	91	91	91	src/game/magic/breath_mote.cpp	2745a0a0
 	Ratan2	copied		src/game/magic_s28.cpp	92	92	92	src/game/magic/breath_beam.cpp	d3e6abb3
 	Ratan2	copied		src/game/magic_s28.cpp	92	92	92	src/game/magic/breath_mote.cpp	d3e6abb3
+	Ratan2	local		src/game/magic_s28.cpp	92	92	92	src/game/magic/breath_mote.cpp	2745a0a0
 	Commit	copied		src/game/magic_s28.cpp	93	93	93	src/game/magic/breath_beam.cpp	d3e6abb3
 	Commit	copied		src/game/magic_s28.cpp	93	93	93	src/game/magic/breath_mote.cpp	d3e6abb3
+	Commit	local		src/game/magic_s28.cpp	93	93	93	src/game/magic/breath_mote.cpp	2745a0a0
 	DrawMode	copied		src/game/magic_s28.cpp	94	96	99	src/game/magic/breath_beam.cpp	d3e6abb3
 	DrawMode	copied		src/game/magic_s28.cpp	94	96	99	src/game/magic/breath_mote.cpp	d3e6abb3
+	DrawMode	local		src/game/magic_s28.cpp	94	96	99	src/game/magic/breath_mote.cpp	2745a0a0
 	TaskSlot	local		src/game/magic_s28.cpp	101	101	101	src/game/magic/breath_beam.cpp	d3e6abb3
 	kMotes	local		src/game/magic_s28.cpp	103	106	106	src/game/magic/breath_mote.cpp	d3e6abb3
 	kBolts	local		src/game/magic_s28.cpp	107	108	108	src/game/magic/breath_mote.cpp	d3e6abb3
 	Record	local		src/game/magic_s28.cpp	109	109	109	src/game/magic/breath_mote.cpp	d3e6abb3
+	PastTable	local		src/game/magic_s28.cpp	120	120	122	src/game/magic/breath_mote.cpp	2745a0a0
 	PastTable	copied		src/game/magic_s28.cpp	122	122	124	src/game/magic/breath_beam.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_s28.cpp	122	122	124	src/game/magic/breath_mote.cpp	d3e6abb3
+	CallCell	local		src/game/magic_s28.cpp	123	123	126	src/game/magic/breath_mote.cpp	2745a0a0
 	CallCell	copied		src/game/magic_s28.cpp	125	125	128	src/game/magic/breath_beam.cpp	d3e6abb3
 	CallCell	copied		src/game/magic_s28.cpp	125	125	128	src/game/magic/breath_mote.cpp	d3e6abb3
 	VoidFn	local		src/game/magic_s28.cpp	130	133	133	src/game/magic/breath_mote.cpp	d3e6abb3
 	RunPool	local		src/game/magic_s28.cpp	135	138	152	src/game/magic/breath_mote.cpp	d3e6abb3
 	ClearPool	local		src/game/magic_s28.cpp	154	155	162	src/game/magic/breath_mote.cpp	d3e6abb3
 	Alloc	local		src/game/magic_s28.cpp	164	166	177	src/game/magic/breath_mote.cpp	d3e6abb3
+	OffsetByDirection	local		src/game/magic_s28.cpp	177	180	193	src/game/magic/breath_mote.cpp	2745a0a0
 	OffsetByDirection	copied		src/game/magic_s28.cpp	179	182	195	src/game/magic/breath_beam.cpp	d3e6abb3
 	OffsetByDirection	copied		src/game/magic_s28.cpp	179	182	195	src/game/magic/breath_mote.cpp	d3e6abb3
+	CopyOwnerPosition	local		src/game/magic_s28.cpp	195	197	201	src/game/magic/breath_mote.cpp	2745a0a0
 	CopyOwnerPosition	copied		src/game/magic_s28.cpp	197	199	203	src/game/magic/breath_beam.cpp	d3e6abb3
 	CopyOwnerPosition	copied		src/game/magic_s28.cpp	197	199	203	src/game/magic/breath_mote.cpp	d3e6abb3
 	BeamWidth	local		src/game/magic_s28.cpp	205	207	214	src/game/magic/breath_beam.cpp	d3e6abb3
+	S28_EXPORT	local		src/game/magic_s28.cpp	205	205	205	src/game/magic/breath_mote.cpp	2745a0a0
 	S28_EXPORT	copied		src/game/magic_s28.cpp	218	218	218	src/game/magic/breath_beam.cpp	d3e6abb3
 	S28_EXPORT	copied		src/game/magic_s28.cpp	218	218	218	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4DD8B0	Firebreath_Task	func	tu_4dd8b0	src/game/magic_s28.cpp	223	225	230	src/game/magic/breath_beam.cpp	d3e6abb3
@@ -17743,7 +17775,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	BeamStep	copied		src/game/magic_s28.cpp	342	347	350	src/game/magic/breath_beam.cpp	d3e6abb3
 	BeamStep	local		src/game/magic_s28.cpp	342	347	350	src/game/magic/breath_beam.cpp	be7100bb
 	BeamWalk	local		src/game/magic_s28.cpp	351	351	364	src/game/magic/breath_beam.cpp	be7100bb
+	MoteAngle	local		src/game/magic_s28.cpp	364	365	365	src/game/magic/breath_mote.cpp	2745a0a0
 	BeamStart	local		src/game/magic_s28.cpp	365	365	371	src/game/magic/breath_beam.cpp	be7100bb
+	MoteCorner	local		src/game/magic_s28.cpp	366	368	373	src/game/magic/breath_mote.cpp	2745a0a0
 	BeamVertex	local		src/game/magic_s28.cpp	372	373	378	src/game/magic/breath_beam.cpp	be7100bb
 0x4DDCE0	BreathBeam_DrawTextured	func	tu_4dd8b0	src/game/magic_s28.cpp	380	385	432	src/game/magic/breath_beam.cpp	d3e6abb3
 0x4DE370	BreathBeam_DrawGlow	func	tu_4dd8b0	src/game/magic_s28.cpp	434	439	477	src/game/magic/breath_beam.cpp	d3e6abb3
@@ -17756,7 +17790,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4DEDF0	BreathMote_Burst	func	tu_4de8c0	src/game/magic_s28.cpp	613	615	625	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4DEE40	BreathMote_Free	func	tu_4de8c0	src/game/magic_s28.cpp	627	628	631	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4DEE50	BreathMote_DrawHex	func	tu_4de8c0	src/game/magic_s28.cpp	644	647	668	src/game/magic/breath_mote.cpp	d3e6abb3
+	BoltSide	local		src/game/magic_s28.cpp	654	658	674	src/game/magic/breath_mote.cpp	2745a0a0
 0x4DEFD0	BreathMote_DrawRing	func	tu_4de8c0	src/game/magic_s28.cpp	670	673	699	src/game/magic/breath_mote.cpp	d3e6abb3
+	BoltSideWide	local		src/game/magic_s28.cpp	675	675	685	src/game/magic/breath_mote.cpp	2745a0a0
+	BoltEnd	local		src/game/magic_s28.cpp	686	686	690	src/game/magic/breath_mote.cpp	2745a0a0
 0x4DF210	BreathMote_DrawBurst	func	tu_4de8c0	src/game/magic_s28.cpp	701	706	736	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4DF450	IcePool_Alloc	func	tu_4de8c0	src/game/magic_s28.cpp	738	740	740	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4DF4B0	Thunderbreath_Task	func	tu_4de8c0	src/game/magic_s28.cpp	745	749	759	src/game/magic/breath_mote.cpp	d3e6abb3
@@ -17780,53 +17817,83 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4E08B0	ThunderPool_Alloc	func	tu_4de8c0	src/game/magic_s28.cpp	1213	1215	1215	src/game/magic/breath_mote.cpp	d3e6abb3
 	cell	copied		src/game/magic_s29.cpp	48	48	48	src/game/magic/breath_mote.cpp	d3e6abb3
 	cell	copied		src/game/magic_s29.cpp	48	48	48	src/game/magic/shadow_mote.cpp	d3e6abb3
+	cell	local		src/game/magic_s29.cpp	48	48	48	src/game/magic/breath_mote.cpp	2745a0a0
 	Handler	copied		src/game/magic_s29.cpp	50	50	50	src/game/magic/breath_mote.cpp	d3e6abb3
 	Handler	copied		src/game/magic_s29.cpp	50	50	50	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Handler	local		src/game/magic_s29.cpp	50	50	50	src/game/magic/breath_mote.cpp	2745a0a0
 	Mem	copied		src/game/magic_s29.cpp	51	51	51	src/game/magic/breath_mote.cpp	d3e6abb3
 	Mem	copied		src/game/magic_s29.cpp	51	51	51	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Mem	local		src/game/magic_s29.cpp	51	51	51	src/game/magic/breath_mote.cpp	2745a0a0
 	Pointer	copied		src/game/magic_s29.cpp	52	52	52	src/game/magic/breath_mote.cpp	d3e6abb3
 	Pointer	copied		src/game/magic_s29.cpp	52	52	52	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Pointer	local		src/game/magic_s29.cpp	52	52	52	src/game/magic/breath_mote.cpp	2745a0a0
 	Long	copied		src/game/magic_s29.cpp	53	53	53	src/game/magic/breath_mote.cpp	d3e6abb3
 	Long	copied		src/game/magic_s29.cpp	53	53	53	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Long	local		src/game/magic_s29.cpp	53	53	53	src/game/magic/breath_mote.cpp	2745a0a0
 	SetLong	copied		src/game/magic_s29.cpp	54	54	54	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_s29.cpp	54	54	54	src/game/magic/shadow_mote.cpp	d3e6abb3
+	SetLong	local		src/game/magic_s29.cpp	54	54	54	src/game/magic/breath_mote.cpp	2745a0a0
 	SetWord	copied		src/game/magic_s29.cpp	55	55	55	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_s29.cpp	55	55	55	src/game/magic/shadow_mote.cpp	d3e6abb3
+	SetWord	local		src/game/magic_s29.cpp	55	55	55	src/game/magic/breath_mote.cpp	2745a0a0
 	Word	copied		src/game/magic_s29.cpp	56	56	56	src/game/magic/breath_mote.cpp	d3e6abb3
 	Word	copied		src/game/magic_s29.cpp	56	56	56	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Word	local		src/game/magic_s29.cpp	56	56	56	src/game/magic/breath_mote.cpp	2745a0a0
 	MulMagicS29	copied		src/game/magic_s29.cpp	60	61	61	src/game/magic/breath_mote.cpp	d3e6abb3
 	MulMagicS29	copied		src/game/magic_s29.cpp	60	61	61	src/game/magic/shadow_mote.cpp	d3e6abb3
+	MulMagicS29	local		src/game/magic_s29.cpp	60	61	61	src/game/magic/breath_mote.cpp	2745a0a0
 	Mul12	copied		src/game/magic_s29.cpp	62	62	62	src/game/magic/breath_mote.cpp	d3e6abb3
 	Mul12	copied		src/game/magic_s29.cpp	62	62	62	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Mul12	local		src/game/magic_s29.cpp	62	62	62	src/game/magic/breath_mote.cpp	2745a0a0
 	Add	copied		src/game/magic_s29.cpp	63	63	65	src/game/magic/breath_mote.cpp	d3e6abb3
 	Add	copied		src/game/magic_s29.cpp	63	63	65	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Add	local		src/game/magic_s29.cpp	63	63	65	src/game/magic/breath_mote.cpp	2745a0a0
 	Sub	copied		src/game/magic_s29.cpp	66	66	68	src/game/magic/breath_mote.cpp	d3e6abb3
 	Sub	copied		src/game/magic_s29.cpp	66	66	68	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Sub	local		src/game/magic_s29.cpp	66	66	68	src/game/magic/breath_mote.cpp	2745a0a0
 	S16MagicS29	copied		src/game/magic_s29.cpp	69	69	69	src/game/magic/breath_mote.cpp	d3e6abb3
 	S16MagicS29	copied		src/game/magic_s29.cpp	69	69	69	src/game/magic/shadow_mote.cpp	d3e6abb3
+	S16MagicS29	local		src/game/magic_s29.cpp	69	69	69	src/game/magic/breath_mote.cpp	2745a0a0
 	AddrMagicS29	copied		src/game/magic_s29.cpp	70	70	70	src/game/magic/breath_mote.cpp	d3e6abb3
 	AddrMagicS29	copied		src/game/magic_s29.cpp	70	70	70	src/game/magic/shadow_mote.cpp	d3e6abb3
+	AddrMagicS29	local		src/game/magic_s29.cpp	70	70	70	src/game/magic/breath_mote.cpp	2745a0a0
 	SetPtr	copied		src/game/magic_s29.cpp	71	71	71	src/game/magic/breath_mote.cpp	d3e6abb3
 	SetPtr	copied		src/game/magic_s29.cpp	71	71	71	src/game/magic/shadow_mote.cpp	d3e6abb3
+	SetPtr	local		src/game/magic_s29.cpp	71	71	71	src/game/magic/breath_mote.cpp	2745a0a0
 	IncMagicS29	copied		src/game/magic_s29.cpp	72	72	72	src/game/magic/breath_mote.cpp	d3e6abb3
 	IncMagicS29	copied		src/game/magic_s29.cpp	72	72	72	src/game/magic/shadow_mote.cpp	d3e6abb3
+	IncMagicS29	local		src/game/magic_s29.cpp	72	72	72	src/game/magic/breath_mote.cpp	2745a0a0
 	DecMagicS29	copied		src/game/magic_s29.cpp	73	73	73	src/game/magic/breath_mote.cpp	d3e6abb3
 	DecMagicS29	copied		src/game/magic_s29.cpp	73	73	73	src/game/magic/shadow_mote.cpp	d3e6abb3
+	DecMagicS29	local		src/game/magic_s29.cpp	73	73	73	src/game/magic/breath_mote.cpp	2745a0a0
 	AddB	local		src/game/magic_s29.cpp	74	74	74	src/game/magic/shadow_mote.cpp	d3e6abb3
+	PutFloat	local		src/game/magic_s29.cpp	75	76	79	src/game/magic/breath_mote.cpp	2745a0a0
 	PutFloat	copied		src/game/magic_s29.cpp	76	77	80	src/game/magic/breath_mote.cpp	d3e6abb3
 	PutFloat	copied		src/game/magic_s29.cpp	76	77	80	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Ftol16	local		src/game/magic_s29.cpp	81	85	90	src/game/magic/shadow_mote.cpp	d3e6abb3
+	ScMagicS29	local		src/game/magic_s29.cpp	81	81	81	src/game/magic/breath_mote.cpp	2745a0a0
+	OwnerMagicS29	local		src/game/magic_s29.cpp	82	82	82	src/game/magic/breath_mote.cpp	2745a0a0
+	TargetByteMagicS29	local		src/game/magic_s29.cpp	83	83	83	src/game/magic/breath_mote.cpp	2745a0a0
+	TaskSlot	local		src/game/magic_s29.cpp	84	84	84	src/game/magic/breath_mote.cpp	2745a0a0
+	SWMagicS29	local		src/game/magic_s29.cpp	87	88	88	src/game/magic/breath_mote.cpp	2745a0a0
+	SSMagicS29	local		src/game/magic_s29.cpp	89	89	89	src/game/magic/breath_mote.cpp	2745a0a0
+	SB	local		src/game/magic_s29.cpp	90	90	90	src/game/magic/breath_mote.cpp	2745a0a0
+	Put	local		src/game/magic_s29.cpp	91	91	91	src/game/magic/breath_mote.cpp	2745a0a0
 	ScMagicS29	copied		src/game/magic_s29.cpp	92	92	92	src/game/magic/breath_mote.cpp	d3e6abb3
 	ScMagicS29	copied		src/game/magic_s29.cpp	92	92	92	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Vec	local		src/game/magic_s29.cpp	92	92	92	src/game/magic/breath_mote.cpp	2745a0a0
 	OwnerMagicS29	copied		src/game/magic_s29.cpp	93	93	93	src/game/magic/breath_mote.cpp	d3e6abb3
 	OwnerMagicS29	copied		src/game/magic_s29.cpp	93	93	93	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Xy	local		src/game/magic_s29.cpp	93	93	93	src/game/magic/breath_mote.cpp	2745a0a0
 	TargetByteMagicS29	copied		src/game/magic_s29.cpp	94	94	94	src/game/magic/breath_mote.cpp	d3e6abb3
 	TargetByteMagicS29	copied		src/game/magic_s29.cpp	94	94	94	src/game/magic/shadow_mote.cpp	d3e6abb3
+	DataPhase	local		src/game/magic_s29.cpp	95	97	99	src/game/magic/breath_mote.cpp	2745a0a0
 	TaskSlot	copied		src/game/magic_s29.cpp	95	95	95	src/game/magic/breath_mote.cpp	d3e6abb3
 	TaskSlot	copied		src/game/magic_s29.cpp	95	95	95	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Mote	local		src/game/magic_s29.cpp	96	96	96	src/game/magic/breath_mote.cpp	d3e6abb3
 	Shade	local		src/game/magic_s29.cpp	97	97	97	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Cur	local		src/game/magic_s29.cpp	98	98	98	src/game/magic/shadow_mote.cpp	d3e6abb3
+	PastTable	local		src/game/magic_s29.cpp	100	100	102	src/game/magic/breath_mote.cpp	2745a0a0
 	SWMagicS29	copied		src/game/magic_s29.cpp	100	101	101	src/game/magic/breath_mote.cpp	d3e6abb3
 	SWMagicS29	copied		src/game/magic_s29.cpp	100	101	101	src/game/magic/shadow_mote.cpp	d3e6abb3
 	SSMagicS29	copied		src/game/magic_s29.cpp	102	102	102	src/game/magic/breath_mote.cpp	d3e6abb3
@@ -17835,18 +17902,27 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SB	copied		src/game/magic_s29.cpp	103	103	103	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Put	copied		src/game/magic_s29.cpp	104	104	104	src/game/magic/breath_mote.cpp	d3e6abb3
 	Put	copied		src/game/magic_s29.cpp	104	104	104	src/game/magic/shadow_mote.cpp	d3e6abb3
+	SinMagicS29	local		src/game/magic_s29.cpp	104	105	105	src/game/magic/breath_mote.cpp	2745a0a0
 	Vec	copied		src/game/magic_s29.cpp	105	105	105	src/game/magic/breath_mote.cpp	d3e6abb3
 	Vec	copied		src/game/magic_s29.cpp	105	105	105	src/game/magic/shadow_mote.cpp	d3e6abb3
+	CosMagicS29	local		src/game/magic_s29.cpp	106	106	106	src/game/magic/breath_mote.cpp	2745a0a0
 	Xy	copied		src/game/magic_s29.cpp	106	106	106	src/game/magic/breath_mote.cpp	d3e6abb3
 	Xy	copied		src/game/magic_s29.cpp	106	106	106	src/game/magic/shadow_mote.cpp	d3e6abb3
+	RandCall	local		src/game/magic_s29.cpp	107	107	107	src/game/magic/breath_mote.cpp	2745a0a0
 	DataPhase	copied		src/game/magic_s29.cpp	108	110	112	src/game/magic/breath_mote.cpp	d3e6abb3
 	DataPhase	copied		src/game/magic_s29.cpp	108	110	112	src/game/magic/shadow_mote.cpp	d3e6abb3
+	NewTask	local		src/game/magic_s29.cpp	108	108	108	src/game/magic/breath_mote.cpp	2745a0a0
+	DrawModeMagicS29	local		src/game/magic_s29.cpp	109	109	109	src/game/magic/breath_mote.cpp	2745a0a0
+	CommitMagicS29	local		src/game/magic_s29.cpp	110	110	110	src/game/magic/breath_mote.cpp	2745a0a0
+	Link	local		src/game/magic_s29.cpp	111	111	113	src/game/magic/breath_mote.cpp	2745a0a0
 	PastTable	copied		src/game/magic_s29.cpp	113	113	115	src/game/magic/breath_mote.cpp	d3e6abb3
 	PastTable	copied		src/game/magic_s29.cpp	113	113	115	src/game/magic/shadow_mote.cpp	d3e6abb3
+	LinkAtSc	local		src/game/magic_s29.cpp	114	114	118	src/game/magic/breath_mote.cpp	2745a0a0
 	SinMagicS29	copied		src/game/magic_s29.cpp	117	118	118	src/game/magic/breath_mote.cpp	d3e6abb3
 	SinMagicS29	copied		src/game/magic_s29.cpp	117	118	118	src/game/magic/shadow_mote.cpp	d3e6abb3
 	CosMagicS29	copied		src/game/magic_s29.cpp	119	119	119	src/game/magic/breath_mote.cpp	d3e6abb3
 	CosMagicS29	copied		src/game/magic_s29.cpp	119	119	119	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Project3	local		src/game/magic_s29.cpp	119	119	123	src/game/magic/breath_mote.cpp	2745a0a0
 	RandCall	copied		src/game/magic_s29.cpp	120	120	120	src/game/magic/breath_mote.cpp	d3e6abb3
 	RandCall	copied		src/game/magic_s29.cpp	120	120	120	src/game/magic/shadow_mote.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_s29.cpp	121	121	121	src/game/magic/breath_mote.cpp	d3e6abb3
@@ -17857,13 +17933,19 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	CommitMagicS29	copied		src/game/magic_s29.cpp	123	123	123	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Link	copied		src/game/magic_s29.cpp	124	124	126	src/game/magic/breath_mote.cpp	d3e6abb3
 	Link	copied		src/game/magic_s29.cpp	124	124	126	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Project4	local		src/game/magic_s29.cpp	124	124	129	src/game/magic/breath_mote.cpp	2745a0a0
 	LinkAtSc	copied		src/game/magic_s29.cpp	127	127	131	src/game/magic/breath_mote.cpp	d3e6abb3
 	LinkAtSc	copied		src/game/magic_s29.cpp	127	127	131	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Shade3	local		src/game/magic_s29.cpp	130	131	135	src/game/magic/breath_mote.cpp	2745a0a0
 	LinkAtCur	local		src/game/magic_s29.cpp	132	132	135	src/game/magic/shadow_mote.cpp	d3e6abb3
+	Fill3	local		src/game/magic_s29.cpp	136	136	136	src/game/magic/breath_mote.cpp	2745a0a0
 	Project3	copied		src/game/magic_s29.cpp	136	136	140	src/game/magic/breath_mote.cpp	d3e6abb3
 	Project3	copied		src/game/magic_s29.cpp	136	136	140	src/game/magic/shadow_mote.cpp	d3e6abb3
+	AllocFn	local		src/game/magic_s29.cpp	138	138	138	src/game/magic/breath_mote.cpp	2745a0a0
+	CallOwn	local		src/game/magic_s29.cpp	139	139	139	src/game/magic/breath_mote.cpp	2745a0a0
 	Project4	copied		src/game/magic_s29.cpp	141	141	146	src/game/magic/breath_mote.cpp	d3e6abb3
 	Project4	copied		src/game/magic_s29.cpp	141	141	146	src/game/magic/shadow_mote.cpp	d3e6abb3
+	S29_EXPORT	local		src/game/magic_s29.cpp	143	143	143	src/game/magic/breath_mote.cpp	2745a0a0
 	Shade3	copied		src/game/magic_s29.cpp	147	148	152	src/game/magic/breath_mote.cpp	d3e6abb3
 	Shade3	copied		src/game/magic_s29.cpp	147	148	152	src/game/magic/shadow_mote.cpp	d3e6abb3
 	Fill3	copied		src/game/magic_s29.cpp	153	153	153	src/game/magic/breath_mote.cpp	d3e6abb3
@@ -17891,6 +17973,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4E11F0	DivineBurst_Fade	func	tu_4de8c0	src/game/magic_s29.cpp	467	469	479	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4E1240	DivineMote_Task	func	tu_4de8c0	src/game/magic_s29.cpp	481	483	487	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4E1260	DivineMote_Run	func	tu_4de8c0	src/game/magic_s29.cpp	489	493	506	src/game/magic/breath_mote.cpp	d3e6abb3
+	MoteAngleMagicS29	local		src/game/magic_s29.cpp	492	493	495	src/game/magic/breath_mote.cpp	2745a0a0
 	MoteAngle	local		src/game/magic_s29.cpp	510	511	513	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4E12F0	DivineMote_Launch	func	tu_4de8c0	src/game/magic_s29.cpp	517	521	552	src/game/magic/breath_mote.cpp	d3e6abb3
 0x4E1430	DivineMote_Fly	func	tu_4de8c0	src/game/magic_s29.cpp	554	559	593	src/game/magic/breath_mote.cpp	d3e6abb3

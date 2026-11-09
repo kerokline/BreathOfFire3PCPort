@@ -199,6 +199,7 @@
 #include "game/magic/corona_ray.h"
 #include "game/core/main_cannon.h"
 #include "game/magic_s28.h"
+#include "game/magic/breath_mote.h"
 #include "game/magic/breath_beam.h"
 #include "game/magic_s27.h"
 #include "game/magic/whelp_breath_flames.h"
@@ -746,6 +747,7 @@ void InjectAll() {
                                 // at the shared harness's recorders, its seven .data tables swapped for the fuzz
                                 // only; after every module whose fuzz clones a caller of 0x4DF820 (they re-aim that
                                 // site themselves); DIV-0011 re-aims four calls to it, bytes outside it
+    BreathMote_Inject();
     BreathBeam_Inject();
     MagicS27_Inject();          // round 9 group S27 (MAGIC118, 120, 121): its clones' calls, stack-table immediates
                                 // and two jump tables re-aimed or moved, its six .data tables swapped for the fuzz
