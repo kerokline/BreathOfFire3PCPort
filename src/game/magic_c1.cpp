@@ -96,39 +96,6 @@ void StackCall(const std::uint32_t* phases, unsigned n, unsigned phase, const ch
 // ===========================================================================
 // MAGIC010 (row 9)
 
-// original 0x49DEF0: the kind-2 task. A four-entry stack table by +1:
-// WhiteFlag_TintSource, MAGIC117's tint-up (0x4D9FD0), WhiteFlag_Untint, the
-// engine's end (0x43F460).
-C1_EXPORT void __cdecl WhiteFlag_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::WhiteFlag_TintSource, bof3::addr::Magic117_Brighten,
-                                                 bof3::addr::WhiteFlag_Untint, bof3::addr::MagicFx_FlagTargetEnd};
-    StackCall(kPhases, 4, Sc()[1], "WhiteFlag_Task");
-}
-
-// original 0x49DF30: the source sprite's tints released and a tint (0, 0, 0,
-// 1) set on it, its record kept in +0xB; +9 0; +1 on.
-C1_EXPORT void __cdecl WhiteFlag_TintSource(void) {
-    MH_CALL(Sprite_ReleaseTint)(Source());
-    const unsigned char tint = MH_CALL(Sprite_SetTint)(Source(), 0, 0, 0, 1);
-    Sc()[0xB] = tint;
-    Sc()[9] = 0;
-    Inc(Sc()[1]);
-}
-
-// original 0x49DF70: the tint record +0xB's colour bytes down by one; +9 down;
-// at 0 the source's tints released, the target actor flashed, +1 on. The
-// record index is unbounded, as in the original (up to 255 records of 12
-// bytes, inside MoveScript_TintRecords' 3,072).
-C1_EXPORT void __cdecl WhiteFlag_Untint(void) {
-    unsigned char* const s = Sc();
-    for (unsigned k = 2; k <= 4; ++k) Dec(MoveScript_TintRecords[s[0xB] * 12u + k]);
-    Dec(s[9]);
-    if (Sc()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Source());
-    MH_CALL(BattleActor_Flash)(TargetByte());
-    Inc(Sc()[1]);
-}
-
 // ===========================================================================
 // MAGIC080 (row 27)
 
@@ -259,9 +226,6 @@ namespace {
 
 void MagicC1_Inject() {
     if (bof3::WantsShadow("magic_c1")) magic_c1::SelfTest();
-    BOF3_INJECT(WhiteFlag_Task);
-    BOF3_INJECT(WhiteFlag_TintSource);
-    BOF3_INJECT(WhiteFlag_Untint);
     BOF3_INJECT(Magic080_Task);
     BOF3_INJECT(Magic080_Start);
     BOF3_INJECT(Magic080_Run);

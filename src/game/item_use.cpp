@@ -74,216 +74,18 @@ unsigned char* CharRecord(unsigned id, unsigned battle) {
 // +0x18, +0x1A, +0x1E, +0x20, +0x22 (item_use_callees.h at::kStatus..kMaxAp).
 records::CharRecord* CharRec(unsigned id, unsigned battle) { return rv::As<records::CharRecord>(CharRecord(id, battle)); }
 
-// The handlers' common tail: `neg al; sbb eax, eax; and al, 0xFD; add eax, 3`
-// - 0 when the callee answered anything in al, 3 when it answered 0.
-unsigned char UsedOr3(unsigned char answer) { return answer != 0 ? 0 : 3; }
-
-// Party member i's record index: 0x66972C[0x904062[i]] (the party list's
-// entry, then its record).
-unsigned Member(unsigned char i) { return Character_IndexById[Cond_Flags[0xd2 + i]]; }
-
-// The party walk of 0x496D50 / 0x497410 / 0x497490 / 0x497510: Party_Count(0)
-// asked before the first member and again after each, compared as bytes. The
-// member's index is stored into the low byte of the id argument's own slot
-// and that dword pushed, so the upper bytes are the caller's: `id` is that
-// slot here.
-template <typename Each> unsigned char PartyWalk(unsigned id, Each each) {
-    unsigned char result = 0;
-    unsigned char i = 0;
-    if (static_cast<unsigned char>(g.party_count(0)) != 0) {
-        do {
-            id = (id & 0xFFFFFF00u) | Member(i);
-            result = static_cast<unsigned char>(result | each(id));
-            ++i;
-        } while (i < static_cast<unsigned char>(g.party_count(0)));
-    }
-    return result;
-}
-
-// The stat-up tail of 0x497040..0x4972E0: 0 if either call answered non-zero
-// in al, else 4. The field menu treats 0 and 4 alike (item used).
-unsigned char UsedOr4(unsigned char first, unsigned char second) { return (first != 0 || second != 0) ? 0 : 4; }
-
 }  // namespace
 
 // ===========================================================================
 // The dispatcher
 
-// original 0x497680 (PSX 0x801E8C1C): 2 for an item whose flags byte is 0,
-// else its handler's answer. The table is read from memory, as the original
-// does; both arguments reach the handler as the caller pushed them. The call
-// is not a tail call, as it is not in the original (the handler's caller is
-// this function, for the call trace).
-extern "C" __attribute__((disable_tail_calls)) unsigned char __cdecl ItemUse_Dispatch(unsigned id, unsigned item, unsigned battle) {
-    const unsigned it = item & 0xFF;
-    if (At(::bof3::Img(at::kItemFlags.v))[it * at::kItemStride] == 0) return 2;
-    const auto handler = reinterpret_cast<Handler>(ItemUse_Handlers[ItemUse_HandlerIndex[it]].Native());
-    const unsigned char answer = handler(id, battle);
-    return answer;
-}
-
 // ===========================================================================
 // The 33 handlers, in table order (ItemUse_Handlers entry in brackets)
-
-// original 0x496CC0 (PSX 0x801E7E34) [0]: no field effect.
-extern "C" unsigned char __cdecl ItemUse_None(unsigned, unsigned) { return 2; }
-
-// original 0x496CD0 (PSX 0x801E7E3C) [1], 0x496CF0 [2], 0x496D10 [3], 0x496D30 [4] (0 is a
-// full heal), 0x4973D0 [23], 0x4973F0 [25], 0x4975D0 [31]: Char_HealHp by a
-// constant.
-extern "C" unsigned char __cdecl ItemUse_HealHp20(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x14, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHp40(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x28, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHp100(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x64, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHpFull(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHp1(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 1, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHp80(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 0x50, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealHp5(unsigned id, unsigned battle) { return UsedOr3(g.heal_hp(id, 5, battle)); }
-
-// original 0x496DD0 (PSX 0x801E7FA0) [6], 0x496DF0 [7], 0x497590 [29], 0x4975B0 [24, 30]:
-// Char_HealAp by a constant.
-extern "C" unsigned char __cdecl ItemUse_HealAp20(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x14, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealAp100(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x64, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealAp40(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 0x28, battle)); }
-extern "C" unsigned char __cdecl ItemUse_HealAp5(unsigned id, unsigned battle) { return UsedOr3(g.heal_ap(id, 5, battle)); }
-
-// original 0x496EA0 (PSX 0x801E8120) [9], 0x496ED0 [10], 0x496EF0 [11], 0x496F20 [12]:
-// Char_ClearStatus by a constant mask.
-extern "C" unsigned char __cdecl ItemUse_Cure80(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0x80, battle)); }
-extern "C" unsigned char __cdecl ItemUse_Cure08(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 8, battle)); }
-extern "C" unsigned char __cdecl ItemUse_Cure100(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0x100, battle)); }
-extern "C" unsigned char __cdecl ItemUse_CureA0(unsigned id, unsigned battle) { return UsedOr3(g.clear_status(id, 0xA0, battle)); }
-
-// original 0x496D50 (PSX 0x801E7F0C) [5], 0x497410 [26], 0x497490 [27]: Char_HealHp for each
-// party member; 0x497510 [28]: Char_ClearStatus(0x80) for each.
-extern "C" unsigned char __cdecl ItemUse_PartyHealHp100(unsigned id, unsigned battle) {
-    return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.heal_hp(m, 0x64, battle); }));
-}
-extern "C" unsigned char __cdecl ItemUse_PartyHealHp80(unsigned id, unsigned battle) {
-    return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.heal_hp(m, 0x50, battle); }));
-}
-extern "C" unsigned char __cdecl ItemUse_PartyHealHp240(unsigned id, unsigned battle) {
-    return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.heal_hp(m, 0xF0, battle); }));
-}
-extern "C" unsigned char __cdecl ItemUse_PartyCure80(unsigned id, unsigned battle) {
-    return UsedOr3(PartyWalk(id, [battle](unsigned m) { return g.clear_status(m, 0x80, battle); }));
-}
-
-// original 0x496FB0 (PSX 0x801E8278) [14]: for each member Char_ClearStatus(0xA0) then a full
-// Char_HealHp, every answer ORed.
-extern "C" unsigned char __cdecl ItemUse_PartyRestore(unsigned id, unsigned battle) {
-    return UsedOr3(PartyWalk(id, [battle](unsigned m) {
-        const unsigned char cured = g.clear_status(m, 0xA0, battle);
-        return static_cast<unsigned char>(cured | g.heal_hp(m, 0, battle));
-    }));
-}
-
-// original 0x496E10 (PSX 0x801E8008) [8]: 5 HP; then, with a bit of 0xA0 in the status byte
-// (read after the heal), the item counts as used and a 30 % roll clears 0xA0.
-// As the original has it: the roll is Rand() % 100 by signed division, and
-// "used" does not depend on it.
-extern "C" unsigned char __cdecl ItemUse_HealHp5Cure(unsigned id, unsigned battle) {
-    unsigned char r = g.heal_hp(id, 5, battle);
-    if (CharRecord(id, battle)[at::kStatus] & 0xA0) {
-        r = static_cast<unsigned char>(r | 1);
-        if (g.rand() % 100 < 30) g.clear_status(id, 0xA0, battle);
-    }
-    return UsedOr3(r);
-}
-
-// original 0x496F50 (PSX 0x801E81F0) [13]: HP 1, then Char_ClearStatus(0x4000). As the
-// original has it (and the PSX): the HP is set before the status is tested,
-// so on a member without 0x4000 the HP is 1 and the answer is 3 - D21, kept.
-extern "C" unsigned char __cdecl ItemUse_Revive(unsigned id, unsigned battle) {
-    rv::Store<unsigned>(CharRec(id, battle)->hp, 1);
-    return UsedOr3(g.clear_status(id, 0x4000, battle));
-}
-
-// original 0x497040 (PSX 0x801E832C) [15], 0x4970B0 [16]: Stat_AddCap999 on a base stat and its
-// effective copy 0x20 below.
-extern "C" unsigned char __cdecl ItemUse_MaxHpUp(unsigned id, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    const unsigned char base = g.add_cap999(reinterpret_cast<unsigned short*>(r + 0x40), 1);
-    return UsedOr4(base, g.add_cap999(reinterpret_cast<unsigned short*>(r + 0x20), 1));
-}
-extern "C" unsigned char __cdecl ItemUse_MaxApUp(unsigned id, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    const unsigned char base = g.add_cap999(reinterpret_cast<unsigned short*>(r + 0x42), 1);
-    return UsedOr4(base, g.add_cap999(reinterpret_cast<unsigned short*>(r + 0x22), 1));
-}
 
 // original 0x497120 (PSX 0x801E8464) [17], 0x497190 [18], 0x497200 [19], 0x497270 [20]:
 // Stat_AddClamped on a base stat and its effective copy, each answer's low
 // byte kept. As the original has it: Stat_AddClamped answers 0 unless it
 // clamped, so these answer 4 for any stat below 999 - "used" either way.
-namespace {
-unsigned char ClampedUp(unsigned id, unsigned battle, unsigned base_at) {
-    unsigned char* const r = CharRecord(id, battle);
-    const auto base = static_cast<unsigned char>(g.add_clamped(reinterpret_cast<unsigned short*>(r + base_at), 1));
-    const auto eff = static_cast<unsigned char>(g.add_clamped(reinterpret_cast<unsigned short*>(r + base_at - 0x20), 1));
-    return UsedOr4(base, eff);
-}
-}  // namespace
-extern "C" unsigned char __cdecl ItemUse_AtkUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x44); }
-extern "C" unsigned char __cdecl ItemUse_DefUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x46); }
-extern "C" unsigned char __cdecl ItemUse_AgiUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x48); }
-extern "C" unsigned char __cdecl ItemUse_IntUp(unsigned id, unsigned battle) { return ClampedUp(id, battle, 0x4A); }
-
-// original 0x4972E0 (PSX 0x801E86D4) [21]: Stat_AddCap99 on the byte +0x4E and its copy +0x2E.
-extern "C" unsigned char __cdecl ItemUse_Stat2EUp(unsigned id, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    const unsigned char base = g.add_cap99(r + 0x4E, 1);
-    return UsedOr4(base, g.add_cap99(r + 0x2E, 1));
-}
-
-// original 0x497350 (PSX 0x801E8770) [22]: 3 at full HP; else the max-HP scale byte + 1 while
-// below 9, the stats recomputed and HP filled to the new max; at 9, HP filled
-// if below max, else 3 (HP above max).
-extern "C" unsigned char __cdecl ItemUse_HpScaleUp(unsigned id, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    auto* const c = rv::As<records::CharRecord>(r);
-    const std::uint16_t hp = c->hp, max = c->stats.max_hp;
-    if (hp == max) return 3;
-    const unsigned char scale = c->hp_scale;
-    if (scale < 9) {
-        c->hp_scale = static_cast<unsigned char>(scale + 1);
-        g.recalc(r);
-        rv::Store<unsigned>(c->hp, c->stats.max_hp);
-        return 0;
-    }
-    if (hp < max) {
-        rv::Store<unsigned>(c->hp, max);
-        return 0;
-    }
-    return 3;
-}
-
-// original 0x4975F0 (PSX 0x801E8B20) [32]: gives the Faerie Tiara (0x57) back, moves the
-// menu on, counts the clear story flags from 0xFF down to the first set one
-// (at most ten) off 0xB9, and keeps the leader's position and the area. The
-// arguments are not read; Inventory_Add gets a fourth 0 it does not read.
-extern "C" unsigned char __cdecl ItemUse_FaerieTiara(unsigned, unsigned) {
-    g.inventory_add(0, 0x57, 1, 0);
-    Game_Step = static_cast<unsigned short>(Game_Step + 1);
-    FieldS_State = 0xA;
-    ModeRest_AreaAsked = 0xB9;
-    for (int flag = 0xFF;;) {
-        if (g.flags_test(At(::bof3::Img(Cond_Flags_addr) + 0xa0), static_cast<unsigned>(flag)) != 0) break;
-        const auto count = static_cast<unsigned char>(ModeRest_AreaAsked - 1);
-        --flag;
-        ModeRest_AreaAsked = count;
-        if (flag < 0xF6) break;
-    }
-    std::memcpy(At(::bof3::Img(AreaW2d_ReturnPoint_addr)), At(::bof3::Img(ObjTrio_addr) + 0x34), 8);
-    SetWord(At(::bof3::Img(AreaW2d_ReturnPoint_addr) + 8), Game_AreaNumber);
-    return 0;
-}
-
-// original 0x497670 (PSX 0x801E8C08) [33].
-extern "C" unsigned char __cdecl ItemUse_WaterJug(unsigned, unsigned) {
-    Cond_Flags[0xcf] = 0xF0;
-    return 0;
-}
-
 // ===========================================================================
 // The character-stat helpers
 
@@ -374,181 +176,20 @@ extern "C" unsigned char __cdecl Char_ClearStatus(unsigned id, unsigned mask, un
 // ===========================================================================
 // The message box's two commits
 
-namespace {
-// Choice ids below 0x80 through the area's own table, the rest through
-// MsgBox_SystemChoice. The area descriptor is re-read for each call, as in
-// the original: Game_AreaNumber zero-extended, the id's low byte.
-void CommitChoice() {
-    const unsigned id = ItemUse_ChoiceId;
-    if (id < 0x80) {
-        const unsigned char* const desc = Area_Descriptors[Game_AreaNumber];
-        const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));   // 32-bit code words
-        table[id]();
-    } else {
-        item_use::g.system_choice();
-    }
-}
-}  // namespace
-
-// original 0x4981C0 (PSX 0x80151494): MsgBox_State4's entry 5. After the
-// commit, window 1's state 3; with a message left (0x7DEE48 not 0xFFFF)
-// window 0's state 1 and the next sub-state, else sub-state 7.
-extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
-    CommitChoice();
-    const bool more = item_use::Word(item_use::At(::bof3::Img(at::kMessage.v))) != 0xFFFF;
-    WindowRecords[1].state = 3;
-    if (more) {
-        const unsigned char sub = ItemUse_SubState;
-        WindowRecords[0].state = 1;
-        ItemUse_ColorHigh = 0;
-        ItemUse_SubState = static_cast<unsigned char>(sub + 1);
-        return;
-    }
-    ItemUse_SubState = 7;
-    ItemUse_ColorHigh = 0;
-}
-
-// original 0x4983C0 (PSX 0x80151838): MsgBox_State5's entry 3.
-extern "C" void __cdecl MsgBox_MenuCommit(void) {
-    CommitChoice();
-    const unsigned char sub = ItemUse_SubState;
-    ItemUse_ColorHigh = 0;
-    WindowRecords[1].state = 3;
-    ItemUse_SubState = static_cast<unsigned char>(sub + 1);
-}
-
 // ===========================================================================
 // The sixteen system choices (MsgBox_SystemChoice's table, ids 0x80..0x8F)
 
-namespace {
-// The message word from the id's pair at 0x658F08 + 4 * k, by the cursor
-// read as s8 (the original's movsx): a cursor outside 0..1 reads the next
-// pair or the one before, as the original does. Returns the cursor.
-int SysMessage(unsigned k) {
-    const int cursor = AreaW0c_ChoiceAnswer;
-    item_use::SetWord(item_use::At(::bof3::Img(at::kMessage.v)), item_use::Word(item_use::At(::bof3::Img(at::kSysMessages.v) + 4 * k + 2 * cursor)));
-    return cursor;
-}
-void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
-    const int cursor = SysMessage(k);
-    if (cursor == 0) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if0;
-    else if (cursor == 1) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if1;
-}
-}  // namespace
-
-// original 0x498AD0: cursor 0 sets the byte 0x929F0B, cursor 1 clears it.
-extern "C" void __cdecl MsgBox_SysChoice80(void) {
-    const int cursor = SysMessage(0);
-    if (cursor == 0) FieldS_Answer = 1;
-    else if (cursor == 1) FieldS_Answer = 0;
-}
-// original 0x498B00, 0x498B30, 0x498B60, 0x498B90: MoveScript variable 3
-// (0x903848) by the cursor.
-extern "C" void __cdecl MsgBox_SysChoice81(void) { SysCounter(1, 0x1E, 0x28); }
-extern "C" void __cdecl MsgBox_SysChoice82(void) { SysCounter(2, 0x1E, 0x32); }
-extern "C" void __cdecl MsgBox_SysChoice83(void) { SysCounter(3, 0x3C, 0x46); }
-extern "C" void __cdecl MsgBox_SysChoice84(void) { SysCounter(4, 0x1E, 0x32); }
-// original 0x498BC0..0x498D00, 0x20 apart: the message word only.
-extern "C" void __cdecl MsgBox_SysChoice85(void) { SysMessage(5); }
-extern "C" void __cdecl MsgBox_SysChoice86(void) { SysMessage(6); }
-extern "C" void __cdecl MsgBox_SysChoice87(void) { SysMessage(7); }
-extern "C" void __cdecl MsgBox_SysChoice88(void) { SysMessage(8); }
-extern "C" void __cdecl MsgBox_SysChoice89(void) { SysMessage(9); }
-extern "C" void __cdecl MsgBox_SysChoice8A(void) { SysMessage(10); }
-extern "C" void __cdecl MsgBox_SysChoice8B(void) { SysMessage(11); }
-extern "C" void __cdecl MsgBox_SysChoice8C(void) { SysMessage(12); }
-extern "C" void __cdecl MsgBox_SysChoice8D(void) { SysMessage(13); }
-extern "C" void __cdecl MsgBox_SysChoice8E(void) { SysMessage(14); }
-extern "C" void __cdecl MsgBox_SysChoice8F(void) { SysMessage(15); }
-
 // ===========================================================================
 // The pad auto-repeat
-
-// original 0x461EB0 (PSX 0x8014E534): a new press among the bits asked for
-// starts a 12-frame wait and latches Input_Held; while a latched bit stays
-// held the wait counts down and re-fires every 3 frames. The answer is the
-// dword at Input_Held - Input_Previous in the upper half, as the original
-// loads it - with the low word 0 when nothing fires.
-extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
-    const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
-    if (static_cast<std::uint16_t>(pressed) != 0) {
-        ItemUse_RepeatTimer = 0xC;
-        item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
-        return held;
-    }
-    if ((item_use::Word(item_use::At(::bof3::Img(at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
-        const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
-        ItemUse_RepeatTimer = timer;
-        if (timer == 0) {
-            ItemUse_RepeatTimer = 3;
-            item_use::SetWord(item_use::At(::bof3::Img(at::kRepeatLatch.v)), held);
-            return held;
-        }
-    }
-    return held & 0xFFFF0000u;
-}
 
 // ===========================================================================
 
 void ItemUse_Inject() {
     if (bof3::WantsShadow("item_use")) item_use::SelfTest();
-    BOF3_INJECT(ItemUse_Dispatch);
-    BOF3_INJECT(ItemUse_None);
-    BOF3_INJECT(ItemUse_HealHp20);
-    BOF3_INJECT(ItemUse_HealHp40);
-    BOF3_INJECT(ItemUse_HealHp100);
-    BOF3_INJECT(ItemUse_HealHpFull);
-    BOF3_INJECT(ItemUse_PartyHealHp100);
-    BOF3_INJECT(ItemUse_HealAp20);
-    BOF3_INJECT(ItemUse_HealAp100);
-    BOF3_INJECT(ItemUse_HealHp5Cure);
-    BOF3_INJECT(ItemUse_Cure80);
-    BOF3_INJECT(ItemUse_Cure08);
-    BOF3_INJECT(ItemUse_Cure100);
-    BOF3_INJECT(ItemUse_CureA0);
-    BOF3_INJECT(ItemUse_Revive);
-    BOF3_INJECT(ItemUse_PartyRestore);
-    BOF3_INJECT(ItemUse_MaxHpUp);
-    BOF3_INJECT(ItemUse_MaxApUp);
-    BOF3_INJECT(ItemUse_AtkUp);
-    BOF3_INJECT(ItemUse_DefUp);
-    BOF3_INJECT(ItemUse_AgiUp);
-    BOF3_INJECT(ItemUse_IntUp);
-    BOF3_INJECT(ItemUse_Stat2EUp);
-    BOF3_INJECT(ItemUse_HpScaleUp);
-    BOF3_INJECT(ItemUse_HealHp1);
-    BOF3_INJECT(ItemUse_HealHp80);
-    BOF3_INJECT(ItemUse_PartyHealHp80);
-    BOF3_INJECT(ItemUse_PartyHealHp240);
-    BOF3_INJECT(ItemUse_PartyCure80);
-    BOF3_INJECT(ItemUse_HealAp40);
-    BOF3_INJECT(ItemUse_HealAp5);
-    BOF3_INJECT(ItemUse_HealHp5);
-    BOF3_INJECT(ItemUse_FaerieTiara);
-    BOF3_INJECT(ItemUse_WaterJug);
     BOF3_INJECT(Char_HealHp);
     BOF3_INJECT(Char_HealAp);
     BOF3_INJECT(Stat_AddCap999);
     BOF3_INJECT(Stat_AddCap99);
     BOF3_INJECT(Stat_AddClamped);
     BOF3_INJECT(Char_ClearStatus);
-    BOF3_INJECT(MsgBox_ChoiceCommit);
-    BOF3_INJECT(MsgBox_MenuCommit);
-    BOF3_INJECT(MsgBox_SysChoice80);
-    BOF3_INJECT(MsgBox_SysChoice81);
-    BOF3_INJECT(MsgBox_SysChoice82);
-    BOF3_INJECT(MsgBox_SysChoice83);
-    BOF3_INJECT(MsgBox_SysChoice84);
-    BOF3_INJECT(MsgBox_SysChoice85);
-    BOF3_INJECT(MsgBox_SysChoice86);
-    BOF3_INJECT(MsgBox_SysChoice87);
-    BOF3_INJECT(MsgBox_SysChoice88);
-    BOF3_INJECT(MsgBox_SysChoice89);
-    BOF3_INJECT(MsgBox_SysChoice8A);
-    BOF3_INJECT(MsgBox_SysChoice8B);
-    BOF3_INJECT(MsgBox_SysChoice8C);
-    BOF3_INJECT(MsgBox_SysChoice8D);
-    BOF3_INJECT(MsgBox_SysChoice8E);
-    BOF3_INJECT(MsgBox_SysChoice8F);
-    BOF3_INJECT(Input_AutoRepeat);
 }

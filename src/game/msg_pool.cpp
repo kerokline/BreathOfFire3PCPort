@@ -75,22 +75,6 @@ void SelfTest(SystemPtrFn theirs) {
 
 }  // namespace
 
-// original 0x497740. The low word of the argument is the id; bits 14-15 pick
-// one of four header dwords, each the offset of a u16 offset table; the rest
-// indexes it. No bound on either, as in the original.
-//
-// DIVERGENCE DIV-0007: the pool's base is a variable. Unrelocated it is the
-// original's constant and the result is the original's.
-extern "C" const unsigned char* __cdecl Msg_SystemPtr(unsigned id) {
-    id &= 0xFFFF;
-    std::uint32_t table;
-    std::memcpy(&table, msg_pool::g_pool + (id >> 14) * 4, sizeof table);
-    const std::uint8_t* block = msg_pool::g_pool + table;
-    std::uint16_t off;
-    std::memcpy(&off, block + 2 * (id & 0x3FFF), sizeof off);
-    return block + off;
-}
-
 std::uint8_t* MsgPool_Moved(std::uint32_t* bytes) {
     *bytes = msg_pool::g_pool && msg_pool::g_pool != ArenaPool() ? kMovedRoom : 0;
     return *bytes ? msg_pool::g_pool : nullptr;
@@ -115,5 +99,4 @@ void MsgPool_Inject() {
     if (bof3::WantsShadow("msg_pool"))
         SelfTest(reinterpret_cast<SystemPtrFn>(
             bof3::CloneOriginal("Msg_SystemPtr", bof3::addr::Msg_SystemPtr, 0x2B)));
-    BOF3_INJECT(Msg_SystemPtr);
 }

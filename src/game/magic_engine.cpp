@@ -77,13 +77,6 @@ void DispatchMagicEngine(const char* who, const std::uint32_t* phases, unsigned 
 // Rows 0 and 126: the hold
 // ===========================================================================
 
-// original 0x47FDA0: +9 = 60, the phase on. Shared: also entry 0 of the .data
-// table EffectKind5F_States (0x654904) EffectKind5F_Run (0x47FD80) jumps through.
-MENGINE_EXPORT void __cdecl Task_StartHold60(void) {
-    Sprite_Current[9] = 0x3C;
-    Bump(Sprite_Current[1]);
-}
-
 // ===========================================================================
 // Row 108: Restore Form (read one id down)
 // ===========================================================================
@@ -102,5 +95,4 @@ MENGINE_EXPORT void __cdecl Task_StartHold60(void) {
 
 void MagicEngine_Inject() {
     if (bof3::WantsShadow("magic_engine")) magic_engine::SelfTest();
-    BOF3_INJECT(Task_StartHold60);
 }
