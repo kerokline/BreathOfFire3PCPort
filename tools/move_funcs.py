@@ -56,7 +56,7 @@ What one move carries, for each function F leaving source S for target T:
   source's `_Inject()` call - after the source's self-test, which clones the
   originals before they are patched, and in the order the functions were
   patched before the move. Where T's binds come from several sources, T
-  gets one `<TStem>_InjectFrom<Source>()` for each, each called right after
+  gets one `<TStem>From<Source>_Inject()` for each, each called right after
   its source's; T's header is included after a source header's line there.
   A function with no such line
   whose bind sits elsewhere (another file's `_Inject()`, a one-line or a
@@ -1229,7 +1229,8 @@ def inject_parts(t: str, e: dict) -> list[tuple[str, str, list[str]]]:
     earlier source's functions being ours already (rest_3g's DIV-0108 check of Battle_PlaceBossActor
     calls battle_sprites' Battle_CopyEnemyData, patched at BattleSprites_Inject; one
     Battle4_Inject() after Rest3G_Inject() left Capcom's in place for it). One source with binds:
-    <T>_Inject(); several: <T>_InjectFrom<Source>() each."""
+    <T>_Inject(); several: <T>From<Source>_Inject() each (the gate's --inject-ok knows a
+    registration by its _Inject ending)."""
     base = target_inject_name(t)
     by_src: dict[str, list[str]] = {}
     for _, name, _, src in sorted(e["funcs"]):
@@ -1238,7 +1239,7 @@ def inject_parts(t: str, e: dict) -> list[tuple[str, str, list[str]]]:
     order = [src for src in e["sources"] if src in by_src]
     if len(order) == 1:
         return [(order[0], base, by_src[order[0]])]
-    return [(src, base + "From" + camel(Path(src).stem), by_src[src]) for src in order]
+    return [(src, base[:-len("_Inject")] + "From" + camel(Path(src).stem) + "_Inject", by_src[src]) for src in order]
 
 
 def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) -> None:
