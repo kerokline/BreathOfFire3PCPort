@@ -146,7 +146,12 @@ names it lists), or `NAME@OBJECT` - that name only where the line's objects
 are OBJECT alone, a file name such as `title_states.cpp.obj`: the one way to
 name a pooled per-file symbol (`_GLOBAL__sub_I_*`) of one file without
 excepting every file's. A data or bss line is excepted by a `data-layout`, `x64-indirect`,
-`i686-fold`, `i686-inline`, `i686-convention` or `refptr` row only (DATA_CLASSES); an inject line never. --exception-classes limits which classes may except:
+`i686-fold`, `i686-inline`, `i686-convention` or `refptr` row only (DATA_CLASSES), except that a
+data or bss symbol which belongs to a function - an exception table (`GCC_except_table*`, paired
+through its .eh_frame FDE) or a function-local static (`_ZZ...E...`) - follows that function: not
+counted when the function is a changed registration under --inject-ok, excepted by the row that
+excepts the function (any class in use), each printed with `belongs to F`. An inject line is never
+excepted. --exception-classes limits which classes may except:
 the rows of the other classes are read (and checked) but never used, and
 never reported as unused. The i686 gate runs with `--exception-classes
 data-layout,i686-fold,i686-inline,i686-convention,inline,refptr` (the owner's
@@ -444,8 +449,9 @@ class Normaliser:
                 break
         return best
 
-    def item(self, secn: int, off: int, depth: int) -> str:
-        """A section-relative target, described by what it points at."""
+    def item(self, secn: int, off: int, depth: int, limit: int | None = None) -> str:
+        """A section-relative target, described by what it points at. `limit`: the bytes one
+        instruction reads there (a pooled constant: its pool's neighbours are not part of it)."""
         if secn <= 0 or secn > len(self.o.sections):
             return f"?sec{secn}+{off:X}"
         sec = self.o.sections[secn - 1]
@@ -459,6 +465,8 @@ class Normaliser:
         if exact:
             return self.symref(exact[0], depth)
         nxt = next((a for a in self.sorted_anchors.get(secn, []) if a > off), sec["size"])
+        if limit:
+            nxt = min(nxt, off + limit)
         if sec["flags"] & SCN_CNT_UNINIT or not sec["data"]:
             return f"{cls}:zero[{nxt - off}]"
         if depth > 2:
@@ -489,14 +497,15 @@ class Normaliser:
     def relocs_in(self, secn: int, start: int, end: int):
         return sorted(r for r in self.o.sections[secn - 1]["relocs"] if start <= r[0] < end)
 
-    def reloc_desc(self, data: bytes, off: int, symi: int, typ: int, depth: int) -> tuple[str, bool]:
+    def reloc_desc(self, data: bytes, off: int, symi: int, typ: int, depth: int,
+                   limit: int | None = None) -> tuple[str, bool]:
         """(the target's description, whether the field's bytes depend on the object's layout)."""
         t = self.o.symbols.get(symi)
         if t is None:
             return f"?sym{symi}", False
         if t["is_section"]:
             a = self.addend(data, off, typ) or 0
-            return f"r{typ:X}:" + self.item(t["section"], a, depth + 1), True
+            return f"r{typ:X}:" + self.item(t["section"], a, depth + 1, limit), True
         return f"r{typ:X}:" + self.symref(symi, depth), False
 
     def render_data(self, secn: int, start: int, end: int, depth: int) -> str:
@@ -583,19 +592,30 @@ class Normaliser:
             return [self.render_data(secn, start, end, depth)]
         import capstone
         raw = bytearray(sec["data"][start:end])
-        notes: dict[int, list[str]] = {}
+        pending: dict[int, list[tuple[int, int, int]]] = {}
         for off, symi2, typ in self.relocs_in(secn, start, end):
-            d, layout = self.reloc_desc(sec["data"], off, symi2, typ, depth)
-            if layout:
+            t = self.o.symbols.get(symi2)
+            if t is not None and t["is_section"]:       # the field's bytes depend on the object's layout
                 w = self.width(typ)
                 raw[off - start:off - start + w] = bytes(w)
-            notes.setdefault(off - start, []).append(d)
+            pending.setdefault(off - start, []).append((off, symi2, typ))
         lines = []
         pos = 0
         for ins in self.disassembler().disasm(bytes(raw), start):
             rel_off = ins.address - start
             pos = rel_off + ins.size
-            mine = [d for o, ds in notes.items() if rel_off <= o < pos for d in ds]
+            # A plain load or store at an absolute (or rip-relative) address reads exactly its operand's
+            # width there: an unnamed pooled constant is described that wide, not to its pool's next
+            # anchor, which a move changes (B6: `movsd xmm0, qword ptr [0] @.rdata:[...]`). An indexed
+            # access, a `lea` and a push read the whole item as before.
+            limit = None
+            if not ins.mnemonic.startswith("lea") and not ins.mnemonic.startswith("push"):
+                for op in ins.operands:
+                    if op.type == capstone.x86.X86_OP_MEM and op.mem.index == 0 and op.size and (
+                            op.mem.base == 0 or op.mem.base == capstone.x86.X86_REG_RIP):
+                        limit = op.size
+            mine = [self.reloc_desc(sec["data"], off, symi2, typ, depth, limit)[0]
+                    for o, rs in pending.items() if rel_off <= o < pos for off, symi2, typ in rs]
             text = f"{ins.mnemonic} {ins.op_str}".strip()
             relative = ins.group(capstone.CS_GRP_BRANCH_RELATIVE)
             if mine:
@@ -627,11 +647,65 @@ def promoted_hashes(path: Path, names: set[str], roots: list[bytes] = (), pad_fr
             if s["section"] > 0 and not s["is_section"] and s["cls"] == 2 and s["name"] in names}
 
 
+def table_owners(obj: Coff, n: Normaliser) -> dict[int, str]:
+    """symbol index of each GCC_except_table* -> the name of the function whose FDE names it as its LSDA.
+    An .eh_frame FDE's relocations run pc_begin (the function, or its section and offset) then the
+    LSDA, so the table belongs to the last code target before it; the CIE's personality routine is
+    external and skipped. Empty where the object has no .eh_frame (x86_64's tables hang off .xdata,
+    which the gate does not read)."""
+    owners: dict[int, str] = {}
+    for secn, sec in enumerate(obj.sections, 1):
+        if not sec["name"].startswith(".eh_frame"):
+            continue
+        last_fn = None
+        for off, symi, typ in sorted(sec["relocs"]):
+            t = obj.symbols.get(symi)
+            if t is None:
+                continue
+            if t["is_section"]:
+                a = n.addend(sec["data"], off, typ)
+                c = n.containing(t["section"], a) if a is not None else None
+                if c is None:
+                    continue
+                ti = c[1]
+            else:
+                ti = symi
+            ts = obj.symbols[ti]
+            if ts["section"] <= 0:
+                continue
+            if obj.sections[ts["section"] - 1]["flags"] & SCN_CNT_CODE:
+                last_fn = ts["name"]
+            elif ts["name"].startswith("GCC_except_table") and last_fn:
+                owners[ti] = last_fn
+    return owners
+
+
+def enclosing_function(name: str) -> list[str]:
+    """The names a function-local static's function may have (`_ZZ<len><id><params>E<local>` ->
+    `_Z<len><id><params>`, or the plain identifier for a C-linkage function), or []."""
+    m = re.match(r"^(_?)_ZZ(\d+)", name)
+    if not m:
+        return []
+    us, length = m.group(1), int(m.group(2))
+    rest = name[m.end():]
+    ident, tail = rest[:length], rest[length:]
+    e = tail.find("E")
+    if len(ident) != length or e < 0:
+        return []
+    params = tail[:e]
+    out = [f"{us}_Z{length}{ident}{params}"]
+    if not params:
+        out.append(us + ident)
+    return out
+
+
 def object_symbols(path: Path, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False,
-                   promoted: dict[str, str] | None = None) -> list[tuple[str, str, list[str], bool]]:
-    """(name, kind, normalised body, file-local) for every defined symbol of one object."""
+                   promoted: dict[str, str] | None = None) -> list[tuple[str, str, list[str], bool, str | None]]:
+    """(name, kind, normalised body, file-local, the owning function of an exception table or None)
+    for every defined symbol of one object."""
     obj = Coff(path)
     n = Normaliser(obj, anonymous_locals, roots, pad_free, promoted)
+    owners = table_owners(obj, n)
     out = []
     for i, s in obj.symbols.items():
         if s["section"] <= 0 or s["is_section"] or s["cls"] not in (2, 3):
@@ -647,7 +721,7 @@ def object_symbols(path: Path, anonymous_locals: bool = False, roots: list[bytes
             kind = "data"
         else:
             continue
-        out.append((pooled_key(s["name"]), kind, n.body(i), s["local"]))
+        out.append((pooled_key(s["name"]), kind, n.body(i), s["local"], owners.get(i)))
     return out
 
 
@@ -664,7 +738,7 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, 
         reader = partial(object_symbols, anonymous_locals=anonymous_locals, roots=roots, pad_free=pad_free,
                          promoted=promoted)
         for key, syms in zip(keys, pool.map(reader, [objs[k] for k in keys], chunksize=8)):
-            for name, kind, lines, local in syms:
+            for name, kind, lines, local, owner in syms:
                 nfunc += kind == "code"
                 h = hashlib.sha1("\n".join(lines).encode()).hexdigest()
                 real = name
@@ -672,6 +746,8 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, 
                     name = f"local:{h[:12]}"
                 e = table.setdefault(name, {"kind": kind, "bodies": {}, "names": set()})
                 e["names"].add(real)
+                if owner:
+                    e.setdefault("owners", {})[real] = owner
                 e["bodies"].setdefault(h, []).append(key)
                 e.setdefault("where", {}).setdefault(real, set()).add(key)
                 texts[h] = lines
@@ -870,6 +946,38 @@ def by_function(a) -> int:
         return 0
     bad = copies = injects = excepts = 0
     counted = {"code": 0, "data": 0, "bss": 0}
+    # the key of each real name, for a data line that follows its owning function
+    by_real: dict[str, str] = {}
+    for t in (base, new):
+        for k, e in t.items():
+            for r in e["names"]:
+                by_real.setdefault(r, k)
+
+    def owner_verdict(e: dict) -> tuple[str, str] | None:
+        """A data or bss symbol that belongs to a function - an exception table (its .eh_frame FDE
+        names it) or a function-local static (`_ZZ...E...`) - follows that function: ("INJECT", f)
+        when f is a changed registration under --inject-ok, (class, f) when a row of a class in use
+        names f (it changed by that class, and its table or static with it). None otherwise."""
+        if e["kind"] == "code":
+            return None
+        cands: list[str] = []
+        for r in sorted(e["names"]):
+            o = e.get("owners", {}).get(r)
+            if o:
+                cands.append(o)
+            cands.extend(enclosing_function(r))
+        for f in cands:
+            if a.inject_ok and INJECT_REGISTRATION.match(f):
+                return "INJECT", f
+            k = by_real.get(f)
+            fe = new.get(k) if k else None
+            fe = fe or (base.get(k) if k else None)
+            if fe is not None:
+                cls = excepted(exceptions, k, fe, allowed)
+                if cls:
+                    return cls, f
+        return None
+
     for name in sorted(set(base) | set(new)):
         x, y = base.get(name), new.get(name)
         if a.inject_ok and INJECT_REGISTRATION.match(name) and (x is None or y is None or set(x["bodies"]) != set(y["bodies"])):
@@ -877,6 +985,20 @@ def by_function(a) -> int:
                   f"a moved BOF3_INJECT line, not counted)")
             injects += 1
             continue
+        if (x is None or y is None or set(x["bodies"]) != set(y["bodies"])):
+            v = owner_verdict(y if y is not None else x)
+            if v is not None:
+                what = "new" if x is None else "gone" if y is None else "changed"
+                e = y if y is not None else x
+                if v[0] == "INJECT":
+                    print(f"INJECT {name}  ({what}; {e['kind']}, in {objects_of(e)}{named(name, e)}; "
+                          f"belongs to {v[1]}, a moved BOF3_INJECT line, not counted)")
+                    injects += 1
+                else:
+                    print(f"EXCEPT {v[0]} {name}  ({what}; {e['kind']}, in {objects_of(e)}{named(name, e)}; "
+                          f"belongs to {v[1]}, excepted; not counted)")
+                    excepts += 1
+                continue
         if y is None:
             cls = excepted(exceptions, name, x, allowed)
             if cls:

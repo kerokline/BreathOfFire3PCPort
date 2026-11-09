@@ -3,9 +3,9 @@
 # inlined, or stopped inlining, a moved or copied helper because its callers in the file changed);
 # low32-site (x86_64; Low32()'s failure message names another file, line or
 # function: __FILE__, __LINE__ and the __builtin_FUNCTION() default argument, which a move or a
-# rename of the caller changes); data-layout (both widths, call 10; a promoted variable is placed elsewhere
-# in .data/.bss, so a neighbouring file-local and its readers' reference to it differ; a row may name a data
-# or bss symbol); x64-indirect (x86_64 only, call 10; a folded internal function pointer is called through
+# rename of the caller changes); data-layout (both widths, call 10; a promoted variable - or, from stage B, a moved
+# one or a moved neighbour - is placed elsewhere in .data/.bss, so a neighbouring file-local and its readers'
+# reference to it differ, or a bss extent changes; a row may name a data or bss symbol); x64-indirect (x86_64 only, call 10; a folded internal function pointer is called through
 # once external; a row names the caller or the pointer, which reads NEW); i686-fold (both widths, call 16; a promoted
 # variable whose value or layout the optimiser had folded into its readers, which now load it; a row may name the
 # data or bss symbol or a reader); i686-inline (both widths, call 16; a promoted file-local function the compiler had
