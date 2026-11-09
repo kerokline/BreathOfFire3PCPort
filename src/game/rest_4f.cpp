@@ -56,7 +56,7 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
-using Handler = void (__cdecl*)();
+using HandlerRest4f = void (__cdecl*)();
 using Frame = void (__cdecl*)(int, int, int, int);
 using DrawText = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
 
@@ -98,7 +98,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
         bof3::Fatal("%s: %s is %u, past the %u handlers of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4f.md section 7)",
                     who, byte, index, entries, (unsigned)::bof3::VaOf(table));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
+    reinterpret_cast<HandlerRest4f>(static_cast<std::uintptr_t>(LRest4f(table + 4 * index)))();
 }
 
 // ===========================================================================
