@@ -82,7 +82,7 @@ void PutWord(unsigned char* p, field_misc::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, field_misc::U v) { std::memcpy(p, &v, sizeof v); }
+void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 // The map-view ring (docs/map-scroll.md): 0x38 rows of 0x1C cells, their heads

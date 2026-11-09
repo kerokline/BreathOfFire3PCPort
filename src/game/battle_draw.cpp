@@ -81,7 +81,7 @@ namespace {
 
 using namespace battle_draw;
 
-unsigned char* At(battle_draw::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 battle_draw::U Addr(const void* p) { return Low32(p); }
 battle_draw::U Word(const unsigned char* p) {
     std::uint16_t v;
@@ -102,7 +102,7 @@ void PutWord(unsigned char* p, battle_draw::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, battle_draw::U v) { std::memcpy(p, &v, sizeof v); }
+void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 unsigned char Byte(battle_draw::U address) { return At(address)[0]; }
 std::int32_t S8(battle_draw::U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
@@ -126,9 +126,9 @@ inline float X87Div(float a, float b) {
 
 // D3d_Device, read afresh before every COM call as the original does.
 void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
-void* Method(void** device, battle_draw::U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
-using Com3 = long(__stdcall*)(void*, battle_draw::U, battle_draw::U);
-using Com6 = long(__stdcall*)(void*, battle_draw::U, battle_draw::U, battle_draw::U, battle_draw::U, battle_draw::U);
+void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
+using Com3 = long(__stdcall*)(void*, U, U);
+using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 long SetTexture(battle_draw::U stage, battle_draw::U texture) {
     void** device = Device();
     return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);

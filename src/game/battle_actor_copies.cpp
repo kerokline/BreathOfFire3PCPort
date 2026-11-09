@@ -84,7 +84,7 @@ using namespace battle_actor_copies;
 
 namespace {
 
-unsigned char& B(battle_actor_copies::U address) { return battle_actor_copies::At(address)[0]; }
+unsigned char& B(U address) { return At(address)[0]; }
 // A pointer the original keeps in a dword of .bss, read afresh.
 unsigned char* PtrAt(battle_actor_copies::U address) { return battle_actor_copies::At(static_cast<battle_actor_copies::U>(battle_actor_copies::Long(battle_actor_copies::At(address)))); }
 // 0x939FA0 points at the menu member's +0x124, its action record

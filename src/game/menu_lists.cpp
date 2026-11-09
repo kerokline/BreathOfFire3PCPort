@@ -116,7 +116,7 @@ unsigned char* RecMenuLists() {
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
-short S(const unsigned char* p) { return static_cast<short>(menu_lists::Word(p)); }
+short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
 // The low byte of Party_Count's answer: every caller here tests al or masks
 // eax with 0xFF.

@@ -94,7 +94,7 @@ battle_misc::U LongBattleMisc(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void PutWord(unsigned char* p, battle_misc::U v) {
+void PutWord(unsigned char* p, U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
