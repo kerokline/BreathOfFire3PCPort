@@ -34,7 +34,7 @@ template <class T> T Get(const unsigned char* p, unsigned offset) {
 
 constexpr unsigned kPrimBytes = 0x48;   // a POLY_FT4 as the port lays it out
 
-int S8(unsigned v) { return static_cast<signed char>(v); }
+int S8MapCells(unsigned v) { return static_cast<signed char>(v); }
 
 // Where MapCell_DrawRising gets its random numbers: Capcom's Rand, except
 // during the start-up fuzz, which runs before the exe's C runtime is set up
@@ -51,8 +51,8 @@ int (__cdecl* g_rand)(void) = Rand;
 // stack into the top halves of Gte_Vertices[1], [3] and [5], which no
 // instruction in the image reads.
 void QuadVertexMapCells(short* v, std::uint32_t dword, std::uint32_t x0, std::uint32_t y0) {
-    v[0] = static_cast<short>(x0 + 2u * static_cast<std::uint32_t>(S8(dword >> 24)));
-    v[1] = static_cast<short>(y0 + 2u * static_cast<std::uint32_t>(S8(dword >> 16)));
+    v[0] = static_cast<short>(x0 + 2u * static_cast<std::uint32_t>(S8MapCells(dword >> 24)));
+    v[1] = static_cast<short>(y0 + 2u * static_cast<std::uint32_t>(S8MapCells(dword >> 16)));
     v[2] = static_cast<short>(dword);
     v[3] = 0;
 }
@@ -123,7 +123,7 @@ extern "C" long __cdecl AreaMap_Elevation(long x, long y) {
     const unsigned char* c = reinterpret_cast<const unsigned char*>(&AreaMap_Corners) + cell * 4;
     const unsigned scale = MapView_HeightScale;
     const bool half_x = (x & 0x8000) != 0, half_y = (y & 0x8000) != 0;
-    if (!half_x && !half_y) return (S8(c[2]) + S8(h[0]) * static_cast<int>(scale) * 2 + S8(c[1])) * 16;
+    if (!half_x && !half_y) return (S8MapCells(c[2]) + S8MapCells(h[0]) * static_cast<int>(scale) * 2 + S8MapCells(c[1])) * 16;
     // imul r/m8: only the product's low byte is kept.
     auto height = [&](unsigned at) { return static_cast<unsigned char>(h[at] * scale); };
     if (half_x != half_y) {
@@ -142,13 +142,13 @@ extern "C" long __cdecl AreaMap_Elevation(long x, long y) {
             d = static_cast<unsigned char>(c[4 * width] + next);
             e = static_cast<unsigned char>(c[4 * width + 1] + next);
         }
-        const int second = S8(e) + S8(d), first = S8(b) + S8(a);
+        const int second = S8MapCells(e) + S8MapCells(d), first = S8MapCells(b) + S8MapCells(a);
         return (first > second ? first : second) * 16;
     }
-    const int p0 = S8(static_cast<unsigned char>(c[3] + height(0)));
-    const int p1 = S8(static_cast<unsigned char>(c[6] + height(1)));
-    const int p2 = S8(static_cast<unsigned char>(c[4 * width + 4] + height(width + 1)));
-    const int p3 = S8(static_cast<unsigned char>(c[4 * width + 1] + height(width)));
+    const int p0 = S8MapCells(static_cast<unsigned char>(c[3] + height(0)));
+    const int p1 = S8MapCells(static_cast<unsigned char>(c[6] + height(1)));
+    const int p2 = S8MapCells(static_cast<unsigned char>(c[4 * width + 4] + height(width + 1)));
+    const int p3 = S8MapCells(static_cast<unsigned char>(c[4 * width + 1] + height(width)));
     if (p0 >= p3 && p0 >= p2 && p0 >= p1) return p0 * 32;
     if (p1 >= p3 && p1 >= p2) return p1 * 32;
     return (p2 < p3 ? p3 : p2) * 32;
