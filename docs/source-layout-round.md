@@ -1134,6 +1134,20 @@ is expected; the doc says so.
    **Answered 2026-11-08 night: "fine for a rename."** Group n renames the
    three classes (worktree `slb1108\n`, brief `briefs\n.md`): B0's naming
    rule, one commit per source, the odd holder only for class (c).
+   **As run (group n, merged 2026-11-09 night, `slb1108\reports\n.md`):** 51
+   renames in 20 sources (33 of class (a), 7 of (b), 11 of (c)), every name
+   the old one plus the source's stem (`AtBattleDraw`, `gFieldBlocked`,
+   `BBattleActorCopies`, `SetPtrAtBattleFlow`), line counts kept, one
+   `low32-site` row (`BattleInput_NextMember` inlines a renamed helper whose
+   `Low32()` message names it). One step the brief had not spelt out: after
+   the renames the 21 class-(c) lines stayed, because the kept identical
+   copies still name `At` bare and the mover refuses a bare name of a moved
+   local; each copy was then qualified as its holder means it (60 items in
+   52 files, 55 `qualify` rows, 6 commits by helper family). Gates 0 differ
+   at both widths, both self-test suites clean. The mover's ambiguity lines:
+   62 -> 8, all of them the check's own over-count of a local variable or
+   parameter named `g` (7) and gfx_texcache's own `Rect` struct (1). Those 8
+   are not ambiguities in C++ and the moves will show it: the build decides.
 14. **win_main `g_capcom_movie_only`** (DIV-0202, main's PR #212, landed after
    group s decided its rows): a file-static state variable with no decision
    row. Promote it (a `data-layout` row if the gate asks) or keep it local
@@ -1147,6 +1161,14 @@ is expected; the doc says so.
    Group n promotes it into `namespace win_main` as g did `g_pad_reset`, a
    `data-layout` row if the gate asks; any other difference reverts and
    comes back here.
+   **As run (group n):** promoted into `namespace win_main`, a `state` row;
+   the gate read PROMOTED with no neighbour changed, so no exception row.
+   The promotion also made group g's two `data-layout` rows for
+   `g_pad_reset`'s reader `WinMain_Inject` unused: the gate asked for them
+   to be pruned and they were (b3bfba11). Why the reader's difference went
+   away with the second promotion was not measured; the gate's 0 differ
+   with the rows gone is the fact. The mover's file-static-state lines:
+   20 -> 19.
 15. **How wide is class 3?** Group a's first case was the narrow form: the
    call goes through the pointer, branch offsets grow a byte (text_immediate,
    draw_pass). Five rows are the same mechanism on a pointer x86_64 had
