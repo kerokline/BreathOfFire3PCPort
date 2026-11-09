@@ -39,31 +39,14 @@ using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-using HandlerKind2Object = void (__cdecl*)();
 
-// Every call out, through pointers so that the start-up fuzz can stand
-// recording functions in for them - for the original's copies and for ours
-// alike. The two tables are the original's own, in BOF3.exe's .data: the
-// dispatchers index them with a whole byte, as the original does, so a run
-// byte or a state out of range reaches exactly what it reached in 2001 (see
-// Kind2_Run). Their entries are the original addresses, which Inject turns
-// into jumps to ours; entry 0 of the run table, 0x437CC0, is Capcom's bare ret.
-struct CalleesKind2Object {
-    const ::bof3::CodeSlot<HandlerKind2Object>* run_table;     // 32-bit code words in the image
-    const ::bof3::CodeSlot<HandlerKind2Object>* state_table;
-    unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
-    long (__cdecl* elevation)(long, long);
-    void (__cdecl* set_elevation)(int);
-    void (__cdecl* view_reset)();
-    void (__cdecl* script)();   // Kind2_Move's tail jump
-};
-const CalleesKind2Object kOriginals = {
-    reinterpret_cast<const ::bof3::CodeSlot<HandlerKind2Object>*>(Kind2_RunTable),
-    reinterpret_cast<const ::bof3::CodeSlot<HandlerKind2Object>*>(Kind2_StateTable),
+const kind2_object::CalleesKind2Object kOriginals = {
+    reinterpret_cast<const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>*>(Kind2_RunTable),
+    reinterpret_cast<const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>*>(Kind2_StateTable),
     MoveScript_Step, AreaMap_Elevation, MapView_SetElevation, Field_ViewReset, Kind2_Script,
 };
-CalleesKind2Object gKind2Object = kOriginals;
-
+}  namespace kind2_object { CalleesKind2Object gKind2Object = kOriginals; }
+namespace {
 // `cdq` / `idiv`: the original's signed division, faults included - a zero
 // divisor, or INT_MIN by -1, raises the same #DE at the same point of the
 // same computation, which a C++ `/` does not promise (it is undefined there).
@@ -92,14 +75,14 @@ std::int32_t Abs32(std::uint32_t v) {
 // there directly (docs/kind2-object.md section 3); op E5 copies k +3 into it
 // when the kind-2 object's own script runs it.
 extern "C" void __cdecl Kind2_Run(void) {
-    gKind2Object.run_table[Sprite_Kind2.state]();
+    kind2_object::gKind2Object.run_table[Sprite_Kind2.state]();
 }
 
 // original 0x573090: the state k +2 through Kind2_StateTable (the PSX
 // 0x801C6830). As the original has it: unchecked, a whole byte - a state of 5
 // jumps to address 0.
 extern "C" void __cdecl Kind2_Dispatch(void) {
-    gKind2Object.state_table[Sprite_Kind2.step]();
+    kind2_object::gKind2Object.state_table[Sprite_Kind2.step]();
 }
 
 // original 0x5730A0, state 0: one step of the kind-2 object's movement script
@@ -129,7 +112,7 @@ extern "C" void __cdecl Kind2_Script(void) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x1C));   // a table of 32-bit places
     Sprite_Current = k;
-    const unsigned char result = gKind2Object.step(k + 0x80, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * k[0x83])))));
+    const unsigned char result = kind2_object::gKind2Object.step(k + 0x80, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * k[0x83])))));
     const unsigned char flags = k[0x80];
     k[8] = result;
     if (flags & 8) {   // the script ended: idle, at speed 3
@@ -154,7 +137,7 @@ extern "C" void __cdecl Kind2_Script(void) {
             const std::uint32_t twice = static_cast<std::uint32_t>(distance) * 2u;
             const unsigned char speed = Field_MoveSpeeds[k[0x84]];   // an unchecked byte index, as the original's
             MoveScript_F3Divisor = static_cast<short>(static_cast<std::uint16_t>(speed << 3));
-            const long ground = gKind2Object.elevation(x, z);
+            const long ground = kind2_object::gKind2Object.elevation(x, z);
             const auto rest = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) -
                                                         (static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16));
             const std::int32_t per_speed = Idiv(0x80, MoveScript_F3Divisor);
@@ -171,7 +154,7 @@ extern "C" void __cdecl Kind2_Script(void) {
         // No glide: the view is reset on the object where it stands.
         Field_Kind2X = rv::As<records::SpriteObject>(k)->x;
         Field_Kind2Z = rv::As<records::SpriteObject>(k)->z;
-        gKind2Object.view_reset();
+        kind2_object::gKind2Object.view_reset();
         k[8] = 0;
         k[2] = 0;
         return;
@@ -190,7 +173,7 @@ extern "C" void __cdecl Kind2_Script(void) {
     }
     // A timed move began: its first frame of elevation, then state 1.
     rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-    gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
+    kind2_object::gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
     k[2] = 1;
 }
 
@@ -207,15 +190,15 @@ extern "C" void __cdecl Kind2_Move(void) {
     unsigned char* const k = rv::Bytes(&Sprite_Kind2);
     if (Field_Kind2Hold != 0) {
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-        gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
+        kind2_object::gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
         return;
     }
-    if (!(k[0x80] & 0x40)) gKind2Object.set_elevation(static_cast<int>(gKind2Object.elevation(Field_Kind2X, Field_Kind2Z)));
+    if (!(k[0x80] & 0x40)) kind2_object::gKind2Object.set_elevation(static_cast<int>(kind2_object::gKind2Object.elevation(Field_Kind2X, Field_Kind2Z)));
     const unsigned char flags = k[0x80];
     k[0x87] = 0;
     k[2] = 0;
     k[0x80] = static_cast<unsigned char>(flags & 0xBF);
-    gKind2Object.script();
+    kind2_object::gKind2Object.script();
 }
 
 // original 0x573320, state 2: wait while Field_Request is 2 (PSX 0x801C6C74).
@@ -238,10 +221,10 @@ extern "C" void __cdecl Kind2_Travel(void) {
         const std::int32_t slope = rv::As<records::SpriteObject>(k)->step_y;
         if (slope == 0) return;
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(slope));
-        gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
+        kind2_object::gKind2Object.set_elevation(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole));
         return;
     }
-    gKind2Object.set_elevation(static_cast<int>(gKind2Object.elevation(Field_Kind2X, Field_Kind2Z)));
+    kind2_object::gKind2Object.set_elevation(static_cast<int>(kind2_object::gKind2Object.elevation(Field_Kind2X, Field_Kind2Z)));
     const unsigned char flags = k[0x80];
     rv::As<records::SpriteObject>(k)->step_y = 0;
     k[0x80] = static_cast<unsigned char>(flags & 0xFB);
@@ -264,7 +247,7 @@ extern "C" void __cdecl Kind2_Lift(void) {
     }
     const auto risen = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole + Word(k + 0x14));
     rv::Store<unsigned>(rv::As<records::SpriteHead>(k)->height_whole, risen);
-    gKind2Object.set_elevation(risen);
+    kind2_object::gKind2Object.set_elevation(risen);
     --k[9];
 }
 
@@ -383,9 +366,9 @@ template <unsigned N> void __cdecl StubEntry() { Record(0x10 + N, Sprite_Kind2.s
 // As the original's .data: the run table's two entries, then the state table's five.
 // (32-bit code words, as the image's; filled by SelfTest from kEntries, since a
 // word's initialiser from a function's address is not a constant on x86-64.)
-::bof3::CodeSlot<HandlerKind2Object> kTable[7];
-const HandlerKind2Object kEntries[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
-const CalleesKind2Object kStubs = {kTable, kTable + 2, StubStep, StubElevation, StubSetElevation, StubViewReset, StubScript};
+::bof3::CodeSlot<kind2_object::HandlerKind2Object> kTable[7];
+const kind2_object::HandlerKind2Object kEntries[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
+const kind2_object::CalleesKind2Object kStubs = {kTable, kTable + 2, StubStep, StubElevation, StubSetElevation, StubViewReset, StubScript};
 
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
@@ -489,7 +472,7 @@ void SeedDistance() {
 }
 
 // A dispatcher's copy: its `jmp [eax*4 + table]` re-aimed at `table`.
-void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<HandlerKind2Object>* table) {
+void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>* table) {
     auto* code = static_cast<std::uint8_t*>(copy);
     std::uint32_t disp;
     std::memcpy(&disp, code + kTableDisp, sizeof disp);
@@ -511,7 +494,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     const unsigned char* const* const scripts = g_scripts;
     std::memcpy(g_descriptor + 0x1C, &scripts, sizeof scripts);
     for (unsigned i = 0; i < 256; ++i) g_scripts[i] = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x20000u + i * 0x40u));
-    gKind2Object = kStubs;
+    kind2_object::gKind2Object = kStubs;
 
     // Kind2_Script's branches as the original took them: wait, end, glide
     // (and with negative frames), already there, view reset, states 2 / 4 / 1 / 0.
@@ -548,11 +531,11 @@ void SelfTest(void* const (&theirs)[kCount]) {
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             if (pass) {
-                const HandlerKind2Object ours[kCount] = {Kind2_Run, Kind2_Dispatch, Kind2_Script, Kind2_Move, Kind2_WaitRequest, Kind2_Travel, Kind2_Lift};
+                const kind2_object::HandlerKind2Object ours[kCount] = {Kind2_Run, Kind2_Dispatch, Kind2_Script, Kind2_Move, Kind2_WaitRequest, Kind2_Travel, Kind2_Lift};
                 ours[k]();
             } else {
                 g_after_step = {};
-                reinterpret_cast<HandlerKind2Object>(theirs[k])();
+                reinterpret_cast<kind2_object::HandlerKind2Object>(theirs[k])();
                 if (k == 2) {
                     const AfterStep& a = g_after_step;
                     if (input.memory[0x81] != 0) ++branch[kWait];
@@ -573,7 +556,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      kind2_object self-test MISMATCH: round %u, %s, log %u / %u", round, kClones[k].name,
                       their_out.log_n, our_out.log_n);
     }
-    gKind2Object = kOriginals;
+    kind2_object::gKind2Object = kOriginals;
     Apply(saved);
     bof3::Log("shadow      kind2_object self-test: %u rounds (%u of Kind2_Script, %u of each other), %u calls to the stand-ins, Kind2_Script's "
               "branches wait %u / end %u / glide %u (negative frames %u) / there %u / view reset %u / to state 2 %u, 4 %u, "
