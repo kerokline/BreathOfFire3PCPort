@@ -91,11 +91,11 @@ unsigned Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->y;
 
 // `call / jmp [table + index * 4]`: the .data dword read at the call, the
 // index unbounded as in the original (a byte, zero-extended).
-void Dispatch(U table, unsigned index) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
+void Dispatch(menu_draw_helpers::U table, unsigned index) {
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
 }
 // The step: the current record's byte +3 through a step table.
-void Step(U table) { Dispatch(table, Rec()[3]); }
+void Step(menu_draw_helpers::U table) { Dispatch(table, Rec()[3]); }
 
 // A party slot's character record: 0x66972C[0x904062[slot]], both bytes, the
 // slot unbounded.
@@ -273,7 +273,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_EquipRun(voi
     Step(::bof3::Img(ShopWin_EquipSteps_addr));
     const unsigned char* const w = Rec();
     const unsigned member = Member(w[0xA]);
-    g.equip_panel(static_cast<int>(X(w)), static_cast<int>(Y(w)), member);
+    menu_draw_helpers::g.equip_panel(static_cast<int>(X(w)), static_cast<int>(Y(w)), member);
 }
 
 // original 0x59B530, kind 6 step 2: x += 0x20; above 0xF, x = 0xF and step 0.
@@ -284,7 +284,7 @@ extern "C" void __cdecl ShopWin_EquipSlideIn(void) { SlideX(0x20, 0xF, false, 0x
 // Shop_DrawBuyList(the record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyListRun(void) {
     Step(::bof3::Img(ShopWin_BuyListSteps_addr));
-    g.buy_list(Rec());
+    menu_draw_helpers::g.buy_list(Rec());
 }
 
 // original 0x59B7B0, kind 7 step 2: x -= 0x20; below 0x84, x = 0x84 and step 0.
@@ -294,21 +294,21 @@ extern "C" void __cdecl ShopWin_BuyListSlideTo84(void) { SlideX(-0x20, 0x84, tru
 extern "C" void __cdecl ShopWin_BuyListSlideTo46(void) { SlideX(-0x20, 0x46, true, 0x46); }
 
 // original 0x59B810, kind 8: Shop_DrawBuyDetail(the record). No step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyDetailRun(void) { g.buy_detail(Rec()); }
+extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyDetailRun(void) { menu_draw_helpers::g.buy_detail(Rec()); }
 
 // original 0x59BB60, kind 9: the step (ShopWin_ItemListSteps: a bare ret,
 // 0x59A5E0 - DH's, ShopWin_ItemListSlideIn), then Menu_DrawItemList(the
 // record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ItemListRun(void) {
     Step(::bof3::Img(ShopWin_ItemListSteps_addr));
-    g.item_list(Rec());
+    menu_draw_helpers::g.item_list(Rec());
 }
 
 // original 0x59BB80, kind 9 step 2: x -= 0x20; below 0x4B, x = 0x4B and step 0.
 extern "C" void __cdecl ShopWin_ItemListSlideIn(void) { SlideX(-0x20, 0x4B, true, 0x4B); }
 
 // original 0x59BBB0, kind 10: Shop_DrawSellDetail(the record). No step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SellDetailRun(void) { g.sell_detail(Rec()); }
+extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SellDetailRun(void) { menu_draw_helpers::g.sell_detail(Rec()); }
 
 // ===========================================================================
 // Record handler 8 (0x66B534)
@@ -336,7 +336,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuWin_Hand(void) {
 // re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_ItemListRun(void) {
     Step(::bof3::Img(BattleMenuWin_ItemListSteps_addr));
-    g.battle_items(Rec());
+    menu_draw_helpers::g.battle_items(Rec());
 }
 
 // original 0x59CB60, handler 8 kind 1 step 2: x += 0x20; above 0x53, x = 0x52
@@ -350,7 +350,7 @@ extern "C" void __cdecl BattleMenuWin_ItemListSlideRight(void) { SlideX(0x20, 0x
 // BattleMenu_DrawSkillList(the record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_SkillListRun(void) {
     Step(::bof3::Img(BattleMenuWin_SkillListSteps_addr));
-    g.battle_skills(Rec());
+    menu_draw_helpers::g.battle_skills(Rec());
 }
 
 // original 0x59CBE0, handler 8 kind 2 step 2: x -= 0x20; below 0x53, x = 0x53
