@@ -76,7 +76,7 @@ using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
 unsigned char* Window(unsigned slot) { return move_script::At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowStride); }
-char* PrintBuf() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kPrintBuf.v))); }
+char* PrintBuf() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(battle_window_draw::at::kPrintBuf.v))); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(move_script::At(at)); }
 
 std::int32_t S16BattleWindowDraw(std::uint32_t v) { return static_cast<std::int16_t>(v); }
@@ -461,17 +461,17 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
 extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, unsigned id) {
     const unsigned ability = id & 0xFF;
     if (ability == 0) return 0;
-    const unsigned char* const rec = At(::bof3::Img(at::kAbilities.v) + ability * at::kAbilityStride);
+    const unsigned char* const rec = At(::bof3::Img(battle_window_draw::at::kAbilities.v) + ability * battle_window_draw::at::kAbilityStride);
     const unsigned m = mode & 0xFF;
     if (m == 1) {
         const unsigned character = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + (member & 0xFF))[0];
         const unsigned record = At(::bof3::Img(Character_IndexById_addr) + character)[0];
         const unsigned cost = battle_window_draw::g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
-        if (Word(At(::bof3::Img(CharacterRecords_addr) + record * at::kCharStride + 0x1A)) < cost) return 0;
+        if (Word(At(::bof3::Img(CharacterRecords_addr) + record * battle_window_draw::at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
     }
     if (m != 2) return 1;
-    const unsigned char* const w = At(::bof3::Img(at::kWorking.v) + (member & 0xFF) * at::kWorkingStride);
+    const unsigned char* const w = At(::bof3::Img(battle_window_draw::at::kWorking.v) + (member & 0xFF) * battle_window_draw::at::kWorkingStride);
     const unsigned ap = Word(w + 0x1A);
     const unsigned cost = battle_window_draw::g.ap_cost(member, id, 1) & 0xFF;
     if (ap < cost) return 0;
@@ -501,7 +501,7 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
 // the kind and Skill_ApCost as the cost.
 extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kind, const unsigned char* name,
                                           unsigned cost, int dim) {
-    const unsigned char icon = At(::bof3::Img(at::kSkillIcons.v) + (kind & 0xFF))[0];
+    const unsigned char icon = At(::bof3::Img(battle_window_draw::at::kSkillIcons.v) + (kind & 0xFF))[0];
     battle_window_draw::g.icon8(x, y + 2, icon, dim);
     const unsigned char n = battle_window_draw::g.char_count(name);
     battle_window_draw::g.text_draw_at(x + 10, y, colour, n, name);
@@ -515,7 +515,7 @@ extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kin
 // As the original has it: the scan runs to 10 and would answer 10, which the
 // mask makes unreachable.
 extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
-    const unsigned flags = move_script::Word(move_script::At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x14));
+    const unsigned flags = move_script::Word(move_script::At(::bof3::Img(battle_window_draw::at::kAbilities.v) + (id & 0xFF) * battle_window_draw::at::kAbilityStride + 0x14));
     if ((flags & 0x1FF) == 0) return 0;
     unsigned bit = 1;
     unsigned char n = 1;
@@ -535,8 +535,8 @@ extern "C" unsigned char __cdecl Skill_FlagIndex(unsigned id) {
 extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsigned battle) {
     const unsigned m = member & 0xFF;
     const unsigned char* const r =
-        (battle & 0xFF) == 0 ? move_script::At(::bof3::Img(CharacterRecords_addr) + m * at::kCharStride) : move_script::At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
-    const unsigned cost = move_script::At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride + 0x12)[0];
+        (battle & 0xFF) == 0 ? move_script::At(::bof3::Img(CharacterRecords_addr) + m * battle_window_draw::at::kCharStride) : move_script::At(::bof3::Img(battle_window_draw::at::kWorking.v) + m * battle_window_draw::at::kWorkingStride);
+    const unsigned cost = move_script::At(::bof3::Img(battle_window_draw::at::kAbilities.v) + (id & 0xFF) * battle_window_draw::at::kAbilityStride + 0x12)[0];
     const unsigned char a = r[0x16];
     if (a == 0x1A) return static_cast<unsigned char>((cost + 1) >> 1);
     const unsigned char b = r[0x17];
@@ -557,9 +557,9 @@ extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned typ
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
         const unsigned character = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2 + (member & 0xFF))[0];
-        r = move_script::At(::bof3::Img(CharacterRecords_addr) + move_script::At(::bof3::Img(Character_IndexById_addr) + character)[0] * at::kCharStride);
+        r = move_script::At(::bof3::Img(CharacterRecords_addr) + move_script::At(::bof3::Img(Character_IndexById_addr) + character)[0] * battle_window_draw::at::kCharStride);
     } else {
-        r = move_script::At(::bof3::Img(at::kWorking.v) + (member & 0xFF) * at::kWorkingStride);
+        r = move_script::At(::bof3::Img(battle_window_draw::at::kWorking.v) + (member & 0xFF) * battle_window_draw::at::kWorkingStride);
     }
     switch (type & 0xFF) {
     case 1: return r + 0x6A;

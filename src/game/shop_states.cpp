@@ -156,15 +156,15 @@ extern "C" void __cdecl FieldSave_Dispatch(void) {
 extern "C" void __cdecl ShopMode_Begin(void) {
     const auto object = static_cast<signed char>(ModeStates_ShopObject);
     if (object < 0) {
-        BattleE1_Mode = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kShopKind.v)) + 2);
+        BattleE1_Mode = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kShopKind.v)) + 2);
     } else {
-        unsigned char* const o = AtShopStates(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
-        PutLong(::bof3::Img(at::kSpriteCurrent.v), Addr(o));
+        unsigned char* const o = AtShopStates(::bof3::Img(Sprite_Objects_addr) + shop_states::at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
+        PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
         BattleE1_Mode = static_cast<unsigned char>(o[0x18] + 2);
         ScenaSc1_ShopByteB = o[0x1C];
     }
-    for (U n = 0; n < at::kActors; ++n) {
-        const U r = ::bof3::Img(Field_ActorStates_addr) + n * at::kActorStride;
+    for (U n = 0; n < shop_states::at::kActors; ++n) {
+        const U r = ::bof3::Img(Field_ActorStates_addr) + n * shop_states::at::kActorStride;
         // r is character record n's +0x10, its status word (Field_ActorStates 0x903A80 = CharacterRecords + 0x10)
         const auto* const c = rv::AsConst<records::CharRecord>(AtShopStates(r - 0x10));
         const auto quarter = static_cast<std::uint16_t>(c->stats.max_hp >> 2);
@@ -173,9 +173,9 @@ extern "C" void __cdecl ShopMode_Begin(void) {
     }
     FieldS_State = 0;
     FieldS_Step = 0;
-    BShopStates(::bof3::Img(at::kCount.v)) = 6;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
     ShopStates_Clear0A = 0;
-    ShopStates2_ShopList = ::bof3::Img(at::kShopRecords.v) + at::kShopRecordBytes * ScenaSc1_ShopByteB;
+    ShopStates2_ShopList = ::bof3::Img(shop_states::at::kShopRecords.v) + shop_states::at::kShopRecordBytes * ScenaSc1_ShopByteB;
 }
 
 // original 0x57F5D0 (PSX 0x801D0FF8), ShopMode_States 1 and 4: the way out.
@@ -187,8 +187,8 @@ extern "C" void __cdecl ShopMode_Begin(void) {
 extern "C" void __cdecl ShopMode_End(void) {
     const auto object = static_cast<signed char>(ModeStates_ShopObject);
     if (object >= 0) {
-        unsigned char* const o = AtShopStates(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
-        PutLong(::bof3::Img(at::kSpriteCurrent.v), Addr(o));
+        unsigned char* const o = AtShopStates(::bof3::Img(Sprite_Objects_addr) + shop_states::at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
+        PutLong(::bof3::Img(shop_states::at::kSpriteCurrent.v), Addr(o));
         if ((o[7] & 8) == 0) {
             o[8] = o[0x85];
             g.face(Sprite_Current[8]);
@@ -214,7 +214,7 @@ extern "C" void __cdecl Inn_Begin(void) {
     const auto step = static_cast<unsigned char>(FieldS_State + 1);
     ShopStates_Choice = 0;
     FieldS_State = step;
-    BShopStates(::bof3::Img(at::kCount.v)) = 4;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
     FieldS_Step = 0;
     bool forced = Field_InputFlags == 0x40;
     if (!forced) {
@@ -244,10 +244,10 @@ extern "C" void __cdecl Inn_Begin(void) {
 // state, 0x929F0B = 1 and, with an object, Msg_OpenSystem(0xD1).
 extern "C" void __cdecl InnPrompt_TitleIn(void) {
     const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
-    const int y = 0x12 - 20 * static_cast<int>(BShopStates(::bof3::Img(at::kCount.v)));
+    const int y = 0x12 - 20 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v)));
     shop_states::g.title_box(0x14, y, 0x118, 0x13, colour);
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) - 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count != 0) return;
     const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
     const unsigned char object = ModeStates_ShopObject;
@@ -264,15 +264,15 @@ extern "C" void __cdecl InnPrompt_TitleIn(void) {
 extern "C" void __cdecl InnPrompt_Greeting(void) {
     TitleBoxShopStates();
     if (!NoObject()) {
-        shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(at::kFormatD.v))),
+        shop_states::g.sprintf_(reinterpret_cast<char*>(AtShopStates(::bof3::Img(shop_states::at::kText.v))), reinterpret_cast<const char*>(AtShopStates(::bof3::Img(shop_states::at::kFormatD.v))),
                    static_cast<int>(ScenaSc1_ShopByteB * 10u));
-        shop_states::g.text_record(0, 8, AtShopStates(::bof3::Img(at::kText.v)));
+        shop_states::g.text_record(0, 8, AtShopStates(::bof3::Img(shop_states::at::kText.v)));
         MessageShopStates(0xA1);
         Zenny();
     }
-    if ((BShopStates(::bof3::Img(at::kMsgFlags.v)) & 2) == 0) return;
+    if ((BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) == 0) return;
     const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = 6;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 6;
     FieldS_Step = sub;
     shop_states::g.play(0x102);
 }
@@ -281,14 +281,14 @@ extern "C" void __cdecl InnPrompt_Greeting(void) {
 // counter (y 0x4C); the title box; with an object, message 0xA1 and the zenny
 // box; counter - 1, at 0 the next state.
 extern "C" void __cdecl InnPrompt_ChoicesIn(void) {
-    shop_states::g.choices(0x6E - 48 * static_cast<int>(BShopStates(::bof3::Img(at::kCount.v))), 0x4C);
+    shop_states::g.choices(0x6E - 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
     TitleBoxShopStates();
     if (!NoObject()) {
         MessageShopStates(0xA1);
         Zenny();
     }
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) - 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -313,7 +313,7 @@ extern "C" void __cdecl InnPrompt_Choose(void) {
         MessageShopStates(0xA1);
         Zenny();
     }
-    shop_states::U pad = LongShopStates(::bof3::Img(at::kPressed.v));
+    shop_states::U pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
     unsigned char cursor = ShopStates_Choice;
     const unsigned char was = cursor;
     bool moved = false;
@@ -337,10 +337,10 @@ extern "C" void __cdecl InnPrompt_Choose(void) {
     if (moved && was != cursor) {
         shop_states::g.play(0x101);
         cursor = ShopStates_Choice;
-        pad = LongShopStates(::bof3::Img(at::kPressed.v));
+        pad = LongShopStates(::bof3::Img(shop_states::at::kPressed.v));
     }
     if (Field_ConfirmButtons & pad) {
-        BShopStates(::bof3::Img(at::kCount.v)) = 0;
+        BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
         ShopStates_Cancelled = 0;
         if (cursor != 0) {
             shop_states::g.play(0x104);
@@ -360,7 +360,7 @@ extern "C" void __cdecl InnPrompt_Choose(void) {
     if (Field_CancelButtons & pad) {
         shop_states::g.play(0x106);
         const auto sub = static_cast<unsigned char>(FieldS_Step + 2);
-        BShopStates(::bof3::Img(at::kCount.v)) = 0;
+        BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
         FieldS_Step = sub;
         ShopStates_Cancelled = 1;
     }
@@ -372,21 +372,21 @@ extern "C" void __cdecl InnPrompt_Choose(void) {
 // sub-state 0, the counter 0x2D for cursor 0 (the night's message) or 0, and
 // step + cursor + 1: 0 the night, 1 the save menu, 2 the way out.
 extern "C" void __cdecl InnPrompt_ChoicesOut(void) {
-    shop_states::g.choices(0x6E + 48 * static_cast<int>(BShopStates(::bof3::Img(at::kCount.v))), 0x4C);
+    shop_states::g.choices(0x6E + 48 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x4C);
     TitleBoxShopStates();
     if (!NoObject()) Zenny();
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) + 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count != 6) return;
     if (ShopStates_Cancelled != 0) {
         const unsigned char step = FieldS_State;
-        BShopStates(::bof3::Img(at::kCount.v)) = 0;
+        BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
         FieldS_State = static_cast<unsigned char>(step + 3);
         return;
     }
     const unsigned char cursor = ShopStates_Choice;
     FieldS_Step = 0;
-    BShopStates(::bof3::Img(at::kCount.v)) = cursor != 0 ? 0 : 0x2D;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = cursor != 0 ? 0 : 0x2D;
     FieldS_State = static_cast<unsigned char>(FieldS_State + cursor + 1);
 }
 
@@ -404,8 +404,8 @@ extern "C" void __cdecl InnPrompt_ChoicesOut(void) {
 extern "C" void __cdecl InnNight_Message(void) {
     TitleBoxShopStates();
     if (!NoObject()) MessageShopStates(0xA4);
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) - 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count != 0) return;
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
     shop_states::g.transition(0);
@@ -432,7 +432,7 @@ extern "C" void __cdecl InnNight_Jingle(void) {
     shop_states::g.black();
     shop_states::g.stream(0);
     const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = 0x96;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0x96;
     FieldS_Step = sub;
 }
 
@@ -441,10 +441,10 @@ extern "C" void __cdecl InnNight_Jingle(void) {
 // Transition_Start(1), the fade in.
 extern "C" void __cdecl InnNight_Wait(void) {
     shop_states::g.black();
-    unsigned char count = BShopStates(::bof3::Img(at::kCount.v));
+    unsigned char count = BShopStates(::bof3::Img(shop_states::at::kCount.v));
     if (count != 0) {
         --count;
-        BShopStates(::bof3::Img(at::kCount.v)) = count;
+        BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
         if (count != 0) return;
     }
     if (shop_states::g.stream_done() == 0) return;
@@ -469,7 +469,7 @@ extern "C" void __cdecl InnNight_Restore(void) {
     const unsigned char object = ModeStates_ShopObject;
     FieldS_Answer = 1;
     FieldS_Step = sub;
-    PutWordShopStates(::bof3::Img(at::kRepeatLatch.v), 0);
+    PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
     ItemUse_RepeatTimer = 0;
     if (object != 0xFF) shop_states::g.open_system(0xD5);
     sound_in::MorningComes();  // DIV-0169
@@ -481,7 +481,7 @@ extern "C" void __cdecl InnNight_Restore(void) {
 extern "C" void __cdecl InnNight_AskSave(void) {
     TitleBoxShopStates();
     if (!NoObject()) {
-        if (BShopStates(::bof3::Img(at::kMsgFlags.v)) & 2) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
+        if (BShopStates(::bof3::Img(shop_states::at::kMsgFlags.v)) & 2) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
     MessageShopStates(0x1D);
@@ -494,7 +494,7 @@ extern "C" void __cdecl InnNight_Leave(void) {
     TitleBoxShopStates();
     const unsigned char answer = static_cast<unsigned char>(FieldS_Answer);
     const unsigned char step = FieldS_State;
-    BShopStates(::bof3::Img(at::kCount.v)) = 0;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
     FieldS_Step = 0;
     FieldS_State = static_cast<unsigned char>(answer == 0 ? step + 2 : step + 1);
 }
@@ -508,9 +508,9 @@ extern "C" void __cdecl InnNight_Leave(void) {
 // shown 0, the next state.
 extern "C" void __cdecl FieldSave_Begin(void) {
     shop_states::g.read_summaries();
-    BShopStates(::bof3::Img(at::kCount.v)) = 4;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 4;
     Rest2c_Slot = 0;
-    PutLong(::bof3::Img(at::kSlotTop.v), 0);
+    PutLong(::bof3::Img(shop_states::at::kSlotTop.v), 0);
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -523,11 +523,11 @@ extern "C" void __cdecl FieldSave_Begin(void) {
 // consumer of the x (SaveMenu_DrawSlots' two draws, Menu_DrawCursorBox) takes
 // it as a u16, where the two agree.
 extern "C" void __cdecl FieldSave_SlotsIn(void) {
-    if (BShopStates(::bof3::Img(at::kCount.v)) == 4) shop_states::g.play(0x102);
+    if (BShopStates(::bof3::Img(shop_states::at::kCount.v)) == 4) shop_states::g.play(0x102);
     TitleBoxShopStates();
-    shop_states::g.slots(0x20 - 80 * static_cast<int>(BShopStates(::bof3::Img(at::kCount.v))), 0x30, 1);
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) - 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    shop_states::g.slots(0x20 - 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 1);
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) - 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -545,18 +545,18 @@ extern "C" void __cdecl FieldSave_Choose(void) {
     MessageShopStates(0x9D);
     shop_states::g.slots(0x20, 0x30, 1);
     const shop_states::U repeat = shop_states::g.auto_repeat(Input_Pressed & 0x5000u);
-    shop_states::U slot = LongShopStates(::bof3::Img(at::kSlot.v));
+    shop_states::U slot = LongShopStates(::bof3::Img(shop_states::at::kSlot.v));
     const shop_states::U old = slot & 0xFF;
     if ((repeat & 0x1000) && slot != 0) {
-        const shop_states::U top = LongShopStates(::bof3::Img(at::kSlotTop.v));
+        const shop_states::U top = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v));
         --slot;
         Rest2c_Slot = slot;
-        if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(at::kSlotTop.v), top - 1);
+        if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), top - 1);
     } else if ((repeat & 0x4000) && static_cast<int>(slot) < 15) {
-        const shop_states::U limit = LongShopStates(::bof3::Img(at::kSlotTop.v)) + 2;
+        const shop_states::U limit = LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v)) + 2;
         ++slot;
         Rest2c_Slot = slot;
-        if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(at::kSlotTop.v), LongShopStates(::bof3::Img(at::kSlotTop.v)) + 1);
+        if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(::bof3::Img(shop_states::at::kSlotTop.v), LongShopStates(::bof3::Img(shop_states::at::kSlotTop.v)) + 1);
     }
     if (old != slot) shop_states::g.play(0x101);
     const std::uint16_t pad = Input_Pressed;
@@ -578,9 +578,9 @@ extern "C" void __cdecl FieldSave_Choose(void) {
 // counter + 1, at 4 the next state.
 extern "C" void __cdecl FieldSave_SlotsOut(void) {
     TitleBoxShopStates();
-    shop_states::g.slots(0x20 + 80 * static_cast<int>(BShopStates(::bof3::Img(at::kCount.v))), 0x30, 0);
-    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(at::kCount.v)) + 1);
-    BShopStates(::bof3::Img(at::kCount.v)) = count;
+    shop_states::g.slots(0x20 + 80 * static_cast<int>(BShopStates(::bof3::Img(shop_states::at::kCount.v))), 0x30, 0);
+    const auto count = static_cast<unsigned char>(BShopStates(::bof3::Img(shop_states::at::kCount.v)) + 1);
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = count;
     if (count == 4) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -600,14 +600,14 @@ extern "C" void __cdecl FieldSave_End(void) {
         return;
     }
     if (ShopStates_InnFlag != 0 && Rest2c_SaveBack == 0) {
-        PutWordShopStates(::bof3::Img(at::kRepeatLatch.v), 0);
+        PutWordShopStates(::bof3::Img(shop_states::at::kRepeatLatch.v), 0);
         ItemUse_RepeatTimer = 0;
         FieldS_Answer = 0;
         FieldS_Step = 8;
         shop_states::g.open_system(0xD0);
         return;
     }
-    BShopStates(::bof3::Img(at::kCount.v)) = 0;
+    BShopStates(::bof3::Img(shop_states::at::kCount.v)) = 0;
     FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 

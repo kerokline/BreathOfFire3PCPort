@@ -137,7 +137,7 @@ using namespace window_task;
 // 0x80143F10..1F, the port scattered them.
 extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned flags) {
     AreaW0b_Place = static_cast<std::uint16_t>(area);
-    at::kPendingX = x;
+    window_task::at::kPendingX = x;
     AreaEntry_PendingZ = z;
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
     window_task::g.classify();
@@ -157,7 +157,7 @@ extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned f
 extern "C" void __cdecl Area_ClassifyPending(void) {
     const std::uint16_t pending = AreaW0b_Place;
     unsigned n = 0;
-    for (std::uint32_t p = ::bof3::Img(at::kAreaKinds.v); p < ::bof3::Img(at::kAreaKindsEnd.v); p += 2, ++n) {
+    for (std::uint32_t p = ::bof3::Img(window_task::at::kAreaKinds.v); p < ::bof3::Img(window_task::at::kAreaKindsEnd.v); p += 2, ++n) {
         if (window_task::Word(window_task::At(p)) == pending) {
             Area_EnterTransition = 0xB;
             return;
@@ -273,7 +273,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
-        for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(at::kRecordsEnd.v); a += 0x24) {
+        for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(window_task::at::kRecordsEnd.v); a += 0x24) {
             unsigned char* const record = window_task::At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
@@ -365,13 +365,13 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
-        y = window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        y = window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + 0x64u) << 4);
-        y = window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        y = window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u + 1u];
     }
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (y + 0x1Bu) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
@@ -389,8 +389,8 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + 0x23u) << 4);
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width_step, 0xE3);
@@ -415,23 +415,23 @@ namespace {
 unsigned SettledX(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
-                                       : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) << 4;
+        return SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                       : window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_x << 4;
     default:
-        return SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) << 4;
+        return SideX(window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u))) << 4;
     }
 }
 unsigned SettledY(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
-                                  : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) << 4;
+        return ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                  : window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_y << 4;
     default:
-        return window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) << 4;
+        return window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) << 4;
     }
 }
 
@@ -525,14 +525,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
-                                            : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + half;
+            place = SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                            : window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u]) + half;
             break;
         case 1:
-            place = window_task::Word(window_task::At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(window_task::at::kSetXY.v) + MenuWindows_ListSet * 8u)) + half;
             break;
         default:
-            place = SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + half;
+            place = SideX(window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u))) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->x = place << 4;
@@ -550,14 +550,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
-                                       : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) + half;
+            place = ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(window_task::at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                       : window_task::At(::bof3::Img(window_task::at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) + half;
             break;
         case 1:
-            place = window_task::Word(window_task::At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u + 2u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(window_task::at::kSetXY.v) + MenuWindows_ListSet * 8u + 2u)) + half;
             break;
         default:
-            place = window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(window_task::at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->y = place << 4;

@@ -879,7 +879,7 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // low words only, so ours passes them zero-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(void) {
     const unsigned set = MenuWindows_ListSet;
-    const unsigned char* const rows = mode_states::At(::bof3::Img(at::kCursorRows) + set * 6);
+    const unsigned char* const rows = mode_states::At(::bof3::Img(mode_states::at::kCursorRows) + set * 6);
     const short row = AreaW0c_ChoiceAnswer;
     const unsigned char* const w = reinterpret_cast<const unsigned char*>(BattleWinStates_Current);
     const unsigned y = (mode_states::Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(mode_states::Word(w + 6)) >> 4) +

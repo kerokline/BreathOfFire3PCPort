@@ -88,7 +88,7 @@ using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
 unsigned char* PtrBattleWindows(std::uint32_t at) { return battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(at)))); }
-unsigned char* CurrentBattleWindows() { return PtrBattleWindows(::bof3::Img(at::kCurrent.v)); }
+unsigned char* CurrentBattleWindows() { return PtrBattleWindows(::bof3::Img(battle_windows::at::kCurrent.v)); }
 unsigned char* FieldState() { return Field_State; }
 unsigned char* Sprite() { return Sprite_Current; }
 
@@ -639,7 +639,7 @@ extern "C" void __cdecl BattleWin_DrawMessage() {
     const records::WindowRecord* win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     battle_windows::g.message_box(win->x, win->y);
     const unsigned index = BattleWindows_MsgHead;
-    const auto* const text = battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(at::kMsgRing.v) + 8 * index))));
+    const auto* const text = battle_windows::At(static_cast<std::uint32_t>(move_script::Long(battle_windows::At(::bof3::Img(battle_windows::at::kMsgRing.v) + 8 * index))));
     win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     battle_windows::g.text_draw_at(static_cast<std::uint16_t>(win->x + 4), static_cast<std::uint16_t>(win->y + 3), 0, 0xFF,
                    text);

@@ -118,10 +118,10 @@ void Slide(unsigned at_word, int by, short bound, bool below, short to) {
 
 // CharacterRecords' record n (0xA4 each), unchecked; a member id's record
 // index, 0x66972C[id] read in place (the byte is unbounded, the table is 24).
-unsigned char* Record(U n) { return AtRest2h(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
-U RecordOf(U id) { return BRest2h(::bof3::Img(at::kMemberMap.v) + (id & 0xFF)); }
+unsigned char* Record(U n) { return AtRest2h(::bof3::Img(CharacterRecords_addr) + n * rest_2h::at::kRecordStride); }
+U RecordOf(U id) { return BRest2h(::bof3::Img(rest_2h::at::kMemberMap.v) + (id & 0xFF)); }
 
-char* PrintBuf() { return reinterpret_cast<char*>(AtRest2h(::bof3::Img(at::kPrintBuf.v))); }
+char* PrintBuf() { return reinterpret_cast<char*>(AtRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v))); }
 const char* FormatRest2h(U address) { return reinterpret_cast<const char*>(AtRest2h(address)); }
 const unsigned char* TextRest2h(U address) { return AtRest2h(address); }
 const unsigned char* Message(unsigned id) { return SH_CALL(Msg_SystemPtr)(id & 0xFFFF); }
@@ -181,16 +181,16 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         SH_CALL(Menu_DrawItemIcon)(x7 + 0x56, y, rec[9], static_cast<int>(shade));
         SH_CALL(Text_DrawAt)(x7 + 0x14, text_y - 0x14, colour, 5, rec);
         SH_CALL(Menu_DrawTile16)(x7 + 2, text_y, 3, dim);
-        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtLevel.v)), static_cast<unsigned>(rec[0xA]));
+        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtLevel.v)), static_cast<unsigned>(rec[0xA]));
         const int pen = x7 + 0x18;
-        SH_CALL(Text_DrawFont8)(pen, text_y, colour, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
+        SH_CALL(Text_DrawFont8)(pen, text_y, colour, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
         const unsigned flags = rv::As<records::CharRecord>(rec)->status;
         U status = 0;
         if (flags & 0x80) {
-            if (flags & 0x20) status = (Frame_Counter & 0x20) ? ::bof3::Img(at::kStatusA.v) : ::bof3::Img(at::kStatusB.v);
-            else status = ::bof3::Img(at::kStatusA.v);
+            if (flags & 0x20) status = (Frame_Counter & 0x20) ? ::bof3::Img(rest_2h::at::kStatusA.v) : ::bof3::Img(rest_2h::at::kStatusB.v);
+            else status = ::bof3::Img(rest_2h::at::kStatusA.v);
         } else if (flags & 0x20) {
-            status = ::bof3::Img(at::kStatusB.v);
+            status = ::bof3::Img(rest_2h::at::kStatusB.v);
         }
         if (status != 0)
             SH_CALL(Text_DrawSmall)(x7 + 0x30, text_y, colour != 0 ? static_cast<unsigned>(colour) : 1u, 0x10, TextRest2h(status));
@@ -201,11 +201,11 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
             if (rec[0x11] & 0x20) c = 4;
             if (rv::As<records::CharRecord>(rec)->hp <= 1) c = 2;
         }
-        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtFigureA.v)), static_cast<unsigned>(WordRest2h(rec + 0x18)));
-        SH_CALL(Text_DrawFont8)(pen, hp_y, c, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtFigureA.v)), static_cast<unsigned>(WordRest2h(rec + 0x18)));
+        SH_CALL(Text_DrawFont8)(pen, hp_y, c, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
         c = dim ? 7 : (rec[0x1E] != 0 ? 4 : 0);
-        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtFigureB.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_hp));
-        SH_CALL(Text_DrawFont8)(pen, hp_y, c, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtFigureB.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_hp));
+        SH_CALL(Text_DrawFont8)(pen, hp_y, c, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
         const int ap_y = text_y + 0x10;
         SH_CALL(Menu_DrawTile16)(x7 + 2, ap_y, 1, dim);
         c = 0;
@@ -217,10 +217,10 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
             if (ap <= quarter) c = 4;
             if (ap == 0) c = 2;
         }
-        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtFigureA.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->ap));
-        SH_CALL(Text_DrawFont8)(pen, ap_y, c, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
-        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtFigureB.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_ap));
-        SH_CALL(Text_DrawFont8)(pen, ap_y, dim ? 7 : 0, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtFigureA.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->ap));
+        SH_CALL(Text_DrawFont8)(pen, ap_y, c, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtFigureB.v)), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_ap));
+        SH_CALL(Text_DrawFont8)(pen, ap_y, dim ? 7 : 0, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
         y += 0x34;
         text_y += 0x34;
         ++list;
@@ -257,8 +257,8 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
     const U genes = Gene_Bits;
     unsigned char n = 0;
     for (unsigned i = 0; i < 0x12; ++i)
-        if (genes & (1u << i)) BRest2h(::bof3::Img(at::kGeneList.v) + n++) = static_cast<unsigned char>(i + 1);
-    if (n < 0x12) std::memset(AtRest2h(::bof3::Img(at::kGeneList.v) + n), 0, 0x12u - n);
+        if (genes & (1u << i)) BRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + n++) = static_cast<unsigned char>(i + 1);
+    if (n < 0x12) std::memset(AtRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + n), 0, 0x12u - n);
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 3, 0x99, 0x9A, 0, style);
     unsigned char offset = 0, moving = 0;
@@ -267,16 +267,16 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
     int icon_y = text_y + 2;
     const int end = static_cast<int>(moving) + static_cast<int>(top) + 9;
     for (unsigned char i = top; static_cast<int>(i) < end; ++i) {
-        if (BRest2h(::bof3::Img(at::kGeneList.v) + i) == 0) break;
+        if (BRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + i) == 0) break;
         if (w[0xB] == i) {
             SH_CALL(Menu_DrawIcon8)(XRest2h(w) + 7, icon_y, 6, 1);
-            const unsigned char* const lit = Message(BRest2h(::bof3::Img(at::kGeneList.v) + i) + 0x4171u);
+            const unsigned char* const lit = Message(BRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + i) + 0x4171u);
             SH_CALL(Text_DrawAt)(XRest2h(w) + 0x11, text_y, 7, 0xFF, lit);
             text_y -= 2;
             icon_y -= 2;
         }
         SH_CALL(Menu_DrawIcon8)(XRest2h(w) + 7, icon_y, 6, 0);
-        const unsigned char* const name = Message(BRest2h(::bof3::Img(at::kGeneList.v) + i) + 0x4171u);
+        const unsigned char* const name = Message(BRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + i) + 0x4171u);
         SH_CALL(Text_DrawAt)(XRest2h(w) + 0x11, text_y, 0, 0xFF, name);
         if (w[0xB] == i) {
             text_y += 2;
@@ -285,14 +285,14 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
         text_y += 0xD;
         icon_y += 0xD;
     }
-    w[0xC] = BRest2h(::bof3::Img(at::kGeneList.v) + w[0xB]);
+    w[0xC] = BRest2h(::bof3::Img(rest_2h::at::kGeneList.v) + w[0xB]);
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 3, 0x99, 0x14, 0, Style());
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 0x92, 0x99, 8, 0, Style());
     const int title_y = YRest2h(w) + 7;
-    const unsigned char length = SH_CALL(Text_CharCount)(TextRest2h(::bof3::Img(at::kGeneTitle.v)));
-    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + XRest2h(w), title_y, 0, 0x10, TextRest2h(::bof3::Img(at::kGeneTitle.v)));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kGenePiecesA.v));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kGenePiecesB.v));
+    const unsigned char length = SH_CALL(Text_CharCount)(TextRest2h(::bof3::Img(rest_2h::at::kGeneTitle.v)));
+    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + XRest2h(w), title_y, 0, 0x10, TextRest2h(::bof3::Img(rest_2h::at::kGeneTitle.v)));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kGenePiecesA.v));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kGenePiecesB.v));
     for (int i = 0; i < 10; ++i) Piece(8 * i + 0x28 + XRest2h(w), YRest2h(w), 1);
     for (int i = 0; i < 15; ++i) Piece(XRest2h(w), 8 * i + 0x18 + YRest2h(w), 4);
     Piece(XRest2h(w) + 0x90, YRest2h(w) + 0x18, 0x16);
@@ -302,7 +302,7 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
     for (int i = 0; i < 17; ++i) Piece(8 * i + 8 + XRest2h(w), YRest2h(w) + 0x90, 0x1A);
     Piece(XRest2h(w) + 8, YRest2h(w), 0x32);
     Piece(XRest2h(w) + 0x90, YRest2h(w), 0x33);
-    SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(at::kGeneList.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 9, 0x12, 0x74);
+    SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(rest_2h::at::kGeneList.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 9, 0x12, 0x74);
 }
 
 // ===========================================================================
@@ -356,12 +356,12 @@ extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
     const unsigned n0 = Rest2h_RowCount;
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 3, 0x65, static_cast<int>((n0 << 4) + 0x19), 0, style);
-    SH_CALL(Text_DrawAt)(XRest2h(w) + 0x1E, YRest2h(w) + 7, 0, 0xFF, AtRest2h(L(::bof3::Img(at::kRowText.v))));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kRowPiecesA.v));
+    SH_CALL(Text_DrawAt)(XRest2h(w) + 0x1E, YRest2h(w) + 7, 0, 0xFF, AtRest2h(L(::bof3::Img(rest_2h::at::kRowText.v))));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kRowPiecesA.v));
     unsigned char i = 0;
     if (Rest2h_RowCount != 0) {
         do {
-            const unsigned char* const text = AtRest2h(L(::bof3::Img(at::kRowText.v) + 4u * BRest2h(::bof3::Img(at::kRowOrder.v) + i)));
+            const unsigned char* const text = AtRest2h(L(::bof3::Img(rest_2h::at::kRowText.v) + 4u * BRest2h(::bof3::Img(rest_2h::at::kRowOrder.v) + i)));
             const int dy = static_cast<int>(i) << 4;
             if (i == w[0xB]) {
                 SH_CALL(Text_DrawAt)(XRest2h(w) + 7, YRest2h(w) + dy + 0x1A, 7, 0xFF, text);
@@ -372,12 +372,12 @@ extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
             } else {
                 SH_CALL(Text_DrawAt)(XRest2h(w) + 7, YRest2h(w) + dy + 0x1A, 0, 0xFF, text);
             }
-            SH_CALL(Menu_DrawPieces)(XRest2h(w), YRest2h(w) + dy + 0x18, TextRest2h(::bof3::Img(at::kRowPiecesB.v)), 1);
-            SH_CALL(Menu_DrawPieces)(XRest2h(w), ((static_cast<int>(i) + 2) << 4) + YRest2h(w), TextRest2h(::bof3::Img(at::kRowPiecesB.v)), 1);
+            SH_CALL(Menu_DrawPieces)(XRest2h(w), YRest2h(w) + dy + 0x18, TextRest2h(::bof3::Img(rest_2h::at::kRowPiecesB.v)), 1);
+            SH_CALL(Menu_DrawPieces)(XRest2h(w), ((static_cast<int>(i) + 2) << 4) + YRest2h(w), TextRest2h(::bof3::Img(rest_2h::at::kRowPiecesB.v)), 1);
             ++i;
         } while (i < Rest2h_RowCount);
     }
-    SH_CALL(Menu_DrawPieces)(XRest2h(w), (static_cast<int>(i) << 4) + YRest2h(w) + 0x18, TextRest2h(::bof3::Img(at::kRowPiecesC.v)), 1);
+    SH_CALL(Menu_DrawPieces)(XRest2h(w), (static_cast<int>(i) << 4) + YRest2h(w) + 0x18, TextRest2h(::bof3::Img(rest_2h::at::kRowPiecesC.v)), 1);
 }
 
 // original 0x59C110, kind 15: the step (ShopWin_MasterListSteps: a bare ret,
@@ -474,7 +474,7 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
     unsigned char lit = 0x7F, picked = 0x7F;
     unsigned char n = 0;
     for (unsigned char i = 0; i < 0x11; ++i) {
-        if (!(BRest2h(::bof3::Img(at::kMasterBits.v) + (i >> 3)) & static_cast<unsigned char>(1u << (i & 7)))) continue;
+        if (!(BRest2h(::bof3::Img(rest_2h::at::kMasterBits.v) + (i >> 3)) & static_cast<unsigned char>(1u << (i & 7)))) continue;
         if (w[0xB] == n) {
             lit = n;
             w[0xD] = i;
@@ -503,7 +503,7 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
             const unsigned char* const name = Message(list[i] + 0x110u);
             SH_CALL(Text_DrawAt)(XRest2h(w) + 0x13, text_y, 7, 0xFF, name);
             if (available == 0) SH_CALL(Menu_DrawIcon8)(XRest2h(w) + 8, icon_y, 6, 1);
-            else SH_CALL(Text_DrawAt)(XRest2h(w) + 5, text_y, 7, 0xFF, TextRest2h(::bof3::Img(at::kMasterMark.v)));
+            else SH_CALL(Text_DrawAt)(XRest2h(w) + 5, text_y, 7, 0xFF, TextRest2h(::bof3::Img(rest_2h::at::kMasterMark.v)));
             text_y -= 2;
             icon_y -= 2;
         }
@@ -511,7 +511,7 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
         const unsigned char* const name = Message(list[i] + 0x110u);
         SH_CALL(Text_DrawAt)(XRest2h(w) + 0x13, text_y, colour, 0xFF, name);
         if (available == 0) SH_CALL(Menu_DrawIcon8)(XRest2h(w) + 8, icon_y, 6, 0);
-        else SH_CALL(Text_DrawAt)(XRest2h(w) + 5, text_y, colour, 0xFF, TextRest2h(::bof3::Img(at::kMasterMark.v)));
+        else SH_CALL(Text_DrawAt)(XRest2h(w) + 5, text_y, colour, 0xFF, TextRest2h(::bof3::Img(rest_2h::at::kMasterMark.v)));
         if (lit == i) {
             text_y += 2;
             icon_y += 2;
@@ -523,13 +523,13 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
     // back from there. Under DIV-0059 (a Latin overlay; DIV-0064's MSTR is
     // four 8-unit letters) the same centre, less half the real width.
     const int title_y = YRest2h(w) + 7;
-    const unsigned char length = SH_CALL(Text_CharCount)(TextRest2h(::bof3::Img(at::kMasterTitle.v)));
+    const unsigned char length = SH_CALL(Text_CharCount)(TextRest2h(::bof3::Img(rest_2h::at::kMasterTitle.v)));
     const int title_x = rest_2h::g_master_title_live && ListTitle_Centring()
-                            ? XRest2h(w) + 0x3A - static_cast<int>(TextAdvance_Width(TextRest2h(::bof3::Img(at::kMasterTitle.v))) / 2)
+                            ? XRest2h(w) + 0x3A - static_cast<int>(TextAdvance_Width(TextRest2h(::bof3::Img(rest_2h::at::kMasterTitle.v))) / 2)
                             : XRest2h(w) - 6 * static_cast<int>(length) + 0x3A;
-    SH_CALL(Text_DrawAt)(title_x, title_y, 0, 0x10, TextRest2h(::bof3::Img(at::kMasterTitle.v)));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kMasterPiecesA.v));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kMasterPiecesB.v));
+    SH_CALL(Text_DrawAt)(title_x, title_y, 0, 0x10, TextRest2h(::bof3::Img(rest_2h::at::kMasterTitle.v)));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kMasterPiecesA.v));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kMasterPiecesB.v));
     for (int i = 0; i < 5; ++i) Piece(8 * i + 0x28 + XRest2h(w), YRest2h(w), 1);
     for (int i = 0; i < 15; ++i) Piece(XRest2h(w), 8 * i + 0x18 + YRest2h(w), 4);
     Piece(XRest2h(w) + 0x68, YRest2h(w) + 0x18, 0x16);
@@ -558,11 +558,11 @@ extern "C" unsigned char __cdecl MasterWin_Available(unsigned index) {
     case 0xE: return (Cond_Flags[0xd1] & 0x20) ? 1 : 0;
     default: break;
     }
-    if (k >= at::kMasterCount)
+    if (k >= rest_2h::at::kMasterCount)
         bof3::Fatal("MasterWin_Available (0x59C780): master %u past the %u lists of 0x%X - the original reads the next "
                     ".data as a pointer (docs/rest_2h.md section 7)",
-                    k, at::kMasterCount, (unsigned)MasterWin_Requirements_addr);
-    const unsigned char* p = AtRest2h(L(::bof3::Img(at::kRequirements.v) + 4 * k));
+                    k, rest_2h::at::kMasterCount, (unsigned)MasterWin_Requirements_addr);
+    const unsigned char* p = AtRest2h(L(::bof3::Img(rest_2h::at::kRequirements.v) + 4 * k));
     while (*p != 0xFF) {
         if (SH_CALL(MasterWin_SkillKnown)(*p) == 0) return 0;
         ++p;
@@ -577,9 +577,9 @@ extern "C" unsigned char __cdecl MasterWin_SkillKnown(unsigned skill) {
     const auto s = static_cast<unsigned char>(skill);
     for (U k = 0; k < 7; ++k)
         for (U j = 0; j < 0xA; ++j)
-            if (BRest2h(::bof3::Img(Field_ActorStates_addr) + 0x6e + k * at::kRecordStride + j) == s) return 1;
+            if (BRest2h(::bof3::Img(Field_ActorStates_addr) + 0x6e + k * rest_2h::at::kRecordStride + j) == s) return 1;
     for (U j = 0; j < 0x80; ++j)
-        if (BRest2h(::bof3::Img(at::kSharedList.v) + j) == s) return 1;
+        if (BRest2h(::bof3::Img(rest_2h::at::kSharedList.v) + j) == s) return 1;
     return 0;
 }
 
@@ -623,7 +623,7 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(XRest2h(w) - 0x25, YRest2h(w) + 3, 0x22, 0x10, 0, style2);
     SH_CALL(Menu_DrawBorder)(XRest2h(w) - 0x28, YRest2h(w), 3, 1);
-    SH_CALL(Text_DrawAt)(XRest2h(w) - 0x20, YRest2h(w) + 4, 0, 0xFF, TextRest2h(::bof3::Img(at::kPupilLabel.v)));
+    SH_CALL(Text_DrawAt)(XRest2h(w) - 0x20, YRest2h(w) + 4, 0, 0xFF, TextRest2h(::bof3::Img(rest_2h::at::kPupilLabel.v)));
 }
 
 // original 0x59CA00: a portrait (x, y, index, shade): index 4 becomes 0xB from
@@ -637,7 +637,7 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
 extern "C" void __cdecl MasterWin_DrawPortrait(int x, int y, unsigned index, unsigned shade) {
     unsigned k = index & 0xFF;
     if (k == 4 && Cond_ByteFA >= 8) k = 0xB;
-    const unsigned char* const cell = AtRest2h(::bof3::Img(at::kPortraitCells.v) + 4 * k);
+    const unsigned char* const cell = AtRest2h(::bof3::Img(rest_2h::at::kPortraitCells.v) + 4 * k);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x1E, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     unsigned char* const p = Gfx_PacketNext;
@@ -677,7 +677,7 @@ extern "C" void __cdecl BattleMenuWin_ItemListSlideLeft(void) { Slide(4, -0x20, 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_EquipRun(void) {
     StepRest2h("BattleMenuWin_EquipRun", ::bof3::Img(BattleMenuWin_EquipSteps_addr), 4);
     unsigned char* const w = RecRest2h();
-    const U member = RecordOf(BRest2h(::bof3::Img(at::kBattleParty.v) + w[0xC]));
+    const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
     SH_CALL(BattleEquipWin_Draw)(member, static_cast<unsigned>(XRest2h(w)), static_cast<unsigned>(YRest2h(w)),
                                  static_cast<U>(LongRest2h(w + 0x20)), w[0xD], Key(w));
 }
@@ -747,34 +747,34 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     else if (slot <= 4) w[8] = 3;
     else w[8] = 1;
     const unsigned cat = w[8];
-    const unsigned char* ids = AtRest2h(L(::bof3::Img(at::kIdLists.v) + 4 * cat));
-    const unsigned char* counts = AtRest2h(L(::bof3::Img(at::kCountLists.v) + 4 * cat));
+    const unsigned char* ids = AtRest2h(L(::bof3::Img(rest_2h::at::kIdLists.v) + 4 * cat));
+    const unsigned char* counts = AtRest2h(L(::bof3::Img(rest_2h::at::kCountLists.v) + 4 * cat));
     unsigned char n = 0;
     for (unsigned k = 0; k < 0x80; ++k, ++ids, ++counts) {
         const unsigned id = *ids;
-        const U member = RecordOf(BRest2h(::bof3::Img(at::kBattleParty.v) + w[0xC]));
+        const U member = RecordOf(BRest2h(::bof3::Img(rest_2h::at::kBattleParty.v) + w[0xC]));
         const unsigned char allowed = SH_CALL(Item_CanUse)(4, member, w[8], id);
         if (allowed == 0) continue;
         if (w[8] == 2) {
             const unsigned kind = SH_CALL(Item_IconKind)(2, *ids) & 0xFF;
             if (static_cast<int>(w[9]) - 1 != static_cast<int>(kind) - 2) continue;
         }
-        BRest2h(::bof3::Img(at::kUseIds.v) + n) = *ids;
-        BRest2h(::bof3::Img(at::kUseCounts.v) + n) = *counts;
+        BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n) = *ids;
+        BRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n) = *counts;
         ++n;
     }
     if (n < 0x80) {
-        std::memset(AtRest2h(::bof3::Img(at::kUseCounts.v) + n), 0, 0x80u - n);
-        std::memset(AtRest2h(::bof3::Img(at::kUseIds.v) + n), 0, 0x80u - n);
+        std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseCounts.v) + n), 0, 0x80u - n);
+        std::memset(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + n), 0, 0x80u - n);
     }
-    w[0xD] = BRest2h(::bof3::Img(at::kUseIds.v) + w[0xB]);
+    w[0xD] = BRest2h(::bof3::Img(rest_2h::at::kUseIds.v) + w[0xB]);
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 3, 0x99, 0x82, 0, style);
     unsigned char offset = 0, moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(w + 0xA, &offset, &moving, w + 0x10);
     int text_y = S8Rest2h(offset) + YRest2h(w) + 0x1A;
-    const U row_ids = ::bof3::Img(at::kUseIds.v) + top;
-    const U row_counts = ::bof3::Img(at::kUseCounts.v) + top;
+    const U row_ids = ::bof3::Img(rest_2h::at::kUseIds.v) + top;
+    const U row_counts = ::bof3::Img(rest_2h::at::kUseCounts.v) + top;
     for (unsigned char r = 0; static_cast<int>(r) < static_cast<int>(moving) + 7; ++r, text_y += 0xD) {
         const unsigned char id = BRest2h(row_ids + r);
         if (id == 0) continue;
@@ -789,14 +789,14 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     SH_CALL(Menu_DrawBox)(XRest2h(w) + 3, YRest2h(w) + 0x7A, 0x99, 8, 0, Style());
     const unsigned title_cat = w[8];
     const int title_y = YRest2h(w) + 7;
-    const unsigned char* const title = AtRest2h(L(::bof3::Img(at::kUseTitles.v) + 4 * title_cat));
+    const unsigned char* const title = AtRest2h(L(::bof3::Img(rest_2h::at::kUseTitles.v) + 4 * title_cat));
     const unsigned char length = SH_CALL(Text_CharCount)(title);
     using DrawAt = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
     SH_WORD(DrawAt, ListTitle_SiteDraw())(6 * (0xD - static_cast<int>(length)) + XRest2h(w), title_y, 0, 0x10, title);
-    SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(n), 0x80u);
-    SH_CALL(Text_DrawFont8)(XRest2h(w) + 0x55, YRest2h(w) + 0x7A, 0, TextRest2h(::bof3::Img(at::kPrintBuf.v)));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kUsePiecesA.v));
-    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(at::kUsePiecesB.v));
+    SH_CALL(Crt_sprintf)(PrintBuf(), FormatRest2h(::bof3::Img(rest_2h::at::kFmtCount.v)), static_cast<unsigned>(n), 0x80u);
+    SH_CALL(Text_DrawFont8)(XRest2h(w) + 0x55, YRest2h(w) + 0x7A, 0, TextRest2h(::bof3::Img(rest_2h::at::kPrintBuf.v)));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesA.v));
+    Pieces(XRest2h(w), YRest2h(w), ::bof3::Img(rest_2h::at::kUsePiecesB.v));
     for (int i = 0; i < 10; ++i) Piece(8 * i + 0x28 + XRest2h(w), YRest2h(w), 1);
     for (int i = 0; i < 12; ++i) Piece(XRest2h(w), 8 * i + 0x18 + YRest2h(w), 4);
     Piece(XRest2h(w) + 0x90, YRest2h(w) + 0x18, 0x16);
@@ -809,7 +809,7 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     Piece(XRest2h(w) + 0x88, YRest2h(w) + 0x78, 0x1D);
     Piece(XRest2h(w) + 8, YRest2h(w), 0x32);
     Piece(XRest2h(w) + 0x90, YRest2h(w), 0x33);
-    SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(at::kUseIds.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 7, 0x80, 0x5C);
+    SH_CALL(Menu_DrawScrollBar)(AtRest2h(::bof3::Img(rest_2h::at::kUseIds.v)), w[0xA], XRest2h(w) + 0x90, YRest2h(w) + 0x18, 7, 0x80, 0x5C);
 }
 
 // original 0x59E160: two verb buttons (x, y, selected): the box (x, y, 0x2D,
@@ -824,12 +824,12 @@ extern "C" void __cdecl Menu_DrawVerbPair(int x, int y, unsigned selected) {
     SH_CALL(Menu_DrawBox)(x, y, 0x2D, 0x14, 0, style);
     const auto s = static_cast<unsigned char>(selected);
     SH_CALL(Text_DrawAt)(x + 0xA, y + 3, s == 0xFF || s == 0 ? 0 : 7, 0x10, TextRest2h(::bof3::Img(Menu_Verbs_addr)));
-    SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(at::kVerbPiecesOn.v) : ::bof3::Img(at::kVerbPiecesOff.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x, y, TextRest2h(s == 0 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
     const int x2 = x + 0x30;
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(x2, y, 0x2D, 0x14, 0, style2);
     SH_CALL(Text_DrawAt)(x2 + 0xA, y + 3, s == 0xFF || s == 1 ? 0 : 7, 0x10, TextRest2h(::bof3::Img(Menu_Verbs_addr) + 0x18));
-    SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(at::kVerbPiecesOn.v) : ::bof3::Img(at::kVerbPiecesOff.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x2, y, TextRest2h(s == 1 ? ::bof3::Img(rest_2h::at::kVerbPiecesOn.v) : ::bof3::Img(rest_2h::at::kVerbPiecesOff.v)), 1);
 }
 
 // ===========================================================================
@@ -859,10 +859,10 @@ extern "C" int __stdcall DInput_EnumJoystick(const void* instance, void* context
     if (created != 0) return 1;
     auto* const joy = static_cast<IUnknown*>(DInput_Joystick);
     void* joystick2 = DInput_Joystick2;
-    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &joystick2);
+    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(rest_2h::at::kJoystickIid)), &joystick2);
     DInput_Joystick2 = joystick2;
     const int differs = SH_CALL(Crt_stricmp)(
-        reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(AtRest2h(::bof3::Img(at::kProductName.v))));
+        reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(AtRest2h(::bof3::Img(rest_2h::at::kProductName.v))));
     if (differs == 0) DInput_JoystickFound = 1;
     return 0;
 }

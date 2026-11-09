@@ -62,14 +62,14 @@ void SetRun(unsigned v) { MoveScript_Var7 = static_cast<unsigned char>(v); }
 unsigned Timer() { return Word(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)); }
 void SetTimer(unsigned v) { SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), v); }
 void DecTimer() { SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), Word(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)) - 1u); }
-unsigned char& C0() { return Byte(::bof3::Img(at::kCounter0)); }
-unsigned char& C1() { return Byte(::bof3::Img(at::kCounter1)); }
-void ClearCounters() { SetLong(At(::bof3::Img(at::kCounters)), 0); }
+unsigned char& C0() { return Byte(::bof3::Img(scena_sc3::at::kCounter0)); }
+unsigned char& C1() { return Byte(::bof3::Img(scena_sc3::at::kCounter1)); }
+void ClearCounters() { SetLong(At(::bof3::Img(scena_sc3::at::kCounters)), 0); }
 void PassFlags(unsigned v) { Draw_PassFlags = static_cast<unsigned char>(v); }
 bool WaitDone() { return Transition_Busy == 0; }
 bool Requested() { return Field_Request == 2; }
-unsigned Message() { return Word(At(::bof3::Img(at::kMessage))); }
-void ScriptFlagsOr80() { Byte(::bof3::Img(at::kScriptFlags)) = static_cast<unsigned char>(Byte(::bof3::Img(at::kScriptFlags)) | 0x80); }
+unsigned Message() { return Word(At(::bof3::Img(scena_sc3::at::kMessage))); }
+void ScriptFlagsOr80() { Byte(::bof3::Img(scena_sc3::at::kScriptFlags)) = static_cast<unsigned char>(Byte(::bof3::Img(scena_sc3::at::kScriptFlags)) | 0x80); }
 void ScriptFlagsAnd(unsigned mask) { Field_ScriptFlags = Field_ScriptFlags & mask; }
 short S16(std::uint32_t a) { return static_cast<short>(Word(At(a))); }
 std::uint32_t Key(const void* p) { return Low32(p); }
@@ -108,9 +108,9 @@ void EventObjFace() { SH_AT(void (__cdecl*)(), scena_sc3::kEventObjFace.v)(); }
 // back as a dword's low byte, as the originals have it.
 unsigned char* TakeEffect(unsigned char kind) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    at::kSlot.b_00 = slot;
+    scena_sc3::at::kSlot.b_00 = slot;
     if (slot == 0xFF) return nullptr;
-    unsigned char* const e = At(::bof3::Img(Effect_Objects_addr) + ((static_cast<std::uint32_t>(at::kSlot.d_00) & 0xFF) << 7));
+    unsigned char* const e = At(::bof3::Img(Effect_Objects_addr) + ((static_cast<std::uint32_t>(scena_sc3::at::kSlot.d_00) & 0xFF) << 7));
     e[0] = 1;
     e[5] = kind;
     return e;
@@ -971,7 +971,7 @@ extern "C" void __cdecl Scena03_Scene7(void) {
         {
             unsigned char* const e = TakeEffect(0x13);
             if (e) {
-                const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(at::kPitch));
+                const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(scena_sc3::at::kPitch));
                 SetLong(e + 0x64, -0x32E);
                 SetLong(e + 0x68, y);
                 SetLong(e + 0x6C, z);
@@ -994,7 +994,7 @@ extern "C" void __cdecl Scena03_Scene7(void) {
         {
             unsigned char* const e = TakeEffect(0x13);
             if (e) {
-                const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(at::kPitch));
+                const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(scena_sc3::at::kPitch));
                 SetLong(e + 0x64, -0x2AA);
                 SetLong(e + 0x68, y);
                 SetLong(e + 0x6C, z);
@@ -1247,12 +1247,12 @@ extern "C" void __cdecl Scena03_Scene8(void) {
 extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     const unsigned char index = SpriteFindFree();
     if (index == 0xFF) return 0;
-    unsigned char* const rec = At(::bof3::Img(Sprite_Objects_addr) + index * at::kSpriteStride);
+    unsigned char* const rec = At(::bof3::Img(Sprite_Objects_addr) + index * scena_sc3::at::kSpriteStride);
     SetLong(At(::bof3::Img(Sprite_Current_addr)), static_cast<std::int32_t>(Key(rec)));
     SetLong(At(::bof3::Img(Field_ActiveMember_addr)), static_cast<std::int32_t>(Key(rec)));
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(0x67);
-    const std::uint32_t m = static_cast<unsigned char>(*reinterpret_cast<const volatile unsigned char*>(&member)) * at::kMemberStride;
+    const std::uint32_t m = static_cast<unsigned char>(*reinterpret_cast<const volatile unsigned char*>(&member)) * scena_sc3::at::kMemberStride;
     auto cur = [] { return Sprite_Current; };
     cur()[0] = 1;
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur())->x, Long(At(::bof3::Img(ObjTrio_addr) + m + 0x34)) + 0x8000);
@@ -1597,11 +1597,11 @@ extern "C" void __cdecl Scena04_EnterArea(void) {
         ClearCounters();
         SH_CALL(Kind2_Place)(0);
         for (unsigned i = 0; i < 3; ++i) {
-            unsigned char& b = Byte(::bof3::Img(at::kMembers) + i * at::kMemberStride + 0x24);
+            unsigned char& b = Byte(::bof3::Img(scena_sc3::at::kMembers) + i * scena_sc3::at::kMemberStride + 0x24);
             b = static_cast<unsigned char>(b & 0xDF);
         }
         if (unsigned char* const e = TakeEffect(0x13)) {
-            const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(at::kPitch));
+            const std::int32_t y = Camera_Angles[1], z = S16(::bof3::Img(scena_sc3::at::kPitch));
             SetLong(e + 0x64, -0xC6);
             SetLong(e + 0x68, y);
             SetLong(e + 0x6C, z);
@@ -1673,7 +1673,7 @@ extern "C" void __cdecl Scena04_Scene1(void) {
         if (Timer() != 0) {
             const unsigned t = MoveScript_PartyRecords[0x66];
             MapView_Redraw = 2;
-            const std::int32_t d = static_cast<signed char>(Byte(::bof3::Img(at::kQuake4) + (t & 3)));
+            const std::int32_t d = static_cast<signed char>(Byte(::bof3::Img(scena_sc3::at::kQuake4) + (t & 3)));
             const std::int32_t elevation = MapView_Elevation;
             DecTimer();
             MapView_Elevation = elevation + (d << 6);
@@ -1853,7 +1853,7 @@ extern "C" void __cdecl Scena04_Scene1(void) {
         ModeStates_ShopObject = 0xFE;
         BattleE1_Mode = 0;
         ScenaSc1_ShopByteB = 0;
-        Byte(::bof3::Img(at::kMemberCount2)) = 1;
+        Byte(::bof3::Img(scena_sc3::at::kMemberCount2)) = 1;
         Game_Mode = 7;
         SetStep(0x1D);
         return;
@@ -1886,7 +1886,7 @@ void Effect13Cam(std::int32_t a, bool yaw, std::int32_t c, bool pitch, unsigned 
     if (!e) return;
     const std::int32_t first = yaw ? Camera_Angles[0] : a;
     const std::int32_t y = Camera_Angles[1];
-    const std::int32_t third = pitch ? S16(::bof3::Img(at::kPitch)) : c;
+    const std::int32_t third = pitch ? S16(::bof3::Img(scena_sc3::at::kPitch)) : c;
     SetLong(e + 0x64, first);
     SetLong(e + 0x68, y);
     SetLong(e + 0x6C, third);
@@ -2134,7 +2134,7 @@ extern "C" void __cdecl Scena04_Tremor(void) {
     const unsigned i = (Frame_Counter >> 1) & 3;
     const std::int32_t elevation = MapView_Elevation;
     MapView_Redraw = 2;
-    const std::int32_t d = static_cast<signed char>(Byte(::bof3::Img(at::kTremor4) + i));
+    const std::int32_t d = static_cast<signed char>(Byte(::bof3::Img(scena_sc3::at::kTremor4) + i));
     MapView_Elevation = elevation + d * 4;
 }
 
@@ -2162,7 +2162,7 @@ namespace {
 // The leader's +8 into the byte 0x903850; true unless it is 4, 5 or 6.
 bool LeaderFree() {
     const unsigned char k = ObjTrio[0].direction;
-    at::kSlot.b_00 = k;
+    scena_sc3::at::kSlot.b_00 = k;
     return k != 6 && k != 5 && k != 4;
 }
 }  // namespace
@@ -2207,7 +2207,7 @@ extern "C" unsigned char __cdecl Scena04_StepArea28(int x, int z) {
 // byte), the script flags' high byte | 1, the request 2; 1.
 extern "C" unsigned char __cdecl Scena04_Message(unsigned char id) {
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(*reinterpret_cast<const volatile unsigned char*>(&id)));
-    Byte(::bof3::Img(at::kScriptFlagsHi)) = static_cast<unsigned char>(Byte(::bof3::Img(at::kScriptFlagsHi)) | 1);
+    Byte(::bof3::Img(scena_sc3::at::kScriptFlagsHi)) = static_cast<unsigned char>(Byte(::bof3::Img(scena_sc3::at::kScriptFlagsHi)) | 1);
     Field_Request = 2;
     return 1;
 }

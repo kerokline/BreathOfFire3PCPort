@@ -72,26 +72,26 @@ U RecordChecked(U base, U stride, unsigned count, unsigned index, const char* ar
     return base + index * stride;
 }
 U Window(unsigned index, const char* who) {
-    return RecordChecked(::bof3::Img(WindowRecords_addr), at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
+    return RecordChecked(::bof3::Img(WindowRecords_addr), rest_2d::at::kWindowStride, rest_2d::at::kWindowCount, index, "WindowRecords", who);
 }
 
 // --- callees by address (R2C's and R2E's, ours; named in rest_2d_callees.h) ----------------
 void MemberPanel(U x, U y, U member, U row) {
-    SH_AT(void (__cdecl*)(U, U, U, U), at::kMemberPanel.v)(x, y, member, row);
+    SH_AT(void (__cdecl*)(U, U, U, U), rest_2d::at::kMemberPanel.v)(x, y, member, row);
 }
-void MemberLabel(U x, U y, U member) { SH_AT(void (__cdecl*)(U, U, U), at::kMemberLabel.v)(x, y, member); }
-void PromptBox(U x, U y, U w, U h, U style) { SH_AT(void (__cdecl*)(U, U, U, U, U), at::kPromptBox.v)(x, y, w, h, style); }
+void MemberLabel(U x, U y, U member) { SH_AT(void (__cdecl*)(U, U, U), rest_2d::at::kMemberLabel.v)(x, y, member); }
+void PromptBox(U x, U y, U w, U h, U style) { SH_AT(void (__cdecl*)(U, U, U, U, U), rest_2d::at::kPromptBox.v)(x, y, w, h, style); }
 
 // The master's message: word [0x6644E8 + 2 * master] + k (the master byte
 // unbounded: the table is read in place).
 unsigned short MasterMessageRest2d(unsigned k) {
-    return static_cast<unsigned short>(Word(move_script::At(::bof3::Img(at::kMasterMessages.v) + 2u * AreaW0c_TailSub)) + k);
+    return static_cast<unsigned short>(Word(move_script::At(::bof3::Img(rest_2d::at::kMasterMessages.v) + 2u * AreaW0c_TailSub)) + k);
 }
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
-unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * at::kObjStride]; }
+unsigned char MemberAt(unsigned slot) { return (rv::Bytes(ObjTrio) + 0x148)[slot * rest_2d::at::kObjStride]; }
 // The member under the cursor: a CharacterRecords index.
 unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
-U RecordOf(unsigned member) { return ::bof3::Img(CharacterRecords_addr) + member * at::kRecordStride; }
+U RecordOf(unsigned member) { return ::bof3::Img(CharacterRecords_addr) + member * rest_2d::at::kRecordStride; }
 
 // The name (the record's first nine bytes) into Text_Records' first slot.
 void NameToText(U record) {
@@ -117,8 +117,8 @@ void DrawMasterScreen(U message, unsigned blink, const unsigned char* (*line)(U)
 }
 
 const unsigned char* MessageText(U message) {
-    const unsigned word = Word(move_script::At(::bof3::Img(at::kMessagePools.v) + 2 * (message & 0xFFFF)));
-    return move_script::At(::bof3::Img(at::kMessagePools.v) + word);
+    const unsigned word = Word(move_script::At(::bof3::Img(rest_2d::at::kMessagePools.v) + 2 * (message & 0xFFFF)));
+    return move_script::At(::bof3::Img(rest_2d::at::kMessagePools.v) + word);
 }
 
 const unsigned char* PickLine(U message) { return SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, MessageText(message)); }
@@ -297,9 +297,9 @@ extern "C" void __cdecl MasterScreen_NameToText(unsigned member) { NameToText(Re
 // tail's step on.
 extern "C" void __cdecl MasterScreen_State6Leave(void) {
     if (Field_Request == 2) return;
-    const unsigned char pose = BRest2d(::bof3::Img(at::kMasterLeavePose.v) + AreaW0c_TailSub);
+    const unsigned char pose = BRest2d(::bof3::Img(rest_2d::at::kMasterLeavePose.v) + AreaW0c_TailSub);
     if (pose != 0xFF) {
-        const U sprite = RecordChecked(::bof3::Img(Sprite_Objects_addr), 0xA4, 30, BRest2d(::bof3::Img(at::kScriptObject.v)), "Sprite_Objects",
+        const U sprite = RecordChecked(::bof3::Img(Sprite_Objects_addr), 0xA4, 30, BRest2d(::bof3::Img(rest_2d::at::kScriptObject.v)), "Sprite_Objects",
                                        "MasterScreen_State6Leave");
         BRest2d(sprite + 1) = pose;
     }
@@ -325,7 +325,7 @@ extern "C" void __cdecl MasterJoin_Step5Apply(void) {
         AreaW3f_AnswerMarkD1 = 0;
         return;
     }
-    const U record = RecordChecked(::bof3::Img(CharacterRecords_addr), at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(::bof3::Img(CharacterRecords_addr), rest_2d::at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterJoin_Step5Apply");
     unsigned char* const r = move_script::At(record);
     unsigned char* const text = move_script::At(::bof3::Img(bof3::addr::Text_Records));
@@ -334,7 +334,7 @@ extern "C" void __cdecl MasterJoin_Step5Apply(void) {
     r[0x1F] = AreaW0c_TailSub;
     text[8] = name8;
     r[0x88] = r[0xA];
-    for (unsigned k = 0; k < 6; ++k) r[0x89 + k] = BRest2d(::bof3::Img(at::kMasterStats.v) + 6u * AreaW0c_TailSub + k);
+    for (unsigned k = 0; k < 6; ++k) r[0x89 + k] = BRest2d(::bof3::Img(rest_2d::at::kMasterStats.v) + 6u * AreaW0c_TailSub + k);
     SH_CALL(Msg_OpenScript)(MasterMessageRest2d(0xA));
     const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
@@ -358,7 +358,7 @@ extern "C" void __cdecl MasterJoin_Step7AllCheck(void) {
         AreaW3f_AnswerMarkD1 = 0;
         return;
     }
-    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(move_script::At(::bof3::Img(at::kMasterMessages.v) + 2u * master)) + 7));
+    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(move_script::At(::bof3::Img(rest_2d::at::kMasterMessages.v) + 2u * master)) + 7));
     const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
     AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
@@ -372,7 +372,7 @@ extern "C" void __cdecl MasterJoin_Step8Close(void) { TellAndLeave(); }
 
 // original 0x587120 (0xE bytes), 0x66450C[4]: jmp [MasterQuit_Steps + 4 * the
 // step], unchecked.
-extern "C" void __cdecl MasterQuit_ByStep(void) { Jump(::bof3::Img(MasterQuit_Steps_addr), at::kQuitStepCount, AreaW3f_AnswerMarkD1, "MasterQuit_ByStep"); }
+extern "C" void __cdecl MasterQuit_ByStep(void) { Jump(::bof3::Img(MasterQuit_Steps_addr), rest_2d::at::kQuitStepCount, AreaW3f_AnswerMarkD1, "MasterQuit_ByStep"); }
 
 // original 0x587130 (0x1F bytes), step 2: the pick of an apprentice, message 0x10.
 extern "C" void __cdecl MasterQuit_Step2Pick(void) { SH_CALL(MasterScreen_PickMember)(MasterMessageRest2d(0x10), 1); }
@@ -391,7 +391,7 @@ extern "C" void __cdecl MasterQuit_Step5Apply(void) {
         AreaW0c_AnswerMark = 6;
         return;
     }
-    const U record = RecordChecked(::bof3::Img(CharacterRecords_addr), at::kRecordStride, 8, CursorMember(), "CharacterRecords",
+    const U record = RecordChecked(::bof3::Img(CharacterRecords_addr), rest_2d::at::kRecordStride, 8, CursorMember(), "CharacterRecords",
                                    "MasterQuit_Step5Apply");
     unsigned char* const r = move_script::At(record);
     unsigned char* const text = move_script::At(::bof3::Img(bof3::addr::Text_Records));
@@ -422,7 +422,7 @@ extern "C" void __cdecl MasterQuit_Step7NoneLeftCheck(void) {
         AreaW3f_AnswerMarkD1 = 0;
         return;
     }
-    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(move_script::At(::bof3::Img(at::kMasterMessages.v) + 2u * master)) + 9));
+    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(move_script::At(::bof3::Img(rest_2d::at::kMasterMessages.v) + 2u * master)) + 9));
     const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
     AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
@@ -436,7 +436,7 @@ extern "C" void __cdecl MasterQuit_Step8Close(void) { TellAndLeave(); }
 
 // original 0x587370 (0xE bytes), 0x66450C[5]: jmp [MasterGrant_Steps + 4 * the
 // step], unchecked.
-extern "C" void __cdecl MasterGrant_ByStep(void) { Jump(::bof3::Img(MasterGrant_Steps_addr), at::kGrantStepCount, AreaW3f_AnswerMarkD1, "MasterGrant_ByStep"); }
+extern "C" void __cdecl MasterGrant_ByStep(void) { Jump(::bof3::Img(MasterGrant_Steps_addr), rest_2d::at::kGrantStepCount, AreaW3f_AnswerMarkD1, "MasterGrant_ByStep"); }
 
 // original 0x587380 (0x37 bytes), step 0: message 5, the step on, the cursor 0.
 extern "C" void __cdecl MasterGrant_Step0Open(void) {
@@ -486,15 +486,15 @@ extern "C" void __cdecl MasterGrant_Step1Member(void) {
             }
         } else {
             for (unsigned i = 0; i < 6; ++i) {
-                const U pair = ::bof3::Img(at::kMasterSkills.v) + 2 * (6u * AreaW0c_TailSub + i);
+                const U pair = ::bof3::Img(rest_2d::at::kMasterSkills.v) + 2 * (6u * AreaW0c_TailSub + i);
                 if (BRest2d(pair) > gained) continue;
                 const unsigned char ability = BRest2d(pair + 1);
                 const U bit = 1u << (ability & 0x1F);
                 if (static_cast<U>(Long(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xf8 + 4u * (ability >> 5)))) & bit) continue;
                 if (SH_CALL(AbilityList_Add)(ability, CursorMember(), 0, 0) == 0) continue;
                 SH_CALL(MasterScreen_NameToText)(CursorMember());
-                const unsigned char taught = BRest2d(::bof3::Img(at::kMasterSkills.v) + 2 * (6u * AreaW0c_TailSub + i) + 1);
-                const U from = ::bof3::Img(at::kAbilityRecords.v) + 0x18u * taught;
+                const unsigned char taught = BRest2d(::bof3::Img(rest_2d::at::kMasterSkills.v) + 2 * (6u * AreaW0c_TailSub + i) + 1);
+                const U from = ::bof3::Img(rest_2d::at::kAbilityRecords.v) + 0x18u * taught;
                 unsigned char* const text = move_script::At(::bof3::Img(bof3::addr::Text_Records) + 0x20);
                 std::memcpy(text, move_script::At(from), 16);
                 unsigned char* const word = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xf8 + 4u * (taught >> 5));
@@ -530,11 +530,11 @@ extern "C" void __cdecl MasterGrant_Step2Next(void) {
 // entry + 2, the state, step and 0x929F03 0, the timer 5.
 extern "C" void __cdecl FieldMenu_TopBarCountdown(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(at::kMenuTimer.v)) - 1);
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = t;
+    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) - 1);
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = t;
     if (t != 0) return;
     const auto mode = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 2);
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 5;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 5;
     BattleE1_Mode = mode;
     FieldS_State = 0;
     FieldS_Step = 0;
@@ -630,7 +630,7 @@ extern "C" unsigned __cdecl FieldAbility_HealFullClearA0(unsigned, unsigned targ
 extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned target, unsigned ability, unsigned battle) {
     const unsigned c = caster & 0xFF;
     const bool working = (battle & 0xFF) != 0;
-    const U record = working ? ::bof3::Img(at::kWorking.v) + c * at::kObjStride : RecordOf(c);
+    const U record = working ? ::bof3::Img(rest_2d::at::kWorking.v) + c * rest_2d::at::kObjStride : RecordOf(c);
     const unsigned char cost = SH_CALL(Skill_ApCost)(caster, ability, 0);
     if (Word(move_script::At(record + 0x1A)) < cost) return 0;
     const auto b = static_cast<unsigned char>(ability);
@@ -645,8 +645,8 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
     const auto answer = static_cast<unsigned char>(handler(caster, target, battle));
     if (answer == 1 || answer == 5) {
         const unsigned char again = SH_CALL(Skill_ApCost)(caster, ability, 0);
-        const U checked = working ? RecordChecked(::bof3::Img(at::kWorking.v), at::kObjStride, 3, c, "the working records", "FieldAbility_Use")
-                                  : RecordChecked(::bof3::Img(CharacterRecords_addr), at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
+        const U checked = working ? RecordChecked(::bof3::Img(rest_2d::at::kWorking.v), rest_2d::at::kObjStride, 3, c, "the working records", "FieldAbility_Use")
+                                  : RecordChecked(::bof3::Img(CharacterRecords_addr), rest_2d::at::kRecordStride, 8, c, "CharacterRecords", "FieldAbility_Use");
         SetWord(move_script::At(checked + 0x1A), Word(move_script::At(checked + 0x1A)) - again);
     }
     return answer;
@@ -664,7 +664,7 @@ const unsigned char* StatusRecord() {
 // original 0x58A4C0 (0xE bytes), FieldMenu_States[6]: jmp [FieldMenuStatus_States
 // + 4 * the menu state], unchecked.
 extern "C" void __cdecl FieldMenuStatus_ByState(void) {
-    Jump(::bof3::Img(FieldMenuStatus_States_addr), at::kStatusStateCount, FieldS_State, "FieldMenuStatus_ByState");
+    Jump(::bof3::Img(FieldMenuStatus_States_addr), rest_2d::at::kStatusStateCount, FieldS_State, "FieldMenuStatus_ByState");
 }
 
 // original 0x58A4D0 (0x3A bytes), state 0: Menu_DrawBackdrop, the windows placed;
@@ -674,7 +674,7 @@ extern "C" void __cdecl FieldMenuStatus_Open(void) {
     SH_CALL(FieldMenuStatus_PlaceWindows)();
     const auto state = static_cast<unsigned char>(FieldS_State + 1);
     BattleActorCopies_ItemActor = 0;
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 8;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 8;
     FieldS_State = state;
     SH_CALL(Sound_PlayEffect)(0x102);
 }
@@ -687,8 +687,8 @@ extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
     const unsigned char kind = Config_Background;
     SetWord(move_script::At(::bof3::Img(0x8032FC)), 0x12);
     SH_CALL(Menu_DrawBackdrop)(kind);
-    const unsigned char t = BRest2d(::bof3::Img(at::kMenuTimer.v));
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = static_cast<unsigned char>(t - 1);
+    const unsigned char t = BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v));
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = static_cast<unsigned char>(t - 1);
     if (t == 0) FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
@@ -705,7 +705,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const auto c = BattleActorCopies_ItemActor;
     WindowRecords[19].in_use = 1;
-    const U member_window = ::bof3::Img(WindowRecords_addr) + at::kWindowStride * static_cast<U>(4 + c);
+    const U member_window = ::bof3::Img(WindowRecords_addr) + rest_2d::at::kWindowStride * static_cast<U>(4 + c);
     SetWord(move_script::At(::bof3::Img(0x803410)), rv::As<records::WindowRecord>(move_script::At(member_window))->x);
     WindowRecords[19].y = rv::As<records::WindowRecord>(move_script::At(member_window))->y;
     SH_CALL(TextRecord_Set)(0, 8, move_script::At(RecordOf(Character_IndexById[Cond_Flags[0xd2 + c]])));
@@ -737,7 +737,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         SH_CALL(FieldMenuStatus_DetailWindows)();
         const unsigned char state = FieldS_State;
         WindowRecords[19].in_use = 0;
-        BRest2d(::bof3::Img(at::kMenuTimer.v)) = 8;
+        BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 8;
         FieldS_State = static_cast<unsigned char>(state + 1);
     }
     if (Field_CancelButtons & Input_Pressed) {
@@ -753,7 +753,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         const unsigned char state = FieldS_State;
         BRest2d(::bof3::Img(0x8032EF)) = 1;
         WindowRecords[19].in_use = 0;
-        BRest2d(::bof3::Img(at::kMenuTimer.v)) = 8;
+        BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 8;
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
 }
@@ -764,10 +764,10 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
 extern "C" void __cdecl FieldMenuStatus_Detail(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_CALL(TextRecord_Set)(0, 8, StatusRecord());
-    const unsigned char t = BRest2d(::bof3::Img(at::kMenuTimer.v));
+    const unsigned char t = BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v));
     SetWord(move_script::At(::bof3::Img(0x8032FC)), 0x12);
     if (t != 0) {
-        BRest2d(::bof3::Img(at::kMenuTimer.v)) = static_cast<unsigned char>(BRest2d(::bof3::Img(at::kMenuTimer.v)) - 1);
+        BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = static_cast<unsigned char>(BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) - 1);
         return;
     }
     if ((Input_Pressed & Field_CancelButtons) == 0) return;
@@ -775,7 +775,7 @@ extern "C" void __cdecl FieldMenuStatus_Detail(void) {
     SH_CALL(Sound_PlayEffect)(0x102);
     SH_CALL(FieldMenuStatus_ListWindows)();
     const unsigned char state = FieldS_State;
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 8;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 8;
     FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
@@ -784,8 +784,8 @@ extern "C" void __cdecl FieldMenuStatus_Detail(void) {
 // timer 0, windows 7..10 state 2, back to the top bar (mode 1, state 0).
 extern "C" void __cdecl FieldMenuStatus_Close(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(at::kMenuTimer.v)) - 1);
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = t;
+    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) - 1);
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = t;
     if (t != 0) return;
     SH_CALL(FieldMenuStatus_ClearWindows)();
     int i = 0;
@@ -795,7 +795,7 @@ extern "C" void __cdecl FieldMenuStatus_Close(void) {
             ++i;
         } while (i < static_cast<int>(static_cast<unsigned char>(SH_CALL(Party_Count)(0))));
     }
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 0;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 0;
     BRest2d(::bof3::Img(0x80325F)) = 2;
     BRest2d(::bof3::Img(0x803283)) = 2;
     BRest2d(::bof3::Img(0x8032A7)) = 2;
@@ -816,7 +816,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
         rv::As<records::WindowRecord>(move_script::At(w))->state = 2;
         rv::As<records::WindowRecord>(move_script::At(w))->in_use = 1;
         SetWord(move_script::At(w + 4), 0x140);
-        const unsigned short y = Word(move_script::At(::bof3::Img(WindowRecords_addr) + at::kWindowStride * (4u + i) + 6));
+        const unsigned short y = Word(move_script::At(::bof3::Img(WindowRecords_addr) + rest_2d::at::kWindowStride * (4u + i) + 6));
         BRest2d(w + 0xA) = i;
         ++i;
         SetWord(move_script::At(w + 6), y);
@@ -904,7 +904,7 @@ extern "C" void __cdecl FieldMenuStatus_ClearWindows(void) {
 // original 0x58AAE0 (0xE bytes), FieldMenu_States[2]: jmp [FieldMenuItems_States
 // + 4 * the menu state], unchecked.
 extern "C" void __cdecl FieldMenuItems_ByState(void) {
-    Jump(::bof3::Img(FieldMenuItems_States_addr), at::kItemsStateCount, FieldS_State, "FieldMenuItems_ByState");
+    Jump(::bof3::Img(FieldMenuItems_States_addr), rest_2d::at::kItemsStateCount, FieldS_State, "FieldMenuItems_ByState");
 }
 
 // original 0x58AAF0 (0x38 bytes), state 0: Menu_DrawBackdrop, the windows placed
@@ -912,11 +912,11 @@ extern "C" void __cdecl FieldMenuItems_ByState(void) {
 // the timer 5.
 extern "C" void __cdecl FieldMenuItems_Open(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    SH_AT(void (__cdecl*)(), at::kItemsWindows.v)();
+    SH_AT(void (__cdecl*)(), rest_2d::at::kItemsWindows.v)();
     SH_CALL(Sound_PlayEffect)(0x102);
     const unsigned char state = FieldS_State;
     Rest2d_ItemsCategory = 0;
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 5;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 5;
     FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
@@ -924,11 +924,11 @@ extern "C" void __cdecl FieldMenuItems_Open(void) {
 // 0 the timer 0 and the state on.
 extern "C" void __cdecl FieldMenuItems_SlideIn(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(at::kMenuTimer.v)) - 1);
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = t;
+    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) - 1);
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = t;
     if (t != 0) return;
     const unsigned char state = FieldS_State;
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 0;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 0;
     FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
@@ -1000,10 +1000,10 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
         }
         const unsigned char list = BRest2d(::bof3::Img(0x80333E));
         BRest2d(::bof3::Img(0x803341)) = 0xFF;
-        const unsigned char top = BRest2d(::bof3::Img(at::kItemsTops.v) + list);
+        const unsigned char top = BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + list);
         const unsigned char state = FieldS_State;
         BRest2d(::bof3::Img(0x80333F)) = top;
-        const unsigned char pick = BRest2d(::bof3::Img(at::kItemsPicks.v) + list);
+        const unsigned char pick = BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + list);
         FieldS_State = static_cast<unsigned char>(state + 1);
         BRest2d(::bof3::Img(0x803340)) = pick;
         return;
@@ -1011,13 +1011,13 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
     if (Field_CancelButtons & Input_Pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
         SH_CALL(Sound_PlayEffect)(0x102);
-        const unsigned char t = BRest2d(::bof3::Img(at::kMenuTimer.v));
+        const unsigned char t = BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v));
         const unsigned char state = FieldS_State;
         BRest2d(::bof3::Img(0x8032EF)) = 1;
         BRest2d(::bof3::Img(0x803313)) = 1;
         BRest2d(::bof3::Img(0x803337)) = 1;
         WindowRecords[21].in_use = 0;
-        BRest2d(::bof3::Img(at::kMenuTimer.v)) = static_cast<unsigned char>(t + 5);
+        BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = static_cast<unsigned char>(t + 5);
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
 }
@@ -1055,7 +1055,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const unsigned char cursor_row = static_cast<unsigned char>(Rest2d_ItemsCategory);
     const unsigned char category = BRest2d(::bof3::Img(0x80333E));
-    const U ids = ListOf(::bof3::Img(at::kItemIdLists.v), category, "FieldMenuItems_List");
+    const U ids = ListOf(::bof3::Img(rest_2d::at::kItemIdLists.v), category, "FieldMenuItems_List");
     BRest2d(::bof3::Img(0x80333C)) = cursor_row != 0 ? 3 : 1;
     const unsigned char item = BRest2d(ids + BRest2d(::bof3::Img(0x803340)));
     const U help = SH_CALL(Item_HelpMessage)(category, item);
@@ -1075,14 +1075,14 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         auto next = static_cast<unsigned char>(old - 1);
         SetWord(move_script::At(::bof3::Img(0x803344)), 0x32);
         BRest2d(::bof3::Img(0x80333E)) = next;
-        BRest2d(::bof3::Img(at::kItemsPicks.v) + old) = pick;
-        BRest2d(::bof3::Img(at::kItemsTops.v) + old) = BRest2d(::bof3::Img(0x80333F));
+        BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + old) = pick;
+        BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + old) = BRest2d(::bof3::Img(0x80333F));
         if (static_cast<signed char>(next) < 0) {
             next = 3;
             BRest2d(::bof3::Img(0x80333E)) = 3;
         }
-        BRest2d(::bof3::Img(0x803340)) = BRest2d(::bof3::Img(at::kItemsPicks.v) + next);
-        BRest2d(::bof3::Img(0x80333F)) = BRest2d(::bof3::Img(at::kItemsTops.v) + next);
+        BRest2d(::bof3::Img(0x803340)) = BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + next);
+        BRest2d(::bof3::Img(0x80333F)) = BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + next);
         return;
     }
     if (held & 0x2000) {
@@ -1092,14 +1092,14 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         const unsigned char pick = BRest2d(::bof3::Img(0x803340));
         auto next = static_cast<unsigned char>(old + 1);
         BRest2d(::bof3::Img(0x80333E)) = next;
-        BRest2d(::bof3::Img(at::kItemsPicks.v) + old) = pick;
-        BRest2d(::bof3::Img(at::kItemsTops.v) + old) = BRest2d(::bof3::Img(0x80333F));
+        BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + old) = pick;
+        BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + old) = BRest2d(::bof3::Img(0x80333F));
         if (next > 3) {
             next = 0;
             BRest2d(::bof3::Img(0x80333E)) = 0;
         }
-        BRest2d(::bof3::Img(0x803340)) = BRest2d(::bof3::Img(at::kItemsPicks.v) + next);
-        BRest2d(::bof3::Img(0x80333F)) = BRest2d(::bof3::Img(at::kItemsTops.v) + next);
+        BRest2d(::bof3::Img(0x803340)) = BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + next);
+        BRest2d(::bof3::Img(0x80333F)) = BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + next);
         return;
     }
     unsigned char pick = BRest2d(::bof3::Img(0x803340));
@@ -1155,13 +1155,13 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         }
     }
     const unsigned char list = BRest2d(::bof3::Img(0x80333E));
-    BRest2d(::bof3::Img(at::kItemsTops.v) + list) = first;
-    BRest2d(::bof3::Img(at::kItemsPicks.v) + list) = pick;
+    BRest2d(::bof3::Img(rest_2d::at::kItemsTops.v) + list) = first;
+    BRest2d(::bof3::Img(rest_2d::at::kItemsPicks.v) + list) = pick;
     if (was != pick) SH_CALL(Sound_PlayEffect)(0x100);
     const unsigned slot = BRest2d(::bof3::Img(0x803340));
     const unsigned char now = BRest2d(::bof3::Img(0x80333E));
-    const U id_at = ListOf(::bof3::Img(at::kItemIdLists.v), now, "FieldMenuItems_List") + slot;
-    const U count_list = ListOf(::bof3::Img(at::kItemCountLists.v), now, "FieldMenuItems_List");
+    const U id_at = ListOf(::bof3::Img(rest_2d::at::kItemIdLists.v), now, "FieldMenuItems_List") + slot;
+    const U count_list = ListOf(::bof3::Img(rest_2d::at::kItemCountLists.v), now, "FieldMenuItems_List");
     if (Word(move_script::At(::bof3::Img(0x803346))) != 0) return;
     if (Field_ConfirmButtons & Input_Pressed) {
         if (BRest2d(id_at) == 0) {
@@ -1171,7 +1171,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         SH_CALL(Sound_PlayEffect)(0x103);
         if (static_cast<unsigned char>(Rest2d_ItemsCategory) != 0) {
             const unsigned char cat = BRest2d(::bof3::Img(0x80333E));
-            const unsigned char it = BRest2d(ListOf(::bof3::Img(at::kItemIdLists.v), cat, "FieldMenuItems_List") + BRest2d(::bof3::Img(0x803340)));
+            const unsigned char it = BRest2d(ListOf(::bof3::Img(rest_2d::at::kItemIdLists.v), cat, "FieldMenuItems_List") + BRest2d(::bof3::Img(0x803340)));
             if (SH_CALL(Item_CanUse)(BRest2d(::bof3::Img(0x80333C)), 0, cat, it) == 0) {
                 SH_CALL(Sound_PlayEffect)(0x107);
                 return;
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             return;
         }
         const unsigned char it = BRest2d(id_at);
-        if ((BRest2d(::bof3::Img(at::kItemFlags.v) + 22u * it) & 0x10) == 0) {
+        if ((BRest2d(::bof3::Img(rest_2d::at::kItemFlags.v) + 22u * it) & 0x10) == 0) {
             const unsigned char state = FieldS_State;
             const unsigned char p = BRest2d(::bof3::Img(0x803340));
             BattleActorCopies_ItemActor = 0;
@@ -1223,16 +1223,16 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
 // member, the timer 0, windows 7..10 state 2, back to the top bar.
 extern "C" void __cdecl FieldMenuItems_Close(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(at::kMenuTimer.v)) - 1);
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = t;
+    const auto t = static_cast<unsigned char>(BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) - 1);
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = t;
     if (t != 0) return;
-    SH_AT(void (__cdecl*)(), at::kItemsReset.v)();
+    SH_AT(void (__cdecl*)(), rest_2d::at::kItemsReset.v)();
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
         const unsigned char k = i;
         ++i;
         BRest2d(Window(4 + k, "FieldMenuItems_Close") + 3) = 3;
     }
-    BRest2d(::bof3::Img(at::kMenuTimer.v)) = 0;
+    BRest2d(::bof3::Img(rest_2d::at::kMenuTimer.v)) = 0;
     BRest2d(::bof3::Img(0x80325F)) = 2;
     BRest2d(::bof3::Img(0x803283)) = 2;
     BRest2d(::bof3::Img(0x8032A7)) = 2;
@@ -1244,7 +1244,7 @@ extern "C" void __cdecl FieldMenuItems_Close(void) {
 // original 0x58B1C0 (0xE bytes), FieldMenuItems_States[5]: jmp
 // [FieldMenuItems_State5Steps + 4 * the menu step], unchecked.
 extern "C" void __cdecl FieldMenuItems_State5ByStep(void) {
-    Jump(::bof3::Img(FieldMenuItems_State5Steps_addr), at::kItemsState5StepCount, FieldS_Step, "FieldMenuItems_State5ByStep");
+    Jump(::bof3::Img(FieldMenuItems_State5Steps_addr), rest_2d::at::kItemsState5StepCount, FieldS_Step, "FieldMenuItems_State5ByStep");
 }
 
 // ============================================================================================

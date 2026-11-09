@@ -1075,7 +1075,7 @@ extern "C" void __cdecl Field_ObjectTrigger(unsigned char* object) {
     if (object[0x89] & 0x40) {
         SH_CALL(Field_ObjectTriggerByKind)(object);
     } else {
-        const U hooks = LFieldE2(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
+        const U hooks = LFieldE2(::bof3::Img(field_e2::at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
         const U entry = CodeAtFieldE2(hooks, 1, "Field_ObjectTrigger");
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
     }
@@ -1090,7 +1090,7 @@ extern "C" void __cdecl Field_ObjectTrigger(unsigned char* object) {
 // hypothesis).
 extern "C" int __cdecl Scenario_CellHook(unsigned x, unsigned z) {
     unsigned char* const kept = Sprite_Current;
-    const U hooks = LFieldE2(::bof3::Img(at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
+    const U hooks = LFieldE2(::bof3::Img(field_e2::at::kScenarioHooks) + 4u * static_cast<U>(static_cast<std::int32_t>(Cond_ByteFA)));
     const U hook = LFieldE2(hooks + 0x10);
     if (hook != 0) {
         const U entry = CodeAtFieldE2(hooks, 4, "Scenario_CellHook");
@@ -1132,18 +1132,18 @@ void TailStep(unsigned char state) { AreaW0c_TailState = state; }
 extern "C" void __cdecl FieldTail_LoadBank(void) {
     switch (TailState()) {
     case 0:
-        BFieldE2(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(at::kScriptFlags2)) | 7);
+        BFieldE2(::bof3::Img(field_e2::at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(field_e2::at::kScriptFlags2)) | 7);
         SH_CALL(LoadDatFile)(0x31C);
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     case 1:
         if (SH_CALL(File_LoadDone)() == 0) return;
         SH_CALL(Gfx_ClutStripCopyRow)(2);
-        SH_AT(void (__cdecl*)(), at::kLoadWait.v)();
+        SH_AT(void (__cdecl*)(), field_e2::at::kLoadWait.v)();
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     case 2:
-        SH_AT(void (__cdecl*)(), at::kLoadStep.v)();
+        SH_AT(void (__cdecl*)(), field_e2::at::kLoadStep.v)();
         return;
     case 3: {
         const auto set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
@@ -1181,17 +1181,17 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         TailStep(1);
         return;
     case 1:
-        SH_CALL(Party_DropIn)(BFieldE2(::bof3::Img(at::kDropInTable) + AreaW0c_TailSub));
+        SH_CALL(Party_DropIn)(BFieldE2(::bof3::Img(field_e2::at::kDropInTable) + AreaW0c_TailSub));
         TailStep(2);
         return;
     case 2:
-        if (BFieldE2(::bof3::Img(at::kCounterB)) != 0x20) return;
-        SetW(::bof3::Img(at::kTailTimer), 0x10);
+        if (BFieldE2(::bof3::Img(field_e2::at::kCounterB)) != 0x20) return;
+        SetW(::bof3::Img(field_e2::at::kTailTimer), 0x10);
         TailStep(3);
         return;
     case 3: {
-        const auto left = static_cast<std::uint16_t>(WFieldE2(::bof3::Img(at::kTailTimer)) - 1u);
-        SetW(::bof3::Img(at::kTailTimer), left);
+        const auto left = static_cast<std::uint16_t>(WFieldE2(::bof3::Img(field_e2::at::kTailTimer)) - 1u);
+        SetW(::bof3::Img(field_e2::at::kTailTimer), left);
         if (left != 0) return;
         switch (AreaW0c_TailSub) {
         case 0:
@@ -1206,8 +1206,8 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         return;
     }
     case 4:
-        if (BFieldE2(::bof3::Img(at::kCounterB)) != 0x31) return;
-        BFieldE2(::bof3::Img(at::kCounterB)) = 0;
+        if (BFieldE2(::bof3::Img(field_e2::at::kCounterB)) != 0x31) return;
+        BFieldE2(::bof3::Img(field_e2::at::kCounterB)) = 0;
         SH_CALL(ScriptFlags_Clear40)();
         SH_CALL(Flags_Clear)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1E);
         SH_CALL(Flags_Clear)(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1F);
@@ -1272,7 +1272,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         BattleE1_Mode = 0;
         ScenaSc1_ShopByteB = 0;
         ModeStates_ShopObject = 0xFE;
-        BFieldE2(::bof3::Img(at::kFieldEC2)) = 1;
+        BFieldE2(::bof3::Img(field_e2::at::kFieldEC2)) = 1;
         Game_Mode = 7;
         TailStep(7);
         return;
@@ -1298,7 +1298,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         if (Transition_Busy != 0) return;
         BattleE1_Mode = 0;
         ModeStates_ShopObject = 0xFE;
-        BFieldE2(::bof3::Img(at::kFieldEC2)) = 1;
+        BFieldE2(::bof3::Img(field_e2::at::kFieldEC2)) = 1;
         ScenaSc1_ShopByteB = 0;
         Game_Mode = 7;
         TailStep(6);
@@ -1361,7 +1361,7 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
         if (Field_Request == 2) return;
         SH_CALL(Flags_Set)(move_script::At(::bof3::Img(Gene_Bits_addr)), AreaW0c_TailSub);
         const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
-        char* const name = reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kTextRecords)));
+        char* const name = reinterpret_cast<char*>(move_script::At(::bof3::Img(field_e2::at::kTextRecords)));
         SH_CALL(Crt_strncpy)(name, reinterpret_cast<const char*>(text), 8);
         if (field_e2::g_name_nul) name[8] = 0;
         SH_CALL(Msg_OpenSystem)(0xFA);
@@ -1422,7 +1422,7 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
         AreaW4d_ReturnZ = static_cast<U>(ObjTrio[0].z);
         AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
-        BFieldE2(::bof3::Img(at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(at::kScriptFlags2)) | 0x40);
+        BFieldE2(::bof3::Img(field_e2::at::kScriptFlags2)) = static_cast<unsigned char>(BFieldE2(::bof3::Img(field_e2::at::kScriptFlags2)) | 0x40);
         SH_CALL(ScriptFlags_Clear40)();
         AreaW0a_TailKind = 0;
         AreaW0c_TailState = 0;
@@ -1496,7 +1496,7 @@ extern "C" void __cdecl MapCell_DrawFrames(const unsigned char* record, unsigned
         SH_CALL(Prim_SetTexture)(LongAt(record + (frame + skip + at) * 4u), prim, 1);
         const unsigned char slot = Draw_OtSlot;
         at += record[at * 4u + 1] + skip;
-        SH_CALL(Gfx_CommitPrim)(slot, at::kPrimBytes);
+        SH_CALL(Gfx_CommitPrim)(slot, field_e2::at::kPrimBytes);
     } while (at != record[2]);
 }
 
@@ -1606,7 +1606,7 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
         }
         Project4(v, prim);
         SH_CALL(Prim_SetTexture)(LongAt(sub + 0x14), prim, 1);
-        SH_CALL(Gfx_CommitPrim)((LongAt(sub + 0x14) & 0x40000000u) ? 6u : Draw_OtSlot, at::kPrimBytes);
+        SH_CALL(Gfx_CommitPrim)((LongAt(sub + 0x14) & 0x40000000u) ? 6u : Draw_OtSlot, field_e2::at::kPrimBytes);
         SH_CALL(Gte_PopMatrix)();
         at += 6;
         sub += 0x18;
@@ -1643,11 +1643,11 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
     if (column >= 0x1C) column -= 0x1C;
     if (row < 0 || row >= 0x38 || column < 0 || column >= 0x1C)
         bof3::Fatal("AreaMap_ClearCell: view cell (%d, %d) past MapView_Cells' 0x38 x 0x1C (the original reads there)", row, column);
-    const U item = WFieldE2(::bof3::Img(at::kMapCells) + 2u * static_cast<U>(column + row * 0x1C));
+    const U item = WFieldE2(::bof3::Img(field_e2::at::kMapCells) + 2u * static_cast<U>(column + row * 0x1C));
     if (item == 0) return;
     const U n = item + (AreaMap_CellBase & 0xFFFF);
     U p = ::bof3::Img(AreaMap_Header_addr) + n * 4u;
-    const U end = p + (LFieldE2(::bof3::Img(at::kCellRecords) - 4u + n * 4u) >> 16) * 4u - 4u;
+    const U end = p + (LFieldE2(::bof3::Img(field_e2::at::kCellRecords) - 4u + n * 4u) >> 16) * 4u - 4u;
     while (p != end) {
         if (p > end) bof3::Fatal("AreaMap_ClearCell: the record walk passed its end 0x%X at 0x%X (the original runs on)", (unsigned)end, (unsigned)p);
         const U v = LFieldE2(p);
@@ -1672,12 +1672,12 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
 namespace {
 // The record the row's entry k names (0x66AD10[k + row * 10] * 8), unchecked.
 U TradeRecord(int k) {
-    return ::bof3::Img(at::kTradeRecords) + static_cast<U>(BFieldE2(::bof3::Img(at::kTradeIndex) + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
+    return ::bof3::Img(field_e2::at::kTradeRecords) + static_cast<U>(BFieldE2(::bof3::Img(field_e2::at::kTradeIndex) + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
 }
-void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
-void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), at::kTradeList.v)(flag); }
+void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), field_e2::at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
+void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), field_e2::at::kTradeList.v)(flag); }
 unsigned char TradeLacks(unsigned k, unsigned quantity) {
-    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kTradeLacks.v)(k, quantity);
+    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), field_e2::at::kTradeLacks.v)(k, quantity);
 }
 const unsigned char* PoolFieldE2(U word_cell) { return move_script::At(::bof3::Img(bof3::addr::MessagePools) + (LFieldE2(word_cell) & 0xFFFF)); }
 }  // namespace
@@ -1690,8 +1690,8 @@ extern "C" void __cdecl ItemTrade_Open(void) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(ItemTrade_OpenSteps_addr), Effect1g_TradeStep, "ItemTrade_Open")))();
     TradeBox();
     TradeList(0);
-    SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
-    SH_AT(void (__cdecl*)(), at::kTradeFrame.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeCursor.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeFrame.v)();
 }
 
 // original 0x5939A0 (ItemTrade_OpenSteps[0]; PSX 0x800F50B4): Transition_Start(1), the pick
@@ -1701,7 +1701,7 @@ extern "C" void __cdecl ItemTrade_OpenStart(void) {
     SH_CALL(Transition_Start)(1);
     Effect1g_TradePick = 0;
     Effect1g_TradeQuantity = 1;
-    Effect1g_TradeRowCount = SH_AT(unsigned char (__cdecl*)(), at::kTradeRows.v)();
+    Effect1g_TradeRowCount = SH_AT(unsigned char (__cdecl*)(), field_e2::at::kTradeRows.v)();
     Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
 }
 
@@ -1719,8 +1719,8 @@ extern "C" void __cdecl ItemTrade_OpenWait(void) {
 // (0x1A, 0x51 + 13 * the s8 pick).
 extern "C" void __cdecl ItemTrade_Run(void) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(ItemTrade_RunSteps_addr), Effect1g_TradeStep, "ItemTrade_Run")))();
-    SH_AT(void (__cdecl*)(), at::kTradeFrame.v)();
-    SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeFrame.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeCursor.v)();
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if (pick & 0xC0) return;
     SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8FieldE2(pick)) + 0x51u), 0);
@@ -1765,7 +1765,7 @@ extern "C" void __cdecl ItemTrade_PickItem(void) {
             } else {
                 Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x40);
                 SH_CALL(Sound_PlayEffect)(0x104);
-                BFieldE2(::bof3::Img(at::kTradeStep)) = static_cast<unsigned char>(Effect1g_TradeStep + 1);
+                BFieldE2(::bof3::Img(field_e2::at::kTradeStep)) = static_cast<unsigned char>(Effect1g_TradeStep + 1);
             }
         }
     } else if (Field_CancelButtons & pressed) {
@@ -1834,9 +1834,9 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
         Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep - 1);
     }
     TradeBox();
-    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordPick)));
+    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(field_e2::at::kPoolWordPick)));
     TradeList(1);
-    SH_AT(void (__cdecl*)(), at::kTradeCount.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeCount.v)();
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
 }
 
@@ -1916,7 +1916,7 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
                 Effect1g_TradePick = pick;
                 const U record = TradeRecord(S8FieldE2(pick));
                 SH_CALL(Inventory_Add)(BFieldE2(record + 1), BFieldE2(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
-                SH_AT(void (__cdecl*)(), at::kTradeTake.v)();
+                SH_AT(void (__cdecl*)(), field_e2::at::kTradeTake.v)();
                 Effect1g_TradeQuantity = 1;
                 Effect1g_TradeStep = 0;
             }
@@ -1926,20 +1926,20 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
     if (Effect1g_TradeStep == 2) {
         const U record = TradeRecord(static_cast<int>(static_cast<unsigned char>(Effect1g_TradePick) & 0xFu));
         const unsigned char* const name = SH_CALL(Item_NamePtr)(BFieldE2(record + 1), BFieldE2(record));
-        std::memcpy(move_script::At(::bof3::Img(at::kTextRecords)), name, 0x10);
-        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordName)));
+        std::memcpy(move_script::At(::bof3::Img(field_e2::at::kTextRecords)), name, 0x10);
+        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(field_e2::at::kPoolWordName)));
         if (g_trade_confirm_layout) {
-            const ConfirmAnswers a = ConfirmLayout(PoolFieldE2(::bof3::Img(at::kPoolWordAsk)));
+            const ConfirmAnswers a = ConfirmLayout(PoolFieldE2(::bof3::Img(field_e2::at::kPoolWordAsk)));
             SH_CALL(Text_DrawAt)(a.x, 0x14, 0, 0xFF, a.line);
             SH_CALL(Menu_DrawHand)(a.stop[Effect1g_TradeAnswer != 0 ? 1 : 0], 0x16, 0);
         } else {
-            SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(at::kPoolWordAsk)));
+            SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, PoolFieldE2(::bof3::Img(field_e2::at::kPoolWordAsk)));
             SH_CALL(Menu_DrawHand)(static_cast<int>(Effect1g_TradeAnswer * 36u + 0xDCu), 0x16, 0);
         }
     }
     TradeList(1);
     if (Effect1g_TradeStep == 0) return;
-    SH_AT(void (__cdecl*)(), at::kTradeCount.v)();
+    SH_AT(void (__cdecl*)(), field_e2::at::kTradeCount.v)();
 }
 
 // ============================================================================

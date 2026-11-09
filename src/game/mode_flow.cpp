@@ -531,7 +531,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         Gfx_ClutStripDirty = 1;
     }
     mode_flow::g.party_set_up(x, z, flags);
-    Cond_ByteFD = mode_flow::g.zone_id(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh))));
+    Cond_ByteFD = mode_flow::g.zone_id(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh))));
     mode_flow::g.view_reset();
     const auto colour = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x38));
     if (colour != 0) {
@@ -541,7 +541,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), mode_flow::Long(own + 0x20));   // Light_Angles
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(own + 0x24));
     } else {
-        mode_flow::g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(at::kDefaultColour)));
+        mode_flow::g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(mode_flow::at::kDefaultColour)));
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
         mode_flow::SetLong(mode_flow::At(::bof3::Img(0x90359C)), mode_flow::Long(mode_flow::At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
     }
@@ -578,7 +578,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         else if (Field_MemberCount > 1) {
             mode_flow::g.entry_walk(0, x, z);
             if (!(Field_ScriptFlags & 0x800) && !(Field_ScriptFlags2 & 0x8000))
-                mode_flow::g.test_fb(static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh)))), static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh)))));
+                mode_flow::g.test_fb(static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh)))), static_cast<short>(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh)))));
         } else {
             walked = false;
         }
@@ -613,7 +613,7 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
     mode_flow::At(::bof3::Img(EventLeader_PendingFlag_addr))[2] = 0;
     EventLeader_PendingZ = z;
     if (members == 0) return;
-    const unsigned char pose = mode_flow::At(::bof3::Img(at::kWalkPoses))[dir];
+    const unsigned char pose = mode_flow::At(::bof3::Img(mode_flow::at::kWalkPoses))[dir];
     for (unsigned i = 0; i < members; ++i) {
         unsigned char* const m = mode_flow::At(::bof3::Img(ObjTrio_addr) + 0x137 + i * 0x14C);
         m[0] = pose;

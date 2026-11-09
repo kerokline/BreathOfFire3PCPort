@@ -128,7 +128,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
             sprite = rv::Current<records::SpriteObject>();
         }
         const std::uint32_t member = static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0]));
-        const unsigned char* const record = Offset(sprite_pose::Ptr(::bof3::Img(at::kMemberAnimations) + member * 4u), (animation & 0x7Fu) * 4u);
+        const unsigned char* const record = Offset(sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kMemberAnimations) + member * 4u), (animation & 0x7Fu) * 4u);
         sprite_pose::g.set_bank(move_script::Word(record));
         rv::Current<records::SpriteObject>()->animation = record[2];
         rv::Current<records::SpriteObject>()->flip = record[3];
@@ -152,7 +152,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
         sprite_pose::g.script_start(start);
         return;
     }
-    const unsigned char* const offsets = sprite_pose::Ptr(::bof3::Img(at::kFrameOffsets));
+    const unsigned char* const offsets = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kFrameOffsets));
     const unsigned char* const table = Offset(offsets, static_cast<std::uint32_t>(move_script::Long(offsets + sprite->column * 4u)));
     sprite->script = static_cast<std::int32_t>(Low32(Offset(table, move_script::Word(table + sprite->animation * 2u))));
     sprite_pose::g.script_start(start);
@@ -236,25 +236,25 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
 namespace sprite_pose { std::uint8_t g_reach_word = 0; }
 
 extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
-    const unsigned count = static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(at::kBankCount)))) & 0xFFu;
-    const unsigned char* const table = sprite_pose::Ptr(::bof3::Img(at::kBankTable));
+    const unsigned count = static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(sprite_pose::at::kBankCount)))) & 0xFFu;
+    const unsigned char* const table = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable));
     unsigned i = 0;
     for (;; ++i) {
         if (i >= count) return 1;
         if (move_script::Word(table + i * 8u) == bank) break;
     }
     rv::Current<records::SpriteObject>()->tex_slot = table[i * 8u + 4];
-    rv::Current<records::SpriteObject>()->tex_row = sprite_pose::Ptr(::bof3::Img(at::kBankTable))[i * 8u + 5];
-    rv::Current<records::SpriteObject>()->clut = sprite_pose::Ptr(::bof3::Img(at::kBankTable))[i * 8u + 2];
-    rv::Current<records::SpriteObject>()->clut_mode = sprite_pose::Ptr(::bof3::Img(at::kBankTable))[i * 8u + 6];
-    const unsigned column = sprite_pose::Ptr(::bof3::Img(at::kBankTable))[i * 8u + 7];
+    rv::Current<records::SpriteObject>()->tex_row = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 5];
+    rv::Current<records::SpriteObject>()->clut = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 2];
+    rv::Current<records::SpriteObject>()->clut_mode = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 6];
+    const unsigned column = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable))[i * 8u + 7];
     rv::Current<records::SpriteObject>()->column = column;
     rv::Current<records::SpriteObject>()->reach = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->reach)) & 0xFFFFFF00u);
     unsigned char* sprite = Sprite_Current;
-    const unsigned char first = move_script::At(::bof3::Img(at::kBankBytes))[bank * 2u];
+    const unsigned char first = move_script::At(::bof3::Img(sprite_pose::at::kBankBytes))[bank * 2u];
     if (sprite_pose::g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sprite)->reach, first);
     else sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | first);
-    const unsigned char second = move_script::At(::bof3::Img(at::kBankBytes))[bank * 2u + 1];
+    const unsigned char second = move_script::At(::bof3::Img(sprite_pose::at::kBankBytes))[bank * 2u + 1];
     rv::Current<records::SpriteObject>()->key_class = second;
     return 0;
 }
@@ -279,9 +279,9 @@ extern "C" void __cdecl Sprite_FaceDirection(unsigned char direction) {
         return;
     }
     const unsigned pair = direction * 2u;
-    rv::Current<records::SpriteObject>()->flip = At(::bof3::Img(at::kDirectionAnimations))[pair + 1];
+    rv::Current<records::SpriteObject>()->flip = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair + 1];
     const unsigned char start = Field_ActiveMember[0xA1];
-    const unsigned char animation = At(::bof3::Img(at::kDirectionAnimations))[pair];
+    const unsigned char animation = At(::bof3::Img(sprite_pose::at::kDirectionAnimations))[pair];
     if (start == 0xFF) {
         sprite_pose::g.ensure_animation(animation);
         return;

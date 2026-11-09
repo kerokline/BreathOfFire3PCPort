@@ -341,7 +341,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
 extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(long x, long y) {
     const world_map::U item = static_cast<world_map::U>(world_map::g.item_at(x, y));
     if (item == 0) return nullptr;
-    return AtWorldMap(at::DrawItemsAt() + (AtWorldMap(at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
+    return AtWorldMap(world_map::at::DrawItemsAt() + (AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
 }
 
 // original 0x572FA0 (PSX 0x801564C4): links the primitive at Gfx_PacketNext
@@ -360,19 +360,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     std::int32_t row = static_cast<std::int16_t>(z >> 16);
     row -= (z & 0xFFFF) == 0 ? 1 : 0;
     row -= (x & 0xFFFF) == 0 ? 1 : 0;
-    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt() + 2));
+    row -= ShortWorldMap(AtWorldMap(world_map::at::MapView_OriginAt() + 2));
     row += static_cast<std::int16_t>(x >> 16);
-    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt()));
+    row -= ShortWorldMap(AtWorldMap(world_map::at::MapView_OriginAt()));
     row += static_cast<signed char>(dy) + 2;
     if (row < 0 || row >= 0x38) return;
     const world_map::U bytes = size & 0xFF;
-    const world_map::U prim = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
+    const world_map::U prim = LongWorldMap(AtWorldMap(world_map::at::Gfx_PacketNextAt()));
     // Tooling only (BOF3X_DRAWORDER): the walk's log names a frame node by its
     // row alone; this says who linked it.
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
                   Low32(__builtin_return_address(0)));
-    const world_map::U bound = (static_cast<world_map::U>(AtWorldMap(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
+    const world_map::U bound = (static_cast<world_map::U>(AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
@@ -380,11 +380,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
         return;
     }
     const world_map::U slot_index = static_cast<world_map::U>(row) * 6u;
-    unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u);
+    unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0]) * 8u);
     world_map::g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
-    const world_map::U next = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
-    PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u), next);
-    PutLong(AtWorldMap(at::Gfx_PacketNextAt()), next + bytes);
+    const world_map::U next = LongWorldMap(AtWorldMap(world_map::at::Gfx_PacketNextAt()));
+    PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(world_map::at::Gfx_BufferIndexAt())[0]) * 8u), next);
+    PutLong(AtWorldMap(world_map::at::Gfx_PacketNextAt()), next + bytes);
 }
 
 // --- the legend's keys: DIV-0135 (world_map.h) -------------------------------

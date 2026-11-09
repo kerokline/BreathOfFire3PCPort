@@ -119,8 +119,8 @@ map_field_objects::U S16(map_field_objects::U v) { return static_cast<map_field_
 short* Vertex(map_field_objects::U address) { return reinterpret_cast<short*>(AtMapFieldObjects(address)); }
 float* FloatAt(map_field_objects::U address) { return reinterpret_cast<float*>(AtMapFieldObjects(address)); }
 
-unsigned char* PacketNext() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(DwordMapFieldObjects(AtMapFieldObjects(at::PacketNextAt())))); }
-map_field_objects::U OtSlot() { return Byte(at::OtSlotAt()); }
+unsigned char* PacketNext() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(DwordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::PacketNextAt())))); }
+map_field_objects::U OtSlot() { return Byte(map_field_objects::at::OtSlotAt()); }
 U SpriteCurrent() { return DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Sprite_Current_addr))); }
 unsigned char* Sprite() { return AtMapFieldObjects(SpriteCurrent()); }
 
@@ -176,7 +176,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     Prim_VertexScratch[3].y = y;
     Prim_VertexScratch[2].y = y;
     kScratchH = h;
-    const map_field_objects::U top = h - WordMapFieldObjects(AtMapFieldObjects(at::UprightHeightsAt() + e * 2u));
+    const map_field_objects::U top = h - WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::UprightHeightsAt() + e * 2u));
     Prim_VertexScratch[3].z = h;
     Prim_VertexScratch[1].z = h;
     Prim_VertexScratch[2].z = top;
@@ -194,7 +194,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     if (MapView_ScreenXY[0] > 400.0f + cull) return;       // fcomp [0x5C4260]; test ah, 0x41
     if (!(Float(::bof3::Img(kScreen1) + 4) >= -20.0f)) return;   // fcomp [0x5C422C]; test ah, 1
     if (MapView_ScreenXY[1] > 260.0f) return;       // fcomp [0x5C425C]; test ah, 0x41
-    if (Byte(at::UprightCountsAt() + e) == 0) return;
+    if (Byte(map_field_objects::at::UprightCountsAt() + e) == 0) return;
     map_field_objects::U d0, d1;
     std::memcpy(&d0, &depth0, 4);
     std::memcpy(&d1, &depth1, 4);
@@ -211,20 +211,20 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
             SetDwordMapFieldObjects(prim + 0x38, DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Effect6c_OffsetX_addr))));
             SetDwordMapFieldObjects(prim + 0x3C, DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Effect6c_OffsetX_addr) + 4)));
             SetDwordMapFieldObjects(prim + 0x40, d1);
-            const auto u02 = static_cast<unsigned char>(Byte(at::UprightU02At() + e));
+            const auto u02 = static_cast<unsigned char>(Byte(map_field_objects::at::UprightU02At() + e));
             prim[0x34] = u02;
             prim[0x14] = u02;
-            const auto u13 = static_cast<unsigned char>(Byte(at::UprightU13At() + e));
+            const auto u13 = static_cast<unsigned char>(Byte(map_field_objects::at::UprightU13At() + e));
             prim[0x44] = u13;
             prim[0x24] = u13;
-            const auto v01 = static_cast<unsigned char>(Byte(at::UprightV01At() + e2 + j));
+            const auto v01 = static_cast<unsigned char>(Byte(map_field_objects::at::UprightV01At() + e2 + j));
             prim[0x25] = v01;
             prim[0x15] = v01;
-            const auto v23 = static_cast<unsigned char>(Byte(at::UprightV23At() + e2 + j));
+            const auto v23 = static_cast<unsigned char>(Byte(map_field_objects::at::UprightV23At() + e2 + j));
             prim[0x45] = v23;
             prim[0x35] = v23;
             prim[6] = prim[5] = prim[4] = 0x80;
-            rv::As<records::GpuPolyFT4>(prim)->clut = (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u;
+            rv::As<records::GpuPolyFT4>(prim)->clut = (Byte(map_field_objects::at::UprightClutAt() + e) >> 4) | 0x78C0u;
             rv::As<records::GpuPolyFT4>(prim)->tpage = 0x1B;
             map_field_objects::g.commit(slot, 0x48);
         }
@@ -232,8 +232,8 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
         const map_field_objects::U vy = static_cast<std::uint32_t>(kScratchY);
         for (map_field_objects::U v = 0; v < 4; ++v) {
             const map_field_objects::U k = ((v >> 1) + base) * 2u;
-            SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Prim_VertexScratch_addr) + v * 8u), WordMapFieldObjects(AtMapFieldObjects(at::UprightOffsetsXAt() + k)) + static_cast<std::uint32_t>(kScratchX.d_00));
-            SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Prim_VertexScratch_addr) + v * 8u + 2), WordMapFieldObjects(AtMapFieldObjects(at::UprightOffsetsYAt() + k)) + vy);
+            SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Prim_VertexScratch_addr) + v * 8u), WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::UprightOffsetsXAt() + k)) + static_cast<std::uint32_t>(kScratchX.d_00));
+            SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(Prim_VertexScratch_addr) + v * 8u + 2), WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::UprightOffsetsYAt() + k)) + vy);
         }
         map_field_objects::g.rtp4(Vertex(::bof3::Img(Prim_VertexScratch_addr)), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18),
                reinterpret_cast<float*>(packet + 8), reinterpret_cast<float*>(packet + 0x18),
@@ -241,7 +241,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
         map_field_objects::g.depth_f4(reinterpret_cast<float*>(packet + 0x10), reinterpret_cast<float*>(packet + 0x20),
                    reinterpret_cast<float*>(packet + 0x58), reinterpret_cast<float*>(packet + 0x68));
         ++i;
-        if (static_cast<std::int32_t>(i) >= static_cast<std::int32_t>(Byte(at::UprightCountsAt() + e))) return;
+        if (static_cast<std::int32_t>(i) >= static_cast<std::int32_t>(Byte(map_field_objects::at::UprightCountsAt() + e))) return;
     }
 }
 
@@ -289,7 +289,7 @@ extern "C" void __cdecl MapCell_DrawDiagonalWall(const unsigned char* record, un
 //
 // DIV-0041 (wide-ring): a cell of the grown ring's rim takes the rim's item.
 extern "C" void __cdecl MapCell_DrawFlatFaces(const unsigned char* record, unsigned b1, unsigned b0) {
-    const map_field_objects::U ox = S16(WordMapFieldObjects(AtMapFieldObjects(at::OriginAt()))), oz = S16(WordMapFieldObjects(AtMapFieldObjects(at::OriginAt() + 2)));
+    const map_field_objects::U ox = S16(WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::OriginAt()))), oz = S16(WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::OriginAt() + 2)));
     const map_field_objects::U dx = b1 - ox, dz = b0 - oz;
     const auto sum = static_cast<std::int32_t>(dx + dz);
     const auto diff = static_cast<std::int32_t>(dx - dz);
@@ -299,10 +299,10 @@ extern "C" void __cdecl MapCell_DrawFlatFaces(const unsigned char* record, unsig
         return;
     }
     if (sum >= 0x38 || sum < 0) return;
-    auto row = static_cast<std::int32_t>(static_cast<map_field_objects::U>(sum) + S16(WordMapFieldObjects(AtMapFieldObjects(at::RowAt()))) + 1u);
+    auto row = static_cast<std::int32_t>(static_cast<map_field_objects::U>(sum) + S16(WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::RowAt()))) + 1u);
     if (row >= 0x38) row -= 0x38;
     if (diff >= 0x38 || diff < 0) return;
-    auto column = static_cast<std::int32_t>(static_cast<map_field_objects::U>(diff / 2) + S16(WordMapFieldObjects(AtMapFieldObjects(at::ColumnAt()))) + 1u);
+    auto column = static_cast<std::int32_t>(static_cast<map_field_objects::U>(diff / 2) + S16(WordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::ColumnAt()))) + 1u);
     if (column >= 0x1C) column -= 0x1C;
     const map_field_objects::U index = static_cast<map_field_objects::U>(column) + static_cast<map_field_objects::U>(row) * 28u;
     const map_field_objects::U item = WordMapFieldObjects(AtMapFieldObjects(::bof3::Img(MapView_CellItems_addr) + 0x2 + index * 4u)) & 0xFFFu;
@@ -361,7 +361,7 @@ extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsign
     if (Float(::bof3::Img(kScreen0) + 4) > 300.0f) return;      // fcomp [0x5C41FC]; test ah, 0x41
     if (p == 0) return;
     const map_field_objects::U timing = DwordMapFieldObjects(record + 8);
-    const map_field_objects::U t = DwordMapFieldObjects(AtMapFieldObjects(at::FrameCounterAt())) % (timing & 0xFFu);
+    const map_field_objects::U t = DwordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::FrameCounterAt())) % (timing & 0xFFu);
     map_field_objects::U k = 0;
     while (static_cast<std::int32_t>(t) >= static_cast<std::int32_t>(record[0xA + k])) ++k;
     unsigned char* const prim = PacketNext();
@@ -415,7 +415,7 @@ extern "C" void __cdecl AreaMap_SetupTint(const unsigned char* entry) {
 // when Cond_ByteFF (the story bit AreaMap_SetupEntries copies in) is set,
 // else their low words.
 extern "C" void __cdecl AreaMap_SetupFlatColours(const unsigned char* entry) {
-    if (Byte(at::CondByteFFAt()) != 0) {
+    if (Byte(map_field_objects::at::CondByteFFAt()) != 0) {
         SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(kFlatColour0)), DwordMapFieldObjects(entry + 4) >> 16);
         SetWordMapFieldObjects(AtMapFieldObjects(::bof3::Img(kFlatColour1)), DwordMapFieldObjects(entry + 8) >> 16);
     } else {
@@ -431,7 +431,7 @@ extern "C" void __cdecl AreaMap_SetupFlatColours(const unsigned char* entry) {
 // 1, y = byte 0) as MapView_CellTextures reads it (word y * width + x + offset
 // * 2). All unchecked.
 extern "C" void __cdecl AreaMap_SetupTexture(const unsigned char* entry) {
-    const map_field_objects::U flag = Byte(at::CondByteFFAt());
+    const map_field_objects::U flag = Byte(map_field_objects::at::CondByteFFAt());
     const map_field_objects::U width = DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(AreaMap_Header_addr))) & 0xFFu;
     const map_field_objects::U d = DwordMapFieldObjects(entry);
     const map_field_objects::U offset = WordMapFieldObjects(AtMapFieldObjects(::bof3::Img(AreaMap_Header_addr) + 0x2));
@@ -481,7 +481,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const U flags = static_cast<U>(rv::As<records::CharRecord>(record)->status);
     U status = 0;
     if (flags & 0x80u) {
-        if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? ::bof3::Img(kStatusText0) : ::bof3::Img(kStatusText1);
+        if (flags & 0x20u) status = (Byte(map_field_objects::at::FrameCounterAt()) & 0x20u) ? ::bof3::Img(kStatusText0) : ::bof3::Img(kStatusText1);
         else status = ::bof3::Img(kStatusText0);
     } else if (flags & 0x20u) {
         status = ::bof3::Img(kStatusText1);
@@ -585,7 +585,7 @@ extern "C" const unsigned char* __cdecl EventScript_SkipSwitch(const unsigned ch
     for (;;) {
         const unsigned char c = *p;
         if (c < 0xF0) {
-            p += Byte(at::OpLengthsAt() + (c >> 4));
+            p += Byte(map_field_objects::at::OpLengthsAt() + (c >> 4));
             continue;
         }
         switch (c) {
@@ -608,7 +608,7 @@ extern "C" const unsigned char* __cdecl EventScript_SkipSwitch(const unsigned ch
 // offset with the value in its low byte (imul; mov al), returned whole.
 extern "C" unsigned long __cdecl AreaMap_SetByte(unsigned long x, unsigned long z, unsigned value) {
     const U row = (DwordMapFieldObjects(AtMapFieldObjects(::bof3::Img(AreaMap_Header_addr))) & 0xFFu) * S16(static_cast<U>(z));
-    AtMapFieldObjects(S16(static_cast<U>(x)) + DwordMapFieldObjects(AtMapFieldObjects(at::BytesAt())) + row)[0] = static_cast<unsigned char>(value);
+    AtMapFieldObjects(S16(static_cast<U>(x)) + DwordMapFieldObjects(AtMapFieldObjects(map_field_objects::at::BytesAt())) + row)[0] = static_cast<unsigned char>(value);
     return (row & 0xFFFFFF00u) | (value & 0xFFu);
 }
 

@@ -80,13 +80,13 @@ int S8(U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 int S16(U v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* Rec(U n) { return At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
-U RecAddr(U n) { return ::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride; }
+unsigned char* Rec(U n) { return At(::bof3::Img(CharacterRecords_addr) + n * field_s::at::kRecordStride); }
+U RecAddr(U n) { return ::bof3::Img(CharacterRecords_addr) + n * field_s::at::kRecordStride; }
 
 // A member id's record index: Character_IndexById[id], unchecked.
 U RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
 // ObjTrio record k's char_index (s8, unchecked): the byte +0x148.
-U MemberAt(int k) { return B(static_cast<U>(::bof3::Img(ObjTrio_addr) + 0x148 + static_cast<std::int32_t>(k) * static_cast<std::int32_t>(at::kObjStride))); }
+U MemberAt(int k) { return B(static_cast<U>(::bof3::Img(ObjTrio_addr) + 0x148 + static_cast<std::int32_t>(k) * static_cast<std::int32_t>(field_s::at::kObjStride))); }
 
 U Pressed() { return Input_Pressed; }
 bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
@@ -95,7 +95,7 @@ bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButto
 void Sound(U id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 U PartyCount() { return static_cast<U>(SH_CALL(Party_Count)(0)) & 0xFF; }
 const unsigned char* Message(U id) { return SH_CALL(Msg_SystemPtr)(id); }
-char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf))); }
+char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(field_s::at::kPrintBuf))); }
 const char* Format(U address) { return reinterpret_cast<const char*>(At(address)); }
 const unsigned char* Text(U address) { return At(address); }
 void DrawFont8(int x, int y, int colour) {
@@ -118,7 +118,7 @@ U CodeAt(U table, U index, const char* who) {
 using Handler = void (__cdecl*)();
 
 // The swap helper 0x58BD50 (nobody's): the two bytes exchanged.
-void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kSwapBytes.v)(At(a), At(b)); }
+void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), field_s::at::kSwapBytes.v)(At(a), At(b)); }
 
 // The five-byte stretch of window stores two SharedList states and
 // SharedList_UseItem make (windows 2 and 3 of WindowRecords, 0x8031A8 and
@@ -297,7 +297,7 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
             Sprite_Current = rv::Bytes(obj);
             SH_CALL(Field_MemberSprite)(obj->char_id, i);
             SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
-            const U row = ::bof3::Img(at::kPlaceTable) + 16 * (3 * kind + i);
+            const U row = ::bof3::Img(field_s::at::kPlaceTable) + 16 * (3 * kind + i);
             ++i;
             rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(L(row)));
             rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(L(row + 4)));
@@ -311,7 +311,7 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
     Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
     Field_Kind2Z = static_cast<long>(static_cast<U>(ObjTrio[0].z));
     SH_CALL(Field_ViewReset)();
-    const U descriptor = L(::bof3::Img(at::kAreaDescriptors) + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
+    const U descriptor = L(::bof3::Img(field_s::at::kAreaDescriptors) + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
     SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
     FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
@@ -348,30 +348,30 @@ extern "C" void __cdecl PartyForm_Setup(void) {
         if ((rec[0xB] & 1) == 0) continue;
         U k = 0;
         const unsigned char id = rec[9];
-        while (k < n && id != B(::bof3::Img(at::kPartyList) + k)) ++k;
-        if (k == n) B(::bof3::Img(at::kReserve) + count++) = rec[9];
+        while (k < n && id != B(::bof3::Img(field_s::at::kPartyList) + k)) ++k;
+        if (k == n) B(::bof3::Img(field_s::at::kReserve) + count++) = rec[9];
     }
     FieldS_ReserveCount = count;
     U edx = 0;
     if (n > 0) {
-        for (U k = 0; k < n; ++k) B(::bof3::Img(at::kReserveFlags) + 2 * k) = 1;
+        for (U k = 0; k < n; ++k) B(::bof3::Img(field_s::at::kReserveFlags) + 2 * k) = 1;
         edx = n;
     }
     if (n == 0 || edx < 3) {
-        U p = ::bof3::Img(at::kReserveFlags) + 2 * edx;
+        U p = ::bof3::Img(field_s::at::kReserveFlags) + 2 * edx;
         do {
             B(p) = 0;
             p += 2;
-        } while (p < ::bof3::Img(at::kReserveFlags) + 6);
+        } while (p < ::bof3::Img(field_s::at::kReserveFlags) + 6);
     }
-    for (U k = 0; k < count; ++k) B(::bof3::Img(at::kReserveFlags) + 1 + 2 * k) = 1;
+    for (U k = 0; k < count; ++k) B(::bof3::Img(field_s::at::kReserveFlags) + 1 + 2 * k) = 1;
     const auto step = static_cast<unsigned char>(FieldS_Step + 1);
     FieldS_Column = 0;
     BattleE1_ModeByte9 = 0;
     ShopStates_Clear0A = 0x7F;
     FieldS_PickRow = 0x7F;
     FieldS_PartyFormResult = 0xFF;
-    B(::bof3::Img(at::kTimer)) = 3;
+    B(::bof3::Img(field_s::at::kTimer)) = 3;
     FieldS_Step = step;
     SH_CALL(Transition_Start)(2);
 }
@@ -401,11 +401,11 @@ extern "C" void __cdecl PartyForm_OpenWait(void) {
 extern "C" void __cdecl PartyForm_SlideIn(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     SH_CALL(PartyForm_DrawSliding)();
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t != 0) return;
     const auto state = FieldS_State;
-    B(::bof3::Img(at::kTimer)) = 3;
+    B(::bof3::Img(field_s::at::kTimer)) = 3;
     FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
@@ -466,7 +466,7 @@ extern "C" void __cdecl PartyForm_Choose(void) {
             BattleE1_ModeByte9 = 0;
         }
     }
-    if (static_cast<int>(old_column) != S8(B(::bof3::Img(at::kColumn))) || row0 != S8(row)) Sound(0x100);
+    if (static_cast<int>(old_column) != S8(B(::bof3::Img(field_s::at::kColumn))) || row0 != S8(row)) Sound(0x100);
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(ShopStates_Clear0A) == 0x7F) {
@@ -511,7 +511,7 @@ extern "C" void __cdecl PartyForm_LeaveFade(void) {
     }
     SH_CALL(Menu_DrawBlackScreen)();
     const auto step = FieldS_Step;
-    B(::bof3::Img(at::kTimer)) = 2;
+    B(::bof3::Img(field_s::at::kTimer)) = 2;
     FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
@@ -519,8 +519,8 @@ extern "C" void __cdecl PartyForm_LeaveFade(void) {
 // down one; at 0 the step up one.
 extern "C" void __cdecl PartyForm_LeaveBlack(void) {
     SH_CALL(Menu_DrawBlackScreen)();
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -546,12 +546,12 @@ extern "C" void __cdecl PartyForm_Reload(void) {
     bool lone = false;
     if (AreaW3c_CampFlag != 0) {
         const unsigned char flag = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x77);
-        const U area = W(::bof3::Img(at::kArea));
+        const U area = W(::bof3::Img(field_s::at::kArea));
         if (((flag & 0xFF) == 0 || area == 0xBB) && area != 0x85) lone = true;
     }
     if (lone) {
         const unsigned char member = CharacterRecords[0].char_id;
-        std::memcpy(At(::bof3::Img(at::kLeaderName)), At(::bof3::Img(CharacterRecords_addr)), 0xA4);
+        std::memcpy(At(::bof3::Img(field_s::at::kLeaderName)), At(::bof3::Img(CharacterRecords_addr)), 0xA4);
         ObjTrio[0].actor = 0;
         Sprite_Current = rv::Bytes(ObjTrio);
         Field_MemberCount = 1;
@@ -584,8 +584,8 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         }
         if (kept != 2 && ObjTrio[0].char_id == 2) {
             const U facing = ObjTrio[0].direction * 4u;
-            ObjTrio[0].x = static_cast<U>(ObjTrio[0].x) + (static_cast<U>(S16(W(::bof3::Img(at::kFacingSteps) + facing))) << 15);
-            ObjTrio[0].z = static_cast<U>(ObjTrio[0].z) + (static_cast<U>(S16(W(::bof3::Img(at::kFacingSteps) + 2 + facing))) << 15);
+            ObjTrio[0].x = static_cast<U>(ObjTrio[0].x) + (static_cast<U>(S16(W(::bof3::Img(field_s::at::kFacingSteps) + facing))) << 15);
+            ObjTrio[0].z = static_cast<U>(ObjTrio[0].z) + (static_cast<U>(S16(W(::bof3::Img(field_s::at::kFacingSteps) + 2 + facing))) << 15);
         }
         if ((Field_StatusBits & 0x40) == 0) {
             Field_Kind2X = static_cast<long>(static_cast<U>(ObjTrio[0].x));
@@ -596,10 +596,10 @@ extern "C" void __cdecl PartyForm_Reload(void) {
     if (Game_AreaNumber == 0x85) {
         const U n = Field_MemberCount;
         for (U i = 0; i < n; ++i) {
-            const U obj = ::bof3::Img(0x802D40) + i * at::kObjStride;
-            SetL(obj + 0x34, L(::bof3::Img(at::kArea85Place) + 16 * i));
-            SetL(obj + 0x38, L(::bof3::Img(at::kArea85Place) + 16 * i + 4));
-            SetL(obj + 0x3C, L(::bof3::Img(at::kArea85Place) + 16 * i + 8));
+            const U obj = ::bof3::Img(0x802D40) + i * field_s::at::kObjStride;
+            SetL(obj + 0x34, L(::bof3::Img(field_s::at::kArea85Place) + 16 * i));
+            SetL(obj + 0x38, L(::bof3::Img(field_s::at::kArea85Place) + 16 * i + 4));
+            SetL(obj + 0x3C, L(::bof3::Img(field_s::at::kArea85Place) + 16 * i + 8));
         }
         if ((Field_StatusBits & 0x40) != 0) {
             SH_CALL(Transition_Start)(3);
@@ -614,7 +614,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         if (Field_MemberCount != 0) {
             U i = 0;
             do {
-                const U obj = ::bof3::Img(0x802D40) + i * at::kObjStride;
+                const U obj = ::bof3::Img(0x802D40) + i * field_s::at::kObjStride;
                 SetL(obj + 0x34, 0x190000);
                 SetL(obj + 0x38, 0x3C0000);
                 const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(ObjTrio[0].x)), static_cast<long>(static_cast<U>(ObjTrio[0].z)));
@@ -634,7 +634,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
 // counter 0, the mode 1 (the field), state and step 0, 0x929F0F 1.
 extern "C" void __cdecl PartyForm_End(void) {
     if (Transition_Busy != 0) return;
-    B(::bof3::Img(at::kTimer)) = 0;
+    B(::bof3::Img(field_s::at::kTimer)) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
     FieldS_Step = 0;
@@ -654,14 +654,14 @@ extern "C" void __cdecl PartyForm_End(void) {
 extern "C" void __cdecl PartyForm_DrawSliding(void) {
     const U n = PartyCount();
     for (U k = 0; k < n; ++k) {
-        const U record = RecordOf(B(::bof3::Img(at::kPartyList) + k));
+        const U record = RecordOf(B(::bof3::Img(field_s::at::kPartyList) + k));
         const int y = static_cast<int>(54 * k) + 0x3E;
-        SH_CALL(Menu_DrawMemberStatus)(0x11 - 40 * static_cast<int>(B(::bof3::Img(at::kTimer))), y, record, Rec(record)[0xB] & 2);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtMember)), k + 1);
-        DrawFont8(0x1A - 40 * static_cast<int>(B(::bof3::Img(at::kTimer))), y + 5, 0);
+        SH_CALL(Menu_DrawMemberStatus)(0x11 - 40 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))), y, record, Rec(record)[0xB] & 2);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtMember)), k + 1);
+        DrawFont8(0x1A - 40 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))), y + 5, 0);
     }
-    SH_CALL(PartyForm_DrawReserve)(45 * static_cast<int>(B(::bof3::Img(at::kTimer))) + 0x96, 0x3B);
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(::bof3::Img(at::kTimer))), 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(PartyForm_DrawReserve)(45 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))) + 0x96, 0x3B);
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))), 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
 }
 
 // original 0x581300: the reserve's panels from (x, y): the port's dropped call
@@ -696,44 +696,44 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
     int base = y + 0x1B;
     unsigned char row = 0;
     do {
-        const U index = RecordOf(B(::bof3::Img(at::kReserve) + row));
+        const U index = RecordOf(B(::bof3::Img(field_s::at::kReserve) + row));
         const unsigned char* const rec = Rec(index);
         unsigned char colour = 0;
         SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, static_cast<unsigned char>(Config_WindowColour));
         SH_CALL(Menu_DrawItemIcon)(X + 0x56, Y, rec[9], (rec[0x10] >> 6) & 2);
         SH_CALL(Text_DrawAt)(X + 0x14, base - 0x14, 0, 5, rec);
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, base, 3, 0);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtLevel)), rec[0xA]);
+        SH_AT(void (__cdecl*)(int, int, int, int), field_s::at::kDrawTag.v)(X + 2, base, 3, 0);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtLevel)), rec[0xA]);
         DrawFont8(pen, base, 0);
         const U flags = W(RecAddr(index) + 0x10);
         U status = 0;
         if (flags & 0x80) {
-            if (flags & 0x20) status = (Frame_Counter & 0x20) ? ::bof3::Img(at::kStatusA) : ::bof3::Img(at::kStatusB);
-            else status = ::bof3::Img(at::kStatusA);
+            if (flags & 0x20) status = (Frame_Counter & 0x20) ? ::bof3::Img(field_s::at::kStatusA) : ::bof3::Img(field_s::at::kStatusB);
+            else status = ::bof3::Img(field_s::at::kStatusA);
         } else if (flags & 0x20) {
-            status = ::bof3::Img(at::kStatusB);
+            status = ::bof3::Img(field_s::at::kStatusB);
         }
         if (status != 0) SH_CALL(Text_DrawSmall)(X + 0x30, base, 1, 0x10, Text(status));
         const int hp_y = base + 8;
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, hp_y, 0, 0);
+        SH_AT(void (__cdecl*)(int, int, int, int), field_s::at::kDrawTag.v)(X + 2, hp_y, 0, 0);
         if (rec[0x11] & 0x20) colour = 4;
         const U hp = W(RecAddr(index) + 0x18);
         if (hp <= 1) colour = 2;
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtFigureA)), hp);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtFigureA)), hp);
         DrawFont8(pen, hp_y, colour);
         colour = rec[0x1E] != 0 ? 4 : 0;
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtFigureB)), W(RecAddr(index) + 0x20));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtFigureB)), W(RecAddr(index) + 0x20));
         DrawFont8(pen, hp_y, colour);
         const int ap_y = base + 0x10;
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, ap_y, 1, 0);
+        SH_AT(void (__cdecl*)(int, int, int, int), field_s::at::kDrawTag.v)(X + 2, ap_y, 1, 0);
         const U quarter = (static_cast<U>(rv::As<records::CharRecord>(Rec(index))->stats.max_ap) >> 2) & 0xFFFF;
         const U ap = W(RecAddr(index) + 0x1A);
         colour = 0;
         if (ap <= quarter) colour = 4;
         if (ap == 0) colour = 2;
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtFigureA)), ap);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtFigureA)), ap);
         DrawFont8(pen, ap_y, colour);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtFigureB)), W(RecAddr(index) + 0x22));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtFigureB)), W(RecAddr(index) + 0x22));
         DrawFont8(pen, ap_y, 0);
         Y += 0x34;
         base += 0x34;
@@ -752,17 +752,17 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
 extern "C" unsigned char __cdecl PartyForm_Swap(void) {
     const unsigned char column = static_cast<unsigned char>(FieldS_Column);
     if (column == static_cast<unsigned char>(ShopStates_Clear0A)) {
-        const U list = column == 0 ? (::bof3::Img(Cond_Flags_addr) + 0xd2) : ::bof3::Img(at::kReserve);
+        const U list = column == 0 ? (::bof3::Img(Cond_Flags_addr) + 0xd2) : ::bof3::Img(field_s::at::kReserve);
         SwapBytes(list + static_cast<std::uint32_t>(BattleE1_ModeByte9), list + static_cast<std::uint32_t>(FieldS_PickRow));
         return 0xFF;
     }
     unsigned char party, other;
     if (column == 0) {
         party = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<std::uint32_t>(BattleE1_ModeByte9));
-        other = B(::bof3::Img(at::kReserve) + static_cast<std::uint32_t>(FieldS_PickRow));
+        other = B(::bof3::Img(field_s::at::kReserve) + static_cast<std::uint32_t>(FieldS_PickRow));
     } else {
         party = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<std::uint32_t>(FieldS_PickRow));
-        other = B(::bof3::Img(at::kReserve) + static_cast<std::uint32_t>(BattleE1_ModeByte9));
+        other = B(::bof3::Img(field_s::at::kReserve) + static_cast<std::uint32_t>(BattleE1_ModeByte9));
     }
     if (Rec(RecordOf(party))[0xB] & 2) return party;
     if (Rec(RecordOf(other))[0xB] & 2) return other;
@@ -770,14 +770,14 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
     if (PartyCount() != 0) {
         unsigned char k = 0;
         do {
-            if (B(::bof3::Img(at::kPartyList) + k) == party) B(::bof3::Img(at::kPartyList) + k) = other;
-            if (B(::bof3::Img(at::kPartyList2) + k) == party) B(::bof3::Img(at::kPartyList2) + k) = other;
+            if (B(::bof3::Img(field_s::at::kPartyList) + k) == party) B(::bof3::Img(field_s::at::kPartyList) + k) = other;
+            if (B(::bof3::Img(field_s::at::kPartyList2) + k) == party) B(::bof3::Img(field_s::at::kPartyList2) + k) = other;
             ++k;
         } while (k < PartyCount());
     }
     const U n = FieldS_ReserveCount;
     for (U i = 0; i < n; ++i)
-        if (B(::bof3::Img(at::kReserve) + i) == other) B(::bof3::Img(at::kReserve) + i) = party;
+        if (B(::bof3::Img(field_s::at::kReserve) + i) == other) B(::bof3::Img(field_s::at::kReserve) + i) = party;
     return 0xFF;
 }
 
@@ -793,20 +793,20 @@ extern "C" void __cdecl PartyForm_Draw(void) {
     const U n = PartyCount();
     SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     for (U k = 0; k < n; ++k) {
-        const U record = RecordOf(B(::bof3::Img(at::kPartyList) + k));
+        const U record = RecordOf(B(::bof3::Img(field_s::at::kPartyList) + k));
         const int y = static_cast<int>(54 * k) + 0x3E;
         SH_CALL(Menu_DrawMemberStatus)(0x11, y, record, (Rec(record)[0xB] >> 1) & 1);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtMember)), k + 1);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtMember)), k + 1);
         DrawFont8(0x1A, y + 5, (Rec(record)[0xB] & 2) ? 7 : 0);
     }
     SH_CALL(PartyForm_DrawReserve)(0x96, 0x3B);
     const unsigned char pick = static_cast<unsigned char>(ShopStates_Clear0A);
     if (pick != 0x7F) {
-        const U cell = ::bof3::Img(at::kPickCells) + static_cast<U>(6 * (S8(pick) + 2 * FieldS_PickRow));
+        const U cell = ::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (S8(pick) + 2 * FieldS_PickRow));
         const bool wide = B(cell + 4) != 0;
         SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, 0, 6);
     }
-    const U cell = ::bof3::Img(at::kPickCells) + static_cast<U>(6 * (FieldS_Column + 2 * BattleE1_ModeByte9));
+    const U cell = ::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (FieldS_Column + 2 * BattleE1_ModeByte9));
     const bool wide = B(cell + 4) != 0;
     SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, 1, 6);
 }
@@ -891,15 +891,15 @@ void MemberCursor(int blink) {
 // (32 t + 0x98, 0x3F) with no row lit; the counter down one; at 0 the cursor,
 // the counter, 0x929F05 and 0x929F0F 0, the state up one, step 0.
 extern "C" void __cdecl ShopResist_Open(void) {
-    if (B(::bof3::Img(at::kTimer)) == 6) Sound(0x102);
+    if (B(::bof3::Img(field_s::at::kTimer)) == 6) Sound(0x102);
     SH_CALL(ShopResist_DrawMembers)(1);
-    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(::bof3::Img(at::kTimer))) + 0x98, 0x3F, 0, 0xFF);
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))) + 0x98, 0x3F, 0, 0xFF);
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t != 0) return;
     const auto state = FieldS_State;
     BattleActorCopies_ItemActor = 0;
-    B(::bof3::Img(at::kTimer)) = 0;
+    B(::bof3::Img(field_s::at::kTimer)) = 0;
     MenuLists_Cursor = 0;
     AreaW3c_Load0F = 0;
     FieldS_State = static_cast<unsigned char>(state + 1);
@@ -943,7 +943,7 @@ extern "C" void __cdecl ShopResist_PickMember(void) {
             FieldS_Answer = 1;
             FieldS_State = state;
             AreaW3c_Load0F = 2;
-            B(::bof3::Img(at::kTimer)) = 0x3C;
+            B(::bof3::Img(field_s::at::kTimer)) = 0x3C;
         } else {
             Sound(0x104);
             const auto state = static_cast<unsigned char>(FieldS_State + 1);
@@ -955,7 +955,7 @@ extern "C" void __cdecl ShopResist_PickMember(void) {
         Sound(0x106);
         FieldS_Answer = 0xF;
         FieldS_State = 6;
-        B(::bof3::Img(at::kTimer)) = 0x3C;
+        B(::bof3::Img(field_s::at::kTimer)) = 0x3C;
     }
 }
 
@@ -994,7 +994,7 @@ extern "C" void __cdecl ShopResist_PickBit(void) {
             FieldS_Answer = 0xB;
             FieldS_State = state;
             AreaW3c_Load0F = 0xC;
-            B(::bof3::Img(at::kTimer)) = 0x3C;
+            B(::bof3::Img(field_s::at::kTimer)) = 0x3C;
         } else {
             Sound(0x104);
             const auto state = static_cast<unsigned char>(FieldS_State + 1);
@@ -1022,7 +1022,7 @@ extern "C" void __cdecl ShopResist_Confirm(void) {
     if (static_cast<unsigned char>(FieldS_Answer) != 0) {
         const int cursor = BattleActorCopies_ItemActor;
         FieldS_Answer = 0xC;
-        B(::bof3::Img(at::kTimer)) = 0x3C;
+        B(::bof3::Img(field_s::at::kTimer)) = 0x3C;
         const U level = Rec(MemberAt(cursor))[0xA];
         const U zenny = Party_Zenny - 10u * level;
         const auto state = static_cast<unsigned char>(FieldS_State + 2);
@@ -1039,11 +1039,11 @@ extern "C" void __cdecl ShopResist_Confirm(void) {
 // mode 1 (the field), state and step 0.
 extern "C" void __cdecl ShopResist_Close(void) {
     SH_CALL(ShopResist_DrawMembers)(1);
-    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(::bof3::Img(at::kTimer))) + 0x98, 0x3F, 0, 0xFF);
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) + 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(::bof3::Img(field_s::at::kTimer))) + 0x98, 0x3F, 0, 0xFF);
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) + 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t != 7) return;
-    B(::bof3::Img(at::kTimer)) = 0;
+    B(::bof3::Img(field_s::at::kTimer)) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
     FieldS_Step = 0;
@@ -1074,7 +1074,7 @@ extern "C" void __cdecl ShopResist_Farewell(void) {
     SH_CALL(ShopResist_DrawMembers)(0);
     if ((SH_CALL(ShopResist_Message)(At(::bof3::Img(FieldS_Answer_addr)), 0x10) & 0xFF) == 0) return;
     const auto state = FieldS_State;
-    B(::bof3::Img(at::kTimer)) = 0;
+    B(::bof3::Img(field_s::at::kTimer)) = 0;
     FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
@@ -1118,7 +1118,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
             SH_CALL(Text_DrawAt)(x + 8, row_y, static_cast<int>(text), 0xFF, Message(k + 0xDE));
         else
             SH_CALL(Text_DrawAt)(x + 8, row_y, 2, 0xFF, Message(k + 0xDE));
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtCost)), price);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtCost)), price);
         SH_CALL(Text_DrawFont12)(x + 0x68, row_y, static_cast<int>(text), reinterpret_cast<const unsigned char*>(PrintBuf()));
         row_y += 0xD;
     }
@@ -1134,7 +1134,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
 // coordinate carries the caller's upper half; Menu_DrawTitleBox,
 // Menu_DrawMemberStatus's draws and Menu_DrawMoneyBox's read the low word.
 extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
-    const int s = (sliding & 0xFF) != 0 ? static_cast<int>(B(::bof3::Img(at::kTimer))) : 0;
+    const int s = (sliding & 0xFF) != 0 ? static_cast<int>(B(::bof3::Img(field_s::at::kTimer))) : 0;
     SH_CALL(Menu_DrawTitleBox)(0x14, 0x10 - 10 * s, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     if (PartyCount() != 0) {
         unsigned char k = 0;
@@ -1153,10 +1153,10 @@ extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
 // byte, else 0.
 extern "C" unsigned char __cdecl ShopResist_Message(unsigned char* index, unsigned end) {
     SH_CALL(Text_DrawAt)(0x1C, 0x14, 0, 0xFF, Message(static_cast<U>(*index) + 0x63));
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t != 0 && Pressed() == 0) return 0;
-    B(::bof3::Img(at::kTimer)) = 0x3C;
+    B(::bof3::Img(field_s::at::kTimer)) = 0x3C;
     const auto next = static_cast<unsigned char>(*index + 1);
     *index = next;
     return next == static_cast<unsigned char>(end) ? 1 : 0;
@@ -1221,18 +1221,18 @@ extern "C" void __cdecl SharedList_Menu(void) {
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(FieldS_SharedChoice) != 0) {
-            if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0 &&
-                (SH_CALL(Inventory_Count)(0, at::kInkItem, 0) & 0xFFFF) == 0) {
+            if ((SH_CALL(KeyItem_Has)(field_s::at::kKeyItemInk) & 0xFF) == 0 &&
+                (SH_CALL(Inventory_Count)(0, field_s::at::kInkItem, 0) & 0xFFFF) == 0) {
                 Sound(0x107);
                 return;
             }
-            if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) {
+            if ((SH_CALL(KeyItem_Has)(field_s::at::kKeyItemInk) & 0xFF) == 0) {
                 const auto state = FieldS_State;
                 FieldS_Answer = 1;
                 FieldS_State = static_cast<unsigned char>(state + 1);
             } else {
                 Sound(0x102);
-                const unsigned char first = B(::bof3::Img(at::kJoined));
+                const unsigned char first = B(::bof3::Img(field_s::at::kJoined));
                 const auto state = static_cast<unsigned char>(FieldS_State + 1);
                 win2->handler = 7;
                 win3->handler = 7;
@@ -1256,7 +1256,7 @@ extern "C" void __cdecl SharedList_Menu(void) {
                 FieldS_Step = 1;
                 Sound(0x103);
                 B(::bof3::Img(0x80318F)) = static_cast<unsigned char>(FieldS_SharedChoice);
-                B(::bof3::Img(at::kTimer)) = 5;
+                B(::bof3::Img(field_s::at::kTimer)) = 5;
                 return;
             }
         } else {
@@ -1277,7 +1277,7 @@ extern "C" void __cdecl SharedList_Menu(void) {
         }
         B(::bof3::Img(0x80318F)) = static_cast<unsigned char>(FieldS_SharedChoice);
         Sound(0x103);
-        B(::bof3::Img(at::kTimer)) = 5;
+        B(::bof3::Img(field_s::at::kTimer)) = 5;
         FieldS_Step = 0;
         return;
     }
@@ -1286,8 +1286,8 @@ extern "C" void __cdecl SharedList_Menu(void) {
     win0->state = 1;
     win1->state = 1;
     win21->in_use = 0;
-    if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) win6->state = 1;
-    B(::bof3::Img(at::kTimer)) = 5;
+    if ((SH_CALL(KeyItem_Has)(field_s::at::kKeyItemInk) & 0xFF) == 0) win6->state = 1;
+    B(::bof3::Img(field_s::at::kTimer)) = 5;
     FieldS_State = 4;
 }
 
@@ -1317,7 +1317,7 @@ extern "C" void __cdecl SharedList_UseItem(void) {
                          ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(static_cast<U>(win0->x)) + 7, FieldS_Answer))
                          : static_cast<U>(win0->x) - 36u * static_cast<std::uint32_t>(FieldS_Answer) + 0xE8;
     const U hand_y = static_cast<U>(win0->y) + 5;
-    U pressed = L(::bof3::Img(at::kPressed));
+    U pressed = L(::bof3::Img(field_s::at::kPressed));
     SetW(::bof3::Img(0x803170), 0x36);
     win21->in_use = 1;
     win21->x = hand_x;
@@ -1325,15 +1325,15 @@ extern "C" void __cdecl SharedList_UseItem(void) {
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
-        pressed = L(::bof3::Img(at::kPressed));
+        pressed = L(::bof3::Img(field_s::at::kPressed));
     }
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
             Sound(0x102);
             FieldS_PickIndex = 0;
-            SH_CALL(Inventory_Remove)(0, at::kInkItem, 1);
-            const unsigned char rec = B(::bof3::Img(at::kJoined) + FieldS_PickIndex);
+            SH_CALL(Inventory_Remove)(0, field_s::at::kInkItem, 1);
+            const unsigned char rec = B(::bof3::Img(field_s::at::kJoined) + FieldS_PickIndex);
             const auto step = static_cast<unsigned char>(FieldS_Step + 1);
             OpenMemberWindows(rec);
             FieldS_Step = step;
@@ -1349,8 +1349,8 @@ extern "C" void __cdecl SharedList_UseItem(void) {
 // original 0x5845E0 (PSX 0x801DFF24): SharedList_MoveSteps[1], and ShopMode_States[9]'s step
 // table 0x6641B0 [0]: the counter down one; at 0 the step up one.
 extern "C" void __cdecl Menu_StepAfterTimer(void) {
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
@@ -1368,7 +1368,7 @@ extern "C" void __cdecl SharedList_PickMember(void) {
     records::WindowRecord* const win3 = &WindowRecords[3];
     records::WindowRecord* const win4 = &WindowRecords[4];
     records::WindowRecord* const win21 = &WindowRecords[0x15];
-    SH_CALL(TextRecord_Set)(0, 8, Rec(B(::bof3::Img(at::kJoined) + FieldS_PickIndex)));
+    SH_CALL(TextRecord_Set)(0, 8, Rec(B(::bof3::Img(field_s::at::kJoined) + FieldS_PickIndex)));
     const unsigned char open = win3->state;
     SetW(::bof3::Img(0x803170), 0x75);
     if (open == 0) {
@@ -1395,7 +1395,7 @@ extern "C" void __cdecl SharedList_PickMember(void) {
         B(::bof3::Img(0x8031D9)) = 0x31;
         if (FieldS_PickIndex > last) FieldS_PickIndex = 0;
     }
-    const unsigned char rec = B(::bof3::Img(at::kJoined) + FieldS_PickIndex);
+    const unsigned char rec = B(::bof3::Img(field_s::at::kJoined) + FieldS_PickIndex);
     B(::bof3::Img(0x8031B2)) = rec;
     B(::bof3::Img(0x8031D6)) = rec;
     const U pressed = Pressed();
@@ -1444,7 +1444,7 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
     const U member_rec = B(::bof3::Img(0x8031D6));
     unsigned char slot = B(::bof3::Img(0x8031D7));
     const U ability = B(RecAddr(member_rec) + 0x7E + slot);
-    SetW(::bof3::Img(0x803170), W(::bof3::Img(at::kAbilityRecords) + 0x16 + 24 * ability));
+    SetW(::bof3::Img(0x803170), W(::bof3::Img(field_s::at::kAbilityRecords) + 0x16 + 24 * ability));
     if (win3->state == 0) {
         const U x = L(::bof3::Img(0x8031D0)) + 7;
         win21->x = x;
@@ -1518,7 +1518,7 @@ extern "C" void __cdecl SharedList_PickShared(void) {
     records::WindowRecord* const win21 = &WindowRecords[0x15];
     const unsigned char cur = B(::bof3::Img(0x8031FB));
     win21->in_use = 1;
-    SetW(::bof3::Img(0x803170), W(::bof3::Img(at::kAbilityRecords) + 0x16 + 24u * B(::bof3::Img(at::kSharedList) + cur)));
+    SetW(::bof3::Img(0x803170), W(::bof3::Img(field_s::at::kAbilityRecords) + 0x16 + 24u * B(::bof3::Img(field_s::at::kSharedList) + cur)));
     win21->x = L(::bof3::Img(0x8031F4)) + 7;
     win21->y = 13 * (static_cast<U>(cur) - B(::bof3::Img(0x8031FA)) + 2) + static_cast<U>(win4->y);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
@@ -1532,14 +1532,14 @@ extern "C" void __cdecl SharedList_PickShared(void) {
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
         const U slot = RecAddr(B(::bof3::Img(0x8031D6))) + 0x7E + B(::bof3::Img(0x8031D7));
-        const unsigned char entry = B(::bof3::Img(at::kSharedList) + cl);
+        const unsigned char entry = B(::bof3::Img(field_s::at::kSharedList) + cl);
         if (entry == 0 && B(slot) == 0) {
             Sound(0x107);
             return;
         }
         const unsigned char had = B(slot);
         B(slot) = entry;
-        B(::bof3::Img(at::kSharedList) + B(::bof3::Img(0x8031FB))) = had;
+        B(::bof3::Img(field_s::at::kSharedList) + B(::bof3::Img(0x8031FB))) = had;
         Sound(0x103);
         FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
         return;
@@ -1560,8 +1560,8 @@ extern "C" void __cdecl SharedList_SortStep(void) {
 // 0x3F) - and the step up one.
 extern "C" void __cdecl SharedList_SortOpen(void) {
     records::WindowRecord* const win5 = &WindowRecords[5];
-    const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kTimer)) - 1);
-    B(::bof3::Img(at::kTimer)) = t;
+    const auto t = static_cast<unsigned char>(B(::bof3::Img(field_s::at::kTimer)) - 1);
+    B(::bof3::Img(field_s::at::kTimer)) = t;
     if (t != 0) return;
     const auto step = FieldS_Step;
     win5->handler = 7;
@@ -1633,7 +1633,7 @@ extern "C" void __cdecl SharedList_Arrange(void) {
     records::WindowRecord* const win21 = &WindowRecords[0x15];
     const unsigned char cur = B(::bof3::Img(0x8031FB));
     win21->in_use = 1;
-    SetW(::bof3::Img(0x803170), W(::bof3::Img(at::kAbilityRecords) + 0x16 + 24u * B(::bof3::Img(at::kSharedList) + cur)));
+    SetW(::bof3::Img(0x803170), W(::bof3::Img(field_s::at::kAbilityRecords) + 0x16 + 24u * B(::bof3::Img(field_s::at::kSharedList) + cur)));
     win21->x = static_cast<U>(win4->x);
     win21->y = 13 * (static_cast<U>(cur) - B(::bof3::Img(0x8031FA)) + 2) + static_cast<U>(win4->y);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
@@ -1647,7 +1647,7 @@ extern "C" void __cdecl SharedList_Arrange(void) {
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
         if (B(::bof3::Img(0x8031FC)) == 0xFF) {
-            if (B(::bof3::Img(at::kSharedList) + cl) != 0) {
+            if (B(::bof3::Img(field_s::at::kSharedList) + cl) != 0) {
                 Sound(0x103);
                 B(::bof3::Img(0x8031FC)) = B(::bof3::Img(0x8031FB));
                 return;
@@ -1658,10 +1658,10 @@ extern "C" void __cdecl SharedList_Arrange(void) {
         Sound(0x103);
         const U first = B(::bof3::Img(0x8031FC));
         B(::bof3::Img(0x8031FC)) = 0xFF;
-        const unsigned char a = B(::bof3::Img(at::kSharedList) + first);
+        const unsigned char a = B(::bof3::Img(field_s::at::kSharedList) + first);
         const U second = B(::bof3::Img(0x8031FB));
-        B(::bof3::Img(at::kSharedList) + first) = B(::bof3::Img(at::kSharedList) + second);
-        B(::bof3::Img(at::kSharedList) + second) = a;
+        B(::bof3::Img(field_s::at::kSharedList) + first) = B(::bof3::Img(field_s::at::kSharedList) + second);
+        B(::bof3::Img(field_s::at::kSharedList) + second) = a;
         return;
     }
     if (!Cancelled(pressed)) return;
@@ -1688,7 +1688,7 @@ extern "C" void __cdecl SharedList_Setup(void) {
     unsigned char n = 0;
     FieldS_JoinedCount = 0;
     for (unsigned char r = 0; r < 8; ++r)
-        if (Rec(r)[0xB] & 1) B(::bof3::Img(at::kJoined) + n++) = r;
+        if (Rec(r)[0xB] & 1) B(::bof3::Img(field_s::at::kJoined) + n++) = r;
     FieldS_JoinedCount = n;
     win0->handler = 7;
     win0->kind = 0;
@@ -1709,7 +1709,7 @@ extern "C" void __cdecl SharedList_Setup(void) {
     win21->kind = 3;
     B(::bof3::Img(0x80345E)) = 4;
     win21->in_use = 0;
-    if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) != 0) return;
+    if ((SH_CALL(KeyItem_Has)(field_s::at::kKeyItemInk) & 0xFF) != 0) return;
     win6->handler = 7;
     win6->kind = 0x12;
     win6->state = 2;
@@ -1750,13 +1750,13 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(window + 0xA, &offset, &moving, window + 0xD);
     const int y0 = S8(offset) + w->y;
-    const unsigned char* p = At(::bof3::Img(at::kSharedList) + top);
+    const unsigned char* p = At(::bof3::Img(field_s::at::kSharedList) + top);
     int y = y0 + 0x1A;
     for (U row = 0; static_cast<int>(row) < static_cast<int>(moving) + 9; ++row, ++p, y += 0xD) {
         const unsigned char id = *p;
         if (id == 0) continue;
         const unsigned char adjust = (window[0xD] & 0xF0) != 0xF0 ? moving : 0;
-        const U record = ::bof3::Img(at::kAbilityRecords) + 24u * id;
+        const U record = ::bof3::Img(field_s::at::kAbilityRecords) + 24u * id;
         const unsigned char kind = SH_CALL(Skill_FlagIndex)(id);
         const U cursor = static_cast<U>(window[0xC]) + adjust;
         const U at_row = row + window[0xA];
@@ -1773,13 +1773,13 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(Config_WindowColour));
     const int title_y = w->y + 7;
-    const unsigned char length = SH_CALL(Text_CharCount)(Text(::bof3::Img(at::kListTitle)));
-    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(::bof3::Img(at::kListTitle)));
-    const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListCount.v)(0, 0xFF, 0) & 0xFF;
-    SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtCount)), count, 0x80u);  // D355: the stray push, the total
+    const unsigned char length = SH_CALL(Text_CharCount)(Text(::bof3::Img(field_s::at::kListTitle)));
+    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(::bof3::Img(field_s::at::kListTitle)));
+    const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), field_s::at::kAbilityListCount.v)(0, 0xFF, 0) & 0xFF;
+    SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtCount)), count, 0x80u);  // D355: the stray push, the total
     DrawFont8(w->x + 0x55, w->y + 0x92, 0);
-    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(::bof3::Img(at::kPiecesA)), 1);
-    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(::bof3::Img(at::kPiecesB)), 1);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(::bof3::Img(field_s::at::kPiecesA)), 1);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(::bof3::Img(field_s::at::kPiecesB)), 1);
     for (int i = 0; i < 10; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x28, w->y, 1, 1);
     for (int i = 0; i < 15; ++i) SH_CALL(Menu_DrawPiece)(w->x, w->y + 8 * i + 0x18, 4, 1);
     SH_CALL(Menu_DrawPiece)(w->x + 0x90, w->y + 0x18, 0x16, 1);
@@ -1790,7 +1790,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     SH_CALL(Menu_DrawPiece)(w->x + 0x50, w->y + 0x90, 0x1B, 1);
     for (int i = 0; i < 6; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x58, w->y + 0x90, 0x1C, 1);
     SH_CALL(Menu_DrawPiece)(w->x + 0x88, w->y + 0x90, 0x1D, 1);
-    SH_CALL(Menu_DrawScrollBar)(At(::bof3::Img(at::kSharedList)), window[0xA], w->x + 0x90, w->y + 0x18, 9, 0x80, 0x74);
+    SH_CALL(Menu_DrawScrollBar)(At(::bof3::Img(field_s::at::kSharedList)), window[0xA], w->x + 0x90, w->y + 0x18, 9, 0x80, 0x74);
 }
 
 // original 0x585500: window kind handler (called by 0x59BEA0 with the window
@@ -1815,7 +1815,7 @@ extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     for (unsigned char k = 0; k < 0xA; ++k, y += 0xD, ++slot) {
         if (B(slot) == 0) continue;
         const unsigned char kind = SH_CALL(Skill_FlagIndex)(B(slot));
-        const U record = ::bof3::Img(at::kAbilityRecords) + 24u * B(slot);
+        const U record = ::bof3::Img(field_s::at::kAbilityRecords) + 24u * B(slot);
         const int colour = k != window[0xC] ? 0 : 2;
         const int x = w->x + 7;
         if (k == window[0xB] || k == window[0xC]) {
@@ -1829,8 +1829,8 @@ extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     unsigned char n = SH_CALL(Text_CharCount)(name);
     if (n > 5) n = 5;
     SH_CALL(Text_DrawAt)(6 * (0xC - static_cast<int>(n)) + w->x, w->y + 7, 0, 5, name);
-    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text((window[0xD] & 2) ? ::bof3::Img(at::kPiecesC) : ::bof3::Img(at::kPiecesA)), 1);
-    SH_CALL(Menu_DrawPieces)(w->x - 8, w->y, Text((window[0xD] & 1) ? ::bof3::Img(at::kPiecesE) : ::bof3::Img(at::kPiecesD)), 1);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text((window[0xD] & 2) ? ::bof3::Img(field_s::at::kPiecesC) : ::bof3::Img(field_s::at::kPiecesA)), 1);
+    SH_CALL(Menu_DrawPieces)(w->x - 8, w->y, Text((window[0xD] & 1) ? ::bof3::Img(field_s::at::kPiecesE) : ::bof3::Img(field_s::at::kPiecesD)), 1);
     const unsigned char state = window[0xD];
     window[0xD] = (state & 0xF0) == 0 ? 0 : static_cast<unsigned char>(state - 0x10);
     for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x28, w->y, 1, 1);
@@ -1857,7 +1857,7 @@ extern "C" void __cdecl SharedList_Sort(unsigned how) {
 extern "C" void __cdecl SharedList_Compact(void) {
     for (U limit = 0x7F; limit != 0; --limit)
         for (U i = 0; i < limit; ++i) {
-            const U e = ::bof3::Img(at::kSharedList) + i;
+            const U e = ::bof3::Img(field_s::at::kSharedList) + i;
             if (B(e) == 0 && B(e + 1) != 0) SwapBytes(e, e + 1);
         }
 }
@@ -1898,13 +1898,13 @@ extern "C" void __cdecl SharedList_SortCostUp(void) {
 // 0x66422C, 0x664238 nine times 8 apart, 0x664244.
 extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
-    SH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, Text(::bof3::Img(at::kItemLabel)));
-    const U count = SH_CALL(Inventory_Count)(0, at::kInkItem, 0) & 0xFFFF;
+    SH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, Text(::bof3::Img(field_s::at::kItemLabel)));
+    const U count = SH_CALL(Inventory_Count)(0, field_s::at::kInkItem, 0) & 0xFFFF;
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), count);
     SH_CALL(Text_DrawFont12)(x + 0x34, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kPiecesF)), 0);
-    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPieces)(x + 8 * i, y, Text(::bof3::Img(at::kPiecesG)), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kPiecesH)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_s::at::kPiecesF)), 0);
+    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPieces)(x + 8 * i, y, Text(::bof3::Img(field_s::at::kPiecesG)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_s::at::kPiecesH)), 0);
 }
 
 // ===========================================================================
@@ -1971,8 +1971,8 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
     const unsigned char slot = B(::bof3::Img(0x80333E));
     B(::bof3::Img(0x803364)) = member;
     B(::bof3::Img(0x803361)) = slot;
-    B(::bof3::Img(0x803362)) = B(::bof3::Img(at::kEquipBytes) + slot + 6u * member);
-    const U record = RecAddr(RecordOf(B(::bof3::Img(at::kPartyList) + member)));
+    B(::bof3::Img(0x803362)) = B(::bof3::Img(field_s::at::kEquipBytes) + slot + 6u * member);
+    const U record = RecAddr(RecordOf(B(::bof3::Img(field_s::at::kPartyList) + member)));
     U category, cell;
     switch (slot) {
     case 1: category = 2; cell = record + 0x13; break;
@@ -1990,7 +1990,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
         const unsigned char s = B(::bof3::Img(0x80333E));
         B(::bof3::Img(0x80333F)) = s;
         const auto state = static_cast<unsigned char>(FieldS_State + 1);
-        B(::bof3::Img(0x803363)) = B(::bof3::Img(at::kEquipCursor) + s + 6u * m);
+        B(::bof3::Img(0x803363)) = B(::bof3::Img(field_s::at::kEquipCursor) + s + 6u * m);
         FieldS_State = state;
         return;
     }
@@ -2021,7 +2021,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
     }
     const auto state = FieldS_State;
     win21->in_use = 0;
-    B(::bof3::Img(at::kTimer)) = 0;
+    B(::bof3::Img(field_s::at::kTimer)) = 0;
     FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
@@ -2048,7 +2048,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     win21->y = hand_y;
     SetW(::bof3::Img(0x8032FC), SH_CALL(Item_HelpMessage)(B(::bof3::Img(0x803360)), B(::bof3::Img(0x803365))));
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0xF00C));
-    SH_AT(void (__cdecl*)(), at::kEquipPreview.v)();
+    SH_AT(void (__cdecl*)(), field_s::at::kEquipPreview.v)();
     unsigned char al = B(::bof3::Img(0x803363));
     const unsigned char before = al;
     unsigned char cl;
@@ -2105,13 +2105,13 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     const unsigned char slot = B(::bof3::Img(0x80333E));
     const U row = 6u * B(::bof3::Img(0x803340));
     if (slot < 4) {
-        B(::bof3::Img(at::kEquipBytes) + slot + row) = cl;
-        B(::bof3::Img(at::kEquipCursor) + slot + row) = al;
+        B(::bof3::Img(field_s::at::kEquipBytes) + slot + row) = cl;
+        B(::bof3::Img(field_s::at::kEquipCursor) + slot + row) = al;
     } else {
-        B(::bof3::Img(at::kEquipBytes) + 5 + row) = cl;
-        B(::bof3::Img(at::kEquipCursor) + 5 + row) = al;
-        B(::bof3::Img(at::kEquipBytes) + 4 + row) = cl;
-        B(::bof3::Img(at::kEquipCursor) + 4 + row) = al;
+        B(::bof3::Img(field_s::at::kEquipBytes) + 5 + row) = cl;
+        B(::bof3::Img(field_s::at::kEquipCursor) + 5 + row) = al;
+        B(::bof3::Img(field_s::at::kEquipBytes) + 4 + row) = cl;
+        B(::bof3::Img(field_s::at::kEquipCursor) + 4 + row) = al;
     }
     if (before != al) Sound(0x100);
     if (W(::bof3::Img(0x803368)) != 0) return;
@@ -2119,7 +2119,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     if (Confirmed(pressed)) {
         if (B(::bof3::Img(0x803365)) != 0) {
             Sound(0x104);
-            SH_AT(void (__cdecl*)(), at::kEquipApply.v)();
+            SH_AT(void (__cdecl*)(), field_s::at::kEquipApply.v)();
             const auto state = FieldS_State;
             B(::bof3::Img(0x803363)) = 0xFF;
             FieldS_State = static_cast<unsigned char>(state - 1);

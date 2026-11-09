@@ -92,9 +92,9 @@ int S8(std::uint32_t address) { return static_cast<signed char>(battle_win_state
 
 // Enemy slot t's record: 0x93B9E0 + 0x128 * (t - 3), the subtraction at full
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
-unsigned char* Enemy(unsigned slot) { return battle_win_states::At(::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * (slot - 3u)); }
+unsigned char* Enemy(unsigned slot) { return battle_win_states::At(::bof3::Img(Battle_Enemies_addr) + 0x80 + battle_win_states::at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
-unsigned char* MemberBattleWinStates(unsigned m) { return battle_win_states::At(::bof3::Img(ObjTrio_addr) + at::kMemberStride * m); }
+unsigned char* MemberBattleWinStates(unsigned m) { return battle_win_states::At(::bof3::Img(ObjTrio_addr) + battle_win_states::at::kMemberStride * m); }
 // Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
 // its typed view, starts 0x80 before.
 
@@ -130,7 +130,7 @@ void LowFlag(unsigned char* status, unsigned value, unsigned top) {
 }
 
 // The target banner's x offset: 0x64E2BC for side bytes 0 and 3, else 0x64E2BE.
-int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(::bof3::Img(at::kSideDx.v)) : BattleWinStates_OtherDx; }
+int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(::bof3::Img(battle_win_states::at::kSideDx.v)) : BattleWinStates_OtherDx; }
 
 }  // namespace
 
@@ -263,20 +263,20 @@ extern "C" void __cdecl BattleWin_PartyRowDraw() {
 // (re-read) is 0, the state steps on; else all seven growths lose 1.
 extern "C" void __cdecl BattleWin_CrossGrow() {
     for (unsigned i = 0; i < 5; ++i) {
-        const unsigned grow = battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i)[0];
+        const unsigned grow = battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossGrow.v) + i)[0];
         const unsigned size = (0x10u - grow) & 0xFFu;
         const unsigned half = grow >> 1;
-        const unsigned char* const arm = battle_win_states::At(::bof3::Img(at::kCrossArms.v) + 2 * i);
+        const unsigned char* const arm = battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossArms.v) + 2 * i);
         auto* const win = rv::As<records::WindowRecord>(Current());
         const unsigned y = win->y + arm[1] + half;
         const unsigned x = win->x + arm[0] + half;
         battle_win_states::g.icon(i, x, y, size, size, 0x80);
     }
-    if (battle_win_states::At(::bof3::Img(at::kCrossGrow.v))[0] == 0) {
+    if (battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossGrow.v))[0] == 0) {
         ++rv::As<records::WindowRecord>(Current())->state;
         return;
     }
-    for (unsigned i = 0; i < 7; ++i) --battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i)[0];
+    for (unsigned i = 0; i < 7; ++i) --battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossGrow.v) + i)[0];
 }
 
 // original 0x597160: state 1 - the selected arm's growth (the selection
@@ -285,8 +285,8 @@ extern "C" void __cdecl BattleWin_CrossGrow() {
 // cross drawn at the window's +4 / +6.
 extern "C" void __cdecl BattleWin_CrossFrame() {
     for (unsigned i = 0; i < 7; ++i) {
-        const unsigned sel = battle_win_states::At(::bof3::Img(at::kCrossSel.v))[0];
-        unsigned char* const grow = battle_win_states::At(::bof3::Img(at::kCrossGrow.v) + i);
+        const unsigned sel = battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossSel.v))[0];
+        unsigned char* const grow = battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossGrow.v) + i);
         if (sel == i) {
             if (*grow < 8) *grow = static_cast<unsigned char>(*grow + 2);
         } else if (*grow != 0) {
@@ -304,7 +304,7 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
 // the byte 0x903A5D is set.
 extern "C" void __cdecl BattleWin_LabelFrame() {
     if (BattleWinStates_LabelGate != 0) return;
-    battle_win_states::g.command_label(battle_win_states::At(::bof3::Img(at::kCrossSel.v))[0]);
+    battle_win_states::g.command_label(battle_win_states::At(::bof3::Img(battle_win_states::at::kCrossSel.v))[0]);
 }
 
 // ===========================================================================
@@ -349,13 +349,13 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     const auto text = [](std::uint32_t off) {
-        return battle_win_states::At(static_cast<std::uint32_t>(battle_win_states::Long(battle_win_states::At(::bof3::Img(at::kBanners.v) + 4 + off))));
+        return battle_win_states::At(static_cast<std::uint32_t>(battle_win_states::Long(battle_win_states::At(::bof3::Img(battle_win_states::at::kBanners.v) + 4 + off))));
     };
-    const unsigned n = battle_win_states::g.glyph_count(text(at::kBannerStride * w[0xA]));
+    const unsigned n = battle_win_states::g.glyph_count(text(battle_win_states::at::kBannerStride * w[0xA]));
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    const std::uint32_t off = at::kBannerStride * w[0xA];
-    const bool wide = battle_win_states::At(::bof3::Img(at::kBanners.v) + 2 + off)[0] != 0;
+    const std::uint32_t off = battle_win_states::at::kBannerStride * w[0xA];
+    const bool wide = battle_win_states::At(::bof3::Img(battle_win_states::at::kBanners.v) + 2 + off)[0] != 0;
     const unsigned x = win->x, y = win->y;
     if (wide) {
         battle_win_states::g.medium_box(static_cast<std::uint16_t>(x - 0x10), y);
@@ -364,9 +364,9 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     }
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    const std::uint32_t o = at::kBannerStride * w[0xA];
+    const std::uint32_t o = battle_win_states::at::kBannerStride * w[0xA];
     // eax: the record offset with its low byte replaced by the colour
-    const unsigned colour = (o & ~0xFFu) | battle_win_states::At(::bof3::Img(at::kBanners.v) + 0xA + o)[0];
+    const unsigned colour = (o & ~0xFFu) | battle_win_states::At(::bof3::Img(battle_win_states::at::kBanners.v) + 0xA + o)[0];
     const unsigned ty = static_cast<std::uint16_t>(win->y + 3);
     const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->x, n, wide, text(o)));
     battle_win_states::g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), BannerTextCount(wide), text(o));
@@ -417,7 +417,7 @@ extern "C" void __cdecl BattleWin_EnemyGaugeFrame() {
 extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
-    const std::uint32_t off = at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
+    const std::uint32_t off = battle_win_states::at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
     const std::uint32_t e = ::bof3::Img(Battle_Enemies_addr) + 0x80 + off;
     const int dx = SideDx(battle_win_states::At(e - 0x78)[0]);
     win->x = static_cast<unsigned>(S8(e + 0x72) + battle_win_states::Word(battle_win_states::At(e - 0x52)) + dx);

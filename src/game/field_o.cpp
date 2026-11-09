@@ -67,10 +67,10 @@ unsigned char* Ptr(U a) { return AtFieldO(a); }
 unsigned char* PtrAt(const unsigned char* cell) { return AtFieldO(static_cast<U>(Long(cell))); }
 const char* Str(U a) { return reinterpret_cast<const char*>(AtFieldO(a)); }
 const unsigned char* Text(U a) { return AtFieldO(a); }
-unsigned char* Buf() { return AtFieldO(::bof3::Img(at::kTextScratch)); }
-char* CBuf() { return reinterpret_cast<char*>(AtFieldO(::bof3::Img(at::kTextScratch))); }
+unsigned char* Buf() { return AtFieldO(::bof3::Img(field_o::at::kTextScratch)); }
+char* CBuf() { return reinterpret_cast<char*>(AtFieldO(::bof3::Img(field_o::at::kTextScratch))); }
 
-unsigned char* Record(unsigned id) { return AtFieldO(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * at::kRecordStride); }
+unsigned char* Record(unsigned id) { return AtFieldO(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * field_o::at::kRecordStride); }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fam() { return Field_ActiveMember; }
@@ -149,26 +149,26 @@ extern "C" void __cdecl Menu_DrawStatsPanel(int x, int y, unsigned record) {
     SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, Style());
     const unsigned char* const rec = Record(record);
     const int left = x + 0xB;
-    SH_CALL(Text_DrawAt)(left, y + 8, 0, 0xFF, Text(::bof3::Img(at::kStatLabels)));
-    Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.atk));
+    SH_CALL(Text_DrawAt)(left, y + 8, 0, 0xFF, Text(::bof3::Img(field_o::at::kStatLabels)));
+    Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.atk));
     SH_CALL(Text_DrawFont8)(x + 0x30, y + 0xA, 0, Buf());
-    SH_CALL(Text_DrawAt)(left, y + 0x15, 0, 0xFF, Text(::bof3::Img(at::kStatLabels) + 8));
-    Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.def));
+    SH_CALL(Text_DrawAt)(left, y + 0x15, 0, 0xFF, Text(::bof3::Img(field_o::at::kStatLabels) + 8));
+    Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.def));
     SH_CALL(Text_DrawFont8)(x + 0x30, y + 0x17, 0, Buf());
-    SH_CALL(Text_DrawAt)(x + 0x53, y + 8, 0, 0xFF, Text(::bof3::Img(at::kStatLabels) + 0x10));
-    Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.intel));
+    SH_CALL(Text_DrawAt)(x + 0x53, y + 8, 0, 0xFF, Text(::bof3::Img(field_o::at::kStatLabels) + 0x10));
+    Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.intel));
     SH_CALL(Text_DrawFont8)(x + 0x78, y + 0xA, 0, Buf());
-    SH_CALL(Text_DrawAt)(x + 0x53, y + 0x15, 0, 0xFF, Text(::bof3::Img(at::kStatLabels) + 0x18));
-    Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.agi));
+    SH_CALL(Text_DrawAt)(x + 0x53, y + 0x15, 0, 0xFF, Text(::bof3::Img(field_o::at::kStatLabels) + 0x18));
+    Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.agi));
     SH_CALL(Text_DrawFont8)(x + 0x78, y + 0x17, 0, Buf());
     const unsigned char trait = rec[0x1F];
     if (trait != 0xFF) {
         SH_CALL(TextRecord_Set)(0, 8, SH_CALL(Msg_SystemPtr)(0x111u + trait));
         SH_CALL(Text_DrawAt)(left, y + 0x22, 0, 0xFF, SH_CALL(Msg_SystemPtr)(0x34));
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kStatsPiecesA)), 0);
-    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(::bof3::Img(at::kStatsPiecesB)), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kStatsPiecesC)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kStatsPiecesA)), 0);
+    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(::bof3::Img(field_o::at::kStatsPiecesB)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kStatsPiecesC)), 0);
 }
 
 // original 0x573BF0: a record's EXP (next 0) or the EXP its next level wants
@@ -181,13 +181,13 @@ extern "C" void __cdecl Menu_DrawExpPanel(int x, int y, unsigned record, unsigne
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x65, 0x25, 0, Style());
     const unsigned char* const rec = Record(record);
     const bool want = static_cast<unsigned char>(next) != 0;
-    SH_CALL(Text_DrawAt)(x + 0x1E + (want ? 0 : 6), y + 7, 0, 0xFF, Text(want ? ::bof3::Img(at::kExpLabel) + 4 : ::bof3::Img(at::kExpLabel)));
+    SH_CALL(Text_DrawAt)(x + 0x1E + (want ? 0 : 6), y + 7, 0, 0xFF, Text(want ? ::bof3::Img(field_o::at::kExpLabel) + 4 : ::bof3::Img(field_o::at::kExpLabel)));
     const std::int32_t v = want ? SH_CALL(Char_ExpForLevel)(record, static_cast<unsigned char>(rec[0xA] + 1))
                                 : rv::As<records::CharRecord>(rec)->exp;
-    if (v == -1) Sprintf(::bof3::Img(at::kFmtExpNone));
-    else Sprintf(::bof3::Img(at::kFmtExp), v);
+    if (v == -1) Sprintf(::bof3::Img(field_o::at::kFmtExpNone));
+    else Sprintf(::bof3::Img(field_o::at::kFmtExp), v);
     SH_CALL(Text_DrawFont12)(x + 5, y + 0x1A, 0, Buf());
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kExpPieces)), 1);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kExpPieces)), 1);
 }
 
 namespace {
@@ -243,7 +243,7 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     const unsigned k = kind & 0xFF;
     // DIVERGENCE DIV-0084: a one-byte-a-letter name (DIV-0064's group 10)
     // centred on x + 0x27, 8 a letter; the port's x + 0x16 otherwise.
-    const unsigned char* const name = Text(::bof3::Img(at::kWheelNames) + k * 28);
+    const unsigned char* const name = Text(::bof3::Img(field_o::at::kWheelNames) + k * 28);
     int name_x = x + 0x16;
     if (field_o::g_wheel_name_centre && Labels_SmallWritten(10))
         name_x = x + 0x27 - 4 * static_cast<int>(std::strlen(reinterpret_cast<const char*>(name)));
@@ -252,15 +252,15 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     const unsigned char count = kb == 0 ? 1 : kb <= 3 ? 2 : 3;
     for (unsigned i = 0; i < 3; ++i) {
         std::int32_t ox, oz;
-        Turn(angle, Long(AtFieldO(::bof3::Img(at::kWheelTriangle) + 8 * i)), Long(AtFieldO(::bof3::Img(at::kWheelTriangle) + 8 * i + 4)), ox, oz);
-        SetLong(AtFieldO(::bof3::Img(at::kWheelFrame) + 8 * i), ox);
-        SetLong(AtFieldO(::bof3::Img(at::kWheelFrame) + 8 * i + 4), oz);
+        Turn(angle, Long(AtFieldO(::bof3::Img(field_o::at::kWheelTriangle) + 8 * i)), Long(AtFieldO(::bof3::Img(field_o::at::kWheelTriangle) + 8 * i + 4)), ox, oz);
+        SetLong(AtFieldO(::bof3::Img(field_o::at::kWheelFrame) + 8 * i), ox);
+        SetLong(AtFieldO(::bof3::Img(field_o::at::kWheelFrame) + 8 * i + 4), oz);
     }
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG3)(prim);
     const std::int32_t bx = static_cast<std::int32_t>(static_cast<U>(x) & 0xFFFF);
     const std::int32_t by = static_cast<std::int32_t>(static_cast<U>(y) & 0xFFFF);
-    const unsigned char* const f = AtFieldO(::bof3::Img(at::kWheelFrame));
+    const unsigned char* const f = AtFieldO(::bof3::Img(field_o::at::kWheelFrame));
     PutFloat(prim + 8, bx + Long(f) + 0x26);
     PutFloat(prim + 0xC, by + Long(f + 4) + 0x17);
     PutFloat(prim + 0x18, bx + Long(f + 8) + 0x26);
@@ -283,15 +283,15 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
         } else {
             colour[j] = 0x70;
         }
-        const unsigned char* const spot = AtFieldO(::bof3::Img(at::kWheelIcons) + k * 28 + 4 * j);
+        const unsigned char* const spot = AtFieldO(::bof3::Img(field_o::at::kWheelIcons) + k * 28 + 4 * j);
         std::int32_t ox, oz;
         Turn(angle, S16(Word(spot)), S16(Word(spot + 2)), ox, oz);
-        SetLong(AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j), ox);
-        SetLong(AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j + 4), oz);
+        SetLong(AtFieldO(::bof3::Img(field_o::at::kWheelSpots) + 8 * j), ox);
+        SetLong(AtFieldO(::bof3::Img(field_o::at::kWheelSpots) + 8 * j + 4), oz);
     }
     for (unsigned i = 0; static_cast<int>(i) < count - 1; ++i) {
         for (unsigned j = 0; static_cast<int>(j) < count - static_cast<int>(i) - 1; ++j) {
-            unsigned char* const a = AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j);
+            unsigned char* const a = AtFieldO(::bof3::Img(field_o::at::kWheelSpots) + 8 * j);
             if (Long(a + 4) <= Long(a + 0xC)) continue;
             const std::int32_t x0 = Long(a), z0 = Long(a + 4);
             SetLong(a, Long(a + 8));
@@ -308,14 +308,14 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     }
     for (unsigned j = 0; j < count; ++j) {
         const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
-        const unsigned char* const spot = AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j);
+        const unsigned char* const spot = AtFieldO(::bof3::Img(field_o::at::kWheelSpots) + 8 * j);
         const auto sx = static_cast<unsigned>(static_cast<std::uint16_t>(Word(spot) + static_cast<unsigned>(x)) + 0x23u);
         const auto sy = static_cast<unsigned>(static_cast<std::uint16_t>(Word(spot + 4) + static_cast<unsigned>(y)) + 0xFu);
         SH_CALL(Menu_DrawCell8)(sx, sy, static_cast<unsigned char>(order[j] + 3), 0x1E, clut, colour[j]);
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(Menu_PlayTimePieces_addr) + 0x2c), 0);
-    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(::bof3::Img(at::kWheelPiecesB)), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kWheelPiecesC)), 0);
+    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(::bof3::Img(field_o::at::kWheelPiecesB)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kWheelPiecesC)), 0);
 }
 
 // original 0x574400 (PSX 0x801D9FC0): one 16 x 8 SPRT of the menu page (CLUT 0x7800, v 0xD8, u
@@ -359,10 +359,10 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
     const unsigned char* const rec = Record(record);
     SH_CALL(Text_DrawAt)(x + 0x20, y + 7, 0, 5, rec);
     for (unsigned i = 0; i < 4; ++i)
-        SH_CALL(Text_DrawAt)(x + 5, y + 0x1A + 13 * static_cast<int>(i), 0, 4, Text(::bof3::Img(at::kStatLabels) + 8 * i));
+        SH_CALL(Text_DrawAt)(x + 5, y + 0x1A + 13 * static_cast<int>(i), 0, 4, Text(::bof3::Img(field_o::at::kStatLabels) + 8 * i));
     static const unsigned char kStats[4] = {0x24, 0x26, 0x2A, 0x28};
     for (unsigned i = 0; i < 4; ++i) {
-        Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(Word(rec + kStats[i])));
+        Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(Word(rec + kStats[i])));
         SH_CALL(Text_DrawFont8)(x + 0x31, y + 0x1C + 13 * static_cast<int>(i), 0, Buf());
     }
     if (static_cast<unsigned char>(no_preview) == 0) {
@@ -377,7 +377,7 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
             const int row = y + 13 * static_cast<int>(i) + 0x1C;
             const unsigned clut = SH_CALL(Gpu_GetClut)(0, 0x1E0);
             SH_CALL(Menu_DrawCell8)(static_cast<unsigned>(x + 0x51), static_cast<unsigned>(row), u, 0x1C, clut, 0x80);
-            Sprintf(::bof3::Img(at::kFmtNumber), static_cast<unsigned>(values[i]));
+            Sprintf(::bof3::Img(field_o::at::kFmtNumber), static_cast<unsigned>(values[i]));
             SH_CALL(Text_DrawFont8)(x + 0x59, row, marks[i], Buf());
         }
     }
@@ -388,21 +388,21 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
     };
     for (unsigned b = 0; b < 6; ++b) {
         const int row = y + 13 * static_cast<int>(b);
-        const unsigned char icon = AtFieldO(::bof3::Img(at::kEquipIcons))[b];
+        const unsigned char icon = AtFieldO(::bof3::Img(field_o::at::kEquipIcons))[b];
         const unsigned char* const name = names[b];
         const bool raised = b == panel[0xB] || b == panel[0xA];
         if (raised) {
             const unsigned char under = b == panel[0xB] ? 2 : 0;
             SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x57, icon, 1);
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x55, 7, SH_CALL(Text_CharCount)(name), name);
-            SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x55, AtFieldO(::bof3::Img(at::kEquipIcons))[b], 0);
+            SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x55, AtFieldO(::bof3::Img(field_o::at::kEquipIcons))[b], 0);
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x53, under, SH_CALL(Text_CharCount)(name), name);
         } else {
             SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x57, icon, 0);
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x55, 0, SH_CALL(Text_CharCount)(name), name);
         }
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kEquipPieces)), 1);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kEquipPieces)), 1);
     for (unsigned b = 0; b < 7; ++b) {
         const int row = y + 8 * static_cast<int>(b) + 0x18;
         SH_CALL(Menu_DrawPiece)(x, row, 4, 1);
@@ -483,13 +483,13 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
         if (colour != 7) SH_CALL(Menu_DrawSkillRow)(PanelX(panel) + 7, row, 7, kind, rec, cost, 1);
         SH_CALL(Menu_DrawSkillRow)(PanelX(panel) + 7, row - 2, colour, kind, rec, cost, dim);
     }
-    const char* const title = Str(static_cast<U>(Long(AtFieldO(::bof3::Img(at::kAbilityTitles) + panel[0xB] * 4u))));
+    const char* const title = Str(static_cast<U>(Long(AtFieldO(::bof3::Img(field_o::at::kAbilityTitles) + panel[0xB] * 4u))));
     const int ty = PanelY(panel) + 7;
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title)),
                                  reinterpret_cast<const unsigned char*>(title)),
                          ty, 0, 0x10, reinterpret_cast<const unsigned char*>(title));
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? ::bof3::Img(at::kListPiecesLit) : ::bof3::Img(at::kListPiecesA)), 1);
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 1 ? ::bof3::Img(at::kListPiecesBLit) : ::bof3::Img(at::kListPiecesB)), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? ::bof3::Img(field_o::at::kListPiecesLit) : ::bof3::Img(field_o::at::kListPiecesA)), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 1 ? ::bof3::Img(field_o::at::kListPiecesBLit) : ::bof3::Img(field_o::at::kListPiecesB)), 1);
     const unsigned char arrows = panel[9];
     panel[9] = arrows & 0xF0 ? static_cast<unsigned char>(arrows - 0x10) : 0;
     for (unsigned b = 0; b < 0xA; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8 * static_cast<int>(b) + 0x28, PanelY(panel), 1, 1);
@@ -540,22 +540,22 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
             const U kindv = SH_CALL(Item_IconKind)(2, ids[0]) & 0xFF;
             if (static_cast<U>(panel[9]) - 1u != kindv - 2u) continue;
         }
-        AtFieldO(::bof3::Img(at::kListIds))[kept] = ids[0];
-        AtFieldO(::bof3::Img(at::kListCounts))[kept] = counts[0];
+        AtFieldO(::bof3::Img(field_o::at::kListIds))[kept] = ids[0];
+        AtFieldO(::bof3::Img(field_o::at::kListCounts))[kept] = counts[0];
         ++total;
         ++kept;
     }
     if (kept < 0x80) {
-        std::memset(AtFieldO(::bof3::Img(at::kListCounts) + kept), 0, 0x80u - kept);
-        std::memset(AtFieldO(::bof3::Img(at::kListIds) + kept), 0, 0x80u - kept);
+        std::memset(AtFieldO(::bof3::Img(field_o::at::kListCounts) + kept), 0, 0x80u - kept);
+        std::memset(AtFieldO(::bof3::Img(field_o::at::kListIds) + kept), 0, 0x80u - kept);
     }
-    panel[0xD] = AtFieldO(::bof3::Img(at::kListIds))[panel[0xB]];
+    panel[0xD] = AtFieldO(::bof3::Img(field_o::at::kListIds))[panel[0xB]];
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 3, 0x99, 0x9A, 0, Style());
     unsigned char offset = 0, moving = 0;
     const unsigned char start = SH_CALL(Menu_ListScroll)(panel + 0xA, &offset, &moving, panel + 0x10);
     int row = PanelY(panel) + Sb(offset) + 0x1A;
-    const unsigned char* item = AtFieldO(::bof3::Img(at::kListIds) + start);
-    const std::int32_t to_counts = static_cast<std::int32_t>(at::kListCounts - at::kListIds);
+    const unsigned char* item = AtFieldO(::bof3::Img(field_o::at::kListIds) + start);
+    const std::int32_t to_counts = static_cast<std::int32_t>(field_o::at::kListCounts - field_o::at::kListIds);
     for (unsigned j = 0; static_cast<int>(j) < moving + 9; ++j, ++item, row += 0xD) {
         const unsigned char id = item[0];
         if (id == 0) continue;
@@ -569,13 +569,13 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 3, 0x99, 0x14, 0, Style());
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 0x92, 0x99, 8, 0, Style());
     const unsigned category = panel[8];
-    const unsigned char* const title = Text(static_cast<U>(Long(AtFieldO(::bof3::Img(at::kItemTitles) + category * 4u))));
+    const unsigned char* const title = Text(static_cast<U>(Long(AtFieldO(::bof3::Img(field_o::at::kItemTitles) + category * 4u))));
     const int ty = PanelY(panel) + 7;
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title), title), ty, 0, 0x10, title);
-    Sprintf(::bof3::Img(at::kFmtCount), static_cast<unsigned>(total), 0x80u);
+    Sprintf(::bof3::Img(field_o::at::kFmtCount), static_cast<unsigned>(total), 0x80u);
     SH_CALL(Text_DrawFont8)(PanelX(panel) + 0x55, PanelY(panel) + 0x92, 0, Buf());
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(::bof3::Img(at::kListPiecesA)), 1);
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(::bof3::Img(at::kItemPiecesB)), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(::bof3::Img(field_o::at::kListPiecesA)), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(::bof3::Img(field_o::at::kItemPiecesB)), 1);
     for (unsigned b = 0; b < 0xA; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8 * static_cast<int>(b) + 0x28, PanelY(panel), 1, 1);
     for (unsigned b = 0; b < 0xF; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel), PanelY(panel) + 8 * static_cast<int>(b) + 0x18, 4, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x90, PanelY(panel) + 0x18, 0x16, 1);
@@ -591,7 +591,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x88, PanelY(panel) + 0x90, 0x1D, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8, PanelY(panel), 0x32, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x90, PanelY(panel), 0x33, 1);
-    SH_CALL(Menu_DrawScrollBar)(AtFieldO(::bof3::Img(at::kListIds)), panel[0xA], PanelX(panel) + 0x90, PanelY(panel) + 0x18, 9, 0x80, 0x74);
+    SH_CALL(Menu_DrawScrollBar)(AtFieldO(::bof3::Img(field_o::at::kListIds)), panel[0xA], PanelX(panel) + 0x90, PanelY(panel) + 0x18, 9, 0x80, 0x74);
 }
 
 // original 0x576960: a save or load slot (SaveMenu_DrawSlots 0x588D6B; the
@@ -618,7 +618,7 @@ namespace field_o { unsigned char g_empty_slot_blank = 0; }
 
 extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const unsigned char* summary) {
     SH_CALL(Menu_DrawBox)(x + 8, y, 0xC8, 0x30, 0, Style());
-    Sprintf(::bof3::Img(at::kFmtSlot), slot & 0xFF);
+    Sprintf(::bof3::Img(field_o::at::kFmtSlot), slot & 0xFF);
     SH_CALL(Text_DrawFont8)(x + 9, y + 5, 0, Buf());
     unsigned flags = 0;
     if (summary != nullptr) {
@@ -635,16 +635,16 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         SH_CALL(Text_DrawAt)(x + inset, y + 2, 0, 5, Buf());
         Sprintf(::bof3::Img(Boss26Fx_CountFormat_addr), static_cast<unsigned>(summary[8]));
         SH_CALL(Text_DrawFont8)(x + 0x1F, y + 0x18, 0, Buf());
-        Sprintf(::bof3::Img(at::kFmtTime), static_cast<unsigned>(summary[0xC]), static_cast<unsigned>(summary[0xD]));
+        Sprintf(::bof3::Img(field_o::at::kFmtTime), static_cast<unsigned>(summary[0xC]), static_cast<unsigned>(summary[0xD]));
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x25, 0, Buf());
-        SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x24, 0, Text(::bof3::Img(at::kColon)));
-        SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(at::kColon)));
+        SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x24, 0, Text(::bof3::Img(field_o::at::kColon)));
+        SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(field_o::at::kColon)));
         SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
         flags = summary[0x14] ? 2 : 0;
     } else if (!field_o::g_empty_slot_blank) {
-        SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(at::kEmptySlot)));
+        SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(field_o::at::kEmptySlot)));
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kSlotPieces)), static_cast<int>(flags));
+    SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kSlotPieces)), static_cast<int>(flags));
     if (summary != nullptr && summary[0x14] != 0) SH_CALL(Menu_DrawPiece)(x + 0x32, y + 0x16, 0x3D, 0);
 }
 

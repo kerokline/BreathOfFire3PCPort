@@ -442,7 +442,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
     const unsigned char roll = static_cast<unsigned char>((Al(static_cast<std::uint32_t>(field_hidden::g.rand())) & 0xF) + 1);
     unsigned char sum = 0;
     for (unsigned char row = 0; row < 8; ++row) {
-        sum = static_cast<unsigned char>(sum + Byte(::bof3::Img(at::kRows) + 8 + row * 9u));
+        sum = static_cast<unsigned char>(sum + Byte(::bof3::Img(field_hidden::at::kRows) + 8 + row * 9u));
         if (roll <= sum) return row;
     }
     return 0;
@@ -455,7 +455,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
 FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * at::kEnemyStride);
+        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * field_hidden::at::kEnemyStride);
         const unsigned char kind = row[k];
         slot[1] = kind;
         if (kind == 0xFF) {
@@ -463,7 +463,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
             continue;
         }
         const int roll = (field_hidden::g.rand() & 0xF) + 1;
-        if (roll > static_cast<int>(Byte(::bof3::Img(at::kSlotChance) + k))) {
+        if (roll > static_cast<int>(Byte(::bof3::Img(field_hidden::at::kSlotChance) + k))) {
             slot[0] = 0;
         } else {
             slot[0] = 1;
@@ -496,7 +496,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
 // argument's slot. Neither slot is read by a caller again.
 FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_centre) {
     unsigned char answer = 1;
-    Sprite_Current = At(::bof3::Img(at::kScratchSprite));
+    Sprite_Current = At(::bof3::Img(field_hidden::at::kScratchSprite));
     unsigned char f = static_cast<unsigned char>(facing);
     if (f >= 4) f = static_cast<unsigned char>((FieldHidden_Facing + 1) & 3);
     FieldHidden_Facing = f;
@@ -510,14 +510,14 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
     const unsigned char count = Al(field_hidden::g.fill_slots(picked));
     FieldHidden_EnemyCount = count;
     if (count == 0) return 0;
-    At(::bof3::Img(at::kBattleFacing))[0] = FieldHidden_Facing;
+    At(::bof3::Img(field_hidden::at::kBattleFacing))[0] = FieldHidden_Facing;
     if (Al(field_hidden::g.place_party()) == 0 || Al(field_hidden::g.place_enemies()) == 0 || Al(field_hidden::g.reachable()) == 0) answer = 0;
     field_hidden::g.push_matrix();
     field_hidden::g.aim_camera(FieldHidden_Facing);
     for (unsigned char m = 0; m < Al(field_hidden::g.party_count(1)); ++m) {
-        const long x = Long(At(::bof3::Img(at::kMemberPos) + m * 8u));
-        const long z = Long(At(::bof3::Img(at::kMemberPos) + m * 8u + 4));
-        const unsigned char id = Byte(::bof3::Img(at::kPartyList2) + m);
+        const long x = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u));
+        const long z = Long(At(::bof3::Img(field_hidden::at::kMemberPos) + m * 8u + 4));
+        const unsigned char id = Byte(::bof3::Img(field_hidden::at::kPartyList2) + m);
         const unsigned wide = (id == 2 || id == 6) ? 1u : 0u;
         if (Al(field_hidden::g.on_screen(x, z, (facing & 0xFFFFFF00u) | wide, 0x20)) == 0) {
             field_hidden::g.pop_matrix();
@@ -525,8 +525,8 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         }
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * at::kEnemyStride);
-        const unsigned char* const kind = At(::bof3::Img(at::kKinds) + slot[1] * at::kKindStride);
+        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * field_hidden::at::kEnemyStride);
+        const unsigned char* const kind = At(::bof3::Img(field_hidden::at::kKinds) + slot[1] * field_hidden::at::kKindStride);
         if (slot[0] == 0) continue;
         if (Al(field_hidden::g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
             slot[0] = 0;

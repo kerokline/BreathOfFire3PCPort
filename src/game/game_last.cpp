@@ -47,11 +47,11 @@ using Handler = void(__cdecl*)();
 extern "C" unsigned __cdecl Item_UseFlags(unsigned category, unsigned item) {
     const unsigned id = item & 0xFF;
     switch (category & 0xFF) {
-    case 1: return move_script::At(::bof3::Img(at::kWeaponFlags.v) + id * at::kWeaponStride)[0];
-    case 2: return ((id * 13) & ~0xFFu) | move_script::At(::bof3::Img(at::kArmourFlags.v) + id * at::kArmourStride)[0];
-    case 3: return move_script::At(::bof3::Img(at::kAccessoryFlags.v) + id * at::kAccessoryStride)[0];
+    case 1: return move_script::At(::bof3::Img(game_last::at::kWeaponFlags.v) + id * game_last::at::kWeaponStride)[0];
+    case 2: return ((id * 13) & ~0xFFu) | move_script::At(::bof3::Img(game_last::at::kArmourFlags.v) + id * game_last::at::kArmourStride)[0];
+    case 3: return move_script::At(::bof3::Img(game_last::at::kAccessoryFlags.v) + id * game_last::at::kAccessoryStride)[0];
     case 4: return 0;
-    default: return ((id * 11) & ~0xFFu) | move_script::At(::bof3::Img(at::kConsumableFlags.v) + id * at::kConsumableStride)[0];
+    default: return ((id * 11) & ~0xFFu) | move_script::At(::bof3::Img(game_last::at::kConsumableFlags.v) + id * game_last::at::kConsumableStride)[0];
     }
 }
 

@@ -217,7 +217,7 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
-    for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(at::kChannelsEnd); p += 4) {
+    for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
         const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(p)));
         if (buffer == 0) continue;
         SH_CALL(SndBuf_Stop)(AtScenaSx2(buffer));
@@ -235,13 +235,13 @@ extern "C" void __cdecl Sound_StopChannels(void) {
 // twin paired.
 extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
     const std::uint32_t c = cue & 0xFFFF;
-    const std::uint32_t bank = (((c >> 8) & 0xF) - 1) * at::kBankStride;
+    const std::uint32_t bank = (((c >> 8) & 0xF) - 1) * scena_sx2::at::kBankStride;
     const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
     for (unsigned k = 0; k < 4; ++k) {
         const std::uint32_t voice = UScenaSx2(LongScenaSx2(AtScenaSx2(cue_at + 4 * k)));
         if (voice == 0) continue;
-        const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF) * 8)));
-        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume.v)(buffer, level);
+        const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
+        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), scena_sx2::at::kSndBufVolume.v)(buffer, level);
     }
 }
 
@@ -251,7 +251,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
 // and answers 1. KeyItem_Add's opposite; chapter 13's Scena13_Run3 takes
 // item 0xB. PSX 0x80166B54 (pairs_propagated "gap9").
 extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
-    unsigned char* const list = AtScenaSx2(::bof3::Img(at::kKeyItems));
+    unsigned char* const list = AtScenaSx2(::bof3::Img(scena_sx2::at::kKeyItems));
     const auto id = static_cast<unsigned char>(item);
     for (unsigned i = 0; i < 0x20; ++i) {
         if (list[i] != id) continue;
@@ -272,9 +272,9 @@ extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
 extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned id, unsigned working) {
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
-    unsigned char* const base = (working & 0xFF) != 0 ? AtScenaSx2(::bof3::Img(at::kWorkingRecords) + m * at::kObjStride)
-                                                      : AtScenaSx2(::bof3::Img(CharacterRecords_addr) + m * at::kRecordStride);
-    const unsigned type = AtScenaSx2(::bof3::Img(at::kAbilityType))[(id & 0xFF) * 24] & 3;
+    unsigned char* const base = (working & 0xFF) != 0 ? AtScenaSx2(::bof3::Img(scena_sx2::at::kWorkingRecords) + m * scena_sx2::at::kObjStride)
+                                                      : AtScenaSx2(::bof3::Img(CharacterRecords_addr) + m * scena_sx2::at::kRecordStride);
+    const unsigned type = AtScenaSx2(::bof3::Img(scena_sx2::at::kAbilityType))[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }
 
@@ -284,7 +284,7 @@ extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned 
 // sibling's Psy-Q signature match; pairs_propagated "call-anchored").
 extern "C" void __cdecl Gpu_SetSprt16(unsigned char* prim) {
     prim[7] = 0x7C;
-    SetLong(prim + 0x10, static_cast<std::int32_t>(at::kDepth));
+    SetLong(prim + 0x10, static_cast<std::int32_t>(scena_sx2::at::kDepth));
 }
 
 void ScenaSx2_Inject() {

@@ -335,8 +335,8 @@ namespace {
 // The original's read: Save_ReadFile(name, 0x1C, 0xCA0), its result not
 // tested, and Save_Staging's first 0x1C bytes copied into the summary.
 bool StagedRead(const char* name, unsigned char* summary, void*) {
-    save_menu::g.read_file(name, at::kSummaryBytes, static_cast<int>(at::kSummaryAt));
-    for (save_menu::U i = 0; i < 7; ++i) PutLong(AddrSaveMenu(summary) + i * 4, LongSaveMenu(::bof3::Img(at::kStaging.v) + i * 4));
+    save_menu::g.read_file(name, save_menu::at::kSummaryBytes, static_cast<int>(save_menu::at::kSummaryAt));
+    for (save_menu::U i = 0; i < 7; ++i) PutLong(AddrSaveMenu(summary) + i * 4, LongSaveMenu(::bof3::Img(save_menu::at::kStaging.v) + i * 4));
     return true;
 }
 }  // namespace
@@ -347,7 +347,7 @@ bool StagedRead(const char* name, unsigned char* summary, void*) {
 // summary whatever Save_Staging held. It rebuilds from Save_Directory alone:
 // DIV-0002's re-listing in Save_WriteFile is what keeps a new save in it.
 extern "C" void __cdecl Save_ReadSummaries(void) {
-    save_menu::ReadSummaries(AtSaveMenu(::bof3::Img(Save_Directory_addr)), AtSaveMenu(::bof3::Img(at::kSummaries.v)), &StagedRead, nullptr);
+    save_menu::ReadSummaries(AtSaveMenu(::bof3::Img(Save_Directory_addr)), AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), &StagedRead, nullptr);
 }
 
 void SaveLists_Arm() {
@@ -426,7 +426,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     sound_in::StreamLoads();  // DIV-0177
     const save_menu::U kind = id >> 12;
     SaveMenu_StreamKind = kind;
-    const save_menu::U table = LongSaveMenu(::bof3::Img(at::kStreamTables.v) + kind * 4);
+    const save_menu::U table = LongSaveMenu(::bof3::Img(save_menu::at::kStreamTables.v) + kind * 4);
     const save_menu::U name = LongSaveMenu(table + (id & 0xFFF) * 4);
     char path[260];  // MAX_PATH
     // DIV-0150: a kind-0 stream from the chosen music source's order; else, and
@@ -434,7 +434,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const char* const text = reinterpret_cast<const char*>(AtSaveMenu(name));
     const bool cache = kind == 0 && music_seq::StreamPath(text, path, sizeof path) ? path[0] != 0
                                                                                   : dat_cache::SoundPath(text, path, sizeof path);
-    if (!cache) save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kStreamFormat.v))), text);
+    if (!cache) save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kStreamFormat.v))), text);
     const int handle = save_menu::g.file_open(path, 0, 0);
     if (handle == -1) {
         if (!save_menu::g_stream_missing)
@@ -461,7 +461,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
         Music_Track = 0xFF;
     }
     save_menu::g.music_start(AtSaveMenu(SaveMenu_StreamData), static_cast<unsigned>(size), 0);
-    save_menu::g.music_volume(at::kStreamVolume);
+    save_menu::g.music_volume(save_menu::at::kStreamVolume);
     bof3::RunSpeed_StreamStarted();
 }
 
@@ -510,7 +510,7 @@ bool bof3::RunSpeed_StreamPlaying() {
 // byte.
 extern "C" void __cdecl Party_RestoreAll(unsigned full) {
     for (save_menu::U i = 0; i < 8; ++i) {
-        const save_menu::U record = ::bof3::Img(CharacterRecords_addr) + i * at::kCharStride;
+        const save_menu::U record = ::bof3::Img(CharacterRecords_addr) + i * save_menu::at::kCharStride;
         if ((full & 0xFF) != 0) {
             PutByte(record + 0x1E, 0);
             save_menu::g.clear_status(i, 0xA0, 0);
@@ -524,8 +524,8 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
         PutByte(record + 0x1D, 0);
         save_menu::g.clear_status(i, 0x2000, 0);
     }
-    if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(at::kFlagsA.v)), 4) == 0) return;
-    if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(at::kFlagsB.v)), 4) != 0) return;
+    if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsA.v)), 4) == 0) return;
+    if (save_menu::g.flags_test(AtSaveMenu(::bof3::Img(save_menu::at::kFlagsB.v)), 4) != 0) return;
     if (static_cast<std::uint32_t>(AreaW1c_Byte9045FB) < 0x1E) AreaW1c_Byte9045FB = 0;
 }
 
@@ -586,10 +586,10 @@ extern "C" void __cdecl Shop_PriceRate(unsigned short* rate) {
     save_menu::U i = 0;
     if (static_cast<unsigned char>(save_menu::g.party_count(0)) != 0) {
         for (;;) {
-            const save_menu::U record = Byte(::bof3::Img(at::kMembers.v) + i * at::kMemberStride);
-            const save_menu::U base = ::bof3::Img(CharacterRecords_addr) + record * at::kCharStride;
+            const save_menu::U record = Byte(::bof3::Img(save_menu::at::kMembers.v) + i * save_menu::at::kMemberStride);
+            const save_menu::U base = ::bof3::Img(CharacterRecords_addr) + record * save_menu::at::kCharStride;
             const auto* const c = rv::AsConst<records::CharRecord>(AtSaveMenu(base));   // CharacterRecords 0x903A70, stride 0xA4
-            if (c->accessory[0] == at::kDiscountItem || c->accessory[1] == at::kDiscountItem) {
+            if (c->accessory[0] == save_menu::at::kDiscountItem || c->accessory[1] == save_menu::at::kDiscountItem) {
                 *rate = 0x50;
                 break;
             }
@@ -670,7 +670,7 @@ extern "C" void __cdecl Shop_InitWindows(void) {
 // 0x591B60(kind, item, 1, 0), then Inventory_Add(kind, the slot's old byte,
 // read after that call, 1, 0), then the item's low byte into the slot.
 extern "C" void __cdecl Shop_Equip(unsigned record, unsigned slot, unsigned item) {
-    const save_menu::U base = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * at::kCharStride;
+    const save_menu::U base = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * save_menu::at::kCharStride;
     save_menu::U offset = 0x12, kind = 1;
     switch ((slot & 0xFF) - 1) {
     case 0: offset = 0x13; kind = 2; break;
@@ -741,9 +741,9 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
         rv::Store<save_menu::U>(s->v, r << 5);
         rv::Store<save_menu::U>(s->w, width);
         rv::Store<save_menu::U>(s->clut, save_menu::g.get_clut(0, 0x1EB));
-        rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(at::kRowBright.v) + r) << 1);
-        rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(at::kRowBright.v) + r) << 1);
-        rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(at::kRowBright.v) + r) << 1);
+        rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
+        rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
+        rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r) << 1);
         save_menu::g.set_semi(p, glow & 0xFF);
         save_menu::g.commit(1, 0x1C);
     }
@@ -760,9 +760,9 @@ extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
     s->y = fy;
     rv::Store<save_menu::U>(s->w, width);
     rv::Store<save_menu::U>(s->clut, save_menu::g.get_clut(0x20, 0x1E3));
-    rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(at::kRowBright.v) + r));
-    rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(at::kRowBright.v) + r));
-    rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(at::kRowBright.v) + r));
+    rv::Store<save_menu::U>(s->r, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
+    rv::Store<save_menu::U>(s->g, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
+    rv::Store<save_menu::U>(s->b, Byte(::bof3::Img(save_menu::at::kRowBright.v) + r));
     save_menu::g.set_semi(p, glow & 0xFF);
     save_menu::g.commit(1, 0x1C);
 }
@@ -783,7 +783,7 @@ extern "C" void __cdecl TitleMenu_DrawPiece(int x, int y, unsigned index, unsign
     // vector store (codegen_same).
     PutFloat(q + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(q + 0xC, static_cast<float>(static_cast<short>(y)));
-    const save_menu::U e = ::bof3::Img(at::kPieces.v) + (index & 0xFF) * 10;
+    const save_menu::U e = ::bof3::Img(save_menu::at::kPieces.v) + (index & 0xFF) * 10;
     rv::Store<save_menu::U>(s->u, Byte(e));
     rv::Store<save_menu::U>(s->v, Byte(e + 2));
     rv::Store<save_menu::U>(s->w, WordSaveMenu(e + 4));
@@ -832,7 +832,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
 }
 
 extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
-    save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3::Img(at::kSlotTop.v))),
+    save_menu::DrawSlotsOver(x, y, highlight, AtSaveMenu(::bof3::Img(save_menu::at::kSummaries.v)), reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v))),
                              reinterpret_cast<const volatile save_menu::U*>(AtSaveMenu(::bof3::Img(Rest2c_Slot_addr))));
 }
 
@@ -861,10 +861,10 @@ extern "C" unsigned char __cdecl NewGame_RollSum(unsigned lo, unsigned hi, unsig
 // does exactly the same, the fifth result stored and cleared too.
 extern "C" void __cdecl NewGame_RollGrowth(unsigned member) {
     const save_menu::U m = member & 0xFF;
-    const save_menu::U lo = Byte(::bof3::Img(at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(at::kGrowthTable.v) + m * 3 + 1),
-            n = Byte(::bof3::Img(at::kGrowthTable.v) + m * 3 + 2);
-    const save_menu::U out = ::bof3::Img(at::kGrowth.v) + m * 5;
-    for (save_menu::U k = 0; k < 4; ++k) PutByte(out + k, Byte(::bof3::Img(at::kGrowthValues.v) + save_menu::g.roll_sum(lo, hi, n)));
+    const save_menu::U lo = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3), hi = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 1),
+            n = Byte(::bof3::Img(save_menu::at::kGrowthTable.v) + m * 3 + 2);
+    const save_menu::U out = ::bof3::Img(save_menu::at::kGrowth.v) + m * 5;
+    for (save_menu::U k = 0; k < 4; ++k) PutByte(out + k, Byte(::bof3::Img(save_menu::at::kGrowthValues.v) + save_menu::g.roll_sum(lo, hi, n)));
     save_menu::g.roll_sum(lo, hi, n);
     for (save_menu::U k = 0; k < 5; ++k) PutByte(out + k, 0);
 }
@@ -886,8 +886,8 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     Field_ScriptFlags = 0;
     Field_ScriptFlags2 = 0;
     AreaW0b_PartySet = 0;
-    PutLong(::bof3::Img(at::kFieldState.v), ::bof3::Img(ObjTrio_addr));
-    PutLong(::bof3::Img(at::kSpriteCurrent.v), ::bof3::Img(ObjTrio_addr));
+    PutLong(::bof3::Img(save_menu::at::kFieldState.v), ::bof3::Img(ObjTrio_addr));
+    PutLong(::bof3::Img(save_menu::at::kSpriteCurrent.v), ::bof3::Img(ObjTrio_addr));
     save_menu::g.member_sprite(0, 0);
     rv::Current<records::SpriteObject>()->flags = 1;
     rv::As<records::PartyMember>(Field_State)->char_id = 0;
@@ -912,7 +912,7 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
 // 0x587EB0, title menu state 0: the frame, counter 2, state + 1.
 extern "C" void __cdecl TitleMenu_Open(void) {
     save_menu::g.draw_frame();
-    PutByte(::bof3::Img(at::kCounter.v), 2);
+    PutByte(::bof3::Img(save_menu::at::kCounter.v), 2);
     SetState(State() + 1);
 }
 
@@ -920,23 +920,23 @@ extern "C" void __cdecl TitleMenu_Open(void) {
 // reaches 0.
 extern "C" void __cdecl TitleMenu_OpenWait(void) {
     save_menu::g.draw_frame();
-    const save_menu::U c = (Byte(::bof3::Img(at::kCounter.v)) - 1) & 0xFF;
-    PutByte(::bof3::Img(at::kCounter.v), c);
+    const save_menu::U c = (Byte(::bof3::Img(save_menu::at::kCounter.v)) - 1) & 0xFF;
+    PutByte(::bof3::Img(save_menu::at::kCounter.v), c);
     if (c == 0) SetState(State() + 1);
 }
 
 // 0x587EF0, state 2: the frame, bit 1 of 0x7DEE44, state + 1.
 extern "C" void __cdecl TitleMenu_FrameUp(void) {
     save_menu::g.draw_frame();
-    PutByte(::bof3::Img(at::kMenuFlags.v), Byte(::bof3::Img(at::kMenuFlags.v)) | 2);
+    PutByte(::bof3::Img(save_menu::at::kMenuFlags.v), Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) | 2);
     SetState(State() + 1);
 }
 
 // 0x587F10, state 3: the counter and all three row brightnesses (and the
 // byte after them - a dword store) 0; the frame, the rows with glow, state + 1.
 extern "C" void __cdecl TitleMenu_RowsStart(void) {
-    PutByte(::bof3::Img(at::kCounter.v), 0);
-    PutLong(::bof3::Img(at::kRowBright.v), 0);
+    PutByte(::bof3::Img(save_menu::at::kCounter.v), 0);
+    PutLong(::bof3::Img(save_menu::at::kRowBright.v), 0);
     save_menu::g.draw_frame();
     save_menu::g.draw_rows(1);
     SetState(State() + 1);
@@ -949,13 +949,13 @@ extern "C" void __cdecl TitleMenu_RowsStart(void) {
 extern "C" void __cdecl TitleMenu_RowsFadeIn(void) {
     save_menu::g.draw_frame();
     save_menu::g.draw_rows(1);
-    PutByte(::bof3::Img(at::kCounter.v), Byte(::bof3::Img(at::kCounter.v)) + 0x10);
+    PutByte(::bof3::Img(save_menu::at::kCounter.v), Byte(::bof3::Img(save_menu::at::kCounter.v)) + 0x10);
     const int cursor = SaveMenu_Cursor;
     for (int i = 0; i < 3; ++i) {
-        const save_menu::U b = (Byte(::bof3::Img(at::kRowBright.v) + i) + 8) & 0xFF;
-        PutByte(::bof3::Img(at::kRowBright.v) + i, cursor != i && b > 0x40 ? 0x40 : b);
+        const save_menu::U b = (Byte(::bof3::Img(save_menu::at::kRowBright.v) + i) + 8) & 0xFF;
+        PutByte(::bof3::Img(save_menu::at::kRowBright.v) + i, cursor != i && b > 0x40 ? 0x40 : b);
     }
-    if (Byte(::bof3::Img(at::kCounter.v)) == 0) SetState(State() + 1);
+    if (Byte(::bof3::Img(save_menu::at::kCounter.v)) == 0) SetState(State() + 1);
 }
 
 // 0x587FA0, state 5: the frame and the rows without glow; nothing more until
@@ -969,8 +969,8 @@ extern "C" void __cdecl TitleMenu_RowsFadeIn(void) {
 extern "C" void __cdecl TitleMenu_Choose(void) {
     save_menu::g.draw_frame();
     save_menu::g.draw_rows(0);
-    if ((Byte(::bof3::Img(at::kMenuFlags.v)) & 2) == 0) return;
-    const save_menu::U pressed = LongSaveMenu(::bof3::Img(at::kPressed.v));
+    if ((Byte(::bof3::Img(save_menu::at::kMenuFlags.v)) & 2) == 0) return;
+    const save_menu::U pressed = LongSaveMenu(::bof3::Img(save_menu::at::kPressed.v));
     if (SaveMenu_AnySave != 0) {
         if (pressed & 0x1000) {
             const signed char c = static_cast<signed char>(static_cast<std::uint32_t>(static_cast<unsigned char>(SaveMenu_Cursor)) - 1);
@@ -987,7 +987,7 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
     }
     const int cursor = SaveMenu_Cursor;
     for (int i = 0; i < 3; ++i) {
-        const save_menu::U a = ::bof3::Img(at::kRowBright.v) + static_cast<save_menu::U>(i);
+        const save_menu::U a = ::bof3::Img(save_menu::at::kRowBright.v) + static_cast<save_menu::U>(i);
         if (cursor == i) {
             PutByte(a, Byte(a) + 8);
             if (Byte(a) > 0x80) PutByte(a, 0x80);
@@ -1025,7 +1025,7 @@ extern "C" void __cdecl TitleFlow_NewGame(void) {
     SaveMenu_NewGameByte = 0;
     Game_AreaNumber = 0xFFFF;
     save_menu::g.scenario_start(0);
-    for (save_menu::U a = ::bof3::Img(Cond_Flags_addr); a < ::bof3::Img(at::kCondFlagsEnd.v); a += 8) PutLong(a, 0);
+    for (save_menu::U a = ::bof3::Img(Cond_Flags_addr); a < ::bof3::Img(save_menu::at::kCondFlagsEnd.v); a += 8) PutLong(a, 0);
     save_menu::g.transition(0);
     Game_Step = 5;
 }
@@ -1036,7 +1036,7 @@ extern "C" void __cdecl TitleFlow_NewGame(void) {
 extern "C" void __cdecl LoadMenu_List(void) {
     save_menu::g.transition(1);
     Rest2c_Slot = 0;
-    PutLong(::bof3::Img(at::kSlotTop.v), 0);
+    PutLong(::bof3::Img(save_menu::at::kSlotTop.v), 0);
     if (save_menu::g.list_files() != 0) {
         save_menu::g.read_summaries();
         SetState(State() + 1);
@@ -1069,17 +1069,17 @@ extern "C" void __cdecl LoadMenu_Choose(void) {
     LoadMessage(0xAC);
     save_menu::g.draw_slots(0x20, 0x30, 1);
     const save_menu::U repeat = save_menu::g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
-    save_menu::U slot = LongSaveMenu(::bof3::Img(at::kSlot.v));
+    save_menu::U slot = LongSaveMenu(::bof3::Img(save_menu::at::kSlot.v));
     const save_menu::U old = slot & 0xFF;
     if ((repeat & 0x1000) && slot != 0) {
         --slot;
         Rest2c_Slot = slot;
-        const save_menu::U top = LongSaveMenu(::bof3::Img(at::kSlotTop.v));
-        if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(at::kSlotTop.v), top - 1);
+        const save_menu::U top = LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v));
+        if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(::bof3::Img(save_menu::at::kSlotTop.v), top - 1);
     } else if ((repeat & 0x4000) && static_cast<int>(slot) < 15) {
         ++slot;
         Rest2c_Slot = slot;
-        if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(at::kSlotTop.v)) + 2)) PutLong(::bof3::Img(at::kSlotTop.v), LongSaveMenu(::bof3::Img(at::kSlotTop.v)) + 1);
+        if (static_cast<int>(slot) > static_cast<int>(LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 2)) PutLong(::bof3::Img(save_menu::at::kSlotTop.v), LongSaveMenu(::bof3::Img(save_menu::at::kSlotTop.v)) + 1);
     }
     if (old != slot) {
         save_menu::g.play_effect(0x101);
@@ -1087,7 +1087,7 @@ extern "C" void __cdecl LoadMenu_Choose(void) {
     }
     const save_menu::U pressed = Input_Pressed;
     if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
-        if (Byte(::bof3::Img(at::kSummaries.v) + slot * at::kSummaryBytes + 0x15) != 0xFF) {
+        if (Byte(::bof3::Img(save_menu::at::kSummaries.v) + slot * save_menu::at::kSummaryBytes + 0x15) != 0xFF) {
             save_menu::g.play_effect(0x104);
             const save_menu::U s = State();
             FieldS_Answer = 1;
@@ -1127,19 +1127,19 @@ extern "C" void __cdecl LoadMenu_Read(void) {
     LoadWindows();
     save_menu::g.draw_slots(0x20, 0x30, 0);
     const save_menu::U slot = Rest2c_Slot;
-    for (save_menu::U i = 0; i < at::kClearBytes; i += 4) PutLong(::bof3::Img(at::kStaging.v) + i, 0);
-    save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kSaveName.v))), slot);
-    if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kPath.v))), at::kFileBytes, 0) == -1) {
+    for (save_menu::U i = 0; i < save_menu::at::kClearBytes; i += 4) PutLong(::bof3::Img(save_menu::at::kStaging.v) + i, 0);
+    save_menu::g.sprintf(reinterpret_cast<char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kSaveName.v))), slot);
+    if (save_menu::g.read_file(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))), save_menu::at::kFileBytes, 0) == -1) {
         SaveMenu_ErrorKind = 2;
         SetState(5);
         return;
     }
-    const save_menu::U stored = LongSaveMenu(::bof3::Img(at::kChecksum.v));
-    PutWord(::bof3::Img(at::kChecksum.v), 0);
+    const save_menu::U stored = LongSaveMenu(::bof3::Img(save_menu::at::kChecksum.v));
+    PutWord(::bof3::Img(save_menu::at::kChecksum.v), 0);
     save_menu::U sum = 0;
-    for (save_menu::U i = 0; i < at::kBlockBytes; ++i) {
-        const save_menu::U c = Byte(::bof3::Img(at::kStaging.v) + i);
-        PutByte(::bof3::Img(at::kGameBlock.v) + i, c);
+    for (save_menu::U i = 0; i < save_menu::at::kBlockBytes; ++i) {
+        const save_menu::U c = Byte(::bof3::Img(save_menu::at::kStaging.v) + i);
+        PutByte(::bof3::Img(save_menu::at::kGameBlock.v) + i, c);
         sum += c;
     }
     Field_ScriptFlags = static_cast<std::uint32_t>(SaveMenu_ScriptFlagsSaved);
@@ -1147,7 +1147,7 @@ extern "C" void __cdecl LoadMenu_Read(void) {
         // Instrumentation, not behaviour: tools/input_run.py hands slot 0 back
         // on this line (docs/input-script.md section 1a) - the file is not
         // read again until a save menu lists the slots.
-        bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kPath.v))));
+        bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(save_menu::at::kPath.v))));
         SetState(6);
         return;
     }
@@ -1214,25 +1214,25 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
     const save_menu::U delay = SaveMenu_ApplyDelay;
     SaveMenu_ApplyDelay = delay - 1;
     if (delay == 0) {
-        const save_menu::U map_4 = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 8);
-        PutLong(::bof3::Img(at::kButtons.v) + 4, map_4);
-        const save_menu::U map_10 = WordSaveMenu(::bof3::Img(at::kSavedButtons.v) + 0x10);
-        PutLong(::bof3::Img(at::kButtons.v), map_0);
-        const save_menu::U map_c = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 0xC);
-        PutWord(::bof3::Img(at::kButtons.v) + 0x10, map_10);
-        PutLong(::bof3::Img(at::kButtons.v) + 8, map_8);
-        PutLong(::bof3::Img(at::kButtons.v) + 0xC, map_c);
+        const save_menu::U map_4 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 8);
+        PutLong(::bof3::Img(save_menu::at::kButtons.v) + 4, map_4);
+        const save_menu::U map_10 = WordSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0x10);
+        PutLong(::bof3::Img(save_menu::at::kButtons.v), map_0);
+        const save_menu::U map_c = LongSaveMenu(::bof3::Img(save_menu::at::kSavedButtons.v) + 0xC);
+        PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, map_10);
+        PutLong(::bof3::Img(save_menu::at::kButtons.v) + 8, map_8);
+        PutLong(::bof3::Img(save_menu::at::kButtons.v) + 0xC, map_c);
         const bool reset = SaveMenu_DefaultPad != 0;
         if (reset) {
-            PutWord(::bof3::Img(at::kButtons.v), 0x20);
-            PutWord(::bof3::Img(at::kButtons.v) + 2, 0x80);
-            PutWord(::bof3::Img(at::kButtons.v) + 0xC, 0x40);
-            PutWord(::bof3::Img(at::kButtons.v) + 4, 0x10);
-            PutWord(::bof3::Img(at::kButtons.v) + 6, 8);
-            PutWord(::bof3::Img(at::kButtons.v) + 8, 4);
-            PutWord(::bof3::Img(at::kButtons.v) + 0xE, 0x20);
-            PutWord(::bof3::Img(at::kButtons.v) + 0x10, 0x40);
-            PutWord(::bof3::Img(at::kButtons.v) + 0xA, 0x100);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v), 0x20);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 2, 0x80);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xC, 0x40);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 4, 0x10);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 6, 8);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 8, 4);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xE, 0x20);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0x10, 0x40);
+            PutWord(::bof3::Img(save_menu::at::kButtons.v) + 0xA, 0x100);
         }
         // DIV-0133 and DIV-0134 (docs/button-sigma.md): the Start-held reset
         // by source, then words 7 / 8 as Speak's and Action's and the table
@@ -1245,29 +1245,29 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         save_menu::g.party_select(static_cast<std::uint32_t>(AreaW0b_PartySet) & 0x7F, 0);
         WaitLoad();
         save_menu::g.party_load(0);
-        const save_menu::U d8 = LongSaveMenu(::bof3::Img(at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(at::kGameBlock.v)), d4 = LongSaveMenu(::bof3::Img(at::kGameBlock.v) + 4);
-        PutLong(::bof3::Img(at::kPosition.v) + 8, d8);
-        PutLong(::bof3::Img(at::kPosition.v) + 4, d4);
-        const save_menu::U dc = LongSaveMenu(::bof3::Img(at::kGameBlock.v) + 0xC);
-        PutLong(::bof3::Img(at::kPosition.v), d0);
-        PutLong(::bof3::Img(at::kPosition.v) + 0xC, dc);
-        const save_menu::U c0 = Byte(::bof3::Img(at::kGameBlock.v) + 0x20);
+        const save_menu::U d8 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 8), d0 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v)), d4 = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 4);
+        PutLong(::bof3::Img(save_menu::at::kPosition.v) + 8, d8);
+        PutLong(::bof3::Img(save_menu::at::kPosition.v) + 4, d4);
+        const save_menu::U dc = LongSaveMenu(::bof3::Img(save_menu::at::kGameBlock.v) + 0xC);
+        PutLong(::bof3::Img(save_menu::at::kPosition.v), d0);
+        PutLong(::bof3::Img(save_menu::at::kPosition.v) + 0xC, dc);
+        const save_menu::U c0 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x20);
         const save_menu::U cond = ::bof3::Img(Cond_Flags_addr) + static_cast<save_menu::U>(static_cast<int>(static_cast<signed char>(d0 & 0xFF)) * 8);
-        const save_menu::U c1 = Byte(::bof3::Img(at::kGameBlock.v) + 0x21);
+        const save_menu::U c1 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x21);
         Chapter_FlagRow = cond;
-        const save_menu::U c2 = Byte(::bof3::Img(at::kGameBlock.v) + 0x22);
-        PutByte(::bof3::Img(at::kCounters.v), c0);
-        const save_menu::U c3 = Byte(::bof3::Img(at::kGameBlock.v) + 0x23);
-        PutByte(::bof3::Img(at::kCounters.v) + 1, c1);
-        PutByte(::bof3::Img(at::kCounters.v) + 2, c2);
-        PutByte(::bof3::Img(at::kCounters.v) + 3, c3);
+        const save_menu::U c2 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x22);
+        PutByte(::bof3::Img(save_menu::at::kCounters.v), c0);
+        const save_menu::U c3 = Byte(::bof3::Img(save_menu::at::kGameBlock.v) + 0x23);
+        PutByte(::bof3::Img(save_menu::at::kCounters.v) + 1, c1);
+        PutByte(::bof3::Img(save_menu::at::kCounters.v) + 2, c2);
+        PutByte(::bof3::Img(save_menu::at::kCounters.v) + 3, c3);
         save_menu::g.scenario_load();
         WaitLoad();
         Game_Step = 5;
         SetState(0);
     }
     if (Transition_Busy == 0) return;
-    if (LongSaveMenu(::bof3::Img(at::kHeld.v)) & 0x800) SaveMenu_DefaultPad = 1;
+    if (LongSaveMenu(::bof3::Img(save_menu::at::kHeld.v)) & 0x800) SaveMenu_DefaultPad = 1;
     LoadWindows();
     save_menu::g.draw_slots(0x20, 0x30, 0);
     LoadMessage(0xB1);
@@ -1283,8 +1283,8 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
     if (Transition_Busy != 0) return;
     const save_menu::U cursor = static_cast<unsigned char>(SaveMenu_Cursor);
     FieldS_Step = 0;
-    PutByte(::bof3::Img(at::kMenuStates.v) + 1, 0);
-    PutByte(::bof3::Img(at::kMenuStates.v) + 3, 0);
+    PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 1, 0);
+    PutByte(::bof3::Img(save_menu::at::kMenuStates.v) + 3, 0);
     if (cursor == 2) {
         SetState(0);
         Game_Step = 1;
@@ -1292,9 +1292,9 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
     }
     for (save_menu::U i = 0; i < 8; ++i) {
         save_menu::g.roll_growth(i);
-        save_menu::g.recalc(AtSaveMenu(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride));
+        save_menu::g.recalc(AtSaveMenu(::bof3::Img(CharacterRecords_addr) + i * save_menu::at::kCharStride));
     }
-    save_menu::g.task_restart(::bof3::Code(at::kGameTask.v));
+    save_menu::g.task_restart(::bof3::Code(save_menu::at::kGameTask.v));
 }
 
 #pragma clang attribute pop
@@ -1338,7 +1338,7 @@ extern "C" __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
 // A jump, as the original's: the step's function returns to task 0's loop.
 extern "C" void __cdecl TitleFlow_Step(void) {
     using Step = void (__cdecl*)();
-    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(at::kStepTable.v) + static_cast<std::uint32_t>(Game_Step) * 4)));
+    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kStepTable.v) + static_cast<std::uint32_t>(Game_Step) * 4)));
     [[clang::musttail]] return step();
 }
 
@@ -1346,7 +1346,7 @@ extern "C" void __cdecl TitleFlow_Step(void) {
 // states 0..6 (the table runs on into the load menu's).
 extern "C" void __cdecl TitleFlow_Menu(void) {
     using Step = void (__cdecl*)();
-    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(at::kMenuTable.v) + State() * 4)));
+    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kMenuTable.v) + State() * 4)));
     [[clang::musttail]] return step();
 }
 
@@ -1354,7 +1354,7 @@ extern "C" void __cdecl TitleFlow_Menu(void) {
 // 0..7.
 extern "C" void __cdecl TitleFlow_Load(void) {
     using Step = void (__cdecl*)();
-    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(at::kLoadTable.v) + State() * 4)));
+    const Step step = reinterpret_cast<Step>(AtSaveMenu(LongSaveMenu(::bof3::Img(save_menu::at::kLoadTable.v) + State() * 4)));
     [[clang::musttail]] return step();
 }
 

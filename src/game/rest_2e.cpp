@@ -159,7 +159,7 @@ void Swap(unsigned char* a, unsigned char* b) { SH_CALL(FieldMenu_SwapBytes)(a, 
 
 const unsigned char* AbilityList(U member, U type) { return SH_CALL(Char_AbilityList)(member & 0xFF, type & 0xFF, 0); }
 UC AbilityUse(U user, U target, U ability) {
-    return static_cast<UC>(SH_AT(UC (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kAbilityUse.v)(user, target, ability, 0));
+    return static_cast<UC>(SH_AT(UC (__cdecl*)(unsigned, unsigned, unsigned, unsigned), rest_2e::at::kAbilityUse.v)(user, target, ability, 0));
 }
 
 // The list scroll FieldItems_ArrangeMove, FieldItems_ViewList32 and
@@ -1270,7 +1270,7 @@ extern "C" void __cdecl FieldAbility_Run(void) {
 // original 0x58D7D0: FieldAbility_States[0].
 extern "C" void __cdecl FieldAbility_Open(void) {
     Backdrop();
-    SH_AT(Handler, at::kAbilityWindows.v)();
+    SH_AT(Handler, rest_2e::at::kAbilityWindows.v)();
     Sound(0x102);
     const auto state = static_cast<UC>(FieldS_State + 1);
     const UC member = BRest2e(::bof3::Img(0x905BA1));
@@ -1709,7 +1709,7 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
         Sound(0x103);
         const UC how = BRest2e(rows + 1 + BRest2e(::bof3::Img(0x8033F3)));
         if (how != 0) {
-            SH_AT(void (__cdecl*)(unsigned), at::kAbilitySort.v)(how);
+            SH_AT(void (__cdecl*)(unsigned), rest_2e::at::kAbilitySort.v)(how);
             return;
         }
         const int m = BattleActorCopies_ItemActor;
@@ -1804,7 +1804,7 @@ extern "C" void __cdecl FieldAbility_Close(void) {
     const auto t = static_cast<UC>(BRest2e(::bof3::Img(kTimer.v)) - 1);
     BRest2e(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
-    SH_AT(Handler, at::kAbilityCloseWindows.v)();
+    SH_AT(Handler, rest_2e::at::kAbilityCloseWindows.v)();
     U k = 0;
     if (PartyCountRest2e() != 0) {
         do {
@@ -1836,7 +1836,7 @@ extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     const auto t = static_cast<UC>(BRest2e(::bof3::Img(kTimer.v)) - 1);
     BRest2e(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
-    SH_AT(Handler, at::kAbilityViewWindow.v)();
+    SH_AT(Handler, rest_2e::at::kAbilityViewWindow.v)();
     const UC cursor = Rest2e_AbilityViewCursor;
     const UC top = Rest2e_AbilityViewTop;
     BRest2e(::bof3::Img(0x8033CF)) = cursor;

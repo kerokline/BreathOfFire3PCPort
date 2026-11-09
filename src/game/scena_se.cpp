@@ -42,8 +42,8 @@ using move_script::Word;
 
 // The placement count (SharedScratch, read afresh at every use as the
 // original reads the word [0x903850]) and the bank word after it.
-short CountScenaSe() { return static_cast<std::int16_t>(at::kCount); }
-unsigned char* ObjectScenaSe(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
+short CountScenaSe() { return static_cast<std::int16_t>(scena_se::at::kCount); }
+unsigned char* ObjectScenaSe(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(scena_se::at::kObjectStride); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.
@@ -62,7 +62,7 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
 // Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return move_script::At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * at::kObjectStride);
+    return move_script::At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * scena_se::at::kObjectStride);
 }
 
 }  // namespace
@@ -150,13 +150,13 @@ extern "C" void __cdecl EventObj_Face(void) {
 // original does. The count is read again after each call, Sprite_Current at
 // every use, the op's bytes where the original reads them.
 extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
-    if (CountScenaSe() >= static_cast<short>(at::kObjectCount)) return;
+    if (CountScenaSe() >= static_cast<short>(scena_se::at::kObjectCount)) return;
     unsigned char* const o = ObjectScenaSe(CountScenaSe());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
+    scena_se::at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(at::kBank);
+    SH_CALL(Sprite_SetAnimationBank)(scena_se::at::kBank);
     Sprite_Current[0] = 1;
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_x, rv::Current<records::SpriteObject>()->x);
@@ -183,7 +183,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5C] = static_cast<unsigned char>(op[3] & 0xF);
     SH_CALL(EventObj_Face)();
-    at::kCount = static_cast<unsigned>(at::kCount + 1);
+    scena_se::at::kCount = static_cast<unsigned>(scena_se::at::kCount + 1);
 }
 
 // original 0x591CC0: a member into the two party lists without a sprite

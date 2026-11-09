@@ -92,7 +92,7 @@ void StackState(const char* who, const U* table, unsigned n, unsigned index, con
 
 // The character record (CharacterRecords index) of the party slot `slot`:
 // 0x66972C[0x904062[slot]], both bytes read in place.
-unsigned PartyRecord(unsigned slot) { return BRest2g(::bof3::Img(at::kMemberRecord.v) + BRest2g(::bof3::Img(at::kParty.v) + slot)); }
+unsigned PartyRecord(unsigned slot) { return BRest2g(::bof3::Img(rest_2g::at::kMemberRecord.v) + BRest2g(::bof3::Img(rest_2g::at::kParty.v) + slot)); }
 
 // A slide: the record's word at `off` (+4 x, +6 y) moves by `step`, and when
 // it is then past `bound` - signed, by `past` - it is held there and +3 goes
@@ -153,13 +153,13 @@ extern "C" void __cdecl BattleResultWin_LevelUpStates(void) {
 // compare is unsigned, and the answer the whole eax.
 extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const U s = slot & 0xFF;
-    const unsigned id = BRest2g(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
+    const unsigned id = BRest2g(::bof3::Img(rest_2g::at::kObjTrio.v) + 0x89 + rest_2g::at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex.v)(arg) & 0xFF;
-    const unsigned char* const rec = move_script::At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
+    const unsigned char* const rec = move_script::At(::bof3::Img(CharacterRecords_addr) + rest_2g::at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
-    for (unsigned k = 0; k < rows; ++k) sum += move_script::Word(move_script::At(::bof3::Img(at::kExpTable.v) + 0x318 * r + 8 * k));
+    for (unsigned k = 0; k < rows; ++k) sum += move_script::Word(move_script::At(::bof3::Img(rest_2g::at::kExpTable.v) + 0x318 * r + 8 * k));
     const U exp = static_cast<U>(rv::As<records::CharRecord>(rec)->exp);
     return sum >= exp ? sum - exp : 0;
 }
@@ -199,15 +199,15 @@ extern "C" void __cdecl GeneWin_GridStates(void) {
 extern "C" void __cdecl GeneWin_GridOpen(void) {
     RecRest2g()[8] = 0x18;
     RecRest2g()[9] = 0x11;
-    for (unsigned i = 0; i < 0x12; ++i) move_script::At(::bof3::Img(at::kGridWords.v) + 2 * i)[0] = 0;
+    for (unsigned i = 0; i < 0x12; ++i) move_script::At(::bof3::Img(rest_2g::at::kGridWords.v) + 2 * i)[0] = 0;
     for (unsigned i = 0; i < 0x12; ++i) {
-        if (BRest2g(::bof3::Img(at::kGridCells.v) + i) == 0) continue;
+        if (BRest2g(::bof3::Img(rest_2g::at::kGridCells.v) + i) == 0) continue;
         const unsigned slot = SH_CALL(BattleTask_Create)(0, 9) & 0xFFu;
-        if (slot >= at::kTaskCount)
+        if (slot >= rest_2g::at::kTaskCount)
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
                         "writes its +0xB / +0x4B past the pool (docs/rest_2g.md section 7)",
-                        slot, at::kTaskCount);
-        unsigned char* const task = move_script::At(::bof3::Img(BattleTask_Slots_addr) + at::kTaskStride * slot);
+                        slot, rest_2g::at::kTaskCount);
+        unsigned char* const task = move_script::At(::bof3::Img(BattleTask_Slots_addr) + rest_2g::at::kTaskStride * slot);
         task[0x4B] = static_cast<unsigned char>(i);
         task[0xB] = static_cast<unsigned char>(i);
     }
@@ -242,21 +242,21 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
     {
         unsigned char* const w = RecRest2g();
         const bool right = w[0xA] == 0;
-        Widescreen_SlideDraw(w, Imm16Bound(right ? at::kGridOutRight.v : at::kGridOutLeft.v), right ? 0x20 : -0x20);
+        Widescreen_SlideDraw(w, Imm16Bound(right ? rest_2g::at::kGridOutRight.v : rest_2g::at::kGridOutLeft.v), right ? 0x20 : -0x20);
     }
     SH_CALL(GeneWin_DrawGrid)();
     Widescreen_SlideUndraw(RecRest2g());
     unsigned char* const r = RecRest2g();
     const short x = S(r + 4);
     if (r[0xA] == 0) {
-        if (x >= Imm16Bound(at::kGridOutRight.v)) {
+        if (x >= Imm16Bound(rest_2g::at::kGridOutRight.v)) {
             SH_CALL(Window_FreeCurrent)();
             return;
         }
         rv::As<records::WindowRecord>(r)->x = static_cast<unsigned>(x + 0x20);
         return;
     }
-    if (x <= Imm16Bound(at::kGridOutLeft.v)) {
+    if (x <= Imm16Bound(rest_2g::at::kGridOutLeft.v)) {
         SH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -394,17 +394,17 @@ extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelLis
 extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto x = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->x + d) & 0xFFFF); };
     auto y = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->y + d) & 0xFFFF); };
-    auto text = [](unsigned index) { return move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(at::kLabelTexts.v) + 4 * index)))); };
+    auto text = [](unsigned index) { return move_script::At(static_cast<U>(move_script::Long(move_script::At(::bof3::Img(rest_2g::at::kLabelTexts.v) + 4 * index)))); };
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned count = BRest2g(::bof3::Img(at::kLabelRows.v) + 6u * rec[0xA]);
+    const unsigned count = BRest2g(::bof3::Img(rest_2g::at::kLabelRows.v) + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));
-    SH_CALL(Menu_DrawPieces)(x(0), y(0), move_script::At(::bof3::Img(at::kLabelPieces.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y(0), move_script::At(::bof3::Img(rest_2g::at::kLabelPieces.v)), 1);
     unsigned row = 0;
     unsigned line = 6u * rec[0xA];
-    if (BRest2g(::bof3::Img(at::kLabelRows.v) + line) != 0) {
+    if (BRest2g(::bof3::Img(rest_2g::at::kLabelRows.v) + line) != 0) {
         do {
-            const unsigned char* const t = text(BRest2g(::bof3::Img(at::kLabelRows.v) + 1 + line + row));
+            const unsigned char* const t = text(BRest2g(::bof3::Img(rest_2g::at::kLabelRows.v) + 1 + line + row));
             const unsigned dy = row << 4;
             if (row == rec[0xC]) {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 7, 0xFF, t);
@@ -415,13 +415,13 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
             } else {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 0, 0xFF, t);
             }
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), move_script::At(::bof3::Img(at::kLabelRowPieces.v)), 1);
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), move_script::At(::bof3::Img(at::kLabelRowPieces.v)), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), move_script::At(::bof3::Img(rest_2g::at::kLabelRowPieces.v)), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), move_script::At(::bof3::Img(rest_2g::at::kLabelRowPieces.v)), 1);
             row = (row + 1) & 0xFF;
             line = 6u * rec[0xA];
-        } while (row < BRest2g(::bof3::Img(at::kLabelRows.v) + line));
+        } while (row < BRest2g(::bof3::Img(rest_2g::at::kLabelRows.v) + line));
     }
-    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), move_script::At(::bof3::Img(at::kLabelEndPieces.v)), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), move_script::At(::bof3::Img(rest_2g::at::kLabelEndPieces.v)), 1);
 }
 
 // original 0x59A8E0, kind 16: the state from MenuList_EquipCompareStates, then
@@ -477,7 +477,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo92(void) { Slide(4, -0x20, 0x5C, Pas
 extern "C" void __cdecl MenuList_SlideRightTo92(void) { Slide(4, 0x20, 0x5C, Past::kAbove); }
 // original 0x599CC0 (MenuList_PanelStates[7]): left to x -300 or less (off
 // the left); the bound the operand of DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff300(void) { SlideOff(-0x20, at::kLeftOff300Bound.v, Past::kAtOrBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff300(void) { SlideOff(-0x20, rest_2g::at::kLeftOff300Bound.v, Past::kAtOrBelow); }
 // original 0x599CF0 (MenuList_PanelStates[8]): right to x 0x11 or more.
 extern "C" void __cdecl MenuList_SlideRightTo17Ge(void) { Slide(4, 0x20, 0x11, Past::kAtOrAbove); }
 // original 0x599D20 (MenuList_PanelStates[10]): left to x 0xB6.
@@ -486,7 +486,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo182(void) { Slide(4, -0x20, 0xB6, Pa
 extern "C" void __cdecl MenuList_SlideLeftTo200(void) { Slide(4, -0x20, 0xC8, Past::kBelow); }
 // original 0x599DF0 (MenuList_TimeStates[1]): left to x -100 (off the left);
 // DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff100(void) { SlideOff(-0x20, at::kLeftOff100Bound.v, Past::kBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff100(void) { SlideOff(-0x20, rest_2g::at::kLeftOff100Bound.v, Past::kBelow); }
 // original 0x599E20 (MenuList_TimeStates[2]): right to x 0x10.
 extern "C" void __cdecl MenuList_SlideRightTo16(void) { Slide(4, 0x20, 0x10, Past::kAbove); }
 // original 0x599F70 (MenuList_IconStates[2]): down to y 0x2A.
@@ -528,7 +528,7 @@ extern "C" void __cdecl MenuList_SlideDownToPanelRow(void) {
 
 // original 0x59A130 (MenuList_StatsStates[5]): left to x -180 or less;
 // DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff180(void) { SlideOff(-0x20, at::kLeftOff180Bound.v, Past::kAtOrBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff180(void) { SlideOff(-0x20, rest_2g::at::kLeftOff180Bound.v, Past::kAtOrBelow); }
 // original 0x59A160 (MenuList_StatsStates[6]): right to x 0x89 or more.
 extern "C" void __cdecl MenuList_SlideRightTo137Ge(void) { Slide(4, 0x20, 0x89, Past::kAtOrAbove); }
 // original 0x59A1D0 (MenuList_EquipStates[2]): left to x 0xA6.
@@ -538,7 +538,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo166(void) { Slide(4, -0x20, 0xA6, Pa
 extern "C" void __cdecl MenuList_SlideRightTo45(void) { Slide(4, 0x20, 0x2D, Past::kAbove); }
 // original 0x59A2B0 (MenuList_ExpStates[1], MenuList_NextLevelStates[1]): left
 // to x -110; DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLeftOff110Bound.v, Past::kBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, rest_2g::at::kLeftOff110Bound.v, Past::kBelow); }
 
 // original 0x59A4B0 (MenuList_IconWheelStates[1]): right by 0x20 until x is
 // past 0x140 + 75 (+0xB & 1) - off the right, one column further for an odd

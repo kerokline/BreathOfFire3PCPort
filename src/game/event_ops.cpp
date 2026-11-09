@@ -115,11 +115,11 @@ constexpr std::uint32_t kFlagsLo = 0x9039A2, kFlagsHi = 0x9039A3, kFlags2Lo = 0x
 // The count and the bank word (event_script.cpp's terms).
 short Count() {
     short v;
-    std::memcpy(&v, At(::bof3::Img(at::kScratch_addr)), sizeof v);
+    std::memcpy(&v, At(::bof3::Img(event_ops::at::kScratch_addr)), sizeof v);
     return v;
 }
-void SetCount(unsigned v) { at::kScratch.w_00 = v; }
-unsigned short Bank() { return at::kScratch2; }
+void SetCount(unsigned v) { event_ops::at::kScratch.w_00 = v; }
+unsigned short Bank() { return event_ops::at::kScratch2; }
 
 unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 unsigned char* Extra(int n) { return rv::Bytes(&Sprite_ObjectsExtra[n]); }
@@ -188,7 +188,7 @@ extern "C" void __cdecl EventOp_5x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    at::kScratch2 = static_cast<unsigned>(op[1]) << 8 | op[2];
+    event_ops::at::kScratch2 = static_cast<unsigned>(op[1]) << 8 | op[2];
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
@@ -248,7 +248,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     unsigned char* const o = Object(Count());
     Sprite_Current = o;
     Field_ActiveMember = o;
-    at::kScratch2 = static_cast<unsigned>(op[1]) << 8 | op[2];
+    event_ops::at::kScratch2 = static_cast<unsigned>(op[1]) << 8 | op[2];
     g.reset();
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
@@ -285,7 +285,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     Sprite_Current[0x2A] = (Sprite_Current[7] >> 4) & 1;
     unsigned char* const sc = Sprite_Current;
     const unsigned bit = sc[5];
-    if (At(::bof3::Img(at::kPlacedFlags))[bit >> 3] & (1u << (bit & 7))) {
+    if (At(::bof3::Img(event_ops::at::kPlacedFlags))[bit >> 3] & (1u << (bit & 7))) {
         if (op[0xC] & 1) {
             sc[0] = 0;
             return;

@@ -87,16 +87,16 @@ void PutFloatFieldMisc(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v)
 
 // The map-view ring (docs/map-scroll.md): 0x38 rows of 0x1C cells, their heads
 // MapView_Row / MapView_Column; MapView_Origin the map cell of the view's corner.
-field_misc::U OriginX() { return WordFieldMisc(AtFieldMisc(at::MapView_OriginAt())); }
-field_misc::U OriginZ() { return WordFieldMisc(AtFieldMisc(at::MapView_OriginAt() + 2)); }
-std::int32_t Row() { return Short(WordFieldMisc(AtFieldMisc(at::MapView_RowAt()))); }
-std::int32_t Column() { return Short(WordFieldMisc(AtFieldMisc(at::MapView_ColumnAt()))); }
-unsigned char BufferIndex() { return AtFieldMisc(at::Gfx_BufferIndexAt())[0]; }
-field_misc::U Header(field_misc::U byte_offset) { return at::AreaMap_HeaderAt() + byte_offset; }
+field_misc::U OriginX() { return WordFieldMisc(AtFieldMisc(field_misc::at::MapView_OriginAt())); }
+field_misc::U OriginZ() { return WordFieldMisc(AtFieldMisc(field_misc::at::MapView_OriginAt() + 2)); }
+std::int32_t Row() { return Short(WordFieldMisc(AtFieldMisc(field_misc::at::MapView_RowAt()))); }
+std::int32_t Column() { return Short(WordFieldMisc(AtFieldMisc(field_misc::at::MapView_ColumnAt()))); }
+unsigned char BufferIndex() { return AtFieldMisc(field_misc::at::Gfx_BufferIndexAt())[0]; }
+field_misc::U Header(field_misc::U byte_offset) { return field_misc::at::AreaMap_HeaderAt() + byte_offset; }
 
 // A draw item's 0x48-byte half for this display buffer: DrawItems +
 // (Gfx_BufferIndex + index * 2) * 0x48, all in 32 bits as the original's lea.
-field_misc::U ItemHalf(field_misc::U index) { return at::DrawItemsAt() + (BufferIndex() + index * 2u) * 0x48u; }
+field_misc::U ItemHalf(field_misc::U index) { return field_misc::at::DrawItemsAt() + (BufferIndex() + index * 2u) * 0x48u; }
 
 // The diagonal ring lookup MoveCmd_TestFB / FC, MapView_ItemAt (and the
 // cell handler 0x570A00, Capcom's) share: map cell (x', z') relative to the
@@ -285,7 +285,7 @@ extern "C" unsigned char __cdecl AreaMap_TooSteepAt(long x, long y) { return fie
 extern "C" long __cdecl MapView_SlopeAt(long x, long y, unsigned long direction) {
     field_misc::g.check_height_scale();
     const long slope = field_misc::g.slope(x, y, direction);
-    AtFieldMisc(at::MapView_HeightScaleAt())[0] = 0;
+    AtFieldMisc(field_misc::at::MapView_HeightScaleAt())[0] = 0;
     return slope;
 }
 
@@ -303,7 +303,7 @@ extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
     const auto dz = static_cast<std::int32_t>(static_cast<field_misc::U>(y) - static_cast<field_misc::U>(Short(OriginZ())));
     const Ring ring = RingCell(dx, dz);
     if (!ring.inside) return map_rim::Active() ? map_rim::RimItemAt(dx, dz) : 0;
-    return WordFieldMisc(AtFieldMisc(at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 28u) * 4u)) & 0xFFF;
+    return WordFieldMisc(AtFieldMisc(field_misc::at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 28u) * 4u)) & 0xFFF;
 }
 
 // originals 0x572650 (PSX 0x80155B38) and 0x572790 (PSX 0x80155CD4): the
@@ -396,8 +396,8 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             if (item != 0) {
                 field_misc::U index;
                 if (face == 0) index = item;
-                else if (face == 1) index = WordFieldMisc(AtFieldMisc(at::ItemFaceA() + item * 0x90u));
-                else index = WordFieldMisc(AtFieldMisc(at::ItemFaceB() + item * 0x90u));
+                else if (face == 1) index = WordFieldMisc(AtFieldMisc(field_misc::at::ItemFaceA() + item * 0x90u));
+                else index = WordFieldMisc(AtFieldMisc(field_misc::at::ItemFaceB() + item * 0x90u));
                 unsigned char* const half = AtFieldMisc(ItemHalf(index));
                 field_misc::g.set_texture(LongFieldMisc(record + static_cast<field_misc::U>(c) * 4u + 4u), half, 1);
             }
@@ -410,14 +410,14 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             used += 3;
             const field_misc::U value = LongFieldMisc(cursor + static_cast<field_misc::U>(c) * 4u + 4u);
             cursor += 12;
-            PutLongFieldMisc(AtFieldMisc(at::AreaMap_CornersAt() + (width * y + x) * 4u), value);
-            AtFieldMisc(at::MapView_RedrawAt())[0] = 2;
+            PutLongFieldMisc(AtFieldMisc(field_misc::at::AreaMap_CornersAt() + (width * y + x) * 4u), value);
+            AtFieldMisc(field_misc::at::MapView_RedrawAt())[0] = 2;
             break;
         }
         default: {
             const field_misc::U value = LongFieldMisc(cursor + 4) >> ((static_cast<field_misc::U>(c) << 4) & 31);
             const field_misc::U width = LongFieldMisc(AtFieldMisc(Header(0))) & 0xFF;
-            const field_misc::U bytes = LongFieldMisc(AtFieldMisc(at::AreaMap_BytesAt()));
+            const field_misc::U bytes = LongFieldMisc(AtFieldMisc(field_misc::at::AreaMap_BytesAt()));
             AtFieldMisc(width * y + bytes + x)[0] = static_cast<unsigned char>(value);
             used += 2;
             cursor += 8;
@@ -443,12 +443,12 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
 extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
     for (field_misc::U bit = 1; bit < 8; bit <<= 1) {
         if (!(static_cast<field_misc::U>(faces) & bit)) continue;
-        unsigned char* const packet = AtFieldMisc(LongFieldMisc(AtFieldMisc(at::Gfx_PacketNextAt())));
+        unsigned char* const packet = AtFieldMisc(LongFieldMisc(AtFieldMisc(field_misc::at::Gfx_PacketNextAt())));
         field_misc::g.set_poly_f4(packet);
         field_misc::U index;
         if (bit == 1) index = item;
-        else if (bit == 2) index = WordFieldMisc(AtFieldMisc(at::ItemFaceA() + item * 0x90u));
-        else index = WordFieldMisc(AtFieldMisc(at::ItemFaceB() + item * 0x90u));
+        else if (bit == 2) index = WordFieldMisc(AtFieldMisc(field_misc::at::ItemFaceA() + item * 0x90u));
+        else index = WordFieldMisc(AtFieldMisc(field_misc::at::ItemFaceB() + item * 0x90u));
         const unsigned char* const src = AtFieldMisc(ItemHalf(index));
         for (field_misc::U corner = 0; corner < 4; ++corner) {
             PutLongFieldMisc(packet + 8 + corner * 0xC, LongFieldMisc(src + 8 + corner * 0x10));
@@ -458,7 +458,7 @@ extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
         packet[4] = static_cast<unsigned char>((colour[0] & 0x1F) << 3);
         packet[5] = static_cast<unsigned char>(((WordFieldMisc(colour) >> 5) & 0x1F) << 3);
         packet[6] = static_cast<unsigned char>(((WordFieldMisc(colour) >> 10) & 0x1F) << 3);
-        field_misc::g.commit_prim(AtFieldMisc(at::Draw_OtSlotAt())[0], 0x38);
+        field_misc::g.commit_prim(AtFieldMisc(field_misc::at::Draw_OtSlotAt())[0], 0x38);
     }
 }
 
@@ -483,7 +483,7 @@ extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green
         if (rows % 2 != 0) {
             for (field_misc::U clut = 0; clut < 16; ++clut) {
                 if (row != 3 || columns % 2 != 0) {
-                    const field_misc::U from = at::Gfx_ClutStripSourceAt() + (row * 16 + clut) * 32;
+                    const field_misc::U from = field_misc::at::Gfx_ClutStripSourceAt() + (row * 16 + clut) * 32;
                     for (field_misc::U k = 0; k < 16; ++k) {
                         const field_misc::U w = WordFieldMisc(AtFieldMisc(from + k * 2));
                         const field_misc::U r = channel(w & 0x1F, red), gr = channel((w >> 5) & 0x1F, green),
@@ -496,7 +496,7 @@ extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green
         }
         rows /= 2;
     }
-    AtFieldMisc(at::Gfx_ClutStripDirtyAt())[0] = 1;
+    AtFieldMisc(field_misc::at::Gfx_ClutStripDirtyAt())[0] = 1;
     return rows;
 }
 

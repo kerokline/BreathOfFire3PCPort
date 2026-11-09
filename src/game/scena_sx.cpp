@@ -380,7 +380,7 @@ extern "C" void __cdecl MapView_FillCells(void) {
 extern "C" std::uint32_t __cdecl Camera_TurnToDegrees(unsigned angle_arg, unsigned step_arg) {
     const std::int32_t step = Degrees(S8(static_cast<unsigned char>(step_arg)));
     const std::int32_t angle = Degrees(static_cast<short>(angle_arg)) & 0xFFF;
-    return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), at::kCameraTurnYaw.v)(angle, step);
+    return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), scena_sx::at::kCameraTurnYaw.v)(angle, step);
 }
 
 // original 0x57C6B0: Cond_AngleFB eased toward an angle (s16 degrees, as a
@@ -432,7 +432,7 @@ extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned
 // al its index; none, al 0xFF (the rest of eax is the caller's). PSX twin
 // 0x8015D438 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Sprite_FindFree(void) {
-    for (unsigned i = 0; i < at::kSpriteCount; ++i)
+    for (unsigned i = 0; i < scena_sx::at::kSpriteCount; ++i)
         if (Sprite_Objects[i].flags == 0) return static_cast<unsigned char>(i);
     return 0xFF;
 }
@@ -449,10 +449,10 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
     unsigned char* list;
     unsigned slots;
     if (static_cast<unsigned char>(shared) == 0) {
-        list = SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListOf.v)(member, id_arg, which);
+        list = SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, unsigned), scena_sx::at::kAbilityListOf.v)(member, id_arg, which);
         slots = 10;
     } else {
-        list = move_script::At(::bof3::Img(at::kAbilityShared));
+        list = move_script::At(::bof3::Img(scena_sx::at::kAbilityShared));
         slots = 0x80;
     }
     for (unsigned i = 0; i < slots; ++i) {
@@ -467,7 +467,7 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
 // byte of the 32-byte key-item list 0x904554, al 1; full, al 0. PSX twin
 // 0x80166B10 (pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl KeyItem_Add(unsigned item) {
-    unsigned char* const list = move_script::At(::bof3::Img(at::kKeyItems));
+    unsigned char* const list = move_script::At(::bof3::Img(scena_sx::at::kKeyItems));
     for (unsigned i = 0; i < 0x20; ++i) {
         if (list[i] != 0) continue;
         list[i] = static_cast<unsigned char>(item);
@@ -526,8 +526,8 @@ extern "C" unsigned char __cdecl Zenny_Add(std::uint32_t amount, unsigned tally)
     SetLong(money, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(money)) + amount));
     if (static_cast<unsigned char>(tally) == 0)
         Rest4a_CountC = static_cast<std::int32_t>(Rest4a_CountC + amount);
-    if (static_cast<std::uint32_t>(Long(money)) > at::kZennyCap) {
-        SetLong(money, static_cast<std::int32_t>(at::kZennyCap));
+    if (static_cast<std::uint32_t>(Long(money)) > scena_sx::at::kZennyCap) {
+        SetLong(money, static_cast<std::int32_t>(scena_sx::at::kZennyCap));
         return 0;
     }
     return 1;

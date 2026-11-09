@@ -129,11 +129,11 @@ extern "C" void __cdecl Window_HpGaugeTrack(unsigned char* gauge, const unsigned
             drain[0] = gauge[0];
             gauge[0] = 0;
         } else {
-            at::kScratch = gauge[0];
+            window_kinds::at::kScratch = gauge[0];
             const auto q = static_cast<unsigned char>(Scale(S(hp), S(max_hp)));
             gauge[0] = q;
             if (S(hp) != 0 && q == 0) gauge[0] = 1;
-            drain[0] = static_cast<unsigned char>(at::kScratch - gauge[0]);
+            drain[0] = static_cast<unsigned char>(window_kinds::at::kScratch - gauge[0]);
         }
         window_kinds::SetWord(step, static_cast<unsigned>(drain[0] >> 4));
         kind[0] = 1;
@@ -219,8 +219,8 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
     window_kinds::g.message_box(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y);
     w = Rec();
     const std::uint32_t e = static_cast<std::uint32_t>(w[0xA]) * 0xC;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(at::kBannerText.v) + e))));
-    const std::uint32_t colour = (e & ~0xFFu) | window_kinds::At(::bof3::Img(at::kBannerColour.v) + e)[0];
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(window_kinds::at::kBannerText.v) + e))));
+    const std::uint32_t colour = (e & ~0xFFu) | window_kinds::At(::bof3::Img(window_kinds::at::kBannerColour.v) + e)[0];
     window_kinds::g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 3),
                    static_cast<int>(colour), 0xFF, text);
 }
@@ -306,11 +306,11 @@ extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
 extern "C" void __cdecl BattleWin_MessageShow(void) {
     window_kinds::g.draw_message();
     unsigned i = BattleWindows_MsgHead;
-    if ((window_kinds::At(::bof3::Img(at::kMsgRing.v) + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
+    if ((window_kinds::At(::bof3::Img(window_kinds::at::kMsgRing.v) + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
         if (window_kinds::g.msg_advance() != 0) Rec()[3] = 3;
     }
     i = BattleWindows_MsgHead;
-    unsigned char* const entry = window_kinds::At(::bof3::Img(at::kMsgRing.v) + 8 * i);
+    unsigned char* const entry = window_kinds::At(::bof3::Img(window_kinds::at::kMsgRing.v) + 8 * i);
     if ((entry[0] & 2) == 0) return;
     unsigned char timer = entry[1];
     if (timer == 0xFF) return;
@@ -337,7 +337,7 @@ extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
     const unsigned char* r = Rec();
     window_kinds::g.message_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
     const unsigned i = (BattleWindows_MsgHead - 1u) & 0xFu;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(at::kMsgRing.v) + 4 + 8 * i))));
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(window_kinds::Long(window_kinds::At(::bof3::Img(window_kinds::at::kMsgRing.v) + 4 + 8 * i))));
     r = Rec();
     window_kinds::g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->y + 3), 0, 0xFF,
                    text);

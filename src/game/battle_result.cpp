@@ -77,7 +77,7 @@ unsigned char& Byte(std::uint32_t address) { return battle_result::At(address)[0
 std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(Long(At(address))); }
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
-unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
+unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(battle_result::at::kMembers.v) + (slot & 0xFF) * battle_result::at::kMemberSize); }
 unsigned char* WindowSlot(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return battle_result::At(BattleWinStates_Current); }
@@ -432,7 +432,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
     const bool us = g_exp_layout_us != 0;
     const int x_msg = us ? 0x82 : 0x55, x_level = us ? 0x114 : 0x85, x_exp = us ? 0x36 : 0xE3;
     unsigned char y = 0x2C;
-    for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
+    for (unsigned char slot = 0; slot < Byte(::bof3::Img(battle_result::at::kPartyCount.v)); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
         unsigned char* const m = MemberBattleResult(slot);
         auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
         battle_result::g.text_draw_at(0x19, y, 0, 5, m);
@@ -441,10 +441,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
             battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x41));
             continue;
         }
-        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
-        battle_result::g.text_draw_font12(x_level, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
-        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), battle_result::g.exp_to_next(slot));
-        battle_result::g.text_draw_font12(x_exp, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
+        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(battle_result::at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
+        battle_result::g.text_draw_font12(x_level, y, 0, battle_result::At(::bof3::Img(battle_result::at::kText2.v)));
+        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(battle_result::at::kText2.v)), Format(::bof3::Img(battle_result::at::kFormat6d.v)), battle_result::g.exp_to_next(slot));
+        battle_result::g.text_draw_font12(x_exp, y, 0, battle_result::At(::bof3::Img(battle_result::at::kText2.v)));
         battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x15));
     }
 }
@@ -472,9 +472,9 @@ extern "C" void __cdecl BattleResultWin_NextStep(void) {
 // As the original has it: the zenny is read after the box.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawZenny(void) {
     battle_result::g.draw_medium_box(0x6E, 0x28);
-    battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
-    battle_result::g.text_draw_font12(0x70, 0x2A, 0, battle_result::At(::bof3::Img(at::kText2.v)));
-    battle_result::g.text_draw_at(0xC4, 0x2A, 0, 0xFF, battle_result::At(::bof3::Img(at::kZennyUnit.v)));
+    battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(battle_result::at::kText2.v)), Format(::bof3::Img(battle_result::at::kFormat7d.v)), Party_Zenny);
+    battle_result::g.text_draw_font12(0x70, 0x2A, 0, battle_result::At(::bof3::Img(battle_result::at::kText2.v)));
+    battle_result::g.text_draw_at(0xC4, 0x2A, 0, 0xFF, battle_result::At(::bof3::Img(battle_result::at::kZennyUnit.v)));
 }
 
 // ===========================================================================
