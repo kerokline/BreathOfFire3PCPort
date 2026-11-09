@@ -19,8 +19,8 @@ constexpr std::uint32_t kTextRecord = 0x20;
 // through a pointer the fuzz can aim at a recorder - for the original's copy
 // and for ours alike.
 using DrawAtFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-DrawAtFn g_draw_at = Text_DrawAt;
-
+}  namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
+namespace {
 const std::uint8_t* AtTextImmediate(std::uint32_t address) {
     return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
 }
@@ -106,7 +106,7 @@ void SelfTest(void* clone) {
         out[at] = 0;
     };
 
-    g_draw_at = &RecordDraw;
+    text_immediate::g_draw_at = &RecordDraw;
     unsigned bad = 0, draws = 0;
     const unsigned rounds = 6000;
     for (unsigned n = 0; n < rounds; ++n) {
@@ -155,7 +155,7 @@ void SelfTest(void* clone) {
             bof3::Log("shadow      Text_DrawImmediate self-test MISMATCH round %u: ret %+d, draws %u / %u", n,
                       (int)(b.ret - a.ret), a.n, b.n);
     }
-    g_draw_at = Text_DrawAt;
+    text_immediate::g_draw_at = Text_DrawAt;
     for (Region& r : regions) std::memcpy(const_cast<std::uint8_t*>(AtTextImmediate(r.address)), r.saved, r.size);
     bof3::Log("shadow      Text_DrawImmediate self-test: %u strings, %u characters through the stand-in, %u MISMATCHES; "
               "the return and every draw's x, y, colour, count and text pointer compared", rounds, draws, bad);
@@ -257,7 +257,7 @@ extern "C" const unsigned char* __cdecl Text_DrawImmediate(int x_arg, int y, con
             break;
         }
 
-        g_draw_at(x, y, colour, 1, text);
+        text_immediate::g_draw_at(x, y, colour, 1, text);
         const int advance = TextAdvance_Of(text);  // DIV-0006; 12 in the original
         if (text[0] & 0x80) ++text;
         if (substituting && --left == 0) {
