@@ -182,6 +182,7 @@ class Item:
     last_line: int
     names: list[str] = field(default_factory=list)
     uses: set[str] = field(default_factory=set)
+    uses_unq: set[str] = field(default_factory=set)   # uses named unqualified (`At`, not `move_script::At`)
     ns: tuple[str, ...] = ()      # enclosing namespaces ('' = anonymous)
     linkage: bool = False         # inside an extern "C" { } block
     pragmas: tuple[str, ...] = () # the #pragma clang attribute push texts in force
@@ -332,6 +333,8 @@ class FileItems:
         it.names = [f.names[0] for f in expanded.functions()]
         it.uses = (set().union(*(f.uses for f in expanded.leaves())) if expanded.leaves() else set())
         it.uses = (it.uses | {it.macro} | {u for a in args for u in IDENT.findall(a)}) - set(it.names)
+        it.uses_unq = (set().union(*(f.uses_unq for f in expanded.leaves())) if expanded.leaves() else set())
+        it.uses_unq = (it.uses_unq | {it.macro} | {u for a in args for u in IDENT.findall(a)}) - set(it.names)
         it.c_linkage = linkage
         out.append(it)
         self.pos = last + 1
@@ -390,11 +393,13 @@ class FileItems:
             if m:
                 it.names = [m.group(0)]
             it.uses = set(IDENT.findall(d[6:])) - set(it.names)
+            it.uses_unq = set(it.uses)
             fm = re.match(r"define\s+(\w+)\(([^)]*)\)(.*)", re.sub(r"\\\r?\n", " ", d), re.S)
             if fm:                                   # a function-like macro: its parameters and body
                 params = [p.strip() for p in fm.group(2).split(",") if p.strip()]
                 self.fmacros[fm.group(1)] = (params, fm.group(3))
                 it.uses -= set(params)
+                it.uses_unq -= set(params)
         if word in ("if", "ifdef", "ifndef"):
             self.cond_stack.append(d)
         elif word == "endif":
@@ -555,7 +560,9 @@ class FileItems:
                 return False
         return has_paren
 
-    def _uses(self, i0: int, i1: int) -> set[str]:
+    def _uses(self, i0: int, i1: int, qualified: bool = True) -> set[str]:
+        """The identifiers the tokens name. With qualified=False, only those written bare: a
+        `sound::Helper` is a use of Helper for reachability, not for the ambiguity test."""
         out = set()
         prev = prev2 = None
         for t in self.toks[i0:i1 + 1]:
@@ -567,7 +574,7 @@ class FileItems:
                 continue
             if t.kind == "id" and t.text not in KEYWORDS and not (prev is not None and prev.text in (".", "->", "::")):
                 out.add(t.text)
-            elif (t.kind == "id" and prev is not None and prev.text == "::" and prev2 is not None
+            elif (qualified and t.kind == "id" and prev is not None and prev.text == "::" and prev2 is not None
                   and prev2.kind == "id" and prev2.text not in QUALIFIERS_NOT_OURS):
                 out.add(t.text)          # `sound::Helper`: a file-local of a named namespace, named in full
             prev2 = prev
@@ -595,6 +602,7 @@ class FileItems:
             name = m.group(0) if m else "?"
         it.names = [name]
         it.uses = self._uses(i0, close) - {name}
+        it.uses_unq = self._uses(i0, close, qualified=False) - {name}
 
     def _decl(self, out: list[Item], i0: int, semi: int, ns, linkage) -> None:
         ts = self._significant(i0, semi)
@@ -683,6 +691,7 @@ class FileItems:
                 it.asm_name = arg.text.strip('"') if arg.kind == "str" else arg.text
                 break
         it.uses = self._uses(i0, semi) - set(names)
+        it.uses_unq = self._uses(i0, semi, qualified=False) - set(names)
         out.append(it)
 
     def _is_prototype(self, ts: list[Tok]) -> bool:

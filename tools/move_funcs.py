@@ -888,16 +888,17 @@ def main() -> int:
         # group's `Callees g`, say), named unqualified by a moved body, is ambiguous there
         if len(e["namespaces"]) > 1:
             # named from file scope (a moved function, a file-scope local): a use inside namespace X
-            # finds X's own name first
-            used = set().union(*(it.uses for _, _, it, _ in e["funcs"]),
-                               *(it.uses for _, it, _ in e["locals"] if not any(it.ns)))
+            # finds X's own name first. Only names written bare count: `X::name` is not ambiguous
+            # (the qualification pass, docs/source-layout-round.md 7b item 11)
+            used = set().union(*(it.uses_unq for _, _, it, _ in e["funcs"]),
+                               *(it.uses_unq for _, it, _ in e["locals"] if not any(it.ns)))
             providers: dict[str, list[str]] = defaultdict(list)
             for x, names in sorted(e["namespaces"].items()):
                 for n in names & used:
                     providers[n].append(x)
             for n, xs in sorted(providers.items()):
                 if len(xs) > 1:
-                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses})
+                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq})
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
                                     f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
                                     f"qualify it first")
