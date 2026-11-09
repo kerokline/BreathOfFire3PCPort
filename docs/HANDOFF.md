@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch and waits on three small owner calls before the moves, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch (main 7f215457 merged in) and waits on two owner calls before the moves, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -381,21 +381,27 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    the 62 blocked rows applied with 191 exception rows, 20 stay blocked (class 1, the function promotions,
    the alias seams). **The qualification pass** (item 11, group q, four passes): 761 `qualify` rows, 6,380
    `X::` qualifiers on their own lines, the mover's ambiguity check fixed to count bare names only and to
-   know same-type aliases; 62 ambiguity lines left, every one in `slb1108\reports\q_remainder.tsv`. **Gate
-   on the tip:** i686 `--exceptions ... --exception-classes data-layout` 0 differ (52 excepted, 78 promoted);
-   x86_64 `--exceptions` 0 differ (198 excepted, 56 promoted); both self-test suites clean. **The owner's,
-   before B1..B5** (7b): the 58 real file-locals plus g's unpromoted ones and the mixed helper copies - the
-   recommendation is a rename (item 13); win_main `g_capcom_movie_only` wants a decision row (item 14); whether
-   class 3 means the narrow form only (item 15); row 572's extent (item 9). Then `move_funcs.py --map-only`
-   and the moves. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
+   know same-type aliases and self-declared names. **Groups n and n2** (2026-11-09 night, the owner's calls 13..15):
+   58 file-local renames, win_main `g_capcom_movie_only` promoted, class 3's wide form excepted; main 7f215457
+   (PR #213) merged with its three seam conflicts resolved by hand, the gate's baseline moved to `slb1108\base2`.
+   **The mover's check now reports no ambiguity and no helper clash**; what it still refuses is 7b items 16
+   and 17. **Gate on the tip:** i686 `--exceptions ... --exception-classes data-layout` 0 differ (51 excepted, 79
+   promoted); x86_64 `--exceptions` 0 differ (199 excepted, 57 promoted); both self-test suites clean. **The
+   owner's, before B1..B5** (7b): **item 16** - 25 file-static items whose readers split between one moving
+   function and the source's own `_Inject()` / self-test (`slb1108\reports\state_readers.md`): promote them
+   under named classes (recommended) or keep about 45 reader functions back; **item 17** - the `MS16_SPARKLES`
+   family's 40 functions want one file (recommended: join MAGIC071..074's units in `analysis/tu_joins.tsv`);
+   row 572's extent (item 9). Then `move_funcs.py --map-only` and the moves. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
    as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
    (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
    legitimately changes when a twin claim is corrected; the mover's check counted `X::name` as a use of `name`,
    so a qualification pass could never lower it (fixed); a brief's assumption that a file-local cannot be
    qualified sent 178 rows to the owner of which 120 were `using X::name;` declarations - classify before
-   declaring a thing impossible. Worktrees `slb1108\r1..r4, c, t, s, a, p, g, q` are removable after the merge
-   into `main`.
+   declaring a thing impossible; the mover's ambiguity test over-counted three ways (qualified names, same-type
+   aliases, self-declared names) - measure a check before sending its lines to an agent; a state kept file-local
+   "with its readers" is blocked by the source's `_Inject()` and self-test, which never move. Worktrees
+   `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2` are removable after the merge into `main`.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
