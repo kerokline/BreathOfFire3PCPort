@@ -45,5 +45,6 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out);
 void ButtonText_Arm();
 
 namespace text_draw {
+extern void(__cdecl* g_emit)(int, int, int, int, int, int, int);   // defined in text_draw.cpp (source-layout B0: promoted for a moved reader)
 extern unsigned g_glyph_limit;   // defined in text_draw.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace text_draw
