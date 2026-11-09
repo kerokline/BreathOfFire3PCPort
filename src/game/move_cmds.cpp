@@ -51,7 +51,7 @@ unsigned char* Kind2() { return rv::Bytes(&Sprite_Kind2); }
 
 // The angle a party member turns to for a direction: Sprite_DirectionAngles,
 // read at any index as the original reads it (the table has 8).
-std::uint16_t DirectionAngle(unsigned char direction) { return Word(At(Address(Sprite_DirectionAngles) + direction * 2u)); }
+std::uint16_t DirectionAngle(unsigned char direction) { return move_script::Word(move_script::At(Address(Sprite_DirectionAngles) + direction * 2u)); }
 
 // Math_Ratan2's doubles, bit for bit the image's (the fuzz checks them).
 constexpr double kScale = 2048.0;
@@ -125,38 +125,38 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
     unsigned char* const record = MoveScript_PartyRecords + slot * 16;
     if (record[0] & 1) return;
     if (Add(sprite->step_z, sprite->step_x) != 0) {
-        const unsigned char* const step = At(Address(Field_DirectionSteps) + direction * 8u);
-        const long ground = g.elevation(Add(Long(step), sprite->x), Add(Long(step + 4), sprite->z));
+        const unsigned char* const step = move_script::At(Address(Field_DirectionSteps) + direction * 8u);
+        const long ground = move_cmds::g.elevation(Add(move_script::Long(step), sprite->x), Add(move_script::Long(step + 4), sprite->z));
         sprite = rv::Current<records::SpriteHead>();
         const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - sprite->height_whole);
         if (direction & 2) {
             sprite->angle[0] = 0;
             const auto slope = static_cast<short>(direction == 3 ? rise : 0u - rise);
-            tilt_y = g.ratan2(static_cast<float>(slope), 128.0f);
+            tilt_y = move_cmds::g.ratan2(static_cast<float>(slope), 128.0f);
         } else {
             const auto slope = static_cast<short>(direction == 1 ? rise : 0u - rise);
-            tilt_x = g.ratan2(static_cast<float>(slope), 128.0f);
+            tilt_x = move_cmds::g.ratan2(static_cast<float>(slope), 128.0f);
             rv::Current<records::SpriteHead>()->angle[1] = 0;
         }
         sprite = rv::Current<records::SpriteHead>();
     }
     const unsigned char frames = rv::Bytes(sprite)[0xA];
     if (frames == 0) {
-        SetLong(record + 0xC, 0);
-        SetLong(record + 8, 0);
-        SetLong(record + 4, 0);
+        move_script::SetLong(record + 0xC, 0);
+        move_script::SetLong(record + 8, 0);
+        move_script::SetLong(record + 4, 0);
         sprite->angle[2] = DirectionAngle(direction);
         return;
     }
     record[1] = static_cast<unsigned char>(frames << 1);
     record[2] = static_cast<unsigned char>(rv::Bytes(sprite)[0xA] << 2);
-    SetLong(record + 4, Sub(tilt_x, static_cast<std::int32_t>(sprite->angle[0])) / static_cast<std::int32_t>(rv::Bytes(sprite)[0xA] * 2u));
-    SetLong(record + 8, Sub(tilt_y, static_cast<std::int32_t>(sprite->angle[1])) / static_cast<std::int32_t>(rv::Bytes(sprite)[0xA] * 2u));
+    move_script::SetLong(record + 4, Sub(tilt_x, static_cast<std::int32_t>(sprite->angle[0])) / static_cast<std::int32_t>(rv::Bytes(sprite)[0xA] * 2u));
+    move_script::SetLong(record + 8, Sub(tilt_y, static_cast<std::int32_t>(sprite->angle[1])) / static_cast<std::int32_t>(rv::Bytes(sprite)[0xA] * 2u));
     std::uint16_t turn_to = DirectionAngle(direction);
     if ((direction == 5 || direction == 6) &&
         static_cast<std::int32_t>(DirectionAngle(3)) < (static_cast<std::int32_t>(sprite->angle[2]) & 0xFFF))
         turn_to = static_cast<std::uint16_t>(turn_to + 0x1000);
-    SetLong(record + 0xC, (static_cast<short>(turn_to) - (static_cast<std::int32_t>(sprite->angle[2]) & 0xFFF)) /
+    move_script::SetLong(record + 0xC, (static_cast<short>(turn_to) - (static_cast<std::int32_t>(sprite->angle[2]) & 0xFFF)) /
                               static_cast<std::int32_t>(rv::Bytes(sprite)[0xA] * 4u));
 }
 
@@ -198,7 +198,7 @@ extern "C" void __cdecl MoveCmd_MoveKind2(unsigned char direction) {
     SetLong(k2 + kK2Z, z);
     Field_Kind2X = x;
     Field_Kind2Z = z;
-    const long ground = g.elevation(x, z);
+    const long ground = move_cmds::g.elevation(x, z);
     const std::int32_t frames = Mul(0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor), k2[kK2Steps]);
     MoveScript_FAWord = 0;
     const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(ground)) - static_cast<short>(Word(k2 + kK2Height));
@@ -213,7 +213,7 @@ extern "C" void __cdecl MoveCmd_MoveKind2(unsigned char direction) {
 // as a short - AreaMap_Elevation's high half is not always 0.
 extern "C" void __cdecl Kind2_Place(unsigned char script) {
     unsigned char* const k2 = Kind2();
-    g.context_reset(k2 + kK2Context);
+    move_cmds::g.context_reset(k2 + kK2Context);
     k2[kK2Flags] |= 0x80;
     const long z = Field_Kind2Z;
     k2[kK2Script] = script;
@@ -221,9 +221,9 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
     k2[kK2Speed] = 3;
     SetLong(k2 + kK2X, x);
     SetLong(k2 + kK2Z, z);
-    const long ground = g.elevation(x, z);
+    const long ground = move_cmds::g.elevation(x, z);
     SetWord(k2 + kK2Height, static_cast<std::uint32_t>(ground));
-    g.set_elevation(ground);
+    move_cmds::g.set_elevation(ground);
     k2[1] = 1;
     k2[2] = 0;
     k2[3] = 0;
