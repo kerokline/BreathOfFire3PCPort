@@ -9315,6 +9315,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetWord	copied		src/game/effect_5a.cpp	59	59	59	src/game/effect/effect_kind_18_sub_0d.cpp	d3e6abb3
 	Word	copied		src/game/effect_5a.cpp	60	60	60	src/game/area/area_109.cpp	d3e6abb3
 	Word	copied		src/game/effect_5a.cpp	60	60	60	src/game/effect/effect_kind_18.cpp	d3e6abb3
+	S	local		src/game/effect_5a.cpp	61	61	61	src/game/platform/magic_080.cpp	675b4476
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/area/area_109.cpp	d3e6abb3
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/effect/effect_kind_18.cpp	d3e6abb3
 	S	copied		src/game/effect_5a.cpp	62	62	62	src/game/effect/effect_kind_18_sub_0d.cpp	d3e6abb3
@@ -26031,6 +26032,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kStrCapcomAvi	local		src/game/win_main.cpp	105	105	105	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrBof3Exe	local		src/game/win_main.cpp	106	106	106	src/game/platform/magic_080.cpp	d3e6abb3
 	Str	local		src/game/win_main.cpp	107	107	107	src/game/platform/magic_080.cpp	d3e6abb3
+	StrWinMain	local		src/game/win_main.cpp	107	107	107	src/game/platform/magic_080.cpp	675b4476
 	kFirstFrameMs	local		src/game/win_main.cpp	109	111	111	src/game/platform/magic_080.cpp	d3e6abb3
 	kFrameMs	local		src/game/win_main.cpp	112	121	121	src/game/platform/magic_080.cpp	d3e6abb3
 	g_frame_ms	local		src/game/win_main.cpp	122	122	122	src/game/platform/magic_080.cpp	d3e6abb3
@@ -26039,9 +26041,12 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	g_fps_log	local		src/game/win_main.cpp	136	136	136	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrSpeed2	local		src/game/win_main.cpp	137	137	137	src/game/platform/magic_080.cpp	d3e6abb3
 	kStrSpeed1	local		src/game/win_main.cpp	138	138	138	src/game/platform/magic_080.cpp	d3e6abb3
+	kStrFrameSaved	local		src/game/win_main.cpp	139	139	139	src/game/platform/magic_080.cpp	675b4476
+	kStrFrameNotSaved	local		src/game/win_main.cpp	140	140	140	src/game/platform/magic_080.cpp	675b4476
 	kEnvBase	local		src/game/win_main.cpp	141	141	141	src/game/platform/magic_080.cpp	d3e6abb3
 	kEnvStride	local		src/game/win_main.cpp	142	142	142	src/game/platform/magic_080.cpp	d3e6abb3
 	kOverlayFrames	copied		src/game/win_main.cpp	143	143	143	src/game/platform/magic_080.cpp	d3e6abb3
+	kOverlayFrames	local		src/game/win_main.cpp	143	143	143	src/game/platform/magic_080.cpp	675b4476
 	kMaxDebtMs	local		src/game/win_main.cpp	145	146	146	src/game/platform/magic_080.cpp	d3e6abb3
 	kWindowedStyle	local		src/game/win_main.cpp	148	150	150	src/game/platform/magic_080.cpp	d3e6abb3
 	kBorderlessStyle	local		src/game/win_main.cpp	151	151	151	src/game/platform/magic_080.cpp	d3e6abb3
@@ -26058,6 +26063,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Overlay	local		src/game/win_main.cpp	271	271	274	src/game/platform/magic_080.cpp	d3e6abb3
 	g_pad_reset_held	local		src/game/win_main.cpp	286	286	286	src/game/platform/magic_080.cpp	d3e6abb3
 	PadReset_Frame	local		src/game/win_main.cpp	294	294	307	src/game/platform/magic_080.cpp	d3e6abb3
+	SaveFrameBesideDll	local		src/game/win_main.cpp	314	316	329	src/game/platform/magic_080.cpp	675b4476
 0x4FCAC0	Cursor_Sync	func	tu_4fc330	src/game/win_main.cpp	331	331	341	src/game/platform/magic_080.cpp	d3e6abb3
 0x5A5130	Display_WindowMoved	func	tu_59e650	src/game/win_main.cpp	343	343	348	src/game/platform/d3d.cpp	d3e6abb3
 0x5A6690	Display_DeviceName	func	tu_59e650	src/game/win_main.cpp	350	350	352	src/game/platform/d3d.cpp	d3e6abb3

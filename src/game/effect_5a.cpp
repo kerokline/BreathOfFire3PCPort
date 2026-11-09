@@ -58,7 +58,6 @@ using move_script::Long;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char* S() { return Sprite_Current; }
 unsigned char T(U a) { return *At(a); }
 std::int32_t TS(U a) { return static_cast<signed char>(*At(a)); }
 U TL(U a) { return static_cast<U>(Long(At(a))); }
@@ -143,31 +142,6 @@ U Div256(U v) {
 // Sub-kind 1 (EffectKind18_States[1])
 // ===========================================================================
 
-// original 0x4FD2E0 (hidden in Gfx_LinkOTags' recorded extent): Cond_ByteFE 1:
-// the step word +0x2E 0 and the gradient (0x40, 0x5A, 0xFF); 2: the step up
-// one below 0xBF (signed), the gradient (c + 0x40, 0x5A, max(0xFF - 2c, 0))
-// and a tail jump to the glow; else nothing.
-extern "C" void __cdecl EffectKind18_01_Sunset(void) {
-    const unsigned fe = Cond_ByteFE;
-    if (fe == 1) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
-        SH_CALL(Gfx_DrawSkyGradient)(0x40, 0x5A, 0xFF);
-        return;
-    }
-    if (fe != 2) return;
-    unsigned char* s = S();
-    const std::int32_t step = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e));
-    if (step < 0xBF) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, static_cast<U>(step + 1));
-        s = S();
-    }
-    const std::int32_t c = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e));
-    std::int32_t b = 0xFF - 2 * c;
-    if (b <= 0) b = 0;
-    SH_CALL(Gfx_DrawSkyGradient)(static_cast<unsigned>(c + 0x40), 0x5A, static_cast<unsigned>(b));
-    SH_CALL(Gfx_DrawSunsetGlow)();
-}
-
 // ===========================================================================
 // Sub-kind 4: EffectKind18_04_States (4)
 // ===========================================================================
@@ -206,5 +180,4 @@ extern "C" void __cdecl EffectKind18_01_Sunset(void) {
 
 void Effect5A_Inject() {
     if (bof3::WantsShadow("effect_5a")) effect_5a::SelfTest();
-    BOF3_INJECT(EffectKind18_01_Sunset);
 }

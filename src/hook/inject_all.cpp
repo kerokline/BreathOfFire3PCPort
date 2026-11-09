@@ -417,6 +417,7 @@
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
 #include "game/shell.h"
+#include "game/platform/magic_080.h"
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
 #include "game/crt_rest.h"
@@ -1595,6 +1596,7 @@ void InjectAll() {
                                 // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
                                 // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
                                 // clones them; before FishingText_Arm (docs/shell.md)
+    Magic080_Inject();
     PsxRest_Inject();           // the platform round's group PL (docs/psx-rest.md: three libgpu setters, the texture
                                 // window, SquareRoot0, ApplyMatrixSV and the teardown chain): every caller of the
                                 // seventeen is ours and calls them by address, so after every module whose fuzz
