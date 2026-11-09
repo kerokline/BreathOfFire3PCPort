@@ -17,7 +17,10 @@
 # pointer stub `.refptr.X` once the reader is in another file - one load more, the same symbol; a row names the
 # reader, or the `.refptr.` data symbol, which reads NEW). By the same call `inline` reaches i686 for a move (the
 # split of a wave file's shared helper changes how many callers each file has). The i686 gate passes
-# --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr, so its code stays exact
+# harness (both widths, the coordinator 2026-11-09; hosted test code - a *_fuzz.cpp or *_harness.cpp function, table
+# or its _GLOBAL__sub_I_* - changed on purpose, never a game function; first case magic_harness::Run, the region
+# skip for the GTE padding, group B6). The i686 gate passes
+# --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness, so its code stays exact
 # but for those classes. A new class needs the coordinator's entry in the round doc with its first case. Read by
 # tools/codegen_same.py --exceptions.
 symbol	class	reason	commit

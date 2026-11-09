@@ -151,12 +151,15 @@ data or bss symbol which belongs to a function - an exception table (`GCC_except
 through its .eh_frame FDE) or a function-local static (`_ZZ...E...`) - follows that function: not
 counted when the function is a changed registration under --inject-ok, excepted by the row that
 excepts the function (any class in use), each printed with `belongs to F`. An inject line is never
-excepted. --exception-classes limits which classes may except:
+excepted. `harness` (both widths, the coordinator's class of 2026-11-09 for stage B) names hosted
+test code changed on purpose - a *_fuzz.cpp / *_harness.cpp function or table - never a game function;
+first case magic_harness::Run (the region skip for the GTE padding, group B6). --exception-classes
+limits which classes may except:
 the rows of the other classes are read (and checked) but never used, and
 never reported as unused. The i686 gate runs with `--exception-classes
-data-layout,i686-fold,i686-inline,i686-convention,inline,refptr` (the owner's
+data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness` (the owner's
 calls of 2026-11-09 on group B1: `inline` reaches i686 for a move, and
-`refptr` is both widths); the x86_64 gate with every class (no flag, the default). A row
+`refptr` is both widths; `harness` is the coordinator's, below); the x86_64 gate with every class (no flag, the default). A row
 whose class is not a known one, a name in --exception-classes that is not
 one, a row without a symbol and a class, or a file without the header, is
 an error: the line is printed and the exit is 2, before anything is
@@ -827,9 +830,9 @@ def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
 
 
 EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect", "i686-fold", "i686-inline",
-                     "i686-convention", "refptr")
+                     "i686-convention", "refptr", "harness")
 # the classes that may except a DATA, BSS or data NEW/GONE line
-DATA_CLASSES = ("data-layout", "x64-indirect", "i686-fold", "i686-inline", "i686-convention", "refptr")
+DATA_CLASSES = ("data-layout", "x64-indirect", "i686-fold", "i686-inline", "i686-convention", "refptr", "harness")
 X64_ONLY_CLASSES = ("x64-indirect",)  # never used on an i386 build
 
 
@@ -1092,7 +1095,7 @@ def main() -> int:
                          "class prints as EXCEPT and is not counted")
     ap.add_argument("--exception-classes", metavar="CLASS[,CLASS]",
                     help="with --exceptions: only these classes may except (default every class); the i686 "
-                         "gate passes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr")
+                         "gate passes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness")
     a = ap.parse_args()
     if a.exceptions and not a.by_function:
         ap.error("--exceptions belongs to --by-function")
