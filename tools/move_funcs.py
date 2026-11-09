@@ -305,8 +305,10 @@ class SourcePlan:
     decls_for: dict[str, list[ci.Item]] = field(default_factory=dict)      # target -> declarations copied
     undefs: dict[str, list[ci.Item]] = field(default_factory=dict)         # target -> `#undef M` lines moved
     bound_elsewhere: dict[str, str] = field(default_factory=dict)          # function -> where its bind stays
-    namespace_names: dict[str, set[str]] = field(default_factory=dict)     # `using namespace X` -> X's names
+    namespace_names: dict[str, dict[str, str]] = field(default_factory=dict)  # `using namespace X` -> X's names -> entity
     alias_bodies: dict[str, dict[str, str]] = field(default_factory=dict)  # X -> alias name -> its code
+    extern_helpers: set[int] = field(default_factory=set)  # id(item): an external helper no other file names
+    local_names: set[str] = field(default_factory=set)     # every file-local name S defines
 
 
 def resolve_include(inc: str) -> str | None:
@@ -448,6 +450,16 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
                 continue                                       # a header declares it extern: a global
             for n in it.names:
                 local_by_name[n].append(it)
+        elif (it.kind == "func" and not it.local and not any(it.ns) and not it.linkage and not it.c_linkage
+              and not it.made and it.names and it.names[0] not in table_target
+              and not declared_in_headers(text, set(it.names[:1]))
+              and not named_elsewhere(it.names[0], source)):
+            # a helper of external linkage that is no [[func]], declared in no header and named by
+            # no other file (effect_5g's Sub3APair): only this file can call it, so it is reached
+            # like a file-local - it moves with its callers; two targets would define it twice
+            plan.extern_helpers.add(id(it))
+            local_by_name[it.names[0]].append(it)
+    plan.local_names = set(local_by_name)
     # who reaches what: every moved item for its target, everything else for S
     roots = []
     local_ids = {id(i) for lst in local_by_name.values() for i in lst}
@@ -460,6 +472,12 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     for lst in plan.decls_for.values():
         local_ids |= {id(d) for d in lst}
     owners = owners_of(fi, roots, local_by_name)
+    # a file-local nothing reaches (rest_1c's kEffectStride) stays in S, so what it names is S's too:
+    # without this its `U` went with the moved functions and S no longer compiled
+    orphans = [(it, source) for lst in local_by_name.values() for it in lst
+               if id(it) not in owners and id(it) not in undef_ids]
+    if orphans:
+        owners = owners_of(fi, roots + orphans, local_by_name)
     seen = set()
     for lst in local_by_name.values():
         for it in lst:
@@ -473,6 +491,11 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
                 plan.moved_locals.setdefault(next(iter(own)), []).append(it)
                 continue
             # reached from two places: a header both include, if it is a value and not state
+            if id(it) in plan.extern_helpers:
+                problems.append(f"{source}: {'/'.join(it.names)} (line {it.code_line}) has external linkage, no "
+                                f"declaration in a header, and is reached by {', '.join(sorted(own))}: two "
+                                f"copies would define it twice; give it internal linkage or a declaration first")
+                continue
             if it.is_var and not it.is_const:
                 problems.append(f"{source}: {'/'.join(it.names)} (line {it.code_line}) is file-static state reached by "
                                 f"{', '.join(sorted(own))}: two copies would split it; decide by hand")
@@ -514,9 +537,23 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     for d in plan.using_dirs:
         mm = re.match(r"\s*using\s+namespace\s+(::)?([\w:]+)\s*;", d.text[d.code_start - d.start:])
         if mm:
-            plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
+            plan.namespace_names[mm.group(2)] = namespace_entities(text, mm.group(2))
             plan.alias_bodies[mm.group(2)] = namespace_alias_bodies(text, mm.group(2))
     return plan
+
+
+_src_texts: dict[str, str] = {}
+
+
+def named_elsewhere(name: str, source: str) -> bool:
+    """Whether a file of src/ other than `source` names `name` (comments and strings included: a
+    false hit only keeps a helper where it is, which the build then reports)."""
+    if not _src_texts:
+        for p in sorted((ROOT / "src").rglob("*")):
+            if p.suffix in (".cpp", ".h", ".inc", ".ixx") and p.is_file():
+                _src_texts[p.relative_to(ROOT).as_posix()] = p.read_text(encoding="utf-8", errors="replace")
+    rx = re.compile(rf"\b{re.escape(name)}\b")
+    return any(rx.search(t) for f, t in _src_texts.items() if f != source)
 
 
 _bind_cache: dict[str, str] = {}
@@ -536,21 +573,79 @@ def bind_site(name: str) -> str:
 
 def namespace_names(text: str, ns: str) -> set[str]:
     """The names namespace `ns` defines at its scope in this file and in the project headers it
-    includes (one level): what `using namespace ns;` brings into a target."""
+    includes (followed): what `using namespace ns;` brings into a target."""
+    return set(namespace_entities(text, ns))
+
+
+def namespace_entities(text: str, ns: str) -> dict[str, str]:
+    """namespace_names with the entity each name is: `X::name`, but for a using-declaration
+    (`using move_script::At;` inside X) the entity it names, and for a type alias its spelling -
+    two names of one entity are no ambiguity ([namespace.udir]/6)."""
     parts = tuple(ns.split("::"))
-    out: set[str] = set()
-    texts = [text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
-                      for t in [resolve_include(inc)] if t]
-    for t in texts:
+    out: dict[str, str] = {}
+    for t in [text] + included_texts(text):
         try:
             fi = ci.FileItems(t.replace("\r\n", "\n"))
         except ValueError:
             continue
         for it in fi.leaves():
+            # `namespace effect_5c::at {` is one component in cpp_items: spelt out
+            its_ns = tuple(q for c in it.ns for q in (c.split("::") if c else [c]))
             # X's own scope and the anonymous namespaces inside it: `using namespace X` brings both
-            if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
+            if (its_ns[:len(parts)] == parts and not any(its_ns[len(parts):])
                     and it.kind in ("decl", "func", "type", "alias", "typedef", "using")):
-                out.update(it.names)
+                for n in it.names:
+                    out.setdefault(n, entity_of(it, ns, n))
+            # a namespace nested in X (X::at, the callees constants) is a name X brings too
+            elif its_ns[:len(parts)] == parts and len(its_ns) > len(parts) and its_ns[len(parts)]:
+                inner = its_ns[len(parts)]
+                out.setdefault(inner, f"{ns}::{inner}")
+    return out
+
+
+def entity_of(it: ci.Item, ns: str, n: str) -> str:
+    """What a name an item declares in namespace `ns` refers to, for the ambiguity test."""
+    code = it.text[it.code_start - it.start:]
+    if it.kind == "using":
+        mu = re.match(r"\s*using\s+(?:::)?([\w:]+)::(\w+)\s*;", code)
+        if mu and mu.group(2) == n:
+            return f"{mu.group(1)}::{n}"
+    if it.kind in ("alias", "typedef"):
+        return "type " + code_tokens(it)
+    name = f"{ns}::{n}" if ns else f"(this file)::{n}"
+    return "class " + name if it.kind == "type" else name
+
+
+def at_uses(it: ci.Item) -> set[str]:
+    """The names an item writes as `at::name` (cpp_items leaves `at::` out of its uses)."""
+    toks = [t for t in ci.lex(it.text) if t.kind in ("id", "punct")]
+    return {toks[i + 2].text for i in range(len(toks) - 2)
+            if toks[i].text == "at" and toks[i + 1].text == "::" and toks[i + 2].kind == "id"
+            and not (i and toks[i - 1].text in ("::", ".", "->"))}
+
+
+def distinct(ents: set[str]) -> bool:
+    """Whether names of these entities, met in one scope, are ambiguous: a class name is hidden by
+    a function or variable of the same name ([basic.scope.hiding]/2: event_leader's Table() and
+    move_script::Table), so it counts only when nothing else is there."""
+    other = {e for e in ents if not e.startswith("class ")}
+    return len(other) > 1 or (not other and len(ents) > 1)
+
+
+def included_texts(text: str) -> list[str]:
+    """The project headers `text` includes, and theirs, each once (what a `using namespace X;` in
+    it can see: battle_odds::U sits in battle_odds_callees.h, which battle_odds.h includes)."""
+    out, seen = [], set()
+    todo = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        t = resolve_include(inc)
+        if t:
+            out.append(t)
+            todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', t, re.M)
     return out
 
 
@@ -594,6 +689,30 @@ def has_static_local(it: ci.Item) -> bool:
 def code_tokens(it: ci.Item) -> str:
     """An item's code without its comments and spacing."""
     return " ".join(t.text for t in ci.lex(it.text) if t.kind != "comment")
+
+
+def alias_header(text: str, ns: str, source_header: str) -> str:
+    """The include spelling of the project header (of those `text` includes, followed) that opens
+    namespace `ns` (`X::at`): `namespace X::at {` or an `at` inside `namespace X {`. magic_c1.cpp's
+    `namespace at = magic_harness::at;` names magic_harness.h's, not a magic_c1_callees.h. Falls back
+    to `<source stem>_callees.h`, the usual home."""
+    outer, _, inner = ns.rpartition("::")
+    todo, seen = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        p = ROOT / "src" / inc
+        if not p.exists():
+            continue
+        h = p.read_text(encoding="utf-8")
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
+        if re.search(rf"\bnamespace\s+{re.escape(ns)}\s*\{{", h) or (
+                outer and re.search(rf"\bnamespace\s+{re.escape(outer)}\s*\{{", h)
+                and re.search(rf"\bnamespace\s+{re.escape(inner)}\s*\{{", h)):
+            return inc
+    return include_name(source_header[:-2] + "_callees.h")
 
 
 def declared_in_headers(text: str, names: set[str]) -> set[str]:
@@ -852,7 +971,7 @@ def main() -> int:
             if p.alias_at:
                 e["aliases"][s] = p.alias_at
             for x, names in p.namespace_names.items():
-                e["namespaces"].setdefault(x, set()).update(names)
+                e["namespaces"].setdefault(x, {}).update(names)
             for x, bodies in p.alias_bodies.items():
                 e["alias_bodies"].setdefault(x, {}).update(bodies)
         for t, its in p.moved_locals.items():
@@ -911,6 +1030,60 @@ def main() -> int:
                 problems.append(f"{t}: {name} is already defined there")
         # every source's `using namespace X;` comes too: a name two of those namespaces define (each
         # group's `Callees g`, say), named unqualified by a moved body, is ambiguous there
+        # the target's own file-scope names (moved or copied file-locals, its `at` alias) against what
+        # the `using namespace` lines bring: two entities of one name, named bare, are ambiguous too
+        # (field_3: its `namespace at = field_c3::at;` and battle_misc::at, mode_states::at)
+        aliases_t = sorted(set(e["aliases"].values()))
+        own_entity: dict[str, set[str]] = defaultdict(set)
+        if aliases_t:
+            own_entity["at"].add(aliases_t[0] if len(aliases_t) == 1 else f"{Path(t).stem}::at")
+        for _, it, _ in e["locals"]:
+            if any(it.ns):
+                continue
+            for n in it.names:
+                own_entity[n].add(entity_of(it, "", n))
+        if e["namespaces"]:
+            # only a use from the global scope sees both: inside the anonymous namespace its own member
+            # is found before what the directives bring to the global namespace
+            used_t = set().union(*(it.uses_unq - it.declares for _, _, it, _ in e["funcs"]),
+                                 *(it.uses_unq - it.declares for _, it, _ in e["locals"] if it.ns == ()))
+            for n in sorted(used_t & set(own_entity)):
+                xs = [x for x, names in sorted(e["namespaces"].items()) if n in names]
+                ents = {e["namespaces"][x][n] for x in xs} | own_entity[n]
+                if xs and distinct(ents):
+                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq - it.declares})
+                    problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(sorted(ents))} (named by "
+                                    f"{', '.join(users[:6]) + (' ...' if len(users) > 6 else '') or 'a moved local'}); "
+                                    f"qualify it first")
+        # a body S wrote meaning X's name (its `using namespace X;`) finds this file's own name of
+        # another entity first wherever it sits in the anonymous namespace: no error, another meaning
+        # (battle_fx_2: battle_odds' helpers mean battle_odds::U and battle_odds::at, the file holds
+        # magic_s37's U() and magic_harness's `at`)
+        for s in e["sources"]:
+            p = plans[s]
+            s_ent: dict[str, set[str]] = defaultdict(set)
+            for ents in p.namespace_names.values():
+                for n, en in ents.items():
+                    s_ent[n].add(en)
+            uses_s = set().union(set(), *(it.uses_unq - it.declares for _, _, it, src in e["funcs"] if src == s),
+                                 *(it.uses_unq - it.declares for src, it, _ in e["locals"] if src == s))
+            for n in sorted((uses_s & set(own_entity) & set(s_ent)) - p.local_names):
+                if n == "at" and p.alias_at:
+                    continue
+                if own_entity[n] - s_ent[n] and distinct(own_entity[n] | s_ent[n]):
+                    problems.append(f"{t}: `{n}` in {s}'s bodies means {', '.join(sorted(s_ent[n]))}; here it "
+                                    f"would find {', '.join(sorted(own_entity[n] - s_ent[n]))}; qualify it first")
+        # the merged `at` (two groups' aliases): a constant two of them define is ambiguous
+        if len(aliases_t) > 1:
+            text0 = {x: plans[s].text for s, x in e["aliases"].items()}
+            have = {x: namespace_names(text0[x], x) for x in aliases_t}
+            used_q = set().union(*(at_uses(it) for _, _, it, _ in e["funcs"]),
+                                 *(at_uses(it) for _, it, _ in e["locals"]))
+            for n in sorted(used_q):
+                xs = [x for x in aliases_t if n in have[x]]
+                if len(xs) > 1:
+                    problems.append(f"{t}: `at::{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} "
+                                    f"meet in {Path(t).stem}::at; qualify it first")
         if len(e["namespaces"]) > 1:
             # named from file scope (a moved function, a file-scope local): a use inside namespace X
             # finds X's own name first. Only names written bare count: `X::name` is not ambiguous
@@ -920,7 +1093,7 @@ def main() -> int:
                                *(it.uses_unq - it.declares for _, it, _ in e["locals"] if not any(it.ns)))
             providers: dict[str, list[str]] = defaultdict(list)
             for x, names in sorted(e["namespaces"].items()):
-                for n in names & used:
+                for n in set(names) & used:
                     providers[n].append(x)
             # a type alias every provider (and the target's own file-scope copy, if any) spells the
             # same is one entity, not an ambiguity ([namespace.udir]/6)
@@ -930,6 +1103,8 @@ def main() -> int:
                 bodies = {e["alias_bodies"].get(x, {}).get(n) for x in xs} | ({own_alias[n]} if n in own_alias else set())
                 if len(xs) > 1 and None not in bodies and len(bodies) == 1:
                     continue
+                if not distinct({e["namespaces"][x][n] for x in xs}):
+                    continue            # one entity under several names (a using-declaration)
                 if len(xs) > 1:
                     users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq - it.declares})
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
@@ -1087,8 +1262,9 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
                        "// groups' namespaces (tools/move_funcs.py, docs/source-layout-round.md 2). The constants\n"
                        "// stay in the groups' headers; a name two of them define differently is refused.\n"
                        "#pragma once\n\n"
-                       + "".join(f'#include "{include_name(header_of(s)[:-2] + "_callees.h")}"\n'
-                                 for s in e["sources"] if s in e["aliases"])
+                       + "".join(f'#include "{h}"\n' for h in dict.fromkeys(
+                                 alias_header(plans[s].text, e["aliases"][s], header_of(s))
+                                 for s in e["sources"] if s in e["aliases"]))
                        + f"\nnamespace {stem}::at {{\n"
                        + "".join(f"using namespace ::{x};\n" for x in aliases)
                        + f"}}  // namespace {stem}::at\n")
