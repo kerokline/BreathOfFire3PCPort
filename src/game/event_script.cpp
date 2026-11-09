@@ -704,7 +704,7 @@ extern "C" unsigned char __cdecl EventCond_ByteFA(const unsigned char** at) {
 // original 0x57C1C0 (PSX 0x8015C05C): condition 2 - flag `operand` of row EventScript_FlagBank
 // (its low byte) of Cond_Flags (PSX 0x8015C05C).
 extern "C" unsigned char __cdecl EventCond_Flag(const unsigned char** at) {
-    return g.flags_test(Cond_Flags + (EventScript_FlagBank & 0xFFu) * 8u, **at);
+    return event_script::g.flags_test(Cond_Flags + (EventScript_FlagBank & 0xFFu) * 8u, **at);
 }
 
 // original 0x57C210: condition 8 - the operand equals Cond_ByteFD (PSX
