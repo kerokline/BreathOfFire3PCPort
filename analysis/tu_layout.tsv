@@ -3709,81 +3709,81 @@
 0x477e30	EffectKind47_Start	tu_477ba0	0x477ba0	0x4781b0	joined	psx AREA085.EMI#13 0x801f30e0>0x801f35a0; psx AREA085.EMI#13 0x801f309c>0x801f30e0; link static?	src/game/effect/effect_kind_46.cpp	src/game/effect/effect_kind_46.cpp	AREA085.EMI#13:u007:interleaved
 0x4780d0	EffectKind47_Blink	tu_477ba0	0x477ba0	0x4781b0	joined	psx AREA085.EMI#13 0x801f30e0>0x801f35a0; link static?	src/game/effect/effect_kind_46.cpp	src/game/effect/effect_kind_46.cpp	AREA085.EMI#13:u007:interleaved
 0x478160	EffectTwinSprites_Release	tu_477ba0	0x477ba0	0x4781b0	guessed	name head Effect; link static?	src/game/effect/effect_kind_46.cpp	src/game/effect/effect_kind_46.cpp	
-0x4781b0	EffectKind48_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	alone; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4781d0	EffectKind48_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478230	EffectKind48_Burst	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478280	EffectKind48_Fade	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478290	EffectKind48_SpawnRing	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478320	EffectKind48_FindFreeSpark	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478340	EffectKind48_ClearSparks	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478360	EffectKind48_StepSparks	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4783c0	EffectKind48_DrawSpark	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478550	EffectKind49_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name stem EffectKind; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478570	EffectKind49_V0Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478590	EffectKind49_V0Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4785b0	EffectKind49_V0Emit	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4785f0	EffectKind49_V0End	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478600	EffectKind49_V1Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478620	EffectKind49_V1Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478640	EffectKind49_V1Fade	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478680	EffectKind49_V2Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4786a0	EffectKind49_V2Launch	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478720	EffectKind49_V2Fly	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4787a0	EffectKind49_V2Wait	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4787f0	EffectKind49_V2Rise	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478840	EffectKind49_V2Sink	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478880	EffectKind49_V3Run	tu_4781b0	0x4781b0	0x47aa50	guessed	data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4788a0	EffectKind49_V3Start	tu_4781b0	0x4781b0	0x47aa50	guessed	data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x478900	EffectKind49_V3Burst	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4789a0	EffectKind49_V3End	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4789b0	EffectKind49_V4Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545fc; segment; name prefix EffectKind49; link static?	src/game/effect_2d.cpp	src/game/effect/effect_kind_48.cpp	
-0x4789d0	EffectKind48_State7_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545fc; segment; name prefix EffectKind49; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478a40	EffectKind48_State7_Swell	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478ab0	EffectKind48_State7_Widen	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478af0	EffectKind48_State7_Lift	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478b30	EffectKind48_State8_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478b50	EffectKind48_State8_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478be0	EffectKind48_State8_Turn	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478c30	EffectKind48_State9_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478c50	EffectKind48_State9_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478cc0	EffectKind48_State9_Emit	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478d20	EffectKind48_State9_Drain	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478d30	EffectKind48_State10_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478d50	EffectKind48_State10_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478df0	EffectKind48_State10_Turn	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478e40	EffectKind48_State11_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478e60	EffectKind48_State11_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478ec0	EffectKind48_State11_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478ef0	EffectKind48_State12_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478f10	EffectKind48_State12_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478f60	EffectKind48_State12_Travel	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x478fd0	EffectKind48_State12_Hold	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479030	EffectKind48_State12_Grow	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479080	EffectKind48_State12_Shrink	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x4790c0	EffectGlowSparks_Clear	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x4790f0	EffectGlowSparks_StartRise	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u039:single
-0x479160	EffectGlowSparks_StartBurst	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479260	EffectGlowSparks_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x4792e0	EffectGlowSparks_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; bss 0x6761c9; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u036:single
-0x479420	EffectGlowSparks_Glow	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479470	EffectGlowSparks_Rise	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x4794d0	EffectGlowTrail_Update	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x4796b0	EffectGlowTrail_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f90c8>0x801f9420; psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u045:single
-0x479970	EffectAngle_Mean	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; psx SCENA08.EMI#0 0x801f90c8>0x801f9420; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u046:single
-0x4799c0	EffectSpiral_Init	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479b70	EffectSpiral_StepDraw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x479ee0	EffectRing_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a110	EffectDust_Clear	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a130	EffectDust_FindFree	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a150	EffectDust_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a200	EffectDust_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a2b0	EffectDust_DrawColumn	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a3d0	EffectDust_DrawFan	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/rest_3e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u047:single
-0x47a560	EffectSphere_Build	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a780	EffectSphere_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u050:single
-0x47a950	EffectKind4A_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name stem EffectKind; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a970	EffectKind4A_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind4A; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
-0x47a9c0	EffectKind4A_Follow	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind4A; link static?	src/game/effect_2e.cpp	src/game/effect/effect_kind_48.cpp	
+0x4781b0	EffectKind48_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	alone; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4781d0	EffectKind48_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478230	EffectKind48_Burst	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478280	EffectKind48_Fade	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478290	EffectKind48_SpawnRing	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478320	EffectKind48_FindFreeSpark	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478340	EffectKind48_ClearSparks	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478360	EffectKind48_StepSparks	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4783c0	EffectKind48_DrawSpark	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478550	EffectKind49_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name stem EffectKind; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478570	EffectKind49_V0Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478590	EffectKind49_V0Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4785b0	EffectKind49_V0Emit	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4785f0	EffectKind49_V0End	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478600	EffectKind49_V1Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478620	EffectKind49_V1Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478640	EffectKind49_V1Fade	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478680	EffectKind49_V2Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4786a0	EffectKind49_V2Launch	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478720	EffectKind49_V2Fly	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4787a0	EffectKind49_V2Wait	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4787f0	EffectKind49_V2Rise	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478840	EffectKind49_V2Sink	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478880	EffectKind49_V3Run	tu_4781b0	0x4781b0	0x47aa50	guessed	data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4788a0	EffectKind49_V3Start	tu_4781b0	0x4781b0	0x47aa50	guessed	data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478900	EffectKind49_V3Burst	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545e0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4789a0	EffectKind49_V3End	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4789b0	EffectKind49_V4Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545fc; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4789d0	EffectKind48_State7_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; data 0x6545fc; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478a40	EffectKind48_State7_Swell	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478ab0	EffectKind48_State7_Widen	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478af0	EffectKind48_State7_Lift	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761d0; segment; name prefix EffectKind49; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478b30	EffectKind48_State8_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478b50	EffectKind48_State8_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478be0	EffectKind48_State8_Turn	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478c30	EffectKind48_State9_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478c50	EffectKind48_State9_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478cc0	EffectKind48_State9_Emit	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478d20	EffectKind48_State9_Drain	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478d30	EffectKind48_State10_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478d50	EffectKind48_State10_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478df0	EffectKind48_State10_Turn	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761cc; segment; name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478e40	EffectKind48_State11_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478e60	EffectKind48_State11_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478ec0	EffectKind48_State11_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478ef0	EffectKind48_State12_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478f10	EffectKind48_State12_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478f60	EffectKind48_State12_Travel	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x478fd0	EffectKind48_State12_Hold	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479030	EffectKind48_State12_Grow	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479080	EffectKind48_State12_Shrink	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind48; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4790c0	EffectGlowSparks_Clear	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4790f0	EffectGlowSparks_StartRise	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u039:single
+0x479160	EffectGlowSparks_StartBurst	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479260	EffectGlowSparks_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	bss 0x6761c9; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4792e0	EffectGlowSparks_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; bss 0x6761c9; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u036:single
+0x479420	EffectGlowSparks_Glow	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; bss 0x6761c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479470	EffectGlowSparks_Rise	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4794d0	EffectGlowTrail_Update	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x4796b0	EffectGlowTrail_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f90c8>0x801f9420; psx SCENA08.EMI#0 0x801f8964>0x801f90c8; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u045:single
+0x479970	EffectAngle_Mean	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; psx SCENA08.EMI#0 0x801f90c8>0x801f9420; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link extern	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u046:single
+0x4799c0	EffectSpiral_Init	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479b70	EffectSpiral_StepDraw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x479ee0	EffectRing_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a110	EffectDust_Clear	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a130	EffectDust_FindFree	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a150	EffectDust_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a200	EffectDust_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a2b0	EffectDust_DrawColumn	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a3d0	EffectDust_DrawFan	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; psx SCENA08.EMI#0 0x801f9420>0x801f9470; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u047:single
+0x47a560	EffectSphere_Build	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a780	EffectSphere_Draw	tu_4781b0	0x4781b0	0x47aa50	guessed	psx SCENA08.EMI#0 0x801f9470>0x801f9688; segment; calls EffectKind48_State9_Start > EffectGlowSparks_Clear; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	SCENA08.EMI#0:u050:single
+0x47a950	EffectKind4A_Run	tu_4781b0	0x4781b0	0x47aa50	guessed	name stem EffectKind; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a970	EffectKind4A_Start	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind4A; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
+0x47a9c0	EffectKind4A_Follow	tu_4781b0	0x4781b0	0x47aa50	guessed	name prefix EffectKind4A; link static?	src/game/effect/effect_kind_48.cpp	src/game/effect/effect_kind_48.cpp	
 0x47aa50	EffectKind4B_Run	tu_47aa50	0x47aa50	0x47b630	joined	psx AREA077.EMI#14 0x801f3e04>0x801f3e48; link static?	src/game/effect/effect_kind_4d.cpp	src/game/effect/effect_kind_4d.cpp	AREA077.EMI#14:u004:single
 0x47aa70	EffectKind4B_Start	tu_47aa50	0x47aa50	0x47b630	joined	psx AREA077.EMI#14 0x801f3e48>0x801f3f08; psx AREA077.EMI#14 0x801f3e04>0x801f3e48; link static?	src/game/effect/effect_kind_4d.cpp	src/game/effect/effect_kind_4d.cpp	AREA077.EMI#14:u005:single
 0x47aaf0	EffectKind4B_Scatter	tu_47aa50	0x47aa50	0x47b630	joined	psx AREA077.EMI#14 0x801f3f08>0x801f43c8; psx AREA077.EMI#14 0x801f3e48>0x801f3f08; link static?	src/game/effect/effect_kind_4d.cpp	src/game/effect/effect_kind_4d.cpp	AREA077.EMI#14:u006:single
@@ -4660,69 +4660,69 @@
 0x4975f0	ItemUse_FaerieTiara	tu_496cc0	0x496cc0	0x4976d0	joined	psx START.EMI#8 0x801e8b20>0x801e8c08; psx START.EMI#8 0x801e8aec>0x801e8b20; link static?	src/game/menu/item_use.cpp	src/game/menu/item_use.cpp	START.EMI#8:u185:single
 0x497670	ItemUse_WaterJug	tu_496cc0	0x496cc0	0x4976d0	joined	psx START.EMI#8 0x801e8c08>0x801e8c1c; psx START.EMI#8 0x801e8b20>0x801e8c08; link static?	src/game/menu/item_use.cpp	src/game/menu/item_use.cpp	START.EMI#8:u186:single
 0x497680	ItemUse_Dispatch	tu_496cc0	0x496cc0	0x4976d0	joined	psx START.EMI#8 0x801e8c08>0x801e8c1c; link extern	src/game/menu/item_use.cpp	src/game/menu/item_use.cpp	START.EMI#8:u187:single
-0x4976d0	Msg_OpenScript	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015034c>0x801503ac; link extern	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u068:single
-0x497710	Msg_OpenSystem	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801503ac>0x801503f8; psx main? 0x8015034c>0x801503ac; link extern	src/game/menu_windows.cpp	src/game/text/msg_box.cpp	main:u069:single
-0x497740	Msg_SystemPtr	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801503f8>0x8015042c; psx main? 0x801503ac>0x801503f8; link extern	src/game/msg_pool.cpp	src/game/text/msg_box.cpp	main:u070:single
-0x497770	MsgBox_Reset	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015042c>0x80150508; psx main? 0x801503f8>0x8015042c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u071:single
-0x4977f0	MsgBox_FrameTask	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80150508>0x80150598; psx main? 0x8015042c>0x80150508; link extern	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u072:subset
-0x497840	MsgBox_Step	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80150598>0x801508ec; psx main? 0x80150508>0x80150598; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u072:subset
-0x497ad0	MsgBox_StateDispatch	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801508ec>0x8015096c; psx main? 0x80150598>0x801508ec; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u072:subset
-0x497b30	MsgBox_StatePrint	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; psx main? 0x801508ec>0x8015096c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u072:subset
-0x497e90	MsgBox_StateDelay	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497eb0	MsgBox_State2	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497ee0	MsgBox_State2Press	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497f20	MsgBox_State2Closed	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497f40	MsgBox_State3	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497f70	MsgBox_State3Arrow	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x497fd0	MsgBox_State3Step	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498050	MsgBox_State4	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4980b0	MsgBox_ChoiceOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4980f0	MsgBox_ChoiceWaitOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498110	MsgBox_ChoiceInput	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4981a0	MsgBox_ChoiceWaitShut	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4981c0	MsgBox_ChoiceCommit	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; psx main? 0x8015096c>0x80151494; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u075:subset+superset
-0x498230	MsgBox_ChoiceReopen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498250	MsgBox_ChoiceDone	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498280	MsgBox_Reopen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4982c0	MsgBox_State5	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498310	MsgBox_MenuOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498340	MsgBox_MenuWaitOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498350	MsgBox_MenuInput	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4983c0	MsgBox_MenuCommit	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151838>0x80151948; psx main? 0x80151494>0x80151838; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u075:subset+superset
-0x498410	MsgBox_MenuDone	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151838>0x80151948; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498450	MsgBox_State6	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; psx main? 0x80151838>0x80151948; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u076:single
-0x498470	MsgBox_State7	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4984a0	MsgBox_State7Delay	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4984e0	MsgBox_EffectTask	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; psx main? 0x80151948>0x80151a1c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u079:single
-0x498520	MsgBox_EffectShake	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498560	MsgBox_ShakeOut	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498580	MsgBox_ShakeBack	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4985a0	MsgBox_EffectGrow	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4985e0	MsgBox_GrowStart	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498610	MsgBox_GrowStep	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498670	MsgBox_EffectWander	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498740	MsgBox_EffectRise	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x498770	MsgBox_RiseStart	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4987a0	MsgBox_RiseStep	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	
-0x4987e0	MsgBox_EffectDraw	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151f4c>0x80152db4; psx main? 0x80151a1c>0x80151f4c; link static?	src/game/msgbox.cpp	src/game/text/msg_box.cpp	main:u088:single
-0x498a30	MsgBox_SystemChoice	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152db4>0x80152e2c; psx main? 0x80151f4c>0x80152db4; link static?	src/game/mode_states.cpp	src/game/text/msg_box.cpp	main:u089:single
-0x498ad0	MsgBox_SysChoice80	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152e2c>0x80152e8c; psx main? 0x80152db4>0x80152e2c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u090:single
-0x498b00	MsgBox_SysChoice81	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152e8c>0x80152edc; psx main? 0x80152e2c>0x80152e8c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u091:single
-0x498b30	MsgBox_SysChoice82	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152edc>0x80152f2c; psx main? 0x80152e8c>0x80152edc; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u092:single
-0x498b60	MsgBox_SysChoice83	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152f2c>0x80152f7c; psx main? 0x80152edc>0x80152f2c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u093:single
-0x498b90	MsgBox_SysChoice84	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152f7c>0x80152fcc; psx main? 0x80152f2c>0x80152f7c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u094:single
-0x498bc0	MsgBox_SysChoice85	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152fcc>0x80152ff8; psx main? 0x80152f7c>0x80152fcc; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u095:single
-0x498be0	MsgBox_SysChoice86	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152ff8>0x80153024; psx main? 0x80152fcc>0x80152ff8; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u096:single
-0x498c00	MsgBox_SysChoice87	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153024>0x80153050; psx main? 0x80152ff8>0x80153024; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u097:single
-0x498c20	MsgBox_SysChoice88	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153050>0x8015307c; psx main? 0x80153024>0x80153050; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u098:single
-0x498c40	MsgBox_SysChoice89	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015307c>0x801530a8; psx main? 0x80153050>0x8015307c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u099:single
-0x498c60	MsgBox_SysChoice8A	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801530a8>0x801530d4; psx main? 0x8015307c>0x801530a8; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u100:single
-0x498c80	MsgBox_SysChoice8B	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801530d4>0x80153100; psx main? 0x801530a8>0x801530d4; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u101:single
-0x498ca0	MsgBox_SysChoice8C	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153100>0x8015312c; psx main? 0x801530d4>0x80153100; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u102:single
-0x498cc0	MsgBox_SysChoice8D	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015312c>0x80153158; psx main? 0x80153100>0x8015312c; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u103:single
-0x498ce0	MsgBox_SysChoice8E	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153158>0x80153184; psx main? 0x8015312c>0x80153158; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u104:single
-0x498d00	MsgBox_SysChoice8F	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153158>0x80153184; link static?	src/game/item_use.cpp	src/game/text/msg_box.cpp	main:u105:single
-0x498d20	MsgBox_DrawArrow	tu_4976d0	0x4976d0	0x498de0	guessed	called only from Msg_OpenScript..; link static?	src/game/menu_windows.cpp	src/game/text/msg_box.cpp	
+0x4976d0	Msg_OpenScript	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015034c>0x801503ac; link extern	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u068:single
+0x497710	Msg_OpenSystem	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801503ac>0x801503f8; psx main? 0x8015034c>0x801503ac; link extern	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u069:single
+0x497740	Msg_SystemPtr	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801503f8>0x8015042c; psx main? 0x801503ac>0x801503f8; link extern	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u070:single
+0x497770	MsgBox_Reset	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015042c>0x80150508; psx main? 0x801503f8>0x8015042c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u071:single
+0x4977f0	MsgBox_FrameTask	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80150508>0x80150598; psx main? 0x8015042c>0x80150508; link extern	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u072:subset
+0x497840	MsgBox_Step	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80150598>0x801508ec; psx main? 0x80150508>0x80150598; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u072:subset
+0x497ad0	MsgBox_StateDispatch	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801508ec>0x8015096c; psx main? 0x80150598>0x801508ec; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u072:subset
+0x497b30	MsgBox_StatePrint	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; psx main? 0x801508ec>0x8015096c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u072:subset
+0x497e90	MsgBox_StateDelay	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497eb0	MsgBox_State2	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497ee0	MsgBox_State2Press	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497f20	MsgBox_State2Closed	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497f40	MsgBox_State3	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497f70	MsgBox_State3Arrow	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x497fd0	MsgBox_State3Step	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498050	MsgBox_State4	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4980b0	MsgBox_ChoiceOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4980f0	MsgBox_ChoiceWaitOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498110	MsgBox_ChoiceInput	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4981a0	MsgBox_ChoiceWaitShut	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4981c0	MsgBox_ChoiceCommit	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; psx main? 0x8015096c>0x80151494; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u075:subset+superset
+0x498230	MsgBox_ChoiceReopen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498250	MsgBox_ChoiceDone	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498280	MsgBox_Reopen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4982c0	MsgBox_State5	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498310	MsgBox_MenuOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498340	MsgBox_MenuWaitOpen	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498350	MsgBox_MenuInput	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4983c0	MsgBox_MenuCommit	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151838>0x80151948; psx main? 0x80151494>0x80151838; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u075:subset+superset
+0x498410	MsgBox_MenuDone	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151838>0x80151948; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498450	MsgBox_State6	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; psx main? 0x80151838>0x80151948; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u076:single
+0x498470	MsgBox_State7	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4984a0	MsgBox_State7Delay	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151948>0x80151a1c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4984e0	MsgBox_EffectTask	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; psx main? 0x80151948>0x80151a1c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u079:single
+0x498520	MsgBox_EffectShake	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498560	MsgBox_ShakeOut	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498580	MsgBox_ShakeBack	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4985a0	MsgBox_EffectGrow	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4985e0	MsgBox_GrowStart	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498610	MsgBox_GrowStep	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498670	MsgBox_EffectWander	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498740	MsgBox_EffectRise	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x498770	MsgBox_RiseStart	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4987a0	MsgBox_RiseStep	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
+0x4987e0	MsgBox_EffectDraw	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80151f4c>0x80152db4; psx main? 0x80151a1c>0x80151f4c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u088:single
+0x498a30	MsgBox_SystemChoice	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152db4>0x80152e2c; psx main? 0x80151f4c>0x80152db4; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u089:single
+0x498ad0	MsgBox_SysChoice80	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152e2c>0x80152e8c; psx main? 0x80152db4>0x80152e2c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u090:single
+0x498b00	MsgBox_SysChoice81	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152e8c>0x80152edc; psx main? 0x80152e2c>0x80152e8c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u091:single
+0x498b30	MsgBox_SysChoice82	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152edc>0x80152f2c; psx main? 0x80152e8c>0x80152edc; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u092:single
+0x498b60	MsgBox_SysChoice83	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152f2c>0x80152f7c; psx main? 0x80152edc>0x80152f2c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u093:single
+0x498b90	MsgBox_SysChoice84	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152f7c>0x80152fcc; psx main? 0x80152f2c>0x80152f7c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u094:single
+0x498bc0	MsgBox_SysChoice85	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152fcc>0x80152ff8; psx main? 0x80152f7c>0x80152fcc; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u095:single
+0x498be0	MsgBox_SysChoice86	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80152ff8>0x80153024; psx main? 0x80152fcc>0x80152ff8; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u096:single
+0x498c00	MsgBox_SysChoice87	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153024>0x80153050; psx main? 0x80152ff8>0x80153024; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u097:single
+0x498c20	MsgBox_SysChoice88	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153050>0x8015307c; psx main? 0x80153024>0x80153050; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u098:single
+0x498c40	MsgBox_SysChoice89	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015307c>0x801530a8; psx main? 0x80153050>0x8015307c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u099:single
+0x498c60	MsgBox_SysChoice8A	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801530a8>0x801530d4; psx main? 0x8015307c>0x801530a8; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u100:single
+0x498c80	MsgBox_SysChoice8B	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x801530d4>0x80153100; psx main? 0x801530a8>0x801530d4; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u101:single
+0x498ca0	MsgBox_SysChoice8C	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153100>0x8015312c; psx main? 0x801530d4>0x80153100; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u102:single
+0x498cc0	MsgBox_SysChoice8D	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x8015312c>0x80153158; psx main? 0x80153100>0x8015312c; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u103:single
+0x498ce0	MsgBox_SysChoice8E	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153158>0x80153184; psx main? 0x8015312c>0x80153158; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u104:single
+0x498d00	MsgBox_SysChoice8F	tu_4976d0	0x4976d0	0x498de0	joined	psx main? 0x80153158>0x80153184; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	main:u105:single
+0x498d20	MsgBox_DrawArrow	tu_4976d0	0x4976d0	0x498de0	guessed	called only from Msg_OpenScript..; link static?	src/game/text/msg_box.cpp	src/game/text/msg_box.cpp	
 0x498de0	Char_LevelUp	tu_498de0	0x498de0	0x498fe0	guessed	alone; link extern	src/game/field/char.cpp	src/game/field/char.cpp	GAME.EMI#0:u302:single
 0x498fe0	NueStomp_Task	tu_498fe0	0x498fe0	0x499750	joined	psx MAGIC001.EMI#0 0x801eec64>0x801eecc4; link static?	src/game/magic/nue_stomp_child.cpp	src/game/magic/nue_stomp_child.cpp	MAGIC001.EMI#0:u000:single
 0x499010	NueStomp_Start	tu_498fe0	0x498fe0	0x499750	joined	psx MAGIC001.EMI#0 0x801eecc4>0x801eefd8; psx MAGIC001.EMI#0 0x801eec64>0x801eecc4; link static?	src/game/magic/nue_stomp_child.cpp	src/game/magic/nue_stomp_child.cpp	MAGIC001.EMI#0:u001:single
