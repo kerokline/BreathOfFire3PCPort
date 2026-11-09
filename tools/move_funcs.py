@@ -369,6 +369,33 @@ def at_qualified(it: ci.Item) -> set[str]:
             and not (k > 0 and toks[k - 1].text in ("::", ".", "->"))}
 
 
+_at_constants: dict[tuple[str, str], dict[str, str]] = {}
+
+
+def at_constant(plan: "SourcePlan", name: str) -> str:
+    """The code (no comments) of the constant `at::name` names in a source: its `at` alias's
+    namespace, else the X::at of its `using namespace X;` lines."""
+    for ns in ([plan.alias_at] if plan.alias_at else []) + [x + "::at" for x in plan.dir_at]:
+        key = (plan.source, ns)
+        if key not in _at_constants:
+            parts, found = tuple(ns.split("::")), {}
+            texts = [plan.text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', plan.text, re.M)
+                                   for t in [resolve_include(inc)] if t]
+            for t in texts:
+                try:
+                    fi = ci.FileItems(t.replace("\r\n", "\n"))
+                except ValueError:
+                    continue
+                for it in fi.leaves():
+                    if it.ns == parts:
+                        for n in it.names:      # `::bof3::x` and `bof3::x` are one spelling here
+                            found.setdefault(n, re.sub(r"(^|[\s{(,=]):: ", r"\1", code_tokens(it)))
+            _at_constants[key] = found
+        if name in _at_constants[key]:
+            return _at_constants[key][name]
+    return "?"
+
+
 def made_names(it: ci.Item) -> list[str]:
     """The function names an item makes: a definition's own name and its assembler name; a macro
     invocation's expansion; a switch #define's header functions (tools/cpp_items.py)."""
@@ -973,6 +1000,10 @@ def main() -> int:
         kept = []
         for s, it, how in provided:
             body = code_tokens(it)       # the same code with other comments or spacing is the same item
+            # ... unless a bare `at::k` in it names another value in each source: with it, the code of
+            # each constant it names in its source's `at`
+            for n in sorted(at_qualified(it)):
+                body += f" /* at::{n} = {at_constant(plans[s], n)} */"
             scope = "::".join(n for n in it.ns if n)
             keys = [(scope, n) for n in it.names]
             if keys and all(any(b == body for _, b, _ in seen.get(k, ())) for k in keys):
