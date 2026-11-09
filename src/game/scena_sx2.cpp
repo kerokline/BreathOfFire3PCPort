@@ -53,10 +53,6 @@ using move_script::Word;
 std::uint32_t UScenaSx2(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
 
-// A signed byte over 4 the way the original divides (cdq / and 3 / add / sar
-// 2): C's truncating division.
-std::int32_t Quarter(unsigned char b) { return static_cast<signed char>(b) / 4; }
-
 // One turn step of a camera angle word (Camera_TurnStep's and
 // Camera_TurnStepFB's shared shape, two constants apart): with a step (s8)
 // the word plus the step, then while (the dword & 0xFFF) is short of the
@@ -102,46 +98,6 @@ extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
     SH_CALL(Flags_Set)(AtScenaSx2(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
-}
-
-// original 0x532FD0: Sprite_Current placed at (x, z) plus the event battle's
-// formation offset for a slot, then grounded (Party_PlaceForBattle's one
-// callee). The group g is the byte 0x904060, plus 1 at two members, plus 4 at
-// three (bytes, wrapping; Field_MemberCount read once); the row is
-// Formation_SlotVectors[g * 3 + slot] (slot the third argument's low byte;
-// both unchecked), a pair of dwords (dx, dz). The formation byte f (0x904AAC)
-// names a pair of s8 at BattleFormation_Offsets[2 f]: with a not 0, +0x34 =
-// dx * (a / 4) + x and +0x38 = dz * (a / 4) + z; else +0x34 = x - dz * (b /
-// 4) and +0x38 = dx * (b / 4) + z - the vector turned a quarter. Products
-// wrap at 32 bits; f and the pair are read again for z. Then +0x3E =
-// MapView_GroundAt(+0x34, +0x38)'s word (Sprite_Current read again after the
-// call). No PSX twin paired.
-extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
-    const unsigned char count = Field_MemberCount;
-    const unsigned char lead = Cond_Flags[0xd0];
-    unsigned char g = lead;
-    if (count == 2)
-        g = static_cast<unsigned char>(lead + 1);
-    else if (count == 3)
-        g = static_cast<unsigned char>(lead + 4);
-    const unsigned char* const pairs = AtScenaSx2(::bof3::Img(bof3::addr::BattleFormation_Offsets));
-    const unsigned char* const row = AtScenaSx2(::bof3::Img(bof3::addr::Formation_SlotVectors) + (g * 3u + (slot & 0xFF)) * 8);
-    const unsigned f = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
-    const unsigned char a = pairs[f * 2];
-    std::uint32_t zd;
-    if (a != 0) {
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(LongScenaSx2(row)) * UScenaSx2(Quarter(a)) + UScenaSx2(x)));
-        const unsigned f2 = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
-        zd = UScenaSx2(Quarter(pairs[f2 * 2])) * UScenaSx2(LongScenaSx2(row + 4));
-    } else {
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(x) - UScenaSx2(Quarter(pairs[f * 2 + 1])) * UScenaSx2(LongScenaSx2(row + 4))));
-        const unsigned f2 = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
-        zd = UScenaSx2(Quarter(pairs[f2 * 2 + 1])) * UScenaSx2(LongScenaSx2(row));
-    }
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + UScenaSx2(z)));
-    unsigned char* const s = Sprite_Current;
-    const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
 // original 0x572620 (PSX 0x80155AF4): the height layer's byte of cell (x, z) (s16s) set:
@@ -290,7 +246,6 @@ extern "C" void __cdecl Gpu_SetSprt16(unsigned char* prim) {
 void ScenaSx2_Inject() {
     if (bof3::WantsShadow("scena_sx2")) scena_sx2::SelfTest();
     BOF3_INJECT(Effect_HoldFlag1C);
-    BOF3_INJECT(Party_PlaceInFormation);
     BOF3_INJECT(AreaMap_SetHeight);
     BOF3_INJECT(Flags_Toggle);
     BOF3_INJECT(Camera_TurnStep);

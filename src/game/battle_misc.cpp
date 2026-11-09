@@ -628,41 +628,6 @@ extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
 
 // --- a string copy and the objects' screen pass ----------------------------------------------
 
-// original 0x5171A0 (PSX 0x8015030C): at most (n & 0xFF) bytes of src to dst,
-// stopping at a NUL (not copied), then a NUL stored; byte by byte, forward.
-// eax is where the NUL went (four callers tail-return it).
-extern "C" char* __cdecl Str_CopyN(char* dst, const char* src, unsigned n) {
-    const U limit = n & 0xFF;
-    U d = Addr(dst), s = Addr(src);
-    for (U k = 0; k < limit; ++k) {
-        const unsigned char c = AtBattleMisc(s)[0];
-        if (c == 0) break;
-        AtBattleMisc(d)[0] = c;
-        ++d;
-        ++s;
-    }
-    AtBattleMisc(d)[0] = 0;
-    return reinterpret_cast<char*>(AtBattleMisc(d));
-}
-
-// original 0x517440 (PSX 0x801A1624, by its callers): each of the 30
-// Sprite_Objects in turn becomes Sprite_Current; one of type (byte +6, read
-// after that store) 7 or 8 and up, present (byte 0 bit 0), gets its screen
-// update - Sprite_UpdateScreenA for type 0xA, none for 9,
-// Sprite_UpdateScreenSlot for the rest. The type is read once per object.
-// Called from the battle's frame (0x42E3D1), which calls on at once.
-extern "C" void __cdecl Sprite_UpdateObjectScreens(void) {
-    for (battle_misc::U i = 0; i < 30; ++i) {
-        const battle_misc::U object = battle_misc::at::Sprite_ObjectsAt() + i * 0xA4;
-        SetSpriteCurrent(object);
-        const unsigned char type = AtBattleMisc(object + 6)[0];
-        if (type < 8 && type != 7) continue;
-        if (!(AtBattleMisc(object)[0] & 1)) continue;
-        if (type == 0xA) battle_misc::g.update_screen_a();
-        else if (type != 9) battle_misc::g.update_screen_slot();
-    }
-}
-
 void BattleMisc_Inject() {
     if (bof3::WantsShadow("battle_misc")) battle_misc::SelfTest();
     BOF3_INJECT(Battle_WrapIndex);
@@ -690,6 +655,4 @@ void BattleMisc_Inject() {
     BOF3_INJECT(BattleBanner_SetMessage);
     BOF3_INJECT(BattleBanner_ShowName);
     BOF3_INJECT(EnemyAI_TurnCheck);
-    BOF3_INJECT(Str_CopyN);
-    BOF3_INJECT(Sprite_UpdateObjectScreens);
 }

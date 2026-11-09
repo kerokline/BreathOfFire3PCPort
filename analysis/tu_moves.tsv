@@ -9600,6 +9600,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_17.cpp	d3e6abb3
+	S	copied		src/game/effect_5c.cpp	81	81	81	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	UL	copied		src/game/effect_5c.cpp	82	82	82	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
@@ -9646,7 +9647,11 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	DispatchEffect5c	copied		src/game/effect_5c.cpp	110	114	121	src/game/effect/effect_kind_18_sub_17.cpp	d3e6abb3
 	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	MapWidth	copied		src/game/effect_5c.cpp	123	126	126	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
 	SetCell	local		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_10.cpp	3943ec42
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	SetCell	copied		src/game/effect_5c.cpp	127	127	127	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
 	SetCorner	local		src/game/effect_5c.cpp	128	128	128	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 	Sub50Variant	local		src/game/effect_5c.cpp	130	131	137	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
 	Sub50Byte	local		src/game/effect_5c.cpp	138	138	144	src/game/effect/effect_kind_18_sub_0f.cpp	d3e6abb3
@@ -9697,8 +9702,18 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x502670	EffectKind18Sub58_DrawColumn	func	tu_501ba0	src/game/effect_5c.cpp	825	832	867	src/game/effect/effect_kind_18_sub_10.cpp	d3e6abb3
 	Sub11Done	local		src/game/effect_5c.cpp	875	877	881	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Sub12Done	local		src/game/effect_5c.cpp	882	882	882	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	TileCells	copied		src/game/effect_5c.cpp	883	884	887	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	TileCells	copied		src/game/effect_5c.cpp	883	884	887	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
 	Tiles	copied		src/game/effect_5c.cpp	888	891	916	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Tiles	copied		src/game/effect_5c.cpp	888	891	916	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
+	TileStart	copied		src/game/effect_5c.cpp	917	919	928	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	TileStart	copied		src/game/effect_5c.cpp	917	919	928	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
+	TileWait	copied		src/game/effect_5c.cpp	929	931	941	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	TileWait	copied		src/game/effect_5c.cpp	929	931	941	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
+	TileOpen	copied		src/game/effect_5c.cpp	942	943	951	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	TileOpen	copied		src/game/effect_5c.cpp	942	943	951	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
+	TileSink	copied		src/game/effect_5c.cpp	952	954	961	src/game/effect/effect_kind_18_sub_11.cpp	3943ec42
+	TileSink	copied		src/game/effect_5c.cpp	952	954	961	src/game/effect/effect_kind_18_sub_12.cpp	3943ec42
 	Draw11	local		src/game/effect_5c.cpp	962	962	962	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
 	Draw12	local		src/game/effect_5c.cpp	963	963	963	src/game/effect/effect_kind_18_sub_12.cpp	d3e6abb3
 0x502810	EffectKind18Sub11_Run	func	tu_502810	src/game/effect_5c.cpp	966	968	970	src/game/effect/effect_kind_18_sub_11.cpp	d3e6abb3
@@ -10325,6 +10340,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x50B7A0	EffectKind18Sub2C_WaitFar	func	tu_50b520	src/game/effect_5g.cpp	532	534	538	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50B870	EffectKind18Sub2C_Close	func	tu_50b520	src/game/effect_5g.cpp	540	542	545	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BB90	EffectKind18Sub3A_Run	func	tu_50b520	src/game/effect_5g.cpp	552	554	556	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
+	Sub3APair	local		src/game/effect_5g.cpp	558	560	563	src/game/effect/effect_kind_18_sub_2c.cpp	3943ec42
 0x50BBB0	EffectKind18Sub3A_Start	func	tu_50b520	src/game/effect_5g.cpp	565	567	574	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BC00	EffectKind18Sub3A_WaitParty	func	tu_50b520	src/game/effect_5g.cpp	576	579	589	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
 0x50BCB0	EffectKind18Sub3A_Open	func	tu_50b520	src/game/effect_5g.cpp	591	593	596	src/game/effect/effect_kind_18_sub_2c.cpp	d3e6abb3
@@ -20752,6 +20768,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x51F0E0	PartyAction5_Form1Again	func	tu_51be90	src/game/rest_1b.cpp	476	479	484	src/game/field/party_action.cpp	d3e6abb3
 0x51F130	PartyAction5_Form1Wait	func	tu_51be90	src/game/rest_1b.cpp	486	490	494	src/game/field/party_action.cpp	d3e6abb3
 	U	local		src/game/rest_1c.cpp	46	46	46	src/game/field/party_action.cpp	d3e6abb3
+	U	copied		src/game/rest_1c.cpp	46	46	46	src/game/field/party_action.cpp	3943ec42
 	At	local		src/game/rest_1c.cpp	47	47	47	src/game/field/party_action.cpp	d3e6abb3
 	Long	local		src/game/rest_1c.cpp	48	48	48	src/game/field/party_action.cpp	d3e6abb3
 	SetLong	local		src/game/rest_1c.cpp	49	49	49	src/game/field/party_action.cpp	d3e6abb3

@@ -88,41 +88,6 @@ extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     BattlePhases_Initiative = 0;
 }
 
-// original 0x519F70: chapter 8's call table A entry 5, and the tail of entry
-// 6 (0x519FA0, which loads a party set first and jumps here). The member
-// count to 0; Party_Join(7), (8), (4), their answers unread; then 0x533E00,
-// the members' palettes reloaded - a tail jmp in the original, whose eax no
-// caller reads (Scenario_CallA is void).
-extern "C" void __cdecl Scena08_PartyJoin784(void) {
-    Field_MemberCount = 0;
-    SH_CALL(Party_Join)(7);
-    SH_CALL(Party_Join)(8);
-    SH_CALL(Party_Join)(4);
-    SH_AT(void (__cdecl*)(), at::kPartyPalettes.v)();
-}
-
-// original 0x524870: an effect object of kind 0x34 at the cell (x, z). With
-// Effect_FindFree's slot not 0xFF: +0 in use, +5 the kind, +1 the state from
-// the first argument's byte, +0x34 / +0x38 the cell's words sign-extended as
-// 16.16, +0x3E the ground there (AreaMap_Elevation of the two, x read back from
-// the record) plus 0x100, +0xB 0. The slot is used as FindFree answers it,
-// unchecked (FindFree gives 0..19 or 0xFF). The eax the original leaves is
-// no caller's (the 18 cell pickups ignore it).
-extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned z) {
-    const unsigned char slot = SH_CALL(Effect_FindFree)();
-    if (slot == 0xFF) return;
-    unsigned char* const e = rv::Bytes(Effect_Objects) + slot * scena_se::at::kEffectStride;
-    e[0] = 1;
-    e[5] = scena_se::at::kCellFxKind;
-    e[1] = static_cast<unsigned char>(state);
-    rv::As<records::EffectObject>(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
-    const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
-    rv::As<records::EffectObject>(e)->z = zz;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
-    rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->height_whole, static_cast<unsigned>(ground) + 0x100);
-    e[0xB] = 0;
-}
-
 // original 0x579D70: the pose or the facing at the end of a placement (PSX
 // FUN_801A591C). Sprite_Current +0x4B = 0xFF; with +7 bit 3, +0x2A = bit 4 of
 // +7 and Sprite_SetAnimation(+8 of Sprite_Current read again), else
@@ -221,8 +186,6 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
 void ScenaSe_Inject() {
     if (bof3::WantsShadow("scena_se")) scena_se::SelfTest();
     BOF3_INJECT(Field_StartEventBattle);
-    BOF3_INJECT(Scena08_PartyJoin784);
-    BOF3_INJECT(Effect_SpawnAtCell);
     BOF3_INJECT(EventObj_Face);
     BOF3_INJECT(EventOp_0x);
     BOF3_INJECT(Party_AddToLists);
