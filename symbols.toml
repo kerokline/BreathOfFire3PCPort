@@ -4500,7 +4500,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, the byte at 0x905B82 counted down to 0, Field_CopyInput, then jmp [0x660918 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's first member only. Read whole 2026-09-22 (group B, 0x2C bytes): the table at 0x660918 is 15 states (0 Field_LeaderStart, 1 Field_LeaderControl, 2..14 unread), indexed by the whole byte unchecked; also called by Field_PartyFirstFrame."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x531B60
@@ -5684,7 +5684,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x124 bytes: state 0 of Field_LeaderFrame's table 0x660918. Sprite_ClearSteps; Sprite_Current +0x18 +0x1C +0x20 = 0 and +9 +0xA +6 +7 +0xB = 0; +0x3E = MapView_GroundAt(+0x34, +0x38); Field_State +0x128 = 3, +0x136..+0x138 = 0; +0x4B = 0xFF; then with Field_InputFlags bit 0x20 state 0xC, in area 0xBD state 0xD (both with +0 bit 0x40), else Field_LeaderAnimation(+8) and state + 1. psx_pair gap20."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x52DA50
@@ -5694,7 +5694,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x17 bytes: state 1 of Field_LeaderFrame's table. call [0x660954 + Sprite_Current +2 * 4] (three sub-states: Field_LeaderStand, 0x52DB90, 0x52E110), then a tail jmp to Sprite_ScriptTick, whose al it returns (no caller reads it). psx_pair gap20."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x52DA70
@@ -5705,7 +5705,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x118 bytes: sub-state 0 of Field_LeaderControl. Returns at once on Field_ScriptFlags bit 0x100, Field_ScriptFlags2 bit 0x40, Field_Request 5, or 0x535120(1) / 0x535240(1) true; 0x5301F0 true clears Field_State +0x136; with Field_InputHeld and actor record Field_State +0x148 bit 0x20 clear, clears it too; then seven tests 0x531950 0x530920 0x5302C0 0x530380 0x530800 0x5303E0 0x530430, any true returns; with Field_InputHeld, 0x530480, +7 = 0, +0xA = 2, +0xB = 0, Field_LeaderAnimation(+8), sub-state 1. Also the tail of a jmp at 0x52F55D. psx_pair gap20."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x52FEB0
@@ -5716,7 +5716,7 @@ ret = "void"
 params = "unsigned keep"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x120 bytes: the word at 0x802E74 (ObjTrio +0x134) from the zone Area_ZoneAt(leader x, z) finds: 0 with Field_ScriptFlags bit 0x20 or a zone whose byte 0x660A24[zone * 2] is 0; kept when keep and it is non-zero and below that base; else base + min(Rand() & 0x1F, 0x660A25[zone * 2]), doubled if a member has accessory 0x15 and halved if one has 0x14 (0x535310(id, 3, n)), in 8 bits. What the counter counts is a guess (steps to an encounter?), unchecked in game. Callers 0x41F8E0 0x4959BF 0x4961EA 0x52DD8D. psx_pair call-anchored. What it is (2026-10-21): the threshold for the next random encounter, against which Field_EncounterDue compares Field_StepCount; accessory 0x15 is the Holy Mantle, 0x14 the Bell Collar; the doubling is capped at 0xFF by DIV-0153. Named Field_ZoneCounterRoll until then."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x52FFD0
@@ -5727,7 +5727,7 @@ ret = "const unsigned char *"
 params = "unsigned x, unsigned z"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x52 bytes: walks the 8-byte records at [0x668D80 + Game_AreaNumber * 4] until x in [r0, r2] and z in [r1, r3] and returns that record; no end test (a record that matches nothing loops forever). Its byte +4 is the zone Field_EncounterThresholdRoll indexes by. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x5305B0
@@ -5738,7 +5738,7 @@ ret = "unsigned char"
 params = "unsigned animation"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x43 bytes: without Field_InputFlags bit 1, 0x589330(animation); with it, 0x589330(0x6608D8[animation * 2]) and Sprite_Current +0x2A = 0x6608D9[animation * 2]. Returns 0x589330's al. 21 call sites. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_4.cpp"
 
 [[func]]
 pc = 0x531BB0
@@ -10900,7 +10900,7 @@ psx = 0x801B1560
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x52DB90..0x52E037 then a 7-entry jump table to 0x52E054 (0x4C4 bytes), cdecl. The leader's sub-state 1 (table 0x660954 entry 1): the six button tests in Field_LeaderStand's order, the frame count +0xA, Field_LeaderDirection, Field_LeaderStepTarget's answer 0 (step or push), 1, 2, 3, 5, 6, 0xFF (4 and 7..0xFE nothing). The PSX FUN_801B1560 branch for branch. Shop route: 253 calls."
 
@@ -10911,7 +10911,7 @@ psx = 0x801B1C80
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x52E060..0x52E107 (0xA8 bytes), cdecl. Field_State +0x128: 3 if a member of the first party list has bit 7 of its record +0x10, unchanged under Field_ScriptFlags bit 9, 3 when (button 0x903582 held) equals the byte 0x903A5E or Field_ScriptFlags2 bit 5, else 4. Shop route: 97 calls."
 
@@ -10922,7 +10922,7 @@ psx = 0x801B1DF4
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x52E140..0x52E158 (0x19 bytes): 0x536670 (the step, group V2), then a tail jump to Sprite_ScriptTick when the pace Field_State +0x128 is 4 or more. 41 E8/E9 sites (0x409706..0x536E87: area scripts, the member frames, 0x52E580) and the table 0x65F99C. Shop route: 520 calls."
 
@@ -10932,7 +10932,7 @@ name = "Field_LeaderStepTarget"
 psx = 0x801B1E3C
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x52E160..0x52E4EB then an 8-entry jump table to 0x52E50C (0x3AC bytes; the catalogue's 0x420 ran into Field_LeaderStepCell). +9 = 0x20 or 0x10 over Field_MoveSpeeds[pace] (idiv), the target 0x903858 / 0x90385C, Scenario_StepHook unless Field_Request 9, then by 0x526DB0's code: 0 -> 1, 1 -> 0, 2 slope (0x5725C0, links, MoveCmd_TestFB, sound by 0x660960), 3, 4 -> 2, 5 -> 3, 6 -> 5, 7 -> 6, 0xFF when the hook took it in state 2. Shop route: 148 calls."
 
@@ -10941,7 +10941,7 @@ pc = 0x52E510
 name = "Field_LeaderStepCell"
 ret = "void"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x52E510..0x52E574 (0x65 bytes), no calls: the words 0x903854 / 0x903856 = the whole parts of 0x903858 / 0x90385C, one more where the fraction is non-zero and the direction's unit 0x6696DC is positive. Pointer-less and in no list (inside the catalogue's 0x52E160); called only by Field_LeaderStepTarget, three sites. Taken with its caller."
 
@@ -10951,7 +10951,7 @@ name = "Field_EncounterDue"
 psx = 0x801B4EA8
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530030..0x5301E2 (0x1B3 bytes), cdecl. The zone (Area_ZoneAt) +4, the counter ObjTrio +0x134 against Field_StepCount (times 7/10 walking), ObjTrio +0x138 bit 0, the word 0x929EE0, member bit 6; on foot the cell +9 steps on is 0, else 0x591F30(4, 0) with Sprite_Current put back and 0x535C50 per member. Named by its caller: Field_LeaderWalk then sets up 0x5317F0 and the exit 0x190000. Shop route: 94 calls."
 
@@ -10962,7 +10962,7 @@ psx = 0x801B6444
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5301F0..0x5302B5 (0xC6 bytes). Field_State +0x136 counts past 0xF0 (not on foot, not record bit 5), then unless a member is in state 9, Rand bit 0: +0x137 = 9, Sprite_EnsureAnimation, +9 = 2, state 6. Called by Field_LeaderStand. Shop route: 120 calls."
 
@@ -10972,7 +10972,7 @@ name = "Field_LeaderSwapTest"
 psx = 0x801B667C
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5302C0..0x53031D (0x5E bytes): two members or more, bit 4 of neither flags byte, button 0x903588 pressed, Party_CanSwap - state 3, Field_ScriptFlags2 bit 10. Shop route: 318 calls."
 
@@ -10985,7 +10985,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x5302C0 (constants 0.60) (docs/install-gap-pairs.md)"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530320..0x53037C (0x5D bytes), no calls: not under bits 0..2 of either flags byte, and no member after the leader in state 2 whose +2 is none of 0x660A34's three bytes. Pointer-less and in no list; called only by Field_LeaderSwapTest. Taken with its caller."
 
@@ -10996,7 +10996,7 @@ psx = 0x801B6750
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530380..0x5303D3 (0x54 bytes): Field_MenuButton pressed, Field_ScriptFlags bit 6 clear - sound 0x105, Field_ScriptFlags2 bit 11, the pose, state 4. Shop route: 318 calls."
 
@@ -11006,7 +11006,7 @@ name = "Field_LeaderRequest4Test"
 psx = 0x801B687C
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5303E0..0x53042A (0x4B bytes): button 0x903586 held, Field_ScriptFlags bit 13 clear - Field_Request 4, the pose, state 1 sub-state 0. Shop route: 318 calls."
 
@@ -11016,7 +11016,7 @@ name = "Field_LeaderRequest9Test"
 psx = 0x801B6908
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530430..0x53047D (0x4E bytes): Input_Pressed 0x800, Field_ScriptFlags bit 13 and Field_InputFlags 0x69 clear - the pose, Field_Request 9, state 0xE. Shop route: 318 calls."
 
@@ -11027,7 +11027,7 @@ psx = 0x801B69AC
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530480..0x53052D (0xAE bytes), no calls: Field_InputHeld and 0xF000 to Sprite_Current +8 - 0x1000 0, 0x2000 2, 0x3000 1, 0x4000 4, 0x6000 3, 0x8000 6, 0x9000 7, 0xC000 5 - answer 1; else 0. Shop route: 180 calls."
 
@@ -11036,7 +11036,7 @@ pc = 0x530530
 name = "Field_EffectAhead"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530530..0x5305A2 (0x73 bytes): the first of Effect_Objects' 20 records in use of kind 0x17 (+5) that the point one Field_DirectionSteps ahead is in reach of (Sprite_PointInReach, margin 0) - its index, or 0xFF. Pointer-less and in no list; called by Field_LeaderEffectTest and ten other sites 0x51D32E..0x524A9E (E8 scan). Taken with its caller."
 
@@ -11047,7 +11047,7 @@ psx = 0x801B6C4C
 psx_overlay = "GAME.EMI#0"
 ret = "const unsigned char *"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530600..0x5307B1 (0x1B2 bytes), no calls: the area descriptor's +0x2C list (+0x31 the last index) of 8-byte runs - entry[3] cells from entry[0], entry[1] along z when entry[2] bit 7, else along x - against the one or two cells ahead; the entry, or null. The PSX FUN_801B6C4C test for test. Called by Field_LeaderTalkTest and 0x52F607 / 0x52F76E. Shop route: 3 calls."
 
@@ -11058,7 +11058,7 @@ psx = 0x801B6EB4
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530800..0x53085B (0x5C bytes): Field_State +0x89 none of 2, 4, 9, 0xA, button 0x90358C pressed, not on foot - state 0xA, +0x137 = 8. Shop route: 318 calls."
 
@@ -11069,7 +11069,7 @@ psx = 0x801B6F60
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned pace"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530860..0x5308C7 (0x68 bytes): Field_State +0x89 3 or 6, an odd direction, the argument's low byte 4, Field_EffectAhead - +0x137 = 8, +0xB the effect, state 0xA sub-state 1. The PSX FUN_801B6F60 is FUN_801B1560's call at the same place. Shop route: 148 calls."
 
@@ -11080,7 +11080,7 @@ psx = 0x801B703C
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5308D0..0x53091C (0x4D bytes): Field_State +0x89 2 and an odd direction - +0xB up; at 0x10 state 0xA, +0x137 = 8. The PSX FUN_801B703C is FUN_801B1560's call at the same place. Shop route: 48 calls."
 
@@ -11091,7 +11091,7 @@ psx = 0x801B7250
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530920..0x530A4D (0x12E bytes): confirm pressed unless byte 0x905B82 - Field_FacingObject (twice) then Field_LeaderTalkTo; else a 0x51 cell and 0x56D7A0; else a 0x50 / 0x53 / 0x55 / 0x52 cell and Area_PassageAhead - state 7. The PSX FUN_801B7250 call for call; the PC tests the passage for null where the PSX does not. Shop route: 322 calls."
 
@@ -15733,7 +15733,7 @@ psx = 0x801B3CF8
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned target"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x52F570..0x52F5B0 (0x41 bytes, pe_funcs had 0x50 through padding), cdecl, no calls. d = Sprite_Current + 8, plus 8 as a byte when below the target byte; al 0xFF when d is target + 1 .. target + 4, else 1. Ten call sites (0x51BF38 .. 0x520EEA, 0x532689), each storing al in Sprite_Current + 0xB. PSX FUN_801B3CF8 term for term. Combat route: 3 calls."
 
@@ -19241,7 +19241,7 @@ pc = 0x52E110
 name = "Field_LeaderStepping"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52E110..0x52E137 (0x28 bytes), cdecl, no arguments: Field_State +0x137 = 1; Sprite_Current +9 zero -> jmp 0x52E580 (Field_LeaderStepLands), else +9 - 1 and jmp Field_LeaderStepTick 0x52E140. Entry 2 of Field_LeaderControlSteps (.data 0x66095C); the only other reference to 0x52E580 is this jmp (E8/E9 scan). Queue: shop, worldmap, combat."
 
@@ -19254,7 +19254,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, order: between 0x52E160 and 0x52E9D0 (5 call(s) agree, constants 0.56) (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52E580..0x52E9C4 (0x445 bytes, recursive descent, every jump internal), cdecl, no arguments; reached only by 0x52E129's jmp. +7 run counter (pace 4: up to 0x11; else 0); pace saved; Field_EquipTick unless Field_InputFlags bit 0; Field_Bit20Tick, Field_FloorDamage; Field_Tile89(0) / Field_Tile8A(0) / Field_TileD0 / Field_TileA4 (the last with MoveCmd_TestFB) end it; on foot: cell 0xAF -> Field_LeaderAnimation, Field_ChangeArea(0x937F82, 0x903860, 0x90384C, 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; Field_ScriptFlags2 bit 13 -> Field_ScriptFlags |= 0x100 and stop; cell 0xC0 -> Area_LinkAt; input bit 1: the edge test (Field_DirectionSteps * +0x70 + position against 0x20000 and (AreaMap_Header[0/1] - 3) << 16) -> Sprite_EnsureAnimation, Field_ChangeArea(0x802290, 0x7E091C, 0x7E0920, 4); then AreaMap_CellsAll(.., 0xA7, 0) -> Area_LinkAt, Field_Request 5; AreaMap_CellsNone(.., 0xA6, 0) zero -> the return point 0x904148 (0x904152 = 0); Field_ScriptFlags2 bit 5 -> xor, Field_JumpStart, +9 - 1, Field_LeaderStepTick, +2 = 2; else Field_StepCount + 1 (+2 on directions 2 / 6), Sprite_ClearSteps, F3Divisor / FAWord 0, Field_EncounterDue (unless input bit 0 or flags2 & 0x60) -> state 5 and flags2 bit 12; pace 3, Field_LeaderEffectTest(saved pace), Scenario_ArriveHook (non-zero: stop), Field_Bit80Tick, Field_LeaderWalk while (Field_InputHeld & (0x903580 | 0xF000)) and flags bit 8 / flags2 bit 6 clear; else standing (+0x137 = 0, +2 = 1). Queue: shop, worldmap, combat."
 
@@ -19267,7 +19267,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tablesearch: its table 0x660968 at 0x801CD888 in ETC/GAME.EMI (5 of 5 paired entries agree) (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52E9D0..0x52E9E1 (0x12 bytes): jmp [0x660968 + 4 * Sprite_Current +2] (Field_SwapSteps, unchecked). Entry 3 of Field_LeaderStates (.data 0x660924); Field_LeaderSwapTest 0x5302C0 sets state 3 with Field_ScriptFlags2 bit 10, which Field_SwapEnd clears. Queue: worldmap."
 
@@ -19280,7 +19280,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.25 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52E9F0..0x52EB93 (0x1A4 bytes), cdecl, entry 0 of Field_SwapSteps (.data 0x660968): for each of Field_MemberCount members (re-read each turn) Sprite_Current = it; slot = i - 1, for the leader the count less one (the byte decremented in place); with ObjTrio +0x138 bit 0 or slot 0, Field_SpotFree at the leader's position with the member's +0x70; else the formation spot (s8 pairs 0x6608F6 + 2 * (slot + 2 * the leader's direction), << 15, plus the leader's position) if Field_SpotFree and 0x52EC20(0x903858, 0x90385C, Sprite_Current +0x70), else Field_SpotFree at the leader's with Sprite_Current +0x70; a member after the leader that found one: Member_ClearState(i), +1 = 3, Sprite_ShadeFadeBegin, +0x5C = 1. Then Sprite_Current = ObjTrio and ObjTrio +2 + 1 when a member after the leader is in state 3, else 4. Queue: worldmap."
 
@@ -19289,7 +19289,7 @@ pc = 0x52EBA0
 name = "Field_SpotFree"
 ret = "unsigned char"
 params = "long x, long z, unsigned direction, unsigned raised"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52EBA0..0x52EC1D (0x7E bytes), cdecl, four dword arguments, the third unread: ground = MapView_GroundAt(x, z); Sprite_Current +9 saved and zeroed; Field_WayBlocked(x, z, raised, ground) non-zero -> 0; |s16 ObjTrio +0x3E - s16 ground| > 0x40 -> 0; else 0x903858 = x, 0x90385C = z, word 0x903852 = MapView_GroundAt(x, z), +9 put back into Sprite_Current re-read, 1. Seven callers (E8 scan): Field_SwapGather x4, Field_SwapExchange x3. Queue: worldmap, recorded start (20 calls)."
 
@@ -19302,7 +19302,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.50 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52ED80..0x52EE61 (0xE2 bytes), cdecl, entry 1 of Field_SwapSteps (.data 0x66096C): Sprite_Current +9 + 1, +8 = (+8 + 1) & 7, Sprite_SetAnimation(+8); for members 1.. below Field_MemberCount (re-read) in state 3 with s8 +0x5D > -32 * +9: +0x5D = +9 * 0xE0 (imul, low byte) and +0x5E / +0x5F copied from it through Sprite_Current re-read; Sprite_Current = ObjTrio; ObjTrio +9 == 4 -> +2 + 1. Queue: worldmap."
 
@@ -19315,7 +19315,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 2 call(s) agree, constants 0.36 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52EE70..0x52F1A5 (0x336 bytes), cdecl, entry 2 of Field_SwapSteps (.data 0x660970): Field_State +0x138 saved; member 1 in state 3: ObjTrio_SwapFields(0, 1, 1) and with 3 members and member 2 in state 3 (1, 2, 1); else that test for (0, 2, 1). Each member in state 3: Sprite_Current = Field_State = it, Field_MemberSprite(+0x89, i), +0x138 = saved (+0x29 = 4 if bit 0), rep movsd 0x29 dwords from actor record Character_IndexById[+0x89] to +0x80, +0x148 its index, 0x904062[i] = +0x89; i > 0: Sprite_ShadeFadeBegin, +0 &= 0xBF, +0x5C = 1, +8 = ObjTrio +8 ^ 4; i > 0 and ObjTrio +0x138 bit 0 clear: the formation spot (Field_SpotFree, 0x52EC20) else Field_SpotFree at the leader's (answer unread); else Field_SpotFree at the leader's; +0x34 / +0x38 = 0x903858 / 0x90385C, +0x3E = MapView_GroundAt, Sprite_SetAnimation(+8). Then Sprite_Current = Field_State = ObjTrio, Field_Kind2X / Z = the leader's, F3Divisor 0x20, FAWord = s16 (ObjTrio +0x3E - word MapView_Elevation) / (max |moved| >> 13 low byte) (idiv) or 0, ObjTrio +9 = 4, +2 + 1. Queue: worldmap."
 
@@ -19328,7 +19328,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.36 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F1B0..0x52F345 (0x196 bytes), cdecl, entry 3 of Field_SwapSteps (.data 0x660974): Sprite_Current +9 - 1, +8 = (+8 + 1) & 7, Sprite_SetAnimation; members 1.. in state 3 get +0x5D..+0x5F = +9 * 0xE0 (the count re-read only after such a member); Field_State = Sprite_Current = ObjTrio; ObjTrio +9 != 0 -> return; else each such member: Sprite_LoadPalette(0x80D380 + +5 * 64, 0), +0 &= 0xDF, +0x5D..+0x5F / +0x5C / +9 = 0, Sprite_ClearSteps, dwords +0x18 / +0x1C / +0x20 = 0; Sprite_Current = ObjTrio, +2 + 1. Queue: worldmap."
 
@@ -19341,7 +19341,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: constants 0.50 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F350..0x52F387 (0x38 bytes), entry 4 of Field_SwapSteps (.data 0x660978): nothing while Field_Kind2Hold; else Field_ScriptFlags2 &= 0xFBFF, MapView_SetElevation(word Sprite_Current +0x3E; the upper half of the pushed dword is stale, the callee keeps 16 bits), +1 = 1, +2 = 0. Queue: worldmap."
 
@@ -19350,7 +19350,7 @@ pc = 0x52F390
 name = "Field_MenuState"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F390..0x52F3A1 (0x12 bytes): jmp [0x66097C + 4 * Sprite_Current +2] (Field_MenuSteps, unchecked). Entry 4 of Field_LeaderStates (.data 0x660928); Field_LeaderMenuTest 0x530380 sets state 4. Queue: worldmap."
 
@@ -19359,7 +19359,7 @@ pc = 0x52F3B0
 name = "Field_MenuOpen"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F3B0..0x52F3C0 (0x11 bytes), entry 0 of Field_MenuSteps (.data 0x66097C): Sprite_Current +2 = 1, Field_Request = 1 (the menu, symbols.toml Field_MenuButton). Queue: worldmap."
 
@@ -19372,7 +19372,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: constants 1.00 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F3D0..0x52F3F8 (0x29 bytes), entry 1 of Field_MenuSteps (.data 0x660980): Field_Request 1 -> nothing; else Field_ScriptFlags2 &= 0xF7FF, Sprite_Current +1 = 1, +2 = 0. Queue: worldmap."
 
@@ -19381,7 +19381,7 @@ pc = 0x52F400
 name = "Field_EncounterState"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F400..0x52F411 (0x12 bytes): jmp [0x660984 + 4 * Sprite_Current +2] (Field_EncounterSteps, unchecked). Entry 5 of Field_LeaderStates (.data 0x66092C); Field_LeaderStepLands sets state 5 on Field_EncounterDue. Queue: combat."
 
@@ -19394,7 +19394,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.40 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F420..0x52F481 (0x62 bytes; the queue's 112 is padding), entry 0 of Field_EncounterSteps (.data 0x660984): byte 0x904AAA zero -> Encounter_RollInitiative, +2 = 1; else members 1.. below Field_MemberCount (re-read after each) Member_ClearState(i) and +1 = 5, then Sprite_Current +0xB = 0xFF, +2 = 1. Queue: combat."
 
@@ -19407,7 +19407,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: constants 0.67 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F490..0x52F4EB (0x5C bytes), entry 1 of Field_EncounterSteps (.data 0x660988): +0xB != 0xFF: Effect_Objects[+0xB * 0x80] non-zero -> nothing, else +0xB = 0xFF; +0xB == 0xFF: with more than one member, member 1 +1 must be 5 (and member 2's with three); then +0xB = 0, Field_ScriptFlags2 &= 0xEFFF, Field_Request = 3. Queue: combat."
 
@@ -19420,7 +19420,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tablesearch: its table 0x66098C at 0x801CD8AC in ETC/GAME.EMI (3 of 3 paired entries agree) (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F5E0..0x52F5F6 (0x17 bytes): call [0x66098C + 4 * Sprite_Current +2] (Field_PassageSteps, unchecked), then jmp Sprite_ScriptTick. Entry 7 of Field_LeaderStates (.data 0x660934); Field_LeaderTalkTest 0x530920 sets state 7 on a passage. Queue: shop."
 
@@ -19433,7 +19433,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 5 call(s) agree, constants 0.56 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F600..0x52F754 (0x155 bytes), cdecl, a 0xA4-byte local, entry 0 of Field_PassageSteps (.data 0x66098C): e = Area_PassageAhead; Field_LeaderAnimation(+8) on foot else Sprite_EnsureAnimation((+8 >> 1) + 0x10); word e+4 bit 15 clear or e[6] 0xFF: Msg_OpenSystem(0), +2 + 1; e[6] 0 Msg_OpenSystem(word & 0xFFF) / 1 Msg_OpenScript(word & 0xFFF), +2 + 2; 2: Field_ActiveMember = the local, local +0x86 = 0xFF, EventScript_Run(Area_Descriptors[Game_AreaNumber] +4 -> [word & 0xFFF]), Msg_OpenScript(local +0x88 & 0xFFF) unless that word is 0xFFFF, Field_State +0x12A = Field_ActiveMember +0x86, +0x12C = the word, +2 + 3; any other kind +2 + 2; Field_Request = 2 on every path. Queue: shop."
 
@@ -19442,7 +19442,7 @@ pc = 0x52F760
 name = "Field_PassageTake"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F760..0x52F89C (0x13D bytes), entry 1 of Field_PassageSteps (.data 0x660990): Field_Request non-zero -> nothing; e = Area_PassageAhead; Flags_Test(0x90410C, e[4]) -> Msg_OpenSystem(1); e[6] 0xFF: dword 0x90413C + 1, Flags_Set(0x90410C, e[4]) unless 0xFF, Sound_PlayEffect(0x106), 0x5307C0(e[5] * 40); else Item_NamePtr(e[6], word e+4 >> 8) - 16 bytes to Text_Records 0x904CE0 - and Inventory_Add(e[6], word e+4 >> 8, 1, 0): taken -> Flags_Set then 0x90413C + 1 (unless e[4] 0xFF), Sound_PlayEffect(0x106), Msg_OpenSystem(2); else Msg_OpenSystem(3). Field_Request = 2, +2 = 2 on every path. Queue: shop."
 
@@ -19455,7 +19455,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.00 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52F8A0..0x52F8E8 (0x49 bytes), entry 2 of Field_PassageSteps (.data 0x660994): Field_Request non-zero -> nothing; Field_LeaderAnimation(+8) on foot else Sprite_EnsureAnimation(+8); +1 = 1, +2 = 0. Queue: shop."
 
@@ -19468,7 +19468,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 2 call(s) agree, constants 0.50 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x52FB60..0x52FBA2 (0x43 bytes): call [0x6609D0 + 4 * (byte 0x90412C & 0x7F)] (Field_ActionBySet, unchecked); Field_State +0x137 non-zero -> return; else Sprite_EnsureAnimation(+8), Member_ClearState(0), +1 = 1. Entry 10 of Field_LeaderStates (.data 0x660940); Field_LeaderCheckTest 0x530800 and Field_LeaderEffectTest 0x530860 set state 0xA. Queue: worldmap."
 
@@ -91681,7 +91681,7 @@ pc = 0x52EC20
 name = "Field_PathClear"
 ret = "unsigned char"
 params = "long x, long z, unsigned raised"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52EC20..0x52ED7C (0x15D bytes): cdecl, al answered: from the leader's x (ObjTrio +0x34, read again each step) toward x in half units (|x - leader| >> 15, plus one, steps) at z, then from its z toward z at x; each step MapView_GroundAt within 0x40 of the leader's height +0x3E and not Field_WayBlocked(.., raised, ground), else al 0; al 1. Called by Field_SwapGather 0x52EA9B and Field_SwapExchange 0x52F04A (ours, event_leader.cpp, its kPathClear). pc_funcs had 0x160 through padding. docs/field_e1.md."
 
@@ -91692,7 +91692,7 @@ psx = 0x801B3C30
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F4F0..0x52F562 (0x73 bytes): Field_LeaderStates[6]: Field_InputHeld not 0 clears Field_State +0x137, else calls 0x660A44[0x90412C & 0x7F] (19 entries, unchecked); once +0x137 is 0: Sprite_EnsureAnimation(+8), +9 = 0, Member_ClearState(0), state 1, +0xB = 0, tail Field_LeaderStand. pc_hidden put it in 0x52EC20; it is its own function, reached only through the table. PSX twin 0x801B3C30 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91702,7 +91702,7 @@ name = "PartyAction_ScriptEnd"
 psx = 0x801B3D4C
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F5C0..0x52F5D5 (0x16 bytes): Sprite_ScriptTickOnce; al not 0 clears Field_State +0x137. 48 cells of the PartyAction run tables 0x65F998.. (band_rows' reach). Hidden after Sprite_TurnSense (ours, 0x41 bytes: no overlap). PSX twin 0x801B3D4C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91713,7 +91713,7 @@ psx = 0x801B41E8
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F8F0..0x52F942 (0x53 bytes): Field_PassageSteps[3]: unless Field_Request is 2, a 0xA4-byte record on its stack with +0x86 = Field_State +0x12A and the word +0x88 = +0x12C (nothing else written) handed to Field_ObjectTrigger 0x56D6B0 (FE2's) unless +0x86 is 0xFF; Sprite_Current +2 = 2. PSX twin 0x801B41E8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91723,7 +91723,7 @@ name = "Field_JumpState"
 psx = 0x801B4258
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F950..0x52F961 (0x12 bytes): Field_LeaderStates[8]: jmp [0x66099C + Sprite_Current +2 * 4], unchecked. The state's steps call Field_JumpSetUp (through FE2's 0x535FE0) and Field_JumpCamera: the jump. PSX twin 0x801B4258 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91734,7 +91734,7 @@ psx = 0x801B429C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F970..0x52F97E (0xF bytes): Field_JumpSteps[0] (and run 0x65F998[3]): 0x535FC0 (FE2's: pose 0x3C or 0x3D by +8), Sprite_Current +2 = 2. PSX twin 0x801B429C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91744,7 +91744,7 @@ name = "Field_JumpOut"
 psx = 0x801B42C8
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F980..0x52F991 (0x12 bytes): Field_JumpSteps[1] (and run 0x65F998[4]): jmp [0x6609AC + Sprite_Current +3 * 4], unchecked. One of scenario_harness_fh's thirteen. PSX twin 0x801B42C8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91755,7 +91755,7 @@ psx = 0x801B430C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F9A0..0x52F9D8 (0x39 bytes): Field_JumpOutSteps[0]: 0x535FE0 (FE2's), then with +5 0 and bit 3 of neither 0x905BA4 nor 0x9039A2 Field_JumpCamera; +3 = 1. PSX twin 0x801B430C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91766,7 +91766,7 @@ psx = 0x801B4380
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F9E0..0x52F9F2 (0x13 bytes): Field_JumpOutSteps[1]: 0x536050 (FE2's), al not 0: +3 = 2. PSX twin 0x801B4380 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91777,7 +91777,7 @@ psx = 0x801B43BC
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA00..0x52FA12 (0x13 bytes): Field_JumpOutSteps[2]: 0x5360C0 (FE2's), al not 0: +3 = 3. PSX twin 0x801B43BC (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91788,7 +91788,7 @@ psx = 0x801B43F8
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA20..0x52FA32 (0x13 bytes): Field_JumpOutSteps[3]: 0x536130 (FE2's), al not 0: +3 = 4. PSX twin 0x801B43F8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91799,7 +91799,7 @@ psx = 0x801B4434
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA40..0x52FA5C (0x1D bytes): Field_JumpOutSteps[4]: 0x536170 (FE2's), al not 0: +2 = 2, +3 = 0. PSX twin 0x801B4434 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91809,7 +91809,7 @@ name = "Field_JumpAir"
 psx = 0x801B4480
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA60..0x52FAB4 (0x55 bytes): Field_JumpSteps[2]: Field_InputHeld bit 12 0x5364D0, else bit 14 0x536550, else any bit shared with the word 0x903580 0x5365D0 (FE2's three); then unless bit 3 of 0x905BA4 | 0x9039A2, MapView_SetElevation(+0x3E) and a tail jump to Field_JumpCamera. PSX twin 0x801B4480 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91819,7 +91819,7 @@ name = "Field_JumpIn"
 psx = 0x801B4538
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAC0..0x52FAD1 (0x12 bytes): Field_JumpSteps[3] (and run 0x65F998[6]): jmp [0x6609C0 + +3 * 4], unchecked. PSX twin 0x801B4538 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91829,7 +91829,7 @@ name = "Field_JumpIn0"
 psx = 0x801B457C
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAE0..0x52FAEE (0xF bytes): Field_JumpInSteps[0]: 0x536290 (FE2's), +3 = 1. PSX twin 0x801B457C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91840,7 +91840,7 @@ psx = 0x801B45A8
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAF0..0x52FB02 (0x13 bytes): Field_JumpInSteps[1]: 0x5362D0 (FE2's), al not 0: +3 = 2. PSX twin 0x801B45A8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91851,7 +91851,7 @@ psx = 0x801B45E4
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FB10..0x52FB47 (0x38 bytes): Field_JumpInSteps[2]: 0x5363C0 (FE2's), al not 0: Field_JumpCamera with +5 0 and bit 3 clear, +3 = 3. PSX twin 0x801B45E4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91861,7 +91861,7 @@ name = "Field_JumpIn3"
 psx = 0x801B4668
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FB50..0x52FB54 (0x5 bytes): Field_JumpInSteps[3]: jmp 0x536440 (FE2's). PSX twin 0x801B4668 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91871,7 +91871,7 @@ name = "Field_ContentState"
 psx = 0x801B4714
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FBB0..0x52FBC6 (0x17 bytes): Field_LeaderStates[11]: call [0x660A1C + +2 * 4] (two entries, unchecked), tail Sprite_ScriptTick. PSX twin 0x801B4714 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91882,7 +91882,7 @@ psx = 0x801B4760
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FBD0..0x52FD83 (0x1B4 bytes): Field_ContentSteps[0]: the field object Sprite_Objects[Field_State +0x139]: its flag +5 set in the bank 0x9040CC - system message 1; else +0x18 0xFF - Field_GiveZenny(+0x19 * 40), the flag, the dword 0x904140 + 1; else Item_NamePtr(+0x18, +0x19) 16 bytes to Text_Records, Inventory_Add(.., 1, 0): taken - flag, sound 0x106, message 2, 0x904140 + 1; not - message 3. Then (not after message 1) unless the object's +0xB bit 0, Sprite_SetAnimation(1) with Sprite_Current lent to it. Field_Request 2, +2 + 1. The category and id reach the two callees with the frame's upper bytes (they read bytes). PSX twin 0x801B4760 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91893,7 +91893,7 @@ psx = 0x801B4A34
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FD90..0x52FE86 (0xF7 bytes): Field_ContentSteps[1]: once Field_Request is 0 - after message 3 (0x7DEE48) the object's animation 0 unless +0xB bit 0; else bit 0 removes it (+0 = 0) or, its +0x34 and +0x38 words 0, AreaMap_SetByte(+0x36, +0x3A, 0x10). Field_InputFlags bit 5: state 0xC; else Sprite_EnsureAnimation(+8), state 1; +2 = 0. PSX twin 0x801B4A34 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91904,7 +91904,7 @@ psx = 0x801B4BF4
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FE90..0x52FEA3 (0x14 bytes): Field_LeaderStates[12]: Game_AreaNumber 0x68 tail Area104_LeaderRun, else tail Area121_LeaderRun (area_w2e.cpp, area_w3b.cpp). PSX twin 0x801B4BF4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91915,7 +91915,7 @@ psx = 0x801B6E50
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned amount"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_4.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x5307C0..0x5307F9 (0x3A bytes): cdecl: Sound_PlayEffect(0x106), Crt_sprintf(Text_Records, Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0). 21 E8 sites (17 in Capcom's 0x51C270..0x5251C6, Field_CellPickup, Field_PassageTake, Field_ContentTake, FC2's 0x46D180). The sibling's Field_GiveZenny 0x801B6E50 (names/functions.toml), verified by reading: the same five steps. docs/field_e1.md."
 

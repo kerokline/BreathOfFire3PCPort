@@ -300,6 +300,7 @@
 #include "game/field_c3.h"
 #include "game/field/field_3.h"
 #include "game/field_e1.h"
+#include "game/field/field_4.h"
 #include "game/field/field_6.h"
 #include "game/field_o.h"
 #include "game/field_c1.h"
@@ -1107,6 +1108,7 @@ void InjectAll() {
                                 // its five tables swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose
                                 // self-test copies 0x52F980 and 0x52D880; no module patches bytes inside its 45
                                 // (DIVERGENCE.md, cheats.cpp)
+    Field4_Inject();
     Field6_Inject();
     FieldO_Inject();            // round 12 group FO (the field engine's 0x5738A0..0x57CD89: eight menu panels, the
                                 // movement ops 87 / 88 / DB / E9 / F9 and their states, the placement ops 3x 4x 6x 7x

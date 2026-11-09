@@ -11176,18 +11176,23 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x437420	EnemyOp_HitPose	func	tu_435830	src/game/enemy_ai_ops.cpp	515	520	525	src/game/battle/enemy_op.cpp	d3e6abb3
 	At	copied		src/game/event_leader.cpp	35	35	35	src/game/field/field_4.cpp	d3e6abb3
 	At	copied		src/game/event_leader.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3
+	At	local		src/game/event_leader.cpp	35	35	35	src/game/field/field_4.cpp	d3b6c112
 	Long	local		src/game/event_leader.cpp	36	36	36	src/game/field/field_4.cpp	d3e6abb3
 	SetWord	local		src/game/event_leader.cpp	38	38	38	src/game/field/field_4.cpp	d3e6abb3
 	Word	copied		src/game/event_leader.cpp	39	39	39	src/game/field/field_4.cpp	d3e6abb3
 	Word	copied		src/game/event_leader.cpp	39	39	39	src/game/field/field_6.cpp	d3e6abb3
+	Word	local		src/game/event_leader.cpp	39	39	39	src/game/field/field_4.cpp	d3b6c112
 	ByteEventLeader	local		src/game/event_leader.cpp	79	79	79	src/game/field/field_4.cpp	d3e6abb3
 	Table	local		src/game/event_leader.cpp	81	84	86	src/game/field/field_4.cpp	d3e6abb3
+	TableEventLeader	local		src/game/event_leader.cpp	81	84	86	src/game/field/field_4.cpp	d3b6c112
 	Member	copied		src/game/event_leader.cpp	88	88	88	src/game/field/field_4.cpp	d3e6abb3
 	Member	copied		src/game/event_leader.cpp	88	88	88	src/game/field/field_6.cpp	d3e6abb3
+	Member	local		src/game/event_leader.cpp	88	88	88	src/game/field/field_4.cpp	d3b6c112
 	StepXEventLeader	local		src/game/event_leader.cpp	90	92	92	src/game/field/field_4.cpp	d3e6abb3
 	StepZEventLeader	local		src/game/event_leader.cpp	93	93	93	src/game/field/field_4.cpp	d3e6abb3
 	Abs	copied		src/game/event_leader.cpp	95	97	100	src/game/field/field_4.cpp	d3e6abb3
 	Abs	copied		src/game/event_leader.cpp	95	97	100	src/game/field/field_6.cpp	d3e6abb3
+	Abs	local		src/game/event_leader.cpp	95	97	100	src/game/field/field_4.cpp	d3b6c112
 	FormationX	local		src/game/event_leader.cpp	102	104	107	src/game/field/field_4.cpp	d3e6abb3
 	FormationZ	local		src/game/event_leader.cpp	108	108	111	src/game/field/field_4.cpp	d3e6abb3
 	SetShade	local		src/game/event_leader.cpp	113	115	123	src/game/field/field_4.cpp	d3e6abb3
@@ -11271,8 +11276,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Word	copied		src/game/event_ops.cpp	40	40	40	src/game/field/field_6.cpp	d3e6abb3
 	Word	copied		src/game/event_ops.cpp	40	40	40	src/game/field/field_7.cpp	d3e6abb3
 	AddressEventOps	local		src/game/event_ops.cpp	108	108	108	src/game/field/field_4.cpp	d3e6abb3
+	Byte	local		src/game/event_ops.cpp	108	108	108	src/game/field/field_4.cpp	d3b6c112
 	Byte	copied		src/game/event_ops.cpp	109	109	109	src/game/field/field_4.cpp	d3e6abb3
 	Byte	copied		src/game/event_ops.cpp	109	109	109	src/game/field/field_6.cpp	d3e6abb3
+	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	local		src/game/event_ops.cpp	110	112	112	src/game/field/field_4.cpp	d3b6c112
 	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	copied		src/game/event_ops.cpp	111	113	113	src/game/field/field_4.cpp	d3e6abb3
 	kFlagsLo/kFlagsHi/kFlags2Lo/kFlags2Hi	copied		src/game/event_ops.cpp	111	113	113	src/game/field/field_6.cpp	d3e6abb3
 	Count	local		src/game/event_ops.cpp	115	116	120	src/game/field/event_op.cpp	d3e6abb3
@@ -11284,16 +11291,20 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Extra	copied		src/game/event_ops.cpp	125	125	125	src/game/field/field_5.cpp	d3e6abb3
 	Extra	copied		src/game/event_ops.cpp	125	125	125	src/game/field/field_6.cpp	d3e6abb3
 	Coordinate	local		src/game/event_ops.cpp	134	136	138	src/game/field/event_op.cpp	d3e6abb3
+	StepX	local		src/game/event_ops.cpp	139	141	141	src/game/field/field_4.cpp	d3b6c112
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_4.cpp	d3e6abb3
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_5.cpp	d3e6abb3
 	StepX	copied		src/game/event_ops.cpp	140	142	142	src/game/field/field_6.cpp	d3e6abb3
+	StepZ	local		src/game/event_ops.cpp	142	142	142	src/game/field/field_4.cpp	d3b6c112
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_4.cpp	d3e6abb3
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_5.cpp	d3e6abb3
 	StepZ	copied		src/game/event_ops.cpp	143	143	143	src/game/field/field_6.cpp	d3e6abb3
 	WalkX	local		src/game/event_ops.cpp	144	144	144	src/game/field/field_4.cpp	d3e6abb3
+	CellDX	local		src/game/event_ops.cpp	145	146	146	src/game/field/field_4.cpp	d3b6c112
 	WalkZ	local		src/game/event_ops.cpp	145	145	145	src/game/field/field_4.cpp	d3e6abb3
 	CellDX	copied		src/game/event_ops.cpp	146	147	147	src/game/field/field_4.cpp	d3e6abb3
 	CellDX	copied		src/game/event_ops.cpp	146	147	147	src/game/field/field_5.cpp	d3e6abb3
+	CellDZ	local		src/game/event_ops.cpp	147	147	147	src/game/field/field_4.cpp	d3b6c112
 	CellDZ	copied		src/game/event_ops.cpp	148	148	148	src/game/field/field_4.cpp	d3e6abb3
 	CellDZ	copied		src/game/event_ops.cpp	148	148	148	src/game/field/field_5.cpp	d3e6abb3
 	Whole	copied		src/game/event_ops.cpp	150	152	152	src/game/field/field_4.cpp	d3e6abb3
@@ -11680,21 +11691,28 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	d3e6abb3
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/leader_panel.cpp	d3e6abb3
 	SetLong	local		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	70f276da
+	BFieldE1	local		src/game/field_e1.cpp	69	69	69	src/game/field/field_4.cpp	d3b6c112
+	W	local		src/game/field_e1.cpp	70	70	70	src/game/field/field_4.cpp	d3b6c112
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_4.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_6.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/leader_panel.cpp	d3e6abb3
+	L	local		src/game/field_e1.cpp	72	72	72	src/game/field/field_4.cpp	d3b6c112
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/field_4.cpp	d3e6abb3
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/field_6.cpp	d3e6abb3
 	W	copied		src/game/field_e1.cpp	73	73	73	src/game/field/leader_panel.cpp	d3e6abb3
+	Sc	local		src/game/field_e1.cpp	74	74	74	src/game/field/field_4.cpp	d3b6c112
+	Fs	local		src/game/field_e1.cpp	75	75	75	src/game/field/field_4.cpp	d3b6c112
 	L	copied		src/game/field_e1.cpp	75	75	75	src/game/field/field_4.cpp	d3e6abb3
 	L	copied		src/game/field_e1.cpp	75	75	75	src/game/field/field_6.cpp	d3e6abb3
 	KeyFieldE1	local		src/game/field_e1.cpp	76	76	76	src/game/field/leader_panel.cpp	d3e6abb3
+	S16	local		src/game/field_e1.cpp	78	80	80	src/game/field/field_4.cpp	d3b6c112
 	Sc	copied		src/game/field_e1.cpp	78	78	78	src/game/field/field_4.cpp	d3e6abb3
 	Sc	copied		src/game/field_e1.cpp	78	78	78	src/game/field/field_6.cpp	d3e6abb3
 	Fs	copied		src/game/field_e1.cpp	79	79	79	src/game/field/field_4.cpp	d3e6abb3
 	Fs	copied		src/game/field_e1.cpp	79	79	79	src/game/field/field_6.cpp	d3e6abb3
 	MemberFieldE1	local		src/game/field_e1.cpp	80	80	80	src/game/field/field_6.cpp	d3e6abb3
 	ObjectFieldE1	local		src/game/field_e1.cpp	81	81	81	src/game/field/field_4.cpp	d3e6abb3
+	Abs32	local		src/game/field_e1.cpp	82	84	88	src/game/field/field_4.cpp	d3b6c112
 	S16	copied		src/game/field_e1.cpp	83	85	85	src/game/field/field_4.cpp	d3e6abb3
 	S16	copied		src/game/field_e1.cpp	83	85	85	src/game/field/field_6.cpp	d3e6abb3
 	Abs32	copied		src/game/field_e1.cpp	87	89	93	src/game/field/field_4.cpp	d3e6abb3
@@ -11891,8 +11909,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	ConfirmLayout	local		src/game/field_e2.cpp	1862	1862	1885	src/game/menu/item_trade.cpp	d3e6abb3
 0x593E60	ItemTrade_Confirm	func	tu_593950	src/game/field_e2.cpp	1889	1899	1943	src/game/menu/item_trade.cpp	d3e6abb3
 	gFieldEvent	local		src/game/field_event.cpp	70	70	70	src/game/field/mode_11.cpp	d3e6abb3
+	HandlerFieldEvent	local		src/game/field_event.cpp	71	71	71	src/game/field/field_4.cpp	d3b6c112
 	HandlerFieldEvent	copied		src/game/field_event.cpp	72	72	72	src/game/field/field_4.cpp	d3e6abb3
 	HandlerFieldEvent	copied		src/game/field_event.cpp	72	72	72	src/game/field/field_6.cpp	d3e6abb3
+	kMemberBytes/kActorBytes	local		src/game/field_event.cpp	73	73	73	src/game/field/field_4.cpp	d3b6c112
 	kMemberBytes/kActorBytes	copied		src/game/field_event.cpp	74	74	74	src/game/field/field_4.cpp	d3e6abb3
 	kMemberBytes/kActorBytes	copied		src/game/field_event.cpp	74	74	74	src/game/field/field_6.cpp	d3e6abb3
 	Address	copied		src/game/field_event.cpp	76	76	76	src/game/field/field_2.cpp	d3e6abb3
@@ -11900,6 +11920,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Address	copied		src/game/field_event.cpp	76	76	76	src/game/field/mode_11.cpp	d3e6abb3
 	Member	copied		src/game/field_event.cpp	77	77	77	src/game/field/field_6.cpp	d3e6abb3
 	Member	copied		src/game/field_event.cpp	77	77	77	src/game/field/mode_11.cpp	d3e6abb3
+	Dispatch	local		src/game/field_event.cpp	78	78	80	src/game/field/field_4.cpp	d3b6c112
 	Actor	local		src/game/field_event.cpp	79	82	82	src/game/field/field_6.cpp	d3e6abb3
 	Dispatch	copied		src/game/field_event.cpp	83	83	85	src/game/field/field_4.cpp	d3e6abb3
 	Dispatch	copied		src/game/field_event.cpp	83	83	85	src/game/field/field_6.cpp	d3e6abb3

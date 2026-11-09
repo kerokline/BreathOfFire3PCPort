@@ -593,19 +593,6 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
 // ===========================================================================
 // The battle intro's party steps
 
-// original 0x52F570 (PSX 0x801B3CF8): which way Sprite_Current turns to face
-// direction `target` (its byte): its direction +8 (plus 8, as a byte, when
-// below the target) 1..4 past the target: 0xFF (anticlockwise, by the
-// numbers), else 1. Ten call sites; each stores al in the sprite's +0xB.
-extern "C" unsigned char __cdecl Sprite_TurnSense(unsigned target) {
-    auto d = Sprite_Current[8];
-    const auto a = static_cast<unsigned char>(target);
-    if (d < a) d = static_cast<unsigned char>(d + 8);
-    const u32 v = d, t = a;
-    if (v >= t + 1 && v <= t + 4) return 0xFF;
-    return 1;
-}
-
 // ===========================================================================
 
 void InventoryOps_Inject() {
@@ -636,5 +623,4 @@ void InventoryOps_Inject() {
     BOF3_INJECT(Short_Abs);
     BOF3_INJECT(Short_Sign);
     BOF3_INJECT(Encounter_StepOpen);
-    BOF3_INJECT(Sprite_TurnSense);
 }
