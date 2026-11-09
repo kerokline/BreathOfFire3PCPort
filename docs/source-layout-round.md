@@ -1182,6 +1182,63 @@ is expected; the doc says so.
    one commit each, so the owner can revert any single one.
    **Answered 2026-11-08 night: "fine to be excepted."** The class covers
    the wide form too; the 7a paragraph stands as written.
+16. **The 25 file-static items the mover still refuses, and who reads them**
+   (the dry run after groups g, q and n, 2026-11-09 night;
+   `slb1108\reports\state_readers.md` lists every reader). The owner's call 10
+   kept class 1, the function promotions and the alias seams file-local
+   "with their readers moving with them". Measured, that cannot happen: in
+   every one of the 25 cases the moved readers all go to **one** target, but
+   code that never moves reads the item too - the source's own `_Inject()`
+   (its `BOF3X_OFF` toggles and live-check arming: 14 cases), its self-test
+   or fuzz (sound's `SelfTest`, d3d_draw's `D3dDraw_CellsShadowWritten`), or
+   its own helpers with external linkage (msg_pool's `MsgPool_Moved` /
+   `_Relocate` / `_TakeChunk`, map_layers' `ArmSideDup` / `SnapshotSides`,
+   dat_load's `DatLoad_OptLayerChunks`, win_main's `WinMain_Background` /
+   `WinMain_InputAllowed`). The mover keeps `_Inject()` and the self-tests in
+   the source by design, so a file-local would be two copies. The cases:
+   dat_load `g_io`, `g_install_has`, `WalkOverlay`, `DatLog` (reader
+   `LoadDatFile` -> battle/dragon_cmd.cpp); sprite_draw's six (reader
+   `Sprite_Draw` -> field/sprite_2.cpp); sound `g_restore_skip`, `ResumeSkip`
+   (`Music_Start` -> platform/music.cpp); msg_pool `g_pool` (`Msg_SystemPtr`
+   -> text/msg_box.cpp); map_layers `g_side_dup` (`MapView_CellTextures` ->
+   field/area_map.cpp); gfx_clut `g_stp_test` (`Gfx_ConvertRow` ->
+   platform/d3d.cpp); d3d_draw `PoseLogOn` (`D3d_CellTexture` -> d3d.cpp);
+   field_frame `g_band_fill` (`Sprite_ProjectA` -> field/event_cond.cpp);
+   win_main `g_background`, `g_foreground` (-> platform/magic_080.cpp); the
+   five alias seams' `g` (field_blocked -> field_3 and field_6, kind2_object
+   -> area_map, object_kinds -> field_3, title_states -> title and field_7,
+   move_script -> field/move_script.cpp); and rest_2d `g_field_heal_party`
+   (DIV-0208, PR #213, new: `FieldAbility_HealAll40/120` ->
+   field/field_ability.cpp). Two ways out, the owner's: **(a) promote them**
+   into their stems' namespaces as items 10 and 14 did, each measured by
+   the gate - the class-2 and class-3 ones land under the existing classes,
+   the 7 class-1 ones and the 5 static-local functions change i686 code (an
+   internal global the optimiser folded; a function it inlined), which call
+   8 refused, so they would need a named class of their own (`i686-fold`,
+   `i686-inline`), behaviour-neutral by construction and checked by the
+   self-tests and the state hash; the seams need a line-count-neutral form
+   first (group g found none; the `Callees` struct could go to the header
+   with its aliases, which loses lines, so a `low32-site` row where the gate
+   asks). Or **(b) keep the reader with its state**: the reader functions
+   named above stay in their present source, which splits their units
+   (`Sprite_Draw` away from tu_592f00, `LoadDatFile` from tu_44f770, nine
+   `Field_*`/`AreaMap_*` from tu_517200, six `Kind2_*` from tu_5722d0, three
+   `MoveScript_*` from tu_576b50, and so on: about 45 functions out of 14
+   units), against the sheet's rule, and leaves the exe's own files holding
+   game functions for good. The recommendation is (a): it is what item 14
+   already did, the i686 change is measured and named, and the layout stays
+   Capcom's.
+17. **The sparkle macro family** (magic_s16.cpp): `MS16_SPARKLES` is invoked
+   four times and defines 40 functions, ten per spell, which the mover can
+   move only together with the macro to one file; the table sends them to
+   `magic/magic_072.cpp`, `magic_073.cpp`, `magic_074.cpp` and
+   `magic/sparkle.cpp` (Magic071's), as the PlayStation had four overlays each
+   with its own copy. Either the four units join into one file (three rows in
+   `analysis/tu_joins.tsv`; `magic/sparkle.cpp` is the name the census already
+   gave the first) or the macro is written out as four copies (a body edit of
+   some 400 lines, a `low32-site` row for every `Low32()` call in them). The
+   recommendation is the join: the PC port's source has one copy, and the
+   file says so.
 
 ## 8. Ownership, merge order, numbering
 
