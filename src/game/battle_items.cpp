@@ -108,7 +108,7 @@ unsigned char* Actor() { return battle_items::At(BattleE2_Owner); }
 
 // The scratch words: SharedScratch + k, and the vertex scratch + k.
 unsigned char* Scr(unsigned k) { return battle_items::At(::bof3::Img(at::kScratch.v) + k); }
-short S16BattleItems(const unsigned char* at) { return static_cast<short>(Word(at)); }
+short S16BattleItems(const unsigned char* at) { return static_cast<short>(battle_items::Word(at)); }
 unsigned char* Vtx(unsigned k) { return battle_items::At(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 
