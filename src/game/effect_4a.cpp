@@ -264,10 +264,6 @@ extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(::bof3::Img(Sprite_O
 // original 0x488610 (state 11): reached: +1 0xD; else +1 0xC.
 extern "C" void __cdecl EffectKind83_Check11(void) { CheckEffect4a(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xC); }
 
-// original 0x433640 (EffectKind83_States[12], and the stack table of the
-// battle's BattleFx_ActorWatch 0x433460, its state 2; hidden in 0x432F10): +1 0.
-extern "C" void __cdecl Sprite_StateRestart(void) { S()[1] = 0; }
-
 // original 0x488650 (state 13): record 1's z + 0x4000 twice, +1 0xE, +9 8.
 extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
 
@@ -665,7 +661,6 @@ void Effect4A_Inject() {
     BOF3_INJECT(EffectKind83_Check9);
     BOF3_INJECT(EffectKind83_Push10);
     BOF3_INJECT(EffectKind83_Check11);
-    BOF3_INJECT(Sprite_StateRestart);
     BOF3_INJECT(EffectKind83_Nudge13);
     BOF3_INJECT(EffectKind83_Hold14);
     BOF3_INJECT(EffectKind83_Nudge15);

@@ -12,16 +12,6 @@
 // The two things WinMain's loop does to VRAM on a RENDERED frame, before the
 // draw (docs/call-trace.md section 6): game logic only queues and marks.
 
-// original 0x454960. The CLUT strip - VRAM rows 480..511, 256 cells wide - is
-// kept by game logic in the DAT arena and marked dirty; here it goes up,
-// row by changed row.
-extern "C" void __cdecl Gfx_FlushDirtyStrip(void) {
-    if (Gfx_ClutStripDirty == 0) return;
-    const short rect[4] = {0, 0x1E0, 0x100, 0x20};
-    Gfx_LoadImageIfChanged(rect, Gfx_ClutStrip);
-    Gfx_ClutStripDirty = 0;
-}
-
 // original 0x461F00. Each queued record: s16 w, s16 h, u32 kind, then data.
 // Kind 1 is 5-bit packed, kind 2 LZSS, anything else raw cells.
 //
@@ -247,6 +237,5 @@ void GfxFlush_Inject() {
         const unsigned bad = FuzzQueue(reinterpret_cast<Fn>(queue)) + FuzzStrip(reinterpret_cast<Fn>(strip));
         if (bad) bof3::Fatal("gfx_flush differs from the original in %u self-test rounds", bad);
     }
-    BOF3_INJECT(Gfx_FlushDirtyStrip);
     BOF3_INJECT(Gfx_FlushUploadQueue);
 }

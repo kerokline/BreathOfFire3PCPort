@@ -191,87 +191,6 @@ namespace dat_load { void DatLog(const char* from, const char* path) {
               static_cast<unsigned>(at), base, static_cast<unsigned>(off));
 } }
 
-
-
-// original 0x454590. Reads DAT\<name> whole and walks its chunks.
-//
-// DIVERGENCE DIV-0089: with BOF3X_CACHE set (and not BOF3X_CACHE_DATA=0),
-// DAT\<name> is the cache's base\dat\<name> and loc\zh-CN\dat\<name> walked
-// chunk by chunk in the PC's slot order when the cache holds it whole, the
-// install's otherwise; each overlay below is the cache's loc\<tag>\dat\<name>
-// or opt\<layer>\dat\<name> when the cache has that layer at all, else the
-// install's (dat_cache.h, docs/cache-read.md).
-//
-// DIVERGENCE DIV-0086: then, with BOF3X_OPT=<layer>[,<layer>...] set,
-// DAT\<layer>.<name> for each layer in that order, when it exists - after the
-// language overlay, so a layer lands on top of both. The layers are built by
-// tools/importer.py from the player's PSP disc (area4-walls, DIV-0080: a
-// Western PSX disc) and copied in by its
-// `install`; none ships (docs/opt-layers.md).
-//
-// DIVERGENCE DIV-0005: with BOF3X_LANG=<tag> set, DAT\<tag>.<name> is walked
-// after DAT\<name> when it exists, so its chunks land on top of the shipped ones - a
-// kind-0 chunk over the same arena bytes, a kind-3 chunk replacing the glyph
-// table (Font_SetGlyphData frees the shipped one, a branch no shipped data
-// runs). The overlays are built locally by tools/loc_build.py; none ships
-// (docs/dialogue-localisation.md).
-//
-// Kept from the original, deliberately:
-//   - the path is sprintf'd into a 0x28-byte stack buffer with no length check
-//     (the longest shipped name fits);
-//   - the malloc results are not checked for null;
-//   - a chunk whose kind is outside 0..3 (including negative: the byte is
-//     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 19, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
-//     DIV-0038, DIV-0064, DIV-0069, DIV-0148, kind 18 the reading row's,
-//     docs/reading-row.md 3, taken only from an optional layer, and kind 19
-//     DIV-0203's corrected text block);
-//   - the walk trusts each chunk's size; nothing checks that a payload lies
-//     inside the file buffer or that a kind-0 tag lies inside the arena;
-//   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
-//     frees the previous one).
-extern "C" void __cdecl LoadDatFile(int file_index) {
-    const char* name = Dat_FileNames[file_index];
-    if (dat_load::g_datlog) {
-        dat_load::g_datlog_caller = __builtin_return_address(0);
-        dat_load::g_datlog_index = file_index;
-        if (!name) dat_load::DatLog("none", "(no name: returns)");
-    }
-    if (!name) return;
-
-    if (dat_cache::WalkShipped(name, dat_load::g_take, nullptr)) {  // DIV-0089: the cache's when it holds it whole
-        if (dat_load::g_datlog) dat_load::DatLog("cache", name);
-    } else {
-        char path[0x28];
-        Crt_sprintf(path, "DAT\\%s", name);
-        WalkDatFile(path);
-    }
-
-    if (dat_load::g_lang[0] && std::strlen(name) < 0x20) {  // DIV-0005
-        char overlay[0x30];
-        Crt_sprintf(overlay, "DAT\\%s.%s", dat_load::g_lang, name);
-        dat_load::WalkOverlay("loc", dat_load::g_lang, dat_load::g_lang_cached, name, overlay);  // DIV-0089
-    }
-    for (int i = 0; i < dat_load::g_opt_count; ++i) {  // DIV-0086
-        char layer[kOptPath];
-        if (4 + std::strlen(dat_load::g_opt[i]) + 1 + std::strlen(name) + 1 > sizeof layer)
-            bof3::Fatal("DIV-0086: DAT\\%s.%s does not fit the 0x%X-byte path buffer", dat_load::g_opt[i], name,
-                        static_cast<unsigned>(sizeof layer));
-        Crt_sprintf(layer, "DAT\\%s.%s", dat_load::g_opt[i], name);
-        dat_load::g_walking_opt_layer = true;   // the reading row's kind 18 may arrive (ReadingRowTake)
-        dat_load::WalkOverlay("opt", dat_load::g_opt[i], dat_load::g_opt_cached[i], name, layer);  // DIV-0089
-        dat_load::g_walking_opt_layer = false;
-    }
-    if (dat_load::g_area_block_loaded) {
-        dat_load::g_area_block_loaded = false;
-        map_layers::SnapshotSides();  // DIV-0085: the side faces the file's heights give (map_layers.h)
-    }
-    // DIV-0147: the quick menu's text is the title's load menu's, kept from
-    // the title's pool (a battle's pool has other messages at its ids).
-    if (_stricmp(name, "FIRST.DAT") == 0) bof3::QuickMenu_TitlePoolLoaded();
-}
-
 namespace {
 // DIV-0113: whether a named layer carries a bank (a kind-2 chunk) at all, read
 // once at injection from its files' headers; Snd_LoadBankFile walks the layers
@@ -920,5 +839,4 @@ void DatLoad_Inject() {
         const std::uint8_t was = 0, is = 1;  // DIV-0203: a language layer's corrected text blocks (TakeCorrected)
         bof3::PatchBytes("DesertDirections", Low32(&g_desert_directions), &was, &is, 1);
     }
-    BOF3_INJECT(LoadDatFile);
 }

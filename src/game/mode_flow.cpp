@@ -715,41 +715,6 @@ extern "C" void __cdecl Title_LoadTask(void) {
     mode_flow::g.title_task();
 }
 
-// original 0x454810: `mov eax, 1; ret`. Where the PSX polled its CD load
-// (File_LoadDone 0x801636F0), the PC's loads are synchronous, so every wait
-// loop's first question is answered "done".
-extern "C" int __cdecl File_LoadDone(void) { return 1; }
-
-// original 0x4549B0 (PSX 0x8014E178, the same loops): the last 0x800 bytes of
-// Gfx_ClutStripSource - its rows 28..31 - zeroed, then all 32 rows of 0x200
-// bytes copied to Gfx_ClutStrip. So the copy carries the zeros: the strip's
-// rows 28..31 come out zero too. The PSX zeroes the same four rows first.
-// Gfx_ClutStripDirty is not touched.
-extern "C" void __cdecl Gfx_ClutStripRestore(void) {
-    std::memset(mode_flow::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3800), 0, 0x800);
-    std::memcpy(Gfx_ClutStrip, Gfx_ClutStripSource, 0x4000);
-}
-
-// original 0x454A20 (PSX 0x8014E2E8): byte +0 of the 32 MoveScript_TintRecords
-// zeroed, then 16 dwords from 0x7E06A0 set to -1.
-extern "C" void __cdecl MoveScript_TintReset(void) {
-    for (unsigned i = 0; i < 32; ++i) MoveScript_TintRecords[i * 12] = 0;
-    for (unsigned i = 0; i < 16; ++i) mode_flow::SetLong(mode_flow::At(::bof3::Img(mode_flow::at::kTintMarks) + i * 4), -1);
-}
-
-// original 0x454A50 (PSX 0x8014E378): the Field_Slots record `slot` (its low
-// byte) freed - byte +0 zeroed - if its bit 0 is set. As the original has it:
-// the index is not checked (callers pass 0..7).
-extern "C" void __cdecl Field_SlotRelease(unsigned slot) {
-    unsigned char* const r = Field_Slots + (slot & 0xFF) * 16u;
-    if (r[0] & 1) r[0] = 0;
-}
-
-// original 0x454AB0: Field_SlotRelease for each of the eight slots.
-extern "C" void __cdecl Field_SlotsReleaseAll(void) {
-    for (unsigned i = 0; i < 8; ++i) mode_flow::g.slot_release(i);
-}
-
 // original 0x461E10 (PSX 0x8014E458): a RECT {x, y, w, h} of 16-bit words on
 // the stack, cleared through Gfx_ClearImage with colour 0.
 //
@@ -806,10 +771,5 @@ void ModeFlow_Inject() {
     BOF3_INJECT(Window_ResetAll);
     BOF3_INJECT(Boot_Task);
     BOF3_INJECT(Title_LoadTask);
-    BOF3_INJECT(File_LoadDone);
-    BOF3_INJECT(Gfx_ClutStripRestore);
-    BOF3_INJECT(MoveScript_TintReset);
-    BOF3_INJECT(Field_SlotRelease);
-    BOF3_INJECT(Field_SlotsReleaseAll);
     BOF3_INJECT(Gfx_ClearRect);
 }

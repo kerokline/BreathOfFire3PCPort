@@ -3361,6 +3361,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Enemy	local		src/game/battle_actions.cpp	96	96	96	src/game/battle/battle_action.cpp	d3e6abb3
 	Handler	local		src/game/battle_actions.cpp	98	101	101	src/game/battle/battle_action.cpp	d3e6abb3
 	Step	local		src/game/battle_actions.cpp	102	102	104	src/game/battle/battle_action.cpp	d3e6abb3
+	StepBattleActions	local		src/game/battle_actions.cpp	102	102	104	src/game/battle/battle_action.cpp	25f8d0eb
 	HookFn	local		src/game/battle_actions.cpp	105	105	105	src/game/battle/battle_action.cpp	d3e6abb3
 	EventHook	local		src/game/battle_actions.cpp	106	106	106	src/game/battle/battle_action.cpp	d3e6abb3
 	SetMemberBlock	local		src/game/battle_actions.cpp	108	114	124	src/game/battle/battle_action.cpp	d3e6abb3
@@ -3973,6 +3974,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Line	local		src/game/battle_e5.cpp	460	460	460	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	ShowLine	local		src/game/battle_e5.cpp	461	463	465	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Member	local		src/game/battle_e5.cpp	466	466	466	src/game/battle/dragon_cmd.cpp	d3e6abb3
+	Member	copied		src/game/battle_e5.cpp	466	466	466	src/game/battle/dragon_cmd.cpp	25f8d0eb
 	Pressed	local		src/game/battle_e5.cpp	471	471	471	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Cancel	local		src/game/battle_e5.cpp	472	472	472	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Confirm	local		src/game/battle_e5.cpp	473	473	473	src/game/battle/dragon_cmd.cpp	d3e6abb3
@@ -4058,6 +4060,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetF	local		src/game/battle_e6.cpp	63	63	63	src/game/field/quake.cpp	d3e6abb3
 	PartyBattleE6	local		src/game/battle_e6.cpp	65	67	67	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Enemy	local		src/game/battle_e6.cpp	68	68	68	src/game/battle/dragon_cmd.cpp	d3e6abb3
+	EnemyBattleE6	local		src/game/battle_e6.cpp	68	68	68	src/game/battle/dragon_cmd.cpp	25f8d0eb
 	Actor	local		src/game/battle_e6.cpp	69	69	69	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Owner	local		src/game/battle_e6.cpp	70	70	70	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Percent	local		src/game/battle_e6.cpp	73	74	74	src/game/battle/dragon_cmd.cpp	d3e6abb3
@@ -4651,6 +4654,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	ActionRecord	local		src/game/battle_sprites.cpp	108	108	108	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	CurrentAction	local		src/game/battle_sprites.cpp	109	111	111	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Target	local		src/game/battle_sprites.cpp	112	112	112	src/game/battle/dragon_cmd.cpp	d3e6abb3
+	TargetBattleSprites	local		src/game/battle_sprites.cpp	112	112	112	src/game/battle/dragon_cmd.cpp	25f8d0eb
 	SetTarget	local		src/game/battle_sprites.cpp	113	113	113	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	OrLong	copied		src/game/battle_sprites.cpp	114	114	114	src/game/battle/battle_5.cpp	d3e6abb3
 	OrLong	copied		src/game/battle_sprites.cpp	114	114	114	src/game/battle/dragon_cmd.cpp	d3e6abb3
@@ -22353,10 +22357,14 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Flags2	local		src/game/rest_3d.cpp	82	82	82	src/game/effect/effect.cpp	d3e6abb3
 	OrLong	copied		src/game/rest_3d.cpp	83	83	83	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	OrLong	copied		src/game/rest_3d.cpp	83	83	83	src/game/effect/effect.cpp	d3e6abb3
+	OrLongRest3d	copied		src/game/rest_3d.cpp	83	83	83	src/game/battle/dragon_cmd.cpp	25f8d0eb
+	OrLongRest3d	copied		src/game/rest_3d.cpp	83	83	83	src/game/effect/effect.cpp	25f8d0eb
 	AndLong	local		src/game/rest_3d.cpp	84	84	84	src/game/effect/effect.cpp	d3e6abb3
 	Result	local		src/game/rest_3d.cpp	86	86	86	src/game/effect/effect.cpp	d3e6abb3
 	Actor	copied		src/game/rest_3d.cpp	87	87	87	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Actor	copied		src/game/rest_3d.cpp	87	87	87	src/game/effect/effect.cpp	d3e6abb3
+	ActorRest3d	copied		src/game/rest_3d.cpp	87	87	87	src/game/battle/dragon_cmd.cpp	25f8d0eb
+	ActorRest3d	copied		src/game/rest_3d.cpp	87	87	87	src/game/effect/effect.cpp	25f8d0eb
 	Target	copied		src/game/rest_3d.cpp	88	88	88	src/game/battle/dragon_cmd.cpp	d3e6abb3
 	Target	copied		src/game/rest_3d.cpp	88	88	88	src/game/effect/effect.cpp	d3e6abb3
 	Ability	copied		src/game/rest_3d.cpp	89	89	89	src/game/battle/dragon_cmd.cpp	d3e6abb3
