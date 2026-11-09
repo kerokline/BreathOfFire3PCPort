@@ -1043,6 +1043,23 @@ is expected; the doc says so.
    (`data-layout`, `x64-indirect`; group g builds them and re-applies the
    rows, worktree `slb1108\g`, brief `briefs\g.md`); class 1 and the 8
    function promotions stay refused, their readers move with them.
+   **As run (group g, merged 2026-11-08 night, `slb1108\reports\g.md`):** of
+   the 62 blocked rows, 42 applied and 20 stay blocked. Three rows sorted as
+   class 2 or 3 measured as class 1 and were reverted with the gate line in
+   their reason: gfx_clut `g_stp_test` (a bool, x86_64 re-allocates
+   registers in `Gfx_ConvertRow`), sound `g_restore_skip` (the optimiser had
+   split the struct into scalars at both widths), field_frame `g_band_fill`
+   (x86_64 folds its -1). 191 exception rows (116 `data-layout`, 75
+   `x64-indirect`), no new `low32-site` row. The i686 gate now runs with
+   `--exception-classes data-layout`; the tip reads 0 differ at both widths
+   with 52 (i686) / 198 (x86_64) excepted, both self-test suites clean. The
+   mover's file-static-state lines went from 64 to 20: the 7 class-1 rows,
+   7 class-4 `=` rows, the 5 seams blocked for their aliases (none keeps the
+   .cpp's line count), and win_main `g_capcom_movie_only` (item 14). Two
+   gate additions beyond the brief, each from a measured case: an
+   `x64-indirect` row may name the pointer itself (it reads NEW on x86_64,
+   where the folded pointer had no symbol), and a row `NAME@OBJECT` names a
+   pooled symbol (`_GLOBAL__sub_I_*`) of one file.
 11. **The qualification pass:** 289 names in 50 proposed targets that two
    sources' `using namespace <stem>;` lines would make ambiguous (`g` seams
    mostly) want writing as `<stem>::g` in the moved bodies - a body edit by
@@ -1050,9 +1067,52 @@ is expected; the doc says so.
    **Answered 2026-11-08 night: run it.** Group q qualifies the names in two
    passes (100 files first, `briefs\q.md`; the 13 files group g also edits
    after g merges), each name a `qualify` row in `tu_renames.tsv`.
+   **As run, pass 1 (group q, merged 2026-11-08 night, `slb1108\reports\q.md`):**
+   57 sources, 5,100 qualifiers written in place (0 lines added or removed,
+   checked against the pristine tree), 495 `qualify` rows (`tu_renames.py`
+   learnt the kind), gates 0 differ at both widths, self-test clean. The
+   check itself over-counted: `cpp_items` read `X::name` as a use of `name`
+   (needed for reachability), so the mover's ambiguity test could never fall.
+   Items now carry a second set, `uses_unq`, of the bare names, and the test
+   reads it (7fd3efbf): 291 lines became 186 on the merged tree with the
+   check's other 78 lines identical. Of the 178 source/name pairs q listed as
+   "needs g", 120 are `using move_script::At;` style using-declarations in
+   the source's own anonymous namespace: the body means a named namespace's
+   function, so pass 1b writes those as `move_script::At`. The other 58 are
+   real file-locals: item 13.
 12. **The commit trailer:** the groups' commits carry `Co-Authored-By: Claude
    Opus 5.5` (the model that did the work), the coordinator's `Claude Fable
    5.1`; both are signed off. Left as they are unless the owner wants one.
+13. **The 58 real file-locals the qualification pass cannot reach** (q's
+   `needs_g_kind.txt`, 2026-11-08 night): 28 helpers a source defines in its
+   own global anonymous namespace (battle_draw's `At`, `Long`, `Word`,
+   `Device`, `Method`, `Vertex`...; field_misc's `Float`, `Method`,
+   `PutFloat`; event_objs, display_setup, save_menu, battle_items), 29 type
+   aliases (`U`, `Handler`, `Com3`, `Com6` in some 20 files) and one
+   constant (display_setup `kRenderFlags`). In a target that also holds
+   another source's `using namespace battle_flow;`, a body naming `At` sees
+   both and C++ calls it ambiguous; no qualifier can say "the anonymous
+   one" (`::At` searches the using-directives too). Two ways out, both body
+   edits by section 1's rule: rename the local (kind `rename`, as B0's group
+   s did; the gate reads a file-local by its body, so the name is free), or
+   wrap the block in `namespace <stem> {` and qualify. Aliases of the same
+   type are not ambiguous in C++ ([namespace.udir]: the same entity), so the
+   check could learn that and the 29 would mostly fall away by themselves.
+14. **win_main `g_capcom_movie_only`** (DIV-0202, main's PR #212, landed after
+   group s decided its rows): a file-static state variable with no decision
+   row. Promote it (a `data-layout` row if the gate asks) or keep it local
+   with its readers?
+15. **How wide is class 3?** Group a's first case was the narrow form: the
+   call goes through the pointer, branch offsets grow a byte (text_immediate,
+   draw_pass). Five rows are the same mechanism on a pointer x86_64 had
+   proved null (gfx_texcache, map_cells, psx_gte_float, sprite_find,
+   sprite_draw): the branch that calls it and the live-check code behind it
+   had been dropped and now come back (NEW `Live`, `DrawQuads`,
+   `LiveCapture`, `Perspective`, `Draw`, `FakeRelease`; callers change
+   shape). The five seams lose an inlined callee. i686 is identical for all
+   of them, and nothing writes those pointers on x86_64 today, so the code
+   that returns is unreachable. Group g excepted every one as `x64-indirect`,
+   one commit each, so the owner can revert any single one.
 
 ## 8. Ownership, merge order, numbering
 
