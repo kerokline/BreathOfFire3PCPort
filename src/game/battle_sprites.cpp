@@ -102,7 +102,7 @@ namespace {
 
 // Actor records, indexed in 32 bits as the originals' lea chains do.
 unsigned char* Party(std::uint32_t i) { return At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
-unsigned char* Enemy(std::uint32_t i) { return At(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
+unsigned char* Enemy(std::uint32_t i) { return At(::bof3::Img(Battle_Enemies_addr) + i * battle_sprites::at::kEnemyStride); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
 unsigned char* ActionRecord(std::uint32_t action) { return At(::bof3::Img(at::kActions.v) + action * at::kActionStride); }
@@ -112,7 +112,7 @@ std::uint16_t CurrentAction() { return rv::As<records::ActionRecord>(Ptr(At(::bo
 unsigned char Target() { return At(::bof3::Img(at::kTarget.v))[0]; }
 void SetTarget(unsigned char t) { At(::bof3::Img(at::kTarget.v))[0] = t; }
 void OrLong(unsigned char* at, std::uint32_t bits) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) | bits)); }
-unsigned char* EnemyData(std::uint32_t id) { return At(::bof3::Img(at::kEnemyData.v) + id * at::kEnemyDataStride); }
+unsigned char* EnemyData(std::uint32_t id) { return At(::bof3::Img(battle_sprites::at::kEnemyData.v) + id * battle_sprites::at::kEnemyDataStride); }
 
 // The four action ids that want a target that is out (Battle_ActionSuitsTarget,
 // Battle_MemberOutAction): by their shape revivals - unconfirmed.
@@ -829,7 +829,7 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     Sprite_Current[0x5C] = 0;
     Sprite_Current[6] = 0;
     Sprite_Current[7] = 0;
-    const unsigned char layout = static_cast<unsigned char>(At(::bof3::Img(at::kLayout.v))[0] ^ 2);
+    const unsigned char layout = static_cast<unsigned char>(At(::bof3::Img(battle_sprites::at::kLayout.v))[0] ^ 2);
     rv::Current<records::BattleEnemy>()->layout = layout;
     Sprite_Current[0x48] = 0;
     rv::Current<records::BattleEnemy>()->animation = 0xFF;
@@ -968,9 +968,9 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                     counts[j + 1] = tc;
                 }
 
-    const unsigned layout = At(::bof3::Img(at::kLayout.v))[0];
-    const std::uint16_t x = Word(At(::bof3::Img(at::kNamePlaces.v) + layout * 4));
-    std::uint16_t y = Word(At(::bof3::Img(at::kNamePlaces.v) + layout * 4 + 2));
+    const unsigned layout = At(::bof3::Img(battle_sprites::at::kLayout.v))[0];
+    const std::uint16_t x = Word(At(::bof3::Img(battle_sprites::at::kNamePlaces.v) + layout * 4));
+    std::uint16_t y = Word(At(::bof3::Img(battle_sprites::at::kNamePlaces.v) + layout * 4 + 2));
     if (layout < 2) {
         for (unsigned char k = 0;;) {
             y = static_cast<std::uint16_t>(y + static_cast<std::uint16_t>(count(k) << 3) + 0xD);
@@ -992,7 +992,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                 if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->enemy_kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
-                    unsigned char* const w = At(::bof3::Img(WindowRecords_addr) + 0x1B0 - shown * at::kWindowStride);
+                    unsigned char* const w = At(::bof3::Img(WindowRecords_addr) + 0x1B0 - shown * battle_sprites::at::kWindowStride);
                     auto* const window_rec = rv::As<records::WindowRecord>(w);
                     window_rec->kind = 4;
                     window_rec->state = 0;
