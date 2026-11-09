@@ -95,6 +95,6 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
     SH_CALL(Char_RecalcStats)(rec);
 }
 
-void Char_Inject() {
+void FieldChar_Inject() {
     BOF3_INJECT(Char_LevelUp);
 }

@@ -1074,7 +1074,7 @@ extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned 
     return base + kLists[type];
 }
 
-void Char_Inject() {
+void MenuChar_Inject() {
     BOF3_INJECT(Menu_DrawIcon);
     BOF3_INJECT(Menu_DrawHand);
     BOF3_INJECT(Char_RecalcStats);

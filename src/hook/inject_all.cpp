@@ -1604,7 +1604,7 @@ void InjectAll() {
     ScenaSx_Inject();           // round 10 group SX (the engine callees the chapters and areas call by raw address,
                                 // eighteen): its clones' calls re-aimed at the scenario harness's recorders; no
                                 // module patches bytes inside its 18 (DIVERGENCE.md, cheats.cpp): order does not
-    Char_Inject();
+    FieldChar_Inject();
     AreaW1b_Inject();           // round 10 group AR1B (world 1, areas 42..47): its clones' calls re-aimed at the
                                 // area harness's recorders, its .data state tables swapped for the fuzz only; no
                                 // module patches bytes inside its 55 (DIVERGENCE.md, cheats.cpp): order does not
@@ -2724,6 +2724,7 @@ void InjectAll() {
     TransitionFromModeRest_Inject();
     GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
     ItemTrade_Inject();
+    MenuChar_Inject();
     CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
