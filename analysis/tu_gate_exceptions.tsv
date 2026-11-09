@@ -97,3 +97,11 @@ Title_DrawLogo	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIF
 Title_Sprite	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_Sprite  first at instruction 18: 'call @r4:Gpu_SetSprt' -> 'call qword ptr [rip + 0x60] @r4:_ZN10mode_tasks1gE'	
 Title_Task	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_Task  first at instruction 9: 'call @r4:Task_ClearPrivate' -> 'call qword ptr [rip] @r4:_ZN10mode_tasks1gE'	
 _ZN10mode_tasks1gE	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: NEW _ZN10mode_tasks1gE  (data)	
+MoveScript_Group6	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_Group6  first at instruction 46: 'call @r4:Sprite_SetAnimation' -> 'call qword ptr [rip + 0x38] @r4:_ZN11move_groups1gE'	
+MoveScript_Group8	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_Group8  first at instruction 13: 'ja .+2EF' -> 'ja .+2FD'	
+MoveScript_Group9	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_Group9  first at instruction 10: 'ja .+59' -> 'ja .+5A'	
+MoveScript_GroupB	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupB  first at instruction 9: 'ja .+149' -> 'ja .+16B'	
+MoveScript_GroupC	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupC  first at instruction 13: 'ja .+5B2' -> 'ja .+5C5'	
+MoveScript_GroupD	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupD  first at instruction 11: 'ja .+238' -> 'ja .+23C'	
+MoveScript_GroupE	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: DIFFER MoveScript_GroupE  first at instruction 11: 'ja .+3A9' -> 'ja .+3B8'	
+_ZN11move_groups1gE	x64-indirect	B0 promotion of move_groups.cpp's Callees g seam: NEW _ZN11move_groups1gE  (data)	

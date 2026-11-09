@@ -26,50 +26,15 @@ using AreaHandler = void (__cdecl*)();
 // Where a generated data name lives (its name is a macro, so bof3::addr:: cannot be used with it).
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-// Every callee, through pointers so that the start-up fuzz can stand recording
-// functions in for them, for the original's copies and for ours alike. The
-// area's handler table (op DE) and its +0x18 script array (op 86) are read
-// from memory, as the original reads them.
-struct CalleesMoveGroups {
-    int (__cdecl* kind)();
-    void (__cdecl* face)(unsigned char);
-    unsigned char (__cdecl* turn_target)(unsigned char*);   // its result unread by group E
-    void (__cdecl* op_e7)(unsigned char);
-    unsigned char (__cdecl* op_e9)(unsigned char*, signed char, signed char, unsigned short, unsigned short, unsigned char, unsigned char);
-    unsigned char (__cdecl* tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
-    void (__cdecl* tint_release)(unsigned char*);
-    void (__cdecl* set_animation)(unsigned char);
-    unsigned char (__cdecl* animation_bank)(unsigned short);
-    long (__cdecl* elevation)(long, long);
-    void (__cdecl* set_elevation)(int);
-    unsigned short (__cdecl* peek)();
-    void (__cdecl* play_by_id)(unsigned short);
-    void (__cdecl* sound)(unsigned short);
-    void (__cdecl* music_play)(unsigned int, int);
-    void (__cdecl* fade_out_stop)(int);
-    void (__cdecl* fade_in)(int);
-    void (__cdecl* fade_out)(int);
-    void (__cdecl* op_b8)(unsigned char);
-    void (__cdecl* op_db)();
-    unsigned char (__cdecl* test_fb)(short, short);
-    unsigned char (__cdecl* test_fc)(short, short);
-    unsigned char (__cdecl* effect_spawn)(unsigned char, signed char, signed char, short, short);
-    unsigned char (__cdecl* effect_spawn_at)(unsigned char, signed char, signed char, long, long, long);
-    long* (__cdecl* handle_position)(long*, unsigned char, unsigned char);
-    void (__cdecl* op_87)();
-    void (__cdecl* op_88)();
-    void (__cdecl* load_stream)(unsigned);   // Sound_LoadStream reads the whole dword (save_menu.cpp)
-    int (__cdecl* stream_done)();
-};
-const CalleesMoveGroups kOriginalsMoveGroups = {
+const move_groups::CalleesMoveGroups kOriginalsMoveGroups = {
     MoveScript_ObjectKind, Sprite_FaceDirection, MoveScript_SetTurnTarget, MoveCmd_OpE7, MoveCmd_OpE9,
     Sprite_SetTint, Sprite_ReleaseTint, Sprite_SetAnimation, Sprite_SetAnimationBank, AreaMap_Elevation,
     MapView_SetElevation, Sprite_ScriptPeek, Sound_PlayById, Sound_PlayEffect, Music_Play, Music_FadeOutStop,
     Music_FadeIn, Music_FadeOut, Port_DroppedCall, MoveCmd_OpDB, MoveCmd_TestFB, MoveCmd_TestFC, Effect_Spawn,
     Effect_SpawnAt, MoveCmd_HandlePosition, MoveCmd_Op87, MoveCmd_Op88, Sound_LoadStream, Sound_StreamDone,
 };
-CalleesMoveGroups g = kOriginalsMoveGroups;
-
+}  namespace move_groups { CalleesMoveGroups g = kOriginalsMoveGroups; }
+namespace {
 // An 8.8 operand pair as the C and D groups add it: the high byte signed, the
 // two shifted into bits 8..23 of a 16.16 value.
 std::int32_t Fixed88(const unsigned char* at) {
@@ -99,8 +64,8 @@ unsigned char* ActiveMember() { return Field_ActiveMember; }
 // facing (kind 1: the animation itself), and the op repeats.
 unsigned char TurnStep(unsigned char* object, unsigned char direction, unsigned char mode) {
     rv::Current<records::SpriteHead>()->direction = direction;
-    if (g.kind() == 1) g.set_animation(rv::Current<records::SpriteHead>()->direction);
-    else g.face(rv::Current<records::SpriteHead>()->direction);
+    if (move_groups::g.kind() == 1) move_groups::g.set_animation(rv::Current<records::SpriteHead>()->direction);
+    else move_groups::g.face(rv::Current<records::SpriteHead>()->direction);
     object[1] = mode;
     SetPos(object, Pos(object) - 1u);
     return rv::Current<records::SpriteHead>()->direction;
@@ -115,14 +80,14 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
     const unsigned char op = p[0];
     if (op >= 0x90 && op <= 0x95) {
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const unsigned char n = g.effect_spawn(static_cast<unsigned char>(op - 0x90), static_cast<signed char>(p[1]),
+        const unsigned char n = move_groups::g.effect_spawn(static_cast<unsigned char>(op - 0x90), static_cast<signed char>(p[1]),
                                                static_cast<signed char>(p[2]), static_cast<short>(static_cast<std::uint16_t>(sprite->screen_x)),
                                                static_cast<short>(static_cast<std::uint16_t>(sprite->screen_y)));
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op >= 0x98 && op <= 0x9D) {
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
-        const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(op - 0x98), static_cast<signed char>(p[1]),
+        const unsigned char n = move_groups::g.effect_spawn_at(static_cast<unsigned char>(op - 0x98), static_cast<signed char>(p[1]),
                                                   static_cast<signed char>(p[2]), sprite->x, sprite->z,
                                                   sprite->height);
         Sprite_Current[0xB] = n;
@@ -153,7 +118,7 @@ extern "C" unsigned char __cdecl MoveScript_Group6(unsigned char* object, const 
     }
     object[0] |= 0x40;
     rv::Current<records::SpriteHead>()->flags2 |= 8;
-    g.set_animation(animation);
+    move_groups::g.set_animation(animation);
     return rv::Current<records::SpriteHead>()->direction;
 }
 
@@ -166,42 +131,42 @@ extern "C" void __cdecl MoveScript_GroupB(unsigned char* object, const unsigned 
     const unsigned char* const p = script + Pos(object);
     switch (p[0]) {
     case 0xB0: case 0xB1: case 0xB2: case 0xB3:
-        g.sound(static_cast<unsigned short>(p[1] + 0x100u * (p[0] - 0xB0u)));
+        move_groups::g.sound(static_cast<unsigned short>(p[1] + 0x100u * (p[0] - 0xB0u)));
         SetPos(object, Pos(object) + 1u);
         break;
     case 0xB4: case 0xBE:
-        g.music_play(p[1], 8);
+        move_groups::g.music_play(p[1], 8);
         SetPos(object, Pos(object) + 1u);
         break;
     case 0xB5:
-        g.fade_out_stop(8);
+        move_groups::g.fade_out_stop(8);
         SetPos(object, Pos(object) + 1u);
         break;
     case 0xB8:   // DIVERGENCE DIV-0170: the PlayStation's 0x8015D300(b1, b2, b3, b3) - the song restarted at b3
         if (sound_sp::g_b8) sound_sp::OpB8(p[1], p[2], p[3]);
-        else g.op_b8(p[2]);
+        else move_groups::g.op_b8(p[2]);
         SetPos(object, Pos(object) + 3u);
         break;
     case 0xB9:
-        g.fade_out_stop(10);
+        move_groups::g.fade_out_stop(10);
         SetPos(object, Pos(object) + 2u);
         break;
     case 0xBA:
-        g.fade_in(p[4]);
+        move_groups::g.fade_in(p[4]);
         SetPos(object, Pos(object) + 4u);
         break;
     case 0xBB:
-        g.fade_out(p[4]);
+        move_groups::g.fade_out(p[4]);
         SetPos(object, Pos(object) + 4u);
         break;
     case 0xBC:   // DIVERGENCE DIV-0172: the PlayStation's 0x8015D7C8(b1:b2, b3, b4) - the level table's b3 / b4
         if (sound_sp::Routed()) sound_sp::PlayLevel(static_cast<unsigned short>(p[1] << 8 | p[2]), p[3], p[4]);
-        else g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
+        else move_groups::g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
         SetPos(object, Pos(object) + 4u);
         break;
     case 0xBD:   // DIVERGENCE DIV-0172: the PlayStation's 0x8015D820(b1:b2, b3) - only near object b3
         if (sound_sp::Routed()) sound_sp::PlayNear(static_cast<unsigned short>(p[1] << 8 | p[2]), p[3]);
-        else g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
+        else move_groups::g.play_by_id(static_cast<unsigned short>(p[1] << 8 | p[2]));
         SetPos(object, Pos(object) + 3u);
         break;
     default:   // B6, B7, BF: nothing
@@ -217,9 +182,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
     switch (op) {
     case 0xE1:   // E1 d t: face d, then turn toward t
         object[5] = rv::Current<records::SpriteHead>()->direction;
-        g.face(p[1]);
+        move_groups::g.face(p[1]);
         SetWord(object + 8, script[Pos(object) + 2u]);
-        g.turn_target(object);
+        move_groups::g.turn_target(object);
         SetPos(object, Pos(object) + 2u);
         object[0] = static_cast<unsigned char>((object[0] & 0xEF) | 0x20);
         return 0xFF;
@@ -228,13 +193,13 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
             object[0] |= 8;
             object[5] = rv::Current<records::SpriteHead>()->direction;
             value = static_cast<unsigned char>(ObjTrio[0].direction ^ 4);
-            g.face(value);
+            move_groups::g.face(value);
         } else {
             object[5] = rv::Current<records::SpriteHead>()->direction & 7;
         }
         SetPos(object, Pos(object) + 1u);
         SetWord(object + 8, script[Pos(object)]);
-        g.turn_target(object);
+        move_groups::g.turn_target(object);
         const auto flags = static_cast<unsigned char>(object[0] & 0xEF);
         object[0] = flags;
         object[0] = static_cast<unsigned char>((rv::Current<records::SpriteHead>()->flags2 & 4) ? flags & 0xDF : flags | 0x20);
@@ -258,18 +223,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         return value;
     case 0xE7:
         SetPos(object, pos + 1u);
-        g.op_e7(script[Pos(object)]);
+        move_groups::g.op_e7(script[Pos(object)]);
         object[7] = 0;
         return 0xFF;
     case 0xE8:
         SetPos(object, pos + 1u);
         object[4] = script[Pos(object)];
-        return g.kind() == 2 ? 0 : value;
+        return move_groups::g.kind() == 2 ? 0 : value;
     case 0xE9:
-        if (g.op_e9(object, static_cast<signed char>(p[1]), static_cast<signed char>(p[2]),
+        if (move_groups::g.op_e9(object, static_cast<signed char>(p[1]), static_cast<signed char>(p[2]),
                     static_cast<unsigned short>(p[3] << 8 | p[4]), static_cast<unsigned short>(p[5] << 8 | p[6]), p[7], p[8])) {
             SetPos(object, Pos(object) - 1u);
-            return g.kind() == 2 ? rv::Current<records::SpriteHead>()->direction : 0xFF;
+            return move_groups::g.kind() == 2 ? rv::Current<records::SpriteHead>()->direction : 0xFF;
         }
         SetPos(object, Pos(object) + 8u);
         return value;
@@ -280,7 +245,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
             rv::Current<records::SpriteHead>()->shade[1] = script[Pos(object) + 2u];
             rv::Current<records::SpriteHead>()->shade[2] = script[Pos(object) + 3u];
         } else {
-            g.tint(rv::Bytes(sprite), p[1], p[2], p[3], p[4]);
+            move_groups::g.tint(rv::Bytes(sprite), p[1], p[2], p[3], p[4]);
         }
         SetPos(object, Pos(object) + 4u);
         return value;
@@ -311,18 +276,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         const long z = Field_Kind2Z, x = Field_Kind2X;
         rv::Store<std::int32_t>(Sprite_Kind2.x, x);
         rv::Store<std::int32_t>(Sprite_Kind2.z, z);
-        rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(g.elevation(x, z)));
+        rv::Store<unsigned>(Sprite_Kind2.height_whole, static_cast<unsigned>(move_groups::g.elevation(x, z)));
         return value;
     }
     case 0xD1:   // D1 hi lo x s: sound hi:lo when the sprite's script reaches x
         if (Field_Request != 3) {
-            const std::uint16_t next = g.peek();
+            const std::uint16_t next = move_groups::g.peek();
             SetWord(Scratch(), next);
             if (rv::Current<records::SpriteHead>()->script_pos != next) {
                 const unsigned char* const q = script + Pos(object);
                 // DIVERGENCE DIV-0172: the PlayStation's 0x8015D820(hi:lo, s) (GAME.EMI US 0x801AA568).
                 if (next == q[3] && sound_sp::Routed()) sound_sp::PlayNear(static_cast<unsigned short>(q[1] << 8 | q[2]), q[4]);
-                else if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
+                else if (next == q[3]) move_groups::g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
             }
         }
         SetPos(object, Pos(object) + 4u);
@@ -391,14 +356,14 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         if (Transition_Busy != 0) SetPos(object, pos - 1u);
         return value;
     case 0xDB:
-        g.op_db();
-        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z)));
+        move_groups::g.op_db();
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(move_groups::g.elevation(rv::Current<records::SpriteHead>()->x, rv::Current<records::SpriteHead>()->z)));
         [[fallthrough]];
     case 0xDC:
-        g.test_fb(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
+        move_groups::g.test_fb(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDD:
-        g.test_fc(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
+        move_groups::g.test_fc(static_cast<short>(rv::Current<records::SpriteHead>()->x_whole), static_cast<short>(rv::Current<records::SpriteHead>()->z_whole));
         return value;
     case 0xDE: {   // DE n: the area's handler n, as flow op 03
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
@@ -425,8 +390,8 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
     const auto operand = [&](unsigned i) { return script[Pos(object) + i]; };
     switch (p[0]) {
     case 0xC0: {   // C0 r g b a: a tint, its record kept by the field (kind 1) or the party member
-        const bool field = g.kind() == 1;
-        const unsigned char n = g.tint(Sprite_Current, operand(1), operand(2), operand(3), operand(4));
+        const bool field = move_groups::g.kind() == 1;
+        const unsigned char n = move_groups::g.tint(Sprite_Current, operand(1), operand(2), operand(3), operand(4));
         if (field) Field_State[0x149] = n;
         else ActiveMember()[0x9F] = n;
         SetPos(object, Pos(object) + 4u);
@@ -434,7 +399,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
     }
     case 0xC1: case 0xC2: {   // C1 / C2 r g b: brighten / darken that record
         const bool add = p[0] == 0xC1;
-        const unsigned char* const owner = g.kind() == 1 ? Field_State + 0x149 : ActiveMember() + 0x9F;
+        const unsigned char* const owner = move_groups::g.kind() == 1 ? Field_State + 0x149 : ActiveMember() + 0x9F;
         for (unsigned i = 0; i < 3; ++i) {
             unsigned char* const c = TintRecord(*owner) + 2 + i;
             *c = static_cast<unsigned char>(add ? *c + operand(1 + i) : *c - operand(1 + i));
@@ -488,8 +453,8 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xCB:
-        g.animation_bank(static_cast<unsigned short>(p[1] << 8 | p[2]));
-        g.set_animation(operand(3));
+        move_groups::g.animation_bank(static_cast<unsigned short>(p[1] << 8 | p[2]));
+        move_groups::g.set_animation(operand(3));
         rv::Current<records::SpriteHead>()->flip = operand(4) & 1;
         SetPos(object, Pos(object) + 4u);
         return value;
@@ -497,7 +462,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         if (!(object[0] & 0x20) && (object[0] & 0x10)) SetPos(object, pos - 1u);
         return value;
     case 0xCD:
-        g.tint_release(Sprite_Current);
+        move_groups::g.tint_release(Sprite_Current);
         return value;
     case 0xCE: {   // turn toward ObjTrio 0's direction, reversed
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
@@ -527,7 +492,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
     case 0x83: object[0] |= 4; return value;
     case 0x84: {   // 84 h b: to the position of the object handle h names
         long buffer[4];
-        const long* const at = g.handle_position(buffer, p[1], p[2]);
+        const long* const at = move_groups::g.handle_position(buffer, p[1], p[2]);
         const long x = at[0], y = at[1], z = at[2];
         rv::Current<records::SpriteHead>()->x = x;
         rv::Current<records::SpriteHead>()->z = y;
@@ -539,7 +504,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         const long x = Field_Kind2X, to_x = ObjTrio[0].x, to_z = ObjTrio[0].z, z = Field_Kind2Z;
         if (x == to_x && z == to_z) {
             if (Field_Kind2Hold == 0) {
-                g.set_elevation(g.elevation(x, z));
+                move_groups::g.set_elevation(move_groups::g.elevation(x, z));
                 return value;
             }
             SetPos(object, pos - 1u);
@@ -553,11 +518,11 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         unsigned char steps = away(x, to_x);
         const unsigned char steps_z = away(z, to_z);
         if (steps < steps_z) steps = steps_z;
-        g.elevation(x, z);
+        move_groups::g.elevation(x, z);
         const long nx = ObjTrio[0].x, nz = ObjTrio[0].z;
         Field_Kind2X = nx;
         Field_Kind2Z = nz;
-        const long h = g.elevation(nx, nz);
+        const long h = move_groups::g.elevation(nx, nz);
         MoveScript_F3Divisor = 0x20;
         if (steps == 0) {
             MoveScript_FAWord = 0;
@@ -568,7 +533,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         return value;
     }
     case 0x86: {   // 86 n: hand over to the area's +0x18 script n (kind 1), else n to context +3; restart
-        if (g.kind() == 1) {
+        if (move_groups::g.kind() == 1) {
             const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
             const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x18));   // a table of 32-bit places
             const std::int32_t next = Long(At(scripts + 4u * script[Pos(object) + 1u]));
@@ -579,22 +544,22 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         SetPos(object, 0xFFFF);
         return value;
     }
-    case 0x87: g.op_87(); return value;
-    case 0x88: g.op_88(); return value;
+    case 0x87: move_groups::g.op_87(); return value;
+    case 0x88: move_groups::g.op_88(); return value;
     case 0x89:
-        g.load_stream(static_cast<unsigned short>(p[1] << 8 | p[2]));
+        move_groups::g.load_stream(static_cast<unsigned short>(p[1] << 8 | p[2]));
         SetPos(object, Pos(object) + 2u);
         return value;
     case 0x8A:
         SetPos(object, pos + 2u);
         return value;
     case 0x8B:
-        if (g.stream_done() == 0) SetPos(object, Pos(object) - 1u);
+        if (move_groups::g.stream_done() == 0) SetPos(object, Pos(object) - 1u);
         return value;
     case 0x8C: {
         records::SpriteHead* const sprite = rv::Current<records::SpriteHead>();
         const auto arg = static_cast<signed char>(MoveScript_EffectArg[Character_IndexById[Field_State[0x89]]]);
-        const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(p[1] - 0x90), p[1] == 0x94 ? 10 : 0, arg,
+        const unsigned char n = move_groups::g.effect_spawn_at(static_cast<unsigned char>(p[1] - 0x90), p[1] == 0x94 ? 10 : 0, arg,
                                                   sprite->x, sprite->z, sprite->height);
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 1u);
@@ -726,7 +691,7 @@ constexpr std::array<void*, sizeof...(I)> AreaStubs(std::index_sequence<I...>) {
 }
 const auto kAreaStubs = AreaStubs(std::make_index_sequence<256>());
 
-const CalleesMoveGroups kStubs = {
+const move_groups::CalleesMoveGroups kStubs = {
     StubKind, StubFace, StubTurnTarget, StubOpE7, StubOpE9, StubTint, StubTintRelease, StubSetAnimation,
     StubAnimationBank, StubElevation, StubSetElevation, StubPeek, StubPlayById, StubSound, StubMusicPlay,
     StubFadeOutStop, StubFadeIn, StubFadeOut, StubOpB8, StubOpDB, StubTestFB, StubTestFC, StubEffectSpawn,
@@ -922,7 +887,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
     std::memcpy(g_descriptor + 0x3C, &area_table, sizeof area_table);
     unsigned char** const scripts = g_scripts18;
     std::memcpy(g_descriptor + 0x18, &scripts, sizeof scripts);
-    g = kStubs;
+    move_groups::g = kStubs;
 
     unsigned bad = 0, calls = 0, per_group[kGroupCount] = {}, ops[256] = {};
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -976,7 +941,7 @@ void SelfTest(void* const (&theirs)[kGroupCount]) {
                       "log %u / %u", round, grp.name, op, their_out.result, our_out.result, Pos(their_out.object),
                       Pos(our_out.object), their_out.log_n, our_out.log_n);
     }
-    g = kOriginalsMoveGroups;
+    move_groups::g = kOriginalsMoveGroups;
     Field_State = saved_field;
     Apply(saved);
     unsigned covered = 0, listed = 0;
