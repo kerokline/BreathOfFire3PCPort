@@ -209,7 +209,15 @@ class Item:
         if self.c_linkage:
             return self.is_static
         return ("" in self.ns or self.is_static or self.kind in ("using", "alias", "typedef", "type")
-                or (self.is_var and self.is_const and not self.is_extern))
+                or (self.is_var and self.is_const and not self.is_extern)
+                or self.is_function_template)
+
+    @property
+    def is_function_template(self) -> bool:
+        """A function template defined in a .cpp (field_s.cpp's SortShared): its linkage is external,
+        but every file that instantiates it needs the definition, so the mover handles it as it does
+        a file-local - copied to each file that uses it, the copies the same text."""
+        return self.kind == "func" and self.text[self.code_start - self.start:].lstrip().startswith("template")
 
 
 def _line_start(src: str, off: int) -> int:
