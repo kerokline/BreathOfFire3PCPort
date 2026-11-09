@@ -26,10 +26,7 @@ bool MusicLogOn();  // sound.cpp: BOF3X_MUSIC_LOG
 }
 
 using sound::ComCall;
-using sound::ComCreate;
-using sound::ComPlay;
 using sound::ComStatus;
-using sound::ComValue;
 // sound::Method is named in full below (source-layout B0, analysis/tu_renames.tsv).
 
 namespace sound_rest {
@@ -37,15 +34,6 @@ namespace {
 
 unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
-std::uint32_t Dword(std::uint32_t address) {
-    std::uint32_t v;
-    std::memcpy(&v, At(address), sizeof v);
-    return v;
-}
-void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address), &v, sizeof v); }
-void SetWord(std::uint32_t address, std::uint16_t v) { std::memcpy(At(address), &v, sizeof v); }
-
-void Release(void* object) { sound::Method<ComCall>(object, sound::kRelease)(object); }
 
 }  // namespace
 
@@ -66,96 +54,6 @@ extern "C" Callees SoundRest_g = kOriginals;
 // ours) does not read it.
 extern "C" int __cdecl Sound_PauseAllEax(void) BOF3_ASM_NAME(Sound_PauseAll);
 
-// original 0x587B80: `jmp Music_Halt`. The caller's ecx and stack reach
-// Music_Halt as they were: a jump through SoundRest_g, not a call. A pair by
-// width (docs/x64-asm-policy.md 8 unit 5): the i686 operand's offset is the
-// table of 4-byte pointers', the x86_64 half's is offsetof over the 8-byte
-// ones, RIP-relative (sound_rest_callees.h's assert ties the two).
-extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
-#if defined(__i386__)
-    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
-#elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
-#else
-#error "no callee-table jump for this architecture"
-#endif
-}
-
-// original 0x587B90: `jmp Music_Resume`, the same way.
-extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
-#if defined(__i386__)
-    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
-#elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
-#else
-#error "no callee-table jump for this architecture"
-#endif
-}
-
-// original 0x587C20: `jmp Music_IsPlaying`, the same way - Music_IsPlaying
-// reads the ecx it is handed (save_menu.cpp). Its callers are Game_Mode 3's
-// steps 0x495BC0 and 0x495C50, still Capcom's (docs/sound-rest.md section 5).
-extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
-#if defined(__i386__)
-    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
-#elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
-#else
-#error "no callee-table jump for this architecture"
-#endif
-}
-
-// original 0x587C30: everything paused - WndProc's on a deactivation and on
-// F9. Each of the 23 Sound_Channels dwords that is not 0, SndBuf_Stop (the
-// dwords kept, unlike Sound_StopChannels'); with a stream kind above 0, the
-// SND stream's buffer SndStream_Stop stops and releases; then the music,
-// Music_Halt, whose eax is the answer.
-// As the original has it: each dword read afresh, after the call before it;
-// the kind read after the walk. The original's tail jump hands Music_Halt the
-// ecx its last callee left (or its own caller's): ours hands it what ours
-// leaves - a value no one set either way, read only where DirectSound's
-// GetStatus does not write its out (section 3).
-int Sound_PauseAllEax(void) {
-    for (std::uint32_t p = sound_rest::Address(Sound_Channels); p < ::bof3::Img(sound_rest::kChannelsEnd); p += 4) {
-        const std::uint32_t buffer = sound_rest::Dword(p);
-        if (buffer != 0) SoundRest_g.sndbuf_stop(sound_rest::At(buffer));
-    }
-    if (SaveMenu_StreamKind != 0) SoundRest_g.stream_stop();
-    return SoundRest_g.halt();
-}
-
-// original 0x5A6C60: a voice's volume - level 0..127 as DirectSound
-// hundredths of a decibel, fild(level) * (1 / 127.0) * 10000.0 - 10000.0,
-// truncated as the CRT's _ftol 0x5B9550 does (round toward zero in a copy of
-// the control word for one fistp to 64 bits; the low dword). The x87 as the
-// original, on the image's own floats, so it rounds as the original under any
-// control word. Nothing for a null buffer.
-// As the original has it: the level is not clamped - above 127 asks for more
-// than 0, below 0 for less than -10000, which DirectSound refuses
-// (DSERR_INVALIDPARAM) and the original does not look at.
-extern "C" void __cdecl SndBuf_SetVolume(void* buffer, int level) {
-    if (buffer == nullptr) return;
-    std::int64_t value;
-    unsigned short saved, truncating;
-    __asm__ volatile(
-        "fildl %[level]\n\t"
-        "fmuls %[inverse]\n\t"
-        "fmuls %[scale]\n\t"
-        "fsubs %[scale]\n\t"
-        "fnstcw %[saved]\n\t"
-        "movw %[saved], %%ax\n\t"
-        "orb $0x0C, %%ah\n\t"
-        "movw %%ax, %[truncating]\n\t"
-        "fldcw %[truncating]\n\t"
-        "fistpll %[value]\n\t"
-        "fldcw %[saved]\n\t"
-        : [value] "=m"(value), [saved] "=m"(saved), [truncating] "=m"(truncating)
-        : [level] "m"(level), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-          [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-        : "eax", "st");
-    sound::Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(value)));
-}
-
 // original 0x5A6FF0 (Music_Stop 0x5A7050 byte for byte): the music stopped if
 // it plays. GetStatus into a local nothing initialises - the slot the entry's
 // `push ecx` made - so a GetStatus that does not write it leaves the caller's
@@ -173,21 +71,6 @@ extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
     return static_cast<int>(sound::Method<ComCall>(playing, sound::kStop)(playing));
 }
 
-// original 0x5A7080: the music played again, looping, from where it stopped
-// (Play(0, 0, DSBPLAY_LOOPING); no rewind). eax Play's, or 0 without a buffer.
-//
-// DIVERGENCE DIV-0177 (sound_in.h): after a jingle the game had bracketed with
-// Sound_StopMusic, the song taken at the jingle's start is started again
-// instead (eax 0, DS_OK) - the ring holds the spent jingle, which Capcom's
-// Play would replay. With the switch off, or no such song, Capcom's.
-extern "C" int __cdecl Music_Resume(void) {
-    if (sound::MusicLogOn()) bof3::Log("music_log   f%u Music_Resume track %u", Frame_Counter, static_cast<unsigned>(Music_Track));
-    if (sound_in::JingleResume()) return 0;  // DIV-0177
-    void* const buffer = Music_Buffer;
-    if (buffer == nullptr) return 0;
-    return static_cast<int>(sound::Method<ComPlay>(buffer, sound::kPlay)(buffer, 0, 0, kLooping));
-}
-
 // original 0x5A7200 (Music_IsPlaying 0x5A7020 on the other buffer): 1 if the
 // SND stream's buffer plays. 0 without it; else GetStatus into the slot of the
 // entry's `push ecx` - the caller's ecx for a GetStatus that does not write
@@ -200,110 +83,6 @@ extern "C" int __cdecl SoundRest_StreamPlayingBody(std::uint32_t ecx) {
     return (status & 1) ? 1 : 0;
 }
 
-// The two entries whose originals read the ecx their caller left: each passes
-// it to its body, above, as it found it - a pair by width
-// (docs/x64-asm-policy.md 8 unit 4): on i686 pushed as the body's argument,
-// on x86-64 one jump, since the caller's ecx is the first argument register
-// already.
-extern "C" __attribute__((naked)) int __cdecl Music_Halt(void) {
-#if defined(__i386__)
-    __asm__ volatile(
-        "push %ecx\n\t"
-        "call " BOF3_SYM(SoundRest_HaltBody) "\n\t"
-        "add $4, %esp\n\t"
-        "ret");
-#elif defined(__x86_64__)
-    __asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody));   // the caller's ecx is the body's first argument already
-#else
-#error "no ecx entry for this architecture"
-#endif
-}
-extern "C" __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
-#if defined(__i386__)
-    __asm__ volatile(
-        "push %ecx\n\t"
-        "call " BOF3_SYM(SoundRest_StreamPlayingBody) "\n\t"
-        "add $4, %esp\n\t"
-        "ret");
-#elif defined(__x86_64__)
-    __asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody));   // the caller's ecx is the body's first argument already
-#else
-#error "no ecx entry for this architecture"
-#endif
-}
-
-// original 0x5A6830: the sound set-up, Game_Init's (hwnd Game_Hwnd). The
-// DirectSound device, made once - nothing if Snd_Device is already set - in
-// exclusive cooperation with the window, and its primary buffer set to
-// 22,050 Hz 8-bit stereo PCM. Nothing more: the voices' buffers come with
-// each DAT's bank (Snd_LoadBank), the music's stream and the MP3 decoder with
-// each track (Music_Start), the SND stream with each stream. 0, or 100..103
-// for the step that failed, with what that step had made let go and cleared;
-// Game_Init does not read it, and a game without a device plays silent
-// (SndBuf_FromWave and Music_Start do nothing without one).
-// As the original has it: any non-zero result is a failure (S_FALSE too);
-// DirectSoundCreate writes Snd_Device directly, and Snd_Device and Snd_Primary
-// are read again after every call; on the format's failure the primary is
-// read after the device's Release and before Snd_Device is cleared. The
-// format's words are stored around the dwords as the original orders them.
-extern "C" int __cdecl Snd_Init(void* hwnd) {
-    if (Snd_Device != nullptr) return 0;
-    // The slot as the out parameter DirectSoundCreate writes (void**): the
-    // 32-bit spelling, since Snd_Device is a 4-byte Slot32<void> and the
-    // callee is Windows'. B5's sound layer (docs/x64-build-design.md 6.3)
-    // replaces this call on both widths; until then it is 32-bit only.
-    if (SoundRest_g.create(nullptr, reinterpret_cast<void**>(&Snd_Device), nullptr) != 0) {
-        Snd_Device = nullptr;
-        return kNoDevice;
-    }
-    void* device = Snd_Device;
-    if (sound::Method<ComCooperate>(device, sound_rest::kSetCooperativeLevel)(device, hwnd, kExclusive) != 0) {
-        Release(Snd_Device);
-        Snd_Device = nullptr;
-        return kNoCooperation;
-    }
-    const std::uint32_t desc = Address(Snd_BufferDesc);
-    std::memset(sound_rest::At(desc), 0, 0x24);
-    SetDword(desc + 0x00, 0x24);             // dwSize
-    SetDword(desc + 0x04, kPrimaryBuffer);   // dwFlags
-    SetDword(desc + 0x08, 0);                // dwBufferBytes
-    SetDword(desc + 0x0C, 0);                // dwReserved
-    SetDword(desc + 0x10, 0);                // lpwfxFormat
-    device = Snd_Device;
-    if (sound::Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, sound_rest::At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
-        Release(Snd_Device);
-        Snd_Device = nullptr;
-        return kNoPrimary;
-    }
-    const std::uint32_t format = Address(Snd_WaveFormat);
-    SetWord(format + 0x00, 1);        // wFormatTag, PCM
-    SetWord(format + 0x02, 2);        // nChannels
-    SetWord(format + 0x0C, 2);        // nBlockAlign
-    SetDword(format + 0x04, 22050);   // nSamplesPerSec
-    SetDword(format + 0x08, 44100);   // nAvgBytesPerSec
-    SetWord(format + 0x0E, 8);        // wBitsPerSample
-    SetWord(format + 0x10, 0);        // cbSize
-    void* const primary = Snd_Primary;
-    if (sound::Method<ComFormat>(primary, kSetFormat)(primary, sound_rest::At(format)) != 0) {
-        Release(Snd_Device);
-        void* const made = Snd_Primary;
-        Snd_Device = nullptr;
-        Release(made);
-        Snd_Primary = nullptr;
-        return kNoFormat;
-    }
-    return 0;
-}
-
 void SoundRest_Inject() {
     if (bof3::WantsShadow("sound_rest")) sound_rest::SelfTest();
-    BOF3_INJECT(Sound_StopMusic);
-    BOF3_INJECT(Sound_ResumeAll);
-    BOF3_INJECT(Sound_MusicPlaying);
-    BOF3_INJECT(Sound_PauseAll);
-    BOF3_INJECT(SndBuf_SetVolume);
-    BOF3_INJECT(Music_Halt);
-    BOF3_INJECT(Music_Resume);
-    BOF3_INJECT(SndStream_IsPlaying);
-    BOF3_INJECT(Snd_Init);
 }

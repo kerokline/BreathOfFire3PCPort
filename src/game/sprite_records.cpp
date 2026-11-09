@@ -18,18 +18,6 @@
 
 namespace {
 
-template <class T> T Get(const unsigned char* p, unsigned offset) {
-    // A pointer-typed field is a 32-bit word of the image on every width.
-    if constexpr (std::is_pointer_v<T>) {
-        std::uint32_t w;
-        std::memcpy(&w, p + offset, sizeof w);
-        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
-    } else {
-        T v;
-        std::memcpy(&v, p + offset, sizeof v);
-        return v;
-    }
-}
 template <class T> void Put(unsigned char* p, unsigned offset, T v) {
     if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
         const std::uint32_t w = Low32(v);
@@ -44,144 +32,7 @@ template <class T> void Put(unsigned char* p, unsigned offset, T v) {
 constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
 constexpr unsigned kPrimBytes = 0x48, kQuadBytes = 0x28, kRecordBytes = 12;
 
-const unsigned char* ObjectData() { return Get<const unsigned char*>(Sprite_Current, 0x54); }
-
 }  // namespace
-
-// original 0x57BFF0 (PSX 0x8015BE00): the current object's matrix. The position - x and y in
-// 1/512ths less 0x4000, z the negated half of the s16 at +0x3E, toward zero -
-// through the current GTE matrix into the translation; the low words of
-// +0x64, +0x68, +0x6C as the rotation's angles.
-extern "C" short* __cdecl Sprite_ObjectMatrix(short* matrix) {
-    const unsigned char* object = Sprite_Current;
-    short position[4], angles[4];
-    position[0] = static_cast<short>((Get<long>(object, 0x34) >> 9) - 0x4000);
-    position[1] = static_cast<short>((Get<long>(object, 0x38) >> 9) - 0x4000);
-    position[2] = static_cast<short>(-(Get<short>(object, 0x3E) / 2));
-    angles[0] = Get<short>(object, 0x64);
-    angles[1] = Get<short>(object, 0x68);
-    angles[2] = Get<short>(object, 0x6C);
-    Gte_RotTrans(position, reinterpret_cast<long*>(matrix + 10));
-    return Gte_RotMatrix(angles, matrix);
-}
-
-// original 0x57BED0 (PSX 0x8015BC9C): the light's direction in the object's frame, to out[0..2]
-// - the first row of the light matrix. (0, 0, Light_Angles[3]) turned by the
-// light's angles, then by the object's rotation "transposed" - IN PLACE, and
-// Gte_TransposeMatrix in place is not a transpose: the upper triangle is
-// lost. Kept, as the original has it; Gte_NormalColor as shipped throws the
-// lit colour away, so nothing on screen shows it.
-extern "C" void __cdecl Light_ObjectDirection(short* out, const long* angles) {
-    Light_AnglesCopy[0] = Light_Angles[0];
-    Light_AnglesCopy[1] = Light_Angles[1];
-    Light_AnglesCopy[2] = Light_Angles[2];
-    const unsigned long zero[3] = {0, 0, 0};
-    Gte_PushMatrix();
-    alignas(4) short turn[16];
-    Gte_RotMatrix(Light_AnglesCopy, turn);
-    Gte_TransMatrix(reinterpret_cast<unsigned long*>(turn), zero);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(turn));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(turn));
-    const short reach[4] = {0, 0, Light_Angles[3], 0};
-    long light[3];
-    Gte_RotTrans(reach, light);
-    const short object_angles[4] = {static_cast<short>(angles[0]), static_cast<short>(angles[1]),
-                                    static_cast<short>(angles[2]), 0};
-    Gte_RotMatrix(object_angles, turn);
-    Gte_TransposeMatrix(turn, turn);
-    Gte_ApplyMatrixLV(turn, light, light);
-    out[0] = static_cast<short>(light[0]);
-    out[1] = static_cast<short>(light[1]);
-    out[2] = static_cast<short>(light[2]);
-    Gte_PopMatrix();
-}
-
-// original 0x57BAE0 (PSX 0x8015B6F0): the current object's quads as primitives and records.
-// Returns the count's low byte; the one caller keeps al only.
-//
-// Kept from the original, deliberately:
-//   - the count is the s8 at byte 0 of the object's +0x54 data widened to a
-//     u16, so a negative one is some 65,000 quads - which the room check
-//     then refuses;
-//   - when the packet pool has no room the function returns 0 with the GTE
-//     matrix still PUSHED and the matrices it loaded still loaded;
-//   - a record's depth is the largest of the four depths / 4, kept as a u16
-//     and compared zero-extended against the whole long, so a negative depth
-//     never raises it and one past 0xFFFF is stored truncated;
-//   - the vertices' fourth words in Prim_VertexScratch are left as they were
-//     and go to Gte_LoadVertex with them.
-extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
-    Gte_PushMatrix();
-    const auto count = static_cast<std::uint16_t>(static_cast<std::int8_t>(ObjectData()[0]));
-    alignas(4) short matrix[16];
-    Sprite_ObjectMatrix(matrix);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(matrix));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(matrix));
-    if (Sprite_Current[0x48] == 0) {
-        const long s = Get<long>(Sprite_Current, 0x40);
-        const long scale[3] = {s, s, s};
-        Gte_ScaleMatrix(matrix, scale);
-    }
-    alignas(4) short view[16];
-    std::memcpy(view, matrix, sizeof view);
-    Light_ObjectDirection(reinterpret_cast<short*>(Light_Matrix), reinterpret_cast<const long*>(Sprite_Current + 0x64));
-    Camera_LoadMatrix(view);
-    Gte_SetMatrix2(Light_Matrix);
-
-    const unsigned char flags = ObjectData()[3];
-    const unsigned mode = flags & 0x40 ? flags : 2u;
-    const unsigned char* quad = Get<const unsigned char*>(Sprite_Current, 0x50);
-    const unsigned tpage = Gpu_GetTPage(0, mode & 3, 0x2C0, 0x100);
-    unsigned char* const start = Gfx_PacketNext;
-    const std::uint32_t bytes = static_cast<std::uint32_t>(count) * kPrimBytes;
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-    if (limit < Low32(start) + bytes) return 0;
-
-    const unsigned semi_trans = (mode >> 6) & 1;
-    unsigned char* prim = start;
-    auto* rec = reinterpret_cast<unsigned char*>(record);
-    for (unsigned n = count; n != 0; --n) {
-        Gpu_SetPolyFT4(prim);
-        short* vertices = reinterpret_cast<short*>(Prim_VertexScratch);
-        for (unsigned i = 0; i < 12; ++i) vertices[i / 3 * 4 + i % 3] = Get<short>(quad, 2 + 2 * i);
-        const long normal[3] = {Get<short>(quad, 0x1A), Get<short>(quad, 0x1C), Get<short>(quad, 0x1E)};
-        for (unsigned k = 0; k < 4; ++k) Put<std::uint16_t>(prim, 0x14 + 0x10 * k, Get<std::uint16_t>(quad, 0x20 + 2 * k));
-        for (unsigned k = 0; k < 4; ++k) {
-            Gte_LoadVertex(reinterpret_cast<const unsigned long*>(vertices + 4 * k));
-            Gte_Rtps();
-            Gte_StoreScreenXY(reinterpret_cast<unsigned long*>(prim + 8 + 0x10 * k));
-            long depth;
-            Gte_StoreDepthQuarter(&depth);
-            Gte_StoreDepthF(reinterpret_cast<float*>(prim + 0x10 + 0x10 * k));
-            if (k == 0) {
-                Put<std::uint16_t>(rec, 4, static_cast<std::uint16_t>(depth));
-                Put<std::uint16_t>(rec, 6, static_cast<std::uint16_t>(depth));
-            } else if (static_cast<long>(Get<std::uint16_t>(rec, 4)) < depth) {
-                Put<std::uint16_t>(rec, 4, static_cast<std::uint16_t>(depth));
-            }
-        }
-        Put<unsigned char*>(rec, 0, prim);
-        Put<unsigned char*>(rec, 8, Sprite_Current);
-        prim[4] = Sprite_Current[0x5D];
-        prim[5] = Sprite_Current[0x5E];
-        prim[6] = Sprite_Current[0x5F];
-        if (ObjectData()[3] & 0x80) {
-            Gte_VectorNormalS(normal, reinterpret_cast<short*>(Prim_VertexScratch));
-            const unsigned char color[4] = {Sprite_Current[0x5D], Sprite_Current[0x5E], Sprite_Current[0x5F], prim[7]};
-            Gte_NormalColor(reinterpret_cast<short*>(Prim_VertexScratch), color, prim + 4);
-        }
-        Put<std::uint16_t>(prim, 0x26, static_cast<std::uint16_t>(tpage));
-        const int clut_x = static_cast<int>(static_cast<unsigned>(static_cast<int>(Get<short>(quad, 0))) << 4);
-        Put<std::uint16_t>(prim, 0x16, static_cast<std::uint16_t>(Gpu_GetClut(clut_x, 0x1E3)));
-        Gpu_SetSemiTrans(prim, semi_trans);
-        prim += kPrimBytes;
-        rec += kRecordBytes;
-        quad += kQuadBytes;
-    }
-    Gfx_PacketNext = start + bytes;
-    Gte_PopMatrix();
-    return count & 0xFFu;
-}
 
 namespace {
 
@@ -417,7 +268,4 @@ void SpriteRecords_Inject() {
             "Sprite_AddDrawRecords", bof3::addr::Sprite_AddDrawRecords, 0x3E1, calls, sizeof calls / sizeof calls[0]));
         SelfTest(theirs);
     }
-    BOF3_INJECT(Sprite_ObjectMatrix);
-    BOF3_INJECT(Light_ObjectDirection);
-    BOF3_INJECT(Sprite_AddDrawRecords);
 }

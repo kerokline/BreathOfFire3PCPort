@@ -40,11 +40,6 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-// The placement count (SharedScratch, read afresh at every use as the
-// original reads the word [0x903850]) and the bank word after it.
-short CountScenaSe() { return static_cast<std::int16_t>(at::kCount); }
-unsigned char* ObjectScenaSe(int n) { return rv::Bytes(Sprite_Objects) + n * static_cast<int>(at::kObjectStride); }
-
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.
 // rv::As<records::SpriteObject>(p) views a
@@ -53,118 +48,8 @@ unsigned char* ObjectScenaSe(int n) { return rv::Bytes(Sprite_Objects) + n * sta
 // Sprite_Kind2 record: ObjectScenaSe(n) is a Sprite_Objects record.
 // rv::As<records::EffectObject>(p) is given effect objects (Effect_Objects).
 
-// A placement's x or z: the whole part from `whole`, the half (0x8000) when
-// `half` is not 0 - `neg / sbb / and 0x8000`, then `or` the whole << 16.
-std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
-    return (half ? 0x8000u : 0u) | static_cast<std::uint32_t>(whole) << 16;
-}
-
-// A character's record +0xB (CharacterRecords, stride 0xA4) through
-// Character_IndexById[id] - both indexes a whole byte, unchecked.
-unsigned char* RecordFlags(unsigned char id) {
-    return move_script::At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * at::kObjectStride);
-}
-
 }  // namespace
-
-// original 0x579D70: the pose or the facing at the end of a placement (PSX
-// FUN_801A591C). Sprite_Current +0x4B = 0xFF; with +7 bit 3, +0x2A = bit 4 of
-// +7 and Sprite_SetAnimation(+8 of Sprite_Current read again), else
-// Sprite_FaceDirection(+8 of the object read the second time).
-extern "C" void __cdecl EventObj_Face(void) {
-    Sprite_Current[0x4B] = 0xFF;
-    unsigned char* const c = Sprite_Current;
-    const unsigned char flags = c[7];
-    if (flags & 8) {
-        c[0x2A] = static_cast<unsigned char>((flags >> 4) & 1);
-        SH_CALL(Sprite_SetAnimation)(Sprite_Current[8]);
-        return;
-    }
-    SH_CALL(Sprite_FaceDirection)(c[8]);
-}
-
-// original 0x57A010: event op 0x and Fx, 17 bytes (PSX FUN_801A5D5C) - the
-// jump table's default in EventScript_Op, and called directly by 19 sites
-// (three of them chapter code). EventOp_1x's placement (event_script.cpp)
-// with object +0x83 = op[0x10]: Sprite_Objects[count] becomes
-// Sprite_Current and Field_ActiveMember, the bank word op[1] op[2], its
-// fields and its script context's from the op, EventObj_SetFlags(op + 0xD),
-// EventObj_Face, the count one on. Nothing when the count is 30 or more; a
-// negative count (signed, unchecked) places before the table, as the
-// original does. The count is read again after each call, Sprite_Current at
-// every use, the op's bytes where the original reads them.
-extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
-    if (CountScenaSe() >= static_cast<short>(at::kObjectCount)) return;
-    unsigned char* const o = ObjectScenaSe(CountScenaSe());
-    Sprite_Current = o;
-    Field_ActiveMember = o;
-    at::kBank = static_cast<unsigned>(op[1]) << 8 | op[2];
-    SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(at::kBank);
-    Sprite_Current[0] = 1;
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_x, rv::Current<records::SpriteObject>()->x);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->target_z, rv::Current<records::SpriteObject>()->z);
-    rv::As<records::SpriteObject>(ObjectScenaSe(CountScenaSe()))->best_score = 0;
-    const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
-    Sprite_Current[1] = op[0xA];
-    Sprite_Current[2] = op[0xC];
-    Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
-    Sprite_Current[6] = static_cast<unsigned char>(op[0] >> 4);
-    unsigned char* const n = ObjectScenaSe(CountScenaSe());
-    rv::As<records::SpriteObject>(n)->half_w = op[4];
-    rv::As<records::SpriteObject>(n)->half_d = op[5];
-    rv::As<records::SpriteObject>(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
-    n[0x83] = op[0x10];
-    n[0x84] = op[0xB];
-    n[0xA0] = 0x7F;
-    SH_CALL(EventObj_SetFlags)(op + 0xD);
-    if (op[3] & 0x80) Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x20);
-    Sprite_Current[0x5D] = 0;
-    Sprite_Current[0x5F] = 0;
-    Sprite_Current[0x5E] = 0;
-    Sprite_Current[0x5C] = static_cast<unsigned char>(op[3] & 0xF);
-    SH_CALL(EventObj_Face)();
-    at::kCount = static_cast<unsigned>(at::kCount + 1);
-}
-
-// original 0x591CC0: a member into the two party lists without a sprite
-// (Party_Join's list half). The member's character record +0xB |= 3 (joined,
-// and bit 1); below three members, the next slot of both lists and the count
-// one on, al 1. With three or more: the first slot i of the first list whose
-// member's record +0xB lacks bit 1 and whose id stands in the second list
-// (slot j) takes the member in both, al 1; none, al 0. Its one caller
-// (chapter 6, 0x54D053) does not read al.
-extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
-    const unsigned char member = static_cast<unsigned char>(member_arg);
-    unsigned char* const flags = RecordFlags(member);
-    *flags = static_cast<unsigned char>(*flags | 3);
-    unsigned char* const lists = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
-    const unsigned char n = Field_MemberCount;
-    if (n < 3) {
-        Field_MemberCount = static_cast<unsigned char>(n + 1);
-        lists[n] = member;
-        lists[n + 3] = member;
-        return 1;
-    }
-    for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char id = lists[i];
-        if (*RecordFlags(id) & 2) continue;
-        for (unsigned j = 0; j < 3; ++j) {
-            if (id != lists[3 + j]) continue;
-            lists[i] = member;
-            lists[3 + j] = member;
-            return 1;
-        }
-    }
-    return 0;
-}
 
 void ScenaSe_Inject() {
     if (bof3::WantsShadow("scena_se")) scena_se::SelfTest();
-    BOF3_INJECT(EventObj_Face);
-    BOF3_INJECT(EventOp_0x);
-    BOF3_INJECT(Party_AddToLists);
 }

@@ -109,17 +109,6 @@ namespace win_main { std::uint8_t g_capcom_movie_only = 0; }
 bool WinMain_InputAllowed() { return !win_main::g_loop_ours || !win_main::g_background || win_main::g_foreground; }
 bool WinMain_Background() { return win_main::g_background; }
 
-extern "C" void __cdecl Display_WindowMoved(int x, int y) {
-    Gfx_WindowRect[0] = x;
-    Gfx_WindowRect[1] = y;
-    Gfx_WindowRect[2] = x + Gfx_ScreenRect[2];   // 0x66B710, the right edge
-    Gfx_WindowRect[3] = y + Gfx_ScreenRect[3];   // 0x66B714, the bottom
-}
-
-extern "C" char* __cdecl Display_DeviceName(int device) {
-    return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
-}
-
 // --- BOF3X_EXITTRACE: who ends the process ---------------------------------
 //
 // Tooling. A run that ends without a CRASH line or a FATAL line left through
@@ -240,6 +229,4 @@ void WinMain_Inject() {
         bof3::Log("DIV-0202    the start plays CAPCOM.AVI alone: %s",
                   win_main::g_capcom_movie_only ? "on" : "OFF (LOGOS.AVI plays if it is in the folder)");
     }
-    BOF3_INJECT(Display_WindowMoved);
-    BOF3_INJECT(Display_DeviceName);
 }

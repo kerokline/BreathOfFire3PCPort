@@ -121,103 +121,6 @@ void SelfTestTexture(SetTextureFn theirs) {
 
 }  // namespace
 
-// original 0x572A00. Texture a run of `count` POLY_FT4s of 0x48 bytes from one
-// packed word - the texture of a cell of the field view's map, and of much
-// else (91 call sites). The word, bit by bit:
-//
-//   0..11   where the four (u, v) come from - below
-//   12, 13  the semi-transparency mode, into the tpage
-//   15      semi-transparency on (Gpu_SetSemiTrans)
-//   16      mirror left to right;  17  top to bottom;  18  a quarter turn
-//   19..23  the shade: r = g = b = (word >> 16) & 0xF8
-//   24..27  the palette: a 4-bit texture's CLUT column, an 8-bit one's row
-//   28, 29  the texture page, x = 320 + 128n, y = 256
-//   31      set: a 4-bit texture; clear: 8-bit
-//
-// The corners, in the POLY_FT4's order (top left, top right, bottom left,
-// bottom right):
-//   - bits 8..11 clear: a 16-texel cell of a 16 x 16 grid, bits 0..3 its
-//     column and 4..7 its row, the corners 15 apart;
-//   - bit 11 set: two dwords of the area block (AreaMap_Header) at dword
-//     u16[+6 + 4n] plus twice bits 0..10 - the four corners a byte each;
-//   - otherwise: one dword at dword u16[+4 + 4n] plus bits 0..7 - the top
-//     left's u and v, then a width and a height.
-// The original takes each dword's top byte signed. Only a coordinate's low
-// byte reaches the primitive, and that is the same either way, width added
-// or not; the fuzz cannot see it (a control that drops the sign passes), so
-// ours keeps the sign only to read like the original.
-//
-// The original goes through x87: each coordinate an integer to a float, the
-// rectangle's far edges one float add, each result back through _ftol. Every
-// such value is an integer of magnitude under 400, so every step is exact at
-// any precision and in any rounding mode, and _ftol truncates: integers are
-// the same arithmetic. The fuzz runs theirs under four control words to hold
-// that claim to account. Its locals also hold four floats it never writes,
-// swapped along with the corners by the turn and the mirrors: stale stack,
-// and none of it reaches the primitive.
-//
-// Kept as the original has it: a count of 0 or less draws nothing; the turn
-// comes first, then the mirrors.
-extern "C" void __cdecl Prim_SetTexture(unsigned long texture, unsigned char* prim, int count) {
-    const auto word = static_cast<std::uint32_t>(texture);
-    const unsigned page = (word >> 28) & 3;
-    const bool eight_bit = (word & 0x80000000u) == 0;
-    const unsigned char* area = AreaMap_Header;
-    auto u16_at = [area](unsigned at) { std::uint16_t x; std::memcpy(&x, area + at, 2); return unsigned{x}; };
-    auto u32_at = [area](unsigned at) { std::uint32_t x; std::memcpy(&x, area + at, 4); return x; };
-    int u[4], v[4];
-    if ((word & 0xF00) == 0) {
-        u[0] = u[2] = static_cast<int>((word & 0xF) << 4);
-        v[0] = v[1] = static_cast<int>(word & 0xF0);
-        u[1] = u[3] = u[0] + 15;
-        v[2] = v[3] = v[0] + 15;
-    } else if (word & 0x800) {
-        const unsigned at = (u16_at(6 + 4 * page) + (word & 0x7FF) * 2) * 4;
-        const std::uint32_t first = u32_at(at), second = u32_at(at + 4);
-        u[0] = static_cast<std::int32_t>(first) >> 24;
-        v[0] = static_cast<int>((first >> 16) & 0xFF);
-        u[1] = static_cast<int>((first >> 8) & 0xFF);
-        v[1] = static_cast<int>(first & 0xFF);
-        u[2] = static_cast<std::int32_t>(second) >> 24;
-        v[2] = static_cast<int>((second >> 16) & 0xFF);
-        u[3] = static_cast<int>((second >> 8) & 0xFF);
-        v[3] = static_cast<int>(second & 0xFF);
-    } else {
-        const std::uint32_t cell = u32_at((u16_at(4 + 4 * page) + (word & 0xFF)) * 4);
-        u[0] = u[2] = static_cast<std::int32_t>(cell) >> 24;
-        v[0] = v[1] = static_cast<int>((cell >> 16) & 0xFF);
-        u[1] = u[3] = u[0] + static_cast<int>((cell >> 8) & 0xFF);
-        v[2] = v[3] = v[0] + static_cast<int>(cell & 0xFF);
-    }
-    if (word & 0x40000) {   // corners 0, 1, 2, 3 take old 2, 0, 3, 1
-        const int ou[4] = {u[0], u[1], u[2], u[3]}, ov[4] = {v[0], v[1], v[2], v[3]};
-        static const int kFrom[4] = {2, 0, 3, 1};
-        for (int i = 0; i < 4; ++i) u[i] = ou[kFrom[i]], v[i] = ov[kFrom[i]];
-    }
-    auto swap = [&u, &v](int a, int b) { std::swap(u[a], u[b]); std::swap(v[a], v[b]); };
-    if (word & 0x10000) swap(0, 1), swap(2, 3);
-    if (word & 0x20000) swap(0, 2), swap(1, 3);
-
-    const auto shade = static_cast<unsigned char>((word >> 16) & 0xF8);
-    const unsigned palette = (word >> 24) & 0xF;
-    // getClut(x, y) is y << 6 | x >> 4: an 8-bit texture's palette is row
-    // 0x1E3 + n at x 0, a 4-bit one's is x 16n of row 0x1E3.
-    const auto clut = static_cast<std::uint16_t>(eight_bit ? 0x78C0 + (palette << 6) : 0x78C0 | palette);
-    const auto tpage = static_cast<std::uint16_t>(
-        ((((word & 0x3000) | 0x800) >> 1 | (((page << 7) + 0x140) & 0x3C0)) >> 6) | (eight_bit ? 0x80u : 0u));
-    const unsigned semi_trans = (word >> 15) & 1;
-    for (; count > 0; --count, prim += kTexPrimBytes) {
-        Gpu_SetSemiTrans(prim, semi_trans);
-        prim[4] = prim[5] = prim[6] = shade;
-        std::memcpy(prim + 0x16, &clut, 2);
-        std::memcpy(prim + 0x26, &tpage, 2);
-        for (int i = 0; i < 4; ++i) {
-            prim[0x14 + 0x10 * i] = static_cast<unsigned char>(u[i]);
-            prim[0x15 + 0x10 * i] = static_cast<unsigned char>(v[i]);
-        }
-    }
-}
-
 void Prim_Inject() {
     // 0x462A70..0x462A81: no calls, no jumps (disasm 2026-09-20).
     if (bof3::WantsShadow("prim"))
@@ -233,5 +136,4 @@ void Prim_Inject() {
         SelfTestTexture(reinterpret_cast<SetTextureFn>(
             bof3::CloneOriginal("Prim_SetTexture", bof3::addr::Prim_SetTexture, 0x4C9, kCalls, 9)));
     }
-    BOF3_INJECT(Prim_SetTexture);
 }

@@ -5,3 +5,5 @@
 #pragma once
 
 void ShopStates2_Inject();
+
+extern unsigned char g_shop_yes_no_hand;   // defined in shop_states2.cpp (named here for a moved reader: source-layout B6)

@@ -82,7 +82,6 @@ world_map::U WordWorldMap(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-std::int32_t ShortWorldMap(const unsigned char* p) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(WordWorldMap(p))); }
 world_map::U LongWorldMap(const unsigned char* p) {
     world_map::U v;
     std::memcpy(&v, p, sizeof v);
@@ -120,59 +119,6 @@ unsigned char g_dial_semi = 0;
 }  // namespace world_map_dial
 
 // --- the map-view helpers ----------------------------------------------------------
-
-// original 0x572F70 (PSX 0x80156468): the 0x48-byte half for this display
-// buffer of map cell (x, y)'s draw item - DrawItems + (Gfx_BufferIndex + item
-// * 2) * 0x48, the buffer index read after MapView_ItemAt - or 0 when the
-// cell has none. The whole of MapView_ItemAt's eax is the item.
-extern "C" __attribute__((disable_tail_calls)) unsigned char* __cdecl MapView_ItemHalfAt(long x, long y) {
-    const world_map::U item = static_cast<world_map::U>(world_map::g.item_at(x, y));
-    if (item == 0) return nullptr;
-    return AtWorldMap(at::DrawItemsAt() + (AtWorldMap(at::Gfx_BufferIndexAt())[0] + item * 2u) * 0x48u);
-}
-
-// original 0x572FA0 (PSX 0x801564C4): links the primitive at Gfx_PacketNext
-// into the map-view row of map (x, z) - the arguments' high words less
-// MapView_Origin's, plus one each for a non-zero low word, plus `dy` (its low
-// byte, signed) plus 2 - when that row is 0..0x37 and the pool has room:
-// (Gfx_BufferIndex << 16) + 0x7F1BAC above Gfx_PacketNext + (size & 0xFF),
-// unsigned. Then Gpu_LinkPrim(tail, prim) with the row's tail for this
-// buffer - the dword at 0x8022C4 + (Gfx_BufferIndex + row * 6) * 8 - and,
-// with the buffer index and Gfx_PacketNext READ AGAIN after that call, the
-// tail slot = Gfx_PacketNext and Gfx_PacketNext += size. No result; the
-// original's eax is the tail slot's new value or, on the exits, the row or
-// the bound - its 371 callers (E8 scan) are draw code that reloads eax.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(unsigned long x, unsigned long z,
-                                                                           int dy, unsigned size) {
-    std::int32_t row = static_cast<std::int16_t>(z >> 16);
-    row -= (z & 0xFFFF) == 0 ? 1 : 0;
-    row -= (x & 0xFFFF) == 0 ? 1 : 0;
-    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt() + 2));
-    row += static_cast<std::int16_t>(x >> 16);
-    row -= ShortWorldMap(AtWorldMap(at::MapView_OriginAt()));
-    row += static_cast<signed char>(dy) + 2;
-    if (row < 0 || row >= 0x38) return;
-    const world_map::U bytes = size & 0xFF;
-    const world_map::U prim = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
-    // Tooling only (BOF3X_DRAWORDER): the walk's log names a frame node by its
-    // row alone; this says who linked it.
-    if (draw_order::Tagging())
-        bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
-                  Low32(__builtin_return_address(0)));
-    const world_map::U bound = (static_cast<world_map::U>(AtWorldMap(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
-    if (bound <= prim + bytes) {
-        if (draw_order::Tagging())
-            bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
-                      Low32(__builtin_return_address(0)));
-        return;
-    }
-    const world_map::U slot_index = static_cast<world_map::U>(row) * 6u;
-    unsigned char* const slot = AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u);
-    world_map::g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(LongWorldMap(slot))), prim);
-    const world_map::U next = LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()));
-    PutLong(AtWorldMap(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + AtWorldMap(at::Gfx_BufferIndexAt())[0]) * 8u), next);
-    PutLong(AtWorldMap(at::Gfx_PacketNextAt()), next + bytes);
-}
 
 // --- the legend's keys: DIV-0135 (world_map.h) -------------------------------
 
@@ -621,6 +567,4 @@ void LegendSelfTest() {
 
 void WorldMap_Inject() {
     if (bof3::WantsShadow("world_map")) world_map::SelfTest();
-    BOF3_INJECT(MapView_ItemHalfAt);
-    BOF3_INJECT(MapView_LinkPrimAt);
 }

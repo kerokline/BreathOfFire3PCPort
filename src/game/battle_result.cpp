@@ -71,8 +71,6 @@ namespace {
 
 unsigned char& Byte(std::uint32_t address) { return battle_result::At(address)[0]; }
 unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(battle_result::at::kMembers.v) + (slot & 0xFF) * battle_result::at::kMemberSize); }
-// The record the window task is running, re-read wherever the original reads it.
-unsigned char* CurrentWindow() { return battle_result::At(BattleWinStates_Current); }
 // MemberBattleResult() is +0x80 into the member record (0x802DC0); the record, and its
 // typed view, starts 0x80 before.
 char* TextBattleResult(std::uint32_t address) { return reinterpret_cast<char*>(battle_result::At(address)); }
@@ -95,18 +93,6 @@ const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>
 // ===========================================================================
 // The result window's states (under the window-kind handler 0x597F60)
 // ===========================================================================
-
-// original 0x598570 (PSX 0x801F065C, paired): state 4 of window kind 4 (the
-// EXP): entry (byte +3 of the record 0x905B84) of a two-entry table the
-// original builds on its own stack - 0x5986F0 (the step one on), 0x5985A0
-// (the EXP list). The index is not checked: 2..255 would call through the
-// words above the table on the original's stack; ours aborts (CLAUDE.md
-// rule 4, as battle_flow's Battle_PhaseDispatch).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpState(void) {
-    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
-    if (index >= 2) bof3::Fatal("BattleResultWin_ExpState: step %u, past the two-entry table", index);
-    battle_result::g.exp_window[index]();
-}
 
 // original 0x5985A0 (PSX 0x801F06D4, paired): the EXP window's frame -
 // 0x5982D0(0x14, 0x28, 0x118, the record's height +9) - and one line per
@@ -134,57 +120,6 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpS
 // BattleResult_Inject patches it to 1 under the name BattleResultExpLayout.
 unsigned char g_exp_layout_us = 0;
 
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawExp(void) {
-    const unsigned char* const w = CurrentWindow();
-    battle_result::g.draw_frame(0x14, 0x28, 0x118, w[9]);
-    const bool us = g_exp_layout_us != 0;
-    const int x_msg = us ? 0x82 : 0x55, x_level = us ? 0x114 : 0x85, x_exp = us ? 0x36 : 0xE3;
-    unsigned char y = 0x2C;
-    for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
-        unsigned char* const m = MemberBattleResult(slot);
-        auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
-        battle_result::g.text_draw_at(0x19, y, 0, 5, m);
-        const unsigned level = member_rec->level;
-        if (level == 0x63) {
-            battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x41));
-            continue;
-        }
-        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
-        battle_result::g.text_draw_font12(x_level, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
-        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), battle_result::g.exp_to_next(slot));
-        battle_result::g.text_draw_font12(x_exp, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
-        battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x15));
-    }
-}
-
-// original 0x5986C0 (no PSX twin paired): state 5 of window kind 4 (the
-// zenny): the same two-entry stack table - 0x5986F0, 0x598700 (the zenny
-// line). Ours aborts past it, as BattleResultWin_ExpState.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ZennyState(void) {
-    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
-    if (index >= 2) bof3::Fatal("BattleResultWin_ZennyState: step %u, past the two-entry table", index);
-    battle_result::g.zenny_window[index]();
-}
-
-// original 0x5986F0 (no PSX twin paired): the record 0x905B84's step +3 one
-// on - both states' entry 0, the frame the window opens.
-extern "C" void __cdecl BattleResultWin_NextStep(void) {
-    auto* const window_rec = rv::As<records::WindowRecord>(CurrentWindow());
-    window_rec->state = static_cast<unsigned char>(window_rec->state + 1);
-}
-
-// original 0x598700 (no PSX twin paired): the zenny window - the medium box
-// at (0x6E, 0x28), the party's zenny 0x904058 in "%7d" at (0x70, 0x2A) and
-// the text 0x66A31C after it at 0xC4.
-//
-// As the original has it: the zenny is read after the box.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawZenny(void) {
-    battle_result::g.draw_medium_box(0x6E, 0x28);
-    battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
-    battle_result::g.text_draw_font12(0x70, 0x2A, 0, battle_result::At(::bof3::Img(at::kText2.v)));
-    battle_result::g.text_draw_at(0xC4, 0x2A, 0, 0xFF, battle_result::At(::bof3::Img(at::kZennyUnit.v)));
-}
-
 // ===========================================================================
 
 void BattleResult_Inject() {
@@ -200,9 +135,4 @@ void BattleResult_Inject() {
             bof3::Log("DIV-0060    EXP line in the US layout: %s", g_exp_layout_us ? "on" : "off");
         }
     }
-    BOF3_INJECT(BattleResultWin_ExpState);
-    BOF3_INJECT(BattleResultWin_DrawExp);
-    BOF3_INJECT(BattleResultWin_ZennyState);
-    BOF3_INJECT(BattleResultWin_NextStep);
-    BOF3_INJECT(BattleResultWin_DrawZenny);
 }

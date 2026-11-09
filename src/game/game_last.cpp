@@ -27,53 +27,9 @@ namespace {
 
 namespace at = game_last::at;
 using U = std::uint32_t;
-using move_script::At;
-using Handler = void(__cdecl*)();
 
 }  // namespace
 
-// original 0x591810 (PSX 0x80166918): by the category's low byte through the
-// 4-entry table 0x591888 (dec; cmp 3; ja default):
-//   1  the byte at 0x657461 + 28 * id (a weapon's +0x11)
-//   2  the byte at 0x657D79 + 26 * id (armour's +0x11)
-//   3  the byte at 0x658461 + 24 * id (an accessory's +0x11)
-//   4  0 (xor al, al over the category less 1, 3: eax 0)
-//   any other (0, 5..255)  the byte at 0x656B38 + 22 * id (a consumable's flags' low byte)
-// id is the item's low byte. The whole eax as the original leaves it - its
-// callers read al: for 1 and 3 the byte is loaded over the id (below 0x100),
-// for 2 over id * 13 (lea edx, [eax+eax*2]; lea eax, [eax+edx*4]) and for the
-// default over id * 11 (lea edx, [eax+eax*4]; lea eax, [eax+edx*2]), so their
-// upper bytes are that product's.
-extern "C" unsigned __cdecl Item_UseFlags(unsigned category, unsigned item) {
-    const unsigned id = item & 0xFF;
-    switch (category & 0xFF) {
-    case 1: return move_script::At(::bof3::Img(at::kWeaponFlags.v) + id * at::kWeaponStride)[0];
-    case 2: return ((id * 13) & ~0xFFu) | move_script::At(::bof3::Img(at::kArmourFlags.v) + id * at::kArmourStride)[0];
-    case 3: return move_script::At(::bof3::Img(at::kAccessoryFlags.v) + id * at::kAccessoryStride)[0];
-    case 4: return 0;
-    default: return ((id * 11) & ~0xFFu) | move_script::At(::bof3::Img(at::kConsumableFlags.v) + id * at::kConsumableStride)[0];
-    }
-}
-
-// original 0x593950 (GameMode8_TradeStep's tail jump 0x52CF30): xor eax, eax;
-// mov al, [0x93985C]; jmp [ItemTrade_States + eax * 4] - unchecked. The three
-// states are ItemTrade_Open, ItemTrade_Run, ItemTrade_Leave (all ours); the
-// byte is written 0, 1, +1 and -1 and nothing else (docs/game-last.md section
-// 1.2). Past the three the original jumps through ItemTrade_OpenSteps' cells
-// (ItemTrade_OpenStart for 3); ours aborts with a message. The handler is the
-// table's cell read in place - in the game Capcom's address or the jump Inject
-// put there to ours, a recorder while the fuzz runs ours.
-extern "C" void __cdecl ItemTrade_Dispatch(void) {
-    const unsigned state = Effect1g_TradeState;
-    if (state >= ItemTrade_States_count)
-        bof3::Fatal("ItemTrade_Dispatch: the trade state 0x93985C is %u, past the %u entries of ItemTrade_States 0x66A470 - "
-                    "the original jumps through the dword after (docs/game-last.md section 4)",
-                    state, ItemTrade_States_count);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ItemTrade_States[state]))();
-}
-
 void GameLast_Inject() {
     if (bof3::WantsShadow("game_last")) game_last::SelfTest();
-    BOF3_INJECT(Item_UseFlags);
-    BOF3_INJECT(ItemTrade_Dispatch);
 }

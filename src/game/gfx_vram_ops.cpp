@@ -9,89 +9,6 @@
 
 // The PC counterparts of the PSX ClearImage and MoveImage, on the VRAM shadow.
 
-// original 0x59E650. Fills rect with one BYTE, then drops the textures under
-// it. As the original has it:
-//   - the PSX call is ClearImage(rect, r, g, b); this one reads two colour
-//     arguments and makes ((g & 0xF) << 2) | (r >> 3) of them - not a 15-bit
-//     colour, and only its low byte is used, for both bytes of every cell. The
-//     one caller found (0x461E46) passes 0, 0, where none of it matters.
-//   - no bounds check of any kind; h is read from the rect again every row.
-extern "C" void __cdecl Gfx_ClearImage(const short* rect, unsigned char red, unsigned char green) {
-    const auto fill = static_cast<std::uint8_t>(((green & 0x0F) << 2) | (red >> 3));
-    auto* dst = reinterpret_cast<std::uint8_t*>(Gfx_VramShadow) + ((rect[1] << 10) + rect[0]) * 2;
-    const std::uint32_t row_bytes = static_cast<std::uint32_t>(rect[2] << 1);
-    for (int row = 0; row < rect[3]; ++row) {
-        std::memset(dst, fill, row_bytes);
-        dst += 0x800;
-    }
-    Gfx_InvalidateTextures(rect, 0);
-}
-
-// original 0x5AA5D6, hand-written assembly. Copies rect, within the buffer at
-// `base` (1,024 cells a row), to (to_x, to_y). As the original has it:
-//   - x, y, w, h are read UNSIGNED;
-//   - each row copies w / 2 dwords, so an odd w loses its last cell - and the
-//     row step is computed from the full w, so every row after an odd one
-//     starts two bytes further left;
-//   - always forward, a dword at a time, whatever the overlap;
-//   - the row counter is h in the low half of a register whose high half is
-//     to_x's: it counts down to zero as 32 bits. h = 0 is 65,536 rows at best.
-extern "C" void __cdecl Gfx_MoveCells(void* base, const short* rect, int to_x, int to_y) {
-    const auto x = static_cast<std::uint16_t>(rect[0]), y = static_cast<std::uint16_t>(rect[1]);
-    const auto w = static_cast<std::uint16_t>(rect[2]), h = static_cast<std::uint16_t>(rect[3]);
-    auto* src = static_cast<std::uint8_t*>(base) + (static_cast<std::uint32_t>(y) << 11) + x * 2u;
-    auto* dst = static_cast<std::uint8_t*>(base) + (to_y << 11) + to_x * 2;
-    const std::uint32_t step = (0x400u - w) << 1;
-    std::uint32_t rows = (static_cast<std::uint32_t>(to_x) & 0xFFFF0000u) | h;
-    do {
-        for (std::uint32_t n = w >> 1; n != 0; --n) {
-            std::uint32_t cells;
-            std::memcpy(&cells, src, 4);
-            std::memcpy(dst, &cells, 4);
-            src += 4;
-            dst += 4;
-        }
-        src += step;
-        dst += step;
-    } while (--rows != 0);
-}
-
-// original 0x59E9A0. Clips rect to the shadow IN PLACE, moves it to
-// (to_x, to_y), rewrites rect's x and y as the destination, and marks the
-// textures under the destination stale (mode 1) rather than dropping them.
-// As the original has it:
-//   - the caller's rect is changed, as above;
-//   - a source hanging off the left or top is clipped and the destination
-//     shifted by the same (negative) amount; one off the right or bottom is
-//     only shortened; the DESTINATION is never clipped at all;
-//   - w == 0 or h == 0 returns at once, but clipping can produce either - or a
-//     negative - afterwards, and Gfx_MoveCells takes them as they come.
-extern "C" void __cdecl Gfx_MoveImage(short* rect, int to_x, int to_y) {
-    if (rect[2] == 0 || rect[3] == 0) return;
-
-    const short x = rect[0];
-    if (x < 0) {
-        rect[2] = static_cast<short>(rect[2] + x);
-        rect[0] = 0;
-        to_x += x;
-    } else if (x + rect[2] > 0x400) {
-        rect[2] = static_cast<short>(0x400 - x);
-    }
-    const short y = rect[1];
-    if (y < 0) {
-        rect[3] = static_cast<short>(rect[3] + y);
-        rect[1] = 0;
-        to_y += y;
-    } else if (y + rect[3] > 0x200) {
-        rect[3] = static_cast<short>(0x200 - y);
-    }
-
-    Gfx_MoveCells(Gfx_VramShadow, rect, to_x, to_y);
-    rect[0] = static_cast<short>(to_x);
-    rect[1] = static_cast<short>(to_y);
-    Gfx_InvalidateTextures(rect, 1);
-}
-
 // --- BOF3X_SHADOW=gfx_vram_ops: start-up differential fuzz against clones -------
 // (docs/SCAFFOLDING.md section 2.) Calls to Gfx_InvalidateTextures are re-aimed
 // at its original address - ours by now - and the cloned Gfx_MoveImage calls
@@ -224,7 +141,4 @@ void GfxVramOps_Inject() {
         auto* move = bof3::CloneOriginal("Gfx_MoveImage", bof3::addr::Gfx_MoveImage, 0xC8, move_calls, 2);
         SelfTest(reinterpret_cast<ClearFn>(clear), reinterpret_cast<CellsFn>(cells), reinterpret_cast<MoveFn>(move));
     }
-    BOF3_INJECT(Gfx_ClearImage);
-    BOF3_INJECT(Gfx_MoveCells);
-    BOF3_INJECT(Gfx_MoveImage);
 }

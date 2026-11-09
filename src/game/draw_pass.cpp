@@ -21,11 +21,6 @@ std::uint16_t Key(const unsigned char* object) {
     std::memcpy(&key, object + 0x32, sizeof key);
     return key;
 }
-std::int32_t Long(const unsigned char* object, unsigned offset) {
-    std::int32_t v;
-    std::memcpy(&v, object + offset, sizeof v);
-    return v;
-}
 
 // The three callees that are not ours, through pointers so that the start-up
 // fuzz can stand recording functions in for them - for the original's copy
@@ -37,9 +32,6 @@ using DrawFn = void (__cdecl*)();
 namespace draw_pass { AddRecordsFn g_add_records = Sprite_AddDrawRecords; }
 namespace draw_pass { DrawFn g_draw = Sprite_Draw; }
 namespace {
-// A layer's 0x30 bytes are three (first, last) pairs per buffer; the pass
-// appends the third, which Gfx_FrameNodes names.
-unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
 
 // --- BOF3X_SHADOW=draw_pass: a differential fuzz, once at start-up ----------------
 // A byte-copy of the original with its eight calls to functions of ours
@@ -229,216 +221,6 @@ void SelfTest(DrawFn theirs) {
 
 }  // namespace
 
-namespace {
-
-// Pass 1 of Sprite_DrawPass, below.
-void SortDrawList() {
-    unsigned char count = Sprite_DrawListCount;
-    if (static_cast<int>(count) - 1 > 0) {
-        unsigned char i = 0;
-        do {
-            const int lowest = i + 1;
-            for (unsigned char j = static_cast<unsigned char>(count - 1); static_cast<int>(j) >= lowest; --j) {
-                const unsigned char* const a = Sprite_DrawList[j - 1];
-                const unsigned char* const b = Sprite_DrawList[j];
-                bool exchange = false;
-                if (Key(b) < Key(a)) {
-                    exchange = true;
-                } else if (Key(b) == Key(a)) {
-                    const std::int32_t sum_a = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(a, 0x38)) +
-                                                                         static_cast<std::uint32_t>(Long(a, 0x34)));
-                    const std::int32_t sum_b = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(b, 0x38)) +
-                                                                         static_cast<std::uint32_t>(Long(b, 0x34)));
-                    exchange = sum_b < sum_a || (sum_b == sum_a && Long(b, 0x3C) < Long(a, 0x3C));
-                }
-                if (exchange) Sprite_DrawListSwap(j, static_cast<unsigned char>(j - 1));
-            }
-            count = Sprite_DrawListCount;
-            ++i;
-        } while (static_cast<int>(i) < static_cast<int>(count) - 1);
-    }
-}
-// DIVERGENCE DIV-0041 (wide-ring, docs/wide-ring.md): the grown ring's two
-// rows the original never draws - layer -1 before Capcom's first and Capcom's
-// row 55 (layer 0x37) after its last - terrain and frame-node primitives only.
-// No sprite is drawn at either (docs/wide-ring-read.md 3, owner's answer 1):
-// Sprite_UpdateScreen keeps hiding a sprite outside 0..0x36, and a type 0x0A
-// sprite Sprite_ProjectA leaves on the list at 0x37 stays undrawn, as on the
-// original.
-void LinkTableItem(unsigned index) {
-    const auto at = Low32(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u);
-    Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at);
-    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at));
-}
-
-void GrownLayerAbove() {
-    if (!(Draw_PassFlags & 4)) return;
-    DrawLayer_Open(-1);
-    for (unsigned i = 0; i < map_rim::ExtraTableCount(); ++i) LinkTableItem(map_rim::ExtraTableItem(i));
-    DrawLayer_Close(-1);
-}
-
-void GrownLayerBelow(unsigned char item) {
-    constexpr unsigned kLayer = 0x37;
-    if (Draw_PassFlags & 4) DrawLayer_Open(static_cast<int>(kLayer));
-    if (Draw_PassFlags & 0x10) {
-        const unsigned long first = FrameNode(kLayer)[0];
-        if (first != 0) {
-            if (draw_order::g_on) draw_order::TagList(first, FrameNode(kLayer)[1], draw_order::kFrameNode, kLayer, Draw_OtSlot);
-            Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
-            Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(kLayer)[1]));
-        }
-    }
-    for (; item < DrawTable_Count && (DrawTable[item] >> 24) == kLayer; ++item)
-        if (Draw_PassFlags & 4) LinkTableItem(DrawTable[item] & 0xFFFu);
-    if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(kLayer));
-}
-
-}  // namespace
-
-// original 0x593060: the field's draw-order pass, once a logic frame
-// (docs/sprite-draw-order.md section 2).
-//
-// Pass 1 bubble-sorts Sprite_DrawList ascending on the u16 at +0x32 (layer,
-// then order), then the sum of the dwords +0x34 and +0x38, then the dword
-// +0x3C; equal neighbours stay put. Pass 2 walks 0x37 layers, merging the
-// layer's sprites with the draw table's items, lower key first and the table
-// first on a tie; sprites gathered into 12-byte records, sorted descending on
-// the s16 at record +4, and drawn or linked.
-//
-// As the original has it: every index is a byte; the record count is a
-// SIGNED byte; a slot byte other than 4 or 6, or a table out of order, never
-// returns (by reading - not something a test can show); and globals are read again wherever the original reads them again,
-// since three of the callees are free to change them.
-extern "C" void __cdecl Sprite_DrawPass(void) {
-    SortDrawList();
-    // DIVERGENCE DIV-0071 (layering.h), off during every fuzz: a sprite drawn
-    // a layer or more later while only floor lies under its feet there.
-    if (layering::g_mode == layering::kFloor && layering::Defer()) SortDrawList();
-    unsigned char count;
-
-    Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0);
-    Gfx_CommitPrim(6, 0xC);
-
-    unsigned char sprite = 0, item = 0;   // next in the draw list, next in the draw table
-    const bool grown = map_rim::Drawn();   // DIV-0041 (wide-ring), above
-    if (grown) GrownLayerAbove();
-    for (unsigned layer = 0; layer < 0x37; ++layer) {
-        if (Draw_PassFlags & 4) draw_pass::g_open(static_cast<int>(layer));
-        if (Draw_PassFlags & 0x10) {
-            const unsigned long first = FrameNode(layer)[0];
-            if (first != 0) {
-                if (draw_order::g_on)
-                    draw_order::TagList(first, FrameNode(layer)[1], draw_order::kFrameNode, layer, Draw_OtSlot);
-                Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
-                Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
-            }
-        }
-
-        for (;;) {
-            count = Sprite_DrawListCount;
-            const bool sprite_here = sprite < count && (Key(Sprite_DrawList[sprite]) >> 8) == layer;
-            if (!sprite_here && ((DrawTable[item] >> 24) != layer || item >= DrawTable_Count)) break;
-
-            bool table_first = sprite == count;
-            if (!table_first) {
-                const unsigned long entry = DrawTable[item];
-                table_first = (entry >> 24) == layer && item < DrawTable_Count &&
-                              static_cast<std::uint16_t>(entry >> 16) <= Key(Sprite_DrawList[sprite]);
-            }
-            if (table_first) {
-                if (Draw_PassFlags & 4) {
-                    const auto at = [item] {
-                        return Low32(draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u);
-                    };
-                    if (draw_order::g_on)
-                        draw_order::TagOne(at(), draw_order::kTable, layer, Draw_OtSlot, DrawTable[item] >> 16,
-                                           DrawTable[item] & 0xFFFu);
-                    Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at());
-                    Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at()));
-                    count = Sprite_DrawListCount;
-                }
-                ++item;
-            }
-
-            // Gather the run of sprites that comes before the table's next item.
-            unsigned char records = 0;
-            if (sprite < count) {
-                const std::uint16_t first_key = Key(Sprite_DrawList[sprite]);
-                do {
-                    unsigned char* const object = Sprite_DrawList[sprite];
-                    const std::uint16_t key = Key(object);
-                    if (static_cast<std::uint16_t>(DrawTable[item] >> 16) <= key && item != DrawTable_Count) break;
-                    if ((key >> 8) != layer) break;
-                    const unsigned char slot = Draw_OtSlot;
-                    if (slot != 6 && (slot != 4 || first_key != key)) break;
-                    Sprite_Current = object;
-                    unsigned long* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
-                    if (object[0x24] & 0x40) {
-                        const unsigned char added = static_cast<unsigned char>(draw_pass::g_add_records(record));
-                        records = static_cast<unsigned char>(records + added);
-                        // What the model drew, kept for the next pass's Defer (layering.h, issue 141).
-                        if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
-                    } else {
-                        record[0] = Low32(object);
-                        record[1] = static_cast<unsigned long>(Long(object, 0x60)) | 0x80000000u;
-                        ++records;
-                    }
-                    ++sprite;
-                } while (sprite < Sprite_DrawListCount);
-            }
-
-            // Bubble sort, descending on the s16 at +4.
-            const int n = static_cast<signed char>(records);
-            if (n - 1 > 0) {
-                unsigned char round = 0;
-                int k = 0;
-                do {
-                    const int lowest = k + 1;
-                    unsigned char j = static_cast<unsigned char>(records - 1);
-                    for (int jj = static_cast<signed char>(j); jj >= lowest; jj = static_cast<signed char>(--j)) {
-                        unsigned long* const here = Sprite_DrawRecords + 3 * jj;
-                        if (static_cast<std::int16_t>(here[1]) > static_cast<std::int16_t>(here[-2]))
-                            Sprite_DrawRecordSwap(here, here - 3);
-                    }
-                    k = static_cast<signed char>(++round);
-                } while (k < n - 1);
-            }
-
-            if (n <= 0) continue;
-            unsigned long* record = Sprite_DrawRecords;
-            for (int left = n; left != 0; --left, record += 3) {
-                const unsigned char flags = Draw_PassFlags;
-                if (record[1] & 0x80000000u) {
-                    if (flags & 2) {
-                        Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
-                        if (draw_order::g_on)
-                            draw_order::Set(draw_order::kSprite, layer, Key(Sprite_Current),
-                                            static_cast<unsigned>(record[0]));
-                        if (layering::g_mode == layering::kFloor) layering::BeforeSprite();   // what it draws (layering.h)
-                        draw_pass::g_draw();
-                        if (draw_order::g_on) draw_order::Clear();
-                        // What it drew, kept; the table faerie's sides again (layering.h, D300).
-                        if (layering::g_mode == layering::kFloor) layering::AfterSprite(Sprite_Current);
-                    }
-                } else if (flags & 8) {
-                    unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
-                    const unsigned long prim = record[0];
-                    if (draw_order::g_on)
-                        draw_order::TagOne(prim, draw_order::kRecord, layer, owner[0x29], static_cast<unsigned>(record[2]), 0);
-                    Sprite_Current = owner;
-                    Gpu_LinkPrim(Gfx_OtPointers[owner[0x29]], prim);
-                    Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(record[0]));
-                }
-            }
-        }
-
-        if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(layer));
-    }
-    if (grown) GrownLayerBelow(item);
-    if (layering::g_mode == layering::kFloor) layering::Restore();
-}
-
 void DrawPass_Inject() {
     // Called before the modules that own its callees: a function can only be
     // cloned before its entry is patched. Every jump stays inside 0x593060..
@@ -459,5 +241,4 @@ void DrawPass_Inject() {
         SelfTest(reinterpret_cast<DrawFn>(
             bof3::CloneOriginal("Sprite_DrawPass", bof3::addr::Sprite_DrawPass, 0x4CB, calls, 11)));
     }
-    BOF3_INJECT(Sprite_DrawPass);
 }

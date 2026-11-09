@@ -224,6 +224,13 @@ struct Group {
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
 void Run(const Group& g);
 
+// Bytes the originals leave undefined (a copy of uninitialised stack), left out of
+// the state compare though still captured and restored: `count` runs of `len` bytes
+// from `at`, `stride` apart, each inside one region. SetSkips arms them for the next
+// Run only (Run disarms them); a group that never calls it compares every byte.
+struct Skip { std::uint32_t at, len, stride, count; };
+void SetSkips(const Skip* skips, unsigned n);
+
 // --- seeding helpers, for Seed and Disturb -------------------------------------
 
 std::uint32_t Next();

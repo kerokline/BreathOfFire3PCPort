@@ -209,7 +209,15 @@ class Item:
         if self.c_linkage:
             return self.is_static
         return ("" in self.ns or self.is_static or self.kind in ("using", "alias", "typedef", "type")
-                or (self.is_var and self.is_const and not self.is_extern))
+                or (self.is_var and self.is_const and not self.is_extern)
+                or self.is_function_template)
+
+    @property
+    def is_function_template(self) -> bool:
+        """A function template defined in a .cpp (field_s.cpp's SortShared): its linkage is external,
+        but every file that instantiates it needs the definition, so the mover handles it as it does
+        a file-local - copied to each file that uses it, the copies the same text."""
+        return self.kind == "func" and self.text[self.code_start - self.start:].lstrip().startswith("template")
 
 
 def _line_start(src: str, off: int) -> int:
@@ -687,6 +695,13 @@ class FileItems:
             k = kw + 1
             if k < len(ts) and ts[k].text in ("class", "struct"):    # enum class
                 k += 1
+            while k < len(ts) and ts[k].text in ("alignas", "__attribute__", "__declspec")                     and k + 1 < len(ts) and ts[k + 1].text == "(":   # `struct alignas(4) Desc`: skip to the name
+                depth, k = 0, k + 1
+                while k < len(ts):
+                    depth += {"(": 1, ")": -1}.get(ts[k].text, 0)
+                    k += 1
+                    if depth == 0:
+                        break
             if k < len(ts) and ts[k].kind == "id" and ts[k].text not in ("alignas", "__attribute__"):
                 names.append(ts[k].text)
             if ts[kw].text == "enum":                                  # its enumerators

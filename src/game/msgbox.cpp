@@ -718,22 +718,33 @@ void Step() {
 
 using namespace msgbox;
 
-// original 0x59E2D0 (PSX 0x80159874). Claims window record `slot` (stride
-// 0x24 off 0x803160) for `kind` if its first byte is free.
 //
-// As the original has it: the slot is masked to a byte for the index but the
-// ANSWER is the argument dword - unchanged on success, with its low byte
-// forced to 0xFF on failure (`or al, 0xFF`), so a caller that passes a slot
-// with high bytes set gets them back. No bound on the slot.
-extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
-    unsigned char* const rec = msgbox::At(::bof3::Img(WindowRecords_addr) + (slot & 0xFF) * 0x24u);
-    if (rec[0] != 0) return slot | 0xFFu;
-    rec[0] = 1;
-    rec[1] = static_cast<unsigned char>(kind);
-    rec[2] = 0;
-    rec[3] = 0;
-    return slot;
-}
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 namespace {
 MsgBoxDraw* g_record;
@@ -785,7 +796,6 @@ void MsgBox_Inject() {
                          Low32(&g_effect_space_skips), &was, &is, 1);
         bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
     }
-    BOF3_INJECT(Window_Alloc);
     // The reading row needs the walk and the printer both ours.
     ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
     // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.

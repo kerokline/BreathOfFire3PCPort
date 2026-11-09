@@ -146,57 +146,6 @@ void SelfTestReleaseCell(ReleaseCellFn theirs) {
 
 }  // namespace
 
-// original 0x56FBD0 (PSX 0x80155028). The next free draw-item index, or 0 for none: index 0 is
-// never in play, the pool starts with top = 1.
-//
-// As the original has it: top wraps from 0x3FF to 0, and 0 reads as "none
-// left" from then until something is released.
-extern "C" unsigned short __cdecl DrawItemPool_Alloc(void) {
-    const unsigned short top = DrawItemPool_Top;
-    if (top == 0) return 0;
-    const unsigned short index = draw_pool::Free()[top];
-    DrawItemPool_Top = static_cast<unsigned short>((top + 1) & draw_pool::Mask());
-    return index;
-}
-
-// original 0x56FC70 (PSX 0x80155120). Gives an index back.
-//
-// As the original has it: no check that the pool is not already full - with
-// top == 1 this stores at entry 0, with top == 0 at entry 0x3FF - and the new
-// top is what is left in eax. No caller read so far uses that; it is returned
-// because it is free to.
-extern "C" unsigned __cdecl DrawItemPool_Release(unsigned short index) {
-    const unsigned top = (DrawItemPool_Top - 1u) & draw_pool::Mask();
-    DrawItemPool_Top = static_cast<unsigned short>(top);
-    draw_pool::Free()[top] = index;
-    return top;
-}
-
-// original 0x56FC00 (PSX 0x80155070). Gives back everything a cell of the view holds: its own
-// draw item, and the two further items that one may own (the words at +0x7E
-// and +0x8E of it). The hottest function of the attract run - 863,659 calls -
-// because the view's 1,568 cells are all put through it whenever the view is
-// rebuilt, nearly all of them holding nothing.
-//
-// As the original has it: the index is taken as 12 bits of the cell's word
-// though the pool has 10, and the word is then zeroed whole.
-extern "C" void __cdecl DrawItemPool_ReleaseCell(unsigned char* cell) {
-    std::uint16_t word;
-    std::memcpy(&word, cell + 2, sizeof word);
-    const unsigned index = word & 0xFFFu;
-    if (index == 0) return;
-    DrawItemPool_Release(static_cast<unsigned short>(index));
-    std::memset(cell + 2, 0, 2);
-    unsigned char* const item = draw_pool::Items() + index * 0x90;
-    for (const unsigned at : {0x7Eu, 0x8Eu}) {
-        std::uint16_t owned;
-        std::memcpy(&owned, item + at, sizeof owned);
-        if (owned == 0) continue;
-        DrawItemPool_Release(owned);
-        std::memset(item + at, 0, 2);
-    }
-}
-
 void DrawPool_Inject() {
     // 0x56FBD0..0x56FBFC: one jump, internal. 0x56FC70..0x56FC95: none. Neither
     // calls anything. 0x56FC00..0x56FC6F: every jump internal, and three
@@ -214,9 +163,6 @@ void DrawPool_Inject() {
         SelfTest(their_alloc, their_release);
         SelfTestReleaseCell(their_release_cell);
     }
-    BOF3_INJECT(DrawItemPool_Alloc);
-    BOF3_INJECT(DrawItemPool_Release);
-    BOF3_INJECT(DrawItemPool_ReleaseCell);
 }
 
 // DIVERGENCE DIV-0062: the pool doubled. The original's 1,024 items (index

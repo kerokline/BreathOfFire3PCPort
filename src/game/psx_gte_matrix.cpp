@@ -17,84 +17,6 @@
 // which is what the original leaves three calls in four
 // (docs/psx-library-layer.md section 4).
 
-// original 0x5A7D70: libgte MulMatrix0 by shape - out = a * b, each element
-// the three products summed in 32 bits and >> 12. Every element of a and b is
-// read before anything is stored, so out may be either of them.
-extern "C" short* __cdecl Gte_MulMatrix0(const short* a, const short* b, short* out) {
-    short result[10];
-    for (int r = 0; r < 3; ++r)
-        for (int c = 0; c < 3; ++c) {
-            const std::uint32_t sum = static_cast<std::uint32_t>(a[3 * r] * b[c]) +
-                                      static_cast<std::uint32_t>(a[3 * r + 1] * b[3 + c]) +
-                                      static_cast<std::uint32_t>(a[3 * r + 2] * b[6 + c]);
-            result[3 * r + c] = static_cast<short>(static_cast<std::int32_t>(sum) >> 12);
-        }
-    result[9] = 0;   // DIV-0021: the original's is whatever its stack held
-    std::memcpy(out, result, 20);
-    return out;
-}
-
-namespace {
-
-// The rotations premultiply: matrix = R * matrix. The original's R is a stack
-// matrix whose padding it never writes; the product never reads it.
-short* Premultiply(short r0, short r1, short r2, short r3, short r4, short r5, short r6, short r7, short r8,
-                   short* matrix) {
-    const short r[9] = {r0, r1, r2, r3, r4, r5, r6, r7, r8};
-    Gte_MulMatrix0(r, matrix, matrix);
-    return matrix;
-}
-
-constexpr short kOne = 0x1000;
-
-}  // namespace
-
-// originals 0x5A7F10, 0x5A7F80, 0x5A7FF0: libgte RotMatrixX, Y and Z by
-// shape. The cosine is taken first, then the sine, as the original.
-extern "C" short* __cdecl Gte_RotMatrixX(int angle, short* matrix) {
-    const short c = static_cast<short>(Math_Cos(angle));
-    const short s = static_cast<short>(Math_Sin(angle));
-    return Premultiply(kOne, 0, 0, 0, c, static_cast<short>(-s), 0, s, c, matrix);
-}
-extern "C" short* __cdecl Gte_RotMatrixY(int angle, short* matrix) {
-    const short c = static_cast<short>(Math_Cos(angle));
-    const short s = static_cast<short>(Math_Sin(angle));
-    return Premultiply(c, 0, s, 0, kOne, 0, static_cast<short>(-s), 0, c, matrix);
-}
-extern "C" short* __cdecl Gte_RotMatrixZ(int angle, short* matrix) {
-    const short c = static_cast<short>(Math_Cos(angle));
-    const short s = static_cast<short>(Math_Sin(angle));
-    return Premultiply(c, static_cast<short>(-s), 0, s, c, 0, 0, 0, kOne, matrix);
-}
-
-// originals 0x5A8060, 0x5A80B0: libgte RotMatrix - Rx Ry Rz - and the twin
-// that makes Ry Rx Rz. The rotation part and its padding start as the
-// identity; the translation is left alone. Each angle is read just before its
-// rotation, after the matrix has been written, as the original reads them.
-extern "C" short* __cdecl Gte_RotMatrix(const short* angles, short* matrix) {
-    std::memcpy(matrix, Gte_IdentityRotation, 20);
-    Gte_RotMatrixZ(angles[2], matrix);
-    Gte_RotMatrixY(angles[1], matrix);
-    Gte_RotMatrixX(angles[0], matrix);
-    return matrix;
-}
-extern "C" short* __cdecl Gte_RotMatrixYXZ(const short* angles, short* matrix) {
-    std::memcpy(matrix, Gte_IdentityRotation, 20);
-    Gte_RotMatrixZ(angles[2], matrix);
-    Gte_RotMatrixX(angles[0], matrix);
-    Gte_RotMatrixY(angles[1], matrix);
-    return matrix;
-}
-
-// original 0x57C070 (PSX 0x8015BEA0): an object's rotation composed with the camera's, in
-// place, then the whole matrix - that rotation, the object's own translation -
-// loaded into the GTE.
-extern "C" void __cdecl Camera_LoadMatrix(short* matrix) {
-    Gte_MulMatrix0(Camera_Matrix, matrix, matrix);
-    Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(matrix));
-    Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(matrix));
-}
-
 namespace {
 
 // --- BOF3X_SHADOW=psx_gte_matrix: a differential fuzz, once at start-up -------
@@ -271,11 +193,4 @@ void PsxGteMatrix_Inject() {
         }
         SelfTest(entries, sizeof entries / sizeof entries[0]);
     }
-    BOF3_INJECT(Gte_MulMatrix0);
-    BOF3_INJECT(Gte_RotMatrixX);
-    BOF3_INJECT(Gte_RotMatrixY);
-    BOF3_INJECT(Gte_RotMatrixZ);
-    BOF3_INJECT(Gte_RotMatrix);
-    BOF3_INJECT(Gte_RotMatrixYXZ);
-    BOF3_INJECT(Camera_LoadMatrix);
 }

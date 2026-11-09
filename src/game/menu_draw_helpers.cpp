@@ -77,7 +77,7 @@ constexpr auto& WordMenuDrawHelpers = move_script::Word;
 
 using Handler = void (__cdecl*)();
 
-unsigned char* Rec() {
+unsigned char* RecMenuDrawHelpers() {
     return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 }
 
@@ -95,7 +95,7 @@ void Dispatch(menu_draw_helpers::U table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
 }
 // The step: the current record's byte +3 through a step table.
-void Step(menu_draw_helpers::U table) { Dispatch(table, Rec()[3]); }
+void Step(menu_draw_helpers::U table) { Dispatch(table, RecMenuDrawHelpers()[3]); }
 
 // A party slot's character record: 0x66972C[0x904062[slot]], both bytes, the
 // slot unbounded.
@@ -104,7 +104,7 @@ unsigned Member(unsigned slot) { return AtMenuDrawHelpers(::bof3::Img(Character_
 // The slides: x (+4) or y (+6) stepped by `by`; past `bound` (signed 16-bit;
 // `below` says which side) it is set to `to` and the step +3 goes to 0.
 void SlideX(int by, short bound, bool below, short to) {
-    unsigned char* const w = Rec();
+    unsigned char* const w = RecMenuDrawHelpers();
     rv::As<records::WindowRecord>(w)->x = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->x + by);
     const short x = S(w + 4);
     if (below ? x < bound : x > bound) {
@@ -113,7 +113,7 @@ void SlideX(int by, short bound, bool below, short to) {
     }
 }
 void SlideY(int by, short bound, bool below, short to) {
-    unsigned char* const w = Rec();
+    unsigned char* const w = RecMenuDrawHelpers();
     rv::As<records::WindowRecord>(w)->y = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->y + by);
     const short y = S(w + 6);
     if (below ? y < bound : y > bound) {
@@ -127,15 +127,6 @@ void SlideY(int by, short bound, bool below, short to) {
 // ===========================================================================
 // Record handler 7 (0x66B1F8)
 // ===========================================================================
-
-// original 0x59B220: record handler 7 of Field_RunTaskRecords' nine (the
-// imm32 at 0x59E27C) - `jmp [0x66B1F8 + byte +2 * 4]`, unbounded, into the
-// nineteen kinds of Window_Handler7KindTable. The kinds take nothing and
-// return nothing; ecx (the record) and eax (the kind) on entry are reloaded
-// by every kind (read 2026-09-25), so a call is the jump.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
-    Dispatch(::bof3::Img(Window_Handler7KindTable_addr), Rec()[2]);
-}
 
 // original 0x59B240, kind 0: the step (ShopWin_TitleSteps by +3: a bare ret,
 // 0x59A3A0, 0x59A3D0 - group DH's slides), then the title box
@@ -159,203 +150,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds
 // hands move with it (YesNoLayout_ShopHandX).
 unsigned char g_shop_yes_no_line = 0;
 
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(void) {
-    Step(::bof3::Img(ShopWin_TitleSteps_addr));
-    const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned char* w = Rec();
-    g.title_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0x118, 0x13, static_cast<int>(colour));
-    const unsigned id = WordMenuDrawHelpers(Rec() + 0x10);
-    if (id == 0) return;
-    const unsigned char* text = g.msg_system(id);
-    w = Rec();
-    g.text_draw_at(static_cast<std::uint16_t>(X(w) + 7), static_cast<std::uint16_t>(Y(w) + 3), 0, 0xFF, text);
-    const unsigned again = WordMenuDrawHelpers(Rec() + 0x10);
-    if (again != 0x36 && again != 0x49 && again != 0x4A && again != 0x52) return;
-    text = g.msg_system(0xF);
-    if (g_shop_yes_no_line) text = YesNoLayout_SystemLine(text);   // DIV-0027, amended 2026-10-03
-    w = Rec();
-    g.text_draw_at(static_cast<std::uint16_t>(X(w) + 7), static_cast<std::uint16_t>(Y(w) + 3), 0, 0xFF, text);
-}
-
-// original 0x59B310, kind 2: the step (ShopWin_ButtonsSteps: a bare ret,
-// 0x59A3A0, 0x59A680 - DH's), then Menu_DrawButtonRow(+4, +6, set +0xA,
-// selected +0xB, 0). The record is re-read after the step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ButtonsRun(void) {
-    Step(::bof3::Img(ShopWin_ButtonsSteps_addr));
-    const unsigned char* const w = Rec();
-    g.button_row(static_cast<int>(X(w)), static_cast<int>(Y(w)), w[0xA], w[0xB], 0);
-}
-
-// original 0x59B350, kind 1: the step (ShopWin_MoneySteps: a bare ret,
-// ShopWin_MoneySlideUp, 0x59A680 - DH's), then Menu_DrawMoneyBox(+4, +6, 0,
-// the zenny 0x904058). Record and zenny read after the step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MoneyRun(void) {
-    Step(::bof3::Img(ShopWin_MoneySteps_addr));
-    const unsigned char* const w = Rec();
-    const auto zenny = Party_Zenny;
-    g.money_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0, zenny);
-}
-
-// original 0x59B390, kind 1 step 1: y (+6) -= 0x10; then, when y is ABOVE
-// -0x14 (signed words), y = -0x14 and the step +3 = 0.
-//
-// As the original has it: `jle`, where its twin 0x59A3A0 (group DH's, the
-// same constants) has `jge`. So the box does not slide: from any y above -4
-// it lands at -0x14 in one frame, and from -4 or less it moves up 0x10 a frame
-// with the step never ending (the word wraps). A candidate defect of the
-// original's, kept (docs/menu_draw_helpers.md section 5).
-extern "C" void __cdecl ShopWin_MoneySlideUp(void) { SlideY(-0x10, -0x14, false, -0x14); }
-
-// original 0x59B3C0, kind 4: Menu_DrawCursorBox(+4, +6, width, 0x34, blink
-// +0xB, flags 6), the width the u16 of ShopWin_CursorBoxWidths by +0xA,
-// unbounded (0x70, then 0, then the low words of the next table's pointers).
-// No step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_CursorBoxDraw(void) {
-    const unsigned char* const w = Rec();
-    const unsigned width = WordMenuDrawHelpers(AtMenuDrawHelpers(::bof3::Img(ShopWin_CursorBoxWidths_addr) + w[0xA] * 2u));
-    g.cursor_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), static_cast<int>(width), 0x34, w[0xB], 6);
-}
-
-// original 0x59B3F0, kind 5: the step (ShopWin_MemberStatsSteps: a bare ret,
-// MenuWin_SlideOutLeft, 0x59A5B0 - DH's, ShopWin_MemberSlideUp,
-// ShopWin_MemberSlideDown), then Shop_DrawMemberStats(+4, +6, the character
-// record of party slot +0xA, slot +0xB, item +0xC). Record re-read after the
-// step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsRun(void) {
-    Step(::bof3::Img(ShopWin_MemberStatsSteps_addr));
-    const unsigned char* const w = Rec();
-    const unsigned item = w[0xC], slot = w[0xB];
-    const unsigned member = Member(w[0xA]);
-    g.member_stats(static_cast<int>(X(w)), static_cast<int>(Y(w)), member, slot, item);
-}
-
-// original 0x59B440, a step of kinds 5 and 6 (and of 0x59BEC0's table at
-// 0x66B304): x (+4) -= 0x20; below the bound (-150; signed words) x = the
-// bound and the step +3 = 0 - the window off the left edge.
-//
-// The bound is the imm32 at 0x59B446, which Widescreen_Inject (DIV-0041)
-// moves out by its columns; ours reads the low word of widescreen.cpp's value
-// for it (g.slide_left_bound's address; a fuzz points that at a clone's
-// immediate) at every call, as the original's `cmp word [eax + 4], cx` reads
-// the operand, so the divergence is kept and BOF3X_ORIGINAL=Widescreen still
-// restores -150.
-//
-// DIVERGENCE DIV-0041 (amended 2026-10-13, the faster slide): decided by that
-// bound at every width; in the wide view the box is drawn to the bound moved
-// out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
-extern "C" void __cdecl MenuWin_SlideOutLeft(void) {
-    const short bound = Widescreen_SlideLogic(static_cast<short>(WordMenuDrawHelpers(AtMenuDrawHelpers(g.slide_left_bound))));
-    const short x_read = S(Rec() + 4);
-    SlideX(-0x20, bound, true, bound);
-    Widescreen_SlideHeld(Rec(), x_read, bound);
-}
-
-// original 0x59B470, kind 5 step 3: y -= 0x10; below 0x3E, y = 0x3E and step 0.
-extern "C" void __cdecl ShopWin_MemberSlideUp(void) { SlideY(-0x10, 0x3E, true, 0x3E); }
-
-// original 0x59B4A0, kind 5 step 4: y += 0x10; above +0xA * 0x36 + 0x3E (the
-// y comparing as a signed word, the bound as the 32-bit sum), y = that sum's
-// low word and step 0 - the panel for party slot +0xA, 0x36 below the last.
-extern "C" void __cdecl ShopWin_MemberSlideDown(void) {
-    unsigned char* const w = Rec();
-    rv::As<records::WindowRecord>(w)->y = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->y + 0x10);
-    const int bound = static_cast<int>(w[0xA]) * 0x36 + 0x3E;
-    if (static_cast<int>(S(w + 6)) > bound) {
-        rv::As<records::WindowRecord>(w)->y = static_cast<unsigned>(bound);
-        w[3] = 0;
-    }
-}
-
-// original 0x59B4F0, kind 6: the step (ShopWin_EquipSteps: a bare ret,
-// MenuWin_SlideOutLeft, ShopWin_EquipSlideIn), then Menu_DrawEquipPanel(+4,
-// +6, the character record of party slot +0xA). Record re-read after the step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_EquipRun(void) {
-    Step(::bof3::Img(ShopWin_EquipSteps_addr));
-    const unsigned char* const w = Rec();
-    const unsigned member = Member(w[0xA]);
-    menu_draw_helpers::g.equip_panel(static_cast<int>(X(w)), static_cast<int>(Y(w)), member);
-}
-
-// original 0x59B530, kind 6 step 2: x += 0x20; above 0xF, x = 0xF and step 0.
-extern "C" void __cdecl ShopWin_EquipSlideIn(void) { SlideX(0x20, 0xF, false, 0xF); }
-
-// original 0x59B560, kind 7: the step (ShopWin_BuyListSteps: a bare ret,
-// 0x59A5E0 - DH's, ShopWin_BuyListSlideTo84, ShopWin_BuyListSlideTo46), then
-// Shop_DrawBuyList(the record, re-read after the step).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyListRun(void) {
-    Step(::bof3::Img(ShopWin_BuyListSteps_addr));
-    menu_draw_helpers::g.buy_list(Rec());
-}
-
-// original 0x59B7B0, kind 7 step 2: x -= 0x20; below 0x84, x = 0x84 and step 0.
-extern "C" void __cdecl ShopWin_BuyListSlideTo84(void) { SlideX(-0x20, 0x84, true, 0x84); }
-
-// original 0x59B7E0, kind 7 step 3: x -= 0x20; below 0x46, x = 0x46 and step 0.
-extern "C" void __cdecl ShopWin_BuyListSlideTo46(void) { SlideX(-0x20, 0x46, true, 0x46); }
-
-// original 0x59B810, kind 8: Shop_DrawBuyDetail(the record). No step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyDetailRun(void) { menu_draw_helpers::g.buy_detail(Rec()); }
-
-// original 0x59BB60, kind 9: the step (ShopWin_ItemListSteps: a bare ret,
-// 0x59A5E0 - DH's, ShopWin_ItemListSlideIn), then Menu_DrawItemList(the
-// record, re-read after the step).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ItemListRun(void) {
-    Step(::bof3::Img(ShopWin_ItemListSteps_addr));
-    menu_draw_helpers::g.item_list(Rec());
-}
-
-// original 0x59BB80, kind 9 step 2: x -= 0x20; below 0x4B, x = 0x4B and step 0.
-extern "C" void __cdecl ShopWin_ItemListSlideIn(void) { SlideX(-0x20, 0x4B, true, 0x4B); }
-
-// original 0x59BBB0, kind 10: Shop_DrawSellDetail(the record). No step.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SellDetailRun(void) { menu_draw_helpers::g.sell_detail(Rec()); }
-
 // ===========================================================================
 // Record handler 8 (0x66B534)
 // ===========================================================================
-
-// original 0x59CB00: record handler 8 of Field_RunTaskRecords (the imm32 at
-// 0x59E284) - `jmp [0x66B534 + byte +2 * 4]`, unbounded, into the six kinds
-// of Window_Handler8KindTable, which reload ecx and eax as handler 7's do.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler8Kinds(void) {
-    Dispatch(::bof3::Img(Window_Handler8KindTable_addr), Rec()[2]);
-}
-
-// original 0x59CB20: the pointing hand at the record's +4, +6
-// (Menu_DrawHand(x, y, 0)). Kind 0 of handler 8, kind 3 of handler 7, and
-// jumped to from three more kind tables (0x66AE40 handler 1's kind 0,
-// 0x66AECC handler 2's kind 1, 0x66AFCC handler 6's kind 14).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuWin_Hand(void) {
-    const unsigned char* const w = Rec();
-    g.hand(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0);
-}
-
-// original 0x59CB40, handler 8 kind 1: the step (BattleMenuWin_ItemListSteps:
-// a bare ret, 0x59A580 - DH's, BattleMenuWin_ItemListSlideRight, 0x59CB90 -
-// in no group, 0x59A5E0 - DH's), then BattleMenu_DrawItemList(the record,
-// re-read after the step).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_ItemListRun(void) {
-    Step(::bof3::Img(BattleMenuWin_ItemListSteps_addr));
-    menu_draw_helpers::g.battle_items(Rec());
-}
-
-// original 0x59CB60, handler 8 kind 1 step 2: x += 0x20; above 0x53, x = 0x52
-// and step 0. As the original has it: the test is against 0x53 and the store
-// 0x52, so an x that lands on 0x53 stays there a frame and goes on to 0x73
-// and then 0x52.
-extern "C" void __cdecl BattleMenuWin_ItemListSlideRight(void) { SlideX(0x20, 0x53, false, 0x52); }
-
-// original 0x59CBC0, handler 8 kind 2: the step (BattleMenuWin_SkillListSteps:
-// a bare ret, 0x59A5E0 - DH's, BattleMenuWin_SkillListSlideIn), then
-// BattleMenu_DrawSkillList(the record, re-read after the step).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_SkillListRun(void) {
-    Step(::bof3::Img(BattleMenuWin_SkillListSteps_addr));
-    menu_draw_helpers::g.battle_skills(Rec());
-}
-
-// original 0x59CBE0, handler 8 kind 2 step 2: x -= 0x20; below 0x53, x = 0x53
-// and step 0.
-extern "C" void __cdecl BattleMenuWin_SkillListSlideIn(void) { SlideX(-0x20, 0x53, true, 0x53); }
 
 // ===========================================================================
 
@@ -371,29 +168,4 @@ void MenuDrawHelpers_Inject() {
                          &was, &is, 1);
         bof3::Log("DIV-0027    the shop's yes / no line re-spaced as Menu_YesNo's");
     }
-    BOF3_INJECT(Window_Handler7Kinds);
-    BOF3_INJECT(ShopWin_TitleRun);
-    BOF3_INJECT(ShopWin_ButtonsRun);
-    BOF3_INJECT(ShopWin_MoneyRun);
-    BOF3_INJECT(ShopWin_MoneySlideUp);
-    BOF3_INJECT(ShopWin_CursorBoxDraw);
-    BOF3_INJECT(ShopWin_MemberStatsRun);
-    BOF3_INJECT(MenuWin_SlideOutLeft);
-    BOF3_INJECT(ShopWin_MemberSlideUp);
-    BOF3_INJECT(ShopWin_MemberSlideDown);
-    BOF3_INJECT(ShopWin_EquipRun);
-    BOF3_INJECT(ShopWin_EquipSlideIn);
-    BOF3_INJECT(ShopWin_BuyListRun);
-    BOF3_INJECT(ShopWin_BuyListSlideTo84);
-    BOF3_INJECT(ShopWin_BuyListSlideTo46);
-    BOF3_INJECT(ShopWin_BuyDetailRun);
-    BOF3_INJECT(ShopWin_ItemListRun);
-    BOF3_INJECT(ShopWin_ItemListSlideIn);
-    BOF3_INJECT(ShopWin_SellDetailRun);
-    BOF3_INJECT(Window_Handler8Kinds);
-    BOF3_INJECT(MenuWin_Hand);
-    BOF3_INJECT(BattleMenuWin_ItemListRun);
-    BOF3_INJECT(BattleMenuWin_ItemListSlideRight);
-    BOF3_INJECT(BattleMenuWin_SkillListRun);
-    BOF3_INJECT(BattleMenuWin_SkillListSlideIn);
 }

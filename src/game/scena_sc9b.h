@@ -14,3 +14,5 @@ namespace scena_sc9b {
 // original before ScenaSc9b_Inject patches it.
 void SelfTest();
 }  // namespace scena_sc9b
+
+void Pose(unsigned char* object, unsigned char pose);   // defined in scena_sc9b.cpp at file scope (named here for a moved reader: source-layout B6)

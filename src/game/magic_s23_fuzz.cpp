@@ -315,6 +315,18 @@ constexpr std::uint32_t kGteSize = 0x380;
 // kGteDepth: now Gte_MatrixDepth (symbols.toml). Gte_MatrixDepth: kept 0..0x15 (a negative one writes below the stack)
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 
+// Left out of the compare (magic_harness::SetSkips): the PSX MATRIX's two padding bytes
+// after m[3][3] (+0x12..+0x13), which the original's PushMatrix copies from uninitialised
+// stack - undefined on both sides. The gte.cpp functions' frames changed in stage B of the
+// source-layout round (the `inline` gate class) and that garbage no longer matched (476
+// rounds of FxSpiral_PushMatrix; B6 report, 2026-11-09). Gte_Matrix's once, and the same
+// two bytes of each of Gte_MatrixStack's 20 slots (a MATRIX is 0x20 bytes; the run showed
+// them at 0x7DE512, 0x7DE572 .. 0x7DE6F2).
+const mh::Skip kSkips[] = {
+    {Gte_Matrix_addr + 0x12, 2, 0, 1},
+    {Gte_MatrixStack_addr + 0x12, 2, 0x20, 20},
+};
+
 const mh::Region kRegions[] = {
     {0x903800, 4},                    // Camera_ShiftY
     {at::kR, 0x10},       // the effect scratch 0x903850..0x90385F
@@ -485,6 +497,7 @@ void SelfTest() {
         &Disturb,
         2000,
     };
+    mh::SetSkips(kSkips, sizeof kSkips / sizeof kSkips[0]);
     mh::Run(group);
 }
 

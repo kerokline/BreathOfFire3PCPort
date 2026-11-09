@@ -9,12 +9,7 @@
 
 namespace {
 
-// What the setters leave at +0x10 and on: the float 0.01, as its bits. The
-// PSX primitives have no such field; the port's are wider, and unread.
-constexpr std::uint32_t kPointZeroOne = 0x3C23D70Au;
 constexpr std::uint32_t kLinkFlag = 0x80000000u;
-
-void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v); }
 
 // --- BOF3X_SHADOW=psx_gpu: differential fuzzes, once at start-up ---------------
 // Seventeen leaves with no calls and only internal jumps: a byte-copy of each
@@ -108,104 +103,6 @@ void FuzzClearOTagR(ClearFn theirs, ClearFn ours) {
 
 }  // namespace
 
-// original 0x5A7540. Puts prim at the head of the list ot heads: the old head
-// goes to link_out - prim's own link, for the game's callers - and the new
-// head carries bit 31 of what prim's first dword held. Both reads first.
-extern "C" void __cdecl Gpu_AddPrim(unsigned long* ot, unsigned long* prim, unsigned long* link_out) {
-    const unsigned long flag = *prim & kLinkFlag;
-    const unsigned long head = *ot;
-    *link_out = head;
-    *ot = flag | Low32(prim);
-}
-
-// original 0x5A7560. One store: the list's last link now names `item`. The
-// caller makes `item` the new tail. 892,889 calls in the attract run.
-extern "C" void __cdecl Gpu_LinkPrim(unsigned long* tail, unsigned long item) { *tail = item; }
-
-// originals 0x5A75D0, 0x5A7650, 0x5A7710, 0x5A7760, 0x5A7770. The primitive's
-// GPU code to byte +7, and for three of them 0.01 to a float per vertex.
-extern "C" void __cdecl Gpu_SetPolyFT4(unsigned char* prim) {
-    prim[7] = 0x2C;
-    for (unsigned at = 0x10; at <= 0x40; at += 0x10) PutDword(prim + at, kPointZeroOne);
-}
-// originals 0x5A7630, 0x5A7690, 0x5A7740 - the three the window layer wants
-// (docs/window-task.md): a shaded textured quad at a 0x14-byte vertex stride,
-// a four-point line at 0xC, and a tile with one vertex.
-extern "C" void __cdecl Gpu_SetPolyGT4(unsigned char* prim) {
-    prim[7] = 0x3C;
-    for (unsigned at = 0x10; at <= 0x4C; at += 0x14) PutDword(prim + at, kPointZeroOne);
-}
-extern "C" void __cdecl Gpu_SetLineF4(unsigned char* prim) {
-    prim[7] = 0x4C;
-    for (unsigned at = 0x10; at <= 0x34; at += 0xC) PutDword(prim + at, kPointZeroOne);
-}
-extern "C" void __cdecl Gpu_SetTile(unsigned char* prim) {
-    prim[7] = 0x60;
-    PutDword(prim + 0x10, kPointZeroOne);
-}
-extern "C" void __cdecl Gpu_SetLineF2(unsigned char* prim) {
-    prim[7] = 0x40;
-    PutDword(prim + 0x10, kPointZeroOne);
-    PutDword(prim + 0x1C, kPointZeroOne);
-}
-extern "C" void __cdecl Gpu_SetSprt(unsigned char* prim) {
-    prim[7] = 0x64;
-    PutDword(prim + 0x10, kPointZeroOne);
-}
-extern "C" void __cdecl Gpu_SetCode6C(unsigned char* prim) { prim[7] = 0x6C; }
-extern "C" void __cdecl Gpu_SetCode84(unsigned char* prim) { prim[7] = 0x84; }
-
-// originals 0x5A7780, 0x5A77A0. Bits 1 and 0 of the GPU code, from bit 0 of the
-// argument's low byte.
-extern "C" void __cdecl Gpu_SetSemiTrans(unsigned char* prim, unsigned abe) {
-    prim[7] = static_cast<unsigned char>((abe & 1) ? prim[7] | 2 : prim[7] & 0xFD);
-}
-extern "C" void __cdecl Gpu_SetShadeTex(unsigned char* prim, unsigned tge) {
-    prim[7] = static_cast<unsigned char>((tge & 1) ? prim[7] | 1 : prim[7] & 0xFE);
-}
-
-// original 0x5A77C0. A draw-mode primitive: 0xE8000000 with the texture page
-// in the low word and the two flags in bits 16 and 17 - not the PSX GPU's
-// 0xE1 packet - and the texture window word after it.
-extern "C" void __cdecl Gpu_SetDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
-    PutDword(prim + 4, 0xE8000000u | (tpage & 0xFFFFu));
-    if (dfe) prim[6] |= 1;
-    if (dtd) prim[6] |= 2;
-    PutDword(prim + 8, tw);
-}
-
-// original 0x5A7960. An ordering table of n entries, each linking to the one
-// below it and the lowest to the terminator, every link with bit 31 set.
-//
-// As the original has it: for n < 2 the terminator goes to ot[n - 1], which
-// for n < 1 is outside the table.
-extern "C" void __cdecl Gpu_ClearOTagR(unsigned long* ot, int n) {
-    std::uintptr_t at = reinterpret_cast<std::uintptr_t>(ot) + static_cast<std::uintptr_t>(n) * 4u - 4u;
-    for (int k = n - 1; k > 0; --k) {
-        *reinterpret_cast<unsigned long*>(at) = static_cast<unsigned long>(at - 4u) | kLinkFlag;
-        at -= 4u;
-    }
-    *reinterpret_cast<unsigned long*>(at) =
-        Low32(&Gpu_OtTerminator) | kLinkFlag;
-}
-
-// originals 0x5A79A0, 0x5A79E0: libgpu's getTPage and getClut, bit for bit.
-extern "C" unsigned __cdecl Gpu_GetTPage(unsigned tp, unsigned abr, int x, int y) {
-    return ((tp & 3u) << 7) | ((abr & 3u) << 5) | ((static_cast<unsigned>(y) & 0x200u) << 2) |
-           (static_cast<unsigned>(x >> 6) & 0xFu) | (static_cast<unsigned>(y >> 4) & 0x10u);
-}
-extern "C" unsigned __cdecl Gpu_GetClut(int x, int y) {
-    return (static_cast<unsigned>(x >> 4) & 0x3Fu) | (static_cast<unsigned>(y) << 6);
-}
-
-// original 0x5A7A00. Sine of a 4096-step angle, 4096 to the unit, from the
-// exe's own quarter-wave table - which is read in place, never copied.
-extern "C" int __cdecl Math_Sin(int angle) {
-    const int sign = (angle & 0x800) ? -1 : 1;
-    const int a = angle & 0x7FF;
-    return static_cast<int>(Math_SinTable[a < 0x400 ? a : 0x800 - a]) * sign;
-}
-
 void PsxGpu_Inject() {
     // Every one: no calls, jumps internal or none (disasm 2026-09-20).
     if (bof3::WantsShadow("psx_gpu")) {
@@ -236,21 +133,4 @@ void PsxGpu_Inject() {
         bof3::Log("shadow      psx_gpu self-test: 17 functions, %u rounds in all, %u MISMATCHES", g_rounds, g_bad);
         if (g_bad) bof3::Fatal("the PSX library layer differs from the originals in %u of %u self-test rounds", g_bad, g_rounds);
     }
-    BOF3_INJECT(Gpu_AddPrim);
-    BOF3_INJECT(Gpu_LinkPrim);
-    BOF3_INJECT(Gpu_SetPolyFT4);
-    BOF3_INJECT(Gpu_SetPolyGT4);
-    BOF3_INJECT(Gpu_SetLineF4);
-    BOF3_INJECT(Gpu_SetTile);
-    BOF3_INJECT(Gpu_SetLineF2);
-    BOF3_INJECT(Gpu_SetSprt);
-    BOF3_INJECT(Gpu_SetCode6C);
-    BOF3_INJECT(Gpu_SetCode84);
-    BOF3_INJECT(Gpu_SetSemiTrans);
-    BOF3_INJECT(Gpu_SetShadeTex);
-    BOF3_INJECT(Gpu_SetDrawMode);
-    BOF3_INJECT(Gpu_ClearOTagR);
-    BOF3_INJECT(Gpu_GetTPage);
-    BOF3_INJECT(Gpu_GetClut);
-    BOF3_INJECT(Math_Sin);
 }

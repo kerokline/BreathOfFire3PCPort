@@ -114,36 +114,8 @@ using namespace battle_sprites;
 //
     unsigned char* const s = Sprite_Current;
 
-// original 0x588F00 (0x8014D154; PSX 0x8014D154): Sprite_Current +0x29 = Draw_OtSlot, then
-// (a tail jump) Sprite_UpdateScreen.
-extern "C" void __cdecl Sprite_UpdateScreenSlot(void) {
-    Sprite_Current[0x29] = Draw_OtSlot;
-    battle_sprites::g.update_screen();
-}
-
-// original 0x587900 (PSX 0x8015E210): Sound_PlayEffect(id). Ops BC, BD and D1 push more
-// arguments; only the first is read.
-//
-// The PlayStation has three here (US 0x8015D71C / 0x8015D7C8 / 0x8015D820;
-// JP 0x8015E10C / 0x8015E1B8 / 0x8015E210); the port folded them into one.
-// Every caller but four is the first's (a jal scan of the US disc: 503 calls
-// in 176 overlays; 0x8015D7C8 only from op BC and SCENA01's three, 0x8015D820
-// only from ops BD and D1), and those four are ours and call sound_sp's
-// level plays under DIV-0172 (move_groups.cpp, scena_sc1.cpp).
-// DIVERGENCE DIV-0171: with the switch, the first's play: the cue follows
-// Sprite_Current (sound_sp.h).
-extern "C" void __cdecl Sound_PlayById(unsigned short id) {
-    if (sound_sp::g_position) {
-        sound_sp::PlayPositional(id);
-        return;
-    }
-    battle_sprites::g.play_effect(id);
-}
-
 void BattleSprites_Inject() {
     if (bof3::WantsShadow("battle_sprites")) battle_sprites::SelfTest();
-    BOF3_INJECT(Sprite_UpdateScreenSlot);
-    BOF3_INJECT(Sound_PlayById);
     // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
     // would write the kind's bit and the cheat would be silently half off.
     if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_SetupEnemy))

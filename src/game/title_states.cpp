@@ -19,8 +19,6 @@
 namespace {
 
 using move_script::At;
-using move_script::Long;
-using move_script::SetLong;
 using move_script::SetWord;
 
 // Bytes the handlers touch that have no name (docs/title-states.md has the
@@ -30,7 +28,6 @@ constexpr ::bof3::image::Va kPlayClock{0x9040C8};      // four bytes zeroed star
 // kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
 constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
 constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
-const std::uint32_t kCondFlags = Low32(Cond_Flags);
 
 }  namespace title_states { bool g_psp_title = false; }
 namespace {
@@ -41,69 +38,16 @@ const title_states::CalleesTitleStates kOriginalsTitleStates = {
     Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
 }  namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
-// original 0x56D5E0: start scenario chapter `chapter` (PSX 0x801A870C). The
-// chapter byte is Cond_ByteFA (PSX 0x8014686C, the index into the scenario
-// vtable table the dispatcher Field_ModeDispatch reads); the scenario's
-// state bytes after it are cleared, and the chapter's own Cond_Flags dword
-// zeroed and remembered at 0x929ED0. Then its DAT (0x306 + chapter), a wait
-// for it - a field frame without the event script each frame, unless no
-// area is loaded (Game_AreaNumber 0xFFFF) or an area change is pending
-// (Field_Request 5) - and the scenario's first frame (a tail jump).
 //
-// As the original has it: the argument's low byte only, sign-extended for
-// the Cond_Flags index, so chapters 0x80..0xFF reach below Cond_Flags; no
-// bounds check. The bytes 0x8034E1..0x8034E9 are zeroed whatever the chapter
-// (MoveScript_Var7 is 0x8034E4, Field_StepCountPrev 0x8034E8). File_LoadDone
-// is asked before any frame; on the PC it is always done, so the loop body
-// never runs.
-extern "C" void __cdecl Scenario_Start(int chapter) {
-    const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = move_script::At(::bof3::Img(kScenarioBytes.v));
-    s[0] = static_cast<unsigned char>(c);
-    s[2] = 0;
-    s[3] = 0;
-    s[4] = 0;
-    move_script::SetWord(s + 6, 0);
-    s[5] = 0;
-    s[1] = 0;
-    move_script::SetWord(s + 8, 0);
-    const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
-    move_script::SetLong(move_script::At(flags), 0);
-    Chapter_FlagRow = static_cast<std::int32_t>(flags);
-    title_states::gTitleStates.scenario_load();
-    while (title_states::gTitleStates.load_done() == 0) {
-        if (Game_AreaNumber != 0xFFFF && Field_Request != 5) title_states::gTitleStates.loading_frame();
-        title_states::gTitleStates.sleep(1);
-    }
-    title_states::gTitleStates.mode_dispatch();
-}
-
-// original 0x56D670: the current chapter's DAT (PSX 0x801A880C, which loads
-// 0x295 + chapter, SCENA<chapter>.EMI). As the original has it: the chapter
-// byte sign-extended.
-extern "C" void __cdecl Scenario_Load(void) {
-    title_states::gTitleStates.load_dat(static_cast<int>(Cond_ByteFA) + 0x306);
-}
-
-// original 0x56D8C0: state 0 of the dispatcher 0x56D8B0 (PSX 0x801A8C34):
-// its state byte to 1 so the next frame runs entry 1 (0x56D920), the six
-// bytes and two words around it zeroed, and 16 bytes of the story flags
-// (Cond_Flags + 0xA0) seeded from the table at 0x662CD8.
 //
-// As the original has it: four dword copies (the PSX copies bytewise); the
-// table and the flags do not overlap, so the order is unobservable.
-extern "C" void __cdecl Scenario_SubInit(void) {
-    unsigned char* const s = move_script::At(::bof3::Img(ScenaSc7_DrawPool_addr));
-    s[2] = 1;
-    s[0] = 0;
-    s[3] = 0;
-    s[4] = 0;
-    move_script::SetWord(s + 6, 0);
-    s[5] = 0;
-    s[1] = 0;
-    move_script::SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) move_script::SetLong(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0 + i), move_script::Long(move_script::At(::bof3::Img(Scenario_SubInitTable_addr) + i)));
-}
+//
+//
+//
+//
+//
+//
+//
+//
 
 namespace {
 
@@ -569,7 +513,4 @@ void TitleStates_Inject() {
     }
     title_states::g_psp_title = psp_code::PspBase();
     if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
-    BOF3_INJECT(Scenario_Start);
-    BOF3_INJECT(Scenario_Load);
-    BOF3_INJECT(Scenario_SubInit);
 }

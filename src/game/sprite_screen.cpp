@@ -29,103 +29,6 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 const sprite_screen::Callees kOriginals = {Sprite_InheritDrawKey, Gte_RotTransPers, Port_DroppedCall, Sprite_QueueOverlay};
 }  namespace sprite_screen { Callees g = kOriginals; }
 namespace {
-// `fld dword` then `fstp dword`: exact, except that a signalling NaN comes
-// back quiet (bit 22 set) - the only change the x87 makes to a float it moves.
-std::uint32_t ThroughX87(std::uint32_t bits) {
-    const bool nan = (bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0;
-    return nan ? bits | 0x00400000u : bits;
-}
-// `fld dword` then the CRT's _ftol 0x5B9550: truncation through a 64-bit
-// fistp, whose NaN and out-of-range answer is the integer indefinite
-// 0x8000000000000000 - so 0 in the low word the caller keeps.
-std::uint16_t Ftol16(std::uint32_t bits) {
-    float v;
-    std::memcpy(&v, &bits, sizeof v);
-    if (!(v > -9.2233720368547758e18f && v < 9.2233720368547758e18f)) return 0;   // NaN included
-    return static_cast<std::uint16_t>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
-}
-
-}  // namespace
-
-// original 0x5890E0 (PSX 0x8014D3D4): a sprite with +0x24 bit 7 goes onto the overlay list, not
-// the draw list (PSX FUN_8014D3D4).
-extern "C" void __cdecl Sprite_QueueOverlay(void) {
-    const unsigned char n = Sprite_OverlayListCount;
-    if (n >= 30) return;
-    Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
-    Sprite_OverlayList[n] = Sprite_Current;
-    if (rv::Current<records::SpriteHead>()->flags & 8) sprite_screen::g.dropped(0);
-    if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0171 (PSX US 0x80161454)
-}
-
-// original 0x588F20: Sprite_Current's draw key, screen position and depth,
-// and its place on the draw list (PSX FUN_8014D184, the sibling's
-// Actor_UpdateScreenPos).
-//
-// As the original has it: the key is 16-bit arithmetic, stored before its
-// range is tested; the float screen point is stored as the x87 moves it and
-// truncated as the CRT's _ftol does (see Ftol16); the PSX's call for a sprite
-// with flag bit 8 is Port_DroppedCall, a bare ret, on the PC.
-// Sprite_Current is any sprite head: effect handlers call this too
-// (field_c1.cpp, field_c2.cpp, EffectKind37_Play, rest_3f CaptureSprite), so
-// it reads as SpriteHead (C2 audit frs F2).
-extern "C" void __cdecl Sprite_UpdateScreen(void) {
-    records::SpriteHead* sprite = rv::Current<records::SpriteHead>();
-    if (sprite->draw_flags & 0x80) {
-        sprite_screen::g.overlay();
-        return;
-    }
-    const unsigned x_whole = sprite->x_frac == 0, z_whole = sprite->z_frac == 0;
-    const signed char adjust = Sprite_KeyAdjust[sprite->key_class * 3u + x_whole + z_whole];
-    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + sprite->z_whole + sprite->x_whole -
-                                                static_cast<std::uint16_t>(MapView_Origin[1]) -
-                                                static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
-    sprite->draw_key = key;
-    sprite = rv::Current<records::SpriteHead>();
-    const auto layer = static_cast<std::int16_t>(sprite->draw_key);
-    if (layer < 0 || layer > 0x36) {   // off the map's layers: hidden
-        sprite->flags |= 0x80;
-        return;
-    }
-    // DIV-0071's comparison mode (BOF3X_LAYERING=2, off during every fuzz): the key one layer later.
-    const int later = layering::g_mode == layering::kLayerLater && Draw_OtSlot == 6 && layer < 0x36;
-    sprite->draw_key = static_cast<unsigned>((layer + later) & 0xFF) << 8;
-    unsigned low;
-    if (Draw_OtSlot == 4) {
-        sprite = rv::Current<records::SpriteHead>();
-        low = static_cast<unsigned>(move_script::Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
-    } else {
-        sprite = rv::Current<records::SpriteHead>();
-        low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
-    }
-    sprite->draw_key = sprite->draw_key | low;
-    sprite_screen::g.inherit_key();
-
-    sprite = rv::Current<records::SpriteHead>();
-    short vertex[4];
-    vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
-    vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
-    unsigned long screen[2];
-    long depth_cue;
-    const long depth = sprite_screen::g.project(vertex, screen, &depth_cue);
-    rv::Current<records::SpriteHead>()->depth = depth;
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
-
-    const unsigned char n = Sprite_DrawListCount;
-    if (n >= 0x28) return;
-    unsigned char* const drawn = Sprite_Current;
-    Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
-    Sprite_DrawList[n] = drawn;
-    band_census::Seen(drawn);   // BOF3X_BANDLOG, an instrument: reads only (band_census.h)
-    if (drawn[0] & 8) sprite_screen::g.dropped(0);
-    if (sound_sp::g_position) sound_sp::UpdatePositional();   // DIVERGENCE DIV-0171 (PSX US 0x80161454)
-}
-
-namespace {
 
 // --- BOF3X_SHADOW=sprite_screen: a differential fuzz, once at start-up ------
 // Two byte-copies, their calls re-aimed at the recorders below - all but the
@@ -299,6 +202,4 @@ void SpriteScreen_Inject() {
         (void)kFtol;
         SelfTest(reinterpret_cast<Fn>(update), reinterpret_cast<Fn>(overlay));
     }
-    BOF3_INJECT(Sprite_UpdateScreen);
-    BOF3_INJECT(Sprite_QueueOverlay);
 }

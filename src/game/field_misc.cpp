@@ -73,30 +73,14 @@ field_misc::U LongFieldMisc(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-float FloatFieldMisc(const unsigned char* p) {
-    float v;
-    std::memcpy(&v, p, sizeof v);
-    return v;
-}
-void PutWord(unsigned char* p, field_misc::U v) {
-    const auto w = static_cast<std::uint16_t>(v);
-    std::memcpy(p, &w, sizeof w);
-}
 void PutLongFieldMisc(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-void PutFloatFieldMisc(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 // The map-view ring (docs/map-scroll.md): 0x38 rows of 0x1C cells, their heads
 // MapView_Row / MapView_Column; MapView_Origin the map cell of the view's corner.
-field_misc::U OriginX() { return WordFieldMisc(AtFieldMisc(at::MapView_OriginAt())); }
-field_misc::U OriginZ() { return WordFieldMisc(AtFieldMisc(at::MapView_OriginAt() + 2)); }
-std::int32_t Row() { return Short(WordFieldMisc(AtFieldMisc(at::MapView_RowAt()))); }
-std::int32_t Column() { return Short(WordFieldMisc(AtFieldMisc(at::MapView_ColumnAt()))); }
-unsigned char BufferIndex() { return AtFieldMisc(at::Gfx_BufferIndexAt())[0]; }
-field_misc::U Header(field_misc::U byte_offset) { return at::AreaMap_HeaderAt() + byte_offset; }
-
-// A draw item's 0x48-byte half for this display buffer: DrawItems +
-// (Gfx_BufferIndex + index * 2) * 0x48, all in 32 bits as the original's lea.
-field_misc::U ItemHalf(field_misc::U index) { return at::DrawItemsAt() + (BufferIndex() + index * 2u) * 0x48u; }
+field_misc::U OriginX() { return WordFieldMisc(AtFieldMisc(field_misc::at::MapView_OriginAt())); }
+field_misc::U OriginZ() { return WordFieldMisc(AtFieldMisc(field_misc::at::MapView_OriginAt() + 2)); }
+std::int32_t Row() { return Short(WordFieldMisc(AtFieldMisc(field_misc::at::MapView_RowAt()))); }
+std::int32_t Column() { return Short(WordFieldMisc(AtFieldMisc(field_misc::at::MapView_ColumnAt()))); }
 
 // The diagonal ring lookup MoveCmd_TestFB / FC, MapView_ItemAt (and the
 // cell handler 0x570A00, Capcom's) share: map cell (x', z') relative to the
@@ -120,47 +104,6 @@ Ring RingCell(std::int32_t dx, std::int32_t dz) {
     std::int32_t column = static_cast<std::int32_t>(static_cast<field_misc::U>(d / 2) + static_cast<field_misc::U>(Column()) + 1u);
     if (column >= 0x1C) column -= 0x1C;
     return {true, static_cast<field_misc::U>(row), static_cast<field_misc::U>(column), static_cast<field_misc::U>(column)};
-}
-
-// --- the x87 sequences, as the draw handlers execute them (d3d_draw.cpp has the
-// same; each rounds to the control word's precision exactly as Capcom's) ---
-// fld a; fmul b; fstp
-inline float X87MulFieldMisc(float a, float b) {
-    float r;
-    __asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-    return r;
-}
-// fld a; fdiv b; fstp
-inline float X87DivFieldMisc(float a, float b) {
-    float r;
-    __asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-    return r;
-}
-
-// D3d_Device, read afresh before every COM call as the original does.
-void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr))))); }
-void* MethodFieldMisc(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
-using Com3 = long(__stdcall*)(void*, U, U);
-using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-long SetTextureFieldMisc(field_misc::U stage, field_misc::U texture) {
-    void** device = DeviceFieldMisc();
-    return reinterpret_cast<Com3>(MethodFieldMisc(device, 0x98))(device, stage, texture);
-}
-// DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVerticesFieldMisc(field_misc::U type, field_misc::U count) {
-    void** device = DeviceFieldMisc();
-    return reinterpret_cast<Com6>(MethodFieldMisc(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
-}
-unsigned char* VertexFieldMisc(field_misc::U i) { return AtFieldMisc(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
-field_misc::U DrawModeFieldMisc() { return LongFieldMisc(AtFieldMisc(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
-// sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
-// rhw = 0.1 / z. Diffuse as given; specular, tu and tv are not written.
-void PutFlatCorner(unsigned char* out, const unsigned char* xyz, field_misc::U diffuse) {
-    PutFloatFieldMisc(out + 0x00, X87MulFieldMisc(D3d_ScaleX, FloatFieldMisc(xyz)));
-    PutFloatFieldMisc(out + 0x04, X87MulFieldMisc(D3d_ScaleY, FloatFieldMisc(xyz + 4)));
-    PutLongFieldMisc(out + 0x08, LongFieldMisc(xyz + 8));
-    PutFloatFieldMisc(out + 0x0C, X87DivFieldMisc(FloatFieldMisc(AtFieldMisc(field_misc::kRhwNumerator)), FloatFieldMisc(xyz + 8)));
-    PutLongFieldMisc(out + 0x10, diffuse);
 }
 
 // The two ops' shared walk: the map cell's run of 4-byte records; a record of
@@ -204,35 +147,6 @@ U TileTest(U x_arg, U z_arg, U want) {
 
 // --- the map tests -----------------------------------------------------------
 
-// original 0x5725C0 (PSX 0x80155A34): the slope at (x, y) along `direction`
-// with the height scale the leader's state asks for: MapView_CheckHeightScale,
-// AreaMap_Slope(x, y, direction) - the three dwords passed on whole - then
-// MapView_HeightScale = 0; returns AreaMap_Slope's eax untouched (the PSX
-// sign-extends its low half; the PC's 102 callers get the whole register).
-// AreaMap_Slope's scratch flag 0x903850 is left as it set it.
-extern "C" long __cdecl MapView_SlopeAt(long x, long y, unsigned long direction) {
-    field_misc::g.check_height_scale();
-    const long slope = field_misc::g.slope(x, y, direction);
-    AtFieldMisc(at::MapView_HeightScaleAt())[0] = 0;
-    return slope;
-}
-
-// original 0x572ED0 (PSX 0x801563AC): the draw item of map cell (x, y) - the
-// low 12 bits of the word at +2 of its MapView_CellItems slot - or 0 when the
-// cell is outside the view's ring. The arguments are whole dwords, less
-// MapView_Origin's words sign-extended, in 32 bits (MoveCmd_TestFB's subtract
-// in 16). Returns the whole eax: the masked word, or 0.
-//
-// DIV-0041 (wide-ring): outside Capcom's window but inside the grown ring, the
-// rim's item - every caller textures, draws or allocates draw items with it
-// (docs/wide-ring-read.md 1.3).
-extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
-    const auto dx = static_cast<std::int32_t>(static_cast<field_misc::U>(x) - static_cast<field_misc::U>(Short(OriginX())));
-    const auto dz = static_cast<std::int32_t>(static_cast<field_misc::U>(y) - static_cast<field_misc::U>(Short(OriginZ())));
-    const Ring ring = RingCell(dx, dz);
-    if (!ring.inside) return map_rim::Active() ? map_rim::RimItemAt(dx, dz) : 0;
-    return WordFieldMisc(AtFieldMisc(at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 28u) * 4u)) & 0xFFF;
-}
 
 // originals 0x572650 (PSX 0x80155B38) and 0x572790 (PSX 0x80155CD4): the
 // movement script's ops FB and FC (MoveScript_GroupF, docs/move-cmds.md) and
@@ -261,172 +175,10 @@ extern "C" unsigned long __cdecl FieldMisc_TestFB(unsigned long x, unsigned long
 extern "C" unsigned long __cdecl FieldMisc_TestFC(unsigned long x, unsigned long z) {
     return TileTest(static_cast<U>(x), static_cast<U>(z), 0x8001);
 }
-extern "C" __attribute__((naked)) unsigned char __cdecl MoveCmd_TestFB(short, short) {
-    asm("jmp " BOF3_SYM(FieldMisc_TestFB));
-}
-extern "C" __attribute__((naked)) unsigned char __cdecl MoveCmd_TestFC(short, short) {
-    asm("jmp " BOF3_SYM(FieldMisc_TestFC));
-}
 
 // --- the area patch list -------------------------------------------------------
 
-// original 0x571110 (PSX 0x801581B8): one entry of the area's patch list
-// (AreaMap_SetupEntries' second walk, and the cell handlers 0x571090 /
-// 0x5710D0, and two callers in 0x413xxx / 0x41Cxxx). The entry's low word is an
-// Area_TestCondition code; its result, al sign-extended, is `c` (0 or 1 from
-// that function). The high word, read after the call, is the entry's length n
-// in dwords. Records follow, each headed by a dword: kind (byte 3), bits 20-23
-// a face, bits 16-19 a texture offset, x (byte 1), y (byte 0). While the
-// dwords consumed are fewer than n (signed):
-//   kind 0 (3 dwords): dword (c ? +8 : +4) into the area's texture run at
-//       ((height * width + 1) / 2 + offset + tile + bits 16-19), `tile` the
-//       word of map (x, y) - AreaMap_BakePatches' address (docs/map-scroll.md)
-//       - then kind 1's work;
-//   kind 1 (2 dwords - its +8 is the next record's head): the face's draw item
-//       of MapView_ItemAt(x, y), when there is one - face 0 the item, 1 the
-//       word at its +0x8E, 2 and up the word at +0x7E - its half for this
-//       buffer given the dword (c ? +8 : +4) through Prim_SetTexture(tex,
-//       half, 1), the head and dword re-read after the lookup;
-//   kind 2 (3 dwords): dword (c ? +8 : +4) to AreaMap_Corners[width * y + x],
-//       MapView_Redraw 2;
-//   any other (2 dwords): the low byte of dword +4 >> ((c << 4) & 31) - its
-//       low half for c 0, its high half for c 1 - to AreaMap_Bytes[width * y + x].
-// The width and height are the header's bytes 0 and 1, its word +2 the offset,
-// all re-read per record. The original also stores c over its own argument
-// slot; every caller pops it unread (field-misc.md section 2), so ours does not.
-extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
-    const std::int32_t c = static_cast<signed char>(field_misc::g.test_condition(WordFieldMisc(entry)));
-    const auto n = static_cast<std::int32_t>(LongFieldMisc(entry) >> 16);
-    const unsigned char* cursor = entry + 4;
-    std::int32_t used = 0;
-    if (n <= 0) return;
-    do {
-        const field_misc::U head = LongFieldMisc(cursor);
-        const unsigned char* const record = cursor;
-        const field_misc::U kind = head >> 24, x = (head >> 8) & 0xFF, y = head & 0xFF;
-        switch (kind) {
-        case 0: {
-            const field_misc::U header = LongFieldMisc(AtFieldMisc(Header(0)));
-            const field_misc::U offset = WordFieldMisc(AtFieldMisc(::bof3::Img(AreaMap_Header_addr) + 0x2));
-            const field_misc::U width = header & 0xFF;
-            const field_misc::U tile = WordFieldMisc(AtFieldMisc(Header(0) + (x + width * y + offset * 2u) * 2u));
-            const auto area = static_cast<std::int32_t>(((header >> 8) & 0xFF) * width + 1u);
-            const field_misc::U run = ((head >> 16) & 0xF) + static_cast<field_misc::U>(area / 2) + offset + tile;
-            used += 1;
-            const field_misc::U value = LongFieldMisc(record + static_cast<field_misc::U>(c) * 4u + 4u);
-            cursor += 4;
-            PutLongFieldMisc(AtFieldMisc(Header(0) + run * 4u), value);
-        }
-            [[fallthrough]];
-        case 1: {
-            const field_misc::U face = (LongFieldMisc(record) >> 20) & 0xF;
-            const field_misc::U item = static_cast<field_misc::U>(field_misc::g.item_at(static_cast<long>(x), static_cast<long>(y)));
-            if (item != 0) {
-                field_misc::U index;
-                if (face == 0) index = item;
-                else if (face == 1) index = WordFieldMisc(AtFieldMisc(at::ItemFaceA() + item * 0x90u));
-                else index = WordFieldMisc(AtFieldMisc(at::ItemFaceB() + item * 0x90u));
-                unsigned char* const half = AtFieldMisc(ItemHalf(index));
-                field_misc::g.set_texture(LongFieldMisc(record + static_cast<field_misc::U>(c) * 4u + 4u), half, 1);
-            }
-            used += 2;
-            cursor += 8;
-            break;
-        }
-        case 2: {
-            const field_misc::U width = LongFieldMisc(AtFieldMisc(Header(0))) & 0xFF;
-            used += 3;
-            const field_misc::U value = LongFieldMisc(cursor + static_cast<field_misc::U>(c) * 4u + 4u);
-            cursor += 12;
-            PutLongFieldMisc(AtFieldMisc(at::AreaMap_CornersAt() + (width * y + x) * 4u), value);
-            AtFieldMisc(at::MapView_RedrawAt())[0] = 2;
-            break;
-        }
-        default: {
-            const field_misc::U value = LongFieldMisc(cursor + 4) >> ((static_cast<field_misc::U>(c) << 4) & 31);
-            const field_misc::U width = LongFieldMisc(AtFieldMisc(Header(0))) & 0xFF;
-            const field_misc::U bytes = LongFieldMisc(AtFieldMisc(at::AreaMap_BytesAt()));
-            AtFieldMisc(width * y + bytes + x)[0] = static_cast<unsigned char>(value);
-            used += 2;
-            cursor += 8;
-            break;
-        }
-        }
-    } while (used < n);
-}
-
 // --- the cell overlay and the palette tint -----------------------------------
-
-// original 0x570AB0 (no PSX twin paired): the cell handler 0x570A00's draw, for
-// map-cell records of kinds 0x10 and up with `faces` = kind - 0x10 and `item`
-// the cell's draw item (MapView_ItemAt's lookup, inline there). For each of
-// faces' bits 1, 2 and 4 that is set: a POLY_F4 at Gfx_PacketNext (read once
-// for the face) made by Gpu_SetPolyF4, its four corners' x and y copied from
-// the face's POLY_FT4 half for this buffer - bit 1 the item itself, bit 2 the
-// item at its +0x8E, bit 4 the item at its +0x7E - its colour the 15-bit word
-// of the area header at +0x1A + (faces >> 3) * 2 (arithmetic shift), each
-// channel's five bits << 3, and Gfx_CommitPrim(Draw_OtSlot, 0x38). The
-// original's eax on the way out is whatever the last call or its caller left;
-// its one caller returns it to DrawLayer_Open, which does not read it.
-extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
-    for (field_misc::U bit = 1; bit < 8; bit <<= 1) {
-        if (!(static_cast<field_misc::U>(faces) & bit)) continue;
-        unsigned char* const packet = AtFieldMisc(LongFieldMisc(AtFieldMisc(at::Gfx_PacketNextAt())));
-        field_misc::g.set_poly_f4(packet);
-        field_misc::U index;
-        if (bit == 1) index = item;
-        else if (bit == 2) index = WordFieldMisc(AtFieldMisc(at::ItemFaceA() + item * 0x90u));
-        else index = WordFieldMisc(AtFieldMisc(at::ItemFaceB() + item * 0x90u));
-        const unsigned char* const src = AtFieldMisc(ItemHalf(index));
-        for (field_misc::U corner = 0; corner < 4; ++corner) {
-            PutLongFieldMisc(packet + 8 + corner * 0xC, LongFieldMisc(src + 8 + corner * 0x10));
-            PutLongFieldMisc(packet + 0xC + corner * 0xC, LongFieldMisc(src + 0xC + corner * 0x10));
-        }
-        const unsigned char* const colour = AtFieldMisc(::bof3::Img(kOverlayColours) + static_cast<field_misc::U>(faces >> 3) * 2u);
-        packet[4] = static_cast<unsigned char>((colour[0] & 0x1F) << 3);
-        packet[5] = static_cast<unsigned char>(((WordFieldMisc(colour) >> 5) & 0x1F) << 3);
-        packet[6] = static_cast<unsigned char>(((WordFieldMisc(colour) >> 10) & 0x1F) << 3);
-        field_misc::g.commit_prim(AtFieldMisc(at::Draw_OtSlotAt())[0], 0x38);
-    }
-}
-
-// original 0x5718F0 (PSX 0x80158CE8): the area palette's tint. For CLUT rows
-// 3..14 whose bit of `rows` is set (bit 0 row 3; `rows` halved per row, signed),
-// each 16-colour CLUT of the row - on row 3 only those whose bit of `columns`
-// is set (`columns` halved per CLUT of every row processed, but tested on row 3
-// alone, which comes first) - copied from Gfx_ClutStripSource to Gfx_ClutStrip
-// with red += `red`, green += `green`, blue += `blue`, each only when non-zero
-// and then clamped to 1..0x1F; bit 15 kept. Then Gfx_ClutStripDirty = 1.
-// Returns the original's eax: `rows` after its twelve halvings. The halvings
-// write the caller's argument slots; the five callers pop them unread.
-extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green, int blue) {
-    const auto channel = [](field_misc::U v, int add) -> U {
-        if (v == 0) return 0;
-        const auto s = static_cast<std::int32_t>(v + static_cast<field_misc::U>(add));
-        if (s <= 0) return 1;
-        if (s > 0x1F) return 0x1F;
-        return static_cast<field_misc::U>(s);
-    };
-    for (field_misc::U row = 3; row < 15; ++row) {
-        if (rows % 2 != 0) {
-            for (field_misc::U clut = 0; clut < 16; ++clut) {
-                if (row != 3 || columns % 2 != 0) {
-                    const field_misc::U from = at::Gfx_ClutStripSourceAt() + (row * 16 + clut) * 32;
-                    for (field_misc::U k = 0; k < 16; ++k) {
-                        const field_misc::U w = WordFieldMisc(AtFieldMisc(from + k * 2));
-                        const field_misc::U r = channel(w & 0x1F, red), gr = channel((w >> 5) & 0x1F, green),
-                                b = channel((w >> 10) & 0x1F, blue);
-                        PutWord(AtFieldMisc(from + 0x4000 + k * 2), (((b << 5) | gr) << 5) | (w & 0x8000) | r);
-                    }
-                }
-                columns /= 2;
-            }
-        }
-        rows /= 2;
-    }
-    AtFieldMisc(at::Gfx_ClutStripDirtyAt())[0] = 1;
-    return rows;
-}
 
 // --- the Direct3D handlers -------------------------------------------------------
 // Each is reached from one site of Gfx_DrawOTag's Direct3D table (d3d-draw.md
@@ -437,53 +189,6 @@ extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green
 // left them. Not kept: F4 and F3 let the colour helper write the diffuse into
 // their own `prim` argument slot, which the caller pops unread; G4 into locals.
 
-// original 0x5A0AB0, code 0x28 (Gpu_SetPolyF4): a flat quad, four corners of
-// 0xC bytes from +8 (float x, y, z), one colour from +4..+6.
-extern "C" long __cdecl D3d_DrawPolyF4(const unsigned char* prim) {
-    unsigned long diffuse;
-    field_misc::g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
-    for (field_misc::U i = 0; i < 4; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<field_misc::U>(diffuse));
-    SetTextureFieldMisc(0, 0);
-    field_misc::g.ret_only(0);
-    field_misc::g.ret_only(0);
-    field_misc::g.set_blend(prim[7], DrawModeFieldMisc());
-    field_misc::g.set_shade(1);   // flat
-    return DrawVerticesFieldMisc(5, 4);   // TRIANGLESTRIP
-}
-
-// original 0x5A1290, code 0x38 (Gpu_SetPolyG4): a Gouraud quad, four corners of
-// 0x10 bytes from +4: r, g, b, (code or pad), float x, y, z. The four colours
-// first, each with the code byte and the mode read again; then the corners.
-extern "C" long __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
-    unsigned long diffuse[4];
-    for (field_misc::U i = 0; i < 4; ++i) {
-        const unsigned char* rgb = prim + 4 + i * 0x10;
-        field_misc::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawModeFieldMisc(), &diffuse[i], nullptr);
-    }
-    for (field_misc::U i = 0; i < 4; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0x10, static_cast<field_misc::U>(diffuse[i]));
-    SetTextureFieldMisc(0, 0);
-    field_misc::g.ret_only(0);
-    field_misc::g.ret_only(0);
-    field_misc::g.set_blend(prim[7], DrawModeFieldMisc());
-    field_misc::g.set_shade(2);   // Gouraud
-    return DrawVerticesFieldMisc(5, 4);
-}
-
-// original 0x5A1A00, code 0x48 (Gpu_SetLineF3): a flat two-segment polyline,
-// three corners of 0xC bytes from +8. The two bare-ret calls get 0 and 1, as
-// the other lines' do.
-extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
-    unsigned long diffuse;
-    field_misc::g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
-    for (field_misc::U i = 0; i < 3; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<field_misc::U>(diffuse));
-    SetTextureFieldMisc(0, 0);
-    field_misc::g.ret_only(0);
-    field_misc::g.ret_only(1);
-    field_misc::g.set_blend(prim[7], DrawModeFieldMisc());
-    field_misc::g.set_shade(1);
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVerticesFieldMisc(3, 3);   // LINESTRIP; DIV-0079 the quads
-}
-
 // --- the libgpu setters ------------------------------------------------------------
 // The port's primitives hold floats: each setter writes the GPU code byte +7
 // and the float 0.01 (0x3C23D70A) into every corner's z, where the PSX's wrote
@@ -491,57 +196,6 @@ extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
 // originals leave it (mov eax, [esp + 4] first); the callers are many and
 // unread here, so ours keeps the register.
 
-// original 0x5A75B0 (PSX SetPolyF4 0x8017B31C): code 0x28, z at +0x10 +0x1C +0x28 +0x34.
-extern "C" unsigned char* __cdecl Gpu_SetPolyF4(unsigned char* prim) {
-    prim[7] = 0x28;
-    for (field_misc::U z = 0x10; z <= 0x34; z += 0xC) PutLongFieldMisc(prim + z, 0x3C23D70A);
-    return prim;
-}
-// original 0x5A7610 (PSX SetPolyG4 0x8017B344): code 0x38, z at +0x10 +0x20 +0x30 +0x40.
-extern "C" unsigned char* __cdecl Gpu_SetPolyG4(unsigned char* prim) {
-    prim[7] = 0x38;
-    for (field_misc::U z = 0x10; z <= 0x40; z += 0x10) PutLongFieldMisc(prim + z, 0x3C23D70A);
-    return prim;
-}
-// original 0x5A7670 (PSX SetLineF3 0x8017B420): code 0x48, z at +0x10 +0x1C
-// +0x28. The PSX also writes the polyline's terminator 0x55555555 at +0x14;
-// the PC's primitive has its third corner there and no terminator.
-extern "C" unsigned char* __cdecl Gpu_SetLineF3(unsigned char* prim) {
-    prim[7] = 0x48;
-    for (field_misc::U z = 0x10; z <= 0x28; z += 0xC) PutLongFieldMisc(prim + z, 0x3C23D70A);
-    return prim;
-}
-// original 0x5A7810 (PSX SetDrawMove 0x8017B554): the port's move-image
-// primitive - +4 the code dword 0xEC000000 (Gfx_DrawOTag hands it to
-// Gfx_MoveImage(prim + 8, +0x10, +0x14)), +8 and +0xC the rect's eight bytes,
-// +0x10 x and +0x14 y as whole dwords. In this order, the rect read after the
-// code is stored (they may overlap). The PSX packs x and y into one word and
-// makes a zero-sized rect a no-op; the PC does neither.
-extern "C" unsigned char* __cdecl Gpu_SetDrawMove(unsigned char* prim, const unsigned char* rect, unsigned long x,
-                                                  unsigned long y) {
-    PutLongFieldMisc(prim + 4, 0xEC000000u);
-    PutLongFieldMisc(prim + 8, LongFieldMisc(rect));
-    const field_misc::U second = LongFieldMisc(rect + 4);
-    PutLongFieldMisc(prim + 0xC, second);
-    PutLongFieldMisc(prim + 0x10, static_cast<field_misc::U>(x));
-    PutLongFieldMisc(prim + 0x14, static_cast<field_misc::U>(y));
-    return prim;
-}
-
 void FieldMisc_Inject() {
     if (bof3::WantsShadow("field_misc")) field_misc::SelfTest();
-    BOF3_INJECT(MapCell_FlatOverlay);
-    BOF3_INJECT(AreaMap_ApplyPatch);
-    BOF3_INJECT(Gfx_ClutAdjust);
-    BOF3_INJECT(MapView_SlopeAt);
-    BOF3_INJECT(MoveCmd_TestFB);
-    BOF3_INJECT(MoveCmd_TestFC);
-    BOF3_INJECT(MapView_ItemAt);
-    BOF3_INJECT(D3d_DrawPolyF4);
-    BOF3_INJECT(D3d_DrawPolyG4);
-    BOF3_INJECT(D3d_DrawLineF3);
-    BOF3_INJECT(Gpu_SetPolyF4);
-    BOF3_INJECT(Gpu_SetPolyG4);
-    BOF3_INJECT(Gpu_SetLineF3);
-    BOF3_INJECT(Gpu_SetDrawMove);
 }
