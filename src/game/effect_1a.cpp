@@ -91,10 +91,10 @@ void Run(const char* who, U table, unsigned entries, unsigned state) {
 // kind 1's and kind 7's state tables - the original's read, kept.
 void RecordHandler(const char* who, U slot) {
     const U index = SH_CALL(WorldMap_RecordIndex)() & 0xFF;
-    if (index >= at::kRecordCount)
+    if (index >= effect_1a::at::kRecordCount)
         bof3::Fatal("%s: WorldMap_RecordIndex answered %u, past the twelve rows (docs/effect_1a.md section 6)", who,
                     (unsigned)index);
-    const U handler = L(slot + index * at::kRecordSize);
+    const U handler = L(slot + index * effect_1a::at::kRecordSize);
     if (handler == 0)
         bof3::Fatal("%s: world map record %u has no handler at +0x%X (area 104's record) - the original jumps to 0 "
                     "(docs/effect_1a.md section 6)",
@@ -112,7 +112,7 @@ unsigned char* Extra(const char* who, U index) {
 }
 // Sprite_Objects record `index` (the byte 0x939A1C): thirty of them.
 unsigned char* Object(const char* who, U index) {
-    if (index >= at::kObjectCount)
+    if (index >= effect_1a::at::kObjectCount)
         bof3::Fatal("%s: object index %u (0x939A1C), past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
@@ -122,11 +122,11 @@ unsigned char* Object(const char* who, U index) {
 // answers 0xFF or 0..19; the original would write past the pool). `index` is
 // the answer as the caller widened it (a movsx in kind 0xF's spawns).
 unsigned char* Spawned(const char* who, std::int32_t index) {
-    if (index < 0 || index >= static_cast<std::int32_t>(at::kEffectCount))
+    if (index < 0 || index >= static_cast<std::int32_t>(effect_1a::at::kEffectCount))
         bof3::Fatal("%s: Effect_FindFree answered %d, past the 20 records - the original writes past the pool "
                     "(docs/effect_1a.md section 6)",
                     who, (int)index);
-    return At(::bof3::Img(Effect_Objects_addr) + static_cast<U>(index) * at::kEffectStride);
+    return At(::bof3::Img(Effect_Objects_addr) + static_cast<U>(index) * effect_1a::at::kEffectStride);
 }
 // Kind 0xF's text record `index` (+0x4B): thirteen of 8 bytes.
 U Text(const char* who, unsigned index) {
