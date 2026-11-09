@@ -1131,10 +1131,22 @@ is expected; the doc says so.
    the rename for all three classes: it is B0's existing kind, the gate
    reads a file-local by its body so the name is free, and it needs no
    qualifier in the bodies.
+   **Answered 2026-11-08 night: "fine for a rename."** Group n renames the
+   three classes (worktree `slb1108\n`, brief `briefs\n.md`): B0's naming
+   rule, one commit per source, the odd holder only for class (c).
 14. **win_main `g_capcom_movie_only`** (DIV-0202, main's PR #212, landed after
    group s decided its rows): a file-static state variable with no decision
    row. Promote it (a `data-layout` row if the gate asks) or keep it local
    with its readers?
+   **Answered 2026-11-08 night.** The owner's intent: it exists to skip the
+   porting house's non-PlayStation LOGOS.AVI, so leaving it local with the
+   exe's other functions would be fine. Measured, its readers split:
+   `Game_WinMain` moves with unit `tu_4fc330` (the porting house's platform
+   layer, proposed `platform/magic_080.cpp`) and the `PatchBytes` toggle in
+   `WinMain_Inject` stays in win_main.cpp, so a local would be two copies.
+   Group n promotes it into `namespace win_main` as g did `g_pad_reset`, a
+   `data-layout` row if the gate asks; any other difference reverts and
+   comes back here.
 15. **How wide is class 3?** Group a's first case was the narrow form: the
    call goes through the pointer, branch offsets grow a byte (text_immediate,
    draw_pass). Five rows are the same mechanism on a pointer x86_64 had
@@ -1146,6 +1158,8 @@ is expected; the doc says so.
    of them, and nothing writes those pointers on x86_64 today, so the code
    that returns is unreachable. Group g excepted every one as `x64-indirect`,
    one commit each, so the owner can revert any single one.
+   **Answered 2026-11-08 night: "fine to be excepted."** The class covers
+   the wide form too; the 7a paragraph stands as written.
 
 ## 8. Ownership, merge order, numbering
 
