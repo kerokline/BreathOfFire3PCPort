@@ -197,7 +197,7 @@ void CommitChoice() {
 // window 0's state 1 and the next sub-state, else sub-state 7.
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
-    const bool more = item_use::Word(item_use::At(::bof3::Img(at::kMessage.v))) != 0xFFFF;
+    const bool more = item_use::Word(item_use::At(::bof3::Img(item_use::at::kMessage.v))) != 0xFFFF;
     WindowRecords[1].state = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
@@ -228,13 +228,13 @@ namespace {
 // pair or the one before, as the original does. Returns the cursor.
 int SysMessage(unsigned k) {
     const int cursor = AreaW0c_ChoiceAnswer;
-    item_use::SetWord(item_use::At(::bof3::Img(at::kMessage.v)), item_use::Word(item_use::At(::bof3::Img(at::kSysMessages.v) + 4 * k + 2 * cursor)));
+    item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kMessage.v)), item_use::Word(item_use::At(::bof3::Img(item_use::at::kSysMessages.v) + 4 * k + 2 * cursor)));
     return cursor;
 }
 void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
     const int cursor = SysMessage(k);
-    if (cursor == 0) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if0;
-    else if (cursor == 1) item_use::At(::bof3::Img(at::kSysCounter.v))[0] = if1;
+    if (cursor == 0) item_use::At(::bof3::Img(item_use::at::kSysCounter.v))[0] = if0;
+    else if (cursor == 1) item_use::At(::bof3::Img(item_use::at::kSysCounter.v))[0] = if1;
 }
 }  // namespace
 
