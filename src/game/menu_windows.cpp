@@ -131,8 +131,8 @@ unsigned char* Ptr(std::uint32_t at) { return menu_windows::At(static_cast<std::
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 
 unsigned char* Next() { return Gfx_PacketNext; }
-char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
-const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
+char* PrintBufMenuWindows() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
+const char* FormatMenuWindows(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
 std::int16_t S16MenuWindows(std::uint32_t v) { return static_cast<std::int16_t>(v); }
 std::int32_t U16(std::uint32_t v) { return static_cast<std::int32_t>(v & 0xFFFF); }
@@ -1225,8 +1225,8 @@ extern "C" void __cdecl Menu_DrawCursorBox(int x, int y, int w, int h, int blink
 // third argument is not read (every caller passes 0).
 extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
     menu_windows::g.box(x + 3, y + 3, 0x65, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7d.v)), value);
-    menu_windows::g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt7d.v)), value);
+    menu_windows::g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     menu_windows::g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(::bof3::Img(at::kMoneyLabel.v)));
     menu_windows::g.pieces(x, y, At(::bof3::Img(0x6633A8)), 0);
     for (unsigned i = 0; i < 11; ++i) menu_windows::g.pieces(x + static_cast<int>(i * 8), y, At(::bof3::Img(Menu_PlayTimePieces_addr)), 0);
@@ -1260,17 +1260,17 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
         stats[2] = stats[3];
         colours[2] = colours[3];
         for (unsigned i = 0; i < 3; ++i) {
-            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(stats[i]));
+            menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(stats[i]));
             menu_windows::g.font8(x + 0x2C, y + static_cast<int>(15 * i) + 8, colours[i],
-                    reinterpret_cast<const unsigned char*>(PrintBuf()));
+                    reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
         }
     } else {
         colour = 7;
         static const unsigned kStat[3] = {0x24, 0x26, 0x28};
         static const int kY[3] = {8, 0x17, 0x26};
         for (unsigned i = 0; i < 3; ++i) {
-            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(Word(record + kStat[i])));
-            menu_windows::g.font8(x + 0x2C, y + kY[i], 7, reinterpret_cast<const unsigned char*>(PrintBuf()));
+            menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt3d.v)), static_cast<unsigned>(Word(record + kStat[i])));
+            menu_windows::g.font8(x + 0x2C, y + kY[i], 7, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
         }
     }
     menu_windows::g.item_icon(x + 0x46, y + 2, record[9], cannot);
@@ -1409,9 +1409,9 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         const unsigned char cat = w[0xA];
         const unsigned room = cat != 4 ? 0x80 : 0x20;
         const unsigned have = menu_windows::g.count_category(cat) & 0xFF;
-        menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt3d3d.v)), have, room);
+        menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt3d3d.v)), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
+        menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     }
     menu_windows::g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 2) ? 0x66349C : 0x663484)), 1);
     menu_windows::g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 1) ? 0x6634A8 : 0x663490)), 1);
@@ -1451,8 +1451,8 @@ extern "C" void __cdecl Menu_DrawItemRow(int x, int y, int colour, unsigned cate
     menu_windows::g.text_draw_at(x + 0xA, y, colour, static_cast<int>(n), name);
     const auto c = static_cast<unsigned char>(count);
     if (c > 1) {
-        menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(c));
-        menu_windows::g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
+        menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(c));
+        menu_windows::g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     }
 }
 
@@ -1544,14 +1544,14 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
                 colour = 7;
                 dim = 1;
             }
-            menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), cost);
+            menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt6dZ.v)), cost);
             if (i == w[0xC]) {
                 if (colour == 0) {
                     menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(::bof3::Img(at::kBuyIcons.v))[kind], 1);
                     const unsigned n = menu_windows::g.char_count(name);
                     menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), 7, static_cast<int>(n), name);
                     menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), 7,
-                            reinterpret_cast<const unsigned char*>(PrintBuf()));
+                            reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
                 }
                 text_y -= 2;
                 row_y -= 2;
@@ -1560,7 +1560,7 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
             const unsigned n = menu_windows::g.char_count(name);
             menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), colour, static_cast<int>(n), name);
             menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), colour,
-                    reinterpret_cast<const unsigned char*>(PrintBuf()));
+                    reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
             if (i == w[0xC]) {
                 text_y += 2;
                 row_y += 2;
@@ -1615,20 +1615,20 @@ extern "C" void __cdecl Shop_DrawBuyDetail(unsigned char* window) {
     menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 4, rv::As<records::WindowRecord>(w)->y + 7, At(::bof3::Img(at::kBuyDetailIcons.v))[kind], 0);
     const unsigned n = menu_windows::g.char_count(name);
     menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * cost);
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * cost);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     const unsigned char* const held = menu_windows::g.msg_system_ptr(0x27);
     menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x20, 0, 0xFF, held);
     const unsigned owned = menu_windows::g.count_owned(category, id, 0) & 0xFFFF;
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), owned);
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmtCount.v)), owned);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     const unsigned char* const equipped = menu_windows::g.msg_system_ptr(0x28);
     menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x2D, 0, 0xFF, equipped);
     const unsigned worn = menu_windows::g.count_owned(category, id, 1) & 0xFFFF;
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), worn);
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmtCount.v)), worn);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     DetailFrame(w, 0x38, 6);
 }
 
@@ -1646,12 +1646,12 @@ extern "C" void __cdecl Shop_DrawSellDetail(unsigned char* window) {
     menu_windows::g.icon8(rv::As<records::WindowRecord>(w)->x + 7, rv::As<records::WindowRecord>(w)->y + 6, At(::bof3::Img(at::kSellIcons.v))[kind], 0);
     const unsigned n = menu_windows::g.char_count(name);
     menu_windows::g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0x11, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt6dZ.v)), unit);
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * unit);
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
-    menu_windows::g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
-    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt6dZ.v)), unit);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmt7dZ.v)), w[0xC] * unit);
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
+    menu_windows::g.sprintf_(PrintBufMenuWindows(), FormatMenuWindows(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(w[0xC]));
+    menu_windows::g.font8(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBufMenuWindows()));
     DetailFrame(w, 0x18, 2);
 }
 
