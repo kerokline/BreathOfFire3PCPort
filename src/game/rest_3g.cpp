@@ -201,7 +201,7 @@ extern "C" void __cdecl EffectKindAD_Rise(void) {
         SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                       s[0x5D], s[0x5E]);
     }
-    if (At(::bof3::Img(at::kCounter.v))[0] == 0xB) S()[1] = static_cast<unsigned char>(S()[1] + 1);
+    if (At(::bof3::Img(rest_3g::at::kCounter.v))[0] == 0xB) S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
 // ===========================================================================
@@ -311,12 +311,12 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
 // three bytes it never wrote; its callee reads their low bytes only.
 extern "C" void __cdecl Battle_PlaceBossActors(void) {
     const unsigned event = EventBattle_Id;
-    const unsigned row = At(::bof3::Img(at::kEventRows.v) + 4 * event)[0];
+    const unsigned row = At(::bof3::Img(rest_3g::at::kEventRows.v) + 4 * event)[0];
     Battle_EnemyCount = 0;
-    if (row >= at::kEncounterRows)
+    if (row >= rest_3g::at::kEncounterRows)
         bof3::Fatal("Battle_PlaceBossActors: event battle %u names encounter row %u, past Encounter_Rows' %u - the original "
                     "reads on into the enemy kinds' records (docs/rest_3g.md section 7)",
-                    event, row, at::kEncounterRows);
+                    event, row, rest_3g::at::kEncounterRows);
     unsigned char count = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
         const unsigned kind = At(::bof3::Img(Encounter_Rows_addr) + 9 * row + slot)[0];
@@ -348,11 +348,11 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     unsigned char* const actor = SH_CALL(BossActor_Find)(slot);
     if (!actor) return;
     const unsigned n = count & 0xFF;
-    if (n >= at::kEnemyCount)
+    if (n >= rest_3g::at::kEnemyCount)
         bof3::Fatal("Battle_PlaceBossActor: count %u, past the %u enemy records - the original writes past them "
                     "(docs/rest_3g.md section 7)",
-                    n, at::kEnemyCount);
-    unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n);
+                    n, rest_3g::at::kEnemyCount);
+    unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + rest_3g::at::kEnemyStride * n);
     for (unsigned i = 0; i < 0x80; i += 4) SetULRest3g(e + i, ULRest3g(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
@@ -375,12 +375,12 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[6] = 0;
     s[7] = 0;
     s[0x2B] = 0;
-    s[8] = static_cast<unsigned char>(At(::bof3::Img(at::kFormation.v))[0] ^ 2);
+    s[8] = static_cast<unsigned char>(At(::bof3::Img(rest_3g::at::kFormation.v))[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
+    psp_code::MyriaItem(At(::bof3::Img(Battle_Enemies_addr) + rest_3g::at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n + 0x8F)[0] = Cheats_EnemyInfoShown() ? 1 : 0;   // DIV-0187
+    At(::bof3::Img(Battle_Enemies_addr) + rest_3g::at::kEnemyStride * n + 0x8F)[0] = Cheats_EnemyInfoShown() ? 1 : 0;   // DIV-0187
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -388,8 +388,8 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
 // original 0x494E70 (PSX 0x800A9EB0; BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart,
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
-    for (unsigned i = 0; i < at::kEnemyCount; ++i) {
-        unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * i);
+    for (unsigned i = 0; i < rest_3g::at::kEnemyCount; ++i) {
+        unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + rest_3g::at::kEnemyStride * i);
         for (unsigned k = 0; k < 5; ++k) e[k] = 0;
     }
 }
@@ -462,8 +462,8 @@ extern "C" void __cdecl GameMode8_Leave(void) {
     SH_CALL(Transition_Start)(0);
     WaitWord(&Mode8Frame);
     {
-        const U z = ULRest3g(::bof3::Img(at::kReturnZ.v));
-        const U x = ULRest3g(::bof3::Img(at::kReturnX.v));
+        const U z = ULRest3g(::bof3::Img(rest_3g::at::kReturnZ.v));
+        const U x = ULRest3g(::bof3::Img(rest_3g::at::kReturnX.v));
         const unsigned area = AreaW2c_LastArea;
         SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
     }
