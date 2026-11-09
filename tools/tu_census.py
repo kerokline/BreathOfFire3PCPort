@@ -1147,7 +1147,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
         fh.write('\n'.join(L) + '\n')
 
 
-def check(tsv, symbols):
+def check(tsv, symbols, strict=False):
     funcs, _, _ = load_symbols(symbols)
     want = {f['pc']: f for f in funcs if f.get('impl')}
     if not os.path.exists(tsv):
@@ -1178,6 +1178,14 @@ def check(tsv, symbols):
     if bad:
         print(f'tu_census --check: {len(bad)} problems')
         return 1
+    if strict and moved:
+        # after stage B every function is in its unit's file; a new one goes there from the start
+        for pc, r in sorted(have.items()):
+            if pc in want and r['proposed_file'] != want[pc]['impl']:
+                print(f'tu_census --check: {pc:#x} {r["name"]} is in {want[pc]["impl"]}, '
+                      f'its unit\'s file is {r["proposed_file"]}')
+        print(f'tu_census --check --strict: {moved} functions not in their unit\'s file')
+        return 1
     print(f'tu_census --check: {len(want)} impl functions, every one has its row '
           f'({moved} not yet in their proposed file)')
     return 0
@@ -1193,11 +1201,13 @@ def main():
     ap.add_argument('--uncertain', type=int, default=0, help='print the N least certain boundaries')
     ap.add_argument('--refresh', action='store_true', help='read the binary again, not the cache')
     ap.add_argument('--check', action='store_true', help='CI: the TSV covers every impl function')
+    ap.add_argument('--strict', action='store_true',
+                    help='with --check: every function\'s impl is its unit\'s file (proposed_file)')
     ap.add_argument('--joins', default=JOINS_TSV, help="the owner's joins of neighbouring units ('' to skip)")
     ap.add_argument('--psx', default=PSX_TSV, help="SL2's tu_psx.tsv, joined into the table and the sheet ('' to skip)")
     a = ap.parse_args()
     if a.check:
-        return check(a.out, a.symbols)
+        return check(a.out, a.symbols, a.strict)
     funcs, data, _ = load_symbols(a.symbols)
     facts = load_facts(a.exe, funcs, a.refresh)
     M = Model(funcs, data, facts)

@@ -44,6 +44,7 @@ the link order through the `file` rows; tools/cite_lookup.py answers an old
 path through them.
 
     python tools/retire_shells.py --check            # the plan, nothing written
+    python tools/retire_shells.py --check --strict   # CI: no flat src/game/*.cpp but the harness files and the runtime's
     python tools/retire_shells.py --moves            # kinds 1 and 2
     python tools/retire_shells.py --shells [--only a,b]   # kind 3
 
@@ -422,6 +423,8 @@ def main() -> int:
     ap.add_argument("--moves", action="store_true", help="the fuzz files and the remainders")
     ap.add_argument("--shells", action="store_true", help="the pure shells")
     ap.add_argument("--only", default="", help="--shells: these group stems only (comma-separated)")
+    ap.add_argument("--strict", action="store_true",
+                    help="--check: exit 1 when a flat src/game/*.cpp is left that is not a harness file or the runtime's")
     a = ap.parse_args()
     try:
         folders, low = load_folders()
@@ -447,6 +450,10 @@ def main() -> int:
             print(f"retire_shells: {len(moves)} whole files to move ({sum(1 for o, _ in moves if o.endswith('_fuzz.cpp'))} fuzz), "
                   f"{len(shells)} pure shells to retire ({sum(1 for p in shells if p.home)} with a seam, "
                   f"{sum(1 for p in shells if p.delete_header)} headers to delete)")
+            if a.strict and (moves or shells):
+                print("retire_shells --check --strict: src/game holds a flat .cpp that is neither a harness file nor "
+                      "the runtime's: a new file goes into its folder (docs/source-layout.md)")
+                return 1
             return 0
         base = mf.git_head([GAME, INJECT_ALL, "analysis/tu_moves.tsv"])
         if a.moves:
