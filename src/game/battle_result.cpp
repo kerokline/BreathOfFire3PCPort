@@ -73,18 +73,18 @@ using namespace battle_result;
 
 namespace {
 
-unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
+unsigned char& Byte(std::uint32_t address) { return battle_result::At(address)[0]; }
 std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(Long(At(address))); }
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
-unsigned char* MemberBattleResult(unsigned slot) { return At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
+unsigned char* MemberBattleResult(unsigned slot) { return battle_result::At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
 unsigned char* WindowSlot(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
-unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
+unsigned char* CurrentWindow() { return battle_result::At(BattleWinStates_Current); }
 // MemberBattleResult() is +0x80 into the member record (0x802DC0); the record, and its
 // typed view, starts 0x80 before.
-char* TextBattleResult(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
-const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(At(address)); }
+char* TextBattleResult(std::uint32_t address) { return reinterpret_cast<char*>(battle_result::At(address)); }
+const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(battle_result::At(address)); }
 
 // The tick step of an amount: 1 below 30, else amount / 30 - kept as a word,
 // as the original stores it (`mov word [0x904B70], dx`).
@@ -397,7 +397,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDr
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpState(void) {
     const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ExpState: step %u, past the two-entry table", index);
-    g.exp_window[index]();
+    battle_result::g.exp_window[index]();
 }
 
 // original 0x5985A0 (PSX 0x801F06D4, paired): the EXP window's frame -
@@ -428,24 +428,24 @@ unsigned char g_exp_layout_us = 0;
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawExp(void) {
     const unsigned char* const w = CurrentWindow();
-    g.draw_frame(0x14, 0x28, 0x118, w[9]);
+    battle_result::g.draw_frame(0x14, 0x28, 0x118, w[9]);
     const bool us = g_exp_layout_us != 0;
     const int x_msg = us ? 0x82 : 0x55, x_level = us ? 0x114 : 0x85, x_exp = us ? 0x36 : 0xE3;
     unsigned char y = 0x2C;
     for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
         unsigned char* const m = MemberBattleResult(slot);
         auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
-        g.text_draw_at(0x19, y, 0, 5, m);
+        battle_result::g.text_draw_at(0x19, y, 0, 5, m);
         const unsigned level = member_rec->level;
         if (level == 0x63) {
-            g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x41));
+            battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x41));
             continue;
         }
-        g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
-        g.text_draw_font12(x_level, y, 0, At(::bof3::Img(at::kText2.v)));
-        g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), g.exp_to_next(slot));
-        g.text_draw_font12(x_exp, y, 0, At(::bof3::Img(at::kText2.v)));
-        g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x15));
+        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
+        battle_result::g.text_draw_font12(x_level, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
+        battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), battle_result::g.exp_to_next(slot));
+        battle_result::g.text_draw_font12(x_exp, y, 0, battle_result::At(::bof3::Img(at::kText2.v)));
+        battle_result::g.text_draw_at(x_msg, y, 0, 0xFF, battle_result::g.msg_system(0x15));
     }
 }
 
@@ -455,7 +455,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ZennyState(void) {
     const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ZennyState: step %u, past the two-entry table", index);
-    g.zenny_window[index]();
+    battle_result::g.zenny_window[index]();
 }
 
 // original 0x5986F0 (no PSX twin paired): the record 0x905B84's step +3 one
@@ -471,10 +471,10 @@ extern "C" void __cdecl BattleResultWin_NextStep(void) {
 //
 // As the original has it: the zenny is read after the box.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawZenny(void) {
-    g.draw_medium_box(0x6E, 0x28);
-    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
-    g.text_draw_font12(0x70, 0x2A, 0, At(::bof3::Img(at::kText2.v)));
-    g.text_draw_at(0xC4, 0x2A, 0, 0xFF, At(::bof3::Img(at::kZennyUnit.v)));
+    battle_result::g.draw_medium_box(0x6E, 0x28);
+    battle_result::g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
+    battle_result::g.text_draw_font12(0x70, 0x2A, 0, battle_result::At(::bof3::Img(at::kText2.v)));
+    battle_result::g.text_draw_at(0xC4, 0x2A, 0, 0xFF, battle_result::At(::bof3::Img(at::kZennyUnit.v)));
 }
 
 // ===========================================================================
