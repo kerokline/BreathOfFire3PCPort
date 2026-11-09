@@ -29,7 +29,7 @@ using namespace move_script;
 using namespace area_entry;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
-unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
+unsigned char* Ptr(const unsigned char* at) { return move_script::At(static_cast<std::uint32_t>(move_script::Long(at))); }
 unsigned char* Descriptor() { return Area_Descriptors[Game_AreaNumber]; }
 unsigned char* Record(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
@@ -77,26 +77,26 @@ extern "C" unsigned char __cdecl Area_LinkAt(unsigned x_arg, unsigned z_arg) {
     return 1;
 found:
     unsigned char flags;
-    if (Word(link + 2) != 0xFFFF) {
-        AreaW0b_Place = Word(link + 2);
-        kPendingX = static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8);
-        AreaEntry_PendingZ = static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8);
+    if (move_script::Word(link + 2) != 0xFFFF) {
+        AreaW0b_Place = move_script::Word(link + 2);
+        kPendingX = static_cast<std::int32_t>((move_script::Word(link + 4) & 0xFF80u) << 8);
+        AreaEntry_PendingZ = static_cast<std::int32_t>((move_script::Word(link + 6) & 0xFF80u) << 8);
         flags = link[0xA];
     } else {
-        const unsigned index = Word(link + 4);
+        const unsigned index = move_script::Word(link + 4);
         const unsigned count = Ptr(descriptor + 0x28)[index];
         const unsigned char* choice = Ptr(Ptr(descriptor + 0x24) + index * 4);
         for (unsigned i = 0; i < count; ++i, choice += 10)
-            if (g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
-        AreaW0b_Place = Word(choice);
-        kPendingX = static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8);
-        AreaEntry_PendingZ = static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8);
+            if (area_entry::g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
+        AreaW0b_Place = move_script::Word(choice);
+        kPendingX = static_cast<std::int32_t>((move_script::Word(choice + 2) & 0xFF80u) << 8);
+        AreaEntry_PendingZ = static_cast<std::int32_t>((move_script::Word(choice + 4) & 0xFF80u) << 8);
         flags = choice[8];
     }
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags & 0x8F);
     kLinkHigh = static_cast<unsigned char>((flags >> 4) & 7);
-    g.classify();
-    g.pick_music(static_cast<unsigned>(kPendingX >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
+    area_entry::g.classify();
+    area_entry::g.pick_music(static_cast<unsigned>(kPendingX >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
                  AreaW0b_Place);
     return 0;
 }
@@ -132,14 +132,14 @@ found:
 // cleared, which ours does not reproduce (0).
 extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     const unsigned entry = entry_arg & 0xFFu;
-    const auto table = static_cast<std::uint32_t>(Long(Descriptor() + 0x14));
-    const unsigned char* list = Ptr(At(table) + entry * 4);
+    const auto table = static_cast<std::uint32_t>(move_script::Long(Descriptor() + 0x14));
+    const unsigned char* list = Ptr(move_script::At(table) + entry * 4);
     const unsigned char header = list[0];
     const unsigned n = header & 0xFu;
     ++list;
     if ((header & 0xC0) == 0) {
         if (Field_MemberCount != n) return (table & 0xFFFFFF00u) | 1u;
-        for (unsigned i = 0; i < n; ++i) At(::bof3::Img(kPickFree.v))[i] = Cond_Flags[0xd2 + i];
+        for (unsigned i = 0; i < n; ++i) move_script::At(::bof3::Img(kPickFree.v))[i] = Cond_Flags[0xd2 + i];
         for (unsigned i = 0; i < n; ++i) {
             const unsigned char wanted = list[i];
             const unsigned members = Field_MemberCount;
@@ -148,21 +148,21 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
                 while (j < members && Record(j)[kRecMember] != wanted) ++j;
                 if (j == members) return 1;
             } else {
-                while (j < members && At(::bof3::Img(kPickFree.v))[j] == 0xFF) ++j;
+                while (j < members && move_script::At(::bof3::Img(kPickFree.v))[j] == 0xFF) ++j;
                 if (j == members) continue;
             }
-            At(::bof3::Img(kPickColumn.v))[i] = Record(j)[kRecColumn];
-            At(::bof3::Img(kPickSlot.v))[i] = static_cast<unsigned char>(j);
-            At(::bof3::Img(kPickFree.v))[j] = 0xFF;
+            move_script::At(::bof3::Img(kPickColumn.v))[i] = Record(j)[kRecColumn];
+            move_script::At(::bof3::Img(kPickSlot.v))[i] = static_cast<unsigned char>(j);
+            move_script::At(::bof3::Img(kPickFree.v))[j] = 0xFF;
         }
-        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(::bof3::Img(kPickSlot.v))[i])[kRecMember];
+        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(move_script::At(::bof3::Img(kPickSlot.v))[i])[kRecMember];
         for (unsigned s = 0; static_cast<int>(s) < static_cast<int>(n) - 1; ++s) {
-            const unsigned char there = At(::bof3::Img(kPickSlot.v))[s];
+            const unsigned char there = move_script::At(::bof3::Img(kPickSlot.v))[s];
             if (s == there) continue;
-            g.swap_members(s, there, 0);
+            area_entry::g.swap_members(s, there, 0);
             for (unsigned t = s; t < n; ++t) {
-                if (At(::bof3::Img(kPickSlot.v))[t] == s) {
-                    At(::bof3::Img(kPickSlot.v))[t] = At(::bof3::Img(kPickSlot.v))[s];
+                if (move_script::At(::bof3::Img(kPickSlot.v))[t] == s) {
+                    move_script::At(::bof3::Img(kPickSlot.v))[t] = move_script::At(::bof3::Img(kPickSlot.v))[s];
                     break;
                 }
             }
@@ -171,14 +171,14 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     } else if ((header & 0xC0) == 0x80 && Field_MemberCount < n) {
         return (table & 0xFFFFFF00u) | 1u;
     }
-    g.set_up(Field_MemberCount, list);
+    area_entry::g.set_up(Field_MemberCount, list);
     list += n;
     // Byte-wide, as the original: bit 3 and bit 8 of Field_ScriptFlags, bit
     // 15 of Field_ScriptFlags2.
-    if (header & 0x20) At(Address(&Field_ScriptFlags))[0] |= 8;
-    if ((header & 0x30) == 0x30) g.kind2_place(list[0]);
-    At(Address(&Field_ScriptFlags) + 1)[0] |= 1;
-    At(Address(&Field_ScriptFlags2) + 1)[0] |= 0x80;
+    if (header & 0x20) move_script::At(Address(&Field_ScriptFlags))[0] |= 8;
+    if ((header & 0x30) == 0x30) area_entry::g.kind2_place(list[0]);
+    move_script::At(Address(&Field_ScriptFlags) + 1)[0] |= 1;
+    move_script::At(Address(&Field_ScriptFlags2) + 1)[0] |= 0x80;
     return 0;
 }
 
@@ -204,13 +204,13 @@ extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned ch
         Sprite_Current[0x5E] = 0;
         Sprite_Current[0x5F] = 0;
         Sprite_Current[0x5C] = 2;
-        g.member_clear(i);
+        area_entry::g.member_clear(i);
         Sprite_Current[1] = 2;
         Sprite_Current[7] = 0;
         Sprite_Current[9] = 0;
-        SetLong(record + kRecScript, Long(Ptr(Descriptor() + 0x18) + list[i] * 4u));
-        g.context_reset(record + kRecContext);
-        g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(kPalettes.v) + Sprite_Current[kRecPalette] * 64u)), 0);
+        move_script::SetLong(record + kRecScript, move_script::Long(Ptr(Descriptor() + 0x18) + list[i] * 4u));
+        area_entry::g.context_reset(record + kRecContext);
+        area_entry::g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(kPalettes.v) + Sprite_Current[kRecPalette] * 64u)), 0);
     }
     Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF8);
 }
@@ -228,17 +228,17 @@ extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned ch
 // same). Field_State is re-read after Field_MemberSprite and after the copy;
 // the member is passed with a stale upper half (Field_MemberSprite masks).
 extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep) {
-    g.swap_fields(a, b, keep);
+    area_entry::g.swap_fields(a, b, keep);
     const unsigned slots[2] = {a, b};
     for (const unsigned slot : slots) {
         unsigned char* const record = Record(slot & 0xFFu);
         Field_State = record;
         Sprite_Current = record;
-        g.member_sprite(record[kRecMember], slot);
+        area_entry::g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
         const unsigned char character = Character_IndexById[state[kRecMember]];
-        const unsigned char* const from = At(::bof3::Img(CharacterRecords_addr) + character * kCharacterBytes);
-        for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
+        const unsigned char* const from = move_script::At(::bof3::Img(CharacterRecords_addr) + character * kCharacterBytes);
+        for (unsigned k = 0; k < kCharacterBytes; k += 4) move_script::SetLong(state + kRecCharacter + k, move_script::Long(from + k));
         state = Field_State;
         state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];
     }
@@ -262,9 +262,9 @@ extern "C" void __cdecl ObjTrio_SwapFields(unsigned a, unsigned b, unsigned keep
         rb[at] = va;
     };
     const auto dword = [&](unsigned at) {
-        const std::int32_t va = Long(ra + at), vb = Long(rb + at);
-        SetLong(ra + at, vb);
-        SetLong(rb + at, va);
+        const std::int32_t va = move_script::Long(ra + at), vb = move_script::Long(rb + at);
+        move_script::SetLong(ra + at, vb);
+        move_script::SetLong(rb + at, va);
     };
     byte(0x89);
     if ((keep & 0xFFu) == 0) {
