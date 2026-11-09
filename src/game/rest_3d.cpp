@@ -49,8 +49,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-std::uint16_t W(U address) { return Word(At(address)); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+std::uint16_t W(U address) { return move_script::Word(move_script::At(address)); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 S32Rest3d S16Rest3d(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 
 // An actor's record as the originals index it: the low byte, 0..2 a party

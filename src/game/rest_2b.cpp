@@ -121,7 +121,7 @@ constexpr rdata::Const kOffsetY{0x5C4274};
 unsigned char& BRest2b(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U Key(const void* p) { return Low32(p); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {

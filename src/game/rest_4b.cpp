@@ -63,7 +63,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return *At(address); }
 unsigned W(U address) { return Word(At(address)); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 void PutW(U address, unsigned v) { SetWord(At(address), v); }
 void PutL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 short S16(U address) { return static_cast<short>(Word(At(address))); }

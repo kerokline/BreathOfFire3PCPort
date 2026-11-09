@@ -46,7 +46,7 @@ using Handler = void (__cdecl*)();
 
 unsigned char& BRest4c(U address) { return At(address)[0]; }
 signed char S8(U address) { return static_cast<signed char>(At(address)[0]); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
+U L(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U Key(const void* p) { return Low32(p); }
 void PutFloat(unsigned char* p, unsigned offset, int v) {
