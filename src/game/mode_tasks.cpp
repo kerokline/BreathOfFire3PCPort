@@ -48,7 +48,7 @@ const mode_tasks::Callees kOriginals = {
 }  namespace mode_tasks { Callees g = kOriginals; }
 namespace {
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
-std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
+std::uint16_t TaskZeroState() { return move_script::Word(move_script::At(::bof3::Img(bof3::addr::Task_Records))); }
 
 }  // namespace
 
@@ -132,9 +132,9 @@ extern "C" unsigned char* __cdecl Title_Sprite(int x, int y, unsigned index, uns
     const unsigned char* const entry = Title_Sprites + (index & 0xFF) * 10u;
     prim[0x14] = entry[0];
     prim[0x15] = entry[2];
-    rv::As<records::GpuSprt>(prim)->w = Word(entry + 4);
-    rv::As<records::GpuSprt>(prim)->h = Word(entry + 6);
-    rv::As<records::GpuSprt>(prim)->clut = static_cast<unsigned>(Word(entry + 8)) << 6;
+    rv::As<records::GpuSprt>(prim)->w = move_script::Word(entry + 4);
+    rv::As<records::GpuSprt>(prim)->h = move_script::Word(entry + 6);
+    rv::As<records::GpuSprt>(prim)->clut = static_cast<unsigned>(move_script::Word(entry + 8)) << 6;
     mode_tasks::g.commit(slot, 0x1C);
     return prim;
 }
@@ -263,9 +263,9 @@ extern "C" void __cdecl GameMode_Field(void) {
     case 3: {   // battle
         const std::int32_t count = static_cast<std::int32_t>(Game_BattleCount);
         Game_Mode = 5;
-        At(::bof3::Img(kBattleBytes))[0] = 0;
-        At(::bof3::Img(kBattleBytes))[1] = 0;
-        At(::bof3::Img(kBattleBytes))[2] = 0;
+        move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
+        move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
+        move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
         rv::Bytes(ObjTrio)[0xb] = 0;
         rv::Bytes(&ObjTrio[1])[0xb] = 0;
         rv::Bytes(&ObjTrio[2])[0xb] = 0;
@@ -278,7 +278,7 @@ extern "C" void __cdecl GameMode_Field(void) {
         return;
     case 5: {   // the area change
         unsigned char track = Music_Track;
-        At(::bof3::Img(Field_ScriptFlags2_addr))[0] |= 0x40;
+        move_script::At(::bof3::Img(Field_ScriptFlags2_addr))[0] |= 0x40;
         if (track != 0xFF && AreaW1f_MusicCurrent != track) {
             mode_tasks::g.music_fade(0x10);
             track = Music_Track;
@@ -295,10 +295,10 @@ extern "C" void __cdecl GameMode_Field(void) {
     }
     case 6:
         BattleE1_Mode = 6;
-        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
-        At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
         Game_Step = 0;
-        At(::bof3::Img(BattleE1_Mode_addr))[0xC] = 0xFF;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[0xC] = 0xFF;
         Game_Mode = 7;
         return;
     case 7:
@@ -306,15 +306,15 @@ extern "C" void __cdecl GameMode_Field(void) {
         Game_Mode = Field_Request == 7 ? 9 : 0xA;
         Game_Step = 0;
         BattleE1_Mode = 0;
-        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
-        At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
+        move_script::At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
         return;
     case 9:
         FieldEvent_Object905DA0 = 1;
-        At(::bof3::Img(kMode11Bytes))[1] = 0;
-        At(::bof3::Img(kMode11Bytes))[2] = 0;
-        At(::bof3::Img(kMode11Bytes))[3] = 0;
-        At(::bof3::Img(kMode11Bytes))[4] = 0;
+        move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
+        move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
+        move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
+        move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
         Game_Mode = 0xB;
         return;
     default:
