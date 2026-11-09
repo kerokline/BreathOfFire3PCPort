@@ -53,6 +53,10 @@ struct Callees {
     void (__cdecl* cell_refresh)(int slot, unsigned first, unsigned count, unsigned clut);               // D3d_RefreshCellTexture
 };
 
+// The pose log's cell footprints (moved from d3d_draw.cpp with g_cell_foot, source-layout B0).
+struct CellFoot { int valid, x0, y0, x1, y1; };   // halfword columns, rows; inclusive
+extern CellFoot g_cell_foot[128];   // defined in d3d_draw.cpp (source-layout B0: promoted for a moved reader)
+
 extern const Callees kOriginals;
 extern Callees g;
 
