@@ -8884,8 +8884,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetLong	copied		src/game/effect_4d.cpp	66	66	66	src/game/effect/effect_kind_94.cpp	d3e6abb3
 	SetLong	copied		src/game/effect_4d.cpp	66	66	66	src/game/effect/effect_kind_95.cpp	d3e6abb3
 	SetLong	copied		src/game/effect_4d.cpp	66	66	66	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	SetLong	copied		src/game/effect_4d.cpp	66	66	66	src/game/effect/effect_kind_9a.cpp	54900254
 	SetWord	local		src/game/effect_4d.cpp	67	67	67	src/game/effect/effect_kind_97.cpp	d3e6abb3
 	Word	copied		src/game/effect_4d.cpp	68	68	68	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	Word	local		src/game/effect_4d.cpp	68	68	68	src/game/effect/effect_kind_97.cpp	54900254
 	Handler	copied		src/game/effect_4d.cpp	69	69	69	src/game/effect/effect_kind_91.cpp	d3e6abb3
 	Handler	copied		src/game/effect_4d.cpp	69	69	69	src/game/effect/effect_kind_94.cpp	d3e6abb3
 	Handler	copied		src/game/effect_4d.cpp	69	69	69	src/game/effect/effect_kind_95.cpp	d3e6abb3
@@ -8905,6 +8907,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetUL	copied		src/game/effect_4d.cpp	73	73	73	src/game/effect/effect_kind_94.cpp	d3e6abb3
 	SetUL	copied		src/game/effect_4d.cpp	73	73	73	src/game/effect/effect_kind_95.cpp	d3e6abb3
 	SetUL	copied		src/game/effect_4d.cpp	73	73	73	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	SetUL	copied		src/game/effect_4d.cpp	73	73	73	src/game/effect/effect_kind_9a.cpp	54900254
 	SW	local		src/game/effect_4d.cpp	74	74	74	src/game/effect/effect_kind_97.cpp	d3e6abb3
 	AddressOf	copied		src/game/effect_4d.cpp	75	75	75	src/game/effect/effect_kind_91.cpp	d3e6abb3
 	AddressOf	copied		src/game/effect_4d.cpp	75	75	75	src/game/effect/effect_kind_94.cpp	d3e6abb3
@@ -8959,8 +8962,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x48CF50	EffectKind96_Pulse	func	tu_48cdd0	src/game/effect_4d.cpp	420	429	473	src/game/effect/effect_kind_95.cpp	d3e6abb3
 0x48D070	EffectKind97_Run	func	tu_48d070	src/game/effect_4d.cpp	479	481	483	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D090	EffectKind97_Start	func	tu_48d070	src/game/effect_4d.cpp	485	486	490	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	Kind97Ring	local		src/game/effect_4d.cpp	492	495	498	src/game/effect/effect_kind_97.cpp	54900254
 0x48D0B0	EffectKind97_Grow	func	tu_48d070	src/game/effect_4d.cpp	500	502	510	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D100	EffectKind97_WaitCue	func	tu_48d070	src/game/effect_4d.cpp	512	516	527	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	Kind97Emit	local		src/game/effect_4d.cpp	529	531	536	src/game/effect/effect_kind_97.cpp	54900254
 0x48D180	EffectKind97_Burst	func	tu_48d070	src/game/effect_4d.cpp	538	542	556	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D220	EffectKind97_Fade	func	tu_48d070	src/game/effect_4d.cpp	558	561	570	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D270	EffectKind97_End	func	tu_48d070	src/game/effect_4d.cpp	572	574	578	src/game/effect/effect_kind_97.cpp	d3e6abb3
@@ -8974,12 +8979,15 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x48D290	EffectKind98_Run	func	tu_48d070	src/game/effect_4d.cpp	823	825	827	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D2B0	EffectKind98_Start	func	tu_48d070	src/game/effect_4d.cpp	829	831	836	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D2E0	EffectKind98_Flash	func	tu_48d070	src/game/effect_4d.cpp	838	841	853	src/game/effect/effect_kind_97.cpp	d3e6abb3
+	Kind98Project	local		src/game/effect_4d.cpp	855	858	869	src/game/effect/effect_kind_97.cpp	54900254
+	Kind98Burst	local		src/game/effect_4d.cpp	870	871	874	src/game/effect/effect_kind_97.cpp	54900254
 0x48D360	EffectKind98_Rise	func	tu_48d070	src/game/effect_4d.cpp	876	878	887	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48D3F0	EffectKind98_Fall	func	tu_48d070	src/game/effect_4d.cpp	889	892	900	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48DBA0	EffectKind98_DrawFlash	func	tu_48d070	src/game/effect_4d.cpp	902	907	922	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48DC40	EffectKind98_DrawBurst	func	tu_48d070	src/game/effect_4d.cpp	924	933	963	src/game/effect/effect_kind_97.cpp	d3e6abb3
 0x48DDE0	EffectKind9A_Run	func	tu_48dde0	src/game/effect_4d.cpp	969	971	973	src/game/effect/effect_kind_9a.cpp	d3e6abb3
 0x48DE00	EffectKind9A_Start	func	tu_48dde0	src/game/effect_4d.cpp	975	977	981	src/game/effect/effect_kind_9a.cpp	d3e6abb3
+	Kind9ANudge	local		src/game/effect_4d.cpp	983	986	996	src/game/effect/effect_kind_9a.cpp	54900254
 0x48DE30	EffectKind9A_NudgeY	func	tu_48dde0	src/game/effect_4d.cpp	998	1000	1000	src/game/effect/effect_kind_9a.cpp	d3e6abb3
 0x48DE70	EffectKind9A_HoldY	func	tu_48dde0	src/game/effect_4d.cpp	1002	1003	1005	src/game/effect/effect_kind_9a.cpp	d3e6abb3
 0x48DE90	EffectKind9A_BackY	func	tu_48dde0	src/game/effect_4d.cpp	1007	1009	1009	src/game/effect/effect_kind_9a.cpp	d3e6abb3
@@ -12357,6 +12365,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Fn	copied		src/game/frame_callees.cpp	28	28	28	src/game/effect/effect_kind_06.cpp	d3e6abb3
 	HandlerFrameCallees	copied		src/game/frame_callees.cpp	29	29	29	src/game/effect/effect_gte.cpp	d3e6abb3
 	HandlerFrameCallees	copied		src/game/frame_callees.cpp	29	29	29	src/game/effect/effect_kind_06.cpp	d3e6abb3
+	HandlerFrameCallees	local		src/game/frame_callees.cpp	29	29	29	src/game/effect/effect_gte.cpp	54900254
 	kEffects/kEffectBytes	copied		src/game/frame_callees.cpp	31	31	31	src/game/effect/effect_gte.cpp	d3e6abb3
 	kSlots/kSlotBytes	copied		src/game/frame_callees.cpp	32	32	32	src/game/field/field_2.cpp	d3e6abb3
 	kTints/kTintBytes	copied		src/game/frame_callees.cpp	33	33	33	src/game/field/field_2.cpp	d3e6abb3
@@ -22494,6 +22503,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	StF	copied		src/game/rest_3e.cpp	92	92	95	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	StF	copied		src/game/rest_3e.cpp	92	92	95	src/game/effect/effect_kind_48.cpp	d3e6abb3
 	StF	copied		src/game/rest_3e.cpp	92	92	95	src/game/effect/effect_kind_5d.cpp	d3e6abb3
+	StI	local		src/game/rest_3e.cpp	94	95	95	src/game/effect/effect_kind_5d.cpp	54900254
 	StI	copied		src/game/rest_3e.cpp	96	97	97	src/game/effect/effect_kind_34.cpp	d3e6abb3
 	StI	copied		src/game/rest_3e.cpp	96	97	97	src/game/effect/effect_kind_5d.cpp	d3e6abb3
 	EqualOrUnordered	local		src/game/rest_3e.cpp	98	99	102	src/game/effect/effect_kind_48.cpp	d3e6abb3

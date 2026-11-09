@@ -45,91 +45,6 @@ const mode_tasks::Callees kOriginals = {
     Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
 };
 }  namespace mode_tasks { Callees g = kOriginals; }
-// original 0x4959F0 (PSX 0x80198378): Game_Mode 2, the field (PSX GAME.EMI section 0,
-// FUN_80198378): the event script and the field's frame, then whatever
-// Field_Request asks for becomes the next mode.
-//
-// As the original has it: Field_Request is read (as a byte) only after the
-// two calls, which may set it; 0 and anything above 9 change nothing. On the
-// area change (5) the music track byte is read again after each call that
-// may have changed it, and Transition_Start gets the area's kind as a byte
-// (the original passes ecx with whatever its upper bytes held; the callee
-// reads the byte). The PSX's case 5 also started the next area's music; the
-// port fades instead (docs/mode-tasks.md section 3).
-extern "C" void __cdecl GameMode_Field(void) {
-    mode_tasks::g.event_dispatch();
-    mode_tasks::g.field_frame();
-    switch (Field_Request) {
-    case 1:   // the menu
-        mode_tasks::g.transition(2);
-        mode_tasks::g.wait_transition(0);
-        Game_Step = 0;
-        Game_Mode = 3;
-        return;
-    case 2:
-        Game_Mode = 4;
-        return;
-    case 3: {   // battle
-        const std::int32_t count = static_cast<std::int32_t>(Game_BattleCount);
-        Game_Mode = 5;
-        move_script::At(::bof3::Img(kBattleBytes))[0] = 0;
-        move_script::At(::bof3::Img(kBattleBytes))[1] = 0;
-        move_script::At(::bof3::Img(kBattleBytes))[2] = 0;
-        rv::Bytes(ObjTrio)[0xb] = 0;
-        rv::Bytes(&ObjTrio[1])[0xb] = 0;
-        rv::Bytes(&ObjTrio[2])[0xb] = 0;
-        Game_Step = 0;
-        Game_BattleCount = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
-        return;
-    }
-    case 4:
-        Game_Mode = 6;
-        return;
-    case 5: {   // the area change
-        unsigned char track = Music_Track;
-        move_script::At(::bof3::Img(Field_ScriptFlags2_addr))[0] |= 0x40;
-        if (track != 0xFF && AreaW1f_MusicCurrent != track) {
-            mode_tasks::g.music_fade(0x10);
-            track = Music_Track;
-        }
-        const unsigned char kind = ModeFlow_AreaTransition;
-        if (kind != 0xFF) {
-            mode_tasks::g.transition(kind);
-            mode_tasks::g.wait_transition(0);
-            track = Music_Track;
-        }
-        if (track != 0xFF && AreaW1f_MusicCurrent != track) mode_tasks::g.music_stop(0xA);
-        Game_Mode = 1;
-        return;
-    }
-    case 6:
-        BattleE1_Mode = 6;
-        move_script::At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
-        move_script::At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
-        Game_Step = 0;
-        move_script::At(::bof3::Img(BattleE1_Mode_addr))[0xC] = 0xFF;
-        Game_Mode = 7;
-        return;
-    case 7:
-    case 8:
-        Game_Mode = Field_Request == 7 ? 9 : 0xA;
-        Game_Step = 0;
-        BattleE1_Mode = 0;
-        move_script::At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
-        move_script::At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
-        return;
-    case 9:
-        FieldEvent_Object905DA0 = 1;
-        move_script::At(::bof3::Img(kMode11Bytes))[1] = 0;
-        move_script::At(::bof3::Img(kMode11Bytes))[2] = 0;
-        move_script::At(::bof3::Img(kMode11Bytes))[3] = 0;
-        move_script::At(::bof3::Img(kMode11Bytes))[4] = 0;
-        Game_Mode = 0xB;
-        return;
-    default:
-        return;
-    }
-}
 
 namespace {
 
@@ -564,5 +479,4 @@ void ModeTasks_Inject() {
         move_script::Relocate(clones[kField], kClones[kField].base, kClones[kField].size, kFieldTable);
         SelfTest(clones);
     }
-    BOF3_INJECT(GameMode_Field);
 }

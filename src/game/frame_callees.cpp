@@ -26,7 +26,6 @@ using namespace move_script;
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 using Fn = void (__cdecl*)();
-Fn HandlerFrameCallees(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
 
 constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
 constexpr unsigned kSlots = 8, kSlotBytes = 0x10;
@@ -59,28 +58,6 @@ unsigned Tinted(unsigned component, unsigned char tint) {
 }
 
 }  // namespace
-
-// original 0x494030: the effect objects' frame (PSX FUN_8019B0EC, term for
-// term). Each of the 20 whose byte +0 is non-zero - any bit, read afresh each
-// turn, so an object a handler spawns further on runs this frame - becomes
-// Sprite_Current and runs Effect_KindHandlers[+5], unbounded as the
-// original's.
-extern "C" void __cdecl Effect_RunObjects(void) {
-    unsigned char* object = rv::Bytes(Effect_Objects);
-    static int log_on = -1;
-    if (log_on < 0) {
-        char v[8];
-        log_on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
-    }
-    for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
-        if (object[0] == 0) continue;
-        if (log_on == 1 && object[1] == 0)
-            bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %lu", kEffects - n, object[5],
-                      object[6], object[9], static_cast<unsigned long>(Frame_Counter));
-        Sprite_Current = object;
-        HandlerFrameCallees(Effect_KindHandlers[object[5]])();
-    }
-}
 
 // original 0x455250: the slot records (PSX FUN_80197C8C, term for term). Each
 // of the 8 whose byte +0 has bit 0 - read afresh each turn - runs
@@ -489,7 +466,6 @@ void FrameCallees_Inject() {
         }
         SelfTest(clones);
     }
-    BOF3_INJECT(Effect_RunObjects);
     BOF3_INJECT(Field_RunSlots);
     BOF3_INJECT(MoveScript_TintFrame);
     BOF3_INJECT(Party_UpdateScreens);
