@@ -79,7 +79,7 @@ unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 // The record views (game/record_views.h). The leader's states and the party's
 // set-up run on an ObjTrio record (Member above, Field_State always); the
 // Sprite_* helpers on any object, whose first 0x80 bytes are a sprite's.
-unsigned char* Actor(unsigned a) { return At(::bof3::Img(CharacterRecords_addr)) + a * kActorBytes; }
+unsigned char* Actor(unsigned a) { return move_script::At(::bof3::Img(CharacterRecords_addr)) + a * kActorBytes; }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
 }
@@ -100,7 +100,7 @@ void CopyActor(unsigned char* to, const unsigned char* from) { std::memcpy(to, f
 // reads (docs/field-event.md, section 1).
 extern "C" void __cdecl Field_LeaderFrame(void) {
     g.restore_clut();
-    unsigned char* const timer = At(::bof3::Img(EventOps_BlockByte_addr));
+    unsigned char* const timer = move_script::At(::bof3::Img(EventOps_BlockByte_addr));
     if (*timer != 0) *timer = static_cast<unsigned char>(*timer - 1);
     g.copy_input();
     Dispatch(g.leader_states, rv::Current<records::PartyMember>()->state);
@@ -204,7 +204,7 @@ extern "C" void __cdecl Field_LeaderStand(void) {
 // Sprite_SetAnimation, typed as a byte - unchecked past that.
 extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
     if (!(Field_InputFlags & 1)) return g.set_animation(animation);
-    const unsigned char* const pair = At(::bof3::Img(at::kAnimationRemap)) + (animation & 0xFF) * 2u;
+    const unsigned char* const pair = move_script::At(::bof3::Img(at::kAnimationRemap)) + (animation & 0xFF) * 2u;
     g.set_animation(pair[0]);
     unsigned char* const c = Sprite_Current;
     c[0x2A] = pair[1];
@@ -221,7 +221,7 @@ extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
 // bytes, the same as unsigned.
 extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_arg) {
     const unsigned x = x_arg & 0xFF, z = z_arg & 0xFF;
-    const unsigned char* record = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(Area_StateRecords_addr)) + Game_AreaNumber * 4u)));   // a 32-bit word
+    const unsigned char* record = move_script::At(static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(Area_StateRecords_addr)) + Game_AreaNumber * 4u)));   // a 32-bit word
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -242,23 +242,23 @@ namespace field_event { std::uint8_t g_mantle_cap = 0; }
 // doubling and the halving are 8-bit and wrap. Rand is called only on the
 // roll path; the zone record's byte +4 is read again after it.
 extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
-    unsigned char* const counter = At(::bof3::Img(ObjTrio_addr) + 0x134);
+    unsigned char* const counter = move_script::At(::bof3::Img(ObjTrio_addr) + 0x134);
     if (static_cast<unsigned char>(Field_ScriptFlags) & 0x20) {
-        SetWord(counter, 0);
+        move_script::SetWord(counter, 0);
         return;
     }
     const unsigned char* const zone = g.zone_at(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]);
-    const unsigned char* const bases = At(::bof3::Img(at::kZoneBases));
+    const unsigned char* const bases = move_script::At(::bof3::Img(at::kZoneBases));
     unsigned char value = bases[zone[4] * 2u];
     if (value == 0) {
-        SetWord(counter, 0);
+        move_script::SetWord(counter, 0);
         return;
     }
     if ((keep & 0xFF) != 0) {
-        const std::uint16_t now = Word(counter);
+        const std::uint16_t now = move_script::Word(counter);
         if (now != 0) {
             if (now < value) return;
-            SetWord(counter, value);
+            move_script::SetWord(counter, value);
             return;
         }
     }
@@ -274,7 +274,7 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
     for (i = 0; i < members; ++i)
         if (g.has_item(ObjTrio[i].char_index, 3, 0x14)) break;
     if (i < members) value = static_cast<unsigned char>(value >> 1);
-    SetWord(counter, value);
+    move_script::SetWord(counter, value);
 }
 
 // --- small helpers -----------------------------------------------------------
@@ -283,7 +283,7 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
 // party list `slot` (0x904062 + slot * 3), at most 3. As the original has it:
 // slot is unchecked.
 extern "C" int __cdecl Party_Count(unsigned slot) {
-    const unsigned char* const list = At(::bof3::Img(Cond_Flags_addr) + 0xd2) + (slot & 0xFF) * 3u;
+    const unsigned char* const list = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2) + (slot & 0xFF) * 3u;
     int n = 0;
     while (list[n] != 0xFF)
         if (++n >= 3) break;
@@ -293,7 +293,7 @@ extern "C" int __cdecl Party_Count(unsigned slot) {
 // original 0x5322B0 (PSX 0x801BF708): a script context back to its start, at
 // speed index 3.
 extern "C" void __cdecl ScriptContext_Reset(unsigned char* context) {
-    SetWord(context + 0xA, 0);
+    move_script::SetWord(context + 0xA, 0);
     context[7] = 0;
     context[2] = 0;
     context[5] = 0;
@@ -364,9 +364,9 @@ extern "C" void __cdecl Party_ClearActive(void) {
 
 // original 0x534010 (PSX 0x801C2838).
 extern "C" void __cdecl Party_JoinReset(void) {
-    SetLong(At(::bof3::Img(at::kJoinState)), 0);
-    SetLong(At(::bof3::Img(at::kJoinState) + 4), 0);
-    *At(::bof3::Img(at::kJoinState) + 8) = 0;
+    move_script::SetLong(move_script::At(::bof3::Img(at::kJoinState)), 0);
+    move_script::SetLong(move_script::At(::bof3::Img(at::kJoinState) + 4), 0);
+    *move_script::At(::bof3::Img(at::kJoinState) + 8) = 0;
 }
 
 // original 0x534EC0 (PSX 0x801C41FC): two of Field_State's timers from its
@@ -407,7 +407,7 @@ extern "C" long __cdecl MapView_GroundAt(long x, long z) {
 // the 32 records of MoveScript_TintRecords in order, compared as whole dwords.
 extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
     for (unsigned i = 0; i < 32; ++i)
-        if (static_cast<std::uint32_t>(Long(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
+        if (static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
             g.tint_release(static_cast<unsigned char>(i));
 }
 
@@ -424,37 +424,37 @@ extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
 // (+0x2B != 0) as its low byte, both read back from the object.
 extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_arg) {
     const unsigned member = member_arg & 0xFF, slot = slot_arg & 0xFF;
-    const unsigned char* const row = At(::bof3::Img(MoveScript_EffectArg_addr) + 0xc) + (AreaW0b_PartySet & 0x7Fu) * 3u;
+    const unsigned char* const row = move_script::At(::bof3::Img(MoveScript_EffectArg_addr) + 0xc) + (AreaW0b_PartySet & 0x7Fu) * 3u;
     unsigned char column = 0;
     while (row[column] != member)
         if (++column >= 3) break;
     g.release_tint(Sprite_Current);
-    SetWord(Sprite_Current + 0x2C, column);
+    move_script::SetWord(Sprite_Current + 0x2C, column);
     {
         unsigned char* const c = Sprite_Current;
-        const unsigned index = Word(c + 0x2C);
-        SetLong(c + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kBankTable)) + index * 4u)) + ::bof3::Img(at::kBankTable)));
+        const unsigned index = move_script::Word(c + 0x2C);
+        move_script::SetLong(c + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(at::kBankTable)) + index * 4u)) + ::bof3::Img(at::kBankTable)));
     }
     Sprite_Current[0x24] = 1;
     Sprite_Current[0x27] = static_cast<unsigned char>(slot + 0x78);
     Sprite_Current[0x28] = 2;
     Sprite_Current[0x25] = 5;
     Sprite_Current[0x26] = static_cast<unsigned char>(slot * 0x50);
-    Sprite_Current[0x2B] = At(::bof3::Img(Character_IndexById_addr) + 0xc)[member];
+    Sprite_Current[0x2B] = move_script::At(::bof3::Img(Character_IndexById_addr) + 0xc)[member];
     {
         unsigned char* const c = Sprite_Current;
-        SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) & 0xFFFFFF00u));
+        move_script::SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(c + 0x70)) & 0xFFFFFF00u));
     }
     {
         unsigned char* const c = Sprite_Current;
-        SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) | (c[0x2B] != 0 ? 1u : 0u)));
+        move_script::SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(c + 0x70)) | (c[0x2B] != 0 ? 1u : 0u)));
     }
     Sprite_Current[0x29] = Draw_OtSlot;
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;
     Sprite_Current[0x5C] = 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + slot * 64u)), 0);
+    g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + slot * 64u)), 0);
 }
 
 // original 0x533CE0 (PSX 0x801C23F8): Field_MemberCount members from the
@@ -469,7 +469,7 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
     const unsigned slot = slot_arg & 0xFF;
     if (Field_Request != 6) g.clear_all();
     if (Field_MemberCount == 0) return;
-    const unsigned char* const list = At(::bof3::Img(Cond_Flags_addr) + 0xd2) + slot * 3u;
+    const unsigned char* const list = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2) + slot * 3u;
     for (unsigned i = 0;;) {
         records::PartyMember* const m = rv::As<records::PartyMember>(Member(i));
         Field_State = rv::Bytes(m);
@@ -511,14 +511,14 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
             m->x = x;
             m->z = z;
         } else {
-            const unsigned char* const offset = At(::bof3::Img(Field_PlaceOffsets_addr)) + (d >> 1) * 8u;
+            const unsigned char* const offset = move_script::At(::bof3::Img(Field_PlaceOffsets_addr)) + (d >> 1) * 8u;
             const auto ux = static_cast<std::uint32_t>(x), uz = static_cast<std::uint32_t>(z);
             if (Field_ScriptFlags2 & 0x4000) {
-                m->x = static_cast<std::int32_t>(ux - static_cast<std::uint32_t>(Long(offset)));
-                m->z = static_cast<std::int32_t>(uz - static_cast<std::uint32_t>(Long(offset + 4)));
+                m->x = static_cast<std::int32_t>(ux - static_cast<std::uint32_t>(move_script::Long(offset)));
+                m->z = static_cast<std::int32_t>(uz - static_cast<std::uint32_t>(move_script::Long(offset + 4)));
             } else {
-                m->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset)) + ux);
-                m->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 4)) + uz);
+                m->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(offset)) + ux);
+                m->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(offset + 4)) + uz);
             }
         }
         m->direction = d;
@@ -552,17 +552,17 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         if (!(input & 9) && area != 0xBD && area != 0xBB) {
             if (!(input & 0x40))
                 whole_party = true;
-            else if (g.flags_test(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x77))
+            else if (g.flags_test(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x77))
                 whole_party = true;
         }
     }
     if (!whole_party) {
         // The leader alone.
         const unsigned count = static_cast<unsigned char>(g.party_count(0));
-        const unsigned char* const list = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
+        const unsigned char* const list = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
         for (unsigned i = 0; i < count; ++i) {
             unsigned char* const word = Field_ActorStates + Character_IndexById[list[i]] * kActorBytes;
-            SetWord(word, Word(word) & 0xFFDF);
+            move_script::SetWord(word, move_script::Word(word) & 0xFFDF);
         }
         for (unsigned i = 0; i < count; ++i) {
             if (Field_ActorStates[Character_IndexById[list[i]] * kActorBytes] & 0x80) {
@@ -624,7 +624,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                     g.member_sprite(id, i);
                     g.release_tint(Sprite_Current);
                     Sprite_Current[0x27] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->actor + 0x78);
-                    g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Current<records::PartyMember>()->actor * 64u)), 0);
+                    g.load_palette(reinterpret_cast<unsigned short*>(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + rv::Current<records::PartyMember>()->actor * 64u)), 0);
                 }
                 ++i;
                 if (i >= Field_MemberCount) break;
@@ -701,7 +701,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
 // loading it).
 extern "C" void __cdecl Field_PendingJump(void) {
     if (EventLeader_PendingFlag == 0) return;
-    Dispatch(g.pending_jumps, *At(::bof3::Img(EventLeader_PendingFlag_addr) + 1));
+    Dispatch(g.pending_jumps, *move_script::At(::bof3::Img(EventLeader_PendingFlag_addr) + 1));
 }
 
 // original 0x533EF0 (PSX 0x801C2874): member `member` joins the party as
