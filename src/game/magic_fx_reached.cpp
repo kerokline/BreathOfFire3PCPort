@@ -97,14 +97,14 @@ using namespace magic_fx_reached;
 namespace {
 
 unsigned char* Ptr(std::uint32_t cell) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(cell)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(magic_fx_reached::Long(magic_fx_reached::At(cell)))));
 }
 std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(Low32(p));
 }
 // A task slot by its index, unchecked as the originals index it.
-unsigned char* Task(unsigned index) { return At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
-unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
+unsigned char* Task(unsigned index) { return magic_fx_reached::At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
+unsigned char Byte(std::uint32_t address) { return magic_fx_reached::At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.
 unsigned char* Enemy(unsigned char index) {
@@ -113,7 +113,7 @@ unsigned char* Enemy(unsigned char index) {
 unsigned char* Party(unsigned char index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
 // A .data dispatch table's entry, read as the original reads it.
 Handler Entry(std::uint32_t table, unsigned index) {
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4 * index)))));
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(magic_fx_reached::Long(magic_fx_reached::At(table + 4 * index)))));
 }
 // Sprite_Current's position copied from `from`: the actor byte +8 and the
 // three dwords +0x34 / +0x38 / +0x3C, Sprite_Current read again for each.
@@ -140,15 +140,15 @@ void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 MFX_EXPORT void __cdecl FxDiscFan_Task(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 3) bof3::Fatal("FxDiscFan_Task: phase %u, past the three-entry table", phase);
-    g.disc_fan[phase]();
+    magic_fx_reached::g.disc_fan[phase]();
     if (Sprite_Current[0] == 0) return;
-    g.update_screen_xy();
+    magic_fx_reached::g.update_screen_xy();
     unsigned char* const sc = Sprite_Current;
     rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y) - 0x10u);
-    g.draw_disc();
-    g.push_matrix();
-    g.draw_fan();
-    g.pop_matrix();
+    magic_fx_reached::g.draw_disc();
+    magic_fx_reached::g.push_matrix();
+    magic_fx_reached::g.draw_fan();
+    magic_fx_reached::g.pop_matrix();
 }
 
 // original 0x4C5020: the start. The position of the source sprite 0x904B4C;
@@ -165,20 +165,20 @@ MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
     TakePosition(Ptr(::bof3::Img(at::kSource)));
     Sprite_Current[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
-        const unsigned index = g.task_create(1, 0x16);
+        const unsigned index = magic_fx_reached::g.task_create(1, 0x16);
         unsigned char* const sc = Sprite_Current;
         unsigned char* const t = Task(index);
-        SetLong(t + 0x80, PtrValue(sc));
+        magic_fx_reached::SetLong(t + 0x80, PtrValue(sc));
         t[9] = static_cast<unsigned char>(i * 6 + 1);
         Bump(sc[0xB], 1);
     }
     for (std::uint32_t a = ::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2; a < (::bof3::Img(Gfx_ClutStrip_addr) + 0x3400) + 0x20; a += 2)
-        SetWord(At(a), Word(At(a - 0x4000)) | 0x8000u);
+        magic_fx_reached::SetWord(magic_fx_reached::At(a), magic_fx_reached::Word(magic_fx_reached::At(a - 0x4000)) | 0x8000u);
     const unsigned char target = Byte(::bof3::Img(at::kTarget));
     Gfx_ClutStrip[0x1a00] = 0;
     Gfx_ClutStripDirty = 1;
-    g.set_target_flags(target, 0x10);
-    g.play_by_id(0x100);
+    magic_fx_reached::g.set_target_flags(target, 0x10);
+    magic_fx_reached::g.play_by_id(0x100);
     Sprite_Current[9] = 1;
     Sprite_Current[0xA] = 1;
     Bump(Sprite_Current[1], 1);
@@ -208,9 +208,9 @@ MFX_EXPORT void __cdecl FxDiscFan_Fade(void) {
         sc = Sprite_Current;
     }
     if (sc[0xB] != 0 || sc[0xA] != 0) return;
-    g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
-    At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kFlags))[0] | 4);
-    g.free_current();
+    magic_fx_reached::g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
+    magic_fx_reached::At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(magic_fx_reached::At(::bof3::Img(at::kFlags))[0] | 4);
+    magic_fx_reached::g.free_current();
 }
 
 // original 0x4C5110: a ring task. Its phase +1 through FxRing_Phases
@@ -221,9 +221,9 @@ MFX_EXPORT void __cdecl FxRing_Task(void) {
     Entry(::bof3::Img(FxRing_Phases_addr), Sprite_Current[1])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[1] == 0) return;
-    g.push_matrix();
-    g.draw_ring();
-    g.pop_matrix();
+    magic_fx_reached::g.push_matrix();
+    magic_fx_reached::g.draw_ring();
+    magic_fx_reached::g.pop_matrix();
 }
 
 // original 0x4AD200: the ring's wait. +9 down; at 0 the owner's position
@@ -261,7 +261,7 @@ MFX_EXPORT void __cdecl FxRing_Fade(void) {
     Bump(Sprite_Current[9], -2);
     if (Sprite_Current[9] != 0) return;
     Bump(Ptr(::bof3::Img(at::kOwner))[0xB], -1);
-    g.free_current();
+    magic_fx_reached::g.free_current();
 }
 
 // ===========================================================================
@@ -461,14 +461,14 @@ MFX_EXPORT void __cdecl StealClone_Finish(void) {
 MFX_EXPORT void __cdecl Sparkle_Task(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 6) bof3::Fatal("Sparkle_Task: phase %u, past the six-entry table", phase);
-    g.sparkle_task[phase]();
+    magic_fx_reached::g.sparkle_task[phase]();
     const std::int32_t saved = static_cast<std::int32_t>(BattleE2_Owner);
     for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
+        unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
         if ((s[0] & 1) == 0) continue;
         BattleItems_SparkleCurrent = PtrValue(s);
-        BattleE2_Owner = Long(s + 0x28);
-        g.sparkle_dispatch();
+        BattleE2_Owner = magic_fx_reached::Long(s + 0x28);
+        magic_fx_reached::g.sparkle_dispatch();
         BattleE2_Owner = saved;
     }
 }
@@ -486,14 +486,14 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
 // read again after each call; the loop's bound is re-read each round.
 MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
     for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
+        unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
         s[0] = 0;
         s[1] = 0;
         s[2] = 0;
     }
     Sprite_Current[4] = 0;
     TakePosition(Ptr(::bof3::Img(at::kSource)));
-    g.update_screen_xy();
+    magic_fx_reached::g.update_screen_xy();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
     Sprite_Current[0xA] = 0;
@@ -501,13 +501,13 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
     unsigned char n = 0;
     if (Sparkle_CountByKind[Sprite_Current[4]] != 0) {
         do {
-            const unsigned char a = g.sparkle_alloc();
+            const unsigned char a = magic_fx_reached::g.sparkle_alloc();
             if (a != 0xFF) {
-                unsigned char* const s = At(::bof3::Img(at::kSparklePool) + a * at::kSparkleStride);
-                SetLong(s + 0x28, PtrValue(Sprite_Current));
+                unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + a * at::kSparkleStride);
+                magic_fx_reached::SetLong(s + 0x28, PtrValue(Sprite_Current));
                 s[1] = 0;
                 s[2] = 0;
-                const int r = g.rand();
+                const int r = magic_fx_reached::g.rand();
                 unsigned char* const sc = Sprite_Current;
                 s[3] = static_cast<unsigned char>(r & 3);
                 s[4] = sc[4];
@@ -518,7 +518,7 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
             ++n;
         } while (n < Sparkle_CountByKind[Sprite_Current[4]]);
     }
-    g.play_effect(0x100);
+    magic_fx_reached::g.play_effect(0x100);
 }
 
 // original 0x4B8F50 (PSX MAGIC070's): the end of the glow. The tint record
@@ -528,13 +528,13 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
 MFX_EXPORT void __cdecl Sparkle_End(void) {
     unsigned char* const sc = Sprite_Current;
     for (unsigned k = 2; k <= 4; ++k) {
-        unsigned char* const tint = At(::bof3::Img(MoveScript_TintRecords_addr) + sc[0xA] * 12u + k);
+        unsigned char* const tint = magic_fx_reached::At(::bof3::Img(MoveScript_TintRecords_addr) + sc[0xA] * 12u + k);
         Bump(*tint, -1);
     }
     Bump(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
-    g.release_tint(Ptr(::bof3::Img(at::kSource)));
-    g.flash(Byte(::bof3::Img(at::kTarget)));
+    magic_fx_reached::g.release_tint(Ptr(::bof3::Img(at::kSource)));
+    magic_fx_reached::g.flash(Byte(::bof3::Img(at::kTarget)));
     Bump(Sprite_Current[1], 1);
 }
 
@@ -555,16 +555,16 @@ MFX_EXPORT void __cdecl Sparkle_End(void) {
 MFX_EXPORT void __cdecl Sparkle_Update(void) {
     const unsigned phase = Ptr(::bof3::Img(at::kSparkleCurrent))[2];
     if (phase >= 3) bof3::Fatal("Sparkle_Update: phase %u, past the three-entry table", phase);
-    g.sparkle[phase]();
+    magic_fx_reached::g.sparkle[phase]();
     const unsigned char* c = Ptr(::bof3::Img(at::kSparkleCurrent));
     if ((c[0] & 1) == 0 || c[2] == 0) return;
-    g.sparkle_disc();
+    magic_fx_reached::g.sparkle_disc();
     c = Ptr(::bof3::Img(at::kSparkleCurrent));
     if ((c[0xC] & 3) == 0) return;
-    g.rays_g2(Frame_Counter >> 1, c[6]);
+    magic_fx_reached::g.rays_g2(Frame_Counter >> 1, c[6]);
     c = Ptr(::bof3::Img(at::kSparkleCurrent));
     const unsigned radius = c[6];
-    g.rays_g3((Frame_Counter >> 1) + 4, (radius >> 1) + radius);
+    magic_fx_reached::g.rays_g3((Frame_Counter >> 1) + 4, (radius >> 1) + radius);
 }
 
 // ===========================================================================
@@ -581,21 +581,21 @@ MFX_EXPORT void __cdecl FxDim_Down(void) {
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] == 0xFA) Bump(sc[1], 1);
-    g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
+    magic_fx_reached::g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
 }
 
 // original 0x4FB050: held until 0x904AA8 bit 2 (the effect is done), then
 // the phase on.
 MFX_EXPORT void __cdecl FxDim_Hold(void) {
-    if (At(::bof3::Img(at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
+    if (magic_fx_reached::At(::bof3::Img(at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
 }
 
 // original 0x4FB070: +9 up; at 0 the task freed; the CLUTs tinted by +9
 // (signed), read after the free.
 MFX_EXPORT void __cdecl FxDim_Up(void) {
     Bump(Sprite_Current[9], 1);
-    if (Sprite_Current[9] == 0) g.free_current();
-    g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
+    if (Sprite_Current[9] == 0) magic_fx_reached::g.free_current();
+    magic_fx_reached::g.tint_clut(static_cast<signed char>(Sprite_Current[9]));
 }
 
 #undef MFX_EXPORT
