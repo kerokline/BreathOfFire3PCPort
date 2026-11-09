@@ -643,11 +643,11 @@ namespace {
 // runtime's at Crt_GetPtd() + 0x14 - there by the time the game draws). Ours
 // is what the game keeps. DIV-0023's pad words are taken as
 // the fuzz takes them.
-
+}  // namespace
 // DIV-0041's random split: a band cell's rising squares are checked against a clone whose Rand
 // call is aimed at the draw-only generator, as ours draws them; both seeds are
 // in the compared state, so either side touching the wrong one is a mismatch.
-HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr;
+namespace map_cells { HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr; }  namespace {
 constexpr unsigned kLiveGte = 0x380, kLiveWindow = 0x1000;
 
 struct LiveState {
@@ -743,11 +743,11 @@ void Live(unsigned which, HandlerFn theirs, void (*ours)(const unsigned char*, u
 }  // namespace
 
 extern "C" void __cdecl MapCell_DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (g_quads_live) Live(0, g_quads_live, DrawQuads, record, b1, b0);
+    if (map_cells::g_quads_live) Live(0, map_cells::g_quads_live, DrawQuads, record, b1, b0);
     else DrawQuads(record, b1, b0);
 }
 extern "C" void __cdecl MapCell_DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (g_rising_live) Live(1, wide_rand::Band() ? g_rising_band_live : g_rising_live, DrawRising, record, b1, b0);
+    if (map_cells::g_rising_live) Live(1, wide_rand::Band() ? map_cells::g_rising_band_live : map_cells::g_rising_live, DrawRising, record, b1, b0);
     else DrawRising(record, b1, b0);
 }
 
@@ -788,16 +788,16 @@ void MapCells_Inject() {
         // quads' clone is the fuzz's; the rising squares' needs Capcom's Rand,
         // which by then has its C runtime.
         if (LiveGteSize() > kLiveGte) bof3::Fatal("map_cells: the GTE's globals are 0x%X bytes", LiveGteSize());
-        g_quads_live = reinterpret_cast<HandlerFn>(const_cast<void*>(quads));
+        map_cells::g_quads_live = reinterpret_cast<HandlerFn>(const_cast<void*>(quads));
         const bof3::CloneCall live_rising_calls[] = {{0x20, elevation}, {0x86, nullptr},  {0x8E, nullptr},  {0x93, nullptr},
                                                      {0x184, nullptr},  {0x199, nullptr}, {0x1C2, nullptr}, {0x1D0, nullptr}};
-        g_rising_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
+        map_cells::g_rising_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
             "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, live_rising_calls,
             sizeof live_rising_calls / sizeof live_rising_calls[0])));
         const bof3::CloneCall band_rising_calls[] = {{0x20, elevation}, {0x86, nullptr},  {0x8E, nullptr},
                                                      {0x93, reinterpret_cast<const void*>(&wide_rand::DrawOnly)},
                                                      {0x184, nullptr},  {0x199, nullptr}, {0x1C2, nullptr}, {0x1D0, nullptr}};
-        g_rising_band_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
+        map_cells::g_rising_band_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
             "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, band_rising_calls,
             sizeof band_rising_calls / sizeof band_rising_calls[0])));
     }
