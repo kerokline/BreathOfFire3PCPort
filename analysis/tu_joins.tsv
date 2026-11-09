@@ -1,0 +1,5 @@
+# analysis/tu_joins.tsv: the owner's joins of neighbouring units that the census proposed apart (docs/source-layout-round.md 7b item 9). Read by tools/tu_census.py: the two units named by their first function's address go in one file whatever the rules say. Addresses and our names only.
+unit_a	unit_b	decided	reason
+0x4AE7C0	0x4AEE90	2026-11-08	PSX MAGIC057 u014 holds both; the census's cut is a back-order read against a twin of unknown image (BattleFx_FreeTask)
+0x531120	0x532FD0	2026-11-08	PSX GAME.EMI u505 holds both (window join); the owner joined it over the back-order cut
+0x56E6C0	0x5722D0	2026-11-08	PSX main u107 holds both (window join of 20); the owner joined it over the back-order cut

@@ -80,6 +80,7 @@ LOCAL_SPAN = 12                             # a static read inside this many fun
 TSV = os.path.join(ROOT, 'analysis', 'tu_layout.tsv')
 SHEET = os.path.join(ROOT, 'analysis', 'tu_layout_sheet.md')
 PSX_TSV = os.path.join(ROOT, 'analysis', 'tu_psx.tsv')   # SL2's table (tools/tu_psx.py)
+JOINS_TSV = os.path.join(ROOT, 'analysis', 'tu_joins.tsv')   # the owner's joins (round doc 7b item 9)
 
 
 def load_psx_units(path):
@@ -778,7 +779,22 @@ def unit_range(M, u):
     return lo, hi
 
 
-def proposals(M, units, names, hard):
+def load_owner_joins(path):
+    """analysis/tu_joins.tsv: (unit_a first pc, unit_b first pc) -> reason. The owner's
+    decision to put two neighbouring units in one file, whatever the rules say."""
+    out = {}
+    if not path or not os.path.exists(path):
+        return out
+    with open(path, encoding='utf-8') as fh:
+        for line in fh:
+            if line.startswith('#') or line.startswith('unit_a\t') or not line.strip():
+                continue
+            a, b, decided, reason = line.rstrip('\n').split('\t')[:4]
+            out[(int(a, 16), int(b, 16))] = f'the owner ({decided}): {reason}'
+    return out
+
+
+def proposals(M, units, names, hard, owner_joins=None):
     """Stand alone, or join neighbours in one file, with the reason. A unit is
     never split. Returns per unit (file, proposal, reason)."""
     hard_edges = {i for i, j, *_ in hard if j == i + 1}
@@ -797,9 +813,12 @@ def proposals(M, units, names, hard):
         ha = head(M.g[units[k - 1]['lo']]['name'])
         hb = head(M.g[units[k]['lo']]['name'])
         why = None
+        key = (M.g[units[k - 1]['lo']]['pc'], M.g[units[k]['lo']]['pc'])
+        if owner_joins and key in owner_joins:
+            why = owner_joins[key]
         # boss units stand alone (the owner, 2026-11-08): the units are cut one
         # or two bosses each and their PSX twins sit one overlay per boss
-        if a['sub'] == b['sub'] == 'boss':
+        elif a['sub'] == b['sub'] == 'boss':
             why = None
         elif {ha, hb} <= {'Font', 'Glyph'}:
             why = "fonts together (the owner's example)"
@@ -1172,6 +1191,7 @@ def main():
     ap.add_argument('--uncertain', type=int, default=0, help='print the N least certain boundaries')
     ap.add_argument('--refresh', action='store_true', help='read the binary again, not the cache')
     ap.add_argument('--check', action='store_true', help='CI: the TSV covers every impl function')
+    ap.add_argument('--joins', default=JOINS_TSV, help="the owner's joins of neighbouring units ('' to skip)")
     ap.add_argument('--psx', default=PSX_TSV, help="SL2's tu_psx.tsv, joined into the table and the sheet ('' to skip)")
     a = ap.parse_args()
     if a.check:
@@ -1182,7 +1202,7 @@ def main():
     B = build(M)
     units, tally, blocked = place(M, B)
     names = unit_names(M, units)
-    files, groups = proposals(M, units, names, B['hard'])
+    files, groups = proposals(M, units, names, B['hard'], load_owner_joins(a.joins))
     psx = load_psx_units(a.psx)
     rowmap = rows(M, B, units, files, psx)
     pchk = psx_checks(M, units, psx)

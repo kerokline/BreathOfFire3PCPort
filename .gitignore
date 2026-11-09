@@ -94,6 +94,7 @@ layout.bin
 # every helper rename with its reason, and the x86-64 gate's named exceptions.
 !/analysis/tu_renames.tsv
 !/analysis/tu_gate_exceptions.tsv
+!/analysis/tu_joins.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/

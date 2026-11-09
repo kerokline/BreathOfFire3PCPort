@@ -991,8 +991,10 @@ is expected; the doc says so.
    `BattleFx_FreeTask` at `0x800C2120`, so it is weak); `field/field_6` |
    `field/field_7` (574-575) and `field/area_map` | `field/kind_2` (604-605),
    both a back-order within one image against a strong PSX window join -
-   the two readings contradict, and the owner's back-order call keeps them
-   apart. `BattleFx_TintActor` was re-pointed to MAGIC062's exact copy and
+   the two readings contradict. **The owner joined all three** (later that
+   night): recorded in `analysis/tu_joins.tsv`, which `tu_census.py` now
+   reads (`--joins`) and applies over its own rules, so the sheet shows the
+   join with the owner's reason; 612 proposed files, no unit changed. `BattleFx_TintActor` was re-pointed to MAGIC062's exact copy and
    the Celerity spell became one unit of 18, as PSX MAGIC062 u001 has it.
    **Row 572** (`tu_52d8f0`, `field/field_4`, 70 functions, the old row 585):
    the US decompilation's unit boundary falls inside it at
