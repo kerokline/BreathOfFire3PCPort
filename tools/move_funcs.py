@@ -1258,6 +1258,70 @@ def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) ->
     write(lh, head + "\n".join(sort_includes(incs, None)) + "\n\n" + block(shared, True))
 
 
+CONSTEXPR_DEF = re.compile(r"^\s*constexpr\s+([\w:]+(?:\s+int)?)\s+(\w+)\s*(?:\{([^{}]*)\}|=\s*([^;]+));", re.M)
+
+
+def at_constants(header: str, ns: str) -> dict[str, tuple[str, str]]:
+    """The `constexpr` constants a callees header defines directly in namespace `ns` (`X::at`), name
+    -> (type, value), the type normalised so that spellings of one type at both widths compare equal
+    (`U` through the namespace's own `using U = ...;`, `std::uint32_t` / `unsigned` / `unsigned int`)."""
+    path = ROOT / header
+    if not path.exists():
+        return {}
+    text = re.sub(r"//[^\n]*", "", path.read_text(encoding="utf-8"))
+    outer, _, inner = ns.rpartition("::")
+    m = (re.search(r"\bnamespace\s+" + re.escape(ns) + r"\s*\{", text)
+         or re.search(r"\bnamespace\s+" + re.escape(outer) + r"\s*\{.*?\bnamespace\s+" + re.escape(inner)
+                      + r"\s*\{", text, re.S))
+    if not m:
+        return {}
+    depth, i = 1, m.end()
+    while i < len(text) and depth:
+        depth += {"{": 1, "}": -1}.get(text[i], 0)
+        i += 1
+    body = text[m.end():i - 1]
+    # only the namespace's own scope: drop nested braces' contents (a nested namespace, a struct)
+    flat, depth = [], 0
+    for ch in body:
+        if ch == "}":
+            depth -= 1
+        if depth == 0:
+            flat.append(ch)
+        if ch == "{":
+            depth += 1
+    flat = "".join(flat)
+    aliases = dict(re.findall(r"\busing\s+(\w+)\s*=\s*([\w:]+)\s*;", flat))
+
+    def norm(ty: str) -> str:
+        ty = aliases.get(ty, ty).lstrip(":")
+        ty = ty[5:] if ty.startswith("std::") else ty
+        return "uint32_t" if ty in ("unsigned", "unsigned int") else ty
+
+    # a braced value was dropped by the flattening; read the definitions from the body itself, at depth 0
+    out = {}
+    for d in CONSTEXPR_DEF.finditer(body):
+        line_start = body.rfind("\n", 0, d.start()) + 1
+        pre = body[:line_start]
+        if pre.count("{") != pre.count("}"):
+            continue
+        val = d.group(3) if d.group(3) is not None else d.group(4)
+        out[d.group(2)] = (norm(d.group(1)), re.sub(r"\s+", "", val))
+    return out
+
+
+def alike_constants(headers: dict[str, str]) -> list[tuple[str, str]]:
+    """The constants two or more of a union's namespaces define alike (one type, one value), each with
+    the first namespace in name order that defines it: a using-declaration of it in the union makes
+    `at::kName` find one entity, where the using-directives alone make it ambiguous. The code is the
+    same whichever namespace is named. A name they define differently is left ambiguous."""
+    defs: dict[str, list[tuple[str, tuple[str, str]]]] = defaultdict(list)
+    for x in sorted(headers):
+        for n, d in at_constants(headers[x], x).items():
+            defs[n].append((x, d))
+    return sorted((n, ds[0][0]) for n, ds in defs.items()
+                  if len(ds) > 1 and len({d for _, d in ds}) == 1)
+
+
 def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
     th = header_of(t)
     stem = Path(t).stem
@@ -1274,15 +1338,20 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
     callees = None
     if len(aliases) > 1:
         callees = t[:-4] + "_callees.h"
+        alike = alike_constants({e["aliases"][s]: header_of(s)[:-2] + "_callees.h"
+                                 for s in e["sources"] if s in e["aliases"]})
         write(callees, "// The callees constants this file's functions name as at::k...: the union of their\n"
                        "// groups' namespaces (tools/move_funcs.py, docs/source-layout-round.md 2). The constants\n"
-                       "// stay in the groups' headers; a name two of them define differently is refused.\n"
+                       "// stay in the groups' headers; a name two of them define alike (one type, one value) is\n"
+                       "// named once by a using-declaration, one they define differently is an ambiguity the\n"
+                       "// build reports.\n"
                        "#pragma once\n\n"
                        + "".join(f'#include "{include_name(h)}"\n'
                                  for h in dict.fromkeys(at_header(s, e["aliases"][s])
                                                         for s in e["sources"] if s in e["aliases"]) if h)
                        + f"\nnamespace {stem}::at {{\n"
                        + "".join(f"using namespace ::{x};\n" for x in aliases)
+                       + "".join(f"using ::{x}::{n};\n" for n, x in alike)
                        + f"}}  // namespace {stem}::at\n")
         incs.append(f'#include "{include_name(callees)}"')
     src_names = ", ".join(Path(s).name for s in e["sources"])
