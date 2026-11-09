@@ -396,6 +396,17 @@ def at_constant(plan: "SourcePlan", name: str) -> str:
     return "?"
 
 
+def at_header(source: str, alias: str) -> str | None:
+    """The header that defines a source's `at` namespace: its own <stem>_callees.h, else the
+    namespace's own (magic_engine.cpp's `at` is magic_harness::at, in magic_harness.h)."""
+    first = alias.lstrip(":").split("::")[0]
+    for h in (header_of(source)[:-2] + "_callees.h", f"src/game/{first}_callees.h", f"src/game/{first}.h"):
+        p = ROOT / h
+        if p.is_file() and re.search(rf"namespace\s+({re.escape(first)}::)?at\b", p.read_text(encoding="utf-8")):
+            return h
+    return None
+
+
 def made_names(it: ci.Item) -> list[str]:
     """The function names an item makes: a definition's own name and its assembler name; a macro
     invocation's expansion; a switch #define's header functions (tools/cpp_items.py)."""
@@ -1233,9 +1244,9 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
                        "// groups' namespaces (tools/move_funcs.py, docs/source-layout-round.md 2). The constants\n"
                        "// stay in the groups' headers; a name two of them define differently is refused.\n"
                        "#pragma once\n\n"
-                       + "".join(f'#include "{include_name(header_of(s)[:-2] + "_callees.h")}"\n'
-                                 for s in e["sources"] if s in e["aliases"]
-                                 and (ROOT / "src" / include_name(header_of(s)[:-2] + "_callees.h")).is_file())
+                       + "".join(f'#include "{include_name(h)}"\n'
+                                 for h in dict.fromkeys(at_header(s, e["aliases"][s])
+                                                        for s in e["sources"] if s in e["aliases"]) if h)
                        + f"\nnamespace {stem}::at {{\n"
                        + "".join(f"using namespace ::{x};\n" for x in aliases)
                        + f"}}  // namespace {stem}::at\n")
