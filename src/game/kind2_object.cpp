@@ -39,7 +39,7 @@ using namespace move_script;
 
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-using Handler = void (__cdecl*)();
+using HandlerKind2Object = void (__cdecl*)();
 
 // Every call out, through pointers so that the start-up fuzz can stand
 // recording functions in for them - for the original's copies and for ours
@@ -49,8 +49,8 @@ using Handler = void (__cdecl*)();
 // Kind2_Run). Their entries are the original addresses, which Inject turns
 // into jumps to ours; entry 0 of the run table, 0x437CC0, is Capcom's bare ret.
 struct CalleesKind2Object {
-    const ::bof3::CodeSlot<Handler>* run_table;     // 32-bit code words in the image
-    const ::bof3::CodeSlot<Handler>* state_table;
+    const ::bof3::CodeSlot<HandlerKind2Object>* run_table;     // 32-bit code words in the image
+    const ::bof3::CodeSlot<HandlerKind2Object>* state_table;
     unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
     long (__cdecl* elevation)(long, long);
     void (__cdecl* set_elevation)(int);
@@ -58,8 +58,8 @@ struct CalleesKind2Object {
     void (__cdecl* script)();   // Kind2_Move's tail jump
 };
 const CalleesKind2Object kOriginals = {
-    reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(Kind2_RunTable),
-    reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(Kind2_StateTable),
+    reinterpret_cast<const ::bof3::CodeSlot<HandlerKind2Object>*>(Kind2_RunTable),
+    reinterpret_cast<const ::bof3::CodeSlot<HandlerKind2Object>*>(Kind2_StateTable),
     MoveScript_Step, AreaMap_Elevation, MapView_SetElevation, Field_ViewReset, Kind2_Script,
 };
 CalleesKind2Object gKind2Object = kOriginals;
@@ -383,8 +383,8 @@ template <unsigned N> void __cdecl StubEntry() { Record(0x10 + N, Sprite_Kind2.s
 // As the original's .data: the run table's two entries, then the state table's five.
 // (32-bit code words, as the image's; filled by SelfTest from kEntries, since a
 // word's initialiser from a function's address is not a constant on x86-64.)
-::bof3::CodeSlot<Handler> kTable[7];
-const Handler kEntries[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
+::bof3::CodeSlot<HandlerKind2Object> kTable[7];
+const HandlerKind2Object kEntries[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
 const CalleesKind2Object kStubs = {kTable, kTable + 2, StubStep, StubElevation, StubSetElevation, StubViewReset, StubScript};
 
 const void* StubFor(std::uint32_t target) {
@@ -489,7 +489,7 @@ void SeedDistance() {
 }
 
 // A dispatcher's copy: its `jmp [eax*4 + table]` re-aimed at `table`.
-void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<Handler>* table) {
+void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<HandlerKind2Object>* table) {
     auto* code = static_cast<std::uint8_t*>(copy);
     std::uint32_t disp;
     std::memcpy(&disp, code + kTableDisp, sizeof disp);
@@ -548,11 +548,11 @@ void SelfTest(void* const (&theirs)[kCount]) {
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             if (pass) {
-                const Handler ours[kCount] = {Kind2_Run, Kind2_Dispatch, Kind2_Script, Kind2_Move, Kind2_WaitRequest, Kind2_Travel, Kind2_Lift};
+                const HandlerKind2Object ours[kCount] = {Kind2_Run, Kind2_Dispatch, Kind2_Script, Kind2_Move, Kind2_WaitRequest, Kind2_Travel, Kind2_Lift};
                 ours[k]();
             } else {
                 g_after_step = {};
-                reinterpret_cast<Handler>(theirs[k])();
+                reinterpret_cast<HandlerKind2Object>(theirs[k])();
                 if (k == 2) {
                     const AfterStep& a = g_after_step;
                     if (input.memory[0x81] != 0) ++branch[kWait];
