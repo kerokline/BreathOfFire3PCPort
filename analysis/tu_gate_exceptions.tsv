@@ -1,10 +1,14 @@
-# The source-layout round's x86-64 gate (docs/source-layout-round.md 7a, the owner's call 8): a function may
-# differ on x86_64 only in a named class listed here; the i686 gate stays exact. Classes: inline (the compiler
+# The source-layout round's gate exceptions (docs/source-layout-round.md 7a, the owner's calls 8 and 10): a
+# function may differ only in a named class listed here. Classes: inline (x86_64; the compiler
 # inlined, or stopped inlining, a moved or copied helper because its callers in the file changed);
-# low32-site (Low32()'s failure message names another file, line or
+# low32-site (x86_64; Low32()'s failure message names another file, line or
 # function: __FILE__, __LINE__ and the __builtin_FUNCTION() default argument, which a move or a
-# rename of the caller changes). A new class needs the coordinator's
-# entry in the round doc with its first case. Read by tools/codegen_same.py --exceptions.
+# rename of the caller changes); data-layout (both widths, call 10; a promoted variable is placed elsewhere
+# in .data/.bss, so a neighbouring file-local and its readers' reference to it differ; a row may name a data
+# or bss symbol); x64-indirect (x86_64 only, call 10; a folded internal function pointer is called through
+# once external). The i686 gate passes --exception-classes data-layout, so its code stays exact but for that
+# class. A new class needs the coordinator's entry in the round doc with its first case. Read by
+# tools/codegen_same.py --exceptions.
 symbol	class	reason	commit
 EffectKind17_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
 EffectKind1B_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	

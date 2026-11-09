@@ -100,22 +100,43 @@ before; it prints as `PROMOTED <name>` and is not a difference. A promoted
 symbol whose body changed is not paired: it reads as GONE `local:<hash>` and
 NEW `<name>`, and its callers as DIFFER.
 
-    --exceptions FILE   (with --by-function; the round doc's 7a, the owner's call 8)
+    --exceptions FILE [--exception-classes CLASS[,CLASS]]
+                        (with --by-function; the round doc's 7a, the owner's calls 8 and 10)
 
 FILE is analysis/tu_gate_exceptions.tsv: a header line `symbol class reason
-commit` (tab-separated), `#` lines comments, one row per symbol the x86_64
-gate lets differ. A DIFFER, GONE or NEW line of a code symbol listed there
-whose class is a known one - `inline` (the compiler inlined, or stopped
-inlining, a moved or copied helper because its callers in the file changed)
-or `low32-site` (Low32()'s failure message names another file, line or
-function: __FILE__, __LINE__, __builtin_FUNCTION() of a moved or renamed caller) -
-prints as `EXCEPT <class> <symbol>` and is not counted. The symbol is the
-name the line prints (for a `local:<hash>` key, any of the names it lists).
-A data, bss or inject line is never excepted. A row whose class is not a
-known one, a row without a symbol and a class, or a file without the
-header, is an error: the line is printed and the exit is 2, before anything
-is compared. A listed symbol that did not differ is reported on an `unused
-exception` line (not an error: a stale row, to prune by hand).
+commit` (tab-separated), `#` lines comments, one row per symbol the gate
+lets differ. A DIFFER, GONE or NEW line of a symbol listed there whose
+class is a known one prints as `EXCEPT <class> <symbol>` and is not counted.
+The classes:
+
+- `inline` (x86_64): the compiler inlined, or stopped inlining, a moved or
+  copied helper because its callers in the file changed;
+- `low32-site` (x86_64): Low32()'s failure message names another file, line
+  or function: __FILE__, __LINE__, __builtin_FUNCTION() of a moved or renamed
+  caller;
+- `data-layout` (both widths; the owner's call 10, 2026-11-08): a promoted
+  variable is placed elsewhere in its .data / .bss, so a neighbouring
+  file-local changes extent or hash, and its readers differ only in the
+  reference to that local. A row names the data or bss symbol (mangled, or
+  a name a `local:<hash>` key lists) or a reader function; this is the one
+  class that may except a DATA or BSS line;
+- `x64-indirect` (x86_64 only; call 10): an internal function pointer that
+  x86_64 folded to a direct call goes through the pointer once the variable
+  is external (`call @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:..g_draw_at`,
+  branch offsets a byte longer). A row names the caller. Never used on an
+  i386 build.
+
+The symbol is the name the line prints (for a `local:<hash>` key, any of the
+names it lists). A data or bss line is excepted by a `data-layout` row only;
+an inject line never. --exception-classes limits which classes may except:
+the rows of the other classes are read (and checked) but never used, and
+never reported as unused. The i686 gate runs with `--exception-classes
+data-layout`; the x86_64 gate with every class (no flag, the default). A row
+whose class is not a known one, a name in --exception-classes that is not
+one, a row without a symbol and a class, or a file without the header, is
+an error: the line is printed and the exit is 2, before anything is
+compared. A listed symbol of a class in use that did not differ is reported
+on an `unused exception` line (not an error: a stale row, to prune by hand).
 """
 
 from __future__ import annotations
@@ -700,7 +721,9 @@ def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
     return out
 
 
-EXCEPTION_CLASSES = ("inline", "low32-site")
+EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect")
+DATA_CLASSES = ("data-layout",)       # the classes that may except a DATA or BSS line
+X64_ONLY_CLASSES = ("x64-indirect",)  # never used on an i386 build
 
 
 def load_exceptions(path: Path) -> dict[str, dict]:
@@ -736,14 +759,19 @@ def load_exceptions(path: Path) -> dict[str, dict]:
     return out
 
 
-def excepted(exceptions: dict, key: str, e: dict) -> str | None:
-    """The class that excepts this code symbol's line, or None."""
-    if not exceptions or e["kind"] != "code":
+def excepted(exceptions: dict, key: str, e: dict, allowed: tuple[str, ...]) -> str | None:
+    """The class that excepts this symbol's line, or None: a code symbol by a row of a class in
+    `allowed`, a data or bss symbol only by a row of a DATA_CLASSES class in `allowed`."""
+    if not exceptions:
         return None
     for n in [key] + sorted(e["names"]):
-        if n in exceptions:
-            exceptions[n]["used"] = True
-            return exceptions[n]["class"]
+        x = exceptions.get(n)
+        if not x or x["class"] not in allowed:
+            continue
+        if e["kind"] != "code" and x["class"] not in DATA_CLASSES:
+            continue
+        x["used"] = True
+        return x["class"]
     return None
 
 
@@ -765,6 +793,14 @@ def by_function(a) -> int:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
 
     exceptions = load_exceptions(a.exceptions) if a.exceptions else {}
+    allowed = tuple(EXCEPTION_CLASSES)
+    if a.exception_classes:
+        allowed = tuple(c.strip() for c in a.exception_classes.split(",") if c.strip())
+        unknown = [c for c in allowed if c not in EXCEPTION_CLASSES]
+        if unknown or not allowed:
+            print(f"codegen_same: --exception-classes {a.exception_classes}: {', '.join(unknown) or 'no class'} "
+                  f"is not one of {', '.join(EXCEPTION_CLASSES)} (docs/source-layout-round.md 7a)")
+            return 2
     broots, nroots = source_roots(a.base), source_roots(a.new)
     pad_free = {len(r) for r in broots} != {len(r) for r in nroots}
     if pad_free:
@@ -775,8 +811,10 @@ def by_function(a) -> int:
     new, ntext, nn = symbol_table(new_objs, wanted, a.anonymous_locals, nroots, pad_free)
     promotions: dict[str, str] = {}
     some = next((p for k, p in sorted(new_objs.items()) if wanted(k)), None)
+    i386 = some is not None and Coff(some).machine == IMAGE_FILE_MACHINE_I386
+    if i386:
+        allowed = tuple(c for c in allowed if c not in X64_ONLY_CLASSES)
     if a.anonymous_locals and some is not None:
-        i386 = Coff(some).machine == IMAGE_FILE_MACHINE_I386
         promotions = find_promotions(base, new, i386)
     if promotions:
         # the second pass: NEW read again with each promoted global known as the file-local it was
@@ -805,7 +843,7 @@ def by_function(a) -> int:
             injects += 1
             continue
         if y is None:
-            cls = excepted(exceptions, name, x)
+            cls = excepted(exceptions, name, x, allowed)
             if cls:
                 print(f"EXCEPT {cls} {name}  (GONE; {x['kind']}, in {objects_of(x)}{named(name, x)}; not counted)")
                 excepts += 1
@@ -814,7 +852,7 @@ def by_function(a) -> int:
             bad += 1
             continue
         if x is None:
-            cls = excepted(exceptions, name, y)
+            cls = excepted(exceptions, name, y, allowed)
             if cls:
                 print(f"EXCEPT {cls} {name}  (NEW; {y['kind']}, in {objects_of(y)}{named(name, y)}; not counted)")
                 excepts += 1
@@ -831,7 +869,7 @@ def by_function(a) -> int:
                 i = next((j for j, (u, v) in enumerate(zip(p, q)) if u != v), min(len(p), len(q)))
                 first = (f"  first at instruction {i}: {p[i] if i < len(p) else '<end>'!r}"
                          f" -> {q[i] if i < len(q) else '<end>'!r}")
-            cls = excepted(exceptions, name, y)
+            cls = excepted(exceptions, name, y, allowed)
             if cls:
                 print(f"EXCEPT {cls} {name}  (DIFFER; base {objects_of(x)}; new {objects_of(y)}){first}; not counted")
                 excepts += 1
@@ -858,7 +896,7 @@ def by_function(a) -> int:
           + (f"; {excepts} excepted (--exceptions)" if excepts else "")
           + (f"; {promoted} promoted to external linkage, the same body" if promoted else ""))
     for sym, x in sorted(exceptions.items()):
-        if not x["used"]:
+        if not x["used"] and x["class"] in allowed:
             print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")
     if bn == 0 or nn == 0:
         print("codegen_same: nothing compared (no function in one of the builds)")
@@ -883,11 +921,16 @@ def main() -> int:
     ap.add_argument("--anonymous-locals", action="store_true",
                     help="with --by-function: a file-local symbol is known by its body, not its name")
     ap.add_argument("--exceptions", type=Path, metavar="FILE",
-                    help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed code symbol of a known "
+                    help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed symbol of a known "
                          "class prints as EXCEPT and is not counted")
+    ap.add_argument("--exception-classes", metavar="CLASS[,CLASS]",
+                    help="with --exceptions: only these classes may except (default every class); the i686 "
+                         "gate passes data-layout")
     a = ap.parse_args()
     if a.exceptions and not a.by_function:
         ap.error("--exceptions belongs to --by-function")
+    if a.exception_classes and not a.exceptions:
+        ap.error("--exception-classes belongs to --exceptions")
     if a.by_function:
         if a.allow_new or a.allow_gone or a.code_only:
             ap.error("--allow-new, --allow-gone and --code-only belong to the object mode")
