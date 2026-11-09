@@ -100,7 +100,7 @@ const CalleesTitleStates kOriginalsTitleStates = {
 CalleesTitleStates g = kOriginalsTitleStates;
 
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
-std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
+std::uint16_t TaskZeroState() { return move_script::Word(move_script::At(::bof3::Img(bof3::addr::Task_Records))); }
 
 // The 16-bit words the handlers count with, as the original's `inc word` /
 // `dec word` in memory: wrapping at 0x10000.
@@ -110,8 +110,8 @@ unsigned char* PspSprite(int x, int y, unsigned index, const PspRect& r, unsigne
     unsigned char* const prim = g.sprite(x, y, index, slot, semi);
     prim[0x14] = r.u;
     prim[0x15] = r.v;
-    SetWord(prim + 0x18, r.w);
-    SetWord(prim + 0x1A, r.h);
+    move_script::SetWord(prim + 0x18, r.w);
+    move_script::SetWord(prim + 0x1A, r.h);
     return prim;
 }
 
@@ -196,10 +196,10 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
     g.stop_music();
     g.dropped(0);
     g.effect_clear();
-    At(::bof3::Img(kPlayClock.v))[3] = 0;
-    At(::bof3::Img(kPlayClock.v))[2] = 0;
-    At(::bof3::Img(kPlayClock.v))[1] = 0;
-    At(::bof3::Img(kPlayClock.v))[0] = 0;
+    move_script::At(::bof3::Img(kPlayClock.v))[3] = 0;
+    move_script::At(::bof3::Img(kPlayClock.v))[2] = 0;
+    move_script::At(::bof3::Img(kPlayClock.v))[1] = 0;
+    move_script::At(::bof3::Img(kPlayClock.v))[0] = 0;
     Draw_PassFlags = 0;
     g.scenario_start(0x10);
     g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
@@ -403,17 +403,17 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
 // never runs.
 extern "C" void __cdecl Scenario_Start(int chapter) {
     const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = At(::bof3::Img(kScenarioBytes.v));
+    unsigned char* const s = move_script::At(::bof3::Img(kScenarioBytes.v));
     s[0] = static_cast<unsigned char>(c);
     s[2] = 0;
     s[3] = 0;
     s[4] = 0;
-    SetWord(s + 6, 0);
+    move_script::SetWord(s + 6, 0);
     s[5] = 0;
     s[1] = 0;
-    SetWord(s + 8, 0);
+    move_script::SetWord(s + 8, 0);
     const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
-    SetLong(At(flags), 0);
+    move_script::SetLong(move_script::At(flags), 0);
     Chapter_FlagRow = static_cast<std::int32_t>(flags);
     g.scenario_load();
     while (g.load_done() == 0) {
@@ -438,16 +438,16 @@ extern "C" void __cdecl Scenario_Load(void) {
 // As the original has it: four dword copies (the PSX copies bytewise); the
 // table and the flags do not overlap, so the order is unobservable.
 extern "C" void __cdecl Scenario_SubInit(void) {
-    unsigned char* const s = At(::bof3::Img(ScenaSc7_DrawPool_addr));
+    unsigned char* const s = move_script::At(::bof3::Img(ScenaSc7_DrawPool_addr));
     s[2] = 1;
     s[0] = 0;
     s[3] = 0;
     s[4] = 0;
-    SetWord(s + 6, 0);
+    move_script::SetWord(s + 6, 0);
     s[5] = 0;
     s[1] = 0;
-    SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(::bof3::Img(Cond_Flags_addr) + 0xa0 + i), Long(At(::bof3::Img(Scenario_SubInitTable_addr) + i)));
+    move_script::SetWord(s + 8, 0);
+    for (unsigned i = 0; i < 16; i += 4) move_script::SetLong(move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa0 + i), move_script::Long(move_script::At(::bof3::Img(Scenario_SubInitTable_addr) + i)));
 }
 
 namespace {
