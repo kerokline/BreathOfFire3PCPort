@@ -240,3 +240,4 @@ _ZN11field_frame1gE	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_ban
 _ZN11field_frame12g_band_countE	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW _ZN11field_frame12g_band_countE  (bss)	126072d9
 _GLOBAL__sub_I_*@field_frame.cpp.obj	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW local:4151c93317f8  (named _GLOBAL__sub_I_*)	126072d9
 _ZN12_GLOBAL__N_16kStubsE	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW local:61d8831e897a  (named _ZN12_GLOBAL__N_16kStubsE)	126072d9
+BattleInput_NextMember	low32-site	B0 rename in battle_phases.cpp: names a renamed file-local helper (SetPtrAtBattlePhases) whose Low32() message holds __builtin_FUNCTION(); i686 identical	
