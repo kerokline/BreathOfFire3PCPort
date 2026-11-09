@@ -1203,8 +1203,20 @@ def switch_start(it: ci.Item) -> int:
     return it.start
 
 
+_inject_defined: dict[str, set[str]] = {}
+
+
 def target_inject_name(t: str) -> str:
-    return camel(Path(t).stem) + "_Inject"
+    """<Stem>_Inject, or <Dir><Stem>_Inject where another file already defines the first: a target
+    named after a source that stays (effect/effect_gte.cpp beside effect_gte.cpp, menu/item_use.cpp
+    beside item_use.cpp) would define its source's _Inject() a second time."""
+    if not _inject_defined:
+        rx = re.compile(r"^void\s+(\w+_Inject)\s*\(\s*\)", re.M)
+        for f in sorted((ROOT / "src").rglob("*.cpp")):
+            _inject_defined[rel(f)] = set(rx.findall(f.read_text(encoding="utf-8")))
+    name = camel(Path(t).stem) + "_Inject"
+    taken = any(name in names for f, names in _inject_defined.items() if f != t)
+    return camel(Path(t).parent.name) + name if taken else name
 
 
 def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) -> None:
