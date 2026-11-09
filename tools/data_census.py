@@ -288,6 +288,13 @@ class SourceFile:
         self.ns_spans = self._namespaces()
         self.aliases = {m.group(1): m.group(2).strip() for m in re.finditer(
             r'\bnamespace\s+(\w+)\s*=\s*([\w:]+)\s*;', self.code)}
+        # the union `at` namespaces the source-layout round's mover writes in a target's
+        # <stem>_callees.h: `namespace X::at { using namespace ::Y::at; ... }` -> X::at: [Y::at, ...]
+        self.at_unions = {}
+        for m in re.finditer(r'\bnamespace\s+([\w:]+::at)\s*\{([^{}]*)\}', self.code):
+            members = re.findall(r'\busing\s+namespace\s+(?:::)?([\w:]+::at)\s*;', m.group(2))
+            if members:
+                self.at_unions[m.group(1)] = members
         self.consts = []          # (name, value_or_None, ns_path, line): a `namespace at`'s
         self.mconsts = []         # the same for every other k-constant (module constants)
         self.locals = {}          # every k-constant by name -> value (any namespace)
@@ -699,7 +706,9 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
     # tier it is another module's alias, and the constants there answer
     tiers = []
     if want_ns:
-        tiers.append(([c for c in cands if c[2].endswith(want_ns) or c[2] == want_ns], True))
+        # a union namespace (a target's <stem>::at, docs/source-layout-round.md 2) is its members
+        own = [want_ns] + [m for u, ms in _AT_UNIONS.items() if u.endswith(want_ns) for m in ms]
+        tiers.append(([c for c in cands if any(c[2].endswith(w) or c[2] == w for w in own)], True))
     tiers.append(([c for c in cands if c[0] is f], True))
     stem = re.sub(r'(_fuzz)?\.\w+$', '', os.path.basename(f.rel))
     tiers.append(([c for c in cands if re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(c[0].rel)) == stem], True))
@@ -719,7 +728,10 @@ def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
             return vals.pop(), t
         if len(vals) > 1:
             return None, t
-    return None, cands
+    # no tier answered: the candidates left are other modules' constants; a typed alias among
+    # them is no address (a target that reaches `at` through its sources' `using namespace`
+    # lines and has no alias of its own - field_5.cpp's at::kScratch2, two REF candidates)
+    return None, [c for c in cands if c[1] != 'REF']
 
 
 def function_start(f, line):
@@ -834,8 +846,14 @@ def in_call(text, pos):
     return False
 
 
+_AT_UNIONS: dict = {}
+
+
 def scan(files, syms):
     by_rel = {f.rel: f for f in files}
+    _AT_UNIONS.clear()
+    for f in files:
+        _AT_UNIONS.update(f.at_unions)
     env = collect_constants(files, {**syms.names, **syms.addr_names})
     defs_by_name = collections.defaultdict(list)
     for f in files:
