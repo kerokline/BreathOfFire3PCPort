@@ -46,20 +46,6 @@ QuotRem Idiv(std::int32_t dividend, std::int32_t divisor) {
 const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
                             Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
 }  namespace frame_callees { CalleesFrameCallees g = kOriginals; }
-namespace {
-// A colour component plus a tint byte, in 8 bits as the original adds them:
-// a result that is negative as a signed byte is 0, one above 31 is 31 - so a
-// large positive tint (0x61 and up on a component of 31) wraps to negative
-// and comes out 0, not 31.
-unsigned Tinted(unsigned component, unsigned char tint) {
-    const auto sum = static_cast<signed char>(static_cast<unsigned char>(component + tint));
-    if (sum < 0) return 0;
-    if (sum > 0x1F) return 0x1F;
-    return static_cast<unsigned>(sum);
-}
-
-}  // namespace
-
 // original 0x494030: the effect objects' frame (PSX FUN_8019B0EC, term for
 // term). Each of the 20 whose byte +0 is non-zero - any bit, read afresh each
 // turn, so an object a handler spawns further on runs this frame - becomes
@@ -147,74 +133,6 @@ extern "C" void __cdecl CameraTurn_End(void) {
     Camera_Angles[2] = static_cast<short>(move_script::Word(object + 0x6C));
     Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xDF);
     frame_callees::g.release();
-}
-
-// original 0x455250: the slot records (PSX FUN_80197C8C, term for term). Each
-// of the 8 whose byte +0 has bit 0 - read afresh each turn - runs
-// Field_RunSlot(index). The original pushes the index as a whole stack dword
-// of which it stored only the low byte (the upper three are the caller's
-// ecx); Field_RunSlot masks it to a byte, so the clean byte here is the same.
-extern "C" void __cdecl Field_RunSlots(void) {
-    const unsigned char* slot = Field_Slots;
-    for (unsigned index = 0; index < kSlots; ++index, slot += kSlotBytes)
-        if (slot[0] & 1) frame_callees::g.run_slot(static_cast<unsigned char>(index));
-}
-
-// original 0x454AD0: the tint records' frame (PSX FUN_8019725C, term for
-// term). For each of the 32 MoveScript_TintRecords with bit 0 of byte +0:
-//   - byte +5 is a CLUT depth, indexing Clut_Sixteens, Clut_PerRow and
-//     Clut_Stride unbounded - depths 5..7 have 0 per row and divide by zero,
-//     as the original does;
-//   - CLUT number +1 (the source) and +6 (the target) each become a word
-//     index into Gfx_ClutStrip: (n / per_row) << 8 plus the column
-//     (n % per_row) * stride, kept to 8 bits;
-//   - sixteens * 16 words are copied source to target in order, each
-//     component plus a tint byte (+2 red, +3 green, +4 blue) in 8 bits and
-//     clamped (Tinted), bit 15 forced by bit 1 of +0 or else kept; the
-//     target's first word is 0 instead, whatever the source. Words are read
-//     one at a time after the previous store, so overlapping source and
-//     target rows copy forward, as the original's;
-// then Gfx_ClutStripDirty is 1, and with bit 6 of +0 it is cleared and the
-// sprite at dword +8 takes +6 as its CLUT number +0x27 - and with bit 7 its
-// +0x24 bit 2. The original captures +0's bit 1, +3 and +4 before the
-// copy and reads +2 in it; nothing the copy writes can reach the record, so
-// that order is kept but unobservable. The tail re-reads +0 and the pointer
-// after each store, in the original's order.
-extern "C" void __cdecl MoveScript_TintFrame(void) {
-    for (unsigned char* record = MoveScript_TintRecords; record < MoveScript_TintRecords + kTints * kTintBytes;
-         record += kTintBytes) {
-        if (!(record[0] & 1)) continue;
-        const unsigned depth = record[5];
-        const std::int32_t per_row = Clut_PerRow[depth];
-        const unsigned stride = Clut_Stride[depth];
-        const QuotRem from = Idiv(record[1], per_row);
-        const QuotRem to = Idiv(record[6], per_row);
-        const unsigned count = static_cast<unsigned>(Clut_Sixteens[depth]) << 4;
-        if (count != 0) {
-            const std::uint32_t source = (static_cast<std::uint32_t>(from.quot & 0xFF) << 8) +
-                                         static_cast<unsigned char>(static_cast<unsigned>(from.rem) * stride);
-            const std::uint32_t target = (static_cast<std::uint32_t>(to.quot & 0xFF) << 8) +
-                                         static_cast<unsigned char>(static_cast<unsigned>(to.rem) * stride);
-            const bool force = (record[0] & 2) != 0;
-            const unsigned char green = record[3], blue = record[4];
-            for (unsigned i = 0; i < count; ++i) {
-                const std::uint16_t word = Gfx_ClutStrip[source + i];
-                const unsigned top = force ? 1 : word >> 15;
-                const unsigned r = Tinted(word & 0x1F, record[2]);
-                const unsigned gr = Tinted((word >> 5) & 0x1F, green);
-                const unsigned b = Tinted((word >> 10) & 0x1F, blue);
-                Gfx_ClutStrip[target + i] = i == 0 ? 0 : static_cast<unsigned short>(top << 15 | b << 10 | gr << 5 | r);
-            }
-        }
-        const unsigned char flags = record[0];
-        Gfx_ClutStripDirty = 1;
-        if (!(flags & 0x40)) continue;
-        const unsigned char clut = record[6];
-        record[0] = static_cast<unsigned char>(flags & 0xBF);
-        move_script::At(static_cast<std::uint32_t>(move_script::Long(record + 8)))[0x27] = clut;
-        if (!(record[0] & 0x80)) continue;
-        move_script::At(static_cast<std::uint32_t>(move_script::Long(record + 8)))[0x24] |= 4;
-    }
 }
 
 // original 0x531B60: the party members' screen updates (PSX FUN_801BEAB0,
@@ -561,7 +479,5 @@ void FrameCallees_Inject() {
     BOF3_INJECT(CameraTurn_Start);
     BOF3_INJECT(CameraTurn_Step);
     BOF3_INJECT(CameraTurn_End);
-    BOF3_INJECT(Field_RunSlots);
-    BOF3_INJECT(MoveScript_TintFrame);
     BOF3_INJECT(Party_UpdateScreens);
 }

@@ -186,57 +186,6 @@ void save_menu::DrawLoadWindows(bool backdrop, const unsigned char* message) {
 // DIVERGENCE DIV-0089: when the cache is armed and holds DAT\name whole, its
 // kind-2 chunks come from the cache's container instead, in the PC's order
 // (dat_cache.h); the install's file is then not opened.
-namespace {
-void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
-    if (c.kind == 2) save_menu::g.load_bank(c.tag, payload, static_cast<U>(c.size));
-}
-}  // namespace
-//
-// DIVERGENCE DIV-0113: then each optional layer's DAT\<name> (BOF3X_OPT, by
-// LoadDatFile's precedence), its kind-2 chunks to Snd_LoadBank too, so a
-// layer's bank (psp-chord-one-tone) replaces the container's here as it does
-// in LoadDatFile. No layer named: nothing more.
-extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
-    const U name = LongSaveMenu(::bof3::Img(at::kDatNames.v) + index * 4);
-    if (name == 0) return;
-    const char* const text = reinterpret_cast<const char*>(AtSaveMenu(name));
-    if (dat_cache::WalkShipped(text, TakeBank, nullptr)) {  // DIV-0089
-        DatLoad_OptLayerChunks(text, TakeBank);             // DIV-0113
-        return;
-    }
-    char path[0x28];
-    save_menu::g.sprintf(path, reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kDatFormat.v))), reinterpret_cast<const char*>(AtSaveMenu(name)));
-    const int handle = save_menu::g.file_open(path, 0, 0);
-    if (handle == -1) return;
-    const int size = save_menu::g.file_size(handle);
-    unsigned char* const data = static_cast<unsigned char*>(save_menu::g.malloc(static_cast<unsigned>(size)));
-    save_menu::g.file_read(handle, data, static_cast<unsigned>(size));
-    save_menu::g.file_close(handle);
-    if (size > 0) {
-        int offset = 0;
-        do {
-            const U chunk = AddrSaveMenu(data) + static_cast<U>(offset);
-            const U bytes = LongSaveMenu(chunk + 8);
-            if (Byte(chunk) == 2) save_menu::g.load_bank(LongSaveMenu(chunk + 4), AtSaveMenu(chunk + 0x10), bytes);
-            offset = static_cast<int>(static_cast<U>(offset) + bytes + 0x10);
-        } while (offset < size);
-    }
-    save_menu::g.free(data);
-    DatLoad_OptLayerChunks(text, TakeBank);  // DIV-0113
-}
-
-// 0x454820 (docs/save-files.md). File_Open(path, 0, 0), -1 on failure;
-// File_Seek(offset); File_Read(size) into Save_Staging; File_Close; 0. The
-// seek's and the read's results are not looked at.
-extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset) {
-    const int handle = g.file_open(path, 0, 0);
-    if (handle == -1) return -1;
-    g.file_seek(handle, offset);
-    g.file_read(handle, AtSaveMenu(::bof3::Img(Save_Staging_addr)), size);
-    g.file_close(handle);
-    return 0;
-}
-
 // The quicksave round's draft B (docs/quicksave.md, section QM): the
 // listing and the summary read take their pattern and their tables, so the
 // quick menu (quick_menu.cpp) lists BISLPS1?.DAT into tables of its own; the
@@ -250,7 +199,6 @@ extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset
 // unbounded table.
 
 namespace save_menu { volatile unsigned char g_lists_split = 0; }  namespace {   // PatchBytes "SaveLists" sets it (SaveLists_Arm)
-constexpr const char* kSavePattern = "BISLPS0?.DAT";
 }  // namespace
 
 // 0x4548B0's body (docs/save-files.md). The table's 0x60 dwords zeroed; the
@@ -294,15 +242,6 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
     } while (g.find_next(handle, found) == 0);
     if (close) _findclose(static_cast<intptr_t>(handle));
     return count;
-}
-
-// 0x4548B0 (docs/save-files.md): the body above on Save_Directory - with the
-// original's BISLPS??.DAT (0x65289C) and no bound, or, armed, draft B's
-// BISLPS0?.DAT and the bound. Kept either way, the original's defect: no
-// _findclose (a search handle leaks per call).
-extern "C" int __cdecl Save_ListFiles(void) {
-    if (save_menu::g_lists_split != 0) return save_menu::ListFiles(kSavePattern, AtSaveMenu(::bof3::Img(Save_Directory_addr)), true, false);
-    return save_menu::ListFiles(reinterpret_cast<const char*>(AtSaveMenu(::bof3::Img(at::kListPattern.v))), AtSaveMenu(::bof3::Img(Save_Directory_addr)), false, false);
 }
 
 // 0x588DC0's body (docs/save-files.md). All sixteen summaries marked empty
@@ -360,17 +299,6 @@ void SaveLists_Arm() {
 // ============================================================================
 // Small helpers
 // ============================================================================
-
-// 0x4549F0 (PSX 0x8014E294). Row (row & 0xFF) of the CLUT strip - 0x100
-// words - copied from the source 0x4000 bytes below it, word by word, and
-// Gfx_ClutStripDirty set; the row is not bounded (256 rows reach 0x20 KB past
-// the strip). Its sibling 0x4549B0 (Gfx_ClutStripRestore) copies the whole
-// strip and does not set the flag.
-extern "C" void __cdecl Gfx_ClutStripCopyRow(unsigned row) {
-    const U base = ((row & 0xFF) << 9) + ::bof3::Img(Gfx_ClutStrip_addr);
-    for (U i = 0; i < 0x100; ++i) PutWord(base + i * 2, WordSaveMenu(base + i * 2 - 0x4000));
-    Gfx_ClutStripDirty = 1;
-}
 
 // 0x5A7020. 0 without Music_Buffer; else IDirectSoundBuffer::GetStatus into a
 // local that nothing initialises - the slot the entry's `push ecx` made - and
@@ -1503,10 +1431,6 @@ void SaveMenu_Inject() {
     if (bof3::WantsShadow("save_menu")) StreamMissingSelfTest();
     if (bof3::WantsShadow("save_menu")) save_menu::SelfTest();
     save_menu::StreamMissingClear();  // DIV-0129: the game starts as no failed open (the fuzz's opens fail)
-    BOF3_INJECT(Snd_LoadBankFile);
-    BOF3_INJECT(Save_ReadFile);
-    BOF3_INJECT(Save_ListFiles);
-    BOF3_INJECT(Gfx_ClutStripCopyRow);
     BOF3_INJECT(Party_RestoreAll);
     BOF3_INJECT(SaveMenu_DrawChoices);
     BOF3_INJECT(Menu_DrawBlackScreen);

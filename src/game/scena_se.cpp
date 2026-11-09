@@ -67,27 +67,6 @@ unsigned char* RecordFlags(unsigned char id) {
 
 }  // namespace
 
-// original 0x4410B0: an event battle begins. Field_ScriptFlags2 bit 12 (the
-// encounter bit the leader's state 5 clears, docs/event_leader.md), the event
-// battle byte, the leader's state 5 with its sub-state bytes +2..+4 cleared,
-// the battle's flags byte from the event battle's 4-byte record
-// (EventBattle_Records[id], its +0) and the opening kind 0. The id is the
-// argument's low byte, unchecked against the table (the original reads it
-// the same way). No PSX twin paired.
-extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
-    const unsigned char id = static_cast<unsigned char>(id_arg);
-    At(::bof3::Img(at::kScriptFlags2High))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kScriptFlags2High))[0] | 0x10);
-    EventBattle_Id = id;
-    unsigned char* const leader = At(::bof3::Img(ObjTrio_addr));
-    leader[1] = 5;
-    const unsigned char flags = At(::bof3::Img(bof3::addr::EventBattle_Records))[id * 4u];
-    leader[2] = 0;
-    leader[3] = 0;
-    leader[4] = 0;
-    EventBattle_Flags = flags;
-    BattlePhases_Initiative = 0;
-}
-
 // original 0x519F70: chapter 8's call table A entry 5, and the tail of entry
 // 6 (0x519FA0, which loads a party set first and jumps here). The member
 // count to 0; Party_Join(7), (8), (4), their answers unread; then 0x533E00,
@@ -220,7 +199,6 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
 
 void ScenaSe_Inject() {
     if (bof3::WantsShadow("scena_se")) scena_se::SelfTest();
-    BOF3_INJECT(Field_StartEventBattle);
     BOF3_INJECT(Scena08_PartyJoin784);
     BOF3_INJECT(Effect_SpawnAtCell);
     BOF3_INJECT(EventObj_Face);

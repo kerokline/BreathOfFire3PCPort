@@ -403,14 +403,6 @@ extern "C" long __cdecl MapView_GroundAt(long x, long z) {
     return ground;
 }
 
-// original 0x454DC0 (PSX 0x80197718): every tint record of `sprite` released,
-// the 32 records of MoveScript_TintRecords in order, compared as whole dwords.
-extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
-    for (unsigned i = 0; i < 32; ++i)
-        if (static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
-            field_event::g.tint_release(static_cast<unsigned char>(i));
-}
-
 // --- the party's placement ---------------------------------------------------
 
 // original 0x533BA0 (PSX 0x801C224C): Sprite_Current set up as party member
@@ -908,5 +900,4 @@ void FieldEvent_Inject() {
     BOF3_INJECT(PartySet_Select);
     BOF3_INJECT(MapView_GroundAt);
     BOF3_INJECT(MapView_CheckHeightScale);
-    BOF3_INJECT(Sprite_ReleaseTint);
 }

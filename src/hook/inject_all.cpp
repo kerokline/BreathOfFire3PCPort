@@ -65,6 +65,7 @@
 #include "game/music_seq.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
+#include "game/battle/battle_2.h"
 #include "game/enemy_ai_ops.h"
 #include "game/battle_misc.h"
 #include "game/battle_sprites.h"
@@ -113,6 +114,7 @@
 #include "game/sprt_draw.h"
 #include "game/field_misc.h"
 #include "game/save_menu.h"
+#include "game/field/save.h"
 #include "game/quick_menu.h"
 #include "game/event_ops.h"
 #include "game/menu_windows.h"
@@ -161,6 +163,10 @@
 #include "game/magic_s25.h"
 #include "game/magic_s20.h"
 #include "game/magic_engine.h"
+#include "game/magic/paralyzer.h"
+#include "game/magic/magic_hold.h"
+#include "game/boss/head_cracker_rock.h"
+#include "game/boss/head_cracker.h"
 #include "game/magic_c3.h"
 #include "game/magic_s29.h"
 #include "game/magic_s31.h"
@@ -206,6 +212,7 @@
 #include "game/area/area_16.h"
 #include "game/scena_sc0.h"
 #include "game/scena_se.h"
+#include "game/field/field.h"
 #include "game/scena_calls.h"
 #include "game/scena_sc11.h"
 #include "game/scena_sc3.h"
@@ -388,25 +395,88 @@
 #include "game/area/area_193.h"
 #include "game/area/area_192.h"
 #include "game/boss_h.h"
+#include "game/area/bare_ret.h"
 #include "game/boss_sb.h"
+#include "game/boss/boss_worker.h"
+#include "game/boss/boss_torast.h"
+#include "game/boss/boss_operator.h"
+#include "game/boss/boss_kassen.h"
+#include "game/boss/boss_galtel.h"
+#include "game/boss/boss_engineer.h"
+#include "game/boss/boss_doksen.h"
+#include "game/boss/boss_07.h"
+#include "game/boss/boss_04.h"
 #include "game/boss_sa.h"
+#include "game/boss/boss_nue.h"
+#include "game/boss/boss_gary.h"
+#include "game/boss/boss_02.h"
+#include "game/boss/boss_01.h"
 #include "game/boss_spawn.h"
 #include "game/boss_sd.h"
 #include "game/boss_sc.h"
+#include "game/boss/boss_sunder.h"
+#include "game/boss/boss_balio.h"
+#include "game/boss/boss_amalgam.h"
+#include "game/boss/boss_08.h"
 #include "game/boss_se.h"
+#include "game/boss/boss_zig.h"
+#include "game/boss/boss_stallion.h"
+#include "game/boss/boss_nina.h"
+#include "game/boss/boss_bully.h"
+#include "game/boss/boss_beyd.h"
+#include "game/boss/boss_24.h"
+#include "game/boss/boss_23.h"
 #include "game/boss_si.h"
+#include "game/boss/boss_sample_4.h"
+#include "game/boss/boss_sample_2.h"
+#include "game/boss/boss_chimera.h"
+#include "game/boss/boss_arwan_fx.h"
+#include "game/boss/boss_arwan.h"
+#include "game/boss/boss_ammonite.h"
+#include "game/boss/boss_53.h"
+#include "game/boss/boss_38.h"
 #include "game/boss_sh.h"
+#include "game/boss/boss_gaist.h"
+#include "game/boss/boss_elder.h"
+#include "game/boss/boss_angler_fx.h"
+#include "game/boss/boss_angler.h"
+#include "game/boss/boss_36.h"
+#include "game/boss/boss_35.h"
 #include "game/boss_sj.h"
+#include "game/boss/boss_shroom.h"
+#include "game/boss/boss_d_lord_fx.h"
+#include "game/boss/boss_d_lord.h"
+#include "game/boss/boss_55.h"
+#include "game/boss/boss_52.h"
 #include "game/boss_sg.h"
+#include "game/boss/boss_weretigr_fx.h"
+#include "game/boss/boss_weretigr.h"
+#include "game/boss/boss_mikba.h"
+#include "game/boss/boss_gisshan.h"
+#include "game/boss/boss_garr_2.h"
+#include "game/boss/boss_dolphin.h"
+#include "game/boss/boss_d_zombie.h"
+#include "game/boss/boss_32.h"
+#include "game/boss/boss_31.h"
 #include "game/boss_sf.h"
+#include "game/boss/boss_myria.h"
+#include "game/boss/boss_gazer_fx.h"
+#include "game/boss/boss_gazer.h"
+#include "game/boss/boss_28.h"
+#include "game/boss/boss_25.h"
 #include "game/boss_harness_eh.h"
 #include "game/battle_e7.h"
 #include "game/battle_e1.h"
+#include "game/battle/battle_result.h"
+#include "game/battle/battle_loss.h"
 #include "game/battle_e5.h"
 #include "game/battle_e6.h"
 #include "game/battle_e4.h"
+#include "game/battle/battle_banner.h"
 #include "game/battle_e2.h"
 #include "game/battle_e3.h"
+#include "game/boss/boss_myria_fx.h"
+#include "game/battle/battle_obj.h"
 #include "game/field_c2.h"
 #include "game/field_s.h"
 #include "game/field_e2.h"
@@ -467,14 +537,24 @@
 #include "game/rest_2c.h"
 #include "game/rest_3g.h"
 #include "game/rest_4a.h"
+#include "game/field/field_2.h"
 #include "game/rest_2b.h"
 #include "game/rest_3a.h"
 #include "game/battle/battle_extra.h"
 #include "game/area/world_map_33.h"
+#include "game/battle/enemy_op.h"
+#include "game/battle/battle_task.h"
+#include "game/battle/battle_fx.h"
+#include "game/battle/battle_action.h"
+#include "game/battle/battle.h"
 #include "game/rest_3c.h"
 #include "game/rest_3e.h"
 #include "game/rest_3d.h"
+#include "game/battle/dragon_cmd.h"
 #include "game/rest_3b.h"
+#include "game/effect/effect.h"
+#include "game/battle/battle_item_cmd.h"
+#include "game/battle/battle_3.h"
 #include "game/rest_4f.h"
 #include "game/rest_4e.h"
 #include "game/rest_4d.h"
@@ -592,6 +672,7 @@ void InjectAll() {
                                 // relocated in the copy, the device a fake: order does not matter
     SaveMenu_Inject();          // every call of its clones re-aimed at a recorder, its jump tables swapped
                                 // for recorders and Shop_Equip's relocated in the copy: order does not matter
+    Save_Inject();
     EventOps_Inject();          // every call of its clones re-aimed at a recorder, three jump tables relocated
                                 // and the chapter table operand moved in the copies: order does not matter
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
@@ -618,6 +699,7 @@ void InjectAll() {
     BattleFlow_Inject();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed and its jump table relocated in the copies: order
                                 // does not matter (no widescreen patch touches its functions)
+    Battle2_Inject();
     BattleSetup_Inject();       // group BA (round 7): every call of its clones re-aimed at a recorder, no jump
                                 // tables - order does not matter
     BattleMisc_Inject();        // every call of its clones re-aimed at a recorder, the dispatch's table
@@ -731,6 +813,10 @@ void InjectAll() {
     MagicEngine_Inject();       // round 9 group E (the engine-side rows 0, 108, 123, 126, 128 and Head Cracker's
                                 // rock): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders; no module patches bytes inside its 22: order does not matter
+    Paralyzer_Inject();
+    MagicHold_Inject();
+    HeadCrackerRock_Inject();
+    HeadCracker_Inject();
     MagicC3_Inject();           // round 9 group C3 (MAGIC002, MAGIC111: the overlays no ability loads): its clones'
                                 // calls and stack-table immediates re-aimed, its three .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 20: order does not matter
@@ -872,6 +958,7 @@ void InjectAll() {
     ScenaSe_Inject();           // round 10 group SE (the chapters' shared engine-side helpers, six): its clones'
                                 // calls re-aimed at the scenario harness's recorders; no module patches bytes
                                 // inside its 6 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Field_Inject();
     ScenaSc11_Inject();         // round 10 group SC11 (scenario chapter 11): its clones' calls re-aimed at the scenario
                                 // harness's recorders, its three .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 30 (DIVERGENCE.md, cheats.cpp): order does not matter
@@ -1165,6 +1252,7 @@ void InjectAll() {
                                 // tables swapped and six kinds' dispatchers driven with a clone planted in their
                                 // tables for the fuzz only; no module patches bytes inside its 20 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    BareRet_Inject();
     BossSd_Inject();            // round 11 group BSD (fights 17..21 and kinds 18, 21..27, 0x43A590..0x43B74A): its
                                 // clones' calls re-aimed at the boss harness's recorders, its kinds' step, action
                                 // and hook tables swapped for the fuzz only; no module patches bytes inside its 52
@@ -1172,40 +1260,97 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the boss harness's recorders, its kinds' state and
                                 // hook tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossWorker_Inject();
+    BossTorast_Inject();
+    BossOperator_Inject();
+    BossKassen_Inject();
+    BossGaltel_Inject();
+    BossEngineer_Inject();
+    BossDoksen_Inject();
+    Boss07_Inject();
+    Boss04_Inject();
     BossSa_Inject();            // round 11 group BSA (fights 1, 2, 3, 39 and kinds 1, 2, 6, 7, 39, 46,
                                 // 0x437A10..0x43D662): its clones' calls re-aimed at the boss harness's recorders,
                                 // the six kinds' state and hook tables swapped for the fuzz only; no module patches
                                 // bytes inside its 49 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossNue_Inject();
+    BossGary_Inject();
+    Boss02_Inject();
+    Boss01_Inject();
     BossSc_Inject();            // round 11 group BSC (fights 11, 12, 14, 15, 16, 46 and kinds 12..17, 53,
                                 // 0x439410..0x43A589): its clones' calls re-aimed at the boss harness's recorders,
                                 // seven kinds' tables swapped for the fuzz only; no module patches bytes inside
                                 // its 53 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSunder_Inject();
+    BossBalio_Inject();
+    BossAmalgam_Inject();
+    Boss08_Inject();
     BossSe_Inject();            // round 11 group BSE (fights 22..26, 30, 48 and kinds 28..32, 55, 0x43B5B0..0x43E7A0):
                                 // its clones' calls re-aimed at the boss harness's recorders, the kinds' state and
                                 // hook tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossZig_Inject();
+    BossStallion_Inject();
+    BossNina_Inject();
+    BossBully_Inject();
+    BossBeyd_Inject();
+    Boss24_Inject();
+    Boss23_Inject();
     BossSi_Inject();            // round 11 group BSI (fights 37, 38, 40, 42, 44, 45, 49..51, 53, kinds 45, 47, 49,
                                 // 51, 52, 56..58, 60 and Arwan's task, 0x43ECC0..0x43F79B): its clones' calls
                                 // re-aimed at the boss harness's recorders, the kinds' state and hook tables swapped
                                 // for the fuzz only; no module patches bytes inside its 50 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    BossSample4_Inject();
+    BossSample2_Inject();
+    BossChimera_Inject();
+    BossArwanFx_Inject();
+    BossArwan_Inject();
+    BossAmmonite_Inject();
+    Boss53_Inject();
+    Boss38_Inject();
     BossSh_Inject();            // round 11 group BSH (fights 34..36, 41, 43, 47, kinds 41..44, 48, 50, 54 and the
                                 // kind-3 slot 3, 0x43DEF0..0x43ECBF): its clones' calls re-aimed at the boss
                                 // harness's recorders, the kinds' state and hook tables swapped for the fuzz only;
                                 // no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp): order does not
                                 // matter
+    BossGaist_Inject();
+    BossElder_Inject();
+    BossAnglerFx_Inject();
+    BossAngler_Inject();
+    Boss36_Inject();
+    Boss35_Inject();
     BossSj_Inject();            // round 11 group BSJ (fights 52, 54, 55, kinds 59, 61, effect slots 4 and 5,
                                 // 0x43F7A0..0x441087): its clones' calls re-aimed at the boss harness's recorders,
                                 // the kinds' and tasks' tables swapped for the fuzz only; no module patches bytes
                                 // inside its 44 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossShroom_Inject();
+    BossDLordFx_Inject();
+    BossDLord_Inject();
+    Boss55_Inject();
+    Boss52_Inject();
     BossSg_Inject();            // round 11 group BSG (fights 29, 31..33, kinds 34..38 and 40, the effect task F6,
                                 // 0x43CDE0..0x43E535): its clones' calls re-aimed at the boss harness's recorders, its
                                 // kinds' and F6's tables swapped for the fuzz only; no module patches bytes inside its
                                 // 53 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossWeretigrFx_Inject();
+    BossWeretigr_Inject();
+    BossMikba_Inject();
+    BossGisshan_Inject();
+    BossGarr2_Inject();
+    BossDolphin_Inject();
+    BossDZombie_Inject();
+    Boss32_Inject();
+    Boss31_Inject();
     BossSf_Inject();            // round 11 group BSF (fights 27, 28, kinds 33 and 62, fight 26's count task and the
                                 // Gazer's effect task, 0x43C480..0x4406D7): its clones' calls re-aimed at the boss
                                 // harness's recorders, the kinds' and tasks' tables swapped for the fuzz only; no
                                 // module patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossMyria_Inject();
+    BossGazerFx_Inject();
+    BossGazer_Inject();
+    Boss28_Inject();
+    Boss25_Inject();
     BossHarnessEh_Inject();     // round 12 group EH: the boss harness's own self-test of its battle-engine frame
                                 // (the new shapes, state_cell, the engine set) with Capcom's code on both sides;
                                 // takes no function and patches nothing: order does not matter
@@ -1224,6 +1369,8 @@ void InjectAll() {
                                 // boss harness's recorders, its dispatchers' tables swapped for the fuzz only; no module
                                 // patches bytes inside its 41 (DIVERGENCE.md, cheats.cpp; DIV-0020 reads 0x42E09D,
                                 // past BattleExtra_EquipLeave's jmp): order does not matter
+    BattleBattleResult_Inject();
+    BattleLoss_Inject();
     BattleE5_Inject();          // round 12 group BE5 (the enemy AI helpers, Effect_Handlers slots 22 / 23 / 38,
                                 // BattleForm_ApplyStats, the Dragon command's run, 0x44B240..0x451471): its clones'
                                 // calls re-aimed at the boss harness's recorders, the Dragon run's six step tables
@@ -1240,6 +1387,7 @@ void InjectAll() {
                                 // re-aimed at the boss harness's recorders, its four dispatchers' tables swapped for
                                 // the fuzz only; after BossHarnessEh_Inject, whose self-test copies 0x4457F0; no
                                 // module patches bytes inside its 56 (DIVERGENCE.md, cheats.cpp)
+    BattleBanner_Inject();
     BattleE2_Inject();          // round 12 group BE2 (0x433650..0x437030: the effect tasks of BattleFx_Dispatch slots
                                 // 9, 10, 12, 13, 14, 17 and the watch's state 3, the enemy's action pick and targets,
                                 // EnemyOp_Steps 4 / 5, EnterSubs 1, ActSubs 3 / 5): its clones' calls re-aimed at the boss
@@ -1250,6 +1398,8 @@ void InjectAll() {
                                 // boss harness's recorders, its sub-tables swapped for the fuzz only; after
                                 // BossHarnessEh_Inject, whose self-test copies 0x441A10 / 0x441A30; no module patches
                                 // bytes inside its 49 (DIVERGENCE.md, cheats.cpp)
+    BossMyriaFx_Inject();
+    BattleObj_Inject();
     FieldC2_Inject();           // round 12 group FC2 (the field core's 0x46BBF0..0x46D5ED: effect kinds 0x30, 0x34,
                                 // 0x3A and 0x41): its clones' calls re-aimed at the scenario harness's recorders, the
                                 // kinds' eight state tables swapped for the fuzz only; after ScenarioHarnessFh_Inject
@@ -1634,6 +1784,11 @@ void InjectAll() {
                                 // inside its 45 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     BattleExtra_Inject();
     WorldMap33_Inject();
+    EnemyOp_Inject();
+    BattleTask_Inject();
+    BattleFx_Inject();
+    BattleAction_Inject();
+    Battle_Inject();
     Rest3C_Inject();            // round 14 wave-three group R3C (0x44D000..0x44E4AA: Effect_Handlers slots 50..85 and
                                 // 87..111): its clones' calls re-aimed at the boss harness's recorders; reached only
                                 // through Effect_Handlers (Effect_ApplyResult reads the cell) and R3D's 0x44EA70 tail
@@ -1677,6 +1832,9 @@ void InjectAll() {
                                 // harness's inject; ours that call it (battle_result, battle_e6, rest_2g) call it by
                                 // the address it had; before FishingText_Arm; no module patches bytes inside its 64
                                 // (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Effect_Inject();
+    BattleItemCmd_Inject();
+    Battle3_Inject();
     Rest4F_Inject();            // round 14 wave-four group R4F (0x460CB0..0x464B9E: the Config screen's machine and
                                 // draws, WorldMap_ExitRecords, the states of effect kinds 2, 7, 8, 9 and 0xB and
                                 // their draws): its clones' calls re-aimed at the scenario harness's recorders, five
@@ -1703,6 +1861,8 @@ void InjectAll() {
                                 // (battle_sprites, battle_e1, battle_e2, frame_callees, area_w4d, mode_states) call
                                 // it by the address it had; before FishingText_Arm; no module patches bytes inside
                                 // its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Field2_Inject();
+    DragonCmd_Inject();
     Rest4C_Inject();            // round 14 wave-four group R4C (0x459EE0..0x45C3F3: the community band's two games
                                 // with a stake, entries 0 and 1 of R4B's game table 0x652A84, their nine state tables
                                 // and draw helpers, Commu_PushSubscreen): its clones' calls re-aimed at the scenario
