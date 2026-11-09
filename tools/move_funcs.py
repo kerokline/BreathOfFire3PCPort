@@ -310,6 +310,8 @@ class SourcePlan:
     # the `at` namespaces S's bodies can mean: its alias's, and X::at of each `using namespace X;`
     # whose X has one - name -> the entity it denotes (namespace_entities); the header declaring each
     at_entities: dict[str, dict[str, str]] = field(default_factory=dict)
+    namespace_shapes: dict[str, dict[str, set]] = field(default_factory=dict)  # X -> name -> item_shape()s
+    namespace_ents: dict[str, dict[str, str]] = field(default_factory=dict)    # X -> name -> entity
     at_header: dict[str, str] = field(default_factory=dict)
 
 
@@ -543,6 +545,8 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         if mm:
             plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
             plan.alias_bodies[mm.group(2)] = namespace_alias_bodies(text, mm.group(2))
+            plan.namespace_shapes[mm.group(2)] = namespace_shapes(text, mm.group(2))
+            plan.namespace_ents[mm.group(2)] = namespace_entities(text, mm.group(2))
     for x in ([plan.alias_at] if plan.alias_at else []) + [
             f"{y}::at" for y in plan.namespace_names if not y.endswith("::at") and y != "at"]:
         ents = namespace_entities(text, x)
@@ -635,6 +639,72 @@ def has_static_local(it: ci.Item) -> bool:
         if not ci.declares_constant(words, name):
             return True
     return False
+
+
+U32_SPELLINGS = {"U", "unsigned", "unsigned int", "std :: uint32_t", "uint32_t", ":: std :: uint32_t"}
+
+
+def item_shape(it: ci.Item, name: str) -> str:
+    """What an overload check needs of a named item: `f(T1,T2)` for a function, its parameter types
+    with the names dropped and the 32-bit unsigned spellings (U, unsigned, std::uint32_t) made one
+    (`f?` when it has defaults or is variadic), else its kind. Two functions of one name whose shapes
+    differ are taken for an overload set that resolves; the build is the judge of the rest."""
+    if it.kind != "func":
+        return it.kind
+    toks = [t for t in ci.lex(it.text) if t.kind not in ("comment", "pp")]
+    for i in range(len(toks) - 1):
+        if toks[i].text == name and toks[i + 1].text == "(":
+            depth, params, cur, j = 0, [], [], i + 1
+            while j < len(toks):
+                t = toks[j].text
+                if t in ("(", "[", "{"):
+                    depth += 1
+                    if depth == 1:
+                        j += 1
+                        continue
+                elif t in (")", "]", "}"):
+                    depth -= 1
+                    if depth == 0:
+                        break
+                if depth == 1 and t == ",":
+                    params.append(cur)
+                    cur = []
+                elif t in ("=", "..."):
+                    return "f?"
+                else:
+                    cur.append(toks[j])
+                j += 1
+            params.append(cur)
+            types = []
+            for prm in params:
+                if len(prm) >= 2 and prm[-1].kind == "id" and prm[-2].text not in ("::",) \
+                        and prm[-1].text not in ci.KEYWORDS:
+                    prm = prm[:-1]                       # the parameter's name
+                ty = " ".join(t.text for t in prm)
+                types.append("u32" if ty in U32_SPELLINGS else ty)
+            if types == [""] or types == ["void"]:
+                types = []
+            return "f(" + ",".join(types) + ")"
+    return "f?"
+
+
+def namespace_shapes(text: str, ns: str) -> dict[str, set]:
+    """name -> the item_shape()s of what namespace `ns` defines under it (as namespace_names finds them)."""
+    parts = tuple(ns.split("::"))
+    out: dict[str, set] = {}
+    texts = [text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
+                      for t in [resolve_include(inc)] if t]
+    for t in texts:
+        try:
+            fi = ci.FileItems(t.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
+                    and it.kind in ("decl", "func", "type", "alias", "typedef", "using")):
+                for n in it.names:
+                    out.setdefault(n, set()).add(item_shape(it, n))
+    return out
 
 
 def namespace_entities(text: str, ns: str) -> dict[str, str]:
@@ -979,6 +1049,9 @@ def main() -> int:
                 e["aliases"][s] = p.alias_at
             for x, names in p.namespace_names.items():
                 e["namespaces"].setdefault(x, set()).update(names)
+                e.setdefault("ns_sources", {}).setdefault(x, set()).add(s)
+                e.setdefault("ns_shapes", {}).setdefault(x, {}).update(p.namespace_shapes.get(x, {}))
+                e.setdefault("ns_ents", {}).setdefault(x, {}).update(p.namespace_ents.get(x, {}))
             for x, bodies in p.alias_bodies.items():
                 e["alias_bodies"].setdefault(x, {}).update(bodies)
             for x, ents in p.at_entities.items():
@@ -1064,6 +1137,38 @@ def main() -> int:
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
                                     f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
                                     f"qualify it first")
+        # a file-scope local the target gets from one source (an anonymous-namespace or `static` item)
+        # and a member of a namespace another source's `using namespace X;` brings: both are found from
+        # file scope, so a bare use is ambiguous unless both are functions of different arity (an
+        # overload set) or one type alias spelt the same. The local's own source had X's names beside
+        # it and compiled, so only a namespace another source brought counts.
+        if e.get("ns_sources"):
+            used_all = set().union(*(it.uses_unq for _, _, it, _ in e["funcs"]),
+                                   *(it.uses_unq for _, it, _ in e["locals"]))
+            for s0, it, _ in e["locals"]:
+                if any(it.ns):
+                    continue
+                for n in set(it.names) & used_all:
+                    mine = item_shape(it, n)
+                    for x, srcs in sorted(e["ns_sources"].items()):
+                        if s0 in srcs or n not in e["namespaces"].get(x, ()):
+                            continue
+                        theirs = e["ns_shapes"].get(x, {}).get(n, {"?"})
+                        if it.kind in ("alias", "typedef") and e["alias_bodies"].get(x, {}).get(n) == code_tokens(it):
+                            continue
+                        if it.kind == "using":            # `using move_script::At;` and X's own: one entity
+                            m = re.match(r"using\s+(?:::\s*)?([\w:\s]+?)\s*;", code_tokens(it))
+                            if m and re.sub(r"\s", "", m.group(1)) == e["ns_ents"].get(x, {}).get(n):
+                                continue
+                        if mine.startswith("f") and mine != "f?" and all(
+                                o.startswith("f") and o not in ("f?", mine) for o in theirs):
+                            continue
+                        if it.kind in ("alias", "typedef", "using") and theirs & {"alias", "typedef", "using"}:
+                            continue                     # two names of a type: one type or not, the build says
+                        problems.append(f"{t}: `{n}` would be ambiguous - {s0}'s file-local (line {it.code_line}) "
+                                        f"and {x}::{n}, which `using namespace {x};` from "
+                                        f"{', '.join(sorted(srcs))} brings, are both found from file scope; "
+                                        f"rename one first")
         # `at::NAME` written bare in a file-scope body: the target's own `at` alias (one group's, or the
         # union <T stem>::at of several) and each X::at a copied `using namespace X;` brings are all
         # found from file scope, so two of them make `at` itself ambiguous; with the alias alone, a name
