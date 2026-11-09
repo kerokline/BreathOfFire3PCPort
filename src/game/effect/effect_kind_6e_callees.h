@@ -1,0 +1,12 @@
+// The callees constants this file's functions name as at::k...: the union of their
+// groups' namespaces (tools/move_funcs.py, docs/source-layout-round.md 2). The constants
+// stay in the groups' headers; a name two of them define differently is refused.
+#pragma once
+
+#include "game/effect_3b_callees.h"
+#include "game/effect_3c_callees.h"
+
+namespace effect_kind_6e::at {
+using namespace ::effect_3b::at;
+using namespace ::effect_3c::at;
+}  // namespace effect_kind_6e::at

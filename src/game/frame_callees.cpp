@@ -60,95 +60,6 @@ unsigned Tinted(unsigned component, unsigned char tint) {
 
 }  // namespace
 
-// original 0x494030: the effect objects' frame (PSX FUN_8019B0EC, term for
-// term). Each of the 20 whose byte +0 is non-zero - any bit, read afresh each
-// turn, so an object a handler spawns further on runs this frame - becomes
-// Sprite_Current and runs Effect_KindHandlers[+5], unbounded as the
-// original's.
-extern "C" void __cdecl Effect_RunObjects(void) {
-    unsigned char* object = rv::Bytes(Effect_Objects);
-    static int log_on = -1;
-    if (log_on < 0) {
-        char v[8];
-        log_on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
-    }
-    for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
-        if (object[0] == 0) continue;
-        if (log_on == 1 && object[1] == 0)
-            bof3::Log("effect      run slot %u handler 0x%02X param 0x%02X +9 %u frame %lu", kEffects - n, object[5],
-                      object[6], object[9], static_cast<unsigned long>(Frame_Counter));
-        Sprite_Current = object;
-        HandlerFrameCallees(Effect_KindHandlers[object[5]])();
-    }
-}
-
-// original 0x469E30: effect kind 0x13, the camera turn (PSX FUN_8019BC3C):
-// its state +1 through CameraTurn_States, unbounded - states 3 and up are the
-// next kind's - then MapView_Redraw 2, whatever the state did to it.
-extern "C" void __cdecl Effect_CameraTurn(void) {
-    HandlerFrameCallees(CameraTurn_States[Sprite_Current[1]])();
-    MapView_Redraw = 2;
-}
-
-// original 0x469E50: the turn's first frame (PSX FUN_8019B90C, term for
-// term). The three angles to 16.16, and a step for each toward the dwords
-// +0x64 / +0x68 / +0x6C over +9 frames: ((target - angle) << 16, in 32 bits)
-// / frames, signed and truncating. A +9 of 0 divides by zero, as on both
-// platforms (the spawners at 0x406B56 / 0x406BE3 give 16). MapView_Redraw
-// takes the frame count - which Effect_CameraTurn overwrites with 2 on return.
-extern "C" void __cdecl CameraTurn_Start(void) {
-    const std::int32_t x = Camera_Angles[0], z = Camera_Angles[2];
-    unsigned char* const object = Sprite_Current;
-    const std::int32_t y = Camera_Angles[1];
-    CameraTurn_Angles[0] = static_cast<long>(static_cast<std::uint32_t>(x) << 16);
-    CameraTurn_Angles[1] = static_cast<long>(static_cast<std::uint32_t>(y) << 16);
-    CameraTurn_Angles[2] = static_cast<long>(static_cast<std::uint32_t>(z) << 16);
-    const auto step = [object](unsigned at, std::int32_t angle) {
-        const std::uint32_t diff = static_cast<std::uint32_t>(move_script::Long(object + at)) - static_cast<std::uint32_t>(angle);
-        return static_cast<long>(Idiv(static_cast<std::int32_t>(diff << 16), object[9]).quot);
-    };
-    CameraTurn_Steps[0] = step(0x64, x);
-    CameraTurn_Steps[1] = step(0x68, y);
-    CameraTurn_Steps[2] = step(0x6C, z);
-    const unsigned char bits = Field_StatusBits;
-    MapView_Redraw = object[9];
-    Field_StatusBits = static_cast<unsigned char>(bits | 0x20);
-    object[1] = 1;
-}
-
-// original 0x469EF0: each later frame (PSX FUN_8019BA4C). With frames left,
-// each 16.16 angle takes its step (wrapping in 32 bits) and its high half goes
-// to Camera_Angles; with none, the state is 2.
-extern "C" void __cdecl CameraTurn_Step(void) {
-    unsigned char* const object = Sprite_Current;
-    if (object[9] == 0) {
-        object[1] = 2;
-        return;
-    }
-    const std::uint32_t x = static_cast<std::uint32_t>(CameraTurn_Angles[0]) + static_cast<std::uint32_t>(CameraTurn_Steps[0]);
-    const std::uint32_t y = static_cast<std::uint32_t>(CameraTurn_Angles[1]) + static_cast<std::uint32_t>(CameraTurn_Steps[1]);
-    const std::uint32_t z = static_cast<std::uint32_t>(CameraTurn_Angles[2]) + static_cast<std::uint32_t>(CameraTurn_Steps[2]);
-    CameraTurn_Angles[0] = static_cast<long>(x);
-    CameraTurn_Angles[1] = static_cast<long>(y);
-    CameraTurn_Angles[2] = static_cast<long>(z);
-    Camera_Angles[0] = static_cast<short>(x >> 16);
-    Camera_Angles[1] = static_cast<short>(y >> 16);
-    Camera_Angles[2] = static_cast<short>(z >> 16);
-    object[9] = static_cast<unsigned char>(object[9] - 1);
-}
-
-// original 0x469F70: the last (PSX FUN_8019BB04). The angles exactly to the
-// targets' low words, the turning bit cleared, and the object released - a
-// tail jmp in the original.
-extern "C" void __cdecl CameraTurn_End(void) {
-    unsigned char* const object = Sprite_Current;
-    Camera_Angles[0] = static_cast<short>(move_script::Word(object + 0x64));
-    Camera_Angles[1] = static_cast<short>(move_script::Word(object + 0x68));
-    Camera_Angles[2] = static_cast<short>(move_script::Word(object + 0x6C));
-    Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xDF);
-    frame_callees::g.release();
-}
-
 // original 0x455250: the slot records (PSX FUN_80197C8C, term for term). Each
 // of the 8 whose byte +0 has bit 0 - read afresh each turn - runs
 // Field_RunSlot(index). The original pushes the index as a whole stack dword
@@ -556,11 +467,6 @@ void FrameCallees_Inject() {
         }
         SelfTest(clones);
     }
-    BOF3_INJECT(Effect_RunObjects);
-    BOF3_INJECT(Effect_CameraTurn);
-    BOF3_INJECT(CameraTurn_Start);
-    BOF3_INJECT(CameraTurn_Step);
-    BOF3_INJECT(CameraTurn_End);
     BOF3_INJECT(Field_RunSlots);
     BOF3_INJECT(MoveScript_TintFrame);
     BOF3_INJECT(Party_UpdateScreens);

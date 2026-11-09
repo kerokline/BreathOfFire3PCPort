@@ -103,13 +103,6 @@ MENGINE_EXPORT void __cdecl MagicHold_Task(void) {
     DispatchMagicEngine("MagicHold_Task", kPhases, 2, Sprite_Current[1]);
 }
 
-// original 0x47FDA0: +9 = 60, the phase on. Shared: also entry 0 of the .data
-// table EffectKind5F_States (0x654904) EffectKind5F_Run (0x47FD80) jumps through.
-MENGINE_EXPORT void __cdecl Task_StartHold60(void) {
-    Sprite_Current[9] = 0x3C;
-    Bump(Sprite_Current[1]);
-}
-
 // original 0x437900: +9 down while it is not 0; at 0 flag 0x40 on the target
 // (Battle_SetTargetFlag40), the effect-done bit, and the slot freed (a tail
 // jmp).
@@ -425,7 +418,6 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Land(void) {
 void MagicEngine_Inject() {
     if (bof3::WantsShadow("magic_engine")) magic_engine::SelfTest();
     BOF3_INJECT(MagicHold_Task);
-    BOF3_INJECT(Task_StartHold60);
     BOF3_INJECT(MagicHold_Countdown);
     BOF3_INJECT(RestoreForm_Task);
     BOF3_INJECT(RestoreForm_Start);

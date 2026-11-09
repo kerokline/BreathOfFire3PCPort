@@ -186,21 +186,6 @@ constexpr std::uint32_t kUiGlyphs = 0xA00, kDialogueGlyphs = 0x993, kSetCells = 
 // to 24 cells (loc_build.py's EXT_SMALL_AT, EXT_AT, EXT_MAX). An English
 // overlay has no glyphs there, and its strings never name them.
 constexpr std::uint32_t kUiExtGlyphs = 0xAA0, kDialogueExtGlyphs = 0xA80, kExtCells = 24;
-// DIV-0051: the controller panel's icons - six glyphs loc_build.py puts
-// after the UI set's blank (its ICONS_AT): circle, cross, triangle, square
-// from the disc's 12 x 12 set, L1 and R1 composed of the dialogue capital
-// and the small serifed 1, each doubled to fill the 24 x 24 glyph, so the
-// 24 px quad shows the icon at the screen's 2x with its own margins.
-constexpr std::uint32_t kIconCircle = kUiGlyphs + kSetCells + 1, kIconCross = kIconCircle + 1,
-                        kIconTriangle = kIconCircle + 2, kIconSquare = kIconCircle + 3,
-                        kIconL1 = kIconCircle + 4, kIconR1 = kIconCircle + 5;
-// The quad's x from the call's x (panel x + 0x5D). Measured off the captures
-// (analysis/shots/ctrl_icons, 2026-09-24): the row box's divider sits at
-// row x + 0x44 whatever the box's width, and the box ends at row x + width.
-// The 24 px quad at x - 0x14 runs from row x + 0x44 to 0x5C - the shapes'
-// own margins keep their ink a pixel or two inside - and the box, 0x60 wide,
-// ends four past it.
-constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of -0x14
 
 constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
@@ -217,80 +202,6 @@ namespace config_text { bool g_icons = false; }
 // under a ja-JP layer (ConfigText_ArmJapanese).
 namespace config_text { std::uint8_t g_ja_icons = 0; }
 namespace {
-// The controller panel's cell, original 0x461C00 (docs/controls.md section 2;
-// disasm 2026-10-17, 0x461C00..0x461E07). cdecl (x, y, word). The original
-// tests the word's bits in the order circle 0x20, cross 0x40, triangle 0x10,
-// square 0x80, L1 0x04, R1 0x08 and, for the first it finds, draws
-// Text_DrawAt(x + 4, y, colour, 3, 0x66A2FC[i]) - the port's glyph, the
-// pointer read in place: colours 2, 1, 6, 5, 0, 0 - then Text_DrawAt(x - 0x10,
-// y, 0, count, letter): the default key table's letter, hard-coded at
-// 0x65382C, 0x653828, 0x653824, 0x653820, 0x65381C (count 4) and 0x653818
-// (known-defects D58). With none of those, select 0x100 (`test ah, 1`) draws
-// the three cells of a SELECT label: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0,
-// 0xF, 0), Gfx_CommitPrim(1, 0xC), then for u = 6, 7, 8 at x + 1, x + 9,
-// x + 0x11: Menu_DrawCell8(x', y + 3, u, 2, Gpu_GetClut(0, 0x1E0), 0x80) - the
-// shade the 0x80 the clut call's caller left on the stack. Nothing else.
-//
-// Under DIV-0051 ours draws one thing, the PlayStation's icon, in that colour,
-// where the letter was: the PlayStation screen has one column. Count 3 as
-// the original passes it. L2 and R2 have no icon on either side, as before,
-// and select none under DIV-0051 (the rebinding's `and ecx, 0xFC` never gives
-// a line the bit; a save could).
-extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int word) {
-    if (config_text::g_icons) {
-        struct Icon { unsigned bit; std::uint32_t glyph; int color; };
-        static const Icon kIcons[] = {
-            {0x20, kIconCircle, 2}, {0x40, kIconCross, 1},  {0x10, kIconTriangle, 6},
-            {0x80, kIconSquare, 5}, {0x04, kIconL1, 0},     {0x08, kIconR1, 0},
-        };
-        for (const Icon& i : kIcons) {
-            if (!(word & i.bit)) continue;
-            const unsigned char code[3] = {static_cast<unsigned char>(0x80 | (i.glyph >> 8)),
-                                           static_cast<unsigned char>(i.glyph), 0};
-            SH_CALL(Text_DrawAt)(x + kIconX, y, i.color, 3, code);
-            return;
-        }
-        return;
-    }
-    struct Cell { unsigned bit; int color; std::uint32_t letter; int letter_count; };
-    static const Cell kCells[] = {
-        {0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
-        {0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
-    };
-    constexpr ::bof3::image::Va kGlyphPointers{0x66A2FC};   // the six one-byte glyph strings 0x66A2E0..
-    for (unsigned i = 0; i < sizeof kCells / sizeof kCells[0]; ++i) {
-        const Cell& c = kCells[i];
-        if (!(word & c.bit)) continue;
-        const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
-        // DIV-0051's 2026-10-21 amendment: under ja-JP the stand-in behind
-        // 0x66A2FC is empty (no Japanese layer writes it); the Japan disc's
-        // own icon, in the same colour at the same place.
-        unsigned char ja[3];
-        if (config_text::g_ja_icons) {
-            const unsigned g = i < 4 ? button_text::kJapaneseIcons + i : button_text::kJapaneseShoulders + (i - 4);
-            if (g >= TextDraw_GlyphCount())
-                bof3::Fatal("ConfigJapaneseIcons: glyph 0x%X, the font loaded has %u (no ja-JP layer's icons)", g,
-                            TextDraw_GlyphCount());
-            ja[0] = static_cast<unsigned char>(0x80 | (g >> 8));
-            ja[1] = static_cast<unsigned char>(g);
-            ja[2] = 0;
-            glyph = ja;
-        }
-        SH_CALL(Text_DrawAt)(x + 4, y, c.color, 3, glyph);
-        SH_CALL(Text_DrawAt)(x - 0x10, y, 0, c.letter_count,
-                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
-        return;
-    }
-    if (!(word & 0x100)) return;
-    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xF, 0);
-    SH_CALL(Gfx_CommitPrim)(1, 0xC);
-    for (unsigned u = 6; u <= 8; ++u) {
-        const unsigned clut = SH_CALL(Gpu_GetClut)(0, 0x1E0);
-        SH_CALL(Menu_DrawCell8)(static_cast<unsigned>(x) + 1 + 8 * (u - 6), static_cast<unsigned>(y) + 3, u, 2, clut,
-                                0x80);
-    }
-}
 
 extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, int color, int count,
                                                                 const unsigned char* text) {
