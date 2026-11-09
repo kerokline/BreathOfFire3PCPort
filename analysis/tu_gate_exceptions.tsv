@@ -12,8 +12,12 @@
 # inlined into its callers in the file, now called; a row names the function, which reads NEW, or a caller, or its
 # static local); i686-convention (both widths, call 16, the owner 2026-11-09; a promoted file-local function that had a
 # body but was called by LLVM's internal register convention, now called as the ABI says; a row names the function,
-# a caller, its static local or the moved exception table). The i686 gate passes --exception-classes
-# data-layout,i686-fold,i686-inline,i686-convention, so its code stays exact
+# a caller, its static local or the moved exception table); refptr (both widths, the owner's call of 2026-11-09 on
+# group B1; a moved function reads a global its old file defines, which llvm-mingw's auto-import loads through the
+# pointer stub `.refptr.X` once the reader is in another file - one load more, the same symbol; a row names the
+# reader, or the `.refptr.` data symbol, which reads NEW). By the same call `inline` reaches i686 for a move (the
+# split of a wave file's shared helper changes how many callers each file has). The i686 gate passes
+# --exception-classes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr, so its code stays exact
 # but for those classes. A new class needs the coordinator's entry in the round doc with its first case. Read by
 # tools/codegen_same.py --exceptions.
 symbol	class	reason	commit
