@@ -117,9 +117,9 @@ def strip_comments(text: str) -> str:
 class Shell:
     """One flat group file as it is now."""
 
-    def __init__(self, stem: str):
+    def __init__(self, stem: str, path: str | None = None):
         self.stem = stem
-        self.path = f"{GAME}/{stem}.cpp"
+        self.path = path or f"{GAME}/{stem}.cpp"
         self.src = mf.read(self.path)
         self.fi = ci.FileItems(self.src)
         self.leaves = list(self.fi.leaves())
@@ -361,6 +361,65 @@ def includers(include: str) -> list[str]:
     return sorted(out)
 
 
+# --- the seams still in a file of ours (the cleanup round, IDEAS I60) ------------------------
+
+def ours_with_seam() -> list[Shell]:
+    """The files that moved whole (the map's file rows) and still define their group's `g`."""
+    out = []
+    for r in mf.load_map(MAP):
+        if r["kind"] != "file" or r["new_path"].endswith("_fuzz.cpp") or not (ROOT / r["new_path"]).is_file():
+            continue
+        sh = Shell(Path(r["old_path"]).stem, r["new_path"])
+        if sh.g is not None:
+            out.append(sh)
+    return out
+
+
+def alone_on_its_lines(src: str, it: ci.Item) -> bool:
+    """The item's lines hold nothing but the item (not `}  namespace x { Callees g = kOriginals; }`)."""
+    lead = src[src.rfind("\n", 0, it.code_start) + 1:it.code_start]
+    body = strip_comments(src[it.code_start:it.end]).rstrip()
+    return not lead.strip() and body.endswith(";") and body.count(";") >= 1 and not re.search(r";\s*\S", body.split("\n")[-1])
+
+
+def plan_seam(sh: Shell, low: dict[str, tuple[int, str]]) -> tuple[str, list[ci.Item], str | None]:
+    """(home, the items that leave the file, why not)."""
+    if sh.stem not in low:
+        return "", [], "no function of the group moved: nothing says where the seam's home is"
+    home = low[sh.stem][1]
+    if home == sh.path:
+        return home, [], "the group's lowest function is in this file"
+    own, _ = sh.seam_items()
+    for it in own:
+        if not alone_on_its_lines(sh.src, it):
+            return home, [], f"line {it.code_line}: the seam shares its line with other code"
+    # an item of the seam that other code of the file reaches stays as a copy; it must be a constant
+    others = [it for it in sh.leaves if it not in own]
+    leave = []
+    for it in own:
+        used = any(set(it.names) & o.uses for o in others)
+        if it is sh.g or not used:
+            leave.append(it)
+        elif not it.is_const:
+            return home, [], f"{it.names[0]} is state the file's other code reaches"
+    return home, leave, None
+
+
+def do_seam(sh: Shell, home: str, leave: list[ci.Item], base: str) -> dict:
+    text, copied, held = insert_seam(sh, home)
+    mf.write(home, text)
+    src = sh.src
+    for it in sorted(leave, key=lambda it: -it.start):
+        src = src[:it.start] + src[it.end:]
+    # a namespace block the seam leaves empty goes with it
+    src = re.sub(rf"namespace {sh.stem} \{{\n\s*\}}  // namespace {sh.stem}\n\n?", "", src)
+    mf.write(sh.path, src)
+    own, _ = sh.seam_items()
+    print(f"  seam {sh.stem}::g: {sh.path} -> {home}" + (f"; copied {', '.join(copied)}" if copied else "")
+          + (f"; the home held {', '.join(held)}" if held else ""))
+    return file_row(sh.path, home, "seam", base, f"{sh.stem}::g", own[0].first_line, own[-1].last_line)
+
+
 class ShellPlan:
     def __init__(self, shell: Shell, low: dict[str, tuple[int, str]]):
         self.shell = shell
@@ -422,6 +481,8 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="print the plan, write nothing")
     ap.add_argument("--moves", action="store_true", help="the fuzz files and the remainders")
     ap.add_argument("--shells", action="store_true", help="the pure shells")
+    ap.add_argument("--seams", action="store_true",
+                    help="the cleanup round: the seams still in a file of ours, to their group's lowest function's file")
     ap.add_argument("--only", default="", help="--shells: these group stems only (comma-separated)")
     ap.add_argument("--strict", action="store_true",
                     help="--check: exit 1 when a flat src/game/*.cpp is left that is not a harness file or the runtime's")
@@ -442,6 +503,27 @@ def main() -> int:
             for p in problems:
                 print("REFUSED:", p)
             return 1
+        if a.seams:
+            only_s = {x for x in a.only.split(",") if x}
+            todo, rows = [], []
+            for sh in ours_with_seam():
+                if only_s and sh.stem not in only_s:
+                    continue
+                home, leave, why = plan_seam(sh, low)
+                if why:
+                    print(f"left   {sh.path}: {why}")
+                else:
+                    todo.append((sh, home, leave))
+                    if a.check:
+                        print(f"seam   {sh.path} -> {home} ({', '.join(it.names[0] for it in leave)} leave)")
+            print(f"retire_shells --seams: {len(todo)} seams to move")
+            if a.check:
+                return 0
+            base = mf.git_head([GAME, "analysis/tu_moves.tsv"])
+            for sh, home, leave in todo:
+                rows.append(do_seam(Shell(sh.stem, sh.path), home, leave, base))
+            add_rows(rows)
+            return 0
         if a.check or not (a.moves or a.shells):
             for old, new in moves:
                 print(f"move   {old} -> {new}")
