@@ -149,9 +149,9 @@ constexpr double kMaxDebtMs = 500.0;
 // (WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX), not resizable.
 constexpr DWORD kWindowedStyle = WS_OVERLAPPEDWINDOW;
 constexpr DWORD kBorderlessStyle = WS_POPUP;
-
-bool g_background = true;     // DIV-0033 on; BOF3X_BACKGROUND=0 turns it off
-bool g_foreground = true;     // the last WM_ACTIVATEAPP's word
+}  // namespace
+namespace win_main { bool g_background = true; }     // DIV-0033 on; BOF3X_BACKGROUND=0 turns it off
+namespace win_main { bool g_foreground = true; }  namespace {     // the last WM_ACTIVATEAPP's word
 }  namespace win_main { bool g_loop_ours = false; }  namespace {     // set by Game_WinMain: WinMain_InputAllowed answers true until then
 RECT g_windowed_rect = {};    // the last windowed placement, for F8 back from borderless
 bool g_have_windowed_rect = false;
@@ -308,8 +308,8 @@ void PadReset_Frame() {
 
 }  // namespace
 
-bool WinMain_InputAllowed() { return !win_main::g_loop_ours || !g_background || g_foreground; }
-bool WinMain_Background() { return g_background; }
+bool WinMain_InputAllowed() { return !win_main::g_loop_ours || !win_main::g_background || win_main::g_foreground; }
+bool WinMain_Background() { return win_main::g_background; }
 
 // F11: the last frame presented, written beside the DLL as
 // bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
@@ -431,10 +431,10 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
             if (App_WasInactive) Sound_ResumeAll();
             SetFocus(hwnd);
             App_Active = 1;
-            g_foreground = true;
+            win_main::g_foreground = true;
         } else {
-            g_foreground = false;
-            if (g_background) {
+            win_main::g_foreground = false;
+            if (win_main::g_background) {
                 // DIV-0033: nothing stops. The pads read zero from here on
                 // (WinMain_InputAllowed) until the next activation.
             } else {
@@ -545,7 +545,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     win_main::g_loop_ours = true;
     {
         char text[32];
-        if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') g_background = false;
+        if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') win_main::g_background = false;
         const DWORD n = GetEnvironmentVariableA("BOF3X_FRAME_MS", text, sizeof text);
         if (n > 0) {
             char* end = nullptr;
@@ -615,7 +615,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                                 r.bottom - r.top, nullptr, nullptr, hinstance, nullptr);
     Game_Hwnd = hwnd;
     bof3::Log("DIV-0032    window %s: %ld,%ld %ld x %ld%s", Cfg_Fullscreen ? "borderless" : "windowed", r.left, r.top,
-              r.right - r.left, r.bottom - r.top, g_background ? "; DIV-0033 runs unfocused" : "");
+              r.right - r.left, r.bottom - r.top, win_main::g_background ? "; DIV-0033 runs unfocused" : "");
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     Cursor_Sync();

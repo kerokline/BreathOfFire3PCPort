@@ -44,37 +44,9 @@ constexpr std::uint32_t kBlockFlags = 0x8034E1;     // bit 6: blocks the idle tu
 constexpr std::uint32_t kLeaderDirection = 0x802D48;  // ObjTrio +8
 constexpr std::uint32_t kLinkArgument = 0x802DC9;   // ObjTrio +0x89
 
-using PaceFn = unsigned char (__cdecl*)(unsigned char*, unsigned, unsigned);
 
-// Every callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them - for the originals' copies and for ours
-// alike. Ours among them (the pace entries, the turn, the three helpers) are
-// tested alone.
-struct CalleesObjectKinds {
-    const ::bof3::CodeSlot<PaceFn>* pace;   // the table itself (32-bit code words), read at the call as the original reads it
-    PaceFn pace0;         // Field_ObjectIdleLong's direct call of entry 0
-    int (__cdecl* rand)();
-    unsigned char (__cdecl* random_turn)(unsigned char*);
-    unsigned char (__cdecl* open_direction)(unsigned char*);
-    unsigned char (__cdecl* in_home)(unsigned char*);
-    void (__cdecl* turn)(unsigned char*);
-    void (__cdecl* settle)(unsigned char*, unsigned char);
-    void (__cdecl* motion)(unsigned char*);
-    unsigned char (__cdecl* flee)(unsigned char*);
-    unsigned char (__cdecl* chase)(unsigned char*);
-    unsigned char (__cdecl* best)(unsigned char*, unsigned char);
-    unsigned char (__cdecl* blocked_ahead)(unsigned char*);
-    void (__cdecl* move)(unsigned char*, unsigned char);
-    unsigned char (__cdecl* set_tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
-    void (__cdecl* tint_release)(unsigned char);
-    void (__cdecl* area_handler)(unsigned short);
-    void (__cdecl* trigger)(unsigned char*);
-    void (__cdecl* event_script)(const unsigned char*);
-    void (__cdecl* msg_script)(unsigned short);   // Msg_OpenScript reads a word
-    void (__cdecl* msg_system)(unsigned);         // Msg_OpenSystem a dword
-};
-CalleesObjectKinds OriginalsObjectKinds() {
-    return {reinterpret_cast<const ::bof3::CodeSlot<PaceFn>*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
+object_kinds::CalleesObjectKinds OriginalsObjectKinds() {
+    return {reinterpret_cast<const ::bof3::CodeSlot<object_kinds::PaceFn>*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
             Field_Pace0,
             Rand,
             Field_ObjectRandomTurn,
@@ -96,13 +68,13 @@ CalleesObjectKinds OriginalsObjectKinds() {
             reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
             reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
 }
-CalleesObjectKinds gObjectKinds = OriginalsObjectKinds();
-
+}  namespace object_kinds { CalleesObjectKinds gObjectKinds = OriginalsObjectKinds(); }
+namespace {
 // The field object, rv::Current<records::SpriteObject>(): the handlers'
 // argument, which the loops also make Sprite_Current.
 
 unsigned char Pace(unsigned char* object, unsigned speed, unsigned flags) {
-    return gObjectKinds.pace[Sprite_Current[2]](object, speed, flags);
+    return object_kinds::gObjectKinds.pace[Sprite_Current[2]](object, speed, flags);
 }
 
 // The four wander kinds end alike: a direction `turn_to` (0xFF for none)
@@ -118,15 +90,15 @@ void TurnOrCancel(unsigned char* object, unsigned char direction, bool turn, uns
         rv::Current<records::SpriteObject>()->direction = direction & 7;
         Sprite_Current[0xA] = 0;
         rv::Current<records::SpriteObject>()->step_frames = 0;
-        gObjectKinds.turn(object);
+        object_kinds::gObjectKinds.turn(object);
         if (rv::Current<records::SpriteObject>()->state == 0x0A) return;   // no settle, no motion this frame
         rv::Current<records::SpriteObject>()->direction = direction;
     } else {
         rv::Current<records::SpriteObject>()->step_frames = 0;
         rv::Current<records::SpriteObject>()->direction = direction;
     }
-    gObjectKinds.settle(object, direction);
-    gObjectKinds.motion(object);
+    object_kinds::gObjectKinds.settle(object, direction);
+    object_kinds::gObjectKinds.motion(object);
 }
 
 // Entries 0 and 3: a random walk, the second kept inside a home box.
@@ -135,15 +107,15 @@ void Wander(unsigned char* object, bool home) {
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     Pace(object, 0, 1);
     if (rv::Current<records::SpriteObject>()->step_frames != 0) {   // a timed move runs
-        gObjectKinds.motion(object);
+        object_kinds::gObjectKinds.motion(object);
         return;
     }
     const unsigned char speed_index = obj->speed;
     const unsigned char speed = Field_MoveSpeeds[speed_index];
     if (obj->move_steps == 0) {
         if (speed_index != 0 && Pace(object, speed, 2)) {
-            gObjectKinds.random_turn(object);
-            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((gObjectKinds.rand() & 3) + 3);
+            object_kinds::gObjectKinds.random_turn(object);
+            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((object_kinds::gObjectKinds.rand() & 3) + 3);
         }
     } else {
         // Not guarded against speed 0, as the original: Field_Pace0 then
@@ -151,8 +123,8 @@ void Wander(unsigned char* object, bool home) {
         Pace(object, speed, 2);
         --obj->move_steps;
     }
-    const unsigned char turn_to = gObjectKinds.open_direction(object);
-    const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0 && (!home || gObjectKinds.in_home(object));
+    const unsigned char turn_to = object_kinds::gObjectKinds.open_direction(object);
+    const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0 && (!home || object_kinds::gObjectKinds.in_home(object));
     TurnOrCancel(object, direction, turn, turn_to);
 }
 
@@ -164,7 +136,7 @@ void LeaderMove(unsigned char* object, unsigned char (__cdecl* pick)(unsigned ch
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     Pace(object, 0, 1);
     if (rv::Current<records::SpriteObject>()->step_frames != 0) {
-        gObjectKinds.motion(object);
+        object_kinds::gObjectKinds.motion(object);
         return;
     }
     const unsigned char speed_index = obj->speed;
@@ -174,11 +146,11 @@ void LeaderMove(unsigned char* object, unsigned char (__cdecl* pick)(unsigned ch
         if (speed_index == 0) return;
         if (Pace(object, speed, 2)) {
             turn_to = pick(object);
-            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((gObjectKinds.rand() & 3) + 3);
+            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((object_kinds::gObjectKinds.rand() & 3) + 3);
         }
     } else {
         Pace(object, speed, 2);
-        turn_to = gObjectKinds.best(object, farthest);
+        turn_to = object_kinds::gObjectKinds.best(object, farthest);
         --obj->move_steps;
     }
     const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0;
@@ -192,7 +164,7 @@ int TintSum(const unsigned char* r) {   // signed bytes, as the original's movsx
     return static_cast<signed char>(r[4]) + static_cast<signed char>(r[3]) + static_cast<signed char>(r[2]);
 }
 void FadeOutStart() {
-    const unsigned char index = gObjectKinds.set_tint(Sprite_Current, 0x1F, 0x1F, 0x1F, 1);
+    const unsigned char index = object_kinds::gObjectKinds.set_tint(Sprite_Current, 0x1F, 0x1F, 0x1F, 1);
     Field_ActiveMember[0x9F] = index;
     rv::Current<records::SpriteObject>()->flags &= 0xBF;
     Sprite_Current[4] = 1;
@@ -205,13 +177,13 @@ void FadeOutStep() {
     }
     const unsigned char index = member[0x9F];
     if (TintSum(TintRecordObjectKinds(index)) != 0) return;
-    gObjectKinds.tint_release(index);
+    object_kinds::gObjectKinds.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFD;   // context bit 1, which chose this pose
     rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     Sprite_Current[4] = 0;
 }
 void FadeInStart() {
-    const unsigned char index = gObjectKinds.set_tint(Sprite_Current, 0, 0, 0, 1);
+    const unsigned char index = object_kinds::gObjectKinds.set_tint(Sprite_Current, 0, 0, 0, 1);
     Field_ActiveMember[0x9F] = index;
     Sprite_Current[4] = 1;
 }
@@ -223,7 +195,7 @@ void FadeInStep() {
     }
     const unsigned char index = member[0x9F];
     if (TintSum(TintRecordObjectKinds(index)) != 0x5D) return;
-    gObjectKinds.tint_release(index);
+    object_kinds::gObjectKinds.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFB;   // context bit 2
     rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     Sprite_Current[4] = 0;
@@ -253,10 +225,10 @@ unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags,
 extern "C" void __cdecl Field_ObjectWander(unsigned char* object) { Wander(object, false); }
 
 // original 0x517790, entry 1 (PSX FUN_801A1D04): away from the leader.
-extern "C" void __cdecl Field_ObjectFlee(unsigned char* object) { LeaderMove(object, gObjectKinds.flee, 1); }
+extern "C" void __cdecl Field_ObjectFlee(unsigned char* object) { LeaderMove(object, object_kinds::gObjectKinds.flee, 1); }
 
 // original 0x517900, entry 2 (PSX FUN_801A1F2C): toward the leader.
-extern "C" void __cdecl Field_ObjectChase(unsigned char* object) { LeaderMove(object, gObjectKinds.chase, 0); }
+extern "C" void __cdecl Field_ObjectChase(unsigned char* object) { LeaderMove(object, object_kinds::gObjectKinds.chase, 0); }
 
 // original 0x517A70, entry 3 (PSX FUN_801A2154): a random walk inside the
 // home box object +0x8E / +0x92, half-widths +0x98 / +0x9A.
@@ -325,13 +297,13 @@ extern "C" void __cdecl Field_ObjectTurn(unsigned char* object) {
     const unsigned char facing = rv::Current<records::SpriteObject>()->direction;
     if (target == facing) {
         rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
-        if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && gObjectKinds.blocked_ahead(object)) {
+        if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && object_kinds::gObjectKinds.blocked_ahead(object)) {
             rv::Current<records::SpriteObject>()->direction &= 7;
             Sprite_Current[0xA] = 0;
             return;
         }
         unsigned char* const context = object + 0x80;
-        gObjectKinds.move(context, rv::Current<records::SpriteObject>()->direction);   // the whole byte, bit 3 and all
+        object_kinds::gObjectKinds.move(context, rv::Current<records::SpriteObject>()->direction);   // the whole byte, bit 3 and all
         rv::Current<records::SpriteObject>()->direction |= 8;
         context[0] |= 8;
         Sprite_Current[0xA] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames >> 1);
@@ -381,7 +353,7 @@ extern "C" unsigned char __cdecl Field_ObjectOpenDirection(unsigned char* object
     const unsigned char entry = rv::Current<records::SpriteObject>()->direction & 7;
     unsigned char turns = 0;
     do {
-        if (!gObjectKinds.blocked_ahead(object)) break;
+        if (!object_kinds::gObjectKinds.blocked_ahead(object)) break;
         rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>((rv::Current<records::SpriteObject>()->direction + 2) & 7);
         ++turns;
     } while (turns < 4);
@@ -394,7 +366,7 @@ extern "C" unsigned char __cdecl Field_ObjectOpenDirection(unsigned char* object
 // pushes 0x80 for Rand, which takes nothing.
 extern "C" unsigned char __cdecl Field_ObjectRandomTurn(unsigned char* object) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    const auto direction = static_cast<unsigned char>((gObjectKinds.rand() & 6) | 1);
+    const auto direction = static_cast<unsigned char>((object_kinds::gObjectKinds.rand() & 6) | 1);
     if ((rv::Current<records::SpriteObject>()->direction & 7) == direction) return rv::Current<records::SpriteObject>()->direction;
     rv::Current<records::SpriteObject>()->direction = direction;
     obj->context |= 8;
@@ -430,7 +402,7 @@ extern "C" void __cdecl Field_ObjectLinked() {
         call = sprite[6] == 4 || (Field_ActiveMember[0xA0] & 0x7F) != 0x7F;
     }
     if (call) {
-        gObjectKinds.area_handler(ObjTrio[0].char_id);
+        object_kinds::gObjectKinds.area_handler(ObjTrio[0].char_id);
         return;
     }
     Field_ActiveMember[0x80] &= 0xFE;
@@ -445,14 +417,14 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
     obj->counter = 0;
     if (speed_index == 0) return;
     if (rv::Current<records::SpriteObject>()->state == 6 || rv::Current<records::SpriteObject>()->state == 4 || Sprite_Current[3] == 4) return;
-    gObjectKinds.pace0(object, Field_MoveSpeeds[speed_index], 2);
+    object_kinds::gObjectKinds.pace0(object, Field_MoveSpeeds[speed_index], 2);
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     unsigned char n = 0;
     for (; n < 4; ++n) {
         rv::Current<records::SpriteObject>()->direction = move_script::At(::bof3::Img(kAsideRows))[n + (ObjTrio[0].direction & 7) * 4u];
-        if (gObjectKinds.blocked_ahead(object)) continue;
+        if (object_kinds::gObjectKinds.blocked_ahead(object)) continue;
         if (rv::Current<records::SpriteObject>()->state == 3 || Sprite_Current[3] == 3) {
-            if (gObjectKinds.in_home(object)) break;
+            if (object_kinds::gObjectKinds.in_home(object)) break;
             continue;
         }
         break;
@@ -473,7 +445,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
         rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     }
     unsigned char* const context = object + 0x80;
-    gObjectKinds.move(context, rv::Current<records::SpriteObject>()->direction);
+    object_kinds::gObjectKinds.move(context, rv::Current<records::SpriteObject>()->direction);
     rv::Current<records::SpriteObject>()->direction |= 8;
     if (!(rv::Current<records::SpriteObject>()->flags2 & 8)) context[0] |= 8;
 }
@@ -483,7 +455,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
 extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
     auto* const obj = rv::As<records::SpriteObject>(object);
     if (Field_Request == 2) return;
-    if (obj->trigger != 0xFF) gObjectKinds.trigger(object);
+    if (obj->trigger != 0xFF) object_kinds::gObjectKinds.trigger(object);
     if (Field_Request == 2) return;
     unsigned char* const sprite = Sprite_Current;
     if (sprite[6] == 5) {
@@ -516,12 +488,12 @@ extern "C" unsigned char __cdecl Field_ObjectTalk(unsigned char* context) {
     if (word & 0x8000) {
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
         const auto scripts = static_cast<std::uint32_t>(move_script::Long(descriptor + 4));   // a table of 32-bit places
-        gObjectKinds.event_script(move_script::At(static_cast<std::uint32_t>(move_script::Long(move_script::At(scripts + 4u * (word & 0xFFF))))));
+        object_kinds::gObjectKinds.event_script(move_script::At(static_cast<std::uint32_t>(move_script::Long(move_script::At(scripts + 4u * (word & 0xFFF))))));
     }
     const std::uint16_t now = move_script::Word(context + 8);
     if (!(now & 0x8000)) {
-        if (now & 0x2000) gObjectKinds.msg_system(now & 0xFFFu);
-        else gObjectKinds.msg_script(now);
+        if (now & 0x2000) object_kinds::gObjectKinds.msg_system(now & 0xFFFu);
+        else object_kinds::gObjectKinds.msg_script(now);
         Field_Request = 2;
     }
     move_script::SetWord(context + 8, word);
@@ -599,7 +571,7 @@ unsigned char __cdecl StubPace(unsigned char* o, unsigned speed, unsigned flags)
     Disturb();
     return static_cast<unsigned char>(Hash() % 3 ? 0 : Hash() >> 7 | 1);
 }
-::bof3::CodeSlot<PaceFn> g_pace_stubs[256];
+::bof3::CodeSlot<object_kinds::PaceFn> g_pace_stubs[256];
 
 unsigned char __cdecl StubPace0(unsigned char* o, unsigned speed, unsigned flags) { Record(1, Id(o), speed & 0xFF, flags & 0xFF); Disturb(); return static_cast<unsigned char>(Hash()); }
 int __cdecl StubRand() { Record(2); return static_cast<int>(Hash()); }
@@ -626,8 +598,8 @@ void __cdecl StubMsgScript(unsigned id) { Record(19, id & 0xFFFF); }
 void __cdecl StubMsgSystem(unsigned id) { Record(20, id); }
 
 template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
-CalleesObjectKinds Stubs() {
-    CalleesObjectKinds s{};
+object_kinds::CalleesObjectKinds Stubs() {
+    object_kinds::CalleesObjectKinds s{};
     s.pace = g_pace_stubs;
     s.pace0 = StubPace0;
     s.rand = StubRand;
@@ -912,7 +884,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     const unsigned char* const* const scripts = g_scripts;
     std::memcpy(g_descriptor + 4, &scripts, sizeof scripts);
     for (unsigned i = 0; i < 0x1000; ++i) g_scripts[i] = At(0x20000u + i * 0x10u);
-    gObjectKinds = Stubs();
+    object_kinds::gObjectKinds = Stubs();
 
     unsigned bad = 0, calls = 0, per[kCount] = {};
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -947,7 +919,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      object_kinds self-test MISMATCH: round %u, %s, log %u / %u, result 0x%X / 0x%X", round, kClones[k].name,
                       their_out.log_n, our_out.log_n, (unsigned)their_out.result, (unsigned)our_out.result);
     }
-    gObjectKinds = OriginalsObjectKinds();
+    object_kinds::gObjectKinds = OriginalsObjectKinds();
     Apply(saved);
     g_current_object = saved_object;
     bof3::Log("shadow      object_kinds self-test: %u rounds (%u per function, %u functions), %u calls to the stand-ins, %u MISMATCHES; "
@@ -958,7 +930,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
 
 template <int... K>
 void FillPaceStubs(std::integer_sequence<int, K...>) {
-    const PaceFn eight[] = {&StubPace<K>...};
+    const object_kinds::PaceFn eight[] = {&StubPace<K>...};
     for (unsigned i = 0; i < 256; ++i) g_pace_stubs[i] = eight[i % 8];
 }
 

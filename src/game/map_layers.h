@@ -16,6 +16,7 @@ class SnapshotReader;
 }  // namespace bof3
 
 namespace map_layers {
+extern bool g_side_dup;   // defined in map_layers.cpp (source-layout B0: promoted for a moved reader)
 extern unsigned char g_file_sides[256*256];   // defined in map_layers.cpp (source-layout B0: promoted for a moved reader)
 extern bool g_side_zero_release;   // defined in map_layers.cpp (source-layout B0: promoted for a moved reader)
 

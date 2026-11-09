@@ -120,28 +120,28 @@ void WalkDatFile(const char* path);
 // DIV-0086's.
 namespace dat_load { bool g_lang_cached; }
 namespace dat_load { bool g_opt_cached[kOptMax]; }
-namespace {
+
 // The file layer the walk reads through and the install's overlay test: the
 // game's - File_Open .. Crt_free and GetFileAttributesA, the calls the
 // original makes - unless the DIV-0089 self-test stands them in, as it does
 // the chunks' handler.
-dat_cache::Io g_io = dat_cache::GameIo();
+namespace dat_load { dat_cache::Io g_io = dat_cache::GameIo(); }  namespace {
 bool InstallHas(const char* path) { return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES; }
-bool (*g_install_has)(const char*) = InstallHas;
+}  namespace dat_load { bool (*g_install_has)(const char*) = InstallHas; }  namespace {
 void TakeChunk(void* ctx, const ChunkHeader& h, std::uint8_t* payload);
 }  namespace dat_load { dat_cache::ChunkFn g_take = TakeChunk; }
-namespace {
+
 // One overlay of DAT\<name>, `kind` "loc" (DIV-0005) or "opt" (DIV-0086), by
 // DIV-0089's precedence (dat_cache::PickOverlay): when armed and the cache has
 // the layer, the cache's file or none; otherwise `install`, the install's
 // DAT\<layer>.<name>, when it exists - the original's test.
-void WalkOverlay(const char* kind, const char* layer, bool cached, const char* name, const char* install) {
+namespace dat_load { void WalkOverlay(const char* kind, const char* layer, bool cached, const char* name, const char* install) {
     static char cache[MAX_PATH];  // static: the 16 KB coroutine stack
     const bool armed = dat_cache::Armed();
     bool has = false;
     if (armed && cached) {
         dat_cache::LayerPath(cache, sizeof cache, kind, layer, name);
-        has = g_io.exists(cache);
+        has = dat_load::g_io.exists(cache);
     }
     switch (dat_cache::PickOverlay(armed, cached, has)) {
     case dat_cache::From::kCache:
@@ -150,11 +150,11 @@ void WalkOverlay(const char* kind, const char* layer, bool cached, const char* n
     case dat_cache::From::kNone:
         break;
     case dat_cache::From::kInstall:
-        if (g_install_has(install)) WalkDatFile(install);
+        if (dat_load::g_install_has(install)) WalkDatFile(install);
         break;
     }
-}
-}  // namespace
+} }
+
 // Set by the walk when a kind-0 chunk lands on the area block (tag 0xC8000,
 // AreaMap_Header); LoadDatFile then snapshots its side faces (DIV-0085).
 namespace dat_load { bool g_area_block_loaded; }
@@ -171,8 +171,8 @@ namespace dat_load { bool g_walking_opt_layer; }
 namespace dat_load { bool g_datlog; }
 namespace dat_load { const void* g_datlog_caller; }
 namespace dat_load { int g_datlog_index = -1; }
-namespace {
-void DatLog(const char* from, const char* path) {
+
+namespace dat_load { void DatLog(const char* from, const char* path) {
     static char module[MAX_PATH];  // static: the 16 KB coroutine stack
     const char* base = "?";
     auto at = reinterpret_cast<std::uintptr_t>(dat_load::g_datlog_caller);
@@ -189,9 +189,9 @@ void DatLog(const char* from, const char* path) {
               static_cast<unsigned>(Frame_Counter), static_cast<unsigned>(Game_AreaNumber),
               static_cast<unsigned>(Game_Mode), static_cast<unsigned>(dat_load::g_datlog_index), from, path,
               static_cast<unsigned>(at), base, static_cast<unsigned>(off));
-}
+} }
 
-}  // namespace
+
 
 // original 0x454590. Reads DAT\<name> whole and walks its chunks.
 //
@@ -236,12 +236,12 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
     if (dat_load::g_datlog) {
         dat_load::g_datlog_caller = __builtin_return_address(0);
         dat_load::g_datlog_index = file_index;
-        if (!name) DatLog("none", "(no name: returns)");
+        if (!name) dat_load::DatLog("none", "(no name: returns)");
     }
     if (!name) return;
 
     if (dat_cache::WalkShipped(name, dat_load::g_take, nullptr)) {  // DIV-0089: the cache's when it holds it whole
-        if (dat_load::g_datlog) DatLog("cache", name);
+        if (dat_load::g_datlog) dat_load::DatLog("cache", name);
     } else {
         char path[0x28];
         Crt_sprintf(path, "DAT\\%s", name);
@@ -251,7 +251,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
     if (dat_load::g_lang[0] && std::strlen(name) < 0x20) {  // DIV-0005
         char overlay[0x30];
         Crt_sprintf(overlay, "DAT\\%s.%s", dat_load::g_lang, name);
-        WalkOverlay("loc", dat_load::g_lang, dat_load::g_lang_cached, name, overlay);  // DIV-0089
+        dat_load::WalkOverlay("loc", dat_load::g_lang, dat_load::g_lang_cached, name, overlay);  // DIV-0089
     }
     for (int i = 0; i < dat_load::g_opt_count; ++i) {  // DIV-0086
         char layer[kOptPath];
@@ -260,7 +260,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
                         static_cast<unsigned>(sizeof layer));
         Crt_sprintf(layer, "DAT\\%s.%s", dat_load::g_opt[i], name);
         dat_load::g_walking_opt_layer = true;   // the reading row's kind 18 may arrive (ReadingRowTake)
-        WalkOverlay("opt", dat_load::g_opt[i], dat_load::g_opt_cached[i], name, layer);  // DIV-0089
+        dat_load::WalkOverlay("opt", dat_load::g_opt[i], dat_load::g_opt_cached[i], name, layer);  // DIV-0089
         dat_load::g_walking_opt_layer = false;
     }
     if (dat_load::g_area_block_loaded) {
@@ -326,7 +326,7 @@ void DatLoad_OptLayerChunks(const char* name, dat_cache::ChunkFn fn) {
             bof3::Fatal("DIV-0086: DAT\\%s.%s does not fit the 0x%X-byte path buffer", dat_load::g_opt[i], name,
                         static_cast<unsigned>(sizeof layer));
         Crt_sprintf(layer, "DAT\\%s.%s", dat_load::g_opt[i], name);
-        WalkOverlay("opt", dat_load::g_opt[i], dat_load::g_opt_cached[i], name, layer);
+        dat_load::WalkOverlay("opt", dat_load::g_opt[i], dat_load::g_opt_cached[i], name, layer);
     }
     dat_load::g_take = was;
 }
@@ -334,14 +334,14 @@ void DatLoad_OptLayerChunks(const char* name, dat_cache::ChunkFn fn) {
 namespace {
 
 void WalkDatFile(const char* path) {
-    const int handle = g_io.open(path, 0, 0);
+    const int handle = dat_load::g_io.open(path, 0, 0);
     if (handle == -1) return;
-    if (dat_load::g_datlog) DatLog("file", path);
+    if (dat_load::g_datlog) dat_load::DatLog("file", path);
 
-    const int file_size = g_io.size(handle);
-    auto* file = static_cast<std::uint8_t*>(g_io.malloc(file_size));
-    g_io.read(handle, file, file_size);
-    g_io.close(handle);
+    const int file_size = dat_load::g_io.size(handle);
+    auto* file = static_cast<std::uint8_t*>(dat_load::g_io.malloc(file_size));
+    dat_load::g_io.read(handle, file, file_size);
+    dat_load::g_io.close(handle);
 
     for (int off = 0; off < file_size;) {
         ChunkHeader h;
@@ -349,7 +349,7 @@ void WalkDatFile(const char* path) {
         dat_load::g_take(nullptr, h, file + off + sizeof h);
         off += h.size + static_cast<int>(sizeof h);
     }
-    g_io.free(file);
+    dat_load::g_io.free(file);
 }
 
 // --- The reading row's side chunks (kind 18; docs/reading-row.md 1.1 and 3) ---
@@ -760,8 +760,8 @@ void CacheSelfTest() {
     const bool lang_cached = dat_load::g_lang_cached;
     bool opt_cached[kOptMax];
     std::memcpy(opt_cached, dat_load::g_opt_cached, sizeof opt_cached);
-    const dat_cache::Io saved_io = g_io;
-    const auto saved_has = g_install_has;
+    const dat_cache::Io saved_io = dat_load::g_io;
+    const auto saved_has = dat_load::g_install_has;
     const dat_cache::ChunkFn saved_take = dat_load::g_take;
 
     std::strcpy(dat_load::g_lang, "xx-TEST");
@@ -771,8 +771,8 @@ void CacheSelfTest() {
     dat_load::g_lang_cached = dat_cache::HasLayer("loc", dat_load::g_lang);
     dat_load::g_opt_cached[0] = dat_cache::HasLayer("opt", "lay-a");
     dat_load::g_opt_cached[1] = dat_cache::HasLayer("opt", "lay-b");
-    g_io = io;
-    g_install_has = io.exists;
+    dat_load::g_io = io;
+    dat_load::g_install_has = io.exists;
     dat_load::g_take = RecordChunk;
     std::vector<Walked> walked;
     g_walked = &walked;
@@ -818,8 +818,8 @@ void CacheSelfTest() {
     dat_load::g_opt_count = opt_count;
     dat_load::g_lang_cached = lang_cached;
     std::memcpy(dat_load::g_opt_cached, opt_cached, sizeof opt_cached);
-    g_io = saved_io;
-    g_install_has = saved_has;
+    dat_load::g_io = saved_io;
+    dat_load::g_install_has = saved_has;
     dat_load::g_take = saved_take;
     g_walked = nullptr;
     dat_cache::TestEnd();

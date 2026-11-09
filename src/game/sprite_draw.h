@@ -3,6 +3,8 @@
 // SpriteCell_Reset 0x5A6780 (docs/sprite-draw-order.md section 14).
 #pragma once
 
+#include <cstdint>
+
 // Must run before PsxGpu_Inject and DrawEmit_Inject: see the .cpp.
 void SpriteDraw_Inject();
 
@@ -12,5 +14,13 @@ void SpriteDraw_Inject();
 void SpriteCapture_ClearSlot(int x, int y, int w, int h);
 
 namespace sprite_draw {
+void Capture(unsigned char* object);   // defined in sprite_draw.cpp (source-layout B0: promoted, one definition)
 extern void(__cdecl* g_draw_clone)();   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern unsigned g_capture_logged;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern int g_draw_columns;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern int g_flag_columns;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint16_t g_canvas[0x140][0x140];   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+extern unsigned long g_tails[8];   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
+struct State;   // the self-test's snapshot, defined in sprite_draw.cpp (its size needs the file's constants)
+extern State g_live;   // defined in sprite_draw.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sprite_draw

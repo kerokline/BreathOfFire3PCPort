@@ -9,6 +9,7 @@
 void FieldFrame_Inject();
 
 namespace field_frame {
+extern int g_band_fill;   // defined in field_frame.cpp (source-layout B0: promoted for a moved reader)
 // moved from field_frame.cpp with the state that has the type (source-layout B0)
 // DIVERGENCE DIV-0041 (ultrawide round, group UC2, docs/ultrawide-culls-fix.md
 // section 2): a type-0x0A sprite in the wide picture's bands. Sprite_ProjectA

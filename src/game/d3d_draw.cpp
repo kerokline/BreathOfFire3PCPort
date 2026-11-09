@@ -526,11 +526,11 @@ namespace {
 std::uint8_t g_cell_vram = 0;   // 1 through PatchBytes("CellTextureVram") in D3dDraw_Inject
 }  // namespace
 namespace d3d_draw { CellFoot g_cell_foot[128]; }  namespace {
-bool PoseLogOn() {
+}  namespace d3d_draw { bool PoseLogOn() {
     static int on = -1;
     if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
     return on == 1;
-}
+} }  namespace {
 void NoteCellFoot(d3d_draw::U slot, unsigned first, unsigned count) {
     if (slot >= 128) return;
     CellFoot f{0, 0, 0, 0, 0};
@@ -550,7 +550,7 @@ void NoteCellFoot(d3d_draw::U slot, unsigned first, unsigned count) {
         if (y1 > f.y1) f.y1 = y1;
     }
     d3d_draw::g_cell_foot[slot] = f;
-    if (PoseLogOn() && f.valid)
+    if (d3d_draw::PoseLogOn() && f.valid)
         bof3::Log("poselog     frame %lu cell build entry %u cells %u..+%u foot %d,%d..%d,%d", static_cast<unsigned long>(Frame_Counter),
                   static_cast<unsigned>(slot), first, count, f.x0, f.y0, f.x1, f.y1);
 }
@@ -564,7 +564,7 @@ void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
         if (!f.valid) continue;
         if (f.x1 < x || f.x0 > x1 || f.y1 < y || f.y0 > y1) continue;
         if (Long(At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry)) != 0) {
-            if (PoseLogOn())
+            if (d3d_draw::PoseLogOn())
                 bof3::Log("poselog     frame %lu cell free entry %u (upload %d,%d %dx%d over foot %d,%d..%d,%d)", static_cast<unsigned long>(Frame_Counter),
                           static_cast<unsigned>(i), x, y, w, h, f.x0, f.y0, f.x1, f.y1);
             D3d_FreeCellTexture(static_cast<int>(i));

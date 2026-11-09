@@ -32,6 +32,10 @@ const unsigned char* DatLoad_ReadingRow(std::uint32_t tag, std::uint32_t half, s
 bool DatLoad_ReadingRowHolds(const unsigned char* p);
 
 namespace dat_load {
+void WalkOverlay(const char* kind, const char* layer, bool cached, const char* name, const char* install);   // defined in dat_load.cpp (source-layout B0: promoted, one definition)
+void DatLog(const char* from, const char* path);   // defined in dat_load.cpp (source-layout B0: promoted, one definition)
+extern dat_cache::Io g_io;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
+extern bool (* g_install_has)(const char*);   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
 extern char g_lang[8];   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
 extern char g_opt[16][24];   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)
 extern int g_opt_count;   // defined in dat_load.cpp (source-layout B0: promoted for a moved reader)

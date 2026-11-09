@@ -4,4 +4,6 @@
 // helpers only they use. docs/object-kinds.md.
 #pragma once
 
+#include "game/object_kinds_callees.h"
+
 void ObjectKinds_Inject();

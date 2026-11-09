@@ -39,9 +39,9 @@ std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x
 
 // x86 shr takes its count modulo 32; say so rather than leave it to the compiler.
 std::uint32_t Shr(std::uint32_t v, std::uint32_t count) { return v >> (count & 31); }
-
-bool g_stp_test = false;   // the self-test's: DIV-0160's rule without the backend
-
+}  // namespace
+namespace gfx_clut { bool g_stp_test = false; }   // the self-test's: DIV-0160's rule without the backend
+namespace {
 }  // namespace
 
 // original 0x59EBB0. Converts w cells of VRAM row y, from x, into the row's
@@ -66,7 +66,7 @@ extern "C" void __cdecl Gfx_ConvertRow(int x, int y, int w) {
     const PixelFormat& f = FormatGfxClut();
     auto* out = static_cast<std::uint8_t*>(row.pixels) + (x << (f.bytes_per_pixel >> 1));
     const std::uint16_t* src = ShadowCell(x, y);
-    const bool stp = g_stp_test || render::StpTexels();   // DIV-0160
+    const bool stp = gfx_clut::g_stp_test || render::StpTexels();   // DIV-0160
     for (int n = 0; n < w; ++n) {
         const std::uint32_t v = src[n];
         std::uint32_t p = (Shr((v & 0x3E0) << 14, f.g_shift) & f.g_mask) |
@@ -234,9 +234,9 @@ void SelfTest(ConvertRowFn their_convert, LoadFn their_load, ClutFn their_clut) 
         for (int pass = 0; pass < 2; ++pass) {
             PutState(y0);
             std::memcpy(ShadowCell(0, y0), g_shadow_in[0], sizeof g_shadow_in[0]);
-            g_stp_test = pass == 1;
+            gfx_clut::g_stp_test = pass == 1;
             (pass ? &Gfx_ConvertRow : their_convert)(x, y0, w);
-            g_stp_test = false;
+            gfx_clut::g_stp_test = false;
             if (pass == 0) std::memcpy(g_buffers_theirs[0], g_buffers[0], sizeof g_buffers_theirs[0]);
         }
         const unsigned bpp = format->bytes_per_pixel;

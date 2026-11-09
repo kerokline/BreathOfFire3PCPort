@@ -20,3 +20,7 @@ void MsgPool_Inject();
 // pool's buffer and its size, or null while the pool is the arena's (inside
 // the span, copied with it).
 std::uint8_t* MsgPool_Moved(std::uint32_t* bytes);
+
+namespace msg_pool {
+extern std::uint8_t* g_pool;   // defined in msg_pool.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace msg_pool
