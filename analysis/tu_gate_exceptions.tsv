@@ -90,3 +90,10 @@ Field_ObjectSettle	x64-indirect	B0 promotion of field_objects.cpp's Callees g se
 Field_ObjectUpdate	x64-indirect	B0 promotion of field_objects.cpp's Callees g seam: DIFFER Field_ObjectUpdate  first at instruction 14: 'jne .+1B2' -> 'jne .+1B8'	
 MoveCmd_AttachOffset	x64-indirect	B0 promotion of field_objects.cpp's Callees g seam: DIFFER MoveCmd_AttachOffset  first at instruction 8: 'call @r4:Gte_PushMatrix' -> 'call qword ptr [rip + 0x60] @r4:_ZN13field_objects1gE'	
 _ZN13field_objects1gE	x64-indirect	B0 promotion of field_objects.cpp's Callees g seam: NEW _ZN13field_objects1gE  (data)	
+GameMode_Field	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER GameMode_Field  first at instruction 3: 'call @r4:Field_ModeDispatch' -> 'call qword ptr [rip + 0x88] @r4:_ZN10mode_tasks1gE'	
+Title_CheckStart	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_CheckStart  first at instruction 8: 'je .+A4' -> 'je .+A8'	
+Title_DrawBackdrop	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_DrawBackdrop  first at instruction 6: 'push rbp' -> 'push rbx'	
+Title_DrawLogo	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_DrawLogo  first at instruction 42: 'jge .+11E' -> 'jge .+125'	
+Title_Sprite	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_Sprite  first at instruction 18: 'call @r4:Gpu_SetSprt' -> 'call qword ptr [rip + 0x60] @r4:_ZN10mode_tasks1gE'	
+Title_Task	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: DIFFER Title_Task  first at instruction 9: 'call @r4:Task_ClearPrivate' -> 'call qword ptr [rip] @r4:_ZN10mode_tasks1gE'	
+_ZN10mode_tasks1gE	x64-indirect	B0 promotion of mode_tasks.cpp's Callees g seam: NEW _ZN10mode_tasks1gE  (data)	
