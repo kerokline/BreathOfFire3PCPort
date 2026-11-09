@@ -55,6 +55,7 @@ The assumption under all of these - a unit's functions are contiguous in
     python tools/tu_census.py --exe bof3/BOF3.exe            # write the TSV and the sheet
     python tools/tu_census.py --exe bof3/BOF3.exe --report   # the measurements
     python tools/tu_census.py --check                        # CI: the TSV covers every impl function
+                                                             # (impl the row's, or moved: its proposed file)
 
 `--check` reads only `symbols.toml` and the TSV (no game file), so CI can run
 it. The facts read out of the binary are cached in
@@ -1165,12 +1166,13 @@ def check(tsv, symbols):
             bad.append(f'{pc:#x} {f["name"]} ({f["impl"]}) has no row')
         elif r['name'] != f['name']:
             bad.append(f'{pc:#x} row names {r["name"]}, symbols.toml {f["name"]}')
-        elif r['impl'] != f['impl']:
+        elif f['impl'] not in (r['impl'], r['proposed_file']):
+            # a stage B move puts the function in its proposed file; the row's impl keeps where it was
             bad.append(f'{pc:#x} {f["name"]}: row impl {r["impl"]}, symbols.toml {f["impl"]} (rerun the tool)')
     for pc in have:
         if pc not in want:
             bad.append(f'{pc:#x} {have[pc]["name"]} has a row but no impl in symbols.toml')
-    moved = sum(1 for pc, r in have.items() if pc in want and r['proposed_file'] != r['impl'])
+    moved = sum(1 for pc, r in have.items() if pc in want and r['proposed_file'] != want[pc]['impl'])
     for b in bad[:40]:
         print('tu_census --check:', b)
     if bad:

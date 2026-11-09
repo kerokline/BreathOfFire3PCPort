@@ -43,14 +43,16 @@ exactly these tab-separated columns:
   and its uses named in full: only the old name is looked for. Where
   source_file has been moved away, new_name must be defined in one of the
   files the map moved its items into (the old name is not looked for: a
-  target may hold another source's item of that name);
+  target may hold another source's item of that name). A source still in the
+  tree may have sent the renamed item on with its functions: new_name is then
+  found in one of those files;
 - kind state, global and macro are decisions: shape only;
 - for kind qualify - a name two sources' `using namespace` lines would make
   ambiguous in a target, written qualified in the source's bodies (the
   qualification pass, the round's 7b item 11) - new_name is `ns::old_name`,
   target_file and other_source (the other namespaces, comma-separated) are
-  given, and new_name is named in source_file's code (or, the file moved
-  away, in one of the files it moved into).
+  given, and new_name is named in source_file's code or in one of the files
+  the map moved its items into (a stage B move takes the uses with the bodies).
 
 --fill: each row with an empty commit gets the first commit on the current
 branch that changed the number of `new_name`s in source_file
@@ -215,8 +217,11 @@ def check(path: Path) -> int:
                 # `ns::name`: a using-declaration dropped and its uses named in full; defined elsewhere
                 # a seam's struct promoted in B0 lives in the source's own <stem>_callees.h
                 seam = src[:-len(".cpp")] + "_callees.h" if src.endswith(".cpp") else ""
+                # a stage B move may have sent the item on to the files src's functions went to
+                moved_to = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
                 if "::" not in r["new_name"] and r["new_name"] not in defined_names(src) and not (
-                        seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)):
+                        seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)) and not any(
+                        r["new_name"] in defined_names(p) for p in moved_to):
                     bad.append(f"{r['new_name']} is not defined in {src}")
             else:
                 homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
@@ -224,7 +229,8 @@ def check(path: Path) -> int:
                     bad.append(f"{r['new_name']} is defined in none of the files {src} moved into "
                                f"({', '.join(homes) or 'none in the tree'})")
         if not bad and r["kind"] == "qualify":
-            homes = [src] if exists else sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+            # the qualified uses may have moved on with src's functions (stage B) while src stays
+            homes = ([src] if exists else []) + sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
             if not any(named_in_full(p, r["new_name"]) for p in homes):
                 bad.append(f"{r['new_name']} is not named in {src if exists else ', '.join(homes) or 'the tree'}")
         for b in bad:
