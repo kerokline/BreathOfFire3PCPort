@@ -80,7 +80,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned which) {
     reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
 }
 
-unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * effect_2d::at::kSparkStride; }
+unsigned char* SparkEffect2d(unsigned i) { return EffectKind30_Shards + i * effect_2d::at::kSparkStride; }
 
 }  // namespace
 
@@ -171,13 +171,13 @@ extern "C" void __cdecl EffectKind48_SpawnRing(void) {
 // whose +0x15 is 0, or null.
 extern "C" unsigned char* __cdecl EffectKind48_FindFreeSpark(void) {
     for (unsigned i = 0; i < effect_2d::at::kSparks; ++i)
-        if (Spark(i)[0x15] == 0) return Spark(i);
+        if (SparkEffect2d(i)[0x15] == 0) return SparkEffect2d(i);
     return nullptr;
 }
 
 // original 0x478340: +0x15 of the 16 sparks 0.
 extern "C" void __cdecl EffectKind48_ClearSparks(void) {
-    for (unsigned i = 0; i < effect_2d::at::kSparks; ++i) Spark(i)[0x15] = 0;
+    for (unsigned i = 0; i < effect_2d::at::kSparks; ++i) SparkEffect2d(i)[0x15] = 0;
 }
 
 // original 0x478360: the map camera loaded (EffectGte_LoadMapCamera); each live
@@ -187,7 +187,7 @@ extern "C" unsigned char __cdecl EffectKind48_StepSparks(void) {
     unsigned char any = 0;
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < effect_2d::at::kSparks; ++i) {
-        unsigned char* const spark = Spark(i);
+        unsigned char* const spark = SparkEffect2d(i);
         if (spark[0x15] == 0) continue;
         SH_CALL(EffectKind48_DrawSpark)(spark);
         const U height = UL(spark + 8) + 0x3000u;
