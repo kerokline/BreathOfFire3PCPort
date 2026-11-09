@@ -75,7 +75,7 @@ extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
 #if defined(__i386__)
     __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
 #elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, halt)));
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
 #else
 #error "no callee-table jump for this architecture"
 #endif
@@ -86,7 +86,7 @@ extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
 #if defined(__i386__)
     __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
 #elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, resume)));
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
 #else
 #error "no callee-table jump for this architecture"
 #endif
@@ -99,7 +99,7 @@ extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
 #if defined(__i386__)
     __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
 #elif defined(__x86_64__)
-    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, music_playing)));
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
 #else
 #error "no callee-table jump for this architecture"
 #endif
@@ -116,9 +116,9 @@ extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
 // leaves - a value no one set either way, read only where DirectSound's
 // GetStatus does not write its out (section 3).
 int Sound_PauseAllEax(void) {
-    for (std::uint32_t p = Address(Sound_Channels); p < ::bof3::Img(kChannelsEnd); p += 4) {
-        const std::uint32_t buffer = Dword(p);
-        if (buffer != 0) SoundRest_g.sndbuf_stop(At(buffer));
+    for (std::uint32_t p = sound_rest::Address(Sound_Channels); p < ::bof3::Img(sound_rest::kChannelsEnd); p += 4) {
+        const std::uint32_t buffer = sound_rest::Dword(p);
+        if (buffer != 0) SoundRest_g.sndbuf_stop(sound_rest::At(buffer));
     }
     if (SaveMenu_StreamKind != 0) SoundRest_g.stream_stop();
     return SoundRest_g.halt();
@@ -257,20 +257,20 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
         return kNoDevice;
     }
     void* device = Snd_Device;
-    if (sound::Method<ComCooperate>(device, kSetCooperativeLevel)(device, hwnd, kExclusive) != 0) {
+    if (sound::Method<ComCooperate>(device, sound_rest::kSetCooperativeLevel)(device, hwnd, kExclusive) != 0) {
         Release(Snd_Device);
         Snd_Device = nullptr;
         return kNoCooperation;
     }
     const std::uint32_t desc = Address(Snd_BufferDesc);
-    std::memset(At(desc), 0, 0x24);
+    std::memset(sound_rest::At(desc), 0, 0x24);
     SetDword(desc + 0x00, 0x24);             // dwSize
     SetDword(desc + 0x04, kPrimaryBuffer);   // dwFlags
     SetDword(desc + 0x08, 0);                // dwBufferBytes
     SetDword(desc + 0x0C, 0);                // dwReserved
     SetDword(desc + 0x10, 0);                // lpwfxFormat
     device = Snd_Device;
-    if (sound::Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
+    if (sound::Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, sound_rest::At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
         Release(Snd_Device);
         Snd_Device = nullptr;
         return kNoPrimary;
@@ -284,7 +284,7 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
     SetWord(format + 0x0E, 8);        // wBitsPerSample
     SetWord(format + 0x10, 0);        // cbSize
     void* const primary = Snd_Primary;
-    if (sound::Method<ComFormat>(primary, kSetFormat)(primary, At(format)) != 0) {
+    if (sound::Method<ComFormat>(primary, kSetFormat)(primary, sound_rest::At(format)) != 0) {
         Release(Snd_Device);
         void* const made = Snd_Primary;
         Snd_Device = nullptr;
