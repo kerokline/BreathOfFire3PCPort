@@ -64,8 +64,6 @@ using namespace mode_states;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return Low32(p); }
-
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
 mode_states::Handler Entry(std::uint32_t table, int index) {
@@ -161,40 +159,6 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_Frame(void) {
 // ===========================================================================
 // The message box's system choice
 // ===========================================================================
-
-// original 0x498A30 (PSX 0x80152DB4): the handler of a message-box choice id
-// 0x7DEE64 of 0x80 or more, called by MsgBox_ChoiceCommit and
-// MsgBox_MenuCommit. The original stores sixteen handlers on its stack
-// (MsgBox_SysChoice80..8F, 0x498AD0..0x498D00) and calls [esp + 4 * id -
-// 0x200] unbounded (D22).
-//
-// Ids 0x80..0x8F call their handler. Id 0x90 calls the word above the table:
-// the original's own return address, so the caller's tail runs, returns here
-// and runs again - reproduced exactly when the caller is one of the two
-// commits' original bodies (their tails 0x4981F1 / 0x4983F1 touch no stack
-// but their own return), by calling the return address. Every other id -
-// 0x91 and up call further words of the caller's frame, below 0x80 words
-// below the table - and 0x90 from any other caller (both commits are ours,
-// item_use.cpp, so the frame the original would call into is compiled code
-// of ours) abort (CLAUDE.md rule 4): there is no original frame left to
-// reproduce. docs/mode_states.md section 2.
-extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_SystemChoice(void) {
-    const unsigned id = ItemUse_ChoiceId;
-    if (id - 0x80u < 16u) {
-        mode_states::g.choice[id - 0x80u]();
-        return;
-    }
-    if (id == 0x90) {
-        const std::uint32_t resume = Address(__builtin_return_address(0));
-        if (resume == mode_states::g.tails[0] || resume == mode_states::g.tails[1]) {
-            reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
-            return;
-        }
-        bof3::Fatal("MsgBox_SystemChoice: choice id 0x90 calls its caller's resume point 0x%X, not a commit's tail",
-                    static_cast<unsigned>(resume));
-    }
-    bof3::Fatal("MsgBox_SystemChoice: choice id 0x%X, outside the sixteen-entry table", id);
-}
 
 // ===========================================================================
 // The 8 px UI string draw
@@ -694,7 +658,6 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(vo
 
 void ModeStates_Inject() {
     if (bof3::WantsShadow("mode_states")) mode_states::SelfTest();
-    BOF3_INJECT(MsgBox_SystemChoice);
     BOF3_INJECT(Text_DrawSmall);
     BOF3_INJECT(Field_LoadingFrame);
     BOF3_INJECT(Menu_Frame);

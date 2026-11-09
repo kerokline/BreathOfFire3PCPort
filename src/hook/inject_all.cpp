@@ -101,6 +101,7 @@
 #include "game/glyph_draw.h"
 #include "game/yes_no_layout.h"
 #include "game/item_use.h"
+#include "game/text/msg_box.h"
 #include "game/menu/item_use.h"
 #include "game/sound.h"
 #include "game/sound_rest.h"
@@ -452,6 +453,7 @@ void InjectAll() {
     FileIo_Inject();
     GameClock_Inject();         // DIV-0022: before WinMain first reads the clock
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
+    TextMsgBoxFromMsgPool_Inject();
     ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
     MenuVerbs_Inject();         // likewise
     DatLoad_Inject();
@@ -516,6 +518,7 @@ void InjectAll() {
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
     MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
                                 // dispatch table's immediates too: order does not matter
+    TextMsgBoxFromMsgbox_Inject();
     WindowTask_Inject();        // every call of its clones is re-aimed at a recorder and every
                                 // stack-built table re-aimed in the copy, so order does not matter
     SpritePose_Inject();        // every call of its clones re-aimed at a recorder or at another of its
@@ -534,6 +537,7 @@ void InjectAll() {
     YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
     ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
                                 // four area descriptors swapped: order does not matter
+    TextMsgBoxFromItemUse_Inject();
     MenuItemUse_Inject();
     TitleFromItemUse_Inject();
     Sound_Inject();             // every call of its clones re-aimed at a recorder, its three Win32 import
@@ -563,6 +567,7 @@ void InjectAll() {
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
+    TextMsgBoxFromMenuWindows_Inject();
     DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     WinMain_Inject();           // the window and the frame loop (DIV-0032..0034): no clones, order does not matter
     FmvPlay_Inject();           // the FMVs into the window (DIV-0035): likewise
@@ -647,6 +652,7 @@ void InjectAll() {
     ModeStates_Inject();        // round 8 group DB: every call of its clones re-aimed at a recorder, the system
                                 // choice's stack table re-aimed, three jump tables relocated and four .data
                                 // tables swapped for recorders: order does not matter
+    TextMsgBoxFromModeStates_Inject();
     TransitionFromModeStates_Inject();
     ShopStates2_Inject();       // round 8 group DG: every call of its clones re-aimed at a recorder and its two .data
                                 // dispatch blocks swapped for recorders: order does not matter

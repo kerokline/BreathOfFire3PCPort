@@ -176,92 +176,8 @@ extern "C" unsigned char __cdecl Char_ClearStatus(unsigned id, unsigned mask, un
 // ===========================================================================
 // The message box's two commits
 
-namespace {
-// Choice ids below 0x80 through the area's own table, the rest through
-// MsgBox_SystemChoice. The area descriptor is re-read for each call, as in
-// the original: Game_AreaNumber zero-extended, the id's low byte.
-void CommitChoice() {
-    const unsigned id = ItemUse_ChoiceId;
-    if (id < 0x80) {
-        const unsigned char* const desc = Area_Descriptors[Game_AreaNumber];
-        const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));   // 32-bit code words
-        table[id]();
-    } else {
-        item_use::g.system_choice();
-    }
-}
-}  // namespace
-
-// original 0x4981C0 (PSX 0x80151494): MsgBox_State4's entry 5. After the
-// commit, window 1's state 3; with a message left (0x7DEE48 not 0xFFFF)
-// window 0's state 1 and the next sub-state, else sub-state 7.
-extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
-    CommitChoice();
-    const bool more = item_use::Word(item_use::At(::bof3::Img(item_use::at::kMessage.v))) != 0xFFFF;
-    WindowRecords[1].state = 3;
-    if (more) {
-        const unsigned char sub = ItemUse_SubState;
-        WindowRecords[0].state = 1;
-        ItemUse_ColorHigh = 0;
-        ItemUse_SubState = static_cast<unsigned char>(sub + 1);
-        return;
-    }
-    ItemUse_SubState = 7;
-    ItemUse_ColorHigh = 0;
-}
-
-// original 0x4983C0 (PSX 0x80151838): MsgBox_State5's entry 3.
-extern "C" void __cdecl MsgBox_MenuCommit(void) {
-    CommitChoice();
-    const unsigned char sub = ItemUse_SubState;
-    ItemUse_ColorHigh = 0;
-    WindowRecords[1].state = 3;
-    ItemUse_SubState = static_cast<unsigned char>(sub + 1);
-}
-
 // ===========================================================================
 // The sixteen system choices (MsgBox_SystemChoice's table, ids 0x80..0x8F)
-
-namespace {
-// The message word from the id's pair at 0x658F08 + 4 * k, by the cursor
-// read as s8 (the original's movsx): a cursor outside 0..1 reads the next
-// pair or the one before, as the original does. Returns the cursor.
-int SysMessage(unsigned k) {
-    const int cursor = AreaW0c_ChoiceAnswer;
-    item_use::SetWord(item_use::At(::bof3::Img(item_use::at::kMessage.v)), item_use::Word(item_use::At(::bof3::Img(item_use::at::kSysMessages.v) + 4 * k + 2 * cursor)));
-    return cursor;
-}
-void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
-    const int cursor = SysMessage(k);
-    if (cursor == 0) item_use::At(::bof3::Img(item_use::at::kSysCounter.v))[0] = if0;
-    else if (cursor == 1) item_use::At(::bof3::Img(item_use::at::kSysCounter.v))[0] = if1;
-}
-}  // namespace
-
-// original 0x498AD0: cursor 0 sets the byte 0x929F0B, cursor 1 clears it.
-extern "C" void __cdecl MsgBox_SysChoice80(void) {
-    const int cursor = SysMessage(0);
-    if (cursor == 0) FieldS_Answer = 1;
-    else if (cursor == 1) FieldS_Answer = 0;
-}
-// original 0x498B00, 0x498B30, 0x498B60, 0x498B90: MoveScript variable 3
-// (0x903848) by the cursor.
-extern "C" void __cdecl MsgBox_SysChoice81(void) { SysCounter(1, 0x1E, 0x28); }
-extern "C" void __cdecl MsgBox_SysChoice82(void) { SysCounter(2, 0x1E, 0x32); }
-extern "C" void __cdecl MsgBox_SysChoice83(void) { SysCounter(3, 0x3C, 0x46); }
-extern "C" void __cdecl MsgBox_SysChoice84(void) { SysCounter(4, 0x1E, 0x32); }
-// original 0x498BC0..0x498D00, 0x20 apart: the message word only.
-extern "C" void __cdecl MsgBox_SysChoice85(void) { SysMessage(5); }
-extern "C" void __cdecl MsgBox_SysChoice86(void) { SysMessage(6); }
-extern "C" void __cdecl MsgBox_SysChoice87(void) { SysMessage(7); }
-extern "C" void __cdecl MsgBox_SysChoice88(void) { SysMessage(8); }
-extern "C" void __cdecl MsgBox_SysChoice89(void) { SysMessage(9); }
-extern "C" void __cdecl MsgBox_SysChoice8A(void) { SysMessage(10); }
-extern "C" void __cdecl MsgBox_SysChoice8B(void) { SysMessage(11); }
-extern "C" void __cdecl MsgBox_SysChoice8C(void) { SysMessage(12); }
-extern "C" void __cdecl MsgBox_SysChoice8D(void) { SysMessage(13); }
-extern "C" void __cdecl MsgBox_SysChoice8E(void) { SysMessage(14); }
-extern "C" void __cdecl MsgBox_SysChoice8F(void) { SysMessage(15); }
 
 // ===========================================================================
 // The pad auto-repeat
@@ -276,22 +192,4 @@ void ItemUse_Inject() {
     BOF3_INJECT(Stat_AddCap99);
     BOF3_INJECT(Stat_AddClamped);
     BOF3_INJECT(Char_ClearStatus);
-    BOF3_INJECT(MsgBox_ChoiceCommit);
-    BOF3_INJECT(MsgBox_MenuCommit);
-    BOF3_INJECT(MsgBox_SysChoice80);
-    BOF3_INJECT(MsgBox_SysChoice81);
-    BOF3_INJECT(MsgBox_SysChoice82);
-    BOF3_INJECT(MsgBox_SysChoice83);
-    BOF3_INJECT(MsgBox_SysChoice84);
-    BOF3_INJECT(MsgBox_SysChoice85);
-    BOF3_INJECT(MsgBox_SysChoice86);
-    BOF3_INJECT(MsgBox_SysChoice87);
-    BOF3_INJECT(MsgBox_SysChoice88);
-    BOF3_INJECT(MsgBox_SysChoice89);
-    BOF3_INJECT(MsgBox_SysChoice8A);
-    BOF3_INJECT(MsgBox_SysChoice8B);
-    BOF3_INJECT(MsgBox_SysChoice8C);
-    BOF3_INJECT(MsgBox_SysChoice8D);
-    BOF3_INJECT(MsgBox_SysChoice8E);
-    BOF3_INJECT(MsgBox_SysChoice8F);
 }
