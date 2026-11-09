@@ -80,8 +80,12 @@ def find_now(path: str, name: str):
     fi = items_now(path)
     if fi is None:
         return None
+    ns, _, short = name.rpartition("::")     # a seam's row names it `<group>::g`
     for it in fi.leaves():
-        if name in it.names or "/".join(it.names) == name:
+        if ns:
+            if short in it.names and it.ns == (ns,):
+                return it.code_line, it
+        elif name in it.names or "/".join(it.names) == name:
             return it.code_line, it
     return None
 
@@ -128,6 +132,8 @@ class Lookup:
                 return True, f"{path} is gone; its items went to " + ", ".join(sorted({r["new_path"] for r in rows}))
             if path in self.retired:
                 return True, f"{path} is gone: a shell stage C retired, nothing of Capcom's left in it"
+            if path.endswith(".h") and path[:-2] + ".cpp" in self.retired:
+                return True, f"{path} is gone with its shell (stage C): it declared the group's _Inject() and SelfTest() alone"
             return False, "no such file, and no move came from it"
         if not rows:
             if exists:
@@ -148,7 +154,8 @@ class Lookup:
                 return True, (f"local {r['name']}, " + (f"still {stay}" if stay else "gone from it")
                               + f"; copied to {', '.join(copies)}")
             return True, f"{r['kind']} {r['name']}{pc}, now {now}"
-        base = rows[0]["base"]
+        # the tree the citation was written against: the oldest rows' base (a seam's row is stage C's)
+        base = next((r["base"] for r in rows if r["kind"] != "seam"), rows[0]["base"])
         fi = items_at(base, path)
         if fi is None:
             return False, f"git show {base}:{path} failed"
