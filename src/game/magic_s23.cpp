@@ -989,7 +989,7 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
             AddByte(corner + 3, Divide(fall, d1));
             const std::uint32_t k = static_cast<std::uint32_t>(i * 15 + j);
             const unsigned char before = Byte(::bof3::Img(at::kQuakeLift) + k);
-            Mem(::bof3::Img(at::kQuakeLast) + k)[0] = before;
+            Mem(::bof3::Img(magic_s23::at::kQuakeLast) + k)[0] = before;
             Mem(::bof3::Img(at::kQuakeLift) + k)[0] = static_cast<unsigned char>(before + raised);
         }
     }

@@ -348,7 +348,7 @@ MS12_EXPORT void __cdecl Identify_ShowUntilInput(void) {
 // effect-done bit and the task freed.
 MS12_EXPORT void __cdecl Identify_End(void) {
     if (SC()[0xB] != 0x80) return;
-    Mem(::bof3::Img(at::kFlags))[0] |= 4;
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -834,7 +834,7 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
 // bit, the byte 0x90465C 5, the task freed.
 MS12_EXPORT void __cdecl Celerity_End(void) {
     if (SC()[0xB] != 0) return;
-    Mem(::bof3::Img(at::kFlags))[0] |= 4;
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] |= 4;
     Mem(::bof3::Img(ModeFlow_CountdownA_addr))[0] = 5;
     MH_CALL(BattleTask_FreeCurrent)();
 }

@@ -579,7 +579,7 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
     }
     if (I(a) >= 0x20 || I(b) >= 0x1C || I(a) < 0 || I(b) < 0) return a & 0xFFFF0000u;
     const U i = (SarRest3g(a, 1) * 15u) + SarRest3g(b, 1);
-    auto t = [&](U offset) { return static_cast<U>(S8Rest3g(At(::bof3::Img(at::kQuakeLast.v) + offset + i)[0])); };
+    auto t = [&](U offset) { return static_cast<U>(S8Rest3g(At(::bof3::Img(rest_3g::at::kQuakeLast.v) + offset + i)[0])); };
     if (((a | b) & 1) == 0) return (0u - (t(1) + t(0xF))) << 3;
     if ((b & 1) != 0 && (a & 1) == 0) return (0u - (t(0x10) + t(1))) << 3;
     if ((b & 1) == 0 && (a & 1) != 0) return (0u - (t(0x10) + t(0xF))) << 3;

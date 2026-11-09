@@ -766,7 +766,7 @@ S15_EXPORT void __cdecl Foretell_Show(void) {
 // 8 and the tiles drawn.
 S15_EXPORT void __cdecl Foretell_End(void) {
     if (Mem(::bof3::Img(BattleE1_MessageUp_addr))[0] == 0) {
-        Mem(::bof3::Img(at::kFlags))[0] |= 4;
+        Mem(::bof3::Img(magic_harness::at::kFlags))[0] |= 4;
         MH_CALL(BattleTask_FreeCurrent)();
         return;
     }

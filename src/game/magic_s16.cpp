@@ -612,7 +612,7 @@ MS16_EXPORT void __cdecl Magic073_Spawn(void) { SpawnOnActors(k073, 0, 0x26); }
 MS16_EXPORT void __cdecl Magic073_Wait(void) {
     if (Sprite_Current[0xB] != 0) return;
     if (MH_CALL(Magic073_CountReacting)() != 0) return;
-    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(magic_harness::at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -643,10 +643,10 @@ MS16_EXPORT void __cdecl ActorFx_WaitStep4(void) {
 MS16_EXPORT unsigned char __cdecl Magic073_CountReacting(void) {
     unsigned char n = 0;
     for (unsigned char i = 0; i < 8; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(::bof3::Img(Battle_Enemies_addr) + 0x379 + i * at::kEnemyStride)[0] == 6)
+        if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(::bof3::Img(Battle_Enemies_addr) + 0x379 + i * magic_harness::at::kEnemyStride)[0] == 6)
             ++n;
     for (unsigned char i = 0; i < 3; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(::bof3::Img(ObjTrio_addr) + 0x1 + i * at::kPartyStride)[0] == 6) ++n;
+        if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(::bof3::Img(ObjTrio_addr) + 0x1 + i * magic_harness::at::kPartyStride)[0] == 6) ++n;
     return n;
 }
 

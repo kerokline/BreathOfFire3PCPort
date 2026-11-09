@@ -71,7 +71,7 @@ void PutWord(unsigned char* p, U v) {
 }
 
 battle_odds::U BannerCurrent() { return BattleMisc_BannerCurrent; }
-U SpriteCurrent() { return Long(AtBattleOdds(at::Sprite_CurrentAt())); }
+U SpriteCurrent() { return Long(AtBattleOdds(battle_odds::at::Sprite_CurrentAt())); }
 unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
 
 }  // namespace
@@ -200,7 +200,7 @@ extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
 extern "C" unsigned long __cdecl BattleFx_Brighten(void) {
     unsigned char* const s = Sprite();
     for (U k = 2; k <= 4; ++k) {
-        unsigned char* const c = AtBattleOdds(at::TintRecordsAt() + s[0xA] * 12u + k);
+        unsigned char* const c = AtBattleOdds(battle_odds::at::TintRecordsAt() + s[0xA] * 12u + k);
         c[0] = static_cast<unsigned char>(c[0] + 1);
     }
     s[9] = static_cast<unsigned char>(s[9] - 1);

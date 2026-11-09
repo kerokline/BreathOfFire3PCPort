@@ -103,7 +103,7 @@ std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(Low32(p));
 }
 // A task slot by its index, unchecked as the originals index it.
-unsigned char* Task(unsigned index) { return magic_fx_reached::At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
+unsigned char* Task(unsigned index) { return magic_fx_reached::At(::bof3::Img(BattleTask_Slots_addr) + index * magic_fx_reached::at::kTaskStride); }
 unsigned char Byte(std::uint32_t address) { return magic_fx_reached::At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.
@@ -162,7 +162,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Task(void) {
 // writes past the slots); Sprite_Current is read again after each create;
 // the source pointer is read once.
 MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
-    TakePosition(Ptr(::bof3::Img(at::kSource)));
+    TakePosition(Ptr(::bof3::Img(magic_fx_reached::at::kSource)));
     Sprite_Current[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
         const unsigned index = magic_fx_reached::g.task_create(1, 0x16);
@@ -174,7 +174,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
     }
     for (std::uint32_t a = ::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2; a < (::bof3::Img(Gfx_ClutStrip_addr) + 0x3400) + 0x20; a += 2)
         magic_fx_reached::SetWord(magic_fx_reached::At(a), magic_fx_reached::Word(magic_fx_reached::At(a - 0x4000)) | 0x8000u);
-    const unsigned char target = Byte(::bof3::Img(at::kTarget));
+    const unsigned char target = Byte(::bof3::Img(magic_fx_reached::at::kTarget));
     Gfx_ClutStrip[0x1a00] = 0;
     Gfx_ClutStripDirty = 1;
     magic_fx_reached::g.set_target_flags(target, 0x10);
@@ -208,8 +208,8 @@ MFX_EXPORT void __cdecl FxDiscFan_Fade(void) {
         sc = Sprite_Current;
     }
     if (sc[0xB] != 0 || sc[0xA] != 0) return;
-    magic_fx_reached::g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
-    magic_fx_reached::At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(magic_fx_reached::At(::bof3::Img(at::kFlags))[0] | 4);
+    magic_fx_reached::g.set_target_flag40(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
+    magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kFlags))[0] = static_cast<unsigned char>(magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kFlags))[0] | 4);
     magic_fx_reached::g.free_current();
 }
 
@@ -233,9 +233,9 @@ MFX_EXPORT void __cdecl FxRing_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->x;
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->height);
+    tsc->x = rv::As<records::SpriteHead>(Ptr(::bof3::Img(magic_fx_reached::at::kOwner)))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(::bof3::Img(magic_fx_reached::at::kOwner)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(::bof3::Img(magic_fx_reached::at::kOwner)))->height);
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -260,7 +260,7 @@ MFX_EXPORT void __cdecl FxRing_Fade(void) {
     Bump(Sprite_Current[0xA], -3);
     Bump(Sprite_Current[9], -2);
     if (Sprite_Current[9] != 0) return;
-    Bump(Ptr(::bof3::Img(at::kOwner))[0xB], -1);
+    Bump(Ptr(::bof3::Img(magic_fx_reached::at::kOwner))[0xB], -1);
     magic_fx_reached::g.free_current();
 }
 
@@ -315,7 +315,7 @@ int StealMultiplier(int diff) {
 // row is unbounded; the target byte is read again after Rand and after
 // Inventory_Add; Inventory_Add gets a fourth 0 it does not read.
 MFX_EXPORT void __cdecl Steal_Start(void) {
-    TakePosition(Ptr(::bof3::Img(at::kOwner)));
+    TakePosition(Ptr(::bof3::Img(magic_fx_reached::at::kOwner)));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x1E;
     Bump(Sprite_Current[1], 1);
@@ -323,7 +323,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     const unsigned index = g.task_create(1, 0x45);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(index);
-    const unsigned char actor = Byte(::bof3::Img(at::kActor));
+    const unsigned char actor = Byte(::bof3::Img(magic_fx_reached::at::kActor));
     SetLong(t + 0x80, PtrValue(sc));
     {
         const unsigned char* const from = Party(actor);
@@ -334,25 +334,25 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     t[6] = 1;
     t[5] = 0x45;
     Bump(sc[0xB], 1);
-    unsigned char* const owner = Ptr(::bof3::Img(at::kOwner));
+    unsigned char* const owner = Ptr(::bof3::Img(magic_fx_reached::at::kOwner));
     owner[0] = static_cast<unsigned char>(owner[0] | 0x40);
 
-    const unsigned char* enemy = Enemy(Byte(::bof3::Img(at::kTarget)));
-    const int diff = static_cast<int>(Word(Party(Byte(::bof3::Img(at::kActor))) + at::kThiefSpeed)) -
-                     static_cast<int>(Word(enemy + at::kEnemySpeed));
+    const unsigned char* enemy = Enemy(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
+    const int diff = static_cast<int>(Word(Party(Byte(::bof3::Img(magic_fx_reached::at::kActor))) + magic_fx_reached::at::kThiefSpeed)) -
+                     static_cast<int>(Word(enemy + magic_fx_reached::at::kEnemySpeed));
     const int multiplier = StealMultiplier(diff);
-    const int rate = Steal_RateTable[enemy[at::kStealRate]];
+    const int rate = Steal_RateTable[enemy[magic_fx_reached::at::kStealRate]];
     const int r = g.rand();
-    unsigned char* const e = Enemy(Byte(::bof3::Img(at::kTarget)));
+    unsigned char* const e = Enemy(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
     // DIV-0046 (BOF3X_STEAL=1): the mask is 0 when the cheat's patch is in
     // the original's `and eax, 0xFF` at 0x4B5690 - the roll then passes
     // whenever the rate times the multiplier is above 0.
     const std::uint32_t mask = Cheats_PilferRollMask();
     if (static_cast<int>(static_cast<std::uint32_t>(r) & mask) >= static_cast<int>(static_cast<std::uint32_t>(rate) * static_cast<std::uint32_t>(multiplier))) {
-        Sprite_Current[0xA] = e[at::kStealRate] != 0 ? 0x39 : 0x3A;
+        Sprite_Current[0xA] = e[magic_fx_reached::at::kStealRate] != 0 ? 0x39 : 0x3A;
         return;
     }
-    const unsigned item = Word(e + at::kStealItem);
+    const unsigned item = Word(e + magic_fx_reached::at::kStealItem);
     if (item == 0) {
         Sprite_Current[0xA] = 0x3A;
         return;
@@ -363,9 +363,9 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     }
     Sprite_Current[0xA] = 0x38;
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, item);
-    unsigned char* const e2 = Enemy(Byte(::bof3::Img(at::kTarget)));
-    e2[at::kStealRate] = 0;
-    SetWord(e2 + at::kStealItem, 0);
+    unsigned char* const e2 = Enemy(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
+    e2[magic_fx_reached::at::kStealRate] = 0;
+    SetWord(e2 + magic_fx_reached::at::kStealItem, 0);
 }
 
 // original 0x4B5770: the wait for the double (+0xB counts it). When it is
@@ -376,7 +376,7 @@ MFX_EXPORT void __cdecl Steal_Wait(void) {
     if (sc[0xB] != 0) return;
     if (sc[9] == 0x1E) {
         g.set_animation(4, 0);
-        unsigned char* const owner = Ptr(::bof3::Img(at::kOwner));
+        unsigned char* const owner = Ptr(::bof3::Img(magic_fx_reached::at::kOwner));
         owner[0] = static_cast<unsigned char>(owner[0] & 0xBF);
         sc = Sprite_Current;
     }
@@ -443,8 +443,8 @@ MFX_EXPORT void __cdecl StealClone_Run(void) {
 // flag 0x40, the owner's count +0xB down and the phase +2 on.
 MFX_EXPORT void __cdecl StealClone_Finish(void) {
     if (g.script_tick_once() == 0) return;
-    g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
-    Bump(Ptr(::bof3::Img(at::kOwner))[0xB], -1);
+    g.set_target_flag40(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
+    Bump(Ptr(::bof3::Img(magic_fx_reached::at::kOwner))[0xB], -1);
     Bump(Sprite_Current[2], 1);
 }
 
@@ -463,8 +463,8 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
     if (phase >= 6) bof3::Fatal("Sparkle_Task: phase %u, past the six-entry table", phase);
     magic_fx_reached::g.sparkle_task[phase]();
     const std::int32_t saved = static_cast<std::int32_t>(BattleE2_Owner);
-    for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
+    for (unsigned i = 0; i < magic_fx_reached::at::kSparkles; ++i) {
+        unsigned char* const s = magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kSparklePool) + i * magic_fx_reached::at::kSparkleStride);
         if ((s[0] & 1) == 0) continue;
         BattleItems_SparkleCurrent = PtrValue(s);
         BattleE2_Owner = magic_fx_reached::Long(s + 0x28);
@@ -485,14 +485,14 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
 // (0 as it has just set it, unless a callee moves it); Sprite_Current is
 // read again after each call; the loop's bound is re-read each round.
 MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
-    for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
+    for (unsigned i = 0; i < magic_fx_reached::at::kSparkles; ++i) {
+        unsigned char* const s = magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kSparklePool) + i * magic_fx_reached::at::kSparkleStride);
         s[0] = 0;
         s[1] = 0;
         s[2] = 0;
     }
     Sprite_Current[4] = 0;
-    TakePosition(Ptr(::bof3::Img(at::kSource)));
+    TakePosition(Ptr(::bof3::Img(magic_fx_reached::at::kSource)));
     magic_fx_reached::g.update_screen_xy();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -503,7 +503,7 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
         do {
             const unsigned char a = magic_fx_reached::g.sparkle_alloc();
             if (a != 0xFF) {
-                unsigned char* const s = magic_fx_reached::At(::bof3::Img(at::kSparklePool) + a * at::kSparkleStride);
+                unsigned char* const s = magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kSparklePool) + a * magic_fx_reached::at::kSparkleStride);
                 magic_fx_reached::SetLong(s + 0x28, PtrValue(Sprite_Current));
                 s[1] = 0;
                 s[2] = 0;
@@ -533,8 +533,8 @@ MFX_EXPORT void __cdecl Sparkle_End(void) {
     }
     Bump(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
-    magic_fx_reached::g.release_tint(Ptr(::bof3::Img(at::kSource)));
-    magic_fx_reached::g.flash(Byte(::bof3::Img(at::kTarget)));
+    magic_fx_reached::g.release_tint(Ptr(::bof3::Img(magic_fx_reached::at::kSource)));
+    magic_fx_reached::g.flash(Byte(::bof3::Img(magic_fx_reached::at::kTarget)));
     Bump(Sprite_Current[1], 1);
 }
 
@@ -553,16 +553,16 @@ MFX_EXPORT void __cdecl Sparkle_End(void) {
 // As the original has it: the rays' arguments are pushed with stale upper
 // halves (their callees read the low words).
 MFX_EXPORT void __cdecl Sparkle_Update(void) {
-    const unsigned phase = Ptr(::bof3::Img(at::kSparkleCurrent))[2];
+    const unsigned phase = Ptr(::bof3::Img(magic_fx_reached::at::kSparkleCurrent))[2];
     if (phase >= 3) bof3::Fatal("Sparkle_Update: phase %u, past the three-entry table", phase);
     magic_fx_reached::g.sparkle[phase]();
-    const unsigned char* c = Ptr(::bof3::Img(at::kSparkleCurrent));
+    const unsigned char* c = Ptr(::bof3::Img(magic_fx_reached::at::kSparkleCurrent));
     if ((c[0] & 1) == 0 || c[2] == 0) return;
     magic_fx_reached::g.sparkle_disc();
-    c = Ptr(::bof3::Img(at::kSparkleCurrent));
+    c = Ptr(::bof3::Img(magic_fx_reached::at::kSparkleCurrent));
     if ((c[0xC] & 3) == 0) return;
     magic_fx_reached::g.rays_g2(Frame_Counter >> 1, c[6]);
-    c = Ptr(::bof3::Img(at::kSparkleCurrent));
+    c = Ptr(::bof3::Img(magic_fx_reached::at::kSparkleCurrent));
     const unsigned radius = c[6];
     magic_fx_reached::g.rays_g3((Frame_Counter >> 1) + 4, (radius >> 1) + radius);
 }

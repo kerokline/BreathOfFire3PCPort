@@ -280,8 +280,8 @@ C2_EXPORT void __cdecl BoneDance_WaitBones(void) {
 
 // original 0x4AEA20: the done flag, Battle_SetTargetFlag40(target), free.
 C2_EXPORT void __cdecl BoneDance_End(void) {
-    const unsigned target = Mem(::bof3::Img(at::kTarget))[0];
-    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
+    const unsigned target = Mem(::bof3::Img(magic_harness::at::kTarget))[0];
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(magic_harness::at::kFlags))[0] | 4);
     MH_CALL(Battle_SetTargetFlag40)(target);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -562,7 +562,7 @@ C2_EXPORT void __cdecl RottenBreath_End(void) {
     Sprite_Current = self;
     if (self[0xB] != 0) return;
     MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
-    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(magic_harness::at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -812,7 +812,7 @@ C2_EXPORT void __cdecl UtmostAttack_Stream(void) {
 // done flag and free (a tail jmp).
 C2_EXPORT void __cdecl UtmostAttack_End(void) {
     if (MH_AT(FnB, addr::UtmostAttack_DrawStreaks)() != 0) return;
-    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
+    Mem(::bof3::Img(magic_harness::at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(magic_harness::at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
