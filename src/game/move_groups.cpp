@@ -27,7 +27,7 @@ using AreaHandler = void (__cdecl*)();
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 const move_groups::CalleesMoveGroups kOriginalsMoveGroups = {
-    MoveScript_ObjectKind, Sprite_FaceDirection, MoveScript_SetTurnTarget, MoveCmd_OpE7, MoveCmd_OpE9,
+    MoveScript_ObjectKind, Sprite_FaceDirection, Field_ObjectTalk, MoveCmd_OpE7, MoveCmd_OpE9,
     Sprite_SetTint, Sprite_ReleaseTint, Sprite_SetAnimation, Sprite_SetAnimationBank, AreaMap_Elevation,
     MapView_SetElevation, Sprite_ScriptPeek, Sound_PlayById, Sound_PlayEffect, Music_Play, Music_FadeOutStop,
     Music_FadeIn, Music_FadeOut, Port_DroppedCall, MoveCmd_OpDB, MoveCmd_TestFB, MoveCmd_TestFC, Effect_Spawn,
@@ -188,7 +188,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         SetPos(object, Pos(object) + 2u);
         object[0] = static_cast<unsigned char>((object[0] & 0xEF) | 0x20);
         return 0xFF;
-    case 0xE0: case 0xE3: {   // E0 t: face the way ObjTrio 0 faces, reversed; E3 t: keep facing; then turn toward t
+    case 0xE0: case 0xE3: {   // E0 t: face the way ObjTrio 0 faces, reversed; E3 t: keep facing; then the talk: message or script t
         if (op == 0xE0) {
             object[0] |= 8;
             object[5] = rv::Current<records::SpriteHead>()->direction;

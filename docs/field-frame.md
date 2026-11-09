@@ -82,7 +82,7 @@ Otherwise each present object of the 30 becomes `Sprite_Current` and
 cleared, and then:
 
 - no timed move (`+9` is 0) and context `+0x80` bit 5: with bit 4,
-  `MoveScript_SetTurnTarget(context)` - and if that returns non-zero and
+  `Field_ObjectTalk(context)` - and if that returns non-zero and
   `Sprite_Current +7` lacks bit 3, `+0x85` takes the direction's low three
   bits and the sprite turns: to its own direction (`+7` bit 1) or to face
   `ObjTrio`'s first member (`(ObjTrio[8] ^ 4) & 7`), through
@@ -163,7 +163,7 @@ New data: `Field_ObjectHandlers` (`0x65F5F8`, 11 entries, then data),
 PSX `0x80146256` beside `Field_ScriptFlags`' `0x80146254`), `Field_StepCount`
 / `Field_StepCountPrev` (`0x905B80` / `0x8034E8`).
 
-**`MoveScript_SetTurnTarget` returns a value.** It returns 0 in `al` when
+**`Field_ObjectTalk` returns a value.** It returns 0 in `al` when
 context `+8` is `0xFFFF` (`0x517EAA`) and 1 after opening a message through
 `Msg_OpenScript` / `Msg_OpenSystem` and setting `Field_Request` to 2
 (`0x517F21`); `Field_ObjectsFrame` tests it. `symbols.toml` typed it `void`
@@ -316,5 +316,5 @@ None found that changes behaviour. Observations, for the record:
 - The batch check in game: frame hash, oracle, captures, with these twelve
   on the `--original` list.
 - Read `FUN_8015B394` (MIPS, 744 bytes) for the key's range test.
-- Consider the sibling's name for `MoveScript_SetTurnTarget` (its return is
-  retyped, 07c5381).
+- `Field_ObjectTalk` took its name 2026-11-08 (was `MoveScript_SetTurnTarget`; its return was
+  retyped in 07c5381).

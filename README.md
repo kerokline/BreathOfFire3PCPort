@@ -127,6 +127,10 @@ won't be done.
   been a great resource when trying to restore PSX functionality to some broken
   areas of the PC port.
 
+- [**bof3-notes**](https://github.com/glitch-in-the-herring/bof3-notes) and [**bof3-save-editor**](https://github.com/glitch-in-the-herring/bof3-save-editor) - 
+  Incredible source of original-psx bugs, and the save editor was a huge help in
+  revealing a bug in my own.
+
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
   This is less a shoutout to myself and more to the psxrecomp team - their AI 
   tooling is what opened up the ability to go back and renovate the PC port. The

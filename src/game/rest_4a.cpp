@@ -195,7 +195,7 @@ extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
     return w == 0x128 ? 1 : 0;
 }
 
-// original 0x454290 (no PSX twin paired): a member's fixed auto-target. The
+// original 0x454290 (PSX 0x800A84A0, Weretiger's target roll): a member's fixed auto-target. The
 // member's odds byte +0x142 (signed, at most 5) against Rand() % 20: below it,
 // and 0x904AB1 not 1, Battle_RandomOtherMember(member); else
 // Battle_DefaultTarget((Rand() & 7) + 3). Then +0x125 = 1, 0x904B35 = 1 and

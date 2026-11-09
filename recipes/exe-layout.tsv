@@ -14783,8 +14783,8 @@ pc	kind	target
 0x65F5F0	code	Field_Pace5
 0x65F5F4	code	Field_Pace6
 0x65F5F8	code	Field_ObjectWander
-0x65F5FC	code	Field_ObjectApproach
-0x65F600	code	Field_ObjectAvoid
+0x65F5FC	code	Field_ObjectFlee
+0x65F600	code	Field_ObjectChase
 0x65F604	code	Field_ObjectWanderHome
 0x65F608	code	Field_ObjectUpdate
 0x65F60C	code	Field_ObjectWait

@@ -3705,14 +3705,14 @@ evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instr
 
 [[func]]
 pc = 0x517E90
-name = "MoveScript_SetTurnTarget"
+name = "Field_ObjectTalk"
 psx = 0x801A27A8
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned char *context"
 impl = "src/game/object_kinds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517E90..0x517F25 (149 bytes), cdecl, every jump internal. Its argument is a script context (object +0x80): ops E0 E1 E3 store an operand to context +8 and call it, and the field object loops call it for an object whose +0x80 has bits 5 and 4. Clears context bit 4; a word +8 of 0xFFFF returns 0. Bit 15: EventScript_Run(the descriptor +4 table [w & 0xFFF]); then, unless the word (read again) has bit 15: Msg_OpenSystem(w & 0xFFF) with bit 13, else Msg_OpenScript(w), and Field_Request = 2. Puts the word back, clears context bit 5 when sprite bit 7.2, stores Field_ActiveMember to 0x903804, returns 1 - the object's talk, not a turn (rename proposed: Field_ObjectTalk). The PSX FUN_801A27A8 branch for branch. Call trace hidden_b: 18 calls, all from MoveScript_GroupE (0x5774FD), all_b 14; the loops' call site never. docs/object-kinds.md."
+evidence = "disasm 2026-09-22, 0x517E90..0x517F25 (149 bytes), cdecl, every jump internal. Its argument is a script context (object +0x80): ops E0 E1 E3 store an operand to context +8 and call it, and the field object loops call it for an object whose +0x80 has bits 5 and 4. Clears context bit 4; a word +8 of 0xFFFF returns 0. Bit 15: EventScript_Run(the descriptor +4 table [w & 0xFFF]); then, unless the word (read again) has bit 15: Msg_OpenSystem(w & 0xFFF) with bit 13, else Msg_OpenScript(w), and Field_Request = 2. Puts the word back, clears context bit 5 when sprite bit 7.2, stores Field_ActiveMember to 0x903804, returns 1 - the object's talk, not a turn (renamed 2026-11-08 from MoveScript_SetTurnTarget). The PSX FUN_801A27A8 branch for branch. Call trace hidden_b: 18 calls, all from MoveScript_GroupE (0x5774FD), all_b 14; the loops' call site never. docs/object-kinds.md."
 
 [[func]]
 pc = 0x518B20
@@ -4036,7 +4036,7 @@ ret = "void"
 params = "unsigned char *object"
 impl = "src/game/object_kinds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517F30..0x517FD7 (167 bytes), cdecl, every jump internal. Called by the field object loops 0x517490 / 0x57B7B0 for an object with no timed move whose +0x80 has bit 5 and not bit 4 (with bit 4 they call MoveScript_SetTurnTarget). Returns when Field_Request is 2; Field_ObjectTrigger(object) when +0x86 is not 0xFF; returns if that made Field_Request 2. A sprite of type 5 then sets bytes 0x929F00 / 0x929F01 to 0, Game_Mode to 7 and byte 0x929F0C to (object - Sprite_Objects) / 0xA4 (signed); any other, unless bit 6 of byte 0x8034E1: the direction +0x85 to Sprite_Current[8] with context bit 3 (unless sprite bit 7.3), and bit 8 of the word Field_ScriptFlags cleared; then context bit 5 cleared. The PSX FUN_801A28D0 branch for branch (call-anchored pair). Call trace hidden_b: 2,181 calls (all from 0x517490), all_b 1,593; the trigger call never. docs/object-kinds.md."
+evidence = "disasm 2026-09-22, 0x517F30..0x517FD7 (167 bytes), cdecl, every jump internal. Called by the field object loops 0x517490 / 0x57B7B0 for an object with no timed move whose +0x80 has bit 5 and not bit 4 (with bit 4 they call Field_ObjectTalk). Returns when Field_Request is 2; Field_ObjectTrigger(object) when +0x86 is not 0xFF; returns if that made Field_Request 2. A sprite of type 5 then sets bytes 0x929F00 / 0x929F01 to 0, Game_Mode to 7 and byte 0x929F0C to (object - Sprite_Objects) / 0xA4 (signed); any other, unless bit 6 of byte 0x8034E1: the direction +0x85 to Sprite_Current[8] with context bit 3 (unless sprite bit 7.3), and bit 8 of the word Field_ScriptFlags cleared; then context bit 5 cleared. The PSX FUN_801A28D0 branch for branch (call-anchored pair). Call trace hidden_b: 2,181 calls (all from 0x517490), all_b 1,593; the trigger call never. docs/object-kinds.md."
 
 [[func]]
 pc = 0x519600
@@ -4079,25 +4079,25 @@ evidence = "disasm 2026-09-22, 0x517640..0x51778F (335 bytes), cdecl, every jump
 
 [[func]]
 pc = 0x517790
-name = "Field_ObjectApproach"
+name = "Field_ObjectFlee"
 psx = 0x801A1D04
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned char *object"
 impl = "src/game/object_kinds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517790..0x5178FA (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 1. As Field_ObjectWander, but the direction is Field_ObjectApproachDirection (no steps left) or Field_ObjectBestDirection(object, 1) (steps left), and with no steps left and no speed it returns before the settle and the motion. The PSX FUN_801A1D04 (gap pair) branch for branch, the early return included. Call trace: never in all_b or hidden_b."
+evidence = "Renamed 2026-11-08 from Field_ObjectApproach: entry 1 keeps the farthest step from the leader (Field_ObjectBestDirection, toward not 0), so it moves away. Before: disasm 2026-09-22, 0x517790..0x5178FA (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 1. As Field_ObjectWander, but the direction is Field_ObjectFleeDirection (no steps left) or Field_ObjectBestDirection(object, 1) (steps left), and with no steps left and no speed it returns before the settle and the motion. The PSX FUN_801A1D04 (gap pair) branch for branch, the early return included. Call trace: never in all_b or hidden_b."
 
 [[func]]
 pc = 0x517900
-name = "Field_ObjectAvoid"
+name = "Field_ObjectChase"
 psx = 0x801A1F2C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned char *object"
 impl = "src/game/object_kinds.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517900..0x517A6A (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 2. Field_ObjectApproach byte for byte but for Field_ObjectAvoidDirection and Field_ObjectBestDirection(object, 0). PSX FUN_801A1F2C (gap pair). Call trace: never in all_b or hidden_b."
+evidence = "Renamed 2026-11-08 from Field_ObjectAvoid: entry 2 keeps the nearest step to the leader, so it moves toward. Before: disasm 2026-09-22, 0x517900..0x517A6A (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 2. Field_ObjectFlee byte for byte but for Field_ObjectChaseDirection and Field_ObjectBestDirection(object, 0). PSX FUN_801A1F2C (gap pair). Call trace: never in all_b or hidden_b."
 
 [[func]]
 pc = 0x517A70
@@ -4255,25 +4255,25 @@ evidence = "disasm 2026-09-22 (group G, whole: 0x518080..0x5180F9, 0x7A bytes, c
 
 [[func]]
 pc = 0x518E20
-name = "Field_ObjectApproachDirection"
+name = "Field_ObjectFleeDirection"
 psx = 0x801A3C9C
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned char *object"
 impl = "src/game/field_c3.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22 (whole, 163 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518E20..0x518EC2 (0xA3 bytes), cdecl: with the leader (ObjTrio +0x34 / +0x38) within the half-widths +0x98 / +0x9A of Sprite_Current (|d| >> 16, signed): Field_ObjectBestDirection(object, 1); 0xFF clears Sprite_Current +9 and answers 0xFF; a direction not +8 & 7 becomes +8 with object +0x80 bit 3; answers +8. Otherwise Field_ObjectRandomTurn then Field_ObjectOpenDirection's al. Called by Field_ObjectApproach. PSX twin 0x801A3C9C gap44. docs/field_c3.md"
+evidence = "disasm 2026-09-22 (whole, 163 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518E20..0x518EC2 (0xA3 bytes), cdecl: with the leader (ObjTrio +0x34 / +0x38) within the half-widths +0x98 / +0x9A of Sprite_Current (|d| >> 16, signed): Field_ObjectBestDirection(object, 1); 0xFF clears Sprite_Current +9 and answers 0xFF; a direction not +8 & 7 becomes +8 with object +0x80 bit 3; answers +8. Otherwise Field_ObjectRandomTurn then Field_ObjectOpenDirection's al. Called by Field_ObjectFlee. PSX twin 0x801A3C9C gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x518ED0
-name = "Field_ObjectAvoidDirection"
+name = "Field_ObjectChaseDirection"
 psx = 0x801A3DBC
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned char *object"
 impl = "src/game/field_c3.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22 (whole, 165 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518ED0..0x518F74 (0xA5 bytes): Field_ObjectApproachDirection with Field_ObjectBestDirection(object, 0) (the differences taken the other way round, the same absolute values). Called by Field_ObjectAvoid. PSX twin 0x801A3DBC gap44. docs/field_c3.md"
+evidence = "disasm 2026-09-22 (whole, 165 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518ED0..0x518F74 (0xA5 bytes): Field_ObjectFleeDirection with Field_ObjectBestDirection(object, 0) (the differences taken the other way round, the same absolute values). Called by Field_ObjectChase. PSX twin 0x801A3DBC gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x518F80
@@ -4281,10 +4281,10 @@ name = "Field_ObjectBestDirection"
 psx = 0x801A3EDC
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
-params = "unsigned char *object, unsigned char toward"
+params = "unsigned char *object, unsigned char farthest"
 impl = "src/game/field_c3.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22 (its first 60 instructions); read whole 2026-09-29 (round twelve group FC3), 0x518F80..0x51909B (0x11C bytes), cdecl: the leader's point = ObjTrio (+0x34, +0x38) + ObjTrio +9 times (+0xC, +0x10); Sprite_Current +8 made odd (+1 when even); object +0x94 = 0 for toward (its byte) not 0, 0x1000000 for 0; four quarter turns (+2 & 7) of +8 from there, each not Field_ObjectBlockedAhead(object) scored |x + Field_DirectionSteps x - point x| + |z + step z - point z| and kept in +0x94 when larger (toward not 0: the farthest) or smaller (0: the nearest), unsigned; answers the kept +8, 0xFF for none. The 2026-09-22 reading had the two the other way round. Callers Field_ObjectApproach / Avoid and the two *Direction functions. PSX twin 0x801A3EDC gap44. docs/field_c3.md"
+evidence = "disasm 2026-09-22 (its first 60 instructions); read whole 2026-09-29 (round twelve group FC3), 0x518F80..0x51909B (0x11C bytes), cdecl: the leader's point = ObjTrio (+0x34, +0x38) + ObjTrio +9 times (+0xC, +0x10); Sprite_Current +8 made odd (+1 when even); object +0x94 = 0 for toward (its byte) not 0, 0x1000000 for 0; four quarter turns (+2 & 7) of +8 from there, each not Field_ObjectBlockedAhead(object) scored |x + Field_DirectionSteps x - point x| + |z + step z - point z| and kept in +0x94 when larger (toward not 0: the farthest) or smaller (0: the nearest), unsigned; answers the kept +8, 0xFF for none. The 2026-09-22 reading had the two the other way round. Callers Field_ObjectFlee / Avoid and the two *Direction functions. PSX twin 0x801A3EDC gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x537540
@@ -4316,7 +4316,7 @@ ret = "void"
 params = "const unsigned char *script"
 impl = "src/game/event_script.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, whole (0x5797C0..0x5797F5, 54 bytes), read against the PSX FUN_801A4F44: EventScript_FlagBank = (s16) Cond_ByteFA, then while the byte is not 0xFF, EventScript_Op below 0xF0 and EventScript_Control from it, each returning the next position. Callers: Area_RunPlacement with the area descriptor +0 script, MoveScript_SetTurnTarget 0x517E90 and 0x52F6A4 with an entry of the descriptor +4 table (a talk script by object +8). No caller reads eax. docs/event-script.md."
+evidence = "disasm 2026-09-22, whole (0x5797C0..0x5797F5, 54 bytes), read against the PSX FUN_801A4F44: EventScript_FlagBank = (s16) Cond_ByteFA, then while the byte is not 0xFF, EventScript_Op below 0xF0 and EventScript_Control from it, each returning the next position. Callers: Area_RunPlacement with the area descriptor +0 script, Field_ObjectTalk 0x517E90 and 0x52F6A4 with an entry of the descriptor +4 table (a talk script by object +8). No caller reads eax. docs/event-script.md."
 
 # --- group A: the field-object frame loop (docs/field-frame.md) -------------
 
@@ -4371,7 +4371,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_frame.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x517490..0x517633 (419 bytes), cdecl, no arguments, one indirect call (Field_ObjectHandlers by object byte +1), every jump internal. Nothing with Field_ScriptFlags2 bit 10. Else each of the 30 Sprite_Objects with flag bit 0, as Sprite_Current and Field_ActiveMember, scratch byte 3 cleared: with no timed move (+9) and context +0x80 bit 5 - bit 4 set, MoveScript_SetTurnTarget and, when it returns non-zero and Sprite_Current +7 lacks bit 3, +0x85 = direction, a turn to face ObjTrio (+7 bit 1 clear) and Sprite_FaceDirection, +0x85 bit 0 for Sprite_Current +1 0x0A; bit 4 clear, Field_ObjectIdle. Otherwise context bit 0 Field_ObjectLinked (and nothing after); +0x9C above 0x1E with no timed move Field_ObjectIdleLong; else the handler. Then, for Sprite_Current not type 0x0A: context bit 6 a tick (Sprite_ScriptTick with flag bit 4, else Sprite_ScriptTickOnce) unless +7 bit 5; bit 3 Sprite_FaceDirection and the bit cleared; else, unless +7 bit 5, max(+0x84 - 2, 0) + 1 Sprite_ScriptTick. Finally Field_StepCountPrev = Field_StepCount. The PSX FUN_801A16E0 term for term. Nine callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+evidence = "disasm 2026-09-22, 0x517490..0x517633 (419 bytes), cdecl, no arguments, one indirect call (Field_ObjectHandlers by object byte +1), every jump internal. Nothing with Field_ScriptFlags2 bit 10. Else each of the 30 Sprite_Objects with flag bit 0, as Sprite_Current and Field_ActiveMember, scratch byte 3 cleared: with no timed move (+9) and context +0x80 bit 5 - bit 4 set, Field_ObjectTalk and, when it returns non-zero and Sprite_Current +7 lacks bit 3, +0x85 = direction, a turn to face ObjTrio (+7 bit 1 clear) and Sprite_FaceDirection, +0x85 bit 0 for Sprite_Current +1 0x0A; bit 4 clear, Field_ObjectIdle. Otherwise context bit 0 Field_ObjectLinked (and nothing after); +0x9C above 0x1E with no timed move Field_ObjectIdleLong; else the handler. Then, for Sprite_Current not type 0x0A: context bit 6 a tick (Sprite_ScriptTick with flag bit 4, else Sprite_ScriptTickOnce) unless +7 bit 5; bit 3 Sprite_FaceDirection and the bit cleared; else, unless +7 bit 5, max(+0x84 - 2, 0) + 1 Sprite_ScriptTick. Finally Field_StepCountPrev = Field_StepCount. The PSX FUN_801A16E0 term for term. Nine callers. Call trace all_b 8,846, hidden_b 12,165 calls."
 
 [[func]]
 pc = 0x57B780
@@ -4391,7 +4391,7 @@ ret = "void"
 params = "void"
 impl = "src/game/field_frame.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x57B7B0..0x57B82B (123 bytes), cdecl, no arguments, one indirect call: for the 4 Sprite_ObjectsExtra as Sprite_Current and Field_ActiveMember, with flag bit 0: no timed move and context +0x80 bit 5 - MoveScript_SetTurnTarget (bit 4, result unused) or Field_ObjectIdle; else context bit 0 Field_ObjectLinked, else Field_ObjectHandlers by +1. Field_ObjectsFrame's first half with no idle-long, no scratch byte and no ticks. The PSX twin by its place in FUN_8019A1B8 (2nd call). Two callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+evidence = "disasm 2026-09-22, 0x57B7B0..0x57B82B (123 bytes), cdecl, no arguments, one indirect call: for the 4 Sprite_ObjectsExtra as Sprite_Current and Field_ActiveMember, with flag bit 0: no timed move and context +0x80 bit 5 - Field_ObjectTalk (bit 4, result unused) or Field_ObjectIdle; else context bit 0 Field_ObjectLinked, else Field_ObjectHandlers by +1. Field_ObjectsFrame's first half with no idle-long, no scratch byte and no ticks. The PSX twin by its place in FUN_8019A1B8 (2nd call). Two callers. Call trace all_b 8,846, hidden_b 12,165 calls."
 
 [[func]]
 pc = 0x57B830
@@ -6810,7 +6810,7 @@ ret = "void"
 params = "void"
 status = "hypothesis"
 impl = "src/game/window_task.cpp"
-evidence = "disasm 2026-09-22, 0x595350..0x595383 (0x33 bytes, whole), no calls: byte 0x937F98 = 0xB when the pending area word 0x937F82 is one of the eleven at 0x66ADC0 (0x10 0x21 0x2D 0x41 0x57 0x58 0x68 0x73 0x79 0x97 0x98, read with tools/pe_data.py) and 1 when it is not - the second store sits under a cmp against 11 that the loop can only leave true. Twenty-two functions touch 0x937F98 (globals_ in analysis/pc_funcs.json), all of them area set-ups; what READS it is not established, so the name is by the shape of what it writes, not by its use. PSX 0x80143F1D per docs/field-modes.md section 4. Sole caller Field_ChangeArea."
+evidence = "disasm 2026-09-22, 0x595350..0x595383 (0x33 bytes, whole), no calls: byte 0x937F98 = 0xB when the pending area word 0x937F82 is one of the eleven at 0x66ADC0 (0x10 0x21 0x2D 0x41 0x57 0x58 0x68 0x73 0x79 0x97 0x98, read with tools/pe_data.py) and 1 when it is not - the second store sits under a cmp against 11 that the loop can only leave true. Twenty-two functions touch 0x937F98 (globals_ in analysis/pc_funcs.json), all of them area set-ups; its reader on the PC is not traced; on the US disc the matching code passes the kind to UI_SetMode (Game_RunAreaLoadState, the list's one user func_801A02E8, read 2026-11-08), so 0xB and 1 are that request's kind and music is not involved. PSX 0x80143F1D per docs/field-modes.md section 4. Sole caller Field_ChangeArea."
 
 [[func]]
 pc = 0x595390
@@ -50441,7 +50441,7 @@ name = "Area0_Descriptor"
 ctype = "unsigned char"
 count = 68
 status = "evidence"
-evidence = "read 2026-09-27, group ART: area 0's descriptor (Area_Descriptors[0]), carrying the layout all 200 share (0x44 bytes, in area order 0x5DB318..0x64AD68; the PSX's are 0x44 too, names/area_records.toml). By a census of the 35 loads of Area_Descriptors[k] in .text and the readers already ours: +0x00 placement script (Area_RunPlacement from Area_Enter; set in 200 of 200); +0x04 event / talk scripts (MoveScript_SetTurnTarget 0x517E90, Field_PassageOpen; 106); +0x08 extra-object entries of 8 bytes (EventOp_Bx; 200, all in a pool at 0x675xxx, not the area's own data); +0x0C attachment vectors, three shorts each (0x578EB0; 31); +0x10 object scripts (Field_ObjectUpdate and eight band sites; 200); +0x14 party placements (Party_DropIn; 136); +0x18 member scripts (Party_SetUpMembers, MoveScript_Group8 op 86; 136); +0x1C kind-2 scripts (Kind2_Script; 108); +0x20 links of 12 bytes (Area_LinkAt; 192); +0x24 / +0x28 alternative lists and their counts (Area_LinkAt; 12); +0x2C passages of 8 bytes (Area_PassageAhead; 95); +0x30 u8 last link index; +0x31 u8 last passage index; +0x32 u8 Field_InputFlags (Area_Enter); +0x33 u8, 0 in all 200, no reader in the census; +0x34 choice handlers by choice id (MsgBox_ChoiceCommit / MsgBox_MenuCommit; 106 areas, 927 entries, and in most areas the tail of the handler array: area 3's +0x34 is its +0x3C plus 8); +0x38 colour matrix, light pair at its +0x20 / +0x24 (Area_Enter; null in 199 areas, area 77's is 0x60ACC8 in .data - not null in the whole image as the plan had it); +0x3C handler array (MoveScript_Flow op 03, MoveScript_GroupD op DE; 119 areas, 678 entries; the PSX has 671, areas 75 and 86 the two that differ); +0x40 init, called with nothing by Area_Enter (67 areas)."
+evidence = "read 2026-09-27, group ART: area 0's descriptor (Area_Descriptors[0]), carrying the layout all 200 share (0x44 bytes, in area order 0x5DB318..0x64AD68; the PSX's are 0x44 too, names/area_records.toml). By a census of the 35 loads of Area_Descriptors[k] in .text and the readers already ours: +0x00 placement script (Area_RunPlacement from Area_Enter; set in 200 of 200); +0x04 event / talk scripts (Field_ObjectTalk 0x517E90, Field_PassageOpen; 106); +0x08 extra-object entries of 8 bytes (EventOp_Bx; 200, all in a pool at 0x675xxx, not the area's own data); +0x0C attachment vectors, three shorts each (0x578EB0; 31); +0x10 object scripts (Field_ObjectUpdate and eight band sites; 200); +0x14 party placements (Party_DropIn; 136); +0x18 member scripts (Party_SetUpMembers, MoveScript_Group8 op 86; 136); +0x1C kind-2 scripts (Kind2_Script; 108); +0x20 links of 12 bytes (Area_LinkAt; 192); +0x24 / +0x28 alternative lists and their counts (Area_LinkAt; 12); +0x2C passages of 8 bytes (Area_PassageAhead; 95); +0x30 u8 last link index; +0x31 u8 last passage index; +0x32 u8 Field_InputFlags (Area_Enter); +0x33 u8, 0 in all 200, no reader in the census; +0x34 choice handlers by choice id (MsgBox_ChoiceCommit / MsgBox_MenuCommit; 106 areas, 927 entries, and in most areas the tail of the handler array: area 3's +0x34 is its +0x3C plus 8); +0x38 colour matrix, light pair at its +0x20 / +0x24 (Area_Enter; null in 199 areas, area 77's is 0x60ACC8 in .data - not null in the whole image as the plan had it); +0x3C handler array (MoveScript_Flow op 03, MoveScript_GroupD op DE; 119 areas, 678 entries; the PSX has 671, areas 75 and 86 the two that differ); +0x40 init, called with nothing by Area_Enter (67 areas)."
 
 [[data]]
 pc = 0x662CE8
@@ -65626,7 +65626,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w2d.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4144E0..0x414530 (0x51 bytes), cdecl: area 103 +0x3C[0] (Area103_Handlers): MoveScript_Object word +8 = (Area103_FirstListedMember as a byte) + 2 (16 bits), MoveScript_SetTurnTarget(it), its bit 0x10 cleared; Sprite_Current +7 bit 4: its bit 0x20 cleared, else set. PSX twin: names/area_records.toml. docs/area_w2d.md."
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4144E0..0x414530 (0x51 bytes), cdecl: area 103 +0x3C[0] (Area103_Handlers): MoveScript_Object word +8 = (Area103_FirstListedMember as a byte) + 2 (16 bits), Field_ObjectTalk(it), its bit 0x10 cleared; Sprite_Current +7 bit 4: its bit 0x20 cleared, else set. PSX twin: names/area_records.toml. docs/area_w2d.md."
 
 [[func]]
 pc = 0x414540

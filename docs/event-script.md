@@ -124,7 +124,7 @@ none of them is quoted here or in the tool.
 
 A second kind of event script exists and is *not* the placement script: the
 area descriptor `+0x04` table, indexed by an object's word `+8` when its bit
-15 is set, which `MoveScript_SetTurnTarget` `0x517E90` and `0x52F670` run
+15 is set, which `Field_ObjectTalk` `0x517E90` and `0x52F670` run
 through `EventScript_Run` - the talk scripts. Same grammar, same interpreter;
 not decoded here (the table's length is not established).
 
@@ -340,7 +340,7 @@ The cycle enters an area twelve times, so the interpreter runs twelve scripts
   not measured: they are not in the trace list. Taking them over is what
   would settle it.
 - `EventScript_Run`'s two other callers, the talk scripts of the descriptor
-  `+0x04` table (`MoveScript_SetTurnTarget`): talking to somebody would.
+  `+0x04` table (`Field_ObjectTalk`): talking to somebody would.
 - a placement with the count already at 30 (an area with more than 30 objects
   on one path), a negative count (no script leaves one), and every condition
   but 0, 2 and 8.

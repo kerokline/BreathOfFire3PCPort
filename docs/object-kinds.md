@@ -23,7 +23,7 @@ For each live object the loop `0x517490` sets `Sprite_Current` and
 
 | condition (object bytes) | call |
 |---|---|
-| no timed move (`+9` = 0), context bits 5 and 4 (`+0x80` & `0x30`) | `MoveScript_SetTurnTarget(object + 0x80)` - the talk |
+| no timed move (`+9` = 0), context bits 5 and 4 (`+0x80` & `0x30`) | `Field_ObjectTalk(object + 0x80)` - the talk |
 | no timed move, bit 5 without 4 | `Field_ObjectIdle(object)` |
 | context bit 0 | `Field_ObjectLinked()` - no argument |
 | the push counter word `+0x9C` above `0x1E`, no timed move | `Field_ObjectIdleLong(object)` |
@@ -38,8 +38,8 @@ bound; `MoveCmd_OpE7` (op E7) calls it too, with `Field_ActiveMember`.
 | entry | PC | name | PSX twin | what it does |
 |---|---|---|---|---|
 | 0 | `0x517640` | `Field_ObjectWander` | `FUN_801A1AEC` | a random walk |
-| 1 | `0x517790` | `Field_ObjectApproach` | `FUN_801A1D04` | toward the leader, when near |
-| 2 | `0x517900` | `Field_ObjectAvoid` | `FUN_801A1F2C` | away from the leader, when near |
+| 1 | `0x517790` | `Field_ObjectFlee` | `FUN_801A1D04` | away from the leader, when near |
+| 2 | `0x517900` | `Field_ObjectChase` | `FUN_801A1F2C` | toward the leader, when near |
 | 3 | `0x517A70` | `Field_ObjectWanderHome` | `FUN_801A2154` | a random walk kept inside a home box |
 | 4 | `0x517BF0` | `Field_ObjectUpdate` | `FUN_801A238C` | the movement script (field_objects.cpp) |
 | 5 | `0x518AC0` | `Field_ObjectWait` | `0x801A3724` | a wait counting down `+0x81`, then the pose back |
@@ -64,7 +64,7 @@ the sibling's Ghidra output and match branch for branch: `FUN_801A1AEC`,
 `801A37CC`, `801A3A0C`, `801A3C18`, `801A4A10`, `801A4B84`. The Ghidra
 output has no function at `0x801A3724`, `0x801A2A2C`, `0x801A32D4`,
 `0x801A33A4`, `0x801A3474`, `0x801A459C` or `0x801A47DC`, and
-`FUN_801A1F2C` (Avoid) was not read: those pairs are the tier's word only.
+`FUN_801A1F2C` (Chase) was not read: those pairs are the tier's word only.
 
 ## 2. The wander kinds, 0 to 3
 
@@ -75,8 +75,8 @@ One shape, read from all four (`0x517640` 335 bytes, `0x517790` 362,
 2. a timed move running (`[9]`): only `Field_ObjectMotion`;
 3. no steps left (`+0x87`): with a speed index (`+0x84`) and a pace
    `(object, Field_MoveSpeeds[+0x84], 2)` that returns non-zero, a new
-   direction - `Field_ObjectRandomTurn` (0, 3), `Field_ObjectApproachDirection`
-   (1), `Field_ObjectAvoidDirection` (2) - and, if a timed move began,
+   direction - `Field_ObjectRandomTurn` (0, 3), `Field_ObjectFleeDirection`
+   (1), `Field_ObjectChaseDirection` (2) - and, if a timed move began,
    `(Rand & 3) + 3` steps; steps left: the pace's second call and one step
    fewer, the direction for 1 / 2 from `Field_ObjectBestDirection(object, 1 / 0)`;
 4. 0 and 3: `Field_ObjectOpenDirection`, quarter turns off a blocked
@@ -131,7 +131,7 @@ speed unguarded** - with speed index 0, `Field_Pace0` divides by zero
   `0x65F624` for the leader's facing (`0x802D48`), the first open one (and,
   for pose 3, inside the home box). It is "idle long" by its provisional
   name only.
-- **`MoveScript_SetTurnTarget`** (`0x517E90`, 149 bytes) is **the object's
+- **`Field_ObjectTalk`** (`0x517E90`, 149 bytes) is **the object's
   talk**, not a turn: the word at context `+8` names an event script (bit 15,
   through the area descriptor's `+4` table and `EventScript_Run`), a system
   message (bit 13) or a script message, and sets `Field_Request` 2. It is
@@ -154,8 +154,8 @@ speed unguarded** - with speed index 0, `Field_Pace0` divides by zero
 
 Left original, behind stand-ins, each with a typed `symbols.toml` entry
 (`# group C callees`): `Field_ObjectBlockedAhead` `0x518080` (called from
-outside the group, `0x40C2B0` and `0x41F790`), `Field_ObjectApproachDirection`
-`0x518E20`, `Field_ObjectAvoidDirection` `0x518ED0` and
+outside the group, `0x40C2B0` and `0x41F790`), `Field_ObjectFleeDirection`
+`0x518E20`, `Field_ObjectChaseDirection` `0x518ED0` and
 `Field_ObjectBestDirection` `0x518F80` (unreached, 163 / 165 / 284 bytes),
 `Tint_Release` `0x454D60`, `Area_ObjectHandler` `0x537540`,
 `Field_ObjectTrigger` `0x56D6B0`, `EventScript_Run` `0x5797C0`. Also
@@ -245,13 +245,13 @@ count of mismatches in the function it touched, none by a hang:
 |---|---|---|
 | after a finished turn, the entry direction not put back | Wander | 44 |
 | WanderHome without `Field_ObjectInHome` | WanderHome | 167 |
-| Wander / WanderHome: `Sprite_Current` cached across the turn call | Approach | 11 |
+| Wander / WanderHome: `Sprite_Current` cached across the turn call | Flee | 11 |
 | Wander: the steps-left pace call guarded by a speed (the defect "fixed") | WanderHome | 159 |
 | Wander: steps `(Rand & 3) + 2` | Wander | 31 |
 | Wander: steps counted down from the value before the pace call | Wander | 112 |
-| Approach / Avoid: no early return without speed | Approach | 70 |
-| Avoid: `Field_ObjectBestDirection(object, 1)` | Avoid | 612 |
-| Approach / Avoid: the direction unmasked into `+0x85` | Avoid | 276 |
+| Flee / Chase: no early return without speed | Flee | 70 |
+| Chase: `Field_ObjectBestDirection(object, 1)` | Chase | 612 |
+| Flee / Chase: the direction unmasked into `+0x85` | Chase | 276 |
 | Wait: context bit 5 for 4 | Wait | 592 |
 | Wait: at 0 the pose left | Wait | 689 |
 | Still: type 9 exempt for 8 | Still | 43 |
@@ -318,10 +318,10 @@ brackets:
 | `Field_ObjectOpenDirection` | 491 (387) | |
 | `Field_ObjectInHome` | 491 (387) | |
 | `Field_ObjectRandomTurn` | 94 (74) | |
-| `MoveScript_SetTurnTarget` | 18 (14) | all from op E0 / E1 / E3; the loops' call never |
+| `Field_ObjectTalk` | 18 (14) | all from op E0 / E1 / E3; the loops' call never |
 
 **Never reached** (the batch check's attract run cannot test them): the
-wander 0, approach 1 and avoid 2 kinds, both fades, `Field_ObjectLinked`,
+wander 0, flee 1 and chase 2 kinds, both fades, `Field_ObjectLinked`,
 `Field_ObjectIdleLong`, and `Field_Pace4` / `5` / `6`. What would: a field
 where an NPC walks toward or away from the party (1 / 2), a script fade
 (context bits 2 / 4 - a character appearing or vanishing), an object with
@@ -332,16 +332,30 @@ an area handler (context bit 0), and pushing against an NPC for a second
 ## 8. Names
 
 The three provisional names registered before the takeover are kept, and so
-is `MoveScript_SetTurnTarget`; each reads wrong now that the body is read.
+was `MoveScript_SetTurnTarget` (renamed `Field_ObjectTalk` 2026-11-08); the three read wrong now that the body is read.
 Proposed, not applied (a rename touches every file that calls them):
 
 | now | proposed | why |
 |---|---|---|
-| `MoveScript_SetTurnTarget` | `Field_ObjectTalk` | it opens the object's message or event script and sets `Field_Request` 2; nothing turns (the sibling's `Script_ShowMessage` says the same) |
+| `MoveScript_SetTurnTarget` | `Field_ObjectTalk` (applied 2026-11-08) | it opens the object's message or event script and sets `Field_Request` 2; nothing turns (the sibling's `Script_ShowMessage` says the same) |
 | `Field_ObjectIdle` | `Field_ObjectTouched` | context bit 5 without 4: the object was touched and does not talk |
 | `Field_ObjectIdleLong` | `Field_ObjectStepAside` | run after 30 frames of pushing (`+0x9C`), it moves the object out of the leader's way |
 | `Field_ObjectLinked` | `Field_ObjectAreaHandler` | it hands the object to the area's own handler table |
 
 The twenty new names are `hypothesis`-grade descriptions of what the bodies
-do; the kinds' own meaning in the game (which NPCs wander, which approach)
+do; the kinds' own meaning in the game (which NPCs wander, which come closer)
 is not observed.
+
+## 9. Entries 1 and 2 renamed (2026-11-08)
+
+`Field_ObjectApproach` and `Field_ObjectAvoid` had the two behaviours the wrong
+way round. Entry 1 calls `Field_ObjectBestDirection(object, 1)`, which keeps the
+step landing **farthest** from the leader: it moves away. Entry 2 keeps the
+nearest and moves toward. They are now `Field_ObjectFlee` and
+`Field_ObjectChase`, with `Field_ObjectFleeDirection` and
+`Field_ObjectChaseDirection`. New names rather than a swap, so an old mention
+cannot silently mean the opposite. The addresses and the code are unchanged.
+Evidence: `src/game/field_c3.cpp` (`Field_ObjectBestDirection`), the US twin
+`func_801A2ED4` (matching), and Red Herring's notes on the placement record's
+byte 10 (kind 1 avoids, kind 2 follows), seen in play. The value is the
+`Field_ObjectHandlers` index, not a set of bits.

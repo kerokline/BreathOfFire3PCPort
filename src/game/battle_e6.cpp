@@ -889,8 +889,8 @@ extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned m
 // not the actor, the action's bit (Battle_ActionBitSet of 0x904B40's byte +2)
 // is set or its list is full (Battle_MemberListFull); else 1 when Rand leaves
 // no remainder by the odds of the action row's high nibble (0x65C4D9 + 0x18
-// by 0x904B40's word +2; 0x64F104 when the member's effect state
-// (0x66972C + its +0x89) is 6, else 0x64F0FC). The original divides by the
+// by 0x904B40's word +2; 0x64F104 when the member's character index
+// (Character_IndexById 0x66972C by its +0x89) is 6, else 0x64F0FC). The original divides by the
 // odds unchecked: ours aborts on 0.
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (BH_CALL(Battle_ActorIsOut)(member) != 0) return 0;

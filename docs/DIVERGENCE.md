@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 207 entries, DIV-0001..0207, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 208 entries, DIV-0001..0208, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15303,5 +15303,39 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=FinNight (ini off=)
 - **Toward:** none - the PlayStation lights the desert; the night is the owner's
+- **Languages:** any
+- **State:** active
+
+### A field heal for the whole party heals the whole party on the world map
+
+- **ID:** DIV-0208
+- **Date:** 2026-11-08
+- **Subsystem:** field abilities - `FieldAbility_HealAll40` `0x58A1B0` and
+  `FieldAbility_HealAll120` `0x58A260` (ours, `HealAll` in
+  `src/game/rest_2d.cpp`); known-defects D408
+- **Tier:** Intent - Capcom's bug; the heal plainly means every member, and the
+  item heals already do
+- **Original behaviour:** on the world map (and wherever else
+  `Field_PartySetUp` `0x533110` takes its leader-alone branch) row 0's character
+  index is set to Ryu whoever leads, and rows 1 and 2 keep their values. The two
+  party heals walk those indexes, so a leader who is not Ryu is not healed and
+  Ryu is healed twice, for the same AP.
+- **New behaviour:** the walk reads the party list (`Character_IndexById` of
+  `Cond_Flags + 0xD2`), as the item heals do. Everywhere the rows already match
+  the list nothing changes.
+- **Rationale:** the owner, 2026-11-08, after Red Herring's notes described the
+  bug ("World Map Heal") and the code confirmed it.
+- **Also in the PSX version?** Yes, Capcom's: US `func_801BFF9C`,
+  `func_801E7A60` and `func_801E7B48` (matching). This changes it on the PC only.
+- **Verification:** builds at both widths; armed after the `rest_2d` self-test,
+  which compares Capcom's walk. Not yet played: on the world map with a leader
+  who is not Ryu and a hurt party, a whole-party heal from the menu must raise
+  all three.
+- **Reversible?** `BOF3X_ORIGINAL=FieldHealParty`.
+  A player turns it off with `BOF3X_OFF=FieldHealParty` (the ini's `off=`).
+- **Switch:** FieldHealParty
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=FieldHealParty (ini off=)
+- **Toward:** none - every release keeps the bug
 - **Languages:** any
 - **State:** active

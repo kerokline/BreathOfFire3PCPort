@@ -78,7 +78,7 @@ void CallHandler(unsigned char* object) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Field_ObjectHandlers[object[1]]))(object);
 }
 
-// MoveScript_SetTurnTarget returns 0 or 1 in al (0x517EAA, 0x517F21), which
+// Field_ObjectTalk returns 0 or 1 in al (0x517EAA, 0x517F21), which
 // Field_ObjectsFrame tests.
 const field_frame::CalleesFieldFrame kOriginals = {
     Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
@@ -86,7 +86,7 @@ const field_frame::CalleesFieldFrame kOriginals = {
     MoveScript_TintFrame, Field_DrawFrame,
     Field_PendingJump, Field_LeaderFrame, Field_MemberFrame,
     Sprite_UpdateScreenA, Sprite_UpdateScreen, Sprite_ProjectA,
-    MoveScript_SetTurnTarget,
+    Field_ObjectTalk,
     Sprite_FaceDirection, Field_ObjectIdle, Field_ObjectLinked, Field_ObjectIdleLong, Sprite_ScriptTick,
     Sprite_ScriptTickOnce,
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,

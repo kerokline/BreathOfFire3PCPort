@@ -6,7 +6,7 @@
 // capstone (2026-09-29) and taken through the scenario harness's field mode
 // (scenario_harness.h, Group::field). docs/field_c3.md has them one row each.
 //
-//   object steering        op E7, the approach / avoid directions and the best
+//   object steering        op E7, the flee / chase directions and the best
 //                          of four turns, the fade cases of Field_ObjectFadeOut
 //                          / FadeIn
 //   two mode frames        mode 11's frame, mode 8's steps 5 and 8
@@ -178,16 +178,16 @@ extern "C" void __cdecl MoveCmd_OpE7(unsigned char n) {
 
 namespace {
 
-// Field_ObjectApproachDirection / AvoidDirection: they differ only in the
-// order of each subtraction (the absolute values agree) and in `toward`.
-unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
+// Field_ObjectFleeDirection / ChaseDirection: they differ only in the
+// order of each subtraction (the absolute values agree) and in `farthest`.
+unsigned char LeaderDirection(unsigned char* object, unsigned char farthest) {
     records::SpriteHead* const s = rv::Current<records::SpriteHead>();   // held for both tests and +8
     const std::int32_t dx = Abs32(static_cast<std::uint32_t>(ObjTrio[0].x) - static_cast<U>(s->x)) >> 16;
     const unsigned char direction = s->direction;
     if (static_cast<int>(SWord(object + 0x98)) > dx) {
         const std::int32_t dz = Abs32(static_cast<std::uint32_t>(ObjTrio[0].z) - static_cast<U>(s->z)) >> 16;
         if (static_cast<int>(SWord(object + 0x9A)) > dz) {
-            const unsigned char best = SH_CALL(Field_ObjectBestDirection)(object, toward);
+            const unsigned char best = SH_CALL(Field_ObjectBestDirection)(object, farthest);
             if (best == 0xFF) {
                 rv::Current<records::SpriteHead>()->step_frames = 0;
                 return 0xFF;
@@ -205,23 +205,23 @@ unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
 
 }  // namespace
 
-// original 0x518E20 (PSX twin 0x801A3C9C): Field_ObjectApproach's pick.
-extern "C" unsigned char __cdecl Field_ObjectApproachDirection(unsigned char* object) { return ChaseDirection(object, 1); }
+// original 0x518E20 (PSX twin 0x801A3C9C): Field_ObjectFlee's pick.
+extern "C" unsigned char __cdecl Field_ObjectFleeDirection(unsigned char* object) { return LeaderDirection(object, 1); }
 
-// original 0x518ED0 (PSX twin 0x801A3DBC): Field_ObjectAvoid's pick.
-extern "C" unsigned char __cdecl Field_ObjectAvoidDirection(unsigned char* object) { return ChaseDirection(object, 0); }
+// original 0x518ED0 (PSX twin 0x801A3DBC): Field_ObjectChase's pick.
+extern "C" unsigned char __cdecl Field_ObjectChaseDirection(unsigned char* object) { return LeaderDirection(object, 0); }
 
 // original 0x518F80 (PSX twin 0x801A3EDC): of four quarter turns, the
-// unblocked one whose step lands farthest (toward not 0) or nearest (0) to the
+// unblocked one whose step lands farthest (farthest not 0) or nearest (0) to the
 // leader's next point, by the sum of the two distances; 0xFF for none.
-extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object, unsigned char toward) {
+extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object, unsigned char farthest) {
     const U pace = ObjTrio[0].step_frames;
     const U point_z = pace * static_cast<std::uint32_t>(ObjTrio[0].step_z) + static_cast<std::uint32_t>(ObjTrio[0].z);
     const U point_x = pace * static_cast<std::uint32_t>(ObjTrio[0].step_x) + static_cast<std::uint32_t>(ObjTrio[0].x);
     records::SpriteHead* s = rv::Current<records::SpriteHead>();
     if ((s->direction & 1) == 0) s->direction = static_cast<unsigned char>(s->direction + 1);
     unsigned char best = 0xFF;
-    SetULong(object + 0x94, toward != 0 ? 0u : 0x1000000u);
+    SetULong(object + 0x94, farthest != 0 ? 0u : 0x1000000u);
     for (int turn = 4; turn != 0; --turn) {
         const unsigned char blocked = SH_CALL(Field_ObjectBlockedAhead)(object);
         s = rv::Current<records::SpriteHead>();
@@ -230,7 +230,7 @@ extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object
             const U score = static_cast<U>(Abs32(DirStepZ(d) + static_cast<U>(s->z) - point_z)) +
                             static_cast<U>(Abs32(DirStepX(d) + static_cast<U>(s->x) - point_x));
             const U kept = ULong(object + 0x94);
-            if (toward != 0 ? kept < score : kept > score) {
+            if (farthest != 0 ? kept < score : kept > score) {
                 SetULong(object + 0x94, score);
                 s = rv::Current<records::SpriteHead>();
                 best = s->direction;
@@ -1131,8 +1131,8 @@ void FieldC3_Inject() {
     BOF3_INJECT(Mode8_Step5);
     BOF3_INJECT(Mode8_Step8);
     BOF3_INJECT(MoveCmd_OpE7);
-    BOF3_INJECT(Field_ObjectApproachDirection);
-    BOF3_INJECT(Field_ObjectAvoidDirection);
+    BOF3_INJECT(Field_ObjectFleeDirection);
+    BOF3_INJECT(Field_ObjectChaseDirection);
     BOF3_INJECT(Field_ObjectBestDirection);
     BOF3_INJECT(Field_ObjectFadeOutStart);
     BOF3_INJECT(Field_ObjectFadeOutStep);
