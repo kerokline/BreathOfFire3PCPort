@@ -282,6 +282,7 @@
 #include "game/magic/wall_of_fire_child.h"
 #include "game/magic/eye_beam.h"
 #include "game/magic_s33.h"
+#include "game/magic/mighty_chop_blade.h"
 #include "game/magic/accession_spark.h"
 #include "game/magic/accession_ring.h"
 #include "game/magic/accession_orb.h"
@@ -889,6 +890,7 @@ void InjectAll() {
     MagicS33_Inject();          // round 9 group S33 (MAGIC151, 154: Accession, Mighty Chop): its clones' calls
                                 // and stack-table immediates re-aimed, its seven .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 57 (DIVERGENCE.md, cheats.cpp)
+    MightyChopBlade_Inject();
     AccessionSpark_Inject();
     AccessionRing_Inject();
     AccessionOrb_Inject();

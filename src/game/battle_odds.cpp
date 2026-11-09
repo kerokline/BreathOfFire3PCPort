@@ -72,7 +72,6 @@ void PutWord(unsigned char* p, U v) {
 
 battle_odds::U BannerCurrent() { return BattleMisc_BannerCurrent; }
 U SpriteCurrent() { return Long(AtBattleOdds(battle_odds::at::Sprite_CurrentAt())); }
-unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
 
 }  // namespace
 
@@ -167,16 +166,6 @@ extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
 // table index), +2 a second counter, +9 a countdown, +0xA a tint record,
 // +0xB a byte the waits test.
 
-// original 0x4ED5C0: +9 = BattleActor_FxSize() (al; Sprite_Current read after
-// the call), then +2 stepped (read again). eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_SetSize(void) {
-    const U size = g.fx_size();
-    Sprite()[9] = static_cast<unsigned char>(size);
-    unsigned char* const s = Sprite();
-    s[2] = static_cast<unsigned char>(s[2] + 1);
-    return Low32(s);
-}
-
 // original 0x4F7350: once +0xB is 0 - Battle_SetTargetFlag40(the byte
 // kFlagTarget; pushed in ecx, whose upper bits are the entry's, and the callee
 // reads the low byte), kRoundFlags |= 4, and a tail jump to
@@ -195,6 +184,5 @@ void BattleOdds_Inject() {
     BOF3_INJECT(BattleBanner_TickKind2);
     BOF3_INJECT(Effect_Heal20);
     BOF3_INJECT(Effect_HalfAttack);
-    BOF3_INJECT(BattleFx_SetSize);
     BOF3_INJECT(BattleFx_Finish);
 }

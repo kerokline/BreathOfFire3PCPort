@@ -4490,6 +4490,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Sprite	copied		src/game/battle_odds.cpp	75	75	75	src/game/magic/celerity_spark.cpp	d3e6abb3
 	Sprite	copied		src/game/battle_odds.cpp	75	75	75	src/game/magic/mighty_chop_blade.cpp	d3e6abb3
 	Sprite	copied		src/game/battle_odds.cpp	75	75	75	src/game/magic/transfer_mote.cpp	d3e6abb3
+	Sprite	local		src/game/battle_odds.cpp	75	75	75	src/game/magic/mighty_chop_blade.cpp	c7066aad
 0x44A740	BattleBanner_TickKind1	func	tu_44a5c0	src/game/battle_odds.cpp	81	91	110	src/game/battle/battle_banner.cpp	d3e6abb3
 0x44A7B0	BattleBanner_TickKind2	func	tu_44a5c0	src/game/battle_odds.cpp	112	119	136	src/game/battle/battle_banner.cpp	d3e6abb3
 0x44C140	Effect_Heal20	func	tu_44aad0	src/game/battle_odds.cpp	140	143	147	src/game/effect/effect.cpp	d3e6abb3
@@ -18600,6 +18601,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SetLong	copied		src/game/magic_s33.cpp	48	49	49	src/game/magic/accession_ring.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_s33.cpp	48	49	49	src/game/magic/accession_spark.cpp	d3e6abb3
 	SetLong	copied		src/game/magic_s33.cpp	48	49	49	src/game/magic/mighty_chop_blade.cpp	d3e6abb3
+	SetLong	local		src/game/magic_s33.cpp	48	49	49	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	SetWord	copied		src/game/magic_s33.cpp	50	50	50	src/game/magic/accession.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_s33.cpp	50	50	50	src/game/magic/accession_bolt.cpp	d3e6abb3
 	SetWord	copied		src/game/magic_s33.cpp	50	50	50	src/game/magic/accession_orb.cpp	d3e6abb3
@@ -18620,6 +18622,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kBannerIds	local		src/game/magic_s33.cpp	70	70	70	src/game/magic/accession.cpp	d3e6abb3
 	kFormFiles	local		src/game/magic_s33.cpp	71	71	71	src/game/magic/accession.cpp	d3e6abb3
 	kSideOffsets	local		src/game/magic_s33.cpp	72	75	75	src/game/magic/accession.cpp	d3e6abb3
+	TargetByte	local		src/game/magic_s33.cpp	73	73	73	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	kMemberClut	local		src/game/magic_s33.cpp	76	78	78	src/game/magic/accession.cpp	d3e6abb3
 	kMemberB05	local		src/game/magic_s33.cpp	79	79	79	src/game/magic/accession.cpp	d3e6abb3
 	kMemberC10	local		src/game/magic_s33.cpp	80	80	80	src/game/magic/accession.cpp	d3e6abb3
@@ -18637,9 +18640,11 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Owner	copied		src/game/magic_s33.cpp	84	84	84	src/game/magic/accession_ring.cpp	d3e6abb3
 	Owner	copied		src/game/magic_s33.cpp	84	84	84	src/game/magic/accession_spark.cpp	d3e6abb3
 	Owner	copied		src/game/magic_s33.cpp	84	84	84	src/game/magic/mighty_chop_blade.cpp	d3e6abb3
+	Inc	local		src/game/magic_s33.cpp	85	85	85	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	TargetByte	copied		src/game/magic_s33.cpp	85	85	85	src/game/magic/accession.cpp	d3e6abb3
 	TargetByte	copied		src/game/magic_s33.cpp	85	85	85	src/game/magic/mighty_chop_blade.cpp	d3e6abb3
 	ActorIndex	local		src/game/magic_s33.cpp	86	86	86	src/game/magic/accession.cpp	d3e6abb3
+	Dec	local		src/game/magic_s33.cpp	86	86	86	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	SW	copied		src/game/magic_s33.cpp	88	88	88	src/game/magic/accession_bolt.cpp	d3e6abb3
 	SW	copied		src/game/magic_s33.cpp	88	88	88	src/game/magic/accession_orb.cpp	d3e6abb3
 	SW	copied		src/game/magic_s33.cpp	88	88	88	src/game/magic/accession_ring.cpp	d3e6abb3
@@ -18648,6 +18653,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	SS	copied		src/game/magic_s33.cpp	89	89	89	src/game/magic/accession_orb.cpp	d3e6abb3
 	SS	copied		src/game/magic_s33.cpp	89	89	89	src/game/magic/accession_ring.cpp	d3e6abb3
 	SS	copied		src/game/magic_s33.cpp	89	89	89	src/game/magic/accession_spark.cpp	d3e6abb3
+	UMagicS33	local		src/game/magic_s33.cpp	89	89	89	src/game/magic/mighty_chop_blade.cpp	c7066aad
+	AddLong	local		src/game/magic_s33.cpp	90	90	90	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	SB	copied		src/game/magic_s33.cpp	90	90	90	src/game/magic/accession_bolt.cpp	d3e6abb3
 	SB	copied		src/game/magic_s33.cpp	90	90	90	src/game/magic/accession_orb.cpp	d3e6abb3
 	SB	copied		src/game/magic_s33.cpp	90	90	90	src/game/magic/accession_ring.cpp	d3e6abb3
@@ -18684,6 +18691,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	Dec	copied		src/game/magic_s33.cpp	100	100	100	src/game/magic/accession_orb.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s33.cpp	100	100	100	src/game/magic/accession_spark.cpp	d3e6abb3
 	Dec	copied		src/game/magic_s33.cpp	100	100	100	src/game/magic/mighty_chop_blade.cpp	d3e6abb3
+	PartyRecord	local		src/game/magic_s33.cpp	100	102	102	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	AddB	copied		src/game/magic_s33.cpp	101	101	101	src/game/magic/accession_bolt.cpp	d3e6abb3
 	AddB	copied		src/game/magic_s33.cpp	101	101	101	src/game/magic/accession_orb.cpp	d3e6abb3
 	AddB	copied		src/game/magic_s33.cpp	101	101	101	src/game/magic/accession_spark.cpp	d3e6abb3
@@ -18723,6 +18731,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	NewTask	copied		src/game/magic_s33.cpp	122	122	122	src/game/magic/accession.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_s33.cpp	122	122	122	src/game/magic/accession_ctl.cpp	d3e6abb3
 	NewTask	copied		src/game/magic_s33.cpp	122	122	122	src/game/magic/accession_orb.cpp	d3e6abb3
+	PastTable	local		src/game/magic_s33.cpp	122	122	124	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	Fn0	copied		src/game/magic_s33.cpp	124	127	127	src/game/magic/accession.cpp	d3e6abb3
 	Fn0	copied		src/game/magic_s33.cpp	124	127	127	src/game/magic/accession_orb.cpp	d3e6abb3
 	Fn0	copied		src/game/magic_s33.cpp	124	127	127	src/game/magic/accession_ring.cpp	d3e6abb3
@@ -18752,6 +18761,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	S33_AS	copied		src/game/magic_s33.cpp	154	154	154	src/game/magic/accession_ring.cpp	d3e6abb3
 	S33_AS	copied		src/game/magic_s33.cpp	154	154	154	src/game/magic/accession_spark.cpp	d3e6abb3
 	Rtp1	local		src/game/magic_s33.cpp	156	156	159	src/game/magic/accession_spark.cpp	d3e6abb3
+	S33_EXPORT	local		src/game/magic_s33.cpp	159	159	159	src/game/magic/mighty_chop_blade.cpp	c7066aad
 	Rtp4	copied		src/game/magic_s33.cpp	160	162	166	src/game/magic/accession_bolt.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s33.cpp	160	162	166	src/game/magic/accession_orb.cpp	d3e6abb3
 	Rtp4	copied		src/game/magic_s33.cpp	160	162	166	src/game/magic/accession_ring.cpp	d3e6abb3
