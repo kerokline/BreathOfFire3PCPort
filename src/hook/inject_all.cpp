@@ -94,7 +94,6 @@
 #include "game/title_states.h"
 #include "game/frame_callees.h"
 #include "game/field_event.h"
-#include "game/event_script.h"
 #include "game/msgbox.h"
 #include "game/window_task.h"
 #include "game/sprite_pose.h"
@@ -1274,7 +1273,6 @@ void InjectAll() {
                                 // fuzz only; no module patches bytes inside its 20: order does not matter
     Magic111_Inject();
     EffectKind5fFromMagicEngine_Inject();
-    MagicC3_Inject();           // round 9 group C3 (MAGIC002, MAGIC111: the overlays no ability loads): its clones'
                                 // calls and stack-table immediates re-aimed, its three .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 20: order does not matter
     Magic002Ball_Inject();
@@ -2726,7 +2724,6 @@ void InjectAll() {
     TransitionFromModeRest_Inject();
     GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
     ItemTrade_Inject();
-    Char_Inject();
     CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
