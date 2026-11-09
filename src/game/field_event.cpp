@@ -67,7 +67,7 @@ Callees g = kOriginals;
 namespace {
 
 using namespace move_script;
-using field_event::g;
+constexpr auto& gFieldEvent = field_event::g;
 namespace at = field_event::at;
 using HandlerFieldEvent = field_event::Handler;
 
