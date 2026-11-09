@@ -75,8 +75,8 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char* P(unsigned actor) { return At(at::Party(actor)); }
-unsigned char* E(unsigned actor) { return At(at::Enemy(actor)); }
+unsigned char* P(unsigned actor) { return move_script::At(at::Party(actor)); }
+unsigned char* E(unsigned actor) { return move_script::At(at::Enemy(actor)); }
 bool Yes(unsigned al) { return (al & 0xFFu) != 0; }
 
 // The state bytes an effect sets, in the originals' order: +1 = 6, +2 = 5,
@@ -135,11 +135,11 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
     unsigned r;
     if (a < 3) {
         offset = a * at::kPartyStride;
-        auto* const member_rec = rv::AsConst<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + offset));
+        auto* const member_rec = rv::AsConst<records::PartyMember>(move_script::At(::bof3::Img(ObjTrio_addr) + offset));
         r = (member_rec->flags & 1) && (member_rec->status & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
-        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(::bof3::Img(Battle_Enemies_addr) + offset));
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(move_script::At(::bof3::Img(Battle_Enemies_addr) + offset));
         r = (enemy_rec->flags & 1) && (enemy_rec->status & 0x4144) == 0 ? 1 : 0;
     }
     return (offset & ~0xFFu) | r;
@@ -167,16 +167,16 @@ extern "C" unsigned __cdecl Battle_PartyOutpaces(unsigned actor, unsigned averag
 // kind 4 with ability 0xA3. An actor above 2 is an enemy, (actor - 3) * 0x128
 // - unbounded, as the original's.
 extern "C" void __cdecl Battle_ClearActingFlags() {
-    const std::uint32_t acting = static_cast<std::uint32_t>(move_script::Long(At(::bof3::Img(at::kActing.v))));
+    const std::uint32_t acting = static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(at::kActing.v))));
     const unsigned a = acting & 0xFF, kind = (acting >> 8) & 0xFF;
-    const unsigned ability = Word(At(::bof3::Img(at::kAbility.v)));
+    const unsigned ability = move_script::Word(move_script::At(::bof3::Img(at::kAbility.v)));
     const auto clear = [a](unsigned bit, unsigned party_count, unsigned enemy_count) {
         const bool party = a <= 2;
         unsigned char* const o = party ? P(a) : E(a);
         unsigned char* const flags = o + (party ? at::kPFlags : at::kEFlags);
         if ((flags[0] & bit) == 0) return;
         o[party ? party_count : enemy_count] = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~bit));
+        move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~bit));
     };
     if (!(kind == 4 && ability == 0x27)) clear(0x40, at::kPCount40, at::kECount40);
     if (!(kind == 4 && ability == 0xA3)) clear(0x80, at::kPCount80, at::kECount80);
@@ -203,7 +203,7 @@ extern "C" void __cdecl Battle_TickCounters() {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(E(i));
         if ((static_cast<std::int32_t>(enemy_rec->flags_114) & 0x4000) && enemy_rec->count_4000 <= 2) ++enemy_rec->count_4000;
     }
-    unsigned char* const timer = At(::bof3::Img(BattleFlow_AnimGate_addr));
+    unsigned char* const timer = move_script::At(::bof3::Img(BattleFlow_AnimGate_addr));
     if (*timer == 0) return;
     if (--*timer != 0) return;
     for (unsigned i = 0; i <= 2; ++i)
@@ -230,7 +230,7 @@ extern "C" unsigned __cdecl Battle_MarkFasterSide() {
         for (unsigned i = from; i <= to; ++i) {
             const unsigned r = battle_setup::g.standing(i);
             if (!Yes(r)) continue;
-            const std::uint32_t v = (r & 0xFFFF0000u) | Word((party ? P(i) + at::kPAgi : E(i) + at::kEAgi));
+            const std::uint32_t v = (r & 0xFFFF0000u) | move_script::Word((party ? P(i) + at::kPAgi : E(i) + at::kEAgi));
             sum += v;
             if ((top & 0xFFFF) < (v & 0xFFFF)) top = v;
             count = (count + 1) & 0xFF;
@@ -246,7 +246,7 @@ extern "C" unsigned __cdecl Battle_MarkFasterSide() {
         if (!Yes(battle_setup::g.can_act(i))) continue;
         if (!Yes(battle_setup::g.outpaces(i, average, highest))) continue;
         unsigned char* const flags = P(i) + at::kPFlags;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
+        move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
         marked = (marked + 1) & 0xFF;
     }
     const unsigned answer = marked != 0 ? 1 : 0;
@@ -255,7 +255,7 @@ extern "C" unsigned __cdecl Battle_MarkFasterSide() {
         if (!Yes(battle_setup::g.can_act(i))) continue;
         if (!Yes(battle_setup::g.enemy_outpaces(i, average, highest))) continue;
         unsigned char* const flags = E(i) + at::kEFlags;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
+        move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) | 0x8000u));
     }
     return answer;
 }
@@ -303,7 +303,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
     unsigned i = static_cast<unsigned char>(BossSe_RoundSlot - 1);
     for (;;) {
         if (i >= to) return;
-        if (At(::bof3::Img(at::kItemQueue.v) + i)[0] == a) break;
+        if (move_script::At(::bof3::Img(at::kItemQueue.v) + i)[0] == a) break;
         ++i;
     }
     unsigned char* const o = P(a);
@@ -346,7 +346,7 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
         unsigned char* const flags = o + at::kPFlags;
         if ((move_script::Long(flags) & 0x4000) == 0 || member_rec->count_4000 != 3) continue;
         member_rec->count_4000 = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
+        move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
         rv::Store<unsigned>(member_rec->hp_change, member_rec->hp);
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
@@ -360,7 +360,7 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
         unsigned char* const flags = o + at::kEFlags;
         if ((move_script::Long(flags) & 0x4000) == 0 || rv::As<records::PartyMember>(P(i))->count_4000 != 3) continue;   // the party array, as the original
         enemy_rec->count_4000 = 0;
-        SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
+        move_script::SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(flags)) & ~0x4000u));
         enemy_rec->hp_change = enemy_rec->hp;
         MarkEffect(o);
         enemy_rec->shown = 0x11;
@@ -425,7 +425,7 @@ unsigned WakeStep(bool party, unsigned bit, unsigned single, unsigned many) {
         if ((status[0] & bit) == 0) continue;
         if (Yes(battle_setup::g.wake_roll(i))) {
             *counter = 0;
-            SetWord(status, Word(status) & ~bit);
+            move_script::SetWord(status, move_script::Word(status) & ~bit);
             who = i;
             count = (count + 1) & 0xFF;
         } else {
@@ -475,8 +475,8 @@ extern "C" unsigned __cdecl BattleStep_Status80() {
         const bool party = i <= 2;
         unsigned char* const o = party ? P(i) : E(i);
         if ((o[party ? at::kPStatus : at::kEStatus] & 0x80) == 0) continue;
-        SetWord(o + (party ? at::kPApChange : at::kEApChange), 0);
-        SetWord(o + (party ? at::kPHpChange : at::kEHpChange), 0);
+        move_script::SetWord(o + (party ? at::kPApChange : at::kEApChange), 0);
+        move_script::SetWord(o + (party ? at::kPHpChange : at::kEHpChange), 0);
         battle_setup::g.set_hp_change(i);
         MarkEffect(o);
         count = (count + 1) & 0xFF;
@@ -563,7 +563,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
             member_rec->flags_134 = static_cast<std::int32_t>(flags & ~0x20u);
             continue;
         }
-        const int cost = static_cast<int>((static_cast<std::uint32_t>(move_script::Long(At(::bof3::Img(BattleActions_ApCost_addr)))) & 0xFF) + 1) / 2;
+        const int cost = static_cast<int>((static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(BattleActions_ApCost_addr)))) & 0xFF) + 1) / 2;
         if (static_cast<int>(member_rec->ap) < cost) {
             member_rec->state = 6;
             member_rec->step = 4;
