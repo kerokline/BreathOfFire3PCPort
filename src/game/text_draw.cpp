@@ -86,7 +86,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
                 why, (unsigned)reinterpret_cast<std::uintptr_t>(p), (unsigned)Game_AreaNumber, p[0], p[1], p[2], p[3],
                 p[4], p[5], p[6]);
 }
-
+}  // namespace
 // --- BOF3X_TEXTLOG: which string is drawn from where ----------------------------
 // Diagnostic only, off unless the variable is set: each distinct (caller,
 // string address) pair is logged once, with the string's first bytes - the
@@ -96,7 +96,7 @@ std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(b
 // drawn through Text_DrawAt shows 0x516B61. Reading Text_DrawAt's caller off
 // the stack, three slots above our first argument, was tried on 2026-09-21
 // and came back wrong as built; unfixed, so not claimed.
-bool g_textlog = false;
+namespace text_draw { bool g_textlog = false; }  namespace {
 constexpr unsigned kTextLogSlots = 4096;
 std::uint64_t g_textlog_seen[kTextLogSlots];
 unsigned g_textlog_count = 0;
@@ -320,7 +320,7 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out) {
 // draw is the one above.
 extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsigned count_arg,
                                                         const unsigned char* text) {
-    if (g_textlog) {
+    if (text_draw::g_textlog) {
         TextLog(Low32(__builtin_return_address(0)), text);
     }
     unsigned color = color_arg;                     // only the low byte is ever read
@@ -435,8 +435,8 @@ void TextDraw_Inject() {
     }
     BOF3_INJECT(Text_DrawString);
     char flag[8];
-    g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
-    if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
+    text_draw::g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
+    if (text_draw::g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }
 
 // --- DT-2 (DIV-0140): the self-test and the switch ---------------------------------
