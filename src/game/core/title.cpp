@@ -51,6 +51,10 @@
 #include "hook/log.h"
 #include "input/sigma.h"
 
+// rest_4f.cpp's own `DrawText` alias (a draw call's type) met <windows.h>'s DrawText macro here,
+// which config_text's and gfx_flush's functions bring: rest_4f never included it (source-layout B3).
+#undef DrawText
+
 namespace {
 
 namespace at = title::at;
