@@ -1,14 +1,13 @@
 # The source-layout round: staging (IDEAS I44's last step, I5 folded in)
 
-**Status:** IN PROGRESS (stage A merged with PR #207 on 2026-11-07; **stage B0
-run 2026-11-08** on `source-layout/stage-b` off `main` `67c3259b`, root
-`C:\Users\kerok\bof3x-runs\slb1108`, section 4 "Stage B0 as run": the 468
-helper clashes renamed, the mover reports none, 39 `low32-site` rows, group
-s's decisions applied where the code stays identical and 62 blocked on
-measured gate classes, the sheet in two tables and its PSX flags read against
-the PlayStation side. Not merged to `main` and no PR while the beta is being
-cut. The moves B1..B5 wait on the owner's read of the sheet's 212 rows and
-the calls in 7b.)
+**Status:** IN PROGRESS (stage A merged with PR #207 on 2026-11-07; stages B0
+and B, the moves, merged as PR #214 on 2026-11-09, section 4; **stage C run
+2026-11-09** on `source-layout/stage-c` off `main` `1a817eba`, section 5
+"Stage C as run": 177 pure shells retired, the fuzz files and 158 files of
+ours moved whole into the folders, both gates 0 differ, the three self-tests
+pass, [`source-layout.md`](source-layout.md) the tree's reader. Stage D, the
+ten-route proof, is next and has not run since B0; the cleanup round after
+it is IDEAS I60.)
 
 The typed-data round named every data access, the relocatable-image round
 removed every fixed address, and the 64-bit round builds the same source at
@@ -1108,6 +1107,122 @@ whole or split, and whether the shared infrastructure headers (`records.h`,
 of their own in this round (the staging says no: they are not units and
 nothing forces it) - plus the two carried from stage B, `-fno-auto-import`
 and the register-allocation-only `inline` rows.
+
+### Stage C as run (2026-11-09, branch `source-layout/stage-c` off `main` `1a817eba`)
+
+Root `C:\Users\kerok\bof3x-runs\slc1109` (worktree `wt`, logs and scripts
+`scratch`, the launcher copy `c_L`). One worktree and no agent groups: with
+the owner's fifth call (7c) every step is one tool run, so C1..C4 had
+nothing to divide. The gate's baseline is still `slb1108\base2`.
+
+**The census before the tool** (`scratch\census.py`, by
+`tools/cpp_items.py`'s items) corrected the staging. Of the 336 flat group
+files, **177 are pure shells**: an `_Inject()` that is empty (7) or is only
+`if (bof3::WantsShadow("g")) g::SelfTest();` (170), 28 with the callee seam,
+nothing else reached. **159 are not shells**: 109 hold a self-test written
+in the file (`gfx_flush.cpp`, which the staging called 15 lines, is 200),
+89 hold variables of ours with external linkage (175 of them, most a
+divergence's switch armed in the file's `_Inject()` after its self-test),
+36 a seam, and 37 never held a function of Capcom's (`widescreen`,
+`layering`, `dat_cache`, `map_rim`, the sound and text modules).
+`crt_rest.cpp` is still the `impl` of the runtime's 19 functions, whose
+range is outside the round (section 9). The owner's call on the 159: move
+whole, dissolve later (7c item 5; IDEAS I60).
+
+**What was done**, each step a commit, the gate after each:
+
+1. **`tools/retire_shells.py`** (`--check`, `--moves`, `--shells`,
+   `--check --strict` for CI), `tools/game_sources.py` (a file that moved
+   whole keeps its place in the link order through the map's `file` rows)
+   and `tools/cite_lookup.py` (an old path answers through them; a `seam`
+   row; a retired shell and its header).
+2. **411 files moved whole**, unchanged inside: the 253 fuzz files and 158
+   files of ours, each to the folder most of its group's functions went to
+   (the 37 modules and the two group-less fuzz files `d3d_fuzz.cpp` and
+   `ddraw_fuzz.cpp` by the tool's `OURS` list). Six that meet a unit file's
+   name are `<group>_ours.cpp` (`battle_result`, `effect_gte`,
+   `event_script`, `move_script`, `sound`, `world_map`). Their headers stay
+   flat. The link order before and after is the same list with the paths
+   substituted (1,224 entries compared).
+3. **The gate learned the move**: `codegen_same.py --moved-map
+   analysis/tu_moves.tsv` reads a file that moved whole under the path it
+   had - its object's name, which the promotion pairing and the
+   `NAME@OBJECT` rows key on, and the path its code carries (`__FILE__` in
+   the 64-bit `Low32()` message). Without it the moves read 13 differences
+   on i686 (the promotions of `g_scale`, `dock::g_on`, `g_faerie_name_end`
+   unpaired, `sound_ours.cpp`'s locals) and 77 on x86_64 (the path strings);
+   with it **0 differ at both widths, no row added**. A build directory that
+   has seen the files in their old place keeps their objects: delete the
+   objects whose source is gone before gating (the first gate read both).
+4. **177 shells retired.** The 28 seams went verbatim into the file of their
+   group's lowest function, inside `namespace <group>`, with the file-locals
+   the table's initialiser reaches (`Fn`, `As`, `Import...`) in an inner
+   anonymous namespace unless the home already held the same text; five
+   homes took two or three seams (`battle_3`, `field_6`, `member`,
+   `ebonfire_ring`, `d3d`). 170 self-test lines stand in
+   `src/hook/inject_all.cpp` where the `_Inject()` calls stood, their
+   declarations in one block the tool keeps. 165 headers that declared only
+   the `_Inject()` and the `SelfTest()` are deleted with every include of
+   them; 12 keep the function declarations they also hold (the effect and
+   party-action groups: `symbols.gen.h` declares the same; stage E's). Both
+   widths built at the first attempt.
+5. **The gate on the retired shells:** on i686 nothing but static
+   initialisers (4 NEW, 8 GONE: where two or three seams meet in one home
+   their initialisers are one function; the 23 single seams' initialisers
+   hash as before), the same twelve on x86_64 - 24 `data-layout` rows. On
+   x86_64 `scenario_harness.cpp` differed in 4 functions and 810 local
+   pairs: two deleted includes had moved its line numbers, which the
+   `Low32()` messages carry; two comment lines in their place keep the
+   numbers until stage E. The gate then reported **311 rows unused** (117
+   `refptr` and 42 `inline` on i686, 112 and 40 on x86_64): stage B's rows
+   for readers that sit in their seam's file again and read it directly.
+   Pruned. The table has 3,681 rows. **Both gates: 0 differ**
+   (`scratch\fin_gate32.txt`, `fin_gate64.txt`).
+6. **The self-tests on that build** (`scratch\st_status.txt`, logs
+   `st_hosted.log`, `st_exe.log`, `st_moved.log`): the hosted
+   `BOF3X_SHADOW='*'` suite exit 0, 0 FATAL, 916 `MISMATCHES` lines all 0;
+   the exe host exit 0; the moved image (`0xA00000`) exit 0. The suite's
+   963 self-test lines, numbers masked, are **the same lines in the same
+   order** as stage B's tip's (`slb1109\f_hosted.log`): every group's
+   self-test still runs, where it ran.
+7. **The checks.** The census files key their sites by path: each moved
+   file's path was substituted first (a commit of its own), then the files
+   regenerated, so the regeneration shows the shells alone - the typed-data
+   census 27,910 -> 27,208 raw sites (the retired shells' copied helpers;
+   706 keys gone, none new, every reason carried), `abs_call` 1,444 ->
+   1,414, the seams' sites listed under their homes (`width_census` 90
+   keys, `reloc_bare` 2). `tu_renames.py` looks in a moved source's own
+   `_callees.h`. `cmake/game_sources_order.txt` is written anew, every file
+   under today's path (1,047 entries; the same list with and without the
+   map). Two CI steps: `tu_census.py --check --strict` (every function's
+   `impl` is its unit's file) and `retire_shells.py --check --strict` (no
+   flat `src/game/*.cpp` but the seven harness files and the runtime's two).
+   `cite_lookup.py --scan` over `docs/`, `CLAUDE.md`, `CONTRIBUTING.md` and
+   `recipes/`: 2,898 citations, 20 unresolved, the same 20 as before the
+   stage (12 name files that never existed under that name or left before
+   the round - `area4_walls.cpp`, `ruby_probe.cpp`, `field_fc3.cpp`, the
+   round doc's own examples - and 8 point at a file's head comment).
+8. **The docs:** [`source-layout.md`](source-layout.md), generated by
+   `tools/source_layout_doc.py`; a line under the status of 255 takeover
+   group docs; [`SCAFFOLDING.md`](SCAFFOLDING.md)'s steps; `docs/README.md`.
+
+**What `src/game/` holds now:** 14 folders with 609 unit files (10,069
+functions), 253 fuzz files and 158 files of ours; flat, 9 sources (the 7
+harness files, `crt_rest.cpp`, `crt_rest_fuzz.cpp`) and 407 headers.
+
+**Not done, and where it went:** the mover's reconciliation (HANDOFF's
+"before stage C") - stage C never runs `move_funcs.py`, and none of B5's or
+B2's six commits applies to the tip's tool as a patch; IDEAS I60 carries it.
+The fuzz table per unit file is I61. **Stage D has not run**: the ten routes
+at both image bases with the state hash, and the 64-bit build's routes.
+No DIV and no D number: nothing a player sees changed.
+
+**Traps paid:** a here-document passed to `python -` loses one level of
+backslashes on this machine's tool path - a regex or an escape written that
+way arrives broken (three times); write the script to a file. The gate reads
+every object under `CMakeFiles`, the stale ones too. A whole-file move
+changes `__FILE__`, and a deleted include line changes `__LINE__`: both are
+code on x86_64.
 
 ## 5a. Stage E: the comment clean-up (I48), at the end (the owner's call 5)
 
