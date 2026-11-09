@@ -336,10 +336,10 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
     unsigned char* const v = Vertices();
     {
         unsigned char* const s = S();
-        if (side >= at::kSidesRoom)
+        if (side >= effect_5g::at::kSidesRoom)
             bof3::Fatal("EffectKind18Sub3A_DrawPanel: side %u, past the %u bytes of 0x%X - the original reads on into "
                         "EffectKind18Sub4A_States (docs/effect_5g.md section 6)",
-                        side, at::kSidesRoom, at::kSub3ASides.v);
+                        side, effect_5g::at::kSidesRoom, at::kSub3ASides.v);
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub3ASides.v))[side])));
         const U slide = sign * Word(s + 0x30);
         const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
@@ -514,7 +514,7 @@ extern "C" void __cdecl EffectKind18Sub2C_WaitNear(void) {
     unsigned char* s = S();
     if (LeaderAt(s, s[8] != 0, 0x8000, 0x10000)) {
         if (Field_Request == 0) {
-            SH_CALL(Sound_PlayEffect)(at::kSoundOpen);
+            SH_CALL(Sound_PlayEffect)(effect_5g::at::kSoundOpen);
             s = S();
         }
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -540,7 +540,7 @@ extern "C" void __cdecl EffectKind18Sub2C_WaitFar(void) {
 // original 0x50B870 (sub-state 4): the slide down 0x10; at 0 or below sound
 // 0x201 unless a message is up and +2 = 1. A tail jump to the draw.
 extern "C" void __cdecl EffectKind18Sub2C_Close(void) {
-    if (Closed()) Shut(at::kSoundShut);
+    if (Closed()) Shut(effect_5g::at::kSoundShut);
     SH_CALL(EffectKind18Sub2C_Draw)();
 }
 

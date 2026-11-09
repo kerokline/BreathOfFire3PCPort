@@ -309,13 +309,13 @@ MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned acto
 // after the create), +4 the icon - `kind`, or 8 when resisted -, +9 1, +0xA 0.
 // The slot is not tested (0xFF writes past the slots).
 MLIB_EXPORT void __cdecl MagicFx_BuffPopup(unsigned kind, unsigned who) {
-    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
+    const unsigned char target = Mem(::bof3::Img(magic_harness::at::kTarget))[0];
     const unsigned stat = MagicFx_BuffStats[kind & 3];
     const unsigned char applied =
         MH_CALL(MagicFx_ApplyBuff)(stat, (target & 0x40) ? static_cast<unsigned char>(who + 3) : who);
     const unsigned char icon = applied != 0 ? static_cast<unsigned char>(kind) : 8;
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x48);
-    unsigned char* const t = Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride);
+    unsigned char* const t = Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * magic_harness::at::kTaskStride);
     move_script::SetLong(t + 0x80, I32(Addr(Sprite_Current)));
     t[4] = icon;
     t[9] = 1;
@@ -479,7 +479,7 @@ MLIB_EXPORT void __cdecl SpriteClut_RestoreFxRow(void) {
 // 9), z the same, and the height word, each a signed division. With every
 // one out the original divides by zero; ours aborts.
 MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
-    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
+    const unsigned char target = Mem(::bof3::Img(magic_harness::at::kTarget))[0];
     if ((target & 0xC0) == 0xC0) return;
     std::uint32_t sx = 0, sz = 0, sy = 0;
     int n = 0;
@@ -506,7 +506,7 @@ MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
 // 0x8C5653 + 0x8C * its type (+0xF0). Answered in al. Its one caller
 // (MAGIC009) stores it to +9, as FxSize's do.
 MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
-    const unsigned char i = Mem(::bof3::Img(at::kActor))[0];
+    const unsigned char i = Mem(::bof3::Img(magic_harness::at::kActor))[0];
     if (i < 3) {
         const unsigned char* const r = PartyRecord(i);
         if (r[0x134] & 2) return FxSizeB_AltTable[Mem(::bof3::Img(BattlePhases_B89_addr))[0]];

@@ -101,7 +101,7 @@ long SlopeAt(U x, U z, unsigned direction) {
     return SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);
 }
 // AreaMap_Slope's "sloped" byte, which the callers read straight after MapView_SlopeAt.
-bool Sloped() { return at::kSloped != 0; }
+bool Sloped() { return field_c3::at::kSloped != 0; }
 
 // The state-1 reset the steps end with: +1 = 1, +2 = +3 = 0 (each through
 // Sprite_Current read again, as the originals store).
@@ -140,10 +140,10 @@ U DirStepZ(unsigned d) { return ULong(move_script::At(AddressOf(Field_DirectionS
 extern "C" void __cdecl Mode11_FieldFrame(void) {
     SH_CALL(Field_MembersFrame)();
     SH_CALL(AreaMap_Frame)();
-    SH_AT(void (__cdecl*)(), at::kEventObjectFrame.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kEventObjectFrame.v)();
     SH_CALL(Party_ExtraScreens)();
     SH_CALL(Party_UpdateScreens)();
-    SH_AT(void (__cdecl*)(), at::kPartyScreens.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kPartyScreens.v)();
     SH_CALL(Effect_RunObjects)();
     SH_CALL(MoveScript_TintFrame)();
     SH_CALL(Field_DrawFrame)();
@@ -151,13 +151,13 @@ extern "C" void __cdecl Mode11_FieldFrame(void) {
 
 // original 0x517330 (PSX 0x8019A3F0): mode 8's step 5 (0x656AB8[5]).
 extern "C" void __cdecl Mode8_Step5(void) {
-    SH_AT(void (__cdecl*)(), at::kMenuDispatchA.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kMenuDispatchA.v)();
     SH_CALL(Field_RunTaskRecords)();
 }
 
 // original 0x517340 (PSX 0x8019A418): mode 8's step 8 (0x656AB8[8]).
 extern "C" void __cdecl Mode8_Step8(void) {
-    SH_AT(void (__cdecl*)(), at::kMenuDispatchB.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kMenuDispatchB.v)();
     SH_CALL(Field_RunTaskRecords)();
 }
 
@@ -599,7 +599,7 @@ extern "C" void __cdecl FieldCore_Down(void) { Run("FieldCore_Down", FieldCore_D
 
 // original 0x525CE0: FieldCore_UpSteps[0].
 extern "C" void __cdecl FieldCore_UpBegin(void) {
-    SH_AT(void (__cdecl*)(), at::kUpFace.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kUpFace.v)();
     S()[4] = static_cast<unsigned char>(S()[4] + 1);
 }
 
@@ -635,9 +635,9 @@ extern "C" void __cdecl FieldCore_UpIn(void) {
     rv::Store<unsigned>(rv::As<records::SpriteHead>(S())->height_whole, rv::As<records::SpriteHead>(S())->height_whole + 0x10u);
     const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     const int stop = static_cast<int>(static_cast<short>(ground)) -
-                     static_cast<int>(SWord(move_script::At(::bof3::Img(at::kTargetOffsets) + rv::As<records::PartyMember>(F())->char_id * 2u)));
+                     static_cast<int>(SWord(move_script::At(::bof3::Img(field_c3::at::kTargetOffsets) + rv::As<records::PartyMember>(F())->char_id * 2u)));
     if (static_cast<int>(SWord(S() + 0x3E)) >= stop) {
-        SH_AT(void (__cdecl*)(), at::kUpLanded.v)();
+        SH_AT(void (__cdecl*)(), field_c3::at::kUpLanded.v)();
         S()[4] = static_cast<unsigned char>(S()[4] + 1);
         return;
     }
@@ -646,23 +646,23 @@ extern "C" void __cdecl FieldCore_UpIn(void) {
 
 // original 0x525E90: FieldCore_UpSteps[5].
 extern "C" void __cdecl FieldCore_UpWait5(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kUpWait5.v)() != 0) S()[4] = static_cast<unsigned char>(S()[4] + 1);
+    if (SH_AT(unsigned char (__cdecl*)(), field_c3::at::kUpWait5.v)() != 0) S()[4] = static_cast<unsigned char>(S()[4] + 1);
 }
 
 // original 0x525EB0: FieldCore_UpSteps[6].
 extern "C" void __cdecl FieldCore_UpWait6(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kUpWait6.v)() != 0) S()[4] = static_cast<unsigned char>(S()[4] + 1);
+    if (SH_AT(unsigned char (__cdecl*)(), field_c3::at::kUpWait6.v)() != 0) S()[4] = static_cast<unsigned char>(S()[4] + 1);
 }
 
 // original 0x525ED0: FieldCore_UpSteps[7].
 extern "C" void __cdecl FieldCore_UpEnd(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kUpWait7.v)() == 0) return;
+    if (SH_AT(unsigned char (__cdecl*)(), field_c3::at::kUpWait7.v)() == 0) return;
     if (S()[5] == 0) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
 }
 
 // original 0x525F10: FieldCore_DownSteps[0].
 extern "C" void __cdecl FieldCore_DownBegin(void) {
-    SH_AT(void (__cdecl*)(), at::kDownJumpSetUp.v)();
+    SH_AT(void (__cdecl*)(), field_c3::at::kDownJumpSetUp.v)();
     unsigned char* const s = S();
     LowByte(Field_ScriptFlags2) = static_cast<unsigned char>(LowByte(Field_ScriptFlags2) | 8);   // or byte ptr [0x905BA4], 8
     s[4] = 1;
@@ -676,10 +676,10 @@ void DownWait(U callee, unsigned char next) {
 }  // namespace
 
 // originals 0x525F30, 0x525F50, 0x525F70, 0x525F90: FieldCore_DownSteps[1..4].
-extern "C" void __cdecl FieldCore_DownWait1(void) { DownWait(at::kDownWait1.v, 2); }
-extern "C" void __cdecl FieldCore_DownWait2(void) { DownWait(at::kDownWait2.v, 3); }
-extern "C" void __cdecl FieldCore_DownWait3(void) { DownWait(at::kDownWait3.v, 4); }
-extern "C" void __cdecl FieldCore_DownWait4(void) { DownWait(at::kDownWait4.v, 5); }
+extern "C" void __cdecl FieldCore_DownWait1(void) { DownWait(field_c3::at::kDownWait1.v, 2); }
+extern "C" void __cdecl FieldCore_DownWait2(void) { DownWait(field_c3::at::kDownWait2.v, 3); }
+extern "C" void __cdecl FieldCore_DownWait3(void) { DownWait(field_c3::at::kDownWait3.v, 4); }
+extern "C" void __cdecl FieldCore_DownWait4(void) { DownWait(field_c3::at::kDownWait4.v, 5); }
 
 // original 0x525FB0: FieldCore_DownSteps[5].
 extern "C" void __cdecl FieldCore_DownOut(void) {
@@ -1037,7 +1037,7 @@ extern "C" void __cdecl FieldCore_FallSpin(void) {
     s = rv::Current<records::SpriteHead>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     if (static_cast<int>(static_cast<short>(ground)) - static_cast<int>(SWord(S() + 0x3E)) > 0x100 && Field_Request != 5) {
-        B(::bof3::Img(at::kScriptFlags2High)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags2High)) | 2);
+        B(::bof3::Img(field_c3::at::kScriptFlags2High)) = static_cast<unsigned char>(B(::bof3::Img(field_c3::at::kScriptFlags2High)) | 2);
         Field_Request = 5;
     }
 }
@@ -1092,7 +1092,7 @@ extern "C" void __cdecl FieldCore_RecoilBegin(void) {
         rv::Current<records::SpriteHead>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteHead>()->step_frames - 1);
         SH_CALL(Sprite_ApplyVelocity)();
     }
-    SH_AT(void (__cdecl*)(unsigned char), at::kRecoilFace.v)(S()[0xB]);
+    SH_AT(void (__cdecl*)(unsigned char), field_c3::at::kRecoilFace.v)(S()[0xB]);
     rv::Current<records::SpriteHead>()->direction = facing;
     S()[0xA] = 8;
     Animate(rv::Current<records::SpriteHead>()->direction);

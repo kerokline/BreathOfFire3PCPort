@@ -96,14 +96,14 @@ unsigned short* Palette(const unsigned char* s) {
 // The pace's reach: Field_DirectionSteps[+8] times (+0x70 + 2), from +0x34 / +0x38.
 void Ahead(const unsigned char* s, std::int32_t& x, std::int32_t& z) {
     const U dir = s[8], k = static_cast<U>(s[0x70]) + 2u;
-    x = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kDirectionSteps) + dir * 8u) * k + LongAt(s + 0x34));
-    z = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kDirectionSteps) + 4u + dir * 8u) * k + LongAt(s + 0x38));
+    x = static_cast<std::int32_t>(LFieldE2(::bof3::Img(field_e2::at::kDirectionSteps) + dir * 8u) * k + LongAt(s + 0x34));
+    z = static_cast<std::int32_t>(LFieldE2(::bof3::Img(field_e2::at::kDirectionSteps) + 4u + dir * 8u) * k + LongAt(s + 0x38));
 }
 
 // The view follows the leader when +5 is 0 and bit 3 of the script flags'
 // low bytes is clear; then every fourth frame one tick of its script.
 void FollowAndTick(unsigned char* s) {
-    if (s[5] == 0 && ((BFieldE2(::bof3::Img(at::kScriptFlags2)) | BFieldE2(::bof3::Img(at::kScriptFlagsLow))) & 8) == 0)
+    if (s[5] == 0 && ((BFieldE2(::bof3::Img(field_e2::at::kScriptFlags2)) | BFieldE2(::bof3::Img(field_e2::at::kScriptFlagsLow))) & 8) == 0)
         SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::SpriteHead>(s)->height_whole));
     if ((Frame_Counter & 3) == 0) SH_CALL(Sprite_ScriptTickOnce)();
 }
@@ -162,9 +162,9 @@ extern "C" __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
 extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
     unsigned char named = 0;
     for (U r = 0; r < 8; ++r) {
-        if (BFieldE2(::bof3::Img(at::kRecords) + 8u * r) != 4) continue;
-        if (BFieldE2(::bof3::Img(at::kRecords) + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
-        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
+        if (BFieldE2(::bof3::Img(field_e2::at::kRecords) + 8u * r) != 4) continue;
+        if (BFieldE2(::bof3::Img(field_e2::at::kRecords) + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
+        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(field_e2::at::kPairsEnd) + 1u; p += 8)
             if (BFieldE2(p - 1) != 0 && BFieldE2(p) == r + 1u) ++named;
     }
     if (named == 0) ++*counter;
@@ -176,11 +176,11 @@ extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
 extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
     for (U r = 0; r < 8; ++r) {
         unsigned char named = 0;
-        if (BFieldE2(::bof3::Img(at::kRecords) + 8u * r) != static_cast<unsigned char>(kind)) continue;
-        if (BFieldE2(::bof3::Img(at::kRecords) + 3u + 8u * r) == 0) continue;
-        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
+        if (BFieldE2(::bof3::Img(field_e2::at::kRecords) + 8u * r) != static_cast<unsigned char>(kind)) continue;
+        if (BFieldE2(::bof3::Img(field_e2::at::kRecords) + 3u + 8u * r) == 0) continue;
+        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(field_e2::at::kPairsEnd) + 1u; p += 8)
             if (BFieldE2(p - 1) != 0 && BFieldE2(p) == r + 1u) ++named;
-        if (named == 0) SetL(::bof3::Img(at::kRecords) + 4u + 8u * r, LFieldE2(::bof3::Img(at::kRecords) + 4u + 8u * r) + 1u);
+        if (named == 0) SetL(::bof3::Img(field_e2::at::kRecords) + 4u + 8u * r, LFieldE2(::bof3::Img(field_e2::at::kRecords) + 4u + 8u * r) + 1u);
     }
 }
 
@@ -199,7 +199,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
 // with 0x9046CC at 4 or more. No PSX twin paired.
 extern "C" void __cdecl Field_AfterBattleTally(void) {
     static const signed char kThresholds[10] = {0x14, 0x14, 0x14, 0x28, 0x14, 0x14, 0x3C, 0x14, 0x14, 0x14};
-    if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(at::kTallyBits)), 4) != 0 && SH_CALL(Flags_Test)(move_script::At(::bof3::Img(at::kTallyBits) + 3), 4) == 0) {
+    if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(field_e2::at::kTallyBits)), 4) != 0 && SH_CALL(Flags_Test)(move_script::At(::bof3::Img(field_e2::at::kTallyBits) + 3), 4) == 0) {
         const unsigned char v = AreaW1c_Byte9045FB;
         if (v < 0x1E) AreaW1c_Byte9045FB = static_cast<unsigned char>(v + 1);
     }
@@ -213,7 +213,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             }
         if (found) {
             unsigned char a = 0, b = 0;
-            for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8) {
+            for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(field_e2::at::kPairsEnd) + 1u; p += 8) {
                 if (BFieldE2(p - 1) == 0) continue;
                 if (BFieldE2(p) == 0xA) ++a;
                 else if (BFieldE2(p) == 0xB) ++b;
@@ -251,8 +251,8 @@ extern "C" void __cdecl Field_FaceMode11Object(void) {
         return;
     }
     unsigned char* const s = Sprite_Current;
-    const auto dx = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kObject) + 0x34) - LongAt(s + 0x34));
-    const auto dz = static_cast<std::int32_t>(LFieldE2(::bof3::Img(at::kObject) + 0x38) - LongAt(s + 0x38));
+    const auto dx = static_cast<std::int32_t>(LFieldE2(::bof3::Img(field_e2::at::kObject) + 0x34) - LongAt(s + 0x34));
+    const auto dz = static_cast<std::int32_t>(LFieldE2(::bof3::Img(field_e2::at::kObject) + 0x38) - LongAt(s + 0x38));
     int facing = -1;
     if (dx < 0) facing = dz < 0 ? 0 : dz > 0 ? 6 : 7;
     else if (dx > 0) facing = dz > 0 ? 4 : dz < 0 ? 2 : 3;
@@ -281,24 +281,24 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (kind > 8) bof3::Fatal("Field_FloorHurt: kind %u past the nine the stack table holds", (unsigned)kind);
     const unsigned char* const t = kTable + 3u * kind;
     SH_CALL(Char_LoseHp)(t[0], rv::As<records::PartyMember>(Field_State)->char_id);
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2.v)(t[1], rv::As<records::PartyMember>(Field_State)->char_id);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), field_e2::at::kHpLoss2.v)(t[1], rv::As<records::PartyMember>(Field_State)->char_id);
     const unsigned char flags = t[2];
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
-    U actor = ::bof3::Img(CharacterRecords_addr) + fs->char_index * at::kRecordStride;
+    U actor = ::bof3::Img(CharacterRecords_addr) + fs->char_index * field_e2::at::kRecordStride;
     if (rv::As<records::CharRecord>(move_script::At(actor))->hp <= (rv::As<records::CharRecord>(move_script::At(actor))->stats.max_hp >> 2)) {
         rv::As<records::CharRecord>(move_script::At(actor))->status = rv::As<records::CharRecord>(move_script::At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
     const U id = fs->char_index;
-    actor = ::bof3::Img(CharacterRecords_addr) + id * at::kRecordStride;
+    actor = ::bof3::Img(CharacterRecords_addr) + id * field_e2::at::kRecordStride;
     SetW(actor + 0x10, WFieldE2(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
-    const U a = ::bof3::Img(CharacterRecords_addr) + f[0x148] * at::kRecordStride;
+    const U a = ::bof3::Img(CharacterRecords_addr) + f[0x148] * field_e2::at::kRecordStride;
     rv::As<records::CharRecord>(move_script::At(a))->status = rv::As<records::CharRecord>(move_script::At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }
@@ -382,7 +382,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     auto probe = [&](unsigned direction) {
         const U px = q.xlo | static_cast<U>(q.xhi) << 16, py = q.ylo | static_cast<U>(q.yhi) << 16;
         const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(px), static_cast<long>(py), direction);
-        return S16FieldE2(static_cast<U>(slope)) > 0x40 && at::kEffectSlot != 0;
+        return S16FieldE2(static_cast<U>(slope)) > 0x40 && field_e2::at::kEffectSlot != 0;
     };
     q.yhi = static_cast<std::uint16_t>(zi);
     q.ylo = 0x8000;
@@ -557,11 +557,11 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     const U actor = rv::As<records::PartyMember>(Field_State)->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    if (S16FieldE2(height) > S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(at::kPaceHeights) + actor * 2u))) {
-        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - BFieldE2(::bof3::Img(at::kPaceRises) + actor));
+    if (S16FieldE2(height) > S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + actor * 2u))) {
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - BFieldE2(::bof3::Img(field_e2::at::kPaceRises) + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        const std::uint16_t offset = WFieldE2(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
+        const std::uint16_t offset = WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again) - offset);
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
@@ -593,7 +593,7 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16FieldE2(height) < S16FieldE2(static_cast<U>(ground))) {
-        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, BFieldE2(::bof3::Img(at::kPaceRises) + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, BFieldE2(::bof3::Img(field_e2::at::kPaceRises) + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again));
@@ -638,7 +638,7 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    const int floor = S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
+    const int floor = S16FieldE2(static_cast<U>(ground)) - S16FieldE2(WFieldE2(::bof3::Img(field_e2::at::kPaceHeights) + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
     if (S16FieldE2(s->height_whole) >= floor) s->step = 3;
     return SH_CALL(Sprite_ScriptTick)();

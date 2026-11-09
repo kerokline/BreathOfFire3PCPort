@@ -664,7 +664,7 @@ extern "C" void __cdecl EffectKind18Sub43_Run(void) {
 // original 0x504F90 (sub-state 1): while the counter 0x903848 is 0xE, the quad
 // at (+9, +9); +9 up one; past 0x6C, Cond_ByteFE 1, the counter 0xF and +2 up.
 extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
-    if (B(::bof3::Img(at::kCounter.v)) != 0xE) return;
+    if (B(::bof3::Img(effect_5d::at::kCounter.v)) != 0xE) return;
     const unsigned char n = S()[9];
     SH_CALL(EffectKind18Sub43_DrawQuad)(n, n);
     unsigned char* s = S();
@@ -672,7 +672,7 @@ extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
     s = S();
     if (s[9] > 0x6C) {
         Cond_ByteFE = 1;
-        B(::bof3::Img(at::kCounter.v)) = 0xF;
+        B(::bof3::Img(effect_5d::at::kCounter.v)) = 0xF;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
 }
@@ -680,7 +680,7 @@ extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
 // original 0x504FE0 (sub-state 3): the counter at 0x1C: Cond_ByteFE 0 and a tail
 // jump to Effect_Release.
 extern "C" void __cdecl EffectKind18Sub43_End(void) {
-    if (B(::bof3::Img(at::kCounter.v)) != 0x1C) return;
+    if (B(::bof3::Img(effect_5d::at::kCounter.v)) != 0x1C) return;
     Cond_ByteFE = 0;
     SH_CALL(Effect_Release)();
 }

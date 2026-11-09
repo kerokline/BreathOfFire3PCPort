@@ -204,7 +204,7 @@ extern "C" void __cdecl Field_LeaderStand(void) {
 // Sprite_SetAnimation, typed as a byte - unchecked past that.
 extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
     if (!(Field_InputFlags & 1)) return field_event::g.set_animation(animation);
-    const unsigned char* const pair = move_script::At(::bof3::Img(at::kAnimationRemap)) + (animation & 0xFF) * 2u;
+    const unsigned char* const pair = move_script::At(::bof3::Img(field_event::at::kAnimationRemap)) + (animation & 0xFF) * 2u;
     field_event::g.set_animation(pair[0]);
     unsigned char* const c = Sprite_Current;
     c[0x2A] = pair[1];
@@ -248,7 +248,7 @@ extern "C" void __cdecl Field_EncounterThresholdRoll(unsigned keep) {
         return;
     }
     const unsigned char* const zone = field_event::g.zone_at(rv::Bytes(ObjTrio)[0x36], rv::Bytes(ObjTrio)[0x3a]);
-    const unsigned char* const bases = move_script::At(::bof3::Img(at::kZoneBases));
+    const unsigned char* const bases = move_script::At(::bof3::Img(field_event::at::kZoneBases));
     unsigned char value = bases[zone[4] * 2u];
     if (value == 0) {
         move_script::SetWord(counter, 0);
@@ -364,9 +364,9 @@ extern "C" void __cdecl Party_ClearActive(void) {
 
 // original 0x534010 (PSX 0x801C2838).
 extern "C" void __cdecl Party_JoinReset(void) {
-    move_script::SetLong(move_script::At(::bof3::Img(at::kJoinState)), 0);
-    move_script::SetLong(move_script::At(::bof3::Img(at::kJoinState) + 4), 0);
-    *move_script::At(::bof3::Img(at::kJoinState) + 8) = 0;
+    move_script::SetLong(move_script::At(::bof3::Img(field_event::at::kJoinState)), 0);
+    move_script::SetLong(move_script::At(::bof3::Img(field_event::at::kJoinState) + 4), 0);
+    *move_script::At(::bof3::Img(field_event::at::kJoinState) + 8) = 0;
 }
 
 // original 0x534EC0 (PSX 0x801C41FC): two of Field_State's timers from its
@@ -433,7 +433,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     {
         unsigned char* const c = Sprite_Current;
         const unsigned index = move_script::Word(c + 0x2C);
-        move_script::SetLong(c + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(at::kBankTable)) + index * 4u)) + ::bof3::Img(at::kBankTable)));
+        move_script::SetLong(c + 0x4C, static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(field_event::at::kBankTable)) + index * 4u)) + ::bof3::Img(field_event::at::kBankTable)));
     }
     Sprite_Current[0x24] = 1;
     Sprite_Current[0x27] = static_cast<unsigned char>(slot + 0x78);

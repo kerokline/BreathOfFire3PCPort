@@ -587,7 +587,7 @@ MFX_EXPORT void __cdecl FxDim_Down(void) {
 // original 0x4FB050: held until 0x904AA8 bit 2 (the effect is done), then
 // the phase on.
 MFX_EXPORT void __cdecl FxDim_Hold(void) {
-    if (magic_fx_reached::At(::bof3::Img(at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
+    if (magic_fx_reached::At(::bof3::Img(magic_fx_reached::at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
 }
 
 // original 0x4FB070: +9 up; at 0 the task freed; the CLUTs tinted by +9

@@ -144,8 +144,8 @@ std::uint32_t StepZ(unsigned d) { return static_cast<std::uint32_t>(event_ops::L
 std::int32_t WalkX(unsigned d) { return event_ops::Long(event_ops::At(::bof3::Img(MoveCmd_F9Steps_addr)) + d * 8u); }
 std::int32_t WalkZ(unsigned d) { return event_ops::Long(event_ops::At(::bof3::Img(MoveCmd_F9Steps_addr)) + d * 8u + 4); }
 // The cell step pair: two signed bytes per direction.
-signed char CellDX(unsigned d) { return static_cast<signed char>(event_ops::At(::bof3::Img(at::kCellDelta))[d * 2u]); }
-signed char CellDZ(unsigned d) { return static_cast<signed char>(event_ops::At(::bof3::Img(at::kCellDelta))[d * 2u + 1]); }
+signed char CellDX(unsigned d) { return static_cast<signed char>(event_ops::At(::bof3::Img(event_ops::at::kCellDelta))[d * 2u]); }
+signed char CellDZ(unsigned d) { return static_cast<signed char>(event_ops::At(::bof3::Img(event_ops::at::kCellDelta))[d * 2u + 1]); }
 
 // The whole part of a 16.16 position, as the original pushes it: the high
 // half of the dword, which the callee reads as a short.
@@ -370,7 +370,7 @@ extern "C" void __cdecl Field_LeaderWalk(void) {
             } else if (event_ops::g.encounter_due()) {
                 event_ops::g.encounter_area();
                 unsigned char* const sc = Sprite_Current;
-                at::kExitX = 0x190000;
+                event_ops::at::kExitX = 0x190000;
                 AreaEntry_PendingZ = 0x190000;
                 AreaEntry_PendingFlags = 4;
                 sc[6] = 4;
@@ -453,7 +453,7 @@ extern "C" void __cdecl Field_LeaderSetPace(void) {
     const unsigned n = static_cast<unsigned>(event_ops::g.party_count(0)) & 0xFF;
     for (unsigned i = 0; i < n; ++i) {
         const unsigned record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (event_ops::At(::bof3::Img(CharacterRecords_addr) + 0x10)[record * at::kActorStride] & 0x80) {
+        if (event_ops::At(::bof3::Img(CharacterRecords_addr) + 0x10)[record * event_ops::at::kActorStride] & 0x80) {
             Field_State[0x128] = 3;
             return;
         }
@@ -485,11 +485,11 @@ extern "C" unsigned char __cdecl Field_LeaderStepTick(void) {
 extern "C" void __cdecl Field_LeaderStepCell(void) {
     const unsigned short x = SharedScratch.w_0a;
     unsigned char* const sc = Sprite_Current;
-    at::kCellX = x;
-    if (SharedScratch.w_08 != 0 && WalkX(sc[8]) > 0) at::kCellX = x + 1u;
+    event_ops::at::kCellX = x;
+    if (SharedScratch.w_08 != 0 && WalkX(sc[8]) > 0) event_ops::at::kCellX = x + 1u;
     const unsigned short z = event_ops::Word(event_ops::At(::bof3::Img(Scratch_Swap_addr)) + 2);
-    at::kCellZ = z;
-    if (event_ops::Word(event_ops::At(::bof3::Img(Scratch_Swap_addr))) != 0 && WalkZ(sc[8]) > 0) at::kCellZ = z + 1u;
+    event_ops::at::kCellZ = z;
+    if (event_ops::Word(event_ops::At(::bof3::Img(Scratch_Swap_addr))) != 0 && WalkZ(sc[8]) > 0) event_ops::at::kCellZ = z + 1u;
 }
 
 // original 0x52E160: where this step goes, and what lies there (PSX
@@ -526,12 +526,12 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         const std::uint32_t dz = static_cast<std::uint32_t>(WalkZ(d)) * n * static_cast<std::uint32_t>(speed);
         if (sc[0x70] == 0) {
             x = dx + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
-            at::kTargetX = static_cast<std::int32_t>(x);
+            event_ops::at::kTargetX = static_cast<std::int32_t>(x);
             z = dz + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z);
             Scratch_Swap = static_cast<std::int32_t>(z);
         } else {
             x = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x) + 2 * dx;
-            at::kTargetX = static_cast<std::int32_t>(x);
+            event_ops::at::kTargetX = static_cast<std::int32_t>(x);
             z = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z) + 2 * dz;
             Scratch_Swap = static_cast<std::int32_t>(z);
         }
@@ -543,16 +543,16 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
             code = 0;
         }
         z = Scratch_Swap;
-        x = static_cast<std::uint32_t>(at::kTargetX);
+        x = static_cast<std::uint32_t>(event_ops::at::kTargetX);
     }
-    const auto link = [] { return event_ops::g.link_at(at::kCellX, at::kCellZ); };
+    const auto link = [] { return event_ops::g.link_at(event_ops::at::kCellX, event_ops::at::kCellZ); };
     switch (code) {
     case 0: return 1;
     case 2: {
         const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<long>(x), static_cast<long>(z),
                                                           DirectionInPointer(Sprite_Current)));
         event_ops::g.step_cell();
-        if (at::kScratch.b_00 == 0) {
+        if (event_ops::at::kScratch.b_00 == 0) {
             const int rise = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) - slope;
             if (std::abs(rise) > 0x80) {
                 if (!link()) Field_Request = 5;
@@ -567,7 +567,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
         if (slope > 0x40) {
             if (!link() && Sprite_Current == event_ops::At(::bof3::Img(ObjTrio_addr))) {
                 if (event_ops::g.test_fb(rv::Current<records::SpriteHead>()->x_whole, rv::Current<records::SpriteHead>()->z_whole)) {
-                    event_ops::g.play_effect(event_ops::Word(event_ops::At(::bof3::Img(at::kStepSounds)) + at::kScratch.b_01 * 2u));
+                    event_ops::g.play_effect(event_ops::Word(event_ops::At(::bof3::Img(event_ops::at::kStepSounds)) + event_ops::at::kScratch.b_01 * 2u));
                     event_ops::g.ensure_animation(static_cast<unsigned char>((Sprite_Current[8] >> 1) + 0x10));
                 } else {
                     event_ops::g.ensure_animation(Sprite_Current[8]);
@@ -585,14 +585,14 @@ extern "C" unsigned char __cdecl Field_LeaderStepTarget(void) {
     case 3: {
         const auto slope = static_cast<short>(event_ops::g.slope_at(static_cast<long>(x), static_cast<long>(z),
                                                           DirectionInPointer(Sprite_Current)));
-        if (at::kScratch.b_00 == 0) return 0;
+        if (event_ops::at::kScratch.b_00 == 0) return 0;
         if (slope > 0x40) {
             unsigned char* const sc = Sprite_Current;
             MoveScript_F3Divisor = 0;
             sc[8] = facing;
             return 1;
         }
-        event_ops::g.ground_at(at::kTargetX, static_cast<std::int32_t>(Scratch_Swap));
+        event_ops::g.ground_at(event_ops::at::kTargetX, static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 4:
@@ -652,7 +652,7 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
     Sprite_Current = saved;
     if (r == 0) return r;
     for (unsigned i = 0; i < Field_MemberCount; ++i) {
-        const unsigned char* const at = event_ops::At(::bof3::Img(at::kMemberPositions)) + i * 8;
+        const unsigned char* const at = event_ops::At(::bof3::Img(event_ops::at::kMemberPositions)) + i * 8;
         const unsigned slot = Character_IndexById[0xc + Cond_Flags[0xd5 + i]];
         r = event_ops::g.member_fits(event_ops::Long(at), event_ops::Long(at + 4), slot, 0x10, 1);
         if (r == 0) return r;
@@ -665,7 +665,7 @@ extern "C" unsigned char __cdecl Field_EncounterDue(void) {
 // then back to 0, and unless a member other than the leader is in state 9,
 // one Rand in two: +0x137 = 9, the pose, +9 = 2, state 6, sub-state 0.
 extern "C" unsigned char __cdecl Field_LeaderIdleTest(void) {
-    if (event_ops::At(::bof3::Img(CharacterRecords_addr) + 0x10)[Field_State[0x148] * at::kActorStride] & 0x20) return 0;
+    if (event_ops::At(::bof3::Img(CharacterRecords_addr) + 0x10)[Field_State[0x148] * event_ops::at::kActorStride] & 0x20) return 0;
     if (Field_InputFlags & 1) return 0;
     Field_State[0x136] = static_cast<unsigned char>(Field_State[0x136] + 1);
     if (Field_State[0x136] <= 0xF0) return 0;
@@ -709,10 +709,10 @@ extern "C" unsigned char __cdecl Party_CanSwap(void) {
     if ((Byte(::bof3::Img(kFlags2Lo)) | Byte(::bof3::Img(kFlagsLo))) & 7) return 0;
     const int members = Field_MemberCount;
     for (int i = 1; i < members; ++i) {
-        const unsigned char* const m = event_ops::At(::bof3::Img(ObjTrio_addr)) + i * at::kMemberStride;
+        const unsigned char* const m = event_ops::At(::bof3::Img(ObjTrio_addr)) + i * event_ops::at::kMemberStride;
         if (m[1] != 2) continue;
         int k = 0;
-        while (k < 3 && m[2] != event_ops::At(::bof3::Img(at::kSwapKinds))[k]) ++k;
+        while (k < 3 && m[2] != event_ops::At(::bof3::Img(event_ops::at::kSwapKinds))[k]) ++k;
         if (k == 3) return 0;
     }
     return 1;
@@ -926,7 +926,7 @@ extern "C" unsigned char __cdecl Field_LeaderTalkTest(void) {
         event_ops::g.talk_to(object);
         return 1;
     }
-    if (event_ops::g.cell_around(0x51) && event_ops::g.cell_hook(at::kScratch.w_00, at::kScratch2)) {
+    if (event_ops::g.cell_around(0x51) && event_ops::g.cell_hook(event_ops::at::kScratch.w_00, event_ops::at::kScratch2)) {
         event_ops::g.leader_animation(Sprite_Current[8]);
         Sprite_Current[2] = 0;
         return 1;
@@ -1190,7 +1190,7 @@ extern "C" void __cdecl Field_LeaderTalkTo(unsigned index) {
     const unsigned char flags = Field_InputFlags;
     if ((flags & 1) && !(flags & 0x20)) return;
     if (!(flags & 0x20)) {
-        if (event_ops::At(::bof3::Img(at::kFacingPose))[Field_State[0x89]])
+        if (event_ops::At(::bof3::Img(event_ops::at::kFacingPose))[Field_State[0x89]])
             event_ops::g.ensure_animation(static_cast<unsigned char>((Sprite_Current[8] >> 1) + 0x34));
         else
             event_ops::g.ensure_animation(Sprite_Current[8]);
@@ -1226,7 +1226,7 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         event_ops::g.exit_from_cell();
         const unsigned kind = AreaEntry_PendingFlags;
         const long z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-        const long x = at::kExitX;
+        const long x = event_ops::at::kExitX;
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xEFFF);
         event_ops::g.change_area(AreaW0b_Place, x, z, kind);
         return 1;
@@ -1252,7 +1252,7 @@ extern "C" unsigned char __cdecl Field_LeaderCellEvent(void) {
         event_ops::SetLong(back + 4, z);
         const long exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
         event_ops::SetWord(back + 8, area);
-        const long exit_x = at::kExitX;
+        const long exit_x = event_ops::at::kExitX;
         event_ops::g.change_area(AreaW0b_Place, exit_x, exit_z, kind);
         return 1;
     }

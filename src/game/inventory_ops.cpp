@@ -88,12 +88,12 @@ using move_script::SetLong;
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
 
-unsigned char* PosX(u32 m) { return move_script::At(::bof3::Img(at::kMemberPos.v) + 8 * m); }
-unsigned char* PosZ(u32 m) { return move_script::At(::bof3::Img(at::kMemberPos.v) + 8 * m + 4); }
+unsigned char* PosX(u32 m) { return move_script::At(::bof3::Img(inventory_ops::at::kMemberPos.v) + 8 * m); }
+unsigned char* PosZ(u32 m) { return move_script::At(::bof3::Img(inventory_ops::at::kMemberPos.v) + 8 * m + 4); }
 unsigned char* Member(u32 m) { return move_script::At(::bof3::Img(at::kMembers.v) + 4 * m); }   // +0 placed, +1 wide
 unsigned char* Enemy(u32 k) { return move_script::At(::bof3::Img(Encounter_Slots_addr) + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return move_script::At(::bof3::Img(at::kKinds.v) + at::kKindStride * kind); }
-unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
+unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + inventory_ops::at::kObjStride * i; }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does;
@@ -653,7 +653,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             continue;
         }
         const u32 record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize)[0x38] < r) continue;
+        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * inventory_ops::at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = inventory_ops::g.effect_free();
         if (e != 0xFF) {
             unsigned char* const fx = rv::Bytes(Effect_Objects) + (static_cast<u32>(e) << 7);
@@ -664,8 +664,8 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             rv::As<records::EffectObject>(fx)->screen_y = static_cast<std::uint16_t>(rv::As<records::PartyMember>(obj)->screen_y);
             const u32 id = obj[0x89];
             Obj(0)[0xB] = e;
-            rv::As<records::EffectObject>(fx)->step_x = move_script::At(::bof3::Img(at::kAlertOffsets.v))[2 * id];
-            rv::As<records::EffectObject>(fx)->step_z = move_script::At(::bof3::Img(at::kAlertOffsets.v))[2 * id + 1];
+            rv::As<records::EffectObject>(fx)->step_x = move_script::At(::bof3::Img(inventory_ops::at::kAlertOffsets.v))[2 * id];
+            rv::As<records::EffectObject>(fx)->step_z = move_script::At(::bof3::Img(inventory_ops::at::kAlertOffsets.v))[2 * id + 1];
         }
         ++count;
     }
@@ -678,7 +678,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
 extern "C" void __cdecl Encounter_PartyTurnSense(void) {
     for (u32 i = 0; i < Field_MemberCount; ++i) {
         Sprite_Current = Obj(i);
-        const unsigned char s = inventory_ops::g.turn_sense(move_script::At(::bof3::Img(at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(at::kBattleFacing.v))]);
+        const unsigned char s = inventory_ops::g.turn_sense(move_script::At(::bof3::Img(inventory_ops::at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(inventory_ops::at::kBattleFacing.v))]);
         Sprite_Current[0xB] = s;
     }
 }
@@ -704,21 +704,21 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
             Field_State = obj;
             Sprite_Current = obj;
             const u32 record = obj[0x148];
-            if (move_script::Word(move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x10)) & 0x4000) {
-                inventory_ops::g.set_anim_from(obj[0x4B], 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+            if (move_script::Word(move_script::At(::bof3::Img(CharacterRecords_addr) + record * inventory_ops::at::kRecordSize + 0x10)) & 0x4000) {
+                inventory_ops::g.set_anim_from(obj[0x4B], 0, move_script::At(::bof3::Img(inventory_ops::at::kAnimBuffer.v)), 0xA00);
                 Sprite_Current[0xB] = 0;
                 continue;
             }
-            const unsigned char target = move_script::At(::bof3::Img(at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(at::kBattleFacing.v))];
+            const unsigned char target = move_script::At(::bof3::Img(inventory_ops::at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(inventory_ops::at::kBattleFacing.v))];
             const unsigned char d = obj[8], turn = obj[0xB];
             if (d == target) {
                 if (turn != 0) {
-                    inventory_ops::g.set_anim_from(d, 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+                    inventory_ops::g.set_anim_from(d, 0, move_script::At(::bof3::Img(inventory_ops::at::kAnimBuffer.v)), 0xA00);
                     Sprite_Current[0xB] = 0;
                 }
             } else {
                 obj[8] = static_cast<unsigned char>((d + turn) & 7);
-                inventory_ops::g.set_anim_from(Sprite_Current[8], 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+                inventory_ops::g.set_anim_from(Sprite_Current[8], 0, move_script::At(::bof3::Img(inventory_ops::at::kAnimBuffer.v)), 0xA00);
             }
             inventory_ops::g.script_tick();
         }
@@ -757,8 +757,8 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
 // one read.
 extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
     if (EventBattle_Flags & 4) return 1;
-    const u32 f = ByteInventoryOps(::bof3::Img(at::kBattleFacing.v));
-    const auto* const step = reinterpret_cast<const signed char*>(move_script::At(::bof3::Img(at::kSideSteps.v) + 2 * f));
+    const u32 f = ByteInventoryOps(::bof3::Img(inventory_ops::at::kBattleFacing.v));
+    const auto* const step = reinterpret_cast<const signed char*>(move_script::At(::bof3::Img(inventory_ops::at::kSideSteps.v) + 2 * f));
     BossSi_CentreX = AddInventoryOps(Shl(step[0], 16), Field_Kind2X);
     BossSi_CentreZ = AddInventoryOps(Shl(step[1], 16), Field_Kind2Z);
     u32 n = Field_MemberCount;
@@ -827,10 +827,10 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
-        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x11)[0] & 0x40)
-            inventory_ops::g.set_animation(static_cast<unsigned char>(ByteInventoryOps(::bof3::Img(at::kBattleFacing.v)) + 0x1C));
+        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * inventory_ops::at::kRecordSize + 0x11)[0] & 0x40)
+            inventory_ops::g.set_animation(static_cast<unsigned char>(ByteInventoryOps(::bof3::Img(inventory_ops::at::kBattleFacing.v)) + 0x1C));
         else
-            inventory_ops::g.set_animation(ByteInventoryOps(::bof3::Img(at::kBattleFacing.v)));
+            inventory_ops::g.set_animation(ByteInventoryOps(::bof3::Img(inventory_ops::at::kBattleFacing.v)));
     }
 }
 

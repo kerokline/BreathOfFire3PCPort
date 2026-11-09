@@ -111,9 +111,9 @@ void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // record indexed by the stored byte read back.
 bool PlaceEffect(unsigned char kind) {
     const unsigned char slot = g.effect_find();
-    at::kEffectSlot.b_00 = slot;
+    mode_states::at::kEffectSlot.b_00 = slot;
     if (slot == 0xFF) return false;
-    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(at::kEffectSlot.d_00) & 0xFF) << 7);
+    unsigned char* const e = rv::Bytes(Effect_Objects) + ((static_cast<std::uint32_t>(mode_states::at::kEffectSlot.d_00) & 0xFF) << 7);
     e[0] = 1;
     e[5] = kind;
     return true;
@@ -418,7 +418,7 @@ extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_Sys
 // glyph bound here (Text_DrawString's 0xA00 test is not in this draw).
 extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned colour, unsigned count, const unsigned char* text) {
     const unsigned c = colour & 0xFF;
-    const unsigned char* const uv = mode_states::At(::bof3::Img(at::kSmallUV) + (c >> 4) * 2);
+    const unsigned char* const uv = mode_states::At(::bof3::Img(mode_states::at::kSmallUV) + (c >> 4) * 2);
     const unsigned u = uv[0], v = uv[1];
     const int clut = static_cast<int>(0x7800u | (c & 0xF));
     const unsigned char* p = text;
@@ -477,7 +477,7 @@ extern "C" void __cdecl FieldCore_Fade(void) { Entry(::bof3::Img(FieldCore_FadeS
 // Field_State +0x137 = 7, +0 bit 6 cleared and +3 = 1, all through
 // Sprite_Current read afresh at each store.
 extern "C" void __cdecl FieldCore_FadeBegin(void) {
-    g.shade_begin();
+    mode_states::g.shade_begin();
     Sprite_Current[0x5D] = 0x80;
     Sprite_Current[0x5E] = 0x80;
     Sprite_Current[0x5F] = 0x80;
@@ -491,7 +491,7 @@ extern "C" void __cdecl FieldCore_FadeBegin(void) {
 // Sprite_ShadeFadeStep(8), and once it answers non-zero, Field_State +0x137
 // = 0 and the object back to state 1, sub-states 0 (+1 = 1, +2 = +3 = 0).
 extern "C" void __cdecl FieldCore_FadeStep(void) {
-    if (g.shade_step(8) == 0) return;
+    if (mode_states::g.shade_step(8) == 0) return;
     Field_State[0x137] = 0;
     Sprite_Current[1] = 1;
     Sprite_Current[2] = 0;

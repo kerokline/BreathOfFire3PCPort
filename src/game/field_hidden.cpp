@@ -149,7 +149,7 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
         }
         break;
     case 1: {
-        const unsigned char i = Al(g.effect_free());
+        const unsigned char i = Al(field_hidden::g.effect_free());
         Sprite_Current[0xB] = i;
         records::PartyMember* const c = rv::Current<records::PartyMember>();
         if (rv::Bytes(c)[0xB] == 0xFF) {
@@ -173,7 +173,7 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
     default:
         break;
     }
-    g.script_tick();
+    field_hidden::g.script_tick();
 }
 
 // ===========================================================================
@@ -225,7 +225,7 @@ void ProbeSide(unsigned d) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (at::kScratch == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (field_hidden::at::kScratch == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
     s = rv::Current<records::PartyMember>();
     if (static_cast<short>(s->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
@@ -259,7 +259,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
-    if (at::kScratch != 0 && static_cast<short>(slope) > 0x40) {
+    if (field_hidden::at::kScratch != 0 && static_cast<short>(slope) > 0x40) {
         g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
         ++rv::Current<records::PartyMember>()->step;
     } else {
@@ -296,9 +296,9 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
         if (found != 0xFF) {
             const int i = static_cast<signed char>(found);
             if (i < 0x1E)
-                At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(field_hidden::at::kObjectStride)))[0] |= 1;
             else
-                At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(field_hidden::at::kObjectStride)))[0] |= 1;
         }
         const unsigned cx = x >> 16, cz = z >> 16;
         if (Al(g.cell_pickup(cx, cz)) == 0) {

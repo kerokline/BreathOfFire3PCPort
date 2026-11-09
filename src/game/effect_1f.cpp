@@ -428,7 +428,7 @@ extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned c
 extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
     U sum = 0;
     for (U i = 0; i < 0x20; ++i) {
-        const unsigned char count = BEffect1f(::bof3::Img(at::kKindCounts.v) + i);
+        const unsigned char count = BEffect1f(::bof3::Img(effect_1f::at::kKindCounts.v) + i);
         if (count) sum += SH_CALL(FieldPanel_KindPoints)(i, count);
     }
     return static_cast<unsigned short>(sum);

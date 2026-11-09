@@ -119,14 +119,14 @@ void SideProbes() {
 // records.
 void FlagObject(const char* who, unsigned char found) {
     const int i = static_cast<signed char>(found);
-    if (i < 0 || i >= static_cast<int>(at::kObjectCount + at::kExtraCount))
+    if (i < 0 || i >= static_cast<int>(rest_1e::at::kObjectCount + rest_1e::at::kExtraCount))
         bof3::Fatal("%s: Sprite_ObjectAt answered 0x%02X, past the 0x22 sprite records; the original sets bit 0 of a "
                     "byte outside them (docs/rest_1e.md section 5)",
                     who, static_cast<unsigned>(found));
-    if (i < static_cast<int>(at::kObjectCount))
-        At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
+    if (i < static_cast<int>(rest_1e::at::kObjectCount))
+        At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<U>(i) * rest_1e::at::kObjectStride)[0] |= 1;
     else
-        At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
+        At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<U>(i - static_cast<int>(rest_1e::at::kObjectCount)) * rest_1e::at::kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original uses unchecked; ours aborts
@@ -226,10 +226,10 @@ unsigned char CellPickupRest1e(unsigned x, unsigned z) {
         }
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
-        const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kPickupItem);
+        const unsigned char* const name = SH_CALL(Item_NamePtr)(0, rest_1e::at::kPickupItem);
         for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
-        if (AlRest1e(SH_CALL(Inventory_Add)(0, at::kPickupItem, 1)) != 0) {
-            SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
+        if (AlRest1e(SH_CALL(Inventory_Add)(0, rest_1e::at::kPickupItem, 1)) != 0) {
+            SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);
         } else {
             SH_CALL(Msg_OpenSystem)(3);
@@ -262,7 +262,7 @@ void Strike(const char* who, CellHelper strike) {
             SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(S() + 0x2C) + 0x100));
             const unsigned char ahead = AlRest1e(SH_CALL(Field_EffectAhead)());
             if (ahead != 0xFF) {
-                SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
+                SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundStrike);
                 unsigned char* const s = S();
                 unsigned char* const e = EffectAtRest1e(who, static_cast<signed char>(ahead), "Field_EffectAhead's answer");
                 e[8] = s[8];
@@ -275,7 +275,7 @@ void Strike(const char* who, CellHelper strike) {
                 const unsigned char found = AlRest1e(SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0));
                 if (found != 0xFF) {
                     FlagObject(who, found);
-                    SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
+                    SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundStrike);
                 }
                 CellsAhead(strike, x, z);
             }
@@ -293,19 +293,19 @@ unsigned char StrikeCell(unsigned x, unsigned z) {
     if (cell == 0xF0 || cell == 0xF1 || cell == 0xF4) {
         SH_CALL(Effect_SpawnAtCellHigh)(0, x, z);
         if (static_cast<signed char>(AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 7) > 5) SH_CALL(Effect_SpawnAtCellHigh)(4, x, z);
-        SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
+        SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundStrike);
         return 1;
     }
     if (cell != 0xF6 && cell != 0xF7) return 0;
     SH_CALL(Effect_SpawnAtCellHigh)(0, x, z);
-    SH_CALL(Sound_PlayEffect)(at::kSoundStrike);
+    SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundStrike);
     const unsigned roll = AlRest1e(static_cast<U>(SH_CALL(Rand)())) & 0xF;
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
-        const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kStrikeItem);
+        const unsigned char* const name = SH_CALL(Item_NamePtr)(0, rest_1e::at::kStrikeItem);
         for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
-        if (AlRest1e(SH_CALL(Inventory_Add)(0, at::kStrikeItem, 1)) != 0) {
-            SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
+        if (AlRest1e(SH_CALL(Inventory_Add)(0, rest_1e::at::kStrikeItem, 1)) != 0) {
+            SH_CALL(Sound_PlayEffect)(rest_1e::at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);
         } else {
             SH_CALL(Msg_OpenSystem)(3);
@@ -316,7 +316,7 @@ unsigned char StrikeCell(unsigned x, unsigned z) {
         SH_CALL(Sprite_FlashClut)(0);
         const unsigned member = Field_State[0x89];
         SH_CALL(Char_LoseHp)(1, member);
-        SH_CALL(Msg_OpenSystem)(at::kStrikeHurtMessage);
+        SH_CALL(Msg_OpenSystem)(rest_1e::at::kStrikeHurtMessage);
         S()[0xB] = 1;
     }
     Field_Request = 2;

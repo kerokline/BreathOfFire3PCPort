@@ -102,7 +102,7 @@ void PutLong(unsigned char* p, battle_misc::U v) { std::memcpy(p, &v, sizeof v);
 battle_misc::U Addr(const void* p) { return Low32(p); }
 
 battle_misc::U SpriteCurrent() { return LongBattleMisc(AtBattleMisc(at::Sprite_CurrentAt())); }
-void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(at::Sprite_CurrentAt()), v); }
+void SetSpriteCurrent(battle_misc::U v) { PutLong(AtBattleMisc(battle_misc::at::Sprite_CurrentAt()), v); }
 battle_misc::U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
 unsigned char* Banner(battle_misc::U i) { return AtBattleMisc(::bof3::Img(battle_misc::kBanners.v) + i * 0xC); }
 
@@ -653,7 +653,7 @@ extern "C" char* __cdecl Str_CopyN(char* dst, const char* src, unsigned n) {
 // Called from the battle's frame (0x42E3D1), which calls on at once.
 extern "C" void __cdecl Sprite_UpdateObjectScreens(void) {
     for (battle_misc::U i = 0; i < 30; ++i) {
-        const battle_misc::U object = at::Sprite_ObjectsAt() + i * 0xA4;
+        const battle_misc::U object = battle_misc::at::Sprite_ObjectsAt() + i * 0xA4;
         SetSpriteCurrent(object);
         const unsigned char type = AtBattleMisc(object + 6)[0];
         if (type < 8 && type != 7) continue;

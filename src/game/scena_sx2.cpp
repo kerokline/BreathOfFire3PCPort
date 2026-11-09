@@ -126,16 +126,16 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
         g = static_cast<unsigned char>(lead + 4);
     const unsigned char* const pairs = AtScenaSx2(::bof3::Img(bof3::addr::BattleFormation_Offsets));
     const unsigned char* const row = AtScenaSx2(::bof3::Img(bof3::addr::Formation_SlotVectors) + (g * 3u + (slot & 0xFF)) * 8);
-    const unsigned f = AtScenaSx2(::bof3::Img(at::kFormation))[0];
+    const unsigned f = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
     const unsigned char a = pairs[f * 2];
     std::uint32_t zd;
     if (a != 0) {
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(LongScenaSx2(row)) * UScenaSx2(Quarter(a)) + UScenaSx2(x)));
-        const unsigned f2 = AtScenaSx2(::bof3::Img(at::kFormation))[0];
+        const unsigned f2 = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
         zd = UScenaSx2(Quarter(pairs[f2 * 2])) * UScenaSx2(LongScenaSx2(row + 4));
     } else {
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(UScenaSx2(x) - UScenaSx2(Quarter(pairs[f * 2 + 1])) * UScenaSx2(LongScenaSx2(row + 4))));
-        const unsigned f2 = AtScenaSx2(::bof3::Img(at::kFormation))[0];
+        const unsigned f2 = AtScenaSx2(::bof3::Img(scena_sx2::at::kFormation))[0];
         zd = UScenaSx2(Quarter(pairs[f2 * 2 + 1])) * UScenaSx2(LongScenaSx2(row));
     }
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + UScenaSx2(z)));

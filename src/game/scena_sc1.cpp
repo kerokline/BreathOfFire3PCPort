@@ -195,7 +195,7 @@ extern "C" void __cdecl Scena01_Start(void) {
     SH_CALL(Scenario_CallA)(0);
     ChangeArea(9, 0x570000, 0x40000, 7);
     SetLong(At(::bof3::Img(Cond_Flags_addr) + 0x8), 0);
-    SetLong(At(::bof3::Img(at::kCounters)), 0);
+    SetLong(At(::bof3::Img(scena_sc1::at::kCounters)), 0);
     MoveScript_PartyRecords[0x62] = 1;
 }
 
@@ -204,8 +204,8 @@ extern "C" void __cdecl Scena01_Start(void) {
 // the original reads any s8 index, ours aborts past the table.
 extern "C" void __cdecl Scena01_Run(void) {
     const int run = MoveScript_Var7;
-    if (run < 0 || run >= static_cast<int>(at::kRunCount))
-        bof3::Fatal("Scena01_Run: run %d past Scena01_Runs (%u entries)", run, at::kRunCount);
+    if (run < 0 || run >= static_cast<int>(scena_sc1::at::kRunCount))
+        bof3::Fatal("Scena01_Run: run %d past Scena01_Runs (%u entries)", run, scena_sc1::at::kRunCount);
     EntryScenaSc1(::bof3::Img(Scena01_Runs_addr), static_cast<unsigned>(run))();
 }
 
@@ -408,7 +408,7 @@ extern "C" void __cdecl Scena01_Scene03(void) {
         MusicStop(0xA);
         SH_CALL(Music_Play)(0x13, 8);
         if (!TakeEffect()) return;
-        Counter(3) = at::kEffectSlot;
+        Counter(3) = scena_sc1::at::kEffectSlot;
         SetStep(0x15);
         AimEffect(-0x2AA, 0x200, 0x14);
         return;
@@ -503,9 +503,9 @@ extern "C" void __cdecl Scena01_Scene05(void) {
 extern "C" void __cdecl Scena01_Scene06(void) {
     switch (Step()) {
     case 0:
-        if (Word(At(::bof3::Img(at::kChoiceWord))) != 2) return;
-        if ((At(::bof3::Img(at::kChoiceBits))[0] & 2) != 2) return;
-        if (SH_CALL(Flags_Test)(At(::bof3::Img(at::kStoryFlags)), 4) == 0) return;
+        if (Word(At(::bof3::Img(scena_sc1::at::kChoiceWord))) != 2) return;
+        if ((At(::bof3::Img(scena_sc1::at::kChoiceBits))[0] & 2) != 2) return;
+        if (SH_CALL(Flags_Test)(At(::bof3::Img(scena_sc1::at::kStoryFlags)), 4) == 0) return;
         Set40();
         Counter(0) = 5;
         SetStep(1);
@@ -1920,7 +1920,7 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     rec()[5] = 6;
     rec()[6] = kind;
     rv::As<records::EffectObject>(rec())->step_x = 0;
-    SetLong(rec() + 0x10, static_cast<signed char>(At(::bof3::Img(at::kEffectX) + Cond_Flags[0xd2])[0]));
+    SetLong(rec() + 0x10, static_cast<signed char>(At(::bof3::Img(scena_sc1::at::kEffectX) + Cond_Flags[0xd2])[0]));
     SetWord(rec() + 0x2E, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_x));
     SetWord(rec() + 0x30, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_y));
 }
@@ -1932,8 +1932,8 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
 // it by any byte, ours aborts past it. 0x56D6D0 reads no answer.
 extern "C" void __cdecl Scena01_ObjectHook(unsigned char* object) {
     const unsigned k = object[0x86];
-    if (k >= at::kObjectCount)
-        bof3::Fatal("Scena01_ObjectHook: object +0x86 %u past Scena01_ObjectHandlers (%u entries)", k, at::kObjectCount);
+    if (k >= scena_sc1::at::kObjectCount)
+        bof3::Fatal("Scena01_ObjectHook: object +0x86 %u past Scena01_ObjectHandlers (%u entries)", k, scena_sc1::at::kObjectCount);
     using ObjectFn = void (__cdecl*)(unsigned char*, unsigned char*);
     reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(Scena01_ObjectHandlers_addr) + 4 * k)))))(object, At(::bof3::Img(Cond_Flags_addr) + 0x8));
 }
@@ -2078,8 +2078,8 @@ extern "C" void __cdecl Scena01_Object11(unsigned char*, unsigned char*) {
 extern "C" unsigned char __cdecl Scena01_CellHook(int x, int z) {
     const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind.v)(At(::bof3::Img(Scena01_Cells_addr)), 2, x, z);
     if (static_cast<signed char>(found) < 0) return 0xFF;
-    if (found >= at::kCellCount)
-        bof3::Fatal("Scena01_CellHook: cell %u past Scena01_CellHandlers (%u entries)", found, at::kCellCount);
+    if (found >= scena_sc1::at::kCellCount)
+        bof3::Fatal("Scena01_CellHook: cell %u past Scena01_CellHandlers (%u entries)", found, scena_sc1::at::kCellCount);
     using CellFn = unsigned char (__cdecl*)(int, int);
     return reinterpret_cast<CellFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(Scena01_CellHandlers_addr) + 4u * found)))))(x, z);
 }

@@ -104,8 +104,8 @@ unsigned char* Picked(const char* who) {
     if (n >= at::kSpriteCount)
         bof3::Fatal("%s: the sprite index 0x939A1C is %u, past the %u Sprite_Objects records - the original reads 0x%X "
                     "(docs/effect_1e.md section 6)",
-                    who, n, at::kSpriteCount, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + n * at::kSpriteStride));
-    return rv::Bytes(Sprite_Objects) + n * at::kSpriteStride;
+                    who, n, at::kSpriteCount, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + n * effect_1e::at::kSpriteStride));
+    return rv::Bytes(Sprite_Objects) + n * effect_1e::at::kSpriteStride;
 }
 unsigned char PickedKind(const char* who) { return Picked(who)[6]; }
 
@@ -115,7 +115,7 @@ unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(Effect1a_Pane
 unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(Effect1a_PanelSet); }
 
 // A message of the script pools: MessagePools + the u16 at `cell`.
-const unsigned char* Pool(U cell) { return At(::bof3::Img(at::kPools.v) + Word(At(cell))); }
+const unsigned char* Pool(U cell) { return At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(cell))); }
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
@@ -939,7 +939,7 @@ extern "C" void __cdecl LeaderPanel_S4Again(void) {
         t[3] = static_cast<unsigned char>(t[3] + 1);
     }
     if (g_shop_ask_row) {
-        const U row = FirstAnswerRow(At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPools.v) + 0x44u * 2u))), 0x44);
+        const U row = FirstAnswerRow(At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(effect_1e::at::kPools.v) + 0x44u * 2u))), 0x44);
         Hand(0x20, 12u * S()[6] + 0xAAu + 12u * (row - 1u));
     } else {
         Hand(0x20, 12u * S()[6] + 0xAAu);
@@ -1193,9 +1193,9 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
     }
     if (S()[3] != 2) return;
     switch (Effect_Objects[6].param & 3) {
-    case 0: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
-    case 1: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
-    case 2: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
+    case 0: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
+    case 1: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
+    case 2: Text(0x1D, 0x14, At(::bof3::Img(effect_1e::at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
     default: break;
     }
     Hand(48u * Effect_Objects[6].param + 0x58u, 0x2E);

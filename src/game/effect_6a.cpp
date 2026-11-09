@@ -271,7 +271,7 @@ extern "C" void __cdecl EffectKind18Sub4A_WaitCond(void) {
             SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, rv::As<records::EffectObject>(s)->z_whole, at::kMapOpen);
             s = S();
             SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, (rv::As<records::EffectObject>(s)->z_whole + 1u) & 0xFFFFu, at::kMapOpen);
-            if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(at::kSoundOpen);
+            if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(effect_6a::at::kSoundOpen);
             S()[2] = static_cast<unsigned char>(S()[2] + 1);
         }
     }

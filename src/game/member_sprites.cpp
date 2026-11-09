@@ -78,7 +78,7 @@ unsigned char* Member(unsigned i) { return move_script::At(Address(rv::Bytes(Obj
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
-unsigned char& Cell(unsigned i) { return move_script::At(::bof3::Img(at::kCells.v))[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return move_script::At(::bof3::Img(member_sprites::at::kCells.v))[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(move_script::Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
@@ -112,14 +112,14 @@ unsigned FlagsLow() { return (Field_ScriptFlags2 | Field_ScriptFlags) & 0xFF; }
 // unchecked - the table at 0x65F960 has 9 entries, then zeros. The original
 // jumps (a tail call).
 extern "C" void __cdecl Field_MemberFrame(void) {
-    g.restore_clut();
-    Dispatch(g.member_states, rv::Current<records::PartyMember>()->state);
+    member_sprites::g.restore_clut();
+    Dispatch(member_sprites::g.member_states, rv::Current<records::PartyMember>()->state);
 }
 
 // original 0x51AC70, state 0 (PSX 0x801BCE90): the member's counters cleared,
 // +6 its index less one, grounded, walking speed 3, its animation, state 1.
 extern "C" void __cdecl Member_Start(void) {
-    g.clear_steps();
+    member_sprites::g.clear_steps();
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_18, 0);
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_1c, 0);
     rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_20, 0);
@@ -128,7 +128,7 @@ extern "C" void __cdecl Member_Start(void) {
     {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
         const long z = c->z, x = c->x;
-        const long ground = g.ground_at(x, z);
+        const long ground = member_sprites::g.ground_at(x, z);
         rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
     }
     Sprite_Current[0x5D] = 0;
@@ -138,7 +138,7 @@ extern "C" void __cdecl Member_Start(void) {
     Field_State[0x128] = 3;
     Field_State[0x137] = 0;
     Field_State[0x136] = 0;
-    g.set_animation(rv::Current<records::PartyMember>()->direction);
+    member_sprites::g.set_animation(rv::Current<records::PartyMember>()->direction);
     rv::Current<records::PartyMember>()->state = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state + 1);
     rv::Current<records::PartyMember>()->step = 0;
 }
@@ -149,8 +149,8 @@ extern "C" void __cdecl Member_Start(void) {
 // As the original has it: the sub-state Sprite_Current +2 is unchecked; the
 // tick is a tail jump whose al no caller reads.
 extern "C" void __cdecl Member_Control(void) {
-    Dispatch(g.control_states, rv::Current<records::PartyMember>()->step);
-    g.script_tick();
+    Dispatch(member_sprites::g.control_states, rv::Current<records::PartyMember>()->step);
+    member_sprites::g.script_tick();
 }
 
 // original 0x51AD60, sub-state 0 of state 1 (PSX 0x801BCFF8): the member
@@ -178,36 +178,36 @@ extern "C" void __cdecl Member_Follow(void) {
         return;
     }
     if (flags & 0xC00) return;
-    if (g.test_535120(1)) return;
-    if (g.test_535240(1)) return;
+    if (member_sprites::g.test_535120(1)) return;
+    if (member_sprites::g.test_535240(1)) return;
     if (ObjTrio[0].state == 0xA) {
-        g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+        member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         rv::Current<records::PartyMember>()->state = 7;
         rv::Current<records::PartyMember>()->step = 0;
         return;
     }
-    if (g.idle()) return;
-    switch (g.follow_step()) {
+    if (member_sprites::g.idle()) return;
+    switch (member_sprites::g.follow_step()) {
     case 0: {
-        if (g.test_531df0()) {
-            g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+        if (member_sprites::g.test_531df0()) {
+            member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
             rv::Current<records::PartyMember>()->step = 0;
             return;
         }
         records::PartyMember* const state = rv::As<records::PartyMember>(Field_State);
         if (!(Field_ActorStates[state->char_index * kActorBytes] & 0x20)) rv::Bytes(state)[0x136] = 0;
-        g.call_534610();
-        g.call_535f50();
-        g.ensure_animation(static_cast<unsigned char>(rv::Current<records::PartyMember>()->direction + 8));
+        member_sprites::g.call_534610();
+        member_sprites::g.call_535f50();
+        member_sprites::g.ensure_animation(static_cast<unsigned char>(rv::Current<records::PartyMember>()->direction + 8));
         if (rv::As<records::PartyMember>(Field_State)->char_id == 2) {
             const records::PartyMember* const c = rv::Current<records::PartyMember>();
             const std::uint32_t steps = c->step_frames;
             const std::uint32_t x = static_cast<std::uint32_t>(c->step_x) * steps + static_cast<std::uint32_t>(c->x);
             const std::uint32_t z = static_cast<std::uint32_t>(c->step_z) * steps + static_cast<std::uint32_t>(c->z);
-            g.ground_at(static_cast<long>(x), static_cast<long>(z));
+            member_sprites::g.ground_at(static_cast<long>(x), static_cast<long>(z));
         }
         rv::Current<records::PartyMember>()->step_frames = static_cast<unsigned char>(rv::Current<records::PartyMember>()->step_frames - 1);
-        g.call_52e140();
+        member_sprites::g.call_52e140();
         Field_State[0x137] = 1;
         rv::Current<records::PartyMember>()->step = 1;
         return;
@@ -216,21 +216,21 @@ extern "C" void __cdecl Member_Follow(void) {
     case 2:
     case 3:
     case 4:
-        g.clear_steps();
-        g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+        member_sprites::g.clear_steps();
+        member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 0;
         rv::Current<records::PartyMember>()->step = 0;
         return;
     case 5:
         Field_State[0x128] = 3;
-        g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+        member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 4;
         rv::Current<records::PartyMember>()->state = 2;
         rv::Current<records::PartyMember>()->step = 3;
         return;
     case 6: {
         Field_State[0x128] = 3;
-        g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+        member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 3;
         rv::Current<records::PartyMember>()->state = 8;
         records::PartyMember* const c = rv::Current<records::PartyMember>();
@@ -248,27 +248,27 @@ extern "C" void __cdecl Member_Walk(void) {
     records::PartyMember* const c = rv::Current<records::PartyMember>();
     const unsigned char left = c->step_frames;
     if (left == 0) {
-        g.walk_end();
+        member_sprites::g.walk_end();
         return;
     }
     c->step_frames = static_cast<unsigned char>(left - 1);
-    g.call_52e140();
+    member_sprites::g.call_52e140();
 }
 
 // original 0x51AFE0 (PSX 0x801BD3F8): the step's end - four event checks, two
 // more tests that may take the frame, then stopped and Member_Follow asked
 // again; standing still in state 1 afterwards, back to sub-state 0.
 extern "C" void __cdecl Member_WalkEnd(void) {
-    g.call_535270();
-    g.call_5350c0();
-    g.call_534f10();
-    g.call_534a00();
-    if (g.test_535120(0)) return;
-    if (g.test_535240(0)) return;
-    if (g.test_534920()) return;
-    g.clear_steps();
+    member_sprites::g.call_535270();
+    member_sprites::g.call_5350c0();
+    member_sprites::g.call_534f10();
+    member_sprites::g.call_534a00();
+    if (member_sprites::g.test_535120(0)) return;
+    if (member_sprites::g.test_535240(0)) return;
+    if (member_sprites::g.test_534920()) return;
+    member_sprites::g.clear_steps();
     Field_State[0x128] = 3;
-    g.follow();
+    member_sprites::g.follow();
     records::PartyMember* const c = rv::Current<records::PartyMember>();
     if (c->step_x != 0) return;
     if (c->step_z != 0) return;
@@ -326,7 +326,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const std::uint32_t pz = gz - (RowZ(::bof3::Img(Field_DirectionSteps_addr), dir) << 1);
     if (Abs(static_cast<std::uint32_t>(c->x) - gx) <= near && Abs(static_cast<std::uint32_t>(c->z) - gz) <= near) return 1;
 
-    g.catch_up(static_cast<long>(px), static_cast<long>(pz));
+    member_sprites::g.catch_up(static_cast<long>(px), static_cast<long>(pz));
     {
         const records::PartyMember* const s = rv::Current<records::PartyMember>();
         const std::int32_t dx = Abs(static_cast<std::uint32_t>(s->x) - px);
@@ -346,14 +346,14 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
         const unsigned char speed = state[0x128];
         state[0x128] = speed < 3 ? 3 : speed > 5 ? 5 : speed;
     }
-    g.direction_to(static_cast<long>(px), static_cast<long>(pz), Sprite_Current + 8);
-    unsigned char answer = g.step_ahead();
+    member_sprites::g.direction_to(static_cast<long>(px), static_cast<long>(pz), Sprite_Current + 8);
+    unsigned char answer = member_sprites::g.step_ahead();
     if (answer != 1) {
         c = rv::Current<records::PartyMember>();
         const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->z) - pz)) +
                                                             static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->x) - px)));
         const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(Scratch_Swap - pz)) +
-                                                           static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(at::kAimX) - px)));
+                                                           static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(member_sprites::at::kAimX) - px)));
         if (mine >= aim) return answer;
         c->direction = facing;
         answer = 1;
@@ -366,8 +366,8 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const std::uint32_t nx = (leader->step_frames * static_cast<std::uint32_t>(leader->step_x) + static_cast<std::uint32_t>(leader->x)) & 0xFFFF8000u;
     unsigned char* const saved = Field_State;
     Field_State = Member(0);
-    const long ground = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
-    const unsigned char blocked = g.blocked_at(static_cast<long>(nx), static_cast<long>(nz), Sprite_Current[0x70], ground);
+    const long ground = member_sprites::g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
+    const unsigned char blocked = member_sprites::g.blocked_at(static_cast<long>(nx), static_cast<long>(nz), Sprite_Current[0x70], ground);
     Field_State = saved;
     if (blocked) return answer;
     rv::Current<records::PartyMember>()->x = static_cast<std::int32_t>(nx);
@@ -375,7 +375,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     rv::Current<records::PartyMember>()->flags = static_cast<unsigned char>(rv::Current<records::PartyMember>()->flags | 0x40);
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] | (Member(0)[0x138] & 1));
-    const long here = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
+    const long here = member_sprites::g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
     rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(here));
     rv::Current<records::PartyMember>()->ot_slot = Member(0)[0x29];
     rv::Current<records::PartyMember>()->state = 2;
@@ -396,7 +396,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
 // aim point is fetched when there is no object there and thrown away.
 extern "C" unsigned char __cdecl Member_StepAhead(void) {
     const unsigned char facing = rv::Current<records::PartyMember>()->direction;
-    const unsigned char kind = g.cell_ahead();
+    const unsigned char kind = member_sprites::g.cell_ahead();
     {
         records::PartyMember* const c = rv::Current<records::PartyMember>();
         c->step_frames = (c->direction == 2 || c->direction == 6) ? 0x20 : 0x10;
@@ -417,7 +417,7 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
         ax = static_cast<std::uint32_t>(c->x) + ((RowX(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed) << 1);
         az = static_cast<std::uint32_t>(c->z) + ((RowZ(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed) << 1);
     }
-    at::kAimX = static_cast<std::int32_t>(ax);
+    member_sprites::at::kAimX = static_cast<std::int32_t>(ax);
     Scratch_Swap = static_cast<std::int32_t>(az);
     switch (kind) {
     case 0:
@@ -426,13 +426,13 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
     case 5:
         return 1;
     case 3: {
-        const long r = g.object_at(static_cast<long>(ax), static_cast<long>(az), c->direction);
+        const long r = member_sprites::g.object_at(static_cast<long>(ax), static_cast<long>(az), c->direction);
         if (Cell(0) == 0) return 0;
         if (static_cast<short>(r) > 0x40) {
             rv::Current<records::PartyMember>()->direction = facing;
             return 1;
         }
-        g.ground_at(at::kAimX, static_cast<std::int32_t>(Scratch_Swap));
+        member_sprites::g.ground_at(member_sprites::at::kAimX, static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 6: return 5;
@@ -445,9 +445,9 @@ namespace {
 // Member_CatchUp's free test at the sprite's position.
 unsigned char BlockedHere() {
     const records::PartyMember* c = rv::Current<records::PartyMember>();
-    const long ground = g.ground_at(c->x, c->z);
+    const long ground = member_sprites::g.ground_at(c->x, c->z);
     c = rv::Current<records::PartyMember>();
-    return g.blocked_at(c->x, c->z, rv::Bytes(c)[0x70], ground);
+    return member_sprites::g.blocked_at(c->x, c->z, rv::Bytes(c)[0x70], ground);
 }
 }  // namespace
 
@@ -480,8 +480,8 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     const std::int32_t far_z = Abs(oz - z);
     if (far < far_z) far = far_z;
     std::int32_t tries = far >= 0x100000 ? (static_cast<std::int32_t>(static_cast<std::uint32_t>(far) - 0xF0000u) >> 16) + 1 : 1;
-    const short here = static_cast<short>(g.ground_at(static_cast<long>(ox), static_cast<long>(oz)));
-    const short there = static_cast<short>(g.ground_at(x_arg, z_arg));
+    const short here = static_cast<short>(member_sprites::g.ground_at(static_cast<long>(ox), static_cast<long>(oz)));
+    const short there = static_cast<short>(member_sprites::g.ground_at(x_arg, z_arg));
     tries -= Abs(static_cast<std::uint32_t>(static_cast<std::int32_t>(here) - static_cast<std::int32_t>(there))) >> 8;
     if (tries <= 0) tries = 1;
 
@@ -490,14 +490,14 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     unsigned char dir = 0;       // the original's stack byte (see above)
     bool found = false;
     for (;;) {
-        g.direction_to(x_arg, z_arg, &dir);
+        member_sprites::g.direction_to(x_arg, z_arg, &dir);
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(((RowX(::bof3::Img(Field_DirectionSteps_addr), dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
         rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(((RowZ(::bof3::Img(Field_DirectionSteps_addr), dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
         {
             const records::PartyMember* c = rv::Current<records::PartyMember>();
-            const long object = g.object_at(c->x, c->z, dir);
+            const long object = member_sprites::g.object_at(c->x, c->z, dir);
             c = rv::Current<records::PartyMember>();
-            if (!g.blocked_at(c->x, c->z, rv::Bytes(c)[0x70], object)) {
+            if (!member_sprites::g.blocked_at(c->x, c->z, rv::Bytes(c)[0x70], object)) {
                 found = true;
                 break;
             }
@@ -557,7 +557,7 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     } else if (Abs(static_cast<std::uint32_t>(c->x) - U(Member(0) + 0x34)) <= 0x60000 && Abs(static_cast<std::uint32_t>(c->z) - U(Member(0) + 0x38)) <= 0x60000) {
         c->x = static_cast<std::int32_t>(ox);
         rv::Current<records::PartyMember>()->z = static_cast<std::int32_t>(oz);
-    } else if (g.map_cell(c->x_whole, c->z_whole)) {
+    } else if (member_sprites::g.map_cell(c->x_whole, c->z_whole)) {
         Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
         rv::Current<records::PartyMember>()->ot_slot = Draw_OtSlot;
         rv::Current<records::PartyMember>()->direction = dir;
@@ -568,7 +568,7 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     rv::Current<records::PartyMember>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::PartyMember>()->x) & 0xFFFF8000u);
     rv::Current<records::PartyMember>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::PartyMember>()->z) & 0xFFFF8000u);
     c = rv::Current<records::PartyMember>();
-    const long ground = g.ground_at(c->x, c->z);
+    const long ground = member_sprites::g.ground_at(c->x, c->z);
     rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
 }
 
@@ -609,10 +609,10 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
     s[0x136] = 0;
     if (rv::Bytes(ObjTrio)[0x137] == 9) return 0;
     if (Member((rv::Current<records::PartyMember>()->actor & 0xFFu) ^ 3u)[0x137] == 9) return 0;
-    const unsigned pick = (static_cast<unsigned>(g.rand()) & 1u) + 1u;
+    const unsigned pick = (static_cast<unsigned>(member_sprites::g.rand()) & 1u) + 1u;
     if (rv::Current<records::PartyMember>()->actor != pick) return 0;
     Field_State[0x137] = 9;
-    g.ensure_animation(rv::Current<records::PartyMember>()->direction);
+    member_sprites::g.ensure_animation(rv::Current<records::PartyMember>()->direction);
     rv::Current<records::PartyMember>()->step_frames = 2;
     rv::Current<records::PartyMember>()->state = 6;
     rv::Current<records::PartyMember>()->step = 0;
@@ -625,8 +625,8 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
 // sprite (+0x70) and Field_CellAheadFlat otherwise (tail jumps). Also called by
 // the leader (0x52E160) and 0x526530 / 0x526C80.
 extern "C" unsigned char __cdecl Field_CellAhead(void) {
-    if (Sprite_Current[0x70] != 0) return g.cell_ahead_raised();
-    return g.cell_ahead_flat();
+    if (Sprite_Current[0x70] != 0) return member_sprites::g.cell_ahead_raised();
+    return member_sprites::g.cell_ahead_flat();
 }
 
 // original 0x526DD0 (PSX: the flat half of 0x801BA590's pair): what the cell
@@ -644,43 +644,43 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     const records::PartyMember* c = rv::Current<records::PartyMember>();
     const unsigned char facing = c->direction;
     if (c->x_frac != 0 && c->z_frac != 0) return 1;
-    const unsigned char* const offsets = move_script::At(::bof3::Img(at::kCellOffsets.v)) + facing * 2u;
+    const unsigned char* const offsets = move_script::At(::bof3::Img(member_sprites::at::kCellOffsets.v)) + facing * 2u;
     const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + c->z_whole);
     const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + c->x_whole);
-    g.read_cells(ahead_x, ahead_z);
+    member_sprites::g.read_cells(ahead_x, ahead_z);
     c = rv::Current<records::PartyMember>();
     const unsigned char dir = c->direction;
     if (dir & 1) {
         // Diagonal.
         const std::uint16_t fx = c->x_frac;
         if (fx == 0 && c->z_frac == 0) {
-            const unsigned char k = g.cell_class(1, 0, 0);
+            const unsigned char k = member_sprites::g.cell_class(1, 0, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
             if (k == 0x10) return 0;
             if ((k & 0xF0) != 0xA0) return 3;
-            return g.cell_slope(8);
+            return member_sprites::g.cell_slope(8);
         }
         if (fx != 0 && c->z_frac == 0) {
             if (dir & 2) return 3;
-            const unsigned char k = g.cell_class(2, 4, 0);
+            const unsigned char k = member_sprites::g.cell_class(2, 4, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
             if (k == 0x70) return 7;
             if (k == 0x20) return 0;
             if (k == 0x10) {
-                if (g.cell_pair_turn(2, 4, 3, 0xFF)) return 0;
-                if (g.cell_pair_turn(2, 4, 3, 0x70)) return 0;
-                if (g.cell_pair_turn(2, 4, 7, 0xA0)) return 0;
-                if (g.cell_pair_turn(2, 4, 7, 0xA1)) return 0;
-                if (g.cell_pair_turn(2, 4, 7, 0xA2)) return 0;
-                return g.cell_pair_turn(2, 4, 7, 0xA3) == 0 ? 1 : 0;
+                if (member_sprites::g.cell_pair_turn(2, 4, 3, 0xFF)) return 0;
+                if (member_sprites::g.cell_pair_turn(2, 4, 3, 0x70)) return 0;
+                if (member_sprites::g.cell_pair_turn(2, 4, 7, 0xA0)) return 0;
+                if (member_sprites::g.cell_pair_turn(2, 4, 7, 0xA1)) return 0;
+                if (member_sprites::g.cell_pair_turn(2, 4, 7, 0xA2)) return 0;
+                return member_sprites::g.cell_pair_turn(2, 4, 7, 0xA3) == 0 ? 1 : 0;
             }
-            if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
+            if ((k & 0xF0) == 0xA0) return member_sprites::g.cell_slope(8);
             const unsigned char* const s = Sprite_Current;
             const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->x_whole)) * 0x20000u + 0x10000u);
             const long az = static_cast<long>(High(ahead_z));
-            const long r = g.object_at(ax, az, 1);
+            const long r = member_sprites::g.object_at(ax, az, 1);
             if (Cell(0) == 0) return 3;
             if (static_cast<short>(r) <= 0x40) return 3;
             rv::Current<records::PartyMember>()->direction = 7;
@@ -688,24 +688,24 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         // z mid-cell (or both whole with x whole and z not): the z side.
         if (!(dir & 2)) return 3;
-        const unsigned char k = g.cell_class(3, 5, 0);
+        const unsigned char k = member_sprites::g.cell_class(3, 5, 0);
         Cell(8) = k;
         if (k == 0xB0) return 6;
         if (k == 0x70) return 7;
         if (k == 0x20) return 0;
         if (k == 0x10) {
-            if (g.cell_pair_turn(3, 5, 5, 0xFF)) return 0;
-            if (g.cell_pair_turn(3, 5, 5, 0x70)) return 0;
-            if (g.cell_pair_turn(3, 5, 1, 0xA0)) return 0;
-            if (g.cell_pair_turn(3, 5, 1, 0xA1)) return 0;
-            if (g.cell_pair_turn(3, 5, 1, 0xA2)) return 0;
-            return g.cell_pair_turn(3, 5, 1, 0xA3) != 0 ? 0 : 3;
+            if (member_sprites::g.cell_pair_turn(3, 5, 5, 0xFF)) return 0;
+            if (member_sprites::g.cell_pair_turn(3, 5, 5, 0x70)) return 0;
+            if (member_sprites::g.cell_pair_turn(3, 5, 1, 0xA0)) return 0;
+            if (member_sprites::g.cell_pair_turn(3, 5, 1, 0xA1)) return 0;
+            if (member_sprites::g.cell_pair_turn(3, 5, 1, 0xA2)) return 0;
+            return member_sprites::g.cell_pair_turn(3, 5, 1, 0xA3) != 0 ? 0 : 3;
         }
-        if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
+        if ((k & 0xF0) == 0xA0) return member_sprites::g.cell_slope(8);
         const unsigned char* const s = Sprite_Current;
         const long az = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->z_whole)) * 0x20000u + 0x10000u);
         const long ax = static_cast<long>(High(ahead_x));
-        const long r = g.object_at(ax, az, 1);
+        const long r = member_sprites::g.object_at(ax, az, 1);
         if (Cell(0) == 0) return 3;
         if (static_cast<short>(r) <= 0x40) return 3;
         rv::Current<records::PartyMember>()->direction = 1;
@@ -716,18 +716,18 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     const std::uint16_t fx = c->x_frac;
     if (fx == 0 && c->z_frac == 0) {
         // On a cell's corner: ahead, and either side.
-        Cell(8) = g.cell_class(1, 2, 3);
-        Cell(9) = g.cell_class(2, 0, 0);
-        const unsigned char third = g.cell_class(3, 0, 0);
+        Cell(8) = member_sprites::g.cell_class(1, 2, 3);
+        Cell(9) = member_sprites::g.cell_class(2, 0, 0);
+        const unsigned char third = member_sprites::g.cell_class(3, 0, 0);
         Cell(10) = third;
         const unsigned char first = Cell(8);
         if (first == 0xB0) return 6;
         if (first == 0x10 || first == 0x20) {
             if (Cell(9) == 0x10) {
                 if (third == 0x10) return 0;
-                g.turn_unless(2, 4, 3);
+                member_sprites::g.turn_unless(2, 4, 3);
             } else if (third == 0x10) {
-                g.turn_unless(4, 6, 5);
+                member_sprites::g.turn_unless(4, 6, 5);
             } else {
                 records::PartyMember* const s = rv::Current<records::PartyMember>();
                 s->direction = static_cast<unsigned char>((s->direction + 1) & 7);
@@ -736,27 +736,27 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         records::PartyMember* const s = rv::Current<records::PartyMember>();
         if (!(Field_InputFlags & 1)) {
             const unsigned char side_x = Cell(9) & 0xF0;
-            if (side_x == 0xA0 && (s->direction == 1 || s->direction == 5)) return g.cell_slope(9);
+            if (side_x == 0xA0 && (s->direction == 1 || s->direction == 5)) return member_sprites::g.cell_slope(9);
             const unsigned char side_z = Cell(10) & 0xF0;
-            if (side_z == 0xA0 && (s->direction == 3 || s->direction == 7)) return g.cell_slope(0xA);
+            if (side_z == 0xA0 && (s->direction == 3 || s->direction == 7)) return member_sprites::g.cell_slope(0xA);
             if (side_x == 0xA0) {
                 s->direction = facing;
-                g.turn_unless(4, 6, 5);
-                return g.cell_slope(9);
+                member_sprites::g.turn_unless(4, 6, 5);
+                return member_sprites::g.cell_slope(9);
             }
             if (side_z == 0xA0) {
                 s->direction = facing;
-                g.turn_unless(2, 4, 3);
-                return g.cell_slope(0xA);
+                member_sprites::g.turn_unless(2, 4, 3);
+                return member_sprites::g.cell_slope(0xA);
             }
         }
         if (s->direction & 1) return 3;
         {
             const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(s->x_whole)) +
                                   static_cast<std::uint32_t>(static_cast<short>(ahead_x))) << 16);
-            const long r = g.object_at(ax, static_cast<long>(High(ahead_z)), 3);
+            const long r = member_sprites::g.object_at(ax, static_cast<long>(High(ahead_z)), 3);
             if (Cell(0) != 0 && static_cast<short>(r) > 0x40) {
-                g.turn_unless(4, 6, 5);
+                member_sprites::g.turn_unless(4, 6, 5);
                 return 1;
             }
         }
@@ -764,43 +764,43 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         if (t->direction & 1) return 3;
         const long az = Half((static_cast<std::uint32_t>(static_cast<short>(t->z_whole)) +
                               static_cast<std::uint32_t>(static_cast<short>(ahead_z))) << 16);
-        const long r = g.object_at(static_cast<long>(High(ahead_x)), az, 1);
+        const long r = member_sprites::g.object_at(static_cast<long>(High(ahead_x)), az, 1);
         if (Cell(0) == 0) return 3;
         if (static_cast<short>(r) <= 0x40) return 3;
-        g.turn_unless(2, 4, 3);
+        member_sprites::g.turn_unless(2, 4, 3);
         return 1;
     }
     if (fx != 0 && c->z_frac == 0) {
         // On an x edge: ahead on x.
-        unsigned char k = g.cell_class(2, 4, 0);
+        unsigned char k = member_sprites::g.cell_class(2, 4, 0);
         Cell(8) = k;
         if (k == 0x70) {
-            g.turn_unless(4, 6, 5);
+            member_sprites::g.turn_unless(4, 6, 5);
             return 7;
         }
         if (k == 0x10 || k == 0x20) {
-            g.turn_unless(2, 4, 3);
+            member_sprites::g.turn_unless(2, 4, 3);
             k = Cell(8);
         }
         if ((k & 0xF0) != 0xA0) return 3;
-        if (!(rv::Current<records::PartyMember>()->direction & 1)) g.turn_unless(4, 6, 5);
-        return g.cell_slope(8);
+        if (!(rv::Current<records::PartyMember>()->direction & 1)) member_sprites::g.turn_unless(4, 6, 5);
+        return member_sprites::g.cell_slope(8);
     }
     // On a z edge: ahead on z.
-    unsigned char k = g.cell_class(3, 5, 0);
+    unsigned char k = member_sprites::g.cell_class(3, 5, 0);
     Cell(8) = k;
     if (k == 0x70) {
-        g.turn_unless(2, 4, 3);
+        member_sprites::g.turn_unless(2, 4, 3);
         return 7;
     }
     if (k == 0xB0) return 6;
     if (k == 0x10 || k == 0x20) {
-        g.turn_unless(4, 6, 5);
+        member_sprites::g.turn_unless(4, 6, 5);
         k = Cell(8);
     }
     if ((k & 0xF0) != 0xA0) return 3;
-    if (!(rv::Current<records::PartyMember>()->direction & 1)) g.turn_unless(2, 4, 3);
-    return g.cell_slope(8);
+    if (!(rv::Current<records::PartyMember>()->direction & 1)) member_sprites::g.turn_unless(2, 4, 3);
+    return member_sprites::g.cell_slope(8);
 }
 
 // original 0x527470 (PSX 0x801BA5D8's helper): the class of up to three cells
@@ -899,20 +899,20 @@ extern "C" unsigned char __cdecl Field_CellPairTurn(unsigned a, unsigned b, unsi
 // as Field_CellKind of it from the sprite's own cell.
 extern "C" void __cdecl Field_ReadCells(unsigned x, unsigned z) {
     const unsigned char* c = Sprite_Current;
-    Cell(1) = g.cell_kind(x, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
+    Cell(1) = member_sprites::g.cell_kind(x, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
-    Cell(2) = g.cell_kind(rv::As<records::PartyMember>(c)->x_whole, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
+    Cell(2) = member_sprites::g.cell_kind(rv::As<records::PartyMember>(c)->x_whole, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
-    Cell(3) = g.cell_kind(x, rv::As<records::PartyMember>(c)->z_whole, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
+    Cell(3) = member_sprites::g.cell_kind(x, rv::As<records::PartyMember>(c)->z_whole, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
     {
         const unsigned x1 = static_cast<std::uint16_t>(rv::As<records::PartyMember>(c)->x_whole + 1);
-        Cell(4) = g.cell_kind(x1, z, x1, rv::As<records::PartyMember>(c)->z_whole);
+        Cell(4) = member_sprites::g.cell_kind(x1, z, x1, rv::As<records::PartyMember>(c)->z_whole);
     }
     c = Sprite_Current;
     {
         const unsigned z1 = static_cast<std::uint16_t>(rv::As<records::PartyMember>(c)->z_whole + 1);
-        Cell(5) = g.cell_kind(x, z1, rv::As<records::PartyMember>(c)->x_whole, z1);
+        Cell(5) = member_sprites::g.cell_kind(x, z1, rv::As<records::PartyMember>(c)->x_whole, z1);
     }
 }
 
@@ -932,8 +932,8 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     const bool whole_x = rv::As<records::PartyMember>(c)->x_frac == 0, whole_z = rv::As<records::PartyMember>(c)->z_frac == 0, ground = c[0x70] == 0;
     const long px = whole_x == ground ? Half(X1 + X0) : static_cast<long>(X1);
     const long pz = whole_z == ground ? Half(Z1 + Z0) : static_cast<long>(Z1);
-    const unsigned char to = g.byte_at(static_cast<short>(x), static_cast<short>(z));
-    const unsigned char from = g.byte_at(static_cast<short>(x0), static_cast<short>(z0));
+    const unsigned char to = member_sprites::g.byte_at(static_cast<short>(x), static_cast<short>(z));
+    const unsigned char from = member_sprites::g.byte_at(static_cast<short>(x0), static_cast<short>(z0));
     switch (to & 0xF0) {
     case 0x80:
         if (rv::Current<records::PartyMember>()->actor != 0) return 0xFF;
@@ -945,8 +945,8 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0xC0:
     case 0xD0:
     case 0xE0:
-        if (g.cell_facing(from)) return 0xB0;
-        if (g.object_ahead(px, pz)) return 0xFF;
+        if (member_sprites::g.cell_facing(from)) return 0xB0;
+        if (member_sprites::g.object_ahead(px, pz)) return 0xFF;
         return to;
     case 0x10:
         if (to == 0x11) {
@@ -959,13 +959,13 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0x40:
     case 0x50:
         if (to != 0x52) return 0xFF;
-        if (g.object_ahead(px, pz)) return 0xFF;
+        if (member_sprites::g.object_ahead(px, pz)) return 0xFF;
         return 0;
     case 0x70:
-        if (from == 0x70 && g.object_ahead(px, pz)) return from;
-        return g.object_ahead(px, pz) ? 0xFF : 0;
+        if (from == 0x70 && member_sprites::g.object_ahead(px, pz)) return from;
+        return member_sprites::g.object_ahead(px, pz) ? 0xFF : 0;
     case 0x20:
-        if (g.object_ahead(px, pz)) return 0xFF;
+        if (member_sprites::g.object_ahead(px, pz)) return 0xFF;
         if ((from & 0xF0) == 0x20 && ((from ^ to) & 0xF1) != 0) return 0xFF;
         return to & 0xF1;
     case 0xA0:
@@ -979,7 +979,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
             return to;
         }
         if (to == 0xA2 || to == 0xA3) return 0xFF;
-        return g.object_ahead(px, pz) ? 0xFF : 0;
+        return member_sprites::g.object_ahead(px, pz) ? 0xFF : 0;
     default:   // 0xF0
         return 0xFF;
     }
@@ -999,7 +999,7 @@ extern "C" unsigned char __cdecl Field_CellFacing(unsigned cell) {
 // original 0x528770: 1 when 0x5725C0 finds an object at (x, z) in the
 // sprite's facing that stands more than 0x40 high.
 extern "C" unsigned char __cdecl Field_ObjectAhead(long x, long z) {
-    const long r = g.object_at(x, z, rv::Current<records::PartyMember>()->direction);
+    const long r = member_sprites::g.object_at(x, z, rv::Current<records::PartyMember>()->direction);
     if (Cell(0) == 0) return 0;
     return static_cast<short>(r) > 0x40 ? 1 : 0;
 }

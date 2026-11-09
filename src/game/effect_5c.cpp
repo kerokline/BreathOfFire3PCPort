@@ -1456,7 +1456,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start(void) {
 // sub-kind 0x17, sub-state 0xA - unchecked: on none free (0xFF) the original
 // writes 0x7F80 past the pool, ours aborts. Then the shared tail.
 extern "C" void __cdecl EffectKind18Sub17_WaitCue(void) {
-    if (At(::bof3::Img(at::kCounter.v))[0] == 0xC) {
+    if (At(::bof3::Img(effect_5c::at::kCounter.v))[0] == 0xC) {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         Cond_ByteFE = 0x23;
         unsigned char* const rec = NewRecord("EffectKind18Sub17_WaitCue", SH_CALL(Effect_FindFree)() & 0xFFu);
@@ -1477,7 +1477,7 @@ extern "C" void __cdecl EffectKind18Sub17_Rise(void) {
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, w + 1u);
     } else {
         s[2] = static_cast<unsigned char>(s[2] + 1);
-        At(::bof3::Img(at::kCounter.v))[0] = 0xD;
+        At(::bof3::Img(effect_5c::at::kCounter.v))[0] = 0xD;
     }
     Sub17Tail();
 }
@@ -1587,7 +1587,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start10(void) {
 // up. Else every fifth frame E5D's step (Frame_Counter / 5) & 3, and E5D's
 // quads variant 2.
 extern "C" void __cdecl EffectKind18Sub17_WaitCue11(void) {
-    const unsigned char cue = At(::bof3::Img(at::kCounter.v))[0];
+    const unsigned char cue = At(::bof3::Img(effect_5c::at::kCounter.v))[0];
     const U f = Frame_Counter;
     if (cue == 0xF && ((f / 5u) & 3u) == 3) {
         Step(4);

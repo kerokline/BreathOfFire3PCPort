@@ -42,12 +42,12 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
 // ObjTrio's record i (stride 0x14C), the index unchecked as the original's.
-const unsigned char* MemberRest1a(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kMemberStride; }
+const unsigned char* MemberRest1a(unsigned i) { return rv::Bytes(ObjTrio) + i * rest_1a::at::kMemberStride; }
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
-URest1a StepXRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(at::kSteps.v) + d * 8)); }
-URest1a StepZRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(at::kSteps.v) + d * 8 + 4)); }
+URest1a StepXRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(rest_1a::at::kSteps.v) + d * 8)); }
+URest1a StepZRest1a(unsigned d) { return static_cast<URest1a>(L(::bof3::Img(rest_1a::at::kSteps.v) + d * 8 + 4)); }
 
 // `cdq; xor eax, edx; sub eax, edx`: the absolute value with the original's
 // wrap (the most negative stays negative).
@@ -82,8 +82,8 @@ HandlerRest1a CodeAt(URest1a table, unsigned count, unsigned index, const char* 
 // callee answers 0..0x21 or 0xFF only, so ours aborts on any other.
 void MarkObject(unsigned char found, const char* who) {
     if (found > 0x21) bof3::Fatal("%s: Sprite_ObjectAt answered 0x%X, no object (it answers 0..0x21 or 0xFF); the original marks a record past the tables", who, found);
-    if (found < 0x1E) B(::bof3::Img(at::kObjectFlags.v) + found * at::kObjectStride) |= 1;
-    else B(::bof3::Img(at::kExtraFlags.v) + (found - 0x1Eu) * at::kObjectStride) |= 1;
+    if (found < 0x1E) B(::bof3::Img(rest_1a::at::kObjectFlags.v) + found * rest_1a::at::kObjectStride) |= 1;
+    else B(::bof3::Img(rest_1a::at::kExtraFlags.v) + (found - 0x1Eu) * rest_1a::at::kObjectStride) |= 1;
 }
 
 // An Effect_Objects record by an index a callee answered (Field_EffectAhead,
@@ -115,7 +115,7 @@ void SideProbeRest1a(URest1a row, unsigned d) {
     const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + static_cast<URest1a>(L(row));
     const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + static_cast<URest1a>(L(row + 4));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
+    if (rest_1a::at::kScratchFlag == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = Sc();
     if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
@@ -134,7 +134,7 @@ void Form0Begin() {
     const URest1a x = static_cast<URest1a>(rv::As<records::PartyMember>(s)->x) + StepXRest1a(d);
     const URest1a z = static_cast<URest1a>(rv::As<records::PartyMember>(s)->z) + StepZRest1a(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
-    if (at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
+    if (rest_1a::at::kScratchFlag != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x46));
         ++Sc()[2];
     } else {
@@ -526,7 +526,7 @@ extern "C" void __cdecl PartyAction0_Form2Begin(void) {
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sc()[8] + 8));
         Fs()[0x128] = 2;
-        B(::bof3::Img(at::kScriptFlags3.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags3.v)) | 0x10);
+        B(::bof3::Img(rest_1a::at::kScriptFlags3.v)) = static_cast<unsigned char>(B(::bof3::Img(rest_1a::at::kScriptFlags3.v)) | 0x10);
         SH_CALL(Field_JumpStart)();
         --Sc()[9];
         SH_CALL(Field_LeaderStepTick)();

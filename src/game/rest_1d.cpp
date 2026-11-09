@@ -264,7 +264,7 @@ void Kind30BeginRest1d(const char* who) {
         SH_CALL(Sound_PlayEffect)(SoundOfForm());
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 8));
         Field_State[0x128] = 2;
-        At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 0x10;
+        At(::bof3::Img(rest_1d::at::kScriptFlagsHi.v))[0] |= 0x10;
         SH_CALL(Field_JumpStart)();
         --Sprite_Current[9];
         SH_CALL(Field_LeaderStepTick)();

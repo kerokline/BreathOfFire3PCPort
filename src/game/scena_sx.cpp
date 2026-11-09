@@ -62,7 +62,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 // CharacterRecords' record n (stride 0xA4), unchecked.
-unsigned char* RecordScenaSx(unsigned n) { return move_script::At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
+unsigned char* RecordScenaSx(unsigned n) { return move_script::At(::bof3::Img(CharacterRecords_addr) + n * scena_sx::at::kRecordStride); }
 // A member id's record: CharacterRecords[Character_IndexById[id]], both
 // indexes a whole byte, unchecked (the original reads them the same way).
 unsigned char* MemberRecord(unsigned char id) { return RecordScenaSx(Character_IndexById[id]); }
@@ -152,7 +152,7 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
     BossSi_CentreX = x;
     const unsigned char formation = move_script::At(::bof3::Img(bof3::addr::EventBattle_Records))[(formation_arg & 0xFF) * 4 + 1];
     BossSi_CentreZ = z;
-    move_script::At(::bof3::Img(at::kFormation))[0] = formation;
+    move_script::At(::bof3::Img(scena_sx::at::kFormation))[0] = formation;
     if (Field_MemberCount == 0) return;
     std::uint32_t slot_arg = formation_arg;
     for (unsigned i = 0; static_cast<int>(i) < Field_MemberCount; ++i) {
@@ -168,14 +168,14 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
             slot_arg = (slot_arg & 0xFFFFFF00u) | j;
             if (j >= 3) break;
         }
-        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), at::kFormationPlace.v)(
+        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), scena_sx::at::kFormationPlace.v)(
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
-        unsigned char* const pos = move_script::At(::bof3::Img(at::kSlotPositions) + (slot_arg & 0xFF) * 8);
+        unsigned char* const pos = move_script::At(::bof3::Img(scena_sx::at::kSlotPositions) + (slot_arg & 0xFF) * 8);
         move_script::SetLong(pos, rv::As<records::SpriteObject>(s)->x);
         move_script::SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
-        s[8] = move_script::At(::bof3::Img(bof3::addr::BattleFormation_Anims))[move_script::At(::bof3::Img(at::kFormation))[0]];
+        s[8] = move_script::At(::bof3::Img(bof3::addr::BattleFormation_Anims))[move_script::At(::bof3::Img(scena_sx::at::kFormation))[0]];
         const auto p = Low32(s);
         EnsureAnimation((p & 0xFFFFFF00u) | s[8]);
     }
@@ -216,7 +216,7 @@ extern "C" void __cdecl Party_HealJoined(void) {
     }
     const int n = Field_MemberCount;
     for (int i = 0; i < n; ++i)
-        std::memmove(ObjScenaSx(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), at::kRecordStride);
+        std::memmove(ObjScenaSx(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), scena_sx::at::kRecordStride);
 }
 
 // original 0x534030: a member out of the party (the argument's low byte, an
@@ -255,7 +255,7 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
             unsigned char* const o = ObjScenaSx(static_cast<unsigned>(s));
             Sprite_Current = o;
             first[s + 1] = 0xFF;
-            std::memmove(o, o + at::kObjStride, at::kObjStride);
+            std::memmove(o, o + scena_sx::at::kObjStride, scena_sx::at::kObjStride);
             o[5] = static_cast<unsigned char>(s);
             Sprite_Current[0x26] = static_cast<unsigned char>(s * 0x50);
             Sprite_Current[0x27] = static_cast<unsigned char>(s + 0x78);

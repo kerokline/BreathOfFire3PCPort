@@ -666,7 +666,7 @@ extern "C" void __cdecl MagicFx_DrawDisc(void) {
 // the actor's own pointer, pushed whole; the enemy's index in the low byte of
 // the caller's ecx (0x435A20 reads only that byte).
 extern "C" void __cdecl BattleActor_SetAnimation(unsigned offset, unsigned arg) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
+    const unsigned char index = battle_items::At(::bof3::Img(battle_items::at::kActorIndex.v))[0];
     unsigned char* const actor = Actor();
     unsigned char* const saved = Sprite_Current;
     Sprite_Current = actor;
@@ -703,11 +703,11 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
     if (battle_items::g.is_out(index) != 0) return;
     const unsigned i = index & 0xFF;
     if (i < 3) {
-        unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride);
+        unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + i * battle_items::at::kPartyStride);
         if (r[0x90] & 0x80) battle_items::g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
         return;
     }
-    unsigned char* const r = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (i - 3) * at::kEnemyStride);
+    unsigned char* const r = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (i - 3) * battle_items::at::kEnemyStride);
     if (r[0x92] & 0x80) battle_items::g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 
@@ -717,15 +717,15 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
 // word (+0xF8's) through 0x437450 when 0x904AAA is set, else Sound_PlayById
 // 0x600 + 2 * its type byte +0xF0. The arguments' low bytes are what is read.
 extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
+    const unsigned char index = battle_items::At(::bof3::Img(battle_items::at::kActorIndex.v))[0];
     if (index < 3) {
-        Field_State = battle_items::At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
+        Field_State = battle_items::At(::bof3::Img(ObjTrio_addr) + index * battle_items::at::kPartyStride);
         const auto a = static_cast<unsigned char>(first);
         if (a != 0) battle_items::g.actor_sound(static_cast<unsigned char>(a + 1));
         if (static_cast<unsigned char>(second) != 0) battle_items::g.actor_sound(second);
         return;
     }
-    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride));
+    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * battle_items::at::kEnemyStride));
     if (EventBattle_Id != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         battle_items::g.enemy_sound(battle_items::Word(cue));
@@ -740,14 +740,14 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
 // its +0x89; an enemy: the byte at 0x8C5652 + 0x8C * its type. Only al is
 // defined in the original's answer; all ten callers store al.
 extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
-    const unsigned char index = battle_items::At(::bof3::Img(at::kActorIndex.v))[0];
+    const unsigned char index = battle_items::At(::bof3::Img(battle_items::at::kActorIndex.v))[0];
     if (index < 3) {
-        const unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
-        if (r[0x134] & 2) return battle_items::At(::bof3::Img(at::kFxSizeAltTable.v))[BattlePhases_B89];
-        return battle_items::At(::bof3::Img(at::kFxSizeTable.v))[r[0x89]];
+        const unsigned char* const r = battle_items::At(::bof3::Img(ObjTrio_addr) + index * battle_items::at::kPartyStride);
+        if (r[0x134] & 2) return battle_items::At(::bof3::Img(battle_items::at::kFxSizeAltTable.v))[BattlePhases_B89];
+        return battle_items::At(::bof3::Img(battle_items::at::kFxSizeTable.v))[r[0x89]];
     }
-    const unsigned char type = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride + 0xF0)[0];
-    return battle_items::At(::bof3::Img(at::kEnemyFxSize.v) + type * 0x8Cu)[0];
+    const unsigned char type = battle_items::At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * battle_items::at::kEnemyStride + 0xF0)[0];
+    return battle_items::At(::bof3::Img(battle_items::at::kEnemyFxSize.v) + type * 0x8Cu)[0];
 }
 
 // ===========================================================================
