@@ -173,12 +173,12 @@ extern "C" void __cdecl EffectKindBA_DrawLine(const long* from, const long* to, 
     SH_CALL(Gfx_CommitPrim)(1, 0x20);
 }
 
-void EffectKindBa_InjectFromEffect4f() {
+void EffectKindBaFromEffect4f_Inject() {
     BOF3_INJECT(EffectKindBA_Run);
     BOF3_INJECT(EffectKindBA_Start);
     BOF3_INJECT(EffectKindBA_DrawLine);
 }
 
-void EffectKindBa_InjectFromRest3g() {
+void EffectKindBaFromRest3g_Inject() {
     BOF3_INJECT(EffectKindBA_Line);
 }

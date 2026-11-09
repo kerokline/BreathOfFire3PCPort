@@ -316,7 +316,7 @@ extern "C" void __cdecl EffectKind87_Midpoint(unsigned a, unsigned b, unsigned c
     for (unsigned w = 0; w < 12; w += 4) SetUL(pc + w, Sar(UL(pb + w) + UL(pa + w), 1));
 }
 
-void EffectKind87_InjectFromEffect4a() {
+void EffectKind87FromEffect4a_Inject() {
     BOF3_INJECT(EffectKind87_Run);
     BOF3_INJECT(EffectKind87_Start);
     BOF3_INJECT(EffectKind87_Step1);
@@ -325,7 +325,7 @@ void EffectKind87_InjectFromEffect4a() {
     BOF3_INJECT(EffectKind87_End);
 }
 
-void EffectKind87_InjectFromEffect4b() {
+void EffectKind87FromEffect4b_Inject() {
     BOF3_INJECT(EffectKind87_Setup);
     BOF3_INJECT(EffectKind87_FadePanes);
     BOF3_INJECT(EffectKind87_StepPanes);

@@ -326,7 +326,7 @@ extern "C" void __cdecl EffectKind50_Drain(void) {
     if (SH_CALL(EffectKind50_MoveSpecks)() != 0) SH_CALL(Effect_Release)();
 }
 
-void EffectKind4e_InjectFromEffect2e() {
+void EffectKind4eFromEffect2e_Inject() {
     BOF3_INJECT(EffectKind4E_Run);
     BOF3_INJECT(EffectKind4E_Start);
     BOF3_INJECT(EffectKind4E_Grow);
@@ -334,7 +334,7 @@ void EffectKind4e_InjectFromEffect2e() {
     BOF3_INJECT(EffectKind4E_Shrink);
 }
 
-void EffectKind4e_InjectFromEffect2f() {
+void EffectKind4eFromEffect2f_Inject() {
     BOF3_INJECT(EffectKind4E_DrawDisc);
     BOF3_INJECT(EffectKind4F_Run);
     BOF3_INJECT(EffectKind4F_Start);

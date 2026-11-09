@@ -918,7 +918,7 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     AreaRect(0, 0x100, 0x100);
 }
 
-void EffectKind09_InjectFromEffect1a() {
+void EffectKind09FromEffect1a_Inject() {
     BOF3_INJECT(EffectKind01_Run);
     BOF3_INJECT(EffectKind01_Start);
     BOF3_INJECT(EffectKind01_Draw);
@@ -931,7 +931,7 @@ void EffectKind09_InjectFromEffect1a() {
     BOF3_INJECT(EffectKind10_Run);
 }
 
-void EffectKind09_InjectFromRest4f() {
+void EffectKind09FromRest4f_Inject() {
     BOF3_INJECT(EffectKind07_DrawSprite);
     BOF3_INJECT(EffectKind07_Hold);
     BOF3_INJECT(EffectKind07_FadeOut);

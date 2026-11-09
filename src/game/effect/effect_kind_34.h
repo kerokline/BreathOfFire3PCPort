@@ -2,8 +2,8 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void EffectKind34_InjectFromEffect1c();
-void EffectKind34_InjectFromFieldC1();
-void EffectKind34_InjectFromFieldC2();
-void EffectKind34_InjectFromRest3e();
-void EffectKind34_InjectFromWorldmapArea();
+void EffectKind34FromEffect1c_Inject();
+void EffectKind34FromFieldC1_Inject();
+void EffectKind34FromFieldC2_Inject();
+void EffectKind34FromRest3e_Inject();
+void EffectKind34FromWorldmapArea_Inject();

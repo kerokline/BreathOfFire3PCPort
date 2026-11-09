@@ -427,20 +427,20 @@ extern "C" void __cdecl EffectKind60_DrawLine(const long* from, const long* to) 
     SH_CALL(Gfx_CommitPrim)(1, 0x24);
 }
 
-void EffectKind5f_InjectFromEffect2g() {
+void EffectKind5fFromEffect2g_Inject() {
     BOF3_INJECT(EffectKind5F_Run);
 }
 
-void EffectKind5f_InjectFromEffect3a() {
+void EffectKind5fFromEffect3a_Inject() {
     BOF3_INJECT(EffectKind60_Run);
     BOF3_INJECT(EffectKind60_DrawLine);
 }
 
-void EffectKind5f_InjectFromMagicEngine() {
+void EffectKind5fFromMagicEngine_Inject() {
     BOF3_INJECT(Task_StartHold60);
 }
 
-void EffectKind5f_InjectFromRest3e() {
+void EffectKind5fFromRest3e_Inject() {
     BOF3_INJECT(EffectKind5F_Launch);
     BOF3_INJECT(EffectKind5F_Hop);
     BOF3_INJECT(EffectKind5F_Fly);
@@ -452,7 +452,7 @@ void EffectKind5f_InjectFromRest3e() {
     BOF3_INJECT(EffectKind5F_SlideOut);
 }
 
-void EffectKind5f_InjectFromRest3f() {
+void EffectKind5fFromRest3f_Inject() {
     BOF3_INJECT(EffectKind60_Start);
     BOF3_INJECT(EffectKind60_SlideBoth);
     BOF3_INJECT(EffectKind60_SlideEnd);

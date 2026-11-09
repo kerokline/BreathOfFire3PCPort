@@ -566,7 +566,7 @@ extern "C" void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to,
     }
 }
 
-void EffectKind9c_InjectFromEffect4e() {
+void EffectKind9cFromEffect4e_Inject() {
     BOF3_INJECT(EffectKind9C_Run);
     BOF3_INJECT(EffectKind9C_Start);
     BOF3_INJECT(EffectKind9C_Grow);
@@ -583,6 +583,6 @@ void EffectKind9c_InjectFromEffect4e() {
     BOF3_INJECT(EffectKind9C_DrawBeamSides);
 }
 
-void EffectKind9c_InjectFromRest3f() {
+void EffectKind9cFromRest3f_Inject() {
     BOF3_INJECT(EffectKind9C_DrawTrail);
 }

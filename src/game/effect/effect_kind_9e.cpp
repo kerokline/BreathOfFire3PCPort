@@ -429,7 +429,7 @@ extern "C" void __cdecl EffectKind9E_DrawShadePlate(const long* a, const long* b
     SH_CALL(MapView_LinkPrimAt)(UL(pa), UL(pa + 4), 0, 0x38);
 }
 
-void EffectKind9e_InjectFromEffect4e() {
+void EffectKind9eFromEffect4e_Inject() {
     BOF3_INJECT(EffectKind9E_Run);
     BOF3_INJECT(EffectKind9E_DrawPlate);
     BOF3_INJECT(EffectKind9E_DrawTexPlate);
@@ -437,7 +437,7 @@ void EffectKind9e_InjectFromEffect4e() {
     BOF3_INJECT(EffectKind9E_DrawShadePlate);
 }
 
-void EffectKind9e_InjectFromRest3f() {
+void EffectKind9eFromRest3f_Inject() {
     BOF3_INJECT(EffectKind9E_Start);
     BOF3_INJECT(EffectKind9E_Grow);
     BOF3_INJECT(EffectKind9E_Flash);

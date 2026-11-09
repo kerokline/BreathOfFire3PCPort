@@ -1523,11 +1523,11 @@ extern "C" void __cdecl EffectKind18_Start(void) {
     rv::As<records::EffectObject>(Cur())->timer = 0;
 }
 
-void EffectKind34_InjectFromEffect1c() {
+void EffectKind34FromEffect1c_Inject() {
     BOF3_INJECT(EffectKind70_Run);
 }
 
-void EffectKind34_InjectFromFieldC1() {
+void EffectKind34FromFieldC1_Inject() {
     BOF3_INJECT(EffectKind1B_Start);
     BOF3_INJECT(EffectKind1B_Fly);
     BOF3_INJECT(EffectKind1B_End);
@@ -1537,7 +1537,7 @@ void EffectKind34_InjectFromFieldC1() {
     BOF3_INJECT(EffectKind30_Start);
 }
 
-void EffectKind34_InjectFromFieldC2() {
+void EffectKind34FromFieldC2_Inject() {
     BOF3_INJECT(EffectKind30_Push);
     BOF3_INJECT(EffectKind30_Slide);
     BOF3_INJECT(EffectKind30_Shatter);
@@ -1584,14 +1584,14 @@ void EffectKind34_InjectFromFieldC2() {
     BOF3_INJECT(EffectKind41_Fade);
 }
 
-void EffectKind34_InjectFromRest3e() {
+void EffectKind34FromRest3e_Inject() {
     BOF3_INJECT(EffectKind1B_Run);
     BOF3_INJECT(EffectKind41_DrawNumber);
     BOF3_INJECT(EffectShards_LoadModel);
     BOF3_INJECT(EffectShards_Step);
 }
 
-void EffectKind34_InjectFromWorldmapArea() {
+void EffectKind34FromWorldmapArea_Inject() {
     BOF3_INJECT(EffectKind18_Run);
     BOF3_INJECT(EffectKind18_Start);
 }

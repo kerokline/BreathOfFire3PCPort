@@ -606,7 +606,7 @@ extern "C" void __cdecl EffectKind1F_Debris(void) {
     if (s[9] > 0x44) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
-void EffectShards_InjectFromEffect1c() {
+void EffectShardsFromEffect1c_Inject() {
     BOF3_INJECT(EffectShards_Clear);
     BOF3_INJECT(EffectKind1D_MoveShards);
     BOF3_INJECT(EffectKind1E_Run);
@@ -635,6 +635,6 @@ void EffectShards_InjectFromEffect1c() {
     BOF3_INJECT(EffectKind1F_Debris);
 }
 
-void EffectShards_InjectFromRest3e() {
+void EffectShardsFromRest3e_Inject() {
     BOF3_INJECT(EffectKind1D_DrawSpeck);
 }

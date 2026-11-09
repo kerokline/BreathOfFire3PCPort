@@ -208,17 +208,17 @@ extern "C" long __cdecl EffectGte_ProjectSize(const long* point, const short* si
     return second;
 }
 
-void EffectEffectGte_InjectFromEffectGte() {
+void EffectEffectGteFromEffectGte_Inject() {
     BOF3_INJECT(EffectGte_LoadMapCamera);
     BOF3_INJECT(EffectGte_ProjectPoint);
     BOF3_INJECT(EffectGte_SetDiagonalOne);
     BOF3_INJECT(EffectGte_ProjectSize);
 }
 
-void EffectEffectGte_InjectFromFrameCallees() {
+void EffectEffectGteFromFrameCallees_Inject() {
     BOF3_INJECT(Effect_RunObjects);
 }
 
-void EffectEffectGte_InjectFromRest3g() {
+void EffectEffectGteFromRest3g_Inject() {
     BOF3_INJECT(Screen_TriangleWinding);
 }

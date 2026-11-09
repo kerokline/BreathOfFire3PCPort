@@ -1453,7 +1453,7 @@ extern "C" void __cdecl Title_LoadTask(void) {
     mode_flow::g.title_task();
 }
 
-void Transition_InjectFromModeFlow() {
+void TransitionFromModeFlow_Inject() {
     BOF3_INJECT(Transition_Start);
     BOF3_INJECT(Transition_Task);
     BOF3_INJECT(Transition_Kind00);
@@ -1489,7 +1489,7 @@ void Transition_InjectFromModeFlow() {
     BOF3_INJECT(Title_LoadTask);
 }
 
-void Transition_InjectFromModeRest() {
+void TransitionFromModeRest_Inject() {
     BOF3_INJECT(GameMode3_Run);
     BOF3_INJECT(GameMode3_Enter);
     BOF3_INJECT(GameMode3_Leave);
@@ -1505,7 +1505,7 @@ void Transition_InjectFromModeRest() {
     BOF3_INJECT(GameMode6_Run);
 }
 
-void Transition_InjectFromModeStates() {
+void TransitionFromModeStates_Inject() {
     BOF3_INJECT(GameMode_LookEnd);
     BOF3_INJECT(GameMode_Shop);
     BOF3_INJECT(Shop_Open);
@@ -1515,11 +1515,11 @@ void Transition_InjectFromModeStates() {
     BOF3_INJECT(Look_Return);
 }
 
-void Transition_InjectFromModeTasks() {
+void TransitionFromModeTasks_Inject() {
     BOF3_INJECT(GameMode_Field);
 }
 
-void Transition_InjectFromRest3g() {
+void TransitionFromRest3g_Inject() {
     BOF3_INJECT(GameMode8_Run);
     BOF3_INJECT(GameMode8_Enter);
     BOF3_INJECT(GameMode8_Leave);

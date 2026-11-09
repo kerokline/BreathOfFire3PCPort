@@ -700,12 +700,12 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
     SH_CALL(Gfx_CommitPrim)(1, 0x48);
 }
 
-void EffectKind5d_InjectFromEffect2g() {
+void EffectKind5dFromEffect2g_Inject() {
     BOF3_INJECT(EffectKind5D_Run);
     BOF3_INJECT(EffectKind5E_Run);
 }
 
-void EffectKind5d_InjectFromRest3e() {
+void EffectKind5dFromRest3e_Inject() {
     BOF3_INJECT(EffectKind5D_Start);
     BOF3_INJECT(EffectKind5D_Open);
     BOF3_INJECT(EffectKind5D_Show);

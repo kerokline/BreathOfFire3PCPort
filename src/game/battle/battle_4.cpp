@@ -411,7 +411,7 @@ extern "C" void __cdecl BossActor_Clear(unsigned tag) {
     for (unsigned i = 0; i < 5; ++i) p[i] = 0;
 }
 
-void Battle4_InjectFromBattleSprites() {
+void Battle4FromBattleSprites_Inject() {
     BOF3_INJECT(Battle_InitEncounterKind);
     BOF3_INJECT(Battle_InitBossEncounter);
     BOF3_INJECT(Battle_InitEnemies);
@@ -419,7 +419,7 @@ void Battle4_InjectFromBattleSprites() {
     BOF3_INJECT(Battle_CopyEnemyData);
 }
 
-void Battle4_InjectFromBossSpawn() {
+void Battle4FromBossSpawn_Inject() {
     BOF3_INJECT(EnemyData_FindByTag);
     BOF3_INJECT(BossActor_Find);
     BOF3_INJECT(BossActor_Index);
@@ -428,7 +428,7 @@ void Battle4_InjectFromBossSpawn() {
     BOF3_INJECT(BossActor_Clear);
 }
 
-void Battle4_InjectFromRest3g() {
+void Battle4FromRest3g_Inject() {
     BOF3_INJECT(Battle_PlaceBossActors);
     BOF3_INJECT(Battle_PlaceBossActor);
 }

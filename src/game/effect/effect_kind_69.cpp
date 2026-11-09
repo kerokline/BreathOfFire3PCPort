@@ -736,7 +736,7 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
     if ((SH_CALL(EffectKind6C_DrawSparks)() & 0xFF) == 0) SH_CALL(Effect_Release)();
 }
 
-void EffectKind69_InjectFromEffect3b() {
+void EffectKind69FromEffect3b_Inject() {
     BOF3_INJECT(EffectKind69_Run);
     BOF3_INJECT(EffectKind69_Spawn);
     BOF3_INJECT(EffectKind69_WaitParts);
@@ -765,6 +765,6 @@ void EffectKind69_InjectFromEffect3b() {
     BOF3_INJECT(EffectKind6C_Live);
 }
 
-void EffectKind69_InjectFromRest3f() {
+void EffectKind69FromRest3f_Inject() {
     BOF3_INJECT(EffectKind69_DrawLines);
 }

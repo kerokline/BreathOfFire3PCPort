@@ -2,6 +2,6 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Battle4_InjectFromBattleSprites();
-void Battle4_InjectFromBossSpawn();
-void Battle4_InjectFromRest3g();
+void Battle4FromBattleSprites_Inject();
+void Battle4FromBossSpawn_Inject();
+void Battle4FromRest3g_Inject();

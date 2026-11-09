@@ -570,11 +570,11 @@ extern "C" void __cdecl EffectKind92_Follow() {
     if ((o[0] & 1) == 0) SH_CALL(Effect_Release)();
 }
 
-void EffectKind06_InjectFromEffect1b() {
+void EffectKind06FromEffect1b_Inject() {
     BOF3_INJECT(EffectKind92_Follow);
 }
 
-void EffectKind06_InjectFromFieldC1() {
+void EffectKind06FromFieldC1_Inject() {
     BOF3_INJECT(EffectKind06_PlayOnce);
     BOF3_INJECT(EffectKind06_Fade);
     BOF3_INJECT(EffectKind19_Run);
@@ -593,22 +593,22 @@ void EffectKind06_InjectFromFieldC1() {
     BOF3_INJECT(EffectKind37_Play);
 }
 
-void EffectKind06_InjectFromFrameCallees() {
+void EffectKind06FromFrameCallees_Inject() {
     BOF3_INJECT(Effect_CameraTurn);
     BOF3_INJECT(CameraTurn_Start);
     BOF3_INJECT(CameraTurn_Step);
     BOF3_INJECT(CameraTurn_End);
 }
 
-void EffectKind06_InjectFromRest3e() {
+void EffectKind06FromRest3e_Inject() {
     BOF3_INJECT(EffectKind37_Run);
 }
 
-void EffectKind06_InjectFromScenaSx2() {
+void EffectKind06FromScenaSx2_Inject() {
     BOF3_INJECT(Effect_HoldFlag1C);
 }
 
-void EffectKind06_InjectFromWorldmapArea() {
+void EffectKind06FromWorldmapArea_Inject() {
     BOF3_INJECT(EffectKind06_Run);
     BOF3_INJECT(EffectKind06_Start);
     BOF3_INJECT(EffectKind06_Tick);

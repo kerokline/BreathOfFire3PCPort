@@ -2,6 +2,6 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void EffectEffectGte_InjectFromEffectGte();
-void EffectEffectGte_InjectFromFrameCallees();
-void EffectEffectGte_InjectFromRest3g();
+void EffectEffectGteFromEffectGte_Inject();
+void EffectEffectGteFromFrameCallees_Inject();
+void EffectEffectGteFromRest3g_Inject();

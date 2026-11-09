@@ -2,8 +2,8 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Transition_InjectFromModeFlow();
-void Transition_InjectFromModeRest();
-void Transition_InjectFromModeStates();
-void Transition_InjectFromModeTasks();
-void Transition_InjectFromRest3g();
+void TransitionFromModeFlow_Inject();
+void TransitionFromModeRest_Inject();
+void TransitionFromModeStates_Inject();
+void TransitionFromModeTasks_Inject();
+void TransitionFromRest3g_Inject();

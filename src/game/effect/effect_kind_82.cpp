@@ -346,7 +346,7 @@ extern "C" void __cdecl EffectKind83_Check11(void) { CheckEffect4a(::bof3::Img(S
 // original 0x488650 (state 13): record 1's z + 0x4000 twice, +1 0xE, +9 8.
 extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
 
-void EffectKind82_InjectFromEffect3d() {
+void EffectKind82FromEffect3d_Inject() {
     BOF3_INJECT(EffectKind82_Run);
     BOF3_INJECT(EffectKind82_Start);
     BOF3_INJECT(EffectKind82_Wait);
@@ -361,7 +361,7 @@ void EffectKind82_InjectFromEffect3d() {
     BOF3_INJECT(EffectKind82_Push10);
 }
 
-void EffectKind82_InjectFromEffect4a() {
+void EffectKind82FromEffect4a_Inject() {
     BOF3_INJECT(EffectKind82_Check11);
     BOF3_INJECT(EffectKind82_Restart);
     BOF3_INJECT(EffectKind82_Nudge13);

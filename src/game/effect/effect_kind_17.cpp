@@ -757,16 +757,16 @@ extern "C" unsigned char __cdecl EffectKind17_CellBlocked(unsigned cell_x, unsig
     return height < ground ? 1 : 0;
 }
 
-void EffectKind17_InjectFromEffect1b() {
+void EffectKind17FromEffect1b_Inject() {
     BOF3_INJECT(EffectKind14_Run);
 }
 
-void EffectKind17_InjectFromEffect1c() {
+void EffectKind17FromEffect1c_Inject() {
     BOF3_INJECT(EffectKind36_Run);
     BOF3_INJECT(EffectKind3C_Run);
 }
 
-void EffectKind17_InjectFromFieldC1() {
+void EffectKind17FromFieldC1_Inject() {
     BOF3_INJECT(EffectKind14_Start);
     BOF3_INJECT(EffectKind14_Hold);
     BOF3_INJECT(EffectKind3C_Start);
@@ -786,6 +786,6 @@ void EffectKind17_InjectFromFieldC1() {
     BOF3_INJECT(EffectKind17_CellBlocked);
 }
 
-void EffectKind17_InjectFromRest3e() {
+void EffectKind17FromRest3e_Inject() {
     BOF3_INJECT(EffectKind17_Run);
 }

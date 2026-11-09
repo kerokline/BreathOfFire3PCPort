@@ -279,7 +279,7 @@ extern "C" void __cdecl EffectKind9B_DrawRing(const long* point, long height) {
     }
 }
 
-void EffectKind9a_InjectFromEffect4d() {
+void EffectKind9aFromEffect4d_Inject() {
     BOF3_INJECT(EffectKind9A_Run);
     BOF3_INJECT(EffectKind9A_Start);
     BOF3_INJECT(EffectKind9A_NudgeY);
@@ -291,7 +291,7 @@ void EffectKind9a_InjectFromEffect4d() {
     BOF3_INJECT(EffectKind9A_Repeat);
 }
 
-void EffectKind9a_InjectFromEffect4e() {
+void EffectKind9aFromEffect4e_Inject() {
     BOF3_INJECT(EffectKind9B_Run);
     BOF3_INJECT(EffectKind9B_Start);
     BOF3_INJECT(EffectKind9B_Rise);

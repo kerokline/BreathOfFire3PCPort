@@ -2,5 +2,5 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void EffectKindAc_InjectFromEffect4f();
-void EffectKindAc_InjectFromRest3g();
+void EffectKindAcFromEffect4f_Inject();
+void EffectKindAcFromRest3g_Inject();

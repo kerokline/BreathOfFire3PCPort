@@ -563,7 +563,7 @@ extern "C" void __cdecl EffectKind26_Widen(void) {
     t[1] = static_cast<unsigned char>(t[1] + 1);
 }
 
-void EffectKind21_InjectFromEffect1d() {
+void EffectKind21FromEffect1d_Inject() {
     BOF3_INJECT(EffectKind21_Run);
     BOF3_INJECT(EffectKind21_Start);
     BOF3_INJECT(EffectKind21_Grow);
@@ -592,7 +592,7 @@ void EffectKind21_InjectFromEffect1d() {
     BOF3_INJECT(EffectKind26_Widen);
 }
 
-void EffectKind21_InjectFromRest3e() {
+void EffectKind21FromRest3e_Inject() {
     BOF3_INJECT(EffectKind21_ArmPoints);
     BOF3_INJECT(EffectKind21_DrawArm);
     BOF3_INJECT(EffectKind21_DrawArmTriangle);

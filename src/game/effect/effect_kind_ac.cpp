@@ -112,11 +112,11 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
     if (S()[9] == 0) SH_CALL(Effect_Release)();
 }
 
-void EffectKindAc_InjectFromEffect4f() {
+void EffectKindAcFromEffect4f_Inject() {
     BOF3_INJECT(EffectKindAC_Run);
 }
 
-void EffectKindAc_InjectFromRest3g() {
+void EffectKindAcFromRest3g_Inject() {
     BOF3_INJECT(EffectKindAC_Start);
     BOF3_INJECT(EffectKindAC_FadeIn);
     BOF3_INJECT(EffectKindAC_FadeOut);

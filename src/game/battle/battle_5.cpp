@@ -209,13 +209,13 @@ extern "C" void __cdecl Battle_SetEnemyOffset(unsigned slot, unsigned id) {
     }
 }
 
-void Battle5_InjectFromBattleSprites() {
+void Battle5FromBattleSprites_Inject() {
     BOF3_INJECT(Battle_OpenEnemyNames);
     BOF3_INJECT(Battle_EnemyKindFlag);
     BOF3_INJECT(Battle_SetEnemyKindFlag);
     BOF3_INJECT(Battle_SetEnemyOffset);
 }
 
-void Battle5_InjectFromRest3g() {
+void Battle5FromRest3g_Inject() {
     BOF3_INJECT(BattleEnemy_ClearStates);
 }

@@ -637,7 +637,7 @@ extern "C" void __cdecl CommuName_CommitEntry(void) {
     Rest4c_Step = 0;
 }
 
-void Commu_InjectFromRest4d() {
+void CommuFromRest4d_Inject() {
     BOF3_INJECT(Commu_LeaveWhenClosed);
     BOF3_INJECT(CommuName_CountSlots);
     BOF3_INJECT(CommuName_NthSlot);
@@ -646,7 +646,7 @@ void Commu_InjectFromRest4d() {
     BOF3_INJECT(CommuName_DrawHeader);
 }
 
-void Commu_InjectFromRest4e() {
+void CommuFromRest4e_Inject() {
     BOF3_INJECT(CommuEntry_DrawPanel);
     BOF3_INJECT(CommuEntry_DrawPanelFrame);
     BOF3_INJECT(CommuEntry_DrawBar);

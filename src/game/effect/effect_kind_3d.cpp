@@ -887,7 +887,7 @@ extern "C" void __cdecl EffectKind42_Glow(void) {
     SH_CALL(Area146_DrawGlowCylinder)(point);
 }
 
-void EffectKind3d_InjectFromEffect2b() {
+void EffectKind3dFromEffect2b_Inject() {
     BOF3_INJECT(EffectKind3D_Run);
     BOF3_INJECT(EffectKind3D_Start);
     BOF3_INJECT(EffectKind3D_Wait);
@@ -901,7 +901,7 @@ void EffectKind3d_InjectFromEffect2b() {
     BOF3_INJECT(EffectKind3D_DrawRing);
 }
 
-void EffectKind3d_InjectFromEffect2c() {
+void EffectKind3dFromEffect2c_Inject() {
     BOF3_INJECT(EffectKind3E_Run);
     BOF3_INJECT(EffectKind3E_Start);
     BOF3_INJECT(EffectKind3E_Bolts);

@@ -645,7 +645,7 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
     }
 }
 
-void EffectKind66_InjectFromEffect2f() {
+void EffectKind66FromEffect2f_Inject() {
     BOF3_INJECT(EffectKind53_Run);
     BOF3_INJECT(EffectKind53_Start);
     BOF3_INJECT(EffectKind53_Beam);
@@ -659,7 +659,7 @@ void EffectKind66_InjectFromEffect2f() {
     BOF3_INJECT(EffectKind56_DrawCross);
 }
 
-void EffectKind66_InjectFromEffect2g() {
+void EffectKind66FromEffect2g_Inject() {
     BOF3_INJECT(EffectKind66_Run);
     BOF3_INJECT(EffectKind66_Start);
     BOF3_INJECT(EffectKind66_Open);

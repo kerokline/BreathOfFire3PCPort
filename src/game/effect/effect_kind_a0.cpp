@@ -1162,7 +1162,7 @@ extern "C" unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long i
     return 0;
 }
 
-void EffectKindA0_InjectFromEffect4e() {
+void EffectKindA0FromEffect4e_Inject() {
     BOF3_INJECT(EffectKindA0_Run);
     BOF3_INJECT(EffectKindA0_Start);
     BOF3_INJECT(EffectKindA0_Grow);
@@ -1187,7 +1187,7 @@ void EffectKindA0_InjectFromEffect4e() {
     BOF3_INJECT(EffectKindA3_Run);
 }
 
-void EffectKindA0_InjectFromRest3f() {
+void EffectKindA0FromRest3f_Inject() {
     BOF3_INJECT(EffectKindA1_CaptureSprite);
     BOF3_INJECT(EffectKindA1_ReadBack);
     BOF3_INJECT(EffectKindA1_SplitPixels);

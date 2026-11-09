@@ -2,9 +2,9 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void EffectKind06_InjectFromEffect1b();
-void EffectKind06_InjectFromFieldC1();
-void EffectKind06_InjectFromFrameCallees();
-void EffectKind06_InjectFromRest3e();
-void EffectKind06_InjectFromScenaSx2();
-void EffectKind06_InjectFromWorldmapArea();
+void EffectKind06FromEffect1b_Inject();
+void EffectKind06FromFieldC1_Inject();
+void EffectKind06FromFrameCallees_Inject();
+void EffectKind06FromRest3e_Inject();
+void EffectKind06FromScenaSx2_Inject();
+void EffectKind06FromWorldmapArea_Inject();

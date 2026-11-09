@@ -608,17 +608,17 @@ extern "C" void __cdecl EffectKindAA_DrawFill(unsigned shade) {
     SH_CALL(Gfx_CommitPrim)(7, 0x44);
 }
 
-void EffectKindA8_InjectFromEffect4e() {
+void EffectKindA8FromEffect4e_Inject() {
     BOF3_INJECT(EffectKindA7_Run);
     BOF3_INJECT(EffectKindA8_Run);
     BOF3_INJECT(EffectKindA9_Run);
 }
 
-void EffectKindA8_InjectFromEffect4f() {
+void EffectKindA8FromEffect4f_Inject() {
     BOF3_INJECT(EffectKindAA_Run);
 }
 
-void EffectKindA8_InjectFromRest3f() {
+void EffectKindA8FromRest3f_Inject() {
     BOF3_INJECT(EffectKindA7_Start);
     BOF3_INJECT(EffectKindA7_Grow);
     BOF3_INJECT(EffectKindA7_Hold);

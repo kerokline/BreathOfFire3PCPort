@@ -2126,32 +2126,32 @@ extern "C" void __cdecl Prim_SetShade(unsigned char* prim, unsigned char level) 
     prim[6] = level;
 }
 
-void Title_InjectFromDrawEmit() {
+void TitleFromDrawEmit_Inject() {
     BOF3_INJECT(Gfx_CommitPrim);
 }
 
-void Title_InjectFromFieldC1() {
+void TitleFromFieldC1_Inject() {
     BOF3_INJECT(Config_DrawRowLabel);
 }
 
-void Title_InjectFromGfxFlush() {
+void TitleFromGfxFlush_Inject() {
     BOF3_INJECT(Gfx_FlushUploadQueue);
 }
 
-void Title_InjectFromGfxUnpack() {
+void TitleFromGfxUnpack_Inject() {
     BOF3_INJECT(Gfx_UploadPacked5);
     BOF3_INJECT(Gfx_UploadLzss);
 }
 
-void Title_InjectFromItemUse() {
+void TitleFromItemUse_Inject() {
     BOF3_INJECT(Input_AutoRepeat);
 }
 
-void Title_InjectFromModeFlow() {
+void TitleFromModeFlow_Inject() {
     BOF3_INJECT(Gfx_ClearRect);
 }
 
-void Title_InjectFromModeTasks() {
+void TitleFromModeTasks_Inject() {
     BOF3_INJECT(Title_Task);
     BOF3_INJECT(Title_CheckStart);
     BOF3_INJECT(Title_Sprite);
@@ -2159,11 +2159,11 @@ void Title_InjectFromModeTasks() {
     BOF3_INJECT(Title_DrawLogo);
 }
 
-void Title_InjectFromPrim() {
+void TitleFromPrim_Inject() {
     BOF3_INJECT(Prim_SetShade);
 }
 
-void Title_InjectFromRest4e() {
+void TitleFromRest4e_Inject() {
     BOF3_INJECT(CommuItem_OpenWindow);
     BOF3_INJECT(CommuItem_Choose);
     BOF3_INJECT(CommuItem_Cancel);
@@ -2183,7 +2183,7 @@ void Title_InjectFromRest4e() {
     BOF3_INJECT(CommuRank_DrawTile);
 }
 
-void Title_InjectFromRest4f() {
+void TitleFromRest4f_Inject() {
     BOF3_INJECT(ConfigScreen_Run);
     BOF3_INJECT(ConfigScreen_OpenRun);
     BOF3_INJECT(ConfigScreen_OpenFade);
@@ -2200,7 +2200,7 @@ void Title_InjectFromRest4f() {
     BOF3_INJECT(Config_DrawControllerRow);
 }
 
-void Title_InjectFromTitleStates() {
+void TitleFromTitleStates_Inject() {
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

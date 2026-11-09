@@ -3165,7 +3165,7 @@ extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned cha
     SH_CALL(Gfx_CommitPrim)(1, 0x28);
 }
 
-void EffectKind0f_InjectFromEffect1a() {
+void EffectKind0fFromEffect1a_Inject() {
     BOF3_INJECT(EffectKind02_Run);
     BOF3_INJECT(EffectHud_Draw);
     BOF3_INJECT(EffectHud_DrawGauge);
@@ -3225,7 +3225,7 @@ void EffectKind0f_InjectFromEffect1a() {
     BOF3_INJECT(EffectKind1A_Reset);
 }
 
-void EffectKind0f_InjectFromEffect1b() {
+void EffectKind0fFromEffect1b_Inject() {
     BOF3_INJECT(EffectKind0F_ListOpen);
     BOF3_INJECT(EffectKind0F_ListShow);
     BOF3_INJECT(EffectKind0F_ListClose);
@@ -3272,7 +3272,7 @@ void EffectKind0f_InjectFromEffect1b() {
     BOF3_INJECT(EffectKind0F_DrawGlyph);
 }
 
-void EffectKind0f_InjectFromRest4f() {
+void EffectKind0fFromRest4f_Inject() {
     BOF3_INJECT(EffectKind02_Start);
     BOF3_INJECT(EffectKind02_SlideIn);
     BOF3_INJECT(EffectKind02_Body);

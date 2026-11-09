@@ -718,7 +718,7 @@ extern "C" unsigned char __cdecl EffectKindB0_StepBars(unsigned length) {
     return any;
 }
 
-void EffectKindAe_InjectFromEffect4f() {
+void EffectKindAeFromEffect4f_Inject() {
     BOF3_INJECT(EffectKindAD_Run);
     BOF3_INJECT(Effect_StateNext);
     BOF3_INJECT(EffectKindAE_Run);
@@ -746,7 +746,7 @@ void EffectKindAe_InjectFromEffect4f() {
     BOF3_INJECT(EffectKindB0_StepBars);
 }
 
-void EffectKindAe_InjectFromRest3g() {
+void EffectKindAeFromRest3g_Inject() {
     BOF3_INJECT(EffectKindAD_Start);
     BOF3_INJECT(EffectKindAD_Rise);
     BOF3_INJECT(EffectKindAE_Start);

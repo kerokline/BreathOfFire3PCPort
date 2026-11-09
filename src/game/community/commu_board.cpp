@@ -2917,7 +2917,7 @@ extern "C" void __cdecl CommuBoard_DrawCells(int x, int y, unsigned shown) {
 
 #pragma clang attribute pop
 
-void CommuBoard_InjectFromRest4b() {
+void CommuBoardFromRest4b_Inject() {
     BOF3_INJECT(CommuBoard_Dispatch);
     BOF3_INJECT(CommuBoard_Init);
     BOF3_INJECT(CommuBoard_Grid);
@@ -2954,7 +2954,7 @@ void CommuBoard_InjectFromRest4b() {
     BOF3_INJECT(CommuBoard_PickHelp);
 }
 
-void CommuBoard_InjectFromRest4c() {
+void CommuBoardFromRest4c_Inject() {
     BOF3_INJECT(Commu_PushSubscreen);
     BOF3_INJECT(CommuHiLo_Run);
     BOF3_INJECT(CommuHiLo_OpenDispatch);
@@ -3017,7 +3017,7 @@ void CommuBoard_InjectFromRest4c() {
     BOF3_INJECT(CommuHitBlow_Close);
 }
 
-void CommuBoard_InjectFromRest4d() {
+void CommuBoardFromRest4d_Inject() {
     BOF3_INJECT(CommuBoard_DrawRows);
     BOF3_INJECT(CommuBoard_DrawFrame);
     BOF3_INJECT(CommuBoard_DrawRowCells);

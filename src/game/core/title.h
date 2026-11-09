@@ -2,14 +2,14 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Title_InjectFromDrawEmit();
-void Title_InjectFromFieldC1();
-void Title_InjectFromGfxFlush();
-void Title_InjectFromGfxUnpack();
-void Title_InjectFromItemUse();
-void Title_InjectFromModeFlow();
-void Title_InjectFromModeTasks();
-void Title_InjectFromPrim();
-void Title_InjectFromRest4e();
-void Title_InjectFromRest4f();
-void Title_InjectFromTitleStates();
+void TitleFromDrawEmit_Inject();
+void TitleFromFieldC1_Inject();
+void TitleFromGfxFlush_Inject();
+void TitleFromGfxUnpack_Inject();
+void TitleFromItemUse_Inject();
+void TitleFromModeFlow_Inject();
+void TitleFromModeTasks_Inject();
+void TitleFromPrim_Inject();
+void TitleFromRest4e_Inject();
+void TitleFromRest4f_Inject();
+void TitleFromTitleStates_Inject();

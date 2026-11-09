@@ -532,7 +532,7 @@ extern "C" void __cdecl EffectKind6D_InitParticles(void) {
     }
 }
 
-void EffectKind6e_InjectFromEffect3b() {
+void EffectKind6eFromEffect3b_Inject() {
     BOF3_INJECT(EffectKind6C_ScatterSparks);
     BOF3_INJECT(EffectKind6C_DrawSparks);
     BOF3_INJECT(EffectKind6C_DrawSpark);
@@ -540,7 +540,7 @@ void EffectKind6e_InjectFromEffect3b() {
     BOF3_INJECT(EffectKind6C_SparkFade);
 }
 
-void EffectKind6e_InjectFromEffect3c() {
+void EffectKind6eFromEffect3c_Inject() {
     BOF3_INJECT(EffectKind6E_Run);
     BOF3_INJECT(EffectKind6E_Start);
     BOF3_INJECT(EffectKind6E_Emit);

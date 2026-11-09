@@ -2,5 +2,5 @@
 // by symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Commu_InjectFromRest4d();
-void Commu_InjectFromRest4e();
+void CommuFromRest4d_Inject();
+void CommuFromRest4e_Inject();

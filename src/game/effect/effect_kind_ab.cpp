@@ -99,11 +99,11 @@ extern "C" void __cdecl EffectKindAB_Drops(void) {
     SH_CALL(EffectKindAB_MoveDrops)();
 }
 
-void EffectKindAb_InjectFromEffect4f() {
+void EffectKindAbFromEffect4f_Inject() {
     BOF3_INJECT(EffectKindAB_Run);
     BOF3_INJECT(EffectKindAB_Start);
 }
 
-void EffectKindAb_InjectFromRest3f() {
+void EffectKindAbFromRest3f_Inject() {
     BOF3_INJECT(EffectKindAB_Drops);
 }
