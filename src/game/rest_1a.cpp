@@ -37,7 +37,7 @@ using move_script::SetLong;
 using move_script::Word;
 
 unsigned char& B(URest1a a) { return *At(a); }
-std::int32_t L(URest1a a) { return Long(At(a)); }
+std::int32_t L(URest1a a) { return move_script::Long(move_script::At(a)); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
