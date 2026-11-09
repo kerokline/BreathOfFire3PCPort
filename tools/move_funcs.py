@@ -303,10 +303,13 @@ class SourcePlan:
     inject_lines: list[str] = field(default_factory=list)
     item_target: dict[int, str] = field(default_factory=dict)              # id(moved item) -> target
     decls_for: dict[str, list[ci.Item]] = field(default_factory=dict)      # target -> declarations copied
+    externals: set[int] = field(default_factory=set)                       # id(item): an external helper of ours
     undefs: dict[str, list[ci.Item]] = field(default_factory=dict)         # target -> `#undef M` lines moved
     bound_elsewhere: dict[str, str] = field(default_factory=dict)          # function -> where its bind stays
     namespace_names: dict[str, set[str]] = field(default_factory=dict)     # `using namespace X` -> X's names
     alias_bodies: dict[str, dict[str, str]] = field(default_factory=dict)  # X -> alias name -> its code
+    dir_at: list[str] = field(default_factory=list)       # `using namespace X;` lines whose X has an X::at
+    at_names: dict[str, set[str]] = field(default_factory=dict)  # each `at` namespace S names -> its names
 
 
 def resolve_include(inc: str) -> str | None:
@@ -329,6 +332,41 @@ def owners_of(fi: ci.FileItems, roots: list[tuple[ci.Item, str]], local_by_name:
                     owners[id(dep)].add(owner)
                     stack.append(dep)
     return owners
+
+
+def external_helper(it: ci.Item, funcs: dict[str, str]) -> bool:
+    """A function definition of ours with external linkage at file scope that is not a [[func]] of
+    symbols.toml (the table names every one): a helper such as rest_4b's ListBoxWidth. Its callers'
+    code may have inlined it, so it moves with them like a file-local rather than being declared."""
+    return (it.kind == "func" and not it.local and not any(it.ns) and not it.linkage and not it.conds
+            and not it.made and len(it.names) == 1 and "::" not in it.names[0]
+            and it.names[0] not in funcs and not it.names[0].endswith("_Inject")
+            and not it.names[0].startswith("operator"))
+
+
+def functions_declared(text: str, names: set[str]) -> set[str]:
+    """Which of `names` a project header `text` includes (and theirs) declares as a function."""
+    found, todo, seen = set(), re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    while todo and names - found:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        p = ROOT / "src" / inc
+        if not p.exists():
+            continue
+        h = p.read_text(encoding="utf-8")
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
+        found |= {n for n in names - found if re.search(rf"\b{re.escape(n)}\s*\(", h)}
+    return found
+
+
+def at_qualified(it: ci.Item) -> set[str]:
+    """The names an item writes as a bare `at::name` (the callees constants of its file's `at`)."""
+    toks = [t for t in ci.lex(it.text) if t.kind != "comment"]
+    return {toks[k + 2].text for k in range(len(toks) - 2)
+            if toks[k].text == "at" and toks[k + 1].text == "::" and toks[k + 2].kind == "id"
+            and not (k > 0 and toks[k - 1].text in ("::", ".", "->"))}
 
 
 def made_names(it: ci.Item) -> list[str]:
@@ -448,6 +486,12 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
                 continue                                       # a header declares it extern: a global
             for n in it.names:
                 local_by_name[n].append(it)
+        elif external_helper(it, table_target):
+            # a helper of ours with external linkage at file scope, not a [[func]]: it goes where its
+            # callers go, as a file-local does (its symbol keeps its name, so a caller elsewhere still
+            # links); it cannot be copied, one definition only (below)
+            local_by_name[it.names[0]].append(it)
+            plan.externals.add(id(it))
     # who reaches what: every moved item for its target, everything else for S
     roots = []
     local_ids = {id(i) for lst in local_by_name.values() for i in lst}
@@ -460,6 +504,17 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     for lst in plan.decls_for.values():
         local_ids |= {id(d) for d in lst}
     owners = owners_of(fi, roots, local_by_name)
+    # a file-local nothing reaches stays in S, and so S keeps what it names (an unused helper's
+    # `U` return type is still compiled there): it is a root of S too, until no more are found
+    rooted = {id(it) for it, _ in roots}
+    while True:
+        extra = [(it, source) for lst in local_by_name.values() for it in lst
+                 if not owners.get(id(it)) and id(it) not in rooted and id(it) not in undef_ids]
+        if not extra:
+            break
+        roots += extra
+        rooted |= {id(it) for it, _ in extra}
+        owners = owners_of(fi, roots, local_by_name)
     seen = set()
     for lst in local_by_name.values():
         for it in lst:
@@ -473,6 +528,11 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
                 plan.moved_locals.setdefault(next(iter(own)), []).append(it)
                 continue
             # reached from two places: a header both include, if it is a value and not state
+            if id(it) in plan.externals:
+                problems.append(f"{source}: {it.names[0]} (line {it.code_line}) is a helper of ours with external "
+                                f"linkage reached by {', '.join(sorted(own))}: one definition cannot be copied; "
+                                f"declare it in a header S includes (its moved callers then call it) or decide by hand")
+                continue
             if it.is_var and not it.is_const:
                 problems.append(f"{source}: {'/'.join(it.names)} (line {it.code_line}) is file-static state reached by "
                                 f"{', '.join(sorted(own))}: two copies would split it; decide by hand")
@@ -499,6 +559,23 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         for u in sorted(it.uses & set(globals_here) - declared):
             problems.append(f"{source}: {name} names {u}, a global {source} defines and no header it includes "
                             f"declares; give it a declaration first")
+    # a moved function that names a function of ours S defines inside a named namespace (msgbox's
+    # ruby::Open) needs a declaration S's headers give; the functions of S's own namespaces at file
+    # scope that the table moves are [[func]]s, declared by symbols.gen.h
+    ns_funcs: dict[str, list[ci.Item]] = defaultdict(list)
+    for it in leaves:
+        if (it.kind == "func" and not it.local and any(it.ns) and "" not in it.ns and id(it) not in moved
+                and it.names and it.names[0] not in table_target):
+            ns_funcs[it.names[0]].append(it)
+    wanted = {u for it in plan.funcs.values() for u in it.uses & set(ns_funcs)}
+    have = functions_declared(text, wanted)
+    for name, it in plan.funcs.items():
+        if it.kind == "pp":
+            continue
+        for u in sorted(it.uses & set(ns_funcs) - have):
+            where = ", ".join(sorted({"::".join(d.ns) for d in ns_funcs[u]}))
+            problems.append(f"{source}: {name} names {where}::{u}, a function {source} defines and no header it "
+                            f"includes declares; declare it first (a caller that had inlined it then calls it)")
     # the inject lines; a bind kept elsewhere (another file's _Inject(), a one-line or conditional
     # bof3::Inject) stays where it is and is listed
     for m in INJECT_LINE.finditer(text):
@@ -516,6 +593,12 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         if mm:
             plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
             plan.alias_bodies[mm.group(2)] = namespace_alias_bodies(text, mm.group(2))
+            sub = namespace_names(text, mm.group(2) + "::at")
+            if sub:
+                plan.dir_at.append(mm.group(2))
+                plan.at_names[mm.group(2) + "::at"] = sub
+    if plan.alias_at:
+        plan.at_names[plan.alias_at] = namespace_names(text, plan.alias_at)
     return plan
 
 
@@ -843,7 +926,8 @@ def main() -> int:
     for s, p in plans.items():
         for name, t in p.target_of.items():
             e = targets.setdefault(t, {"funcs": [], "locals": [], "sources": [], "aliases": {}, "shared_from": set(),
-                                       "undefs": [], "binds": set(), "namespaces": {}, "alias_bodies": {}})
+                                       "undefs": [], "binds": set(), "namespaces": {}, "alias_bodies": {},
+                                       "dir_at": {}, "at_names": {}})
             e["funcs"].append((move_of[name].pc, name, p.funcs[name], s))
             if name in p.inject_lines:
                 e["binds"].add(name)
@@ -855,6 +939,10 @@ def main() -> int:
                 e["namespaces"].setdefault(x, set()).update(names)
             for x, bodies in p.alias_bodies.items():
                 e["alias_bodies"].setdefault(x, {}).update(bodies)
+            for x in p.dir_at:
+                e["dir_at"].setdefault(x + "::at", set()).add(s)
+            for x, names in p.at_names.items():
+                e["at_names"].setdefault(x, set()).update(names)
         for t, its in p.moved_locals.items():
             targets[t]["locals"] += [(s, it, "local") for it in its]
         for t, its in p.decls_for.items():
@@ -935,6 +1023,32 @@ def main() -> int:
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
                                     f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
                                     f"qualify it first")
+        # `at`: the target's own alias (one source's namespace, or the union of several) and every
+        # X::at a `using namespace X;` line brings are each an `at` at file scope; two different ones
+        # make a bare `at::k...` ambiguous
+        own_at = sorted({x.lstrip(":") for x in e["aliases"].values()})
+        ats = ({own_at[0]} if len(own_at) == 1 else {f"{Path(t).stem}::at"} if own_at else set())
+        ats |= set(e["dir_at"])
+        bodies_at = ([(name, it) for _, name, it, _ in e["funcs"]]
+                     + [("/".join(it.names), it) for _, it, _ in e["locals"]])
+        if len(ats) > 1:
+            users = sorted({name for name, it in bodies_at if "at" in it.uses_unq - it.declares})
+            if users:
+                problems.append(f"{t}: `at` would be ambiguous - {', '.join(sorted(ats))} (named by "
+                                f"{', '.join(users)}); qualify `at::` first")
+        elif len(own_at) > 1:
+            # the union of the groups' at:: namespaces: a constant two of them define is ambiguous there
+            hold: dict[str, list[str]] = defaultdict(list)
+            for x in own_at:
+                for n in e["at_names"].get(x, ()):
+                    hold[n].append(x)
+            for n, xs in sorted(hold.items()):
+                if len(xs) < 2:
+                    continue
+                users = sorted({name for name, it in bodies_at if n in at_qualified(it)})
+                if users:
+                    problems.append(f"{t}: at::{n} would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} "
+                                    f"(named by {', '.join(users)}); qualify it first")
 
     if problems:
         print("move_funcs: refused, nothing written:")
@@ -1088,7 +1202,8 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
                        "// stay in the groups' headers; a name two of them define differently is refused.\n"
                        "#pragma once\n\n"
                        + "".join(f'#include "{include_name(header_of(s)[:-2] + "_callees.h")}"\n'
-                                 for s in e["sources"] if s in e["aliases"])
+                                 for s in e["sources"] if s in e["aliases"]
+                                 and (ROOT / "src" / include_name(header_of(s)[:-2] + "_callees.h")).is_file())
                        + f"\nnamespace {stem}::at {{\n"
                        + "".join(f"using namespace ::{x};\n" for x in aliases)
                        + f"}}  // namespace {stem}::at\n")
