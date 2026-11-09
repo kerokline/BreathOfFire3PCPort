@@ -20,7 +20,7 @@ namespace at {
 // new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
 constexpr ::bof3::image::Va kMessage{0x7DEE48};
-// The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
+// The focus object: the object whose talk ran last (Field_ObjectTalk
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
 constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by

@@ -542,11 +542,11 @@ data, DIV-0101's.
 
 - **Where the byte is.**
   - Descriptor `+0x04` of each faerie village area (175..185) is the talk scripts' table: 12 pointers (area 178: the table at `0x642DC4`, the scripts at `0x642D1C` and `0x642D40 + 12 (k - 1)`). The pointer words were found by a scan of `.data` for words into the block.
-  - [`event-script.md`](event-script.md) 2 describes the table: `MoveScript_SetTurnTarget` `0x517E90` runs the table entry an object's talk word picks (bit 15) through `EventScript_Run`.
+  - [`event-script.md`](event-script.md) 2 describes the table: `Field_ObjectTalk` `0x517E90` runs the table entry an object's talk word picks (bit 15) through `EventScript_Run`.
   - The bytes previously written as "the `+0x10` block" are this table's scripts (the `+0x10` array holds one pointer, to `0x642D0C`). The 12-byte talk scripts are `D0 00 hi lo`, `D0 08 80 n`, `FF`.
   - `tools/event_scan.py --area 178` decodes the placement script at `+0x00` up to `0x642D09`. That tool does not decode the talk table ("not decoded here"), so the three ops were read with its grammar: `EventScript_OpLengths` gives `Dx` 4 bytes.
 - **What `D0` does.** It is `EventOp_Dx` `0x57B500` (`src/game/event_ops.cpp`). With `op[1]` 0 it writes the talked-to object's word `+0x88` (`trigger_word`) = `hi:lo`. With `op[1]` not 0 it writes `+0x86` (the trigger id) = `op[3]`.
-- **How the word is read.** After the script, `MoveScript_SetTurnTarget` reads `+0x88` again (`object_kinds.cpp`, PSX `FUN_801A27A8`): bit 13 set opens a system message, otherwise `Msg_OpenScript` opens **script message `hi:lo` of the area's text block**.
+- **How the word is read.** After the script, `Field_ObjectTalk` reads `+0x88` again (`object_kinds.cpp`, PSX `FUN_801A27A8`): bit 13 set opens a system message, otherwise `Msg_OpenScript` opens **script message `hi:lo` of the area's text block**.
 - **The values.** The byte is the low byte of talk script 6's message. All eleven areas have the same run of numbers in the same order (a scratch read, `scripts\talk_ids.py`).
   - On the PC, the JP disc and both PSPs, script 6 opens message `0xE1`.
   - On the four Western PSX discs it opens `0x6D`, the same message as script 5.

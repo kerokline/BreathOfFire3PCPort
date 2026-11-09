@@ -211,7 +211,7 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // Noise): after these calls the callers read a cell again - the running
 // object after the elevation, the sound, the animations and the effect
 // search (areas 95, 99, 103), the script object after MoveCmd_Move,
-// Sprite_SetAnimation and MoveScript_SetTurnTarget (area 95's turn, area
+// Sprite_SetAnimation and Field_ObjectTalk (area 95's turn, area
 // 103's talk), the chapter byte and the area after the sound (area 95's
 // effect). The harness's own disturbance reaches a group cell about one call
 // in 24 and moves Sprite_Current one call in 24.
@@ -280,7 +280,7 @@ const ah::Callee kCallees[] = {
     {W2D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
-    {W2D_OURS(MoveScript_SetTurnTarget), 1, {kAll}, ah::Answer::kFlag, 0, 0, {}, &MovesScriptObject},
+    {W2D_OURS(Field_ObjectTalk), 1, {kAll}, ah::Answer::kFlag, 0, 0, {}, &MovesScriptObject},
     {W2D_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     {W2D_OURS(Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},

@@ -11,7 +11,7 @@
 // site was re-listed by the same capstone pass over the final extents. Shapes:
 //
 //   kState   the mode frames (no Sprite_Current)
-//   kCall    MoveCmd_OpE7 (a byte), the approach / avoid picks and the best of
+//   kCall    MoveCmd_OpE7 (a byte), the flee / chase picks and the best of
 //            four turns (a sprite record; al), FieldCore_TileD0Probe (x, z, a
 //            scratch word, the direction; al)
 //   kSprite  the rest: the fade cases and the field core's states, run on
@@ -107,8 +107,8 @@ const sh::Clone kClones[] = {
     {C3_CLONE(Mode8_Step5, 0x517330, 0xA, kCalls517330), 0, false, kSt},
     {C3_CLONE(Mode8_Step8, 0x517340, 0xA, kCalls517340), 0, false, kSt},
     {C3_LEAF(MoveCmd_OpE7, 0x518B20, 0x19), 0, false, kCa},
-    {C3_CLONE(Field_ObjectApproachDirection, 0x518E20, 0xA3, kCalls518E20), 0xFF, false, kCa, ArgAt(0, Arg::kSprite)},
-    {C3_CLONE(Field_ObjectAvoidDirection, 0x518ED0, 0xA5, kCalls518ED0), 0xFF, false, kCa, ArgAt(0, Arg::kSprite)},
+    {C3_CLONE(Field_ObjectFleeDirection, 0x518E20, 0xA3, kCalls518E20), 0xFF, false, kCa, ArgAt(0, Arg::kSprite)},
+    {C3_CLONE(Field_ObjectChaseDirection, 0x518ED0, 0xA5, kCalls518ED0), 0xFF, false, kCa, ArgAt(0, Arg::kSprite)},
     {C3_CLONE(Field_ObjectBestDirection, 0x518F80, 0x11C, kCalls518F80), 0xFF, false, kCa, ArgAt(0, Arg::kSprite)},
     {C3_CLONE(Field_ObjectFadeOutStart, 0x5193D0, 0x39, kCalls5193D0), 0, false, kSp},
     {C3_CLONE(Field_ObjectFadeOutStep, 0x519410, 0xC6, kCalls519410), 0, false, kSp},
@@ -173,7 +173,7 @@ const sh::Clone kClones[] = {
 #undef SH_N
 
 enum : unsigned {
-    kMode11, kMode8a, kMode8b, kOpE7, kApproach, kAvoid, kBest, kFadeOutStart, kFadeOutStep, kFadeInStart, kFadeInStep,
+    kMode11, kMode8a, kMode8b, kOpE7, kFlee, kChase, kBest, kFadeOutStart, kFadeOutStep, kFadeInStart, kFadeInStep,
     kScriptMove, kAlign, kNext, kStep, Transition_Busy_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
     kHopFall, kHopLand, kVertical, kUp, kUpBegin, kUpOut, kUpArrive, kUpIn, kUpWait5, kUpWait6, kUpEnd, kDown,
     kDownBegin, kDownWait1, kDownWait2, kDownWait3, kDownWait4, kDownOut, kDownArrive, kDownIn, kDownLand, kVShade,
@@ -267,8 +267,8 @@ const sh::Callee kCallees[] = {
     // Field_ObjectHandlers' eleven (MoveCmd_OpE7's table): typed, one argument -
     // the object, Field_ActiveMember - which a handler recorder would not log
     {C3_OURS(Field_ObjectWander), 1, {kAll}, kG, 0, 0},
-    {C3_OURS(Field_ObjectApproach), 1, {kAll}, kG, 0, 0},
-    {C3_OURS(Field_ObjectAvoid), 1, {kAll}, kG, 0, 0},
+    {C3_OURS(Field_ObjectFlee), 1, {kAll}, kG, 0, 0},
+    {C3_OURS(Field_ObjectChase), 1, {kAll}, kG, 0, 0},
     {C3_OURS(Field_ObjectWanderHome), 1, {kAll}, kG, 0, 0},
     {C3_OURS(Field_ObjectUpdate), 1, {kAll}, kG, 0, 0},
     {C3_OURS(Field_ObjectWait), 1, {kAll}, kG, 0, 0},
@@ -395,8 +395,8 @@ void Seed(unsigned k) {
     case kTileD0:
     case kFall:
     case kRecoil: s[3] = static_cast<unsigned char>(sh::Next() % 2); break;
-    case kApproach:
-    case kAvoid: {
+    case kFlee:
+    case kChase: {
         // the leader within the half-widths about half the time
         for (unsigned i = 0; i < 4; ++i) {
             unsigned char* const r = sh::SpriteRecord(i);

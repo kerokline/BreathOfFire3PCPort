@@ -50,7 +50,7 @@ constexpr ::bof3::image::Va kRecordIndex{0x903851};
 // kCondRow13: now Cond_Flags[0x68] (symbols.toml).
 // kFlagRow: now Chapter_FlagRow (symbols.toml).
 // kFlags904650: now Gene_Bits (symbols.toml).
-// The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
+// The focus object: the object whose talk ran last (Field_ObjectTalk
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
 constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The party records (ObjTrio): the leader's byte +8 (the pose the hooks

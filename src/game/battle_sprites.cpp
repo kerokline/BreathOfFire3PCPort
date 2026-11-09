@@ -333,7 +333,7 @@ extern "C" unsigned char __cdecl Battle_SettleFlag8(void) {
 
 // original 0x453C00 (0x800A79AC, the PSX's Formation_ApplyStatMods): by the
 // formation byte, 1..4 (anything else nothing), through Stat_AddClamped and
-// Stat_AddCap100 on the party records' stats (+0xC4.. the effective block):
+// Stat_AddCap100 on the party records' stats (+0xC4.. the base block):
 //   1: member 0's +0xC4 up by half, +0xC6 down by a quarter, +0xD9 doubled
 //      (capped at 100);
 //   2: every member up to the party count not out: +0xC8 down by a quarter;

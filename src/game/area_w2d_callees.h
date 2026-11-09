@@ -50,7 +50,7 @@ constexpr ::bof3::image::Va kReturnPoint{0x904148};
 // A byte area 98's choice sets to 6 beside the message it opens (areas 37
 // and 50 do the same); no reader read this round.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
-// The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
+// The focus object: the object whose talk ran last (Field_ObjectTalk
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
 constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The leader's record (ObjTrio): x +0x34, z +0x38, byte +8 (the pose the

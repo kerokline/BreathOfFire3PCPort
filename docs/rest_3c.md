@@ -453,3 +453,11 @@ one.
 **`analysis/calltrace/entries_logic.txt`** (main checkout, 2026-10-04): 61
 lines appended, the code's extents of section 1 (none was there; no host
 line covers them - `Effect_ApplyResult`'s line is `0044B9F0 750`).
+
+## Addendum: which ability reaches a slot (2026-11-08)
+
+The ability record's call byte is the index into the handler table `0x64E540`
+directly (the 228 records and their bytes are identical on the US disc and the
+PC), so "not traced" above can be read off the ability table. For example: 6
+Whelp Breath, 62 Bonebreak, 103 Super Combo, `0x49` Double and Triple Blow,
+`0x70` Tornado, `0x72` Depress.
