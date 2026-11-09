@@ -353,7 +353,7 @@ void DrawPixel(const unsigned char* part) {
 
 // --- kind 0xA8's bars -------------------------------------------------------------------
 
-unsigned char* Bar(unsigned i) { return EffectKind30_Shards + i * at::kBarStride; }
+unsigned char* Bar(unsigned i) { return EffectKind30_Shards + i * rest_3f::at::kBarStride; }
 
 }  // namespace
 
@@ -432,7 +432,7 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
     do {
         const std::int32_t row = static_cast<std::int16_t>(i);
         const std::int32_t rr = static_cast<std::int16_t>(radius);
-        const int s = SH_AT(int (__cdecl*)(int), at::kSqrt.v)(rr * rr - row * row);
+        const int s = SH_AT(int (__cdecl*)(int), rest_3f::at::kSqrt.v)(rr * rr - row * row);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineF2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -787,7 +787,7 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
         SH_CALL(EffectKind9E_DrawWall)(PointRest3f(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
     }
     unsigned char* const s = S();
-    if (At(::bof3::Img(at::kCounter.v))[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
+    if (At(::bof3::Img(rest_3f::at::kCounter.v))[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
 // original 0x48F300 (state 4; in no list - the cut's 0x48F240 runs over it):
@@ -892,7 +892,7 @@ extern "C" void __cdecl EffectKindA1_MovePixels(void) {
 // nothing until the chapter's count is 0x29; then CaptureSprite in kind
 // 0xA3's form (the page always, Sprite_SetAnimation(7)).
 extern "C" void __cdecl EffectKindA3_CaptureSprite(void) {
-    if (At(::bof3::Img(at::kCounter.v))[0] != 0x29) return;
+    if (At(::bof3::Img(rest_3f::at::kCounter.v))[0] != 0x29) return;
     CaptureSprite("EffectKindA3_CaptureSprite", true);
 }
 
@@ -946,7 +946,7 @@ extern "C" void __cdecl EffectKindA3_MovePixels(void) {
         part[0] = static_cast<unsigned char>(part[0] ^ 1);
     }
     if (CountDown()) {
-        At(::bof3::Img(at::kCounter.v))[0] = 0x2B;
+        At(::bof3::Img(rest_3f::at::kCounter.v))[0] = 0x2B;
         NextState();
     }
 }
@@ -1178,13 +1178,13 @@ extern "C" void __cdecl EffectKindA7_Shrink(void) {
 
 // original 0x491FF0: the sixteen bars out of use (+0 = 0).
 extern "C" void __cdecl EffectKindA8_ClearBars(void) {
-    for (unsigned i = 0; i < at::kBarCount; ++i) Bar(i)[0] = 0;
+    for (unsigned i = 0; i < rest_3f::at::kBarCount; ++i) Bar(i)[0] = 0;
 }
 
 // original 0x492010: the first bar out of use put in use (+0 = 1, +2 = 0);
 // none free, nothing.
 extern "C" void __cdecl EffectKindA8_StartBar(void) {
-    for (unsigned i = 0; i < at::kBarCount; ++i) {
+    for (unsigned i = 0; i < rest_3f::at::kBarCount; ++i) {
         unsigned char* const b = Bar(i);
         if (b[0] == 0) {
             b[0] = 1;
@@ -1269,7 +1269,7 @@ extern "C" unsigned char __cdecl EffectKindA8_StepBars(unsigned length) {
     DrawMode(1, 0x380, 0x100, 1, 7);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char any = 0;
-    for (unsigned i = 0; i < at::kBarCount; ++i) {
+    for (unsigned i = 0; i < rest_3f::at::kBarCount; ++i) {
         unsigned char* const b = Bar(i);
         if (b[0] == 0) continue;
         any = 1;
@@ -1321,7 +1321,7 @@ extern "C" void __cdecl EffectKindA8_Bars(void) {
     }
     s[9] = next;
     SH_CALL(EffectKindA8_StepBars)(0xF0);
-    if (At(::bof3::Img(at::kCounter.v))[0] == 0xE) NextState();
+    if (At(::bof3::Img(rest_3f::at::kCounter.v))[0] == 0xE) NextState();
 }
 
 // original 0x491C40 (state 2, hidden in 0x4918B0): the bars stepped (0xF0);
@@ -1413,7 +1413,7 @@ extern "C" void __cdecl EffectKindA9_Grow(void) {
 // original 0x491D10 (state 2, hidden in 0x4918B0): once the chapter's count is
 // 9, +9 = 0x1E and +1 up.
 extern "C" void __cdecl EffectKindA9_Wait(void) {
-    if (At(::bof3::Img(at::kCounter.v))[0] != 9) return;
+    if (At(::bof3::Img(rest_3f::at::kCounter.v))[0] != 9) return;
     S()[9] = 0x1E;
     NextState();
 }
