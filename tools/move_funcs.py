@@ -429,8 +429,19 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     moved = {id(it) for it in plan.funcs.values()}
     m_alias = None
     local_by_name: dict[str, list[ci.Item]] = defaultdict(list)
+    # a C++ helper of ours defined at file scope with external linkage (no `static`, no anonymous
+    # namespace) that no [[func]] names and no included header declares: only this file can call it,
+    # so it moves with its callers like a file-local - but it cannot be copied (two definitions). An
+    # `extern "C"` one stays: its C name is how assembler text and other files reach it
+    ext_helpers = {id(it) for it in leaves
+                   if it.kind == "func" and not it.local and not it.c_linkage and not any(it.ns) and not it.made
+                   and it.names and it.names[0] not in all_funcs()
+                   and not func_declared_in_headers(text, it.names[0])}
     for it in leaves:
         if id(it) in moved:
+            continue
+        if id(it) in ext_helpers:
+            local_by_name[it.names[0]].append(it)
             continue
         if it.kind == "pp" and it.names:                       # a #define in the .cpp is file-local
             local_by_name[it.names[0]].append(it)
@@ -460,6 +471,12 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
     for lst in plan.decls_for.values():
         local_ids |= {id(d) for d in lst}
     owners = owners_of(fi, roots, local_by_name)
+    # a file-local nothing reaches (a helper no code calls any more) stays in S, so what it names
+    # stays reachable there too
+    idle = [(it, source) for lst in local_by_name.values() for it in lst
+            if id(it) not in owners and id(it) not in undef_ids]
+    if idle:
+        owners = owners_of(fi, roots + idle, local_by_name)
     seen = set()
     for lst in local_by_name.values():
         for it in lst:
@@ -471,6 +488,11 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
                 continue
             if len(own) == 1:
                 plan.moved_locals.setdefault(next(iter(own)), []).append(it)
+                continue
+            if id(it) in ext_helpers:
+                problems.append(f"{source}: {'/'.join(it.names)} (line {it.code_line}) is a helper with external "
+                                f"linkage that no header declares, reached by {', '.join(sorted(own))}: two "
+                                f"copies would be two definitions; declare it in a header first")
                 continue
             # reached from two places: a header both include, if it is a value and not state
             if it.is_var and not it.is_const:
@@ -594,6 +616,36 @@ def has_static_local(it: ci.Item) -> bool:
 def code_tokens(it: ci.Item) -> str:
     """An item's code without its comments and spacing."""
     return " ".join(t.text for t in ci.lex(it.text) if t.kind != "comment")
+
+
+_all_funcs: set[str] = set()
+
+
+def all_funcs() -> set[str]:
+    """Every [[func]] name in symbols.toml (symbols.gen.h declares the ones with an impl)."""
+    if not _all_funcs:
+        _all_funcs.update(n for n in load_symbols())
+        _all_funcs.add("")
+    return _all_funcs
+
+
+def func_declared_in_headers(text: str, name: str) -> bool:
+    """Whether a project header `text` includes (and theirs) declares a function `name`."""
+    todo, seen = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    rx = re.compile(rf"\b{re.escape(name)}\s*\(")
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
+        p = ROOT / "src" / inc
+        if not p.exists():
+            continue
+        h = p.read_text(encoding="utf-8")
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
+        if rx.search(h):
+            return True
+    return False
 
 
 def declared_in_headers(text: str, names: set[str]) -> set[str]:
