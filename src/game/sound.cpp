@@ -161,10 +161,10 @@ using namespace sound;
 // read afresh for each voice. eax is 0 on return (the original's loop count).
 int Sound_PlayEffectEax(unsigned short id) {
     const std::uint32_t cue_id = id & 0xFFFFu;
-    const std::uint32_t base = (((cue_id >> 8) & 0xF) - 1) * kBankBytes;
-    std::uint32_t cue = Address(Sound_Banks) + base + (cue_id & 0xFF) * 16;
+    const std::uint32_t base = (((cue_id >> 8) & 0xF) - 1) * sound::kBankBytes;
+    std::uint32_t cue = sound::Address(Sound_Banks) + base + (cue_id & 0xFF) * 16;
     for (int n = 4; n != 0; --n, cue += 4) {
-        const std::uint32_t word = Dword(cue);
+        const std::uint32_t word = sound::Dword(cue);
         if (word == 0) continue;
         std::uint32_t channel = (word >> 8) & 0x1F;
         if (channel >= 0x17) channel -= 0x17;
@@ -172,19 +172,19 @@ int Sound_PlayEffectEax(unsigned short id) {
         if (voice == 0xFF) {
             void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
             if (playing) {
-                g.sndbuf_stop(playing);
+                sound::g.sndbuf_stop(playing);
                 Sound_Channels[channel] = 0;
             }
             continue;
         }
         const std::uint32_t loops = (word & 0xFFFF8000u) << 16;
         void* const playing = reinterpret_cast<void*>(Sound_Channels[channel]);
-        if (playing) g.sndbuf_stop(playing);
-        const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
+        if (playing) sound::g.sndbuf_stop(playing);
+        const std::uint32_t entry = sound::Address(Sound_Banks) + base + sound::kVoices + voice * 8;
         // DIVERGENCE DIV-0171 / DIV-0172: a buffer sound_sp changed gets its level back first (sound_sp.h).
-        if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(Dword(entry + 4)));
-        g.sndbuf_play(Dword(entry) | loops, reinterpret_cast<void*>(Dword(entry + 4)), word >> 16);
-        Sound_Channels[channel] = loops ? Dword(entry + 4) : 0;
+        if (sound_sp::Routed()) sound_sp::BeforePlay(reinterpret_cast<void*>(sound::Dword(entry + 4)));
+        sound::g.sndbuf_play(sound::Dword(entry) | loops, reinterpret_cast<void*>(sound::Dword(entry + 4)), word >> 16);
+        Sound_Channels[channel] = loops ? sound::Dword(entry + 4) : 0;
         if (!loops) sound_st::NoteOneShot(channel, entry);  // DIV-0174: DLL-side, nothing without its switch
     }
     return 0;
@@ -211,23 +211,23 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
     const bool pc_first = music_seq::PcFirst();               // DIV-0150
     if (!pc_first && music_seq::LoadFile(track)) return 0;  // DIV-0087
     char looping[0x28], once[0x28];
-    g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-    g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+    sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+    sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
     Music_FileLoops = 1;
-    int handle = g.file_open(looping, 0, 0);
+    int handle = sound::g.file_open(looping, 0, 0);
     if (handle == -1) {
-        handle = g.file_open(once, 0, 0);
+        handle = sound::g.file_open(once, 0, 0);
         if (handle == -1) return pc_first && music_seq::LoadFile(track) ? 0 : -1;  // DIV-0150
         Music_FileLoops = 0;
     }
     music_seq::Forget(Music_File);  // DIV-0087: a cache song in it is gone
-    if (Music_File) g.free(Music_File);
-    const int size = g.file_size(handle);
+    if (Music_File) sound::g.free(Music_File);
+    const int size = sound::g.file_size(handle);
     Music_FileSize = size;
-    void* const file = g.malloc(static_cast<unsigned>(size));
+    void* const file = sound::g.malloc(static_cast<unsigned>(size));
     Music_File = file;
-    g.file_read(handle, file, static_cast<unsigned>(Music_FileSize));
-    g.file_close(handle);
+    sound::g.file_read(handle, file, static_cast<unsigned>(Music_FileSize));
+    sound::g.file_close(handle);
     Music_LoadedTrack = static_cast<int>(track);
     return 0;
 }
@@ -292,11 +292,11 @@ int Music_PlayEax(unsigned int track, int frames) {
     if (track == Music_Track) return static_cast<int>(track);
     const std::uint32_t loaded = static_cast<std::uint32_t>(Music_LoadedTrack);
     Music_Track = static_cast<unsigned char>(track);
-    if (track != loaded) g.music_load_file(track);
-    SetDword(Address(&Music_Volume), 0);
+    if (track != loaded) sound::g.music_load_file(track);
+    sound::SetDword(sound::Address(&Music_Volume), 0);
     SetVolumeBits(0);
-    g.music_start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
-    return g.music_fade_in(frames);
+    sound::g.music_start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
+    return sound::g.music_fade_in(frames);
 }
 
 // DIVERGENCE DIV-0167: the PlayStation's SsUtKeyOffV on voices 16..23 at the
@@ -466,7 +466,7 @@ void RingLog();
 }
 
 extern "C" void __cdecl Sound_Tick(void) {
-    g.music_pump();
+    sound::g.music_pump();
     sound_in::JingleFrame();  // DIV-0177: once a logic frame, the jingle's end and its song's resume
     if (sound::MusicLogOn()) sound::RingLog();  // the music log's ear: no behaviour
     if (Music_FadeCount == 0) return;
@@ -486,12 +486,12 @@ extern "C" void __cdecl Sound_Tick(void) {
         : [volume] "+m"(Music_Volume)
         : [step] "m"(Music_FadeStep)
         : "st");
-    SetVolumeBits(Dword(Address(&Music_Volume)));
+    SetVolumeBits(sound::Dword(sound::Address(&Music_Volume)));
     const int count = Music_FadeCount - 1;
     Music_FadeCount = count;
     if (count != 0) return;
     if (!Music_FadeStops) return;
-    g.music_stop();
+    sound::g.music_stop();
     Music_Track = 0xFF;
 }
 
@@ -499,7 +499,7 @@ extern "C" void __cdecl Sound_Tick(void) {
 // device (Snd_LoadBank's voice entries); 0 when there is none.
 extern "C" void* __cdecl SndBuf_FromWave(const unsigned char* wave) {
     if (!Snd_Device) return nullptr;
-    return g.sndbuf_create(wave);
+    return sound::g.sndbuf_create(wave);
 }
 
 // original 0x5A69E0: a static DirectSound buffer holding a RIFF WAVE's data:
@@ -512,21 +512,21 @@ extern "C" void* __cdecl SndBuf_FromWave(const unsigned char* wave) {
 // buffer lands in the original's argument slot, which holds `wave` until
 // CreateSoundBuffer writes it (ours likewise).
 extern "C" void* __cdecl SndBuf_CreateFromWave(const unsigned char* wave) {
-    const std::uint32_t format = Address(Snd_WaveFormat);
-    for (unsigned i = 0; i < 16; i += 4) SetDword(format + i, Dword(Address(wave) + 0x14 + i));
-    SetWord(format + 0x10, 0);
+    const std::uint32_t format = sound::Address(Snd_WaveFormat);
+    for (unsigned i = 0; i < 16; i += 4) sound::SetDword(format + i, sound::Dword(sound::Address(wave) + 0x14 + i));
+    sound::SetWord(format + 0x10, 0);
     const unsigned char* data = nullptr;
-    const unsigned size = g.wave_find_data(wave, &data);
-    const std::uint32_t desc = Address(Snd_BufferDesc);
+    const unsigned size = sound::g.wave_find_data(wave, &data);
+    const std::uint32_t desc = sound::Address(Snd_BufferDesc);
     std::memset(Snd_BufferDesc, 0, 0x24);
     void* const device = Snd_Device;
-    SetDword(desc + 0x00, 0x24);
-    SetDword(desc + 0x04, 0x180E2);
-    SetDword(desc + 0x08, size);
-    SetDword(desc + 0x10, format);
+    sound::SetDword(desc + 0x00, 0x24);
+    sound::SetDword(desc + 0x04, 0x180E2);
+    sound::SetDword(desc + 0x08, size);
+    sound::SetDword(desc + 0x10, format);
     void* buffer = const_cast<unsigned char*>(wave);
-    if (Method<ComCreate>(device, kCreateSoundBuffer)(device, Snd_BufferDesc, &buffer, nullptr) != 0) return nullptr;
-    g.sndbuf_write(buffer, data, 0, size);
+    if (sound::Method<ComCreate>(device, kCreateSoundBuffer)(device, Snd_BufferDesc, &buffer, nullptr) != 0) return nullptr;
+    sound::g.sndbuf_write(buffer, data, 0, size);
     return buffer;
 }
 
@@ -537,15 +537,15 @@ extern "C" void* __cdecl SndBuf_CreateFromWave(const unsigned char* wave) {
 // As the original has it: no end test - a wave without a data chunk walks on
 // through memory; no padding of odd chunk sizes; the offset wraps at 32 bits.
 extern "C" unsigned __cdecl Wave_FindData(const unsigned char* wave, const unsigned char** data) {
-    const std::uint32_t base = Address(wave);
-    std::uint32_t at = Dword(base + 0x10) + 0x14;
+    const std::uint32_t base = sound::Address(wave);
+    std::uint32_t at = sound::Dword(base + 0x10) + 0x14;
     for (;;) {
-        const unsigned char* const tag = At(base + at);
+        const unsigned char* const tag = sound::At(base + at);
         if (tag[0] == 'd' && tag[1] == 'a' && tag[2] == 't' && tag[3] == 'a') break;
-        at = at + Dword(base + at + 4) + 8;
+        at = at + sound::Dword(base + at + 4) + 8;
     }
-    const unsigned size = Dword(base + at + 4);
-    if (data) *data = At(base + at + 8);
+    const unsigned size = sound::Dword(base + at + 4);
+    if (data) *data = sound::At(base + at + 8);
     return size;
 }
 
@@ -560,19 +560,19 @@ extern "C" unsigned __cdecl Wave_FindData(const unsigned char* wave, const unsig
 // the caller's ecx - for a Lock that reports success without writing them.
 extern "C" long __cdecl SndBuf_Write(void* buffer, const void* src, unsigned offset, unsigned size) {
     void* first = nullptr;
-    unsigned long first_bytes = Address(buffer);
+    unsigned long first_bytes = sound::Address(buffer);
     void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
     unsigned long second_bytes = size;
-    long result = Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
+    long result = sound::Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
     if (result == kBufferLost) {
-        Method<ComCall>(buffer, kRestore)(buffer);
-        result = Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
+        sound::Method<sound::ComCall>(buffer, kRestore)(buffer);
+        result = sound::Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
     }
     if (result != 0) return result;
     const unsigned char* const bytes = static_cast<const unsigned char*>(src);
     std::memcpy(first, bytes, first_bytes);
     if (first_bytes != size) std::memcpy(second, bytes + first_bytes, second_bytes);
-    return Method<ComUnlock>(buffer, kUnlock)(buffer, first, first_bytes, second, second_bytes);
+    return sound::Method<ComUnlock>(buffer, kUnlock)(buffer, first, first_bytes, second, second_bytes);
 }
 
 // original 0x5A6BB0: plays a voice's buffer from the start at `frequency`,
@@ -585,27 +585,27 @@ extern "C" void __cdecl SndBuf_Play(unsigned sample, void* buffer, unsigned freq
     const std::uint32_t wave = sample & 0x7FFFFFFFu;
     if (!buffer) return;
     const unsigned long loops = (sample & 0x80000000u) ? 1 : 0;
-    Method<ComValue>(buffer, kSetCurrentPosition)(buffer, 0);
-    Method<ComValue>(buffer, kSetFrequency)(buffer, frequency);
-    if (Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops) != kBufferLost) return;
-    const unsigned char* data = At(sample);
-    const unsigned size = g.wave_find_data(At(wave), &data);
-    g.sndbuf_write(buffer, data, 0, size);
-    Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops);
+    sound::Method<ComValue>(buffer, kSetCurrentPosition)(buffer, 0);
+    sound::Method<ComValue>(buffer, kSetFrequency)(buffer, frequency);
+    if (sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops) != kBufferLost) return;
+    const unsigned char* data = sound::At(sample);
+    const unsigned size = sound::g.wave_find_data(sound::At(wave), &data);
+    sound::g.sndbuf_write(buffer, data, 0, size);
+    sound::Method<ComPlay>(buffer, kPlay)(buffer, 0, 0, loops);
 }
 
 // original 0x5A6C30: stops a buffer that is playing. GetStatus writes into
 // the original's argument slot, so the status starts as the pointer.
 extern "C" void __cdecl SndBuf_Stop(void* buffer) {
     if (!buffer) return;
-    if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
+    if (Playing(buffer, sound::Address(buffer))) sound::Method<sound::ComCall>(buffer, kStop)(buffer);
 }
 
 // original 0x5A6C90: SndBuf_Stop, then Release.
 extern "C" void __cdecl SndBuf_Release(void* buffer) {
     if (!buffer) return;
-    if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
-    Method<ComCall>(buffer, kRelease)(buffer);
+    if (Playing(buffer, sound::Address(buffer))) sound::Method<sound::ComCall>(buffer, kStop)(buffer);
+    sound::Method<sound::ComCall>(buffer, sound::kRelease)(buffer);
 }
 
 // DIV-pending (music_loops.h, docs/bgm-comparison.md section 12): the loop of
@@ -634,9 +634,9 @@ void LoopBegin(int track, unsigned size) {
 // end cannot happen for a row the generator checked against its file, so it
 // is fatal rather than papered over.
 std::uint32_t LoopFrame(std::uint32_t& decoder) {
-    const int result = g.mp3_decode(At(decoder), sound::g_loop.frame);
-    decoder = Address(Music_Decoder);
-    const std::uint32_t bytes = Dword(Dword(decoder + 0x14) + 8);
+    const int result = sound::g.mp3_decode(sound::At(decoder), sound::g_loop.frame);
+    decoder = sound::Address(Music_Decoder);
+    const std::uint32_t bytes = sound::Dword(sound::Dword(decoder + 0x14) + 8);
     if (result == kEndOfStream)
         bof3::Fatal("music_loops: track %u's stream ended at sample %u, before its loop end %u", sound::g_loop.row->track,
                     sound::g_loop.pos, sound::g_loop.row->end);
@@ -646,7 +646,7 @@ std::uint32_t LoopFrame(std::uint32_t& decoder) {
 }
 
 void LoopDecode(unsigned char* dst, std::uint32_t size) {
-    std::uint32_t decoder = Address(Music_Decoder);
+    std::uint32_t decoder = sound::Address(Music_Decoder);
     std::uint32_t filled = 0;
     while (filled < size) {
         if (sound::g_loop.carry_len) {
@@ -685,8 +685,8 @@ void LoopDecode(unsigned char* dst, std::uint32_t size) {
         std::int16_t fade_from[2 * 1152];
         if (fade_bytes > sizeof fade_from) bof3::Fatal("music_loops: track %u's crossfade of %u samples", row.track, row.fade);
         std::memcpy(fade_from, sound::g_loop.frame + keep, fade_bytes);
-        g.mp3_seek(At(decoder), 0);
-        decoder = Address(Music_Decoder);
+        sound::g.mp3_seek(sound::At(decoder), 0);
+        decoder = sound::Address(Music_Decoder);
         sound::g_loop.pos = 0;
         for (;;) {
             bytes = LoopFrame(decoder);
@@ -801,8 +801,8 @@ std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsign
 extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) {
     MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
     if (!Snd_Device) return;
-    if (Music_Data) g.music_release();
-    void* const copy = g.malloc(size);
+    if (Music_Data) sound::g.music_release();
+    void* const copy = sound::g.malloc(size);
     Music_Data = copy;
     std::memcpy(copy, file, size);
     if (music_seq::IsSong(file, size)) {  // DIV-0087: the cache's song - the synth, no decoder, no measured loop
@@ -810,7 +810,7 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
         LoopBegin(-1, size);
         music_seq::Begin();
     } else {
-        Music_Decoder = g.music_open_decoder(Music_Data, size);
+        Music_Decoder = sound::g.music_open_decoder(Music_Data, size);
         // DIV-pending (music_loops.h): the measured loop of a BGM track Music_Play
         // started, looked up before the first half is decoded; Sound_LoadStream's
         // streams (not Music_File) and once-only tracks have none.
@@ -836,14 +836,14 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
                       sound::g_ring.written == sound::g_resume.pending_sample ? "" : " (asked past its end: from the top)");
         }
     }
-    void* const buffer = g.music_create_buffer();
+    void* const buffer = sound::g.music_create_buffer();
     Music_Buffer = buffer;
     sound::g_ring.half_base[0] = sound::g_ring.written;  // Music_CreateBuffer wrote the first half
     sound::g_ring.written += kHalfSamples;
     if (buffer) {
-        g.music_set_notify(buffer);
+        sound::g.music_set_notify(buffer);
         void* const playing = Music_Buffer;
-        Method<ComPlay>(playing, kPlay)(playing, 0, 0, 1);
+        sound::Method<ComPlay>(playing, kPlay)(playing, 0, 0, 1);
     }
     Music_Finished = 0;
     Music_Loops = loops;
@@ -856,14 +856,14 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
 // is not destroyed.
 extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
     void* decoder = nullptr;
-    if (g.mp3_create(&decoder) != 0) return nullptr;
+    if (sound::g.mp3_create(&decoder) != 0) return nullptr;
     unsigned char io[0x2C];
-    g.mp3_memory_io(io);
-    g.mp3_set_io(decoder, io);
+    sound::g.mp3_memory_io(io);
+    sound::g.mp3_set_io(decoder, io);
     char name[0x20];
-    g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
-    if (g.mp3_open(decoder, name, -1) != 0) return nullptr;
-    return g.mp3_start(decoder) == 0 ? decoder : nullptr;
+    sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
+    if (sound::g.mp3_open(decoder, name, -1) != 0) return nullptr;
+    return sound::g.mp3_start(decoder) == 0 ? decoder : nullptr;
 }
 
 // original 0x5A6DF0: the streaming buffer's two notifications - one event as
@@ -874,14 +874,14 @@ extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
 extern "C" long __cdecl Music_SetNotify(void* buffer) {
     // The slot as QueryInterface's out parameter (void**): the 32-bit spelling,
     // as Snd_Init's (sound_rest.cpp); B5's sound layer replaces it.
-    Method<ComQuery>(buffer, kQueryInterface)(buffer, At(kIidNotify), reinterpret_cast<void**>(&Music_Notify));
-    Music_Events[0] = g.create_event(nullptr, 0, 0, nullptr);
-    void* const second = g.create_event(nullptr, 0, 0, nullptr);
+    sound::Method<ComQuery>(buffer, kQueryInterface)(buffer, sound::At(kIidNotify), reinterpret_cast<void**>(&Music_Notify));
+    Music_Events[0] = sound::g.create_event(nullptr, 0, 0, nullptr);
+    void* const second = sound::g.create_event(nullptr, 0, 0, nullptr);
     Music_Events[1] = second;
     struct Position { unsigned long offset; void* event; };
     const Position positions[2] = {{0, Music_Events[0]}, {kHalf, second}};
     void* const notify = Music_Notify;
-    return Method<ComPositions>(notify, kSetNotificationPositions)(notify, 2, positions);
+    return sound::Method<ComPositions>(notify, kSetNotificationPositions)(notify, 2, positions);
 }
 
 // original 0x5A6E60: the streaming buffer: 44,100 Hz 16-bit stereo PCM,
@@ -891,23 +891,23 @@ extern "C" long __cdecl Music_SetNotify(void* buffer) {
 extern "C" void* __cdecl Music_CreateBuffer(void) {
     std::memset(Snd_BufferDesc, 0, 0x24);
     void* const device = Snd_Device;
-    const std::uint32_t format = Address(Snd_WaveFormat);
-    SetWord(format + 0x00, 1);          // WAVE_FORMAT_PCM
-    SetWord(format + 0x02, 2);
-    SetDword(format + 0x04, 0xAC44);    // 44,100
-    SetDword(format + 0x08, 0x2B110);   // bytes a second
-    SetWord(format + 0x0C, 4);
-    SetWord(format + 0x0E, 0x10);
-    SetWord(format + 0x10, 0);
-    const std::uint32_t desc = Address(Snd_BufferDesc);
-    SetDword(desc + 0x00, 0x24);
-    SetDword(desc + 0x04, 0x181E0);
-    SetDword(desc + 0x08, 2 * kHalf);
-    SetDword(desc + 0x10, format);
+    const std::uint32_t format = sound::Address(Snd_WaveFormat);
+    sound::SetWord(format + 0x00, 1);          // WAVE_FORMAT_PCM
+    sound::SetWord(format + 0x02, 2);
+    sound::SetDword(format + 0x04, 0xAC44);    // 44,100
+    sound::SetDword(format + 0x08, 0x2B110);   // bytes a second
+    sound::SetWord(format + 0x0C, 4);
+    sound::SetWord(format + 0x0E, 0x10);
+    sound::SetWord(format + 0x10, 0);
+    const std::uint32_t desc = sound::Address(Snd_BufferDesc);
+    sound::SetDword(desc + 0x00, 0x24);
+    sound::SetDword(desc + 0x04, 0x181E0);
+    sound::SetDword(desc + 0x08, 2 * kHalf);
+    sound::SetDword(desc + 0x10, format);
     void* buffer = nullptr;
-    if (Method<ComCreate>(device, kCreateSoundBuffer)(device, Snd_BufferDesc, &buffer, nullptr) != 0) return nullptr;
-    g.music_decode(Music_Staging, kHalf);
-    g.sndbuf_write(buffer, Music_Staging, 0, kHalf);
+    if (sound::Method<ComCreate>(device, kCreateSoundBuffer)(device, Snd_BufferDesc, &buffer, nullptr) != 0) return nullptr;
+    sound::g.music_decode(Music_Staging, kHalf);
+    sound::g.sndbuf_write(buffer, Music_Staging, 0, kHalf);
     return buffer;
 }
 
@@ -926,7 +926,7 @@ extern "C" void __cdecl Music_Decode(unsigned char* dst, int size) {
         music_seq::Decode(dst, size);
         return;
     }
-    std::uint32_t decoder = Address(Music_Decoder);
+    std::uint32_t decoder = sound::Address(Music_Decoder);
     std::uint32_t filled = 0;
     if (!decoder) return;
     if (sound::g_loop.row) {  // a measured loop (music_loops.h); everything else as the original
@@ -934,17 +934,17 @@ extern "C" void __cdecl Music_Decode(unsigned char* dst, int size) {
         return;
     }
     for (;;) {
-        const int result = g.mp3_decode(At(decoder), At(filled + Address(dst)));
-        decoder = Address(Music_Decoder);
-        filled += Dword(Dword(decoder + 0x14) + 8);
+        const int result = sound::g.mp3_decode(sound::At(decoder), sound::At(filled + sound::Address(dst)));
+        decoder = sound::Address(Music_Decoder);
+        filled += sound::Dword(sound::Dword(decoder + 0x14) + 8);
         if (result == kEndOfStream) {
             if (!Music_Loops) {
-                std::memset(At(Address(dst) + filled), 0, static_cast<std::uint32_t>(size) - filled);
+                std::memset(sound::At(sound::Address(dst) + filled), 0, static_cast<std::uint32_t>(size) - filled);
                 Music_Finished = 1;
                 return;
             }
-            g.mp3_seek(At(decoder), 0);
-            decoder = Address(Music_Decoder);
+            sound::g.mp3_seek(sound::At(decoder), 0);
+            decoder = sound::Address(Music_Decoder);
         }
         if (static_cast<std::int32_t>(filled) >= size) return;
     }
@@ -964,7 +964,7 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
     void* const buffer = Music_Buffer;
     if (!buffer) return;
     if (music_seq::Active()) {  // DIV-0087
-        Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
+        sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
         return;
     }
     std::int64_t level;
@@ -985,7 +985,7 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
         : [volume] "m"(volume), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
           [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
         : "eax", "st");
-    Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
+    sound::Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
 }
 
 // original 0x5A7050: stops the music buffer if it is playing.
@@ -999,7 +999,7 @@ extern "C" void __cdecl Music_Stop(void) {
     if (!buffer) return;
     if (!Playing(buffer, 0)) return;
     void* const playing = Music_Buffer;
-    Method<ComCall>(playing, kStop)(playing);
+    sound::Method<sound::ComCall>(playing, kStop)(playing);
 }
 
 // original 0x5A70A0: everything the music stream holds let go: the buffer
@@ -1014,28 +1014,28 @@ extern "C" void __cdecl Music_Release(void) {
     if (buffer) {
         if (Playing(buffer, 0)) {
             void* const playing = Music_Buffer;
-            Method<ComCall>(playing, kStop)(playing);
+            sound::Method<sound::ComCall>(playing, kStop)(playing);
         }
         void* const releasing = Music_Buffer;
-        Method<ComCall>(releasing, kRelease)(releasing);
+        sound::Method<sound::ComCall>(releasing, sound::kRelease)(releasing);
         Music_Buffer = nullptr;
     }
     void* const data = Music_Data;
     if (data) {
-        g.free(data);
+        sound::g.free(data);
         Music_Data = nullptr;
     }
     void* const notify = Music_Notify;
     if (notify) {
-        Method<ComCall>(notify, kRelease)(notify);
+        sound::Method<sound::ComCall>(notify, sound::kRelease)(notify);
         void* const first = Music_Events[0];
         Music_Notify = nullptr;
-        g.close_handle(first);
-        g.close_handle(Music_Events[1]);
+        sound::g.close_handle(first);
+        sound::g.close_handle(Music_Events[1]);
     }
     void* const decoder = Music_Decoder;
     if (decoder) {
-        g.mp3_destroy(decoder);
+        sound::g.mp3_destroy(decoder);
         Music_Decoder = nullptr;
     }
     music_seq::Release();  // DIV-0087: the synth stopped, its bank kept
@@ -1052,23 +1052,23 @@ extern "C" void __cdecl Music_Release(void) {
 extern "C" void __cdecl Music_Pump(void) {
     if ((!Music_Decoder && !music_seq::Active()) || !Music_Buffer) return;
 #if defined(__i386__)
-    const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+    const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
 #else
     // MsgWaitForMultipleObjects reads a native HANDLE array, 8 bytes an entry
     // on x86-64; Music_Events is two 32-bit image slots. Handed on as they
     // stand, the wait read one merged handle and the word after them, failed
     // every frame, and the ring was never refilled after its first half.
     void* const events[2] = {Music_Events[0], Music_Events[1]};
-    const unsigned signalled = g.msg_wait(2, events, 0, 0, 0xFF);
+    const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
 #endif
     if (signalled >= 2) return;
     if (Music_Finished) {
-        g.music_stop();
+        sound::g.music_stop();
         Music_Finished = 0;
         return;
     }
-    g.music_decode(Music_Staging, kHalf);
-    g.sndbuf_write(Music_Buffer, Music_Staging, signalled != 0 ? 0 : kHalf, kHalf);
+    sound::g.music_decode(Music_Staging, kHalf);
+    sound::g.sndbuf_write(Music_Buffer, Music_Staging, signalled != 0 ? 0 : kHalf, kHalf);
     sound::g_ring.half_base[signalled != 0 ? 0 : 1] = sound::g_ring.written;  // DIV-0092's resume: the ring's bookkeeping
     sound::g_ring.written += kHalfSamples;
 }
