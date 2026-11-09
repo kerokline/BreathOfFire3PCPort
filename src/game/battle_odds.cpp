@@ -61,8 +61,7 @@ U Long(const unsigned char* p) {
     return v;
 }
 
-U SpriteCurrent() { return Long(AtBattleOdds(at::Sprite_CurrentAt())); }
-unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
+U SpriteCurrent() { return Long(AtBattleOdds(battle_odds::at::Sprite_CurrentAt())); }
 
 }  // namespace
 
@@ -74,69 +73,6 @@ unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
 // Each runs on Sprite_Current, an effect object: +1 its state (the host's
 // table index), +2 a second counter, +9 a countdown, +0xA a tint record,
 // +0xB a byte the waits test.
-
-// original 0x4AEE90 (PSX 0x800C2120): `jmp BattleTask_FreeCurrent` - the state
-// that ends an effect, the running battle task's slot freed. 31 host tables in
-// .text and one .data slot (0x64D474) hold it. eax the callee's.
-extern "C" unsigned long __cdecl BattleFx_FreeTask(void) { return g.free_task(); }
-
-// original 0x4B1E70: the countdown +9 stepped (a byte); at 0 the acting
-// actor's object (kActorObject, read before the countdown) loses its tints
-// (Sprite_ReleaseTint) and gets a new one, Sprite_SetTint(object, 0, 0, 0, 1),
-// whose index (al) becomes +0xA; then +9 = 8 and the next state. Sprite_Current
-// is read again for each store. eax is Sprite_Current as last read.
-extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
-    const U object = BattleOdds_ActorObject;
-    unsigned char* s = Sprite();
-    s[9] = static_cast<unsigned char>(s[9] - 1);
-    s = Sprite();
-    if (s[9] != 0) return Low32(s);
-    g.release_tint(object);
-    const U index = g.set_tint(object, 0, 0, 0, 1);
-    Sprite()[0xA] = static_cast<unsigned char>(index);
-    Sprite()[9] = 8;
-    s = Sprite();
-    s[1] = static_cast<unsigned char>(s[1] + 1);
-    return Low32(s);
-}
-
-// original 0x4B1ED0: the red, green and blue bytes (+2, +3, +4) of tint record
-// +0xA of MoveScript_TintRecords (12 bytes each, the index read again for
-// each; no bound) stepped up by one; then the countdown +9 down, and at 0 the
-// next state. Sprite_Current is read once for all of that and once more for
-// the test. eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_Brighten(void) {
-    unsigned char* const s = Sprite();
-    for (U k = 2; k <= 4; ++k) {
-        unsigned char* const c = AtBattleOdds(at::TintRecordsAt() + s[0xA] * 12u + k);
-        c[0] = static_cast<unsigned char>(c[0] + 1);
-    }
-    s[9] = static_cast<unsigned char>(s[9] - 1);
-    unsigned char* const t = Sprite();
-    if (t[9] == 0) t[1] = static_cast<unsigned char>(t[1] + 1);
-    return Low32(t);
-}
-
-// original 0x4ED5C0: +9 = BattleActor_FxSize() (al; Sprite_Current read after
-// the call), then +2 stepped (read again). eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_SetSize(void) {
-    const U size = g.fx_size();
-    Sprite()[9] = static_cast<unsigned char>(size);
-    unsigned char* const s = Sprite();
-    s[2] = static_cast<unsigned char>(s[2] + 1);
-    return Low32(s);
-}
-
-// original 0x4EE8A0: once +0xB is 4 or below (unsigned), +9 = 8 and the next
-// state. eax Sprite_Current.
-extern "C" unsigned long __cdecl BattleFx_WaitStep4(void) {
-    unsigned char* s = Sprite();
-    if (s[0xB] > 4) return Low32(s);
-    s[9] = 8;
-    s = Sprite();
-    s[1] = static_cast<unsigned char>(s[1] + 1);
-    return Low32(s);
-}
 
 // original 0x4F7350: once +0xB is 0 - Battle_SetTargetFlag40(the byte
 // kFlagTarget; pushed in ecx, whose upper bits are the entry's, and the callee
@@ -152,10 +88,5 @@ extern "C" unsigned long __cdecl BattleFx_Finish(void) {
 
 void BattleOdds_Inject() {
     if (bof3::WantsShadow("battle_odds")) battle_odds::SelfTest();
-    BOF3_INJECT(BattleFx_FreeTask);
-    BOF3_INJECT(BattleFx_TintActor);
-    BOF3_INJECT(BattleFx_Brighten);
-    BOF3_INJECT(BattleFx_SetSize);
-    BOF3_INJECT(BattleFx_WaitStep4);
     BOF3_INJECT(BattleFx_Finish);
 }

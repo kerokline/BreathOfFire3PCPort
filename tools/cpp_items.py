@@ -624,7 +624,20 @@ class FileItems:
         it.c_linkage = it.linkage or (len(ts) > 1 and ts[0].text == "extern" and ts[1].text == '"C"')
         depth = 0
         name = None
+        skip = 0
+        if ts and ts[0].text == "template":   # the template header's own parentheses are not the name's
+            angle = 0
+            for skip, t in enumerate(ts):
+                if t.text == "<":
+                    angle += 1
+                elif t.text in (">", ">>"):
+                    angle -= len(t.text)
+                    if angle <= 0:
+                        skip += 1
+                        break
         for k, t in enumerate(ts):
+            if k < skip:
+                continue
             if t.text == "(":
                 if depth == 0 and k > 0 and ts[k - 1].kind == "id" and ts[k - 1].text not in SPECIAL_CALLS:
                     name = ts[k - 1].text

@@ -49,7 +49,6 @@
 
 namespace {
 
-
 namespace at = rest_3g::at;
 using U = std::uint32_t;
 using move_script::At;
@@ -558,34 +557,6 @@ extern "C" void __cdecl GameMode11_LookEnd(void) {
 // Quake's vertex lift (MapCell_DrawTexQuads, _DrawShadedQuads, _DrawSpinQuads)
 // ===========================================================================
 
-// original 0x4CF4B0 (cdecl; callers read ax): the vertex (x, z), each (v +
-// 0x4000) sar 6 less twice the heaved block's first column / row (0x695C2C /
-// 0x695C2E) - with Quake's facing bit 0 the axes swap: a from x, b from z;
-// without, a from z, b from x. Outside a 0..0x1F, b 0..0x1B: ax 0 (the upper
-// half a's). Else by the parities of a and b, from the lift table 0x695A2C
-// (index i = (a >> 1) * 15 + (b >> 1)): both even -(s8 [i+1] + s8 [i+0xF]) << 3;
-// b odd a even -(s8 [i+0x10] + s8 [i+1]) << 3; b even a odd -(s8 [i+0x10] + s8
-// [i+0xF]) << 3; both odd -s8 [i+0x10] << 4.
-extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
-    const U fx = SarRest3g(static_cast<U>(x) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeX) << 1);
-    const U fz = SarRest3g(static_cast<U>(z) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeY) << 1);
-    U a, b;   // eax and esi
-    if (MagicS23_QuakeFacing & 1) {
-        b = fz;
-        a = fx;
-    } else {
-        b = fx;
-        a = fz;
-    }
-    if (I(a) >= 0x20 || I(b) >= 0x1C || I(a) < 0 || I(b) < 0) return a & 0xFFFF0000u;
-    const U i = (SarRest3g(a, 1) * 15u) + SarRest3g(b, 1);
-    auto t = [&](U offset) { return static_cast<U>(S8Rest3g(At(::bof3::Img(at::kQuakeLast.v) + offset + i)[0])); };
-    if (((a | b) & 1) == 0) return (0u - (t(1) + t(0xF))) << 3;
-    if ((b & 1) != 0 && (a & 1) == 0) return (0u - (t(0x10) + t(1))) << 3;
-    if ((b & 1) == 0 && (a & 1) != 0) return (0u - (t(0x10) + t(0xF))) << 3;
-    return (0u - t(0x10)) << 4;
-}
-
 // ===========================================================================
 // Area 109's switch (Area_CellHooks' entry for area 0x6D)
 // ===========================================================================
@@ -1012,7 +983,6 @@ void Rest3G_Inject() {
     BOF3_INJECT(GameMode11_Frame);
     BOF3_INJECT(GameMode11_Look);
     BOF3_INJECT(GameMode11_LookEnd);
-    BOF3_INJECT(Quake_VertexLift);
     BOF3_INJECT(Area109_SwitchPattern);
     BOF3_INJECT(Area109_SwitchHook);
     BOF3_INJECT(EffectKind18Sub41_DrawPanels);
