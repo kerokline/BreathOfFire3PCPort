@@ -225,18 +225,18 @@ using namespace d3d_rest;
 // Gfx_DrawTpage read again; flat; a triangle list of 3.
 long D3d_DrawPolyF3(const unsigned char* prim) {
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
-    for (U i = 0; i < 3; ++i) {
-        unsigned char* out = Vertex(i);
-        PutPosition(out, prim + 8 + i * 0xC);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
+    d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::DrawMode(), &diffuse, nullptr);
+    for (d3d_rest::U i = 0; i < 3; ++i) {
+        unsigned char* out = d3d_rest::Vertex(i);
+        d3d_rest::PutPosition(out, prim + 8 + i * 0xC);
+        d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse));
     }
-    SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(0);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(1);   // flat
-    return DrawVertices(4, 3);   // TRIANGLELIST
+    d3d_rest::SetTexture(0, 0);
+    d3d_rest::g.ret_only(0);
+    d3d_rest::g.ret_only(0);
+    d3d_rest::g.set_blend(prim[7], d3d_rest::DrawMode());
+    d3d_rest::g.set_shade(1);   // flat
+    return d3d_rest::DrawVertices(4, 3);   // TRIANGLELIST
 }
 
 // 0x5A0A40, called only by D3d_FlattenFT3 (0x5A093A): the 4-bit texel at
@@ -249,16 +249,16 @@ long D3d_DrawPolyF3(const unsigned char* prim) {
 // - the converted palette - indexed by the nibble: a u16 when
 // Gfx_PixelFormat's bytes per texel (+3, read after the call) is 2, else a
 // dword.
-U D3d_PageTexel4(U clut, U page, U uv) {
-    U row = ((page & 0x10) << 4) + static_cast<U>(static_cast<std::int32_t>(uv) >> 8);
-    const U offset = ((row << 4) + (page & 0xF)) << 7;
-    const U column = static_cast<U>(static_cast<std::int32_t>(uv) >> 1) & 0x7F;
-    const U texels = At(::bof3::Img(Gfx_VramShadow_addr) + offset + column)[0];
-    const U shift = (static_cast<U>(~uv) & 1) << 2;
-    const U index = (texels >> shift) & 0xF;
-    const unsigned char* palette = static_cast<const unsigned char*>(g.clut_pixels(clut));
-    if (At(::bof3::Img(Gfx_PixelFormat_addr) + 3)[0] == 2) return Word(palette + index * 2);
-    return Long(palette + index * 4);
+d3d_rest::U D3d_PageTexel4(d3d_rest::U clut, d3d_rest::U page, d3d_rest::U uv) {
+    d3d_rest::U row = ((page & 0x10) << 4) + static_cast<d3d_rest::U>(static_cast<std::int32_t>(uv) >> 8);
+    const d3d_rest::U offset = ((row << 4) + (page & 0xF)) << 7;
+    const d3d_rest::U column = static_cast<d3d_rest::U>(static_cast<std::int32_t>(uv) >> 1) & 0x7F;
+    const d3d_rest::U texels = d3d_rest::At(::bof3::Img(Gfx_VramShadow_addr) + offset + column)[0];
+    const d3d_rest::U shift = (static_cast<d3d_rest::U>(~uv) & 1) << 2;
+    const d3d_rest::U index = (texels >> shift) & 0xF;
+    const unsigned char* palette = static_cast<const unsigned char*>(d3d_rest::g.clut_pixels(clut));
+    if (d3d_rest::At(::bof3::Img(Gfx_PixelFormat_addr) + 3)[0] == 2) return d3d_rest::Word(palette + index * 2);
+    return d3d_rest::Long(palette + index * 4);
 }
 
 // 0x5A0910, called only by D3d_DrawPolyFT3 (0x59FDCB) when the three corners'
@@ -273,20 +273,20 @@ U D3d_PageTexel4(U clut, U page, U uv) {
 // read before the one before it is stored - and the code's bit 2 (textured)
 // cleared. The primitive itself changes: drawn again without being rebuilt it
 // is a POLY_F3 (code 0x20) of the modulated colour.
-void D3d_FlattenFT3(unsigned char* prim, U uv) {
-    const U pixel = D3d_PageTexel4(Word(prim + 0xE), Word(prim + 0x16), uv & 0xFFFF);
-    const unsigned char* format = At(::bof3::Img(Gfx_PixelFormat_addr));
-    const U green = ((Long(format + 0x14) & pixel) << (Long(format + 0x8) & 31)) >> 16;
-    const U blue = ((Long(format + 0x18) & pixel) << (Long(format + 0xC) & 31)) >> 16;
-    const U red = ((Long(format + 0x10) & pixel) << (Long(format + 0x4) & 31)) >> 16;
-    const float k = FloatAt(kModulate);
-    U r = X87RedFtol(red, prim[4], k);
+void D3d_FlattenFT3(unsigned char* prim, d3d_rest::U uv) {
+    const d3d_rest::U pixel = D3d_PageTexel4(d3d_rest::Word(prim + 0xE), d3d_rest::Word(prim + 0x16), uv & 0xFFFF);
+    const unsigned char* format = d3d_rest::At(::bof3::Img(Gfx_PixelFormat_addr));
+    const d3d_rest::U green = ((d3d_rest::Long(format + 0x14) & pixel) << (d3d_rest::Long(format + 0x8) & 31)) >> 16;
+    const d3d_rest::U blue = ((d3d_rest::Long(format + 0x18) & pixel) << (d3d_rest::Long(format + 0xC) & 31)) >> 16;
+    const d3d_rest::U red = ((d3d_rest::Long(format + 0x10) & pixel) << (d3d_rest::Long(format + 0x4) & 31)) >> 16;
+    const float k = d3d_rest::FloatAt(kModulate);
+    d3d_rest::U r = X87RedFtol(red, prim[4], k);
     if (r > 0xFF) r = 0xFF;
-    const U gg = prim[5];
+    const d3d_rest::U gg = prim[5];
     prim[4] = static_cast<unsigned char>(r);
-    U v = X87FimulFtol(static_cast<std::int32_t>(gg), k, static_cast<std::int32_t>(green));
+    d3d_rest::U v = X87FimulFtol(static_cast<std::int32_t>(gg), k, static_cast<std::int32_t>(green));
     if (v > 0xFF) v = 0xFF;
-    const U b = prim[6];
+    const d3d_rest::U b = prim[6];
     prim[5] = static_cast<unsigned char>(v);
     v = X87FimulFtol(static_cast<std::int32_t>(b), k, static_cast<std::int32_t>(blue));
     if (v > 0xFF) v = 0xFF;
@@ -306,31 +306,31 @@ void D3d_FlattenFT3(unsigned char* prim, U uv) {
 // call.
 long D3d_DrawPolyFT3(unsigned char* prim) {
     bool flattened = false;
-    const U uv = Word(prim + 0x14);
-    if (uv == Word(prim + 0x24) && uv == Word(prim + 0x34)) {
+    const d3d_rest::U uv = d3d_rest::Word(prim + 0x14);
+    if (uv == d3d_rest::Word(prim + 0x24) && uv == d3d_rest::Word(prim + 0x34)) {
         D3d_FlattenFT3(prim, uv);
         flattened = true;
     }
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Word(prim + 0x26), &diffuse, &specular);
-    for (U i = 0; i < 3; ++i) {
-        unsigned char* out = Vertex(i);
-        PutPosition(out, prim + 8 + i * 0x10);
-        PutLong(out + 0x10, static_cast<U>(diffuse));
-        PutLong(out + 0x14, static_cast<U>(specular));
+    d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::Word(prim + 0x26), &diffuse, &specular);
+    for (d3d_rest::U i = 0; i < 3; ++i) {
+        unsigned char* out = d3d_rest::Vertex(i);
+        d3d_rest::PutPosition(out, prim + 8 + i * 0x10);
+        d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse));
+        d3d_rest::PutLong(out + 0x14, static_cast<d3d_rest::U>(specular));
     }
-    PutLong(Vertex(3) + 8, 0);
+    d3d_rest::PutLong(d3d_rest::Vertex(3) + 8, 0);
     if (flattened) {
-        SetTexture(0, 0);
+        d3d_rest::SetTexture(0, 0);
     } else {
-        for (U i = 0; i < 3; ++i) PutTexel(Vertex(i), prim + 0x14 + i * 0x10);
-        g.bind_texture(Word(prim + 0x26), Word(prim + 0x16));
+        for (d3d_rest::U i = 0; i < 3; ++i) d3d_rest::PutTexel(d3d_rest::Vertex(i), prim + 0x14 + i * 0x10);
+        d3d_rest::g.bind_texture(d3d_rest::Word(prim + 0x26), d3d_rest::Word(prim + 0x16));
     }
-    g.ret_only(Word(prim + 0x26) & 0x400);
-    g.ret_only(Word(prim + 0x26) & 0x800);
-    g.set_blend(prim[7], Word(prim + 0x26));
-    g.set_shade(1);   // flat
-    return DrawVertices(4, 3);   // TRIANGLELIST
+    d3d_rest::g.ret_only(d3d_rest::Word(prim + 0x26) & 0x400);
+    d3d_rest::g.ret_only(d3d_rest::Word(prim + 0x26) & 0x800);
+    d3d_rest::g.set_blend(prim[7], d3d_rest::Word(prim + 0x26));
+    d3d_rest::g.set_shade(1);   // flat
+    return d3d_rest::DrawVertices(4, 3);   // TRIANGLELIST
 }
 
 // 0x5A1050, table entry 5 (code 0x34, called at 0x59F0F0): a textured Gouraud
@@ -342,24 +342,24 @@ long D3d_DrawPolyFT3(unsigned char* prim) {
 // Gouraud; a triangle list of 3.
 long D3d_DrawPolyGT3(const unsigned char* prim) {
     unsigned long diffuse[3], specular[3];
-    for (U i = 0; i < 3; ++i) {
+    for (d3d_rest::U i = 0; i < 3; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x14;
-        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], Word(prim + 0x2A), &diffuse[i], &specular[i]);
+        d3d_rest::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_rest::Word(prim + 0x2A), &diffuse[i], &specular[i]);
     }
-    for (U i = 0; i < 3; ++i) {
-        unsigned char* out = Vertex(i);
+    for (d3d_rest::U i = 0; i < 3; ++i) {
+        unsigned char* out = d3d_rest::Vertex(i);
         const unsigned char* in = prim + 8 + i * 0x14;
-        PutPosition(out, in);
-        PutLong(out + 0x10, static_cast<U>(diffuse[i]));
-        PutLong(out + 0x14, static_cast<U>(specular[i]));
-        PutTexel(out, in + 0xC);
+        d3d_rest::PutPosition(out, in);
+        d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse[i]));
+        d3d_rest::PutLong(out + 0x14, static_cast<d3d_rest::U>(specular[i]));
+        d3d_rest::PutTexel(out, in + 0xC);
     }
-    g.bind_texture(Word(prim + 0x2A), Word(prim + 0x16));
-    g.ret_only(0);
-    g.ret_only(0);
-    g.set_blend(prim[7], Word(prim + 0x2A));
-    g.set_shade(2);   // Gouraud
-    return DrawVertices(4, 3);   // TRIANGLELIST
+    d3d_rest::g.bind_texture(d3d_rest::Word(prim + 0x2A), d3d_rest::Word(prim + 0x16));
+    d3d_rest::g.ret_only(0);
+    d3d_rest::g.ret_only(0);
+    d3d_rest::g.set_blend(prim[7], d3d_rest::Word(prim + 0x2A));
+    d3d_rest::g.set_shade(2);   // Gouraud
+    return d3d_rest::DrawVertices(4, 3);   // TRIANGLELIST
 }
 
 // 0x5A1EA0, table entry 13 (code 0x5C, called at 0x59F160): a Gouraud
@@ -370,21 +370,21 @@ long D3d_DrawPolyGT3(const unsigned char* prim) {
 // blend; Gouraud; a line strip of 4.
 long D3d_DrawLineG4(const unsigned char* prim) {
     unsigned long diffuse[4];
-    for (U i = 0; i < 4; ++i) {
+    for (d3d_rest::U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x10;
-        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawMode(), &diffuse[i], nullptr);
+        d3d_rest::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], d3d_rest::DrawMode(), &diffuse[i], nullptr);
     }
-    for (U i = 0; i < 4; ++i) {
-        unsigned char* out = Vertex(i);
-        PutPosition(out, prim + 8 + i * 0x10);
-        PutLong(out + 0x10, static_cast<U>(diffuse[i]));
+    for (d3d_rest::U i = 0; i < 4; ++i) {
+        unsigned char* out = d3d_rest::Vertex(i);
+        d3d_rest::PutPosition(out, prim + 8 + i * 0x10);
+        d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse[i]));
     }
-    SetTexture(0, 0);
-    g.ret_only(0);
-    g.ret_only(1);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(2);   // Gouraud
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(4) : DrawVertices(3, 4);   // LINESTRIP; DIV-0079 the quads
+    d3d_rest::SetTexture(0, 0);
+    d3d_rest::g.ret_only(0);
+    d3d_rest::g.ret_only(1);
+    d3d_rest::g.set_blend(prim[7], d3d_rest::DrawMode());
+    d3d_rest::g.set_shade(2);   // Gouraud
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(4) : d3d_rest::DrawVertices(3, 4);   // LINESTRIP; DIV-0079 the quads
 }
 
 // 0x5A2220, table entry 16 (code 0x68, called at 0x59F17C): a one-pixel tile,
@@ -402,39 +402,39 @@ long D3d_DrawLineG4(const unsigned char* prim) {
 unsigned char g_tile1_quad = 0;
 long D3d_DrawTile1(const unsigned char* prim) {
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
+    d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::DrawMode(), &diffuse, nullptr);
     if (g_tile1_quad != 0) {
-        const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
-        const float left = X87Mul(D3d_ScaleX, x);
-        const float top = X87Mul(D3d_ScaleY, y);
-        const float right = X87Mul(D3d_ScaleX, x + 1.0f);
-        const float bottom = X87Mul(D3d_ScaleY, y + 1.0f);
-        const float rhw = X87Div(FloatAt(kRhwNumerator), z);
+        const float x = d3d_rest::Float(prim + 8), y = d3d_rest::Float(prim + 0xC), z = d3d_rest::Float(prim + 0x10);
+        const float left = d3d_rest::X87Mul(D3d_ScaleX, x);
+        const float top = d3d_rest::X87Mul(D3d_ScaleY, y);
+        const float right = d3d_rest::X87Mul(D3d_ScaleX, x + 1.0f);
+        const float bottom = d3d_rest::X87Mul(D3d_ScaleY, y + 1.0f);
+        const float rhw = d3d_rest::X87Div(d3d_rest::FloatAt(d3d_rest::kRhwNumerator), z);
         const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
-        for (U i = 0; i < 4; ++i) {
-            unsigned char* out = Vertex(i);
-            PutFloat(out + 0x00, xs[i]);
-            PutFloat(out + 0x04, ys[i]);
-            PutLong(out + 0x08, Long(prim + 0x10));
-            PutFloat(out + 0x0C, rhw);
-            PutLong(out + 0x10, static_cast<U>(diffuse));
+        for (d3d_rest::U i = 0; i < 4; ++i) {
+            unsigned char* out = d3d_rest::Vertex(i);
+            d3d_rest::PutFloat(out + 0x00, xs[i]);
+            d3d_rest::PutFloat(out + 0x04, ys[i]);
+            d3d_rest::PutLong(out + 0x08, d3d_rest::Long(prim + 0x10));
+            d3d_rest::PutFloat(out + 0x0C, rhw);
+            d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse));
         }
-        SetTexture(0, 0);
-        g.ret_only(1);
-        g.ret_only(1);
-        g.set_blend(prim[7], DrawMode());
-        g.set_shade(1);
-        return DrawVertices(5, 4);   // TRIANGLESTRIP
+        d3d_rest::SetTexture(0, 0);
+        d3d_rest::g.ret_only(1);
+        d3d_rest::g.ret_only(1);
+        d3d_rest::g.set_blend(prim[7], d3d_rest::DrawMode());
+        d3d_rest::g.set_shade(1);
+        return d3d_rest::DrawVertices(5, 4);   // TRIANGLESTRIP
     }
-    unsigned char* out = Vertex(0);
-    PutPosition(out, prim + 8);
-    PutLong(out + 0x10, static_cast<U>(diffuse));
-    SetTexture(0, 0);
-    g.ret_only(1);
-    g.ret_only(1);
-    g.set_blend(prim[7], DrawMode());
-    g.set_shade(1);
-    return DrawVertices(1, 1);   // POINTLIST
+    unsigned char* out = d3d_rest::Vertex(0);
+    d3d_rest::PutPosition(out, prim + 8);
+    d3d_rest::PutLong(out + 0x10, static_cast<d3d_rest::U>(diffuse));
+    d3d_rest::SetTexture(0, 0);
+    d3d_rest::g.ret_only(1);
+    d3d_rest::g.ret_only(1);
+    d3d_rest::g.set_blend(prim[7], d3d_rest::DrawMode());
+    d3d_rest::g.set_shade(1);
+    return d3d_rest::DrawVertices(1, 1);   // POINTLIST
 }
 
 // --- the walk's two other callees ----------------------------------------------
@@ -446,7 +446,7 @@ long D3d_DrawTile1(const unsigned char* prim) {
 // alpha alone - and the cache 0. The cache is read once, before the call, and
 // written after it. Nothing reads what it returns.
 void D3d_SetAlphaModulate(unsigned on) {
-    const U cache = D3d_AlphaOpCache;
+    const d3d_rest::U cache = D3d_AlphaOpCache;
     if (on != 0) {
         if (cache != 0) return;
         SetStageState(0, 4, 4);
@@ -483,47 +483,47 @@ void D3d_SetAlphaModulate(unsigned on) {
 // Display_Setup and the teardown reads the ready word or the texture.
 void D3d_AfterDraw() {
     if (Gfx_RenderFlags & 1) return;
-    if (Long(At(::bof3::Img(D3d_CaptureSurface_addr))) == 0) {
-        PutLong(At(::bof3::Img(D3dRest_CaptureScale_addr)), 0x3F800000); // 1.0
+    if (d3d_rest::Long(d3d_rest::At(::bof3::Img(D3d_CaptureSurface_addr))) == 0) {
+        d3d_rest::PutLong(d3d_rest::At(::bof3::Img(D3dRest_CaptureScale_addr)), 0x3F800000); // 1.0
         D3dRest_CaptureW = 0x140;
         D3dRest_CaptureH = 0xF0;
-        if (!g.create_plain(0x140, 0x140, reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
-        g.fit_size(Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexW.v))),
-                   reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexH.v))));
-        if (!g.create_texture(Long(At(::bof3::Img(kCaptureTexW.v))) & 0xFFFF, Word(At(::bof3::Img(kCaptureTexH.v))),
-                              reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureTexSurface_addr))),
-                              reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
+        if (!d3d_rest::g.create_plain(0x140, 0x140, reinterpret_cast<::bof3::Slot32<void>*>(d3d_rest::At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
+        d3d_rest::g.fit_size(d3d_rest::Long(d3d_rest::At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(d3d_rest::At(::bof3::Img(kCaptureTexW.v))),
+                   reinterpret_cast<unsigned*>(d3d_rest::At(::bof3::Img(kCaptureTexH.v))));
+        if (!d3d_rest::g.create_texture(d3d_rest::Long(d3d_rest::At(::bof3::Img(kCaptureTexW.v))) & 0xFFFF, d3d_rest::Word(d3d_rest::At(::bof3::Img(kCaptureTexH.v))),
+                              reinterpret_cast<::bof3::Slot32<void>*>(d3d_rest::At(::bof3::Img(D3d_CaptureTexSurface_addr))),
+                              reinterpret_cast<::bof3::Slot32<void>*>(d3d_rest::At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
             return;
-        const U width = Word(At(::bof3::Img(kCaptureTexW.v)));
+        const d3d_rest::U width = d3d_rest::Word(d3d_rest::At(::bof3::Img(kCaptureTexW.v)));
         if (width < 0x140) {
-            const U height = D3dRest_CaptureH;
+            const d3d_rest::U height = D3dRest_CaptureH;
             D3dRest_CaptureW = width;
-            PutFloat(At(::bof3::Img(D3dRest_CaptureScale_addr)), X87IntMul(static_cast<std::int32_t>(width), FloatAt(kPerColumn)));
+            d3d_rest::PutFloat(d3d_rest::At(::bof3::Img(D3dRest_CaptureScale_addr)), X87IntMul(static_cast<std::int32_t>(width), d3d_rest::FloatAt(kPerColumn)));
             D3dRest_CaptureH = X87IntMulFtol(static_cast<std::int32_t>(height), D3dRest_CaptureScale);
         }
     }
-    const U step_x = X87MulFtol(D3d_ScaleX, FloatAt(kFixedOne));
-    const U step_y = X87MulFtol(D3d_ScaleY, FloatAt(kFixedOne));
+    const d3d_rest::U step_x = X87MulFtol(D3d_ScaleX, d3d_rest::FloatAt(kFixedOne));
+    const d3d_rest::U step_y = X87MulFtol(D3d_ScaleY, d3d_rest::FloatAt(kFixedOne));
     alignas(4) unsigned char desc[0x7C];
-    g.init_desc(desc);
+    d3d_rest::g.init_desc(desc);
     if (Lock(SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr)), desc) != 0) return;
-    U out = Long(desc + 0x24);
+    d3d_rest::U out = d3d_rest::Long(desc + 0x24);
     if (Lock(SurfaceAt(::bof3::Img(DDraw_BackBuffer_addr)), desc) != 0) return;
     const bool narrow = D3dRest_ScreenBpp == 2;
-    const U from = Long(desc + 0x24);
-    U y = 0;
-    for (U row = 0; row < 0xF0; ++row) {
+    const d3d_rest::U from = d3d_rest::Long(desc + 0x24);
+    d3d_rest::U y = 0;
+    for (d3d_rest::U row = 0; row < 0xF0; ++row) {
         // sar, then imul: the low 32 bits, which an unsigned multiply gives too
-        const U line = static_cast<U>(static_cast<std::int32_t>(y) >> 16) * Long(desc + 0x10);
-        U x = 0;
-        for (U column = 0; column < 0x140; ++column) {
+        const d3d_rest::U line = static_cast<d3d_rest::U>(static_cast<std::int32_t>(y) >> 16) * d3d_rest::Long(desc + 0x10);
+        d3d_rest::U x = 0;
+        for (d3d_rest::U column = 0; column < 0x140; ++column) {
             if (narrow) {
-                const U at = ((x >> 15) & 0x1FFFE) + line;
-                std::memcpy(At(out), At(from + at), 2);
+                const d3d_rest::U at = ((x >> 15) & 0x1FFFE) + line;
+                std::memcpy(d3d_rest::At(out), d3d_rest::At(from + at), 2);
                 out += 2;
             } else {
-                const U at = ((x >> 14) & 0x3FFFC) + line;
-                std::memcpy(At(out), At(from + at), 4);
+                const d3d_rest::U at = ((x >> 14) & 0x3FFFC) + line;
+                std::memcpy(d3d_rest::At(out), d3d_rest::At(from + at), 4);
                 out += 4;
             }
             x += step_x;
@@ -532,11 +532,11 @@ void D3d_AfterDraw() {
     }
     Unlock(SurfaceAt(::bof3::Img(DDraw_BackBuffer_addr)));
     Unlock(SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr)));
-    const U dst_rect[4] = {0, 0, Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
-    const U src_rect[4] = {0, 0, 0x140, 0xF0};
+    const d3d_rest::U dst_rect[4] = {0, 0, d3d_rest::Long(d3d_rest::At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
+    const d3d_rest::U src_rect[4] = {0, 0, 0x140, 0xF0};
     void** source = SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr));
     void** texture = SurfaceAt(::bof3::Img(D3d_CaptureTexSurface_addr));
-    reinterpret_cast<Com6>(Method(texture, 0x14))(texture, Addr(dst_rect), Addr(source), Addr(src_rect), 0x1000000, 0);
+    reinterpret_cast<d3d_rest::Com6>(d3d_rest::Method(texture, 0x14))(texture, d3d_rest::Addr(dst_rect), d3d_rest::Addr(source), d3d_rest::Addr(src_rect), 0x1000000, 0);
     D3d_CaptureReady = 1;
 }
 
@@ -555,24 +555,24 @@ void D3d_AfterDraw() {
 // ours) reads.
 int Gfx_StoreImage(const short* rect, void* to) {
     const unsigned char* r = reinterpret_cast<const unsigned char*>(rect);
-    const U x = static_cast<U>(Short(r)), y = static_cast<U>(Short(r + 2));
-    U from = ::bof3::Img(Gfx_VramShadow_addr) + ((y << 10) + x) * 2;
-    const U bytes = static_cast<U>(Short(r + 4)) << 1;
-    if (Short(r + 6) <= 0) return static_cast<int>(bytes);
-    U dest = Addr(to);
+    const d3d_rest::U x = static_cast<d3d_rest::U>(d3d_rest::Short(r)), y = static_cast<d3d_rest::U>(d3d_rest::Short(r + 2));
+    d3d_rest::U from = ::bof3::Img(Gfx_VramShadow_addr) + ((y << 10) + x) * 2;
+    const d3d_rest::U bytes = static_cast<d3d_rest::U>(d3d_rest::Short(r + 4)) << 1;
+    if (d3d_rest::Short(r + 6) <= 0) return static_cast<int>(bytes);
+    d3d_rest::U dest = d3d_rest::Addr(to);
     std::int32_t i = 0;
     do {
-        U s = from, d = dest;
-        for (U n = bytes >> 2; n != 0; --n, s += 4, d += 4) {
-            U v;
-            std::memcpy(&v, At(s), 4);
-            std::memcpy(At(d), &v, 4);
+        d3d_rest::U s = from, d = dest;
+        for (d3d_rest::U n = bytes >> 2; n != 0; --n, s += 4, d += 4) {
+            d3d_rest::U v;
+            std::memcpy(&v, d3d_rest::At(s), 4);
+            std::memcpy(d3d_rest::At(d), &v, 4);
         }
-        for (U n = bytes & 3; n != 0; --n, ++s, ++d) At(d)[0] = At(s)[0];
+        for (d3d_rest::U n = bytes & 3; n != 0; --n, ++s, ++d) d3d_rest::At(d)[0] = d3d_rest::At(s)[0];
         from += 0x800;
         dest += bytes;
         ++i;
-    } while (i < Short(r + 6));
+    } while (i < d3d_rest::Short(r + 6));
     return static_cast<int>(bytes);
 }
 
