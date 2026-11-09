@@ -61,7 +61,7 @@ void SetW(U address, unsigned v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32BattleE5 S16BattleE5(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
-unsigned char* PartyBattleE5(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
+unsigned char* PartyBattleE5(unsigned member) { return move_script::At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + n * at::kEnemyStride); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
@@ -461,7 +461,7 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 // The message window's last line (0x93C2C4 + ((0x93C2A1 - 1) & 15) * 8),
 // the count read after the Msg_SystemPtr call that made the text.
 void ShowLine(const unsigned char* text) {
-    SetLong(At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32BattleE5>(Key(text)));
+    move_script::SetLong(move_script::At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32BattleE5>(Key(text)));
 }
 unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 void MarkMember() {
@@ -902,7 +902,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
             Sound(0x107);
         } else {
             const unsigned char col = BattleE1_Roster;
-            unsigned char* const flag = At(::bof3::Img(at::kGeneFlags.v) + col + 6u * row);
+            unsigned char* const flag = move_script::At(::bof3::Img(at::kGeneFlags.v) + col + 6u * row);
             if (*flag == 0) {
                 Sound(0x107);
                 return;
