@@ -36,12 +36,6 @@ void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 }  // namespace
 
-    SetFloat(quad + 0x8, left);
-    SetDword(quad + 0xC, 0);
-    SetFloat(quad + 0x18, right);
-    SetDword(quad + 0x1C, 0);
-    SetFloat(quad + 0x28, left);
-
 void AreaBackdrop_Inject() {
     if (bof3::WantsShadow("area_backdrop")) area_backdrop::SelfTest();
 }
