@@ -914,9 +914,10 @@ def main() -> int:
         if len(e["namespaces"]) > 1:
             # named from file scope (a moved function, a file-scope local): a use inside namespace X
             # finds X's own name first. Only names written bare count: `X::name` is not ambiguous
-            # (the qualification pass, docs/source-layout-round.md 7b item 11)
-            used = set().union(*(it.uses_unq for _, _, it, _ in e["funcs"]),
-                               *(it.uses_unq for _, it, _ in e["locals"] if not any(it.ns)))
+            # (the qualification pass, docs/source-layout-round.md 7b item 11); nor is a name the body
+            # declares itself (a local `g`, a parameter, a struct member), which hides the namespaces'
+            used = set().union(*(it.uses_unq - it.declares for _, _, it, _ in e["funcs"]),
+                               *(it.uses_unq - it.declares for _, it, _ in e["locals"] if not any(it.ns)))
             providers: dict[str, list[str]] = defaultdict(list)
             for x, names in sorted(e["namespaces"].items()):
                 for n in names & used:
@@ -930,7 +931,7 @@ def main() -> int:
                 if len(xs) > 1 and None not in bodies and len(bodies) == 1:
                     continue
                 if len(xs) > 1:
-                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq})
+                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq - it.declares})
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
                                     f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
                                     f"qualify it first")

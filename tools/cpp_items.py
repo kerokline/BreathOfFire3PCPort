@@ -183,6 +183,7 @@ class Item:
     names: list[str] = field(default_factory=list)
     uses: set[str] = field(default_factory=set)
     uses_unq: set[str] = field(default_factory=set)   # uses named unqualified (`At`, not `move_script::At`)
+    declares: set[str] = field(default_factory=set)   # names the text declares itself (a local, parameter or member)
     ns: tuple[str, ...] = ()      # enclosing namespaces ('' = anonymous)
     linkage: bool = False         # inside an extern "C" { } block
     pragmas: tuple[str, ...] = () # the #pragma clang attribute push texts in force
@@ -560,6 +561,42 @@ class FileItems:
                 return False
         return has_paren
 
+    DECL_END = {"=", ";", ",", ")", "[", "{", ":"}
+    DECL_NOT_TYPE = {"return", "case", "goto", "sizeof", "else", "throw", "new", "delete", "operator"}
+
+    def _declares(self, i0: int, i1: int) -> set[str]:
+        """Identifiers the tokens declare: `T name` followed by `= ; , ) [ { :`, where T is an identifier
+        that is no keyword of statement kind, or `*` / `&` / `&&`; and the further declarators of one
+        declaration (`float r, g, b;`). A heuristic: a wrong guess hides a real ambiguity, which the
+        build then reports; a missed one keeps a false ambiguity line."""
+        ts = [t for t in self.toks[i0:i1 + 1] if t.kind not in ("comment", "pp")]
+        out = set()
+        for k in range(1, len(ts) - 1):
+            t, prev, nxt = ts[k], ts[k - 1], ts[k + 1]
+            if t.kind != "id" or t.text in KEYWORDS or nxt.text not in self.DECL_END:
+                continue
+            if (prev.kind == "id" and prev.text not in self.DECL_NOT_TYPE) or prev.text in ("*", "&", "&&"):
+                out.add(t.text)
+                # the declarator list: `, name` up to the `;`, each declarator's initializer skipped at
+                # bracket depth 0 (`const unsigned r = F(0), g = F(5), b;`)
+                j = k + 1
+                while j < len(ts) and ts[j].text not in (";", "{", ")"):
+                    depth = 0
+                    while j < len(ts) and (depth or ts[j].text not in (",", ";", "{")):
+                        if ts[j].text in ("(", "["):
+                            depth += 1
+                        elif ts[j].text in (")", "]"):
+                            if depth == 0:
+                                break
+                            depth -= 1
+                        j += 1
+                    if j >= len(ts) or ts[j].text != ",":
+                        break
+                    if j + 2 < len(ts) and ts[j + 1].kind == "id" and ts[j + 2].text in (",", ";", "=", "[", "{"):
+                        out.add(ts[j + 1].text)
+                    j += 1
+        return out
+
     def _uses(self, i0: int, i1: int, qualified: bool = True) -> set[str]:
         """The identifiers the tokens name. With qualified=False, only those written bare: a
         `sound::Helper` is a use of Helper for reachability, not for the ambiguity test."""
@@ -603,6 +640,7 @@ class FileItems:
         it.names = [name]
         it.uses = self._uses(i0, close) - {name}
         it.uses_unq = self._uses(i0, close, qualified=False) - {name}
+        it.declares = self._declares(i0, close) - {name}
 
     def _decl(self, out: list[Item], i0: int, semi: int, ns, linkage) -> None:
         ts = self._significant(i0, semi)
@@ -692,6 +730,7 @@ class FileItems:
                 break
         it.uses = self._uses(i0, semi) - set(names)
         it.uses_unq = self._uses(i0, semi, qualified=False) - set(names)
+        it.declares = self._declares(i0, semi) - set(names)
         out.append(it)
 
     def _is_prototype(self, ts: list[Tok]) -> bool:
