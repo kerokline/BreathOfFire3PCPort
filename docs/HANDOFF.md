@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on `source-layout/stage-b` (main 7f215457 merged in, the mover refuses nothing, the move map written, the ten-route state-hash proof passed 2026-11-09); the moves B1..B5 start in a fresh session, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on `source-layout/stage-b` (main 7f215457 merged in, the mover refuses nothing, the move map written, the ten-route state-hash proof passed 2026-11-09); stage B's moves done 2026-11-09 on `source-layout/stage-b` 2ee99f2a, stage C next, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -361,80 +361,49 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **After this round:** IDEAS I53 (the wide image, one struct at a time, gated by the hash) and I5's
    translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
-14b. **The source-layout round: stage A in `main` (PR #207), stage B0 run 2026-11-08 on `source-layout/stage-b`**
-   (off `main` `67c3259b`, `main` merged back in after the beta's cut; root `C:\Users\kerok\bof3x-runs\slb1108`,
-   its `base` the gate's baseline, reports in `reports\`; [`source-layout-round.md`](source-layout-round.md)
-   section 4 "Stage B0 as run", the owner's calls in 7b). Done there: the generated source list adopted; the
-   468 helper clashes renamed (stem-suffix names, 457 rows in `analysis/tu_renames.tsv`, `tu_renames.py --check`
-   0 problems; `move_funcs.py --check` reports no clash); `codegen_same.py --exceptions` with 39 `low32-site`
-   rows (the 64-bit `Low32()` names its caller), the source-root placeholder (a worktree's `__FILE__` path read
-   as 8,870 differences before), `PROMOTED`, the macro-made functions in the mover; group s's 135 state and
-   global decisions, applied where the code stays identical (23 declarations, 39 promotions, 1 seam) and 62
-   blocked with their first difference; both self-test suites pass; 35 PlayStation twin claims re-pointed to
-   their own overlay (`symbols.toml`). **The sheet is decided** (7b item 9, 2026-11-08 evening and night):
-   stand-alone units confirmed, one-area and one-function-unit joins stand, bosses one file per unit, same-names
-   joins stand except across a PlayStation back-order seam (`battle_4`/`battle_5`, `gpu`/`gpu_2` stand alone),
-   the six neighbour pairs the PlayStation held in one unit joined by the owner's table `analysis/tu_joins.tsv`
-   (bone_dance, field_6/7, area_map/kind_2); `analysis/tu_layout_sheet.md` has 659 units in 612 files, its
-   first table the 67 PSX-flag rows, every one classified. **The shared-state gate classes** (item 10, group g):
-   `data-layout` (both widths) and `x64-indirect` (x86_64) in `codegen_same.py`, `--exception-classes`, 42 of
-   the 62 blocked rows applied with 191 exception rows, 20 stay blocked (class 1, the function promotions,
-   the alias seams). **The qualification pass** (item 11, group q, four passes): 761 `qualify` rows, 6,380
-   `X::` qualifiers on their own lines, the mover's ambiguity check fixed to count bare names only and to
-   know same-type aliases and self-declared names. **Groups n and n2** (2026-11-09 night, the owner's calls 13..15):
-   58 file-local renames, win_main `g_capcom_movie_only` promoted, class 3's wide form excepted; main 7f215457
-   (PR #213) merged with its three seam conflicts resolved by hand, the gate's baseline moved to `slb1108\base2`.
-   **2026-11-09 morning, the owner's calls 16 and 17 ("I agree with the recommendation"):** MAGIC071..074's
-   units joined into `magic/sparkle.cpp` (three `tu_joins.tsv` rows, 609 proposed files); group k cleared the
-   nine lines the join exposed (5 helper renames, 4 qualifications); group h promoted all 25 file-static items
-   under new gate classes `i686-fold`, `i686-inline` and, by the owner's next call, `i686-convention` (189 rows;
-   7a has their first cases), the five
-   seams' `Callees` structs to `<stem>_callees.h` headers; `move_script::g` renamed `gMoveScript`. **The mover
-   refuses nothing**: `move_funcs.py --map-only` wrote `analysis/tu_moves.tsv` (26,189 rows, every impl
-   function, now tracked). **Gate on the tip:** i686 `--exceptions ... --exception-classes
-   data-layout,i686-fold,i686-inline,i686-convention` 0 differ (153 excepted, 93 promoted); x86_64
-   `--exceptions` 0 differ (280 excepted, 61 promoted); both self-test suites clean on h's and k's tips. **The
-   state-hash proof passed** (2026-11-09, `slb1108\ab\REPORT.md`): the tip build on the ten routes against
-   the `orig4` pairs reads the accepted proof's pages plus documented noise, and against main 7f215457's own
-   build (base2) is identical but for noise. Row 572 answered: field_4 stays one file. **A main-side
-   finding, not this round's:** the shop route's signature moved between b7bd1d29 (2026-10-29) and 7f215457 -
-   `0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode transition one frame apart after the
-   `r2` confirm at recipe frame 2579 (`Transition_Busy`, `ModeFlow_TransitionKind`, `ItemUse_RepeatTimer` 7
-   against 0); main's own build shows it, so a PR among 170..213 did it - bisect main's merges on
-   `tools/recipes/shop.txt` with the state hash to name it, then ledger or fix.
-   **Pick up here (a fresh session, the owner's word of 2026-11-09): the moves B1..B5.** The branch
-   `source-layout/stage-b` sits in worktree `C:\Users\kerok\bof3x-runs\slb1108\wt` (470 commits over `main`
-   7f215457, unpushed, tree clean; `main` may be merged in first, a PR at the owner's word). The baseline
-   `slb1108\base2` is `main` 7f215457 built at both widths. The gates, run from the worktree, both 0 differ on
-   the tip: i686 `python tools/codegen_same.py C:/Users/kerok/bof3x-runs/slb1108/base2/build build
-   --by-function --anonymous-locals --exceptions analysis/tu_gate_exceptions.tsv --exception-classes
-   data-layout,i686-fold,i686-inline,i686-convention` (153 excepted, 93 promoted); x86_64 the same with
-   `base2/build-x86_64 build-x86_64` and no class limit (280 excepted, 61 promoted). Checks: `tu_renames.py
-   --check` (1477 rows, 0 problems), `tu_census.py --check`, `move_funcs.py analysis/tu_layout.tsv --check`
-   (prints the whole plan, 851 targets, refuses nothing). **How a group runs:** one worktree off the tip per
-   group, `python tools/move_funcs.py analysis/tu_layout.tsv --range LO..HI` (hex pcs, HI exclusive; the
-   round doc's section 4 table gives the first cut, redrawn to unit edges from `analysis/tu_layout_sheet.md`
-   so no two groups touch one unit; `--unit U` moves one unit); the mover moves bodies byte for byte, copies
-   shared file-locals (`--shared copy`), moves `BOF3_INJECT` lines into `<TStem>_Inject()`, writes the
-   `_callees.h` aliases, is idempotent, and refuses a source with uncommitted changes. Build both widths,
-   gate: a move's only lawful differences are x86_64 `inline` and `low32-site` rows (the i686 gate stays
-   exact); every row names its gate line; `tu_census.py --check` counts the functions now in their proposed
-   file. Groups run in parallel and **merge one at a time with the gate after each** (a merge is where a
-   shared helper shows); each group's report per section 4: files made, emptied and deleted, the `guessed`
-   rows it placed, the gate's verdict. Then stages C (the headers), D, E (round doc 5, 5a). The main
-   checkout's `game\` folder stays the owner's; harness roots under `bof3x-runs`. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
-   not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
-   as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
-   (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
-   legitimately changes when a twin claim is corrected; the mover's check counted `X::name` as a use of `name`,
-   so a qualification pass could never lower it (fixed); a brief's assumption that a file-local cannot be
-   qualified sent 178 rows to the owner of which 120 were `using X::name;` declarations - classify before
-   declaring a thing impossible; the mover's ambiguity test over-counted three ways (qualified names, same-type
-   aliases, self-declared names) - measure a check before sending its lines to an agent; a state kept file-local
-   "with its readers" is blocked by the source's `_Inject()` and self-test, which never move; the i686 gate
-   pairs a promotion with its file-local by name, so renaming a promoted variable costs `data-layout` rows
-   (gMoveScript: 5). Worktrees `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2, h, k` are removable after the merge
-   into `main`.
+14b. **The source-layout round: stage A in `main` (PR #207), stages B0 and B done on `source-layout/stage-b`**
+   (off `main` `67c3259b`, `main` 7f215457 merged in; root `C:\Users\kerok\bof3x-runs\slb1108` for B0 and
+   `slb1109` for the moves, `slb1108\base2` the gate's baseline = main 7f215457 at both widths;
+   [`source-layout-round.md`](source-layout-round.md) section 4 "Stage B0 as run" and "Stage B as run", the
+   owner's calls in 7a and 7b). **The moves are done (2026-11-09):** six groups B1..B6 (B4 split at the owner's
+   word), 10,088 functions into 609 files under 14 folders, merged one at a time with the gate after each;
+   the tip `2ee99f2a` (669 commits over `main`, unpushed, tree clean) builds at both widths, both gates read
+   **0 differ** (`--inject-ok` on both; the i686 classes `data-layout,i686-fold,i686-inline,i686-convention,
+   inline,refptr,harness`), `tu_renames.py --check` 1793 rows 0 problems, `tu_census.py --check` every function
+   in its proposed file, `move_funcs.py --check` nothing to move; the three self-tests on the tip's build:
+   hosted shadow suite exit 0 with 0 FATAL and every MISMATCHES 0, the exe host exit 0, moved (0xA00000) exit 0 (`slb1109\f_*.log`). The exception table has 3,994 rows, each with its gate line and commit. The 597 flat
+   `src/game/*.cpp` files hold no `impl` function now: each keeps its `_Inject()`, its self-test, its fuzz rows
+   and the copied helpers. Reports `slb1109\reports\b<n>.md`, the common brief `slb1109\briefs\common.md`
+   (the coordinator's notes appended), gate and build logs `slb1109\m<n>_*.txt`, `final_gate*.txt`, `f_*.log`.
+   **The day's decisions** are in 7a (the owner's `refptr` and i686 `inline`; the coordinator's owner-following
+   of exception tables and statics, the operand-width pooled constant, `data-layout` for a move's placement,
+   the `harness` class) and in section 4's "Stage B as run" (the mover's lessons by group, the merges' findings).
+   **Pick up here: stage C** (round doc 5, one agent): empty the 597 flat shells - move each source's
+   remaining `_Inject()` registrations, self-test and fuzz rows to the new files (one fuzz file per new file),
+   delete the shells, regenerate the hosted build's fuzz table, `tu_census.py --check` in `checks.yml`,
+   `cite_lookup.py --scan` over the docs, `docs/source-layout.md`, SCAFFOLDING and README; then stage D (round
+   doc 6: the ten routes at both image bases with the state hash against the `orig4` pairs and against base2's
+   own build - **not yet run on the stage B tip** - the shadow suite, the 64-bit build's routes, STATUS, the
+   ledger note) and stage E (I48, the comment clean-up). Before stage C, reconcile the mover: the tip's is B3's;
+   B5's `#undef far/near` and template naming and B2's refusals were superseded at the merges (their branches
+   hold them: `source-layout/b5` df5c19ce, cff3a6a0, 984b1478; `source-layout/b2` 35518a3e, 2e28ee7d,
+   25f8d0eb). **For the owner:** `-fno-auto-import` (B3 measured: every `refptr` row would go, a new baseline
+   and a DLL-import check the cost); the 32 x86_64 and 2 i686 `inline` rows B3 flagged as register allocation
+   only; the shop-route signature shift that is main's own (below, unchanged). **Traps paid today:** the git
+   stash list is shared by every worktree of a repo (two groups swapped hunks; no stash in a shared repo);
+   `git commit --amend` loses the trailer and is out even on unpushed commits; six agents' shadow suites on
+   one game folder collide when a `timeout` kills a launcher while its game runs on (run alone, wait for the
+   log); the mover's dry run cannot see what the compiler sees (two `at`s meeting, an undeclared helper, a
+   `<windows.h>` macro) - plan on one build round per group; a merge of two groups that moved out of one
+   source needs its hunks resolved by "what both sides kept" and then a parse and a scan for indented
+   statements at brace depth 0 (`scan_fragments.py` in the session scratchpad; the fix commits name it);
+   two targets of one stem in two folders need folder-named inject functions; an exception table or a static
+   local differs only because its function did - pair it, never row it alone. The main-side finding stands:
+   the shop route's signature moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at
+   ticks 2714..2757, a mode transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect
+   main's merges on `tools/recipes/shop.txt` with the state hash, then ledger or fix. Worktrees
+   `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2, h, k` and `slb1109\b1..b6` are removable after the merge
+   into `main`; the launcher copies `slb1109\*_L` and `f_L` too.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages

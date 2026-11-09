@@ -822,6 +822,126 @@ rows; the `SparkleDispatch` difference and `Gfx_DrawOTag` (differs on i686
 when moved to `platform/d3d.cpp`: a copied helper inlined, so it cannot leave
 `d3d_list.cpp` as the table has it - a sheet row).
 
+### Stage B as run (2026-11-09, branch `source-layout/stage-b`, the moves B1..B6)
+
+**The owner's word of 2026-11-09 morning: "split group 4, then begin."** Six
+Opus agents, one worktree each under `C:\Users\kerok\bof3x-runs\slb1109\b1..b6`
+(branches `source-layout/b1..b6` off the B0 tip `efbbcc8c`), the common brief
+`slb1109\briefs\common.md` with the coordinator's seven notes appended as the
+day went, the reports `slb1109\reports\b<n>.md` (the harness refused the
+agents the folder, so the coordinator saved their hand-back text there). The
+cuts, snapped to target-file edges so that no file takes functions from two
+groups (B4 of the first table split at `0x4F62C0`):
+
+| Group | Range | Functions | Target files | Mostly | Tip / commits |
+|---|---|---|---|---|---|
+| B1 | `0x401000..0x42E990` | 1,526 | 150 | area | `a315e2c9`, 13 |
+| B2 | `0x42E990..0x455450` | 1,326 | 80 | boss, battle | `9171d6e5`, 22 |
+| B3 | `0x455450..0x4A11E0` | 2,055 | 104 | effect | `1d799617`, 60 |
+| B4 | `0x4A11E0..0x4F62C0` | 1,745 | 118 | magic | `71e79553`, 21 |
+| B5 | `0x4F62C0..0x5428C0` | 1,722 | 88 | effect, scenario, field | `fad1e997`, 31 |
+| B6 | `0x5428C0..0x5AB7E0` | 1,695 | 69 | scenario, field, menu, platform | `0a27c241`, 33 |
+
+**Every group ended at 0 differ on both gates with its three headless
+self-tests passing**, and the merges went in one at a time with the gate
+after each (B1 `f9bdb3a1`, B2 `e3c26701`, B4 `97f9b257`, B3 `b07af2e9`, B5
+`f45f241f`, B6 `62b61aff`). On the tip every one of the 10,088 functions
+sits in its proposed file (`tu_census.py --check`: 0 not yet in their
+proposed file; `move_funcs.py --check`: nothing to move), in 609 files under
+14 folders (area 150, magic 132, effect 123, boss 60, scenario 43, field 31,
+battle 23, menu 13, platform 11, shop 8, community 6, core 5, text 3,
+minigame 1); the 597 flat `src/game/*.cpp` files hold no function with an
+`impl` any more - each keeps its `_Inject()` (now registering nothing of its
+own, or its clone-and-compare self-test), its fuzz rows and the file-local
+helpers that were copied rather than moved - and are stage C's to empty
+(section 5). `analysis/tu_moves.tsv` has 26,541 rows. The gates on the tip
+(`2ee99f2a`, `--inject-ok` on both; i686 `--exception-classes
+data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness`):
+
+- i686: `codegen_same --by-function: 22548 code, 10035 data, 819 bss symbols compared (24391 / 25394 function definitions read), 0 differ; 337 with another number of identical copies; 984 inject registrations changed (--inject-ok); 1631 excepted (--exceptions); 88 promoted to external linkage, the same body`
+- x86_64: `codegen_same --by-function: 14925 code, 847 data, 421 bss symbols compared (16538 / 17594 function definitions read), 0 differ; 313 with another number of identical copies; 977 inject registrations changed (--inject-ok); 2325 excepted (--exceptions); 57 promoted to external linkage, the same body`
+
+`analysis/tu_gate_exceptions.tsv` carries 3,994 rows (refptr 1,942, inline
+1,486, data-layout 198, low32-site 189, x64-indirect 91, i686-fold 57,
+i686-convention 15, i686-inline 10, harness 6), each quoting its gate line
+and naming its commit; 26 rows the merges made unused were pruned on the tip.
+Self-tests on the tip's build (`slb1109\f_L`, the four files and
+`bof3x-A00000.exe`, no ini): hosted `BOF3X_SHADOW='*'` - `self-test only, game process exit code 0`, 31,861 log lines, 0 FATAL, every MISMATCHES line 0, `self-test only: done, ending the process`; the exe host - exit code 0, 10,360 lines, 0 FATAL; moved (`BOF3X_IMAGEBASE=0xA00000`) - exit code 0, 10,360 lines, 0 FATAL, `the image at 0xA00000, moved from 0x400000` (logs `slb1109\f_hosted.log`, `f_exe.log`, `f_moved.log`).
+
+**What the day decided (7a has the entries, each with its first case):**
+the owner's two calls on B1's report - the class `refptr` (a moved reader of
+its old file's global loads it through llvm-mingw's auto-import stub, both
+widths) and `inline` at i686 for a move - and the coordinator's readings:
+an exception table or a function-local static follows its function in the
+gate (B2's four tables belonged to `_Inject()` functions), a pooled constant
+is read as wide as the instruction that loads it (B5, B6), `data-layout`
+covers a move's placement (B6's `g_trade_confirm_layout`, B5's
+`EnemyAI_TurnCheck`), and the class `harness` for hosted test code changed
+on purpose (B6's region skip). The `--inject-ok` flag belongs on both gate
+lines from stage B on, and a move's self-test copy needs `bof3x-A00000.exe`.
+
+**What the mover learned, by group** (its dry run had planned every range
+clean, and then 20..30 objects a group failed to compile): two sources' `at`
+meeting in one target through `using namespace X;` (qualify, 1,631 `X::at::`
+in B2 alone, 231 in B3, 431 in B5, 1,672 in B6, 154 in B1, 131 in B4, each
+with its `qualify` rows); an external-linkage helper of ours a moved body
+calls - B1 and B2 declared it in the source's header, B3 and B4 measured
+that base2 had it inlined and moved it with its callers instead, which keeps
+i686 identical (B3's mover is the one the merges kept); a union callees
+header names a constant two groups define alike once (B1) and includes the
+header that really opens each `at` (B2, B3); a dead file-local that stays
+keeps its helpers (B2, B4); two copies of a helper are two items when their
+bare `at::k` resolves differently (B3: rest_3e's and effect_2d's `Spark`,
+strides 0x1C and 0x18 - a silent wrong copy otherwise); a target beside a
+flat file of its stem, or whose stem is a keyword (`char`), gets a folder
+name (`<Dir><Stem>_Inject`, `char_::at`); `<windows.h>`'s `near`, `far` and
+`DrawText` macros reach a moved body in a new file (B2 renamed a block-scope
+`near`; B5 `#undef`s; B3 `#undef DrawText` in core/title.cpp); **a target
+fed by several sources keeps each source's binds right after that source's
+`_Inject()`** (B3's `<T>From<Source>_Inject()`: with one `Battle4_Inject()`
+the hosted suite failed `Battle_PlaceBossActor ... in 4004 rounds`, because
+rest_3g's DIV-0108 clone met Capcom's `0x4946C0` before BattleSprites had
+patched it); and eight more file-local renames for clashes the mover reports
+(B3's `SparkEffect2d`, B4's `MoteAngleMagicS29` and `UMagicS33`, B5's
+`UMagicS37`, `StrWinMain`, `TableEventLeader`), each with its row.
+
+**What the merges showed** (a merge is where a shared helper shows): B3's
+merge took magic_c1's last callers of the copied `PastTable`, so i686 stopped
+inlining it into `Magic080_Task` (rows, later unused again when B5 took the
+rest); battle_sprites' static initialiser changed with each group's moves
+and settled back to the base's after B6; two targets of one stem in two
+folders (B5's `field/char.cpp`, B6's `menu/char.cpp`) both defined
+`Char_Inject()` and the link refused them - `FieldChar_Inject`,
+`MenuChar_Inject` (`a25bc81a`); the merge resolution of sources both groups
+moved out of (a hunk keeps only what both sides kept, since each side removed
+what it moved) left five body fragments at file scope in three files and
+doubled two inject calls, each found by the build or by a scan for indented
+statements at brace depth 0 and removed (`0602a3fd`, `f6772178`, `d74930b8`,
+`67bb1aaf`). The mover's whole-table `--check` on the tip is B3's mover;
+B2's, B4's and B5's own mover changes were superseded at the merges where
+the texts conflicted (B5's `#undef far/near` and template naming, B2's
+refusals) - stage C re-reads the mover against what it still needs.
+
+**The harness change** (B6, DIV-free, hosted test code only): `magic_harness`
+regions may carry a separate skip table (`SetSkips`, `{at, len, stride,
+count}`, armed per `Run`), and magic_s23 leaves out the PSX MATRIX's two
+padding bytes of `Gte_Matrix` and of the 20-slot `Gte_MatrixStack`: the
+original's PushMatrix copies them from uninitialised stack, the gte.cpp
+frames changed under `inline`, and the garbage no longer matched (476
+rounds). Every other magic group's tables are byte for byte the base.
+
+**Measured but not taken: `-fno-auto-import`.** B3 built main and its tree
+with the flag: the i686 gate between them read 47 differ instead of 167, all
+inlining or pairing, and `ItemUse_AgiUp` compiled that way is byte for byte
+base2's - every `refptr` row would go. The cost is a new baseline and a check
+of the DLL's data imports: for the owner, IDEAS.
+
+**Left for stage C and D:** the 597 flat shells (their `_Inject()`,
+self-tests, fuzz rows and copied helpers), the fuzz files per new file, the
+mover's reconciliation, `docs/source-layout.md`, the ten-route proof and the
+state hash (section 6; the ten routes have not run on the stage B tip -
+only the self-tests have).
+
 ## 5. Stage C: what follows the moves (one agent, after B)
 
 - `tu_moves.tsv` complete; `cite_lookup.py --scan` over `docs/`,
