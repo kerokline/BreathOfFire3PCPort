@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-07: D406, the quick-load's voice stream played before the song, measured at 10 ms and removed by DIV-0145's amendment, both widths; 2026-11-03)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b`, the PR #209 merge; its notes are [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md); the tag follows the owner's two checks of [`beta-readiness.md`](beta-readiness.md) section 4)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,7 +8,27 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The ending scenes, 2026-11-07 evening** (`fix/ending-scenes-1107`, PR #209; HANDOFF item 0): the owner's
+**The beta, `v0.1.0-beta.1`, is being cut on 2026-11-08 from `main` `67c3259b`** (the PR #209 merge; the
+checklist is [`beta-readiness.md`](beta-readiness.md), the notes [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
+the routine [`releases/README.md`](releases/README.md)). It is the first public release since `v0.1.0-alpha.5`
+(2026-10-22; alpha.6 was tagged at `b7bd1d29` on 2026-10-29, stayed a draft and was deleted on 2026-11-08, the tag kept) and holds alpha.6's list and
+everything merged after it: issue #141's model box (PR #171), the no-fail minigames cheat (PRs #172, #198), the
+item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
+issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207), DIV-0202 (PR #186), issue #185
+(PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert faerie entrance (PR #202), the FMV
+decoders (in PR #207) and the ending scenes (PR #209) - each below with its ledger entry. **What the two clears
+established** (beta-readiness section 1): the owner finished the game and validated the clear save on 2026-11-07
+on the PC install under the furigana row at 21:9, with the sound on; ScrubOasis did the same on a PSX-US + PSP-EU
+disc-built install in English; a third player is deep into a PSX-FR disc-only install. That retires alpha.6's
+"watched, not played" list down to a PSP-only and a PSX-JP install, German and Japanese as main languages, the
+three presets other than Recommended, the 32-bit build's movies through our decoder, the alpha.5 upgrade path,
+D406's quick-load listen and DIV-0203's German - the notes say exactly that. **The one open crash report is
+issue #190** (the dragon gene window; not reproduced in many tries; left open by the owner to gather data).
+**The tag is not made yet:** the owner still runs beta-readiness section 4's items 2 (one start of the 32-bit zip
+for the movies) and 3 (the alpha.5 upgrade path), then commits the notes on `main`, tags and publishes. Alpha.6's
+draft was deleted on 2026-11-08; the beta readiness work is PR #211, held open through the checks.
+
+**The ending scenes, 2026-11-07 evening** (merged as PR #209 the same night, `main` `67c3259b`): the owner's
 four reports off their `myriaFightAndEnding` route - the *Fin* disc's rim short of the 21:9 corners, the bands'
 one-frame flash before the desert's fade, and Garr and Rei blinking in Myria's chamber where Nina and Momo
 scattered. DIV-0127 amended twice (the rim, the bands), DIV-0142 amended (the frame upload queue drained
@@ -18,8 +38,8 @@ original's 1,306 before `Sprite_Current`, D217's shape), then DIV-0207 `FinNight
 sheet: the disc held at 1,000 and the night kept under the *Fin* panel. Verified by shots in the harness;
 **played and approved by the owner** (the night, the disappear and reappear effect).
 
-**The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D built
-on `x64/stage-d` (2026-11-07, unpushed, PR at the owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
+**The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D as
+PR #207 (2026-11-07)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
 image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are
 unchanged - x86-64 Windows alone, a developer build beside the 32-bit player's default, SDL3). Stage A
 measured and designed (the width census, the low-memory design, the asm policy, the `x86_64` preset); stage B
@@ -38,18 +58,20 @@ launcher copy (combat identical on every tick), the last two routes' stackwatch 
 the ten routes pass it on the 64-bit host, stage C's pre-fix log fails it);
 the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. No DIV
 entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
-change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice played the voice before the song returned (D406, ours: a 10 ms head start measured on both widths and removed by DIV-0145's amendment the same day; the owner's listen after it owed). **The one 64-bit defect seen: the Capcom movie plays with no picture (D407) - Windows has no 64-bit Cinepak decompressor, so the 64-bit build needs IDEAS I7's own decoder before it can be more than a developer build.** The Sources page looks right. Owed the owner (owner-review): whether the logos movie shows.
+change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice played the voice before the song returned (D406, ours: a 10 ms head start measured on both widths and removed by DIV-0145's amendment the same day; the owner's listen after it owed). **The one 64-bit defect seen: the Capcom movie played with no picture (D407) - Windows has no 64-bit Cinepak decompressor - fixed the same day by DIV-0205 (below) and confirmed by the owner's eye on the 64-bit build copied into `game\`.** The Sources page looks right. The 64-bit build stays a developer build by the owner's call of 2026-11-01; the release ships it as `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. PR #207 also carried the source-layout round's stage A ([`source-layout-round.md`](source-layout-round.md) 3: the unit census, the 556-file proposal on the owner's sheet `analysis/tu_layout_sheet.md`, the mover's dry run); stage B waits on the owner's read of the sheet (HANDOFF item 14b).
 
-**The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; folded into PR #207).**
+**The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; merged in PR #207).**
 The owner's first play of the 64-bit build showed no Capcom movie (D407): Windows ships its Cinepak and Video 1
 decompressors for 32-bit processes only, and MCI drew nothing. `Fmv_Play` now decodes both shipped AVIs itself
 (`src/video`, written from the public format descriptions, nothing vendored), draws them into DIV-0035's
 rectangle by GDI on the wall clock and plays the PCM stream through SDL3; the modal loop, the skips and the pause
 are as before, and MCI is not called on either width. Every frame of the three movies is bit-exact against
-ffmpeg's decode; the gates pass ([`replacing-mci.md`](replacing-mci.md) 8). Not yet seen by the owner.
+ffmpeg's decode; the gates pass ([`replacing-mci.md`](replacing-mci.md) 8). The owner saw the Capcom movie
+through it on the 64-bit build the same evening (owner-review); the 32-bit build goes through the same code and
+has not been started since - one start of the released 32-bit zip covers it (beta-readiness section 4, item 2).
 
-**Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
-`fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
+**Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, merged as
+PR #193 with issue #189's fade on 2026-11-03; STATUS called it unpushed until 2026-11-07). Capcom's Japanese says to turn east and keep going east when the
 Evening Star is due west, spoken (AREA193 slot 17) and in the camp's note (AREA191 / AREA192 slot 108); the US,
 European, PSP-EU, French and German discs each got some of those words wrong, and disagree among themselves.
 `tools/loc_build.py` now corrects them in the layer it builds, by a rule table that names each message by
@@ -57,11 +79,31 @@ language, area and slot and holds its measured hash, so another disc revision is
 block is a kind-19 chunk beside the disc's own, and `BOF3X_OFF=DesertDirections` gives the disc's text back.
 A layer gets it when it is rebuilt. Not played; the German wording is owed your eye (owner-review).
 
+**The player reports of 2026-11-01..07, each fixed and merged:** issues #177, #178 and #179 (ScrubOasis, a
+PSX-US + PSP-EU disc-built install) as PR #181 - the talk button at the faerie village's plaque read address 3
+in an area with no passage list, Capcom's PC code (DIV-0197, D399); the dock's parts list 16 px under its hand on
+a Western disc-built image, the West's box with Japan's margin (DIV-0198, D400); a screen-rectangle quad sampling
+the texel past its far edge, the line under the ENGINE gauge and the crane button's border (DIV-0199, D198); and
+a faerie's Chinese name read past its five-byte slot into the glyph trap, a crash on the village's boards
+(DIV-0200, D401) - then the village deaths page's cause column at the Western discs' x (PR #182, DIV-0064
+amended). Issue #185, the Desert of Death drawn as a band and the party only in the wide modes (PR #188: D402 the
+wide ring over area 189's own view, DIV-0041 amended; D403 the exe host's cull bounds read as 0). Issue #189,
+Weretiger's cross-fade drawing nothing (PR #193, D404, DIV-0142 amended: a palette set in the capture's frame
+read from the CLUT strip), and issue #191, Station Myria's hologram in a box of the PC title's art (PR #194,
+D405, DIV-0142 amended: kind 0x9D clears its page; the stripe at its edge the owner saw in play fixed 2026-11-07
+as PR #208, the clear 25 x 49). D226, area 196's sand hill not drawn on a later showing in one session (2026-11-05, DIV-0182
+amended). The owner's F5 in a battle drawing a corrupt menu and a load from it stopping the game (2026-11-06,
+DIV-0145 amended: the menu's lines from `FIRST.DAT`'s pool, no backdrop in a battle). Area 198, Myria's chamber,
+taken off the pillarbox list (2026-11-07, DIV-0041 amended). **And the owner's request, DIV-0204 (PR #202,
+2026-11-05):** a second faerie village entrance on the desert map near Caer Xhan, off by default (Mods, Extras),
+with its flower ring made at load from the player's own `AREA151.DAT`; played and approved ("That worked great",
+"Looks good").
+
 **The PC game folder leaves out the porting house's logo movie, 2026-11-02, merged as PR #186** (DIV-0202). The
 owner's call: `tools/player_sources.py` copies `capcom.avi` and no longer `logos.avi`, so a game folder built from
 the PC install starts as a disc-built one does. A `logos.avi` put in the folder by hand still plays.
 
-**The exe-gap round, 2026-10-31** (built on `exe-gap/round`, unpushed, PR at the owner's word;
+**The exe-gap round, 2026-10-31** (merged as PR #176 the same day;
 [`exe-gap-round.md`](exe-gap-round.md) 4a). Staged in the morning (re-measured: 71 distinct `gap` ranges, 20..51 a
 build) and run the same day by five Opus agents: **AC** wrote `recipes/exe-gaps-accepted.tsv`, an answer and a
 pointer for every `gap` row of a disc-built image, with a CI check; **AU** gave disc-only installs the loss tune
@@ -97,9 +139,9 @@ mismatches with the switch armed after the self-test. Not yet played.
 
 **The dock's legend words, 2026-10-30 evening, merged as PR #174** (DIV-0190). The owner's new recording `shipPartsMenu.txt` reached the dock's parts menu (area 128) under en-US with its button legend still the area page's Japanese paint (○…決定 / ×…終了 / △…メモを見る), the one screen text no layer touched. Every Western disc repainted the three words on its own page and nothing else there (US / EU / PSP-EU `OK` / `End` / `Memo`, French `Fin`, German `Ende` / `Notiz`; the JP disc's page the PC's), so `loc_build.py` now carries the panel's word columns into `<tag>.AREA128.DAT` as DIV-0088 carries the village board's buttons, the icon column kept the port's for DIV-0137's cell reading ([`rest_3e.md`](rest_3e.md) 11.7). Seen in the replay under en-US, fr-FR and de-DE, and by the owner on their own install on 2026-10-31.
 
-**The no-fail minigames cheat, 2026-10-30, merged as PR #172** (off `main` `494c270a`, the PR #171 merge; DIV-0188; the two Cheats pages, a rope pull with the box on and the chop's count box seen by the owner on 2026-10-31). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed).
+**The no-fail minigames cheat, 2026-10-30, merged as PR #172** (off `main` `494c270a`, the PR #171 merge; DIV-0188; the two Cheats pages, a rope pull with the box on and the chop's count box seen by the owner on 2026-10-31). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed). **The well and the shisu joined the switch on 2026-11-03, merged as PR #198** (the owner's `vinegarMinigame.txt` and `shisuMinigame.txt`: `EffectKind8C_Fail` ends as the pass; the shisu's score raised to the best prize's, the owner's call). **Played with and working well (the owner, 2026-11-07 night).**
 
-**The enemy-information cheat, 2026-10-29, merged as PR #169** (off `main` `628aa521`, the PR #167 merge). A player asked for every enemy's HP bar shown; the owner named the lever, the enemy record's "discovered" byte `+0x8F`, which the HP gauge and Identify's panel read and which the original copies from the save's "kind beaten before" bit set (0 for a boss). **DIV-0187:** `cheat.enemy_info=1` / `BOF3X_ENEMY_INFO=1` makes `Battle_SetupEnemy` and `Battle_PlaceBossActor` write 1, so every enemy and every boss shows its gauge and its stats from the first meeting; the save's bit set is untouched. A box on the Cheats sub-page beside Steal; off by default; a Fatal when a writer is left as Capcom's. Headless checks in [`cheats.md`](cheats.md) section 6; not yet played.
+**The enemy-information cheat, 2026-10-29, merged as PR #169** (off `main` `628aa521`, the PR #167 merge). A player asked for every enemy's HP bar shown; the owner named the lever, the enemy record's "discovered" byte `+0x8F`, which the HP gauge and Identify's panel read and which the original copies from the save's "kind beaten before" bit set (0 for a boss). **DIV-0187:** `cheat.enemy_info=1` / `BOF3X_ENEMY_INFO=1` makes `Battle_SetupEnemy` and `Battle_PlaceBossActor` write 1, so every enemy and every boss shows its gauge and its stats from the first meeting; the save's bit set is untouched. A box on the Cheats sub-page beside Steal; off by default; a Fatal when a writer is left as Capcom's. Headless checks in [`cheats.md`](cheats.md) section 6; **played with and working well (the owner, 2026-11-07 night).**
 
 **The relocatable-image round, 2026-10-28..29, merged as PR #168 (`main` `e839eaf7`)** (off `main` `15518394`, the PR #164 merge; stages A (census, address-independent state hash, loader design), B (every address in the source spelled as a VA placed by `Img` / `Code`, machine code identical throughout), C (the move, C1, and the binding, C2) and D (the audit, the docs, the rule); Opus agents in worktrees under `C:\Users\kerok\bof3x-runs\ri1027`, merged one at a time, the proof by the coordinator; `main` merged through PR #169 before it; [`relocatable-image-round.md`](relocatable-image-round.md), sections 2..5). **The image is movable** (IDEAS I44 stage 3): the base is read at run time, `.data`'s pointer words are rebased at load, and the code words are bound by name to places of ours - `(top << 24) | VA`, a table of jumps (`src/hook/bind.cpp`) - so the **entry-stub page is gone** and `.stub` is a no-access trap. **What the player sees: nothing changed** - `bof3x.exe` stays at `0x400000`, and its state hash matches the references on all ten routes; the developer switch `BOF3X_IMAGEBASE=0xA00000` (the developer launcher, which fences the linked span) runs the same ten routes hash-equal to `0x400000`, and a quicksave across bases is refused. Stage D found two defects and fixed both (`BOF3X_MP3_COMPARE` reaching Capcom's decoder, now refused in `bof3x.exe`; a place handed to `PatchBytes`), the PR's day a third the gate had not run for (the hosted shadow suite's fault in `field_misc`'s fuzz: `draw_pool`'s pointers initialised in an order the move made unspecified, now null until the switch), and `tools/reloc_bare.py --check` (CI) refuses a new bare image address. No ledger entry: no behaviour a player meets changed. **Owed the owner's eye: nothing player-visible**; the open items are in the round doc's section 5 "Left".
 

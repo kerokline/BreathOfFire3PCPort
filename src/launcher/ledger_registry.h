@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 201;
+inline constexpr std::size_t kSwitchCount = 202;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -269,6 +269,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "QuadFarEdge", 0, 11},   // DIV-0199
     {SwitchForm::Name, "FaerieNameEnd", 0, 13},   // DIV-0200
     {SwitchForm::Name, "SoundSdl", 0, 8},   // DIV-0201
+    {SwitchForm::Name, "CapcomMovieOnly", 0, 15},   // DIV-0202
     {SwitchForm::Name, "DesertDirections", 0, 16},   // DIV-0203
     {SwitchForm::Ini, "ini:desert_faerie=0", 4, 13},   // DIV-0204
     {SwitchForm::Name, "Fmv_Play", 0, 8},   // DIV-0205
@@ -680,18 +681,18 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 194, 1, true, Player::Yes, 0, kLangAny},
     {201, "Play the sound through SDL3 audio, with objects of ours in DirectSound's slots",
      Tier::Sensible, State::Active, 0, 195, 1, true, Player::Yes, 0, kLangAny},
-    {202, "A game folder built from the PC install leaves out the porting house's logo movie",
-     Tier::Sensible, State::Active, 0, 196, 0, true, Player::Never, kTowardPsx, kLangAny},
+    {202, "The start plays Capcom's logo movie alone, and setup leaves out the porting house's",
+     Tier::Sensible, State::Active, 0, 196, 1, true, Player::Yes, kTowardPsx, kLangAny},
     {203, "Horis's desert directions say east, as Capcom's Japanese does, in every Western layer",
-     Tier::Intent, State::Active, 0, 196, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
+     Tier::Intent, State::Active, 0, 197, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
     {204, "A second faerie village entrance on the desert map, near Caer Xhan",
-     Tier::Extension, State::Active, 0, 197, 1, false, Player::Yes, 0, kLangAny},
+     Tier::Extension, State::Active, 0, 198, 1, false, Player::Yes, 0, kLangAny},
     {205, "The FMVs decoded by our own AVI, Cinepak and Video 1 decoders, not MCI",
-     Tier::Sensible, State::Active, 0, 198, 1, true, Player::Costly, 0, kLangAny},
+     Tier::Sensible, State::Active, 0, 199, 1, true, Player::Costly, 0, kLangAny},
     {206, "The scatter-to-pixels effects have room for every pixel, instead of overwriting Sprite_Current",
-     Tier::Intent, State::Active, 0, 199, 1, true, Player::Yes, kTowardPsx, kLangAny},
+     Tier::Intent, State::Active, 0, 200, 1, true, Player::Yes, kTowardPsx, kLangAny},
     {207, "The ending's disc holds at 1,000 and the night stays under the Fin panel",
-     Tier::Intent, State::Active, 0, 200, 1, true, Player::Yes, 0, kLangAny},
+     Tier::Intent, State::Active, 0, 201, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

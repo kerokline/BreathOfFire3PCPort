@@ -285,6 +285,12 @@ void Overlay(const char* text) {
 std::uint8_t g_pad_reset = 0;
 unsigned g_pad_reset_held = 0;
 
+// DIV-0202: the second movie (LOGOS.AVI, the 2001 porting house's logos) is
+// not played, whether or not the file is in the folder: every install starts
+// with Capcom's logo alone. 1 through PatchBytes("CapcomMovieOnly") in
+// WinMain_Inject; BOF3X_OFF=CapcomMovieOnly plays a LOGOS.AVI that is there.
+std::uint8_t g_capcom_movie_only = 0;
+
 void PadReset_Frame() {
     if ((Input_Held & 0x900) != 0x900) {
         g_pad_reset_held = 0;
@@ -615,7 +621,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     Cursor_Sync();
 
     bof3::orig::Fmv_Play(Str(::bof3::Img(kStrCapcomAvi.v)), hwnd, Cfg_Fullscreen);
-    bof3::orig::Fmv_Play(Str(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
+    if (!g_capcom_movie_only) bof3::orig::Fmv_Play(Str(::bof3::Img(kStrLogosAvi.v)), hwnd, Cfg_Fullscreen);
     bof3::Log("WinMain: FMVs done, quit flag %d", Game_QuitFlag);
 
     // A quit during the FMVs returns at once (0x4FCD3A): nothing is set up,
@@ -924,6 +930,13 @@ void WinMain_Inject() {
         const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("PadReset", Low32(&g_pad_reset), &was, &is, 1);
         bof3::Log("DIV-0152    Start + Select held 60 frames returns to the title, as on the Western discs (on unless the line above says OFF)");
+    }
+    {
+        // DIV-0202: Capcom's logo alone before the title.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("CapcomMovieOnly", Low32(&g_capcom_movie_only), &was, &is, 1);
+        bof3::Log("DIV-0202    the start plays CAPCOM.AVI alone: %s",
+                  g_capcom_movie_only ? "on" : "OFF (LOGOS.AVI plays if it is in the folder)");
     }
     BOF3_INJECT(Game_WinMain);
     BOF3_INJECT(Game_WndProc);

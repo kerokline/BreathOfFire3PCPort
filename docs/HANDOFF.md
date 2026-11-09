@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-07: D406 fixed - a quick-load's voice stream is played after the song's start, DIV-0145's amendment, the 10 ms head start measured and removed on both widths, the owner's listen owed; the 64-bit build round's stages A..C merged as PRs #183 and #187, **stage D open as PR #207**, item 14a; the source-layout round's stage A done, stage B at the owner's read of the sheet, item 14b; DIV-0202 the logo movie as PR #186; `main` at PR #206; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B waits on the owner's read of the sheet, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,85 +14,76 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `39d88ef9`** (PR #206, 2026-11-07; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `67c3259b`** (PR #209, 2026-11-07 night; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170, stayed a draft and was deleted on 2026-11-08, its tag kept; **`v0.1.0-beta.1` is being cut from this commit**, item 0): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
 (PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
-issues 177..179 (PRs #181, #182), the 64-bit build round's stages A and B (PR #183) and DIV-0202 (PR #186)
+issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, the FMV decoders DIV-0205 in the
+last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
+faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **No PR is open** (2026-11-07; stage C of the 64-bit round merged as PR #187 on 2026-11-02).
-`v0.1.0-alpha.6` is the
-release cut from an earlier state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
-publishes it). Owed throughout:
+unpushed is merged; the open work is below. **One PR is open** (2026-11-08), the beta-readiness docs PR to
+come, which carries the beta's notes, the README line, the bug-report template and this rewrite (item 0) - opened as PR #211 on 2026-11-08.
+Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
 (`importer.py build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) before comparing one.
 
 ## Pick up here
 
-0. **The ending scenes, the owner's four of 2026-11-07, on `fix/ending-scenes-1107`** (built, verified in the
-   harness root `D:/bof3x-runs/end1107`, PR #209 open 2026-11-07 night, Auto-fix on), from their new route
-   `tools/recipes/myriaFightAndEnding.txt` (its save `myriaFightAndEnding.DAT`; it saves over slot 0 near its end
-   on purpose, the clear-save path - replay with `--slot0-hold`; past the staff roll it waits on the song's
-   stream, so at `--speed 8` the roll and the *Fin* disc fall off the recorded frames): (1) the *Fin* disc's
-   outer rim grows with the wide picture, 1,600 + 10 a column (DIV-0127 amended); (2) the ending's first wide
-   frame no longer flashes the live sand in the bands beside the 320-wide frame copy - black tiles over the
-   bands while the fade is off (DIV-0127 amended; measured on `ending17`'s save: frame 188 at brightness 105
-   before, black after); (3) and (4) Rei and Garr scatter into pixels and Garr gathers back in Myria's chamber,
-   as Nina and Momo did and as the PlayStation does: two faults - the capture of a sprite whose frames are
-   uploaded on demand composed before the frame's upload queue drained (DIV-0142 amended: the queue drained
-   first), and then their 1,651 / 3,458 / 2,441 particles past the 1,306 the original's pool holds before
-   `Sprite_Current` (DIV-0206, switch `PixelRoom`, rooms for kinds 0xA1 / 0xA3 and 0x61 - D217 closed for
-   the three). Self-tests of `sprite_draw`, `rest_3f`, `effect_3a`, `scena_sc15`, `mode_flow`, `gfx_flush`:
-   0 mismatches; `ledger_check`, `ledger_switches --check`, `ledger_registry --check`, `width_census --check`
-   clean. Then, off the outro sheet, **DIV-0207 `FinNight`**: the disc held at 1,000 and the darkness kept at
-   0xFF under the *Fin* panel (the owner's "same night look as the campfire scenes"; Capcom's lightens the
-   desert to 0x80; the 4:3 picture framed that much less desert, the owner's point).
-   **Owed the owner:** the play of the four and the night (section in [`owner-review.md`](owner-review.md)),
-   and the word on the PR. The route is long: the shots of the scenes are in the root (`shots_v4`, `shots_e2`, `shots_o`).
-0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
-   (folded into PR #207, `x64/stage-d`, 2026-11-07): D407 - the 64-bit build's Capcom movie had
-   no picture, Windows' Cinepak decompressor being 32-bit only (Video 1's is in both widths). `Fmv_Play` now reads the AVI itself
-   (`src/video`: the RIFF reader, a Cinepak decoder, a Microsoft Video 1 decoder, written from the public
-   descriptions), draws by `StretchDIBits` into DIV-0035's rectangle on the wall clock, plays the PCM stream
-   through an SDL3 audio stream, and calls no MCI; the pump, the skips and the pause keep their shape
-   ([`replacing-mci.md`](replacing-mci.md) 8). Bit-exact against ffmpeg on every frame of `capcom.avi`,
-   the disc-built `CAPCOM.AVI` and `logos.avi` (`tools/fmv_compare.py`, `build/bof3x-fmvdump.exe`); both widths
-   build, the suites pass, `whelpBoss` runs, the state hash as the x64 round's check. **Owed the owner:** the eye
-   and ear on both widths (a 4:3 fit without a whole multiple is the untried `HALFTONE` path); the PR word. Root
-   `C:\Users\kerok\bof3x-runs\fmv1107` (proof, grabs, the ffmpeg reference decodes - game-derived).
-0. **The mountain passes (DIV-0191, 2026-10-30 night, merged as PR #175)**: Mt. Zublo's walkway passable from
-   chapter 9 and Mt. Levett's once crossed, played and approved by the owner on six builds
-   ([`mountain-passes.md`](mountain-passes.md)). **Owed:** nothing of the owner's; the doc's "Left" items (a
-   child-era save keeps Zublo's wall by design). Traps paid: a door reached from a plain cell acts on the last place
-   a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check the object list before
-   the cells. `tools/cell_peek.py` reads a running game's cells around the leader.
-0. **The consumables sorted by id (DIV-0189, 2026-10-30, merged as PR #173)**: within each half of the
-   `NormalItem` / `CombatItem` partition, ascending item id; switch `ItemSortById`. **Owed the owner's play** (a
-   sort on a long game's bag) and their word on a hand-written type order (healing, throwables, fish...) as the next
-   step, which would replace the id compare.
-0. **The dock's legend words from the disc (DIV-0190, 2026-10-30 evening, merged as PR #174)** on `loc/ship-parts-menu`: the owner's
-   `shipPartsMenu.txt` reached the parts menu (area 128), whose button legend was still the page's Japanese paint.
-   `loc_build.py build_dock_panel` now carries the panel's word columns from each Western disc's `AREA128.EMI` page
-   into `<tag>.AREA128.DAT` (`OK` / `End` / `Memo`; French `Fin`; German `Ende` / `Notiz`), the icon column left the
-   port's for DIV-0137 ([`rest_3e.md`](rest_3e.md) 11.7). Seen under en-US, fr-FR and de-DE in the replay; the owner's
-   install takes it when the launcher rebuilds the stale `loc` step. **Seen by the owner on their own install on 2026-10-31, approved.**
-0. **The no-fail minigames cheat (DIV-0188, 2026-10-30, merged as PR #172)** on `cheat/no-fail-minigames`: the switch, the rope pull,
-   the lighthouse valve and (the afternoon) the chop under it, the cheats on two pages of the Cheats sub-tab, a third
-   row of buttons ([`cheats.md`](cheats.md) 7).
-   With the chop, the owner's catch: the count's one-glyph word after the number is now DIV-0064's group 25, the
-   West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's
-   `BOOT.BIN`; the owner's install takes it when the launcher rebuilds the stale `loc` step at its setup prompt.
-   **The well joined the switch on 2026-11-03** (branch `cheat/no-fail-vinegar`, the owner's `vinegarMinigame.txt`:
-   `EffectKind8C_Fail` ends as the pass, cheats.md 7), and the shisu the same day (`shisuMinigame.txt`: the
-   owner's call, the score raised to the best prize's 0xB4 in `Shisu_Result`). **Next minigame**, when the owner records its start
-   (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu. The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
-   lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
-   `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
-   route seen to go on, the table in cheats.md 7. **Seen by the owner on 2026-10-31, approved:** the two pages, a rope pull with the box on, the chop under
-   no-fail, and the chop's count box under `en-US`. The well's recording arrived 2026-11-03; owed: the owner's
-   play of the well and the shisu with the box on.
+0. **The beta's first reports.** `v0.1.0-beta.1` is being cut from `main` `67c3259b`
+   ([`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
+   the notes; [`STATUS.md`](STATUS.md) says what it holds and what the two clears established). **Still the
+   owner's before the tag** (beta-readiness section 4): item 3, the alpha.5 upgrade
+   path over a copy of a real alpha.5 folder (the launcher names the stale pieces and offers the rebuild; a
+   disc-built image built by an older release is refused until rebuilt, DIV-0101's strict mode; the saves load;
+   the Jukebox's names show). Then the routine ([`releases/README.md`](releases/README.md)): commit the notes on
+   `main` signed off, tag `v0.1.0-beta.1`, read the draft, publish (`v0.1.0-alpha.6`'s draft deleted on 2026-11-08, its tag
+   kept). The beta readiness work is **PR #211**, open and held through the owner's checks. **When a player files a report:** the
+   template `.github/ISSUE_TEMPLATE/bug-report.md` asks for the release's name (the launcher shows no version:
+   the zip's name, or the exe's Properties > Details > Product version, stamped by `src/version.rc`), the Sources
+   page's list and the language, the preset, what was done and seen, and the `CRASH n:` block from `bof3x.log`;
+   it says in bold not to attach the `bof3x.crash-*.dmp` files (game data, [`crash-reporter.md`](crash-reporter.md)
+   3; CLAUDE.md rule 1) - if one is attached, ask for its removal before reading on. A `CRASH` block is read
+   with `tools/crash_report.py` (or `llvm-symbolizer` on a layout-identical build of the reported commit, as
+   DIV-0197's reading did); a report on a disc-built install wants the install's shape rebuilt in a harness root
+   (the i130 pattern, `D:\bof3x-runs\i130`). **Issue #190, the dragon gene window crash**, stays open by the
+   owner's decision (not reproduced at several places, in long and short plays, bosses and ordinary fights; the
+   harness attempt in `D:\bof3x-runs\i190`, window 21 as an enemy gauge): each new report of it adds its `CRASH`
+   lines, install and language to the issue, and the first reproducible one reopens the reading. **Owed the
+   owner after the cut** (owner-review): D406's listen (a quick-load during a battle voice, both widths);
+   DIV-0203's German on a rebuilt `de-DE` layer; the item sort in a long game's bag and the word on a type order
+   (DIV-0189); the owner-review sweep of what the two clears cover (section 4 item 7: the proposal sheet is
+   [`owner-review-sweep-1108.md`](owner-review-sweep-1108.md), 40 strikes / 82 keeps / 29 questions; the owner
+   answers its section 2 and says which strikes stand, then the file changes). Traps paid on the cut: a release note never claims more than STATUS; the
+   `latest` pre-release is never GitHub's latest; test the upgrade with the draft's signed zip, not a local build
+   (Defender); a quicksave is bound to the build that made it (the notes say so).
+
+0a. **Folded from the merged items of 2026-10-30..11-07** (each in [`STATUS.md`](STATUS.md) with its PR; only
+   what is still owed or worth keeping stays here):
+   - **The ending scenes** (PR #209): approved by the owner in play (the night, the scatter and gather). The route
+     `tools/recipes/myriaFightAndEnding.txt` saves over slot 0 near its end on purpose (the clear-save path):
+     replay with `--slot0-hold`; past the staff roll it waits on the song's stream, so at `--speed 8` the roll and
+     the *Fin* disc fall off the recorded frames. `kFinRadius` in `scena_sc15.cpp` is the one constant if the
+     owner says "tighter" or "wider". Root `D:/bof3x-runs/end1107` (shots `shots_v4`, `shots_e2`, `shots_o`,
+     `shots_p2`), removable.
+   - **The FMV decoders** (DIV-0205, in PR #207): the picture seen by the owner on both widths (the 32-bit
+     build on 2026-11-08, the beta's item 2). A 4:3 fit without a whole multiple is the untried `HALFTONE` path. Root
+     `C:\Users\kerok\bof3x-runs\fmv1107` (game-derived), removable.
+   - **The mountain passes** (DIV-0191, PR #175): nothing owed. Traps paid: a door reached from a plain cell acts
+     on the last place a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check
+     the object list before the cells. `tools/cell_peek.py` reads a running game's cells around the leader.
+   - **The no-fail minigames** (DIV-0188, PRs #172 and #198; played with, 2026-11-07 night). **Next minigame**,
+     when the owner records its start (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu.
+     The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
+     lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
+     `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
+     route seen to go on, the table in [`cheats.md`](cheats.md) 7. The well's start recording is still wanted for
+     the harness, not for the release.
+   - **The dock's legend** (DIV-0190, PR #174) and **the desert faerie entrance** (DIV-0204, PR #202): seen and
+     approved by the owner; nothing owed. DIV-0204's trap: a map's spare palette rows feed the compass and the
+     place plate - the ring's colours go at palette 14's tail, checked zero before each lay.
 
 1. **The away day of 2026-10-27 is merged as PR #158** (with `away1027/twins` and `away1027/docs`; four Opus
    agents, [`STATUS.md`](STATUS.md) has a line each; the evidence in [`install-gap-labels.md`](install-gap-labels.md)
@@ -284,9 +275,12 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `0x801DA068` (the function before the twin). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **2026-11-07** (owner-review's two sections of that date): the ending scenes approved in play; the 64-bit
+     build heard right, D406's listen after its fix owed; DIV-0203's German on a rebuilt `de-DE` layer.
    - **2026-10-28..31** (owner-review's section of that name): the exe-gap round's listens and DIV-0195's boxes
-     (item 14), the Preset page (item 2), the enemy-information cheat in play (DIV-0187, PR #169), the item sort in play
-     (item 0, DIV-0189), the well with the no-fail box on (item 0; recorded and guarded 2026-11-03).
+     (item 14); the Preset page opened and toggled, the other three presets not played (item 2); the item sort in
+     play (item 0, DIV-0189). Struck 2026-11-07 night: the enemy-information cheat (DIV-0187) and the no-fail
+     cheats (DIV-0188), both played with and working well.
    - **The away day of 2026-10-27** (item 1): the faerie operand's call, area 9 on a PSP-built install, the
      fishing spots, the kind sheet, the seven boss-only skills' routes (the stp pairs seen, owner-review).
    - **The spell sweep's looks** (item 3), **the sound-layer listens** (item 9), **issues #121, #142, #149** (items
@@ -305,9 +299,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
      sections); Peco's EXP table (item 22).
 
-14. **The exe-gap round is built on `exe-gap/round`** (2026-10-31; [`exe-gap-round.md`](exe-gap-round.md) 4a
-   "as run", 7 the owner's calls; tip `2b27a3c0` plus the end batch's record; unpushed, **PR at the owner's
-   word**). Five groups merged the same day: AC (`recipes/exe-gaps-accepted.tsv`, 221 rows, the CI check),
+14. **The exe-gap round is merged as PR #176** (2026-10-31; [`exe-gap-round.md`](exe-gap-round.md) 4a
+   "as run", 7 the owner's calls; the end batch's record with it). Five groups merged the same day: AC (`recipes/exe-gaps-accepted.tsv`, 221 rows, the CI check),
    AU (DIV-0192 the loss tune on disc-only installs, DIV-0193 `SaveSlotBlank`, DIV-0194 the European disc's own
    banks; D320 and D257 fixed), PL (three families placed, DIV-0195 the Western disc's regional fields - the
    owner's word: "using the PSX bytes for a psx-only build instead of saving hardcoded values is fine" - and the
@@ -325,8 +318,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    fresh `cn_<route>_orig4` re-record with the current saves (the references carry the standing SunderLoop and
    slot-6 signature).
 
-14a. **The 64-bit build round: stages A..D done, stage D on `x64/stage-d` (2026-11-07, unpushed; PR at the
-   owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's four calls of 2026-11-01 in its
+14a. **The 64-bit build round: stages A..D done, stage D merged as PR #207 (2026-11-07)**
+   ([`x64-build-round.md`](x64-build-round.md); the owner's four calls of 2026-11-01 in its
    section 7: the narrow image, x86-64 Windows alone, a developer build and a second release artefact, SDL3).
    Stages A and B merged as PR #183, stage C as PR #187 (2026-11-02): `cmake --preset x86_64 && cmake --build
    build-x86_64` links a 64-bit `bof3x.exe`, `bof3x.dll` and launcher that play every route; stage C's proof is
@@ -350,15 +343,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **CI and release:** the `x86_64` job of `build.yml` is a gate with the import check; `release.yml` builds
      both widths, signs six binaries in one jsign call and attaches `bof3x-<tag>-win-x64.zip` beside the 32-bit
      zip, which stays the player's default ([`releases/README.md`](releases/README.md)). The six-file jsign
-     call is unexercised until the next push to `main`.
+     call has run: the `latest` builds of PR #208's and PR #209's merges passed (`gh run list
+     --workflow=release.yml`, 2026-11-08; PR #207's own run was cancelled by the next push); the beta's draft is
+     its first `v*` run.
    **The owner's listens, 2026-11-07, on the 64-bit build:** the inn's night, the combat loop and the voices all
    sound right (the first play of the 64-bit build), so the 546 ms figure is the dump's model, not the ear's; one observation became D406 (a quick-load during a battle
    voice played the voice before the song returned: the rebuild's order, measured at 10 ms on both widths and fixed by DIV-0145's amendment the same day; the owner's listen owed). **Seen on
    that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
    decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
-   the picture; the fix is IDEAS I7 (a decoder of ours), built the same day as DIV-0205 and folded into this
-   PR (item 0).** Still owed (owner-review):
-   whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows; the Sources page looks right (its
+   the picture; the fix is IDEAS I7 (a decoder of ours), built the same day as DIV-0205 and merged in this
+   PR (item 0a); the owner saw the Capcom movie through it on the 64-bit build the same evening.** Still owed (owner-review):
+   the Sources page looks right (its
    list read from an earlier build's config; an import from the 64-bit launcher is unexercised). **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
    a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
    `BOF3X_SHADOW='*'` suite takes about forty minutes - count its log's lines a minute apart before calling it
@@ -367,24 +362,28 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
 14b. **The source-layout round: stage A in `main` (PR #207), stage B0 run 2026-11-08 on `source-layout/stage-b`**
-   (off `main` `67c3259b`, local, unpushed, no PR while the beta is cut; root `C:\Users\kerok\bof3x-runs\slb1108`,
+   (off `main` `67c3259b`, `main` merged back in after the beta's cut; root `C:\Users\kerok\bof3x-runs\slb1108`,
    its `base` the gate's baseline, reports in `reports\`; [`source-layout-round.md`](source-layout-round.md)
-   section 4 "Stage B0 as run", the owner's open calls in 7b). Done there: the generated source list adopted; the
+   section 4 "Stage B0 as run", the owner's calls in 7b). Done there: the generated source list adopted; the
    468 helper clashes renamed (stem-suffix names, 457 rows in `analysis/tu_renames.tsv`, `tu_renames.py --check`
    0 problems; `move_funcs.py --check` reports no clash); `codegen_same.py --exceptions` with 39 `low32-site`
    rows (the 64-bit `Low32()` names its caller), the source-root placeholder (a worktree's `__FILE__` path read
    as 8,870 differences before), `PROMOTED`, the macro-made functions in the mover; group s's 135 state and
    global decisions, applied where the code stays identical (23 declarations, 39 promotions, 1 seam) and 62
-   blocked with their first difference; both self-test suites pass; the sheet in two tables (212 rows that want a
-   call, 457 settled) and 28 PlayStation twin claims re-pointed (`symbols.toml`, 669 units, no proposed file
-   changed). **Gate on the tip:** i686 `--by-function --anonymous-locals` 0 differ; x86_64 with `--exceptions` 0
-   differ. **The owner's, before B1..B5** (7b): the sheet's 212 rows (a per-class answer is enough); the gate
-   classes for shared state (62 rows); the qualification pass for 50 ambiguous targets; row 585's extent. **Traps
-   paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must not change a
-   file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line as a comment);
-   a helper that matched its twin exactly stops matching once a helper it calls is renamed (cascades: run
-   `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv` legitimately changes when a
-   twin claim is corrected. Worktrees `slb1108\r1..r4, c, t, s, a, p` are removable after the merge into `main`.
+   blocked with their first difference; both self-test suites pass; 35 PlayStation twin claims re-pointed to
+   their own overlay (`symbols.toml`). **The sheet is decided** (7b item 9, 2026-11-08 evening): stand-alone
+   units confirmed, one-area and one-function-unit joins stand, bosses one file per unit, same-names joins stand
+   except across a PlayStation back-order seam (`battle_4`/`battle_5`, `field_4..7`, `gpu`/`gpu_2` stand alone);
+   `analysis/tu_layout_sheet.md` has 661 units in 617 files, its first table the 71 PSX-flag rows only. **Gate on
+   the tip:** i686 `--by-function --anonymous-locals` 0 differ; x86_64 with `--exceptions` 0 differ. **The
+   owner's, before B1..B5** (7b): the PSX flags that are one overlay's own code and row 585's extent (item 9);
+   the gate classes for shared state (62 rows, item 10); the qualification pass for 50 ambiguous targets (item
+   11). **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
+   not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
+   as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
+   (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
+   legitimately changes when a twin claim is corrected. Worktrees `slb1108\r1..r4, c, t, s, a, p` are removable
+   after the merge into `main`.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
@@ -602,27 +601,29 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **Folded into PR #207 (2026-11-07):** `claude/dreamy-kilby-648ea8` (DIV-0205, the FMV decoders, item 0 above);
-  its root `C:\Users\kerok\bof3x-runs\fmv1107` removable after the merge.
-- **In flight (2026-11-02):** PR #187, `x64/c1` (item 14a, stage C), with its worktree
-  `C:\Users\kerok\bof3x-runs\x641101\c1`; stage D starts from its tip, or from `main` once it merges. The 64-bit
-  round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,
-  `round`, `c1`) and the proof (`proof\`: the run scripts with their `.out`, the launcher folders `L64`, `L32`,
-  `L64f`, `Lmix`, the quit-ended recipe copies in `stackq\`); keep `proof\` until stage D's runs are done.
-- **Built, unpushed (2026-11-07):** `x64/stage-d` (item 14a, stage D of the 64-bit round; PR at the owner's word),
-  in the main checkout. Its root `C:\Users\kerok\bof3x-runs\x641107` holds the launcher copies (`L32`, `L64`,
-  `Lmix`), the game copy, the proof (`proof\`: the run scripts' `.out`, the hashes under `sh\`, the WAV pair under
-  `wav\`) and the two agents' worktrees `wt_ci`, `wt_music` (merged; removable with the branches `x64/d-ci`,
-  `x64/d-music`). The 64-bit round's earlier root `C:\Users\kerok\bof3x-runs\x641101` (stages A..C: the agents'
-  worktrees `xa1`..`xa4`, `b1`..`b5`, `round`, `c1` and the proof) is removable with the `x64/xa*`, `x64/b*`,
-  `x64/round` and `x64/c1` branches, all merged.
-  `fix/issues-177-178` in the main checkout is another session's (issues 177..179), uncommitted work on it.
-- **Merged, still to remove:** `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
-  `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176),
-  `docs/x64-refresh`; the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174)
-  and the branches `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`,
-  local and on `origin`; the scratch roots `ss1026` and `stg1027`
-  (their worktrees are gone). `git cherry` before deleting any (Traps).
+- **The beta's docs branch (2026-11-08):** `docs/beta-readiness-1107` in the main checkout - the checklist, the
+  notes `docs/releases/v0.1.0-beta.1.md`, the README's status line, `.github/ISSUE_TEMPLATE/bug-report.md` and
+  this rewrite; the PR to come, then the tag from `main` (item 0).
+- **Merged, still to remove (2026-11-08; `git cherry` before deleting any, Traps):** the 64-bit round's branches
+  `x64/stage-d`, `x64/d-ci`, `x64/d-music` with the worktrees `C:\Users\kerok\bof3x-runs\x641107\wt_ci`, `wt_music`
+  (the root's launcher copies, game copy and proof - `proof\`: the run scripts' `.out`, the hashes under `sh\`,
+  the WAV pair under `wav\` - can go with them), and the earlier root `C:\Users\kerok\bof3x-runs\x641101`
+  (stages A..C: the agents' worktrees `xa1`..`xa4`, `b1`..`b5`, `round`, `c1` and the proof) with the `x64/xa*`,
+  `x64/b*`, `x64/round`, `x64/c1` branches; `claude/dreamy-kilby-648ea8` (DIV-0205) and `claude/bold-fermi-cbc0b2`
+  (D226's census) with their `.claude/worktrees/` checkouts and the root `C:\Users\kerok\bof3x-runs\fmv1107`;
+  `fix/ending-scenes-1107` (PR #209) and `D:/bof3x-runs/end1107`; `feature/desert-faerie-entrance` (PR #202),
+  `fix/d226-manmo-hill`, `fix/quick-menu-in-battle`, `fix/hologram-edge` with `D:/bof3x-runs/holo1107/wt`,
+  `cheat/no-fail-vinegar` (PR #198); `fix/retire-logos-import` and `C:\Users\kerok\bof3x-runs\logos1102\wt`
+  (PR #186); `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176);
+  `docs/x64-refresh`; `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174) and the branches
+  `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`, local and on
+  `origin`; the scratch roots `ss1026` and `stg1027` (their worktrees are gone). The source-layout worktrees
+  under `C:\Users\kerok\bof3x-runs\sl1107` (`sl1`..`sl3`, `wt`, `pr207`) stay until stage B starts (item 14b).
+- **Other sessions' branches in the main checkout (2026-11-08), not this file's to judge:** `docs/shisu-mode-fix`
+  (a scratchpad worktree), `docs/fish-record-sizes` (`D:/bof3x-runs/fishdocs1106/wt`), `install/pc-zh-iso`
+  (`D:/bof3x-runs/pciso1103/wt`, the PC CD source), `tools/exe-twins-solid-trim` (`D:/bof3x-runs/trim1106/wt`),
+  `docs/ammonite-chase`, `docs/i58-emi-patch-mods`, `docs/idea-i56-solo-character`, `docs/source-layout-staging`,
+  `claude/focused-brahmagupta-18db93`. Check each with `git cherry main <branch>` before touching it.
 - **Local, not for merge:** `gameplay/angel-tower-skip` (one commit, the Angel Tower skip measured and unexplained,
   IDEAS I32 P1).
 - **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and

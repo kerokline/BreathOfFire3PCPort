@@ -183,14 +183,13 @@ def edit_pth(pydir):
     return lines
 
 
-README = """Breath of Fire III - bof3x {version} (alpha)
+README = """Breath of Fire III - bof3x {version} ({stage})
 =================================================
 
 A renovation of the 2001 PC port of Breath of Fire III. This download holds
 no game data: you supply your own copy of the game.
 
-1. Unzip this folder somewhere with a short path, e.g. C:\\Games\\bof3x
-   (Windows cannot play the opening movie from a very long folder path).
+1. Unzip this folder somewhere with a short path, e.g. C:\\Games\\bof3x.
 2. Run bof3x-launcher.exe.
 3. On the Sources page, add what you own - any of:
      - the PC game's folder (the one holding BOF3.exe and DAT)
@@ -212,10 +211,22 @@ Not supported yet: .chd and .cso images (convert them back to .cue/.bin or
 .iso), 2048-byte .iso images of a PlayStation disc (they lose the disc's
 audio and movie sectors).
 
-This is an alpha: much has been watched, not all of it played through. See
+{stage_note} See
 the release notes for what is known. Licences: LICENSE (this project),
 THIRD_PARTY.md and THIRD_PARTY_RUNTIME.txt (what it bundles).
 {width_note}"""
+
+# The README's first line and its last paragraph follow the tag: an alpha was
+# watched more than played; a beta has been played through by hand
+# (docs/beta-readiness.md 5). Anything else (a plain v0.1.0, a latest-<sha>
+# build) is named a build and told nothing it cannot promise.
+def stage_of(version: str) -> tuple[str, str]:
+    if "-alpha" in version:
+        return "alpha", "This is an alpha: much has been watched, not all of it played through."
+    if "-beta" in version:
+        return "beta", "This is a beta: the game has been played to its end by hand."
+    return "build", "This is a build from the project's main branch, not a release."
+
 
 # Appended to the README of the -win-x64 zip alone; the -win zip's README is
 # unchanged. The player is told which zip is the default in one sentence.
@@ -296,6 +307,7 @@ def main():
                     help="where the pinned downloads are kept between runs")
     ap.add_argument("--stage", help="lay the release out here and keep it (default a temporary folder)")
     a = ap.parse_args()
+    stage_word, stage_note = stage_of(a.version)
     missing = [f for f in BUILD_FILES if not os.path.isfile(os.path.join(a.build, f))]
     if missing:
         # The advice names the preset whose binaryDir this is (CMakePresets.json).
@@ -352,7 +364,8 @@ def main():
             os.makedirs(os.path.dirname(t), exist_ok=True)
             (shutil.copytree if os.path.isdir(s) else shutil.copy2)(s, t)
         with open(os.path.join(stage, "README.txt"), "w", encoding="utf-8", newline="\r\n") as f:
-            f.write(README.format(version=a.version, width_note=WIDTH_NOTE_64 if width == 64 else ""))
+            f.write(README.format(version=a.version, stage=stage_word, stage_note=stage_note,
+                                  width_note=WIDTH_NOTE_64 if width == 64 else ""))
         with open(os.path.join(stage, "THIRD_PARTY_RUNTIME.txt"), "w", encoding="utf-8", newline="\r\n") as f:
             f.write(RUNTIME_NOTES.format(py=PYTHON_VERSION, pth=PTH,
                                          wheels="\n".join("  %s (%s)" % (w[0], w[1]) for w in WHEELS)))

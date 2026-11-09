@@ -72,7 +72,7 @@ would cover the last two, if you care to.
 
 ## 2026-11-03, issue #184's desert directions
 
-- **The German wording of DIV-0203** (`fix/issue-184-desert-directions`): the turn word is now Osten, and the
+- **The German wording of DIV-0203** (on `main` since PR #193, 2026-11-03; a rebuilt `de-DE` layer carries it): the turn word is now Osten, and the
   keep-going word, which the disc hyphenates over a line break ("We-" / "sten"), is Osten whole at the start of
   the next line, the break moved before it so no line grows (the sentences are in the session's report, not here:
   CLAUDE.md rule 1). Rebuild the `de-DE` layer, ask Horis about directions in the Desert of Death and read the
@@ -90,12 +90,15 @@ Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc 
   item below. JA's sheets and DIV-0196 were seen and approved on 2026-10-31.
 - **The Preset page** (ledger-fields stage D, PR #164; [`ledger-fields-round.md`](ledger-fields-round.md) 5): the
   Settings sub-tab at 100 % and 200 % scale, screenshots in `C:\Users\kerok\bof3x-runs\lfd1028\d2\shots`.
-- **The enemy-information cheat** (DIV-0187, PR #169; [`cheats.md`](cheats.md) 6): checked headless only; a fight
-  with `cheat.enemy_info=1` shows every enemy's HP gauge and Identify stats from the first meeting.
+  **The owner, 2026-11-07 night: opened and toggled; the play stayed under Recommended.** Left: a stretch of play
+  under each of the other three presets.
+- ~~**The enemy-information cheat** (DIV-0187, PR #169; [`cheats.md`](cheats.md) 6)~~ - **played with, working
+  well (the owner, 2026-11-07 night).**
 - **The consumables sorted by id** (DIV-0189, PR #173; [`rest_2e.md`](rest_2e.md)): a sort on a long game's bag,
   and your word on a hand-written type order as the next step.
-- **The no-fail cheat's next minigame** (DIV-0188; [`cheats.md`](cheats.md) 7): a recording of the well's start
-  (`BOF3X_RECORD`).
+- **The no-fail cheats** (DIV-0188; [`cheats.md`](cheats.md) 7): **played with, working well (the owner,
+  2026-11-07 night).** The well's start recording (`BOF3X_RECORD`) is still wanted for the harness, not for the
+  release.
 
 ## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 
@@ -1230,7 +1233,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   Drop it from our build by default with a ledger entry, or keep it on the
   PC-install path? **Answered 2026-11-02: drop it** - the Sources page's
   setup no longer copies it, so a PC-built and a disc-built install start
-  the same way (DIV-0202).
+  the same way (DIV-0202). **2026-11-08:** the game skips it as well where
+  the file is still present, nothing deleted (`off=CapcomMovieOnly` plays it).
 - **Six doubtful `.bss` words CP holds as pointers** (24 bytes,
   `exe-import-engine.md` 7.2) and **DIV-0055's 94 plate bytes** with no
   transform (the PSX source unmeasured): small, listed so they are not lost.

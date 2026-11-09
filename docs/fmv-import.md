@@ -13,8 +13,9 @@ ffmpeg converts it at import into the AVI the engine already plays, with no
 decoder in the engine. `importer.py build` now does that from any PSX disc.
 `LOGOS.AVI` (the porting house's logos) has no disc counterpart and is not
 this doc's (the owner's question, `disc-only-round.md` section 2); since
-2026-11-02 a game folder built from the PC install leaves it out too, so
-every source starts the same way (DIV-0202).
+2026-11-02 a game folder built from the PC install leaves it out too, and
+since 2026-11-08 the game skips it even where the file is present, so every
+source starts the same way (DIV-0202, `off=CapcomMovieOnly` plays it).
 
 ## 1. The movie on the discs
 
