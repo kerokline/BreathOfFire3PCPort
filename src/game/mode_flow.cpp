@@ -344,7 +344,7 @@ extern "C" void __cdecl GameMode_Start(void) {
     Area189_EventsInRow = 0;
     Game_AreaNumber = 0xFFFF;
     mode_flow::g.change_area(area, x, z, flags);
-    const unsigned char* const clock = mode_flow::At(::bof3::Img(at::kClock));
+    const unsigned char* const clock = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
     if (clock[3] != 0 || clock[2] != 0 || clock[1] != 0 || clock[0] != 0) {
         // DIV-0092: a loaded game plays the track the save holds; a save with no
         // track (0xFF - the port's F12 save, written while the music was off)
@@ -375,7 +375,7 @@ extern "C" void __cdecl GameMode_Start(void) {
 extern "C" void __cdecl GameMode_Enter(void) {
     const unsigned char flags = AreaEntry_PendingFlags;
     const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-    const std::int32_t x = at::kPendingX;
+    const std::int32_t x = mode_flow::at::kPendingX;
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
     mode_flow::g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {
@@ -388,7 +388,7 @@ extern "C" void __cdecl GameMode_Enter(void) {
     } else if (kind != 0xFF) {
         mode_flow::g.transition(kind);
         mode_flow::g.wait_transition(1);
-        if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(at::kKind2ZHigh))));
+        if (Field_InputFlags & 1) mode_flow::g.entry_point(mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2XHigh))), mode_flow::Word(mode_flow::At(::bof3::Img(mode_flow::at::kKind2ZHigh))));
     }
     const bool bit0 = (Field_InputFlags & 1) != 0;
     const std::uint16_t area = Game_AreaNumber;
@@ -463,7 +463,7 @@ void CountDown(std::uint32_t address) {
 }  // namespace
 extern "C" void __cdecl Game_ClockTick(void) {
     if (Field_Request == 9) return;
-    unsigned char* const c = mode_flow::At(::bof3::Img(at::kClock));
+    unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));
     const unsigned char hours = c[0], minutes = c[1], seconds = c[2];
     if (!(hours == 0x63 && minutes == 0x3B && seconds == minutes)) {
         const auto frames = static_cast<unsigned char>(c[3] + 1);
@@ -682,7 +682,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     mode_flow::g.dropped(0);
     mode_flow::g.load_dat(0x225);
     while (mode_flow::g.load_done() == 0) mode_flow::g.sleep(1);
-    std::memset(mode_flow::At(::bof3::Img(at::kBootClear)), 0, at::kBootClearBytes);
+    std::memset(mode_flow::At(::bof3::Img(mode_flow::at::kBootClear)), 0, mode_flow::at::kBootClearBytes);
     std::memcpy(mode_flow::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000), mode_flow::At(::bof3::Img(ModeFlow_ButtonDefaults_addr)), 0x12);
     // DIV-0133 and DIV-0134 (docs/button-sigma.md): the release's starting
     // words by source, then words 7 / 8 as Speak's and Action's and the
