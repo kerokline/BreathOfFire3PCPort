@@ -490,7 +490,7 @@ S29_EXPORT void __cdecl DivineMote_Run(void) {
 namespace {
 
 // A mote's angle: ((+0xB & 7) x 8 + +9) << 6, a word.
-std::uint16_t MoteAngle(const unsigned char* s) {
+std::uint16_t MoteAngleMagicS29(const unsigned char* s) {
     return static_cast<std::uint16_t>(((s[0xB] & 7u) * 8 + s[9]) << 6);
 }
 
@@ -511,7 +511,7 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         rv::Store(ts->step_y, 0x80000);
         rv::Store(ts->work_20, 0x40000);
         Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(ts->step_x));
-        Put(::bof3::Img(cell::kW4), MoteAngle(s));
+        Put(::bof3::Img(cell::kW4), MoteAngleMagicS29(s));
     }
     {
         const int sn = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));
@@ -554,7 +554,7 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
         unsigned char* const s = ScMagicS29();
         Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
         x = s + 0x34;
-        Put(::bof3::Img(cell::kW4), MoteAngle(s));
+        Put(::bof3::Img(cell::kW4), MoteAngleMagicS29(s));
     }
     {
         const int sn = SinMagicS29(SSMagicS29(::bof3::Img(cell::kW4)));

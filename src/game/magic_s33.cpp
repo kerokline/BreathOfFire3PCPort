@@ -86,8 +86,8 @@ void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
 std::uint32_t Key(const void* p) { return Low32(p); }
-std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
-void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(move_script::Long(at)) + v)); }
+std::uint32_t UMagicS33(std::int32_t v) { return static_cast<std::uint32_t>(v); }
+void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(UMagicS33(move_script::Long(at)) + v)); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
@@ -213,8 +213,8 @@ S33_EXPORT void __cdecl MightyChop_Throw(void) {
     rv::Current<records::BattleTask>()->step_x = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(0xFFFE8000u));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_x) + U(rv::As<records::SpriteHead>(source)->x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_z) + U(rv::As<records::SpriteHead>(source)->z)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(UMagicS33(rv::Current<records::BattleTask>()->step_x) + UMagicS33(rv::As<records::SpriteHead>(source)->x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(UMagicS33(rv::Current<records::BattleTask>()->step_z) + UMagicS33(rv::As<records::SpriteHead>(source)->z)));
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
     MH_CALL(Sound_PlayById)(0x100);
     for (unsigned i = 0; i < 6; ++i) {
@@ -283,8 +283,8 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     rv::Current<records::BattleTask>()->step_x = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(rv::Current<records::BattleTask>()->step_x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(rv::Current<records::BattleTask>()->step_z)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(UMagicS33(rv::As<records::SpriteHead>(Owner())->x) + UMagicS33(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(UMagicS33(rv::As<records::SpriteHead>(Owner())->z) + UMagicS33(rv::Current<records::BattleTask>()->step_z)));
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x8000);
     rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x8000);
