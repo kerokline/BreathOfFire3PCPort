@@ -101,7 +101,7 @@ constexpr ::bof3::image::Va kListCPairs{0x904CA0};
 namespace rest_4e { std::uint8_t g_faerie_name_end = 0; }  namespace {
 const unsigned char* SlotName(unsigned e) {
     static unsigned char ended[6];
-    const unsigned char* const slot = At(::bof3::Img(kEntryNames.v) + 5 * e);
+    const unsigned char* const slot = move_script::At(::bof3::Img(kEntryNames.v) + 5 * e);
     return rest_4e::g_faerie_name_end ? faerie_name::Ended(slot, ended) : slot;
 }
 
@@ -139,11 +139,11 @@ constexpr ::bof3::image::Va kPageFormat{0x6531F4};    // "page / pages"
 constexpr ::bof3::image::Va kOneGlyph{0x669F08};
 constexpr rdata::Const kFour{0x5C41C8}, kEight{0x5C41CC};   // the floats 4.0, 8.0 (rdata_consts.h)
 
-unsigned char& BRest4e(U address) { return At(address)[0]; }
-U W(U address) { return Word(At(address)); }
-void SetW(U address, U v) { SetWord(At(address), v); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
-void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+unsigned char& BRest4e(U address) { return move_script::At(address)[0]; }
+U W(U address) { return move_script::Word(move_script::At(address)); }
+void SetW(U address, U v) { move_script::SetWord(move_script::At(address), v); }
+U L(U address) { return static_cast<U>(Long(move_script::At(address))); }
+void SetL(U address, U v) { SetLong(move_script::At(address), static_cast<std::int32_t>(v)); }
 U Key(const void* p) { return Low32(p); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
     T v;
@@ -153,7 +153,7 @@ template <class T> T Get(const unsigned char* p, unsigned offset) {
 template <class T> void Put(unsigned char* p, unsigned offset, T v) { std::memcpy(p + offset, &v, sizeof v); }
 float F(int v) { return static_cast<float>(v); }
 int S16(U v) { return static_cast<short>(v); }
-const unsigned char* Message(unsigned id) { return At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
+const unsigned char* Message(unsigned id) { return move_script::At(::bof3::Img(kScriptPool.v) + W(::bof3::Img(kScriptPool.v) + 2 * id)); }
 
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
@@ -172,7 +172,7 @@ unsigned char* EntryRecord(const char* who) {
     const unsigned e = AreaW0c_TailSub;
     if (e >= kEntryCount)
         bof3::Fatal("%s: the entry 0x9039F5 is %u, past the 60 of 0x9046D0 (docs/rest_4e.md section 7)", who, e);
-    return At(::bof3::Img(Community_Records_addr) + 8 * e);
+    return move_script::At(::bof3::Img(Community_Records_addr) + 8 * e);
 }
 
 // --- the callees ------------------------------------------------------------------------
@@ -1101,7 +1101,7 @@ extern "C" void __cdecl CommuItem_Cancel(void) {
 extern "C" void __cdecl CommuItem_Confirm(void) {
     if (!ItemClosed()) return;
     SH_CALL(Window_ResetAll)();
-    const unsigned char* const entry = At(::bof3::Img(Community_Records_addr) + 8u * AreaW0c_TailSub);
+    const unsigned char* const entry = move_script::At(::bof3::Img(Community_Records_addr) + 8u * AreaW0c_TailSub);
     const unsigned char tab = entry[3];
     const unsigned item = entry[2];
     unsigned char kind;
@@ -1118,7 +1118,7 @@ extern "C" void __cdecl CommuItem_Confirm(void) {
         return;
     }
     const unsigned char* const name = SH_CALL(Item_NamePtr)(tab, item);
-    std::memcpy(At(::bof3::Img(kTextRecords.v)), name, 16);
+    std::memcpy(move_script::At(::bof3::Img(kTextRecords.v)), name, 16);
     OpenMessage(0x61);
     const unsigned char step = Rest4b_BoardStep;
     CommuItem_Slide = 0;
@@ -1238,9 +1238,9 @@ extern "C" void __cdecl CommuRank_Show(void) {
         CommuList_Page = page;
         if (static_cast<signed char>(page) < 0) BRest4e(::bof3::Img(kPage.v)) = static_cast<unsigned char>(total - 1);
     }
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(At(::bof3::Img(kPageFormat.v))),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(kTextBuffer.v))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(kPageFormat.v))),
                          CommuList_Page + 1, static_cast<unsigned>(total));
-    SH_CALL(Text_DrawFont8)(0xEE, 0x2C, 0, At(::bof3::Img(kTextBuffer.v)));
+    SH_CALL(Text_DrawFont8)(0xEE, 0x2C, 0, move_script::At(::bof3::Img(kTextBuffer.v)));
     if (Input_Pressed & (Field_ConfirmButtons | Field_CancelButtons)) ++Rest4b_BoardState;
 }
 
@@ -1363,7 +1363,7 @@ extern "C" void __cdecl CommuRank_DrawListC(int x, int y, unsigned page) {
     const unsigned p = page & 0xFF;
     for (unsigned i = 0; i < 8; ++i) {
         if (static_cast<int>(8 * p + i) >= Rest4b_BusyB) break;
-        const unsigned char* const pair = At(::bof3::Img(kListCPairs.v) + 16 * p + 2 * i);
+        const unsigned char* const pair = move_script::At(::bof3::Img(kListCPairs.v) + 16 * p + 2 * i);
         const unsigned kind = pair[0];
         if (W(::bof3::Img(kPairMessages.v) + 4 * kind + 2) != 0) {
             BRest4e(::bof3::Img(kTextRecords.v) + 5) = 0;
@@ -1384,7 +1384,7 @@ extern "C" void __cdecl CommuRank_DrawListC(int x, int y, unsigned page) {
 extern "C" void __cdecl CommuRank_DrawBackdrop(int x, int y) {
     DrawMode(0, 0x1D, nullptr);
     for (unsigned i = 0; i < 16; ++i) {
-        const unsigned char* const t = At(::bof3::Img(kTilesTop.v) + 2 * i);
+        const unsigned char* const t = move_script::At(::bof3::Img(kTilesTop.v) + 2 * i);
         SH_CALL(CommuRank_DrawTile)(x + 16 * static_cast<int>(i), y, t[0], t[1], 0);
     }
     for (int c = 0; c < 4; ++c) {
@@ -1400,7 +1400,7 @@ extern "C" void __cdecl CommuRank_DrawBackdrop(int x, int y) {
         }
     }
     for (unsigned i = 0; i < 16; ++i) {
-        const unsigned char* const t = At(::bof3::Img(kTilesBottom.v) + 2 * i);
+        const unsigned char* const t = move_script::At(::bof3::Img(kTilesBottom.v) + 2 * i);
         SH_CALL(CommuRank_DrawTile)(x + 16 * static_cast<int>(i), y + 0xB0, t[0], t[1], 0);
     }
 }
