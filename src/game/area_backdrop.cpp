@@ -273,19 +273,6 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
     }
 }
 
-// original 0x4112A0 (0x18 bytes, no calls): Sprite_Current's screen point
-// +0x2E / +0x30 = (160, 80). Called first thing by 33 small state handlers
-// at 0x401F80..0x424E00 - eleven triads, one per world-map region overlay
-// compiled into the exe - each of which then adjusts the sprite's scale,
-// countdown and state and tail-jumps to Sprite_UpdateScreen. On the
-// world-map route (259 calls) the callers are 0x404030 and 0x404080. The
-// point is centred on the 320-wide view, so under the wide picture's
-// primitive shift it stays centred: nothing to widen.
-extern "C" void __cdecl WorldMap_PinSprite(void) {
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, 0xA0);
-    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, 0x50);
-}
-
 void AreaBackdrop_Inject() {
     if (bof3::WantsShadow("area_backdrop")) area_backdrop::SelfTest();
     BOF3_INJECT(AreaMap_DrawBackdrop);
@@ -293,5 +280,4 @@ void AreaBackdrop_Inject() {
     BOF3_INJECT(Gfx_DrawSunsetGlow);
     BOF3_INJECT(AreaMap_TextureCycle);
     BOF3_INJECT(AreaMap_SlotZones);
-    BOF3_INJECT(WorldMap_PinSprite);
 }

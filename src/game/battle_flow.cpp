@@ -113,33 +113,6 @@ using HookFn = void (__cdecl*)(int);
 // The battle's frame and the task slots
 // ===========================================================================
 
-// original 0x42E400 (no PSX twin paired): once a frame from the battle's frame
-// Battle_Frame 0x42E370. While the byte 0x904AAA is set and the phase is not 0, the
-// pointer at 0x904B6C is called with 3 first; then entry (0x904AA0 & 0xFF) of
-// a six-entry table the original builds on its own stack - 0x42E470,
-// 0x42E990, 0x42F070, 0x42F220, 0x4302B0, 0x4311E0, the battle's phases
-// (unread).
-//
-// As the original has it: `test al, al` twice, the second after `mov eax,
-// [0x904AA0]` has replaced al - so the second test is of the phase's low
-// byte, and phase 0 never runs the hook (the fuzz found it; section 2 of the
-// doc). 0x904AAA is read once; the phase dword before the tests and again
-// after the hook (which may move it); the hook pointer at the call. The
-// index is not checked: 6..255 would call through the words above the table
-// on the original's stack, its own return address first; ours aborts
-// instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
-extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
-    const unsigned char event = EventBattle_Id;
-    std::uint32_t phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(battle_flow::at::kPhase.v))));
-    if (event != 0 && (phase & 0xFF) != 0) {
-        reinterpret_cast<HookFn>(PtrAtBattleFlow(::bof3::Img(battle_flow::at::kEventHook.v)))(3);
-        phase = static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(::bof3::Img(battle_flow::at::kPhase.v))));
-    }
-    const unsigned index = phase & 0xFF;
-    if (index >= 6) bof3::Fatal("Battle_PhaseDispatch: phase %u, past the six-entry table", index);
-    battle_flow::g.phases[index]();
-}
-
 // original 0x435110: each of the 48 battle-task slots whose byte +0 is not
 // zero - the slot to 0x93B8C4 and to Sprite_Current, its +0x80 dword to
 // 0x93B940 - runs the handler of its kind (+6) from a four-entry table the
@@ -589,7 +562,6 @@ extern "C" unsigned char __cdecl Battle_ActorIsOut(unsigned actor) {
 
 void BattleFlow_Inject() {
     if (bof3::WantsShadow("battle_flow")) battle_flow::SelfTest();
-    BOF3_INJECT(Battle_PhaseDispatch);
     BOF3_INJECT(BattleTask_RunAll);
     BOF3_INJECT(BattleTask_Create);
     BOF3_INJECT(BattleTask_FreeCurrent);
