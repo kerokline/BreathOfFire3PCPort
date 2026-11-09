@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch (main 7f215457 merged in) and waits on two owner calls before the moves, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on its branch (main 7f215457 merged in), the mover refuses nothing and the move map is written; the moves B1..B5 are next, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -384,14 +384,21 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    know same-type aliases and self-declared names. **Groups n and n2** (2026-11-09 night, the owner's calls 13..15):
    58 file-local renames, win_main `g_capcom_movie_only` promoted, class 3's wide form excepted; main 7f215457
    (PR #213) merged with its three seam conflicts resolved by hand, the gate's baseline moved to `slb1108\base2`.
-   **The mover's check now reports no ambiguity and no helper clash**; what it still refuses is 7b items 16
-   and 17. **Gate on the tip:** i686 `--exceptions ... --exception-classes data-layout` 0 differ (51 excepted, 79
-   promoted); x86_64 `--exceptions` 0 differ (199 excepted, 57 promoted); both self-test suites clean. **The
-   owner's, before B1..B5** (7b): **item 16** - 25 file-static items whose readers split between one moving
-   function and the source's own `_Inject()` / self-test (`slb1108\reports\state_readers.md`): promote them
-   under named classes (recommended) or keep about 45 reader functions back; **item 17** - the `MS16_SPARKLES`
-   family's 40 functions want one file (recommended: join MAGIC071..074's units in `analysis/tu_joins.tsv`);
-   row 572's extent (item 9). Then `move_funcs.py --map-only` and the moves. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
+   **2026-11-09 morning, the owner's calls 16 and 17 ("I agree with the recommendation"):** MAGIC071..074's
+   units joined into `magic/sparkle.cpp` (three `tu_joins.tsv` rows, 609 proposed files); group k cleared the
+   nine lines the join exposed (5 helper renames, 4 qualifications); group h promoted all 25 file-static items
+   under two new gate classes `i686-fold` and `i686-inline` (189 rows; 7a has their first cases), the five
+   seams' `Callees` structs to `<stem>_callees.h` headers; `move_script::g` renamed `gMoveScript`. **The mover
+   refuses nothing**: `move_funcs.py --map-only` wrote `analysis/tu_moves.tsv` (26,189 rows, every impl
+   function, now tracked). **Gate on the tip:** i686 `--exceptions ... --exception-classes
+   data-layout,i686-fold,i686-inline` 0 differ (153 excepted, 93 promoted); x86_64 `--exceptions` 0 differ (280
+   excepted, 61 promoted); both self-test suites clean on h's and k's tips. **Owed the owner:** (1) 7a's
+   `i686-inline` also covers three functions (sound `ResumeSkip`, dat_load `WalkOverlay`, `DatLog`) that were not
+   inlined but called by LLVM's internal register convention - same cause, flagged in each row; if that is a
+   third class, two half-commits revert; (2) the first i686 code change of the round has no played route
+   behind it yet - a state-hash A/B or a play of the branch build; (3) row 572's extent (item 9). **Next:**
+   the moves B1..B5 (round doc 4: groups by `.text` range, parallel, merged one at a time with the gate after
+   each), then stages C/D/E. **Traps paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must
    not change a file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line
    as a comment); a helper that matched its twin exactly stops matching once a helper it calls is renamed
    (cascades: run `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv`
@@ -400,8 +407,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    qualified sent 178 rows to the owner of which 120 were `using X::name;` declarations - classify before
    declaring a thing impossible; the mover's ambiguity test over-counted three ways (qualified names, same-type
    aliases, self-declared names) - measure a check before sending its lines to an agent; a state kept file-local
-   "with its readers" is blocked by the source's `_Inject()` and self-test, which never move. Worktrees
-   `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2` are removable after the merge into `main`.
+   "with its readers" is blocked by the source's `_Inject()` and self-test, which never move; the i686 gate
+   pairs a promotion with its file-local by name, so renaming a promoted variable costs `data-layout` rows
+   (gMoveScript: 5). Worktrees `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2, h, k` are removable after the merge
+   into `main`.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
