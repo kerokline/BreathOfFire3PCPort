@@ -73,7 +73,7 @@ field_misc::U LongFieldMisc(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-float Float(const unsigned char* p) {
+float FloatFieldMisc(const unsigned char* p) {
     float v;
     std::memcpy(&v, p, sizeof v);
     return v;
@@ -82,8 +82,8 @@ void PutWord(unsigned char* p, field_misc::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
+void PutLongFieldMisc(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
+void PutFloatFieldMisc(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 // The map-view ring (docs/map-scroll.md): 0x38 rows of 0x1C cells, their heads
 // MapView_Row / MapView_Column; MapView_Origin the map cell of the view's corner.
@@ -125,13 +125,13 @@ Ring RingCell(std::int32_t dx, std::int32_t dz) {
 // --- the x87 sequences, as the draw handlers execute them (d3d_draw.cpp has the
 // same; each rounds to the control word's precision exactly as Capcom's) ---
 // fld a; fmul b; fstp
-inline float X87Mul(float a, float b) {
+inline float X87MulFieldMisc(float a, float b) {
     float r;
     __asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
     return r;
 }
 // fld a; fdiv b; fstp
-inline float X87Div(float a, float b) {
+inline float X87DivFieldMisc(float a, float b) {
     float r;
     __asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
     return r;
@@ -139,28 +139,28 @@ inline float X87Div(float a, float b) {
 
 // D3d_Device, read afresh before every COM call as the original does.
 void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr))))); }
-void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
+void* MethodFieldMisc(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 long SetTextureFieldMisc(field_misc::U stage, field_misc::U texture) {
     void** device = DeviceFieldMisc();
-    return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
+    return reinterpret_cast<Com3>(MethodFieldMisc(device, 0x98))(device, stage, texture);
 }
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVerticesFieldMisc(field_misc::U type, field_misc::U count) {
     void** device = DeviceFieldMisc();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
+    return reinterpret_cast<Com6>(MethodFieldMisc(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
 unsigned char* VertexFieldMisc(field_misc::U i) { return AtFieldMisc(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
 field_misc::U DrawModeFieldMisc() { return LongFieldMisc(AtFieldMisc(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z. Diffuse as given; specular, tu and tv are not written.
 void PutFlatCorner(unsigned char* out, const unsigned char* xyz, field_misc::U diffuse) {
-    PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
-    PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
-    PutLong(out + 0x08, LongFieldMisc(xyz + 8));
-    PutFloat(out + 0x0C, X87Div(Float(AtFieldMisc(field_misc::kRhwNumerator)), Float(xyz + 8)));
-    PutLong(out + 0x10, diffuse);
+    PutFloatFieldMisc(out + 0x00, X87MulFieldMisc(D3d_ScaleX, FloatFieldMisc(xyz)));
+    PutFloatFieldMisc(out + 0x04, X87MulFieldMisc(D3d_ScaleY, FloatFieldMisc(xyz + 4)));
+    PutLongFieldMisc(out + 0x08, LongFieldMisc(xyz + 8));
+    PutFloatFieldMisc(out + 0x0C, X87DivFieldMisc(FloatFieldMisc(AtFieldMisc(field_misc::kRhwNumerator)), FloatFieldMisc(xyz + 8)));
+    PutLongFieldMisc(out + 0x10, diffuse);
 }
 
 // The two ops' shared walk: the map cell's run of 4-byte records; a record of
@@ -185,14 +185,14 @@ U TileTest(U x_arg, U z_arg, U want) {
         U record = LongFieldMisc(AtFieldMisc(walk));
         if ((record & 0xFF000000u) == 0x23000000u) {
             record = (record & 0xFFFFFFu) | 0x24000000u;
-            PutLong(AtFieldMisc(walk), record);
+            PutLongFieldMisc(AtFieldMisc(walk), record);
             const U patch = at::AreaMap_HeaderAt() +
                             ((record & 0xFFFF) + (LongFieldMisc(AtFieldMisc(at::AreaMap_PatchBaseAt())) & 0xFFFF)) * 4u;
             U entry = LongFieldMisc(AtFieldMisc(patch));
             if ((entry & 0xF001) == want) {
                 entry = want == 0x8000 ? entry | 1u : entry & ~1u;   // or al, 1 / and al, 0xFE
                 found = 1;
-                PutLong(AtFieldMisc(patch), entry);
+                PutLongFieldMisc(AtFieldMisc(patch), entry);
             }
         }
         walk += AtFieldMisc(walk)[2] * 4u;   // the step, read after both stores
@@ -387,7 +387,7 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             used += 1;
             const field_misc::U value = LongFieldMisc(record + static_cast<field_misc::U>(c) * 4u + 4u);
             cursor += 4;
-            PutLong(AtFieldMisc(Header(0) + run * 4u), value);
+            PutLongFieldMisc(AtFieldMisc(Header(0) + run * 4u), value);
         }
             [[fallthrough]];
         case 1: {
@@ -410,7 +410,7 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             used += 3;
             const field_misc::U value = LongFieldMisc(cursor + static_cast<field_misc::U>(c) * 4u + 4u);
             cursor += 12;
-            PutLong(AtFieldMisc(at::AreaMap_CornersAt() + (width * y + x) * 4u), value);
+            PutLongFieldMisc(AtFieldMisc(at::AreaMap_CornersAt() + (width * y + x) * 4u), value);
             AtFieldMisc(at::MapView_RedrawAt())[0] = 2;
             break;
         }
@@ -451,8 +451,8 @@ extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
         else index = WordFieldMisc(AtFieldMisc(at::ItemFaceB() + item * 0x90u));
         const unsigned char* const src = AtFieldMisc(ItemHalf(index));
         for (field_misc::U corner = 0; corner < 4; ++corner) {
-            PutLong(packet + 8 + corner * 0xC, LongFieldMisc(src + 8 + corner * 0x10));
-            PutLong(packet + 0xC + corner * 0xC, LongFieldMisc(src + 0xC + corner * 0x10));
+            PutLongFieldMisc(packet + 8 + corner * 0xC, LongFieldMisc(src + 8 + corner * 0x10));
+            PutLongFieldMisc(packet + 0xC + corner * 0xC, LongFieldMisc(src + 0xC + corner * 0x10));
         }
         const unsigned char* const colour = AtFieldMisc(::bof3::Img(kOverlayColours) + static_cast<field_misc::U>(faces >> 3) * 2u);
         packet[4] = static_cast<unsigned char>((colour[0] & 0x1F) << 3);
@@ -566,13 +566,13 @@ extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
 // original 0x5A75B0 (PSX SetPolyF4 0x8017B31C): code 0x28, z at +0x10 +0x1C +0x28 +0x34.
 extern "C" unsigned char* __cdecl Gpu_SetPolyF4(unsigned char* prim) {
     prim[7] = 0x28;
-    for (field_misc::U z = 0x10; z <= 0x34; z += 0xC) PutLong(prim + z, 0x3C23D70A);
+    for (field_misc::U z = 0x10; z <= 0x34; z += 0xC) PutLongFieldMisc(prim + z, 0x3C23D70A);
     return prim;
 }
 // original 0x5A7610 (PSX SetPolyG4 0x8017B344): code 0x38, z at +0x10 +0x20 +0x30 +0x40.
 extern "C" unsigned char* __cdecl Gpu_SetPolyG4(unsigned char* prim) {
     prim[7] = 0x38;
-    for (field_misc::U z = 0x10; z <= 0x40; z += 0x10) PutLong(prim + z, 0x3C23D70A);
+    for (field_misc::U z = 0x10; z <= 0x40; z += 0x10) PutLongFieldMisc(prim + z, 0x3C23D70A);
     return prim;
 }
 // original 0x5A7670 (PSX SetLineF3 0x8017B420): code 0x48, z at +0x10 +0x1C
@@ -580,7 +580,7 @@ extern "C" unsigned char* __cdecl Gpu_SetPolyG4(unsigned char* prim) {
 // the PC's primitive has its third corner there and no terminator.
 extern "C" unsigned char* __cdecl Gpu_SetLineF3(unsigned char* prim) {
     prim[7] = 0x48;
-    for (field_misc::U z = 0x10; z <= 0x28; z += 0xC) PutLong(prim + z, 0x3C23D70A);
+    for (field_misc::U z = 0x10; z <= 0x28; z += 0xC) PutLongFieldMisc(prim + z, 0x3C23D70A);
     return prim;
 }
 // original 0x5A7810 (PSX SetDrawMove 0x8017B554): the port's move-image
@@ -591,12 +591,12 @@ extern "C" unsigned char* __cdecl Gpu_SetLineF3(unsigned char* prim) {
 // makes a zero-sized rect a no-op; the PC does neither.
 extern "C" unsigned char* __cdecl Gpu_SetDrawMove(unsigned char* prim, const unsigned char* rect, unsigned long x,
                                                   unsigned long y) {
-    PutLong(prim + 4, 0xEC000000u);
-    PutLong(prim + 8, LongFieldMisc(rect));
+    PutLongFieldMisc(prim + 4, 0xEC000000u);
+    PutLongFieldMisc(prim + 8, LongFieldMisc(rect));
     const field_misc::U second = LongFieldMisc(rect + 4);
-    PutLong(prim + 0xC, second);
-    PutLong(prim + 0x10, static_cast<field_misc::U>(x));
-    PutLong(prim + 0x14, static_cast<field_misc::U>(y));
+    PutLongFieldMisc(prim + 0xC, second);
+    PutLongFieldMisc(prim + 0x10, static_cast<field_misc::U>(x));
+    PutLongFieldMisc(prim + 0x14, static_cast<field_misc::U>(y));
     return prim;
 }
 
