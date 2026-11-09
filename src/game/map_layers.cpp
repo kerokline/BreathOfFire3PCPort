@@ -43,12 +43,12 @@ namespace {
 // map_layers::g: named in full below (source-layout B0, a clash on g)
 }  // namespace
 namespace map_layers { bool g_side_zero_release; }   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
-namespace {
+
 // DIV-0085: 0 until ArmSideDup (and with BOF3X_SIDE_DUP=0), so every self-test
 // compares Capcom's walk. g_file_sides: per map cell (z * width + x), 1 when the
 // heights as the area file loaded them give it a south side only, 2 an east
 // side only - and its tile carries no third word - else 0 (SnapshotSides).
-bool g_side_dup;
+namespace map_layers { bool g_side_dup; }  namespace {
 }  namespace map_layers { unsigned char g_file_sides[256 * 256]; }
 namespace {
 std::uint32_t Dword(const unsigned char* p) {
@@ -587,7 +587,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
         }
     }
     const unsigned next = Word(item + 0x7E);
-    if (g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
+    if (map_layers::g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
         // DIV-0085 (D239): the tile carries a word for the one side the file's
         // heights give this cell and no third; the second side exists only
         // because the heights moved since (AREA060's sky effect), and the
