@@ -19,6 +19,9 @@ names and defaults from the player's own install, so it ships no game data.
 - **Bytes the existing editor does not model are worth adding**, optional for
   the player.
 - **Creation means from nothing, settable to any story point.**
+- **The story-point table and the flag documentation are reference material**, like
+  the song names: neither code nor assets, so they are checked in. Investigation
+  results also serve as material for the wiki.
 
 ## 2. Provenance
 
@@ -378,8 +381,9 @@ Rules:
 - "Typical progress" is optional. Without it the party gets the defaults.
 - Picking a point warns about, but does not refuse, a party that does not fit it.
 
-Open: whether a table of flag numbers measured from saves counts as data under
-`CLAUDE.md` rule 1 (section 14).
+The table is reference material (section 1): flag numbers, positions and labels in
+text. It never embeds a save or a dump of one. Flag meanings are written up as they
+are found, with their evidence, in a form that can also go to the wiki.
 
 ## 13. Behaviour
 
@@ -447,24 +451,19 @@ Fixtures are local saves and are never committed.
 
 For the owner:
 
-1. **Is a story-point table allowed under rule 1?** It would be flag numbers and
-   positions measured from saves, in a text file, with no binary. I read it as
-   facts about state, like the area numbers already in docs, but the rule says
-   "anything extracted". If not, the alternative is capturing it on the player's
-   machine, which is slow.
-2. **How fine should story points go?** Each row costs a capture and a load test.
-3. **Which reference new-game saves can be recorded?** PC, US and JP.
+1. **How fine should story points go?** Each row costs a capture and a load test.
+2. **Which reference new-game saves can be recorded?** PC, US and JP.
 
 For later investigation:
 
-4. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
+3. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
    no such saves, and the FR and DE serials are unconfirmed.
-5. Name codecs for the PSX EU, FR and DE releases.
-6. What writes the constant bytes near `+0xC2A`.
-7. How the launcher turns the install's glyph codes into text it can draw. Until
+4. Name codecs for the PSX EU, FR and DE releases.
+5. What writes the constant bytes near `+0xC2A`.
+6. How the launcher turns the install's glyph codes into text it can draw. Until
    then, item and ability lists can show ids.
-8. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
-9. The CITED fields to confirm before they become editable.
+7. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
+8. The CITED fields to confirm before they become editable.
 
 ## 15. How the measurements were made
 
