@@ -73,11 +73,11 @@ void Run(const char* who, U table, unsigned entries, unsigned at) {
 // Effect_FindFree's record: a Fatal on an answer past the twenty (the callee
 // answers 0xFF or 0..19; the original would write past the pool).
 unsigned char* EffectRecord(const char* who, unsigned index) {
-    if (index >= at::kEffects)
+    if (index >= field_c2::at::kEffects)
         bof3::Fatal("%s: Effect_FindFree answered %u, past the 20 records - the original writes past the pool "
                     "(docs/field_c2.md section 2)",
                     who, index);
-    return rv::Bytes(Effect_Objects) + index * at::kEffectStride;
+    return rv::Bytes(Effect_Objects) + index * field_c2::at::kEffectStride;
 }
 
 // A new kind-0x34 record at the running one's place: +0 1, +5 0x34 (the caller
@@ -94,13 +94,13 @@ void CopyPlace(unsigned char* e, const unsigned char* s) {
 // answer as the caller widened it; past the four extras (or, sign-extended,
 // negative) the original writes outside both lists - a Fatal here.
 void Touch(const char* who, int index) {
-    if (index < 0 || index >= static_cast<int>(at::kObjects + at::kExtras))
+    if (index < 0 || index >= static_cast<int>(field_c2::at::kObjects + field_c2::at::kExtras))
         bof3::Fatal("%s: Sprite_ObjectAt answered %d, past the 30 objects and four extras - the original writes "
                     "outside them (docs/field_c2.md section 2)",
                     who, index);
-    unsigned char* const o = index < static_cast<int>(at::kObjects)
-                                 ? rv::Bytes(Sprite_Objects) + static_cast<U>(index) * at::kObjectStride
-                                 : rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(index - static_cast<int>(at::kObjects)) * at::kObjectStride;
+    unsigned char* const o = index < static_cast<int>(field_c2::at::kObjects)
+                                 ? rv::Bytes(Sprite_Objects) + static_cast<U>(index) * field_c2::at::kObjectStride
+                                 : rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(index - static_cast<int>(field_c2::at::kObjects)) * field_c2::at::kObjectStride;
     o[0x80] = static_cast<unsigned char>(o[0x80] | 1);
 }
 
@@ -121,8 +121,8 @@ static_assert(sizeof(Matrix) == 0x20, "a MATRIX is 0x20 bytes");
 // member +0xB's screen words +0x2E / +0x30 (the member byte unchecked, as the
 // original: a data read, not a table index).
 void DrawNumber(const unsigned char* s) {
-    const records::PartyMember* const o = rv::AsConst<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + s[0xB] * at::kMemberStride));
-    SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kDrawNumber.v)(
+    const records::PartyMember* const o = rv::AsConst<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + s[0xB] * field_c2::at::kMemberStride));
+    SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), field_c2::at::kDrawNumber.v)(
         static_cast<std::uint16_t>(o->screen_x), static_cast<std::uint16_t>(static_cast<std::uint16_t>(o->screen_y) + rv::As<records::EffectObject>(s)->z_whole), s[6], s[0x27]);
 }
 
@@ -169,13 +169,13 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             }
             s = rv::As<records::EffectObject>(S());
             const int bytes = static_cast<signed char>(At(s->frames)[0]) * 40;
-            unsigned char* dst = At(::bof3::Img(at::kModelCopy));
+            unsigned char* dst = At(::bof3::Img(field_c2::at::kModelCopy));
             for (int i = bytes; i > 0; --i) {
                 s = rv::As<records::EffectObject>(S());
                 *dst++ = *At(s->script);
                 s->script = s->script + 1;
             }
-            rv::Store<U>(rv::As<records::EffectObject>(S())->script, ::bof3::Img(at::kModelCopy));
+            rv::Store<U>(rv::As<records::EffectObject>(S())->script, ::bof3::Img(field_c2::at::kModelCopy));
             SH_CALL(EffectKind30_ShardsInit)();
             SH_CALL(EffectKind30_SparksInit)();
             SH_CALL(Sound_PlayEffect)(0x10E);
@@ -356,8 +356,8 @@ extern "C" void __cdecl EffectKind30_FreeCells(void) {
 // the engine's 0x46D710. PSX 0x8019E650 (gap67).
 extern "C" void __cdecl EffectKind30_ShardsInit(void) {
     const unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
-    for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kShardStride);
+    for (unsigned i = 0; i < field_c2::at::kShardCount; ++i, face += field_c2::at::kFaceStride) {
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * field_c2::at::kShardStride);
         SetWord(r + 0, static_cast<U>((SW(face + 8) + SW(face + 0x14) + SW(face + 0xE) + SW(face + 2)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(face + 4) + SW(face + 0x16) + SW(face + 0xA) + SW(face + 0x10)) >> 2));
         SetWord(r + 4, static_cast<U>((SW(face + 0x18) + SW(face + 6) + SW(face + 0x12) + SW(face + 0xC)) >> 2));
@@ -386,8 +386,8 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
 // PSX 0x8019E808 (gap67).
 extern "C" void __cdecl EffectKind30_ShardsStep(void) {
     unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
-    for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kShardStride);
+    for (unsigned i = 0; i < field_c2::at::kShardCount; ++i, face += field_c2::at::kFaceStride) {
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * field_c2::at::kShardStride);
         const unsigned vx = Word(r + 8);
         SetWord(r + 0xC, Word(r + 0xC) + 2u);
         SetWord(r + 0, Word(r + 0) + vx);
@@ -433,9 +433,9 @@ extern "C" void __cdecl EffectKind30_ShardTumble(unsigned char* shard, unsigned 
 // EffectKind30_Push's and the engine's 0x46D710. No PSX twin paired.
 extern "C" void __cdecl EffectKind30_SparksInit(void) {
     EffectKind30_Sparks[0] = 0x40;
-    SetWord(At(::bof3::Img(at::kSparkSize)), 0);
-    for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * at::kSparkStride);
+    SetWord(At(::bof3::Img(field_c2::at::kSparkSize)), 0);
+    for (unsigned i = 0; i < field_c2::at::kSparkCount; ++i) {
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * field_c2::at::kSparkStride);
         const records::EffectObject* const s = rv::As<records::EffectObject>(S());
         SetUL(p + 0, static_cast<U>(s->x));
         SetUL(p + 4, static_cast<U>(s->z));
@@ -455,11 +455,11 @@ extern "C" void __cdecl EffectKind30_SparksInit(void) {
 // more, the size word up 0x80; else the shade byte down 5. EffectKind30_
 // Shatter's and the engine's 0x46D770 (a tail jump). No PSX twin paired.
 extern "C" void __cdecl EffectKind30_SparksDraw(void) {
-    SH_AT(void (__cdecl*)(void), at::kCameraMatrices.v)();
+    SH_AT(void (__cdecl*)(void), field_c2::at::kCameraMatrices.v)();
     const unsigned char* s = nullptr;
-    for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * at::kSparkStride);
-        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(::bof3::Img(at::kSparkSize))), EffectKind30_Sparks[0]);
+    for (unsigned i = 0; i < field_c2::at::kSparkCount; ++i) {
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * field_c2::at::kSparkStride);
+        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(::bof3::Img(field_c2::at::kSparkSize))), EffectKind30_Sparks[0]);
         s = S();
         const unsigned shift = s[9] >= 0xC ? 1 : 0;
         SetUL(p + 0, UL(p + 0) + (UL(p + 0x10) << shift));
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
         SetUL(p + 8, UL(p + 8) + (UL(p + 0x18) << shift));
     }
     if (s[9] >= 0xC)
-        SetWord(At(::bof3::Img(at::kSparkSize)), Word(At(::bof3::Img(at::kSparkSize))) + 0x80u);
+        SetWord(At(::bof3::Img(field_c2::at::kSparkSize)), Word(At(::bof3::Img(field_c2::at::kSparkSize))) + 0x80u);
     else
         EffectKind30_Sparks[0] = static_cast<unsigned char>(EffectKind30_Sparks[0] + 0xFB);
 }
@@ -489,9 +489,9 @@ extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size,
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     float screen[3];
-    SH_AT(void (__cdecl*)(const long*, float*), at::kProjectPoint.v)(point, screen);
+    SH_AT(void (__cdecl*)(const long*, float*), field_c2::at::kProjectPoint.v)(point, screen);
     short wh[2] = {static_cast<short>(size), static_cast<short>(size)};
-    SH_AT(void (__cdecl*)(const long*, const short*, short*), at::kProjectSize.v)(point, wh, wh);
+    SH_AT(void (__cdecl*)(const long*, const short*, short*), field_c2::at::kProjectSize.v)(point, wh, wh);
     const int w = wh[0], h = wh[1];
     const int hw = static_cast<short>(wh[0]) >> 1, hh = static_cast<short>(wh[1]) >> 1;
     const double left = static_cast<double>(screen[0]) - static_cast<double>(hw);
@@ -1017,7 +1017,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
     s = rv::As<records::EffectObject>(S());
     if (SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX(rv::Bytes(s), 0)), static_cast<short>(CellZ(rv::Bytes(s), 0))) == 0xFD) {
         s = rv::As<records::EffectObject>(S());
-        SH_AT(void (__cdecl*)(unsigned, unsigned), at::kClearCell.v)(CellX(rv::Bytes(s), 0), CellZ(rv::Bytes(s), 0));
+        SH_AT(void (__cdecl*)(unsigned, unsigned), field_c2::at::kClearCell.v)(CellX(rv::Bytes(s), 0), CellZ(rv::Bytes(s), 0));
         found = true;
     }
     s = rv::As<records::EffectObject>(S());
@@ -1025,7 +1025,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         const unsigned char b = SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX(rv::Bytes(s), 1)), static_cast<short>(CellZ(rv::Bytes(s), 0)));
         s = rv::As<records::EffectObject>(S());
         if (b == 0xFD) {
-            SH_AT(void (__cdecl*)(unsigned, unsigned), at::kClearCell.v)(CellX(rv::Bytes(s), 1), CellZ(rv::Bytes(s), 0));
+            SH_AT(void (__cdecl*)(unsigned, unsigned), field_c2::at::kClearCell.v)(CellX(rv::Bytes(s), 1), CellZ(rv::Bytes(s), 0));
             s = rv::As<records::EffectObject>(S());
             found = true;
         }
@@ -1034,7 +1034,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         const unsigned char b = SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX(rv::Bytes(s), 0)), static_cast<short>(CellZ(rv::Bytes(s), 1)));
         s = rv::As<records::EffectObject>(S());
         if (b == 0xFD) {
-            SH_AT(void (__cdecl*)(unsigned, unsigned), at::kClearCell.v)(CellX(rv::Bytes(s), 0), CellZ(rv::Bytes(s), 1));
+            SH_AT(void (__cdecl*)(unsigned, unsigned), field_c2::at::kClearCell.v)(CellX(rv::Bytes(s), 0), CellZ(rv::Bytes(s), 1));
             s = rv::As<records::EffectObject>(S());
             found = true;
         }
@@ -1043,7 +1043,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         if (!found) {
             if (SH_CALL(AreaMap_ByteAt)(static_cast<short>(CellX(rv::Bytes(s), 1)), static_cast<short>(CellZ(rv::Bytes(s), 1))) != 0xFD) return 0;
             s = rv::As<records::EffectObject>(S());
-            SH_AT(void (__cdecl*)(unsigned, unsigned), at::kClearCell.v)(CellX(rv::Bytes(s), 1), CellZ(rv::Bytes(s), 1));
+            SH_AT(void (__cdecl*)(unsigned, unsigned), field_c2::at::kClearCell.v)(CellX(rv::Bytes(s), 1), CellZ(rv::Bytes(s), 1));
         }
     } else if (!found) {
         return 0;
@@ -1055,7 +1055,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         return 1;
     }
     rv::Bytes(s)[0xB] = 2;
-    SH_AT(void (__cdecl*)(unsigned), at::kZennyFind.v)(luck == 0xF ? 0xA : 5);
+    SH_AT(void (__cdecl*)(unsigned), field_c2::at::kZennyFind.v)(luck == 0xF ? 0xA : 5);
     const unsigned char n = SH_CALL(Effect_FindFree)();
     if (n != 0xFF) {
         // the original widens the answer signed (movsx): 0x80..0xFE would be a
