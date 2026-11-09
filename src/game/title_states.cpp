@@ -60,45 +60,14 @@ constexpr PspRect kPspEmblem = {0, 0, 202, 122};       // the "III" emblem, with
 constexpr int kPspTextDx = -3, kPspLowerDx = 224, kPspLowerDy = 5, kPspEmblemDx = 30;
 }  namespace title_states { bool g_psp_title = false; }
 namespace {
-// Every callee, through pointers so that the start-up fuzz can stand
-// recording functions in for them. Five are ours (Title_FadeMusic,
-// Title_StopMusic, Title_DrawBadge, Scenario_Start, Scenario_Load), called
-// through here all the same so that each function is tested alone.
-// Field_ModeDispatch belongs to another file and is called through its
-// address.
-struct CalleesTitleStates {
-    void (__cdecl* dropped)(unsigned char);
-    void (__cdecl* load_dat)(int);
-    int (__cdecl* load_done)();
-    void (__cdecl* sleep)(int);
-    void (__cdecl* clut_restore)();
-    void (__cdecl* music_play)(unsigned int, int);
-    void (__cdecl* transition)(unsigned char);
-    void (__cdecl* fade_music)();
-    void (__cdecl* stop_music)();
-    void (__cdecl* effect_clear)();
-    void (__cdecl* scenario_start)(int);
-    void (__cdecl* task_create)(int, void*);
-    void (__cdecl* music_fade_out)(int);
-    void (__cdecl* music_fade_stop)(int);
-    void (__cdecl* badge)();
-    void (__cdecl* task_exit)();
-    void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
-    void (__cdecl* commit)(unsigned, unsigned);
-    unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
-    void (__cdecl* shade)(unsigned char*, unsigned char);
-    void (__cdecl* scenario_load)();
-    void (__cdecl* loading_frame)();
-    void (__cdecl* mode_dispatch)();
-};
-const CalleesTitleStates kOriginalsTitleStates = {
+const title_states::CalleesTitleStates kOriginalsTitleStates = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
     Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
-CalleesTitleStates gTitleStates = kOriginalsTitleStates;
-
+}  namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
+namespace {
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
 std::uint16_t TaskZeroState() { return move_script::Word(move_script::At(::bof3::Img(bof3::addr::Task_Records))); }
 
@@ -107,7 +76,7 @@ std::uint16_t TaskZeroState() { return move_script::Word(move_script::At(::bof3:
 // Capcom's sprite `index` (its palette and the rest of its record), its
 // rectangle replaced by `r` (DIV-0131).
 unsigned char* PspSprite(int x, int y, unsigned index, const PspRect& r, unsigned slot, unsigned semi) {
-    unsigned char* const prim = gTitleStates.sprite(x, y, index, slot, semi);
+    unsigned char* const prim = title_states::gTitleStates.sprite(x, y, index, slot, semi);
     prim[0x14] = r.u;
     prim[0x15] = r.v;
     move_script::SetWord(prim + 0x18, r.w);
@@ -128,12 +97,12 @@ void BumpState() { Title_State = static_cast<std::uint16_t>(Title_State + 1); }
 // restored and Gfx_ClutStripDirty counted up - not set to 1 - after the
 // load; the state word read after the calls.
 extern "C" void __cdecl Title_StateLoad(void) {
-    gTitleStates.dropped(2);
-    gTitleStates.load_dat(0x136);
-    while (gTitleStates.load_done() == 0) gTitleStates.sleep(1);
-    gTitleStates.clut_restore();
+    title_states::gTitleStates.dropped(2);
+    title_states::gTitleStates.load_dat(0x136);
+    while (title_states::gTitleStates.load_done() == 0) title_states::gTitleStates.sleep(1);
+    title_states::gTitleStates.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
-    gTitleStates.music_play(0x8D, 8);
+    title_states::gTitleStates.music_play(0x8D, 8);
     BumpState();
     Title_Fade = 1;
     Title_Scroll = 0xC8;
@@ -174,8 +143,8 @@ extern "C" void __cdecl Title_StateBackdrop(void) {
 extern "C" void __cdecl Title_StateLogo(void) {
     Title_Timer = static_cast<std::uint16_t>(Title_Timer - 1);
     if (Title_Timer != 0) return;
-    gTitleStates.transition(0);
-    gTitleStates.fade_music();
+    title_states::gTitleStates.transition(0);
+    title_states::gTitleStates.fade_music();
     BumpState();
 }
 
@@ -193,16 +162,16 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
     Title_Fade = 0;
     Title_LogoState = 0;
     Title_StartArmed = 0;
-    gTitleStates.stop_music();
-    gTitleStates.dropped(0);
-    gTitleStates.effect_clear();
+    title_states::gTitleStates.stop_music();
+    title_states::gTitleStates.dropped(0);
+    title_states::gTitleStates.effect_clear();
     move_script::At(::bof3::Img(kPlayClock.v))[3] = 0;
     move_script::At(::bof3::Img(kPlayClock.v))[2] = 0;
     move_script::At(::bof3::Img(kPlayClock.v))[1] = 0;
     move_script::At(::bof3::Img(kPlayClock.v))[0] = 0;
     Draw_PassFlags = 0;
-    gTitleStates.scenario_start(0x10);
-    gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
+    title_states::gTitleStates.scenario_start(0x10);
+    title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
     BumpState();
 }
 
@@ -218,13 +187,13 @@ extern "C" void __cdecl Title_StateDemo(void) {
         Title_State = 0;
         return;
     }
-    if (gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
+    if (title_states::gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
         MoveScript_Var7 = 1;
-        gTitleStates.transition(4);
-        gTitleStates.music_fade_stop(8);
+        title_states::gTitleStates.transition(4);
+        title_states::gTitleStates.music_fade_stop(8);
         BumpState();
     }
-    gTitleStates.badge();
+    title_states::gTitleStates.badge();
 }
 
 // original 0x4623D0: entry 6 (PSX 0x801D0FB8), after Start ended the demo:
@@ -236,7 +205,7 @@ extern "C" void __cdecl Title_StateDemoEnd(void) {
         Title_State = 0;
         return;
     }
-    gTitleStates.badge();
+    title_states::gTitleStates.badge();
 }
 
 // original 0x4623F0: entry 7 (PSX 0x801D1000), after Start on the logo: once
@@ -249,16 +218,16 @@ extern "C" void __cdecl Title_StateDemoEnd(void) {
 // makes this return, as the original's jump would to its caller.
 extern "C" void __cdecl Title_StateMenu(void) {
     if (Transition_Busy != 0) return;
-    gTitleStates.stop_music();
-    gTitleStates.dropped(0);
-    gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
-    gTitleStates.task_exit();
+    title_states::gTitleStates.stop_music();
+    title_states::gTitleStates.dropped(0);
+    title_states::gTitleStates.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
+    title_states::gTitleStates.task_exit();
 }
 
 // original 0x4624B0: fade the music out over 0x10 frames, unless none plays
 // (PSX 0x801D1134, which fades through a per-track table).
 extern "C" void __cdecl Title_FadeMusic(void) {
-    if (Music_Track != 0xFF) gTitleStates.music_fade_out(0x10);
+    if (Music_Track != 0xFF) title_states::gTitleStates.music_fade_out(0x10);
 }
 
 // original 0x4624D0: fade out and stop over 0xA frames, and forget the track,
@@ -268,7 +237,7 @@ extern "C" void __cdecl Title_FadeMusic(void) {
 // left there.
 extern "C" void __cdecl Title_StopMusic(void) {
     if (Music_Track == 0xFF) return;
-    gTitleStates.music_fade_stop(0xA);
+    title_states::gTitleStates.music_fade_stop(0xA);
     Music_Track = 0xFF;
 }
 
@@ -284,9 +253,9 @@ extern "C" void __cdecl Title_StopMusic(void) {
 extern "C" void __cdecl Title_DrawBadge(void) {
     if (Field_Request == 5 && Game_Mode == 2 && Transition_Busy == 0) Title_BadgeOn = 0;
     if (Draw_PassFlags == 0 || Title_BadgeOn == 0) return;
-    gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0x9D, 0);
-    gTitleStates.commit(2, 0xC);
-    gTitleStates.sprite(0xC0, 4, 0xA, 2, 0);
+    title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0x9D, 0);
+    title_states::gTitleStates.commit(2, 0xC);
+    title_states::gTitleStates.sprite(0xC0, 4, 0xA, 2, 0);
 }
 
 // original 0x462820: the logo's first set (PSX 0x801D12CC): sprite 1 through
@@ -308,19 +277,19 @@ extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
     if (!title_states::g_psp_title) {   // DIV-0131: the PSP's art carries its own TM; the mark sprite is not drawn
-        gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
-        gTitleStates.commit(1, 0xC);
-        gTitleStates.shade(gTitleStates.sprite(0x106, 0x82, 1, 1, semi), level);
+        title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
+        title_states::gTitleStates.commit(1, 0xC);
+        title_states::gTitleStates.shade(title_states::gTitleStates.sprite(0x106, 0x82, 1, 1, semi), level);
     }
-    gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xBD, 0);
-    gTitleStates.commit(2, 0xC);
-    gTitleStates.shade(gTitleStates.sprite(0x14, 0xD0, 8, 2, semi), level);
-    gTitleStates.shade(gTitleStates.sprite(0xA4, 0xD0, 9, 2, semi), level);
+    title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xBD, 0);
+    title_states::gTitleStates.commit(2, 0xC);
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(0x14, 0xD0, 8, 2, semi), level);
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(0xA4, 0xD0, 9, 2, semi), level);
     if (Title_Fade != 0 || Title_LogoState != 2) {
         Title_BlinkCount = 0;
         return;
     }
-    unsigned char* const prim = gTitleStates.sprite(0x30, 0xB8, 7, 2, 0);
+    unsigned char* const prim = title_states::gTitleStates.sprite(0x30, 0xB8, 7, 2, 0);
     Title_BlinkCount = static_cast<std::uint16_t>(Title_BlinkCount + 1);
     const unsigned count = Title_BlinkCount & 0xFFu;
     const unsigned step = (count & 0x1Fu) << 2;
@@ -344,28 +313,28 @@ extern "C" void __cdecl Title_DrawSetC(int x, int y, unsigned flag, unsigned sha
     if (title_states::g_psp_title) {   // DIV-0131: the PSP's pieces, same sprites and pages
         const int ux = x + kPspTextDx, lx = ux + kPspLowerDx, ly = y + kPspLowerDy;
         if (semi != 0) {
-            gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
-            gTitleStates.commit(2, 0xC);
-            gTitleStates.shade(PspSprite(ux, y, 0xF, kPspTextUpper, 2, 1), level);
-            gTitleStates.shade(PspSprite(lx, ly, 0x10, kPspTextLower, 2, 1), level);
+            title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
+            title_states::gTitleStates.commit(2, 0xC);
+            title_states::gTitleStates.shade(PspSprite(ux, y, 0xF, kPspTextUpper, 2, 1), level);
+            title_states::gTitleStates.shade(PspSprite(lx, ly, 0x10, kPspTextLower, 2, 1), level);
         }
-        gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
-        gTitleStates.commit(2, 0xC);
-        gTitleStates.shade(PspSprite(ux, y, 4, kPspTextUpper, 2, semi), level);
-        gTitleStates.shade(PspSprite(lx, ly, 5, kPspTextLower, 2, semi), level);
+        title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
+        title_states::gTitleStates.commit(2, 0xC);
+        title_states::gTitleStates.shade(PspSprite(ux, y, 4, kPspTextUpper, 2, semi), level);
+        title_states::gTitleStates.shade(PspSprite(lx, ly, 5, kPspTextLower, 2, semi), level);
         return;
     }
     const int right = static_cast<int>(static_cast<unsigned>(x) + 0xE0u);
     if (semi != 0) {
-        gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
-        gTitleStates.commit(2, 0xC);
-        gTitleStates.shade(gTitleStates.sprite(x, y, 0xF, 2, 1), level);
-        gTitleStates.shade(gTitleStates.sprite(right, y, 0x10, 2, 1), level);
+        title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
+        title_states::gTitleStates.commit(2, 0xC);
+        title_states::gTitleStates.shade(title_states::gTitleStates.sprite(x, y, 0xF, 2, 1), level);
+        title_states::gTitleStates.shade(title_states::gTitleStates.sprite(right, y, 0x10, 2, 1), level);
     }
-    gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
-    gTitleStates.commit(2, 0xC);
-    gTitleStates.shade(gTitleStates.sprite(x, y, 4, 2, semi), level);
-    gTitleStates.shade(gTitleStates.sprite(right, y, 5, 2, semi), level);
+    title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
+    title_states::gTitleStates.commit(2, 0xC);
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(x, y, 4, 2, semi), level);
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(right, y, 5, 2, semi), level);
 }
 
 // original 0x462A00: the logo's second set (PSX 0x801D1664): sprites 2 at
@@ -374,14 +343,14 @@ extern "C" void __cdecl Title_DrawSetC(int x, int y, unsigned flag, unsigned sha
 extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
-    gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xBB, 0);
-    gTitleStates.commit(2, 0xC);
+    title_states::gTitleStates.draw_mode(Gfx_PacketNext, 0, 0, 0xBB, 0);
+    title_states::gTitleStates.commit(2, 0xC);
     if (title_states::g_psp_title) {   // DIV-0131: the emblem alone; the PSP's page has nothing under sprite 3's rectangle
-        gTitleStates.shade(PspSprite(x + kPspEmblemDx, y, 2, kPspEmblem, 2, semi), level);
+        title_states::gTitleStates.shade(PspSprite(x + kPspEmblemDx, y, 2, kPspEmblem, 2, semi), level);
         return;
     }
-    gTitleStates.shade(gTitleStates.sprite(x, y, 2, 2, semi), level);
-    gTitleStates.shade(gTitleStates.sprite(static_cast<int>(static_cast<unsigned>(x) + 0xF0u), static_cast<int>(static_cast<unsigned>(y) + 0x70u),
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(x, y, 2, 2, semi), level);
+    title_states::gTitleStates.shade(title_states::gTitleStates.sprite(static_cast<int>(static_cast<unsigned>(x) + 0xF0u), static_cast<int>(static_cast<unsigned>(y) + 0x70u),
                      3, 2, semi),
             level);
 }
@@ -415,19 +384,19 @@ extern "C" void __cdecl Scenario_Start(int chapter) {
     const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
     move_script::SetLong(move_script::At(flags), 0);
     Chapter_FlagRow = static_cast<std::int32_t>(flags);
-    gTitleStates.scenario_load();
-    while (gTitleStates.load_done() == 0) {
-        if (Game_AreaNumber != 0xFFFF && Field_Request != 5) gTitleStates.loading_frame();
-        gTitleStates.sleep(1);
+    title_states::gTitleStates.scenario_load();
+    while (title_states::gTitleStates.load_done() == 0) {
+        if (Game_AreaNumber != 0xFFFF && Field_Request != 5) title_states::gTitleStates.loading_frame();
+        title_states::gTitleStates.sleep(1);
     }
-    gTitleStates.mode_dispatch();
+    title_states::gTitleStates.mode_dispatch();
 }
 
 // original 0x56D670: the current chapter's DAT (PSX 0x801A880C, which loads
 // 0x295 + chapter, SCENA<chapter>.EMI). As the original has it: the chapter
 // byte sign-extended.
 extern "C" void __cdecl Scenario_Load(void) {
-    gTitleStates.load_dat(static_cast<int>(Cond_ByteFA) + 0x306);
+    title_states::gTitleStates.load_dat(static_cast<int>(Cond_ByteFA) + 0x306);
 }
 
 // original 0x56D8C0: state 0 of the dispatcher 0x56D8B0 (PSX 0x801A8C34):
@@ -587,7 +556,7 @@ void __cdecl StubModeDispatch() { Record(26, static_cast<unsigned char>(Cond_Byt
 // The stand-ins take bytes as dwords and mask them: the copies push whole
 // registers.
 template <typename T> T As(const void* p) { return reinterpret_cast<T>(const_cast<void*>(p)); }
-const CalleesTitleStates kStubs = {
+const title_states::CalleesTitleStates kStubs = {
     As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubDropped)), StubLoadDat, StubLoadDone, StubSleep, StubClutRestore,
     StubMusicPlay, As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubTransition)), StubFadeMusic, StubStopMusic,
     StubEffectClear, StubScenarioStart, StubTaskCreate, StubMusicFadeOut, StubMusicFadeStop, StubBadge, StubTaskExit,
@@ -838,7 +807,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
     unsigned char* const saved_packet = Gfx_PacketNext;
     Gfx_PacketNext = g_prim;
     Capture(saved);
-    gTitleStates = kStubs;
+    title_states::gTitleStates = kStubs;
 
     const void* const ours[kCount] = {
         reinterpret_cast<const void*>(&Title_StateLoad), reinterpret_cast<const void*>(&Title_StateFadeIn),
@@ -878,7 +847,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
                           their_out.log_n, our_out.log_n);
         }
     }
-    gTitleStates = kOriginalsTitleStates;
+    title_states::gTitleStates = kOriginalsTitleStates;
     Apply(saved);
     Gfx_PacketNext = saved_packet;
     bof3::Log("shadow      title_states self-test: %u rounds (%u per function), %u calls to the stand-ins, %u MISMATCHES; "
