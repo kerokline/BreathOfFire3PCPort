@@ -103,7 +103,7 @@ long LandingZ(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObj
 unsigned char TileState(unsigned code, unsigned char state) {
     if (Field_ScriptFlags & 0x400) return 0;
     const unsigned char* const s = Sprite_Current;
-    if (!g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+    if (!event_objs::g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
         return 0;
     Sprite_Current[1] = 2;
     Sprite_Current[2] = state;
@@ -115,7 +115,7 @@ unsigned char TileState(unsigned code, unsigned char state) {
 // Field_Tile89 and Field_Tile8A.
 unsigned char TileTurn(unsigned code, unsigned value, unsigned turn) {
     if (Field_ScriptFlags & 0x400) return 0;
-    return g.tile_turn(code, value, turn) != 0;
+    return event_objs::g.tile_turn(code, value, turn) != 0;
 }
 
 // AreaMap_CellsAll4 / AreaMap_CellsNone4: the four cells of the 2 x 2
@@ -124,10 +124,10 @@ void Cells(long x, long z, unsigned char c[4]) {
     const auto cx = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
     const auto cz = static_cast<short>(static_cast<std::uint32_t>(z) >> 16);
     const auto cx1 = static_cast<short>(cx + 1), cz1 = static_cast<short>(cz + 1);
-    c[0] = g.byte_at(cx, cz);
-    c[1] = g.byte_at(cx1, cz);
-    c[2] = g.byte_at(cx, cz1);
-    c[3] = g.byte_at(cx1, cz1);
+    c[0] = event_objs::g.byte_at(cx, cz);
+    c[1] = event_objs::g.byte_at(cx1, cz);
+    c[2] = event_objs::g.byte_at(cx, cz1);
+    c[3] = event_objs::g.byte_at(cx1, cz1);
 }
 
 }  // namespace
@@ -152,8 +152,8 @@ extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
 // palette comes back from row 15 of Gfx_ClutStripSource and the shade bytes
 // and the semi-transparency go. al only (callers test al).
 extern "C" unsigned char __cdecl Sprite_ShadeFadeStep(unsigned step) {
-    if (!g.shade_raise(step)) return 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + Sprite_Current[5] * 64u)), 0);
+    if (!event_objs::g.shade_raise(step)) return 0;
+    event_objs::g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + Sprite_Current[5] * 64u)), 0);
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xDF);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -185,12 +185,12 @@ extern "C" unsigned char __cdecl Sprite_ShadeRaise(unsigned step) {
 // with bit 3 of neither flag word's low byte - the camera's target. The
 // original reaches Field_JumpCamera by a tail jmp.
 extern "C" void __cdecl Field_JumpStart(void) {
-    g.jump_setup();
+    event_objs::g.jump_setup();
     if (Sprite_Current[5] != 0) return;
     const auto flags = static_cast<unsigned char>(static_cast<unsigned char>(Field_ScriptFlags2) |
                                                   static_cast<unsigned char>(Field_ScriptFlags));
     if (flags & 8) return;
-    g.jump_camera();
+    event_objs::g.jump_camera();
 }
 
 // original 0x534610 (PSX 0x801C3530): a jump's frames (+9), its step per
@@ -213,8 +213,8 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
-    long ground = g.slope_at(x, z, s[8]);
-    if (ScratchByte() != 0) ground = g.ground_at(x, z);
+    long ground = event_objs::g.slope_at(x, z, s[8]);
+    if (ScratchByte() != 0) ground = event_objs::g.ground_at(x, z);
     unsigned char* const t = Sprite_Current;
     rv::As<records::SpriteObject>(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(rv::As<records::SpriteHead>(t)->height_whole), t[9]);
 }
@@ -241,12 +241,12 @@ extern "C" void __cdecl Field_JumpCamera(void) {
 extern "C" void __cdecl Field_JumpCheckHeight(void) {
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
-    g.slope_at(x, z, s[8]);
+    event_objs::g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) return;
-    const long ground = g.ground_at(x, z);
+    const long ground = event_objs::g.ground_at(x, z);
     if (static_cast<short>(ground) - static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) < 0x80) return;
     Field_State[0x128] = static_cast<unsigned char>(Field_State[0x128] - 1);
-    g.jump_start();
+    event_objs::g.jump_start();
 }
 
 // original 0x536670 (PSX 0x801C67AC): one frame of the step - +0x34 / +0x38
@@ -276,11 +276,11 @@ extern "C" void __cdecl Field_FloorDamage(void) {
     for (;; ++n) {
         if (n == 9) return;
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
+        if (event_objs::g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
             break;
     }
-    g.floor_hurt(n);
-    g.flash(kKind[n]);
+    event_objs::g.floor_hurt(n);
+    event_objs::g.flash(kKind[n]);
 }
 
 // original 0x535120 (PSX 0x801C4788).
@@ -297,7 +297,7 @@ extern "C" unsigned char __cdecl Field_Tile8A(unsigned turn) { return TileTurn(0
 extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, unsigned turn) {
     {
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_none(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+        if (event_objs::g.cells_none(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
             return 0;
     }
     if (static_cast<unsigned char>(turn) != 0) {
@@ -307,7 +307,7 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
             const long x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
             const long z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
-            if (!g.turn_probe(x, z, 0, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole))) break;
+            if (!event_objs::g.turn_probe(x, z, 0, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole))) break;
             if (++i >= 8) break;
         }
         Sprite_Current[8] = static_cast<unsigned char>(direction ^ 4);
@@ -325,12 +325,12 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
 // original 0x535390 (PSX 0x801C49D0): the 2 x 2 footprint when `wide` - the
 // whole dword - is 0, else 0x535490's. The callee's eax is the answer.
 extern "C" unsigned char __cdecl AreaMap_CellsAll(long x, long z, unsigned wide, unsigned code, unsigned mask) {
-    return wide == 0 ? g.cells_all4(x, z, code, mask) : g.cells_all_wide(x, z, code, mask);
+    return wide == 0 ? event_objs::g.cells_all4(x, z, code, mask) : event_objs::g.cells_all_wide(x, z, code, mask);
 }
 
 // original 0x535C50 (PSX 0x801C5724): the same over the "none" tests.
 extern "C" unsigned char __cdecl AreaMap_CellsNone(long x, long z, unsigned wide, unsigned code, unsigned mask) {
-    return wide == 0 ? g.cells_none4(x, z, code, mask) : g.cells_none_wide(x, z, code, mask);
+    return wide == 0 ? event_objs::g.cells_none4(x, z, code, mask) : event_objs::g.cells_none_wide(x, z, code, mask);
 }
 
 // original 0x5353E0 (PSX 0x801C4A10): every cell the footprint covers is the
@@ -378,7 +378,7 @@ extern "C" unsigned char __cdecl AreaMap_CellsNone4(long x, long z, unsigned cod
 // kind 0x41 at the leader if any HP was taken. Field_State is held from after
 // Party_Count until the countdown, as the original's esi; read afresh after.
 extern "C" void __cdecl Field_Bit80Tick(void) {
-    const auto count = static_cast<unsigned char>(g.party_count(0));
+    const auto count = static_cast<unsigned char>(event_objs::g.party_count(0));
     unsigned char* const f = Field_State;
     unsigned char hit = 0;
     if (Field_InputFlags & 1) {
@@ -392,17 +392,17 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     hit = 0;
     if (Field_State[0x124] != 0) return;
     Field_State[0x124] = 10;
-    g.flash(1);
+    event_objs::g.flash(1);
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i) {
             const unsigned char member = Cond_Flags[0xd2 + i];
-            if ((ActorState(Character_IndexById[member]) & 0x80) && (g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
+            if ((ActorState(Character_IndexById[member]) & 0x80) && (event_objs::g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
         }
         if (!hit) return;
-    } else if ((g.hp_lose(1, Field_State[0x89]) & 0xFFFF) == 0) {
+    } else if ((event_objs::g.hp_lose(1, Field_State[0x89]) & 0xFFFF) == 0) {
         return;
     }
-    const unsigned char e = g.effect_free();
+    const unsigned char e = event_objs::g.effect_free();
     if (e == 0xFF) return;
     const unsigned char* const s = Sprite_Current;
     unsigned char* const o = rv::Bytes(&Effect_Objects[e]);
@@ -430,9 +430,9 @@ extern "C" void __cdecl Field_Bit20Tick(void) {
 // original 0x535270 (PSX 0x801C4820): one HP (0x5373F0) for each of three
 // equipment tests the leader passes. Field_State read afresh for each use.
 extern "C" void __cdecl Field_EquipTick(void) {
-    if (g.equip_count(Field_State[0x148], 3, 0x16)) g.hp_gain(1, Field_State[0x89]);
-    if (g.equip_count(Field_State[0x148], 3, 0x17)) g.hp_gain(1, Field_State[0x89]);
-    if (g.equip_count(Field_State[0x148], 2, 0x1F)) g.hp_gain(1, Field_State[0x89]);
+    if (event_objs::g.equip_count(Field_State[0x148], 3, 0x16)) event_objs::g.hp_gain(1, Field_State[0x89]);
+    if (event_objs::g.equip_count(Field_State[0x148], 3, 0x17)) event_objs::g.hp_gain(1, Field_State[0x89]);
+    if (event_objs::g.equip_count(Field_State[0x148], 2, 0x1F)) event_objs::g.hp_gain(1, Field_State[0x89]);
 }
 
 // original 0x535310 (PSX 0x801C48EC): how many of a record's equipment bytes
