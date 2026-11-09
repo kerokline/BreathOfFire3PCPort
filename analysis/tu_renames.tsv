@@ -1,7 +1,7 @@
 # The source-layout round, step B0 (docs/source-layout-round.md 7a, the owner's call 7): every rename of a
 # file-local helper made so that two sources' helpers of one name can share a target file, with its reason,
 # and the hand decisions on shared state and macro-made functions. Never pruned: the record to revisit from.
-# kind: helper | constant | variable | state | macro | global.  commit: filled by tools/tu_renames.py --fill.
+# kind: helper | constant | variable | state | macro | global | qualify.  commit: filled by tools/tu_renames.py --fill.
 source_file	old_name	new_name	kind	reason	target_file	other_source	commit
 src/game/battle_e4.cpp	Party	PartyBattleE4	helper	src/game/battle_damage.cpp has a different Party; the two meet in src/game/battle/battle_3.cpp; source-stem suffix (one rule, no clash with another group's choice)	src/game/battle/battle_3.cpp	src/game/battle_damage.cpp	84461f7f
 src/game/battle_e4.cpp	Enemy	EnemyBattleE4	helper	src/game/battle_damage.cpp has a different Enemy; the two meet in src/game/battle/battle_3.cpp; source-stem suffix (one rule, no clash with another group's choice)	src/game/battle/battle_3.cpp	src/game/battle_damage.cpp	84461f7f
