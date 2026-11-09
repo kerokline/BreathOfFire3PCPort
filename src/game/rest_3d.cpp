@@ -84,7 +84,7 @@ void OrLong(unsigned char* p, U bits) { move_script::SetLong(p, static_cast<S32R
 void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32Rest3d>(static_cast<U>(Long(p)) & bits)); }
 
 unsigned char* Result() { return At(BattleDamage_Result); }
-unsigned Actor() { return B(::bof3::Img(rest_3d::at::kActor.v)); }
+unsigned ActorRest3d() { return B(::bof3::Img(rest_3d::at::kActor.v)); }
 unsigned Target() { return B(::bof3::Img(rest_3d::at::kTarget.v)); }
 U Ability() { return L(::bof3::Img(rest_3d::at::kAbility.v)) & 0xFFFF; }
 // NameTable_Abilities (24 bytes an ability): +3 the s8 stat step, +4 the word
@@ -350,7 +350,7 @@ namespace {
 // Battle_RecalcStats(the target, with the stat word's upper bytes above it as
 // the original's register holds it), al 0.
 unsigned char RollStatStep(unsigned stat) {
-    if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return 1;
+    if (BH_CALL(Battle_StatusResisted)(ActorRest3d(), Target())) return 1;
     const auto step = static_cast<signed char>(AbilityStep());
     BH_CALL(Effect_StepStatByte)(static_cast<U>(static_cast<S32Rest3d>(step)), stat);
     BH_CALL(Battle_RecalcStats)((stat & 0xFFFFFF00u) | Target());
@@ -360,7 +360,7 @@ unsigned char RollStatStep(unsigned stat) {
 // 0x44FC60 / 0x44FCA0's: the roll; resisted al 1; else
 // Battle_InflictStatus(the target, status), al 0.
 unsigned char RollInflict(unsigned status) {
-    if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return 1;
+    if (BH_CALL(Battle_StatusResisted)(ActorRest3d(), Target())) return 1;
     BH_CALL(Battle_InflictStatus)(Target(), status);
     return 0;
 }
@@ -396,7 +396,7 @@ extern "C" unsigned char __cdecl Effect_RollInflict(unsigned status) { return Ro
 // A divisor of 0 faults in the original (idiv): ours aborts. Its callers pass
 // 1, 2 and 3 (R3C's slots 64..66 pass 3, 1, 2).
 extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
-    const U hp = move_script::Word(Hp(Actor()));
+    const U hp = move_script::Word(Hp(ActorRest3d()));
     const U mask = AbilityMask();
     S32Rest3d affinity = 100;
     if (mask & 0x1F) affinity = S16Rest3d(static_cast<U>(BH_CALL(Battle_ElementAffinity)(Target(), mask)));
@@ -435,7 +435,7 @@ void HpLessDefence(int divisor) {
 // (Battle_StatusResisted): the HP delta its HP less 1.
 extern "C" void __cdecl Effect112_HpToOne(void) {
     if ((BH_CALL(Rand)() & 1) == 0) return;
-    if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return;
+    if (BH_CALL(Battle_StatusResisted)(ActorRest3d(), Target())) return;
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, Word(Hp(Target())) - 1u);
 }
 
@@ -443,7 +443,7 @@ extern "C" void __cdecl Effect112_HpToOne(void) {
 // 0x10000 (the flag Battle_CalcDamage and Effect_SkillDamage answer 0 for).
 extern "C" void __cdecl Effect113_ActorNullDamage(void) {
     BH_CALL(Effect_NoHitReaction)();
-    OrLong(Flags(Actor()), 0x10000);
+    OrLong(Flags(ActorRest3d()), 0x10000);
 }
 
 // original 0x44E580 (slot 114): the result's mark +8 = 2, then the AP delta
@@ -452,14 +452,14 @@ extern "C" void __cdecl Effect113_ActorNullDamage(void) {
 extern "C" void __cdecl Effect114_SkillApDamage(void) {
     Result()[8] = 2;
     const U power = AbilityStep();
-    const int v = BH_CALL(Effect_SkillDamage)(Actor(), Target(), power, 1);
+    const int v = BH_CALL(Effect_SkillDamage)(ActorRest3d(), Target(), power, 1);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->ap_change, static_cast<U>(v));
 }
 
 // original 0x44E5D0 (slot 115): the target not resisting Battle_StatusResisted20:
 // the HP delta its whole HP.
 extern "C" void __cdecl Effect115_HpToZero(void) {
-    if (BH_CALL(Battle_StatusResisted20)(Actor(), Target())) return;
+    if (BH_CALL(Battle_StatusResisted20)(ActorRest3d(), Target())) return;
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, Word(Hp(Target())));
 }
 
@@ -527,7 +527,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
 extern "C" void __cdecl Effect119_ActorFlag1000(void) {
     BH_CALL(Effect_NoHitReaction)();
     const unsigned t = Target();
-    OrLong(Flags2(Actor()), 0x1000);
+    OrLong(Flags2(ActorRest3d()), 0x1000);
     BH_CALL(Battle_RecalcStats)(t);
 }
 
@@ -536,7 +536,7 @@ extern "C" void __cdecl Effect119_ActorFlag1000(void) {
 // bit 11 and Battle_RecalcStats(the target's dword). Either way a tail jump
 // to Effect_NoHitReaction.
 extern "C" void __cdecl Effect120_TargetFlag800(void) {
-    if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) {
+    if (BH_CALL(Battle_StatusResisted)(ActorRest3d(), Target())) {
         Result()[8] = 1;
         BH_CALL(Battle_SetDamagePopup)(0, Target());
     } else {
@@ -552,7 +552,7 @@ extern "C" void __cdecl Effect120_TargetFlag800(void) {
 // target).
 extern "C" void __cdecl Effect121_ActorFlag4000(void) {
     BH_CALL(Effect_NoHitReaction)();
-    const unsigned a = Actor();
+    const unsigned a = ActorRest3d();
     const unsigned t = Target();
     OrLong(Flags2(a), 0x4000);
     if (IsMember(a)) PartyRest3d(a)[0x142] = 0;
@@ -585,7 +585,7 @@ extern "C" void __cdecl Effect124_HalfHpLessDefence(void) { HpLessDefence(2); }
 // target, 8).
 extern "C" void __cdecl Effect125_Inflict8Roll80(void) {
     BH_CALL(Effect_NoHitReaction)();
-    if (BH_CALL(Battle_StatusResistedMask)(Actor(), Target(), 0x80)) return;
+    if (BH_CALL(Battle_StatusResistedMask)(ActorRest3d(), Target(), 0x80)) return;
     BH_CALL(Battle_InflictStatus)(Target(), 8);
 }
 
@@ -602,7 +602,7 @@ extern "C" void __cdecl Effect126_Ability4EDrainAp(void) {
 // object's +0x8D is 4 (the target read again) doubled (a 16-bit shift).
 extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
     const unsigned t = Target();
-    const short v = BH_CALL(Battle_CalcDamage)(Actor(), t, 0xFFFF);
+    const short v = BH_CALL(Battle_CalcDamage)(ActorRest3d(), t, 0xFFFF);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(v));
     if (IsMember(t)) return;
     if (EnemyRest3d(Target())[0x8D] == 4) rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change)) << 1);
@@ -612,10 +612,10 @@ extern "C" void __cdecl Effect127_AttackDoubledKind4(void) {
 // 0xFFFF) / 2 (signed, toward 0); when it is not 0 and Battle_StatusResisted
 // says not resisted, Effect_RollInflict(4) (a second roll).
 extern "C" void __cdecl Effect128_HalfAttackInflict4(void) {
-    const short v = BH_CALL(Battle_CalcDamage)(Actor(), Target(), 0xFFFF);
+    const short v = BH_CALL(Battle_CalcDamage)(ActorRest3d(), Target(), 0xFFFF);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<U>(static_cast<S32Rest3d>(v) / 2));
     if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) == 0) return;
-    if (BH_CALL(Battle_StatusResisted)(Actor(), Target())) return;
+    if (BH_CALL(Battle_StatusResisted)(ActorRest3d(), Target())) return;
     BH_CALL(Effect_RollInflict)(4);
 }
 
