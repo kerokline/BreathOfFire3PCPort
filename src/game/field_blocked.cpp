@@ -51,10 +51,6 @@ bool NibbleBlocks(unsigned nibble) {
     }
 }
 
-// Only al of a byte result is meaningful: the originals (and the recorders
-// standing in for them in the fuzz) leave the rest of eax undefined.
-unsigned char Al(std::uint32_t eax) { return static_cast<unsigned char>(eax); }
-
 template <typename T, typename F> T AsFieldBlocked(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 field_blocked::CalleesFieldBlocked Originals() {
     field_blocked::CalleesFieldBlocked c{};
@@ -73,61 +69,6 @@ field_blocked::CalleesFieldBlocked Originals() {
     return c;
 }
 }  namespace field_blocked { CalleesFieldBlocked gFieldBlocked = Originals(); }
-namespace {
-
-// Sprite_ObjectAt and Party_MemberAt: the first object of `count` from `first`
-// (`size` apart) that is not Sprite_Current (re-read for each), is in use
-// (byte +0) and - for the sprite lists - not skipped by +7 bit 0x80, and for
-// which Sprite_PointInReach says (x, y, h) is within `margin` of it. The count
-// is re-read after each object; `count_at` null means a fixed count.
-unsigned char FirstInReach(unsigned char* first, unsigned size, unsigned count, const unsigned char* count_at, bool skip_flag7,
-                           long x, long y, long h, unsigned margin, unsigned char base) {
-    for (unsigned i = 0; i < (count_at ? *count_at : count); ++i) {
-        const unsigned char* const object = first + i * size;
-        if (object == Sprite_Current) continue;
-        if (object[0] == 0) continue;
-        if (skip_flag7 && (object[7] & 0x80)) continue;
-        if (Al(field_blocked::gFieldBlocked.reach(x, y, h, margin, object))) return static_cast<unsigned char>(base + i);
-    }
-    return 0xFF;
-}
-
-}  // namespace
-
-// original 0x531DB0 (PSX 0x801BECF0): the height to test a point at - the
-// ground's there, unless it is more than 0x100 above or below Sprite_Current's
-// own (s16 +0x3E, read after the call), then Sprite_Current's. 16 bits,
-// zero-extended as the original's eax is.
-extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
-    const long ground = field_blocked::gFieldBlocked.elevation(x, y);
-    const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
-    const auto there = static_cast<short>(ground);
-    int distance = own - there;
-    if (distance < 0) distance = -distance;
-    return static_cast<long>(static_cast<std::uint16_t>(distance > 0x100 ? own : there));
-}
-
-// original 0x531CF0 (PSX 0x801BEE0C): the sprite object at (x, y) - within
-// `margin` by Sprite_PointInReach at the probe height - as its index in
-// Sprite_Objects, or 0x1E + its index in Sprite_ObjectsExtra; 0xFF for none.
-// Skips Sprite_Current, objects not in use, and those with +7 bit 0x80. The
-// original stores the height over its own y argument slot (the calls take y
-// from a register); cdecl gives the caller no claim on that slot and no
-// caller reads it back (docs/field-blocked.md section 2), so ours does not.
-extern "C" unsigned char __cdecl Sprite_ObjectAt(long x, long y, unsigned margin) {
-    const long h = field_blocked::gFieldBlocked.probe(x, y);
-    const unsigned char found = FirstInReach(rv::Bytes(Sprite_Objects), kObjectSize, kObjects, nullptr, true, x, y, h, margin, 0);
-    if (found != 0xFF) return found;
-    return FirstInReach(rv::Bytes(Sprite_ObjectsExtra), kObjectSize, kExtra, nullptr, true, x, y, h, margin, 0x1E);
-}
-
-// original 0x531F10 (PSX 0x801BF0B8): the same over the party's records -
-// Field_MemberCount of ObjTrio's, re-read after each - without the +7 test.
-extern "C" unsigned char __cdecl Party_MemberAt(long x, long y, unsigned margin) {
-    const long h = field_blocked::gFieldBlocked.probe(x, y);
-    return FirstInReach(rv::Bytes(ObjTrio), kMemberSize, 0, &Field_MemberCount, false, x, y, h, margin, 0);
-}
-
 namespace {
 
 // --- BOF3X_SHADOW=field_blocked: a differential fuzz, once at start-up -------
@@ -520,7 +461,4 @@ void FieldBlocked_Inject() {
         Relocate(clones[kCell], 0x518620, 0x40, {0x29, 0x34, 3});
         SelfTest(clones);
     }
-    BOF3_INJECT(Sprite_ObjectAt);
-    BOF3_INJECT(Field_ProbeHeight);
-    BOF3_INJECT(Party_MemberAt);
 }

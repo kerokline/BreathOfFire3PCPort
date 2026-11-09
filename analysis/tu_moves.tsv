@@ -11398,6 +11398,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kMemberSize	copied		src/game/field_blocked.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3
 	NibbleBlocks	copied		src/game/field_blocked.cpp	39	47	52	src/game/field/field_3.cpp	d3e6abb3
 	BlockingNibbles	local		src/game/field_blocked.cpp	53	53	61	src/game/field/field_3.cpp	d3e6abb3
+	Al	local		src/game/field_blocked.cpp	54	56	56	src/game/field/field_6.cpp	70f276da
 	Al	copied		src/game/field_blocked.cpp	63	65	65	src/game/field/field_3.cpp	d3e6abb3
 	Al	copied		src/game/field_blocked.cpp	63	65	65	src/game/field/field_6.cpp	d3e6abb3
 	StepX	local		src/game/field_blocked.cpp	86	88	88	src/game/field/field_3.cpp	d3e6abb3
@@ -11677,6 +11678,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x526D30	FieldCore_RecoilBlink	func	tu_525370	src/game/field_c3.cpp	1103	1104	1126	src/game/field/field_core.cpp	d3e6abb3
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	d3e6abb3
 	SetLong	copied		src/game/field_e1.cpp	66	68	68	src/game/field/leader_panel.cpp	d3e6abb3
+	SetLong	local		src/game/field_e1.cpp	66	68	68	src/game/field/field_6.cpp	70f276da
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_4.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/field_6.cpp	d3e6abb3
 	BFieldE1	copied		src/game/field_e1.cpp	72	72	72	src/game/field/leader_panel.cpp	d3e6abb3

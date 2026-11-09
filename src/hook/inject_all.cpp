@@ -115,6 +115,7 @@
 #include "game/save_menu.h"
 #include "game/quick_menu.h"
 #include "game/event_ops.h"
+#include "game/field/field_5.h"
 #include "game/menu_windows.h"
 #include "game/shoulder_glyphs.h"
 #include "game/display_setup.h"
@@ -203,6 +204,7 @@
 #include "game/area_cell_hook.h"
 #include "game/area_w0b.h"
 #include "game/scena_sc0.h"
+#include "game/scenario/scena_00.h"
 #include "game/scena_se.h"
 #include "game/scena_calls.h"
 #include "game/scenario/scena_call_5.h"
@@ -228,6 +230,7 @@
 #include "game/scena_sc11.h"
 #include "game/scena_sc3.h"
 #include "game/scena_sc1.h"
+#include "game/scenario/scena_01_2.h"
 #include "game/scena_sc12.h"
 #include "game/scena_sc9a.h"
 #include "game/area_w0a.h"
@@ -243,6 +246,7 @@
 #include "game/area_w2b.h"
 #include "game/scena_sc15.h"
 #include "game/scena_sc2.h"
+#include "game/scenario/scena_02_2.h"
 #include "game/scena_sc13.h"
 #include "game/scena_sx2.h"
 #include "game/scenario_harness_fh.h"
@@ -295,6 +299,7 @@
 #include "game/field_c3.h"
 #include "game/field/field_3.h"
 #include "game/field_e1.h"
+#include "game/field/field_6.h"
 #include "game/field_o.h"
 #include "game/field_c1.h"
 #include "game/effect_gte.h"
@@ -385,6 +390,8 @@
 #include "game/rest_1d.h"
 #include "game/field/party_action.h"
 #include "game/rest_2a.h"
+#include "game/scenario/linked_object.h"
+#include "game/field/mode_11.h"
 #include "game/rest_2g.h"
 #include "game/rest_2d.h"
 #include "game/rest_2e.h"
@@ -523,6 +530,7 @@ void InjectAll() {
                                 // for recorders and Shop_Equip's relocated in the copy: order does not matter
     EventOps_Inject();          // every call of its clones re-aimed at a recorder, three jump tables relocated
                                 // and the chapter table operand moved in the copies: order does not matter
+    Field5_Inject();
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
@@ -795,6 +803,7 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders, its three .data tables swapped
                                 // for the fuzz only; no module patches bytes inside its 19 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    Scena00_Inject();
     ScenaSe_Inject();           // round 10 group SE (the chapters' shared engine-side helpers, six): its clones'
                                 // calls re-aimed at the scenario harness's recorders; no module patches bytes
                                 // inside its 6 (DIVERGENCE.md, cheats.cpp): order does not matter
@@ -807,6 +816,7 @@ void InjectAll() {
     ScenaSc1_Inject();          // round 10 group SC1 (scenario chapter 1's bank): its clones' calls re-aimed at the
                                 // scenario harness's recorders, its three .data tables swapped for the fuzz only;
                                 // no module patches bytes inside its 42: order does not matter
+    Scena012_Inject();
     ScenaSc12_Inject();         // round 10 group SC12 (scenario chapter 12's first block, 0x55E4E0..0x561DB0):
                                 // no module patches bytes inside its 24 (DIVERGENCE.md, cheats.cpp): order does
                                 // not matter
@@ -877,6 +887,7 @@ void InjectAll() {
                                 // cheats.cpp): order does not matter
     ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
                                 // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Scena022_Inject();
     ScenaSx2_Inject();          // round 10 group SX2 (the engine callees nobody owned after SX, thirteen): its
                                 // clones' calls re-aimed at the scenario harness's recorders; no module patches
                                 // bytes inside its 13 (DIVERGENCE.md, cheats.cpp): order does not matter
@@ -1093,6 +1104,7 @@ void InjectAll() {
                                 // its five tables swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose
                                 // self-test copies 0x52F980 and 0x52D880; no module patches bytes inside its 45
                                 // (DIVERGENCE.md, cheats.cpp)
+    Field6_Inject();
     FieldO_Inject();            // round 12 group FO (the field engine's 0x5738A0..0x57CD89: eight menu panels, the
                                 // movement ops 87 / 88 / DB / E9 / F9 and their states, the placement ops 3x 4x 6x 7x
                                 // Ax, thirteen event conditions, EventScript_SkipIf, ObjTrio_ClearBit40): its clones'
@@ -1435,6 +1447,8 @@ void InjectAll() {
                                 // recorders, Area_ObjectFallbacks and Area74_Handlers swapped for the fuzz only; after
                                 // every harness's inject and wave one's; no module patches bytes inside its 22
                                 // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
+    LinkedObject_Inject();
+    Mode11_Inject();
     Rest2G_Inject();            // round 14 wave-two group R2G (0x597FA0..0x59AA77: record handler 4's kind 0 and the
                                 // EXP to the next level, handler 5's kind dispatch and the gene grid's states,
                                 // MenuList_Run's kinds 5..13 and 15..19 and 26 slide states): its clones' calls

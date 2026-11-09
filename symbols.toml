@@ -1789,7 +1789,7 @@ pc = 0x531BD0
 name = "Field_CopyInput"
 ret = "void"
 params = "void"
-impl = "src/game/field_input.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x9A bytes. Decides a flag: with bit 0 of Field_InputFlags set, whether ANY of the Field_MemberCount records at Field_Members (none if the count is 0) has bit 0x20 in the Field_ActorStates byte its byte +0 indexes - the loop does not stop at the first; with bit 0 clear, whether the first record has. Flag clear: Field_InputHeld = Input_Held. Flag set: Field_InputHeld = the low word of ((held & 0xF000) << 2) | ((held >> 2) & 0x3000) | (held & 0x9FF) - bits 12 and 13 move to 14 and 15 and back, bits 9 and 10 are dropped, bit 11 and bits 0-8 pass. Call trace all_a 2026-09-19: 2,779 calls."
 note = "Bits 12-15 are up, right, down, left - established 2026-09-21 from Pad_Read (see Input_Held) - so this reverses the directions while someone has state 0x20; what state 0x20 is has not been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
@@ -1853,7 +1853,7 @@ pc = 0x536700
 name = "AreaMap_ByteAt"
 ret = "unsigned char"
 params = "short x, short y"
-impl = "src/game/map_view.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 9 instructions, cdecl, no calls, no jumps: both arguments sign-extended from 16 bits; returns in al the byte at AreaMap_Bytes + x + y * width, width the low byte of the dword at AreaMap_Header. No bounds check. Call trace all_a 2026-09-19: 619 calls."
 
@@ -1862,7 +1862,7 @@ pc = 0x531C70
 name = "Sprite_PointInReach"
 ret = "unsigned char"
 params = "int x, int y, short z, int margin, const unsigned char *object"
-impl = "src/game/sprite_find.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, five arguments, no calls, every jump internal, 0x80 bytes. r = byte +0x70 of the object + margin + 2. Returns 0 in al if |s16 object +0x3E - s16 z| > r << 7; with k = byte +9, if |x - dword +0xC * k - dword +0x34| >= r << 15; or the same for y with +0x10 and +0x38; else 1. The products and differences wrap in 32 bits and each absolute value is cdq / xor / sub, so 0x80000000 stays negative and passes. At least ten callers (E8 scan) in 0x51C705..0x531F54. Call trace all_a 2026-09-19: 2,450 calls."
 note = "+0x34 / +0x38 / +0x3E are the position Sprite_FindNearby uses; +0xC and +0x10 scaled by byte +9 read as a velocity times a step count - the position about to be, not the one it has - but that is inference. Note z is inclusive where x and y are exclusive."
@@ -1888,7 +1888,7 @@ pc = 0x534E50
 name = "Sprite_RestoreClut"
 ret = "void"
 params = "void"
-impl = "src/game/sprite_clut.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x68 bytes. If bit 3 of byte +0x138 of the block at Field_State is clear, nothing. Otherwise, with clut = byte +0x27 of the object at Sprite_Current (re-read each time round), copies words clut * 32 + n for n = 1..31 from Gfx_ClutStripSource to Gfx_ClutStrip - the index is built as (clut % 8) + (clut / 8) * 8, which is clut - sets Gfx_ClutStripDirty to 1 and clears the bit. Two callers (E8 scan): 0x51AC50, 0x52D8F0. Call trace all_a 2026-09-19: 2,779 calls."
 note = "Entry 0 of the CLUT is left as it is. 32 words per CLUT where a PSX CLUT is 16: two CLUTs a row, or one of 32 - unread."
@@ -4293,7 +4293,7 @@ psx = 0x801ADE10
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned short n"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22 (whole, 58 bytes); read again disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537540..0x537579 (0x3A bytes), cdecl, no calls: a tail jmp - with Field_ActiveMember +0xA0 & 0x7F not 0x7F through Area_Descriptors[Game_AreaNumber] +0x3C at that index (the area's table, no count the code knows: ours reads the cell in place, aborts past the 200 descriptors), else through Area_ObjectFallbacks[(short)n] (ours aborts outside 0..10). The handler runs with the caller's argument where it was; ours passes n on. Called by Field_ObjectLinked (twice). PSX 0x801ADE10. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -4490,7 +4490,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 7 instructions: when the byte at 0x904EF0 is non-zero, jmp [0x660B60 + byte 0x904EF1 * 4]; else ret. First call of Field_MembersFrame. Named by its shape. 0x18 bytes; the table's four entries 0x533780 / 0x5338B0 / 0x5338F0 / 0x533900 are separate, unread functions (group B, docs/field-event.md)."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x52D8F0
@@ -4509,7 +4509,7 @@ psx = 0x801BEAB0
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/frame_callees.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x531B60..0x531BAA (75 bytes), cdecl, no arguments: Field_MemberCount read once; for ObjTrio members n = count - 1 down to 0 (none for a count of 0; a count above 3 walks past the three at 0x14C a step) whose byte +0 lacks bit 6: Sprite_Current to the member, then Sprite_UpdateScreenSlot when Field_Request is 3 (re-read per member), else Sprite_UpdateScreen. The PSX FUN_801BEAB0 term for term (0x8014D154 / 0x8014D184, records 0x140 apart there). Call trace all_b 8,846, hidden_b 12,165 calls. docs/frame-callees.md."
 
@@ -5256,7 +5256,7 @@ name = "Sprite_ObjectAt"
 psx = 0x801BEE0C
 ret = "unsigned char"
 params = "long x, long y, unsigned margin"
-impl = "src/game/field_blocked.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22 (whole: 0x531CF0..0x531DA7, 0xB8 bytes, cdecl, every jump internal): h = Field_ProbeHeight(x, y), stored over its own y argument slot; then the 30 Sprite_Objects and the 4 Sprite_ObjectsExtra, skipping Sprite_Current (re-read each time), an object whose byte +0 is 0 and one with +7 bit 0x80: the first for which Sprite_PointInReach(x, y, h, margin, object) is non-zero - its index, or 0x1E + its index in the extra four; 0xFF if none (or al, 0xFF: the rest of eax is left over). About 60 callers (E8 scan), every one reading al only. psx_pair call-anchored. Call trace hidden_b: 1,840 calls."
 
@@ -5266,7 +5266,7 @@ name = "Field_ProbeHeight"
 psx = 0x801BECF0
 ret = "long"
 params = "long x, long y"
-impl = "src/game/field_blocked.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22 (whole: 0x531DB0..0x531DEA, 0x3B bytes, cdecl, every jump internal): e = AreaMap_Elevation(x, y); with s the s16 at Sprite_Current +0x3E (read after the call), the height a probe at (x, y) is tested at: s when |s - (s16) e| > 0x100 - the ground there is too far above or below, so the sprite's own height - else e's low 16 bits. Returned zero-extended to 32 bits (the upper half of eax is the upper half of the absolute difference, always 0). Callers: Sprite_ObjectAt and Party_MemberAt, which pass it on as a dword. psx_pair call-anchored. Call trace hidden_b: 3,664 calls."
 
@@ -5276,7 +5276,7 @@ name = "Party_MemberAt"
 psx = 0x801BF0B8
 ret = "unsigned char"
 params = "long x, long y, unsigned margin"
-impl = "src/game/field_blocked.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22 (whole: 0x531F10..0x531F80, 0x71 bytes, cdecl, every jump internal): Sprite_ObjectAt over the ObjTrio records (0x14C apart) instead, Field_MemberCount of them - the count re-read after each - skipping Sprite_Current and a record whose byte +0 is 0, but not testing +7 bit 0x80; the first index in reach, or 0xFF. About 12 callers (E8 scan), all reading al. psx_pair call-anchored. Call trace hidden_b: 1,824 calls."
 
@@ -5460,7 +5460,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned n"
 status = "evidence"
-impl = "src/game/field_modes.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-22 (whole, 27 bytes): jmp [[0x660B84 + Cond_ByteFA (s8) * 4] + (n & 0xFF) * 4] - entry n of the chapter's call table, reached with the caller's arguments in place. The sibling's Scenario_CallA through 0x801CDC4C (docs/LOADER_RECORDS.md); pairs_propagated.json call-anchored. 153 call sites (rel32 scan of .text); none reads eax after the call. Chapter 16's table: 0x519890, 0x437CC0 (PSX 0x801F8498, a jr ra). Kept a naked tail jump. docs/field-modes.md."
 
 [[func]]
@@ -5749,7 +5749,7 @@ ret = "int"
 params = "unsigned slot"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x20 bytes: the number of entries of the 3-byte list at 0x904062 + slot * 3 before the first 0xFF, at most 3. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x5322B0
@@ -5760,7 +5760,7 @@ ret = "void"
 params = "unsigned char *context"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x20 bytes: context +0xA (the script position word) = 0, +7 +2 +5 +0 +1 +3 = 0, +4 = 3 (the speed index Kind2_Script resets to). Callers Kind2_Place and 0x53225A. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x533110
@@ -5771,7 +5771,7 @@ ret = "void"
 params = "long x, long z, unsigned flags"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x388 bytes: the area set-up's party placement, called once by 0x594E60. Clears Field_ScriptFlags bit 0x1000; unless Field_ScriptFlags2 bit 0x8000, and on Field_InputFlags bits 9, areas 0xBD / 0xBB, or bit 0x40 with flag 0x77 of 0x904030 clear, sets up the leader alone (actor record 0 copied, an animation bank, Field_MemberSprite or area 0xBD's reset); otherwise Party_Count(0) members through Field_PartyLoad(0) or, with bit 0x8000, member by member. Then Field_Kind2X / Z: fixed with Field_InputFlags bit 8, (x, z) with flags bit 0x80, else the leader's after Field_PartyPosition (or 0x533690 with Field_ScriptFlags bit 0x800). psx_pair callers."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x5334A0
@@ -5782,7 +5782,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0xD3 bytes: called by 0x594E60 after Field_PartySetUp. With Field_ScriptFlags2 bit 0x8000 clears bit 0x40 of each member; else Party_ClearActive, the leader's state 9 (Field_InputFlags bit 8) or each member's +0x29 = 6, and one Field_LeaderFrame / Field_MemberFrame per member not masked by Field_ScriptFlags bit i. Clears Field_ScriptFlags2 bit 0x4000. psx_pair gap15."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x533580
@@ -5793,7 +5793,7 @@ ret = "void"
 params = "long x, long z, unsigned direction"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x102 bytes: each member at (x, z), or offset from it by the 8-byte pair 0x660B40[(direction >> 1) * 8] (subtracted with Field_ScriptFlags2 bit 0x4000) when its +0x70 byte is non-zero; +8 = direction; +0x3E = MapView_GroundAt; bit 0x40 set on members 1 and 2, cleared on the leader. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x533BA0
@@ -5803,7 +5803,7 @@ ret = "void"
 params = "unsigned member, unsigned slot"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x134 bytes: sets up Sprite_Current as party member `member` in slot `slot`: Sprite_ReleaseTint; +0x2C = the member's column in the party-set row 0x669750 + (0x90412C & 0x7F) * 3 (3 if absent); +0x4C = 0x813580 + [0x813580 + that * 4]; +0x24 = 1, +0x27 = slot + 0x78, +0x28 = 2, +0x25 = 5, +0x26 = slot * 0x50, +0x2B = 0x669738[member], +0x70 low byte = (+0x2B != 0), +0x29 = Draw_OtSlot, +0x5C..+0x5F = 0; Sprite_LoadPalette(0x80D380 + slot * 64, 0). 18 call sites. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x533CE0
@@ -5814,7 +5814,7 @@ ret = "void"
 params = "unsigned slot"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x120 bytes: unless Field_Request 6, Party_ClearAll; then for each of Field_MemberCount members: Field_State = Sprite_Current = the member, +0 = 1, +5 = i, Field_MemberSprite(list[slot * 3 + i], i), +0x48 = 0, +0x40 = +0x44 = 0x10000, +0x148 = Character_IndexById[id], its actor record copied to +0x80, +0x138 bit 0 cleared; slot non-zero and actor bit 0x80: Sprite_SetTint(-4, -8, 0, 0); slot 0: Field_MemberTimers. 34 call sites. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x533EF0
@@ -5825,7 +5825,7 @@ ret = "unsigned char"
 params = "unsigned member"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x11A bytes: Party_JoinReset; actor record Character_IndexById[member] +0xB bit 0 set; with Field_MemberCount 3 or more, Field_Request = 6 and 1; else the member into both party lists at 0x904062 / 0x904065, ObjTrio slot n +0 = 1, Member_ClearState(n), Field_MemberSprite(member, n), its actor record copied, +5 = n, +0x4B = 0xFF, Field_MemberCount + 1, +0x148 = the actor index, and 0. psx_pair callers."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x534010
@@ -5835,7 +5835,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x12 bytes: the dwords 0x9045FC, 0x904600 and the byte 0x904604 = 0. Callers Party_Join and 0x534032. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x534EC0
@@ -5846,7 +5846,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x4B bytes: actor record Field_State +0x148: bit 0x80 sets Field_State +0x124 = 10, bit 0x20 sets +0x125 = 0x28. What they time is unread. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x536650
@@ -5855,7 +5855,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x1E bytes: the dwords Sprite_Current +0xC, +0x10, +0x14 = 0 (eax 0 on return, read by no caller checked). 14 call sites. psx_pair call-disputed, so no psx."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/field_6.cpp"
 
 [[func]]
 pc = 0x5366A0
@@ -5867,7 +5867,7 @@ ret = "void"
 params = "unsigned short *dst, unsigned index"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x55 bytes: 32 words from palette `index` of Sprite_Current's bank (+0x4C; its dword +4 an offset to a table of offsets) to dst and to the same place in Gfx_ClutStrip (0x80F580 + ((dst - Gfx_ClutStripSource) >> 1) * 2), then Gfx_ClutStripDirty = 1. 21 call sites. psx_pair call-disputed, so no psx."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x536730
@@ -5877,7 +5877,7 @@ ret = "void"
 params = "unsigned member"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x30 bytes: bytes +1..+4 of ObjTrio member `member` (stride 0x14C, unchecked) = 0. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x536760
@@ -5887,7 +5887,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x33 bytes: for the three ObjTrio members, +0 = 0 and Member_ClearState. psx_pair gap20."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x5367A0
@@ -5897,7 +5897,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x35 bytes: Member_ClearState for each of the three ObjTrio members whose +0 is non-zero. psx_pair call."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x5367E0
@@ -5909,7 +5909,7 @@ ret = "void"
 params = "unsigned a, unsigned b, unsigned c, unsigned mode"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x6C bytes: mode 0 first PartySet_LoadFirst(a, b, c) and a wait (Task_Sleep(1) until File_LoadDone); then PartySet_LoadSecond(a, b, c, mode) and the same wait. 63 call sites, most in 0x519890's script ops. Unpaired."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x536850
@@ -5921,7 +5921,7 @@ ret = "void"
 params = "unsigned a, unsigned b, unsigned c"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x38 bytes: PartySet_Select(PartySet_Find(a, b, c), 3) unless that is already 0x90412C & 0x7F. Unpaired."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x536890
@@ -5933,7 +5933,7 @@ ret = "void"
 params = "unsigned a, unsigned b, unsigned c, unsigned mode"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x54 bytes: set = PartySet_Find(a, b, c); PartySet_Select(set, mode) unless 0x90412C already holds set (mode non-zero) or set | 0x80 (mode 0). Unpaired."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x5368F0
@@ -5945,7 +5945,7 @@ ret = "unsigned char"
 params = "unsigned a, unsigned b, unsigned c"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x16B bytes: a, b, c to 0x903850; the current set 0x90412C & 0x7F if it is not 0xFF and holds every one that is not 0xFF; else the three sorted and looked up column by column in the 19 sorted 3-byte rows at 0x669750, the row returned; none found calls 0x536A60 (which prints and never returns) and gives 0xFF. Unpaired."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x536AC0
@@ -5955,7 +5955,7 @@ ret = "void"
 params = "unsigned set, unsigned mode"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x94 bytes with its inline 4-entry jump table at 0x536B44: 0x90412C = set | 0x80 (mode 0) or set (1, 2), untouched for 3; then LoadDatFile(set + 0x2C2 / 0xFC / 0x10F / 0x2D5) for mode 0 / 1 / 2 / 3, nothing above. psx_pair call-anchored."
-impl = "src/game/field_event.cpp"
+impl = "src/game/field/mode_11.cpp"
 
 [[func]]
 pc = 0x572570
@@ -7729,7 +7729,7 @@ psx = 0x801BF1A8
 ret = "unsigned"
 params = "unsigned entry"
 status = "evidence"
-impl = "src/game/area_entry.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-22, 0x531F90..0x5321B6 (0x227 bytes, whole); the PSX FUN_801BF1A8 (call-anchored; read, the same). Entry (entry & 0xFF) of the descriptor +0x14 table: header N | 0x20 flag | 0x30 kind-2 | kind in bits 6-7. Kind 0: exactly N members, records matched to the wanted list (0x80 any), the party list 0x904062 rewritten and the records sorted by Party_SwapMembers; kind 0x80: at least N; then Party_SetUpMembers, Kind2_Place, Field_ScriptFlags |= 0x100, Field_ScriptFlags2 |= 0x8000. 393 call sites (E8 scan), none reads the argument slot the function overwrites. Not in any attract trace."
 
 [[func]]
@@ -7740,7 +7740,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned count, const unsigned char *list"
 status = "evidence"
-impl = "src/game/area_entry.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-22, 0x5321C0..0x5322A5 (0xE6 bytes, whole); the PSX FUN_801BF56C (callers pairing; read, the same). For each of (count & 0xFF) ObjTrio records: Sprite_Current, +0 bit 5 off, +0x5C..+0x5F, Member_ClearState(i), +1 / +7 / +9, script +0x130 from descriptor +0x18 at list[i], ScriptContext_Reset(+0x124), Sprite_LoadPalette(0x80D380 + +5 * 64, 0); then Field_ScriptFlags2 &= 0xFFF8. Sole caller Party_DropIn."
 
 [[func]]
@@ -7750,7 +7750,7 @@ psx = 0x801BF730
 ret = "void"
 params = "unsigned a, unsigned b, unsigned keep"
 status = "evidence"
-impl = "src/game/area_entry.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-22, 0x5322D0..0x5323DB (0x10C bytes, whole); the PSX FUN_801BF730 (call-anchored; read, the same). ObjTrio_SwapFields(a, b, keep), then for a and b: Field_State = Sprite_Current = the record, Field_MemberSprite(+0x89, slot), 0xA4 bytes to +0x80 from 0x903A70 + Character_IndexById[+0x89] * 0xA4, +0x148 = Character_IndexById[+0x89] read after that copy. Sole caller Party_DropIn."
 
 [[func]]
@@ -7761,7 +7761,7 @@ psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned a, unsigned b, unsigned keep"
 status = "evidence"
-impl = "src/game/area_entry.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-22, 0x5323E0..0x532549 (0x16A bytes, whole), no calls; the PSX FUN_801BF918 (call-anchored; read, the same). Records (a & 0xFF) and (b & 0xFF) of ObjTrio exchange +0x89; unless keep's low byte, +0x08 +0x29 +0x138 and dwords +0x34 +0x38 +0x3C; always dwords +0x0C +0x10 +0x14 and bytes +0x125 +0x124; +0x4B of both 0xFF. Callers Party_SwapMembers and two at 0x52EE98 / 0x52EECF."
 # ---------------------------------------------------------------------------
 # Round four, group N (2026-09-22): the glyph draw and its helpers,
@@ -9596,7 +9596,7 @@ name = "Sprite_ShadeFadeBegin"
 psx = 0x801C3430
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534590..0x5345DB (0x4C bytes), no calls: bit 15 set on words 0..30 of row 15 of Gfx_ClutStrip at Sprite_Current +5 (0x811380 + clut * 64), Sprite_Current +0 bit 0x20 (semi-transparency), Gfx_ClutStripDirty = 1, word 31 of that CLUT 0. The PSX 0x801C3430 term for term (lhu / ori 0x8000 / sh). Caller 0x5258D0 (a leader state, table 0x660158) then sets +0x5D..+0x5F to 0x80. Shop route 14 calls."
 
@@ -9607,7 +9607,7 @@ psx = 0x801C34C8
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5345E0..0x534609 (0x2A bytes): Field_JumpSetUp; then, if Sprite_Current +5 is 0 and bit 3 of the low bytes of Field_ScriptFlags2 or Field_ScriptFlags is clear, a tail jmp to Field_JumpCamera. PSX 0x801C34C8 the same (a jal there). Callers 0x52DCFA, 0x52E880, Field_JumpCheckHeight. Shop route 100 calls."
 
@@ -9618,7 +9618,7 @@ psx = 0x801C3530
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534610..0x534705 (0xF6 bytes): speed = Field_MoveSpeeds[Field_State +0x128]; Sprite_Current +9 = 0x20 for direction (+8) 2 or 6, else 0x10, divided by the speed (idiv, a zero speed faults), doubled if Field_ScriptFlags bit 12; +0xC / +0x10 = the direction's step pair at 0x6696DC times the speed; the landing (x, z) = step * +9 + (+0x34, +0x38); 0x5725C0(x, z, direction) and, when it leaves SharedScratch's byte non-zero, MapView_GroundAt(x, z) instead; +0x14 = (s16 ground - s16 +0x3E) / +9 (idiv, faults on 0). The PSX 0x801C3530 the same (divu / div, break 7). Callers Field_JumpStart, 0x51AE66, 0x535FF7. Shop route 179 calls."
 
@@ -9629,7 +9629,7 @@ psx = 0x801C3708
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534710..0x534788 (0x79 bytes), no calls, Sprite_Current read once: MoveScript_F3Divisor = 4 for direction 2 or 6, else 8, then that times Field_MoveSpeeds[Field_State +0x128] (16-bit imul); Field_Kind2X / Field_Kind2Z = the landing point (+0xC / +0x10 times +9 plus +0x34 / +0x38); MoveScript_FAWord = word +0x14. The PSX 0x801C3708 the same. Reached only by Field_JumpStart's tail jmp (100 calls)."
 
@@ -9639,7 +9639,7 @@ name = "Sprite_ShadeFadeStep"
 psx = 0x801C37D8
 ret = "unsigned char"
 params = "unsigned step"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534790..0x5347F6 (0x67 bytes): Sprite_ShadeRaise(step); if that answers 1, Sprite_LoadPalette(0x80D380 + Sprite_Current +5 * 64, 0), +0 bit 0x20 cleared, +0x5D +0x5E +0x5F +0x5C = 0, al 1; else al 0. The PSX 0x801C37D8 the same. Callers read al only. Caller 0x525920 (push 8). Shop route 112 calls."
 
@@ -9649,7 +9649,7 @@ name = "Sprite_ShadeRaise"
 psx = 0x801C388C
 ret = "unsigned char"
 params = "unsigned step"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534800..0x53487D (0x7E bytes), no calls: for each of Sprite_Current +0x5D, +0x5E, +0x5F that is non-zero, add the step's low byte and, if the result is above -64 signed, make it 0xC0; al 1 when all three are 0xC0. The PSX 0x801C388C the same (slti -0x3F; the three compared as the word +0x5C with its low byte masked). Callers read al only. Shop route 112 calls, all from Sprite_ShadeFadeStep. Its neighbour 0x534880 is the mirror (towards 0x80), unreached and not taken."
 
@@ -9660,7 +9660,7 @@ psx = 0x801C3AA4
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534920..0x534981 (0x62 bytes): al 0 if Field_ScriptFlags bit 10; else AreaMap_CellsAll(+0x34, +0x38, +0x70 low byte, 0xD0, 0) and, when it answers, Sprite_Current +1 = 2, +2 = 6, +3 = +4 = 0 and al 1. The PSX 0x801C3AA4 the same. Callers 0x51B010, 0x52E5F7 read al. Shop route 181 calls."
 
@@ -9671,7 +9671,7 @@ psx = 0x801C3B44
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534990..0x5349F1 (0x62 bytes): Field_TileD0's body with cell code 0xA4 and +2 = 7. The PSX 0x801C3B44 the same. Caller 0x52E604 reads al. Shop route 103 calls."
 
@@ -9682,7 +9682,7 @@ psx = 0x801C3BE4
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534A00..0x534C1F (0x220 bytes): nothing if Field_ScriptFlags bit 10; else the first cell code 0x80..0x88 AreaMap_CellsAll(+0x34, +0x38, +0x70 low byte, code, 0) answers for, n = code - 0x80, then 0x534C20(n) and 0x534DB0(kind[n]) with kind a 9-byte table on the stack, 0 0 0 0 1 2 3 3 3 (PSX 0x80196FEC). Both callee arguments are pushed with stale upper bytes; both callees mask them. The PSX 0x801C3BE4 the same. Callers 0x51AFEF, 0x52E5CE. Shop route 181 calls."
 
@@ -9693,7 +9693,7 @@ psx = 0x801C4294
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534F10..0x5350B3 (0x1A4 bytes): with Field_InputFlags bit 0, any of the Party_Count(0) members of the list at 0x904062 whose actor record (by Character_IndexById) has bit 0x80 at +0x10; else the leader's record (Field_State +0x148). Then Field_State +0x124 counts down; at 0 it is 10 again, 0x534DB0(1), and 0x537480(1, member) for each such member (or for Field_State +0x89); if any took HP, an Effect_FindFree object gets kind 0x41 at the leader's +0x2E / +0x30. PSX 0x801C4294 the same. Callers 0x51AFEA, 0x52E967. Shop route 178 calls."
 
@@ -9704,7 +9704,7 @@ psx = 0x801C4590
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5350C0..0x535115 (0x56 bytes), no calls: if the leader's actor record (Field_State +0x148) has bit 0x20 at +0x10, Field_State +0x125 counts down, and at 0 the bit is cleared (and word 0xFFDF). The PSX 0x801C4590 the same (psx_pair did not pair it; the body did). Callers 0x51AFE5, 0x52E5C9. Shop route 181 calls."
 
@@ -9714,7 +9714,7 @@ name = "Field_Tile89"
 psx = 0x801C4788
 ret = "unsigned char"
 params = "unsigned turn"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535120..0x535146 (0x27 bytes): al 0 if Field_ScriptFlags bit 10, else Field_TileTurn(0x89, 2, turn) != 0 (setne). PSX 0x801C4788 the same. Callers read al (0x51ADAD, 0x51AFF6, 0x52E5D5). Shop route 1,816 calls."
 
@@ -9725,7 +9725,7 @@ psx = 0x801C4644
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned code, unsigned value, unsigned turn"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535150..0x535236 (0xE7 bytes): al 0 if AreaMap_CellsNone(+0x34, +0x38, +0x70 low byte, code, 0) answers; else, with the turn byte set, up to eight directions from the opposite of +8 round, each probed by 0x535610(x + step x * 2, z + step z * 2, 0, word +0x3E) with Field_DirectionSteps, stopping at the first the probe does not refuse, and +8 = that direction xor 4; then +1 = 2, +2 = 8, +3 = +4 = 0, +0xB = value, al 1. PSX 0x801C4644 the same (xori 4 for xor 0xFC). Shop route 3,632 calls."
 
@@ -9735,7 +9735,7 @@ name = "Field_Tile8A"
 psx = 0x801C47D4
 ret = "unsigned char"
 params = "unsigned turn"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535240..0x535266 (0x27 bytes): Field_Tile89 with Field_TileTurn(0x8A, 1, turn). PSX 0x801C47D4 the same. Callers read al (0x51ADBB, 0x51B004, 0x52E5E7). Shop route 1,816 calls."
 
@@ -9746,7 +9746,7 @@ psx = 0x801C4820
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535270..0x53530A (0x9B bytes): three times Actor_EquipCount(Field_State +0x148, kind, value) for (3, 0x16), (3, 0x17), (2, 0x1F), each followed when non-zero by 0x5373F0(1, Field_State +0x89); Field_State re-read for every call. PSX 0x801C4820 the same. Callers 0x51AFE0, 0x52E5C2. Shop route 181 calls."
 
@@ -9756,7 +9756,7 @@ name = "Actor_EquipCount"
 psx = 0x801C48EC
 ret = "unsigned char"
 params = "unsigned member, unsigned kind, unsigned value"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + Character_IndexById[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_EncounterThresholdRoll (docs/field-event.md). Shop route 561 calls."
 
@@ -9766,7 +9766,7 @@ name = "AreaMap_CellsAll"
 psx = 0x801C49D0
 ret = "unsigned char"
 params = "long x, long z, unsigned wide, unsigned code, unsigned mask"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535390..0x5353D1 (0x42 bytes): wide (the whole dword) 0: AreaMap_CellsAll4(x, z, code, mask); else 0x535490(x, z, code, mask); the callee's eax returned. PSX 0x801C49D0 the same. Shop route 2,016 calls."
 
@@ -9776,7 +9776,7 @@ name = "AreaMap_CellsAll4"
 psx = 0x801C4A10
 ret = "unsigned char"
 params = "long x, long z, unsigned code, unsigned mask"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5353E0..0x535481 (0xA2 bytes): the four cells AreaMap_ByteAt (x >> 16, z >> 16), (+1, 0), (0, +1), (+1, +1) in that order, each and 0xF0 when the mask byte is set; al 1 when the first equals the code byte and so do the second if x has a fraction, the third if z has one, the fourth if both. PSX twin 0x801C4A10 by the body - psx_pair's call tier has it and 0x535490 swapped (0x801C4B70). Shop route 2,016 calls."
 
@@ -9786,7 +9786,7 @@ name = "AreaMap_CellsNone"
 psx = 0x801C5724
 ret = "unsigned char"
 params = "long x, long z, unsigned wide, unsigned code, unsigned mask"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535C50..0x535C91 (0x42 bytes): AreaMap_CellsAll's shape over AreaMap_CellsNone4 and 0x535D60. PSX 0x801C5724 the same. Callers Field_TileTurn, 0x52E825. Shop route 3,735 calls."
 
@@ -9797,7 +9797,7 @@ psx = 0x801C5764
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "long x, long z, unsigned code, unsigned mask"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535CA0..0x535D5D (0xBE bytes): AreaMap_CellsAll4's four cells, each 0x2n made 0x2n and 0x21, then and 0xF0 with the mask; al 0 when the first, or the second with an x fraction, the third with a z fraction or the fourth with both, equals the code; else 1. PSX twin 0x801C5764 by the body - psx_pair has it and 0x535D60 swapped (0x801C58F4). Shop route 3,735 calls."
 
@@ -9808,7 +9808,7 @@ psx = 0x801C5C40
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x535F50..0x535FBC (0x6D bytes): the landing point (Field_JumpSetUp's), 0x5725C0 on it; if that leaves SharedScratch's byte 0, MapView_GroundAt there, and if the ground is 0x80 or more above word +0x3E, Field_State +0x128 one less and Field_JumpStart again. PSX 0x801C5C40 the same. Callers 0x51AE6B, 0x52DCFF. Shop route 176 calls."
 
@@ -9818,7 +9818,7 @@ name = "Sprite_ApplyVelocity"
 psx = 0x801C67AC
 ret = "void"
 params = "void"
-impl = "src/game/event_objs.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x536670..0x53669D (0x2E bytes), no calls: Sprite_Current +0x34 += +0xC, +0x38 += +0x10, word +0x3E += word +0x14. PSX 0x801C67AC the same (psx_pair call-disputed; the body agrees). Caller 0x52E140 and three unreached neighbours. Shop route 520 calls."
 # ---------------------------------------------------------------------------
@@ -11101,7 +11101,7 @@ name = "Field_FacingObject"
 psx = 0x801B5148
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_5.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530A50..0x530BEA (0x19B bytes): the object faced - even directions try the odd neighbours first (turning), odd ones look +0x70 + 2 steps ahead and, unless that cell is 0x30, one; each through Field_ObjectInPath. Shop route: 11 calls."
 
@@ -11111,7 +11111,7 @@ name = "Field_ObjectInPath"
 psx = 0x801B53C8
 ret = "unsigned char"
 params = "long x, long z, unsigned direction"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_5.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530BF0..0x530C87 (0x98 bytes): Sprite_ObjectAt(x, z, +0x70); 0xFF for none, kind 8, word +0x88 0xFFFF or a height more than 0x100 off. The index compared signed with 30. The third argument is not read. Shop route: 11 calls."
 
@@ -11121,7 +11121,7 @@ name = "Field_CellAround"
 psx = 0x801B548C
 ret = "unsigned char"
 params = "unsigned cell"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_5.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530C90..0x530CB7 (0x28 bytes): Field_CellAroundNear, or 0x531120 for a sprite with +0x70. Shop route: 24 calls."
 
@@ -11132,7 +11132,7 @@ psx = 0x801B5D74
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned cell"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_5.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x530CC0..0x53111D (0x45E bytes), calls AreaMap_ByteAt only: a cell of the argument's byte around the leader, the found cell's words to 0x903850 / 0x903852, turning the leader to the diagonal it lies on (section 3 of the doc). Shop route: 24 calls."
 
@@ -11142,7 +11142,7 @@ name = "Field_LeaderTalkTo"
 psx = 0x801B70D4
 ret = "void"
 params = "unsigned index"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x531660..0x5317E2 (0x183 bytes): object n (below 30 Sprite_Objects, else Sprite_ObjectsExtra, unbounded) - not kind 9: its +0x80 bit 5, the pose, Field_ScriptFlags bit 8; kind 9: the facing pose by 0x660A38, Field_State +0x139 = n, state 0xB. Shop route: 3 calls."
 
@@ -11152,7 +11152,7 @@ name = "Field_LeaderCellEvent"
 psx = 0x801B766C
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x531950..0x531AE7 (0x198 bytes), on foot: confirm on 0xAE (0x9039F3 = 0x37) or a 0xAx cell (0x531AF0, Field_ChangeArea); pad 0x100 cycles 0x9045FA; pad 0x800 with 0x531820 (the return point 0x904148, Field_ChangeArea); button 0x90358C on 0xA0 / 0xA1 (0x9039F3 = 0x1B). Called by Field_LeaderStand. Shop route: 120 calls."
 
@@ -11163,7 +11163,7 @@ psx = 0x801BEF00
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x531DF0..0x531F07 (0x118 bytes): the point one (two under Field_ScriptFlags bit 12) Field_DirectionSteps ahead at MapView_GroundAt's height (the leader's if more than 0x100 off); every object in use without +7 bit 7 in reach has word +0x9C counted; if any, pace 3, +9 = 0. Also called by 0x51AE1C, 0x526CB4 and area scripts. Shop route: 176 calls."
 
@@ -11176,7 +11176,7 @@ psx_status = "hypothesis"
 psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch seeding of exe_imm.py pair, not one of its methods), scena: Scenario_Hooks[0] slot 3 against GAME.EMI#0 0x801C944C[0] (SCENA00) (docs/install-gap-pairs.md 8)"
 ret = "unsigned char"
 params = "long x, long z"
-impl = "src/game/event_ops.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 3 bytes: xor al, al / ret. Thirteen .data references (chapter records and hook tables 0x660CDC..0x662C64) and Area_StepHook's case for area 0xAE. The catalogue's 16 bytes and eleven calls ran on into 0x539AD0. Shop route: 100 calls, all from Scenario_ArriveHook."
 
@@ -15744,7 +15744,7 @@ psx = 0x801BFBA8
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x532550..0x532657 (0x108 bytes), cdecl, two calls, every jump internal; one caller 0x52F429. ObjTrio + 0xB = 0xFF; five slots of 0x14C from ObjTrio (three objects there): r = Rand and 0x7F, redrawn above 100; below Field_MemberCount (read per slot) a member notices when the byte +0x38 of its actor record (0x66972C of the list 0x904062) is r or more - an Effect_FindFree object (0xFF also counts) with +0 1, +5 6, +6 1, the words +0x2E / +0x30 of the object, the bytes 0x660B24 / 0x660B25 of id +0x89 at +0xC / +0x10, ObjTrio + 0xB its index; past the count, r of 50 or less counts. Five: 0x904AE4 = 1, none 2, else 0. PSX FUN_801BFBA8 term for term. Combat route: 1 call. The name is a guess from the shape."
 
@@ -15754,7 +15754,7 @@ name = "Encounter_PartyTurnSense"
 psx = 0x801BFDC8
 ret = "void"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x532660..0x5326AE (0x4F bytes), cdecl, one call, every jump internal; one caller, the battle intro state 0x495EA0 (table 0x656A84 by word 0x66C7EA). Each member below Field_MemberCount (read per member): Sprite_Current = the object, + 0xB = Sprite_TurnSense(0x660B3C[byte 0x904AAC]), the sprite read after the call. PSX FUN_801BFDC8 term for term. Combat route: 1 call."
 
@@ -15764,7 +15764,7 @@ name = "Encounter_PartyTurn"
 psx = 0x801BFE54
 ret = "unsigned char"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x5326B0..0x532850 (0x1A1 bytes), cdecl, five calls, every jump internal; one caller, the intro state 0x495EC1. While a member +0xB is set: per member (Field_State, Sprite_Current), record word +0x10 bit 14 gives 0x5891C0(+0x4B, 0, 0x8C5D80, 0xA00) and +0xB 0 without a tick; else facing 0x660B3C[0x904AAC] already, +0xB set gives the animation of that direction and +0xB 0; not facing it, +8 = +8 + +0xB and 7 and its animation; Sprite_ScriptTick; 0. None set: bit 2 of 0x904AE5 answers 1; else each member 32 CLUT words 0x80D380 row +5 copied to 0x80D440, Sprite_ShadeFadeBegin, +0xB 0, +0x5D..+0x5F 0xC0, +0x5C 1; 1. PSX FUN_801BFE54 term for term. Combat route: 6 calls."
 
@@ -15775,7 +15775,7 @@ psx = 0x801C0114
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x532860..0x532A61 (0x202 bytes), cdecl, four calls, every jump internal; one caller, the intro state 0x495F91. Bit 2 of 0x904AE5: 1. Else the centre = Field_Kind2X / Z plus (s8 0x660B1C[2 * 0x904AAC]) << 16; per member: +0xB 0 and Sprite_ShadeLower(8) done - the spot of its place in 0x904065 (by Field_State +0x89, else the fourth), Field_State +0x138 bit 0 cleared, +0x29 Draw_OtSlot, +0x34 / +0x38 the spot, +0x3E MapView_GroundAt, +0x48 0, +0xB 1; +0xB 1 and Sprite_ShadeRaise(8) done - 32 words 0x80D440 row +5 into 0x811380, Gfx_ClutStripDirty, +0 bit 5 cleared, +0xB, +0x5D..+0x5F, +0x5C 0, +0xB 2; Sprite_ScriptTick. Answers every +0xB == 2. PSX FUN_801C0114 term for term. Combat route: 16 calls."
 
@@ -15784,7 +15784,7 @@ pc = 0x532A70
 name = "Encounter_PartyAtPlaces"
 ret = "void"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x532A70..0x532B51 (0xE2 bytes), cdecl, two calls, every jump internal; one caller, the intro state 0x495FDA. Per member (Field_State, Sprite_Current): a search of 0x904062 for id +0x89 whose result is never used; +0x34 / +0x38 the member spot 0x7E06E0 + 8i; +0x3E MapView_GroundAt; +0xB 0; Sprite_SetAnimation(0x904AAC, + 0x1C when bit 6 of the record byte +0x11 by Field_State +0x148). No PSX twin paired. Combat route: 1 call."
 
@@ -15797,7 +15797,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x4960D0 (constants 0.50) (docs/install-gap-pairs.md)"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x532B60..0x532C0D (0xAE bytes), cdecl, one call, every jump internal; one caller, the intro state 0x4960D1. Bit 4 of 0x904AE5: 1. Else per member (Field_State, Sprite_Current; the same unused search of 0x904062): +0xB 0 and Sprite_ScriptTickOnce non-zero give +0xB 1; answers every +0xB == 1. No PSX twin paired. Combat route: 42 calls."
 
@@ -15807,7 +15807,7 @@ name = "Sprite_ShadeLower"
 psx = 0x801C3998
 ret = "unsigned char"
 params = "unsigned step"
-impl = "src/game/inventory_ops.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534880..0x534911 (0x92 bytes), cdecl, no calls. Sprite_ShadeRaise mirror: each of Sprite_Current + 0x5D..+0x5F not 0x80 becomes s8 byte - s8 step as a 16-bit difference, 0x80 below -128, else its low byte; al 1 when all three are 0x80. Three call sites (0x403922, 0x525742, 0x5328DD). PSX FUN_801C3998 term for term. Combat route: 24 calls."
 
@@ -19477,7 +19477,7 @@ pc = 0x5317F0
 name = "Field_EncounterArea"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x5317F0..0x53181D (0x2E bytes), no calls: the first of the ten word pairs at 0x660A90 (to 0x660AB8) whose first is Game_AreaNumber - its second to word 0x937F82; none, nothing. One caller, Field_LeaderWalk (0x52DDA0, as event_ops.cpp's kEncounterArea). Queue: worldmap, recorded start (1 call)."
 
@@ -19486,7 +19486,7 @@ pc = 0x531920
 name = "Field_CellHasEvent"
 ret = "unsigned char"
 params = "long x, long z"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x531920..0x53194A (0x2B bytes), cdecl: AreaMap_ByteAt(x, z) (the two dwords pushed, read as words) in the 0xFF-ended list 0x660B10 (Field_EventCells) -> 1, else 0. Twelve callers: eleven world-map sites 0x402453..0x425223 and Field_LeaderCellEvent 0x53185A. Queue: worldmap, recorded start (562 calls)."
 
@@ -19495,7 +19495,7 @@ pc = 0x531AF0
 name = "Field_ExitFromCell"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x531AF0..0x531B5E (0x6F bytes), cdecl: AreaMap_ByteAt(Sprite_Current +0x36, +0x3A) not 0xA0 -> nothing; else r = 0x462AC0() and the first 4-byte record with r[0] == word +0x36 and r[1] == word +0x3A (no end test): word 0x937F82 = r[2], 0x903860 = 0xE8000, 0x90384C = 0x410000, byte 0x905B88 = r[3]. One caller, Field_LeaderCellEvent (0x5319AF). Queue: worldmap, recorded start (2 calls)."
 
@@ -19508,7 +19508,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of ETC/GAME.EMI pairs it (psx-jp image); the fingerprints agree: 2 call(s) agree, constants 0.27 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x533780..0x5338AF (0x130 bytes), cdecl, entry 0 of Field_PendingJumps (.data 0x660B60): byte 0x904EF2 zero -> ObjTrio +0 &= 0xBF, Member_ClearState(0), ObjTrio +0x138 &= 0xFD, 0x904EF2 = (re-read) + 1; else nothing while |leader x - 0x904EF4| and |z - 0x904EF8| are both below 0x10000; else with more than one member, for members 1..count-1 with bit (1 << n mod 32, n the running count from 0x904EF2) clear in word Field_ScriptFlags: +0 &= 0xBF, +1 = +2 = 2, +3 = +4 = 0, +0x138 &= 0xFD, the bit cleared in a 16-bit copy of Field_ScriptFlags2; n + 1 per member; the copy and n stored. Then n == Field_MemberCount: MoveCmd_TestFC(word 0x904EF6, word 0x904EFA), Field_ScriptFlags2 &= 0xFFEF, 0x904EF0 = 0. Queue: shop, worldmap, combat."
 
@@ -19517,7 +19517,7 @@ pc = 0x535610
 name = "Field_WayBlocked"
 ret = "unsigned char"
 params = "long x, long z, unsigned raised, long ground"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x535610..0x535638 (0x29 bytes), cdecl: the low byte of `raised` set -> 0x535830(x, z, ground), else Field_WayBlocked4(x, z, ground); the callee's al. Eleven callers (E8 scan): 0x51B37D.. (member_sprites, six), 0x526711, Field_SpotFree 0x52EBC9, 0x52EC20's 0x52ECDE / 0x52ED4E, Field_TileTurn 0x5351D6. Queue: worldmap, recorded start (20 calls)."
 
@@ -19526,7 +19526,7 @@ pc = 0x535640
 name = "Field_WayBlocked4"
 ret = "unsigned char"
 params = "long x, long z, long ground"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x535640..0x535727 (0xE8 bytes), cdecl: Field_CellsBlock(x, z, 0) -> 1; x's low word non-zero and s16 MapView_SlopeAt(x, z, 3) > 0x40 with byte 0x903850 -> 1; the same for z's (5) and both (4); |s16 MapView_GroundAt(x, z) - s16 ground| > 0xC0 -> 1; else Sprite_Current +0x3E saved, set to ground's word, Sprite_ObjectAt(x, z, 0), +0x3E put back into Sprite_Current re-read; al = that != 0xFF. One caller, Field_WayBlocked. Queue: worldmap, recorded start (20 calls)."
 
@@ -19535,7 +19535,7 @@ pc = 0x535730
 name = "Field_CellsBlock"
 ret = "unsigned char"
 params = "long x, long z, unsigned wide"
-impl = "src/game/event_leader.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x535730..0x535829 (0xFA bytes), cdecl: AreaMap_CellsNone(x, z, wide, code, 1) zero for any code of the 0xFF-ended 0x660C24 (Field_BlockingCells) -> 1; CellsNone(.., 0x10, 0) zero -> 1; unless Field_State +0x138 bit 0, (.., 0x11, 0) zero -> 1; (0x20, 0) and (0x21, 0) both zero -> 1; (0xC0, 0) and (0xA0, 1) both zero -> 1; al = (0xA2, 0) == 0. Callers Field_WayBlocked4 (wide 0) and 0x535830 (wide 1). Queue: worldmap, recorded start (20 calls)."
 
@@ -19781,7 +19781,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/mode_states.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-25, 0x539AD0..0x539ADD (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x660D7C], unchecked - chapter 1's slot 0 (Scena01_Hooks 0x660D68, 0x662C80 entry 1), which Field_ModeDispatch calls; the shape of Scena16_Frame. Shop, worldmap and combat routes."
 
 [[func]]
@@ -19790,7 +19790,7 @@ name = "Scena01_EnterArea"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/mode_states.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-25, 0x539B20..0x53A24B and three jump tables 0x53A24C (6, area 5) / 0x53A264 (9, area 0xA) / 0x53A288 (8, area 0x17) to 0x53A2A7 - 0x788 bytes, not the catalogue's 416 (0x539CC0 is a case of the first table). Scena01_States entry 1: by Game_AreaNumber (0, 5, 7, 8, 9, 0xA, 0xD, 0xE, 0x10, 0x11, 0x16, 0x17, 0x21, each re-read) and the counter byte 0x90384A, with Flags_Test on the dword 0x929ED0, sets MoveScript_Var7 / 0x8034E5 and the counters, pass flags, script flags, music (Music_LoadFile 0 / 8 and the load wait, Music_FadeOutStop 0xA), camera distance (+0xA00, +0xB80), an effect (Effect_FindFree, kind 0x12 / 0x11), Flags_Set 0xB 0xD 0x1C 0x39 0x3F, Scenario_CallA 1 / 2, AreaMap_SetupEntries and MoveCmd_TestFB(0x49, 0xC); every exit stores 0x8034E2 = 2. 48 calls. Shop, worldmap and combat routes."
 
 [[func]]
@@ -19803,7 +19803,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "unsigned char"
 params = "int x, int z"
 status = "evidence"
-impl = "src/game/mode_states.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-25, 0x53D830..0x53DD1D (0x4EE bytes), cdecl (x at +4, z at +8; bp is z's high word), al 1 or 0: chapter 1's slot 2 (.data 0x660D70), called by Scenario_StepHook with the leader's target. Areas 0xA, 7, 8, 0x13, 0x17, 0x16 test flags (Flags_Test on 0x929ED0) and inclusive signed bounds of x and z, and on a hit ScriptFlags_Set40 (not for area 0x16's first rectangle), the run 0x8034E4 / step 0x8034E5 / counters, Sound_PlayEffect(0x202) or Field_ChangeArea (8, 0x340000, 0x178000, 0x83), (0x17, 0x180000, 0x180000, 0x82), (0x16, 0x58000, 0x140000, 0x80), (0x16, 0x450000, 0xB8000, 0x81) and answer 1; area 0x60 sets flag 0x18 over x 0x10000 / 0x18000, z 0x110000..0x128000 and answers 0. 31 calls. Shop, worldmap and combat routes."
 
 [[func]]
@@ -48365,7 +48365,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 0 of 0x539AD0's table 
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x539AE0..0x539B18 (0x39 bytes), read to the last instruction: chapter 1's state 0 (Scena01_States entry 0): Scenario_CallA(0), Field_ChangeArea(9, 0x570000, 0x40000, 7), the dwords 0x903F98 and 0x903848 (the four counters) cleared, state 0x8034E2 = 1. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48374,7 +48374,7 @@ name = "Scena01_Run"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A2B0..0x53A2BD (0xE bytes), read to the last instruction: chapter 1's state 2 (Scena01_States entry 2): jmp [Scena01_Runs + s8 MoveScript_Var7 * 4], unchecked in the original (ours aborts past the 24 entries). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48383,7 +48383,7 @@ name = "Scena01_Scene01"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A2C0..0x53A372 (0xB3 bytes), read to the last instruction: Scena01_Runs entry 1, steps 0..2 by a sub/dec chain: changes to area 9 and 0xA on counter 0, Kind2_Place(0), flag 0. The catalogue labels it Boot: top-level modes, so the scenario walk stopped at it (frontier) - it is chapter 1's. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48392,7 +48392,7 @@ name = "Scena01_Scene02"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A380..0x53A5DF (0x260 bytes), read to the last instruction: Scena01_Runs entry 2, steps 0..0xB (jump table 0x53A5B0, 12; cmp 0xB / ja): area 0xA's changes, music 0xE, transitions 0xF / 0x10, sound 0x201, the last effect cleared, flag 1. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48401,7 +48401,7 @@ name = "Scena01_Scene03"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A5E0..0x53AA8B (0x4AC bytes), read to the last instruction: Scena01_Runs entry 3, steps 0..0x16 (jump table 0x53AA30, 23): camera distance stepped over 0x50 frames twice, Menu_DrawHand(0xD2, 0x3C, 0) until Input_Pressed, Kind2 moves, kind-0x13 effects, music 0x14 / 0x13, flags 2 and 3. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48410,7 +48410,7 @@ name = "Scena01_Scene05"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53AA90..0x53AC20 (0x191 bytes), read to the last instruction: Scena01_Runs entry 5, steps 0..2 and 0xA..0xC (byte table 0x53AC14 over 0..0xC, jump table 0x53ABF8 of 7): messages 7 / 8, sound 0x103, the change to area 8, flag 4, Inventory_Add(0, 0x22, 1). Run 5 is what Scena01_Cell starts. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48419,7 +48419,7 @@ name = "Scena01_Scene06"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53AC30..0x53B12E (0x4FF bytes), read to the last instruction: Scena01_Runs entry 6, steps 0..0x1A (byte table 0x53B114, jump table 0x53B0D0 of 17): the choice word 0x7DEE48 and story flag 4 at 0x90410C, flags 5..7, Scenario_CallB(0), the leader's animation loop (0x44 on button 0x40, 5), two effects 0x15 / 0x55. The byte table after its jump table is not a function (scenario_rows.py lists it as 0x53B120). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48428,7 +48428,7 @@ name = "Scena01_Scene08"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53B130..0x53B5E8 (0x4B9 bytes), read to the last instruction: Scena01_Runs entry 8, steps 0..6, 0xE..0x13, 0x37..0x3C (byte table 0x53B5AC over 0..0x3C, jump table 0x53B55C of 20): 0x57C550 tests, timers 0x6E / 0xB4, sounds 0x200 / 0x207 / 0x204, Cond_ByteFE, flags 9 / 0xA, changes to area 0x17, the stream, message 0x13, 0x532ED0 and 0x4410B0(2). 0x53B150, 0x53B210, 0x53B450, 0x53B480, 0x53B4A0 are its cases, not starts. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48437,7 +48437,7 @@ name = "Scena01_Scene09"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53B5F0..0x53BD7B (0x78C bytes), read to the last instruction: Scena01_Runs entry 9, steps 0..0x2D (jump table 0x53BCC4 of 46): messages 1 / 2 / 0xC, AreaMap_SetByte on eight cells, members dropped in, flags 0xC / 0xF / 0x10 / 0x12 / 0x1D / 0x3F, Sound_PlayById(0x1206), changes to area 0x16, 0x532ED0 and 0x4410B0(3), the exit test for run 0xA. 0x53B960 and 0x53BC70 are its cases. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48446,7 +48446,7 @@ name = "Scena01_Scene0A"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53BD80..0x53C013 (0x294 bytes), read to the last instruction: Scena01_Runs entry 0xA, steps 0..4, 0xB..0xD, 0x14, 0x15, 0x19, 0x1E, 0x1F (byte table 0x53BFF4 over 0..0x1F, jump table 0x53BFBC of 14): message 0x18, flag 0x10 cleared, sounds 0x205 / 0x206, the change to area 0x17 by flags 0x12 / 0x14, Kind2 moves, the change to area 5. 0x53BE30 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48455,7 +48455,7 @@ name = "Scena01_Scene0B"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C020..0x53C32B (0x30C bytes), read to the last instruction: Scena01_Runs entry 0xB, steps 0..4, 0xA..0x13 (jump table 0x53C2DC of 20): flags 0x19..0x1C, changes to area 7 and 0xE, two effects at the camera, message 0x20, the camera pulled in over 0x2E frames. 0x53C230 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48464,7 +48464,7 @@ name = "Scena01_Scene0C"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C330..0x53C59B (0x26C bytes), read to the last instruction: Scena01_Runs entry 0xC, steps 0..0xA (jump table 0x53C570 of 11): the change to area 5, transitions 0xE / 0xD, music 8, an effect, 0x57C550, message 4, flags 0x15 / 0x16, 0x533E50. 0x53C470 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48473,7 +48473,7 @@ name = "Scena01_Scene0D"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C5A0..0x53CA1F (0x480 bytes), read to the last instruction: Scena01_Runs entry 0xD, steps 0..6, 0xA..0x12 (jump table 0x53C9D4 of 19): the change to area 0, the camera pulled in over 0x14 frames, music 0, flags 0x3A..0x3D, Scena01_PlaceEffect(0x92 / 0x93), message 0x36 and the choice bit 0x7DEE44 & 2. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48482,7 +48482,7 @@ name = "Scena01_Scene0E"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CA20..0x53CBAB (0x18C bytes), read to the last instruction: Scena01_Runs entry 0xE, steps 0, 3..5, 7..9 (jump table 0x53CB84 of 10): music 0x11, messages 0x10 / 0x1C, flag 0x3E, changes to area 0xD and 0xF, Field_ViewReset, then the tail jump to 0x56D6F0 (Field_StatusBits bit 7). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48491,7 +48491,7 @@ name = "Scena01_Scene0F"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CBB0..0x53CCD7 (0x128 bytes), read to the last instruction: Scena01_Runs entry 0xF, steps 0..5 (jump table 0x53CCC0 of 6): counter 0 = 0x64 / 0x65, 0x533E50, the stream (Sound_LoadStream(0), Sound_StreamDone), music 0x1B, message 0xA. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48500,7 +48500,7 @@ name = "Scena01_Scene11"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CCE0..0x53CF90 (0x2B1 bytes), read to the last instruction: Scena01_Runs entry 0x11, steps 0, 2, 3, 5..7, 0x14..0x18 (byte table 0x53CF78 over 0..0x18, jump table 0x53CF48 of 12): counter 0 = 0x64 / 0x65 / 0xC8 (Game_Mode 7, 0x929F0C = 0xFE: the shop) / 0xC9, 0x533E50, the stream, the change to area 5 by Field_MemberCount, music 7. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48509,7 +48509,7 @@ name = "Scena01_Scene12"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CFA0..0x53D002 (0x63 bytes), read to the last instruction: Scena01_Runs entry 0x12, steps 0 and 1: music 0x1A, member 0xB dropped in; on counter 0 = 2 run 9 at step 0x2D. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48518,7 +48518,7 @@ name = "Scena01_Scene14"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D010..0x53D062 (0x53 bytes), read to the last instruction: Scena01_Runs entry 0x14, steps 0 and 1: message 0x18, then the end. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48527,7 +48527,7 @@ name = "Scena01_Scene15"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D070..0x53D0B4 (0x45 bytes), read to the last instruction: Scena01_Runs entry 0x15, steps 0 and 1: message 0x34, then run 6. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48536,7 +48536,7 @@ name = "Scena01_Scene16"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D0C0..0x53D104 (0x45 bytes), read to the last instruction: Scena01_Runs entry 0x16, steps 0 and 1: message 0x34, then run 0. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48545,7 +48545,7 @@ name = "Scena01_Scene17"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D110..0x53D3A0 (0x291 bytes), read to the last instruction: Scena01_Runs entry 0x17, steps 0, 2, 3, 5, 0xA..0xD, 0x14..0x18 (byte table 0x53D388 over 0..0x18, jump table 0x53D354 of 13; 0xD and 0x17 share a case): as Scena01_Scene11, the change to area 0xA by Field_MemberCount. The byte table is not a function (scenario_rows.py lists it as 0x53D390). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48554,7 +48554,7 @@ name = "Scena01_PlaceEffect"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D3B0..0x53D462 (0xB3 bytes), read to the last instruction: called by Scena01_Scene0D with 0x92 and 0x93: Sprite_Current = the leader's record, Effect_FindFree into its +0xB, the record live as kind 6, +6 = n + 0x70, +0x10 = the s8 at 0x660D60 by the byte 0x904062, the leader's +0x2E / +0x30 words. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48567,7 +48567,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "void"
 params = "unsigned char *object"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D470..0x53D48C (0x1D bytes), read to the last instruction: slot 1 of Scena01_Hooks (0x660D6C), called by 0x56D6D0 with the object whose trigger fired: call [Scena01_ObjectHandlers + object[+0x86] * 4](object, 0x903F98), unchecked (ours aborts past 18); the caller reads no answer. PSX twin by table slot: SCENA01 vtable[1] 0x801FD444 (the sibling's names/scenario_records.toml). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48580,7 +48580,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 1 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D490..0x53D4CD (0x3E bytes), read to the last instruction: Scena01_ObjectHandlers entry 1: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48593,7 +48593,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 2 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D4D0..0x53D4ED (0x1E bytes), read to the last instruction: Scena01_ObjectHandlers entry 2: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48606,7 +48606,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 3 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D4F0..0x53D50F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 3: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48619,7 +48619,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 4 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D510..0x53D52F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 4: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48632,7 +48632,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 5 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D530..0x53D54F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 5: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48645,7 +48645,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 6 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D550..0x53D5CC (0x7D bytes), read to the last instruction: Scena01_ObjectHandlers entry 6: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48658,7 +48658,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 7 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D5D0..0x53D649 (0x7A bytes), read to the last instruction: Scena01_ObjectHandlers entry 7: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48671,7 +48671,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 8 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D650..0x53D6D2 (0x83 bytes), read to the last instruction: Scena01_ObjectHandlers entry 8: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48684,7 +48684,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 9 of 0x53D470's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D6E0..0x53D750 (0x71 bytes), read to the last instruction: Scena01_ObjectHandlers entry 9: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48697,7 +48697,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 10 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D760..0x53D767 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 10: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48710,7 +48710,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 11 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D770..0x53D777 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 11: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48723,7 +48723,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 12 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D780..0x53D787 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 12: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48736,7 +48736,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 13 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D790..0x53D797 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 13: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48749,7 +48749,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 14 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7A0..0x53D7C9 (0x2A bytes), read to the last instruction: Scena01_ObjectHandlers entry 14: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48762,7 +48762,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 15 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7D0..0x53D7ED (0x1E bytes), read to the last instruction: Scena01_ObjectHandlers entry 15: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48775,7 +48775,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 16 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7F0..0x53D80F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 16: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48788,7 +48788,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 17 of 0x53D470's table
 ret = "void"
 params = "unsigned char *object, unsigned char *unused"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D810..0x53D823 (0x14 bytes), read to the last instruction: Scena01_ObjectHandlers entry 17: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48801,7 +48801,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "unsigned char"
 params = "int x, int z"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DD20..0x53DD49 (0x2A bytes), read to the last instruction: slot 4 of Scena01_Hooks (0x660D78), the cell hook: 0x56D800(Scena01_Cells, 2, x, z); a negative al answers 0xFF, else jmp [Scena01_CellHandlers + al * 4] with the same arguments (unchecked; ours aborts past 2). PSX twin by table slot: SCENA01 vtable[4] 0x801FE03C. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[func]]
@@ -48814,7 +48814,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 0 of 0x53DD20's table 
 ret = "unsigned char"
 params = "int x, int z"
 status = "evidence"
-impl = "src/game/scena_sc1.cpp"
+impl = "src/game/scenario/scena_01_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DD50..0x53DD91 (0x42 bytes), read to the last instruction: both entries of Scena01_CellHandlers: flag 3 set and flag 4 clear, ScriptFlags_Set40, run 5 from step 0, al 1; else al 0xFF (or al, 0xFF over Flags_Test's eax). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
 
 [[data]]
@@ -51545,7 +51545,7 @@ psx = 0x801C2E34
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned n"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341C0..0x5341DA (0x1B bytes) naked, a tail jump: movsx eax, byte Cond_ByteFA / mov ecx, [esp + 4] / mov edx, [eax*4 + 0x660BD4] / and ecx, 0xFF / jmp [edx + ecx * 4] - Scenario_CallA shape through Scenario_CallBTables: entry n of the chapter call table B, reached with the caller arguments in place. Chapter 0 table pointer is 0 (unchecked, as the original). Named 2026-09-27 by SCH; taken by FE2. PSX twin 0x801C2E34 call-anchored. docs/field_e2.md."
 
@@ -51563,7 +51563,7 @@ psx_status = "hypothesis"
 psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch seeding of exe_imm.py pair, not one of its methods), scena: Scenario_Hooks[0] slot 0 against GAME.EMI#0 0x801C944C[0] (SCENA00) (docs/install-gap-pairs.md 8)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x537F20..0x537F2D (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x660CE4], unchecked - chapter 0's slot 0 (Scena00_Hooks), Field_ModeDispatch's; the shape of Scena01_Frame and Scena16_Frame. Scena00_States entries 0..2, then Scena00_Runs' words. Ours aborts where the entry read is not code."
 
@@ -51576,7 +51576,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: constants 0.54 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x537F30..0x537FD1 (0xA2 bytes, recursive descent, every jump internal): Scena00_States entry 0. Scenario_CallA(0), Field_ChangeArea(0x18, 0x630000, 0xC0000, 3), byte 0x9039A2 |= 0x40, the pending change 0x903A04 / 07 / 08 / 0C the same four, 18 dwords 0x904608..0x90464F = -1 (rep stosd), MoveScript_Var7 5, 0x8034E5 0, Task_Sleep(1) until File_LoadDone, dword 0x903848 0, 0x8034E2 1. The shape of Scena16_Start."
 
@@ -51589,7 +51589,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 6 call(s) agree, constants 0.79 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x537FE0..0x5381D2 (0x1F3 bytes, every jump internal): Scena00_States entry 1. By Game_AreaNumber (re-read at each test): 1 - Party_DropIn(0), then on 0x90384A a kind-0x10 effect (Effect_FindFree into 0x903850), the third camera angle -0x155 or +0x155, 0x90384A / 0x8034E5 cleared unless 3, run 10; Scena00_Area02 (call); 4 - once on flag 0 Draw_PassFlags 0, Flags_Set, ScriptFlags_Set40, run 2, and with Cond_ByteFD 2 pass flags 0x1F and ObjTrio_SetBit40; Scena00_Area18 (call); 0x19 - four sprite words, Sound_PlayEffect(0x200), run 11, timer 0x8034E6 0x14, pass flags 0; 0x1F - camera (0x100, 0, 0) distance 0x100, once on flag 1 pass flags 0, the flag, state 2, run 3 and return, else Party_DropIn(0) and run 9. State 2."
 
@@ -51602,7 +51602,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x537FE0 (5 call(s) agree, constants 0.54) (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x5381E0..0x5382F5 (0x116 bytes): area 2 only. Once on flag 2: dword 0x903848 0, MapView_SetElevation(0x300), Kind2_Place(0), Camera_Angles[0] + 0xAA, a kind-0x13 effect at (angle - 0xAA, angle 1, angle 2) mode 0x40, ObjTrio_SetBit40, ObjTrio +0x34 / +0x38 = 0x330000 / 0x400000, Flags_Set(2). Else once on flag 10: Flags_Set, Party_DropIn(0), Field_Kind2X / Z = 0x260000 / 0x1B8000. The same steps as Scena16_Area02 on other flags. Called only by Scena00_EnterArea."
 
@@ -51611,7 +51611,7 @@ pc = 0x538300
 name = "Scena00_Area18"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538300..0x5384EB (0x1EC bytes with its 5-entry jump table 0x5384D8, cmp 4 / ja): area 0x18 only, by Cond_ByteFD: 0 - counter 0, unless flag 6 run 8; 1 - unless flag 3 Music_LoadFile(3) and the load wait, pass flags 0x1F, counter 0, the flag, elevation and distance 0x480, third angle 0x350, Party_DropIn(0), Kind2_Place(0), a kind-0x13 effect mode 0x90; with flag 3 the words 0x80BC20.. / 0x80FC20.. copied 0x20 bytes down (eax, eax + 0x4000), Gfx_ClutStripDirty 1, then Party_DropIn(1) unless flag 5, else ScriptFlags_Clear40; 2 / 4 - unless flag 8 / 9 run 6; 3 nothing. Called only by Scena00_EnterArea."
 
@@ -51624,7 +51624,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tablesearch: its table 0x660CF0 at 0x801FCA1C in SCENARIO/SCENA00.EMI (9 of 9 paired entries agree) (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x5384F0..0x5384FD (0xE bytes): movsx eax, byte MoveScript_Var7 / jmp [eax*4 + 0x660CF0], unchecked - Scena00_States entry 2, the chapter's runs (0, 1 a bare ret 0x437CC0; 2..11 Scena00_Run2..Run11). Found by the scenario walk (no list had it)."
 
@@ -51637,7 +51637,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 6 call(s) agree, constants 0.76 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538500..0x5386EB (0x20C bytes with its 8-entry jump table 0x5386EC, cmp 7 / ja; 0x538620 in pc_hidden.json is case 5): run 2 on 0x8034E5 - script message 0x10 with music 6, a timer to 0x7C while the message is open, transitions 1 and 0 on 0x90384B, message 0x11, area 4 at (0x440000, 0x80000) facing 5, pass flags on Cond_ByteFD 2, a kind-0x13 effect on 0x90384A 0x23, area 0x1F and a fade (0x40) on 0x90384B 0x60, run 3."
 
@@ -51646,7 +51646,7 @@ pc = 0x538710
 name = "Scena00_Run3"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538710..0x538867 (0x158 bytes with its 4-entry jump table 0x538858; 0x538820 in pc_hidden.json is case 3): run 3 - transition 1 and an effect mode 0xFF on 0x90384A 0x30; the view test (MapView_FocusZ 0x4400: Field_Kind2Z, 0x802038, 0x7E0978 - 0x1E0000, 0x7E068A - 0x1E, focus 0x6200, tail jmp 0x56FCA0) until 0x90384A 0x35; 0x90384A 0x37; on 0x38 Music_Play(2, 0x20) and area 2, run 4."
 
@@ -51659,7 +51659,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 5 call(s) agree, constants 0.76 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538870..0x538AD9 plus its 11-entry jump table 0x538ADC (0x298 bytes; 0x538950 and 0x538A60 in pc_hidden.json are cases 5 and 8): run 4 - script messages 1..4 on the counter 0x903848 (3, 4), a 0x130-frame distance pull (0x67FFF90 - 0x57943 * n, high word), effects at x -0x34A / -0x2AC modes 0x60 / 0x20, a 0x200-frame pull (13n << 14 >> 16), transition 0 on 0xB, message 4 and Music_FadeOutStop(0x20), area 0x18 and run 5."
 
@@ -51672,7 +51672,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 9 call(s) agree, constants 0.66 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538B10..0x538F3D plus its 18-entry jump table 0x538F40 (0x478 bytes): run 5. On steps 4..6 every 16th frame, Rand % 3 as a shift count of 1 into 0x90384B (idiv: a negative Rand gives 0) and 0x90384A + 0x10 above 1, Frame_Counter re-read. Steps: flags 0..3, a distance pull (n << 19 >> 16), shakes of the word 0x80203E by Scena00_Shake[frame & 15] * 4, an effect kind 0x1E at ObjTrio 0 with AreaMap_Elevation, transition 8, area 0x18 with 0x937F98 9 / 0x904EE0 0xFF, music 3 on the counter 4 and File_LoadDone, shakes of sprite 2's +0x34 / +0x38 by the table << 11, 0x532ED0 / 0x4410B0 event battle 1, the end (Party_DropIn(6), run 0). Step 0x10 and past 0x11 nothing."
 
@@ -51685,7 +51685,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 8 call(s) agree, constants 0.78 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x538F90..0x5391A2 (0x213 bytes: code, the 11-entry jump table 0x539144 and the 51-entry byte table 0x539170, cmp 0x32 / ja): run 6 - step 0 from Scena00_StartSteps[Cond_ByteFD] (unchecked); 0xA / 0x14 / 0x1E a member (ScriptFlags_Set40, Party_DropIn 3 / 4 / 5, flags 7 / 8 / 9; the last two unless ObjTrio +1 is 2); 0xB / 0x15 / 0x1F on the counter 0xB / 5 / 4 the party placed at ObjTrio 0 (0x532ED0) and event battle 4 / 5 / 6 (0x4410B0); 0xD / 0x17 / 0x21 the counter + 1, ScriptFlags_Clear40, run 0; 0x32 area 0x1F and 0x904CD0 4."
 
@@ -51698,7 +51698,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 3 call(s) agree, constants 0.72 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x5391B0..0x5393FB (0x24C bytes with its 9-entry jump table 0x5393D8): run 7 - counter 0xA, Party_DropIn(1), Kind2_Place(1); event battle 7 on 0xD; script flags | 0x180 and message 0xE; transition 3, the kind-2 object and sprite to (0x2F0000, 0x1D0000), Field_ViewReset, elevation 0x580, the camera (0xFCF6, -, 0x180) at 0x480, timer 0x1E; after the wait and timer Kind2_Place(2), elevation again, an effect mode 0x20; distance - 0x24 for 0x20 frames; Music_Play(4, 8) on 0x24; area 0x1F on 0x25."
 
@@ -51711,7 +51711,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 1 call(s) agree, constants 0.50 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x539400..0x53942E (0x2F bytes): run 8 - at step 0 Flags_Set(6), Party_DropIn(2), run and step 0."
 
@@ -51724,7 +51724,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: constants 0.62 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x539430..0x5394A5 (0x76 bytes, a sub / je chain): run 9 - step 0 waits for 0x90384A 0x71 (timer 0x3C, step 2); step 2 the timer, then area 1 at (0xF0000, 0x210000), Sound_PlayEffect(0x206), dword 0x903848 0, run 10."
 
@@ -51737,7 +51737,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 2 call(s) agree, constants 0.59 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x5394B0..0x5395CB (0x11C bytes with its 4-entry jump table 0x5395BC): run 10 - 0x57C6B0(0x2D, 0xA) (the camera turned; al 1 while turning) then a timer 0x32; while 0x90384A is odd sprite 3's +0x34 / +0x38 = ((Rand & 7) + 0x69D / 0x55D) << 10; on 0x90384A 3 after the timer area 1; 0x57C6B0(0xF, 0xA) then 0x90384A 4; on 9 script flags & 0xFF7F, area 0x19, run 11, timer 0x258."
 
@@ -51750,7 +51750,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_tables.py feed 2026-10-18: a placed code-pointer word of SCENARIO/SCENA00.EMI pairs it (psx-jp image); the fingerprints agree: 8 call(s) agree, constants 0.53 (docs/exe-immediate-places.md 3)"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x5395D0..0x53994F (0x380 bytes with its 10-entry jump table 0x539928): run 11. Every 32nd frame Rand & 7 into 0x90384B; below 0x90384A 0x14 at MapView_FocusZ 0x5000 the view moved 0x200000 and 0x56FCA0 called. Steps: transition 1 and sound 0x203; timers; the pad (Input_Pressed & 0xF000) or a timeout into Scena00_Steer; steering with sprite 0's animation from Scena00_InputAnims (Sprite_EnsureAnimation), counters 0x903848 / 49; a random wobble of the corner words through Area_Descriptors[Game_AreaNumber] +0xC + 0x12 (MapView_CornerPtr) and Sprite_EnsureAnimation with the corner pointer's upper bytes above the animation; transition 0; area 9 at (0x570000, 0x40000) with ObjTrio +0x24 bit 5 and script flags 0x48 cleared, then 0x56D6F0."
 
@@ -51759,7 +51759,7 @@ pc = 0x539950
 name = "Scena00_Steer"
 ret = "void"
 params = "void"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x539950..0x539A09 (0xBA bytes, no branch out): MapView_CornerPtr = Area_Descriptors[Game_AreaNumber] +0xC + 0x12 (the index unchecked), its two words zeroed and moved by 2 on Input_Pressed bits 0x2000 / 0x8000 and 0x4000 / 0x1000 with the dwords 0x8021AC / 0x8021B0 by 0x40, then Sound_PlayEffect(0x204). Called by Scena00_Run11 steps 4 and 5."
 
@@ -51772,7 +51772,7 @@ psx_status = "hypothesis"
 psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch seeding of exe_imm.py pair, not one of its methods), scena: Scenario_Hooks[0] slot 1 against GAME.EMI#0 0x801C944C[0] (SCENA00) (docs/install-gap-pairs.md 8)"
 ret = "void"
 params = "unsigned char *object"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x539A10..0x539A2E (0x1F bytes): chapter 0's slot 1 (0x56D6D0 pushes the object): call [0x660D58 + object[0x86] * 4](object, [0x929ED0]), unchecked; Scena00_ObjectHooks has one entry, a bare ret. In no start list; a root of Scena00_Hooks."
 
@@ -51785,7 +51785,7 @@ psx_status = "hypothesis"
 psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch seeding of exe_imm.py pair, not one of its methods), scena: Scenario_Hooks[0] slot 2 against GAME.EMI#0 0x801C944C[0] (SCENA00) (docs/install-gap-pairs.md 8)"
 ret = "unsigned char"
 params = "long x, long z"
-impl = "src/game/scena_sc0.cpp"
+impl = "src/game/scenario/scena_00.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-27, 0x539A30..0x539AB0 (0x81 bytes): chapter 0's slot 2, called by Scenario_StepHook with the leader's target; reads only x's high word (si = [esp + 0xA]). Area 2, cell 0x2B and flag 6: run 7 step 0. Area 0x18 (Game_AreaNumber re-read), Cond_ByteFD 0, cell 0x14, not flag 7: ScriptFlags_Set40, run 6 step 0, al 1. Else al 0 (xor al, al; the caller movsx's al). In no start list; a root of Scena00_Hooks."
 
@@ -56834,7 +56834,7 @@ psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x5556D0 (1 call(s)
 ret = "void"
 params = "int x, int z, unsigned formation"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x532ED0..0x532FC8 (0xF9 bytes), cdecl, every jump internal: x, z (16.16) to 0x903780 / 0x903784, 0x904AAC = EventBattle_Records[formation and 0xFF] +1; with Field_MemberCount (read again each pass) members: Field_State = Sprite_Current = ObjTrio record i, slot j = the index of its +0x89 in the second party list 0x904065 (3 if absent), written into the low byte of the third argument's stack slot and passed as that dword to 0x532FD0(x, z, slot) (the dwords re-read); Sprite_Current +0x34 / +0x38 to 0x7E06E0 + 8 j, +0x48 = 0, +8 = BattleFormation_Anims[0x904AAC], Sprite_EnsureAnimation of it with Sprite_Current's upper bytes in the dword. 58 E8 sites in 13 chapter bands. No PSX twin paired."
 
 [[func]]
@@ -56843,7 +56843,7 @@ name = "Party_ReloadPalettes"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x533E00..0x533E47 (0x48 bytes), every jump internal: for i below Field_MemberCount (read again each pass): Sprite_Current = ObjTrio record i, Sprite_ReleaseTint(the record), Sprite_LoadPalette(0x80D380 + 0x40 i, 0). 63 E8 / E9 sites, all in the CALLS block 0x519890..0x51AC50 (53 of them tail jmps), plus SE's Scena08_PartyJoin784. No PSX twin paired."
 
 [[func]]
@@ -56856,7 +56856,7 @@ psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x555E40 (1 call(s)
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x533E50..0x533EE3 (0x94 bytes), every jump internal: each of the 8 CharacterRecords with +0xB bit 0: +0x1E = 0, Char_RecalcStats(record), +0x1C = +0x2E, HP +0x18 = +0x20, AP +0x1A = +0x22, word +0x10 = 0; then for i below Field_MemberCount (read once) 0x29 dwords from the record Character_IndexById[first list 0x904062 byte i] (unchecked) to ObjTrio record i +0x80. 51 E8 sites: 11 chapter bands, five area overlays, Field_ModeTailRun. Party_RestoreAll 0x580630 (the inn) is the larger cousin. No PSX twin paired."
 
 [[func]]
@@ -56869,7 +56869,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, calls: a call of 0x51A3A0 (1 call(s)
 ret = "void"
 params = "unsigned member"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x534030..0x534195 (0x166 bytes), cdecl, every jump internal: Party_JoinReset; the member byte's slot in the second list 0x904065 (the count when absent, unchecked) = 0xFF and bubbled to the end below count - 1; its slot in the first list 0x904062 = 0xFF; while s < Field_MemberCount - 1, a 0xFF slot takes the next id, the next ObjTrio record copied over (0x53 dwords; Sprite_Current it), +5 = s, +0x26 = s * 0x50, +0x27 = s + 0x78, +0x4B = 0xFF, +0x148 = Character_IndexById[+0x89]. Then ObjTrio record count - 1 +0 = 0 (0x802BF4 at a count of 0), Member_ClearState(count - 1), and by the count read again: 3 - 0x904060 = 0 if at least 3; 2 - 0x904060 = 0; the count one less. 41 E8 / E9 sites, all in the CALLS block. No PSX twin paired."
 
 [[func]]
@@ -56879,7 +56879,7 @@ name = "Sprite_FlashClut"
 ret = "void"
 params = "unsigned colour"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x534DB0..0x534E45 (0x96 bytes), cdecl, every jump internal: four words 0x0010, 0x4010, 0x0210, 0x4000 built on its stack and indexed by the argument's low byte (4 and above read its own frame: ours aborts); words 1..31 of Gfx_ClutStrip row Sprite_Current +0x27 (read once) = that colour, Gfx_ClutStripDirty = 1, Sound_PlayEffect(0x108), Field_State +0x138 |= 8 (read after the call). 13 E8 sites: the nine field-action copies (push 0), Field_FloorDamage, Field_Bit80Tick (push 1), 0x505480 (push 2), SC11. PSX 0x801C4084 (pairs_propagated call-anchored)."
 
 [[func]]
@@ -56889,7 +56889,7 @@ name = "Char_LoseHp"
 ret = "unsigned"
 params = "unsigned amount, unsigned member"
 status = "evidence"
-impl = "src/game/scena_sx.cpp"
+impl = "src/game/field/mode_11.cpp"
 evidence = "disasm 2026-09-28, group SX, 0x537480..0x5374F7 (0x78 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked) HP +0x18 minus the amount when HP is above its word (16-bit, unsigned), else HP 1; eax the amount taken (the argument whole, or HP - 1). Then the record Field_State +0x148 names: HP at most (+0x20 >> 2) sets bit 0x2000 of its word +0x10 (Field_ActorStates) and of Field_State word +0x90. 14 E8 sites: the nine field-action copies, 0x534C20, Field_Bit80Tick (twice; reads ax), SC11 twice. PSX 0x80168AB4 (pairs_propagated call)."
 
 [[func]]
@@ -58586,7 +58586,7 @@ psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x5697A0 (constants
 ret = "unsigned"
 params = "unsigned index"
 status = "evidence"
-impl = "src/game/scena_sc15.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 evidence = "disasm 2026-09-28 group SC15 (0x537580..0x537593, 0x14 bytes): the word at [0x7E0880] + (index & 0xFFFF) * 8, eax zero-extended. Callers 0x48A57A and 0x48A59D (area code, testing 0x261 and 0x308) and 0x569BBC (Scena15_Run5, 0x308); E8 scan of .text. Placed before chapter 0's block; chapter 15's by its one scenario caller. scenario_rows.py SC15: 0x14 bytes."
 
 [[func]]
@@ -60447,7 +60447,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DDA0..0x53DDAD (0xE bytes), read to the last instruction: slot 0 of chapter 2's vtable (Field_ModeDispatch every field frame): jmp [Scena02_States + s8 state 0x8034E2 * 4], unchecked in the original (ours aborts past the 3 entries). PSX twin hypothesis: SCENA02 vtable[0] 0x801F719C (names/scenario_records.toml). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60456,7 +60456,7 @@ name = "Scena02_Start"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DDB0..0x53DDC3 (0x14 bytes), read to the last instruction: Scena02_States entry 0: state 1, the dword 0x903FA0 (chapter 2's flag row) and the four counters 0x903848 cleared. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60469,7 +60469,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 1 of 0x53DDA0's table 
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DDD0..0x53E3CB (0x5FC bytes), read to the last instruction: Scena02_States entry 1, once per area entered, every way out storing state 2: by Game_AreaNumber (read afresh) - 0 the pass flags and flag 3; 3 call B(1), Scena02_StripMember(3) and (4), run 0x15, music 0xF loaded (Music_LoadFile, Task_Sleep until File_LoadDone); 5 a jump table of 5 on counter 2 (2..6); 0xB run 0x13; 0xD run 0x12 by flags 0x1A, 0x1B and Cond_ByteFD; 0xF flag 0 and run 2; 0x12/0x16/0x17/0x1D/0x2D all cleared; 0x1A, 0x1B, 0x1C by counter 2 (MoveCmd_TestFB(0x27, 0x15)); 0x5A music 0x4D; 0x10 music 0x11 by the word 0x802290. PSX twin hypothesis 0x801F71FC (analysis/pairs_propagated.json, callers). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60478,7 +60478,7 @@ name = "Scena02_Run"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53E3D0..0x53E3DD (0xE bytes), read to the last instruction: Scena02_States entry 2: jmp [Scena02_Runs + s8 MoveScript_Var7 * 4], unchecked in the original (ours aborts past the 28 entries). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60487,7 +60487,7 @@ name = "Scena02_Scene00"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53E3E0..0x53E566 (0x187 bytes), read to the last instruction: Scena02_Runs entry 0 (run 0 is code here, not the bare ret): in area 0x1A without flag 0x3F, the near helpers Scena02_Near01..0C on sprites 0..9 by flags 0x28, 0x29, 0x2B, 0x2C, 7, 0x34, 0x2E, then a tail jmp to Scena02_DoorStart or Scena02_DoorSound. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60496,7 +60496,7 @@ name = "Scena02_Scene02"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53E570..0x53E883 (0x314 bytes), read to the last instruction: Scena02_Runs entry 2, steps 0..0x23 (byte table 0x53E860, 36, into jump table 0x53E824, 15): area 0xF, flag 4, members 1 and 2, flags 5 and 6 and area 0x1A (script flags ^ 0xB0), area 0x1A by Field_MemberCount, the choice 0x64 / 0x65 (0x533E50, the stream), music 0x11, message 0xA. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60505,7 +60505,7 @@ name = "Scena02_Scene04"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53E890..0x53E9FB (0x16C bytes), read to the last instruction: Scena02_Runs entry 4, steps 0..8 (jump table 0x53E9D8, 9): run 2's steps with area 0xF at (0x2C0000, 0x430000) and the script flags ^ 0x80, the byte 0x937F98 = 1. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60514,7 +60514,7 @@ name = "Scena02_Scene05"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53EA00..0x53EA44 (0x45 bytes), read to the last instruction: Scena02_Runs entry 5: message 0x3E, then the end once Field_Request leaves 2. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60523,7 +60523,7 @@ name = "Scena02_Scene06"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53EA50..0x53EBE3 (0x194 bytes), read to the last instruction: Scena02_Runs entry 6, steps 0..5 (jump table 0x53EBCC, 6): message 0x30 and its choice 0xBE / 0xBF, area 0xF with 0x904CD0 = 0x11, flag 0x24 cleared and (flag 7) flags 0x2B, 0x2C, 0x3E, 0x35, 9..0xB cleared and 0x34 set; or the end with counter 1 = flag 0x3A. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60532,7 +60532,7 @@ name = "Scena02_Scene07"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53EBF0..0x53ED6B (0x17C bytes), read to the last instruction: Scena02_Runs entry 7, steps 0..4 (jump table 0x53ED58, 5): member 6, transition 0xD, message 0x16, area 0xF with 0x904CD0 = 0x11, the end with run 6's flag reset. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60541,7 +60541,7 @@ name = "Scena02_Scene08"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53ED70..0x53F113 (0x3A4 bytes), read to the last instruction: Scena02_Runs entry 8, steps 0..0xB (jump table 0x53F0E4, 12): Kind2_Place(4), 0x532ED0(0x70000, 0xE0000, 0xE), Field_StartEventBattle(0xE), member 0x12 and area 0x1A, flag 0xC, message 0x9A; step 8 three cells of the leader (ObjTrio +0x36, +0x3A s16, +0x4B, +8) with flags 9..0xB and the end on counter 2 = 3; steps 9..0xB tail-jump to Scena02_Scene08Next. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60550,7 +60550,7 @@ name = "Scena02_Scene08Next"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5413D0..0x5413FD (0x2E bytes), read to the last instruction: Scena02_Scene08 steps 9..0xB's shared tail: counter 2 = 3 a tail jmp to ScriptFlags_Set40, else ScriptFlags_Clear40, counter 3 = 0, step 8, counter 2 + 1. A real function (three jmps from Scena02_Scene08): tools/scenario_rows.py dropped it as a byte table start and ran Scena02_Scene1B's extent over it. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60559,7 +60559,7 @@ name = "Scena02_Scene09"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F120..0x53F33B (0x21C bytes), read to the last instruction: Scena02_Runs entry 9, steps 0..7 (jump table 0x53F31C, 8): member 0x18, two kind-0x13 effects at the camera (Effect_FindFree into 0x903850), the second's end waited for through counter 3, member 0xA, music 0x20, Kind2 1, call B(0) and area 0x1B, flag 0x3F. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60568,7 +60568,7 @@ name = "Scena02_Scene0A"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F340..0x53F4CB (0x18C bytes), read to the last instruction: Scena02_Runs entry 0xA, steps 0..0xA (jump table 0x53F4A0, 11): member 3, area 0x1B, flag 0xF; member 4, Kind2 0, 0x532ED0 and Field_StartEventBattle(8), member 0x12, flag 0x10. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60577,7 +60577,7 @@ name = "Scena02_Scene0B"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F4D0..0x53F6F0 (0x221 bytes), read to the last instruction: Scena02_Runs entry 0xB, steps 0..0x18 (byte table Scena02_Scene0BSteps 0x53F6D8, 25, into jump table 0x53F6AC, 11): the choice 0x64 / 0x65, the shop (Game_Mode 7) on 0xC8, 0x533E50, the stream, area 5 by Field_MemberCount and music 7. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60586,7 +60586,7 @@ name = "Scena02_Scene0C"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F700..0x53F7F3 (0xF4 bytes), read to the last instruction: Scena02_Runs entry 0xC, steps 0..4 (jump table 0x53F7E0, 5): members 0x1A, 5, 0x15, 0x532ED0 and Field_StartEventBattle(9), flag 0x11. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60595,7 +60595,7 @@ name = "Scena02_Scene0D"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F800..0x53F9B7 (0x1B8 bytes), read to the last instruction: Scena02_Runs entry 0xD, steps 0..6 (jump table 0x53F99C, 7): member 6, Kind2 2, 0x532ED0, two kind-0x13 effects (x -0x2BA, -0x2AA), Field_StartEventBattle(0xA), member 0x16, flags 0x12, 0x13. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60604,7 +60604,7 @@ name = "Scena02_Scene0E"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53F9C0..0x53FBFF (0x240 bytes), read to the last instruction: Scena02_Runs entry 0xE, steps 0..0xA (jump table 0x53FBD4, 11): members by the byte 0x904062, sound 0x204, flag 0x17, 0x532ED0 and Field_StartEventBattle(0xB), two changes to area 0x1B (0x8A / 0x8B), flag 0x14. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60613,7 +60613,7 @@ name = "Scena02_Scene0F"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53FC00..0x53FE2B (0x22C bytes), read to the last instruction: Scena02_Runs entry 0xF, steps 0..0xC (jump table 0x53FDF8, 13): transition 0xD on counter 0 = 5, 0x533E50 and the stream, area 0x1B by the member count and 0x904062, music 0x21, flag 0x18 and member 0x11, a second area 0x1B, the choice bit 0x7DEE44. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60622,7 +60622,7 @@ name = "Scena02_Scene10"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53FE30..0x5400F2 (0x2C3 bytes), read to the last instruction: Scena02_Runs entry 0x10, steps 0..0x16 (byte table 0x5400DC, 23, into jump table 0x5400A4, 14): four changes to area 0x1C, transition 1, flags 0x15 and 1, call A(0), member 2 while the byte 0x802FC3 is not 7, two turns tested through 0x57C600 (0x5A, 2) and (0x28, -2). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60631,7 +60631,7 @@ name = "Scena02_Scene11"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540100..0x540507 (0x408 bytes), read to the last instruction: Scena02_Runs entry 0x11, steps 0..0x1D (jump table 0x540490, 30): music 0x25, messages 0x14, 0x29, 0x38, the stream 1, Scena02_Shake(0xA) until counter 0 = 0x14, sounds 0x203, 0x204, 0x201, transitions, 0x532ED0 and Field_StartEventBattle(0xC), flag 0x36, areas 0 and 5, Field_StatusBits bit 0 flipped. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60640,7 +60640,7 @@ name = "Scena02_Scene12"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540510..0x540677 (0x168 bytes), read to the last instruction: Scena02_Runs entry 0x12, steps 0..7 (jump table 0x540658, 8): flag 0x1A and member 2, area 0xD, flags 0x1C, 0x38, 0x1B, music 0x10 once Cond_ByteFD is 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60649,7 +60649,7 @@ name = "Scena02_Scene13"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540680..0x5408CF (0x250 bytes), read to the last instruction: Scena02_Runs entry 0x13, steps 0xA..0x11 (jump table 0x5408B0, 8, on step - 0xA): flag 0x1D and area 0xB, transition 5, two kind-0x13 effects, member 1, music 0xD, 0x532ED0 and Field_StartEventBattle(0xD), flag 0x1E and area 3 (0x904CD0 = 0xFF). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60658,7 +60658,7 @@ name = "Scena02_Scene15"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5408D0..0x540A27 (0x158 bytes), read to the last instruction: Scena02_Runs entry 0x15, steps 0..7 (jump table 0x540A08, 8): music 0xF, Kind2 0, 0x533E50 and flag 0x1F, transition 5, flag 0x20 and 0x56D6F0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60667,7 +60667,7 @@ name = "Scena02_Scene17"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540A30..0x540A6F (0x40 bytes), read to the last instruction: Scena02_Runs entry 0x17, one step: 0x591BE0(0x32, 0), flag 0x23, sound 0x106, the end. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60676,7 +60676,7 @@ name = "Scena02_Scene18"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540A70..0x540D40 (0x2D1 bytes), read to the last instruction: Scena02_Runs entry 0x18, steps 0..0x14 (byte table 0x540D2C, 21, into jump table 0x540D08, 9): message 0x65, members by 0x904062, the payment 0x591BC0(0x32, 0) on counter 0 = 8 (flags 0x24, 0x25, sound 0x106), messages 0x6D / 0x6C, flag 0x3A. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60685,7 +60685,7 @@ name = "Scena02_Scene19"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540D50..0x540E9D (0x14E bytes), read to the last instruction: Scena02_Runs entry 0x19, steps 0..0x11 (byte table 0x540E8C, 18, into jump table 0x540E70, 7): flag 0x27 and 0x591B60(4, 2, 1, 0), flag 0x26 and Inventory_Add(4, 2, 1), message 0x73, Scena02_PlaceEffect70(0x91). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60694,7 +60694,7 @@ name = "Scena02_Scene1A"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x540EA0..0x5411D3 (0x334 bytes), read to the last instruction: Scena02_Runs entry 0x1A, steps 0..0x1E (byte table 0x541194, 31, into jump table 0x541158, 15; a second jump table 0x5411B4, 8, on the leader's +8): sound 0x20B, counter 3 to 0x4B, members, Scena02_PlaceEffect70(0x92), flags 0x2F, 0x30, 0x32, message 0x7F, Scena02_PlaceEffect68(0x99), 0x532ED0 and Field_StartEventBattle(0xF). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60703,7 +60703,7 @@ name = "Scena02_Scene1B"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5411E0..0x5413CD (0x1EE bytes), read to the last instruction: Scena02_Runs entry 0x1B, steps 0..0x19 (byte table Scena02_Scene1BSteps 0x5413B4, 26, into jump table 0x541388, 11): message 0x6F, the choice bit 0x7DEE44 and counter 0 = 0x5A..0x5D, the shop (Game_Mode 7), 0x533E50, 0x587B80, the stream, Sound_ResumeAll, area 0x1B. The scenario tool's extent 0x220 ran over its byte table to the next start and hid Scena02_Scene08Next. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60712,7 +60712,7 @@ name = "Scena02_Near01"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541400..0x54145B (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [0, 0x50000], z [-0x18000, 0x18000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60721,7 +60721,7 @@ name = "Scena02_Near02"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541460..0x5414BB (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x40000, 0], z [-0x18000, 0x18000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60730,7 +60730,7 @@ name = "Scena02_Near03"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5414C0..0x541521 (0x62 bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x18000, 0x18000], z [0x10000, 0x40000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60739,7 +60739,7 @@ name = "Scena02_Near04"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541530..0x541591 (0x62 bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x18000, 0x18000], z [-0x40000, 0x10000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60748,7 +60748,7 @@ name = "Scena02_Near05"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5415A0..0x5415FB (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [0, 0x60000], z [-0x20000, 0x20000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60757,7 +60757,7 @@ name = "Scena02_Near06"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541600..0x541659 (0x5A bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x10000, 0x10000], z [-0x50000, 0] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60766,7 +60766,7 @@ name = "Scena02_Near07"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541660..0x5416BB (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x48000, 0], z [-0x18000, 0x18000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60775,7 +60775,7 @@ name = "Scena02_Near08"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5416C0..0x54171B (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [0, 0x40000], z [-0x10000, 0x10000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60784,7 +60784,7 @@ name = "Scena02_Near09"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541720..0x54177B (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [0, 0x40000], z [-0x20000, 0x28000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60793,7 +60793,7 @@ name = "Scena02_Near0A"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541780..0x5417DB (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [0, 0x30000], z [-0x10000, 0x18000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60802,7 +60802,7 @@ name = "Scena02_Near0B"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5417E0..0x54183B (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x10000, 0x10000], z [0, 0x50000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60811,7 +60811,7 @@ name = "Scena02_Near0C"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541840..0x54189B (0x5C bytes), read to the last instruction: a near helper of Scena02_Scene00: with Cond_ByteFD 0, the leader's (x, z) (ObjTrio +0x34, +0x38) within x [-0x18000, 0x18000], z [0, 0x40000] of Sprite_Objects record n's (+0x34, +0x38), inclusive signed compares of wrapping sums: a tail jmp to Scena02_StartRun07. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60820,7 +60820,7 @@ name = "Scena02_DoorStart"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5418A0..0x5419BC (0x11D bytes), read to the last instruction: tail-jumped by Scena02_Scene00 (flag 0x2E clear): with the byte 0x904062 0 or 3, the leader on cell x 0x44/0x45 z 0x3F (+0x4B 0x42, +8 1), 0x46/0x3E (0x45, 7) or 0x44/0x3E (0x43, 3): ScriptFlags_Set40, counter 0 = 0x23, run 0x1A at step 0; the x word re-read after each call. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60829,7 +60829,7 @@ name = "Scena02_DoorSound"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5419C0..0x541AA0 (0xE1 bytes), read to the last instruction: tail-jumped by Scena02_Scene00 (flag 0x2E set): Scena02_DoorStart's three cells, each Sound_PlayEffect(0x20B) and run 0x1A at step 0x1E. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60838,7 +60838,7 @@ name = "Scena02_StartRun07"
 ret = "void"
 params = "void"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541AB0..0x541AD4 (0x25 bytes), read to the last instruction: the near helpers' shared tail, reached only by their tail jmps (the start the chapter walk did not reach): counter 0 = 0x1F, counters 1..3 cleared, run 7 at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60847,7 +60847,7 @@ name = "Scena02_Shake"
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541AE0..0x541B8D (0xAE bytes), read to the last instruction: called by Scena02_Scene11 step 5 with 0xA: by counter 1 (0 / 1), Camera_ShiftY = n + Camera_ShiftX, MapView_Redraw 2, counter 3 counted; on its second frame both shifts 0 and counter 1 flipped. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60860,7 +60860,7 @@ psx_evidence = "read 2026-10-26, docs/exe-immediate-places.md 7: one of two 0x1B
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541B90..0x541C42 (0xB3 bytes), read to the last instruction: Scena01_PlaceEffect compiled again: Sprite_Current = ObjTrio, Effect_FindFree into its +0xB, the record live as kind 6, +6 = n + 0x70, +0xC 0, +0x10 the s8 Scena02_EffectX[0x904062], the leader's +0x2E / +0x30. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60873,7 +60873,7 @@ psx_evidence = "read 2026-10-26, docs/exe-immediate-places.md 7: the +0x68 / 0x1
 ret = "void"
 params = "unsigned char n"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541C50..0x541D02 (0xB3 bytes), read to the last instruction: Scena02_PlaceEffect70 as kind 0x19 with +6 = n + 0x68. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60886,7 +60886,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "void"
 params = "unsigned char *object"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541D10..0x541D2C (0x1D bytes), read to the last instruction: slot 1 of chapter 2's vtable (0x56D6D0 with the object): Scena02_ObjectHandlers[object +0x86](object, 0x903FA0), unchecked in the original (ours aborts past the 27 entries). PSX twin hypothesis: SCENA02 vtable[1] 0x801FD084. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60899,7 +60899,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 1 of 0x541D10's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541D30..0x541D4F (0x20 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x01 (object, row), neither read: ScriptFlags_Set40, run 0xB at step 7, counters 1 and 2 cleared. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60912,7 +60912,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 2 of 0x541D10's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541D50..0x541D6F (0x20 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x02 (object, row), neither read: ScriptFlags_Set40, run 0xB at step 2, counters 1 and 2 cleared. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60925,7 +60925,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 4 of 0x541D10's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541D70..0x541DAB (0x3C bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x04 (object, row), neither read: with flag 5 clear: script flags ^ 0x36, ScriptFlags_Set40, run 4 at step 5. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60938,7 +60938,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 5 of 0x541D10's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541DB0..0x541DEB (0x3C bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x05 (object, row), neither read: with flag 5 clear: script flags ^ 0x36, ScriptFlags_Set40, run 4 at step 7. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60947,7 +60947,7 @@ name = "Scena02_Object06"
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541E00..0x541E07 (0x8 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x06 (object, row), neither read: counter 1 = 1 (entries 6 and 8). Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60956,7 +60956,7 @@ name = "Scena02_Object07"
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541DF0..0x541DF7 (0x8 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x07 (object, row), neither read: counter 2 = 1. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60969,7 +60969,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 9 of 0x541D10's table 
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541E10..0x541E20 (0x11 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x09 (object, row), neither read: flag 0xD set. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60982,7 +60982,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 11 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541E30..0x541E54 (0x25 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x0B (object, row), neither read: ScriptFlags_Set40, counter 0 = 1, run 7 at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -60995,7 +60995,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 12 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541E60..0x541E7D (0x1E bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x0C (object, row), neither read: ScriptFlags_Set40, run 0xB at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61008,7 +61008,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 13 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541E80..0x541E9F (0x20 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x0D (object, row), neither read: ScriptFlags_Set40, run 0xB at step 5. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61021,7 +61021,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 14 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541EA0..0x541EC6 (0x27 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x0E (object, row), neither read: ScriptFlags_Set40, counter 0 = 0x14, run 2 at step 0x14. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61034,7 +61034,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 15 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541ED0..0x541EED (0x1E bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x0F (object, row), neither read: ScriptFlags_Set40, run 0xF at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61047,7 +61047,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 16 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541EF0..0x541F0E (0x1F bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x10 (object, row), neither read: ScriptFlags_Set40, run 0x10 at step 0xF, sound 0x106. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61060,7 +61060,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 17 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541F10..0x541F37 (0x28 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x11 (object, row), neither read: ScriptFlags_Set40, the counters cleared, run 0x12 at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61073,7 +61073,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 19 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541F40..0x541F64 (0x25 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x13 (object, row), neither read: ScriptFlags_Set40, run 2 at step 0x1E, counters 1..3 cleared. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61086,7 +61086,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 20 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541F70..0x541F83 (0x14 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x14 (object, row), neither read: ScriptFlags_Set40, run 0x1B at step 0xA. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61099,7 +61099,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 21 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541F90..0x541FA3 (0x14 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x15 (object, row), neither read: ScriptFlags_Set40, run 0x17 at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61112,7 +61112,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 22 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541FB0..0x541FD7 (0x28 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x16 (object, row), neither read: ScriptFlags_Set40, the counters cleared, run 0x19 at step 0. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61125,7 +61125,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 23 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x541FE0..0x542014 (0x35 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x17 (object, row), neither read: ScriptFlags_Set40, the counters cleared, run 0x19 at step 0xA, sound 0x106. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61138,7 +61138,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 24 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x542020..0x542030 (0x11 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x18 (object, row), neither read: flag 0x31 set. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61151,7 +61151,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 25 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x542040..0x542053 (0x14 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x19 (object, row), neither read: ScriptFlags_Set40, run 0x1A at step 0x19. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61164,7 +61164,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, tables: state 26 of 0x541D10's table
 ret = "void"
 params = "unsigned char *object, unsigned char *row"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x542060..0x542073 (0x14 bytes), read to the last instruction: Scena02_ObjectHandlers entry 0x1A (object, row), neither read: ScriptFlags_Set40, run 0x1B at step 5. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61177,7 +61177,7 @@ psx_evidence = "exe_imm.py pair 2026-10-19, order-align: between 0x542060 and 0x
 ret = "void"
 params = "unsigned char member"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x542080..0x5420BB (0x3C bytes), read to the last instruction: called by Scena02_EnterArea with 3 and 4: the ten bytes at 0x903AEE + 0xA4 * member (+0x7E of the member's record), each not 0 passed to 0x590C90(byte, 0, 1, 0) then cleared; the index unchecked. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[func]]
@@ -61190,7 +61190,7 @@ psx_evidence = "table seed 2026-10-19 (docs/install-gap-pairs.md 8; a scratch se
 ret = "unsigned char"
 params = "int x, int z"
 status = "evidence"
-impl = "src/game/scena_sc2.cpp"
+impl = "src/game/scenario/scena_02_2.cpp"
 evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x5420C0..0x5428B2 (0x7F3 bytes), read to the last instruction: slot 2 of chapter 2's vtable (Scenario_StepHook with the leader's target x, z, 16.16): 1 in al when a rectangle starts a scene, else 0. Area 3 (flags 0x1F / 0x20) to area 3 and run 0x15; 0xF run 5; 0x1A two area changes by flag 0x32 and ten rectangles by flags 7, 0x2F, 0x30, 0x34, 0x35, 0x24, 0x25, Cond_ByteFD and counter 1; 0x1B seven by flags 0xF..0x18 and Field_MemberCount (one on z's high word alone); 0x1C run 0x11. PSX twin hypothesis: SCENA02 vtable[2] 0x801FD780. Fuzzed under BOF3X_SHADOW=scena_sc2 (docs/scena_sc2.md)."
 
 [[data]]
@@ -61985,7 +61985,7 @@ psx_evidence = "exe_imm.py pair 2026-10-18, calls: a call of 0x532ED0 (1 call(s)
 ret = "void"
 params = "int x, int z, unsigned slot"
 status = "evidence"
-impl = "src/game/scena_sx2.cpp"
+impl = "src/game/field/field_6.cpp"
 evidence = "disasm 2026-09-28, group SX2, 0x532FD0..0x53310F (0x140 bytes), cdecl: group g = byte 0x904060 (+1 at Field_MemberCount 2, +4 at 3, bytes); row = Formation_SlotVectors[g * 3 + slot byte] (dx, dz dwords); pair (a, b) = BattleFormation_Offsets[2 * byte 0x904AAC] (s8s, each / 4 truncated): a not 0 - Sprite_Current +0x34 = dx * a/4 + x, +0x38 = dz * a/4 + z; else +0x34 = x - dz * b/4, +0x38 = dx * b/4 + z; then +0x3E = MapView_GroundAt(+0x34, +0x38) as a word. The slot local is push ecx's slot, only its low byte written and read. One E8 site: Party_PlaceForBattle 0x532F58. No PSX twin paired. docs/scena_sx2.md."
 
 [[func]]
@@ -90277,7 +90277,7 @@ pc = 0x5341E0
 name = "Field_AfterBattleTally"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341E0..0x5343BC (0x1DD bytes) cdecl, called once by GameMode_Field on its return from a battle (0x4961F2, after Field_EncounterThresholdRoll): bit 4 of 0x904654 set and of 0x904657 clear - the byte 0x9045FB up below 0x1E; from chapter 8 with 0x9046CB not 0 the first clear story flag n of 0xF6..0xFF, the in-use pairs of 0x9046D0 naming 0xA and 0xB counted, the dword 0x9046B0 up and at max(5, a stack threshold - a bias byte) story flag n set; then 0x5343C0(1, 0x9046C0) below 7 at 0x9046CC, (0, 0x9046C4) below 10 at 0x9046CB, 0x534420(5) and (0xB); story flag 0xF5 set at 0x9046CC 4 or more. No PSX twin paired. docs/field_e2.md."
 
@@ -90286,7 +90286,7 @@ pc = 0x5343C0
 name = "Records_CountUnpaired"
 ret = "void"
 params = "unsigned key, unsigned *counter"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5343C0..0x534414 (0x55 bytes) cdecl: *counter + 1 unless one of the sixty pairs at 0x9046D0 (+0 in use, +1 a 1-based record) names any of the eight records at 0x9048B0 of kind 4 whose +1 is the key byte (one count over all of them). Called twice by Field_AfterBattleTally. No PSX twin paired. docs/field_e2.md."
 
@@ -90295,7 +90295,7 @@ pc = 0x534420
 name = "Records_CountUnpairedOfKind"
 ret = "void"
 params = "unsigned kind"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534420..0x534476 (0x57 bytes) cdecl (the catalog says 96, the rest padding): for each of the eight records at 0x9048B0 of the kind byte with +3 not 0, its dword +4 up by one unless a pair of 0x9046D0 names it. Called twice by Field_AfterBattleTally. No PSX twin paired. docs/field_e2.md."
 
@@ -90305,7 +90305,7 @@ name = "Field_FaceMode11Object"
 psx = 0x801C32D0
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534480..0x53458B (0x10C bytes) a hidden start in 0x534420, reached by Field_LeaderStates[14] and the members table 0x65F960[14] (0x65F998): unless Field_Request is 9 the state +1 = 1; else the facing +8 toward the mode-11 object 0x905DA0 by the signs of the x, z differences (eight directions, both 0 kept) and Sprite_EnsureAnimation(+8). PSX twin 0x801C32D0 table-anchored (pairs_propagated), not adopted. docs/field_e2.md."
 
@@ -90316,7 +90316,7 @@ psx = 0x801C3E2C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "unsigned kind"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534C20..0x534DA1 (0x182 bytes) cdecl: kind 0..8 (Field_FloorDamage cell code - 0x80) through a 27-byte stack table: Char_LoseHp(t0, Field_State +0x89) - 4, 8, 16, 32, 2 -, 0x537500(t1, +0x89) - 4, 8, 32 for kinds 6..8 -, flags t2 (bit 7 Field_State +0x124 = 10, bit 5 +0x125 = 40); the actor +0x148 at a quarter HP or less: its +0x10 and Field_State +0x90 |= 0x2000; its +0x10 |= t2; Actor_EquipCount(actor, 3, 8) not 0 clears bit 5 and +0x125. Callers Field_FloorDamage, 0x50572D, FC3 0x526CE9. PSX twin 0x801C3E2C gap20, a hypothesis. docs/field_e2.md."
 
@@ -90326,7 +90326,7 @@ name = "AreaMap_CellsAllWide"
 psx = 0x801C4B70
 ret = "unsigned char"
 params = "long x, long z, unsigned code, unsigned mask"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535490..0x535601 (0x172 bytes) cdecl: AreaMap_CellsAll with wide set - al 1 when the four cells (x, z)..(x+1, z+1), with no x fraction also (x-1, z) and (x-1, z+1), with no z fraction (x, z-1) and (x+1, z-1), with neither (x-1, z-1), each and 0xF0 by the mask byte, all equal the code byte; else 0. PSX twin 0x801C4B70 by the body (psx_pair swaps it with AreaMap_CellsAll4), a hypothesis. docs/field_e2.md."
 
@@ -90336,7 +90336,7 @@ name = "Field_WayBlockedWide"
 psx = 0x801C5038
 ret = "unsigned char"
 params = "long x, long z, unsigned ground"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535830..0x535C44 (0x415 bytes) cdecl, called by Field_WayBlocked for a raised sprite: al 1 when Field_CellsBlock(x, z, 1) answers, or any of up to 14 MapView_SlopeAt probes around the cell answers above 0x40 (s16) with the byte 0x903850 set after it, or MapView_GroundAt(x, z) is more than 0xC0 from the ground word; else Sprite_ObjectAt(x, z, 1) with Sprite_Current +0x3E set to ground for the call - al 1 unless it answers 0xFF. PSX twin 0x801C5038 call, a hypothesis. docs/field_e2.md."
 
@@ -90346,7 +90346,7 @@ name = "AreaMap_CellsNoneWide"
 psx = 0x801C58F4
 ret = "unsigned char"
 params = "long x, long z, unsigned code, unsigned mask"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535D60..0x535F45 (0x1E6 bytes) cdecl: AreaMap_CellsNone with wide set - AreaMap_CellsAllWide cells, each 0x2n made 0x2n and 0x21 (not the corner), and 0xF0 by the mask; al 0 when any equals the code, else 1. PSX twin 0x801C58F4 by the body, a hypothesis. docs/field_e2.md."
 
@@ -90356,7 +90356,7 @@ name = "Leader_Pose3C"
 psx = 0x801C5D14
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535FC0..0x535FDE (0x1F bytes) Sprite_EnsureAnimation(0x3C) with Sprite_Current +8 at 7, else (0x3D). Called by FC3 0x525CE0 and FE1 0x52F970. PSX twin 0x801C5D14 call, a hypothesis. docs/field_e2.md."
 
@@ -90367,7 +90367,7 @@ psx = 0x801C5D50
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535FE0..0x536049 (0x6A bytes) Field_State +0x128 = +0x70 + 2, Field_JumpSetUp, +0x14 = 0, +9 = (+0x70 + 1) * +9 * 2 and +0xA = +9 / 2 (bytes), Sprite_EnsureAnimation(+8 + 8), Sprite_ApplyVelocity, +9 - 1. Called by FC3 0x525F10, FE1 0x52F9A0. PSX twin 0x801C5D50 call, a hypothesis. docs/field_e2.md."
 
@@ -90378,7 +90378,7 @@ psx = 0x801C5E0C
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536050..0x5360B8 (0x69 bytes) +9 at 0: Sprite_EnsureAnimation(+8), +0xA = 4, Sprite_ScriptTick, al 1; else +9 - 1, Sprite_ApplyVelocity, at +9 == +0xA the CLUT word 0x8113BE + +5 * 0x40 = 0 and Gfx_ClutStripDirty, Sprite_ScriptTick, al 0. Called by FC3 0x525F30, FE1 0x52F9E0 (test al). PSX twin 0x801C5E0C call, a hypothesis. docs/field_e2.md."
 
@@ -90389,7 +90389,7 @@ psx = 0x801C5EBC
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5360C0..0x536123 (0x64 bytes) +0xA - 1; at 0 Sprite_EnsureAnimation(0x37 facing 3, else 0x34), +8 ^= 4, al 1; else Sprite_EnsureAnimation(7 - +0xA facing 3, else +0xA + 1), +9 = 1, al 0. Called by FC3 0x525F50, FE1 0x52FA00. PSX twin 0x801C5EBC call, a hypothesis. docs/field_e2.md."
 
@@ -90399,7 +90399,7 @@ name = "Leader_Pose3E"
 psx = 0x801C5F80
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536130..0x536160 (0x31 bytes) al 0 until Sprite_ScriptTickOnce answers; then Sprite_EnsureAnimation(0x3E facing 7, else 0x3F), al 1. Called by FC3 0x525F70, FE1 0x52FA20. PSX twin 0x801C5F80 call, a hypothesis. docs/field_e2.md."
 
@@ -90410,7 +90410,7 @@ psx = 0x801C5FD8
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536170..0x536284 (0x115 bytes) the point Field_DirectionSteps[+8] * (+0x70 + 2) ahead, MapView_GroundAt there less the s16 0x66978C[Field_State +0x89]: the height +0x3E above it - height minus the rise 0x6697A4[actor], al 0; else the ground again less the offset into +0x3E, Sprite_EnsureAnimation(0x3C / 0x3D), al 1; then MapView_SetElevation(+0x3E) with +5 0 and script-flag bit 3 clear, Sprite_ScriptTickOnce every fourth frame. Called by FC3 0x525F90, FE1 0x52FA40. PSX twin 0x801C5FD8 call, a hypothesis. docs/field_e2.md."
 
@@ -90420,7 +90420,7 @@ name = "Leader_Pose34"
 psx = 0x801C61A8
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536290..0x5362C8 (0x39 bytes) the CLUT word 0x8113BE + +5 * 0x40 = 0 with Gfx_ClutStripDirty, then Sprite_EnsureAnimation(0x37 facing 7, else 0x34). Called by FC3 0x525E78, FE1 0x52FAE0. PSX twin 0x801C61A8 call, a hypothesis. docs/field_e2.md."
 
@@ -90431,7 +90431,7 @@ psx = 0x801C6204
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5362D0..0x5363B4 (0xE5 bytes) Leader_StepUp mirrored: the height below the ground ahead - height plus the rise 0x6697A4[Field_State +0x89], al 0; else the ground into +0x3E, Sprite_EnsureAnimation(0x3E / 0x3F), al 1; the same view follow and tick. Called by FC3 0x525E90, FE1 0x52FAF0. PSX twin 0x801C6204 call, a hypothesis. docs/field_e2.md."
 
@@ -90442,7 +90442,7 @@ psx = 0x801C6394
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5363C0..0x53643C (0x7D bytes) al 0 until Sprite_ScriptTickOnce answers; then Leader_HopStart body, al 1. Called by FC3 0x525EB0, FE1 0x52FB10. PSX twin 0x801C6394 call, a hypothesis. docs/field_e2.md."
 
@@ -90453,7 +90453,7 @@ psx = 0x801C646C
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536440..0x5364CE (0x8F bytes) +9 at 0: Sprite_EnsureAnimation(+8), Sprite_ClearSteps, Field_State +0x137 = 0, states +1 = 1, +2..+4 = 0, al 1; else +9 - 1, Sprite_ApplyVelocity, at +9 == +0xA Sprite_LoadPalette(0x80D380 + +5 * 0x40, 0), Sprite_ScriptTick, al 0. Called by FC3 0x525ED0, FE1 0x52FB50 (a tail jmp). PSX twin 0x801C646C gap20, a hypothesis. docs/field_e2.md."
 
@@ -90464,7 +90464,7 @@ psx = 0x801C6550
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5364D0..0x53654A (0x7B bytes) +0x3E up 0x10; with it at or above the ground ahead less the actor offset, +2 = 3; tail jmp Sprite_ScriptTick (its al). Called by 0x51BD96 and FE1 0x52FA6A. PSX twin 0x801C6550 gap20, a hypothesis. docs/field_e2.md."
 
@@ -90475,7 +90475,7 @@ psx = 0x801C6618
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536550..0x5365CF (0x80 bytes) +0x3E down 0x10; with the ground under (+0x34, +0x38) above it: +0x3E = ground, Sprite_SetAnimation(+8), the palette, Field_State +0x137 = 0, +1 = 1, +2 = 0; tail jmp Sprite_ScriptTick. Called by 0x51BD8F and FE1 0x52FA76. PSX twin 0x801C6618 callers, a hypothesis. docs/field_e2.md."
 
@@ -90486,7 +90486,7 @@ psx = 0x801C66DC
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5365D0..0x536644 (0x75 bytes) +8 ^= 4, Sprite_EnsureAnimation(0x3A facing 3, else 0x3B), the palette, Sprite_ClearSteps, +0x20 = -8, +1 = 2, +2 = 3, +3 = 3. Called by 0x51BD88 and FE1 0x52FA86. PSX twin 0x801C66DC gap20, a hypothesis. docs/field_e2.md."
 
@@ -90496,7 +90496,7 @@ name = "PartySet_ErrorLoop"
 psx = 0x8016776C
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536A60..0x536AB8 (0x59 bytes) never returns: each frame Text_DrawFont8(0xA0, 0x64, 0, the line at 0x660C90), Crt_sprintf into 0x904BA0 of the three ids at 0x903850..52 by the format 0x660C7C, Text_DrawFont8(0xA0, 0x74, 0, it), Task_Sleep(1), jmp to its own start. Called by PartySet_Find when no set row holds the three. PSX twin 0x8016776C callers, a hypothesis. docs/field_e2.md."
 
@@ -90506,7 +90506,7 @@ name = "Mode11_ObjectFrame"
 psx = 0x80167CBC
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536B60..0x536B8E (0x2F bytes) (the catalog says 48, the rest padding): Field_InputHeld = the word Input_Held, Sprite_Current = 0x905DA0, Field_State = ObjTrio, a jump through Mode11_ObjectStates by the object +1. Called by mode 11 step 0x496790. PSX twin 0x80167CBC call, a hypothesis. docs/field_e2.md."
 
@@ -90518,7 +90518,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tables: state 0 of 0x536B60's table 0x660C2C (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536B90..0x536BE7 (0x58 bytes) a hidden start (the catalog made one 736-byte row of it and 0x536BF0), Mode11_ObjectStates[0]: +5 = 0, +0xB = the leader flag byte 0x802E78, Field_State +0x128 = 3, +0x34 / +0x38 / +0x3C from ObjTrio[0], +1 up. No PSX twin paired. docs/field_e2.md."
 
@@ -90530,7 +90530,7 @@ psx_status = "hypothesis"
 psx_evidence = "exe_imm.py pair 2026-10-18, tables: state 1 of 0x536B60's table 0x660C2C (docs/install-gap-pairs.md)"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536BF0..0x536E6B (0x27C bytes) a start in no cut row, Mode11_ObjectStates[1] and 0x536EC0 tail target: Input_Pressed bit 11 - the kind-2 point moved to Field_State, MoveScript_F3Divisor 0x20, MoveScript_FAWord = (+0x3E - MapView_Elevation) / (distance >> 13), state 3; the 0x903586 buttons held - Game_Step up, state 1; no direction (Field_LeaderDirection) - still, state 1; Field_LeaderStepTarget - state 1 and Field_Request 9; within 0x60000 of the leader - the pace by the run buttons and 0x903A5E, Field_JumpStart, Field_JumpCheckHeight, +9 - 1, Field_LeaderStepTick, state 2; else still, state 1, Field_Request 9. No PSX twin paired. docs/field_e2.md."
 
@@ -90539,7 +90539,7 @@ pc = 0x536E70
 name = "Mode11_ObjectMove"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536E70..0x536E8B (0x1C bytes) Mode11_ObjectStates[2] (the catalog says 32, the rest padding): +9 at 0 tail jmp 0x536EC0, else +9 - 1 and tail jmp Field_LeaderStepTick. No PSX twin paired. docs/field_e2.md."
 
@@ -90548,7 +90548,7 @@ pc = 0x536E90
 name = "Mode11_ObjectEnd"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536E90..0x536EB2 (0x23 bytes) Mode11_ObjectStates[3] (the catalog made 127 bytes of it and 0x536EC0): once Field_Kind2Hold is 0, MapView_SetElevation(Field_State +0x3E) and Field_Request 0. No PSX twin paired. docs/field_e2.md."
 
@@ -90557,7 +90557,7 @@ pc = 0x536EC0
 name = "Mode11_ObjectHalt"
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536EC0..0x536F0E (0x4F bytes) a start in no cut row (FH found it: reached by the tail jmp at 0x536E7D): the velocity +0xC..+0x14 and the two script words 0, Field_State +0x128 = 3; Field_InputHeld & 0xF000 - tail jmp Mode11_ObjectControl, else state 1. No PSX twin paired. docs/field_e2.md."
 
@@ -90567,7 +90567,7 @@ name = "Mode11_ObjectDraw"
 psx = 0x80168288
 ret = "void"
 params = "void"
-impl = "src/game/field_e2.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536F10..0x5372D7 (0x3C8 bytes) called by FC3 0x5172C0: Sprite_Current = 0x905DA0; unless its +0 bit 6: a POLY_FT4 marker at the object through Gte_RotTransPers and _ftol (fild / fadd of the floats 0x5C4254, 0x5C41F0, a Frame_Counter bob), linked at the object; under a pushed matrix (Gte_RotTrans, Gte_RotMatrix, Gte_MulMatrix0 with Camera_Matrix) a draw mode and 32 POLY_G3 fans through Prim_VertexScratch and Gte_RotTransPers3, semi-transparent. PSX twin 0x80168288 callers, a hypothesis. docs/field_e2.md."
 
@@ -91926,7 +91926,7 @@ psx = 0x801B54D4
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned code"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x531120..0x53153F (0x420 bytes): cdecl, al answered: with Sprite_Current's +0x34 and +0x38 words both 0, al 0; else rows of two or three cells ahead by the facing's step (0x66971C, 1 read as 2), the cell in 0x903850 / 0x903852, each AreaMap_ByteAt against the code: a match with an even facing turns it (to 1 / 5 or 7 / 3), along the row answers 1; the other rows; for the both-fractions shape Field_CellAroundSide on the facings two either side. Called by Field_CellAround 0x530CAF (ours, event_ops.cpp's kCellAroundLarge), which returns its eax. PSX twin 0x801B54D4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91935,7 +91935,7 @@ pc = 0x531540
 name = "Field_CellAroundSide"
 ret = "unsigned char"
 params = "unsigned direction, unsigned code"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x531540..0x531655 (0x116 bytes): cdecl, bytes: the whole x, z of Sprite_Current plus the direction's step into 0x903850 / 0x903852; directions 1 and 5 walk x, 7 and 3 walk z, two cells each, AreaMap_ByteAt against the code: a match sets +8 to the direction, al 1; else al 0. Two sites in Field_CellAroundLarge. docs/field_e1.md."
 
@@ -91944,7 +91944,7 @@ pc = 0x531820
 name = "Field_GatewayExit"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x531820..0x531918 (0xF9 bytes): al answered: 0 with Field_ScriptFlags bit 14, party set 0xC, Field_CellHasEvent at the leader's whole x / z, or Field_ScriptFlags2 bit 12; area 0xBD the 3-byte record 0x660B08 by Cond_ByteFF == 0; else the area's record in the ten 8-byte ones of 0x660AB8 (none: 0). 0x937F82 the exit's area, 0x905B88 = 4, 0x903860 = x << 16, 0x90384C = z << 16, al 1. Called by Field_LeaderCellEvent 0x531A1F and FieldMenu_TopBarInput 0x589BCA (ours; event_ops' and menu_lists' kExitGateway). docs/field_e1.md."
 
@@ -91953,7 +91953,7 @@ pc = 0x532C10
 name = "Party_PlaceAtSlots"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x532C10..0x532D05 (0xF6 bytes): each of Field_MemberCount members' x, z from the slot pairs 0x7E06E0; the member whose +0x89 is 0x904062 (the record after the last when none); unless 0x904AE5 bit 1: MoveScript_F3Divisor 0x20, Field_Kind2X / Z to its x, z, MoveScript_FAWord = (short)(AreaMap_Elevation - MapView_Elevation) / ((the larger distance >> 13) as a byte), 0 for a byte 0. One site, 0x496130 in a Capcom field-mode function. docs/field_e1.md."
 
@@ -91962,7 +91962,7 @@ pc = 0x532D10
 name = "Party_ScriptTicks"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x532D10..0x532D47 (0x38 bytes): each member (count read again) Field_State = Sprite_Current = its ObjTrio record and Sprite_ScriptTick. Sites 0x496135, 0x4961F9 (Capcom's). docs/field_e1.md."
 
@@ -91973,7 +91973,7 @@ psx = 0x801C0B2C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x532D50..0x532EC9 (0x17A bytes): the members' x saved to 0x903850.. and reassigned by each id's slot in the list 0x904065, then z likewise with MapView_GroundAt to +0x3E (the count read again); 0x904AE5 bit 7: Party_DropIn(0x92BF18), Field_MembersFrame; else each member current, +8 BattleFormation_Anims[0x904AAC], +0x29 = 6, the others +7 = 0 and +6 = +5 - 1, Field_MemberTimers, Sprite_SetAnimation(+8). One site 0x49617E (Capcom's). PSX twin 0x801C0B2C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91983,7 +91983,7 @@ name = "Field_LeaderPlaceOffset"
 psx = 0x801C1904
 ret = "void"
 params = "long x, long z, unsigned direction"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x533690..0x53375E (0xCF bytes): cdecl: one member or none - the leader's +0x34 / +0x38 / +8 = x, z, direction; else x, z plus twice the pair 0x660B40[direction >> 1] (thrice with its +0x70), once more for the first later member with +0x70; +8 the direction. Called by Field_PartySetUp 0x533453 (ours, field_event.cpp's position_alt) under Field_ScriptFlags bit 11. PSX twin 0x801C1904 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -91994,7 +91994,7 @@ psx = 0x801C1CD4
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x5338B0..0x5338E2 (0x33 bytes): Field_PendingJumps[1]: Field_PendingRelease(2) when the member at 0x904EF2 faces 5 or 3, else (3). Hidden after Field_PendingJump (ours, 0x18 bytes). PSX twin 0x801C1CD4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -92005,7 +92005,7 @@ psx = 0x801C1D2C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x5338F0..0x5338F8 (0x9 bytes): Field_PendingJumps[2]: Field_PendingRelease(4). PSX twin 0x801C1D2C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -92016,7 +92016,7 @@ psx = 0x801C1D4C
 psx_overlay = "GAME.EMI#0"
 ret = "void"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x533900..0x533991 (0x92 bytes): Field_PendingJumps[3]: when Field_PendingNext answers al: Sprite_EnsureAnimation(0x3A facing 3, else 0x3B), +0 bit 6 cleared, +0x3E = MapView_GroundAt + 0x7D0, Sprite_ClearSteps, +0x20 = -8, +1..+3 = 2, 3, 3, Field_State +0x138 bit 1 cleared. PSX twin 0x801C1D4C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -92026,7 +92026,7 @@ name = "Field_PendingNext"
 psx = 0x801C1E40
 ret = "unsigned char"
 params = "void"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x5339A0..0x533A42 (0xA3 bytes): al answered: at 0x904EF2 = n not 0 waits (al 0) unless member n - 1 is in state 1; n 1 clears Field_ScriptFlags2 bit 3 and with one member bit 9 and 0x904EF0 (al 0); bit n (mod 32) cleared; member n made Sprite_Current and Field_State, 0x904EF2 + 1, at the count (more than one member) bits 3, 4, 9 cleared and 0x904EF0 = 0; al 1. One site, Field_PendingDrop. PSX twin 0x801C1E40 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -92037,7 +92037,7 @@ psx = 0x801C1F94
 psx_overlay = "GAME.EMI#0"
 ret = "unsigned char"
 params = "unsigned kind"
-impl = "src/game/field_e1.cpp"
+impl = "src/game/field/field_6.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29, round twelve group FE1, 0x533A50..0x533B9F (0x150 bytes): cdecl, a byte: member n = 0x904EF2 waits (al 0) until bit n or n - 1 of Field_ScriptFlags (read once) is set or member n - 1 is in state 1 (at n 2 with bit 1 set, until member 0 is); bit n of Field_ScriptFlags2 cleared; unless bit n: +0 bit 6 cleared, +1..+4 = the 4-byte record 0x660B70[kind], +0x138 bit 1 cleared. 0x904EF2 + 1; at the count bit 4 cleared, 0x904EF0 = 0, al 2; else al 1. Shifts by n mod 32. Three sites, Field_PendingJumpTurn and Field_PendingJumpKind4. PSX twin 0x801C1F94 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
 
@@ -120364,7 +120364,7 @@ name = "Mode11_ListedSpriteScreens"
 psx = 0x80168778
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5372E0..0x5373E2 (0x103 bytes), cdecl, two calls: for each of the 30 Sprite_Objects records Sprite_Current = it; with +0 bit 0: type +6 not 9 - +0x29 = 4 with +0x24 bit 4, else Draw_OtSlot; type 9 with Draw_OtSlot 4 - nothing more. Then type 0xA: Sprite_UpdateScreenA. Else the first of the bank list's count (byte 0x8C3580) 8-byte records at [0x7E0880] whose +7 equals the u16 +0x2C (none: the record at the count, read unchecked); its u16 +0 in Mode11_ScreenBanks (to its 0xFFFF): Sprite_UpdateScreen. Called by Mode11_FieldFrame (its sixth call). PSX twin 0x80168778 (pairs_propagated gap44, a hypothesis, not read). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120374,7 +120374,7 @@ name = "Char_GainHp"
 psx = 0x80168954
 ret = "void"
 params = "unsigned amount, unsigned member"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5373F0..0x537478 (0x89 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked; stride 0xA4): HP +0x18 below its maximum +0x20 (u16) - HP = (HP + amount) as a u16, held at the maximum; then the record Field_State +0x148 names: HP above (+0x20 >> 2) clears 0x2000 of its +0x10 and of Field_State word +0x90. HP at or above the maximum: nothing at all. eax is no answer. Called by Field_EquipTick (three sites). PSX twin 0x80168954 (pairs_propagated call-anchored). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120384,7 +120384,7 @@ name = "Char_LoseAp"
 psx = 0x80168BC0
 ret = "unsigned"
 params = "unsigned amount, unsigned member"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/field/mode_11.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537500..0x537537 (0x38 bytes), cdecl, no calls: the member byte's record (Character_IndexById, unchecked) AP +0x1A minus the amount while AP is above its word (16-bit, unsigned), else AP 1; eax the amount taken (the argument whole, or AP - 1). Char_LoseHp's twin without its actor test. Called by Field_FloorHurt. PSX twin 0x80168BC0 (pairs_propagated call). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120393,7 +120393,7 @@ pc = 0x5375A0
 name = "LinkedObjectA_Run"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5375A0..0x5375DD (0x3E bytes): a five-entry table on its own stack (LinkedObjectA_Roll, LinkedObject_Show2, _Show5, _EndAfterEffect, _EndAfterMessage), called by Sprite_Current +4 unchecked; ours aborts past the 5 (the original calls through its own frame), an index no state writes. Area_ObjectFallbacks entries 0, 7 and 9. A start hidden in Scena15_RecordWord's catalog extent; not scenario code. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120402,7 +120402,7 @@ pc = 0x5375E0
 name = "LinkedObjectA_Roll"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5375E0..0x537735 (0x156 bytes, then its 8-entry jump table to 0x537758), cdecl: r = Rand & 0xF; unless Sprite_Current +7 bit 3, Sprite_FaceDirection((leader +8 ^ 0xFC) & 7) (the guard before it never jumps); Field_ScriptFlags |= 0x100; Field_ActiveMember +0xA0 bit 7 set already: LinkedObject_SpawnEffect19(1) for r 8..15, (3) else, state 3. Else the bit set and by r: 0..3 SpawnEffect19(1), state 3; 4..6 SpawnEffect19(1), Zenny_Add(2, 0), LinkedObject_SpawnEffect32(the member's Sprite_Objects index, signed / 0xA4), state 1; 7 the same with Zenny_Add(5, 0), state 2; 8..15 SpawnEffect19(3), state 3. LinkedObjectA_Run's state 0 (a stack immediate). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120411,7 +120411,7 @@ pc = 0x537760
 name = "LinkedObject_Show2"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537760..0x5377A3 (0x44 bytes), cdecl, two calls: Effect_Objects[Sprite_Current +0xB] +0 bit 0 clear (the byte unchecked: 0xFF reads 0x7E9160, inside Gfx_PacketPools - ours reads it in place) - Crt_sprintf(Text_Records, Area08_MessageFormat, 2), Msg_OpenSystem(5), Field_Request = 2, state 4. A start no list had (inside the cut's extent of 0x5375E0); state 1 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120420,7 +120420,7 @@ pc = 0x5377B0
 name = "LinkedObject_Show5"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5377B0..0x5377F3 (0x44 bytes), cdecl, two calls: LinkedObject_Show2 with 5. State 2 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120429,7 +120429,7 @@ pc = 0x537800
 name = "LinkedObject_EndAfterEffect"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537800..0x53784E (0x4F bytes), cdecl, one call: Effect_Objects[Sprite_Current +0xB] +0 bit 0 clear (unchecked as Show2) - unless +7 bit 3, Sprite_FaceDirection(+8); Field_ActiveMember +0x80 bit 0 cleared; Field_ScriptFlags &= 0xFEFF; state 0. State 3 of LinkedObjectA_Run and LinkedObjectC_Run, state 1 of LinkedObjectB_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120438,7 +120438,7 @@ pc = 0x537850
 name = "LinkedObject_EndAfterMessage"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537850..0x537897 (0x48 bytes), cdecl, one call: Field_Request not 2 - LinkedObject_EndAfterEffect's end. State 4 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120447,7 +120447,7 @@ pc = 0x5378A0
 name = "LinkedObjectB_Run"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5378A0..0x5378C5 (0x26 bytes): a two-entry stack table (LinkedObjectB_Roll, LinkedObject_EndAfterEffect) called by Sprite_Current +4 unchecked; ours aborts past the 2. Area_ObjectFallbacks entries 1 and 8. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120456,7 +120456,7 @@ pc = 0x5378D0
 name = "LinkedObjectB_Roll"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5378D0..0x537946 (0x77 bytes), cdecl: r = Rand & 0xF; unless +7 bit 3, Sprite_FaceDirection((leader +8 ^ 0xFC) & 7); LinkedObject_SpawnEffect19(2) for r above 6, else (3); Field_ScriptFlags |= 0x100; state 1. No mark, no zenny. LinkedObjectB_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120465,7 +120465,7 @@ pc = 0x537950
 name = "LinkedObjectC_Run"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537950..0x53798D (0x3E bytes): LinkedObjectA_Run with LinkedObjectC_Roll as state 0; ours aborts past the 5. Area_ObjectFallbacks entries 3 and 6. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120474,7 +120474,7 @@ pc = 0x537990
 name = "LinkedObjectC_Roll"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537990..0x537AE5 (0x156 bytes, then its 8-entry jump table to 0x537B08), cdecl: LinkedObjectA_Roll with the second sub-kind 5 for 3 (the marked path's r 0..7 and the roll's 8..15). LinkedObjectC_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120483,7 +120483,7 @@ pc = 0x537B10
 name = "LinkedObjectD_Run"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537B10..0x537B4E (0x3F bytes): a six-entry stack table (LinkedObjectD_Roll, LinkedObjectD_ShowAmount three times, LinkedObjectD_WaitMessage, LinkedObjectD_ColourStep) called by Sprite_Current +4 unchecked; ours aborts past the 6. Area_ObjectFallbacks entry 5. A start no list had (inside the cut's extent of 0x537990). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120492,7 +120492,7 @@ pc = 0x537B50
 name = "LinkedObjectD_Roll"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537B50..0x537CBD (0x16E bytes, then its 8-entry jump table to 0x537CE0), cdecl: LinkedObjectA_Roll's body with Zenny_Add(1, 0) to state 2 and (10, 0) to state 3, every other path state 1; then Sprite_Current +0x5E, +0x5F, +0x5D = 0xB0. LinkedObjectD_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120505,7 +120505,7 @@ psx_status = "evidence"
 psx_evidence = "read 2026-10-26, docs/exe-immediate-places.md 7: bit 0 of the object record's byte (0x80143FC8 + 0x74 * +0xB; the PC's 0x7E11E0 + 0x80 * +0xB), lbu [0x801C8938 + byte +4] (the PC's 0x660CCC), sprintf of a %d format, call 5, 0x80143BB0 = 2 (0x66C7D8), +4 = 4 / 5: LinkedObjectD_Amounts' four bytes, read by no other lui pair on the disc. psx-us at 0x801AD90C, the PAL discs at 0x801ADB90"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537CE0..0x537D46 (0x67 bytes), cdecl, two calls: Effect_Objects[+0xB] +0 bit 0 clear (unchecked as Show2) - LinkedObjectD_Amounts[+4] (the state byte unchecked; ours aborts past the 4): not 0 Crt_sprintf(Text_Records, Area08_MessageFormat, it), Msg_OpenSystem(5), Field_Request = 2, state 4; 0 state 5. States 1..3 of LinkedObjectD_Run. A start no list had (inside the cut's extent of 0x537B50). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120514,7 +120514,7 @@ pc = 0x537D50
 name = "LinkedObjectD_WaitMessage"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537D50..0x537D62 (0x13 bytes), cdecl: Field_Request not 2 - state 5. LinkedObjectD_Run's state 4. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120523,7 +120523,7 @@ pc = 0x537D70
 name = "LinkedObjectD_ColourStep"
 ret = "void"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537D70..0x537DD3 (0x64 bytes), cdecl, one call: +0x5D not 0 - +0x5D, +0x5F, +0x5E each += 0x10; 0 - LinkedObject_EndAfterEffect's end. LinkedObjectD_Run's state 5. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120532,7 +120532,7 @@ pc = 0x537DE0
 name = "LinkedObject_SpawnEffect19"
 ret = "void"
 params = "unsigned sub"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537DE0..0x537E95 (0xB6 bytes), cdecl, two calls: Effect_FindFree into Sprite_Current +0xB; not 0xFF: that record (by +0xB, re-read for each store) +0 = 1, +5 = 0x19, +6 = the argument's byte, dword +0xC = 0; dword +0x10 = (s8) LinkedObject_EffectRise + 0x28; dwords +0x34 / +0x38 / +0x3C = Sprite_Current's (read after the call). Called by the four rolls (17 sites). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120541,7 +120541,7 @@ pc = 0x537EA0
 name = "LinkedObject_EffectRise"
 ret = "unsigned char"
 params = "void"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537EA0..0x537ECF (0x30 bytes), cdecl, no calls: (s8)(Sprite_Current +0x30 - byte 0x802D70, the leader's +0x30) / 28 (signed: imul 0x92492493, sar 4); negative, al << 2. Answers al. Called by LinkedObject_SpawnEffect19. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
@@ -120550,7 +120550,7 @@ pc = 0x537ED0
 name = "LinkedObject_SpawnEffect32"
 ret = "void"
 params = "unsigned sub"
-impl = "src/game/rest_2a.cpp"
+impl = "src/game/scenario/linked_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537ED0..0x537F1B (0x4C bytes), cdecl, one call: Effect_FindFree into Sprite_Current +0xB; not 0xFF: that record +0 = 1, +5 = 0x32, +6 = the argument's byte. Called by the three rolls' zenny paths (6 sites). Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
