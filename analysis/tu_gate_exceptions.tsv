@@ -6,8 +6,12 @@
 # rename of the caller changes); data-layout (both widths, call 10; a promoted variable is placed elsewhere
 # in .data/.bss, so a neighbouring file-local and its readers' reference to it differ; a row may name a data
 # or bss symbol); x64-indirect (x86_64 only, call 10; a folded internal function pointer is called through
-# once external; a row names the caller or the pointer, which reads NEW). The i686 gate passes --exception-classes data-layout, so its code stays exact but for that
-# class. A new class needs the coordinator's entry in the round doc with its first case. Read by
+# once external; a row names the caller or the pointer, which reads NEW); i686-fold (both widths, call 16; a promoted
+# variable whose value or layout the optimiser had folded into its readers, which now load it; a row may name the
+# data or bss symbol or a reader); i686-inline (both widths, call 16; a promoted file-local function the compiler had
+# inlined into its callers in the file, now called; a row names the function, which reads NEW, or a caller, or its
+# static local). The i686 gate passes --exception-classes data-layout,i686-fold,i686-inline, so its code stays exact
+# but for those classes. A new class needs the coordinator's entry in the round doc with its first case. Read by
 # tools/codegen_same.py --exceptions.
 symbol	class	reason	commit
 EffectKind17_Run	low32-site	B0 rename in rest_3e.cpp: names a renamed file-local helper whose Low32() message holds __builtin_FUNCTION(); i686 identical	
