@@ -90,141 +90,16 @@ world_map::U LongWorldMap(const unsigned char* p) {
 }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char* Object() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Sprite_CurrentAt()))); }
 
 // The map task's object, Object(), is an effect record: its frame runs from
 // WorldMapHud_Frame, effect kind 0x58's handler, on the effect record.
-unsigned char* PacketNext() { return AtWorldMap(LongWorldMap(AtWorldMap(at::Gfx_PacketNextAt()))); }
-
-// The needle's corner arithmetic, as the original's x87 executes it: the
-// integer offset loaded with fild, the corner's float loaded over it, the
-// subtraction at the control word's precision, one store to a float.
-//   fild d; fld a; fsub st(1); fstp a
-inline float X87SubInt(float a, std::int32_t d) {
-    float r;
-    __asm__ volatile(
-        "fildl %2\n\t"
-        "flds %1\n\t"
-        "fsub %%st(1), %%st\n\t"
-        "fstps %0\n\t"
-        "fstp %%st(0)"
-        : "=m"(r)
-        : "m"(a), "m"(d)
-        : "st", "st(1)");
-    return r;
-}
-float Float(const unsigned char* p) {
-    float v;
-    std::memcpy(&v, p, sizeof v);
-    return v;
-}
+unsigned char* PacketNext() { return AtWorldMap(LongWorldMap(AtWorldMap(world_map::at::Gfx_PacketNextAt()))); }
 
 }  // namespace
 
 // --- the map task's frame state machine ------------------------------------------
 
-// original 0x404160 (the PSX 0x801F4178 family: a jalr through a table of the
-// object's state byte): the map task's frame, called from 0x404150 before the
-// HUD's state machine 0x404230. By byte +2 of Sprite_Current through the table
-// 0x5EF5F8 (four entries; the byte is loaded whole and the original indexes
-// past four into the HUD's table and the sprite table - never reached, and
-// ours refuses it):
-//   0: the shared block 0x411310 (Capcom's; eleven state machines share it):
-//      unless the mode byte 0x9045FA is 2 or Field_ScriptFlags bit 8 is set,
-//      y (the word at +0x2E) = -0x30 and the state 1;
-//   1: y += 0x10; at 0x10 and above the state becomes 2; then as state 2;
-//   2: the mode byte 2 makes the state 3; WorldMap_DrawFrame(0x10, y);
-//   3: y -= 0x10; at -0x30 and below the state is 0; unless the mode byte is 2
-//      the state is 1 (over the 0); WorldMap_DrawFrame(0x10, y).
-// The y the original pushes carries the object pointer's (state 3) or a stale
-// register's (state 2) high half above the word; every reader of the frame's
-// y takes its low word (docs/world-map.md section 7.1), so ours passes the
-// word sign-extended.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep() {
-    records::EffectObject* object = rv::As<records::EffectObject>(Object());
-    switch (object->step) {
-    case 0:
-        world_map::g.state0();
-        return;
-    case 1:
-        object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) + 0x10;
-        object = rv::As<records::EffectObject>(Object());
-        if (static_cast<std::int32_t>(object->screen_x) >= 0x10) object->step = static_cast<unsigned char>(object->step + 1);
-        [[fallthrough]];
-    case 2:
-        if (AreaW0b_MapMode == 2) {
-            object = rv::As<records::EffectObject>(Object());
-            object->step = 3;
-        }
-        object = rv::As<records::EffectObject>(Object());
-        world_map::g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
-        return;
-    case 3:
-        object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) - 0x10;
-        object = rv::As<records::EffectObject>(Object());
-        if (static_cast<std::int32_t>(object->screen_x) <= -0x30) {
-            object->step = 0;
-            object = rv::As<records::EffectObject>(Object());
-        }
-        if (AreaW0b_MapMode != 2) {
-            object->step = 1;
-            object = rv::As<records::EffectObject>(Object());
-        }
-        world_map::g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
-        return;
-    default:
-        bof3::Fatal("WorldMap_FrameStep: the map task's state byte is %u, past its four-entry table", object->step);
-    }
-}
-
 // --- the frame ----------------------------------------------------------------------
-
-// original 0x404390 (PSX 0x801F3B00, branch for branch): the map's frame at
-// (x, y), nothing unless Draw_PassFlags & 0x1B. A draw-mode primitive
-// (Gpu_SetDrawMode(prim, 0, 0, 0x9C, 0): tpage 0x9C, 8-bit at (768, 256),
-// blend mode 0; the PSX picks 0x22C on GetGraphType 1 or 2) committed to slot
-// 1; the dial at (x, y); the cell under the leader (AreaMap_ByteAt of the
-// high words of Field_Kind2X, Field_Kind2Z). Then three legend rows:
-//   1 at (x + 0x30, y), unless the cell is 0xA0, 0xA1 or 0xAE or
-//     Field_ScriptFlags2 bit 12: its key - the first of the six button-table
-//     entries whose mask has a bit of the button map's word 0 - drawn at
-//     (x + 0x38, y + 8) as the entry's sprite index + 1 (the lit glyph), or,
-//     when the label is withheld, as the index itself (the dim one);
-//   2 at (x + 0x30, y + 0x10) unless the cell is 0xA0 or 0xA1: its key from
-//     word 6 over EIGHT entries (the seventh and eighth are the state table's
-//     words 0x5EF688 / 0x5EF68C - kept), the same lit / dim rule at
-//     (x + 0x38, y + 0x10);
-//   3 at (x + 0x30, y + 0x18) when 0x531920(cell x, cell z) says so, or flag
-//     bit 12, or the party set (0x90412C & 0x7F) is 0xC, or Field_ScriptFlags
-//     bit 14;
-// and the needle at (x + 0x18, y + 0x18). The flags are read after the calls
-// that precede them; the index the original pushes for a lit key carries the
-// button word's upper bytes, which the sprite draw masks off.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
-    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
-    world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
-    world_map::g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
-    world_map::g.commit_prim(1, 0xC);
-    world_map::g.draw_sprite(x, y, 0);
-    const unsigned char cell =
-        world_map::g.byte_at(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
-    const bool withheld1 =
-        cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
-    if (!withheld1) world_map::g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(world_map::g.draw_sprite, ::bof3::Img(kButtonTable), 6, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
-    const bool withheld2 = cell == 0xA1 || cell == 0xA0;
-    if (!withheld2) world_map::g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(world_map::g.draw_sprite, ::bof3::Img(kButtonTable), 8, LongWorldMap(AtWorldMap(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
-    const unsigned char event =
-        world_map::g.cell_event(static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellX)))), static_cast<short>(WordWorldMap(AtWorldMap(::bof3::Img(kLeaderCellZ)))));
-    bool third = event != 0;
-    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlags2At())) & 0x1000) != 0;
-    if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
-    if (!third) third = (WordWorldMap(AtWorldMap(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
-    if (third) world_map::g.draw_sprite(x + 0x30, y + 0x18, 3);
-    world_map_legend::Start(x + 0x30, y + 0x18, !third);
-    world_map::g.draw_needle(x + 0x18, y + 0x18);
-}
 
 // original 0x404560 (PSX 0x801F39D8): one sprite of the dial page at (x, y):
 // a draw-mode primitive (tpage 0x9C, as the frame's) committed to slot 1,
@@ -243,94 +118,6 @@ namespace world_map_dial {
 // DIV-0184: 1 after every module's self-test (PatchBytes "DialTranslucent").
 unsigned char g_dial_semi = 0;
 }  // namespace world_map_dial
-
-extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(int x, int y, unsigned index) {
-    world_map::g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
-    world_map::g.commit_prim(1, 0xC);
-    unsigned char* const prim = PacketNext();
-    world_map::g.set_sprt(prim);
-    world_map::g.set_semi_trans(prim, (world_map_dial::g_dial_semi != 0 || (index & 0xFF) != 0) ? 1u : 0u);
-    PutFloat(prim + 8, static_cast<float>(static_cast<short>(x)));
-    PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
-    prim[4] = prim[5] = prim[6] = 0x80;
-    rv::As<records::GpuSprt>(prim)->clut = 0x7B80;
-    const unsigned char* const entry = AtWorldMap(::bof3::Img(kSpriteTable) + (index & 0xFF) * 4u);
-    rv::As<records::GpuSprt>(prim)->w = entry[0];
-    rv::As<records::GpuSprt>(prim)->h = entry[1];
-    prim[0x14] = entry[2];
-    prim[0x15] = entry[3];
-    world_map::g.commit_prim(1, 0x1C);
-}
-
-// original 0x404620 (PSX 0x801F40C4): the HUD at (x, y), nothing unless
-// Draw_PassFlags & 0x1B: the region box (sprite 4, 128 x 24) at (x, y), its
-// cap (sprite 5, 8 x 24) at (x + 0x80, y), then Text_DrawAt(x + 4, y + 4, 0,
-// 0xFF, text) with the region's name at 0x803580 + the low word of the dword
-// 0x803588 - the area's 0x80010000 section's word +8, read after the two
-// sprites. The return (Text_DrawAt's) is not read by the three callers.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int x, int y) {
-    if (!(AtWorldMap(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
-    world_map::g.draw_sprite(x, y, 4);
-    world_map::g.draw_sprite(x + 0x80, y, 5);
-    const unsigned char* text = AtWorldMap(::bof3::Img(kAreaText) + (LongWorldMap(AtWorldMap(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
-    world_map::g.text_draw_at(x + 4, y + 4, 0, 0xFF, text);
-}
-
-// original 0x408530 (PSX 0x801F3ECC): the compass needle in the dial at (x, y)
-// - the arguments' low words. Gte_PushMatrix; a local MATRIX from Camera_Angles
-// by Gte_RotMatrix, its translation zeroed, Gte_SetRotMatrix and
-// Gte_SetTransMatrix of it; the four corners (-10, 0, 0), (0, -4, 0), (0, 4,
-// 0), (10, 0, 0) into Prim_VertexScratch (their pads untouched); a POLY_G4 at
-// Gfx_PacketNext by Gpu_SetPolyG4; Gte_RotTransPers4 over the four into the
-// primitive's corners with two locals for the depth and the flag (ten
-// arguments, as libgte's); Gte_PrimDepths4_10B of the primitive (depths 1/4096,
-// 0, 0, 0 - D41, DIV-0044 in the backend); each corner moved by (x - 0x9E,
-// y - 0x76) on the x87; colours red, purple, purple, blue; Gfx_CommitPrim(1,
-// 0x44); Gte_PopMatrix.
-extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(int x, int y) {
-    g.push_matrix();
-    alignas(4) unsigned char matrix[0x20];
-    g.rot_matrix(reinterpret_cast<const short*>(AtWorldMap(at::Camera_AnglesAt())), reinterpret_cast<short*>(matrix));
-    PutLong(matrix + 0x14, 0);
-    PutLong(matrix + 0x18, 0);
-    PutLong(matrix + 0x1C, 0);
-    g.set_rot_matrix(reinterpret_cast<const unsigned long*>(matrix));
-    g.set_trans_matrix(reinterpret_cast<const unsigned long*>(matrix));
-    unsigned char* const prim = PacketNext();
-    unsigned char* const scratch = AtWorldMap(at::Prim_VertexScratchAt());
-    rv::As<records::SVector>(scratch)[0].x = 0xFFF6;   // (-10, 0, 0)
-    rv::As<records::SVector>(scratch)[0].y = 0;
-    rv::As<records::SVector>(scratch)[0].z = 0;
-    rv::As<records::SVector>(scratch)[1].x = 0;        // (0, -4, 0)
-    rv::As<records::SVector>(scratch)[1].y = 0xFFFC;
-    rv::As<records::SVector>(scratch)[1].z = 0;
-    rv::As<records::SVector>(scratch)[2].x = 0;        // (0, 4, 0)
-    rv::As<records::SVector>(scratch)[2].y = 4;
-    rv::As<records::SVector>(scratch)[2].z = 0;
-    rv::As<records::SVector>(scratch)[3].x = 0xA;      // (10, 0, 0)
-    rv::As<records::SVector>(scratch)[3].y = 0;
-    rv::As<records::SVector>(scratch)[3].z = 0;
-    g.set_poly_g4(prim);
-    long depth, flag;
-    g.rot_trans_pers4(reinterpret_cast<const short*>(scratch), reinterpret_cast<const short*>(scratch + 8),
-                      reinterpret_cast<const short*>(scratch + 0x10), reinterpret_cast<const short*>(scratch + 0x18),
-                      reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
-                      reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &depth, &flag);
-    g.prim_depths(prim);
-    const std::int32_t dx = 0x9E - static_cast<short>(x);
-    const std::int32_t dy = 0x76 - static_cast<short>(y);
-    for (U corner = 0; corner < 4; ++corner) {
-        unsigned char* const xy = prim + 8 + corner * 0x10;
-        PutFloat(xy, X87SubInt(Float(xy), dx));
-        PutFloat(xy + 4, X87SubInt(Float(xy + 4), dy));
-    }
-    prim[0x04] = 0xFF; prim[0x05] = 0;    prim[0x06] = 0;      // red
-    prim[0x14] = 0x80; prim[0x15] = 0;    prim[0x16] = 0x80;   // purple
-    prim[0x24] = 0x80; prim[0x25] = 0;    prim[0x26] = 0x80;   // purple
-    prim[0x34] = 0;    prim[0x35] = 0;    prim[0x36] = 0xFF;   // blue
-    g.commit_prim(1, 0x44);
-    g.pop_matrix();
-}
 
 // --- the map-view helpers ----------------------------------------------------------
 
@@ -834,11 +621,6 @@ void LegendSelfTest() {
 
 void WorldMap_Inject() {
     if (bof3::WantsShadow("world_map")) world_map::SelfTest();
-    BOF3_INJECT(WorldMap_FrameStep);
-    BOF3_INJECT(WorldMap_DrawFrame);
-    BOF3_INJECT(WorldMap_DrawSprite);
-    BOF3_INJECT(WorldMap_DrawHud);
-    BOF3_INJECT(WorldMap_DrawNeedle);
     BOF3_INJECT(MapView_ItemHalfAt);
     BOF3_INJECT(MapView_LinkPrimAt);
 }

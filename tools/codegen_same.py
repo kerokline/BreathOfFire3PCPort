@@ -535,6 +535,8 @@ class Normaliser:
                 j = i
                 while j < n and data[j] == 0:
                     j += 1
+                if j == n:
+                    break           # the zeros that end the run: the padding, stripped below as before
                 parts.append(unroot(bytes(chunk), self.roots).hex() + "~")
                 chunk = bytearray()
                 i = j

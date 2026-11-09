@@ -10,6 +10,10 @@
 
 void AreaW3c_Inject();
 
+// Area 131's talk scene (area_w3c.cpp), a helper of ours with external linkage: area 131's
+// two choices call it from their own file since the source-layout round.
+void FocusScene(unsigned char step, unsigned char b83);
+
 namespace area_w3c {
 // BOF3X_SHADOW=area_w3c: the start-up fuzz, area_w3c_fuzz.cpp - one
 // area_harness::Run per area. Clones every original before AreaW3c_Inject
