@@ -128,13 +128,13 @@ void Hold(unsigned next) {
 // The pushes have ended (0x903849 0xFF) or the presses have (0x90384A 0x80):
 // +1 0x17, +2 0; else 0x903849 0 and +1, +2 0 (back to the start).
 void Again() {
-    if (B(::bof3::Img(at::kCounterB.v)) == 0xFF || B(::bof3::Img(at::kCounterC.v)) == 0x80) {
+    if (B(::bof3::Img(effect_4a::at::kCounterB.v)) == 0xFF || B(::bof3::Img(effect_4a::at::kCounterC.v)) == 0x80) {
         S()[1] = 0x17;
         S()[2] = 0;
         return;
     }
     unsigned char* const s = S();
-    B(::bof3::Img(at::kCounterB.v)) = 0;
+    B(::bof3::Img(effect_4a::at::kCounterB.v)) = 0;
     s[1] = 0;
     S()[2] = 0;
 }
@@ -145,8 +145,8 @@ bool PastLine() {
     const std::int32_t x = ObjTrio[2].x;
     Field_State = P(::bof3::Img(ObjTrio_addr) + 0x298);
     if (x < at::kTrio2Line) return false;
-    B(::bof3::Img(at::kCounterB.v)) = 0xFF;
-    B(::bof3::Img(at::kCounterC.v)) = 0;
+    B(::bof3::Img(effect_4a::at::kCounterB.v)) = 0xFF;
+    B(::bof3::Img(effect_4a::at::kCounterC.v)) = 0;
     B(::bof3::Img(at::kCounterD.v)) = 0;
     MoveScript_PartyRecords[0x65] = 0x14;
     return true;
@@ -171,7 +171,7 @@ extern "C" void __cdecl EffectKind82_Check11(void) { CheckEffect4a(::bof3::Img(S
 // is 0x80.
 extern "C" void __cdecl EffectKind82_Restart(void) {
     S()[1] = 0;
-    if (B(::bof3::Img(at::kCounterB.v)) == 0xFF || B(::bof3::Img(at::kCounterC.v)) == 0x80) B(::bof3::Img(at::kCounterB.v)) = 0;
+    if (B(::bof3::Img(effect_4a::at::kCounterB.v)) == 0xFF || B(::bof3::Img(effect_4a::at::kCounterC.v)) == 0x80) B(::bof3::Img(effect_4a::at::kCounterB.v)) = 0;
 }
 
 // original 0x488090 (state 13): record 0's z + 0x4000 twice, +1 0xE, +9 8.
@@ -201,8 +201,8 @@ extern "C" void __cdecl EffectKind82_Again(void) { Again(); }
 // step 0x1E; 0x90384A and 0x90384B 0 either way; a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind82_End(void) {
     if (!PastLine()) {
-        B(::bof3::Img(at::kCounterB.v)) = 0xFE;
-        B(::bof3::Img(at::kCounterC.v)) = 0;
+        B(::bof3::Img(effect_4a::at::kCounterB.v)) = 0xFE;
+        B(::bof3::Img(effect_4a::at::kCounterC.v)) = 0;
         B(::bof3::Img(at::kCounterD.v)) = 0;
         MoveScript_PartyRecords[0x65] = 0x1E;
     }
@@ -229,11 +229,11 @@ extern "C" void __cdecl EffectKind83_Wait(void) {
         s[1] = 0x16;
         s = S();
     }
-    if (B(::bof3::Img(at::kCounterC.v)) == 0x80) {
+    if (B(::bof3::Img(effect_4a::at::kCounterC.v)) == 0x80) {
         s[1] = 0x17;
         s = S();
     }
-    switch (B(::bof3::Img(at::kCounterB.v))) {
+    switch (B(::bof3::Img(effect_4a::at::kCounterB.v))) {
     case 3: s[1] = 6; return;
     case 4: s[1] = 4; return;
     case 5: s[1] = 2; return;
