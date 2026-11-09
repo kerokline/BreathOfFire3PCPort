@@ -65,8 +65,8 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
         if (obj->move_steps == 0) {
             if (speed_index != 0) {
                 const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-                const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x10));   // a table of 32-bit places
-                const unsigned char result = field_objects::g.step(context, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * obj->area_script)))));
+                const auto scripts = static_cast<std::uint32_t>(move_script::Long(descriptor + 0x10));   // a table of 32-bit places
+                const unsigned char result = field_objects::g.step(context, move_script::At(static_cast<std::uint32_t>(move_script::Long(move_script::At(scripts + 4u * obj->area_script)))));
                 if (obj->pose_wait) field_objects::g.pose_wait(context);
                 if (result == 0xFF) return;
                 if (rv::Current<records::SpriteObject>()->direction != result) {
@@ -126,7 +126,7 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
                                                                  static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_x));
         rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) +
                                                                  static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_z));
-        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + Word(Sprite_Current + 0x14)));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + move_script::Word(Sprite_Current + 0x14)));
         --rv::Current<records::SpriteObject>()->step_frames;
         if (rv::Current<records::SpriteObject>()->step_frames == 0) {   // arrived
             if (!(context[0] & 0x80))
@@ -165,14 +165,14 @@ extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
     unsigned char* const r = MoveScript_PartyRecords + static_cast<signed char>(slot) * 16;
     if (r[1] != 0) {
         --r[1];
-        sprite->angle[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0])) + static_cast<std::uint32_t>(Long(r + 4)));
+        sprite->angle[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0])) + static_cast<std::uint32_t>(move_script::Long(r + 4)));
         rv::Current<records::SpriteObject>()->angle[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::Current<records::SpriteObject>()->angle[1])) +
-                                                                 static_cast<std::uint32_t>(Long(r + 8)));
+                                                                 static_cast<std::uint32_t>(move_script::Long(r + 8)));
         sprite = rv::Current<records::SpriteObject>();
     }
     if (r[2] != 0) {
         --r[2];
-        sprite->angle[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[2])) + static_cast<std::uint32_t>(Long(r + 0xC)));
+        sprite->angle[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[2])) + static_cast<std::uint32_t>(move_script::Long(r + 0xC)));
     }
 }
 
@@ -212,9 +212,9 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
     const unsigned char* const other = n >= 0x1E ? rv::Bytes(&Sprite_ObjectsExtra[n - 0x1Eu]) : rv::Bytes(&Sprite_Objects[n]);
     if (rv::Current<records::SpriteObject>()->step_frames == 0) {
         rv::Current<records::SpriteObject>()->draw_flags |= 0x20;
-        for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) SetLong(Sprite_Current + at, Long(other + at));
+        for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) move_script::SetLong(Sprite_Current + at, move_script::Long(other + at));
         if (rv::Current<records::SpriteObject>()->type != 0x0A)
-            for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) SetLong(Sprite_Current + at, Long(other + at));
+            for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) move_script::SetLong(Sprite_Current + at, move_script::Long(other + at));
         long offset[3];
         field_objects::g.attach_offset(offset, Sprite_Current[0x1C]);
         rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) + static_cast<std::uint32_t>(offset[0]));
