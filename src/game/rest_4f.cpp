@@ -122,7 +122,7 @@ U Repeat() { return SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u); }
 // The cursor's row state for the panel's row draws: the counter byte on the
 // row under the cursor (cursor - 2), 0 on the others; 0x929F04 read as a dword.
 U RowState(unsigned row) {
-    const U d = LRest4f(::bof3::Img(at::kCounter.v));
+    const U d = LRest4f(::bof3::Img(rest_4f::at::kCounter.v));
     const int cursor = static_cast<signed char>(static_cast<unsigned char>(d >> 8)) - 2;
     return cursor == static_cast<int>(row) ? (d & 0xFF) : 0;
 }
@@ -134,12 +134,12 @@ void SetDefaults() {
     BattleWinStates_LabelGate = 0;
     FieldE2_RunDefault = 0;
     ModeFlow_ConfigBytes = 1;
-    SetWRest4f(::bof3::Img(at::kButtons.v), 0x23);
-    SetWRest4f(::bof3::Img(at::kButtons.v) + 2, 0x80);
-    SetWRest4f(::bof3::Img(at::kButtons.v) + 0xC, 0x40);
-    SetWRest4f(::bof3::Img(at::kButtons.v) + 4, 0x10);
-    SetWRest4f(::bof3::Img(at::kButtons.v) + 6, 8);
-    SetWRest4f(::bof3::Img(at::kButtons.v) + 8, 4);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), 0x23);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2, 0x80);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 0xC, 0x40);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 4, 0x10);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 6, 8);
+    SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 8, 4);
 }
 
 }  // namespace
@@ -148,14 +148,14 @@ void SetDefaults() {
 // [ConfigScreen_States + 0x929F02 * 4] - 0 the opening, 1 the top bar, 2 the
 // rows, 3 the controller panel, 4 the closing. Unbounded: ours aborts past 5.
 extern "C" void __cdecl ConfigScreen_Run(void) {
-    Dispatch("ConfigScreen_Run", ::bof3::Img(ConfigScreen_States_addr), at::kConfigStateCount, FieldS_Step, "the state byte 0x929F02");
+    Dispatch("ConfigScreen_Run", ::bof3::Img(ConfigScreen_States_addr), rest_4f::at::kConfigStateCount, FieldS_Step, "the state byte 0x929F02");
 }
 
 // original 0x460CC0 (ConfigScreen_States[0]): jmp [ConfigScreen_OpenStates +
 // 0x929F03 * 4] - 0 a fade started, 1 its wait, 2 the slide in
 // (ConfigMenu_Open sets 2). Unbounded: ours aborts past 3.
 extern "C" void __cdecl ConfigScreen_OpenRun(void) {
-    Dispatch("ConfigScreen_OpenRun", ::bof3::Img(ConfigScreen_OpenStates_addr), at::kConfigOpenCount, Rest2d_MenuSub,
+    Dispatch("ConfigScreen_OpenRun", ::bof3::Img(ConfigScreen_OpenStates_addr), rest_4f::at::kConfigOpenCount, Rest2d_MenuSub,
              "the opening byte 0x929F03");
 }
 
@@ -179,7 +179,7 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
     SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26);
     if (Transition_Busy != 0) return;
     const unsigned char st = FieldS_Step;
-    BRest4f(::bof3::Img(at::kCounter.v)) = 0;
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 1);
 }
@@ -189,18 +189,18 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
 // each draw): the banner box at y 0x10 - 16c, the panel at x 0x1C + 64c, the top
 // bar at y 0x26 - 16c; the counter down one, at 0 the state on (0x929F03 0).
 extern "C" void __cdecl ConfigScreen_SlideIn(void) {
-    const unsigned char c0 = BRest4f(::bof3::Img(at::kCounter.v));
+    const unsigned char c0 = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
     MenuLists_Cursor = 0;
     if (c0 == 5) Sound(0x102);
     Backdrop();
-    TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 16);
-    SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 64 + 0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 16);
-    const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(at::kCounter.v)) - 1);
-    BRest4f(::bof3::Img(at::kCounter.v)) = n;
+    TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+    SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
+    SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+    const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) - 1);
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
     if (n != 0) return;
     const unsigned char st = FieldS_Step;
-    BRest4f(::bof3::Img(at::kCounter.v)) = 0;
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 1);
 }
@@ -218,7 +218,7 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
 // two sounds.
 extern "C" void __cdecl ConfigScreen_TopBar(void) {
     const unsigned char bd = Config_Background;
-    BRest4f(::bof3::Img(at::kCounter.v)) = 0;
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
     SH_CALL(Menu_DrawBackdrop)(bd);
     TitleBox(0x10);
     TitleText(CursorId());
@@ -244,7 +244,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
         FieldS_Step = static_cast<unsigned char>(st + 1);
         return;
     }
-    const U pressed = LRest4f(::bof3::Img(at::kPressedDword.v));
+    const U pressed = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
     if (Field_ConfirmButtons & pressed & 0xFFFFu) {
         if (static_cast<unsigned char>(MenuLists_Cursor) == 0) {
             if (Game_Step != 4) {
@@ -253,7 +253,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
             }
             const unsigned char st = FieldS_Step;
             Rest2d_MenuSub = 0;
-            BRest4f(::bof3::Img(at::kCounter.v)) = 0;
+            BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
             FieldS_Step = static_cast<unsigned char>(st + 3);
             return;
         }
@@ -271,7 +271,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
         Sound(0x102);
     }
     const unsigned char st = FieldS_Step;
-    BRest4f(::bof3::Img(at::kCounter.v)) = 0;
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 3);
 }
@@ -282,7 +282,7 @@ namespace {
 // (signed compares, as the original's jle / jns); `down_first` tests 0x8000
 // first (row 2's order).
 void StepSetting(U cell, int top, bool down_first) {
-    const U p = LRest4f(::bof3::Img(at::kPressedDword.v));
+    const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
     const auto up = [&] {
         Sound(0x101);
         const unsigned char v = static_cast<unsigned char>(BRest4f(cell) + 1);
@@ -324,7 +324,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     SH_CALL(ConfigScreen_DrawButtons)(static_cast<unsigned char>(MenuLists_Cursor), 0x70, 0x26);
     const U row = static_cast<U>(CursorS() - 2);
     if (row <= 5) {
-        const U held = LRest4f(::bof3::Img(at::kPressedDword.v));
+        const U held = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
         switch (row) {
         case 0: StepSetting(::bof3::Img(ModeFlow_ConfigBytes_addr), 2, false); break;
         case 1: StepSetting(::bof3::Img(Config_WindowColour_addr), 3, false); break;
@@ -364,7 +364,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
             MenuLists_Cursor = 0;
             FieldS_Step = static_cast<unsigned char>(st - 1);
         }
-        BRest4f(::bof3::Img(at::kCounter.v)) = 1;
+        BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
         return;
     }
     if (rep & 0x4000) {
@@ -376,7 +376,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
             MenuLists_Cursor = 0;
             FieldS_Step = static_cast<unsigned char>(st - 1);
         }
-        BRest4f(::bof3::Img(at::kCounter.v)) = 1;
+        BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = 1;
         return;
     }
     const U cancel = Field_CancelButtons | 0x800u;
@@ -386,8 +386,8 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
         MenuLists_Cursor = 0;
         FieldS_Step = static_cast<unsigned char>(st - 1);
     }
-    const unsigned char n = BRest4f(::bof3::Img(at::kCounter.v));
-    if (n < 3) BRest4f(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(n + 1);
+    const unsigned char n = BRest4f(::bof3::Img(rest_4f::at::kCounter.v));
+    if (n < 3) BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = static_cast<unsigned char>(n + 1);
 }
 
 // original 0x4613B0 (ConfigScreen_States[3]; in no list of the cut, inside the
@@ -415,7 +415,7 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
     U bits = Input_Pressed & 0xFCu;
     if (bits != 0) {
         Sound(0x103);
-        SetWRest4f(::bof3::Img(at::kButtons.v), WRest4f(::bof3::Img(at::kButtons.v)) & 0xFFFC);
+        SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) & 0xFFFC);
         Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons & 0xFFFC);
         unsigned i = 0;
         for (; i < 16; ++i)
@@ -423,17 +423,17 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         if (i < 16)
             for (++i; i < 16; ++i) bits &= ~(1u << i);
         unsigned r = 0;
-        for (; r < at::kPadRowCount; ++r)
-            if (WRest4f(::bof3::Img(at::kButtons.v) + 2u * BRest4f(::bof3::Img(at::kPadRows.v) + r)) & bits) break;
+        for (; r < rest_4f::at::kPadRowCount; ++r)
+            if (WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r)) & bits) break;
         const unsigned char c = static_cast<unsigned char>(MenuLists_Cursor);
-        const U by_cursor = ::bof3::Img(at::kPadRowsByCursor.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
-        if (r != at::kPadRowCount) {
+        const U by_cursor = ::bof3::Img(rest_4f::at::kPadRowsByCursor.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
+        if (r != rest_4f::at::kPadRowCount) {
             const U from = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * BRest4f(by_cursor);
-            const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * BRest4f(::bof3::Img(at::kPadRows.v) + r);
+            const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * BRest4f(::bof3::Img(rest_4f::at::kPadRows.v) + r);
             SetWRest4f(to, WRest4f(from));
         }
-        SetWRest4f(::bof3::Img(at::kButtons.v) + 2u * BRest4f(by_cursor), bits);
-        SetWRest4f(::bof3::Img(at::kButtons.v), WRest4f(::bof3::Img(at::kButtons.v)) | 3);
+        SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * BRest4f(by_cursor), bits);
+        SetWRest4f(::bof3::Img(rest_4f::at::kButtons.v), WRest4f(::bof3::Img(rest_4f::at::kButtons.v)) | 3);
         Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons | 3);
         // DIV-0133 (docs/button-sigma.md): words 7 / 8 as Speak's and
         // Action's and the table - nothing until sigma::Arm, after every
@@ -459,7 +459,7 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         MenuLists_Cursor = 8;
         return;
     }
-    const U p = LRest4f(::bof3::Img(at::kPressedDword.v));
+    const U p = LRest4f(::bof3::Img(rest_4f::at::kPressedDword.v));
     if (p & 0xA000) {
         Sound(0x101);
         const unsigned char st = FieldS_Step;
@@ -490,11 +490,11 @@ extern "C" void __cdecl ConfigScreen_SlideOut(void) {
         Game_Step = 5;
         return;
     }
-    TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 16);
-    SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 64 + 0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(at::kCounter.v))) * 16);
-    const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(at::kCounter.v)) + 1);
-    BRest4f(::bof3::Img(at::kCounter.v)) = n;
+    TitleBox(0x10 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+    SH_CALL(Config_DrawPanel)(static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 64 + 0x1C, 0x40);
+    SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v))) * 16);
+    const unsigned char n = static_cast<unsigned char>(BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) + 1);
+    BRest4f(::bof3::Img(rest_4f::at::kCounter.v)) = n;
     if (n == 5) FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
@@ -533,9 +533,9 @@ extern "C" void __cdecl Config_DrawPanel(int x, int y) {
 // rest small (count * 8, Text_DrawSmall) at y + 1.
 extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsigned setting, unsigned state) {
     const U r = row & 0xFF;
-    const U first = BRest4f(::bof3::Img(at::kOptionFirst.v) + r);
-    if (BRest4f(::bof3::Img(at::kOptionCount.v) + r) == 0) return;
-    U rec = ::bof3::Img(at::kOptionRecords.v) + first * 16;
+    const U first = BRest4f(::bof3::Img(rest_4f::at::kOptionFirst.v) + r);
+    if (BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r) == 0) return;
+    U rec = ::bof3::Img(rest_4f::at::kOptionRecords.v) + first * 16;
     const unsigned chosen = setting & 0xFF;
     for (unsigned i = 0;;) {
         const U colour = (row & 0xFFFFFF00u) | (chosen == i ? 2u : 0u);
@@ -553,7 +553,7 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
         }
         rec += 16;
         ++i;
-        if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(BRest4f(::bof3::Img(at::kOptionCount.v) + r))) break;
+        if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(BRest4f(::bof3::Img(rest_4f::at::kOptionCount.v) + r))) break;
     }
 }
 
@@ -572,7 +572,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
     for (unsigned row = 0; row < 6; ++row) {
         const int ry = y + static_cast<int>(row) * 18 + 6;
         SH_CALL(Config_DrawControllerRow)(x + 5, ry, static_cast<int>((hi & 0xFFFFFF00u) | row));
-        const U word = WRest4f(::bof3::Img(at::kButtons.v) + 2u * kWords[row]);
+        const U word = WRest4f(::bof3::Img(rest_4f::at::kButtons.v) + 2u * kWords[row]);
         SH_CALL(Config_DrawControllerCell)(x + 0x58, ry, (hi & 0xFFFF0000u) | word);
     }
 }
@@ -591,11 +591,11 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     const ConfigTextOperands& ops = ConfigText_Operands();   // at::kPadBoxWidth .. kPadSecondCell
     SH_CALL(Menu_DrawBox)(x, y, ops.box_width, 0x10, 0, style);
     const U r = static_cast<U>(row) & 0xFF;
-    if (r >= at::kPadNameCount)
+    if (r >= rest_4f::at::kPadNameCount)
         bof3::Fatal("Config_DrawControllerRow: row %u, past the six names of 0x%X - the original reads the dword after "
                     "as a string (docs/rest_4f.md section 7)",
-                    (unsigned)r, (unsigned)at::kPadNames.v);
-    const auto* const name = move_script::At(LRest4f(::bof3::Img(at::kPadNames.v) + 4 * r));
+                    (unsigned)r, (unsigned)rest_4f::at::kPadNames.v);
+    const auto* const name = move_script::At(LRest4f(::bof3::Img(rest_4f::at::kPadNames.v) + 4 * r));
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     const U k = ops.name_x4 ? 4 : 6;   // DIV-0026's lea [ecx+ecx], or the original's [ecx+ecx*2]
     const int edge = ops.name_edge;
@@ -634,11 +634,11 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
 // read their +4 / +8 there); ours aborts past 11. Area 104's record holds 0.
 extern "C" const unsigned char* __cdecl WorldMap_ExitRecords(void) {
     const U index = SH_CALL(WorldMap_RecordIndex)() & 0xFF;
-    if (index >= at::kRecordCount)
+    if (index >= rest_4f::at::kRecordCount)
         bof3::Fatal("WorldMap_ExitRecords: WorldMap_RecordIndex answered %u, past the twelve rows (docs/rest_4f.md "
                     "section 7)",
                     (unsigned)index);
-    return At(LRest4f(::bof3::Img(at::kExitRecords.v) + index * at::kRecordSize));
+    return At(LRest4f(::bof3::Img(rest_4f::at::kExitRecords.v) + index * rest_4f::at::kRecordSize));
 }
 
 // ===========================================================================
@@ -753,7 +753,7 @@ namespace {
 // original (ours aborts past the thirty).
 const unsigned char* TraceObject(const char* who) {
     const unsigned idx = S()[6];
-    if (idx >= at::kObjectCount)
+    if (idx >= rest_4f::at::kObjectCount)
         bof3::Fatal("%s: the object byte +6 is %u, past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/rest_4f.md section 7)",
                     who, idx);
