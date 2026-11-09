@@ -98,19 +98,19 @@ using namespace psx_rest;
 // alone, as in every setter of the port's (docs/psx-library-layer.md section 1).
 extern "C" void __cdecl Gpu_SetPolyF3(unsigned char* prim) {
     prim[7] = 0x20;
-    for (U at = 0x10; at <= 0x28; at += 0xC) std::memcpy(prim + at, &kPointZeroOne, 4);
+    for (psx_rest::U at = 0x10; at <= 0x28; at += 0xC) std::memcpy(prim + at, &kPointZeroOne, 4);
 }
 
 // original 0x5A7590. SetPolyFT3: code 0x24, the depths at a 0x10 stride.
 extern "C" void __cdecl Gpu_SetPolyFT3(unsigned char* prim) {
     prim[7] = 0x24;
-    for (U at = 0x10; at <= 0x30; at += 0x10) std::memcpy(prim + at, &kPointZeroOne, 4);
+    for (psx_rest::U at = 0x10; at <= 0x30; at += 0x10) std::memcpy(prim + at, &kPointZeroOne, 4);
 }
 
 // original 0x5A76F0. SetLineG4: code 0x5C, four depths at a 0x10 stride.
 extern "C" void __cdecl Gpu_SetLineG4(unsigned char* prim) {
     prim[7] = 0x5C;
-    for (U at = 0x10; at <= 0x40; at += 0x10) std::memcpy(prim + at, &kPointZeroOne, 4);
+    for (psx_rest::U at = 0x10; at <= 0x40; at += 0x10) std::memcpy(prim + at, &kPointZeroOne, 4);
 }
 
 // original 0x5A7840. libgpu SetTexWindow(DR_TWIN *, RECT *) as the port has it:
@@ -119,8 +119,8 @@ extern "C" void __cdecl Gpu_SetLineG4(unsigned char* prim) {
 // 0xF0 copies the rect from that pointer into Gfx_TexCacheKey
 // (docs/d3d-draw.md section 3), so the rect must outlive the frame's draw.
 extern "C" void __cdecl Gpu_SetTexWindow(unsigned char* prim, const unsigned char* rect) {
-    PutLong(Low32(prim + 4), kTexWindowCode);
-    const U address = Low32(rect);
+    psx_rest::PutLong(Low32(prim + 4), kTexWindowCode);
+    const psx_rest::U address = Low32(rect);
     std::memcpy(prim + 8, &address, 4);
 }
 
@@ -164,12 +164,12 @@ extern "C" void __cdecl Gte_ApplyMatrixSV(const short* matrix, const short* vect
 // 512 pairs) to Crt_free, and the pair - the generation counter with it -
 // zeroed. A pair whose pointer is null is left as it is.
 extern "C" void __cdecl Gfx_FreeClutRows() {
-    for (U at = ::bof3::Img(Gfx_ClutRows_addr) + 4; at < ::bof3::Img(kClutRowsEnd) + 4; at += 8) {
-        void* const row = Ptr(at);
+    for (psx_rest::U at = ::bof3::Img(Gfx_ClutRows_addr) + 4; at < ::bof3::Img(kClutRowsEnd) + 4; at += 8) {
+        void* const row = psx_rest::Ptr(at);
         if (!row) continue;
-        g.free(row);
-        PutLong(at - 4, 0);
-        PutLong(at, 0);
+        psx_rest::g.free(row);
+        psx_rest::PutLong(at - 4, 0);
+        psx_rest::PutLong(at, 0);
     }
 }
 
@@ -177,10 +177,10 @@ extern "C" void __cdecl Gfx_FreeClutRows() {
 // its first entry whose state byte is 0: the texture at +0x14 released, then
 // the surface at +0x10 - read after that Release - and the 0x18 bytes zeroed.
 extern "C" void __cdecl Gfx_ReleaseTexCache() {
-    for (U page = ::bof3::Img(Gfx_TexCache_addr); page < ::bof3::Img(kTexCacheEnd); page += kTexPageBytes) {
-        for (U i = 0; i < 0x20; ++i) {
-            const U entry = page + i * kTexEntryBytes;
-            if (!At(entry)[0]) break;
+    for (psx_rest::U page = ::bof3::Img(Gfx_TexCache_addr); page < ::bof3::Img(kTexCacheEnd); page += kTexPageBytes) {
+        for (psx_rest::U i = 0; i < 0x20; ++i) {
+            const psx_rest::U entry = page + i * kTexEntryBytes;
+            if (!psx_rest::At(entry)[0]) break;
             ReleaseIf(entry + 0x14, false);
             ReleaseIf(entry + 0x10, false);
             ZeroDwords(entry, 6);
@@ -192,11 +192,11 @@ extern "C" void __cdecl Gfx_ReleaseTexCache() {
 // the surface +8 (read after), the entry's five dwords zeroed and its glyph
 // word +0 set back to 0xFFFF - the set-up's empty value.
 extern "C" void __cdecl Font_ReleaseTexCache() {
-    for (U entry = ::bof3::Img(Font_TexCache_addr); entry < ::bof3::Img(kFontCacheEnd); entry += kFontEntryBytes) {
+    for (psx_rest::U entry = ::bof3::Img(Font_TexCache_addr); entry < ::bof3::Img(kFontCacheEnd); entry += psx_rest::kFontEntryBytes) {
         ReleaseIf(entry + 0xC, false);
         ReleaseIf(entry + 8, false);
         ZeroDwords(entry, 5);
-        PutWord(entry, 0xFFFF);
+        psx_rest::PutWord(entry, 0xFFFF);
     }
 }
 
@@ -204,7 +204,7 @@ extern "C" void __cdecl Font_ReleaseTexCache() {
 // instruction of the image names: +0x10 then +8, +0x14 then +0xC, +4, +0 -
 // each released and zeroed when it is not null (docs/psx-rest.md section 2).
 extern "C" void __cdecl Display_ReleaseOrphans() {
-    for (U at = ::bof3::Img(PsxRest_Orphans_addr) + 8; at < ::bof3::Img(PsxRest_Orphans_addr) + 0x10; at += 4) {
+    for (psx_rest::U at = ::bof3::Img(PsxRest_Orphans_addr) + 8; at < ::bof3::Img(PsxRest_Orphans_addr) + 0x10; at += 4) {
         ReleaseIf(at + 8, true);
         ReleaseIf(at, true);
     }
@@ -217,7 +217,7 @@ extern "C" void __cdecl Display_ReleaseOrphans() {
 // then the seven dwords from 0x6BE9F8 zeroed, and 0x6BE9FC = 0x12345678,
 // which nothing reads.
 extern "C" void __cdecl Display_ReleaseBackdrop() {
-    for (U at = ::bof3::Img(kBackdropPairs); at < ::bof3::Img(kBackdropPairs) + 8; at += 4) {
+    for (psx_rest::U at = ::bof3::Img(kBackdropPairs); at < ::bof3::Img(kBackdropPairs) + 8; at += 4) {
         ReleaseIf(at + 8, false);
         ReleaseIf(at, false);
     }
@@ -229,7 +229,7 @@ extern "C" void __cdecl Display_ReleaseBackdrop() {
 // original 0x5A6760. D3d_FreeCellTexture of every D3d_CellTexCache slot,
 // 0 to 127.
 extern "C" void __cdecl D3d_FreeCellTextures() {
-    for (U slot = 0; slot < kCellSlots; ++slot) g.free_cell_texture(static_cast<int>(slot));
+    for (psx_rest::U slot = 0; slot < kCellSlots; ++slot) psx_rest::g.free_cell_texture(static_cast<int>(slot));
 }
 
 // original 0x5A6650. D3d_AfterDraw's three surfaces - the texture, its
@@ -251,13 +251,13 @@ extern "C" void __cdecl D3d_ReleaseAfterDraw() {
 // SetCooperativeLevel(hwnd, DDSCL_NORMAL) on the object as first read, then
 // RestoreDisplayMode and Release each on the slot read again; Release; zero.
 extern "C" void __cdecl Display_Teardown(void* hwnd) {
-    g.free_clut_rows();
-    g.release_tex_cache();
-    g.release_font_cache();
-    g.release_orphans();
-    g.release_backdrop();
-    g.free_cell_textures();
-    g.release_after_draw();
+    psx_rest::g.free_clut_rows();
+    psx_rest::g.release_tex_cache();
+    psx_rest::g.release_font_cache();
+    psx_rest::g.release_orphans();
+    psx_rest::g.release_backdrop();
+    psx_rest::g.free_cell_textures();
+    psx_rest::g.release_after_draw();
     ReleaseIf(::bof3::Img(D3d_BackMaterial_addr), true);
     ReleaseIf(::bof3::Img(D3d_Viewport_addr), true);
     ReleaseIf(::bof3::Img(D3d_Device_addr), true);
@@ -269,14 +269,14 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
     ReleaseIf(::bof3::Img(DDraw_Primary_addr), true);
     void* dd = Dd_DirectDraw;
     if (!dd) return;
-    if (Long(::bof3::Img(kRenderFlags.v)) & 0x100) {
-        Method<ComCoop>(dd, kSetCooperativeLevel)(dd, hwnd, kDdsclNormal);
+    if (psx_rest::Long(::bof3::Img(psx_rest::kRenderFlags.v)) & 0x100) {
+        psx_rest::Method<ComCoop>(dd, psx_rest::kSetCooperativeLevel)(dd, hwnd, kDdsclNormal);
         dd = Dd_DirectDraw;
-        Method<ComCall>(dd, kRestoreDisplayMode)(dd);
+        psx_rest::Method<psx_rest::ComCall>(dd, kRestoreDisplayMode)(dd);
         dd = Dd_DirectDraw;
     }
-    Method<ComCall>(dd, kRelease)(dd);
-    PutLong(::bof3::Img(kDirectDraw.v), 0);
+    psx_rest::Method<psx_rest::ComCall>(dd, psx_rest::kRelease)(dd);
+    psx_rest::PutLong(::bof3::Img(psx_rest::kDirectDraw.v), 0);
 }
 
 // original 0x5A66B0. GDI text on the back buffer: GetDC on DDraw_BackBuffer as
@@ -287,13 +287,13 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
 extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
     void* const surface = DDraw_BackBuffer;
     void* hdc = nullptr;   // the original's is the slot `push ecx` made: GetDC writes it (docs/psx-rest.md section 3)
-    if (Method<ComGetDC>(surface, kGetDC)(surface, &hdc)) return;
-    g.set_text_color(hdc, kWhite);
-    g.set_bk_mode(hdc, kTransparent);
+    if (psx_rest::Method<ComGetDC>(surface, kGetDC)(surface, &hdc)) return;
+    psx_rest::g.set_text_color(hdc, kWhite);
+    psx_rest::g.set_bk_mode(hdc, kTransparent);
     const int n = static_cast<int>(std::strlen(text));
-    g.text_out(hdc, x, y, text, n);
+    psx_rest::g.text_out(hdc, x, y, text, n);
     void* const again = DDraw_BackBuffer;
-    Method<ComReleaseDC>(again, kReleaseDC)(again, hdc);
+    psx_rest::Method<ComReleaseDC>(again, kReleaseDC)(again, hdc);
 }
 
 // original 0x5A6720. MessageBoxA(NULL, text, the image's caption, MB_ICONHAND)
@@ -302,17 +302,17 @@ extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
 // after the first table's twenty. Nothing checks the code; nothing reads the
 // box's answer.
 extern "C" void __cdecl Display_ErrorBox(int code) {
-    const U base = code < 100 ? ::bof3::Img(kErrorText.v) : ::bof3::Img(kErrorTextHigh.v);
-    const char* const text = reinterpret_cast<const char*>(Ptr(base + static_cast<U>(code) * 4));
-    g.message_box(nullptr, text, reinterpret_cast<const char*>(At(::bof3::Img(kErrorCaption.v))), kIconHand);
+    const psx_rest::U base = code < 100 ? ::bof3::Img(kErrorText.v) : ::bof3::Img(kErrorTextHigh.v);
+    const char* const text = reinterpret_cast<const char*>(psx_rest::Ptr(base + static_cast<psx_rest::U>(code) * 4));
+    psx_rest::g.message_box(nullptr, text, reinterpret_cast<const char*>(psx_rest::At(::bof3::Img(kErrorCaption.v))), kIconHand);
 }
 
 // original 0x5A6980. SndStream_Stop, Music_Release, then the primary sound
 // buffer and the DirectSound object - both the real DirectSound's, made by
 // the sound set-up 0x5A6830 - each released and zeroed when not null.
 extern "C" void __cdecl Sound_Shutdown() {
-    g.stream_stop();
-    g.music_release();
+    psx_rest::g.stream_stop();
+    psx_rest::g.music_release();
     ReleaseIf(::bof3::Img(Snd_Primary_addr), true);
     ReleaseIf(::bof3::Img(Snd_Device_addr), true);
 }
