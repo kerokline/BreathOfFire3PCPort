@@ -82,17 +82,17 @@ Handler Entry(U table, unsigned index, const char* who) {
 
 // The records the handlers write by an index byte the original never checks.
 unsigned char* SpriteRec(int i, const char* who) {
-    if (i < 0 || i >= static_cast<int>(at::kSpriteCount))
+    if (i < 0 || i >= static_cast<int>(field_c1::at::kSpriteCount))
         bof3::Fatal("%s: Sprite_Objects index %d - the original writes outside the records", who, i);
-    return rv::Bytes(Sprite_Objects) + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_Objects) + static_cast<U>(i) * field_c1::at::kRecordStride;
 }
 unsigned char* ExtraRec(int i, const char* who) {
-    if (i < 0 || i >= static_cast<int>(at::kExtraCount))
+    if (i < 0 || i >= static_cast<int>(field_c1::at::kExtraCount))
         bof3::Fatal("%s: Sprite_ObjectsExtra index %d - the original writes outside the records", who, i);
-    return rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(i) * at::kRecordStride;
+    return rv::Bytes(Sprite_ObjectsExtra) + static_cast<U>(i) * field_c1::at::kRecordStride;
 }
 unsigned char* EffectRec(unsigned i, const char* who) {
-    if (i >= at::kEffectCount)
+    if (i >= field_c1::at::kEffectCount)
         bof3::Fatal("%s: Effect_Objects index %u - the original writes outside the records", who, i);
     return rv::Bytes(&Effect_Objects[i]);
 }
@@ -1009,7 +1009,7 @@ extern "C" unsigned char __cdecl EffectKind17_CellBlocked(unsigned cell_x, unsig
 // +0x89) is 1, else 0x12; +0 |= 2; +1 up.
 extern "C" void __cdecl EffectKind1B_Start(void) {
     Cur()[8] = ObjTrio[0].direction;
-    SH_AT(void (__cdecl*)(), at::kFc2Aim.v)();
+    SH_AT(void (__cdecl*)(), field_c1::at::kFc2Aim.v)();
     Cur()[0x27] = 0x7B;
     SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((Cur()[8] >> 1) + 0x4A));
     SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0)), 1);
@@ -1140,7 +1140,7 @@ extern "C" void __cdecl EffectKind30_Start(void) {
     rv::As<records::EffectObject>(Cur())->step_z = 0;
     rv::Store<U>(rv::As<records::EffectObject>(Cur())->step_y, 0);
     rv::As<records::EffectObject>(Cur())->timer = 0;
-    SH_AT(void (__cdecl*)(), at::kFc2Place.v)();
+    SH_AT(void (__cdecl*)(), field_c1::at::kFc2Place.v)();
     Cur()[0xB] = 0;
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
     SH_CALL(Sprite_UpdateScreenA)();
