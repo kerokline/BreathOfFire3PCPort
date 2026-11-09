@@ -275,10 +275,10 @@ def insert_seam(shell: Shell, home: str) -> tuple[str, list[str], list[str]]:
     text = mf.read(home)
     hfi = ci.FileItems(text)
     hleaves = list(hfi.leaves())
-    by_name: dict[str, ci.Item] = {}
+    by_name: dict[str, list[ci.Item]] = {}
     for it in hleaves:
         for n in it.names:
-            by_name.setdefault(n, it)
+            by_name.setdefault(n, []).append(it)
 
     def code(src: str, it: ci.Item) -> str:
         return re.sub(r"\s+", " ", strip_comments(src[it.code_start:it.end])).strip()
@@ -288,11 +288,17 @@ def insert_seam(shell: Shell, home: str) -> tuple[str, list[str], list[str]]:
         if d.kind == "alias" and re.fullmatch(rf"namespace\s+(\w+)\s*=\s*(::)?{shell.stem}::\1\s*;",
                                               strip_comments(shell.src[d.code_start:d.end]).strip()):
             continue                  # `namespace at = <group>::at;`: inside namespace <group> it is `at` already
-        h = by_name.get(d.names[0]) if d.names else None
-        if h is not None and h.local and code(text, h) == code(shell.src, d):
+        same = [h for h in by_name.get(d.names[0], []) if h.local and code(text, h) == code(shell.src, d)
+                and (not h.ns or h.ns == ("",) or h.ns[0] == shell.stem)] if d.names else []
+        if same:
             held.append(d.names[0])
-            after = max(after, h.end)
+            after = max(after, same[0].end)
         else:
+            # the copy goes into namespace <group>'s anonymous namespace: another item of its name there clashes
+            if d.names and any(h.ns and h.ns[0] == shell.stem for h in by_name.get(d.names[0], [])):
+                raise mf.Refused(f"{home} holds another `{d.names[0]}` in namespace {shell.stem}: the seam's copy would clash")
+            if not d.local and not d.ns:
+                raise mf.Refused(f"the seam reaches `{d.names[0]}`, a file-scope declaration {home} does not hold as written")
             copy.append(d)
     if f'#include "game/{shell.stem}_callees.h"' not in text and "Callees" in shell.src[own[0].start:own[0].end]:
         raise mf.Refused(f"{home} does not include game/{shell.stem}_callees.h, which declares the seam it would hold")
@@ -510,6 +516,11 @@ def main() -> int:
                 if only_s and sh.stem not in only_s:
                     continue
                 home, leave, why = plan_seam(sh, low)
+                if not why:
+                    try:
+                        insert_seam(sh, home)       # the dry pass: every refusal before anything is written
+                    except mf.Refused as e:
+                        why = str(e)
                 if why:
                     print(f"left   {sh.path}: {why}")
                 else:
