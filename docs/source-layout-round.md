@@ -936,6 +936,16 @@ inlining or pairing, and `ItemUse_AgiUp` compiled that way is byte for byte
 base2's - every `refptr` row would go. The cost is a new baseline and a check
 of the DLL's data imports: for the owner, IDEAS.
 
+**The ledger job's two census checks** (found by the PR's CI, 2026-11-09 evening, `5e99c69b`):
+`data_census.py` had to learn the union `at` namespaces the mover writes (a constant reached
+through one fell to a tier that rejects typed aliases: a TypeError), and its baseline
+`analysis/data_census.tsv` is regenerated at 27,910 sites against 27,437 - no new raw access,
+the rise is the mover's copies of file-local helpers (2,090 rows of known sites counted once per
+copy) and B0's renamed accessors; `typed_left.py` carries a reason across the layout (the move
+map's file change, the rename table, the dropped `X::` qualifiers, the census's 60-character cut)
+and names a copy of a helper whose original's rows disagree a `layout-copy`; 20 rows carried by
+hand. Both `--check` and `--strict` pass on the tip.
+
 **Left for stage C and D:** the 597 flat shells (their `_Inject()`,
 self-tests, fuzz rows and copied helpers), the fuzz files per new file, the
 mover's reconciliation, `docs/source-layout.md`, the ten-route proof and the

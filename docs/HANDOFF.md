@@ -398,7 +398,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    source needs its hunks resolved by "what both sides kept" and then a parse and a scan for indented
    statements at brace depth 0 (`scan_fragments.py` in the session scratchpad; the fix commits name it);
    two targets of one stem in two folders need folder-named inject functions; an exception table or a static
-   local differs only because its function did - pair it, never row it alone. The main-side finding stands:
+   local differs only because its function did - pair it, never row it alone; the typed-data census
+   counts a copied helper's raw site once per copy, so a move round regenerates `analysis/data_census.tsv`
+   with the reason in the commit, and `typed_left.py` must be run on the committed list, never twice in a
+   row (a regeneration rewrites the keys it then reads as carried). The main-side finding stands:
    the shop route's signature moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at
    ticks 2714..2757, a mode transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect
    main's merges on `tools/recipes/shop.txt` with the state hash, then ledger or fix. Worktrees
