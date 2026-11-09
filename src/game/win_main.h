@@ -21,6 +21,8 @@ bool WinMain_InputAllowed();
 bool WinMain_Background();
 
 namespace win_main {
+extern bool g_background;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_foreground;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
 extern std::uint8_t g_capcom_movie_only;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
 extern std::uint8_t g_pad_reset;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
 extern bool g_loop_ours;   // defined in win_main.cpp (source-layout B0: promoted for a moved reader)
