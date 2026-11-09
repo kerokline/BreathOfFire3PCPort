@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "game/music_loops.h"
+
 void Sound_Inject();
 
 namespace sound {
@@ -46,4 +48,32 @@ extern std::uint8_t g_play_refuses_none;
 // and for the whole of a BOF3X_SELFTEST_ONLY run.
 extern std::uint8_t g_ring_log_hold;
 
+}  // namespace sound
+
+namespace sound {
+// moved from sound.cpp with the state that has the type (source-layout B0)
+struct Loop {
+    const music_loops::Row* row;  // nullptr: the original's rewind
+    std::uint32_t pos;            // samples decoded from the file's first frame
+    unsigned char frame[0x4000];
+    std::uint32_t carry_at, carry_len;  // bytes of `frame` still to hand out
+    unsigned logged[8];                 // tracks whose first loop was logged (a bitmap of 256)
+};
+struct Ring {
+    std::uint32_t written = 0;        // stream samples written into the ring since Music_Start
+    std::uint32_t half_base[2] = {};  // the stream sample each half starts with
+    bool track_stream = false;        // the stream is the BGM file Music_Play started
+    int track = -1;                   // Music_LoadedTrack then
+};
+struct Resume {
+    bool remembered = false;
+    unsigned track = 0;
+    std::uint32_t sample = 0;
+    bool pending = false;
+    unsigned pending_track = 0;
+    std::uint32_t pending_sample = 0;
+};
+extern Loop g_loop;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
+extern Ring g_ring;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
+extern Resume g_resume;   // defined in sound.cpp (source-layout B0: promoted for a moved reader)
 }  // namespace sound
