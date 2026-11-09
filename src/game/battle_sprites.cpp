@@ -111,9 +111,6 @@ unsigned char* EnemyData(std::uint32_t id) { return At(::bof3::Img(battle_sprite
 
 using namespace battle_sprites;
 
-//
-    unsigned char* const s = Sprite_Current;
-
 void BattleSprites_Inject() {
     if (bof3::WantsShadow("battle_sprites")) battle_sprites::SelfTest();
     // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
