@@ -1227,7 +1227,7 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
     SetPos(context, Pos(context) + 3u);
 }
 
-void MoveScript_Inject() {
+void FieldMoveScript_Inject() {
     BOF3_INJECT(MoveScript_Step);
     BOF3_INJECT(MoveScript_Flow);
     BOF3_INJECT(MoveScript_GroupB);

@@ -1091,9 +1091,10 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders; after ScenarioHarnessFh_Inject,
                                 // whose self-test copies 0x57C1A0, 0x57C230, 0x57C8E0 (FO's); after YesNoLayout_Inject,
                                 // whose DIV-0029 byte at 0x576A48 Menu_DrawSaveSlot reads back
+    FieldMoveScript_Inject();
     Menu_Inject();
     MoveCmd_Inject();
-    EventScript_Inject();
+    FieldEventScript_Inject();
     FieldC1_Inject();           // round 12 group FC1 (the field core's first half, 0x461800 and 0x469D10..0x46BBF0:
                                 // the Config row label, effect kinds 4, 0x14, 0x17, 0x19, 0x1B, 0x30..0x32, 0x37,
                                 // 0x3C and two of kind 6's ticks): its clones' calls re-aimed at the scenario
@@ -1546,7 +1547,7 @@ void InjectAll() {
                                 // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound
                                 // faked; after every module that calls them (by name, or by the address they had);
                                 // before FishingText_Arm; no module patches bytes inside its nine
-    Sound_Inject();
+    CoreSound_Inject();
     Shell_Inject();             // the platform round's group PW (the seven "Windows shell" starts: Input_Latch,
                                 // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
                                 // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module

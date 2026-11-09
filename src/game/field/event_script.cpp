@@ -989,7 +989,7 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     BumpCount();
 }
 
-void EventScript_Inject() {
+void FieldEventScript_Inject() {
     BOF3_INJECT(Area_RunPlacement);
     BOF3_INJECT(EventScript_Run);
     BOF3_INJECT(EventScript_Control);

@@ -1372,7 +1372,7 @@ extern "C" void __cdecl TitleMode_Load(void) {
 
 #pragma clang attribute pop
 
-void Sound_Inject() {
+void CoreSound_Inject() {
     BOF3_INJECT(Sound_PlayEffect);
     BOF3_INJECT(Sound_StopChannels);
     BOF3_INJECT(Sound_SetCueVolume);
