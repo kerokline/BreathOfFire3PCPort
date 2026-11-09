@@ -187,6 +187,8 @@
 #include "game/magic_s34.h"
 #include "game/magic_s36.h"
 #include "game/magic_s37.h"
+#include "game/magic/geo_breath_child.h"
+#include "game/magic/combustion.h"
 #include "game/magic_s35.h"
 #include "game/magic_s38.h"
 #include "game/area_011.h"
@@ -686,6 +688,8 @@ void InjectAll() {
                                 // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    GeoBreathChild_Inject();
+    Combustion_Inject();
     MagicS35_Inject();          // round 9 group S35 (MAGIC167, 168, 169: Last Resort, Cure, Benediction): its
                                 // clones' calls and stack-table immediates re-aimed at the shared harness's recorders,
                                 // its six .data tables swapped for the fuzz only; no module patches bytes inside its 46
