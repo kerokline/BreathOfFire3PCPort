@@ -22,6 +22,8 @@ names and defaults from the player's own install, so it ships no game data.
 - **The story-point table and the flag documentation are reference material**, like
   the song names: neither code nor assets, so they are checked in. Investigation
   results also serve as material for the wiki.
+- **Chapter starts come first.** They give a baseline of the default flags at each
+  chapter, and finer story points are added on top of it.
 
 ## 2. Provenance
 
@@ -66,7 +68,8 @@ Evidence tags used below:
 
 The raw-card format covers every emulator named so far. Mednafen, Beetle
 per-card files and psxrecomp all hold the same 128 KiB image (MEASURED, section
-15), so they differ by file name only. The target picker offers "PC" or "memory
+15), so they differ by file name only. RetroArch's `.srm` cards are the same size,
+but their contents have not been checked. The target picker offers "PC" or "memory
 card" plus the release, and the file extension is the player's choice.
 
 **Out of scope for now:**
@@ -363,13 +366,21 @@ A story point is a row in `recipes/save-story-points.toml`:
 
 Three tiers, shipped in this order:
 
-- **Chapter starts.** Scene state alone, since a chapter's Start places the party.
-  Reached on PC for chapter 17 ([`ending-backdrop.md`](ending-backdrop.md), recipe
-  `ending17`). Chapter values 0..15 and 17 appear in the samples.
-- **Story events inside a chapter.** These need `flags_set`. Captured from real
+- **Chapter starts, first.** Each chapter gets a baseline: the flags set on entering
+  it in a normal playthrough, the "default flags at chapter x". The chapter's Start
+  places the party, as reached on PC for chapter 17
+  ([`ending-backdrop.md`](ending-backdrop.md), recipe `ending17`). Chapter values
+  0..15 and 17 appear in the samples.
+- **Story events inside a chapter.** These need `flags_set`, stored as differences
+  from the chapter's baseline. Captured from real
   playthroughs: the harness runs a recorded route and logs flag bytes at each
   point, and the existing recipe saves give a head start.
 - **Free choice.** Any row, plus the Advanced page for anything else.
+
+Baselines come from saves a real game wrote at or near a chapter's entry. A crafted
+chapter-jump save does not qualify, because it changes only the scene bytes and
+keeps its parent's flags. Where several real saves fall in one chapter, the flags
+set in all of them show what is fixed by that point.
 
 Rules:
 
@@ -451,19 +462,19 @@ Fixtures are local saves and are never committed.
 
 For the owner:
 
-1. **How fine should story points go?** Each row costs a capture and a load test.
-2. **Which reference new-game saves can be recorded?** PC, US and JP.
+1. **Which reference new-game saves can be recorded?** PC, US and JP. Paused on
+   2026-11-09 while the owner is away.
 
 For later investigation:
 
-3. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
+2. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
    no such saves, and the FR and DE serials are unconfirmed.
-4. Name codecs for the PSX EU, FR and DE releases.
-5. What writes the constant bytes near `+0xC2A`.
-6. How the launcher turns the install's glyph codes into text it can draw. Until
+3. Name codecs for the PSX EU, FR and DE releases.
+4. What writes the constant bytes near `+0xC2A`.
+5. How the launcher turns the install's glyph codes into text it can draw. Until
    then, item and ability lists can show ids.
-7. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
-8. The CITED fields to confirm before they become editable.
+6. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
+7. The CITED fields to confirm before they become editable.
 
 ## 15. How the measurements were made
 
@@ -479,6 +490,12 @@ Limits: the PC set is mostly crafted recipe saves, so some scene bytes are not w
 the game would write. No EU, FR or DE save is in the set, and the latest PSX save
 is about 42 hours in.
 
+**Sources not yet measured,** named by the owner for baselines and format checks:
+the English and Japanese cards in RetroArch's saves folder
+(`E:\SteamLibrary\steamapps\common\RetroArch\saves`: `.mcr` and `.srm`, 128 KiB
+each). Its `.srm.bsv` is an input recording, not a card. The psxrecomp JP cards in
+the sibling's `saves/` are already in the set above.
+
 The coverage count transcribes each saver in Red Herring's editor to a byte map at
 commit `7c93fd3`, then compares it with the samples.
 
@@ -489,7 +506,7 @@ commit `7c93fd3`, then compares it with the samples.
 3. The page: open, edit and write for the E-class fields.
 4. Advanced page, generated from the field table.
 5. New-game creation, with the reference comparison.
-6. Story points: chapter starts, then captured events.
+6. Story points: chapter-start baselines, then captured events.
 
 Each stage is its own branch and can stop there and still be useful.
 
