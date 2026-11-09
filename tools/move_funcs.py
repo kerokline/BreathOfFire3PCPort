@@ -691,6 +691,8 @@ def insert_inject_all(text: str, sources: list[str], target_h: str, target_injec
     calls = []
     for s in sources:
         name = source_inject_name(s)
+        if name is None:                  # a source with no _Inject() of its own (its binds sit elsewhere)
+            continue
         calls += [i for i, l in enumerate(lines) if re.match(rf"\s*{name}\(\);", l)]
     if not calls:
         raise Refused("inject_all.cpp calls none of the sources' _Inject()")
@@ -701,13 +703,18 @@ def insert_inject_all(text: str, sources: list[str], target_h: str, target_injec
     return "".join(lines)
 
 
-_inject_names: dict[str, str] = {}
+_inject_names: dict[str, str | None] = {}
 
 
-def source_inject_name(source: str) -> str:
+def source_inject_name(source: str) -> str | None:
+    """The source's one _Inject(), or None when it has none (d3d_list.cpp: Gfx_DrawOTag is bound in
+    d3d_draw.cpp's); two are refused."""
     if source not in _inject_names:
         fi = ci.FileItems(read(source))
         names = [it.names[0] for it in fi.functions() if it.names[0].endswith("_Inject") and not it.ns]
+        if not names:
+            _inject_names[source] = None
+            return None
         if len(names) != 1:
             raise Refused(f"{source}: {len(names)} _Inject() functions")
         _inject_names[source] = names[0]
