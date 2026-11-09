@@ -140,8 +140,8 @@ extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned f
     at::kPendingX = x;
     AreaEntry_PendingZ = z;
     AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
-    g.classify();
-    g.pick_music(static_cast<unsigned>(x >> 16), static_cast<unsigned>(z >> 16), AreaW0b_Place);
+    window_task::g.classify();
+    window_task::g.pick_music(static_cast<unsigned>(x >> 16), static_cast<unsigned>(z >> 16), AreaW0b_Place);
     Field_Request = 5;
 }
 
@@ -158,7 +158,7 @@ extern "C" void __cdecl Area_ClassifyPending(void) {
     const std::uint16_t pending = AreaW0b_Place;
     unsigned n = 0;
     for (std::uint32_t p = ::bof3::Img(at::kAreaKinds.v); p < ::bof3::Img(at::kAreaKindsEnd.v); p += 2, ++n) {
-        if (Word(At(p)) == pending) {
+        if (window_task::Word(window_task::At(p)) == pending) {
             Area_EnterTransition = 0xB;
             return;
         }
@@ -175,7 +175,7 @@ extern "C" void __cdecl Area_ClassifyPending(void) {
 // alone - the upper 24 bits of eax are the zone record's address, which no
 // caller reads.
 extern "C" unsigned char __cdecl Area_ZoneIdAt(unsigned x, unsigned z) {
-    return g.zone_at(x, z, Game_AreaNumber)[5];
+    return window_task::g.zone_at(x, z, Game_AreaNumber)[5];
 }
 
 // original 0x5953B0 (PSX 0x801A1388): the track the new area wants, into
@@ -210,7 +210,7 @@ extern "C" void __cdecl Area_PickMusic(unsigned x, unsigned z, unsigned area) {
         AreaW1f_MusicCurrent = g_keep_stopping_none && stopping ? 0xFF : Music_Track;
         return;
     }
-    AreaW1f_MusicCurrent = Area_ZoneTrack(g.zone_at(x, z, area));
+    AreaW1f_MusicCurrent = Area_ZoneTrack(window_task::g.zone_at(x, z, area));
 }
 
 unsigned char Area_ZoneTrack(const unsigned char* zone) {
@@ -239,7 +239,7 @@ unsigned char Area_ZoneTrack(const unsigned char* zone) {
 // that guess rested on are those fourteen.
 extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z_arg, unsigned area) {
     const unsigned x = x_arg & 0xFFu, z = z_arg & 0xFFu;
-    const unsigned char* record = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(Area_StateRecords_addr)) + (area & 0xFFFFu) * 4u)));   // a 32-bit word
+    const unsigned char* record = window_task::At(static_cast<std::uint32_t>(window_task::Long(window_task::At(::bof3::Img(Area_StateRecords_addr)) + (area & 0xFFFFu) * 4u)));   // a 32-bit word
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -274,7 +274,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     if (pass > 2) return;
     do {
         for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(at::kRecordsEnd.v); a += 0x24) {
-            unsigned char* const record = At(a);
+            unsigned char* const record = window_task::At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
                 continue;
@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
                             static_cast<unsigned>((a - ::bof3::Img(WindowRecords_addr)) / 0x24), handler);
             Widescreen_SlideBefore(record);
-            g.records[handler]();
+            window_task::g.records[handler]();
             Widescreen_SlideAfter(record);
         }
         ++pass;
@@ -310,7 +310,7 @@ extern "C" void __cdecl Window_FreeCurrent(void) {
 extern "C" void __cdecl Window_Run(void) {
     const unsigned kind = Rec()[2];
     if (kind >= 3) bof3::Fatal("a window record's kind byte is %u; the original's stack table holds three", kind);
-    g.kinds[kind]();
+    window_task::g.kinds[kind]();
 }
 
 namespace {
@@ -318,7 +318,7 @@ namespace {
 // The three kind dispatchers are one function three times over: byte +3 of
 // the record through a five-entry table built on the stack, the same `sub
 // esp, 0x14` / `call [esp + eax * 4]` in each. No bound on the state either.
-void RunState(const Handler (&states)[5], const char* which) {
+void RunState(const window_task::Handler (&states)[5], const char* which) {
     const unsigned state = Rec()[3];
     if (state >= 5) bof3::Fatal("a %s window's state byte is %u; the original's stack table holds five", which, state);
     states[state]();
@@ -328,15 +328,15 @@ void RunState(const Handler (&states)[5], const char* which) {
 
 // original 0x5954E0: kind 0 - the message box. Its states are the open, the
 // grow, the frame, the shrink and the close.
-extern "C" void __cdecl Window_Kind0States(void) { RunState(g.kind0, "kind 0"); }
+extern "C" void __cdecl Window_Kind0States(void) { RunState(window_task::g.kind0, "kind 0"); }
 
 // original 0x595AA0: kind 1 - the choice list drawn at fixed screen
 // coordinates. States 1 and 3 are kind 0's grow and shrink.
-extern "C" void __cdecl Window_Kind1States(void) { RunState(g.kind1, "kind 1"); }
+extern "C" void __cdecl Window_Kind1States(void) { RunState(window_task::g.kind1, "kind 1"); }
 
 // original 0x595B40: kind 2 - the list drawn relative to its own window.
 // States 1, 3 and 4 are shared as well.
-extern "C" void __cdecl Window_Kind2States(void) { RunState(g.kind2, "kind 2"); }
+extern "C" void __cdecl Window_Kind2States(void) { RunState(window_task::g.kind2, "kind 2"); }
 
 // original 0x595520: kind 0's state 0. Takes the two high bits off the 0x0C
 // placement code into the record's flag byte +0xD - bit 7 means "do not draw
@@ -365,13 +365,13 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
-        y = At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        y = window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + 0x64u) << 4);
-        y = At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        y = window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u];
     }
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (y + 0x1Bu) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
@@ -389,8 +389,8 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + 0x23u) << 4);
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width_step, 0xE3);
@@ -403,7 +403,7 @@ extern "C" void __cdecl Window_Kind2Open(void) {
 // original 0x595AE0: kind 1's state 0 - the unread set-up at 0x596330, then
 // the state on.
 extern "C" void __cdecl Window_Kind1Open(void) {
-    g.list_set_up();
+    window_task::g.list_set_up();
     ++Rec()[3];
 }
 
@@ -415,23 +415,23 @@ namespace {
 unsigned SettledX(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return SideX((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
-                                       : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) << 4;
+        return SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                       : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_x << 4;
     default:
-        return SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) << 4;
+        return SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) << 4;
     }
 }
 unsigned SettledY(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return ((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
-                                  : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) << 4;
+        return ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                  : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_y << 4;
     default:
-        return Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) << 4;
+        return window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) << 4;
     }
 }
 
@@ -439,7 +439,7 @@ unsigned SettledY(const unsigned char* r) {
 // toward zero, added on the shrink and subtracted on the grow, so that the
 // box stays centred on its settled position.
 int HalfStep(const unsigned char* r, unsigned offset) {
-    return static_cast<int>(static_cast<std::int16_t>(Word(r + offset))) / 2;
+    return static_cast<int>(static_cast<std::int16_t>(window_task::Word(r + offset))) / 2;
 }
 
 // The four arguments every draw in this family is called with: the top-left and
@@ -492,7 +492,7 @@ extern "C" void __cdecl Window_Grow(void) {
         ++settled;
     }
     if ((r[0xD] & 1) == 0) {
-        g.draw_outline(RecX(r), RecY(r), RecW(r), RecH(r));
+        window_task::g.draw_outline(RecX(r), RecY(r), RecW(r), RecH(r));
         r = Rec();
     }
     if (settled == 2) ++r[3];
@@ -525,14 +525,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = SideX((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
-                                            : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + half;
+            place = SideX((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                            : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + half;
             break;
         case 1:
-            place = Word(At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u)) + half;
             break;
         default:
-            place = SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + half;
+            place = SideX(window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->x = place << 4;
@@ -550,14 +550,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = ((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
-                                       : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) + half;
+            place = ((r[0xD] & 2) != 0 ? window_task::At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                       : window_task::At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) + half;
             break;
         case 1:
-            place = Word(At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u + 2u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u + 2u)) + half;
             break;
         default:
-            place = Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + half;
+            place = window_task::Word(window_task::At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->y = place << 4;
@@ -571,11 +571,11 @@ extern "C" void __cdecl Window_Shrink(void) {
         return;
     }
     if ((r[0xD] & 1) == 0) {
-        g.draw_outline(RecX(r), RecY(r), RecW(r), RecH(r));
+        window_task::g.draw_outline(RecX(r), RecY(r), RecW(r), RecH(r));
         r = Rec();
     }
     if (r[2] != 0) return;
-    g.msgbox_frame();
+    window_task::g.msgbox_frame();
 }
 
 // original 0x595820: kind 0's state 2 - the open message box. The frame,
@@ -584,8 +584,8 @@ extern "C" void __cdecl Window_Shrink(void) {
 // caller is the kind dispatcher's `call [esp + eax * 4]`).
 extern "C" void __cdecl Window_Kind0Frame(void) {
     unsigned char* const r = Rec();
-    if ((r[0xD] & 1) == 0) g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
-    g.msgbox_frame();
+    if ((r[0xD] & 1) == 0) window_task::g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
+    window_task::g.msgbox_frame();
 }
 
 // original 0x595AF0: kind 1's state 2 - the frame unconditionally (flag 1 is
@@ -593,18 +593,18 @@ extern "C" void __cdecl Window_Kind0Frame(void) {
 // cursor draw at 0x596120 as a tail jump.
 extern "C" void __cdecl Window_Kind1Frame(void) {
     unsigned char* const r = Rec();
-    g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
-    g.list_draw();
-    g.list_cursor();
+    window_task::g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
+    window_task::g.list_draw();
+    window_task::g.list_cursor();
 }
 
 // original 0x595C10: kind 2's state 2, the same shape with the two
 // window-relative draws 0x596020 and 0x5960D0.
 extern "C" void __cdecl Window_Kind2Frame(void) {
     unsigned char* const r = Rec();
-    g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
-    g.set_draw();
-    g.set_cursor();
+    window_task::g.draw_frame(RecX(r), RecY(r), RecW(r), RecH(r));
+    window_task::g.set_draw();
+    window_task::g.set_cursor();
 }
 
 // original 0x595A80: kind 0's state 4 - once the message box's frame task
@@ -614,14 +614,14 @@ extern "C" void __cdecl Window_Kind2Frame(void) {
 // As the original has it: the byte stored to 0x802D20 is the task's own
 // zero return, so it is always 0 on that path.
 extern "C" void __cdecl Window_Kind0Close(void) {
-    if (g.msgbox_frame() != 0) return;
+    if (window_task::g.msgbox_frame() != 0) return;
     BossSa_WindowPass = 0;
-    g.free_current();
+    window_task::g.free_current();
 }
 
 // original 0x595B30: kinds 1 and 2's state 4 - the record free alone, as a
 // five-byte tail jump.
-extern "C" void __cdecl Window_FreeState(void) { g.free_current(); }
+extern "C" void __cdecl Window_FreeState(void) { window_task::g.free_current(); }
 
 // ===========================================================================
 // What an open window draws (0x595C50, 0x595F60, 0x596150)
@@ -656,10 +656,10 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     const int h = static_cast<int>(static_cast<unsigned>(h_arg) & 0xFFu);
 
     // 1. the black tile
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
-    g.commit(1, 0xC);
+    window_task::g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
+    window_task::g.commit(1, 0xC);
     unsigned char* const tile = Gfx_PacketNext;
-    g.set_tile(tile);
+    window_task::g.set_tile(tile);
     const float fx = Flt(x), fy = Flt(y);
     PutFloat(tile + 8, fx);
     PutFloat(tile + 0xC, fy);
@@ -668,25 +668,25 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     tile[4] = 0;
     tile[5] = 0;
     tile[6] = 0;
-    g.set_semi(tile, 1);
-    g.commit(1, 0x1C);
+    window_task::g.set_semi(tile, 1);
+    window_task::g.commit(1, 0x1C);
 
     // 2. the texture window of the quad's draw mode
     unsigned char* const window1 = Gfx_PacketNext;
     Gfx_PacketNext = window1 + 8;
-    SetWord(window1 + 0, 0);
-    SetWord(window1 + 2, 0xF0);
-    SetWord(window1 + 6, 0x10);
-    SetWord(window1 + 4, 0x10);
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xF,
+    window_task::SetWord(window1 + 0, 0);
+    window_task::SetWord(window1 + 2, 0xF0);
+    window_task::SetWord(window1 + 6, 0x10);
+    window_task::SetWord(window1 + 4, 0x10);
+    window_task::g.draw_mode(Gfx_PacketNext, 0, 0, 0xF,
                 Low32(window1));
-    g.commit(1, 0xC);
+    window_task::g.commit(1, 0xC);
 
     // 3. the window's textured quad
     unsigned char* const quad = Gfx_PacketNext;
-    g.set_poly_gt4(quad);
-    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
-    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, g.get_clut(Config_WindowColour * 32 + 0x10, 0x1E1));
+    window_task::g.set_poly_gt4(quad);
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->tpage, window_task::g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(quad)->clut, window_task::g.get_clut(Config_WindowColour * 32 + 0x10, 0x1E1));
     const float fright = Flt(x + w + 1), fbottom = Flt(y + h + 1);
     PutFloat(quad + 8, fx);
     PutFloat(quad + 0xC, fy);
@@ -716,23 +716,23 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     quad[0x3D] = static_cast<unsigned char>(h);
     quad[0x50] = static_cast<unsigned char>(w);
     quad[0x51] = static_cast<unsigned char>(h);
-    g.set_semi(quad, 1);
-    g.commit(1, 0x54);
+    window_task::g.set_semi(quad, 1);
+    window_task::g.commit(1, 0x54);
 
     // 4. the texture window of the outline's draw mode
     unsigned char* const window2 = Gfx_PacketNext;
     Gfx_PacketNext = window2 + 8;
-    SetWord(window2 + 2, 0);
-    SetWord(window2 + 0, 0);
-    SetWord(window2 + 6, 0x100);
-    SetWord(window2 + 4, 0x100);
-    g.draw_mode(Gfx_PacketNext, 0, 0, 5,
+    window_task::SetWord(window2 + 2, 0);
+    window_task::SetWord(window2 + 0, 0);
+    window_task::SetWord(window2 + 6, 0x100);
+    window_task::SetWord(window2 + 4, 0x100);
+    window_task::g.draw_mode(Gfx_PacketNext, 0, 0, 5,
                 Low32(window2));
-    g.commit(1, 0xC);
+    window_task::g.commit(1, 0xC);
 
     // 5. three sides of the bright outline
     unsigned char* const outline = Gfx_PacketNext;
-    g.set_line_f4(outline);
+    window_task::g.set_line_f4(outline);
     outline[4] = 0xC8;
     outline[5] = 0xC8;
     outline[6] = 0xC8;
@@ -744,15 +744,15 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     PutFloat(outline + 0x24, fbottom);
     PutFloat(outline + 0x2C, Flt(x - 1));
     PutFloat(outline + 0x30, fbottom);
-    g.commit(1, 0x38);
+    window_task::g.commit(1, 0x38);
 
     // 6. the fourth side, and the dim border two pixels out
     const int right = x + w, bottom = y + h;
-    g.draw_line(x - 1, y - 1, x - 1, bottom + 1, 0xC8);
-    g.draw_line(x - 2, y, x - 2, bottom, 0x8C);
-    g.draw_line(right + 2, y, right + 2, bottom, 0x8C);
-    g.draw_line(x, y - 2, right, y - 2, 0x8C);
-    g.draw_line(x, bottom + 2, right, bottom + 2, 0x8C);
+    window_task::g.draw_line(x - 1, y - 1, x - 1, bottom + 1, 0xC8);
+    window_task::g.draw_line(x - 2, y, x - 2, bottom, 0x8C);
+    window_task::g.draw_line(right + 2, y, right + 2, bottom, 0x8C);
+    window_task::g.draw_line(x, y - 2, right, y - 2, 0x8C);
+    window_task::g.draw_line(x, bottom + 2, right, bottom + 2, 0x8C);
 }
 
 // original 0x595F60 (PSX 0x8015A990): the growing or shrinking box - the
@@ -761,7 +761,7 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
 // tile, no quad, no draw mode of its own.
 extern "C" void __cdecl Window_DrawOutline(int x_arg, int y_arg, int w_arg, int h_arg) {
     unsigned char* const outline = Gfx_PacketNext;
-    g.set_line_f4(outline);
+    window_task::g.set_line_f4(outline);
     const int x = static_cast<std::int16_t>(x_arg), y = static_cast<std::int16_t>(y_arg);
     const int w = static_cast<int>(static_cast<unsigned>(w_arg) & 0xFFu);
     const int h = static_cast<int>(static_cast<unsigned>(h_arg) & 0xFFu);
@@ -777,8 +777,8 @@ extern "C" void __cdecl Window_DrawOutline(int x_arg, int y_arg, int w_arg, int 
     PutFloat(outline + 0x24, fbottom);
     PutFloat(outline + 0x2C, Flt(x - 1));
     PutFloat(outline + 0x30, fbottom);
-    g.commit(1, 0x38);
-    g.draw_line(x - 1, y - 1, x - 1, y + h + 1, 0x78);
+    window_task::g.commit(1, 0x38);
+    window_task::g.draw_line(x - 1, y - 1, x - 1, y + h + 1, 0x78);
 }
 
 // original 0x596150 (PSX 0x8015ABA0): one LINE_F2 at the packet cursor, grey
@@ -791,7 +791,7 @@ extern "C" void __cdecl Window_DrawOutline(int x_arg, int y_arg, int w_arg, int 
 // their scratch - which is the slot the colour came out of.
 extern "C" void __cdecl Window_DrawLine(int x0, int y0, int x1, int y1, unsigned colour) {
     unsigned char* const line = Gfx_PacketNext;
-    g.set_line_f2(line);
+    window_task::g.set_line_f2(line);
     const auto shade = static_cast<unsigned char>(colour);
     line[4] = shade;
     line[5] = shade;
@@ -800,7 +800,7 @@ extern "C" void __cdecl Window_DrawLine(int x0, int y0, int x1, int y1, unsigned
     PutFloat(line + 0xC, Flt(static_cast<std::int16_t>(y0)));
     PutFloat(line + 0x14, Flt(static_cast<std::int16_t>(x1)));
     PutFloat(line + 0x18, Flt(static_cast<std::int16_t>(y1)));
-    g.commit(1, 0x20);
+    window_task::g.commit(1, 0x20);
 }
 
 void AreaKeepStoppingNone_Arm() {
