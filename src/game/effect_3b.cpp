@@ -1025,7 +1025,7 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 // 4.
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
     Effect3c_ShardCursor = ::bof3::Img(EffectKind30_Shards_addr);
-    for (unsigned left = at::kSparkCount; left != 0; --left) {
+    for (unsigned left = effect_3b::at::kSparkCount; left != 0; --left) {
         SetUL(Spark() + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
         SetUL(Spark() + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
         SetUL(Spark() + 0xC, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
@@ -1043,7 +1043,7 @@ extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
         Spark()[3] = 0x40;
         Spark()[0x26] = 7;
         Spark()[2] = 4;
-        Effect3c_ShardCursor = Effect3c_ShardCursor + at::kSparkStride;
+        Effect3c_ShardCursor = Effect3c_ShardCursor + effect_3b::at::kSparkStride;
     }
 }
 
@@ -1062,7 +1062,7 @@ extern "C" unsigned char __cdecl EffectKind6C_DrawSparks(void) {
     unsigned char any = 0;
     U c = ::bof3::Img(EffectKind30_Shards_addr);
     Effect3c_ShardCursor = c;
-    for (unsigned n = at::kSparkCount; n != 0; --n) {
+    for (unsigned n = effect_3b::at::kSparkCount; n != 0; --n) {
         if (At(c)[0] != 0) {
             Through("EffectKind6C_DrawSparks", AddressOf(EffectKind6C_SparkStates), EffectKind6C_SparkStates_count,
                     At(c)[1], 1);
@@ -1070,7 +1070,7 @@ extern "C" unsigned char __cdecl EffectKind6C_DrawSparks(void) {
             c = Effect3c_ShardCursor;
             any = 1;
         }
-        c += at::kSparkStride;
+        c += effect_3b::at::kSparkStride;
         Effect3c_ShardCursor = c;
     }
     return any;
