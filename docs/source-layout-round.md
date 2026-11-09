@@ -961,6 +961,144 @@ only the self-tests have).
 - [`SCAFFOLDING.md`](SCAFFOLDING.md) and [`docs/README.md`](README.md): the
   new tree's shape, where a new function of ours goes.
 
+### Stage C staging (the coordinator, 2026-11-09 evening, for the PR; unlaunched)
+
+**What the tree holds after stage B, measured on `0b7878b6`.** 597 flat
+`src/game/*.cpp` files: 254 `*_fuzz.cpp` (the groups' fuzz tables and 251
+`SelfTest()` definitions, about 8,900 table rows), 7 harness files
+(`area_harness`, `magic_harness`, `scenario_harness` and their kin, which stay),
+and **336 shells** - the old group files, 63,618 lines in all, none holding a
+function with an `impl`. A shell keeps: its `_Inject()` (266 of them only
+`if (bof3::WantsShadow("x")) x::SelfTest();`, four still binding something -
+`config_text`, `crt_rest`, `d3d_draw`, `sprt_draw` - and the rest empty); in
+73 of them the group's `Callees g = kOriginals;` seam with its table, which
+the moved functions now read across files (84 of the 341 `.refptr` globals
+in the exception table are such seams); in 326 an anonymous namespace of
+file-local helpers the mover **copied** rather than moved, because the
+shell's own `_Inject()` or self-test reached them - dead once those go; and
+its include list. 572 flat headers: 214 `*_callees.h` (the constants and the
+`Callees` structs, stage E's to retire, round doc 5a), the groups' own
+`<stem>.h` (declaring `<Stem>_Inject()` and the group's externs), and the
+shared infrastructure headers every new file includes (`records.h`,
+`record_views.h`, `move_script_bytes.h`, the harness headers, `widescreen.h`
+- 550 distinct flat headers are included from the new files, the top six by
+hundreds of files each). `cmake/game_sources_order.txt` still orders by the
+old stems, with `x_fuzz.cpp` placed after `x.cpp` by stem
+(`tools/game_sources.py`).
+
+**What stage C delivers** (section 5's contract, made concrete):
+
+1. **No shell left.** Every flat group file is deleted, its header with it,
+   and `src/game/` holds the 14 folders, the shared headers, the harness
+   files and the fuzz files. `tu_census.py --check` stays at every function
+   in its file; a new check in `checks.yml` fails on a `src/game/*.cpp` that
+   is neither a fuzz nor a harness file (the list of the seven harness files
+   is in the check).
+2. **The seams have one home each.** A group's `Callees g` and its
+   `kOriginals` table move, verbatim, into the new file that holds the
+   group's lowest-pc function (the file `game_sources.py` already orders
+   first for that group); its `<stem>_callees.h` keeps declaring it until
+   stage E. The readers in that file go from `.refptr` back to direct (the
+   `refptr` class, the mechanism reversed), the readers elsewhere stay as
+   they are; the table's static initialiser moves with it (`data-layout`).
+   *The owner's call C1 (section 7c):* this, or a `src/game/seams/` folder
+   holding every seam in a file of its own - the latter keeps the seams out
+   of Capcom's units but adds 73 files that are not units.
+3. **The self-tests are called from one place.** Each shell's
+   `if (WantsShadow) SelfTest()` line moves into `src/hook/inject_all.cpp`
+   under a generated block (the order kept: a group's self-test runs where
+   its `_Inject()` ran, right before its targets' `<T>From<Source>_Inject()`
+   calls, which is what B3's inject-order lesson requires); the four shells
+   that still bind something hand those binds to the new files of the
+   functions bound (`config_text.cpp:572`'s `Config_DrawControllerCell`,
+   `d3d_draw.cpp:647`'s `Gfx_DrawOTag`, and the two others, each a
+   `bof3::Inject` line the mover listed as "bound elsewhere").
+4. **The fuzz files move beside their code.** Each `<stem>_fuzz.cpp` goes to
+   the folder of the new file that holds most of its rows' functions, as
+   `<folder>/<stem>_fuzz.cpp`, unchanged inside (the rows name functions by
+   their `symbols.gen.h` declarations, so they keep working); its `SelfTest()`
+   stays the group's. *The owner's call C2:* section 5's "one fuzz file per
+   new file" would split a group's table across files, but a group's harness
+   (`Group`, its regions, callees and recorders) is one object per old
+   group, so a per-file split means a registry that assembles each group's
+   table from pieces - a harness redesign this round should not carry. The
+   staging recommends the move, with `analysis/tu_moves.tsv` rows of kind
+   `fuzz` saying which new file each row's function is in, and the split as
+   an IDEAS item.
+5. **The copied helpers go with the shells.** They were copies; the targets
+   hold the originals' text. Nothing to move.
+6. **The map and the order file.** `tu_moves.tsv` gains a row per seam, per
+   fuzz file and per deleted shell (kinds `seam`, `fuzz`, `shell`); every
+   `cite_lookup.py` reader resolves through them. `game_sources.py` orders a
+   fuzz file after the file its stem's seam went to, from the map, and
+   `game_sources_order.txt` is regenerated once.
+7. **The docs.** `docs/source-layout.md`, the table's reader (units by
+   folder, each with its range, file, PlayStation twin unit and confidence,
+   and where its group's seam and fuzz file are); `cite_lookup.py --scan`
+   over `docs/`, `CLAUDE.md`, `CONTRIBUTING.md` and the `recipes/` comments
+   with the unresolved list read by hand (the docs' paths are not rewritten,
+   call 4; `docs/README.md` says once that a pre-round `src/game/` path
+   resolves through the map); `SCAFFOLDING.md` and `docs/README.md` on the
+   tree's shape and where a new function of ours goes; a line at the top of
+   each takeover-round group doc saying where its functions live now.
+
+**How it runs.** The same shape as stage B: a tool first, then groups by
+folder in worktrees, merged one at a time with the gate after each.
+
+- **C0, the coordinator (or one Opus agent), the tool:** `tools/retire_shells.py
+  SHELL...` does one shell: moves its seam (item 2) and its self-test call
+  (item 3), hands over the four binds, moves its fuzz file (item 4), deletes
+  the shell and its header, edits `inject_all.cpp` and writes the map rows;
+  refuses a shell whose header a new file still includes for anything but
+  the `_Inject()` declaration (the include is then rewritten by the tool,
+  since the new files' own headers declare what they define), and a shell
+  that still defines a function with an `impl`. Idempotent; a dry run lists
+  what it would do. Its first case, by hand before the tool: one small
+  shell (`gfx_flush.cpp`, 15 lines after stage B) to the end, gated.
+- **C1..C4, in parallel, by folder** (no two touch one shell; a shell's
+  folder is that of its seam's new home, from the map's `--dry-run`):
+  C1 `area/`, `community/`; C2 `magic/`, `boss/`, `battle/`; C3 `effect/`;
+  C4 `field/`, `scenario/`, `core/`, `menu/`, `platform/`, `shop/`, `text/`,
+  `minigame/`. Each: the tool over its shells, `cmake --preset` at both
+  widths (the source list is generated, so the configure re-runs), the gate
+  against `slb1108\base2` with the stage B exception list as it is (the table
+  is cumulative against `main`; a stage C row says "stage C" and its group),
+  the three checks, **the hosted shadow suite above all** (every self-test
+  call and every fuzz file moved: a group that fails to run, or runs in the
+  wrong order, shows there and nowhere else), the exe host and the moved
+  image. A row's lawful classes here: `refptr` (a seam's readers in its new
+  file read it directly again), `data-layout` (the seam's static initialiser
+  and the table's placement), `inline` (a copied helper's last caller
+  leaving a shell changes nothing - the shell is gone - but a seam's new file
+  may inline differently), `harness` (none expected: the fuzz files move
+  unchanged). Anything else is a finding.
+- **Then the coordinator:** the merges, `game_sources_order.txt` regenerated,
+  the `checks.yml` gate, the docs of item 7, the "as run" section, and
+  stage D (section 6: the ten routes at both image bases with the state hash
+  against the `orig4` pairs and against base2's own build, which **has not
+  run since B0** - stage B passed only the self-tests; the 64-bit build's
+  routes; STATUS; the ledger note that nothing a player sees changed).
+
+**Traps carried from stage B** (HANDOFF 14b has the list): no `git stash` in
+a shared repo; no `--amend`; one build round per group is normal (the dry
+run cannot see what the compiler sees); a merge of two groups that edited
+one file is resolved by "what both sides kept" and then parsed and scanned
+for statements at brace depth 0; two targets of one stem in two folders
+need folder-named inject functions; an exception table or a static follows
+its function. New to stage C: a seam's home must be built and self-tested
+before its fuzz file moves (the fuzz file includes the seam's header and
+swaps `g` - a wrong order reads as a FATAL in the first module); the four
+binds elsewhere are easy to drop silently - the exe host's self-test and
+`move_funcs.py --check`'s "bound elsewhere" list are the two readers that
+would notice.
+
+**For the owner before launch (7c):** C1 the seams' home, C2 the fuzz files
+whole or split, and whether the shared infrastructure headers (`records.h`,
+`record_views.h`, `move_script_bytes.h`, the harness headers) get a folder
+of their own in this round (the staging says no: they are not units and
+nothing forces it) - plus the two carried from stage B, `-fno-auto-import`
+and the register-allocation-only `inline` rows.
+
 ## 5a. Stage E: the comment clean-up (I48), at the end (the owner's call 5)
 
 After stage D's proof, on the new layout, so it runs once: the typed-data
@@ -1516,6 +1654,25 @@ eports1.md` 5), both recommended by
    what the file's `using move_script::X;` lines already meant. Line counts
    kept, both gates exactly the unchanged tree's, no line names
    `magic/sparkle.cpp` any more.
+
+### 7c. Open after stage B (2026-11-09), the owner's, before stage C launches
+
+1. **C1, the seams' home.** A group's `Callees g = kOriginals;` (73 of them)
+   moves into the new file holding the group's lowest-pc function (the
+   staging's recommendation, section 5), or into a `src/game/seams/` folder
+   of 73 files that are not units. Either way `<stem>_callees.h` keeps
+   declaring it until stage E.
+2. **C2, the fuzz files.** Moved whole beside their code
+   (`<folder>/<stem>_fuzz.cpp`, the recommendation) or split per new file,
+   which needs a registry that assembles each group's table from pieces (an
+   IDEAS item if deferred).
+3. **The shared infrastructure headers** (`records.h`, `record_views.h`,
+   `move_script_bytes.h`, the harness headers): stay flat this round (the
+   recommendation) or get a folder.
+4. **Carried from stage B:** `-fno-auto-import` (B3's measurement: every
+   `refptr` row would go; a new baseline and a check of the DLL's data
+   imports); the 32 x86_64 and 2 i686 `inline` rows B3 flagged as register
+   allocation only.
 
 ## 8. Ownership, merge order, numbering
 

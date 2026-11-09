@@ -378,7 +378,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **The day's decisions** are in 7a (the owner's `refptr` and i686 `inline`; the coordinator's owner-following
    of exception tables and statics, the operand-width pooled constant, `data-layout` for a move's placement,
    the `harness` class) and in section 4's "Stage B as run" (the mover's lessons by group, the merges' findings).
-   **Pick up here: stage C** (round doc 5, one agent): empty the 597 flat shells - move each source's
+   **Pick up here: stage C** (the staging is round doc 5 "Stage C staging", the owner's calls before launch in 7c; a tool C0, then four folder groups C1..C4 and the merges): empty the 597 flat shells - move each source's
    remaining `_Inject()` registrations, self-test and fuzz rows to the new files (one fuzz file per new file),
    delete the shells, regenerate the hosted build's fuzz table, `tu_census.py --check` in `checks.yml`,
    `cite_lookup.py --scan` over the docs, `docs/source-layout.md`, SCAFFOLDING and README; then stage D (round
