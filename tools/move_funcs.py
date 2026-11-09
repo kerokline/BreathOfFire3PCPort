@@ -306,6 +306,7 @@ class SourcePlan:
     undefs: dict[str, list[ci.Item]] = field(default_factory=dict)         # target -> `#undef M` lines moved
     bound_elsewhere: dict[str, str] = field(default_factory=dict)          # function -> where its bind stays
     namespace_names: dict[str, set[str]] = field(default_factory=dict)     # `using namespace X` -> X's names
+    alias_bodies: dict[str, dict[str, str]] = field(default_factory=dict)  # X -> alias name -> its code
 
 
 def resolve_include(inc: str) -> str | None:
@@ -514,6 +515,7 @@ def plan_source(source: str, moves: list[Move], problems: list[str],
         mm = re.match(r"\s*using\s+namespace\s+(::)?([\w:]+)\s*;", d.text[d.code_start - d.start:])
         if mm:
             plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
+            plan.alias_bodies[mm.group(2)] = namespace_alias_bodies(text, mm.group(2))
     return plan
 
 
@@ -549,6 +551,27 @@ def namespace_names(text: str, ns: str) -> set[str]:
             if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
                     and it.kind in ("decl", "func", "type", "alias", "typedef", "using")):
                 out.update(it.names)
+    return out
+
+
+def namespace_alias_bodies(text: str, ns: str) -> dict[str, str]:
+    """The type aliases namespace `ns` defines (as namespace_names finds them), name -> code without
+    comments: two namespaces that spell an alias the same name the same entity, so a `using namespace`
+    of both is no ambiguity for it ([namespace.udir]/6)."""
+    parts = tuple(ns.split("::"))
+    out: dict[str, str] = {}
+    texts = [text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
+                      for t in [resolve_include(inc)] if t]
+    for t in texts:
+        try:
+            fi = ci.FileItems(t.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
+                    and it.kind in ("alias", "typedef")):
+                for n in it.names:
+                    out[n] = code_tokens(it)
     return out
 
 
@@ -820,7 +843,7 @@ def main() -> int:
     for s, p in plans.items():
         for name, t in p.target_of.items():
             e = targets.setdefault(t, {"funcs": [], "locals": [], "sources": [], "aliases": {}, "shared_from": set(),
-                                       "undefs": [], "binds": set(), "namespaces": {}})
+                                       "undefs": [], "binds": set(), "namespaces": {}, "alias_bodies": {}})
             e["funcs"].append((move_of[name].pc, name, p.funcs[name], s))
             if name in p.inject_lines:
                 e["binds"].add(name)
@@ -830,6 +853,8 @@ def main() -> int:
                 e["aliases"][s] = p.alias_at
             for x, names in p.namespace_names.items():
                 e["namespaces"].setdefault(x, set()).update(names)
+            for x, bodies in p.alias_bodies.items():
+                e["alias_bodies"].setdefault(x, {}).update(bodies)
         for t, its in p.moved_locals.items():
             targets[t]["locals"] += [(s, it, "local") for it in its]
         for t, its in p.decls_for.items():
@@ -896,7 +921,14 @@ def main() -> int:
             for x, names in sorted(e["namespaces"].items()):
                 for n in names & used:
                     providers[n].append(x)
+            # a type alias every provider (and the target's own file-scope copy, if any) spells the
+            # same is one entity, not an ambiguity ([namespace.udir]/6)
+            own_alias = {n: code_tokens(it) for _, it, _ in e["locals"]
+                         if it.kind in ("alias", "typedef") and not any(it.ns) for n in it.names}
             for n, xs in sorted(providers.items()):
+                bodies = {e["alias_bodies"].get(x, {}).get(n) for x in xs} | ({own_alias[n]} if n in own_alias else set())
+                if len(xs) > 1 and None not in bodies and len(bodies) == 1:
+                    continue
                 if len(xs) > 1:
                     users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses_unq})
                     problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
