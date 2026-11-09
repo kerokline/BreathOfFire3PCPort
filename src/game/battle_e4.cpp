@@ -60,7 +60,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 unsigned char* Ptr(U cell) { return move_script::At(static_cast<U>(move_script::Long(move_script::At(cell)))); }
 // The party's records by a byte (0..2 in play), the enemies' objects by an
 // actor byte (3..10: object actor - 3), as every original indexes them - the

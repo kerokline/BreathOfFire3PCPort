@@ -116,7 +116,7 @@ unsigned char* RecMenuLists() {
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
-short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short SMenuLists(const unsigned char* p) { return static_cast<short>(menu_lists::Word(p)); }
 
 // The low byte of Party_Count's answer: every caller here tests al or masks
 // eax with 0xFF.
@@ -503,7 +503,7 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
         menu_lists::SetWord(r + 0x10, 0);
         r = RecMenuLists();
     }
-    const short count = S(r + 0x10);
+    const short count = SMenuLists(r + 0x10);
     if (count < 3) {
         menu_lists::SetWord(r + 0x10, static_cast<std::uint16_t>(count + 1));
         r = RecMenuLists();
@@ -578,7 +578,7 @@ void SlideY(int step, short bound, bool down) {
     unsigned char* const moved = RecMenuLists();
     rv::As<records::WindowRecord>(moved)->y = rv::As<records::WindowRecord>(moved)->y + static_cast<unsigned>(step);
     unsigned char* const r = RecMenuLists();
-    if (down ? S(r + 6) > bound : S(r + 6) < bound) {
+    if (down ? SMenuLists(r + 6) > bound : SMenuLists(r + 6) < bound) {
         rv::As<records::WindowRecord>(r)->y = static_cast<std::uint16_t>(bound);
         RecMenuLists()[3] = 0;
     }
@@ -587,7 +587,7 @@ void SlideX(int step, short bound, bool right) {
     unsigned char* const moved = RecMenuLists();
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x + static_cast<unsigned>(step);
     unsigned char* const r = RecMenuLists();
-    if (right ? S(r + 4) > bound : S(r + 4) < bound) {
+    if (right ? SMenuLists(r + 4) > bound : SMenuLists(r + 4) < bound) {
         rv::As<records::WindowRecord>(r)->x = static_cast<std::uint16_t>(bound);
         RecMenuLists()[3] = 0;
     }
@@ -605,7 +605,7 @@ extern "C" void __cdecl MenuSlide_DownTo16(void) { SlideY(0x10, 0x10, true); }
 // (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuSlide_LeftOff(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kLeftOffBound));
-    const short x_read = S(RecMenuLists() + 4);
+    const short x_read = SMenuLists(RecMenuLists() + 4);
     SlideX(-0x20, bound, false);
     Widescreen_SlideHeld(RecMenuLists(), x_read, bound);
 }
@@ -615,7 +615,7 @@ extern "C" void __cdecl MenuSlide_RightTo17(void) { SlideX(0x20, 0x11, true); }
 // faster slide as MenuSlide_LeftOff's.
 extern "C" void __cdecl MenuSlide_RightOff(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kRightOffBound));
-    const short x_read = S(RecMenuLists() + 4);
+    const short x_read = SMenuLists(RecMenuLists() + 4);
     SlideX(0x20, bound, true);
     Widescreen_SlideHeld(RecMenuLists(), x_read, bound);
 }

@@ -73,8 +73,8 @@ namespace {
 unsigned char* PtrAtBattleFlow(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_flow::Long(battle_flow::At(address)))));
 }
-void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+void SetPtrAtBattleFlow(std::uint32_t address, const unsigned char* p) {
+    battle_flow::SetLong(battle_flow::At(address), static_cast<std::int32_t>(Low32(p)));
 }
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
@@ -446,7 +446,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_StartAbilityM
     const unsigned id = Word(At(::bof3::Img(at::kMagicId.v)));
     if ((At(::bof3::Img(at::kAbilityFlags.v) + id * 24)[0] & 0x10) == 0) return;
     const unsigned second = g.task_create(1, 0x43) & 0xFF;
-    SetPtrAt(::bof3::Img(at::kTasks.v) + second * at::kTaskSize + 0x80, Task(first));
+    SetPtrAtBattleFlow(::bof3::Img(at::kTasks.v) + second * at::kTaskSize + 0x80, Task(first));
     Task(second)[0xB] = static_cast<unsigned char>(a);
 }
 

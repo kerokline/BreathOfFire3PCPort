@@ -132,11 +132,9 @@ _Z15TextDraw_Injectv	data-layout	B0 promotion of text_draw.cpp's g_textlog: DIFF
 _ZN9text_draw9g_textlogE	data-layout	B0 promotion of text_draw.cpp's g_textlog: NEW _ZN9text_draw9g_textlogE  (bss)	8d2c5595
 _Game_WinMain@16	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER _Game_WinMain@16  first at instruction 293: 'cmp byte ptr [0], 0 @r6:local#345e7ec17582' -> 'cmp byte ptr [0], 0 @r6:local#355bc88a63ab'	8c2bab79
 _Game_WndProc@16	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER _Game_WndProc@16  first at instruction 23: 'cmp byte ptr [0], 1 @r6:local#345e7ec17582' -> 'cmp byte ptr [0], 1 @r6:local#617e1a42a62d'	8c2bab79
-__Z14WinMain_Injectv	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER __Z14WinMain_Injectv  first at instruction 111: 'push 0 @r6:local#345e7ec17582' -> 'push 0 @r6:local#355bc88a63ab'	8c2bab79
 __ZN12_GLOBAL__N_19ApplyModeEP6HWND__	data-layout	B0 promotion of win_main.cpp's g_pad_reset: GONE local:a22fed71f940  (named __ZN12_GLOBAL__N_19ApplyModeEP6HWND__)	8c2bab79
 Game_WinMain	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER Game_WinMain  first at instruction 287: 'cmp byte ptr [rip - 1], 0 @r4:local#345e7ec17582' -> 'cmp byte ptr [rip - 1], 0 @r4:local#63bedd034a43'	8c2bab79
 Game_WndProc	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER Game_WndProc  first at instruction 28: 'cmp byte ptr [rip - 1], 1 @r4:local#345e7ec17582' -> 'cmp byte ptr [rip - 1], 1 @r4:local#617e1a42a62d'	8c2bab79
-_Z14WinMain_Injectv	data-layout	B0 promotion of win_main.cpp's g_pad_reset: DIFFER _Z14WinMain_Injectv  first at instruction 124: 'lea rax, [rip] @r4:local#345e7ec17582' -> 'lea rax, [rip] @r4:local#63bedd034a43'	8c2bab79
 _ZN12_GLOBAL__N_19ApplyModeEP6HWND__	data-layout	B0 promotion of win_main.cpp's g_pad_reset: NEW local:b07c74f3c04f  (named _ZN12_GLOBAL__N_19ApplyModeEP6HWND__)	8c2bab79
 Scenario_Load	data-layout	B0 promotion of title_states.cpp's g_psp_title: DIFFER Scenario_Load  first at instruction 5: 'jmp qword ptr [rip + 8] @r4:local#a67ff6466418' -> 'jmp qword ptr [rip + 8] @r4:local#6f8d7397040a'	703591bc
 Scenario_Start	data-layout	B0 promotion of title_states.cpp's g_psp_title: DIFFER Scenario_Start  first at instruction 11: 'add eax, dword ptr [rip] @r4:local#5b5d7263536a' -> 'add eax, dword ptr [rip] @r4:local#617e1a42a62d'	703591bc
@@ -240,3 +238,4 @@ _ZN11field_frame1gE	x64-indirect	B0 promotion of field_frame.cpp's g_band, g_ban
 _ZN11field_frame12g_band_countE	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW _ZN11field_frame12g_band_countE  (bss)	126072d9
 _GLOBAL__sub_I_*@field_frame.cpp.obj	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW local:4151c93317f8  (named _GLOBAL__sub_I_*)	126072d9
 _ZN12_GLOBAL__N_16kStubsE	data-layout	B0 promotion of field_frame.cpp's g_band, g_band_count, g_band_added and its Callees g seam: NEW local:61d8831e897a  (named _ZN12_GLOBAL__N_16kStubsE)	126072d9
+BattleInput_NextMember	low32-site	B0 rename in battle_phases.cpp: names a renamed file-local helper (SetPtrAtBattlePhases) whose Low32() message holds __builtin_FUNCTION(); i686 identical	

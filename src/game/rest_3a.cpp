@@ -51,7 +51,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 U LRest3a(U address) { return static_cast<U>(move_script::Long(move_script::At(address))); }
 unsigned char* PtrAtRest3a(U cell) { return move_script::At(LRest3a(cell)); }
 U Addr(const void* p) { return Low32(p); }

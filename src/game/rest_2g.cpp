@@ -56,7 +56,7 @@ using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return Low32(p); }
 unsigned char BRest2g(U address) { return move_script::At(address)[0]; }
-short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S(const unsigned char* p) { return static_cast<short>(move_script::Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
 
 // The record the window layer is running, re-read from 0x905B84 wherever the

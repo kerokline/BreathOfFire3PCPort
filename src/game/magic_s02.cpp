@@ -110,7 +110,7 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
-short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
+short S16(const unsigned char* at) { return static_cast<short>(move_script::Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t Key(const void* p) { return Low32(p); }

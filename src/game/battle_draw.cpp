@@ -81,19 +81,19 @@ namespace {
 
 using namespace battle_draw;
 
-unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+unsigned char* AtBattleDraw(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 battle_draw::U Addr(const void* p) { return Low32(p); }
-battle_draw::U Word(const unsigned char* p) {
+battle_draw::U WordBattleDraw(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-battle_draw::U Long(const unsigned char* p) {
+battle_draw::U LongBattleDraw(const unsigned char* p) {
     battle_draw::U v;
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-float Float(const unsigned char* p) {
+float FloatBattleDraw(const unsigned char* p) {
     float v;
     std::memcpy(&v, p, sizeof v);
     return v;
@@ -102,9 +102,9 @@ void PutWord(unsigned char* p, battle_draw::U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
-unsigned char Byte(battle_draw::U address) { return At(address)[0]; }
+void PutLongBattleDraw(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
+void PutFloatBattleDraw(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
+unsigned char Byte(battle_draw::U address) { return AtBattleDraw(address)[0]; }
 std::int32_t S8(battle_draw::U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 std::int32_t S16(battle_draw::U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 
@@ -112,42 +112,42 @@ std::int32_t S16(battle_draw::U v) { return static_cast<std::int16_t>(static_cas
 // field_misc.cpp have the same; each rounds to the control word's precision
 // exactly as Capcom's) ---
 // fld a; fmul b; fstp
-inline float X87Mul(float a, float b) {
+inline float X87MulBattleDraw(float a, float b) {
     float r;
     __asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
     return r;
 }
 // fld a; fdiv b; fstp
-inline float X87Div(float a, float b) {
+inline float X87DivBattleDraw(float a, float b) {
     float r;
     __asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
     return r;
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
-void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
+void** DeviceBattleDraw() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtBattleDraw(::bof3::Img(D3d_Device_addr))))); }
+void* MethodBattleDraw(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-long SetTexture(battle_draw::U stage, battle_draw::U texture) {
-    void** device = Device();
-    return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
+long SetTextureBattleDraw(battle_draw::U stage, battle_draw::U texture) {
+    void** device = DeviceBattleDraw();
+    return reinterpret_cast<Com3>(MethodBattleDraw(device, 0x98))(device, stage, texture);
 }
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVertices(battle_draw::U type, battle_draw::U count) {
-    void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
+long DrawVerticesBattleDraw(battle_draw::U type, battle_draw::U count) {
+    void** device = DeviceBattleDraw();
+    return reinterpret_cast<Com6>(MethodBattleDraw(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
-unsigned char* Vertex(battle_draw::U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
-battle_draw::U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
+unsigned char* VertexBattleDraw(battle_draw::U i) { return AtBattleDraw(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+battle_draw::U DrawModeBattleDraw() { return LongBattleDraw(AtBattleDraw(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z; the diffuse as given. Specular, tu and tv are not written.
 void PutCorner(unsigned char* out, const unsigned char* xyz, battle_draw::U diffuse) {
-    PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
-    PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
-    PutLong(out + 0x08, Long(xyz + 8));
-    PutFloat(out + 0x0C, X87Div(Float(At(battle_draw::kRhwNumerator)), Float(xyz + 8)));
-    PutLong(out + 0x10, diffuse);
+    PutFloatBattleDraw(out + 0x00, X87MulBattleDraw(D3d_ScaleX, FloatBattleDraw(xyz)));
+    PutFloatBattleDraw(out + 0x04, X87MulBattleDraw(D3d_ScaleY, FloatBattleDraw(xyz + 4)));
+    PutLongBattleDraw(out + 0x08, LongBattleDraw(xyz + 8));
+    PutFloatBattleDraw(out + 0x0C, X87DivBattleDraw(FloatBattleDraw(AtBattleDraw(battle_draw::kRhwNumerator)), FloatBattleDraw(xyz + 8)));
+    PutLongBattleDraw(out + 0x10, diffuse);
 }
 
 // The Gouraud handlers' shared shape: n colours (r, g, b at +4 + i * 0x10, the
@@ -157,9 +157,9 @@ void GouraudCorners(const unsigned char* prim, battle_draw::U n) {
     unsigned long diffuse[3];
     for (battle_draw::U i = 0; i < n; ++i) {
         const unsigned char* const rgb = prim + 4 + i * 0x10;
-        battle_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawMode(), &diffuse[i], nullptr);
+        battle_draw::g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawModeBattleDraw(), &diffuse[i], nullptr);
     }
-    for (battle_draw::U i = 0; i < n; ++i) PutCorner(Vertex(i), prim + 8 + i * 0x10, static_cast<battle_draw::U>(diffuse[i]));
+    for (battle_draw::U i = 0; i < n; ++i) PutCorner(VertexBattleDraw(i), prim + 8 + i * 0x10, static_cast<battle_draw::U>(diffuse[i]));
 }
 
 }  // namespace
@@ -167,7 +167,7 @@ void GouraudCorners(const unsigned char* prim, battle_draw::U n) {
 // --- the Direct3D handlers -------------------------------------------------------
 // Each is reached from one site of Gfx_DrawOTag's Direct3D table (d3d-draw.md
 // section 2) and returns what DrawPrimitive returned (the caller does not read
-// it). Untextured and Gouraud (shade mode 2): SetTexture(0, NULL); the blend
+// it). Untextured and Gouraud (shade mode 2): SetTextureBattleDraw(0, NULL); the blend
 // mode Gfx_DrawTpage's low word, read for each colour and again for the blend;
 // the colour helper gets a null specular pointer, so the vertices' specular,
 // tu and tv stay as the last draw left them. The colours go into locals, as
@@ -180,13 +180,13 @@ void GouraudCorners(const unsigned char* prim, battle_draw::U n) {
 // reads (three vertices), which the next four-vertex handler overwrites.
 extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
-    PutLong(Vertex(3) + 8, 0);
-    SetTexture(0, 0);
+    PutLongBattleDraw(VertexBattleDraw(3) + 8, 0);
+    SetTextureBattleDraw(0, 0);
     battle_draw::g.ret_only(0);
     battle_draw::g.ret_only(0);
-    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_blend(prim[7], DrawModeBattleDraw());
     battle_draw::g.set_shade(2);   // Gouraud
-    return DrawVertices(4, 3);   // TRIANGLELIST
+    return DrawVerticesBattleDraw(4, 3);   // TRIANGLELIST
 }
 
 // original 0x5A18B0, table entry 11 (code 0x50, called at 0x59F144): a Gouraud
@@ -194,24 +194,24 @@ extern "C" long __cdecl D3d_DrawPolyG3(const unsigned char* prim) {
 // the other lines' do.
 extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
     GouraudCorners(prim, 2);
-    SetTexture(0, 0);
+    SetTextureBattleDraw(0, 0);
     battle_draw::g.ret_only(0);
     battle_draw::g.ret_only(1);
-    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_blend(prim[7], DrawModeBattleDraw());
     battle_draw::g.set_shade(2);
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(2) : DrawVertices(3, 2);   // LINESTRIP; DIV-0079 the quads
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(2) : DrawVerticesBattleDraw(3, 2);   // LINESTRIP; DIV-0079 the quads
 }
 
 // original 0x5A1B50, table entry 12 (code 0x58, called at 0x59F152): a Gouraud
 // two-segment polyline - three corners, a line strip of 3.
 extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
     GouraudCorners(prim, 3);
-    SetTexture(0, 0);
+    SetTextureBattleDraw(0, 0);
     battle_draw::g.ret_only(0);
     battle_draw::g.ret_only(1);
-    battle_draw::g.set_blend(prim[7], DrawMode());
+    battle_draw::g.set_blend(prim[7], DrawModeBattleDraw());
     battle_draw::g.set_shade(2);
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVertices(3, 3);   // LINESTRIP; DIV-0079 the quads
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVerticesBattleDraw(3, 3);   // LINESTRIP; DIV-0079 the quads
 }
 
 // --- the battle menu's lists -------------------------------------------------------
@@ -286,12 +286,12 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     unsigned char offset = 0, moving = 0;
     const unsigned char top = battle_draw::g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const battle_draw::U category = w[0xA];
-    battle_draw::U items = Long(At(::bof3::Img(kInventory.v) + category * 4)) + top;
-    battle_draw::U counts = Long(At(::bof3::Img(kCounts.v) + category * 4)) + top;   // 0 + top for key items: not read then
+    battle_draw::U items = LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + category * 4)) + top;
+    battle_draw::U counts = LongBattleDraw(AtBattleDraw(::bof3::Img(kCounts.v) + category * 4)) + top;   // 0 + top for key items: not read then
     battle_draw::U row = static_cast<std::uint16_t>(S8(offset) + static_cast<battle_draw::U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
-        const unsigned char item = At(items)[0];
+        const unsigned char item = AtBattleDraw(items)[0];
         if (item != 0) {
             unsigned char dim = 1;
             if (w[9] == 0) {
@@ -303,14 +303,14 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
             const battle_draw::U cursor = w[0xD];
             if (here == cursor) colour = 2;
             const unsigned char row_category = w[0xA];
-            const unsigned char count = row_category == 4 ? 1 : At(counts)[0];
+            const unsigned char count = row_category == 4 ? 1 : AtBattleDraw(counts)[0];
             const int x = static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7;
             if (here == cursor || here == w[0xC]) {
-                if (colour != 7) battle_draw::g.item_row(x, static_cast<int>(row), 7, row_category, At(items)[0], count, 1);
+                if (colour != 7) battle_draw::g.item_row(x, static_cast<int>(row), 7, row_category, AtBattleDraw(items)[0], count, 1);
                 battle_draw::g.item_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, w[0xA],
-                           At(items)[0], count, dim);
+                           AtBattleDraw(items)[0], count, dim);
             } else {
-                battle_draw::g.item_row(x, static_cast<int>(row), colour, row_category, At(items)[0], count, dim);
+                battle_draw::g.item_row(x, static_cast<int>(row), colour, row_category, AtBattleDraw(items)[0], count, dim);
             }
         }
         ++items;
@@ -322,7 +322,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
-        const unsigned char* const label = At(Long(At(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
+        const unsigned char* const label = AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
         const int y = static_cast<int>(static_cast<battle_draw::U>(window_rec->y)) + 7;
         const unsigned n = battle_draw::g.char_count(label);
         battle_draw::g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<battle_draw::U>(window_rec->x))), y, grey,
@@ -332,14 +332,14 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         const unsigned char cat = w[0xA];
         const unsigned room = cat != 4 ? 0x80 : 0x20;
         const unsigned have = battle_draw::g.count_used(cat) & 0xFFu;
-        battle_draw::g.sprintf_(reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(At(::bof3::Img(kFmt3d3d.v))), have, room);
+        battle_draw::g.sprintf_(reinterpret_cast<char*>(AtBattleDraw(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(AtBattleDraw(::bof3::Img(kFmt3d3d.v))), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        battle_draw::g.font8(static_cast<battle_draw::U>(window_rec->x) + 0x55, static_cast<battle_draw::U>(window_rec->y) + 0x7A, grey, At(::bof3::Img(kPrintBuf.v)));
+        battle_draw::g.font8(static_cast<battle_draw::U>(window_rec->x) + 0x55, static_cast<battle_draw::U>(window_rec->y) + 0x7A, grey, AtBattleDraw(::bof3::Img(kPrintBuf.v)));
     }
-    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[0x10] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
-    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[0x10] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[0x10] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
-        const battle_draw::U t = Word(w + 0x10);
+        const battle_draw::U t = WordBattleDraw(w + 0x10);
         PutWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
     }
     for (int b = 0; b < 10; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 0x28, static_cast<battle_draw::U>(window_rec->y), 1, 1);
@@ -352,7 +352,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x50, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1B, 1);
     for (int b = 0; b < 6; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 0x58, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1C, 1);
     battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x88, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1D, 1);
-    battle_draw::g.scroll_bar(At(Long(At(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x18, 7, 0x80,
+    battle_draw::g.scroll_bar(AtBattleDraw(LongBattleDraw(AtBattleDraw(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x18, 7, 0x80,
                  0x5C);
 }
 
@@ -386,16 +386,16 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     battle_draw::U row = static_cast<std::uint16_t>(S8(offset) + static_cast<battle_draw::U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
-        const unsigned char id = At(ids)[0];
+        const unsigned char id = AtBattleDraw(ids)[0];
         if (id != 0) {
             const unsigned char usable = static_cast<unsigned char>(battle_draw::g.skill_usable(w[8], static_cast<unsigned char>(BattleActorCopies_ItemActor), id));
             const unsigned char dim = usable == 0 ? 1 : 0;
             unsigned char colour = dim ? 7 : 0;
             if (i == w[0xD]) colour = 2;
-            const unsigned cost = battle_draw::g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), At(ids)[0], 1) & 0xFFu;
-            const unsigned icon = battle_draw::g.skill_icon(At(ids)[0]) & 0xFFu;
-            const std::int32_t here = static_cast<std::int32_t>(i) + S16(Word(w + 0x10));
-            const unsigned char* const record = At(::bof3::Img(kSkillRecords.v) + At(ids)[0] * 0x18u);
+            const unsigned cost = battle_draw::g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), AtBattleDraw(ids)[0], 1) & 0xFFu;
+            const unsigned icon = battle_draw::g.skill_icon(AtBattleDraw(ids)[0]) & 0xFFu;
+            const std::int32_t here = static_cast<std::int32_t>(i) + S16(WordBattleDraw(w + 0x10));
+            const unsigned char* const record = AtBattleDraw(::bof3::Img(kSkillRecords.v) + AtBattleDraw(ids)[0] * 0x18u);
             if (here == static_cast<std::int32_t>(w[0xD]) || here == static_cast<std::int32_t>(w[0xC])) {
                 if (colour != 7) battle_draw::g.skill_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
                 battle_draw::g.skill_row(static_cast<int>(static_cast<battle_draw::U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
@@ -411,13 +411,13 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     battle_draw::g.box(static_cast<battle_draw::U>(window_rec->x) + 3, static_cast<battle_draw::U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char* const label =
-            At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
+            AtBattleDraw(WordBattleDraw(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : LongBattleDraw(AtBattleDraw(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
         const int y = static_cast<int>(static_cast<battle_draw::U>(window_rec->y)) + 7;
         const battle_draw::U length = static_cast<battle_draw::U>(std::strlen(reinterpret_cast<const char*>(label)));
         battle_draw::g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<battle_draw::U>(window_rec->x)), y, 0, 0x10, label);
     }
-    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[9] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
-    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), At((w[9] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    battle_draw::g.pieces(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y), AtBattleDraw((w[9] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
         const unsigned char t = w[9];
         w[9] = (t & 0xF0) ? static_cast<unsigned char>(t - 0x10) : 0;
@@ -429,7 +429,7 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y) + 0x70, 0x18, 1);
     battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x), static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x19, 1);
     for (int b = 0; b < 17; ++b) battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + b * 8 + 8, static_cast<battle_draw::U>(window_rec->y) + 0x78, 0x1A, 1);
-    if (Word(w + 0x14) != 0) {
+    if (WordBattleDraw(w + 0x14) != 0) {
         battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 8, static_cast<battle_draw::U>(window_rec->y), 0x32, 1);
         battle_draw::g.piece(static_cast<battle_draw::U>(window_rec->x) + 0x90, static_cast<battle_draw::U>(window_rec->y), 0x33, 1);
     }

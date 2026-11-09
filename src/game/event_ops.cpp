@@ -106,7 +106,7 @@ using namespace event_ops;
 namespace {
 
 std::uint32_t AddressEventOps(const void* p) { return Low32(p); }
-unsigned char& Byte(std::uint32_t a) { return *At(a); }
+unsigned char& Byte(std::uint32_t a) { return *event_ops::At(a); }
 
 // Field_ScriptFlags' two bytes and Field_ScriptFlags2's, as the original
 // tests them (`test ah, n` on a dword read, `test byte ptr`).
@@ -139,8 +139,8 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 
 // Field_DirectionSteps' pair and the walk's unit pair for a direction - a
 // whole byte into tables of eight, as the original indexes them.
-std::uint32_t StepX(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
-std::uint32_t StepZ(unsigned d) { return static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
+std::uint32_t StepX(unsigned d) { return static_cast<std::uint32_t>(event_ops::Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u)); }
+std::uint32_t StepZ(unsigned d) { return static_cast<std::uint32_t>(event_ops::Long(reinterpret_cast<const unsigned char*>(Field_DirectionSteps) + d * 8u + 4)); }
 std::int32_t WalkX(unsigned d) { return event_ops::Long(event_ops::At(::bof3::Img(MoveCmd_F9Steps_addr)) + d * 8u); }
 std::int32_t WalkZ(unsigned d) { return event_ops::Long(event_ops::At(::bof3::Img(MoveCmd_F9Steps_addr)) + d * 8u + 4); }
 // The cell step pair: two signed bytes per direction.

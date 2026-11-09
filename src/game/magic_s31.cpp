@@ -91,7 +91,7 @@ void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_
 void AddVW(unsigned k, unsigned v) { SetVW(k, VW(k) + v); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
-short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
+short S16(const unsigned char* at) { return static_cast<short>(move_script::Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }

@@ -108,7 +108,7 @@ unsigned char* Actor() { return battle_items::At(BattleE2_Owner); }
 
 // The scratch words: SharedScratch + k, and the vertex scratch + k.
 unsigned char* Scr(unsigned k) { return battle_items::At(::bof3::Img(at::kScratch.v) + k); }
-short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
+short S16BattleItems(const unsigned char* at) { return static_cast<short>(battle_items::Word(at)); }
 unsigned char* Vtx(unsigned k) { return battle_items::At(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 
@@ -149,7 +149,7 @@ std::uint32_t AnimationInPointer(const unsigned char* actor, unsigned offset) {
 // vtable offset: entry offset / 4, as sound_callees.h's Method<> reads it,
 // so the index is right where an entry is 8 bytes (an object of ours on
 // x86-64; docs/x64-build-design.md 6.1).
-template <typename F> F Method(void* object, unsigned offset) {
+template <typename F> F MethodBattleItems(void* object, unsigned offset) {
     void* const* vtable;
     std::memcpy(&vtable, object, sizeof vtable);
     return reinterpret_cast<F>(vtable[offset / 4]);
@@ -216,7 +216,7 @@ extern "C" void __cdecl Sparkle_Launch(void) {
     battle_items::SetWord(Cur() + at::kY, battle_items::Word(Actor() + 0x30));
     c = Cur();
     unsigned char* const x = c + at::kX;
-    if (S16(battle_items::At(::bof3::Img(at::kSparkleOffsets.v) + (c[at::kLimit] & 0x1F) * 4)) < 0) {
+    if (S16BattleItems(battle_items::At(::bof3::Img(at::kSparkleOffsets.v) + (c[at::kLimit] & 0x1F) * 4)) < 0) {
         const int r = battle_items::g.rand();
         const unsigned char* const c2 = Cur();
         const auto dx = static_cast<std::uint16_t>(battle_items::Word(battle_items::At(::bof3::Img(at::kSparkleOffsets.v) + (c2[at::kLimit] & 0x1F) * 4)) - (r & 7));
@@ -339,13 +339,13 @@ extern "C" void __cdecl Sparkle_DrawRaysG2(unsigned start, unsigned radius) {
         unsigned char* const p = Gfx_PacketNext;
         battle_items::g.set_line_g2(p);
         battle_items::g.set_semi(p, 1);
-        PutFloat(p + 8, S16(Scr(0)));
+        PutFloat(p + 8, S16BattleItems(Scr(0)));
         battle_items::SetWord(Scr(6), static_cast<unsigned>((n & 0x1F) << 7));
-        PutFloat(p + 0xC, S16(Scr(2)));
-        const int co = battle_items::g.cos(S16(Scr(6)));
-        PutFloat(p + 0x18, Mul12(co, r) + S16(Scr(0)));
-        const int si = battle_items::g.sin(S16(Scr(6)));
-        PutFloat(p + 0x1C, Mul12(si, r) + S16(Scr(2)));
+        PutFloat(p + 0xC, S16BattleItems(Scr(2)));
+        const int co = battle_items::g.cos(S16BattleItems(Scr(6)));
+        PutFloat(p + 0x18, Mul12(co, r) + S16BattleItems(Scr(0)));
+        const int si = battle_items::g.sin(S16BattleItems(Scr(6)));
+        PutFloat(p + 0x1C, Mul12(si, r) + S16BattleItems(Scr(2)));
         p[4] = Scr(8)[0];
         p[5] = Scr(0xA)[0];
         p[6] = Scr(0xC)[0];
@@ -374,17 +374,17 @@ extern "C" void __cdecl Sparkle_DrawRaysG3(unsigned start, unsigned radius) {
         unsigned char* const p = Gfx_PacketNext;
         battle_items::g.set_line_g3(p);
         battle_items::g.set_semi(p, 1);
-        PutFloat(p + 8, S16(Scr(0)));
+        PutFloat(p + 8, S16BattleItems(Scr(0)));
         battle_items::SetWord(Scr(6), static_cast<unsigned>((n & 0x1F) << 7));
-        PutFloat(p + 0xC, S16(Scr(2)));
-        const int co = battle_items::g.cos(S16(Scr(6)));
-        PutFloat(p + 0x18, Mul12(co, half) + S16(Scr(0)));
-        const int si = battle_items::g.sin(S16(Scr(6)));
-        PutFloat(p + 0x1C, Mul12(si, half) + S16(Scr(2)));
-        const int co2 = battle_items::g.cos(S16(Scr(6)));
-        PutFloat(p + 0x28, Mul12(co2, full) + S16(Scr(0)));
-        const int si2 = battle_items::g.sin(S16(Scr(6)));
-        const int y2 = Mul12(si2, full) + S16(Scr(2));
+        PutFloat(p + 0xC, S16BattleItems(Scr(2)));
+        const int co = battle_items::g.cos(S16BattleItems(Scr(6)));
+        PutFloat(p + 0x18, Mul12(co, half) + S16BattleItems(Scr(0)));
+        const int si = battle_items::g.sin(S16BattleItems(Scr(6)));
+        PutFloat(p + 0x1C, Mul12(si, half) + S16BattleItems(Scr(2)));
+        const int co2 = battle_items::g.cos(S16BattleItems(Scr(6)));
+        PutFloat(p + 0x28, Mul12(co2, full) + S16BattleItems(Scr(0)));
+        const int si2 = battle_items::g.sin(S16BattleItems(Scr(6)));
+        const int y2 = Mul12(si2, full) + S16BattleItems(Scr(2));
         p[4] = 1;
         p[5] = 1;
         p[6] = 1;
@@ -421,17 +421,17 @@ extern "C" void __cdecl Sparkle_DrawDisc(void) {
         unsigned char* const p = Gfx_PacketNext;
         battle_items::g.set_poly_g3(p);
         battle_items::g.set_semi(p, 1);
-        PutFloat(p + 8, S16(Scr(0)));
-        PutFloat(p + 0xC, S16(Scr(2)));
+        PutFloat(p + 8, S16BattleItems(Scr(0)));
+        PutFloat(p + 0xC, S16BattleItems(Scr(2)));
         int s = battle_items::g.sin(a);
-        PutFloat(p + 0x18, Mul12(s, S16(Scr(4))) + S16(Scr(0)));
+        PutFloat(p + 0x18, Mul12(s, S16BattleItems(Scr(4))) + S16BattleItems(Scr(0)));
         int co = battle_items::g.cos(a);
-        PutFloat(p + 0x1C, Mul12(co, S16(Scr(4))) + S16(Scr(2)));
+        PutFloat(p + 0x1C, Mul12(co, S16BattleItems(Scr(4))) + S16BattleItems(Scr(2)));
         a += 0x200;
         s = battle_items::g.sin(a);
-        PutFloat(p + 0x28, Mul12(s, S16(Scr(4))) + S16(Scr(0)));
+        PutFloat(p + 0x28, Mul12(s, S16BattleItems(Scr(4))) + S16BattleItems(Scr(0)));
         co = battle_items::g.cos(a);
-        PutFloat(p + 0x2C, Mul12(co, S16(Scr(4))) + S16(Scr(2)));
+        PutFloat(p + 0x2C, Mul12(co, S16BattleItems(Scr(4))) + S16BattleItems(Scr(2)));
         p[4] = Scr(8)[0];
         p[5] = Scr(0xA)[0];
         p[6] = Scr(0xC)[0];
@@ -477,10 +477,10 @@ extern "C" void __cdecl MagicFx_DrawFan(void) {
     battle_items::SetWord(Scr(0), 0x120);
     battle_items::SetWord(Scr(0xA), sc[0xA] * 12u);
     int s = battle_items::g.sin(0);
-    battle_items::SetWord(Vtx(0x10), static_cast<unsigned>(Mul12(s, S16(Scr(0)))));
+    battle_items::SetWord(Vtx(0x10), static_cast<unsigned>(Mul12(s, S16BattleItems(Scr(0)))));
     int co = battle_items::g.cos(0);
     battle_items::SetWord(Vtx(0x14), 0);
-    battle_items::SetWord(Vtx(0x12), static_cast<unsigned>(Mul12(co, S16(Scr(0)))));
+    battle_items::SetWord(Vtx(0x12), static_cast<unsigned>(Mul12(co, S16BattleItems(Scr(0)))));
     battle_items::SetWord(Vtx(0xC), 0);
     battle_items::SetWord(Vtx(4), 0);
     for (int a = 0x200; a < 0x1200; a += 0x200) {
@@ -493,9 +493,9 @@ extern "C" void __cdecl MagicFx_DrawFan(void) {
         battle_items::SetWord(Vtx(8), x);
         battle_items::SetWord(Vtx(0xA), y);
         s = battle_items::g.sin(a);
-        battle_items::SetWord(Vtx(0x10), static_cast<unsigned>(Mul12(s, S16(Scr(0)))));
+        battle_items::SetWord(Vtx(0x10), static_cast<unsigned>(Mul12(s, S16BattleItems(Scr(0)))));
         co = battle_items::g.cos(a);
-        battle_items::SetWord(Vtx(0x12), static_cast<unsigned>(Mul12(co, S16(Scr(0)))));
+        battle_items::SetWord(Vtx(0x12), static_cast<unsigned>(Mul12(co, S16BattleItems(Scr(0)))));
         long depth, flag;
         battle_items::g.rtp3(VtxP(0), VtxP(8), VtxP(0x10), reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                reinterpret_cast<float*>(p + 0x28), &depth, &flag);
@@ -523,7 +523,7 @@ extern "C" void __cdecl MagicFx_PushActorMatrix(void) {
     short v[4];
     v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
     v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
-    v[2] = static_cast<short>(-(S16(sc + 0x3E) / 2));
+    v[2] = static_cast<short>(-(S16BattleItems(sc + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
         short m[10];
@@ -553,19 +553,19 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
     battle_items::SetWord(Scr(6), sc[0xA] * 4u + 0x40);
     battle_items::SetWord(Scr(8), static_cast<unsigned>((sc[0xB] & 0xF) << 8));
     int v = battle_items::g.cos(0);
-    battle_items::SetWord(Vtx(8), static_cast<unsigned>(Mul12(v, S16(Scr(0)))));
+    battle_items::SetWord(Vtx(8), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(0)))));
     v = battle_items::g.sin(0);
-    battle_items::SetWord(Vtx(0xA), static_cast<unsigned>(Mul12(v, S16(Scr(0)))));
-    v = battle_items::g.sin(S16(Scr(8)));
+    battle_items::SetWord(Vtx(0xA), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(0)))));
+    v = battle_items::g.sin(S16BattleItems(Scr(8)));
     {
         const std::uint16_t lift = battle_items::Word(Scr(6));
         battle_items::SetWord(Vtx(0xC), static_cast<unsigned>(Mul12(v, static_cast<short>(lift))) - lift);
     }
     v = battle_items::g.cos(0);
-    battle_items::SetWord(Vtx(0x18), static_cast<unsigned>(Mul12(v, S16(Scr(4)))));
+    battle_items::SetWord(Vtx(0x18), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(4)))));
     v = battle_items::g.sin(0);
     battle_items::SetWord(Vtx(0x1C), 0);
-    battle_items::SetWord(Vtx(0x1A), static_cast<unsigned>(Mul12(v, S16(Scr(4)))));
+    battle_items::SetWord(Vtx(0x1A), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(4)))));
     unsigned i = 1;
     for (int a = 0x80; a < 0x1080; a += 0x80, ++i) {
         sc = Sprite_Current;
@@ -574,10 +574,10 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
         battle_items::SetWord(Vtx(2), battle_items::Word(Vtx(0xA)));
         battle_items::SetWord(Vtx(4), battle_items::Word(Vtx(0xC)));
         v = battle_items::g.cos(a);
-        battle_items::SetWord(Vtx(8), static_cast<unsigned>(Mul12(v, S16(Scr(0)))));
+        battle_items::SetWord(Vtx(8), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(0)))));
         v = battle_items::g.sin(a);
-        battle_items::SetWord(Vtx(0xA), static_cast<unsigned>(Mul12(v, S16(Scr(0)))));
-        v = battle_items::g.sin(S16(Scr(8)));
+        battle_items::SetWord(Vtx(0xA), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(0)))));
+        v = battle_items::g.sin(S16BattleItems(Scr(8)));
         {
             const std::uint16_t lift = battle_items::Word(Scr(6));
             battle_items::SetWord(Vtx(0xC), static_cast<unsigned>(Mul12(v, static_cast<short>(lift))) - lift);
@@ -586,12 +586,12 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
         battle_items::SetWord(Vtx(0x12), battle_items::Word(Vtx(0x1A)));
         battle_items::SetWord(Vtx(0x14), 0);
         v = battle_items::g.cos(a);
-        battle_items::SetWord(Vtx(0x18), static_cast<unsigned>(Mul12(v, S16(Scr(4)))));
+        battle_items::SetWord(Vtx(0x18), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(4)))));
         v = battle_items::g.sin(a);
         sc = Sprite_Current;
         unsigned char* p = Gfx_PacketNext;
-        battle_items::SetWord(Vtx(0x1A), static_cast<unsigned>(Mul12(v, S16(Scr(4)))));
-        const std::uint32_t lean = static_cast<std::uint32_t>(static_cast<int>(S16(Vtx(8)))) << 9;
+        battle_items::SetWord(Vtx(0x1A), static_cast<unsigned>(Mul12(v, S16BattleItems(Scr(4)))));
+        const std::uint32_t lean = static_cast<std::uint32_t>(static_cast<int>(S16BattleItems(Vtx(8)))) << 9;
         battle_items::SetWord(Vtx(0x1C), 0);
         const unsigned x = static_cast<std::uint32_t>(battle_items::Long(sc + 0x34)) + lean;
         const unsigned z = static_cast<std::uint32_t>(battle_items::Long(sc + 0x38)) + lean;
@@ -638,17 +638,17 @@ extern "C" void __cdecl MagicFx_DrawDisc(void) {
         unsigned char* const p = Gfx_PacketNext;
         battle_items::g.set_poly_g3(p);
         battle_items::g.set_semi(p, 1);
-        PutFloat(p + 8, S16(Sprite_Current + 0x2E));
-        PutFloat(p + 0xC, S16(Sprite_Current + 0x30));
+        PutFloat(p + 8, S16BattleItems(Sprite_Current + 0x2E));
+        PutFloat(p + 0xC, S16BattleItems(Sprite_Current + 0x30));
         int v = battle_items::g.sin(a);
-        PutFloat(p + 0x18, Mul12(v, S16(Scr(0))) + S16(Sprite_Current + 0x2E));
+        PutFloat(p + 0x18, Mul12(v, S16BattleItems(Scr(0))) + S16BattleItems(Sprite_Current + 0x2E));
         v = battle_items::g.cos(a);
-        PutFloat(p + 0x1C, Mul12(v, S16(Scr(0))) + S16(Sprite_Current + 0x30));
+        PutFloat(p + 0x1C, Mul12(v, S16BattleItems(Scr(0))) + S16BattleItems(Sprite_Current + 0x30));
         a += 0x200;
         v = battle_items::g.sin(a);
-        PutFloat(p + 0x28, Mul12(v, S16(Scr(0))) + S16(Sprite_Current + 0x2E));
+        PutFloat(p + 0x28, Mul12(v, S16BattleItems(Scr(0))) + S16BattleItems(Sprite_Current + 0x2E));
         v = battle_items::g.cos(a);
-        PutFloat(p + 0x2C, Mul12(v, S16(Scr(0))) + S16(Sprite_Current + 0x30));
+        PutFloat(p + 0x2C, Mul12(v, S16BattleItems(Scr(0))) + S16BattleItems(Sprite_Current + 0x30));
         p[4] = static_cast<unsigned char>(Sprite_Current[9] * 10u);
         for (unsigned k : {5u, 6u, 0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) p[k] = 1;
         sc = Sprite_Current;
@@ -686,7 +686,7 @@ extern "C" void __cdecl BattleActor_UpdateScreenXY(void) {
     short v[4];
     v[0] = static_cast<short>((battle_items::Long(sc + 0x34) >> 9) - 0x4000);
     v[1] = static_cast<short>((battle_items::Long(sc + 0x38) >> 9) - 0x4000);
-    v[2] = static_cast<short>(-(S16(sc + 0x3E) / 2));
+    v[2] = static_cast<short>(-(S16BattleItems(sc + 0x3E) / 2));
     v[3] = 0;
     battle_items::g.set_tile1(p);
     long depth, flag;
@@ -766,15 +766,15 @@ extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
     void* const buffer = battle_items::g.create_from_wave(wave);
     StreamBuffer() = buffer;
     if (buffer == nullptr) return;
-    Method<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
+    MethodBattleItems<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
     void* b = StreamBuffer();
-    if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+    if (MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
         return;
     const unsigned char* data = nullptr;
     const unsigned size = battle_items::g.find_data(wave, &data);
     battle_items::g.buffer_write(StreamBuffer(), data, 0, size);
     b = StreamBuffer();
-    Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+    MethodBattleItems<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
 }
 
 // original 0x5A71C0: the stream's buffer, if any, stopped when GetStatus says
@@ -784,13 +784,13 @@ extern "C" void __cdecl SndStream_Stop(void) {
     void* b = StreamBuffer();
     if (b == nullptr) return;
     unsigned long status = 0;
-    Method<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
+    MethodBattleItems<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
     if (status & 1) {
         b = StreamBuffer();
-        Method<long (__stdcall*)(void*)>(b, 0x48)(b);
+        MethodBattleItems<long (__stdcall*)(void*)>(b, 0x48)(b);
     }
     b = StreamBuffer();
-    Method<unsigned long (__stdcall*)(void*)>(b, 8)(b);
+    MethodBattleItems<unsigned long (__stdcall*)(void*)>(b, 8)(b);
     StreamBuffer() = nullptr;
 }
 

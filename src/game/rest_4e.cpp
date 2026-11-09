@@ -47,7 +47,7 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
-using Handler = void (__cdecl*)();
+using HandlerRest4e = void (__cdecl*)();
 
 // --- the cells ------------------------------------------------------------------------
 
@@ -163,7 +163,7 @@ void Run(const char* who, U table, unsigned entries, unsigned index, const char*
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4e.md section 7)",
                     who, byte, index, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<HandlerRest4e>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 
 // The entry 0x9039F5 indexes the 60-entry table; past it the original writes

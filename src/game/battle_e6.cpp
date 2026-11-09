@@ -49,7 +49,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 U LBattleE6(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 void SetL(unsigned char* p, U v) { move_script::SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S8(unsigned char v) { return static_cast<std::int8_t>(v); }

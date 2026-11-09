@@ -97,7 +97,7 @@ unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsign
 save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
 save_menu::U Byte(save_menu::U address) { return AtSaveMenu(address)[0]; }
 void PutByte(save_menu::U address, save_menu::U v) { AtSaveMenu(address)[0] = static_cast<unsigned char>(v); }
-save_menu::U Word(save_menu::U address) {
+save_menu::U WordSaveMenu(save_menu::U address) {
     std::uint16_t v;
     std::memcpy(&v, AtSaveMenu(address), sizeof v);
     return v;
@@ -368,7 +368,7 @@ void SaveLists_Arm() {
 // strip and does not set the flag.
 extern "C" void __cdecl Gfx_ClutStripCopyRow(unsigned row) {
     const U base = ((row & 0xFF) << 9) + ::bof3::Img(Gfx_ClutStrip_addr);
-    for (U i = 0; i < 0x100; ++i) PutWord(base + i * 2, Word(base + i * 2 - 0x4000));
+    for (U i = 0; i < 0x100; ++i) PutWord(base + i * 2, WordSaveMenu(base + i * 2 - 0x4000));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -518,7 +518,7 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
         }
         PutByte(record + 0x1D, 0);
         save_menu::g.recalc(AtSaveMenu(record));
-        const save_menu::U hp = Word(record + 0x20), ap = Word(record + 0x22);
+        const save_menu::U hp = WordSaveMenu(record + 0x20), ap = WordSaveMenu(record + 0x22);
         PutWord(record + 0x18, hp);
         PutWord(record + 0x1A, ap);
         PutByte(record + 0x1D, 0);
@@ -786,9 +786,9 @@ extern "C" void __cdecl TitleMenu_DrawPiece(int x, int y, unsigned index, unsign
     const save_menu::U e = ::bof3::Img(at::kPieces.v) + (index & 0xFF) * 10;
     rv::Store<save_menu::U>(s->u, Byte(e));
     rv::Store<save_menu::U>(s->v, Byte(e + 2));
-    rv::Store<save_menu::U>(s->w, Word(e + 4));
-    rv::Store<save_menu::U>(s->h, Word(e + 6));
-    rv::Store<save_menu::U>(s->clut, Word(e + 8) << 6);
+    rv::Store<save_menu::U>(s->w, WordSaveMenu(e + 4));
+    rv::Store<save_menu::U>(s->h, WordSaveMenu(e + 6));
+    rv::Store<save_menu::U>(s->clut, WordSaveMenu(e + 8) << 6);
     save_menu::g.commit(slot, 0x1C);
 }
 
@@ -1216,7 +1216,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
     if (delay == 0) {
         const save_menu::U map_4 = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 4), map_0 = SaveMenu_SavedButtons, map_8 = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 8);
         PutLong(::bof3::Img(at::kButtons.v) + 4, map_4);
-        const save_menu::U map_10 = Word(::bof3::Img(at::kSavedButtons.v) + 0x10);
+        const save_menu::U map_10 = WordSaveMenu(::bof3::Img(at::kSavedButtons.v) + 0x10);
         PutLong(::bof3::Img(at::kButtons.v), map_0);
         const save_menu::U map_c = LongSaveMenu(::bof3::Img(at::kSavedButtons.v) + 0xC);
         PutWord(::bof3::Img(at::kButtons.v) + 0x10, map_10);

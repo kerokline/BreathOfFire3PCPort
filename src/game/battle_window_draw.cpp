@@ -76,8 +76,8 @@ using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
 unsigned char* Window(unsigned slot) { return move_script::At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowStride); }
-char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
-const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
+char* PrintBuf() { return reinterpret_cast<char*>(move_script::At(::bof3::Img(at::kPrintBuf.v))); }
+const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(move_script::At(at)); }
 
 std::int32_t S16BattleWindowDraw(std::uint32_t v) { return static_cast<std::int16_t>(v); }
 float F(std::int32_t v) { return static_cast<float>(v); }

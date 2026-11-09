@@ -44,7 +44,7 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
-using Handler = scenario_harness::Handler;
+using HandlerModeRest = scenario_harness::Handler;
 
 U UL(U a) { return static_cast<U>(move_script::Long(move_script::At(a))); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
@@ -65,7 +65,7 @@ void StepDispatch(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: Game_Step is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/mode-rest.md section 6)",
                     who, step, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+    reinterpret_cast<HandlerModeRest>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
 }
 
 // call File_LoadDone; test eax, eax; jne done; loop: Task_Sleep(1);

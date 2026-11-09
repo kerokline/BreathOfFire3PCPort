@@ -96,7 +96,7 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xF
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
-short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
+short S16(const unsigned char* at) { return static_cast<short>(move_script::Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t Key(const void* p) { return Low32(p); }

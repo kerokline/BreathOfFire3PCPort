@@ -66,11 +66,11 @@ using namespace battle_phases;
 namespace {
 
 unsigned char& BBattlePhases(std::uint32_t address) { return *battle_phases::At(address); }
-unsigned char* PtrAt(std::uint32_t address) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
+unsigned char* PtrAtBattlePhases(std::uint32_t address) {
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(battle_phases::Long(battle_phases::At(address)))));
 }
-void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
+void SetPtrAtBattlePhases(std::uint32_t address, const unsigned char* p) {
+    battle_phases::SetLong(battle_phases::At(address), static_cast<std::int32_t>(Low32(p)));
 }
 unsigned char* MemberBattlePhases(unsigned index) { return battle_phases::At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
 unsigned char* EnemyObject(unsigned index) { return battle_phases::At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
@@ -78,7 +78,7 @@ unsigned char* Window(unsigned index) { return battle_phases::At(::bof3::Img(Win
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.
 unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
-unsigned char* MenuRecord() { return PtrAt(::bof3::Img(at::kMenuRecord.v)); }
+unsigned char* MenuRecord() { return PtrAtBattlePhases(::bof3::Img(at::kMenuRecord.v)); }
 int S8(std::uint32_t address) { return static_cast<signed char>(BBattlePhases(address)); }
 
 // A tail jump through a .data table, as the three stubs have it: the entry
@@ -269,7 +269,7 @@ extern "C" void __cdecl Battle_Init(void) {
     if (EventBattle_Id == 0) battle_phases::g.load_dat(static_cast<int>(Game_AreaNumber + 0x15D));
     const unsigned char event = EventBattle_Id;
     for (unsigned i = 0; i < 4; ++i) battle_phases::SetLong(battle_phases::At(::bof3::Img(BattlePhases_B24_addr) + 4 * i), 0);
-    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAt(::bof3::Img(at::kEventHook.v)))(6);
+    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAtBattlePhases(::bof3::Img(at::kEventHook.v)))(6);
     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
 }
 
@@ -421,7 +421,7 @@ extern "C" void __cdecl BattleInput_NextMember(void) {
                 if ((q[0x90] & 0x20) == 0 && (static_cast<std::uint32_t>(static_cast<std::int32_t>(member_q->flags_134)) & 0x14001u) == 0) {
                     unsigned char* const p = MemberBattlePhases(c);
                     BattleE4_MenuActor = reinterpret_cast<records::PartyMember*>(p);
-                    SetPtrAt(::bof3::Img(at::kMenuRecord.v), p + 0x124);
+                    SetPtrAtBattlePhases(::bof3::Img(at::kMenuRecord.v), p + 0x124);
                     battle_phases::g.banner_show_name(p);
                     rv::As<records::WindowRecord>(Window(4))->state = 1;
                     rv::As<records::WindowRecord>(Window(3))->state = 1;

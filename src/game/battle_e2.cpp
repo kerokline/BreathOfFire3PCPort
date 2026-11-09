@@ -53,7 +53,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& B(U address) { return move_script::At(address)[0]; }
 U UL(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 U Key(const void* p) { return Low32(p); }
 unsigned char* PtrIn(const unsigned char* p) { return move_script::At(UL(p)); }
