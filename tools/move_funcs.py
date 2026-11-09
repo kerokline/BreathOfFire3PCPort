@@ -657,11 +657,10 @@ def at_uses(it: ci.Item) -> set[str]:
 
 
 def distinct(ents: set[str]) -> bool:
-    """Whether names of these entities, met in one scope, are ambiguous: a class name is hidden by
-    a function or variable of the same name ([basic.scope.hiding]/2: event_leader's Table() and
-    move_script::Table), so it counts only when nothing else is there."""
-    other = {e for e in ents if not e.startswith("class ")}
-    return len(other) > 1 or (not other and len(ents) > 1)
+    """Whether names of these entities, met in one scope, are ambiguous. A class name is not hidden
+    by a function another using-directive brings: clang calls event_leader's file-local Table()
+    and move_script::Table (a struct) ambiguous in field_4, so every two entities count."""
+    return len(ents) > 1
 
 
 def included_texts(text: str) -> list[str]:
@@ -1317,6 +1316,14 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
             switches.append(it)
     out += [it.text[switch_start(it) - it.start:].rstrip("\n") + "\n" for it in switches]
     out += [l + "\n" for l in sort_includes(incs, f'#include "{include_name(th)}"')]
+    # <windows.h> (minwindef.h) defines `far` and `near` as empty macros; a source that did not include
+    # it may name one (field_e1's `const std::int32_t far`), and the target now has it from another
+    if any(re.match(r"#\s*include\s*<windows\.h>", i.strip()) for i in incs):
+        named = set().union(set(), *(it.uses | it.declares for _, _, it, _ in e["funcs"]),
+                            *(it.uses | it.declares for _, it, _ in e["locals"]))
+        for m in ("far", "near"):
+            if m in named:
+                out.append(f"#undef {m}  // <windows.h>'s empty macro: a moved body names {m}\n")
     out.append("\n")
     if aliases:
         target_ns = f"{stem}::at" if len(aliases) > 1 else aliases[0]
