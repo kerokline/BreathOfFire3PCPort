@@ -1054,7 +1054,12 @@ def switch_start(it: ci.Item) -> int:
 
 
 def target_inject_name(t: str) -> str:
-    return camel(Path(t).stem) + "_Inject"
+    """<TStem>_Inject, or <Dir><TStem>_Inject when a flat src/game/<stem>.cpp of the same stem exists
+    (field/move_script.cpp beside move_script.cpp): the two _Inject()s would be one symbol."""
+    p = Path(t)
+    if p.parent != Path("src/game") and (ROOT / "src" / "game" / (p.stem + ".cpp")).exists():
+        return camel(p.parent.name) + camel(p.stem) + "_Inject"
+    return camel(p.stem) + "_Inject"
 
 
 def write_local_header(lh: str, s: str, p: SourcePlan, shared: list[ci.Item]) -> None:
