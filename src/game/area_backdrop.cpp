@@ -143,10 +143,10 @@ extern "C" void __cdecl AreaMap_DrawBackdrop(const unsigned char* entry) {
 // (-53, 0)..(372, 239) - the same rule as AreaMap_DrawBackdrop above, and
 // the fuzz (before Widescreen_Inject) compares the original's.
 extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b) {
-    g.draw_mode(Gfx_PacketNext, 0, 1, 0x95, 0);
-    g.commit(7, 0xC);
+    area_backdrop::g.draw_mode(Gfx_PacketNext, 0, 1, 0x95, 0);
+    area_backdrop::g.commit(7, 0xC);
     unsigned char* const quad = Gfx_PacketNext;
-    g.set_poly_g4(quad);
+    area_backdrop::g.set_poly_g4(quad);
     const float wide = static_cast<float>(Widescreen_Live());
     const float left = 0.0f - wide;   // not -wide: -0.0f when wide is 0
     const float right = 319.0f + wide;
@@ -164,7 +164,7 @@ extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b)
     quad[0x34] = quad[0x24] = 0;
     quad[0x35] = quad[0x25] = 0;
     quad[0x36] = quad[0x26] = 0;
-    g.commit(7, 0x44);
+    area_backdrop::g.commit(7, 0x44);
 }
 
 // original 0x4FD3E0 (read 2026-09-30): the sunset's glow over the sky above -
@@ -176,11 +176,11 @@ extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b)
 // DIV-0041: (-53, 0)..(373, 240) under a wide picture, the fuzz (before
 // Widescreen_Inject) comparing the original's.
 extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0xB5, 0);
-    g.commit(3, 0xC);
+    area_backdrop::g.draw_mode(Gfx_PacketNext, 0, 0, 0xB5, 0);
+    area_backdrop::g.commit(3, 0xC);
     unsigned char* const quad = Gfx_PacketNext;
-    g.set_poly_f4(quad);
-    g.set_semi(quad, 1);
+    area_backdrop::g.set_poly_f4(quad);
+    area_backdrop::g.set_semi(quad, 1);
     const float wide = static_cast<float>(Widescreen_Live());
     const float left = 0.0f - wide;   // not -wide: -0.0f when wide is 0
     const float right = 320.0f + wide;
@@ -197,7 +197,7 @@ extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
     quad[5] = 0;
     quad[6] = 0;
     quad[4] = static_cast<unsigned char>(static_cast<int>(step) / 8);   // cdq / and 7 / sar 3: toward zero
-    g.commit(3, 0x38);
+    area_backdrop::g.commit(3, 0x38);
 }
 
 // original 0x571D30: AreaMap_EntryHandlers 2 (PSX FUN_801592EC) - a texture

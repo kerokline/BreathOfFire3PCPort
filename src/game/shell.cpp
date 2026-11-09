@@ -197,7 +197,7 @@ void Shell_MapDefaultKeys() {
 // read, Input_Held the new word, Input_Pressed the bits that went down. The
 // high word - which Pad_Read never sets - the same for pad 2 at 0x7E1BF0.
 extern "C" void __cdecl Input_Latch(void) {
-    const U word = g.pad_read();
+    const U word = shell::g.pad_read();
     const std::uint16_t now1 = static_cast<std::uint16_t>(word);
     const std::uint16_t was1 = Input_Held;
     Input_Held = now1;
@@ -286,7 +286,7 @@ extern "C" void __cdecl Game_Init(void) {
 // byte (+0x2C) 1 and clear colour (+0x2D..+0x2F) black. The eax the original
 // leaves (Gpu_ClearOTagR's, al 0) is not read by its caller.
 extern "C" void __cdecl Gfx_InitBufferBlock(unsigned char* block) {
-    g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
+    shell::g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
     block[0x2C] = 1;
     block[0x2D] = 0;
     block[0x2E] = 0;
@@ -304,7 +304,7 @@ extern "C" void __cdecl Gfx_LinkOTags(void) {
         const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
         const U buffer = Gfx_BufferIndex;
         const U block = Addr(Gfx_CurrentEnv);
-        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));
+        shell::g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));
     }
 }
 

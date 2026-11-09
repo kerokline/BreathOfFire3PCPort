@@ -71,7 +71,7 @@ void PutWord(unsigned char* p, U v) {
 }
 
 battle_odds::U BannerCurrent() { return BattleMisc_BannerCurrent; }
-U SpriteCurrent() { return Long(AtBattleOdds(at::Sprite_CurrentAt())); }
+U SpriteCurrent() { return Long(AtBattleOdds(battle_odds::at::Sprite_CurrentAt())); }
 unsigned char* Sprite() { return AtBattleOdds(SpriteCurrent()); }
 
 }  // namespace
