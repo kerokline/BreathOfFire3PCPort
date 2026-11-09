@@ -104,13 +104,13 @@ std::int32_t PtrValueMagicS16(const void* p) { return static_cast<std::int32_t>(
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
-unsigned char* Scr(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
-short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
+unsigned char* ScrMagicS16(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
+short S16(const unsigned char* a) { return static_cast<short>(move_script::Word(a)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
 // `fild dword` then `fstp dword`: the integer as a float.
-void PutFloat(unsigned char* a, int v) {
+void PutFloatMagicS16(unsigned char* a, int v) {
     const float f = static_cast<float>(v);
     std::memcpy(a, &f, sizeof f);
 }
@@ -130,7 +130,7 @@ unsigned char* ActorRecord(unsigned char actor) {
 // a jmp read in place, the type unchecked (the spawns store 0).
 void Dispatch(const Pool& p) {
     const unsigned type = Cur(p)[kType];
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(p.types + 4 * type)))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(p.types + 4 * type)))))();
 }
 
 // original (e.g. 0x4B9B30): the sparkle's phase +2 through a three-entry
@@ -167,37 +167,37 @@ void Launch(const Pool& p) {
     BumpMagicS16(c[kTimer], -1);
     c = Cur(p);
     if (c[kTimer] != 0) return;
-    SetLong(c + 0x14, rv::As<records::SpriteHead>(Owner())->x);
-    SetLong(Cur(p) + 0x18, rv::As<records::SpriteHead>(Owner())->z);
-    SetLong(Cur(p) + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
-    SetWord(Cur(p) + kX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
-    SetWord(Cur(p) + kY, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
+    move_script::SetLong(c + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    move_script::SetLong(Cur(p) + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    move_script::SetLong(Cur(p) + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    move_script::SetWord(Cur(p) + kX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    move_script::SetWord(Cur(p) + kY, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     c = Cur(p);
     unsigned char* const x = c + kX;
     if (S16(Mem(p.offsets + (c[kLimit] & 0x1F) * 4)) < 0) {
         const int r = MH_CALL(Rand)();
         const unsigned char* const c2 = Cur(p);
-        SetWord(x, Word(x) + static_cast<std::uint16_t>(Word(Mem(p.offsets + (c2[kLimit] & 0x1F) * 4)) - (r & 7)));
+        move_script::SetWord(x, move_script::Word(x) + static_cast<std::uint16_t>(move_script::Word(Mem(p.offsets + (c2[kLimit] & 0x1F) * 4)) - (r & 7)));
     } else {
         const int r = MH_CALL(Rand)();
         const unsigned char* const c2 = Cur(p);
-        SetWord(x, Word(x) + static_cast<std::uint16_t>((r & 7) + Word(Mem(p.offsets + (c2[kLimit] & 0x1F) * 4))));
+        move_script::SetWord(x, move_script::Word(x) + static_cast<std::uint16_t>((r & 7) + move_script::Word(Mem(p.offsets + (c2[kLimit] & 0x1F) * 4))));
     }
     unsigned char* const y = Cur(p) + kY;
     {
         const int r = MH_CALL(Rand)();
         const unsigned char* const c2 = Cur(p);
-        SetWord(y, Word(y) - static_cast<std::uint16_t>((r & 7) + Word(Mem(p.offsets + 2 + (c2[kLimit] & 0x1F) * 4))));
+        move_script::SetWord(y, move_script::Word(y) - static_cast<std::uint16_t>((r & 7) + move_script::Word(Mem(p.offsets + 2 + (c2[kLimit] & 0x1F) * 4))));
     }
     c = Cur(p);
-    SetWord(c + kBaseX, Word(c + kX));
+    move_script::SetWord(c + kBaseX, move_script::Word(c + kX));
     {
         const int r = MH_CALL(Rand)();
-        SetWord(Cur(p) + kDriftY, static_cast<unsigned>(r & 1));
+        move_script::SetWord(Cur(p) + kDriftY, static_cast<unsigned>(r & 1));
     }
     {
         const int r = MH_CALL(Rand)();
-        SetWord(Cur(p) + kWave, static_cast<unsigned>(r));
+        move_script::SetWord(Cur(p) + kWave, static_cast<unsigned>(r));
     }
     {
         const int r = MH_CALL(Rand)();
@@ -211,22 +211,22 @@ void Launch(const Pool& p) {
 
 // The sway the rise and the fade share: +0xC up; x = base + sin((+0xC & 0x3F)
 // << 6) * 24 >> 12 (the angle kept in scratch +6); y += the drift +0xA.
-void Sway(const Pool& p) {
+void SwayMagicS16(const Pool& p) {
     unsigned char* c = Cur(p);
-    SetWord(c + kWave, Word(c + kWave) + 1);
+    move_script::SetWord(c + kWave, move_script::Word(c + kWave) + 1);
     const int angle = (Cur(p)[kWave] & 0x3F) << 6;
-    SetWord(Scr(6), static_cast<unsigned>(angle));
+    move_script::SetWord(ScrMagicS16(6), static_cast<unsigned>(angle));
     const int s = MH_CALL(Math_Sin)(angle);
     c = Cur(p);
-    SetWord(c + kX, static_cast<unsigned>(Mul12(s, 24)) + Word(c + kBaseX));
+    move_script::SetWord(c + kX, static_cast<unsigned>(Mul12(s, 24)) + move_script::Word(c + kBaseX));
     c = Cur(p);
-    SetWord(c + kY, Word(c + kY) + Word(c + kDriftY));
+    move_script::SetWord(c + kY, move_script::Word(c + kY) + move_script::Word(c + kDriftY));
 }
 
 // original (e.g. 0x4B9D30): the rise. The sway; the count +6 up; at the rise
 // length +7 the phase on.
 void Rise(const Pool& p) {
-    Sway(p);
+    SwayMagicS16(p);
     BumpMagicS16(Cur(p)[kCount]);
     unsigned char* const c = Cur(p);
     if (c[kCount] == c[kLimit]) BumpMagicS16(c[kPhase]);
@@ -236,7 +236,7 @@ void Rise(const Pool& p) {
 // fourth frame; the brightness +5 down, and at 0 the owner's sparkle count
 // +0xB down and the sparkle freed (a tail jmp in the original).
 void Fade(const Pool& p) {
-    Sway(p);
+    SwayMagicS16(p);
     if ((Frame_Counter & 3) == 0) BumpMagicS16(Cur(p)[kCount], -1);
     BumpMagicS16(Cur(p)[kTimer], -1);
     if (Cur(p)[kTimer] != 0) return;
@@ -249,24 +249,24 @@ void Fade(const Pool& p) {
 void DrawMode(const Pool& p) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     const unsigned char* const c = Cur(p);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(c + 0x14)), static_cast<unsigned long>(Long(c + 0x18)), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(move_script::Long(c + 0x14)), static_cast<unsigned long>(move_script::Long(c + 0x18)), 2, 0xC);
 }
 void Commit(const Pool& p) {
     const unsigned char* const c = Cur(p);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(c + 0x14)), static_cast<unsigned long>(Long(c + 0x18)), 2, 0x34);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(move_script::Long(c + 0x14)), static_cast<unsigned long>(move_script::Long(c + 0x18)), 2, 0x34);
 }
 // Scratch +0 / +2 the sparkle's screen point (read before the draw mode).
 void PointToScratch(const Pool& p) {
     const unsigned char* const c = Cur(p);
-    SetWord(Scr(0), Word(c + kX));
-    SetWord(Scr(2), Word(c + kY));
+    move_script::SetWord(ScrMagicS16(0), move_script::Word(c + kX));
+    move_script::SetWord(ScrMagicS16(2), move_script::Word(c + kY));
 }
 // Scratch +8 / +0xA / +0xC: the brightness +5 times 6.
-void RayShade(const Pool& p) {
+void RayShadeMagicS16(const Pool& p) {
     const unsigned char* const c = Cur(p);
-    SetWord(Scr(8), c[kTimer] * 6u);
-    SetWord(Scr(0xA), c[kTimer] * 6u);
-    SetWord(Scr(0xC), c[kTimer] * 6u);
+    move_script::SetWord(ScrMagicS16(8), c[kTimer] * 6u);
+    move_script::SetWord(ScrMagicS16(0xA), c[kTimer] * 6u);
+    move_script::SetWord(ScrMagicS16(0xC), c[kTimer] * 6u);
 }
 
 // original (e.g. 0x4B9E30): four gouraud lines from the sparkle's point,
@@ -275,7 +275,7 @@ void RayShade(const Pool& p) {
 void RaysG2(const Pool& p, unsigned start, unsigned radius) {
     PointToScratch(p);
     DrawMode(p);
-    RayShade(p);
+    RayShadeMagicS16(p);
     int n = static_cast<int>(start & 0xFFFF);
     const int end = n + 0x20;
     const int r = static_cast<int>(radius & 0xFFFF);
@@ -283,16 +283,16 @@ void RaysG2(const Pool& p, unsigned start, unsigned radius) {
         unsigned char* const q = Gfx_PacketNext;
         MH_CALL(Gpu_SetLineG2)(q);
         MH_CALL(Gpu_SetSemiTrans)(q, 1);
-        PutFloat(q + 8, S16(Scr(0)));
-        SetWord(Scr(6), static_cast<unsigned>((n & 0x1F) << 7));
-        PutFloat(q + 0xC, S16(Scr(2)));
-        const int co = MH_CALL(Math_Cos)(S16(Scr(6)));
-        PutFloat(q + 0x18, Mul12(co, r) + S16(Scr(0)));
-        const int si = MH_CALL(Math_Sin)(S16(Scr(6)));
-        PutFloat(q + 0x1C, Mul12(si, r) + S16(Scr(2)));
-        q[4] = Scr(8)[0];
-        q[5] = Scr(0xA)[0];
-        q[6] = Scr(0xC)[0];
+        PutFloatMagicS16(q + 8, S16(ScrMagicS16(0)));
+        move_script::SetWord(ScrMagicS16(6), static_cast<unsigned>((n & 0x1F) << 7));
+        PutFloatMagicS16(q + 0xC, S16(ScrMagicS16(2)));
+        const int co = MH_CALL(Math_Cos)(S16(ScrMagicS16(6)));
+        PutFloatMagicS16(q + 0x18, Mul12(co, r) + S16(ScrMagicS16(0)));
+        const int si = MH_CALL(Math_Sin)(S16(ScrMagicS16(6)));
+        PutFloatMagicS16(q + 0x1C, Mul12(si, r) + S16(ScrMagicS16(2)));
+        q[4] = ScrMagicS16(8)[0];
+        q[5] = ScrMagicS16(0xA)[0];
+        q[6] = ScrMagicS16(0xC)[0];
         q[0x14] = 1;
         q[0x15] = 1;
         q[0x16] = 1;
@@ -306,7 +306,7 @@ void RaysG2(const Pool& p, unsigned start, unsigned radius) {
 void RaysG3(const Pool& p, unsigned start, unsigned radius) {
     PointToScratch(p);
     DrawMode(p);
-    RayShade(p);
+    RayShadeMagicS16(p);
     int n = static_cast<int>(start & 0xFFFF);
     const int end = n + 0x20;
     const int full = static_cast<int>(radius & 0xFFFF);
@@ -315,24 +315,24 @@ void RaysG3(const Pool& p, unsigned start, unsigned radius) {
         unsigned char* const q = Gfx_PacketNext;
         MH_CALL(Gpu_SetLineG3)(q);
         MH_CALL(Gpu_SetSemiTrans)(q, 1);
-        PutFloat(q + 8, S16(Scr(0)));
-        SetWord(Scr(6), static_cast<unsigned>((n & 0x1F) << 7));
-        PutFloat(q + 0xC, S16(Scr(2)));
-        const int co = MH_CALL(Math_Cos)(S16(Scr(6)));
-        PutFloat(q + 0x18, Mul12(co, half) + S16(Scr(0)));
-        const int si = MH_CALL(Math_Sin)(S16(Scr(6)));
-        PutFloat(q + 0x1C, Mul12(si, half) + S16(Scr(2)));
-        const int co2 = MH_CALL(Math_Cos)(S16(Scr(6)));
-        PutFloat(q + 0x28, Mul12(co2, full) + S16(Scr(0)));
-        const int si2 = MH_CALL(Math_Sin)(S16(Scr(6)));
-        const int y2 = Mul12(si2, full) + S16(Scr(2));
+        PutFloatMagicS16(q + 8, S16(ScrMagicS16(0)));
+        move_script::SetWord(ScrMagicS16(6), static_cast<unsigned>((n & 0x1F) << 7));
+        PutFloatMagicS16(q + 0xC, S16(ScrMagicS16(2)));
+        const int co = MH_CALL(Math_Cos)(S16(ScrMagicS16(6)));
+        PutFloatMagicS16(q + 0x18, Mul12(co, half) + S16(ScrMagicS16(0)));
+        const int si = MH_CALL(Math_Sin)(S16(ScrMagicS16(6)));
+        PutFloatMagicS16(q + 0x1C, Mul12(si, half) + S16(ScrMagicS16(2)));
+        const int co2 = MH_CALL(Math_Cos)(S16(ScrMagicS16(6)));
+        PutFloatMagicS16(q + 0x28, Mul12(co2, full) + S16(ScrMagicS16(0)));
+        const int si2 = MH_CALL(Math_Sin)(S16(ScrMagicS16(6)));
+        const int y2 = Mul12(si2, full) + S16(ScrMagicS16(2));
         q[4] = 1;
         q[5] = 1;
         q[6] = 1;
-        PutFloat(q + 0x2C, y2);
-        q[0x14] = Scr(8)[0];
-        q[0x15] = Scr(0xA)[0];
-        q[0x16] = Scr(0xC)[0];
+        PutFloatMagicS16(q + 0x2C, y2);
+        q[0x14] = ScrMagicS16(8)[0];
+        q[0x15] = ScrMagicS16(0xA)[0];
+        q[0x16] = ScrMagicS16(0xC)[0];
         q[0x24] = 1;
         q[0x25] = 1;
         q[0x26] = 1;
@@ -348,34 +348,34 @@ void Disc(const Pool& p) {
     DrawMode(p);
     const int r = MH_CALL(Rand)();
     const unsigned char* const c = Cur(p);
-    SetWord(Scr(4), static_cast<unsigned>((r & 3) + c[kCount]));
-    SetWord(Scr(0), Word(c + kX));
-    SetWord(Scr(2), Word(c + kY));
+    move_script::SetWord(ScrMagicS16(4), static_cast<unsigned>((r & 3) + c[kCount]));
+    move_script::SetWord(ScrMagicS16(0), move_script::Word(c + kX));
+    move_script::SetWord(ScrMagicS16(2), move_script::Word(c + kY));
     const unsigned char* const rgb = Mem(p.colours + (c[kShade] + c[kKind] * 4u) * 3u);
-    SetWord(Scr(8), rgb[0] * static_cast<unsigned>(c[kTimer]));
-    SetWord(Scr(0xA), rgb[1] * static_cast<unsigned>(c[kTimer]));
-    SetWord(Scr(0xC), rgb[2] * static_cast<unsigned>(c[kTimer]));
-    SetWord(Scr(0xE), c[kTimer]);
+    move_script::SetWord(ScrMagicS16(8), rgb[0] * static_cast<unsigned>(c[kTimer]));
+    move_script::SetWord(ScrMagicS16(0xA), rgb[1] * static_cast<unsigned>(c[kTimer]));
+    move_script::SetWord(ScrMagicS16(0xC), rgb[2] * static_cast<unsigned>(c[kTimer]));
+    move_script::SetWord(ScrMagicS16(0xE), c[kTimer]);
     int a = 0;
     do {
         unsigned char* const q = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(q);
         MH_CALL(Gpu_SetSemiTrans)(q, 1);
-        PutFloat(q + 8, S16(Scr(0)));
-        PutFloat(q + 0xC, S16(Scr(2)));
+        PutFloatMagicS16(q + 8, S16(ScrMagicS16(0)));
+        PutFloatMagicS16(q + 0xC, S16(ScrMagicS16(2)));
         int s = MH_CALL(Math_Sin)(a);
-        PutFloat(q + 0x18, Mul12(s, S16(Scr(4))) + S16(Scr(0)));
+        PutFloatMagicS16(q + 0x18, Mul12(s, S16(ScrMagicS16(4))) + S16(ScrMagicS16(0)));
         int co = MH_CALL(Math_Cos)(a);
-        PutFloat(q + 0x1C, Mul12(co, S16(Scr(4))) + S16(Scr(2)));
+        PutFloatMagicS16(q + 0x1C, Mul12(co, S16(ScrMagicS16(4))) + S16(ScrMagicS16(2)));
         a += 0x200;
         s = MH_CALL(Math_Sin)(a);
-        PutFloat(q + 0x28, Mul12(s, S16(Scr(4))) + S16(Scr(0)));
+        PutFloatMagicS16(q + 0x28, Mul12(s, S16(ScrMagicS16(4))) + S16(ScrMagicS16(0)));
         co = MH_CALL(Math_Cos)(a);
-        PutFloat(q + 0x2C, Mul12(co, S16(Scr(4))) + S16(Scr(2)));
-        q[4] = Scr(8)[0];
-        q[5] = Scr(0xA)[0];
-        q[6] = Scr(0xC)[0];
-        for (unsigned k : {0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) q[k] = Scr(0xE)[0];
+        PutFloatMagicS16(q + 0x2C, Mul12(co, S16(ScrMagicS16(4))) + S16(ScrMagicS16(2)));
+        q[4] = ScrMagicS16(8)[0];
+        q[5] = ScrMagicS16(0xA)[0];
+        q[6] = ScrMagicS16(0xC)[0];
+        for (unsigned k : {0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) q[k] = ScrMagicS16(0xE)[0];
         Commit(p);
     } while (a < 0x1000);
 }
@@ -511,7 +511,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
             const unsigned char slot = MH_CALL(BattleTask_Create)(1, parameter);
             unsigned char* const t = Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
             unsigned char* const sc = Sprite_Current;
-            SetLong(t + 0x80, PtrValueMagicS16(sc));
+            move_script::SetLong(t + 0x80, PtrValueMagicS16(sc));
             t[1] = 0;
             t[4] = i;
             t[9] = delay;
@@ -593,7 +593,7 @@ constexpr std::uint32_t kActor074[6] = {bof3::addr::Magic074_ActorStart, bof3::a
 // kActorPhases074: now Magic074_ActorPhases (symbols.toml).
 
 void CallCell(std::uint32_t table, unsigned index) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * index)))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(table + 4 * index)))))();
 }
 }  // namespace
 
