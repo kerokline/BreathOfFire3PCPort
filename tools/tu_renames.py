@@ -43,8 +43,7 @@ exactly these tab-separated columns:
   and its uses named in full: only the old name is looked for. Where
   source_file has been moved away, new_name must be defined in one of the
   files the map moved its items into (the old name is not looked for: a
-  target may hold another source's item of that name). Where only some of its items moved (the
-  source stays, for its _Inject()), new_name may be defined in one of those files instead;
+  target may hold another source's item of that name);
 - kind state, global and macro are decisions: shape only;
 - for kind qualify - a name two sources' `using namespace` lines would make
   ambiguous in a target, written qualified in the source's bodies (the
@@ -216,20 +215,22 @@ def check(path: Path) -> int:
                 # `ns::name`: a using-declaration dropped and its uses named in full; defined elsewhere
                 # a seam's struct promoted in B0 lives in the source's own <stem>_callees.h
                 seam = src[:-len(".cpp")] + "_callees.h" if src.endswith(".cpp") else ""
-                # a helper the moves took out of a source that stays (its _Inject() keeps it) is
-                # looked for in the files the map moved the source's items into
-                homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+                # a source the moves left in the tree: the renamed item may have gone with its functions
+                homes = sorted(p for p in moves.get(src, ()) if p and p != src and (ROOT / p).is_file())
                 if "::" not in r["new_name"] and r["new_name"] not in defined_names(src) and not (
                         seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)) and not any(
                         r["new_name"] in defined_names(p) for p in homes):
-                    bad.append(f"{r['new_name']} is not defined in {src}")
+                    bad.append(f"{r['new_name']} is not defined in {src}"
+                               + (f" nor in the files it moved into ({', '.join(homes)})" if homes else ""))
             else:
                 homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
                 if "::" not in r["new_name"] and not any(r["new_name"] in defined_names(p) for p in homes):
                     bad.append(f"{r['new_name']} is defined in none of the files {src} moved into "
                                f"({', '.join(homes) or 'none in the tree'})")
         if not bad and r["kind"] == "qualify":
-            homes = ([src] if exists else []) + sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+            # the source, if still in the tree, and the files the map moved its items into
+            homes = ([src] if exists else []) + sorted(p for p in moves.get(src, ()) if p and p != src
+                                                       and (ROOT / p).is_file())
             if not any(named_in_full(p, r["new_name"]) for p in homes):
                 bad.append(f"{r['new_name']} is not named in {src if exists else ', '.join(homes) or 'the tree'}")
         for b in bad:
