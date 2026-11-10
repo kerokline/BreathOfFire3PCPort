@@ -288,7 +288,10 @@ def insert_seam(shell: Shell, home: str) -> tuple[str, list[str], list[str]]:
         if d.kind == "alias" and re.fullmatch(rf"namespace\s+(\w+)\s*=\s*(::)?{shell.stem}::\1\s*;",
                                               strip_comments(shell.src[d.code_start:d.end]).strip()):
             continue                  # `namespace at = <group>::at;`: inside namespace <group> it is `at` already
-        same = [h for h in by_name.get(d.names[0], []) if h.local and code(text, h) == code(shell.src, d)
+        # a file-scope declaration (`extern "C" ... BOF3_ASM_NAME(...);`) the home holds with the same text is
+        # held too: the seam needs only the name declared (the cleanup round, group K2's sound seam)
+        same = [h for h in by_name.get(d.names[0], [])
+                if (h.local or (d.kind == h.kind == "decl" and not d.ns and not h.ns)) and code(text, h) == code(shell.src, d)
                 and (not h.ns or h.ns == ("",) or h.ns[0] == shell.stem)] if d.names else []
         if same:
             held.append(d.names[0])
