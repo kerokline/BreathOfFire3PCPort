@@ -1063,6 +1063,7 @@ void InjectAll() {
                                 // clones, the surfaces, viewport and material fakes: order does not matter
     TexPage_Inject();           // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper and converter copies, DirectDraw a fake: order does not matter
+    TexFromTexPage_Inject();
     if (bof3::WantsShadow("tex_cells")) tex_cells::SelfTest();          // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper copies, DirectDraw and the device fakes: order does not matter
     Tex_Inject();
