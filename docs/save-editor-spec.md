@@ -194,7 +194,7 @@ Class says how the editor treats a field:
 | `+0x974` | 512 | Item counts | E | as above |
 | `+0xB74` | 32 | Vital items | E | as above |
 | `+0xB94` | 128 | Skill notes | E | CITED |
-| `+0xC14` | 92 | Unnamed: 48 bytes constant and non-zero on every sample, in runs from `0xC2A` to `0xC42` and `0xC48` to `0xC6F` | P | UNKNOWN, needed for creation |
+| `+0xC14` | 92 | Unnamed. `+0xC28`: eight 4-byte rows, identical at a new game, one byte of each constant on every sample. `+0xC48`: 40 copies of one byte on every sample (section 12.1) | P | MEASURED shape, meaning UNKNOWN |
 | `+0xC70` | 3 | Dragon genes | E | CITED |
 | `+0xC73` | 1 | Unnamed | P | UNKNOWN |
 | `+0xC74` | 6 | Masters, written twice over | E | CITED |
@@ -336,19 +336,59 @@ A generator, not a template. No binary save is shipped.
 2. Copy the default records from the install (section 10), applying the derived
    byte, then the whelp record.
 3. Write the target's layout, names and options.
-4. Scene state at the new-game chapter, state 0. That chapter's Start sets the area.
-5. Fill the constant bytes near `+0xC2A`. **Their source is not traced**: the
-   first task of this stage is to find what writes them.
-6. Seal.
+4. Scene state at the new-game chapter. That chapter's Start sets the area.
+5. Fill the two patterns at `+0xC28` and `+0xC48` (below).
+6. Write the few remaining start-up fields (below), then seal.
 
 The test is a byte comparison against a save the game wrote at the first
-opportunity on a new game, per target. The earliest sample held today is 3:08 in,
-with 573 non-zero bytes, so it is close but not the reference. The owner has been
-asked for fresh ones.
+opportunity on a new game, per target. The PC reference is held (below). The US
+and JP ones are still owed.
 
-Open: our PC reading is `Scenario_Start(0)` for New Game
-(`TitleFlow_NewGame`, `save_menu.cpp`), while frost cites `Scene_Start(16)` on
-the PSX. Chapter numbers are therefore not assumed to be story order.
+On PC the new-game chapter is 0, read (`Scenario_Start(0)` in `TitleFlow_NewGame`,
+`save_menu.cpp`) and now measured. frost cites `Scene_Start(16)` on the PSX, so
+chapter numbers are not assumed to be the same there, or to be story order.
+
+#### The PC reference saves (owner, 2026-11-09)
+
+Two saves in `tools/recipe_saves/`, git-ignored like the rest:
+
+| Save | Made | State |
+|---|---|---|
+| `start.DAT` | F12 one frame into a new game. The game would never save here | Chapter 0, area `0x18`, the whelp alone, clock at frame 1. 558 non-zero bytes |
+| `start_normal.DAT` | The first save point, 9:49 in, after the whelp section | Chapter 1, area `0x0A`, record 0 leading. 572 non-zero bytes |
+
+MEASURED on `start.DAT`:
+
+- **Records are the install's defaults.** Records 0..6 equal `Char_DefaultRecords`,
+  and record 7 the whelp record, apart from: the name (the install's language
+  layer, DIV-0020), the derived byte at PC `+0x1C`, `+0x2E` and `+0x4E`, and three
+  recalculated live stats at PC `+0x24`, `+0x26`, `+0x28`. The whelp record also
+  differs at PC `+0x0B` and `+0x38`.
+- **The patterns near `+0xC28` are simple.** `+0xC28..+0xC47` is eight identical
+  4-byte rows. `+0xC48..+0xC6F` is one byte 40 times. Both are already there at
+  frame 1 and unchanged in the second save. The block is in the image's
+  uninitialised part (it sits at `0x9039E0`; the section's file data ends at
+  `0x676000`), so code writes them at start-up. That code is not found yet.
+- **Three flags are set at frame 1:** bit 3 of chapter 0's flag word, and event
+  flags 3, 25 and 27.
+- **Other start-up fields, to trace one by one:** the nine button masks, the
+  option byte `+0x78`, formation byte `+0x681`, and `+0x74C`, `+0x74D`, `+0x751`.
+
+MEASURED between the two saves (36 bytes differ, checksum aside):
+
+- **The flag words are indexed by chapter.** Chapter 0's word gains bits 0, 1, 2,
+  4..7 and 10. Chapter 1's word, at `+0x5B8`, gains bits 0 and 1. No event flag
+  changes.
+- **The item picked up** takes slot 0 of inventory category 1: one id byte at
+  `+0x7F4` and one count byte at `+0x9F4`.
+- **The battle count** at `+0x754` goes from 0 to 3.
+- **The lead changes** from id 10 to id 9 in both orders, and record 0's
+  `char_id` becomes 9.
+- Also changed, meaning not established: `+0x20`, `+0x68B`, `+0x6EC`, `+0x760`,
+  the three bytes near `+0x74C`, and scene bytes 0, 1, 4, 5 and 8.
+
+So the opening section's whole effect on a save is 36 bytes. That is the size of
+thing a chapter-start baseline row has to hold.
 
 ### 12.2 Story points
 
@@ -462,15 +502,16 @@ Fixtures are local saves and are never committed.
 
 For the owner:
 
-1. **Which reference new-game saves can be recorded?** PC, US and JP. Paused on
-   2026-11-09 while the owner is away.
+1. **Reference new-game saves on US and JP.** The PC pair is recorded (section
+   12.1).
 
 For later investigation:
 
 2. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
    no such saves, and the FR and DE serials are unconfirmed.
 3. Name codecs for the PSX EU, FR and DE releases.
-4. What writes the constant bytes near `+0xC2A`.
+4. Which code writes the two patterns at `+0xC28` and `+0xC48`, and what they mean.
+   Their content is known (section 12.1).
 5. How the launcher turns the install's glyph codes into text it can draw. Until
    then, item and ability lists can show ids.
 6. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
