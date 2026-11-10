@@ -12,14 +12,8 @@ namespace {
 
 constexpr std::uint32_t kCharacterRecord = 0xA4;
 constexpr std::uint32_t kTextRecord = 0x20;
-
-// Text_DrawAt is not ours and ends in a committed primitive, so it is called
-// through a pointer the fuzz can aim at a recorder - for the original's copy
-// and for ours alike.
-using DrawAtFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
 }  // namespace
 
-namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
 namespace {
 const std::uint8_t* AtTextImmediate(std::uint32_t address) {
     return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
