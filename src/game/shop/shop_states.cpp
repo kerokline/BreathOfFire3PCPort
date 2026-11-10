@@ -52,14 +52,6 @@ namespace {
 template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Menu_DrawTitleBox, Menu_DrawMoneyBox, Text_DrawAt, Msg_SystemPtr, Msg_OpenSystem,
-    Sound_PlayEffect, Sound_LoadStream, Sound_StreamDone,
-    SaveMenu_DrawSlots, Save_ReadSummaries, Input_AutoRepeat, Menu_YesNo,
-    Transition_Start, Sprite_FaceDirection, Window_ResetAll,
-    Crt_sprintf, TextRecord_Set, SaveMenu_DrawChoices, Menu_DrawBlackScreen, Party_RestoreAll,
-};
-Callees g = kOriginals;
 
 }  // namespace shop_states
 

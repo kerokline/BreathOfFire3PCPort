@@ -38,22 +38,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Field_LeaderStepLands, Field_SpotFree, Field_WayBlocked4, Field_CellsBlock, Field_WayBlocked,
-    Field_LeaderStepTick, Field_EquipTick, Field_Bit20Tick, Field_FloorDamage, Field_Tile89, Field_Tile8A,
-    Field_TileD0, Field_TileA4, MoveCmd_TestFB, AreaMap_ByteAt, Field_LeaderAnimation, Field_ChangeArea,
-    Area_LinkAt, AreaMap_CellsAll, AreaMap_CellsNone, Sprite_EnsureAnimation, Field_JumpStart, Sprite_ClearSteps,
-    Field_EncounterDue, Field_LeaderEffectTest, Scenario_ArriveHook, Field_Bit80Tick, Field_LeaderWalk,
-    Member_ClearState, Sprite_ShadeFadeBegin, MapView_GroundAt, Sprite_SetAnimation, ObjTrio_SwapFields,
-    Field_MemberSprite, Sprite_LoadPalette, MapView_SetElevation, Encounter_RollInitiative, Sprite_ScriptTick,
-    Area_PassageAhead, EventScript_Run, Msg_OpenScript, Msg_OpenSystem, Flags_Test, Flags_Set, Sound_PlayEffect,
-    Item_NamePtr, Inventory_Add, MoveCmd_TestFC, MapView_SlopeAt, Sprite_ObjectAt,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned)>(::bof3::Code(fn::kPathClear.v)),
-    Fn<void (__cdecl*)(int)>(::bof3::Code(fn::kGiveZenny.v)),
-    Fn<const unsigned char* (__cdecl*)()>(::bof3::Code(fn::kAreaExits.v)),
-    Fn<unsigned char (__cdecl*)(long, long, long)>(::bof3::Code(fn::kWayBlockedWide.v)),
-};
-Callees g = kOriginals;
 
 // DIV-0121: 1 through PatchBytes("EdgeNoArea") in EventLeader_Inject, after
 // the fuzz, which runs Capcom's rule.

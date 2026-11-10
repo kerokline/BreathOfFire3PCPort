@@ -241,6 +241,58 @@ using move_script::Word;
 
 }  // namespace window_task
 
+// window_task's callee seam, moved here from window_task.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace window_task {
+namespace {
+
+template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Area_ClassifyPending,
+    Area_PickMusic,
+    Area_ZoneAtIn,
+    Window_DrawFrame,
+    Window_DrawOutline,
+    Window_DrawLine,
+    Window_FreeCurrent,
+    Flags_Test,
+    As<unsigned char(__cdecl*)()>(::bof3::Code(kMsgBoxFrameTask.v)),
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_SetTile,
+    Gpu_SetPolyGT4,
+    Gpu_SetLineF4,
+    Gpu_SetLineF2,
+    Gpu_SetSemiTrans,
+    Gpu_GetTPage,
+    Gpu_GetClut,
+    As<Handler>(::bof3::Code(kListSetUp.v)),
+    As<Handler>(::bof3::Code(kListDraw.v)),
+    As<Handler>(::bof3::Code(kListCursorDraw.v)),
+    As<Handler>(::bof3::Code(kSetDraw.v)),
+    As<Handler>(::bof3::Code(kSetCursorDraw.v)),
+    {As<Handler>(::bof3::Code(kRecordHandlers[0])), As<Handler>(::bof3::Code(kRecordHandlers[1])), As<Handler>(::bof3::Code(kRecordHandlers[2])),
+     As<Handler>(::bof3::Code(kRecordHandlers[3])), As<Handler>(::bof3::Code(kRecordHandlers[4])), As<Handler>(::bof3::Code(kRecordHandlers[5])),
+     As<Handler>(::bof3::Code(kRecordHandlers[6])), As<Handler>(::bof3::Code(kRecordHandlers[7])), As<Handler>(::bof3::Code(kRecordHandlers[8]))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0States)), As<Handler>(::bof3::Code(bof3::addr::Window_Kind1States)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2States))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Close))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
+};
+Callees g = kOriginals;
+
+}  // namespace window_task
+
 // original 0x593950 (GameMode8_TradeStep's tail jump 0x52CF30): xor eax, eax;
 // mov al, [0x93985C]; jmp [ItemTrade_States + eax * 4] - unchecked. The three
 // states are ItemTrade_Open, ItemTrade_Run, ItemTrade_Leave (all ours); the

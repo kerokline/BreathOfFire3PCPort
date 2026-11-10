@@ -46,44 +46,6 @@ namespace {
 template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 }  // namespace
 
-const Callees kOriginals = {
-    As<long (__cdecl*)(long, long)>(AreaMap_Elevation),
-    As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*)>(Gte_RotTransPers3),
-    As<void (__cdecl*)(float*, float*, float*)>(Gte_StoreDepthF3),
-    As<void (__cdecl*)(unsigned char*)>(Gpu_SetPolyFT4),
-    As<void (__cdecl*)(unsigned char*, unsigned)>(Gpu_SetShadeTex),
-    As<U (__cdecl*)(unsigned, unsigned)>(Gfx_CommitPrim),
-    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*)>(
-        Gte_RotTransPers4),
-    As<void (__cdecl*)(float*, float*, float*, float*)>(Gte_StoreDepthF4),
-    As<void (__cdecl*)(void*)>(Gte_PrimDepths4_10),
-    As<void (__cdecl*)(unsigned long, unsigned char*, int)>(Prim_SetTexture),
-    As<void (__cdecl*)(int, unsigned)>(MapCell_FlatOverlay),
-    As<void (__cdecl*)(const unsigned char*)>(AreaMap_ApplyPatch),
-    As<unsigned char (__cdecl*)(unsigned long)>(Area_TestCondition),
-    As<long (__cdecl*)(const short*, unsigned long*, long*)>(Gte_RotTransPers),
-    As<void (__cdecl*)(void*)>(Gte_PrimDepthFlat4_10),
-    As<long (__cdecl*)(int, int, int, int, int)>(Gfx_ClutAdjust),
-    As<void (__cdecl*)(int, int, int, int, int, int)>(Menu_DrawBox),
-    As<void (__cdecl*)(int, int, int, int)>(Menu_DrawItemIcon),
-    As<const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*)>(Text_DrawAt),
-    As<int (__cdecl*)(char*, const char*, unsigned)>(Crt_sprintf),
-    As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont8),
-    reinterpret_cast<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(
-        static_cast<std::uintptr_t>(::bof3::Code(kTinyFont.v))),
-    As<U (__cdecl*)(int, int, const unsigned char*, int)>(Menu_DrawPieces),
-    As<U (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(Menu_DrawExpBar),
-    As<void (__cdecl*)(unsigned char*)>(Gpu_SetSprt8),
-    As<void (__cdecl*)(unsigned char*, unsigned)>(Gpu_SetSemiTrans),
-    As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont12),
-    As<const unsigned char* (__cdecl*)(const unsigned char*)>(EventScript_SkipControl),
-    As<void (__cdecl*)()>(EventObj_Reset),
-    As<U (__cdecl*)(U)>(Sprite_SetAnimationBank),
-    As<void (__cdecl*)(const unsigned char*)>(EventObj_SetFlags),
-    As<void (__cdecl*)(U)>(Sprite_SetAnimation),
-    As<U (__cdecl*)(U, U, U)>(AreaMap_SetByte),
-};
-Callees g = kOriginals;
 
 }  // namespace map_field_objects
 

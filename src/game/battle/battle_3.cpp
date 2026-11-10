@@ -498,6 +498,69 @@ Callees g = kOriginals;
 
 }  // namespace battle_damage
 
+// battle_misc's callee seam, moved here from battle_misc.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_misc {
+namespace {
+
+template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
+template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+using F0 = U __cdecl();
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<U __cdecl(U, U, U, U, U)>(::bof3::Code(bof3::addr::Sprite_SetTint)),
+    As<U (__cdecl*)(U)>(Sound_PlayEffect),
+    As<U (__cdecl*)(U)>(Sound_LoadStream),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Char_AbilityList)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Skill_CanUse)),
+    As<U (__cdecl*)()>(Window_FreeCurrent),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::EnemyAI_CondElement)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_RowDone)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<F0>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
+    As<U (__cdecl*)()>(Sprite_UpdateScreenA),
+    Fn<F0>(::bof3::Code(bof3::addr::Sprite_UpdateScreenSlot)),
+    As<U (__cdecl*)()>(Battle_InitActorContext),
+    As<U (__cdecl*)(U, U, U)>(Str_CopyN),
+    As<U (__cdecl*)(U, U, U, U, U, U)>(BattleBanner_Set),
+    {Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kBannerKind1.v)), Fn<F0>(::bof3::Code(kBannerKind2.v)), Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kRetOnly.v))},
+};
+Callees g = kOriginals;
+
+}  // namespace battle_misc
+
+// battle_window_draw's callee seam, moved here from battle_window_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_window_draw {
+
+const Callees kOriginals = {
+    Window_Alloc,
+    Crt_sprintf,
+    Gpu_GetTPage,
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_GetClut,
+    Gpu_SetSprt,
+    Gpu_SetPolyF4,
+    Gpu_SetSemiTrans,
+    Gpu_SetTile,
+    Gpu_SetPolyFT4,
+    Gpu_SetLineF2,
+    Menu_DrawIcon8,
+    Text_CharCount,
+    Text_DrawAt,
+    Text_DrawFont8,
+    Skill_ApCost,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_window_draw
+
 // original 0x442FA0 (PSX 0x801D74DC): the party row - the frame of edge
 // pieces and tiles sized by the member count 0x904AB0 at (x, y), then per
 // member i (x' = x + 0x14 + 0x5E i): a tile, the gauge of bytes +0 / +2 of

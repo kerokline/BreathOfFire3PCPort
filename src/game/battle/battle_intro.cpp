@@ -101,6 +101,36 @@ Callees g = kOriginals;
 
 }  // namespace battle_flow
 
+// battle_phases's callee seam, moved here from battle_phases.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_phases {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_PhaseDispatch, BattleParty_RunStates, BattleEnemy_RunAll, BattleBanner_Dispatch, AreaMap_Frame,
+    BattleTask_RunAll, BattleParty_UpdateScreens, BattleEnemy_UpdateScreenAll, Field_ObjectsScreen,
+    Sprite_UpdateObjectScreens, Party_ExtraScreens, Effect_RunObjects, Field_RunSlots, MoveScript_TintFrame,
+    Field_RunTaskRecords, Field_DrawFrame,
+    {Battle_Init, BattleIntro_Dispatch},
+    {BattleIntro_OpenWindows, BattleIntro_WaitWindow, BattleIntro_PrepareCross, BattleIntro_Finish},
+    BattleBanner_ClearAll, Battle_ActorIsOut, Battle_InitEncounterKind, BattleTask_ClearAll,
+    Battle_InitActorContexts, Formation_ApplyStatMods, Gfx_ClutStripCopyRow, Sprite_SetClutStp, LoadDatFile,
+    Window_Alloc, Msg_SystemPtr, BattleQueue_Push, BattleWin_OpenStatus, Battle_OpenEnemyNames,
+    BattleWin_OpenSub1, BattleQueue_Pending, File_LoadDone, BattleWin_OpenSub2, BattleWin_OpenSub3,
+    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(::bof3::Code(kAutoFillCommands.v)),
+    Battle_SpawnActorCopies, BattleBanner_ShowName, Sound_PlayEffect,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)), BattleWin_DrawCommandCross,
+    BattleWin_DrawCommandLabel, BattleWin_DrawPartyStatus, Battle_PulseStep,
+    Battle_BuildTurnOrder, EnemyAI_ChooseActions,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_phases
+
 // original 0x42E370 (no PSX twin paired): state 5 of the battle mode's state
 // table 0x656A84 (reached by the tail jump at 0x495E98), once a frame. The
 // phase dispatch runs unless the round flags' bit 1 is set, or window 0 is in

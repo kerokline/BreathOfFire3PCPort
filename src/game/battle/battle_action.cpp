@@ -384,6 +384,88 @@ Callees g = kOriginals;
 
 }  // namespace battle_setup
 
+// battle_actions's callee seam, moved here from battle_actions.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_actions {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_MemberAutoTarget,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyPickAction.v)),
+    Battle_ClearActingFlags,
+    Battle_OpenMsgWindow,
+    Msg_SystemPtr,
+    BattleBanner_Add,
+    Battle_SetActorBit,
+    Battle_ActionSuitsTarget,
+    Battle_RemoveFromTurnOrder,
+    Str_CopyN,
+    Skill_ApCost,
+    Battle_PickFlag8Member,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kPickTarget.v)),
+    Magic_LoadForAbility,
+    File_LoadDone,
+    Battle_StartAbilityMagic,
+    Battle_ItemSuitsTarget,
+    Battle_ReturnQueuedItem,
+    Item_NamePtr,
+    Magic_LoadForItem,
+    Battle_StartItemMagic,
+    Battle_AnyFlagF0,
+    LoadDatFile,
+    Gfx_ClutStripCopyRow,
+    Battle_SettleFlag8,
+    BattleQueue_Push,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_actions
+
+// battle_turn_steps's callee seam, moved here from battle_turn_steps.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_turn_steps {
+namespace {
+
+template <typename F> F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_MarkFasterSide)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_TickCounters)),
+    {Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Expire4000)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Restore800)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_PartyWake40)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_EnemyWake40)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_PartyWake20)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_EnemyWake20)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Status80)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_HpDrift)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_ApUpkeep))},
+    Fn<void (__cdecl*)(int)>(::bof3::Code(bof3::addr::LoadDatFile)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_ClearCommands)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_ClearStatus)),
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(bof3::addr::Sprite_ReleaseTint)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ReturnQueuedItem)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Port_DroppedCall)),  // Port_DroppedCall (ours; called by its address)
+    Fn<void (__cdecl*)(int)>(::bof3::Code(bof3::addr::Music_FadeOutStop)),
+    Fn<void (__cdecl*)(unsigned, int)>(::bof3::Code(bof3::addr::Music_Play)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_OpenMsgWindow)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_OpeningMessage)),
+    Fn<int (__cdecl*)()>(::bof3::Code(bof3::addr::File_LoadDone)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kWriteBackMember.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Window_ResetAll)),
+    Fn<void (__cdecl*)()>(::bof3::Code(kClearEnemies.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::BattleTask_ClearAll)),
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(bof3::addr::Char_RecalcStats)),
+    Fn<void (__cdecl*)()>(::bof3::Code(kReloadParty.v)),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_turn_steps
+
 // original 0x42E990 (no PSX twin paired): phase 1's entry. A tail jump
 // through Battle_InputSteps 0x64AE28 by the step 0x904AA1: Battle_RoundStart,
 // BattleInput_NextMember, BattleMenu_CommandSelect, BattleHold_Dispatch 0x42ED90 (BE1's; a sub-step

@@ -539,6 +539,54 @@ Callees g = kOriginals;
 
 }  // namespace window_kinds
 
+// battle_win_states's callee seam, moved here from battle_win_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_win_states {
+
+const Callees kOriginals = {
+    BattleWin_DrawPartyStatus,
+    BattleWin_DrawCommandCross,
+    BattleWin_DrawCommandLabel,
+    BattleWin_DrawSmallBox,
+    BattleWin_DrawMediumBox,
+    BattleWin_DrawTargetEnemy,
+    BattleWin_DrawEnemyStatus,
+    BattleWin_DrawTargetMember,
+    Window_FlagAndAdvance,
+    Window_RestoreAndBack,
+    Window_DispatchKind,
+    Text_GlyphCount,
+    Text_DrawAt,
+    Menu_DrawIcon,
+    Battle_ActorIsOut,
+    Battle_ReturnTrue,
+    {at::kKinds[0], at::kKinds[1], at::kKinds[2], at::kKinds[3], at::kKinds[4], at::kKinds[5], at::kKinds[6],
+     at::kKinds[7]},
+    {at::kPartyStates[0], at::kPartyStates[1], at::kPartyStates[2]},
+    {at::kCrossStates[0], at::kCrossStates[1], at::kCrossStates[2]},
+    {at::kLabelStates[0], at::kLabelStates[1], at::kLabelStates[2]},
+    {at::kBannerStates[0], at::kBannerStates[1], at::kBannerStates[2]},
+    {at::kEnemyStates[0], at::kEnemyStates[1], at::kEnemyStates[2], at::kEnemyStates[3]},
+    {at::kMemberStates[0], at::kMemberStates[1], at::kMemberStates[2]},
+};
+Callees g = kOriginals;
+
+}  // namespace battle_win_states
+
+// menu_draw_helpers's callee seam, moved here from menu_draw_helpers.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace menu_draw_helpers {
+
+const Callees kOriginals = {
+    Menu_DrawTitleBox,  Msg_SystemPtr,       Text_DrawAt,        Menu_DrawButtonRow,       Menu_DrawMoneyBox,
+    Menu_DrawCursorBox, Shop_DrawMemberStats, Menu_DrawEquipPanel, Shop_DrawBuyList,       Shop_DrawBuyDetail,
+    Menu_DrawItemList,  Shop_DrawSellDetail, Menu_DrawHand,      BattleMenu_DrawItemList, BattleMenu_DrawSkillList,
+    Low32(Widescreen_SlideOperand(at::kSlideLeftBound)),
+};
+Callees g = kOriginals;
+
+}  // namespace menu_draw_helpers
+
 // original 0x596FA0: record handler 3 of Field_RunTaskRecords - the battle
 // window by its kind byte +2, from eight handlers on its stack: 0 the party
 // row 0x597000, 1 the command cross 0x597090, 2 the command label 0x5971B0,

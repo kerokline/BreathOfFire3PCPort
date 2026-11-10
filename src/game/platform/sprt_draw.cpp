@@ -77,14 +77,6 @@
 
 namespace sprt_draw {
 
-const Callees kOriginals = {
-    D3d_PrimColor,
-    D3d_BindTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-    D3d_SetBlend,
-    D3d_SetShadeMode,
-};
-Callees g = kOriginals;
 
 float g_far[kFarEntries];
 U g_far_base = ::bof3::Img(kCapcomFarBase);   // a place: the handlers read the edge there

@@ -37,35 +37,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Battle_MemberAutoTarget,
-    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyPickAction.v)),
-    Battle_ClearActingFlags,
-    Battle_OpenMsgWindow,
-    Msg_SystemPtr,
-    BattleBanner_Add,
-    Battle_SetActorBit,
-    Battle_ActionSuitsTarget,
-    Battle_RemoveFromTurnOrder,
-    Str_CopyN,
-    Skill_ApCost,
-    Battle_PickFlag8Member,
-    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kPickTarget.v)),
-    Magic_LoadForAbility,
-    File_LoadDone,
-    Battle_StartAbilityMagic,
-    Battle_ItemSuitsTarget,
-    Battle_ReturnQueuedItem,
-    Item_NamePtr,
-    Magic_LoadForItem,
-    Battle_StartItemMagic,
-    Battle_AnyFlagF0,
-    LoadDatFile,
-    Gfx_ClutStripCopyRow,
-    Battle_SettleFlag8,
-    BattleQueue_Push,
-};
-Callees g = kOriginals;
 
 }  // namespace battle_actions
 

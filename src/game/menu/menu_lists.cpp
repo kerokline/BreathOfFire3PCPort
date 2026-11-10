@@ -61,32 +61,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    FieldMenu_PlaceWindows,
-    FieldMenu_ReconcileParty,
-    MenuList_DrawMemberPanel,
-    Menu_DrawBackdrop,
-    Char_RecalcStats,
-    Party_Count,
-    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kExitGateway.v)),
-    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kCampCell.v)),
-    Input_AutoRepeat,
-    Sound_PlayEffect,
-    Window_ResetAll,
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, int)>(::bof3::Code(kMemberBody.v)),
-    Gpu_SetDrawMode,
-    Gfx_CommitPrim,
-    Gpu_GetClut,
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kMemberFace.v)),
-    Menu_DrawMoneyBox,
-    Fn<void (__cdecl*)(int, int)>(::bof3::Code(kTimeBox.v)),
-    Menu_DrawIcon,
-    Menu_DrawTitleBox,
-    Msg_SystemPtr,
-    Text_CharCount,
-    Text_DrawAt,
-};
-Callees g = kOriginals;
 
 }  // namespace menu_lists
 

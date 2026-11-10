@@ -26,23 +26,6 @@
 // (a stand-in may move it); "FAM" is Field_ActiveMember, whose +0x80.. is the
 // object's script context.
 
-namespace event_script {
-
-const Callees kOriginals = {
-    EventScript_Op, EventScript_Control, EventScript_If, EventScript_IfNot, EventScript_Switch,
-    EventScript_IfRunStep, EventScript_IfSkipStep, EventScript_SkipControl, EventScript_SkipIf,
-    EventScript_SkipSwitch, EventScript_CaseRun, EventScript_CaseSkip,
-    reinterpret_cast<const ::bof3::CodeSlot<Condition>*>(EventScript_Conditions),
-    {EventOp_0x, EventOp_1x, EventOp_2x, EventOp_3x, EventOp_4x, EventOp_5x, EventOp_6x, EventOp_7x, EventOp_8x,
-     EventOp_9x, EventOp_Ax, EventOp_Bx, EventOp_Cx, EventOp_Dx, EventOp_Ex, EventOp_0x},
-    EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face,
-    PartyRecord_Clear, Sprite_InitFromEntry, Kind2_Place,
-    EventScript_Run, Flags_Test,
-};
-Callees g = kOriginals;
-
-}  // namespace event_script
-
 namespace {
 
 // using event_script::g;   (B6: every use written event_script::g, so the moves copy no using-declaration)

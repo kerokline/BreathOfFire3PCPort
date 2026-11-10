@@ -39,24 +39,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Task_Sleep, Task_Exit, Task_Create, Task_ClearPrivate,
-    Transition_FadeSub, Transition_FadeAdd, Transition_DrawTile, Window_ResetAll, Game_ClockTick,
-    Transition_Start, Field_WaitTransition, Area_Enter, Area_EntryWalk, MoveScript_TintReset,
-    Field_SlotRelease, Field_SlotsReleaseAll, Gfx_ClutStripRestore, File_LoadDone, Gfx_ClearRect,
-    Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetTile, Gpu_SetSemiTrans,
-    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kEntryPoint.v)), Field_EncounterThresholdRoll,
-    Field_Frame, Effect_ClearAll, Music_Play, LoadDatFile, Field_PartySetUp, Area_ZoneIdAt, Field_ViewReset,
-    Gte_SetColorMatrix, Scenario_Start, Area_RunPlacement, Flags_Clear, Field_ModeDispatch, Field_PartyFirstFrame,
-    MoveCmd_TestFB, Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPlaceParty.v)), Field_MembersFrame, Port_DroppedCall,
-    Title_Task, Gfx_ClearImage,
-    {Transition_Kind00, Transition_Kind01, Transition_Kind02, Transition_Kind03, Transition_Kind04,
-     Transition_Kind05, Transition_Kind06, Transition_Kind07, Transition_Kind08, Transition_Kind09,
-     Transition_Kind10, Transition_Kind11, Transition_Kind12, Transition_Kind13, Transition_Kind14,
-     Transition_Kind15, Transition_Kind16, Transition_Kind17, Transition_Kind18, Transition_Kind19,
-     Transition_Kind20},
-};
-Callees g = kOriginals;
 
 }  // namespace mode_flow
 

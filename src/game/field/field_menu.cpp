@@ -63,6 +63,44 @@ unsigned char& BRest2d(U a) { return move_script::At(a)[0]; }
 
 }  // namespace
 
+// menu_lists's callee seam, moved here from menu_lists.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace menu_lists {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    FieldMenu_PlaceWindows,
+    FieldMenu_ReconcileParty,
+    MenuList_DrawMemberPanel,
+    Menu_DrawBackdrop,
+    Char_RecalcStats,
+    Party_Count,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kExitGateway.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kCampCell.v)),
+    Input_AutoRepeat,
+    Sound_PlayEffect,
+    Window_ResetAll,
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, int)>(::bof3::Code(kMemberBody.v)),
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_GetClut,
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kMemberFace.v)),
+    Menu_DrawMoneyBox,
+    Fn<void (__cdecl*)(int, int)>(::bof3::Code(kTimeBox.v)),
+    Menu_DrawIcon,
+    Menu_DrawTitleBox,
+    Msg_SystemPtr,
+    Text_CharCount,
+    Text_DrawAt,
+};
+Callees g = kOriginals;
+
+}  // namespace menu_lists
+
 // original 0x589970 (recorded start, 38 calls on the world-map route): mode
 // 3's per-frame call from 0x5172F0, `jmp [0x6672B4 + 4 (0x929F00 & 0xFF)]` -
 // state 0 FieldMenu_Open, 1 FieldMenu_TopBar, 2 Items 0x58AAE0, 3 Ability

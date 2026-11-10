@@ -22,27 +22,6 @@ using Handler = long(__cdecl*)(const unsigned char*);
 Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
 }  // namespace
 
-// The handlers of each table, by entry, as the original's case blocks call them.
-const Callees kOriginals = {
-    {
-        // the software surfaces, first table 0x59F2A0
-        H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-        H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
-        H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-    },
-    {
-        // Direct3D, second table 0x59F3D8
-        H(bof3::addr::D3d_DrawPolyF3), H(bof3::addr::D3d_DrawPolyFT3), H(bof3::addr::D3d_DrawPolyF4), H(bof3::addr::D3d_DrawPolyFT4), H(bof3::addr::D3d_DrawPolyG3),
-        H(bof3::addr::D3d_DrawPolyGT3), H(bof3::addr::D3d_DrawPolyG4),
-        H(bof3::addr::D3d_DrawPolyGT4), H(bof3::addr::D3d_DrawLineF2), H(bof3::addr::D3d_DrawLineF3), H(bof3::addr::D3d_DrawLineF4), H(bof3::addr::D3d_DrawLineG2), H(bof3::addr::D3d_DrawLineG3), H(bof3::addr::D3d_DrawLineG4),
-        H(bof3::addr::D3d_DrawTile), H(bof3::addr::D3d_DrawSprt), H(bof3::addr::D3d_DrawTile1), H(bof3::addr::D3d_DrawGlyph), H(bof3::addr::D3d_DrawSprt8), H(bof3::addr::D3d_DrawSprt16), H(bof3::addr::D3d_DrawCellSprite),
-    },
-    Gfx_MoveImage,
-    // by the original's address (group PH, docs/d3d-rest.md): BOF3X_ORIGINAL=<name> restores Capcom's for the walk
-    bof3::orig::D3d_SetAlphaModulate,
-    bof3::orig::D3d_AfterDraw,
-};
-Callees g = kOriginals;
 
 namespace {
 

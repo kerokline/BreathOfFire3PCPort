@@ -38,40 +38,6 @@ template <typename F>
 F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Party_Count,
-    AreaMap_Elevation,
-    Sprite_ObjectAt,
-    Gte_RotTransPers,
-    Gte_RotMatrix,
-    Gte_ApplyMatrix,
-    Gte_SetRotMatrix,
-    Gte_SetTransMatrix,
-    Rand,
-    MapView_GroundAt,
-    Effect_FindFree,
-    Fn<void (__cdecl*)(unsigned, unsigned, unsigned char*, unsigned)>(::bof3::Code(kSetAnimFrom.v)),
-    Sprite_ScriptTick,
-    Sprite_ShadeFadeBegin,
-    Sprite_ShadeRaise,
-    Sprite_ScriptTickOnce,
-    Sprite_SetAnimation,
-    Encounter_PlaceMember,
-    Encounter_MemberClear,
-    Encounter_MemberStands,
-    Encounter_EnemyClear,
-    AreaMap_CellNibble,
-    Encounter_Project,
-    Encounter_Apart,
-    Encounter_CellFits,
-    Encounter_PathClear,
-    Short_Abs,
-    Short_Sign,
-    Encounter_StepOpen,
-    Sprite_TurnSense,
-    Sprite_ShadeLower,
-};
-Callees g = kOriginals;
 
 }  // namespace inventory_ops
 

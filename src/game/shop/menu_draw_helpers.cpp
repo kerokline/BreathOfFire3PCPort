@@ -55,18 +55,6 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-namespace menu_draw_helpers {
-
-const Callees kOriginals = {
-    Menu_DrawTitleBox,  Msg_SystemPtr,       Text_DrawAt,        Menu_DrawButtonRow,       Menu_DrawMoneyBox,
-    Menu_DrawCursorBox, Shop_DrawMemberStats, Menu_DrawEquipPanel, Shop_DrawBuyList,       Shop_DrawBuyDetail,
-    Menu_DrawItemList,  Shop_DrawSellDetail, Menu_DrawHand,      BattleMenu_DrawItemList, BattleMenu_DrawSkillList,
-    Low32(Widescreen_SlideOperand(at::kSlideLeftBound)),
-};
-Callees g = kOriginals;
-
-}  // namespace menu_draw_helpers
-
 namespace {
 
 using namespace menu_draw_helpers;

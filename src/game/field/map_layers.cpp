@@ -21,23 +21,6 @@
 // The view's frame, its rebuild and the area header's pass - see
 // docs/map-layers.md for each function, its PSX twin and the fuzz.
 
-namespace map_layers {
-
-const Callees kOriginals = {
-    AreaMap_FrameAreaBD, MapView_ShiftColumnNext, MapView_ShiftColumnPrev, MapView_ShiftRowsNext,
-    MapView_ShiftRowsPrev, MapView_PlaceRuns, Gte_RotMatrix, Gte_ApplyMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix,
-    MapView_Build,
-    DrawLayers_Reset, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, MapView_CellTextures, DrawItemPool_Alloc,
-    Gte_LoadVertices3, Gte_Rtpt, Gpu_LinkPrim, Gte_StoreScreenXY3, Gte_PrimDepths4_10, Gte_StoreDepthF3,
-    DrawItemPool_ReleaseCell, DrawTable_Sort,
-    Prim_SetTexture, DrawItemPool_Release,
-    Gpu_SetPolyFT4, Gpu_SetShadeTex, Gte_RotTransPers4, Gfx_CommitPrim,
-    Area_TestCondition,
-};
-Callees map_layers::g = kOriginals;
-
-}  // namespace map_layers
-
 namespace {
 
 // map_layers::g: named in full below (source-layout B0, a clash on g)

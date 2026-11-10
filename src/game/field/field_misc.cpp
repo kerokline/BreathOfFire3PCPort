@@ -37,23 +37,6 @@ namespace field_misc {
 
 template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
-const Callees kOriginals = {
-    AreaMap_CellBlocked,
-    AreaMap_TooSteep,
-    AreaMap_TooSteepAt,
-    Gpu_SetPolyF4,
-    Gfx_CommitPrim,
-    Area_TestCondition,
-    MapView_ItemAt,
-    Prim_SetTexture,
-    MapView_CheckHeightScale,
-    AreaMap_Slope,
-    D3d_PrimColor,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-    D3d_SetBlend,
-    D3d_SetShadeMode,
-};
-Callees g = kOriginals;
 
 }  // namespace field_misc
 

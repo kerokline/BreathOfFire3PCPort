@@ -24,15 +24,6 @@
 
 namespace glyph_draw {
 
-const Callees kOriginals = {
-    D3d_PrimColor,
-    Font_GlyphTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-    D3d_SetBlend,
-    D3d_SetShadeMode,
-    Font_BuildGlyphTexture,
-};
-Callees g = kOriginals;
 
 float g_texel_inset = 0.0f;
 

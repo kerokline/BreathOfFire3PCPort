@@ -1786,6 +1786,126 @@ Callees g = kOriginals;
 
 }  // namespace tex_cells
 
+// d3d_draw's callee seam, moved here from d3d_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace d3d_draw {
+
+const Callees kOriginals = {
+    D3d_PrimColor,
+    D3d_BindTexture,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+    D3d_CellTexture,
+    Gfx_TexCacheFind,
+    D3d_BuildPageTexture,
+    D3d_RefreshPageTexture,
+    D3d_BuildCellTexture,
+    D3d_RefreshCellTexture,
+};
+Callees g = kOriginals;
+
+}  // namespace d3d_draw
+
+// d3d_list's callee seam, moved here from d3d_list.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace d3d_list {
+namespace {
+
+using Handler = long(__cdecl*)(const unsigned char*);
+Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
+
+}  // namespace
+
+// The handlers of each table, by entry, as the original's case blocks call them.
+const Callees kOriginals = {
+    {
+        // the software surfaces, first table 0x59F2A0
+        H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+        H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
+        H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+    },
+    {
+        // Direct3D, second table 0x59F3D8
+        H(bof3::addr::D3d_DrawPolyF3), H(bof3::addr::D3d_DrawPolyFT3), H(bof3::addr::D3d_DrawPolyF4), H(bof3::addr::D3d_DrawPolyFT4), H(bof3::addr::D3d_DrawPolyG3),
+        H(bof3::addr::D3d_DrawPolyGT3), H(bof3::addr::D3d_DrawPolyG4),
+        H(bof3::addr::D3d_DrawPolyGT4), H(bof3::addr::D3d_DrawLineF2), H(bof3::addr::D3d_DrawLineF3), H(bof3::addr::D3d_DrawLineF4), H(bof3::addr::D3d_DrawLineG2), H(bof3::addr::D3d_DrawLineG3), H(bof3::addr::D3d_DrawLineG4),
+        H(bof3::addr::D3d_DrawTile), H(bof3::addr::D3d_DrawSprt), H(bof3::addr::D3d_DrawTile1), H(bof3::addr::D3d_DrawGlyph), H(bof3::addr::D3d_DrawSprt8), H(bof3::addr::D3d_DrawSprt16), H(bof3::addr::D3d_DrawCellSprite),
+    },
+    Gfx_MoveImage,
+    // by the original's address (group PH, docs/d3d-rest.md): BOF3X_ORIGINAL=<name> restores Capcom's for the walk
+    bof3::orig::D3d_SetAlphaModulate,
+    bof3::orig::D3d_AfterDraw,
+};
+Callees g = kOriginals;
+
+}  // namespace d3d_list
+
+// d3d_rest's callee seam, moved here from d3d_rest.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace d3d_rest {
+
+const Callees kOriginals = {
+    D3d_PrimColor,
+    D3d_BindTexture,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+    Gfx_ClutPixels,
+    Dd_InitSurfaceDesc,
+    Dd_CreatePlainSurface,
+    D3d_FitTextureSize,
+    Dd_CreateTextureSurface,
+};
+Callees g = kOriginals;
+
+}  // namespace d3d_rest
+
+// glyph_draw's callee seam, moved here from glyph_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace glyph_draw {
+
+const Callees kOriginals = {
+    D3d_PrimColor,
+    Font_GlyphTexture,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+    Font_BuildGlyphTexture,
+};
+Callees g = kOriginals;
+
+}  // namespace glyph_draw
+
+// sprt_draw's callee seam, moved here from sprt_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace sprt_draw {
+
+const Callees kOriginals = {
+    D3d_PrimColor,
+    D3d_BindTexture,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+};
+Callees g = kOriginals;
+
+}  // namespace sprt_draw
+
+// tex_page's callee seam, moved here from tex_page.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace tex_page {
+
+const Callees kOriginals = {
+    Tex_Convert4,
+    Tex_Convert8,
+    Tex_Convert16,
+    Gfx_ClutPixels,
+};
+Callees g = kOriginals;
+
+}  // namespace tex_page
+
 // original 0x59E650. Fills rect with one BYTE, then drops the textures under
 // it. As the original has it:
 //   - the PSX call is ClearImage(rect, r, g, b); this one reads two colour

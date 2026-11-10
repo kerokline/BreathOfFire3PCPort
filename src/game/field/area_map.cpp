@@ -1066,6 +1066,108 @@ Callees g = kOriginals;
 
 }  // namespace map_scroll
 
+// battle_draw's callee seam, moved here from battle_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_draw {
+namespace {
+
+template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    D3d_PrimColor,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRetOnly.v)),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+    Menu_DrawBox,
+    Menu_ListScroll,
+    Item_CanUse,
+    Menu_DrawItemRow,
+    Text_CharCount,
+    Text_DrawAt,
+    Inventory_CountUsed,
+    Crt_sprintf,
+    Text_DrawFont8,
+    Menu_DrawPieces,
+    Menu_DrawPiece,
+    Menu_DrawScrollBar,
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillUsable.v)),
+    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(::bof3::Code(kSkillRow.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kSkillIcon.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillCost.v)),
+    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillList.v)),
+    Gfx_ClutAdjust,
+    AreaMap_ClutCycleStart,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_draw
+
+// map_field_objects's callee seam, moved here from map_field_objects.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace map_field_objects {
+
+const Callees kOriginals = {
+    As<long (__cdecl*)(long, long)>(AreaMap_Elevation),
+    As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*)>(Gte_RotTransPers3),
+    As<void (__cdecl*)(float*, float*, float*)>(Gte_StoreDepthF3),
+    As<void (__cdecl*)(unsigned char*)>(Gpu_SetPolyFT4),
+    As<void (__cdecl*)(unsigned char*, unsigned)>(Gpu_SetShadeTex),
+    As<U (__cdecl*)(unsigned, unsigned)>(Gfx_CommitPrim),
+    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*)>(
+        Gte_RotTransPers4),
+    As<void (__cdecl*)(float*, float*, float*, float*)>(Gte_StoreDepthF4),
+    As<void (__cdecl*)(void*)>(Gte_PrimDepths4_10),
+    As<void (__cdecl*)(unsigned long, unsigned char*, int)>(Prim_SetTexture),
+    As<void (__cdecl*)(int, unsigned)>(MapCell_FlatOverlay),
+    As<void (__cdecl*)(const unsigned char*)>(AreaMap_ApplyPatch),
+    As<unsigned char (__cdecl*)(unsigned long)>(Area_TestCondition),
+    As<long (__cdecl*)(const short*, unsigned long*, long*)>(Gte_RotTransPers),
+    As<void (__cdecl*)(void*)>(Gte_PrimDepthFlat4_10),
+    As<long (__cdecl*)(int, int, int, int, int)>(Gfx_ClutAdjust),
+    As<void (__cdecl*)(int, int, int, int, int, int)>(Menu_DrawBox),
+    As<void (__cdecl*)(int, int, int, int)>(Menu_DrawItemIcon),
+    As<const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*)>(Text_DrawAt),
+    As<int (__cdecl*)(char*, const char*, unsigned)>(Crt_sprintf),
+    As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont8),
+    reinterpret_cast<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(
+        static_cast<std::uintptr_t>(::bof3::Code(kTinyFont.v))),
+    As<U (__cdecl*)(int, int, const unsigned char*, int)>(Menu_DrawPieces),
+    As<U (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(Menu_DrawExpBar),
+    As<void (__cdecl*)(unsigned char*)>(Gpu_SetSprt8),
+    As<void (__cdecl*)(unsigned char*, unsigned)>(Gpu_SetSemiTrans),
+    As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont12),
+    As<const unsigned char* (__cdecl*)(const unsigned char*)>(EventScript_SkipControl),
+    As<void (__cdecl*)()>(EventObj_Reset),
+    As<U (__cdecl*)(U)>(Sprite_SetAnimationBank),
+    As<void (__cdecl*)(const unsigned char*)>(EventObj_SetFlags),
+    As<void (__cdecl*)(U)>(Sprite_SetAnimation),
+    As<U (__cdecl*)(U, U, U)>(AreaMap_SetByte),
+};
+Callees g = kOriginals;
+
+}  // namespace map_field_objects
+
+// map_layers's callee seam, moved here from map_layers.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace map_layers {
+
+const Callees kOriginals = {
+    AreaMap_FrameAreaBD, MapView_ShiftColumnNext, MapView_ShiftColumnPrev, MapView_ShiftRowsNext,
+    MapView_ShiftRowsPrev, MapView_PlaceRuns, Gte_RotMatrix, Gte_ApplyMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix,
+    MapView_Build,
+    DrawLayers_Reset, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, MapView_CellTextures, DrawItemPool_Alloc,
+    Gte_LoadVertices3, Gte_Rtpt, Gpu_LinkPrim, Gte_StoreScreenXY3, Gte_PrimDepths4_10, Gte_StoreDepthF3,
+    DrawItemPool_ReleaseCell, DrawTable_Sort,
+    Prim_SetTexture, DrawItemPool_Release,
+    Gpu_SetPolyFT4, Gpu_SetShadeTex, Gte_RotTransPers4, Gfx_CommitPrim,
+    Area_TestCondition,
+};
+Callees map_layers::g = kOriginals;
+
+}  // namespace map_layers
+
 // original 0x56E6C0: the view's frame (PSX FUN_801532A0). Called by the field
 // frame entries 0x517200 / 0x517240.
 //

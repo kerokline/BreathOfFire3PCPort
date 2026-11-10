@@ -3420,6 +3420,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x42D6F0	Area199_ChoiceStepIfAnswer	func	tu_42d6f0	src/game/area_w4f.cpp	1012	1014	1018	src/game/area/area_199.cpp	d3e6abb3
 		file		src/game/area_w4f_fuzz.cpp	1	1	615	src/game/area/area_w4f_fuzz.cpp	b29e27f3
 		file		src/game/band_census.cpp	1	1	683	src/game/field/band_census.cpp	b29e27f3
+	battle_actions::g	seam		src/game/battle/battle_actions.cpp	40	40	68	src/game/battle/battle_action.cpp	98cb16c7
+	battle_misc::g	seam		src/game/battle/battle_misc.cpp	57	57	78	src/game/battle/battle_3.cpp	98cb16c7
+	battle_phases::g	seam		src/game/battle/battle_phases.cpp	39	39	56	src/game/battle/battle_intro.cpp	98cb16c7
+	battle_result::g	seam		src/game/battle/battle_result_ours.cpp	48	48	64	src/game/battle/battle_result.cpp	98cb16c7
+	battle_turn_steps::g	seam		src/game/battle/battle_turn_steps.cpp	43	43	71	src/game/battle/battle_action.cpp	98cb16c7
+	battle_window_draw::g	seam		src/game/battle/battle_window_draw.cpp	46	46	65	src/game/battle/battle_3.cpp	98cb16c7
+	battle_windows::g	seam		src/game/battle/battle_windows.cpp	46	46	77	src/game/battle/battle_obj.cpp	98cb16c7
 		file		src/game/battle_actions.cpp	1	1	159	src/game/battle/battle_actions.cpp	b29e27f3
 	At	local		src/game/battle_actions.cpp	36	36	36	src/game/battle/battle_action.cpp	d3e6abb3
 	Long	local		src/game/battle_actions.cpp	37	37	37	src/game/battle/battle_action.cpp	d3e6abb3
@@ -6402,6 +6409,8 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kIconCircle/kIconCross/kIconTriangle/kIconSquare/kIconL1/kIconR1	local		src/game/config_text.cpp	189	194	196	src/game/core/title.cpp	d3e6abb3
 	kIconX	local		src/game/config_text.cpp	197	203	203	src/game/core/title.cpp	d3e6abb3
 0x461C00	Config_DrawControllerCell	func	tu_45fe60	src/game/config_text.cpp	220	239	293	src/game/core/title.cpp	d3e6abb3
+	mode_flow::g	seam		src/game/core/mode_flow.cpp	42	42	59	src/game/battle/dragon_cmd.cpp	98cb16c7
+	save_menu::g	seam		src/game/core/save_menu.cpp	56	56	88	src/game/battle/dragon_cmd.cpp	98cb16c7
 		file		src/game/d3d_draw.cpp	1	1	173	src/game/platform/d3d_draw.cpp	b29e27f3
 	At	copied		src/game/d3d_draw.cpp	63	63	63	src/game/platform/d3d.cpp	d3e6abb3
 	Word	local		src/game/d3d_draw.cpp	64	64	68	src/game/platform/d3d.cpp	d3e6abb3
@@ -11734,6 +11743,13 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x57C810	ObjTrio_SetBit40	func	tu_57b780	src/game/event_script.cpp	722	723	727	src/game/field/event_cond.cpp	d3e6abb3
 		file		src/game/event_script_fuzz.cpp	1	1	839	src/game/field/event_script_fuzz.cpp	b29e27f3
 		file		src/game/faerie_ring.cpp	1	1	341	src/game/field/faerie_ring.cpp	b29e27f3
+	event_leader::g	seam		src/game/field/event_leader.cpp	41	41	56	src/game/field/field_4.cpp	98cb16c7
+	event_script::g	seam		src/game/field/event_script_ours.cpp	31	31	42	src/game/field/event_script.cpp	98cb16c7
+	field_event::g	seam		src/game/field/field_event.cpp	35	35	63	src/game/field/field_2.cpp	98cb16c7
+	field_misc::g	seam		src/game/field/field_misc.cpp	40	40	56	src/game/field/field_3.cpp	98cb16c7
+	inventory_ops::g	seam		src/game/field/inventory_ops.cpp	41	41	74	src/game/field/field_4.cpp	98cb16c7
+	map_field_objects::g	seam		src/game/field/map_field_objects.cpp	49	49	86	src/game/field/area_map.cpp	98cb16c7
+	map_layers::g	seam		src/game/field/map_layers.cpp	26	26	37	src/game/field/area_map.cpp	98cb16c7
 		file		src/game/field_blocked.cpp	1	1	465	src/game/field/field_blocked.cpp	b29e27f3
 	kObjectSize/kObjects/kExtra	copied		src/game/field_blocked.cpp	34	34	34	src/game/field/field_6.cpp	d3e6abb3
 	kMemberSize	copied		src/game/field_blocked.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3
@@ -20611,6 +20627,10 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x528730	Field_CellFacing	func	tu_525370	src/game/member_sprites.cpp	988	990	997	src/game/field/field_core.cpp	d3e6abb3
 0x528770	Field_ObjectAhead	func	tu_525370	src/game/member_sprites.cpp	999	1001	1005	src/game/field/field_core.cpp	d3e6abb3
 		file		src/game/member_sprites_fuzz.cpp	1	1	861	src/game/field/member_sprites_fuzz.cpp	b29e27f3
+	battle_win_states::g	seam		src/game/menu/battle_win_states.cpp	48	48	74	src/game/menu/menu_list.cpp	98cb16c7
+	menu_lists::g	seam		src/game/menu/menu_lists.cpp	64	64	89	src/game/field/field_menu.cpp	98cb16c7
+	menu_windows::g	seam		src/game/menu/menu_windows.cpp	57	57	112	src/game/text/msg_box.cpp	98cb16c7
+	window_task::g	seam		src/game/menu/window_task.cpp	49	49	88	src/game/menu/item_trade.cpp	98cb16c7
 		file		src/game/menu_draw_helpers.cpp	1	1	172	src/game/shop/menu_draw_helpers.cpp	b29e27f3
 	AtMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	73	73	73	src/game/battle/battle_menu_win.cpp	d3e6abb3
 	AtMenuDrawHelpers	copied		src/game/menu_draw_helpers.cpp	73	73	73	src/game/menu/menu_list.cpp	d3e6abb3
@@ -21173,6 +21193,14 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x5A9690	DInput_Shutdown	func	tu_5a94c0	src/game/pad_read.cpp	294	297	317	src/game/platform/d_input.cpp	d3e6abb3
 		file		src/game/pause_text.cpp	1	1	96	src/game/text/pause_text.cpp	b29e27f3
 		file		src/game/pillarbox.cpp	1	1	284	src/game/platform/pillarbox.cpp	b29e27f3
+	battle_draw::g	seam		src/game/platform/battle_draw.cpp	51	51	76	src/game/field/area_map.cpp	98cb16c7
+	d3d_draw::g	seam		src/game/platform/d3d_draw.cpp	46	46	59	src/game/platform/d3d.cpp	98cb16c7
+	d3d_list::g	seam		src/game/platform/d3d_list.cpp	25	25	45	src/game/platform/d3d.cpp	98cb16c7
+	d3d_rest::g	seam		src/game/platform/d3d_rest.cpp	39	39	51	src/game/platform/d3d.cpp	98cb16c7
+	glyph_draw::g	seam		src/game/platform/glyph_draw.cpp	27	27	35	src/game/platform/d3d.cpp	98cb16c7
+	shell::g	seam		src/game/platform/shell.cpp	42	42	52	src/game/platform/magic_080.cpp	98cb16c7
+	sprt_draw::g	seam		src/game/platform/sprt_draw.cpp	80	80	87	src/game/platform/d3d.cpp	98cb16c7
+	tex_page::g	seam		src/game/platform/tex_page.cpp	34	34	40	src/game/platform/d3d.cpp	98cb16c7
 		file		src/game/prim.cpp	1	1	140	src/game/core/prim.cpp	b29e27f3
 	kTexPrimBytes/kTexPrims	copied		src/game/prim.cpp	51	51	51	src/game/field/area_map.cpp	d3e6abb3
 0x462A70	Prim_SetShade	func	tu_45fe60	src/game/prim.cpp	124	126	130	src/game/core/title.cpp	d3e6abb3
@@ -26464,6 +26492,9 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x4FD200	Gfx_InitBufferBlock	func	tu_4fc330	src/game/shell.cpp	284	288	294	src/game/platform/magic_080.cpp	d3e6abb3
 0x4FD290	Gfx_LinkOTags	func	tu_4fc330	src/game/shell.cpp	296	302	309	src/game/platform/magic_080.cpp	d3e6abb3
 		file		src/game/shell_fuzz.cpp	1	1	559	src/game/platform/shell_fuzz.cpp	b29e27f3
+	menu_draw_helpers::g	seam		src/game/shop/menu_draw_helpers.cpp	60	60	66	src/game/menu/menu_list.cpp	98cb16c7
+	shop_states::g	seam		src/game/shop/shop_states.cpp	55	55	62	src/game/shop/shop_mode.cpp	98cb16c7
+	shop_states2::g	seam		src/game/shop/shop_states2.cpp	46	46	54	src/game/shop/shop_trade.cpp	98cb16c7
 		file		src/game/shop_states.cpp	1	1	121	src/game/shop/shop_states.cpp	b29e27f3
 	Fn	copied		src/game/shop_states.cpp	52	52	52	src/game/shop/field_save.cpp	d3e6abb3
 	Fn	copied		src/game/shop_states.cpp	52	52	52	src/game/shop/shop_mode.cpp	d3e6abb3
@@ -26871,6 +26902,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x5A0080	D3d_BuildPageTexture	func	tu_59e650	src/game/tex_page.cpp	322	343	421	src/game/platform/d3d.cpp	d3e6abb3
 0x5A0510	D3d_RefreshPageTexture	func	tu_59e650	src/game/tex_page.cpp	423	435	469	src/game/platform/d3d.cpp	d3e6abb3
 		file		src/game/tex_page_fuzz.cpp	1	1	659	src/game/platform/tex_page_fuzz.cpp	b29e27f3
+	msgbox::g	seam		src/game/text/msgbox.cpp	43	43	77	src/game/text/msg_box.cpp	98cb16c7
 		file		src/game/text_advance.cpp	1	1	103	src/game/text/text_advance.cpp	b29e27f3
 		file		src/game/text_draw.cpp	1	1	535	src/game/text/text_draw.cpp	b29e27f3
 	kCell	local		src/game/text_draw.cpp	27	27	27	src/game/text/text.cpp	d3e6abb3

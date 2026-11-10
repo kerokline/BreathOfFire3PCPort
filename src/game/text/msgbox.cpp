@@ -40,41 +40,6 @@
 
 namespace msgbox {
 
-const Callees kOriginals = {
-    {MsgBox_StatePrint, MsgBox_StateDelay, MsgBox_State2, MsgBox_State3, MsgBox_State4, MsgBox_State5,
-     MsgBox_State6, MsgBox_State7},
-    {MsgBox_State2Press, MsgBox_State2Closed},
-    {MsgBox_State3Arrow, MsgBox_State3Step},
-    {MsgBox_State3Arrow, MsgBox_ChoiceOpen, MsgBox_ChoiceWaitOpen, MsgBox_ChoiceInput, MsgBox_ChoiceWaitShut,
-     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kChoiceCommit))), MsgBox_ChoiceReopen,
-     MsgBox_ChoiceDone},
-    {MsgBox_MenuOpen, MsgBox_MenuWaitOpen, MsgBox_MenuInput,
-     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kMenuCommit))), MsgBox_MenuDone,
-     MsgBox_State3Step},
-    {MsgBox_State7Delay, MsgBox_State2Closed},
-    {reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))), MsgBox_EffectShake,
-     MsgBox_EffectGrow, MsgBox_EffectGrow, MsgBox_EffectWander, MsgBox_EffectRise},
-    {MsgBox_ShakeOut, MsgBox_ShakeBack},
-    {MsgBox_GrowStart, MsgBox_GrowStep},
-    {MsgBox_RiseStart, MsgBox_RiseStep},
-    MsgBox_Reset,
-    Window_Alloc,
-    MsgBox_StateDispatch,
-    MsgBox_EffectTask,
-    MsgBox_Step,
-    MsgBox_Reopen,
-    Sound_PlayEffect,
-    MsgBox_DrawChar,   // DIV-0006; Text_DrawAt when no advance table is loaded
-    MsgBox_EffectDraw,
-    reinterpret_cast<void (__cdecl*)(int, int)>(static_cast<std::uintptr_t>(::bof3::Code(kPageArrow))),
-    reinterpret_cast<unsigned (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kAutoRepeat))),
-    Text_DrawString,
-    Gpu_SetCode6C,
-    Gpu_SetSemiTrans,
-    Gfx_CommitPrim,
-    Gpu_GetClut,
-};
-Callees g = kOriginals;
 unsigned char g_effect_space_skips = 0;   // DIV-0070, set by MsgBox_Inject after the self-test
 
 // DIV-0158, the faster text (BOF3X_TEXT_SPEED=1, text_speed= in bof3x.ini):

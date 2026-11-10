@@ -43,20 +43,6 @@
 
 namespace d3d_draw {
 
-const Callees kOriginals = {
-    D3d_PrimColor,
-    D3d_BindTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-    D3d_SetBlend,
-    D3d_SetShadeMode,
-    D3d_CellTexture,
-    Gfx_TexCacheFind,
-    D3d_BuildPageTexture,
-    D3d_RefreshPageTexture,
-    D3d_BuildCellTexture,
-    D3d_RefreshCellTexture,
-};
-Callees g = kOriginals;
 
 namespace {
 

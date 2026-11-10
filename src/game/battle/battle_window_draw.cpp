@@ -43,26 +43,6 @@
 
 namespace battle_window_draw {
 
-const Callees kOriginals = {
-    Window_Alloc,
-    Crt_sprintf,
-    Gpu_GetTPage,
-    Gpu_SetDrawMode,
-    Gfx_CommitPrim,
-    Gpu_GetClut,
-    Gpu_SetSprt,
-    Gpu_SetPolyF4,
-    Gpu_SetSemiTrans,
-    Gpu_SetTile,
-    Gpu_SetPolyFT4,
-    Gpu_SetLineF2,
-    Menu_DrawIcon8,
-    Text_CharCount,
-    Text_DrawAt,
-    Text_DrawFont8,
-    Skill_ApCost,
-};
-Callees g = kOriginals;
 
 }  // namespace battle_window_draw
 

@@ -145,6 +145,116 @@ unsigned g_instant_page = 0;
 
 }  // namespace msgbox
 
+// menu_windows's callee seam, moved here from menu_windows.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace menu_windows {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Text_DrawAt,
+    Text_DrawAt,
+    Text_DrawImmediate,
+    Msg_SystemPtr,
+    Msg_SystemPtr,
+    MsgBox_Reset,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(reinterpret_cast<void*>(&Sound_PlayEffect)),
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_SetSprt,
+    Gpu_SetSemiTrans,
+    Gpu_GetTPage,
+    Gpu_GetClut,
+    Gpu_SetPolyFT4,
+    Gpu_SetLineF2,
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(kSetLineF3.v)),
+    Gpu_SetLineF4,
+    Gpu_SetTile,
+    reinterpret_cast<unsigned char (__cdecl*)(int, int)>(reinterpret_cast<void*>(&AreaMap_ByteAt)),
+    Crt_sprintf,
+    Fn<void (__cdecl*)(unsigned, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kStatIcon.v)),
+    Fn<void (__cdecl*)(int, int, int)>(::bof3::Code(kDrawHand.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned char*, unsigned short*)>(::bof3::Code(kEquipCompare.v)),
+    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemName.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemKind.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kEquipMask.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemFlagsOf.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kHasKeyItem.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kCountOwned.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kCountCategory.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kPriceScale.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSellPrice.v)),
+    Text_DrawFont12,
+    Text_DrawFont8,
+    Menu_DrawPanel,
+    Menu_DrawBox,
+    Menu_DrawIcon8,
+    Text_CharCount,
+    Menu_DrawPieces,
+    Menu_DrawPiece,
+    Menu_PieceRect,
+    Menu_DrawLine,
+    Menu_DrawOutline,
+    Menu_DrawItemIcon,
+    Menu_DrawBigIcon,
+    Char_ExpForLevel,
+    Item_BasePrice,
+    Item_CanUse,
+    Menu_DrawItemRow,
+    Menu_DrawScrollBar,
+    Menu_ListScroll,
+    Menu_DrawBorder,
+    Gpu_SetSprt8,
+};
+Callees g = kOriginals;
+
+}  // namespace menu_windows
+
+// msgbox's callee seam, moved here from msgbox.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace msgbox {
+
+const Callees kOriginals = {
+    {MsgBox_StatePrint, MsgBox_StateDelay, MsgBox_State2, MsgBox_State3, MsgBox_State4, MsgBox_State5,
+     MsgBox_State6, MsgBox_State7},
+    {MsgBox_State2Press, MsgBox_State2Closed},
+    {MsgBox_State3Arrow, MsgBox_State3Step},
+    {MsgBox_State3Arrow, MsgBox_ChoiceOpen, MsgBox_ChoiceWaitOpen, MsgBox_ChoiceInput, MsgBox_ChoiceWaitShut,
+     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kChoiceCommit))), MsgBox_ChoiceReopen,
+     MsgBox_ChoiceDone},
+    {MsgBox_MenuOpen, MsgBox_MenuWaitOpen, MsgBox_MenuInput,
+     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kMenuCommit))), MsgBox_MenuDone,
+     MsgBox_State3Step},
+    {MsgBox_State7Delay, MsgBox_State2Closed},
+    {reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))), MsgBox_EffectShake,
+     MsgBox_EffectGrow, MsgBox_EffectGrow, MsgBox_EffectWander, MsgBox_EffectRise},
+    {MsgBox_ShakeOut, MsgBox_ShakeBack},
+    {MsgBox_GrowStart, MsgBox_GrowStep},
+    {MsgBox_RiseStart, MsgBox_RiseStep},
+    MsgBox_Reset,
+    Window_Alloc,
+    MsgBox_StateDispatch,
+    MsgBox_EffectTask,
+    MsgBox_Step,
+    MsgBox_Reopen,
+    Sound_PlayEffect,
+    MsgBox_DrawChar,   // DIV-0006; Text_DrawAt when no advance table is loaded
+    MsgBox_EffectDraw,
+    reinterpret_cast<void (__cdecl*)(int, int)>(static_cast<std::uintptr_t>(::bof3::Code(kPageArrow))),
+    reinterpret_cast<unsigned (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kAutoRepeat))),
+    Text_DrawString,
+    Gpu_SetCode6C,
+    Gpu_SetSemiTrans,
+    Gfx_CommitPrim,
+    Gpu_GetClut,
+};
+Callees g = kOriginals;
+
+}  // namespace msgbox
+
 // original 0x4976D0 (PSX 0x8015034C). Opens message `id` of the script pool:
 // the pool header's u16 at 2*id is the message's offset from the pool base.
 //

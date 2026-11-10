@@ -242,6 +242,22 @@ Handler Entry(shop_states2::U table, shop_states2::U index, const char* who) {
 
 }  // namespace
 
+// shop_states2's callee seam, moved here from shop_states2.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace shop_states2 {
+
+const Callees kOriginals = {
+    Shop_InitWindows, Shop_PriceRate, Shop_ScalePrice, Shop_SellPrice, Shop_Equip,
+    Item_IconKind, Item_HelpMessage, Item_BasePrice, Inventory_Count, Inventory_Add, Item_NamePtr, TextRecord_Set,
+    Item_EquipMask, Item_CanUse, Char_RecalcStats, Party_Count,
+    Input_AutoRepeat, Sound_PlayEffect,
+    Window_ResetAll, Task_ClearPrivate, Task_Sleep, Field_RunTaskRecords, LoadDatFile, File_LoadDone,
+    Gfx_ClutStripRestore,
+};
+Callees g = kOriginals;
+
+}  // namespace shop_states2
+
 // original 0x5818B0: entry 2 of the field menus' table 0x663E40 (group DF's),
 // the shop proper - ShopTrade_States by 0x929F01: 0 open, 1 buy or sell,
 // 2 buy, 3 sell, 4 close.

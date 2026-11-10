@@ -301,6 +301,81 @@ Callees g = kOriginals;
 
 }  // namespace event_ops
 
+// event_leader's callee seam, moved here from event_leader.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace event_leader {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Field_LeaderStepLands, Field_SpotFree, Field_WayBlocked4, Field_CellsBlock, Field_WayBlocked,
+    Field_LeaderStepTick, Field_EquipTick, Field_Bit20Tick, Field_FloorDamage, Field_Tile89, Field_Tile8A,
+    Field_TileD0, Field_TileA4, MoveCmd_TestFB, AreaMap_ByteAt, Field_LeaderAnimation, Field_ChangeArea,
+    Area_LinkAt, AreaMap_CellsAll, AreaMap_CellsNone, Sprite_EnsureAnimation, Field_JumpStart, Sprite_ClearSteps,
+    Field_EncounterDue, Field_LeaderEffectTest, Scenario_ArriveHook, Field_Bit80Tick, Field_LeaderWalk,
+    Member_ClearState, Sprite_ShadeFadeBegin, MapView_GroundAt, Sprite_SetAnimation, ObjTrio_SwapFields,
+    Field_MemberSprite, Sprite_LoadPalette, MapView_SetElevation, Encounter_RollInitiative, Sprite_ScriptTick,
+    Area_PassageAhead, EventScript_Run, Msg_OpenScript, Msg_OpenSystem, Flags_Test, Flags_Set, Sound_PlayEffect,
+    Item_NamePtr, Inventory_Add, MoveCmd_TestFC, MapView_SlopeAt, Sprite_ObjectAt,
+    Fn<unsigned char (__cdecl*)(long, long, unsigned)>(::bof3::Code(fn::kPathClear.v)),
+    Fn<void (__cdecl*)(int)>(::bof3::Code(fn::kGiveZenny.v)),
+    Fn<const unsigned char* (__cdecl*)()>(::bof3::Code(fn::kAreaExits.v)),
+    Fn<unsigned char (__cdecl*)(long, long, long)>(::bof3::Code(fn::kWayBlockedWide.v)),
+};
+Callees g = kOriginals;
+
+}  // namespace event_leader
+
+// inventory_ops's callee seam, moved here from inventory_ops.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace inventory_ops {
+namespace {
+
+template <typename F>
+F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Party_Count,
+    AreaMap_Elevation,
+    Sprite_ObjectAt,
+    Gte_RotTransPers,
+    Gte_RotMatrix,
+    Gte_ApplyMatrix,
+    Gte_SetRotMatrix,
+    Gte_SetTransMatrix,
+    Rand,
+    MapView_GroundAt,
+    Effect_FindFree,
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned char*, unsigned)>(::bof3::Code(kSetAnimFrom.v)),
+    Sprite_ScriptTick,
+    Sprite_ShadeFadeBegin,
+    Sprite_ShadeRaise,
+    Sprite_ScriptTickOnce,
+    Sprite_SetAnimation,
+    Encounter_PlaceMember,
+    Encounter_MemberClear,
+    Encounter_MemberStands,
+    Encounter_EnemyClear,
+    AreaMap_CellNibble,
+    Encounter_Project,
+    Encounter_Apart,
+    Encounter_CellFits,
+    Encounter_PathClear,
+    Short_Abs,
+    Short_Sign,
+    Encounter_StepOpen,
+    Sprite_TurnSense,
+    Sprite_ShadeLower,
+};
+Callees g = kOriginals;
+
+}  // namespace inventory_ops
+
 // original 0x52D8F0: the leader's frame (PSX 0x801B10F0), called by
 // Field_MembersFrame for member 0 and by Field_PartyFirstFrame.
 //

@@ -369,6 +369,30 @@ Callees g = kOriginals;
 
 }  // namespace move_cmds
 
+// field_misc's callee seam, moved here from field_misc.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_misc {
+
+const Callees kOriginals = {
+    AreaMap_CellBlocked,
+    AreaMap_TooSteep,
+    AreaMap_TooSteepAt,
+    Gpu_SetPolyF4,
+    Gfx_CommitPrim,
+    Area_TestCondition,
+    MapView_ItemAt,
+    Prim_SetTexture,
+    MapView_CheckHeightScale,
+    AreaMap_Slope,
+    D3d_PrimColor,
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+    D3d_SetBlend,
+    D3d_SetShadeMode,
+};
+Callees g = kOriginals;
+
+}  // namespace field_misc
+
 // original 0x517200: the field's frame (PSX FUN_8019A1B8, call for call).
 extern "C" void __cdecl Field_Frame(void) {
     field_frame::g.kind2();

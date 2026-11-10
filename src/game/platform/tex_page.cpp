@@ -31,13 +31,6 @@
 
 namespace tex_page {
 
-const Callees kOriginals = {
-    Tex_Convert4,
-    Tex_Convert8,
-    Tex_Convert16,
-    Gfx_ClutPixels,
-};
-Callees g = kOriginals;
 std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOpaque") in TexPage_Inject
 
 namespace {
@@ -70,9 +63,6 @@ void PutWord(unsigned char* p, U v) {
 }  // namespace tex_page
 
 using namespace tex_page;
-
-namespace tex_page {
-}  // namespace tex_page
 
 void TexPage_Inject() {
     if (bof3::WantsShadow("tex_page")) tex_page::SelfTest();

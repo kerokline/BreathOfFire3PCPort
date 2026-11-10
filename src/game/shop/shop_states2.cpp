@@ -41,20 +41,6 @@
 #include "hook/log.h"
 #include "input/sigma.h"
 
-namespace shop_states2 {
-
-const Callees kOriginals = {
-    Shop_InitWindows, Shop_PriceRate, Shop_ScalePrice, Shop_SellPrice, Shop_Equip,
-    Item_IconKind, Item_HelpMessage, Item_BasePrice, Inventory_Count, Inventory_Add, Item_NamePtr, TextRecord_Set,
-    Item_EquipMask, Item_CanUse, Char_RecalcStats, Party_Count,
-    Input_AutoRepeat, Sound_PlayEffect,
-    Window_ResetAll, Task_ClearPrivate, Task_Sleep, Field_RunTaskRecords, LoadDatFile, File_LoadDone,
-    Gfx_ClutStripRestore,
-};
-Callees g = kOriginals;
-
-}  // namespace shop_states2
-
 using namespace shop_states2;
 
 // DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no

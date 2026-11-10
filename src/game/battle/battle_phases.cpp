@@ -36,24 +36,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Battle_PhaseDispatch, BattleParty_RunStates, BattleEnemy_RunAll, BattleBanner_Dispatch, AreaMap_Frame,
-    BattleTask_RunAll, BattleParty_UpdateScreens, BattleEnemy_UpdateScreenAll, Field_ObjectsScreen,
-    Sprite_UpdateObjectScreens, Party_ExtraScreens, Effect_RunObjects, Field_RunSlots, MoveScript_TintFrame,
-    Field_RunTaskRecords, Field_DrawFrame,
-    {Battle_Init, BattleIntro_Dispatch},
-    {BattleIntro_OpenWindows, BattleIntro_WaitWindow, BattleIntro_PrepareCross, BattleIntro_Finish},
-    BattleBanner_ClearAll, Battle_ActorIsOut, Battle_InitEncounterKind, BattleTask_ClearAll,
-    Battle_InitActorContexts, Formation_ApplyStatMods, Gfx_ClutStripCopyRow, Sprite_SetClutStp, LoadDatFile,
-    Window_Alloc, Msg_SystemPtr, BattleQueue_Push, BattleWin_OpenStatus, Battle_OpenEnemyNames,
-    BattleWin_OpenSub1, BattleQueue_Pending, File_LoadDone, BattleWin_OpenSub2, BattleWin_OpenSub3,
-    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(::bof3::Code(kAutoFillCommands.v)),
-    Battle_SpawnActorCopies, BattleBanner_ShowName, Sound_PlayEffect,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)), BattleWin_DrawCommandCross,
-    BattleWin_DrawCommandLabel, BattleWin_DrawPartyStatus, Battle_PulseStep,
-    Battle_BuildTurnOrder, EnemyAI_ChooseActions,
-};
-Callees g = kOriginals;
 
 }  // namespace battle_phases
 

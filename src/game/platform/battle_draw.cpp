@@ -48,32 +48,6 @@ namespace {
 template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    D3d_PrimColor,
-    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRetOnly.v)),
-    D3d_SetBlend,
-    D3d_SetShadeMode,
-    Menu_DrawBox,
-    Menu_ListScroll,
-    Item_CanUse,
-    Menu_DrawItemRow,
-    Text_CharCount,
-    Text_DrawAt,
-    Inventory_CountUsed,
-    Crt_sprintf,
-    Text_DrawFont8,
-    Menu_DrawPieces,
-    Menu_DrawPiece,
-    Menu_DrawScrollBar,
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillUsable.v)),
-    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(::bof3::Code(kSkillRow.v)),
-    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kSkillIcon.v)),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillCost.v)),
-    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillList.v)),
-    Gfx_ClutAdjust,
-    AreaMap_ClutCycleStart,
-};
-Callees g = kOriginals;
 
 }  // namespace battle_draw
 

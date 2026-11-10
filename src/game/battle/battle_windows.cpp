@@ -43,38 +43,6 @@ namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 }  // namespace
 
-const Callees kOriginals = {
-    Gpu_GetTPage,
-    Gpu_SetDrawMode,
-    Gfx_CommitPrim,
-    Gpu_SetPolyFT4,
-    Text_DrawAt,
-    Text_DrawFont8,
-    Crt_sprintf,
-    Menu_DrawIcon,
-    Sprite_UpdateScreen,
-    reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTick)),
-    reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTickOnce)),
-    reinterpret_cast<unsigned (__cdecl*)(unsigned)>(reinterpret_cast<void*>(&Sprite_EnsureAnimation)),
-    Fn<unsigned (__cdecl*)(unsigned, std::uint32_t, unsigned)>(::bof3::Code(kPoseFrom.v)),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawValue.v)),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawEdge.v)),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawTile.v)),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawTileRgb.v)),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawBar.v)),
-    Fn<void (__cdecl*)(int, int, unsigned)>(::bof3::Code(kDrawDigit.v)),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLinePlain.v)),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi0.v)),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi1.v)),
-    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kEnemyNameShown.v)),
-    Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kTinyFont.v)),
-    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleObj_StateTable_addr))),
-    {at::kKindHandlers[0], at::kKindHandlers[1], at::kKindHandlers[2]},
-    BattleObj_RunState,
-    BattleWin_DrawCommandIcon,
-    BattleWin_DrawMessageBox,
-};
-Callees g = kOriginals;
 
 }  // namespace battle_windows
 

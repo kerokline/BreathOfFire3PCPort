@@ -98,6 +98,35 @@ void RunStep(std::uint32_t table) {
 
 }  // namespace
 
+// battle_result's callee seam, moved here from battle_result.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_result {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_NextStep)), Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_DrawExp))},
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_NextStep)), Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_DrawZenny))},
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kCountMembers.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kZennyBonus.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kAddExp.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kRosterIndex.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kLevelUpPending.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kLevelUp.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kAddZenny.v)),
+    Fn<void (__cdecl*)(int, int, int, int)>(::bof3::Code(kDrawFrame.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kExpToNext.v)),
+    Crt_sprintf, Msg_SystemPtr, PartySet_Select, Window_Alloc, File_LoadDone, Snd_LoadBankFile,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Inventory_Add)),   // Inventory_Add, ours
+    Text_DrawAt, Text_DrawFont12, BattleWin_DrawMediumBox,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_result
+
 // original 0x431940 (PSX 0x801EECD4, paired): the EXP total 0x904AEC split
 // among the party - rounded up, (total + n - 1) / n with n the count BattleResult_CountExpShares 0x4319B0
 // answers, the sum wrapping at 32 bits; 0 when the total or the count is 0

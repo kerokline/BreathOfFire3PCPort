@@ -404,7 +404,10 @@ def plan_seam(sh: Shell, low: dict[str, tuple[int, str]]) -> tuple[str, list[ci.
     leave = []
     for it in own:
         used = any(set(it.names) & o.uses for o in others)
-        if it is sh.g or not used:
+        # the group's callees header declares the table extern: one definition, so it moves
+        hdr = ROOT / f"{GAME}/{sh.stem}_callees.h"
+        declared = hdr.is_file() and re.search(rf"extern\s[^;]*{it.names[0]}\s*;", hdr.read_text(encoding="utf-8"))
+        if it is sh.g or not used or declared:
             leave.append(it)
         elif not it.is_const:
             return home, [], f"{it.names[0]} is state the file's other code reaches"
