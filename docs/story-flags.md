@@ -197,9 +197,25 @@ save of the play folder, so that byte is the summary's copy of flag 146.
     in the running row, 7. A player who took the gift in chapter 6 is refused,
     as meant. One who first takes it in chapter 7 sets row 7's flag, which
     nothing tests, so the code would give it again at the object's next
-    trigger. The object fires once until its `+0x86` is armed again; what arms
-    it, and whether the data hides the object, is not traced. No save on record
-    has row 7's flag 34 or 35.
+    trigger. Traced further the same day:
+    - **The gifts** are a weapon (`Inventory_Add(1, record 7's weapon byte + 1)`,
+      flag `0x22`) and an armour (category 2, record 7's third armour byte + 1,
+      flag `0x23`). Record 7 in chapters 6 and 7 is the guest the chapter 6
+      scenes train and equip, named "Beyd" on the US disc (DIV-0118), so the
+      gifts follow what the player left on the guest. The scenes run in areas
+      92 and 94 in chapter 6 (Rhapala, by Red Herring's and the sibling's area
+      names, not checked here); which area holds the chapter 7 giver is in the
+      area data.
+    - **What arms the trigger again:** a `D0` op of the object's talk script
+      (every talk) or of the placement script (every entry to the area and every
+      load). Nothing in code retires the giver, and `Inventory_Add` refuses only
+      past 99. So a gift first taken in chapter 7 repeats at the next talk or
+      the next entry, unless the area's scripts test row 7 and hide the giver:
+      they can, and the source cannot say.
+    - **Verdict: cannot tell from source, likely reachable.** No save on record
+      has row 7's flag 34 or 35. A play test settles it: leave both gifts in
+      chapter 6, take one in chapter 7, talk again, then leave and come back.
+    - A fix would be `ObjectReward` testing row 6 or the running row. Not made.
   - **Chapter 8's run 3, not a defect in play.** The code has no guard, but the
     scene is armed by `Area108_PlaceScene` matching the cart (extra object 1),
     and DIV-0182's measured run found area 108 with no cart after the fight:

@@ -1,6 +1,8 @@
 # The save block, byte by byte
 
-**Status: IN PROGRESS (2026-11-10).** One reading pass over the source for each of
+**Status: IN PROGRESS (2026-11-10).** File and line citations here and in the
+range files are of the source as it was at `44fd3204`, before the source-layout
+moves of PRs #214 and #217: a cited function is found by its name. One reading pass over the source for each of
 five ranges, then the passes' claims that a save can show were measured on 80
 distinct PC saves (the owner's play folder and `tools/recipe_saves`). The range
 files are the record; this page is the index. Where it differs from
