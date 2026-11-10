@@ -90,20 +90,8 @@ void DrawMode(U abr, int x, int y, int dtd, U slot) {
     SH_CALL(Gfx_CommitPrim)(slot, 0xC);
 }
 
-// DIVERGENCE DIV-0206 (D217): kind 0x61's particles. The original writes one
-// 0x14-byte particle per opaque pixel of the member's read-back at 0x92DF80
-// with no bound; the room before Gfx_CurrentEnv (0x937F84) holds 2,048, and
-// the second frame (64 x 64) can make 4,096. The 2,049th lands on 0x937F80:
-// its floats over Gfx_CurrentEnv and Sprite_Current, then Frame_Counter. Ours:
-// once g_pixel_room is armed (after the self-test, PatchBytes "PixelRoom") the
-// particles go to a room of ours that holds a frame's every pixel, so the whole
-// member scatters and gathers; the count, the order, the fields and the draw
-// are the original's. Nothing but these three states names the array (a raw
-// scan of the image: 0x92DF80 at 0x4807A0's and 0x480910's bodies only), and
-// the frames 0x654948 that size them are read and never written.
-// BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at 0x92DF80, the overrun
-// with them.
-}  namespace effect_3a { unsigned char g_pixel_room = 0; }  // ===========================================================================
+}
+// ===========================================================================
 // Kind 0x60: Effect_KindHandlers[0x60] (0x6554D0), EffectKind60_States (six)
 // ===========================================================================
 
@@ -126,10 +114,4 @@ void DrawMode(U abr, int x, int y, int dtd, U slot) {
 
 void Effect3A_Inject() {
     if (bof3::WantsShadow("effect_3a")) effect_3a::SelfTest();
-    // DIV-0206: armed after the self-test, which compares ours with Capcom's at
-    // 0x92DF80.
-    static const std::uint8_t pixel_was = 0, pixel_is = 1;
-    bof3::PatchBytes("PixelRoom", AddressOf(&effect_3a::g_pixel_room), &pixel_was, &pixel_is, 1);
-    bof3::Log("DIV-0206    kind 0x61's particles in a room of %u (the original's holds 2,048): %s", at::kParticleRoom,
-              effect_3a::g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
 }
