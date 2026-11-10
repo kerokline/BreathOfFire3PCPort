@@ -31,7 +31,7 @@ const move_groups::CalleesMoveGroups kOriginalsMoveGroups = {
     Music_FadeIn, Music_FadeOut, Port_DroppedCall, MoveCmd_OpDB, MoveCmd_TestFB, MoveCmd_TestFC, Effect_Spawn,
     Effect_SpawnAt, MoveCmd_HandlePosition, MoveCmd_Op87, MoveCmd_Op88, Sound_LoadStream, Sound_StreamDone,
 };
-}  namespace move_groups { CalleesMoveGroups g = kOriginalsMoveGroups; }
+}  // namespace
 namespace {
 
 // Ops D4..D6: the party slot Field_ActiveMember is, as a byte - the original

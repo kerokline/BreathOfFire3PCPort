@@ -802,6 +802,14 @@ extern "C" void __cdecl Field_LeaderStepCell(void) {
     if (event_ops::Word(event_ops::At(::bof3::Img(Scratch_Swap_addr))) != 0 && WalkZ(sc[8]) > 0) event_ops::at::kCellZ = z + 1u;
 }
 
+namespace event_leader {
+
+// DIV-0121: 1 through PatchBytes("EdgeNoArea") in EventLeader_Inject, after
+// the fuzz, which runs Capcom's rule.
+std::uint32_t g_edge_no_area = 0;
+
+}  // namespace event_leader
+
 // original 0x52E580 (PSX 0x801B2464): where a step lands - reached only by 0x52E110's tail
 // jump, in no list (event-ops.md section 11). The run counter +7 (up to 0x11
 // while running, else 0); unless on foot the equipment tick; the two actor
@@ -1707,6 +1715,12 @@ extern "C" void __cdecl Field_AreaRunState(void) {
     else SH_CALL(Area121_LeaderRun)();
 }
 
+// DIVERGENCE DIV-0153: 1 through PatchBytes("MantleCap") in
+// FieldEvent_Inject, after the self-test. Accessory 0x15 (the Holy Mantle)
+// doubles the threshold in a byte; zone 1's 120..151 wraps to 0..46. With
+// the flag the doubling stops at 0xFF.
+namespace field_event { std::uint8_t g_mantle_cap = 0; }
+
 // original 0x52FEB0 (PSX 0x801B4CC4): the word at 0x802E74 set from the zone
 // the leader stands in - see docs/field-event.md section 1 for what it may be.
 //
@@ -2203,4 +2217,23 @@ void Field4_Inject() {
     BOF3_INJECT(Field_LeaderEffectTest);
     BOF3_INJECT(Field_LeaderPushCount);
     BOF3_INJECT(Field_LeaderTalkTest);
+}
+
+void Field4FromEventLeader_Inject() {
+    {
+        // DIV-0121: armed after the fuzz above, which sees Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("EdgeNoArea", Low32(&event_leader::g_edge_no_area),
+                         was, is, 4);
+        bof3::Log("DIV-0121    a map edge that leads to no area (a game loaded in an encounter field) holds (on unless the line above says OFF)");
+    }
+}
+
+void Field4FromFieldEvent_Inject() {
+    {
+        // DIV-0153: after the self-test, which compared Capcom's roll.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MantleCap", Low32(&field_event::g_mantle_cap), &was, &is, 1);
+        bof3::Log("DIV-0153    the Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping (on unless the line above says OFF)");
+    }
 }

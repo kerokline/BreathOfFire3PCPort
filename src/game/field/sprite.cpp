@@ -285,6 +285,19 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 
 }  // namespace
 
+// sprite_screen's callee seam, moved here from sprite_screen.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace sprite_screen {
+namespace {
+
+const sprite_screen::Callees kOriginals = {Sprite_InheritDrawKey, Gte_RotTransPers, Port_DroppedCall, Sprite_QueueOverlay};
+
+}  // namespace
+
+Callees g = kOriginals;
+
+}  // namespace sprite_screen
+
 // original 0x588F00 (0x8014D154; PSX 0x8014D154): Sprite_Current +0x29 = Draw_OtSlot, then
 // (a tail jump) Sprite_UpdateScreen.
 extern "C" void __cdecl Sprite_UpdateScreenSlot(void) {
@@ -577,6 +590,27 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
     return script;
 }
 
+// original 0x589590 (PSX 0x8014DC30): finds `bank` among the bank records
+// (kBankTable, 8 bytes each: u16 the bank, then +2 +4 +5 +6 +7 bytes; as many
+// as the low byte of the dword at kBankCount, read once) and gives the current
+// sprite its texture: +0x25 = +4, +0x26 = +5, +0x27 = +2, +0x28 = +6, +0x2C =
+// +7 (as a word), +0x70's low byte = kBankBytes[bank * 2] ORed into a cleared
+// byte, +0x2B = kBankBytes[bank * 2 + 1]. Returns 0; 1 (and nothing changed)
+// when there is no such record. The first match wins.
+//
+// As the original has it: the table pointer and Sprite_Current re-read
+// before each store; kBankBytes indexed by the whole 16-bit bank, unchecked.
+// The PSX re-reads the count each turn and stores the bank byte over the
+// whole of +0x70 (its AND before is dead; US 0x8014DD3C, JP 0x8014DC30); the
+// PC keeps +0x70's upper bytes (`and esi, 0xFFFFFF00` at 0x58962D, then the
+// byte ORed in).
+//
+// DIVERGENCE DIV-0164 (known-defects D341): 1 through
+// PatchBytes("SpriteReachWord") in SpritePose_Inject, after the self-test.
+// The bank byte is then stored zero-extended over the whole dword +0x70, as
+// the PSX does.
+namespace sprite_pose { std::uint8_t g_reach_word = 0; }
+
 extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
     const unsigned count = static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(sprite_pose::at::kBankCount)))) & 0xFFu;
     const unsigned char* const table = sprite_pose::Ptr(::bof3::Img(sprite_pose::at::kBankTable));
@@ -619,6 +653,13 @@ extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
     return 0xFF;
 }
 
+namespace {
+using InheritFn = void (__cdecl*)();
+}  // namespace
+// --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
+// clone first, then ours from the same state, and the results are compared.
+namespace sprite_find { InheritFn g_inherit_live = nullptr; }
+
 extern "C" void __cdecl Sprite_InheritDrawKey(void) {
     if (!sprite_find::g_inherit_live) return InheritDrawKey();
     // The one store either makes is the current object's +0x32.
@@ -656,4 +697,13 @@ void Sprite_Inject() {
     BOF3_INJECT(Sprite_SetAnimationBank);
     BOF3_INJECT(Sprite_FindNearby);
     BOF3_INJECT(Sprite_InheritDrawKey);
+}
+
+void SpriteFromSpritePose_Inject() {
+    {
+        // DIV-0164: after the self-test, which compared Capcom's masked store.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SpriteReachWord", Low32(&sprite_pose::g_reach_word), &was, &is, 1);
+        bof3::Log("DIV-0164    the bank setter stores the sprite's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
+    }
 }

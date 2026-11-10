@@ -28,9 +28,9 @@ std::uint16_t Key(const unsigned char* object) {
 using OpenFn = void (__cdecl*)(int);
 using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
 using DrawFn = void (__cdecl*)();
-}  namespace draw_pass { OpenFn g_open = DrawLayer_Open; }
-namespace draw_pass { AddRecordsFn g_add_records = Sprite_AddDrawRecords; }
-namespace draw_pass { DrawFn g_draw = Sprite_Draw; }
+}  // namespace
+// draw_pass::g_open, g_add_records and g_draw are defined in field/sprite_2.cpp,
+// beside their reader Sprite_DrawPass (the source layout's cleanup round, I60).
 namespace {
 
 // --- BOF3X_SHADOW=draw_pass: a differential fuzz, once at start-up ----------------

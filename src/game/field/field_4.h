@@ -3,3 +3,5 @@
 #pragma once
 
 void Field4_Inject();
+void Field4FromEventLeader_Inject();
+void Field4FromFieldEvent_Inject();

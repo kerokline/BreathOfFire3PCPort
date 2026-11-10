@@ -39,10 +39,6 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 }  // namespace
 
 
-// DIV-0121: 1 through PatchBytes("EdgeNoArea") in EventLeader_Inject, after
-// the fuzz, which runs Capcom's rule.
-std::uint32_t g_edge_no_area = 0;
-
 }  // namespace event_leader
 
 using namespace event_leader;
@@ -72,11 +68,4 @@ using namespace event_leader;
 
 void EventLeader_Inject() {
     if (bof3::WantsShadow("event_leader")) event_leader::SelfTest();
-    {
-        // DIV-0121: armed after the fuzz above, which sees Capcom's rule.
-        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        bof3::PatchBytes("EdgeNoArea", Low32(&event_leader::g_edge_no_area),
-                         was, is, 4);
-        bof3::Log("DIV-0121    a map edge that leads to no area (a game loaded in an encounter field) holds (on unless the line above says OFF)");
-    }
 }

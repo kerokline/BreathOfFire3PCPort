@@ -3,3 +3,4 @@
 #pragma once
 
 void Sprite_Inject();
+void SpriteFromSpritePose_Inject();

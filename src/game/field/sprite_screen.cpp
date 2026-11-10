@@ -27,7 +27,7 @@ using namespace move_script;
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 const sprite_screen::Callees kOriginals = {Sprite_InheritDrawKey, Gte_RotTransPers, Port_DroppedCall, Sprite_QueueOverlay};
-}  namespace sprite_screen { Callees g = kOriginals; }
+}  // namespace
 namespace {
 
 // --- BOF3X_SHADOW=sprite_screen: a differential fuzz, once at start-up ------

@@ -27,7 +27,7 @@ const CalleesMoveScript kOriginalsMoveScript = {
     MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
     MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
 };
-}  namespace move_script { CalleesMoveScript gMoveScript = kOriginalsMoveScript; }
+}  // namespace (move_script::gMoveScript is beside its reader, in field/move_script.cpp)
 // originals 0x57C460, 0x57C480, 0x57C4A0: the counters of flow ops A0..AF,
 // reached through MoveScript_CounterOps by op & 3. Counter (op >> 2) & 3 of
 // the four bytes at 0x903848, below the PSX scratchpad's words. Set returns 1

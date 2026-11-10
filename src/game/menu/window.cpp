@@ -1129,6 +1129,10 @@ extern "C" void __cdecl MenuSlide_DownTo40(void) {
     }
 }
 
+// DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
+// the patch is read back, call Text_DrawAt as the original's copy does).
+namespace rest_2f { U g_title_call = 0; }
+
 // original 0x596A90: called by Win2_ItemList - the item list window, the
 // shape of Menu_DrawItemList's (menu_windows.cpp) with nine rows: the box;
 // Menu_ListScroll (top +0xB, its offset kept in the record pointer argument's
@@ -1267,4 +1271,13 @@ void Window_Inject() {
     BOF3_INJECT(Win2_TitleBox);
     BOF3_INJECT(MenuSlide_DownTo40);
     BOF3_INJECT(Win2_DrawItemList);
+}
+
+void WindowFromRest2f_Inject() {
+    using rest_2f::kTitleCall;
+    // DIV-0059 survives the takeover: ours calls what the site calls, as
+    // battle_draw.cpp holds it (BattleDraw_Inject ran first; operand-store.md)
+    rest_2f::g_title_call = ListTitle_SiteDraw();
+    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall.v, rest_2f::g_title_call,
+              rest_2f::g_title_call == bof3::addr::Text_DrawAt ? " (Text_DrawAt)" : " (DIV-0059's ListTitle_DrawAt)");
 }

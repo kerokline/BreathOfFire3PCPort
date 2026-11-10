@@ -567,6 +567,24 @@ extern "C" void __cdecl FieldTail_WorldMapHook(void) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, "FieldTail_WorldMapHook")))();
 }
 
+// original 0x56DE50 (slot 44): 0 - unless a message is up: bit (argument) of
+// 0x904650 set, the system message 0x4172 + argument copied (8 bytes, the
+// CRT's copy) into Text_Records, Msg_OpenSystem(0xFA), Field_Request 2,
+// Sound_StopMusic, Sound_LoadStream(9), state 1; 1 - once Sound_StreamDone
+// and no message is up, Sound_ResumeAll, the byte 0x903804 points at 0,
+// ScriptFlags_Clear40, the tail cleared. Bit (argument) of 0x904650 is the
+// dragon gene's (Gene_Bits) and message 0xFA names it.
+//
+// DIVERGENCE DIV-0166 (known-defects D351): the copy (`push 8` ... `call
+// 0x5B9450` at 0x56DED1..0x56DEE2) is strncpy, so a name of 8 bytes or more
+// leaves Text_Records' first record unterminated and the message prints on
+// into whatever an earlier copy left at +8. The US disc (GAME.EMI#0
+// 0x801A83DC; a `sb $zero` to the buffer + 8 after the copy) terminates it;
+// the JP (0x801A93E4) does not. With g_name_nul (1 through
+// PatchBytes("GeneNameNul") in FieldE2_Inject, after the self-test) the byte
+// at +8 is 0 after the copy, as on the US disc.
+namespace field_e2 { std::uint8_t g_name_nul = 0; }
+
 extern "C" void __cdecl FieldTail_FlagMessage(void) {
     switch (TailState()) {
     case 0: {
@@ -753,4 +771,13 @@ void Field7_Inject() {
     BOF3_INJECT(Area_ReturnGate);
     BOF3_INJECT(Area_ArriveHook);
     BOF3_INJECT(Area_CellHook);
+}
+
+void Field7FromFieldE2_Inject() {
+    {
+        // DIV-0166: after the self-test, which compared Capcom's unterminated copy.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("GeneNameNul", Low32(&field_e2::g_name_nul), &was, &is, 1);
+        bof3::Log("DIV-0166    message 0xFA's gene name is terminated after its 8-byte copy (on unless the line above says OFF)");
+    }
 }

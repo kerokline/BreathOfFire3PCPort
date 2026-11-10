@@ -116,23 +116,6 @@ U CodeAtFieldE2(U table, U index, const char* who) {
 // No PSX twin paired for any.
 // ============================================================================
 
-// original 0x56DE50 (slot 44): 0 - unless a message is up: bit (argument) of
-// 0x904650 set, the system message 0x4172 + argument copied (8 bytes, the
-// CRT's copy) into Text_Records, Msg_OpenSystem(0xFA), Field_Request 2,
-// Sound_StopMusic, Sound_LoadStream(9), state 1; 1 - once Sound_StreamDone
-// and no message is up, Sound_ResumeAll, the byte 0x903804 points at 0,
-// ScriptFlags_Clear40, the tail cleared. Bit (argument) of 0x904650 is the
-// dragon gene's (Gene_Bits) and message 0xFA names it.
-//
-// DIVERGENCE DIV-0166 (known-defects D351): the copy (`push 8` ... `call
-// 0x5B9450` at 0x56DED1..0x56DEE2) is strncpy, so a name of 8 bytes or more
-// leaves Text_Records' first record unterminated and the message prints on
-// into whatever an earlier copy left at +8. The US disc (GAME.EMI#0
-// 0x801A83DC; a `sb $zero` to the buffer + 8 after the copy) terminates it;
-// the JP (0x801A93E4) does not. With g_name_nul (1 through
-// PatchBytes("GeneNameNul") in FieldE2_Inject, after the self-test) the byte
-// at +8 is 0 after the copy, as on the US disc.
-namespace field_e2 { std::uint8_t g_name_nul = 0; }
 
 // ============================================================================
 // Draw layers: three MapCell_Handlers kinds (DrawLayer_Open calls each with
@@ -149,33 +132,9 @@ namespace field_e2 { std::uint8_t g_name_nul = 0; }
 // anchored and callers, each a hypothesis).
 // ============================================================================
 
-// DIVERGENCE DIV-0027 (amended 2026-10-03, after the live check): the per-item
-// "Is <item> OK?" answers. Capcom draws the two answer words, one space apart,
-// at x 0xDE and the hand at 0xDC + 36 * the answer - stops fitted to the Chinese
-// words: under the English overlay the hand on No covers Yes (the owner's
-// masterAndManillo.txt, frames 2700 and 3030). With the flag on (FieldE2_Inject,
-// a Latin overlay, after the self-test) the layout is the load / save screen's,
-// as the leave prompt's is (effect_1g.cpp, yes_no_layout.cpp): the first answer
-// three spaces further left, the second where it was, the hand two units left
-// of each.
-unsigned char g_trade_confirm_layout = 0;
 
 // ============================================================================
 
 void FieldE2_Inject() {
     if (bof3::WantsShadow("field_e2")) field_e2::SelfTest();
-    {
-        // DIV-0166: after the self-test, which compared Capcom's unterminated copy.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("GeneNameNul", Low32(&field_e2::g_name_nul), &was, &is, 1);
-        bof3::Log("DIV-0166    message 0xFA's gene name is terminated after its 8-byte copy (on unless the line above says OFF)");
-    }
-    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
-    // compares the original's prompt; a Latin overlay only (DIV-0056).
-    if (Lang_Latin()) {
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("TradeConfirmLayout", Low32(&g_trade_confirm_layout),
-                         &was, &is, 1);
-        bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
-    }
 }

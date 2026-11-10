@@ -3292,6 +3292,21 @@ extern "C" void __cdecl AreaMap_TintClut(int level) {
     battle_draw::g.clut_cycle();
 }
 
+namespace kind2_object {
+namespace {
+
+const kind2_object::CalleesKind2Object kOriginals = {
+    reinterpret_cast<const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>*>(Kind2_RunTable),
+    reinterpret_cast<const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>*>(Kind2_StateTable),
+    MoveScript_Step, AreaMap_Elevation, MapView_SetElevation, Field_ViewReset, Kind2_Script,
+};
+
+}  // namespace
+
+CalleesKind2Object gKind2Object = kOriginals;
+
+}  // namespace kind2_object
+
 // original 0x573080: the kind-2 object's frame (PSX FUN_801C67EC) - a jump
 // through Kind2_RunTable by the run byte k +1.
 //

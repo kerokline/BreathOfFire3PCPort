@@ -32,7 +32,7 @@ const field_objects::CalleesFieldObjects kOriginalsFieldObjects = {
     Sprite_ObjectByHandle, MoveCmd_AttachOffset, Field_ObjectUpdate, Gte_PushMatrix, Gte_RotMatrix,
     Gte_TransMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix,
 };
-}  namespace field_objects { CalleesFieldObjects g = kOriginalsFieldObjects; }
+}  // namespace
 namespace {
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {

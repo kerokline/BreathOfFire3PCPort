@@ -3,3 +3,4 @@
 #pragma once
 
 void LeaderPanel_Inject();
+void LeaderPanelFromEffect1e_Inject();

@@ -207,6 +207,46 @@ std::uint16_t DirectionAngle(unsigned char direction) { return move_script::Word
 
 constexpr std::uint32_t kAsideRows = 0x65F624;      // 4 directions per leader direction
 
+}  // namespace
+
+namespace object_kinds {
+namespace {
+
+// Data these read that symbols.toml does not name.
+constexpr std::uint32_t kPaceTable = 0x65F5DC;      // 7 handlers, by Sprite_Current[2], no bound
+
+object_kinds::CalleesObjectKinds OriginalsObjectKinds() {
+    return {reinterpret_cast<const ::bof3::CodeSlot<object_kinds::PaceFn>*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
+            Field_Pace0,
+            Rand,
+            Field_ObjectRandomTurn,
+            Field_ObjectOpenDirection,
+            Field_ObjectInHome,
+            Field_ObjectTurn,
+            Field_ObjectSettle,
+            Field_ObjectMotion,
+            Field_ObjectFleeDirection,
+            Field_ObjectChaseDirection,
+            Field_ObjectBestDirection,
+            Field_ObjectBlockedAhead,
+            MoveCmd_Move,
+            Sprite_SetTint,
+            Tint_Release,
+            Area_ObjectHandler,
+            Field_ObjectTrigger,
+            EventScript_Run,
+            reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
+            reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
+}
+
+}  // namespace
+
+CalleesObjectKinds gObjectKinds = OriginalsObjectKinds();
+
+}  // namespace object_kinds
+
+namespace {
+
 unsigned char Pace(unsigned char* object, unsigned speed, unsigned flags) {
     return object_kinds::gObjectKinds.pace[Sprite_Current[2]](object, speed, flags);
 }
@@ -392,6 +432,50 @@ const Callees kOriginals = {
 Callees g = kOriginals;
 
 }  // namespace field_misc
+
+// field_frame's callee seam, moved here from field_frame.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_frame {
+namespace {
+
+// Field_ObjectTalk returns 0 or 1 in al (0x517EAA, 0x517F21), which
+// Field_ObjectsFrame tests.
+const field_frame::CalleesFieldFrame kOriginals = {
+    Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
+    AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots,
+    MoveScript_TintFrame, Field_DrawFrame,
+    Field_PendingJump, Field_LeaderFrame, Field_MemberFrame,
+    Sprite_UpdateScreenA, Sprite_UpdateScreen, Sprite_ProjectA,
+    Field_ObjectTalk,
+    Sprite_FaceDirection, Field_ObjectIdle, Field_ObjectLinked, Field_ObjectIdleLong, Sprite_ScriptTick,
+    Sprite_ScriptTickOnce,
+    Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,
+    AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, Sprite_SwapOverlays, Sprite_Draw,
+};
+
+}  // namespace
+
+CalleesFieldFrame g = kOriginals;
+
+}  // namespace field_frame
+
+// field_objects's callee seam, moved here from field_objects.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_objects {
+namespace {
+
+const field_objects::CalleesFieldObjects kOriginalsFieldObjects = {
+    MoveScript_Step, Sprite_SetPoseWait, Field_ObjectBlocked, MoveCmd_Move, Field_ObjectSettle,
+    Field_ObjectMotion, AreaMap_Elevation, Party_ApplyRecord, Party_MoveMember,
+    Sprite_ObjectByHandle, MoveCmd_AttachOffset, Field_ObjectUpdate, Gte_PushMatrix, Gte_RotMatrix,
+    Gte_TransMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix,
+};
+
+}  // namespace
+
+CalleesFieldObjects g = kOriginalsFieldObjects;
+
+}  // namespace field_objects
 
 // original 0x517200: the field's frame (PSX FUN_8019A1B8, call for call).
 extern "C" void __cdecl Field_Frame(void) {
@@ -787,6 +871,33 @@ extern "C" unsigned char __cdecl Field_ObjectInHome(unsigned char* object) {
     if (dz < 0) dz = -dz;
     return static_cast<short>(obj->half_d) >= dz ? 1 : 0;
 }
+
+namespace field_blocked {
+namespace {
+
+template <typename T, typename F> T AsFieldBlocked(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+field_blocked::CalleesFieldBlocked Originals() {
+    field_blocked::CalleesFieldBlocked c{};
+    c.map_ahead = AsFieldBlocked<field_blocked::ObjectFn>(&Field_MapBlockedAhead);
+    c.object_at = AsFieldBlocked<field_blocked::PointFn>(&Sprite_ObjectAt);
+    c.member_at = AsFieldBlocked<field_blocked::PointFn>(&Party_MemberAt);
+    c.wide = AsFieldBlocked<field_blocked::PointFn>(&AreaMap_BlockedWide);
+    c.narrow = AsFieldBlocked<field_blocked::PointFn>(AreaMap_BlockedNarrow);
+    c.cell = AsFieldBlocked<decltype(c.cell)>(&AreaMap_CellBlocked);
+    c.steep = AsFieldBlocked<decltype(c.steep)>(&AreaMap_TooSteep);
+    c.byte_at = AsFieldBlocked<decltype(c.byte_at)>(&AreaMap_ByteAt);
+    c.slope = &AreaMap_Slope;
+    c.probe = &Field_ProbeHeight;
+    c.elevation = &AreaMap_Elevation;
+    c.reach = AsFieldBlocked<decltype(c.reach)>(&Sprite_PointInReach);
+    return c;
+}
+
+}  // namespace
+
+CalleesFieldBlocked gFieldBlocked = Originals();
+
+}  // namespace field_blocked
 
 // original 0x518080 (PSX FUN_801A2AEC): the point one step ahead of the object
 // - its position plus the step of ITS direction, taken before any call - is

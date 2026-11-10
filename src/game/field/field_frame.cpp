@@ -41,9 +41,9 @@ const unsigned char* Record54(const unsigned char* sprite) {
     return At(p);
 }
 }  // namespace
-namespace field_frame { BandSprite g_band[0x28]; }
-namespace field_frame { unsigned g_band_count, g_band_added; }  namespace {
-}  namespace field_frame { int g_band_fill = -1; }   // the self-test's columns; -1 is Widescreen_Fill()
+// field_frame::g_band, g_band_count and g_band_fill are beside their first reader BandNote
+// (field/event_cond.cpp), g_band_added beside BandAppend (field/sprite_2.cpp).
+//
 namespace {
 void BandNote(unsigned char* sprite) {
     if (field_frame::g_band_count < sizeof field_frame::g_band / sizeof field_frame::g_band[0]) field_frame::g_band[field_frame::g_band_count++].sprite = sprite;
@@ -92,8 +92,7 @@ const field_frame::CalleesFieldFrame kOriginals = {
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,
     AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, Sprite_SwapOverlays, Sprite_Draw,
 };
-}  namespace field_frame { CalleesFieldFrame g = kOriginals; }
-
+}  // namespace
 namespace {
 
 // --- BOF3X_SHADOW=field_frame: a differential fuzz, once at start-up --------

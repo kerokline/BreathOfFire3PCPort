@@ -468,6 +468,17 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
 }
 
+// DIVERGENCE DIV-0027 (amended 2026-10-03, after the live check): the per-item
+// "Is <item> OK?" answers. Capcom draws the two answer words, one space apart,
+// at x 0xDE and the hand at 0xDC + 36 * the answer - stops fitted to the Chinese
+// words: under the English overlay the hand on No covers Yes (the owner's
+// masterAndManillo.txt, frames 2700 and 3030). With the flag on (FieldE2_Inject,
+// a Latin overlay, after the self-test) the layout is the load / save screen's,
+// as the leave prompt's is (effect_1g.cpp, yes_no_layout.cpp): the first answer
+// three spaces further left, the second where it was, the hand two units left
+// of each.
+unsigned char g_trade_confirm_layout = 0;
+
 // original 0x593E60 (ItemTrade_RunSteps[2]): the yes / no. Left or right
 // (Input_AutoRepeat of 0xA000) flips the hand 0x6BE08F, sound 0x100. Else
 // cancel: sound 0x106, the step down; confirm on no: the same; confirm on
@@ -1226,4 +1237,15 @@ void ItemTrade_Inject() {
     BOF3_INJECT(Area_ZoneIdAt);
     BOF3_INJECT(Area_PickMusic);
     BOF3_INJECT(Area_ZoneAtIn);
+}
+
+void ItemTradeFromFieldE2_Inject() {
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's prompt; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("TradeConfirmLayout", Low32(&g_trade_confirm_layout),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
+    }
 }

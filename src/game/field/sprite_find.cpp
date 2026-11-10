@@ -341,8 +341,8 @@ unsigned char ObjectByHandle(unsigned char handle) {
 }  // namespace
 // --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
 // clone first, then ours from the same state, and the results are compared.
-namespace sprite_find { HandleFn g_handle_live = nullptr; }
-namespace sprite_find { InheritFn g_inherit_live = nullptr; }  namespace {
+// sprite_find::g_handle_live and g_inherit_live are beside their readers (field/event_cond.cpp, field/sprite.cpp).
+namespace {
 struct LiveCounts { unsigned calls, bit7, mismatches; } g_live_handle, g_live_inherit;
 
 void LiveReport(const char* name, const LiveCounts& c) {

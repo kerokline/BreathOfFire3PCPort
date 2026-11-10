@@ -62,15 +62,6 @@ namespace at = rest_2e::at;
 // The Items screen
 // ===========================================================================
 
-// DIVERGENCE DIV-0189: the two consumable sorts order each bucket. The
-// original's NormalItem / CombatItem sorts are a partition: the items whose
-// flag bit (bit 0 field-usable, bit 1 battle-usable) is set go first, and
-// within each half the bubble sort, being stable, leaves the list in the
-// order the player had it. Ours, once g_sort_by_id is armed (after the
-// self-test, PatchBytes "ItemSortById"), sorts within each half by the item
-// id ascending - the record's index in the consumables table, the EMI's
-// order (Green Apple 1 .. Water Jug 91). Unarmed, the original's partition.
-namespace rest_2e { unsigned char g_sort_by_id = 0; }
 // ===========================================================================
 // The Equipment screen
 // ===========================================================================
@@ -81,12 +72,4 @@ namespace rest_2e { unsigned char g_sort_by_id = 0; }
 
 void Rest2E_Inject() {
     if (bof3::WantsShadow("rest_2e")) rest_2e::SelfTest();
-    {
-        // DIV-0189: armed after the self-test, which compares the two
-        // consumable sorts with Capcom's partition.
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ItemSortById", Low32(&rest_2e::g_sort_by_id), &was, &is, 1);
-        bof3::Log("DIV-0189    the Items screen's NormalItem / CombatItem sorts order each half by item id: %s",
-                  rest_2e::g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
-    }
 }

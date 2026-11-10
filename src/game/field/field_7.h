@@ -3,3 +3,4 @@
 #pragma once
 
 void Field7_Inject();
+void Field7FromFieldE2_Inject();

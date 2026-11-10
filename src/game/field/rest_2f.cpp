@@ -102,9 +102,6 @@ void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 unsigned char PartyCountRest2f() { return static_cast<unsigned char>(SH_CALL(Party_Count)(0)); }
 
 }  // namespace
-// DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
-// the patch is read back, call Text_DrawAt as the original's copy does).
-namespace rest_2f { U g_title_call = 0; }
 // ===========================================================================
 // The Ability screen's helpers (R2E's states call them)
 // ===========================================================================
@@ -149,9 +146,4 @@ template <typename Body> void ForParty(Body body) {
 
 void Rest2F_Inject() {
     if (bof3::WantsShadow("rest_2f")) rest_2f::SelfTest();
-    // DIV-0059 survives the takeover: ours calls what the site calls, as
-    // battle_draw.cpp holds it (BattleDraw_Inject ran first; operand-store.md)
-    rest_2f::g_title_call = ListTitle_SiteDraw();
-    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall.v, rest_2f::g_title_call,
-              rest_2f::g_title_call == bof3::addr::Text_DrawAt ? " (Text_DrawAt)" : " (DIV-0059's ListTitle_DrawAt)");
 }

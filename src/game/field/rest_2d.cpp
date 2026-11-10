@@ -126,11 +126,7 @@ const unsigned char* MessageText(U message) {
 
 // --- the field abilities (FieldAbility_Effects, called by FieldAbility_Use) ---------------------
 
-namespace {
-// DIVERGENCE DIV-0208: 1 through PatchBytes("FieldHealParty") in Rest2D_Inject,
-// after the self-test. The walk then reads the party list, as the item heals
-// do, not the rows the world map leaves holding Ryu alone in row 0 (D408).
-}  namespace rest_2d { std::uint8_t g_field_heal_party = 0; }  // --- the Status screen: FieldMenu_States[6] ----------------------------------------------------
+// --- the Status screen: FieldMenu_States[6] ----------------------------------------------------
 
 // --- the Items screen: FieldMenu_States[2] -------------------------------------------------------
 
@@ -138,10 +134,4 @@ namespace {
 
 void Rest2D_Inject() {
     if (bof3::WantsShadow("rest_2d")) rest_2d::SelfTest();
-    {
-        // DIV-0208: after the self-test, which compared Capcom's walk.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("FieldHealParty", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
-        bof3::Log("DIV-0208    a field heal for the whole party walks the party list (on unless the line above says OFF)");
-    }
 }

@@ -66,7 +66,7 @@ object_kinds::CalleesObjectKinds OriginalsObjectKinds() {
             reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
             reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
 }
-}  namespace object_kinds { CalleesObjectKinds gObjectKinds = OriginalsObjectKinds(); }
+}  // namespace (object_kinds::gObjectKinds is beside its first reader, in field/field_3.cpp)
 namespace {
 // The field object, rv::Current<records::SpriteObject>(): the handlers'
 // argument, which the loops also make Sprite_Current.

@@ -269,6 +269,18 @@ def header_rest(stem: str, inject: str | None) -> tuple[str, bool]:
     return t.strip(), has_include
 
 
+def declares_seam(text: str, stem: str) -> bool:
+    """The home sees the seam's declaration: it includes game/<stem>_callees.h, or game/<stem>.h when that
+    header includes the callees header or declares the seam itself (`extern Callees g;`, sprite_pose's)."""
+    if f'#include "game/{stem}_callees.h"' in text:
+        return True
+    own = ROOT / f"{GAME}/{stem}.h"
+    if f'#include "game/{stem}.h"' not in text or not own.is_file():
+        return False
+    h = own.read_text(encoding="utf-8")
+    return f'#include "game/{stem}_callees.h"' in h or re.search(r"\bextern\s+\w+\s+g\s*;", h) is not None
+
+
 def insert_seam(shell: Shell, home: str) -> tuple[str, list[str], list[str]]:
     """The home's new text with the seam in; the names copied; the names the home already held."""
     own, deps = shell.seam_items()
@@ -300,7 +312,7 @@ def insert_seam(shell: Shell, home: str) -> tuple[str, list[str], list[str]]:
             if not d.local and not d.ns:
                 raise mf.Refused(f"the seam reaches `{d.names[0]}`, a file-scope declaration {home} does not hold as written")
             copy.append(d)
-    if f'#include "game/{shell.stem}_callees.h"' not in text and "Callees" in shell.src[own[0].start:own[0].end]:
+    if (not declares_seam(text, shell.stem)) and "Callees" in shell.src[own[0].start:own[0].end]:
         raise mf.Refused(f"{home} does not include game/{shell.stem}_callees.h, which declares the seam it would hold")
     first_fn = next((it.start for it in hleaves if it.kind == "func" and not it.local and not it.ns), len(text))
     # after a held helper that sits inside a namespace block: go to the block's end

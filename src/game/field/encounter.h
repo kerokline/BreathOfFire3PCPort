@@ -3,3 +3,4 @@
 #pragma once
 
 void Encounter_Inject();
+void EncounterFromInventoryOps_Inject();

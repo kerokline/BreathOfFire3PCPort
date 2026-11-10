@@ -11746,10 +11746,15 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	event_leader::g	seam		src/game/field/event_leader.cpp	41	41	56	src/game/field/field_4.cpp	98cb16c7
 	event_script::g	seam		src/game/field/event_script_ours.cpp	31	31	42	src/game/field/event_script.cpp	98cb16c7
 	field_event::g	seam		src/game/field/field_event.cpp	35	35	63	src/game/field/field_2.cpp	98cb16c7
+	field_frame::g	seam		src/game/field/field_frame.cpp	97	97	97	src/game/field/field_3.cpp	c51c8531
 	field_misc::g	seam		src/game/field/field_misc.cpp	40	40	56	src/game/field/field_3.cpp	98cb16c7
+	field_objects::g	seam		src/game/field/field_objects.cpp	37	37	37	src/game/field/field_3.cpp	c51c8531
 	inventory_ops::g	seam		src/game/field/inventory_ops.cpp	41	41	74	src/game/field/field_4.cpp	98cb16c7
 	map_field_objects::g	seam		src/game/field/map_field_objects.cpp	49	49	86	src/game/field/area_map.cpp	98cb16c7
 	map_layers::g	seam		src/game/field/map_layers.cpp	26	26	37	src/game/field/area_map.cpp	98cb16c7
+	move_groups::g	seam		src/game/field/move_groups.cpp	36	36	36	src/game/field/move_script.cpp	c51c8531
+	sprite_pose::g	seam		src/game/field/sprite_pose.cpp	39	39	43	src/game/field/event_cond.cpp	c51c8531
+	sprite_screen::g	seam		src/game/field/sprite_screen.cpp	32	32	32	src/game/field/sprite.cpp	c51c8531
 		file		src/game/field_blocked.cpp	1	1	465	src/game/field/field_blocked.cpp	b29e27f3
 	kObjectSize/kObjects/kExtra	copied		src/game/field_blocked.cpp	34	34	34	src/game/field/field_6.cpp	d3e6abb3
 	kMemberSize	copied		src/game/field_blocked.cpp	35	35	35	src/game/field/field_6.cpp	d3e6abb3

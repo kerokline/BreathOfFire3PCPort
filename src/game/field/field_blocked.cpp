@@ -68,7 +68,7 @@ field_blocked::CalleesFieldBlocked Originals() {
     c.reach = AsFieldBlocked<decltype(c.reach)>(&Sprite_PointInReach);
     return c;
 }
-}  namespace field_blocked { CalleesFieldBlocked gFieldBlocked = Originals(); }
+}  // namespace (field_blocked::gFieldBlocked is beside its first reader, in field/field_3.cpp)
 namespace {
 
 // --- BOF3X_SHADOW=field_blocked: a differential fuzz, once at start-up -------

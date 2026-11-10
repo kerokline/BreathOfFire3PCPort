@@ -3,3 +3,4 @@
 #pragma once
 
 void Window_Inject();
+void WindowFromRest2f_Inject();

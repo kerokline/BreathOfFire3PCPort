@@ -1029,6 +1029,7 @@ void InjectAll() {
     ClutStrip_Inject();
     if (bof3::WantsShadow("map_scroll")) map_scroll::SelfTest();         // likewise: every call of its clones re-aimed at a recorder
     FieldEvent_Inject();        // every call of its clones re-aimed at a recorder: any slot will do
+    Field4FromFieldEvent_Inject();
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
     MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
                                 // dispatch table's immediates too: order does not matter
@@ -1037,6 +1038,7 @@ void InjectAll() {
                                 // stack-built table re-aimed in the copy, so order does not matter
     SpritePose_Inject();        // every call of its clones re-aimed at a recorder or at another of its
                                 // own clones: order does not matter
+    SpriteFromSpritePose_Inject();
     if (bof3::WantsShadow("move_cmds")) move_cmds::SelfTest();          // every call of its clones re-aimed at a recorder, its jump table
                                 // relocated in the copy: order does not matter
     Scena16_Inject();
@@ -1119,6 +1121,7 @@ void InjectAll() {
     Battle5FromBattleSprites_Inject();
     Battle4FromBattleSprites_Inject();
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    EncounterFromInventoryOps_Inject();
     if (bof3::WantsShadow("battle_odds")) battle_odds::SelfTest();        // group CK, round eight: every call and tail jmp of its clones re-aimed at a
                                 // recorder: order does not matter
     if (bof3::WantsShadow("window_kinds")) window_kinds::SelfTest();       // round 8 group CM: every call of its clones re-aimed at a recorder and its three
@@ -1178,6 +1181,7 @@ void InjectAll() {
     Effect2_Inject();
     EventLeader_Inject();       // round 8 group DC: every call of its clones re-aimed at a recorder and its five
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
+    Field4FromEventLeader_Inject();
     if (bof3::WantsShadow("mode_states")) mode_states::SelfTest();        // round 8 group DB: every call of its clones re-aimed at a recorder, the system
                                 // choice's stack table re-aimed, three jump tables relocated and four .data
                                 // tables swapped for recorders: order does not matter
@@ -2024,6 +2028,8 @@ void InjectAll() {
                                 // clones' calls re-aimed at the scenario harness's recorders, its dispatch tables
                                 // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
                                 // 0x5343C0, 0x534420, 0x56E020 and 0x5728D0; no module patches bytes inside its 51
+    Field7FromFieldE2_Inject();
+    ItemTradeFromFieldE2_Inject();
     AreaMap_Inject();
     if (bof3::WantsShadow("field_c3")) field_c3::SelfTest();           // round 12 group FC3 (object steering, op E7, the fade cases, mode 8's and 11's
                                 // frames, the field core's state-2 sub-states 0, 1, 3..8 and their steps;
@@ -2048,6 +2054,7 @@ void InjectAll() {
                                 // calls re-aimed at the scenario harness's recorders; after ScenarioHarnessFh_Inject,
                                 // whose self-test copies 0x57C1A0, 0x57C230, 0x57C8E0 (FO's); after YesNoLayout_Inject,
                                 // whose DIV-0029 byte at 0x576A48 Menu_DrawSaveSlot reads back
+    MenuFromFieldO_Inject();
     FieldMoveScript_Inject();
     Menu_Inject();
     MoveCmd_Inject();
@@ -2110,6 +2117,7 @@ void InjectAll() {
                                 // harness's recorders, its eight steps tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject (none of its eight rows is E1E's); no module patches bytes
                                 // inside its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    LeaderPanelFromEffect1e_Inject();
     Effect1A_Inject();          // round 13 group E1A (0x462B00..0x4672F0: the dispatchers of effect kinds 1, 2, 3, 5,
                                 // 7, 8, 9, 0xA..0x10, 0x16, 0x1A, 0x5C, the states of kinds 1, 3, 5, 7, 0xA, 0xC, 0xD,
                                 // 0xF, 0x1A and the panel draws EffectHud_*): its clones' calls re-aimed at the
@@ -2513,6 +2521,7 @@ void InjectAll() {
                                 // Equip_ChooseItem, PartyForm_Swap, the SharedList sorts) call it by the address it
                                 // had; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp, labels.cpp)
+    FieldAbility2FromRest2e_Inject();
     Rest2H_Inject();            // round 14 wave-two group R2H (0x59AA80..0x5A9874: window kinds - handler 7's 11..18,
                                 // handler 8's 3..5, MenuList_Kinds[20] - the masters' windows, the battle equipment
                                 // window's items and bar, the joystick enumeration, Cfg_Load's key table): its clones'
@@ -2530,6 +2539,7 @@ void InjectAll() {
                                 // 15 state tables swapped for the fuzz only; after Widescreen_Inject (DIV-0041's
                                 // bound inside MenuSlide_LeftOff170, read back) and BattleDraw_Inject (DIV-0059's
                                 // title call inside Win2_DrawItemList, read back) and every harness's inject
+    WindowFromRest2f_Inject();
     Window_Inject();
     ConfigMenu_Inject();
     FieldAbility2_Inject();

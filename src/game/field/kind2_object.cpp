@@ -44,7 +44,7 @@ const kind2_object::CalleesKind2Object kOriginals = {
     reinterpret_cast<const ::bof3::CodeSlot<kind2_object::HandlerKind2Object>*>(Kind2_StateTable),
     MoveScript_Step, AreaMap_Elevation, MapView_SetElevation, Field_ViewReset, Kind2_Script,
 };
-}  namespace kind2_object { CalleesKind2Object gKind2Object = kOriginals; }
+}  // namespace (kind2_object::gKind2Object is beside its reader, in field/area_map.cpp)
 namespace {
 
 // `cdq` / `xor` / `sub`: an absolute value in which INT_MIN stays INT_MIN.
