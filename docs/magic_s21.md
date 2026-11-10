@@ -6,6 +6,8 @@ through the shared harness (`src/game/magic_s21_fuzz.cpp`): 0 mismatches.
 152 negative controls: 150 are refused by a count (exit 3), and the 2 not refused are plants no fuzz can see (section 4). No recorded route casts any of these spells, so the
 fuzz is the only check until the owner looks.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/magic/magic_092.cpp`, `src/game/magic/iceblast.cpp`, `src/game/magic/frost_ring.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s21.cpp` itself is retired. A `src/game/magic_s21.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s21.cpp:LINE` answers it.
+
 This is group S21 of round nine's first spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)). It
 takes three whole overlays of `Magic_Rows`, found with `tools/magic_rows.py`:

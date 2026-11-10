@@ -9,6 +9,8 @@ two two-state dispatchers abort past their tables and area 193's choice 4
 past its three-row stack table, where the original would jump into data or
 read its own frame (section 6).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/area/area_197.cpp`, `src/game/area/area_198.cpp`, `src/game/area/area_192.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/area_w4f.cpp` itself is retired. A `src/game/area_w4f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w4f.cpp:LINE` answers it.
+
 Group AR4F of round ten's sixth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 18), the
 last group of the area round. The band is the tool's (`tools/area_rows.py`,

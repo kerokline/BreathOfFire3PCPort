@@ -63,7 +63,6 @@ void __cdecl EffectKind27_Emit(void);
 
 }  // extern "C"
 
-void Effect1D_Inject();
 
 namespace effect_1d {
 // BOF3X_SHADOW=effect_1d: the start-up fuzz, effect_1d_fuzz.cpp. Clones every

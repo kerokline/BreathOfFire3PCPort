@@ -4,4 +4,10 @@
 // demo goes through (0x56D5E0, 0x56D670, 0x56D8C0). docs/title-states.md.
 #pragma once
 
+#include "game/title_states_callees.h"
+
 void TitleStates_Inject();
+
+namespace title_states {
+extern bool g_psp_title;   // defined in title_states.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace title_states

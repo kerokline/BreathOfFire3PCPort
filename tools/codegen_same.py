@@ -70,6 +70,103 @@ a commit that renames such a helper so that two files' helpers of one name
 can share a target file. Every function still compares by its own name, so
 a renamed helper whose code is the same passes, and one whose code changed
 reads as a GONE / NEW pair `local:<hash>` with its names.
+
+The source root (both modes). A `__FILE__` string holds the absolute path
+of the tree that was built (x86_64's Low32() message, a static local's
+path), so two worktrees' builds differ there although nothing changed. Each
+build directory's root is read from its CMakeCache.txt
+(CMAKE_HOME_DIRECTORY, else bof3x_SOURCE_DIR) and every spelling of it -
+`/` or `\\`, the drive letter in either case - is replaced by one
+placeholder in every initialised byte compared (the object mode's data
+dumps; the per-function mode's data symbols and section-relative items).
+When the two roots differ in length, what follows a path in its section
+also moves and its alignment padding changes, so in the per-function mode
+(said on a first line) the zeros that end each run between two data anchors
+are not compared, and, after a section's first path only, neither is the
+length of a zero run that follows a printable byte (a string's NUL and its
+padding) nor the offset of a relocation there. The object mode compares
+offsets as written, so a pair of trees with roots of different lengths can
+still differ there on x86_64; its per-function mode is the gate. A build of
+the same tree compares exactly as before.
+
+--anonymous-locals also knows a promotion (stage B0's shared-state cases):
+a symbol global in NEW, not a global of BASE, whose body is that of a BASE
+file-local of the same name but for its linkage (demangled by llvm-cxxfilt,
+with `static`'s `L` and `(anonymous namespace)::` dropped; or, when that
+body has one file-local of the name, but for its named namespace too). NEW is then read
+a second time with each such global known as the file-local it was, where it
+is defined and wherever another object names it, so its callers compare as
+before; it prints as `PROMOTED <name>` and is not a difference. A promoted
+symbol whose body changed is not paired: it reads as GONE `local:<hash>` and
+NEW `<name>`, and its callers as DIFFER.
+
+    --exceptions FILE [--exception-classes CLASS[,CLASS]]
+                        (with --by-function; the round doc's 7a, the owner's calls 8 and 10)
+
+FILE is analysis/tu_gate_exceptions.tsv: a header line `symbol class reason
+commit` (tab-separated), `#` lines comments, one row per symbol the gate
+lets differ. A DIFFER, GONE or NEW line of a symbol listed there whose
+class is a known one prints as `EXCEPT <class> <symbol>` and is not counted.
+The classes:
+
+- `inline` (x86_64): the compiler inlined, or stopped inlining, a moved or
+  copied helper because its callers in the file changed;
+- `low32-site` (x86_64): Low32()'s failure message names another file, line
+  or function: __FILE__, __LINE__, __builtin_FUNCTION() of a moved or renamed
+  caller;
+- `data-layout` (both widths; the owner's call 10, 2026-11-08): a promoted
+  variable is placed elsewhere in its .data / .bss, so a neighbouring
+  file-local changes extent or hash, and its readers differ only in the
+  reference to that local. A row names the data or bss symbol (mangled, or
+  a name a `local:<hash>` key lists) or a reader function;
+- `x64-indirect` (x86_64 only; call 10): an internal function pointer that
+  x86_64 folded to a direct call goes through the pointer once the variable
+  is external (`call @r4:Text_DrawAt` -> `call qword ptr [rip] @r4:..g_draw_at`,
+  branch offsets a byte longer). A row names the caller, or the pointer
+  itself: folded, it had no data symbol, so the promoted one reads NEW. Never
+  used on an i386 build;
+- `i686-fold` (both widths; the owner's call 16, 2026-11-09): a promoted
+  variable whose value or layout the optimiser had folded into its readers
+  (its constant value, a struct split into scalars, a branch dropped on a
+  known value), which now load it. A row names the data or bss symbol or a
+  reader. Named for the width whose gate was exact until it;
+- `i686-inline` (both widths; call 16): a promoted file-local function the
+  compiler had inlined into its callers in the file, now called. A row names
+  the function (which reads NEW, out of line) or a caller; where the
+  function's static local reads NEW or GONE, a row of this class names it;
+- `i686-convention` (both widths; call 16, the owner 2026-11-09): a promoted
+  file-local function that had a body of its own but was called by LLVM's
+  internal convention (arguments in registers); external, its callers call
+  it as the ABI says. A row names the function (NEW, its local GONE), a
+  caller, its static local, or the exception table whose call-site offsets
+  moved with the caller's code.
+
+The symbol is the name the line prints (for a `local:<hash>` key, any of the
+names it lists), or `NAME@OBJECT` - that name only where the line's objects
+are OBJECT alone, a file name such as `title_states.cpp.obj`: the one way to
+name a pooled per-file symbol (`_GLOBAL__sub_I_*`) of one file without
+excepting every file's. A data or bss line is excepted by a `data-layout`, `x64-indirect`,
+`i686-fold`, `i686-inline`, `i686-convention` or `refptr` row only (DATA_CLASSES), except that a
+data or bss symbol which belongs to a function - an exception table (`GCC_except_table*`, paired
+through its .eh_frame FDE) or a function-local static (`_ZZ...E...`) - follows that function: not
+counted when the function is a changed registration under --inject-ok, excepted by the row that
+excepts the function (any class in use), each printed with `belongs to F`. An inject line is never
+excepted. `harness` (both widths, the coordinator's class of 2026-11-09 for stage B) names hosted
+test code changed on purpose - a *_fuzz.cpp / *_harness.cpp function or table - never a game function;
+first case magic_harness::Run (the region skip for the GTE padding, group B6). --exception-classes
+limits which classes may except:
+the rows of the other classes are read (and checked) but never used, and
+never reported as unused. The i686 gate runs with `--exception-classes
+data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness` (the owner's
+calls of 2026-11-09 on group B1: `inline` reaches i686 for a move, and
+`refptr` is both widths; `harness` is the coordinator's, below); the x86_64 gate with every class (no flag, the default). A row
+whose class is not a known one, a name in --exception-classes that is not
+one, a row without a symbol and a class, or a file without the header, is
+an error: the line is printed and the exit is 2, before anything is
+compared. A listed symbol of a class in use that did not differ is reported
+on an `unused exception` line (not an error: a stale row, to prune by hand);
+a row whose symbol neither build defines (a data-layout row is read at both
+widths, and names one width's symbol) is only counted, on one line.
 """
 
 from __future__ import annotations
@@ -127,13 +224,84 @@ def data_sections(objdump: str, path: Path) -> list[str]:
     return names
 
 
-def data_dump(objdump: str, path: Path) -> list[str]:
+SOURCE_ROOT = b"<source-root>"
+
+
+def source_roots(build: Path) -> list[bytes]:
+    """The spellings of a build's source root that `__FILE__` strings carry (x86_64's Low32() message,
+    a static local's path, ...): from CMakeCache.txt's CMAKE_HOME_DIRECTORY or bof3x_SOURCE_DIR, with
+    `/` and `\\`, the drive letter in either case, longest first. Empty when the cache names none."""
+    cache = build / "CMakeCache.txt"
+    roots: set[str] = set()
+    if cache.exists():
+        for line in cache.read_text(encoding="utf-8", errors="replace").splitlines():
+            m = re.match(r"(CMAKE_HOME_DIRECTORY|bof3x_SOURCE_DIR):[A-Z]+=(.+)$", line.strip())
+            if m and m.group(2).strip():
+                roots.add(m.group(2).strip().rstrip("/\\"))
+    out: set[bytes] = set()
+    for r in roots:
+        for s in (r.replace("\\", "/"), r.replace("/", "\\")):
+            for v in (s, s[:1].lower() + s[1:], s[:1].upper() + s[1:]):
+                out.add(v.encode("utf-8"))
+    return sorted(out, key=len, reverse=True)
+
+
+def unroot(data: bytes, roots: list) -> bytes:
+    """`data` with every spelling of the build's source root replaced by one placeholder; a
+    (new path, old path) pair among `roots` (--moved-map) then reads a moved file's path as it was."""
+    for r in roots:
+        if isinstance(r, tuple):
+            if r[0] in data:
+                data = data.replace(r[0], r[1])
+        elif r in data:
+            data = data.replace(r, SOURCE_ROOT)
+    return data
+
+
+def moved_files(map_path: Path) -> dict[str, str]:
+    """new path -> old path of the files that moved whole (the `file` rows of analysis/tu_moves.tsv)."""
+    out: dict[str, str] = {}
+    with open(map_path, encoding="utf-8", newline="") as f:
+        head = None
+        for line in f:
+            if line.startswith("#"):
+                continue
+            cells = line.rstrip("\r\n").split("\t")
+            if head is None:
+                head = cells
+                continue
+            r = dict(zip(head, cells))
+            if r.get("kind") == "file" and r.get("new_path"):
+                out[r["new_path"]] = r["old_path"]
+    return out
+
+
+def data_dump(objdump: str, path: Path, roots: list[bytes] = ()) -> list[str]:
     names = data_sections(objdump, path)
     if not names:
         return []
     r = subprocess.run([objdump, "-s", "-r"] + ["--section=" + n for n in names] + [str(path)],
                        capture_output=True, text=True, check=True)
-    return [l for l in r.stdout.splitlines() if l.strip() and "file format" not in l]
+    lines = [l for l in r.stdout.splitlines() if l.strip() and "file format" not in l]
+    if not roots:
+        return lines
+    # each section's contents read back to bytes, the source root replaced, one hex line a section
+    out: list[str] = []
+    buf: bytearray | None = None
+    for l in lines + ["<end>"]:
+        hexrow = buf is not None and re.match(r" [0-9a-f]{4,} ", l)
+        if hexrow:
+            groups = l[1:].split(" ", 1)[1][:35].split()
+            buf += bytes.fromhex("".join(groups))
+            continue
+        if buf is not None:
+            out.append(" " + unroot(bytes(buf), roots).hex())
+            buf = None
+        if l.startswith("Contents of section"):
+            buf = bytearray()
+        if l != "<end>":
+            out.append(l)
+    return out
 
 
 def first_section(lines: list[str], index: int) -> str:
@@ -246,9 +414,18 @@ def pooled_key(name: str) -> str:
 class Normaliser:
     """The normalised body of every symbol of one object."""
 
-    def __init__(self, obj: Coff, anonymous_locals: bool = False):
+    def __init__(self, obj: Coff, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False,
+                 promoted: dict[str, str] | None = None):
         self.o = obj
         self.anonymous_locals = anonymous_locals
+        self.roots = list(roots)      # the build's source-root spellings (source_roots), read as one
+        self.pad_free = pad_free      # the two roots differ in length: zero padding before an anchor not compared
+        # --anonymous-locals' second pass: a global of NEW that was a file-local of BASE is read as
+        # the file-local it was, where it is defined and (by its body's hash) where it is named
+        self.promoted = promoted or {}
+        for s in obj.symbols.values():
+            if s["section"] > 0 and not s["is_section"] and s["cls"] == 2 and s["name"] in self.promoted:
+                s["local"] = True
         self.cs = None
         self.by_section: dict[int, list[tuple[int, int]]] = {}
         for i, s in obj.symbols.items():
@@ -267,6 +444,7 @@ class Normaliser:
                         self.anchors.setdefault(t["section"], set()).add(a)
         self.sorted_anchors = {n: sorted(v) for n, v in self.anchors.items()}
         self.local_hash_cache: dict[int, str] = {}
+        self.root_at: dict[int, int | None] = {}
 
     def width(self, typ: int) -> int:
         w = RELOC_WIDTH[self.o.machine].get(typ)
@@ -296,8 +474,9 @@ class Normaliser:
                 break
         return best
 
-    def item(self, secn: int, off: int, depth: int) -> str:
-        """A section-relative target, described by what it points at."""
+    def item(self, secn: int, off: int, depth: int, limit: int | None = None) -> str:
+        """A section-relative target, described by what it points at. `limit`: the bytes one
+        instruction reads there (a pooled constant: its pool's neighbours are not part of it)."""
         if secn <= 0 or secn > len(self.o.sections):
             return f"?sec{secn}+{off:X}"
         sec = self.o.sections[secn - 1]
@@ -311,6 +490,8 @@ class Normaliser:
         if exact:
             return self.symref(exact[0], depth)
         nxt = next((a for a in self.sorted_anchors.get(secn, []) if a > off), sec["size"])
+        if limit:
+            nxt = min(nxt, off + limit)
         if sec["flags"] & SCN_CNT_UNINIT or not sec["data"]:
             return f"{cls}:zero[{nxt - off}]"
         if depth > 2:
@@ -322,6 +503,8 @@ class Normaliser:
         if s["is_section"]:
             return f"{section_class(s['name'])}+?"
         name = pooled_key(s["name"])
+        if s["section"] <= 0 and s["name"] in self.promoted:     # a promoted symbol another object defines
+            return "local" if depth >= 1 else f"local#{self.promoted[s['name']]}"
         if s["section"] > 0 and s["local"]:
             if self.anonymous_locals:
                 name = "local"
@@ -339,17 +522,26 @@ class Normaliser:
     def relocs_in(self, secn: int, start: int, end: int):
         return sorted(r for r in self.o.sections[secn - 1]["relocs"] if start <= r[0] < end)
 
-    def reloc_desc(self, data: bytes, off: int, symi: int, typ: int, depth: int) -> tuple[str, bool]:
+    def reloc_desc(self, data: bytes, off: int, symi: int, typ: int, depth: int,
+                   limit: int | None = None) -> tuple[str, bool]:
         """(the target's description, whether the field's bytes depend on the object's layout)."""
         t = self.o.symbols.get(symi)
         if t is None:
             return f"?sym{symi}", False
         if t["is_section"]:
             a = self.addend(data, off, typ) or 0
-            return f"r{typ:X}:" + self.item(t["section"], a, depth + 1), True
+            return f"r{typ:X}:" + self.item(t["section"], a, depth + 1, limit), True
         return f"r{typ:X}:" + self.symref(symi, depth), False
 
     def render_data(self, secn: int, start: int, end: int, depth: int) -> str:
+        if self.pad_free:
+            # a path of another length moves what follows it in its section, so the alignment padding of
+            # the items after it changes: each run between two anchors read alone (render_run)
+            cuts = [start] + [x for x in self.sorted_anchors.get(secn, []) if start < x < end] + [end]
+            return "|".join(self.render_run(secn, a, b, depth, True) for a, b in zip(cuts, cuts[1:]))
+        return self.render_run(secn, start, end, depth, False)
+
+    def render_run(self, secn: int, start: int, end: int, depth: int, strip: bool) -> str:
         sec = self.o.sections[secn - 1]
         data = bytearray(sec["data"][start:end])
         notes = []
@@ -358,8 +550,49 @@ class Normaliser:
             if layout:
                 w = self.width(typ)
                 data[off - start:off - start + w] = bytes(w)
-            notes.append(f"{off - start:X}={d}")
-        return data.hex() + (" " + ",".join(notes) if notes else "")
+            notes.append((off, d))
+        if not strip:
+            return (unroot(bytes(data), self.roots).hex()
+                    + (" " + ",".join(f"{o - start:X}={d}" for o, d in notes) if notes else ""))
+        # The roots differ in length, so what follows a path in its section sits elsewhere and its
+        # alignment padding changes. Not compared: the zeros that end the run (the padding before the next
+        # anchor) and the length of a zero run that follows two or more printable bytes (a string's NUL
+        # and the padding after it), shown as `~`; a relocation's offset past the section's first path is
+        # not compared either (its order and target are). The fold reads the run alone, wherever it sits:
+        # it once applied past the first path only, so a table that sat after its file's path in one
+        # build and before it in the other (a moved function's `static constexpr` table, B2's
+        # `HeadCracker_Task::kPhases`) rendered two ways with the same bytes; and it folded after one
+        # printable byte, so a pointer or a small integer whose low byte read as a letter (`e0 fc 43 00`)
+        # was taken for a string.
+        fr = self.first_root(secn)
+        parts: list[str] = []
+        i, n = 0, len(data)
+        chunk = bytearray()
+        while i < n:
+            if (data[i] == 0 and i > 1
+                    and 0x20 <= data[i - 1] < 0x7F and 0x20 <= data[i - 2] < 0x7F):
+                j = i
+                while j < n and data[j] == 0:
+                    j += 1
+                if j == n:
+                    break           # the zeros that end the run: the padding, stripped below as before
+                parts.append(unroot(bytes(chunk), self.roots).hex() + "~")
+                chunk = bytearray()
+                i = j
+                continue
+            chunk.append(data[i])
+            i += 1
+        parts.append(unroot(bytes(chunk).rstrip(b"\x00"), self.roots).hex())
+        return "".join(parts) + (" " + ",".join(
+            (f"{o - start:X}" if fr is None or o < fr else "*") + f"={d}" for o, d in notes) if notes else "")
+
+    def first_root(self, secn: int):
+        """The offset of the first source-root spelling in a section's bytes, or None."""
+        if secn not in self.root_at:
+            data = self.o.sections[secn - 1]["data"]
+            hits = [k for k in (data.find(r) for r in self.roots if not isinstance(r, tuple)) if k >= 0]
+            self.root_at[secn] = min(hits) if hits else None
+        return self.root_at[secn]
 
     def disassembler(self):
         if self.cs is None:
@@ -377,22 +610,37 @@ class Normaliser:
         if not (sec["flags"] & SCN_CNT_CODE):
             if sec["flags"] & SCN_CNT_UNINIT or not sec["data"]:
                 return [f"zero[{end - start}]"]
+            # an initialised symbol ends at the next anchor too: what follows it unnamed but referenced
+            # (a string literal, another constant) is compared where it is referenced, so a move that
+            # takes those items to another object does not read as a change of this symbol
+            end = next((x for x in self.sorted_anchors.get(secn, []) if start < x < end), end)
             return [self.render_data(secn, start, end, depth)]
         import capstone
         raw = bytearray(sec["data"][start:end])
-        notes: dict[int, list[str]] = {}
+        pending: dict[int, list[tuple[int, int, int]]] = {}
         for off, symi2, typ in self.relocs_in(secn, start, end):
-            d, layout = self.reloc_desc(sec["data"], off, symi2, typ, depth)
-            if layout:
+            t = self.o.symbols.get(symi2)
+            if t is not None and t["is_section"]:       # the field's bytes depend on the object's layout
                 w = self.width(typ)
                 raw[off - start:off - start + w] = bytes(w)
-            notes.setdefault(off - start, []).append(d)
+            pending.setdefault(off - start, []).append((off, symi2, typ))
         lines = []
         pos = 0
         for ins in self.disassembler().disasm(bytes(raw), start):
             rel_off = ins.address - start
             pos = rel_off + ins.size
-            mine = [d for o, ds in notes.items() if rel_off <= o < pos for d in ds]
+            # A plain load or store at an absolute (or rip-relative) address reads exactly its operand's
+            # width there: an unnamed pooled constant is described that wide, not to its pool's next
+            # anchor, which a move changes (B6: `movsd xmm0, qword ptr [0] @.rdata:[...]`). An indexed
+            # access, a `lea` and a push read the whole item as before.
+            limit = None
+            if not ins.mnemonic.startswith("lea") and not ins.mnemonic.startswith("push"):
+                for op in ins.operands:
+                    if op.type == capstone.x86.X86_OP_MEM and op.mem.index == 0 and op.size and (
+                            op.mem.base == 0 or op.mem.base == capstone.x86.X86_REG_RIP):
+                        limit = op.size
+            mine = [self.reloc_desc(sec["data"], off, symi2, typ, depth, limit)[0]
+                    for o, rs in pending.items() if rel_off <= o < pos for off, symi2, typ in rs]
             text = f"{ins.mnemonic} {ins.op_str}".strip()
             relative = ins.group(capstone.CS_GRP_BRANCH_RELATIVE)
             if mine:
@@ -416,10 +664,73 @@ class Normaliser:
         return lines
 
 
-def object_symbols(path: Path, anonymous_locals: bool = False) -> list[tuple[str, str, list[str], bool]]:
-    """(name, kind, normalised body, file-local) for every defined symbol of one object."""
+def promoted_hashes(path: Path, names: set[str], roots: list[bytes] = (), pad_free: bool = False) -> dict[str, str]:
+    """The hash a reference to each promoted symbol `path` defines reads as (Normaliser.local_hash)."""
     obj = Coff(path)
-    n = Normaliser(obj, anonymous_locals)
+    n = Normaliser(obj, True, roots, pad_free, {x: "" for x in names})
+    return {s["name"]: n.local_hash(i) for i, s in obj.symbols.items()
+            if s["section"] > 0 and not s["is_section"] and s["cls"] == 2 and s["name"] in names}
+
+
+def table_owners(obj: Coff, n: Normaliser) -> dict[int, str]:
+    """symbol index of each GCC_except_table* -> the name of the function whose FDE names it as its LSDA.
+    An .eh_frame FDE's relocations run pc_begin (the function, or its section and offset) then the
+    LSDA, so the table belongs to the last code target before it; the CIE's personality routine is
+    external and skipped. Empty where the object has no .eh_frame (x86_64's tables hang off .xdata,
+    which the gate does not read)."""
+    owners: dict[int, str] = {}
+    for secn, sec in enumerate(obj.sections, 1):
+        if not sec["name"].startswith(".eh_frame"):
+            continue
+        last_fn = None
+        for off, symi, typ in sorted(sec["relocs"]):
+            t = obj.symbols.get(symi)
+            if t is None:
+                continue
+            if t["is_section"]:
+                a = n.addend(sec["data"], off, typ)
+                c = n.containing(t["section"], a) if a is not None else None
+                if c is None:
+                    continue
+                ti = c[1]
+            else:
+                ti = symi
+            ts = obj.symbols[ti]
+            if ts["section"] <= 0:
+                continue
+            if obj.sections[ts["section"] - 1]["flags"] & SCN_CNT_CODE:
+                last_fn = ts["name"]
+            elif ts["name"].startswith("GCC_except_table") and last_fn:
+                owners[ti] = last_fn
+    return owners
+
+
+def enclosing_function(name: str) -> list[str]:
+    """The names a function-local static's function may have (`_ZZ<len><id><params>E<local>` ->
+    `_Z<len><id><params>`, or the plain identifier for a C-linkage function), or []."""
+    m = re.match(r"^(_?)_ZZ(\d+)", name)
+    if not m:
+        return []
+    us, length = m.group(1), int(m.group(2))
+    rest = name[m.end():]
+    ident, tail = rest[:length], rest[length:]
+    e = tail.find("E")
+    if len(ident) != length or e < 0:
+        return []
+    params = tail[:e]
+    out = [f"{us}_Z{length}{ident}{params}"]
+    if not params:
+        out.append(us + ident)
+    return out
+
+
+def object_symbols(path: Path, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False,
+                   promoted: dict[str, str] | None = None) -> list[tuple[str, str, list[str], bool, str | None]]:
+    """(name, kind, normalised body, file-local, the owning function of an exception table or None)
+    for every defined symbol of one object."""
+    obj = Coff(path)
+    n = Normaliser(obj, anonymous_locals, roots, pad_free, promoted)
+    owners = table_owners(obj, n)
     out = []
     for i, s in obj.symbols.items():
         if s["section"] <= 0 or s["is_section"] or s["cls"] not in (2, 3):
@@ -435,11 +746,12 @@ def object_symbols(path: Path, anonymous_locals: bool = False) -> list[tuple[str
             kind = "data"
         else:
             continue
-        out.append((pooled_key(s["name"]), kind, n.body(i), s["local"]))
+        out.append((pooled_key(s["name"]), kind, n.body(i), s["local"], owners.get(i)))
     return out
 
 
-def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
+def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, roots: list[bytes] = (),
+                 pad_free: bool = False, promoted: dict[str, str] | None = None):
     """name -> {"kind": code | data | bss, "bodies": {hash: [objects]}}; texts by hash; functions read."""
     from concurrent.futures import ProcessPoolExecutor
     from functools import partial
@@ -448,9 +760,10 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
     texts: dict[str, list[str]] = {}
     nfunc = 0
     with ProcessPoolExecutor() as pool:
-        reader = partial(object_symbols, anonymous_locals=anonymous_locals)
+        reader = partial(object_symbols, anonymous_locals=anonymous_locals, roots=roots, pad_free=pad_free,
+                         promoted=promoted)
         for key, syms in zip(keys, pool.map(reader, [objs[k] for k in keys], chunksize=8)):
-            for name, kind, lines, local in syms:
+            for name, kind, lines, local, owner in syms:
                 nfunc += kind == "code"
                 h = hashlib.sha1("\n".join(lines).encode()).hexdigest()
                 real = name
@@ -458,9 +771,144 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
                     name = f"local:{h[:12]}"
                 e = table.setdefault(name, {"kind": kind, "bodies": {}, "names": set()})
                 e["names"].add(real)
+                if owner:
+                    e.setdefault("owners", {})[real] = owner
                 e["bodies"].setdefault(h, []).append(key)
+                e.setdefault("where", {}).setdefault(real, set()).add(key)
                 texts[h] = lines
     return table, texts, nfunc
+
+
+def find_cxxfilt() -> str:
+    for name in ("llvm-cxxfilt", "llvm-cxxfilt.exe"):
+        p = shutil.which(name)
+        if p:
+            return p
+    for cxx in ("i686-w64-mingw32-clang++", "x86_64-w64-mingw32-clang++", "clang++"):
+        p = shutil.which(cxx)
+        if p and Path(p).with_name("llvm-cxxfilt.exe").exists():
+            return str(Path(p).with_name("llvm-cxxfilt.exe"))
+    sys.exit("codegen_same: llvm-cxxfilt not found (it ships with the llvm-mingw toolchain)")
+
+
+def linkage_free(names: list[str], i386: bool) -> dict[str, str]:
+    """name -> its demangled spelling without what internal linkage adds: `static` (the L of
+    _ZL...) and `(anonymous namespace)::` - so a promoted symbol and the file-local it was read alike."""
+    if not names:
+        return {}
+    # i686 prefixes every C and C++ name with one underscore (llvm-cxxfilt's --strip-underscore drops
+    # it only from a name it demangles, so a promoted C-spelled variable would keep it)
+    plain = [n[1:] if i386 and n.startswith("_") else n for n in names]
+    r = subprocess.run([find_cxxfilt()], input="\n".join(plain) + "\n", capture_output=True, text=True, check=True)
+    out = r.stdout.splitlines()
+    if len(out) != len(names):
+        sys.exit("codegen_same: llvm-cxxfilt answered another number of lines than it was given")
+    return {n: d.replace("(anonymous namespace)::", "") for n, d in zip(names, out)}
+
+
+def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
+    """NEW's global name -> BASE's file-local name, for a global of NEW (not a global of BASE) whose
+    body is a BASE file-local's of the same name but for its linkage (with --anonymous-locals)."""
+    cand = sorted(k for k in new if not k.startswith("local:") and k not in base)
+    if not cand:
+        return {}
+    local_names = sorted({n for k, e in base.items() if k.startswith("local:") for n in e["names"]})
+    spell = linkage_free(cand + local_names, i386)
+    by_spelling: dict[str, list[str]] = {}
+    for k, e in base.items():
+        if k.startswith("local:"):
+            for n in e["names"]:
+                by_spelling.setdefault(spell[n], []).append(k)
+    def unqualified(d: str) -> str:
+        """`ns::name(args)` -> `name(args)`: a promotion may also move the item into a named namespace."""
+        cut = d.find("(")
+        head, tail = (d, "") if cut < 0 else (d[:cut], d[cut:])
+        return head.rsplit("::", 1)[-1] + tail
+
+    by_tail: dict[str, list[str]] = {}
+    for k, e in base.items():
+        if k.startswith("local:"):
+            for n in e["names"]:
+                by_tail.setdefault(unqualified(spell[n]), []).append(k)
+    out = {}
+    for name in cand:
+        for h in new[name]["bodies"]:
+            k = f"local:{h[:12]}"
+            if k in by_spelling.get(spell[name], ()):
+                out[name] = next(n for n in sorted(base[k]["names"]) if spell[n] == spell[name])
+            elif k in by_tail.get(unqualified(spell[name]), ()):
+                # only the namespace changed: paired when that body has one file-local of that name
+                same = [n for n in sorted(base[k]["names"]) if unqualified(spell[n]) == unqualified(spell[name])]
+                if len(same) == 1 and by_tail[unqualified(spell[name])].count(k) == 1:
+                    out[name] = same[0]
+                else:
+                    # two sources' file-locals of one name and one body (a zero byte each): the one
+                    # defined in the object that now defines the global, when exactly one is
+                    here = set(new[name]["bodies"][h])
+                    mine = [n for n in same if base[k]["where"].get(n, set()) & here]
+                    if len(mine) == 1:
+                        out[name] = mine[0]
+    return out
+
+
+EXCEPTION_CLASSES = ("inline", "low32-site", "data-layout", "x64-indirect", "i686-fold", "i686-inline",
+                     "i686-convention", "refptr", "harness")
+# the classes that may except a DATA, BSS or data NEW/GONE line
+DATA_CLASSES = ("data-layout", "x64-indirect", "i686-fold", "i686-inline", "i686-convention", "refptr", "harness")
+X64_ONLY_CLASSES = ("x64-indirect",)  # never used on an i386 build
+
+
+def load_exceptions(path: Path) -> dict[str, dict]:
+    """symbol -> {"class", "line", "used"}; an unknown class or a malformed line exits 2."""
+    out: dict[str, dict] = {}
+    header = False
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        print(f"codegen_same: --exceptions {path}: {e}")
+        sys.exit(2)
+    for n, line in enumerate(lines, 1):
+        if not line.strip() or line.startswith("#"):
+            continue
+        f = [x.strip() for x in line.split("\t")]
+        if not header:
+            if f[:4] != ["symbol", "class", "reason", "commit"]:
+                print(f"codegen_same: {path}:{n}: the header must be symbol, class, reason, commit: {line}")
+                sys.exit(2)
+            header = True
+            continue
+        if len(f) < 2 or not f[0] or not f[1]:
+            print(f"codegen_same: {path}:{n}: a row needs a symbol and a class: {line}")
+            sys.exit(2)
+        if f[1] not in EXCEPTION_CLASSES:
+            print(f"codegen_same: {path}:{n}: class {f[1]!r} is not one of {', '.join(EXCEPTION_CLASSES)} "
+                  f"(a new class needs the coordinator's entry in docs/source-layout-round.md 7a): {line}")
+            sys.exit(2)
+        out[f[0]] = {"class": f[1], "line": line, "used": False}
+    if not header:
+        print(f"codegen_same: {path}: no header line (symbol, class, reason, commit)")
+        sys.exit(2)
+    return out
+
+
+def excepted(exceptions: dict, key: str, e: dict, allowed: tuple[str, ...]) -> str | None:
+    """The class that excepts this symbol's line, or None: a code symbol by a row of a class in
+    `allowed`, a data or bss symbol only by a row of a DATA_CLASSES class in `allowed`."""
+    if not exceptions:
+        return None
+    objs = {o.replace("\\", "/").rsplit("/", 1)[-1] for v in e["bodies"].values() for o in v}
+    for n in [key] + sorted(e["names"]):
+        x = exceptions.get(n)
+        if not x:
+            # a row `NAME@OBJECT`: this name in that object only (a pooled name such as _GLOBAL__sub_I_*)
+            x = next((exceptions[f"{n}@{o}"] for o in objs if len(objs) == 1 and f"{n}@{o}" in exceptions), None)
+        if not x or x["class"] not in allowed:
+            continue
+        if e["kind"] != "code" and x["class"] not in DATA_CLASSES:
+            continue
+        x["used"] = True
+        return x["class"]
+    return None
 
 
 def named(key: str, e: dict) -> str:
@@ -480,8 +928,58 @@ def by_function(a) -> int:
     def wanted(k: str) -> bool:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
 
-    base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals)
-    new, ntext, nn = symbol_table(objects(a.new), wanted, a.anonymous_locals)
+    exceptions = load_exceptions(a.exceptions) if a.exceptions else {}
+    allowed = tuple(EXCEPTION_CLASSES)
+    if a.exception_classes:
+        allowed = tuple(c.strip() for c in a.exception_classes.split(",") if c.strip())
+        unknown = [c for c in allowed if c not in EXCEPTION_CLASSES]
+        if unknown or not allowed:
+            print(f"codegen_same: --exception-classes {a.exception_classes}: {', '.join(unknown) or 'no class'} "
+                  f"is not one of {', '.join(EXCEPTION_CLASSES)} (docs/source-layout-round.md 7a)")
+            return 2
+    broots, nroots = source_roots(a.base), source_roots(a.new)
+    pad_free = {len(r) for r in broots} != {len(r) for r in nroots}
+    if pad_free:
+        print(f"codegen_same: the source roots differ in length ({a.base}, {a.new}): the alignment "
+              f"padding a path moves is not compared (the docstring's 'source root')")
+    base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals, broots, pad_free)
+    new_objs = objects(a.new)
+    if a.moved_map:
+        # a file that moved whole (stage C) is read under the path it had: its object's name, and
+        # the path its code carries (__FILE__: x86_64's Low32() message). The padding a longer
+        # path moves is not compared.
+        moved = moved_files(a.moved_map)
+        renamed = {}
+        for k, p in new_objs.items():
+            for n, o in moved.items():
+                if k.endswith("/" + n + ".obj"):
+                    k = k[:-len(n + ".obj")] + o + ".obj"
+                    break
+            if k in renamed:
+                print(f"codegen_same: --moved-map: two objects of NEW read as {k}")
+                return 2
+            renamed[k] = p
+        new_objs = renamed
+        nroots = list(nroots)
+        for n, o in sorted(moved.items()):
+            nroots.append((n.encode(), o.encode()))
+            nroots.append((n.replace("/", "\\").encode(), o.replace("/", "\\").encode()))
+        pad_free = True
+    new, ntext, nn = symbol_table(new_objs, wanted, a.anonymous_locals, nroots, pad_free)
+    promotions: dict[str, str] = {}
+    some = next((p for k, p in sorted(new_objs.items()) if wanted(k)), None)
+    i386 = some is not None and Coff(some).machine == IMAGE_FILE_MACHINE_I386
+    if i386:
+        allowed = tuple(c for c in allowed if c not in X64_ONLY_CLASSES)
+    if a.anonymous_locals and some is not None:
+        promotions = find_promotions(base, new, i386)
+    if promotions:
+        # the second pass: NEW read again with each promoted global known as the file-local it was
+        defining = sorted({k for n in promotions for v in new[n]["bodies"].values() for k in v})
+        lh: dict[str, str] = {}
+        for k in defining:
+            lh.update(promoted_hashes(new_objs[k], set(promotions), nroots, pad_free))
+        new, ntext, nn = symbol_table(new_objs, wanted, True, nroots, pad_free, lh)
     if a.show:
         for side, t, tx in (("BASE", base, btext), ("NEW", new, ntext)):
             e = t.get(a.show)
@@ -492,8 +990,40 @@ def by_function(a) -> int:
                 print(f"--- {side}: {a.show} in {', '.join(where)}")
                 print("\n".join(tx[h]))
         return 0
-    bad = copies = injects = 0
+    bad = copies = injects = excepts = 0
     counted = {"code": 0, "data": 0, "bss": 0}
+    # the key of each real name, for a data line that follows its owning function
+    by_real: dict[str, str] = {}
+    for t in (base, new):
+        for k, e in t.items():
+            for r in e["names"]:
+                by_real.setdefault(r, k)
+
+    def owner_verdict(e: dict) -> tuple[str, str] | None:
+        """A data or bss symbol that belongs to a function - an exception table (its .eh_frame FDE
+        names it) or a function-local static (`_ZZ...E...`) - follows that function: ("INJECT", f)
+        when f is a changed registration under --inject-ok, (class, f) when a row of a class in use
+        names f (it changed by that class, and its table or static with it). None otherwise."""
+        if e["kind"] == "code":
+            return None
+        cands: list[str] = []
+        for r in sorted(e["names"]):
+            o = e.get("owners", {}).get(r)
+            if o:
+                cands.append(o)
+            cands.extend(enclosing_function(r))
+        for f in cands:
+            if a.inject_ok and INJECT_REGISTRATION.match(f):
+                return "INJECT", f
+            k = by_real.get(f)
+            fe = new.get(k) if k else None
+            fe = fe or (base.get(k) if k else None)
+            if fe is not None:
+                cls = excepted(exceptions, k, fe, allowed)
+                if cls:
+                    return cls, f
+        return None
+
     for name in sorted(set(base) | set(new)):
         x, y = base.get(name), new.get(name)
         if a.inject_ok and INJECT_REGISTRATION.match(name) and (x is None or y is None or set(x["bodies"]) != set(y["bodies"])):
@@ -501,11 +1031,35 @@ def by_function(a) -> int:
                   f"a moved BOF3_INJECT line, not counted)")
             injects += 1
             continue
+        if (x is None or y is None or set(x["bodies"]) != set(y["bodies"])):
+            v = owner_verdict(y if y is not None else x)
+            if v is not None:
+                what = "new" if x is None else "gone" if y is None else "changed"
+                e = y if y is not None else x
+                if v[0] == "INJECT":
+                    print(f"INJECT {name}  ({what}; {e['kind']}, in {objects_of(e)}{named(name, e)}; "
+                          f"belongs to {v[1]}, a moved BOF3_INJECT line, not counted)")
+                    injects += 1
+                else:
+                    print(f"EXCEPT {v[0]} {name}  ({what}; {e['kind']}, in {objects_of(e)}{named(name, e)}; "
+                          f"belongs to {v[1]}, excepted; not counted)")
+                    excepts += 1
+                continue
         if y is None:
+            cls = excepted(exceptions, name, x, allowed)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (GONE; {x['kind']}, in {objects_of(x)}{named(name, x)}; not counted)")
+                excepts += 1
+                continue
             print(f"GONE   {name}  ({x['kind']}, in {objects_of(x)}{named(name, x)})")
             bad += 1
             continue
         if x is None:
+            cls = excepted(exceptions, name, y, allowed)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (NEW; {y['kind']}, in {objects_of(y)}{named(name, y)}; not counted)")
+                excepts += 1
+                continue
             print(f"NEW    {name}  ({y['kind']}, in {objects_of(y)}{named(name, y)})")
             bad += 1
             continue
@@ -518,6 +1072,11 @@ def by_function(a) -> int:
                 i = next((j for j, (u, v) in enumerate(zip(p, q)) if u != v), min(len(p), len(q)))
                 first = (f"  first at instruction {i}: {p[i] if i < len(p) else '<end>'!r}"
                          f" -> {q[i] if i < len(q) else '<end>'!r}")
+            cls = excepted(exceptions, name, y, allowed)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (DIFFER; base {objects_of(x)}; new {objects_of(y)}){first}; not counted")
+                excepts += 1
+                continue
             print(f"{tag} {name}  (base {objects_of(x)}; new {objects_of(y)}){first}")
             bad += 1
             continue
@@ -527,10 +1086,31 @@ def by_function(a) -> int:
             copies += 1
             if a.verbose:
                 print(f"COPIES {name}  {nx} -> {ny} (the same bodies)")
+    promoted = 0
+    for n, was in sorted(promotions.items()):
+        key = next((k for k, e in new.items() if k.startswith("local:") and n in e["names"]), None)
+        if key and key in base and set(base[key]["bodies"]) == set(new[key]["bodies"]):
+            print(f"PROMOTED {n}  (was the file-local {was}; the same body, in {objects_of(new[key])})")
+            promoted += 1
     print(f"codegen_same --by-function: {counted['code']} code, {counted['data']} data, {counted['bss']} bss symbols "
           f"compared ({bn} / {nn} function definitions read), {bad} differ"
           + (f"; {copies} with another number of identical copies" if copies else "")
-          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else ""))
+          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else "")
+          + (f"; {excepts} excepted (--exceptions)" if excepts else "")
+          + (f"; {promoted} promoted to external linkage, the same body" if promoted else ""))
+    # a row of a class in use whose symbol neither build defines names the other width's symbol (or a
+    # gone one): counted, not listed - a data-layout row is read at both widths, by each width's name
+    defined = {n for t in (base, new) for k, e in t.items() for n in [k] + sorted(e["names"])}
+    foreign = 0
+    for sym, x in sorted(exceptions.items()):
+        if not x["used"] and x["class"] in allowed:
+            if sym.split("@", 1)[0] not in defined:
+                foreign += 1
+                continue
+            print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")
+    if foreign:
+        print(f"codegen_same: {foreign} exception rows of a class in use name no symbol of either build "
+              f"(the other width's names, or gone): not listed")
     if bn == 0 or nn == 0:
         print("codegen_same: nothing compared (no function in one of the builds)")
         return 2
@@ -553,7 +1133,20 @@ def main() -> int:
                     help="with --by-function: list a changed *_Inject() / bof3::InjectAll as INJECT, not a difference")
     ap.add_argument("--anonymous-locals", action="store_true",
                     help="with --by-function: a file-local symbol is known by its body, not its name")
+    ap.add_argument("--exceptions", type=Path, metavar="FILE",
+                    help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed symbol of a known "
+                         "class prints as EXCEPT and is not counted")
+    ap.add_argument("--moved-map", type=Path, metavar="TSV",
+                    help="with --by-function: analysis/tu_moves.tsv - a file its `file` rows moved whole is read "
+                         "under its old path (object name and __FILE__ strings)")
+    ap.add_argument("--exception-classes", metavar="CLASS[,CLASS]",
+                    help="with --exceptions: only these classes may except (default every class); the i686 "
+                         "gate passes data-layout,i686-fold,i686-inline,i686-convention,inline,refptr,harness")
     a = ap.parse_args()
+    if a.exceptions and not a.by_function:
+        ap.error("--exceptions belongs to --by-function")
+    if a.exception_classes and not a.exceptions:
+        ap.error("--exception-classes belongs to --exceptions")
     if a.by_function:
         if a.allow_new or a.allow_gone or a.code_only:
             ap.error("--allow-new, --allow-gone and --code-only belong to the object mode")
@@ -565,6 +1158,7 @@ def main() -> int:
             print(f"codegen_same: {d} has no CMakeFiles: not a build directory")
             return 2
     base, new = objects(a.base), objects(a.new)
+    broots, nroots = source_roots(a.base), source_roots(a.new)
 
     def wanted(k: str) -> bool:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
@@ -591,7 +1185,7 @@ def main() -> int:
             continue
         if a.code_only:
             continue
-        x, y = data_dump(objdump, base[k]), data_dump(objdump, new[k])
+        x, y = data_dump(objdump, base[k], broots), data_dump(objdump, new[k], nroots)
         if x != y:
             i = next((j for j, (p, q) in enumerate(zip(x, y)) if p != q), min(len(x), len(y)))
             print(f"DATA   {k}  first in {first_section(y if i < len(y) else x, i)}")

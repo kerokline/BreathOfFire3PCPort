@@ -4,4 +4,9 @@
 // 0x572590 and Sprite_ReleaseTint 0x454DC0. docs/field-event.md.
 #pragma once
 
-void FieldEvent_Inject();
+#include <cstdint>
+
+
+namespace field_event {
+extern std::uint8_t g_mantle_cap;   // defined in field_event.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace field_event

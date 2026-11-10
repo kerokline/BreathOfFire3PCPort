@@ -2,4 +2,6 @@
 // 0x578A00, 0x578010, 0x577BD0, 0x577420 and 0x577280. docs/movement-script.md.
 #pragma once
 
+#include "game/move_groups_callees.h"
+
 void MoveGroups_Inject();

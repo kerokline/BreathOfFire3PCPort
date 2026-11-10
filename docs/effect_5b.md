@@ -13,6 +13,8 @@ fuzzed through the scenario harness in effect mode
 (section 6). **Fuzz only**: no
 recorded route enters any of the 50 (section 9).
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_0e.cpp`, `src/game/effect/effect_kind_18_sub_0d.cpp`, `src/game/effect/effect_kind_18_sub_0f.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_5b.cpp` itself is retired. A `src/game/effect_5b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5b.cpp:LINE` answers it.
+
 Every row is effect code, and every row is `evidence` tier: the seven
 dispatchers are `EffectKind18_States` entries 11..15, 19 and 79 (kind 0x18's
 `EffectKind18_Run` jumps through that table by `+1`), each a sub-kind with its

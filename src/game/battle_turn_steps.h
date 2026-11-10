@@ -5,4 +5,9 @@
 // eight dispatch stubs and the twelve steps they reach. docs/battle_turn_steps.md.
 #pragma once
 
-void BattleTurnSteps_Inject();
+#include <cstdint>
+
+
+namespace battle_turn_steps {
+extern std::uint8_t g_extra_round_clear;   // defined in battle_turn_steps.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace battle_turn_steps

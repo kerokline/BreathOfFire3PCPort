@@ -8,6 +8,7 @@
 #pragma once
 
 void MsgBox_Inject();
+void MsgBox_ArmAfterBinds();
 
 // DIV-0140's self-test (text_draw.cpp, ButtonText_Arm): MsgBox_Step run over
 // `msg` until `glyphs` characters are drawn, from a box at (0x10, 0x20), every
@@ -32,3 +33,17 @@ const unsigned char* MsgBox_ReadingRowSystem(unsigned id, const unsigned char* p
 // `repeat`, a held key's auto-repeat - whether the reading rows' glyphs are
 // drawn. The layout, the reveal and the pages are the same either way.
 bool MsgBox_ReadingRowKey(unsigned vk, bool repeat);
+
+namespace msgbox {
+extern bool g_text_faster;   // defined in msgbox.cpp (source-layout B0: promoted for a moved reader)
+
+// The reading row's entry points (docs/reading-row.md 3), defined in msgbox.cpp and named by
+// the box's functions in text/msg_box.cpp (source-layout B3). base2's msgbox.cpp had Open and
+// Annotated inlined into those callers.
+namespace ruby {
+const unsigned char* Open(unsigned tag, unsigned half, unsigned slot, const unsigned char* plain);
+bool Annotated(const unsigned char* base);
+void Step();
+const unsigned char* SkipRow(const unsigned char* base, const unsigned char* at);
+}  // namespace ruby
+}  // namespace msgbox

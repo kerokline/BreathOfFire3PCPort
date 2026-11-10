@@ -13,6 +13,8 @@ Two step tables named. Not yet live-checked: the routes reach every mode
 (section 8) but no trace ever armed these starts; the coordinator's state
 hash after the merge is the live check.
 
+**Source layout (2026-11-09):** the 13 functions this group took live in the file of their translation unit now: `src/game/core/transition.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/mode_rest.cpp` still held of ours is `src/game/core/mode_rest.cpp` now. A `src/game/mode_rest.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/mode_rest.cpp:LINE` answers it.
+
 ## 0. For the record: how four modes stayed outside the count
 
 `GameMode_Handlers` `0x656A44` holds twelve code pointers; `Field_Task`

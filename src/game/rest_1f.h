@@ -86,7 +86,6 @@ void __cdecl LeaderPanel_S0End(void);            // 0x528970
 
 }  // extern "C"
 
-void Rest1F_Inject();
 
 namespace rest_1f {
 // BOF3X_SHADOW=rest_1f: the start-up fuzz, rest_1f_fuzz.cpp. Clones the 49

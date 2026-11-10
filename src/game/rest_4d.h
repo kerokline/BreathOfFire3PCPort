@@ -82,7 +82,7 @@ void __cdecl CommuName_DrawHeader(void);                // 0x45E820
 }  // extern "C"
 
 namespace rest_4d {
+extern unsigned char g_entry_abandons;   // defined in rest_4d.cpp (source-layout B0: promoted for a moved reader)
 void SelfTest();           // rest_4d_fuzz.cpp
 void EntryAbandonTest();   // rest_4d_fuzz.cpp: DIV-0075's row, run once the switch is set
 }
-void Rest4D_Inject();

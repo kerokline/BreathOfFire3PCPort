@@ -6,6 +6,8 @@ the shared harness with 0 mismatches over 94,000 rounds; 167 negative controls, 
 Nothing recorded casts these spells, so this is fuzz only until the owner sees
 them cast.
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the files of their translation units now: `src/game/magic/whelp_breath_flames.cpp`, `src/game/battle/dragon_breath_beam.cpp`, `src/game/magic/burn.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s27.cpp` itself is retired. A `src/game/magic_s27.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s27.cpp:LINE` answers it.
+
 This is round nine, second wave, group S27
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 It takes three `Magic_Rows` overlays:

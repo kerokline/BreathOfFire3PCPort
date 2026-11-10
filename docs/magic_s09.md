@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 94,000 rounds. 277 of 280 negative controls refused (exit 3; two of them by our abort, the rest by a count); two equivalent mutants and one plant the harness's flags cannot see, each with a near variant refused. Nothing recorded casts
 these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the files of their translation units now: `src/game/magic/elem_breath_mote.cpp`, `src/game/magic/bone_dart_shaft.cpp`, `src/game/magic/dream_breath_mote.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s09.cpp` itself is retired. A `src/game/magic_s09.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s09.cpp:LINE` answers it.
+
 Round nine, fourth spell wave, group S09
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

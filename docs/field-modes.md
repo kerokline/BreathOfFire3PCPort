@@ -8,6 +8,8 @@ under them. Each fuzzed against a copy of Capcom's with every call re-aimed
 at a recorder and every table it reads swapped for recording entries; 37
 negative controls, all refused. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 8 had it owed.
 
+**Source layout (2026-11-09):** the 17 functions this group took live in the files of their translation units now: `src/game/scenario/scena_16_2.cpp`, `src/game/field/field_7.cpp`, `src/game/field/field_6.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/field_modes.cpp` itself is retired. A `src/game/field_modes.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_modes.cpp:LINE` answers it.
+
 [`attract-remaining.md`](attract-remaining.md) section 4.6 listed this as
 "the dispatcher `0x56D690` and the handlers it reaches - `0x6619E8` is a
 table of them ... `0x662CC0` points at it and at three sibling tables". What

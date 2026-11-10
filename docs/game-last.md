@@ -13,6 +13,8 @@ own game code is left that any catalogue or scan names. Not live-checked
 here: no trace ever armed either start (section 6); the coordinator's state
 hash after the merge is the live check.
 
+**Source layout (2026-11-09):** the 2 functions this group took live in the files of their translation units now: `src/game/menu/char.cpp`, `src/game/menu/item_trade.cpp` ([`source-layout.md`](source-layout.md)). `src/game/game_last.cpp` itself is retired. A `src/game/game_last.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/game_last.cpp:LINE` answers it.
+
 ## 1. What each does
 
 ### 1.1 `Item_UseFlags` `0x591810` (PSX `0x80166918`)

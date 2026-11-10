@@ -12,6 +12,8 @@ capstone and fuzzed through the scenario harness's effect mode
 unchanged: 208,000 rounds, 0 mismatches. 100 controls planted one at a time: 99 refused by a count, one stopped by ours' own abort with its near variant refused (section 8). All seven kinds are
 fuzz only: no recorded route enters them (section 10).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_35.cpp`, `src/game/effect/effect_kind_38.cpp`, `src/game/effect/effect_kind_3d.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/effect_2b.cpp` itself is retired. A `src/game/effect_2b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2b.cpp:LINE` answers it.
+
 Every row is effect code: seven kinds of the `Effect_Objects` pool (20
 records of 0x80 at `0x7E11E0`; `Effect_RunObjects` calls
 `Effect_KindHandlers[+5]` with `Sprite_Current` the record). No row is a

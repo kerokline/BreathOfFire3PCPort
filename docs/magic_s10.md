@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 120,000 rounds. 359 negative controls: 355 refused by a count (exit 3), one by a fault (L6, its near variant L6b by a count), and three equivalent mutants (S41, S46, S48, section 6), each with a near variant refused by a count. Nothing recorded
 casts these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the files of their translation units now: `src/game/magic/sacrifice_actor.cpp`, `src/game/magic/lavaburst_child.cpp`, `src/game/magic/howling_child.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s10.cpp` itself is retired. A `src/game/magic_s10.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s10.cpp:LINE` answers it.
+
 Round nine, fourth spell wave, group S10
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

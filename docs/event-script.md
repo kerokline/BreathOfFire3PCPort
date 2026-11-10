@@ -9,6 +9,8 @@ fuzzed against a copy of Capcom's with every call re-aimed at a recorder,
 placement scripts decodes (`tools/event_scan.py`) and is byte-identical to the
 PlayStation disc's. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 8 had it owed.
 
+**Source layout (2026-11-09):** the 28 functions this group took live in the files of their translation units now: `src/game/field/event_script.cpp`, `src/game/field/event_cond.cpp`, `src/game/field/event_op.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/event_script.cpp` still held of ours is `src/game/field/event_script_ours.cpp` now. A `src/game/event_script.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/event_script.cpp:LINE` answers it.
+
 [`attract-remaining.md`](attract-remaining.md) section 4.5 catalogued the
 `0x579740`..`0x57BA60` run as "entered only a few dozen times, from
 `0x594E60`; what it sets up is unread". This document reads it. The *other*
@@ -124,7 +126,7 @@ none of them is quoted here or in the tool.
 
 A second kind of event script exists and is *not* the placement script: the
 area descriptor `+0x04` table, indexed by an object's word `+8` when its bit
-15 is set, which `MoveScript_SetTurnTarget` `0x517E90` and `0x52F670` run
+15 is set, which `Field_ObjectTalk` `0x517E90` and `0x52F670` run
 through `EventScript_Run` - the talk scripts. Same grammar, same interpreter;
 not decoded here (the table's length is not established).
 
@@ -340,7 +342,7 @@ The cycle enters an area twelve times, so the interpreter runs twelve scripts
   not measured: they are not in the trace list. Taking them over is what
   would settle it.
 - `EventScript_Run`'s two other callers, the talk scripts of the descriptor
-  `+0x04` table (`MoveScript_SetTurnTarget`): talking to somebody would.
+  `+0x04` table (`Field_ObjectTalk`): talking to somebody would.
 - a placement with the count already at 30 (an area with more than 30 objects
   on one path), a negative count (no script leaves one), and every condition
   but 0, 2 and 8.

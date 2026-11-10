@@ -3,4 +3,6 @@
 // handler 0x4959F0. docs/mode-tasks.md.
 #pragma once
 
+#include "game/mode_tasks_callees.h"
+
 void ModeTasks_Inject();

@@ -13,6 +13,8 @@ instruction with capstone and fuzzed through the boss harness's engine frame
 count, 1 an equivalent mutant with its near variant refused (section 5).
 Fuzz-only: no recorded route enters any of the 61 (section 8).
 
+**Source layout (2026-11-09):** the 61 functions this group took live in the file of their translation unit now: `src/game/effect/effect.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_3c.cpp` itself is retired. A `src/game/rest_3c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3c.cpp:LINE` answers it.
+
 The band is one thing: **61 consecutive slots of `Effect_Handlers`**
 (`0x64E73C`, 130 entries, named in round twelve), the table
 `Effect_ApplyResult` (ours, `battle_damage.cpp`) calls with no argument
@@ -453,3 +455,11 @@ one.
 **`analysis/calltrace/entries_logic.txt`** (main checkout, 2026-10-04): 61
 lines appended, the code's extents of section 1 (none was there; no host
 line covers them - `Effect_ApplyResult`'s line is `0044B9F0 750`).
+
+## Addendum: which ability reaches a slot (2026-11-08)
+
+The ability record's call byte is the index into the handler table `0x64E540`
+directly (the 228 records and their bytes are identical on the US disc and the
+PC), so "not traced" above can be read off the ability table. For example: 6
+Whelp Breath, 62 Bonebreak, 103 Super Combo, `0x49` Double and Triple Blow,
+`0x70` Tornado, `0x72` Depress.

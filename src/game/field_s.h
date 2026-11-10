@@ -5,6 +5,7 @@
 #pragma once
 
 void FieldS_Inject();
+extern unsigned char g_use_item_yes_no_hand;   // defined in field_s.cpp, armed by FieldS_Inject (named here for a moved reader: source-layout B0)
 
 #include <cstdint>
 

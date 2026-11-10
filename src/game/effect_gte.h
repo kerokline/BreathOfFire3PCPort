@@ -54,7 +54,6 @@ long __cdecl EffectGte_ProjectSize(const long* point, const short* size, short* 
 
 }  // extern "C"
 
-void EffectGte_Inject();
 
 namespace effect_gte {
 // BOF3X_SHADOW=effect_gte: the start-up fuzz, effect_gte_fuzz.cpp. Clones the

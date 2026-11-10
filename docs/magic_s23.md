@@ -5,6 +5,8 @@
 through the shared harness: 102,000 rounds, 0 mismatches; 69 of 70 negative controls refused by a count, the other an equivalent mutant. No
 recorded route casts any of these spells: fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/magic/simoon_dust.cpp`, `src/game/magic/fx_spiral.cpp`, `src/game/magic/fx_funnel.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s23.cpp` itself is retired. A `src/game/magic_s23.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s23.cpp:LINE` answers it.
+
 Group S23 of round nine's first spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) Â§4).
 Four overlays of `Magic_Rows`, their names the sibling's read one id down

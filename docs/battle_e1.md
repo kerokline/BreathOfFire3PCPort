@@ -12,6 +12,8 @@ with capstone and fuzzed through the boss harness's engine frame
 `BOF3X_SHADOW='*'` headless at this branch's tip: exit 0, 656 self-test lines, every harness's runs 0 mismatches (`boss_harness_eh` and `battle_e1` among them). Three of the functions are entered by the
 owner's `dragonTransform` route (section 11); the rest are fuzz only.
 
+**Source layout (2026-11-09):** the 41 functions this group took live in the files of their translation units now: `src/game/battle/battle_extra.cpp`, `src/game/battle/battle_action.cpp`, `src/game/battle/battle_loss.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/battle_e1.cpp` itself is retired. A `src/game/battle_e1.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e1.cpp:LINE` answers it.
+
 Game facts below are what the code does; where a name says more (the
 "loss screen", "equipment"), the evidence is the existing docs it cites,
 not memory of the game.

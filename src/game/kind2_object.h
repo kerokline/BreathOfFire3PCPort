@@ -3,4 +3,6 @@
 // 0x573340, 0x5733B0. docs/kind2-object.md.
 #pragma once
 
+#include "game/kind2_object_callees.h"
+
 void Kind2Object_Inject();

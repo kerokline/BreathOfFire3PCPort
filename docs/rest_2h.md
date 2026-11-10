@@ -13,6 +13,8 @@ harness's **field** mode (used unchanged): 144,000 rounds, **0 mismatches**;
 them (`analysis/pairs_propagated.json`). Fuzz only; the camp route's reach is
 section 9.
 
+**Source layout (2026-11-09):** the 36 functions this group took live in the files of their translation units now: `src/game/shop/shop_win_2.cpp`, `src/game/battle/battle_menu_win.cpp`, `src/game/menu/menu_list.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_2h.cpp` still held of ours is `src/game/shop/rest_2h.cpp` now. A `src/game/rest_2h.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2h.cpp:LINE` answers it.
+
 **What the band is.** Window kinds, almost all: a record of `WindowRecords`
 (`0x803160`, 22 of 0x24) is the dword at `0x905B84` while
 `Field_RunTaskRecords` runs it, `+2` its kind, `+3` its step, `+4` / `+6` x /

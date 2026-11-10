@@ -7,6 +7,8 @@ against a copy of Capcom's with every call re-aimed at a recorder;
 counting twin). **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B
 (`analysis/validate_shop.sh`) 35 of 35; section 7 had it owed.
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the file of their translation unit now: `src/game/menu/char.cpp` ([`source-layout.md`](source-layout.md)). `src/game/char_stats.cpp` itself is retired. A `src/game/char_stats.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/char_stats.cpp:LINE` answers it.
+
 Group W of the sixth parallel round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)): the eighteen
 functions of `0x5903F0..0x591CAB` that the owner's shop route reaches, and

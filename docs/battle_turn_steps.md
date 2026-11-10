@@ -6,6 +6,8 @@ read whole and fuzzed headless against a copy of Capcom's with every call
 re-aimed at a recorder: 30,000 rounds, 0 mismatches; 109 negative controls,
 all 109 refused. The combat route's live check is owed (section 7).
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the file of their translation unit now: `src/game/battle/battle_action.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_turn_steps.cpp` still held of ours is `src/game/battle/battle_turn_steps.cpp` now. A `src/game/battle_turn_steps.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_turn_steps.cpp:LINE` answers it.
+
 Group CC of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). The battle engine is
 the PSX's `BATTLE.EMI` compiled into the exe; the RAM layout is the one

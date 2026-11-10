@@ -45,7 +45,7 @@ constexpr ::bof3::image::Va kCounter1{0x903849};
 constexpr ::bof3::image::Va kCounter3{0x90384B};
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 constexpr ::bof3::image::Va kObjectIndex{SharedScratch_addr};
-// The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
+// The focus object: the object whose talk ran last (Field_ObjectTalk
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject). Area
 // 192's and 193's pair choices write its dwords +0x18 / +0x1C.
 constexpr ::bof3::image::Va kFocusObject{0x903804};

@@ -9,9 +9,9 @@
 // symbols.toml).
 #pragma once
 
-void Rest3F_Inject();
 
 namespace rest_3f {
+extern unsigned char g_pixel_room;   // defined in rest_3f.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=rest_3f: the start-up fuzz, rest_3f_fuzz.cpp. Clones every
 // original before Rest3F_Inject patches it.
 void SelfTest();

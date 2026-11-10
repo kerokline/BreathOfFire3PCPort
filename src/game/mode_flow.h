@@ -8,10 +8,10 @@
 #include <cstdint>
 
 namespace mode_flow {
+extern std::uint8_t g_reset_full;   // defined in mode_flow.cpp (source-layout B0: promoted for a moved reader)
 // DIV-0092: 1 once ModeRest_Inject arms it (after both modules' fuzzes, which
 // run Capcom's rule): a save without a track and a battle's end take the
 // area's own track 0x904CD0 where Capcom's code left the music off.
 extern std::uint32_t g_area_track_fallback;
 }  // namespace mode_flow
 
-void ModeFlow_Inject();

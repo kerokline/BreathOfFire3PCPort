@@ -12,6 +12,8 @@ mutants whose near variants are refused (section 6).
 Nine of the 56 are entered by the owner's `dragonTransform.txt` (section
 11); the rest are fuzz-only.
 
+**Source layout (2026-11-09):** the 56 functions this group took live in the files of their translation units now: `src/game/battle/battle_item_cmd.cpp`, `src/game/battle/battle_3.cpp`, `src/game/battle/battle_banner.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_e4.cpp` itself is retired. A `src/game/battle_e4.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e4.cpp:LINE` answers it.
+
 The band tool (`tools/band_rows.py --group BE4`) and the cut agree: 56
 functions, none missing from the list, none listed that is not a function.
 Its extents are the code's; the cut's sizes are longer by the trailing

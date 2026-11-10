@@ -8,6 +8,8 @@ headless through the scenario harness
 39,000 rounds; **56 of 56 negative controls refused** (54 by a count, two by a fault with their near variants refused by a count; section 5). `BOF3X_SHADOW='*'` exit 0.
 Fuzz only: no route is recorded through these.
 
+**Source layout (2026-11-09):** the 13 functions this group took live in the files of their translation units now: `src/game/field/event_cond.cpp`, `src/game/core/sound.cpp`, `src/game/menu/char.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/scena_sx2.cpp` itself is retired. A `src/game/scena_sx2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sx2.cpp:LINE` answers it.
+
 Group SX2 of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §10, §12): the
 engine functions the chapter and area groups still called by raw address

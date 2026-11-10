@@ -21,6 +21,8 @@ a ledger entry** (section 7, L1): `Battle_RandomLiveEnemy` reads up to six
 bytes of its own stack frame it never wrote when five or more enemies are
 standing; ours takes them as 0.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/community/commu_sim.cpp`, `src/game/field/field_trigger_01.cpp`, `src/game/battle/dragon_cmd.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/rest_4a.cpp` itself is retired. A `src/game/rest_4a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4a.cpp:LINE` answers it.
+
 The cut called the band "field core below the community rows" with 20 rows
 under "table 0x6529E4 read by 0x456D50" (that reader is R4B's, and none of
 these rows is in its table). By the code it is three things:
@@ -425,3 +427,18 @@ The 48 extents were present for 34 starts already; appended 14 lines
 (2026-10-05): the twelve triggers, `0x4563B0 2C4` beside the existing `2C9`
 (padding), and `0x456AF0 23` beside the host line `0x456AF0 34E`, which
 covers the twelve triggers: **the coordinator splits it** at the round's end.
+
+## 12. What the community's fields mean (2026-11-08)
+
+Section 1 left the meanings unstated. Read from the US `COMMU` overlays and
+Frost's matching C, and set against this group's code:
+
+- Faerie traits `+0x10..+0x13`: power, constitution, culture, intellect.
+- `0x9046CA` food, `0x9046CC` culture, `0x9046CB` jobs unlocked,
+  `0x9046CD` / `0x9046CE` clear and build power. These two are snapshots from
+  the last village visit, while the count gate is live.
+- Rooms: 4 scholar, 5 merchant, 6 inn, 7 gift shop, 8 fortune teller,
+  9 explorer, 0xA antiques, 0xB music, 0xC casino, 0xD copy shop.
+- `CommuSim_TickKind9`, `D`, `5`, `B`: explore, copy, merchant, music. Copy
+  statuses are `0x1_..0x4_`, the record's `+2` / `+3`.
+- Spawning needs food above four per faerie.

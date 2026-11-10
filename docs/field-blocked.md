@@ -7,6 +7,8 @@ the first, and the object tests both of them share. Each fuzzed against a copy
 of Capcom's with every call re-aimed at a recorder; 28 negative controls, all
 refused by count. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 6 had it owed.
 
+**Source layout (2026-11-09):** the 9 functions this group took live in the files of their translation units now: `src/game/field/field_3.cpp`, `src/game/field/field_6.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/field_blocked.cpp` still held of ours is `src/game/field/field_blocked.cpp` now. A `src/game/field_blocked.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_blocked.cpp:LINE` answers it.
+
 Group G of the second parallel round. The callers were read last round:
 [`object-kinds.md`](object-kinds.md) (`Field_ObjectTurn`,
 `Field_ObjectOpenDirection`, `Field_ObjectIdleLong`) and

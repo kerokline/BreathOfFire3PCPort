@@ -8,6 +8,8 @@ Fuzz only: no recorded route reaches the band (section 8). No divergence;
 the four state-table dispatchers abort past the code their tables hold, where
 the original would jump through data (section 6).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/area/area_141.cpp`, `src/game/area/area_136.cpp`, `src/game/area/area_140.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/area_w3e.cpp` itself is retired. A `src/game/area_w3e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w3e.cpp:LINE` answers it.
+
 Group AR3E of round ten's fifth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 15). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

@@ -8,6 +8,8 @@ and on; 50 negative controls, 49 refused by a count, one not refused because
 it changes nothing. **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B
 (`analysis/validate_shop.sh`) 35 of 35; section 6 had it owed.
 
+**Source layout (2026-11-09):** the 37 functions this group took live in the files of their translation units now: `src/game/menu/menu.cpp`, `src/game/menu/menu_2.cpp`, `src/game/shop/shop_win_2.cpp` and 4 more ([`source-layout.md`](source-layout.md)). What `src/game/menu_windows.cpp` still held of ours is `src/game/menu/menu_windows.cpp` now. A `src/game/menu_windows.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/menu_windows.cpp:LINE` answers it.
+
 Group Y of the sixth parallel round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)): what the owner's
 shop route reaches of the menu's drawing - the menu box and its pieces, the

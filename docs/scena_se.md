@@ -9,6 +9,8 @@ refused (section 5). `BOF3X_SHADOW='*'` exit 0. Fuzz only: no route is
 recorded through these. Three of the nine addresses the round listed are not
 taken (section 1).
 
+**Source layout (2026-11-09):** the 6 functions this group took live in the files of their translation units now: `src/game/field/event_script.cpp`, `src/game/field/field.cpp`, `src/game/scenario/scena_08.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/scena_se.cpp` itself is retired. A `src/game/scena_se.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_se.cpp:LINE` answers it.
+
 Group SE of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §1: "eight

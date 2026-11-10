@@ -88,7 +88,7 @@ rule ([`README.md`](README.md)) here too.
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left; 2026-10-25: every slow piece reused, the second-language rows in parallel, kept pieces hard-linked - an unchanged upgrade 248 s -> 31 s ([`install-staleness.md`](install-staleness.md) 5) |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); step 2 measured 2026-10-18 ([`install-gap-reads.md`](install-gap-reads.md)); steps 3 and 4 **built** 2026-10-31 by the exe-gap round ([`exe-gap-round.md`](exe-gap-round.md): every `gap` row answered, STRICT on by default for disc-built images; on `exe-gap/round`, PR at the owner's word) |
-| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), merged as PR #168); the source-layout pass **staged** 2026-11-07 ([`source-layout-round.md`](source-layout-round.md)) |
+| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), merged as PR #168); the source-layout pass **built** 2026-11-07..09 ([`source-layout-round.md`](source-layout-round.md): stages A and B as PRs #207 and #214; stage C, the cleanup round I60 and stage D's proof on `source-layout/stage-c`, 2026-11-09) |
 | I45 | Shrink the quicksave files (about 4 MB raw) | engine | HIGH | open 2026-10-17 (the owner): nothing measured |
 | I46 | A quicksave is native memory: revisit what loading one trusts | engine | HIGH | open 2026-10-19 (the owner): a note to consider again |
 | I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
@@ -103,6 +103,9 @@ rule ([`README.md`](README.md)) here too.
 | I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
 | I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
 | I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind |
+| I59 | Two battle repairs from the review of Red Herring's notes: Escape's enemy agility (it reads the wrong objects, and on the PC leftovers from earlier fights) and the skills' turn priority (the learn difficulty removes it) | game behaviour / battle | HIGH | open 2026-11-08 (the owner): put off, nothing built |
+| I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | run 2026-11-09 on `source-layout/stage-c`, before stage D, at the owner's word; the written-in self-tests, the mover and I48 left |
+| I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
 
 ---
 
@@ -2471,3 +2474,52 @@ So the exe's tables are not a duplicate of anything in `DAT/`. They sat inside t
 
 ### Outcome
 _(2026-11-06) open; the measurement above, nothing built._
+
+## I59 — Two battle repairs: Escape's enemy agility and the skills' turn priority
+
+**Ask (2026-11-08, the owner):** after the review of Red Herring's notes, fix both, then put off: recorded here, nothing built.
+**Kind:** game behaviour / battle. **Feasibility:** HIGH (each is a few lines behind a switch).   **Gated on:** the owner's word and the choice in the first item. Each needs a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built.
+
+**1. Escape's enemy agility (D182).** `Escape_Roll` `0x44A010` (`src/game/battle_e4.cpp`, PSX `0x80098278`) loops actors 3..10 and reads object `actor`, not `actor - 3`. So the fight's first enemies are skipped, and with three or fewer enemies only unused objects are read. On the PlayStation those reload as zero each battle, so the enemies' mean is 0 and the sum is wrong the same way on every console. On the PC they are static `.bss` and hold the agility of an earlier fight of four or more enemies (read in code, not measured). Red Herring's notes describe the PlayStation side as a truncated average. Two targets, and the choice changes the balance:
+
+- **Match the PlayStation:** clear the unused objects at spawn, or read 0 for them. Ends the dependence on earlier fights and changes nothing else. Small fights stay as easy to leave as on the console.
+- **What the code meant:** read `actor - 3`, the real mean. Escape gets harder in most small fights, on every release's terms. Objects 8..10 (past the eight enemies) stop being read as well.
+
+The two divisors are D177's and do not change.
+
+**2. Turn priority for skills.** `Battle_BuildTurnOrder` `0x4450E0` (`src/game/battle_damage.cpp`, PSX `0x801DAAB4`) gives a queued ability a bonus by comparing the whole byte at `NameTable_Abilities + 1` with 0, 1 and 3. The byte holds the class in its low nibble and the learn difficulty in its high nibble, so any difficulty above 0 loses the bonus. 97 of the 140 class 3 abilities lose it, and the counts are the same in `BOF3.exe`. The repair is to compare `kind & 0xF`. The PlayStation has the same test, so this departs from every release. Red Herring's `Mechanics/Battle/Turns.md` states the rule; that Capcom did not mean it is an inference.
+
+### Outcome
+_(2026-11-08) open; read, nothing built._
+
+## I60 — The source layout's cleanup round: dissolve the files of ours
+
+**Ask (2026-11-09, the owner):** at stage C of the source-layout round, "move whole, dissolve later"; and of the two calls carried from stage B, "handle them in the cleanup round".
+**Kind:** tooling / source. **Feasibility:** HIGH (each step is gated by `codegen_same.py`).   **Gated on:** stage D's proof of the source-layout round ([`source-layout-round.md`](source-layout-round.md) 6).
+
+Stage C found that 159 of the 336 group files stage B left were not shells: they hold code of ours. 158 moved whole into their folders ([`source-layout.md`](source-layout.md) 3; `crt_rest.cpp`, the runtime's, stays flat). What the cleanup round does with them, and what else waits for it:
+
+- **A divergence's switch and its arming** (175 variables of ours in 89 files, most of them a switch: `battle_e5.cpp` is `g_store_ask_word` and the `PatchBytes` that arms DIV-0162, read by one function in `battle/dragon_cmd.cpp`): the variable goes beside the function that reads it, the arming into that file's `_Inject()`, after the group's self-test as it is now. The readers go from `.refptr` back to direct.
+- **A self-test written in the file** (109 files, `gfx_flush.cpp` the first): the file becomes the group's fuzz file under that name.
+- **The callee seams still in a file of ours** (36): to the file of the group's lowest function, as stage C did for the 28 in pure shells (`tools/retire_shells.py`).
+- **A module of ours** (`widescreen`, `layering`, `dat_cache`, `msgbox`, the sound files, 37 that never held a function of Capcom's): stays a file; the six named `<group>_ours.cpp` get names of their own.
+- **`-fno-auto-import`** (B3's measurement: every `refptr` exception row goes; a new baseline and a check of the DLL's data imports) and **the 34 register-allocation `inline` rows** (32 x86_64, 2 i686), both the owner's to accept there.
+- **The mover's superseded fixes**: `tools/move_funcs.py` on `main` is group B3's; B5's (`df5c19ce`, `cff3a6a0`, `984b1478`) and B2's (`35518a3e`, `2e28ee7d`, `25f8d0eb`) are in the history but were lost at the merges, and none applies as a patch. Stage C did not run the mover; a round that does reconciles it first.
+- **The two comment lines in `scenario_harness.cpp`** that keep its line numbers, the 12 group headers that still declare functions `symbols.gen.h` declares, the `<group>_callees.h` remnants, then **I48's comments** (stage E).
+
+**First concrete step, when wanted:** a new gate baseline at the stage D tip; then one switch by hand (`battle_e5`'s) to fix the shape, and a tool for the rest.
+
+### Outcome
+_(2026-11-09) Run the same evening, before stage D, at the owner's word ([`source-layout-round.md`](source-layout-round.md) 5, "The cleanup round, I60, as run")._ `-fno-auto-import` is in and the `refptr` class is gone (the exception table 3,681 rows to 1,881 at the end, the baseline `slc1109\base3`); the 34 register-allocation `inline` rows are accepted (the owner); 41 more seams moved; four agents put each switch and its arming beside its reader (70 files); 39 files left as pure shells were retired, 119 files of ours stay. Both gates 0 differ, the three self-tests pass. **It found a regression of stage B's on `main`:** `IsEnabled` checks that ran before the bind they test - the reading row never armed, four opt-in switches stopping the game at start - repaired, with a guard in the hook layer that stops the game for the next one. **Left open:** a self-test written in a file of ours as the group's fuzz file (with I61); the five files whose arming runs before their self-test; the six `<group>_ours.cpp` names; the mover's reconciliation; the comment lines that hold line numbers and I48's comments (stage E).
+
+## I61 — A fuzz table per unit file
+
+**Ask (2026-11-09, the owner's call C2):** the fuzz files move whole beside their code; the split per new file is deferred.
+**Kind:** tooling / source. **Feasibility:** MEDIUM.   **Gated on:** I60 (the written-in self-tests become fuzz files first).
+
+A takeover group's fuzz file is one table driven by one harness object (`Group`: its regions, callees and recorders), and a group's functions now sit in several unit files. One fuzz file per unit file needs a registry that assembles each group's table from pieces at start-up, or a harness per unit file with the regions shared. The rows name functions by their `symbols.gen.h` declarations, so they work where they are; what the split buys is a reader finding a function's fuzz rows beside it.
+
+**First concrete step, when wanted:** count the rows per (group, unit file) from `analysis/tu_moves.tsv`; pick the harness with the fewest shared regions (`area_harness`) and split one group.
+
+### Outcome
+_(2026-11-09) open; nothing built._

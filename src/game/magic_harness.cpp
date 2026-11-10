@@ -369,6 +369,13 @@ Region g_regions[kMaxRegions];
 unsigned g_region_n;
 constexpr unsigned kMaxBytes = 0x10000;
 
+// 1 where a state byte is compared, 0 where its region's skip leaves it out; g_skipped
+// counts the 0s (none: the plain memcmp).
+unsigned char g_compared[kMaxBytes];
+unsigned g_skipped;
+const Skip* g_skip;
+unsigned g_skip_n;
+
 struct State {
     unsigned char memory[kMaxBytes];
     Entry log[kLog];
@@ -397,14 +404,14 @@ void Apply(const State& s) {
     g_salt = 0;
     g_rand_pending = g_rand_first;
 }
-bool Same(const State& a, const State& b) {
-    return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, Used(a.log_n) * sizeof(Entry)) == 0;
-}
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
-        if (a.memory[i] != b.memory[i]) return i;
+        if (a.memory[i] != b.memory[i] && g_compared[i]) return i;
     return g_bytes;
+}
+bool Same(const State& a, const State& b) {
+    const bool memory = g_skipped ? FirstDifference(a, b) == g_bytes : std::memcmp(a.memory, b.memory, g_bytes) == 0;
+    return a.log_n == b.log_n && memory && std::memcmp(a.log, b.log, Used(a.log_n) * sizeof(Entry)) == 0;
 }
 unsigned FirstLogDifference(const State& a, const State& b) {
     const unsigned n = Used(a.log_n < b.log_n ? a.log_n : b.log_n);
@@ -540,6 +547,11 @@ const void* StandIn(std::uint32_t key) {
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
+void SetSkips(const Skip* skips, unsigned n) {
+    g_skip = skips;
+    g_skip_n = n;
+}
+
 void Run(const Group& group) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
@@ -573,6 +585,19 @@ void Run(const Group& group) {
     g_bytes = 0;
     for (unsigned i = 0; i < g_region_n; ++i) g_bytes += g_regions[i].size;
     if (g_bytes > kMaxBytes) bof3::Fatal("magic_harness: %s: the regions are %u bytes, the state holds %u", group.shadow, g_bytes, kMaxBytes);
+    std::memset(g_compared, 1, g_bytes);
+    g_skipped = 0;
+    for (unsigned s = 0; s < g_skip_n; ++s)
+        for (std::uint32_t k = 0; k < g_skip[s].count; ++k) {
+            const std::uint32_t a = g_skip[s].at + k * g_skip[s].stride;
+            unsigned n = 0, i = 0;
+            for (; i < g_region_n; n += g_regions[i].size, ++i)
+                if (a >= g_regions[i].at && a + g_skip[s].len <= g_regions[i].at + g_regions[i].size) break;
+            if (i == g_region_n) bof3::Fatal("magic_harness: %s: a skip at 0x%X lies in no region", group.shadow, (unsigned)a);
+            std::memset(g_compared + n + (a - g_regions[i].at), 0, g_skip[s].len);
+            g_skipped += g_skip[s].len;
+        }
+    g_skip_n = 0;   // armed for this Run only
 
     // the copies, every call out re-aimed at its recorder, the stack tables' immediates too
     static void* clones[256];

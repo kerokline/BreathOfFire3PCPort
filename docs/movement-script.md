@@ -49,7 +49,7 @@ at entry, replaced by some ops). Then the step dispatches that byte on its
 | high nibble | what |
 |---|---|
 | `0x10`..`0x40` | move: direction `(b - 0x10) >> 3`, `b & 7` steps to `ctx[+7]`; `MoveCmd_Move`, or `MoveCmd_MoveKind2` for the kind-2 object; returns the direction |
-| `0x50` | `ctx[+1] = b & 0xF` |
+| `0x50` | `ctx[+1] = b & 0xF`, a wait of n + 2 ticks for n >= 1 and one tick for `0x50` (`object_kinds.cpp`) |
 | `0x60`, `0x80`, `0x90`, `0xC0`, `0xD0`, `0xE0`, `0xF0` | the group handler, whose result is the step's |
 | `0xA0` | stays: the flow pass stopped on an `A` op that returned negative |
 | `0x70`, and `0x00` / `0xB0`, which never get here | nothing |
@@ -70,7 +70,7 @@ then the position advances by one, read again after the handler.
 | `0C x` | 2 | bit `0x40` of three objects, cleared or set |
 | `0D` 4 bytes | 5 | place at a map position and take the ground's elevation |
 | `0E` / `0F` 3 or 4 bytes | 4 or 5 | an animation, by number or through `MoveScript_AnimByState` |
-| `A0`..`AF` | 2, 2, 1, 1 by `op & 3` | the counters at `0x903848`: set, compare (stop if unequal), increment, nothing (`MoveScript_CounterOps`; the first three ours, `MoveScript_CounterSet` / `Test` / `Step`, fuzzed alone under `BOF3X_SHADOW=move_counters`, four controls refused) |
+| `A0`..`AF` | 2, 2, 1, 1 by `op & 3` | the counters at `0x903848`, a signalling channel between actors (one waits on a value another sets): set, compare (stop if unequal), increment, nothing (`MoveScript_CounterOps`; the first three ours, `MoveScript_CounterSet` / `Test` / `Step`, fuzzed alone under `BOF3X_SHADOW=move_counters`, four controls refused) |
 | `B0`..`BF` | from the table | `MoveScript_GroupB` |
 
 **The `0xF0` group** (`MoveScript_GroupF`), lengths with the step's `+1`:
@@ -120,7 +120,7 @@ one line - `symbols.toml` has the ops:
 | `0xB0` | sound and music (a flow op: it runs in the flow pass) |
 | `0xC0` | tints (`C0`..`C2`), 8.8 moves of the sprite's fields (`C3` `C4` `C7`), turning one step toward a direction (`C8` `CE`), an animation bank (`CB`) |
 | `0xD0` | the kind-2 object placed (`D0`), a sound on a script position (`D1`), the party slot's moves (`D4`..`D6`), waits on the field's state (`D9` `DA` `DF`), ground tests, `DE` the area's handler, `D8` end |
-| `0xE0` | facing and turning (`E0`..`E3`), flags, `E6` ends the object, `E9` repeats on a test, `EA` a tint, `EF` end |
+| `0xE0` | `E0` `E1` `E3` open the object's talk (`Field_ObjectTalk`; `E2 hi lo` only stores its word), flags, `E6` ends the object, `E9` repeats on a test, `EA` a tint, `EF` end |
 
 **What the PC port changed** - found by setting each PC handler against its
 PSX twin; the rest is the same code:

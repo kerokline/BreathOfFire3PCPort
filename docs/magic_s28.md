@@ -8,6 +8,8 @@ rounds. 153 negative controls: 152 refused, one an equivalent mutant (section 6)
 overlays are fuzz only until the owner sees them cast; `Port_DroppedCall` is
 the one function in the band a recorded route reaches (section 2).
 
+**Source layout (2026-11-09):** the 42 functions this group took live in the files of their translation units now: `src/game/magic/breath_mote.cpp`, `src/game/magic/breath_beam.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s28.cpp` itself is retired. A `src/game/magic_s28.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s28.cpp:LINE` answers it.
+
 Round nine, second wave, group S28
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 

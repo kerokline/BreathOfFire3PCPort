@@ -6,4 +6,10 @@
 // swap of the round flags' bit 6. docs/battle_actions.md.
 #pragma once
 
-void BattleActions_Inject();
+#include <cstdint>
+
+
+namespace battle_actions {
+extern std::uint8_t g_effect_key_off;   // defined in battle_actions.cpp (source-layout B0: promoted for a moved reader)
+extern bool g_unlearned_blue;   // defined in battle_actions.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace battle_actions

@@ -16,6 +16,8 @@ sub-kinds' states, taken. **No full-frame fill of DIV-0041's list is in this
 band**; two screen-space overlays drawn from fixed coordinates are (section 2),
 for the coordinator.
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_61.cpp`, `src/game/effect/effect_kind_18_sub_5b.cpp`, `src/game/effect/effect_kind_18_sub_64.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/effect_6d.cpp` itself is retired. A `src/game/effect_6d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_6d.cpp:LINE` answers it.
+
 All eight are sub-kinds of effect kind 0x18: `EffectKind18_Run` (`0x46D830`,
 ours) jumps through `EffectKind18_States` by `+1`, which `EffectKind18_Start`
 copies from `+0xB`. Five of them dispatch again through a table of their own -

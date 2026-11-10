@@ -5,6 +5,8 @@
 headless against a copy of Capcom's with every call re-aimed at a recorder;
 99 negative controls, all 99 refused by a count. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 7 had it owed.
 
+**Source layout (2026-11-09):** the 18 functions this group took live in the files of their translation units now: `src/game/battle/battle_3.cpp`, `src/game/effect/effect.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_damage.cpp` itself is retired. A `src/game/battle_damage.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_damage.cpp:LINE` answers it.
+
 Group BE of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The battle engine
 is the PSX's `BATTLE.EMI` overlays compiled into the exe; every function here
@@ -81,7 +83,7 @@ the attacker's ATK to `0x939FE4` and the target's DEF to `0x939F86` (the PSX
 **Scale** (`Battle_ScaleDamage`), in 8.8 fixed point with `s = base << 8`:
 
 1. x `205/256` (the multiplier `0x100 - (s / 256000) << 17 >> 8` floored at
-   `0xCD`; it is `0xCD` for any base below 256,000);
+   `0xCD`; it is `0xCD` for every base, since the expression is 1 or negative before the floor);
 2. x the variance `{218, 230, 243, 256, 269, 282, 294, 307}[Rand & 7] / 256`
    - 0.85 to 1.20;
 3. if the damage scratch (`SharedScratch` `0x903850`, the weapon's element
@@ -117,7 +119,8 @@ and scale:
 7. `0x904AA8` bit 7: x2, plus a quarter of the base without the defence
    (`Battle_BaseDamage` mode 1).
 8. A quarter off on a party target when `0x904060` is 2, and a quarter off
-   for status `0x80`.
+   for status `0x80`, poison: a poisoned target takes less melee damage. The US disc
+   does the same (`Battle_CalcDamage`, matching).
 9. At least 1 with status `0x60` or `0x904AA8` bit 7; 0 against flag
    `0x10000`; clamped to +-9999.
 

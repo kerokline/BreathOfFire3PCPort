@@ -7,6 +7,8 @@ Capcom's (`BOF3X_SHADOW=mode_states`, 43,500 rounds, 0 mismatches), with
 injects. No divergence. The live check (the shop and world-map routes' A/B)
 is the coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the files of their translation units now: `src/game/core/transition.cpp`, `src/game/field/field_core.cpp`, `src/game/field/field_3.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/mode_states.cpp` itself is retired. A `src/game/mode_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/mode_states.cpp:LINE` answers it.
+
 Group DB of the eighth round's wave B
 ([`takeover-queue-round8.md`](takeover-queue-round8.md), "DB"). The queue
 listed 21 entries; **20 are functions and are ours; `0x497C30` is not a
@@ -58,21 +60,21 @@ the reading was a guess), the recorded shop route reaches all three steps
 and nothing else reaches them, and step 1 runs the shop overlay's dispatch
 `0x57F500` (group DF's). The look-around reading of mode 6 is the code's:
 while a button of the map word `0x903586` is held the pad turns the camera,
-and on release it swings back to yaw `0xFD56`, pitch `0x200`. Which button
+and on release it swings back (the two words' names corrected 2026-11-08: up and down step `vx`, the pitch; left and right step `vz`, the yaw; the US twin `func_80198F1C`) to pitch `0xFD56`, yaw `0x200`. Which button
 that is was not measured.
 
 ### 1.1 The modes (6, 7 and the menu's wait)
 
 - **`Look_PadControl`**: with none of the map word's buttons held in
-  `Input_Held`, the look ends - the pitch word (`Camera_Angles[2]`,
+  `Input_Held`, the look ends - the yaw word (`Camera_Angles[2]`,
   `Cond_AngleFB`'s low half) above `0x200` sets the turn byte `0x66C7D9` 0,
   below it 1, equal leaves it - and `Game_Step` + 1. Otherwise bits 14 / 12 /
-  13 / 15 of the held word step the yaw by -22 while above `0xFD56`, +22
-  while below `0xFE39`, the pitch +22 while below `0x355` and -22 while
+  13 / 15 of the held word step the pitch by -22 while above `0xFD56`, +22
+  while below `0xFE39`, the yaw +22 while below `0x355` and -22 while
   above `0xAA` - signed 16-bit compares, so a word may end up to 21 past its
   limit - each word with its `Light_AnglesCopy` twin.
-- **`Look_Return`**: the yaw 22 down while above `0xFD56`, else snapped to
-  it; the pitch 22 towards `0x200` (down with the turn byte 0, up
+- **`Look_Return`**: the pitch 22 down while above `0xFD56`, else snapped to
+  it; the yaw 22 towards `0x200` (down with the turn byte 0, up
   otherwise) and snapped once at or past it. **`GameMode_LookEnd`** runs it
   and, with both words home, sets mode 2, `Field_Request` 0, `Game_Step` 0.
   Mode 11 (`0x496780`, not this group's) uses the same two functions for its
@@ -334,22 +336,22 @@ made to bring the camera home half the time (commit `2c9c601`).
 
 | # | control | refused |
 |---|---|---|
-| P1 | pad: pitch > 0x200 taken as >= | `Look_PadControl` 19 |
-| P2 | pad: equal pitch sets the turn byte | `Look_PadControl` 52 |
-| P3 | pad: yaw-down limit >= | `Look_PadControl` 31 |
-| P4 | pad: yaw-up limit unsigned | `Look_PadControl` 120 |
-| P5 | pad: pitch-up limit <= | `Look_PadControl` 24 |
-| P6 | pad: pitch-down on bit 3 | `Look_PadControl` 281 |
+| P1 | pad: yaw > 0x200 taken as >= | `Look_PadControl` 19 |
+| P2 | pad: equal yaw sets the turn byte | `Look_PadControl` 52 |
+| P3 | pad: pitch-down limit >= | `Look_PadControl` 31 |
+| P4 | pad: pitch-up limit unsigned | `Look_PadControl` 120 |
+| P5 | pad: yaw-up limit <= | `Look_PadControl` 24 |
+| P6 | pad: yaw-down on bit 3 | `Look_PadControl` 281 |
 | P7 | pad: button map low byte only | `Look_PadControl` 74 |
-| P8 | pad: pitch copy not stepped up | `Look_PadControl` 322 |
-| R1 | return: yaw limit >= | `Look_Return` 91 |
-| R2 | return: yaw copy snapped to 0xFD57 | `Look_Return` 586 |
-| R3 | return: pitch 0x200 goes on with turn 0 | `Look_Return` 47 |
+| P8 | pad: yaw copy not stepped up | `Look_PadControl` 322 |
+| R1 | return: pitch limit >= | `Look_Return` 91 |
+| R2 | return: pitch copy snapped to 0xFD57 | `Look_Return` 586 |
+| R3 | return: yaw 0x200 goes on with turn 0 | `Look_Return` 47 |
 | R4 | return: turn byte tested != 1 | `Look_Return` 701 |
-| R5 | return: down snap < | **not refused** - changes nothing: a pitch of exactly 0x200 has returned two lines before, so <= and < agree |
+| R5 | return: down snap < | **not refused** - changes nothing: a yaw of exactly 0x200 has returned two lines before, so <= and < agree |
 | R6 | return: up step 0x15 | `Look_Return` 363 |
 | R7 | return: down copy step 0x15 | `Look_Return` 371 |
-| E1 | look end: yaw alone | `GameMode_LookEnd` 266 |
+| E1 | look end: pitch alone | `GameMode_LookEnd` 266 |
 | E2 | look end: Field_Request kept | `GameMode_LookEnd` 510 |
 | E3 | look end: tested before the call | `GameMode_LookEnd` 509 |
 | S1 | shop: step & 1 | `GameMode_Shop` 462 |
@@ -526,7 +528,7 @@ not listed (section 1.6).
 ## 8. Behaviours kept that look odd (not defects, no D-number asked)
 
 - `Look_PadControl`'s limits are tested before the step, so a word can end up
-  to 21 past its limit (the yaw is snapped back by `Look_Return` on the way
+  to 21 past its limit (the pitch is snapped back by `Look_Return` on the way
   home; nothing snaps the look's own overshoot).
 - `Text_DrawSmall` returns one past the byte after the last one drawn when the
   count runs out, a byte it never looked at.

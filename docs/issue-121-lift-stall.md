@@ -17,7 +17,7 @@ Area 99 (やまごや in the sibling's `names/places.toml`), story chapter 3, **
 `0x544040`, `src/game/scena_sc3.cpp`). Its steps wait on the script counter `C0` (`0x903848`) with exact
 tests: step 4 `C0 == 7`, 5 `0x12`, 6 `0x16`, 7 `0x18`, 8 `0x27`, 0xB `0x2F`, 0xD `0x34`; step 0xD ends the
 run. The area's movement scripts advance `C0` between messages: a dialogue object's script does `A2` (count
-up) then `E3 nn` (open message `nn` through `MoveScript_SetTurnTarget`, `Field_Request` 2, `Game_Mode` 4 while
+up) then `E3 nn` (open message `nn` through `Field_ObjectTalk`, `Field_Request` 2, `Game_Mode` 4 while
 the box is up), and waits on the others' counts with `A1 nn` (`MoveScript_CounterTest`: stop while unequal).
 The lift itself is the **kind-2 object** (`Sprite_Kind2` `0x7E0940`, the camera focus, `docs/kind2-object.md`),
 running the area's `+0x1C` script 0 (`0x618CB4`) through `Kind2_Script`; it waits on the same counts.

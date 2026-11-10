@@ -8,6 +8,8 @@ Fuzz only: no recorded route reaches the band (section 8). No divergence;
 where the original jumps or calls through a pointer read past a table ours
 aborts with a message (section 6).
 
+**Source layout (2026-11-09):** the 59 functions this group took live in the files of their translation units now: `src/game/area/area_75.cpp`, `src/game/area/area_68.cpp`, `src/game/area/area_74.cpp` and 4 more ([`source-layout.md`](source-layout.md)). What `src/game/area_w1f.cpp` still held of ours is `src/game/area/area_w1f.cpp` now. A `src/game/area_w1f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w1f.cpp:LINE` answers it.
+
 Group AR1F of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 12; the
 tool's `--groups` prints it as its `AR1C` row, its world-1 letters having

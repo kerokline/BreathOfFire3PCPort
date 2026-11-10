@@ -11,6 +11,8 @@ covers sound only by the owner's ear (§6). No divergence; three defects of
 Capcom's written down ([`known-defects.md`](known-defects.md) D24..D26), one
 of which, D26, every fade in the game has.
 
+**Source layout (2026-11-09):** the 23 functions this group took live in the files of their translation units now: `src/game/platform/music.cpp`, `src/game/core/sound.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/sound.cpp` still held of ours is `src/game/platform/sound_ours.cpp` now. A `src/game/sound.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/sound.cpp:LINE` answers it.
+
 The fourth parallel round's group Q
 ([`takeover-queue-round4.md`](takeover-queue-round4.md)): the catalogue's
 §4.12 ([`attract-remaining.md`](attract-remaining.md)) - the glue between the

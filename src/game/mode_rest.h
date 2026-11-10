@@ -22,9 +22,11 @@
 // group's inject and its fuzz.
 #pragma once
 
-void ModeRest_Inject();
+#include <cstdint>
+
 
 namespace mode_rest {
+extern std::uint8_t g_event_keeps_music;   // defined in mode_rest.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=mode_rest: the start-up fuzz, mode_rest_fuzz.cpp. Clones the
 // fourteen originals before ModeRest_Inject patches them.
 void SelfTest();

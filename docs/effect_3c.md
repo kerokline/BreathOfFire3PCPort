@@ -11,6 +11,8 @@ scenario harness in effect mode ([`scenario_harness.md`](scenario_harness.md)
 section 8) without edits to it: 204,000 rounds, 0 mismatches; 84 of 85 controls refused by a count, the other an equivalent mutant whose near variant is refused.
 **Fuzz only**: no recorded route enters any of the 51 (section 9).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_73.cpp`, `src/game/effect/effect_kind_6e.cpp`, `src/game/effect/effect_kind_6f.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_3c.cpp` itself is retired. A `src/game/effect_3c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_3c.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x6E: sixteen shards emitted one every fourth frame from the record's point, rising, growing and darkening (E3B's shard quad draws them); `Field_ScriptFlags` bit 6 held while any is live | 8 | `Effect_KindHandlers[0x6E]` (`0x655508`), `EffectKind6E_States` `0x654A44` (4) |

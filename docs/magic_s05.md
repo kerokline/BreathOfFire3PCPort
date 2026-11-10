@@ -7,6 +7,8 @@ it: 0 mismatches over 58,000 rounds. 126 of 126 negative controls refused,
 every one by a count (exit 3). Nothing recorded casts these spells, so this
 is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 29 functions this group took live in the files of their translation units now: `src/game/magic/magic_017_image.cpp`, `src/game/magic/magic_018_row_54.cpp`, `src/game/magic/magic_018_row_5.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s05.cpp` itself is retired. A `src/game/magic_s05.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s05.cpp:LINE` answers it.
+
 Round nine, third spell wave, group S05
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

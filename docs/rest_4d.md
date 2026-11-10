@@ -11,6 +11,8 @@ in field mode ([`scenario_harness.md`](scenario_harness.md) section 7), used
 unchanged: 240,000 rounds, 0 mismatches. **173 controls planted** one at a time: 170 refused by a count, 3 equivalent mutants not refused, each with a near variant refused (section 6). No recorded
 route enters the community (section 9): **fuzz only**.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the files of their translation units now: `src/game/community/commu_name.cpp`, `src/game/community/commu.cpp`, `src/game/community/commu_board.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/rest_4d.cpp` still held of ours is `src/game/community/rest_4d.cpp` now. A `src/game/rest_4d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4d.cpp:LINE` answers it.
+
 The band is three things. **The board** (`0x45C400..0x45C8B0`): four draw
 helpers R4C's states call (33 sites) - eight rows of the five-byte records at
 `0x675F98`, R4C's cells and frame pieces. **CommuDraw** (`0x45C8C0..0x45D03F`):

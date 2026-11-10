@@ -8,6 +8,8 @@ Fuzz only: no recorded route reaches the band (section 8). No divergence;
 the three dispatchers through area 172's state tables abort past the entries
 that are code, where the original would jump into data (section 6).
 
+**Source layout (2026-11-09):** the 56 functions this group took live in the files of their translation units now: `src/game/area/area_172.cpp`, `src/game/area/area_170.cpp`, `src/game/area/area_171.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/area_w4b.cpp` itself is retired. A `src/game/area_w4b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w4b.cpp:LINE` answers it.
+
 Group AR4B of round ten's sixth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 18). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

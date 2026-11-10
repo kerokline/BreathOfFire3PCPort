@@ -4,4 +4,5 @@
 // title loop with its mode 0 (0x588E70, 0x588EB0). docs/shop_states2.md.
 #pragma once
 
-void ShopStates2_Inject();
+
+extern unsigned char g_shop_yes_no_hand;   // defined in shop_states2.cpp (named here for a moved reader: source-layout B6)

@@ -2,6 +2,8 @@
 // (docs/render-backend.md section 4).
 #pragma once
 
+#include <cstdint>
+
 void DisplaySetup_Inject();
 
 // DIV-0036: the scale k of a windowed render target, 320k x 240k - the
@@ -24,3 +26,8 @@ unsigned DisplaySetup_ScaleForClient(unsigned cw, unsigned ch);
 // DIV-0042: BOF3X_SNAP - 0 fits the picture to the client, anything else (the
 // default) snaps it to whole multiples. Read once.
 bool DisplaySetup_Snap();
+
+namespace display_setup {
+extern bool g_backend_up;   // defined in display_setup.cpp (source-layout B0: promoted for a moved reader)
+extern std::uint32_t g_scale;   // defined in display_setup.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace display_setup

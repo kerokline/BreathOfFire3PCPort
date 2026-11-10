@@ -6,6 +6,8 @@ the shared harness: 0 mismatches in 112,000 rounds. 113 negative controls plante
 fuzz covers this group: no recorded route casts any of these spells, so it
 waits for the owner's eye.
 
+**Source layout (2026-11-09):** the 56 functions this group took live in the files of their translation units now: `src/game/magic/spell_ragnarok.cpp`, `src/game/magic/spell_sleep.cpp`, `src/game/magic/spell_confuse.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s25.cpp` itself is retired. A `src/game/magic_s25.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s25.cpp:LINE` answers it.
+
 This is group S25 of round nine's first spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) section 4),
 taken with the harness of [`magic_harness.md`](magic_harness.md).

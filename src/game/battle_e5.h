@@ -9,9 +9,11 @@
 // engine frame (boss_harness.h). docs/battle_e5.md.
 #pragma once
 
-void BattleE5_Inject();
+#include <cstdint>
+
 
 namespace battle_e5 {
+extern std::uint8_t g_store_ask_word;   // defined in battle_e5.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=battle_e5: the start-up fuzz, battle_e5_fuzz.cpp - one
 // boss_harness::Run over the group, Group::engine set. Clones every original
 // before BattleE5_Inject patches it.

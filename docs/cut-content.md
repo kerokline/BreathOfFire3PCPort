@@ -61,7 +61,7 @@ are engine-side on both). Measured 2026-09-25.
 | `0x6F` | The World | 27 | `MAGIC080` | `0x4FC330` | prints text, does nothing |
 | `0x70` | Again | 27 | `MAGIC080` | `0x4FC330` | prints text |
 | `0x71` | Pentagram | 10 | `MAGIC113` | `0x4D67F0` | **works**, with an animation seen nowhere else |
-| `0x7F` | Assault | 126 | engine | `0x4378D0` | halts the game a moment, then a plain attack |
+| `0x7F` | Assault | 126 | engine | `0x4378D0` | halts the game a moment, then a plain attack by report; its handler (`0x40`, breath rank 3, HP / 3, US and PC) says otherwise, not played |
 | `0x91` | Ink | 149 | `MAGIC145` | `0x4E9A70` | a smoke effect, no damage |
 | `0x92` | Ink Ink | 150 | `MAGIC146` | `0x4E9EF0` | the same |
 | `0x93` | Death Bomb | 27 | `MAGIC080` | `0x4FC330` | prints text |

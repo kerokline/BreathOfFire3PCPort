@@ -13,6 +13,8 @@ capstone and fuzzed through the scenario harness in effect mode
 272,000 rounds, 0 mismatches; 147 of 148 controls refused by a count or the abort, the one other an equivalent mutant whose near variant is refused. **Fuzz only**: no recorded
 route enters any of the 68 (section 9).
 
+**Source layout (2026-11-09):** the 68 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_77.cpp`, `src/game/effect/effect_kind_7d.cpp`, `src/game/effect/effect_kind_82.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/effect_3d.cpp` itself is retired. A `src/game/effect_3d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_3d.cpp:LINE` answers it.
+
 Every row is effect code but one: **`0x486D60` (`EffectKind7D_SetMap`, a
 `part5` row) is a map set-up**, not a state - it writes area 170's map cells
 from the three dials and is called by `Area170_Init` as well as by kind 0x7D's

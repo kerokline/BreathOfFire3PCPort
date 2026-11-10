@@ -5,6 +5,8 @@
 the shared harness: 0 mismatches over 40,000 rounds. 117 of 120 negative controls are refused; the other three are equivalent mutants (section 6). Nothing
 recorded reaches either overlay, so this is fuzz only (section 7).
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the files of their translation units now: `src/game/magic/magic_111.cpp`, `src/game/magic/magic_002_ball.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_c3.cpp` itself is retired. A `src/game/magic_c3.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_c3.cpp:LINE` answers it.
+
 Round nine, second spell wave, group C3
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4):
 two `Magic_Rows` overlays that no ability id's row byte names

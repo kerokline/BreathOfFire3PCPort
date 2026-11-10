@@ -9,6 +9,8 @@ mismatches). 132 negative controls were planted, and every one was refused by a 
 (`inject: 1278 ours`, every self-test line of every module 0 mismatches). No divergence. The live check (the shop and world-map routes)
 is the coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 16 functions this group took live in the files of their translation units now: `src/game/field/area_map.cpp`, `src/game/menu/menu.cpp`, `src/game/field/event_script.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/map_field_objects.cpp` still held of ours is `src/game/field/map_field_objects.cpp` now. A `src/game/map_field_objects.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/map_field_objects.cpp:LINE` answers it.
+
 This is group DD of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md), "DD"). The queue
 calls it "map layers and field objects". The first nine are the map-layer

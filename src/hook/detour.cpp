@@ -396,13 +396,42 @@ int OwnedCount() { return g_enabled + g_disabled; }
 
 std::uint32_t OwnedAddress(int i) { return g_owned[i]; }
 
+// An address IsEnabled was asked about before any Inject named it. The answer
+// then is "not ours", whatever the bind decides later: a check that runs before
+// the bind it tests reads a wrong answer and says nothing. InjectReport stops
+// the game for each one that an Inject named afterwards (the source-layout
+// round's stage B put five cheat checks and two switches' checks ahead of their
+// binds this way, and nothing said so until the switch was set).
+namespace {
+constexpr int kMaxEarly = 64;
+std::uint32_t g_early[kMaxEarly];
+int g_early_count = 0;
+bool g_early_closed = false;
+}  // namespace
+
 bool IsEnabled(std::uint32_t original) {
     for (int i = 0; i < g_enabled + g_disabled; ++i)
         if (g_owned[i] == original) return g_owned_on[i];
+    if (!g_early_closed) {
+        bool have = false;
+        for (int i = 0; i < g_early_count; ++i) have = have || g_early[i] == original;
+        if (!have) {
+            if (g_early_count == kMaxEarly) Fatal("IsEnabled: more than %d addresses asked about before any Inject named them", kMaxEarly);
+            g_early[g_early_count++] = original;
+        }
+    }
     return false;
 }
 
 void InjectReport() {
+    g_early_closed = true;
+    int early = 0;
+    for (int i = 0; i < g_early_count; ++i)
+        if (IsOwned(g_early[i])) {
+            Log("IsEnabled(0x%X) was asked before the Inject that names it", (unsigned)g_early[i]);
+            ++early;
+        }
+    if (early) Fatal("%d IsEnabled checks ran before the bind they test (the lines above): each read \"not ours\"", early);
     Log("inject: %d ours, %d left original by BOF3X_ORIGINAL", g_enabled, g_disabled);
     int by_original = 0, by_off = 0;
     for (int i = 0; i < g_code_count; ++i) {

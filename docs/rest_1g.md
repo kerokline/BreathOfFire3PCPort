@@ -14,6 +14,8 @@ controls refused (section 6).
 Six `.data` tables named. Fuzz only here; two recorded routes reach the fish
 (section 9).
 
+**Source layout (2026-11-09):** the 45 functions this group took live in the file of their translation unit now: `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1g.cpp` itself is retired. A `src/game/rest_1g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1g.cpp:LINE` answers it.
+
 **What the band is.** Not the party sets' field actions: everything here is
 the fishing spot's code ([`fishing-text.md`](fishing-text.md) places the
 machine; the names below say what the code does, not what the player sees -
@@ -527,3 +529,9 @@ round-thirteen state. No file of another group of this round refers to the
 lacked and the smaller extents `0052B1B0 48` and `0052B6C0 84` beside the
 catalogue's host lines (`92`, `12C2`). The other 13 were already listed with
 the extents read here.
+
+## 12. The fishing records' fields (2026-11-08)
+
+From the US fishing overlay and the group's code. Rod: `+0` cast speed, `+1`
+sweep, `+2` distance, `+3` cursor size, `+4..+6` speeds, `+7` the held-reel
+speed, `+8` / `+9` the snap values. Lure: `+0`, `+4`, `+8` float rates.

@@ -6,6 +6,8 @@ with every callee a recording stand-in, 0 mismatches, and every planted bug
 refused. **Not yet through the batch check in game**: the frozen-shot A/B is
 what checks these pixel for pixel, and it runs after the merge.
 
+**Source layout (2026-11-09):** the 6 functions this group took live in the file of their translation unit now: `src/game/field/area_map.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/map_layers.cpp` still held of ours is `src/game/field/map_layers.cpp` now. A `src/game/map_layers.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/map_layers.cpp:LINE` answers it.
+
 Handoff item 0000, target 2. Everything here feeds the draw: the view's
 camera and scroll every field frame, the rebuild of the view's cell draw
 items, two table-reached handlers, and the area header's pass.

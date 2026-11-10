@@ -6,6 +6,8 @@ Capcom's with every call re-aimed at a recorder: 40,000 rounds, 0
 mismatches. 104 negative controls were planted, one at a time: all 104 were
 refused by a count (section 4).
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the files of their translation units now: `src/game/shop/field_save.cpp`, `src/game/shop/shop_mode.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/shop_states.cpp` still held of ours is `src/game/shop/shop_states.cpp` now. A `src/game/shop_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/shop_states.cpp:LINE` answers it.
+
 This is group DF of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)), wave B. Every
 function is a *faithful* replacement, so no `DIVERGENCE.md` entry is owed.

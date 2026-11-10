@@ -19,9 +19,11 @@
 // group's inject and its fuzz.
 #pragma once
 
-void Rest2F_Inject();
+#include <cstdint>
+
 
 namespace rest_2f {
+extern std::uint32_t g_title_call;   // defined in rest_2f.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=rest_2f: the start-up fuzz, rest_2f_fuzz.cpp. Clones the 49
 // originals before Rest2F_Inject patches them.
 void SelfTest();

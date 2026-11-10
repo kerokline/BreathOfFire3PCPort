@@ -6,9 +6,11 @@
 // symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Effect4B_Inject();
+#include <cstdint>
+
 
 namespace effect_4b {
+extern std::uint32_t g_hologram_clear;   // defined in effect_4b.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=effect_4b: the start-up fuzz, effect_4b_fuzz.cpp. Clones every
 // original before Effect4B_Inject patches it.
 void SelfTest();

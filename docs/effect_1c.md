@@ -12,6 +12,8 @@ through the scenario harness's effect mode
 unchanged: 212,000 rounds, 0 mismatches. 73 controls planted one at a time: 71 refused, 2 equivalent mutants each with a refused near variant (section 8). Kind 0x1C is entered by the
 recorded whelp route (section 9); the rest are fuzz only.
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/effect/effect_shards.cpp`, `src/game/effect/effect_kind_20.cpp`, `src/game/effect/effect_kind_1c.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/effect_1c.cpp` itself is retired. A `src/game/effect_1c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1c.cpp:LINE` answers it.
+
 Eight kinds of the `Effect_Objects` pool (20 records of 0x80 at `0x7E11E0`;
 `Effect_RunObjects` calls `Effect_KindHandlers[+5]` with `Sprite_Current` the
 record). The spawners found in our area code (`grep` for `[5] = 0x..`,

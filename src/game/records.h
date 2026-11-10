@@ -168,7 +168,7 @@ struct SpriteObjectBody : SpriteHead {
     std::int32_t target_x;  // +0x8C MoveCmd_OpF9's target on Field_ActiveMember, 16.16 (field_o.cpp); the placement op's home (wide_staging.cpp:572); zeroed by event_script.cpp:494
     std::int32_t target_z;  // +0x90 (the same readers)
     std::uint32_t best_score;  // +0x94 Field_ObjectBestDirection's running score, started 0 or 0xFFFFFF (field_c3.md); zeroed by field_o.cpp:1229
-    std::uint16_t half_w;  // +0x98 the object's half-widths, |d| >> 16 against them (field_c3.md Field_ObjectApproachDirection); op[3] (event_ops.cpp:199; event-ops.md)
+    std::uint16_t half_w;  // +0x98 the object's half-widths, |d| >> 16 against them (field_c3.md Field_ObjectFleeDirection); op[3] (event_ops.cpp:199; event-ops.md)
     std::uint16_t half_d;  // +0x9A op[4] (event_ops.cpp:200)
     std::uint16_t counter;  // +0x9C counted up for every object in reach of the point ahead (event-ops.md); a u16 zeroed by field_objects.cpp
     std::uint8_t tag;  // +0x9E the boss set-ups' tag (boss_spawn.h; field_o.cpp:1157 op[0x10]; psp-battle-changes.md)
@@ -240,10 +240,10 @@ struct PartyMember : SpriteHead {
     std::uint8_t field_object;  // +0x139 field: a Sprite_Objects index (field_e1.cpp:478); battle zeroes +0x138..+0x13F (battle_e3.cpp:691; battle_e6.cpp:217-218; battle_phases.cpp:222-223)
     unsigned char pad_13A[0x6];  // +0x13A..+0x13F: zeroed with +0x138 in battle; not named
     std::uint16_t saved_script_pos;  // +0x140 the sprite's +0x58 saved by BattleObj_HitEnter (battle_e3.cpp:381)
-    std::uint8_t count_4000;  // +0x142 (battle_setup kPCount4000)
+    std::uint8_t count_4000;  // +0x142 Weretiger's turn counter, flag 0x4000 the x3 PWR state (battle_setup kPCount4000)
     std::uint8_t count_800;  // +0x143 (battle_setup kPCount800)
     std::uint8_t count_40;  // +0x144 zeroed with flag 0x40 (battle_setup kPCount40); battle_damage kPCharge, the attack charge
-    std::uint8_t count_80;  // +0x145 zeroed with flag 0x80 (battle_setup kPCount80); battle_damage kPCharge2, the ability charge
+    std::uint8_t count_80;  // +0x145 Meditation's counter, zeroed with flag 0x80 (battle_setup kPCount80); battle_damage kPCharge2, the ability charge
     unsigned char pad_146[0x2];  // +0x146, +0x147: unread
     std::uint8_t char_index;  // +0x148 the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPCharIndex (0x138 from 0x802D50; kPWeaponKind until stage B1) is this byte: Battle_CalcDamage's rule is "character index 5" (docs/typed-records.md 3)
     std::uint8_t tint;  // +0x149 field: the running script's tint record, MoveScript_TintRecords by it (area_w1a.cpp:134)

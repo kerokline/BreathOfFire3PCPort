@@ -12,6 +12,8 @@ capstone and fuzzed through the scenario harness in effect mode
 ledgered: **DIV-0068** (section 2). **Fuzz only**: no recorded route enters any
 of the 48 (section 10).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_64.cpp`, `src/game/effect/effect_kind_5f.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_3a.cpp` still held of ours is `src/game/effect/effect_3a.cpp` now. A `src/game/effect_3a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_3a.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x60: a dispatcher, and the grey line its states 1 and 2 draw (its states are catalog part 6 rows) | 2 | `Effect_KindHandlers[0x60]` (`0x6554D0`), `EffectKind60_States` `0x65492C` (6) |

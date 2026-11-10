@@ -1,0 +1,499 @@
+// DIVERGENCE DIV-0015: the in-game Config screen's text from a language
+// overlay.
+//
+// The Config screen's strings are not in any DAT. They are in BOF3.exe itself
+// (docs/config-screen.md), in three shapes, and each needs a different key:
+//
+//  - Six row labels, as pointers built into the code of the row draw
+//    0x461800 (`mov dword ptr [esp + n], 0x669F0C` and five more). The Chinese
+//    strings have 4 to 8 bytes of room where "Background" needs 11, so these
+//    are RE-POINTED at buffers of ours rather than written over - six operand
+//    patches, each validated against the address it must hold.
+//  - Seventeen option strings, in 16-byte records at 0x6536F8: a count, a
+//    signed x, then the string. Written in place; the donor's own count and x
+//    come with the string, because they are what puts an option where the
+//    PlayStation release puts it.
+//  - Six controller-panel names behind the pointer table 0x66A368, whose six
+//    entries point into eight-byte slots at 0x66A338. Re-pointed too: a UI
+//    string is two bytes a character, so "Change" needs 13.
+//
+// NOT patched: the screen's own centring and right-alignment arithmetic. This
+// screen draws through 0x516E70, whose quad is 8 units where the ordinary draw
+// uses 12 - 16 screen pixels a character against 24, measured off the owner's
+// screenshot (docs/config-screen.md section 4). That quad shows the WHOLE
+// 24 x 24 cell scaled to 16 x 16 (the emitter 0x516D50 fixes the texture
+// extent at 0xC units), so every string here names the donor's 8 x 8 UI cells
+// (glyph 0xA00 up, DIV-0016), which the overlay stores tripled to fill the
+// cell and which therefore arrive as the PlayStation's doubled 8 x 8 - and
+// names them two bytes at a time even where a one-byte slot exists, which
+// keeps a string's byte length exactly twice its character count, exactly
+// what the original's `4 * len` and `4 * count` assume.
+//
+// Three earlier builds got this wrong, and the wrongs are worth knowing. The
+// first used single-byte codes and patched three width computations to hide
+// the difference. The second used the 8 x 8 set doubled into a corner of its
+// cell, and the letters came out two thirds of the disc's size. The third took
+// that for the wrong font and used the 8 x 12 cells: right height, two thirds
+// of the width. The width arithmetic is the original's.
+#include "game/config_text.h"
+
+#include <windows.h>
+
+#include <cstring>
+
+#include "bof3/symbols.gen.h"
+#include "game/button_text.h"
+#include "game/lang_layout.h"
+#include "game/scenario_harness.h"
+#include "game/text_draw.h"
+#include "hook/code_bytes.h"
+#include "hook/detour.h"
+#include "hook/log.h"
+
+namespace {
+
+constexpr std::uint32_t kLabels = 6;
+constexpr std::uint32_t kRecords = 17;
+constexpr std::uint32_t kCtrl = 6;
+
+// The record table at 0x6536F8: 16 bytes each, [0] count, [1] signed x,
+// [2..] the string. Read 2026-09-20; the row -> first record and row -> count
+// tables at 0x653808 / 0x653810 are byte-identical to the PlayStation's.
+constexpr ::bof3::image::Va kRecordBase{0x6536F8};
+constexpr std::uint32_t kRecordStride = 16;
+constexpr std::uint32_t kRecordRoom = kRecordStride - 2;   // string + its NUL
+
+// The controller panel's six names. The pointer table at 0x66A368 is data, so
+// unlike the labels these are re-aimed by writing the table itself.
+constexpr ::bof3::image::Va kCtrlPointers{0x66A368};
+constexpr std::uint32_t kCtrlExpected[kCtrl] = {
+    0x66A338, 0x66A340, 0x66A348, 0x66A350, 0x66A358, 0x66A360,
+};
+constexpr std::uint32_t kCtrlRoom = 32;
+char g_ctrl[kCtrl][kCtrlRoom];
+
+// Our own storage for the six labels. Static, so the addresses patched into
+// the code stay good for the life of the process.
+constexpr std::uint32_t kLabelRoom = 32;
+char g_labels[kLabels][kLabelRoom];
+
+// The six `mov dword ptr [esp + n], <label>` operands in the row draw
+// 0x461800 (Config_DrawRowLabel, ours since round twelve: field_c1.cpp reads
+// these operands, the anchors and the large call below from the original's
+// code at every call, so the patches hold for ours), and the address each must
+// hold before we touch it.
+struct LabelSite {
+    std::uint32_t at;
+    std::uint32_t expected;
+};
+constexpr LabelSite kLabelSites[kLabels] = {
+    {0x461832, 0x669F0C}, {0x46183A, 0x669F18}, {0x461842, 0x669F24},
+    {0x46184A, 0x669F2C}, {0x461852, 0x669F34}, {0x46185A, 0x669F3C},
+};
+
+// The values of ours (ConfigText_Operands), the original's until a patch goes
+// in. The labels are the strings' places (Config_DrawRowLabel draws them);
+// hosted, where the code holds the VAs, Img is the identity.
+ConfigTextOperands g_ops = {
+    {::bof3::Img(0x669F0C), ::bof3::Img(0x669F18), ::bof3::Img(0x669F24), ::bof3::Img(0x669F2C), ::bof3::Img(0x669F34),
+     ::bof3::Img(0x669F3C)},
+    0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC, false,
+};
+
+// The multi-byte patches below, the original's bytes and ours. The hosted
+// check (OperandRule) compares the code with the bytes g_ops' field stands
+// for - the field the readers read, not a copy kept beside it, which agreed
+// with g_ops only because each block's patches share one BOF3X_ORIGINAL name
+// (docs/disc-only-round-review.md 2).
+constexpr std::uint8_t kLabelWas[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};
+constexpr std::uint8_t kLabelIs[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};
+constexpr std::uint8_t kOptionWas[] = {0x8D, 0x04, 0x40};
+constexpr std::uint8_t kOptionIs[] = {0xD1, 0xE0, 0x90};
+constexpr std::uint8_t kCtrlWas[] = {0x8D, 0x04, 0x49};
+constexpr std::uint8_t kCtrlIs[] = {0x8D, 0x04, 0x09};
+constexpr std::uint8_t kCell2Was[] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};
+constexpr std::uint8_t kCell2Is[] = {0xEB, 0x3B, 0x90, 0x90, 0x90, 0x90};
+constexpr std::uint8_t kEspWas[] = {0x83, 0xC4, 0x44};
+constexpr std::uint8_t kEspIs[] = {0x83, 0xC4, 0x38};
+constexpr std::uint8_t kSubBigWas[] = {0x2B, 0xD1};     // 0x461899 sub edx,ecx (x less the large label's width)
+constexpr std::uint8_t kSubSmallWas[] = {0x2B, 0xC1};   // 0x4618E7 sub eax,ecx (x less the small label's width)
+constexpr std::uint8_t kSubNops[] = {0x90, 0x90};       // DIV-0196: no width taken off - left-aligned at x + anchor
+
+// Hosted only (OperandRule): the n bytes of Capcom's code at va are `want`.
+bool CodeIs(std::uint32_t va, const std::uint8_t* want, std::size_t n) {
+    return std::memcmp(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), want, n) == 0;
+}
+bool AnchorBigAsRead() {
+    const std::uint8_t b[] = {static_cast<std::uint8_t>(g_ops.anchor)};
+    return CodeIs(0x46189D, b, sizeof b);
+}
+bool AnchorSmallAsRead() {
+    const std::uint8_t b[] = {static_cast<std::uint8_t>(g_ops.anchor)};
+    return CodeIs(0x4618ED, b, sizeof b);
+}
+bool LabelSubBigAsRead() { return CodeIs(0x461899, g_ops.label_left ? kSubNops : kSubBigWas, sizeof kSubBigWas); }
+bool LabelSubSmallAsRead() { return CodeIs(0x4618E7, g_ops.label_left ? kSubNops : kSubSmallWas, sizeof kSubSmallWas); }
+bool LabelWidthAsRead() { return CodeIs(0x461894, g_ops.label_x4 ? kLabelIs : kLabelWas, sizeof kLabelWas); }
+bool OptionWidthAsRead() { return CodeIs(0x4619E1, g_ops.option_x8 ? kOptionIs : kOptionWas, sizeof kOptionWas); }
+bool NameWidthAsRead() { return CodeIs(0x461B36, g_ops.name_x4 ? kCtrlIs : kCtrlWas, sizeof kCtrlWas); }
+bool NameEdgeAsRead() {
+    const std::uint8_t b[] = {0x83, 0xC1, static_cast<std::uint8_t>(g_ops.name_edge)};
+    return CodeIs(0x461B3F, b, sizeof b);
+}
+bool BoxWidthAsRead() {
+    const std::uint8_t b[] = {0x6A, static_cast<std::uint8_t>(g_ops.box_width)};
+    return CodeIs(0x461B06, b, sizeof b);
+}
+bool SecondCellAsRead() { return CodeIs(0x461BAC, g_ops.second_cell ? kCell2Was : kCell2Is, sizeof kCell2Was); }
+bool SecondCellEspAsRead() { return CodeIs(0x461BE9, g_ops.second_cell ? kEspWas : kEspIs, sizeof kEspWas); }
+bool FrameAsRead() {
+    const std::uint8_t b[] = {0x6A, static_cast<std::uint8_t>(g_ops.frame_w), 0x32};
+    return CodeIs(0x461A61, b, sizeof b);
+}
+
+// Reads one NUL-terminated string out of the payload. Returns nullptr when the
+// payload ends first, which the caller treats as a malformed chunk.
+const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
+    const auto* start = reinterpret_cast<const char*>(p);
+    while (p < end && *p) ++p;
+    if (p >= end) return nullptr;
+    ++p;  // the NUL
+    return start;
+}
+
+// DIVERGENCE DIV-0017: the selected row, in the dialogue font at its own
+// advance.
+//
+// The row under the cursor is drawn large: 0x461800 and Config_DrawRowOptions each have a
+// branch that goes through Text_DrawAt and its 12-unit quad instead of the
+// 8-unit draw. In Chinese that is the same glyph at full size. On the
+// PlayStation it is a different FONT - the 8 x 12 dialogue cells, still on an
+// 8 advance (owner's screenshots, 2026-09-21: "Background" large spans the
+// same ten columns it does small). Our strings name the 8 x 8 UI cells, which
+// at full size are a tripled 8 x 8 on an advance of 8: crowded, and - because
+// the branch reckons 12 units a character where the pen moves 8 - thrown left
+// by four units a character.
+//
+// So this stands in for Text_DrawAt at those two call sites only (and, since
+// DIV-0026, at the controller panel's one, 0x461B43), and redraws
+// the string with each UI glyph swapped for the dialogue glyph of the same
+// character. The two sets are in the same code order, 100 cells each
+// (tools/loc_build.py), so the swap is a constant offset. The blank after the
+// UI set stays: it is the space, and its advance is 8 in either draw.
+constexpr std::uint32_t kUiGlyphs = 0xA00, kDialogueGlyphs = 0x993, kSetCells = 100;
+// The French and German discs' accented cells (codes 0x94 up) are a second
+// pair of blocks, laid out the same way: UI at 0xAA0, dialogue at 0xA80, up
+// to 24 cells (loc_build.py's EXT_SMALL_AT, EXT_AT, EXT_MAX). An English
+// overlay has no glyphs there, and its strings never name them.
+constexpr std::uint32_t kUiExtGlyphs = 0xAA0, kDialogueExtGlyphs = 0xA80, kExtCells = 24;
+
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
+constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
+}  // namespace
+// DIV-0051's icon path is on: set once the cell's Inject went in, which is
+// under a Latin overlay only (ConfigText_Inject), the overlay whose font
+// loc_build.py built the icon glyphs into. Without it the glyphs are past the
+// end of the Chinese font, and Text_DrawString stops on Capcom's glyph trap
+// (0xC0000096, ecx 0xA65: known-defects D312) - so the cell draws what the
+// original draws.
+namespace config_text { bool g_icons = false; }
+// DIV-0051's 2026-10-21 amendment: 1 through PatchBytes("ConfigJapaneseIcons")
+// under a ja-JP layer (ConfigText_ArmJapanese).
+namespace config_text { std::uint8_t g_ja_icons = 0; }
+namespace {
+
+extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, int color, int count,
+                                                                const unsigned char* text) {
+    unsigned char big[64];
+    std::size_t n = 0;
+    while (text[n]) {
+        if (n + 3 > sizeof big) bof3::Fatal("config: a selected-row string is over %u bytes",
+                                            (unsigned)sizeof big - 1);
+        if (text[n] & 0x80) {
+            if (!text[n + 1]) bof3::Fatal("config: a selected-row string ends inside a code");
+            std::uint32_t g = (static_cast<std::uint32_t>(text[n] & 0x7F) << 8) | text[n + 1];
+            if (g >= kUiGlyphs && g < kUiGlyphs + kSetCells) g = g - kUiGlyphs + kDialogueGlyphs;
+            else if (g >= kUiExtGlyphs && g < kUiExtGlyphs + kExtCells) g = g - kUiExtGlyphs + kDialogueExtGlyphs;
+            big[n] = static_cast<unsigned char>(0x80 | (g >> 8));
+            big[n + 1] = static_cast<unsigned char>(g);
+            n += 2;
+        } else {
+            big[n] = text[n];
+            ++n;
+        }
+    }
+    big[n] = 0;
+    // The original returns a pointer past the string it was given; neither
+    // call site reads it, but keep it a pointer into THEIR string, not ours.
+    Text_DrawAt(x, y, color, count, big);
+    return text + n + 1;
+}
+
+}  // namespace
+
+void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    if (tag != 0) bof3::Fatal("config chunk tag is 0x%X, expected 0", (unsigned)tag);
+    // FIRST.DAT's overlay is walked again when the game returns to the title
+    // (F9 twice in play, the owner 2026-09-27) and its text is the same; the
+    // controller pointers and the label sites below already name ours by
+    // then, and checking them against the original's values stopped the
+    // game ("controller pointer 0 holds ..."). As PauseText_Apply has it.
+    static bool applied = false;
+    if (applied) return;
+    applied = true;
+    const std::uint8_t* p = payload;
+    const std::uint8_t* const end = payload + size;
+
+    if (p >= end || *p++ != kLabels)
+        bof3::Fatal("config chunk: label count is not %u", (unsigned)kLabels);
+    for (std::uint32_t i = 0; i < kLabels; ++i) {
+        const char* s = TakeString(p, end);
+        if (!s) bof3::Fatal("config chunk: ran out inside label %u", (unsigned)i);
+        if (std::strlen(s) + 1 > kLabelRoom)
+            bof3::Fatal("config chunk: label %u is %u bytes, room is %u", (unsigned)i,
+                        (unsigned)std::strlen(s) + 1, (unsigned)kLabelRoom);
+        std::memcpy(g_labels[i], s, std::strlen(s) + 1);
+    }
+
+    if (p >= end || *p++ != kRecords)
+        bof3::Fatal("config chunk: record count is not %u", (unsigned)kRecords);
+    for (std::uint32_t i = 0; i < kRecords; ++i) {
+        if (p + 2 > end) bof3::Fatal("config chunk: ran out at record %u", (unsigned)i);
+        const std::uint8_t count = *p++;
+        const std::uint8_t x = *p++;
+        const char* s = TakeString(p, end);
+        if (!s) bof3::Fatal("config chunk: ran out inside record %u", (unsigned)i);
+        if (std::strlen(s) + 1 > kRecordRoom)
+            bof3::Fatal("config chunk: option %u is %u bytes, the record holds %u", (unsigned)i,
+                        (unsigned)std::strlen(s) + 1, (unsigned)kRecordRoom);
+        auto* rec = reinterpret_cast<std::uint8_t*>(
+            static_cast<std::uintptr_t>(::bof3::Img(kRecordBase.v) + i * kRecordStride));
+        rec[0] = count;
+        rec[1] = x;
+        std::memset(rec + 2, 0, kRecordRoom);
+        std::memcpy(rec + 2, s, std::strlen(s));
+    }
+
+    if (p >= end || *p++ != kCtrl)
+        bof3::Fatal("config chunk: controller count is not %u", (unsigned)kCtrl);
+    for (std::uint32_t i = 0; i < kCtrl; ++i) {
+        const char* s = TakeString(p, end);
+        if (!s) bof3::Fatal("config chunk: ran out inside controller name %u", (unsigned)i);
+        if (std::strlen(s) + 1 > kCtrlRoom)
+            bof3::Fatal("config chunk: controller name %u is %u bytes, room is %u", (unsigned)i,
+                        (unsigned)std::strlen(s) + 1, (unsigned)kCtrlRoom);
+        std::memcpy(g_ctrl[i], s, std::strlen(s) + 1);
+        auto* entry = reinterpret_cast<std::uint32_t*>(
+            static_cast<std::uintptr_t>(::bof3::Img(kCtrlPointers.v) + i * sizeof(std::uint32_t)));
+        if (*entry != ::bof3::Img(kCtrlExpected[i]))   // a pointer word: the place
+            bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", (unsigned)i,
+                        (unsigned)*entry, (unsigned)::bof3::Img(kCtrlExpected[i]), (unsigned)kCtrlExpected[i]);
+        *entry = Low32(g_ctrl[i]);
+    }
+
+    if (p != end)
+        bof3::Fatal("config chunk: %u bytes left over", (unsigned)(end - p));
+
+    // The labels are ours now, so point the code at them. Done here rather
+    // than in Inject because the strings must exist first; the chunk arrives
+    // with FIRST.DAT, long before the Config screen can be opened.
+    for (std::uint32_t i = 0; i < kLabels; ++i) {
+        std::uint8_t expected[4], replacement[4];
+        std::memcpy(expected, &kLabelSites[i].expected, 4);
+        const auto ours = Low32(g_labels[i]);
+        std::memcpy(replacement, &ours, 4);
+        if (bof3::PatchBytes("ConfigText", kLabelSites[i].at, expected, replacement, 4)) g_ops.label[i] = ours;
+    }
+    bof3::Operands_Check("DIV-0015's Config labels");
+    bof3::Log("DIV-0015: Config screen - %u labels, %u options, %u controller names",
+              (unsigned)kLabels, (unsigned)kRecords, (unsigned)kCtrl);
+}
+
+const ConfigTextOperands& ConfigText_Operands() { return g_ops; }
+
+void ConfigText_ArmJapanese() {
+    if (Lang_Latin() || !Lang_Japanese()) return;
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("ConfigJapaneseIcons", Low32(&config_text::g_ja_icons),
+                     &was, &is, 1);
+    bof3::Log("DIV-0051    the Config panel's button cell under ja-JP: the Japan disc's icons %s",
+              config_text::g_ja_icons ? "on" : "OFF (BOF3X_ORIGINAL=ConfigJapaneseIcons)");
+}
+
+void ConfigText_Inject() {
+    // The values of ours against the operands they stand for (code_bytes.h),
+    // whether or not the patches below go in.
+    for (std::uint32_t i = 0; i < kLabels; ++i) bof3::Operand("DIV-0015 Config label", kLabelSites[i].at, &g_ops.label[i], 4);
+    bof3::OperandRule("DIV-0017 Config label anchor", 0x46189D, 1, &AnchorBigAsRead);
+    bof3::OperandRule("DIV-0017 Config label anchor", 0x4618ED, 1, &AnchorSmallAsRead);
+    bof3::OperandRule("DIV-0017 Config label width", 0x461894, sizeof kLabelWas, &LabelWidthAsRead);
+    bof3::OperandRule("DIV-0196 Config label alignment", 0x461899, sizeof kSubBigWas, &LabelSubBigAsRead);
+    bof3::OperandRule("DIV-0196 Config label alignment", 0x4618E7, sizeof kSubSmallWas, &LabelSubSmallAsRead);
+    bof3::OperandRule("DIV-0017 Config option width", 0x4619E1, sizeof kOptionWas, &OptionWidthAsRead);
+    bof3::OperandCall("DIV-0017 Config selected draw", kBigLabelCall, &g_ops.big_draw);
+    bof3::OperandCall("DIV-0017 Config selected draw", kBigOptionCall, &g_ops.big_draw);
+    bof3::OperandCall("DIV-0026 controller name draw", kCtrlNameCall, &g_ops.name_draw);
+    bof3::OperandRule("DIV-0026 controller name width", 0x461B36, sizeof kCtrlWas, &NameWidthAsRead);
+    bof3::OperandRule("DIV-0026 controller name edge", 0x461B3F, 3, &NameEdgeAsRead);
+    bof3::OperandRule("DIV-0051 controller box width", 0x461B06, 2, &BoxWidthAsRead);
+    bof3::OperandRule("DIV-0051 controller second cell", 0x461BAC, sizeof kCell2Was, &SecondCellAsRead);
+    bof3::OperandRule("DIV-0051 controller second cell", 0x461BE9, sizeof kEspWas, &SecondCellEspAsRead);
+    bof3::OperandRule("DIV-0051 controller frame", 0x461A61, 3, &FrameAsRead);
+
+    // --- the label column under ja-JP (DIV-0196) ----------------------------
+    // The Japan disc centres each row's label; the port right-aligns them to
+    // the edge x_arg + 0x3A (`sub reg, width` then `add reg, 0x3A` in both
+    // paths), and with the Japan disc's words (DIV-0015's 2026-10-31
+    // amendment) the nine-character label begins left of the row box and
+    // the selected row's large label runs under the hand (the owner's eye on
+    // the sheets, 2026-10-31). The owner's rule: left-aligned at the box's
+    // own x, no buffer glyph (two glyphs in at first, then one: the selected
+    // row's large text of the longest label ran off the right at both, the
+    // owner's looks the same day) - the `sub` at each path made two nops, so
+    // nothing comes off x, and the anchor 0. Japanese only: the
+    // Latin layout below keeps its right alignment at 0x5F, and the shipped
+    // Chinese the original's at 0x3A. Ours (field_c1.cpp) reads both operands.
+    if (Lang_Japanese() && !Lang_Latin()) {
+        static const std::uint8_t ja_anchor_was[] = {0x3A};
+        static const std::uint8_t ja_anchor_is[] = {0x00};
+        const bool ja_on = bof3::PatchBytes("ConfigLabelJapanese", 0x461899, kSubBigWas, kSubNops, sizeof kSubBigWas);   // big path: no width off x
+        bof3::PatchBytes("ConfigLabelJapanese", 0x46189D, ja_anchor_was, ja_anchor_is, 1);                             // big path: x + 0x20
+        bof3::PatchBytes("ConfigLabelJapanese", 0x4618E7, kSubSmallWas, kSubNops, sizeof kSubSmallWas);                 // small path: no width off x
+        bof3::PatchBytes("ConfigLabelJapanese", 0x4618ED, ja_anchor_was, ja_anchor_is, 1);                             // small path: x + 0x20
+        if (ja_on) {
+            g_ops.anchor = ja_anchor_is[0];
+            g_ops.label_left = true;
+        }
+        bof3::Log("DIV-0196    the Config label column under ja-JP left-aligned at the box's x (x + 0x%02X) %s", (unsigned)g_ops.anchor,
+                  ja_on ? "on" : "OFF (BOF3X_ORIGINAL=ConfigLabelJapanese)");
+        return;
+    }
+
+    // Layout only, and only under a language overlay: with the shipped Chinese
+    // text every number below is right as it stands.
+    // Lang_Latin: set, not "original", not full-width (DIV-0056). Until
+    // 2026-09-29 this tested "set" and "not full-width" alone, so
+    // BOF3X_LANG=original laid the Chinese screen out for Latin text, and
+    // group FC1's fuzz found the row draw's call re-aimed (known-defects D174).
+    if (!Lang_Latin()) return;
+
+    // --- the label column, right-aligned -----------------------------------
+    // Both branches of the row draw 0x461800 place a label at
+    // `x_arg + 0x3A - width`, so its RIGHT edge is a constant: measured off the
+    // owner's screenshot of the Chinese screen at x = 168 of 640, with the
+    // separator bar at 292. Four Chinese characters fit left of that; ten Latin
+    // ones do not, and "Controller" ran off the panel.
+    //
+    // 0x5F puts it at 205, which the owner judged right in game on 2026-09-20 -
+    // the second try. The first, 0x7F, was set from a reading of the disc
+    // screenshot that put the edge near 251; at that anchor the labels ran into
+    // the separator bar at 292, so the estimate was wrong and the in-game look
+    // is what settled it.
+    static const std::uint8_t anchor_was[] = {0x3A};
+    static const std::uint8_t anchor_is[] = {0x5F};
+    // One name for every patch of this block: all go in, or none
+    // (BOF3X_ORIGINAL=ConfigText), so one answer sets every value.
+    const bool on = bof3::PatchBytes("ConfigText", 0x46189D, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 big path
+    bof3::PatchBytes("ConfigText", 0x4618ED, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 small path
+
+    // --- the selected row (DIV-0017) ----------------------------------------
+    // The glyph swap, and the branch's width reckoned at the 8 units a
+    // character the dialogue font advances (DIV-0006) instead of 12:
+    //   label  0x461894  lea ecx,[ecx+ecx*2] / shl ecx,1   len * 6
+    //                 -> shl ecx,2 / nop / nop             len * 4
+    //   option 0x4619E1  lea eax,[eax+eax*2]  (then shl 2)  count * 12
+    //                 -> shl eax,1 / nop      (then shl 2)  count * 8
+    // which makes each the same number its small branch already computes, so a
+    // row does not move when the cursor lands on it - as on the disc.
+    bof3::RetargetCall("ConfigText", kBigLabelCall, kTextDrawAt.v,
+                       reinterpret_cast<void*>(&ConfigText_DrawSelected));
+    bof3::RetargetCall("ConfigText", kBigOptionCall, kTextDrawAt.v,
+                       reinterpret_cast<void*>(&ConfigText_DrawSelected));
+    bof3::PatchBytes("ConfigText", 0x461894, kLabelWas, kLabelIs, sizeof kLabelWas);
+    bof3::PatchBytes("ConfigText", 0x4619E1, kOptionWas, kOptionIs, sizeof kOptionWas);
+    if (on) {
+        g_ops.anchor = anchor_is[0];
+        g_ops.label_x4 = true;
+        g_ops.option_x8 = true;
+        g_ops.big_draw = Low32(&ConfigText_DrawSelected);
+    }
+
+    // --- the controller panel (DIV-0026) ------------------------------------
+    // Config_DrawControllerRow draws each of the six names through the large Text_DrawAt at
+    // x = row x + 0x20 - width, the width reckoned `len * 6` - 12 units a
+    // Chinese character of two bytes:
+    //   0x461B36  lea eax,[ecx+ecx*2]   (then mov ecx,ebp / shl eax,1)
+    // Ours are two bytes a character too but advance 8, so each name began 4
+    // units a character left of its right edge, and in the large quad the
+    // tripled 8 x 8 cells crowded (the owner's screenshot, 2026-09-22). The
+    // same pair as the selected row: the SIB byte made `[ecx+ecx]`, so the
+    // `shl eax,1` after it gives len * 4, and the call re-aimed at the glyph
+    // swap. The right edge, row x + 0x20, is the original's (the doc says why
+    // it is not enough: docs/config-screen.md section 9). Not under
+    // BOF3X_LANG=original, which DatLoad_Inject reads as no overlay: the
+    // Chinese names advance 12 and want the original's width - since
+    // 2026-09-29 the Lang_Latin test at the top makes that exception for
+    // every patch here (docs/glyph-draw.md section 8 had it for this one).
+    {
+        // One name again: all of the controller panel's go in, or none.
+        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt.v,
+                                                reinterpret_cast<void*>(&ConfigText_DrawSelected));
+        bof3::PatchBytes("ConfigController", 0x461B36, kCtrlWas, kCtrlIs, sizeof kCtrlWas);
+
+        // The owner's second look, 2026-09-23 (in game, English): "Change"
+        // and "Action" still began left of the panel's frame, and the rows ran
+        // past its right side. The names' right edge from row x + 0x20 to
+        // x + 0x36 (`add ecx, 0x20` at 0x461B3F): 22 units in, "Change" inside
+        // the frame with a margin, every name still left of the separator at
+        // x + 0x3F. The frame (DIV-0011's Menu_DrawFrame through the call at
+        // 0x461A84) from 0xC cells to 0xF (`push 0xC` at 0x461A61): 0xE, the
+        // first try, still left the rows' dark boxes poking past its right side
+        // in game, so one cell more (owner, 2026-09-23).
+        static const std::uint8_t edge_was[] = {0x83, 0xC1, 0x20};
+        static const std::uint8_t edge_is[] = {0x83, 0xC1, 0x36};
+        bof3::PatchBytes("ConfigController", 0x461B3F, edge_was, edge_is, 3);
+        // DIV-0051 (2026-09-24, the owner's choice: the PlayStation's one
+        // column): the frame from DIV-0026's 0xF cells to 0xD (below), the
+        // row's dark box from
+        // 0x68 wide to 0x60 (`push 0x68` at 0x461B06, Menu_DrawRowBox's
+        // width), the second cell's set-up skipped - 0x461BAC..0x461BE8,
+        // the `mov esi, [0x7E0670]` at its start made a jump to the
+        // `add esp, 0x44` at 0x461BE9, which loses that block's three
+        // pushes (push esi for 0x5A7650, push 0x20 / push 1 for 0x461E50)
+        // and becomes `add esp, 0x38` - and the cell's contents ours.
+        static const std::uint8_t box_was[] = {0x6A, 0x68};
+        static const std::uint8_t box_is[] = {0x6A, 0x58};   // the owner: half a glyph shorter than 0x60
+        bof3::PatchBytes("ConfigController", 0x461B06, box_was, box_is, 2);
+        bof3::PatchBytes("ConfigController", 0x461BAC, kCell2Was, kCell2Is, sizeof kCell2Was);
+        bof3::PatchBytes("ConfigController", 0x461BE9, kEspWas, kEspIs, sizeof kEspWas);
+        // The frame from DIV-0026's 0xF cells to 0xD: 0x68 px from the panel's
+        // x, three past the row box's end at panel x + 0x65.
+        static const std::uint8_t frame_was[] = {0x6A, 0x0C, 0x32};
+        static const std::uint8_t frame_is[] = {0x6A, 0x0D, 0x32};   // the owner: a cell past the box, as at the left
+        bof3::PatchBytes("ConfigController", 0x461A61, frame_was, frame_is, 3);
+        if (ctrl_on) {
+            g_ops.name_draw = Low32(&ConfigText_DrawSelected);
+            g_ops.name_x4 = true;
+            g_ops.name_edge = edge_is[2];
+            g_ops.box_width = box_is[1];
+            g_ops.second_cell = false;
+            g_ops.frame_w = frame_is[1];
+        }
+        bof3::Inject("Config_DrawControllerCell", bof3::addr::Config_DrawControllerCell,
+                     reinterpret_cast<void*>(&Config_DrawControllerCell));
+        // Ours is called directly by our Config_DrawControllerPanel
+        // (rest_4f.cpp, since round 14's R4F) whether or not this Inject went
+        // in, so the icons follow the Inject, not the call: OFF under
+        // BOF3X_ORIGINAL (the jmp on ours reaches Capcom's), and never without
+        // a Latin overlay, whose return above leaves the original path (D312).
+        config_text::g_icons = bof3::IsEnabled(bof3::addr::Config_DrawControllerCell);
+    }
+
+    // The rows' y is the original's. An earlier build lowered every string on
+    // this screen by two (five displacements in 0x461800, Config_DrawRowOptions and
+    // Config_DrawControllerRow), tuned against cells that sat in the top of their 24 x 24 slot.
+    // A tripled 8 x 8 cell fills the slot, and with it the owner saw the text
+    // two pixels low - sitting on the row's floor - so the drop is gone
+    // (2026-09-20).
+}

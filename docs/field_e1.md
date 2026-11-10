@@ -11,6 +11,8 @@ field mode ([`scenario_harness.md`](scenario_harness.md) section 7) without
 edits to it: 270,000 rounds, 0 mismatches. 149 controls planted, 148 refused by a count, one equivalent with its near variant refused (section 6). Fuzz-only except
 the three both recorded routes enter (section 9).
 
+**Source layout (2026-11-09):** the 45 functions this group took live in the files of their translation units now: `src/game/field/field_4.cpp`, `src/game/field/field_6.cpp`, `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). `src/game/field_e1.cpp` itself is retired. A `src/game/field_e1.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_e1.cpp:LINE` answers it.
+
 The cut calls the band "event script, first seven runs"; what it holds is
 wider:
 

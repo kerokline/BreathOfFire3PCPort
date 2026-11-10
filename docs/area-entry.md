@@ -8,6 +8,8 @@ controls: 37 refused by a count, 3 that change nothing. **Not yet through a
 live batch, and nothing the attract sequence does reaches any of them**
 (section 4). No divergence; no new defect.
 
+**Source layout (2026-11-09):** the 5 functions this group took live in the files of their translation units now: `src/game/field/field_6.cpp`, `src/game/menu/item_trade.cpp` ([`source-layout.md`](source-layout.md)). `src/game/area_entry.cpp` itself is retired. A `src/game/area_entry.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_entry.cpp:LINE` answers it.
+
 Group O of the fourth parallel round
 ([`takeover-queue-round4.md`](takeover-queue-round4.md)): the two functions
 group K left behind a stand-in ([`mode-flow.md`](mode-flow.md) section 1) and

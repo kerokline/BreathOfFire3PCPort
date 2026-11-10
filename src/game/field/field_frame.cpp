@@ -1,0 +1,609 @@
+// The field's frame loop, from its per-frame entries down to the overlay
+// list's draw: originals 0x517200 and 0x517240 (the entries), 0x517350 (the
+// three party members), 0x5173E0 and 0x517490 (the 30 field objects' screen
+// update and frame), 0x57B780 / 0x57B7B0 (the same for the four extra party
+// objects), 0x57B830 / 0x57B860 (a type-0x0A sprite's screen update),
+// 0x592F00, 0x592F20 and 0x593020 (the draw at the frame's end, the overlay
+// list's sort and draw). docs/field-frame.md.
+#include "game/field_frame.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#include "bof3/symbols.gen.h"
+#include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
+#include "game/widescreen.h"
+#include "hook/detour.h"
+#include "hook/log.h"
+
+namespace {
+
+using namespace move_script;
+
+// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
+
+// A function pointer as another function type, through an integer.
+template <class To, class From> To Cast(From f) { return reinterpret_cast<To>(reinterpret_cast<std::uintptr_t>(f)); }
+
+constexpr unsigned kObjectBytes = 0xA4, kObjects = 30, kExtra = 4, kMemberBytes = 0x14C;
+
+// The record a type-0x0A sprite points at from +0x54 (bytes 1 and 3 read here).
+const unsigned char* Record54(const unsigned char* sprite) {
+    std::uint32_t p;
+    std::memcpy(&p, sprite + 0x54, sizeof p);
+    return At(p);
+}
+}  // namespace
+// field_frame::g_band, g_band_count and g_band_fill are beside their first reader BandNote
+// (field/event_cond.cpp), g_band_added beside BandAppend (field/sprite_2.cpp).
+//
+namespace {
+void BandNote(unsigned char* sprite) {
+    if (field_frame::g_band_count < sizeof field_frame::g_band / sizeof field_frame::g_band[0]) field_frame::g_band[field_frame::g_band_count++].sprite = sprite;
+}
+
+// Just before the draw pass: each noted sprite still flagged off screen, still
+// not a model and not already on the list, appended while the list has room.
+void BandAppend() {
+    field_frame::g_band_added = 0;
+    for (unsigned i = 0; i < field_frame::g_band_count; ++i) {
+        field_frame::BandSprite& b = field_frame::g_band[i];
+        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40) || (b.sprite[0x24] & 0x40)) continue;
+        const unsigned char n = Sprite_DrawListCount;
+        if (n >= 0x28) break;
+        bool listed = false;
+        for (unsigned k = 0; k < n; ++k) listed = listed || Sprite_DrawList[k] == b.sprite;
+        if (listed) continue;
+        std::memcpy(b.scale, b.sprite + 0x40, sizeof b.scale);
+        Sprite_DrawList[n] = b.sprite;
+        Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
+        field_frame::g_band[field_frame::g_band_added++] = b;
+    }
+    field_frame::g_band_count = 0;
+}
+void BandRestore() {
+    for (unsigned i = 0; i < field_frame::g_band_added; ++i) std::memcpy(field_frame::g_band[i].sprite + 0x40, field_frame::g_band[i].scale, sizeof field_frame::g_band[i].scale);
+    field_frame::g_band_added = 0;
+}
+
+using Handler = void (__cdecl*)(unsigned char*);
+void CallHandler(unsigned char* object) {
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Field_ObjectHandlers[object[1]]))(object);
+}
+
+// Field_ObjectTalk returns 0 or 1 in al (0x517EAA, 0x517F21), which
+// Field_ObjectsFrame tests.
+const field_frame::CalleesFieldFrame kOriginals = {
+    Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
+    AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots,
+    MoveScript_TintFrame, Field_DrawFrame,
+    Field_PendingJump, Field_LeaderFrame, Field_MemberFrame,
+    Sprite_UpdateScreenA, Sprite_UpdateScreen, Sprite_ProjectA,
+    Field_ObjectTalk,
+    Sprite_FaceDirection, Field_ObjectIdle, Field_ObjectLinked, Field_ObjectIdleLong, Sprite_ScriptTick,
+    Sprite_ScriptTickOnce,
+    Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,
+    AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, Sprite_SwapOverlays, Sprite_Draw,
+};
+}  // namespace
+namespace {
+
+// --- BOF3X_SHADOW=field_frame: a differential fuzz, once at start-up --------
+// Twelve byte-copies, every call out of them re-aimed at the recorders below
+// (their calls of one another included, so each is tested alone) - all but
+// Sprite_ProjectA's two of the CRT's _ftol, a pure x87 conversion the copy
+// keeps. The indirect calls go through Field_ObjectHandlers, whose eleven
+// entries are recorders for the fuzz's duration, for both sides. One round:
+// one of the twelve; random bytes in the 30 field objects, the four extra
+// party objects, ObjTrio's three members and the lists, with each branch's
+// boundaries seeded; theirs, then from the same state ours; all of it and
+// the recorders' log compared.
+
+constexpr unsigned kLog = 512, kRecords = 8;
+unsigned char g_records[kRecords * 4];   // what the objects' +0x54 point at
+struct Entry { std::uint32_t what, current, a, b; };
+Entry g_log[kLog];
+unsigned g_log_n, g_seed;
+
+std::uint32_t Hash() {
+    std::uint32_t h = (g_seed + g_log_n) * 0x9E3779B1u;
+    h ^= h >> 15;
+    h *= 0x85EBCA6Bu;
+    h ^= h >> 13;
+    return h;
+}
+void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0) {
+    if (g_log_n < kLog) g_log[g_log_n] = {what, Address(Sprite_Current), a, b};
+    ++g_log_n;
+}
+
+// The objects a pointer may name: the 30, the four extra and ObjTrio's three.
+constexpr unsigned kPool = kObjects + kExtra + 3;
+unsigned char* Pool(unsigned k) {
+    k %= kPool;
+    if (k < kObjects) return reinterpret_cast<unsigned char*>(Sprite_Objects) + k * kObjectBytes;
+    if (k < kObjects + kExtra) return reinterpret_cast<unsigned char*>(Sprite_ObjectsExtra) + (k - kObjects) * kObjectBytes;
+    return reinterpret_cast<unsigned char*>(ObjTrio) + (k - kObjects - kExtra) * kMemberBytes;
+}
+
+// A callee may change what the caller reads again after it: which sprite is
+// current and its type, flags, direction; the loop object's context byte and
+// tick count; the members' flags and count; the list counts - never past
+// their lists, nor an object's handler index or record pointer.
+void Disturb() {
+    const std::uint32_t h = Hash();
+    if (h % 4 == 0) Sprite_Current = Pool(h >> 8);
+    if (h % 5 == 0) {
+        unsigned char* const s = Sprite_Current;
+        s[0] = static_cast<unsigned char>(h >> 8);
+        s[6] = (h >> 16) % 3 == 0 ? 0x0A : static_cast<unsigned char>(h >> 20) % 12;
+        s[7] = static_cast<unsigned char>(h >> 24);
+        s[8] = static_cast<unsigned char>(h >> 12);
+        s[1] = (h >> 18) % 3 == 0 ? 0x0A : static_cast<unsigned char>(h >> 22) % 11;
+    }
+    if (h % 6 == 0) {
+        Field_ActiveMember[0x80] = static_cast<unsigned char>(h >> 8);
+        Field_ActiveMember[0x84] = static_cast<unsigned char>(h >> 16) % 6;
+    }
+    if (h % 7 == 0) {
+        Field_ScriptFlags = static_cast<unsigned short>(h >> 8);
+        Field_ScriptFlags2 = static_cast<unsigned short>(h >> 12);
+        Field_MemberCount = static_cast<unsigned char>((h >> 24) % 5);
+    }
+    if (h % 9 == 0) {
+        Sprite_OverlayListCount = static_cast<unsigned char>((h >> 8) % 31);
+        Sprite_DrawListCount = static_cast<unsigned char>(0x25 + (h >> 16) % 6);
+    }
+}
+
+// The recorders. The no-argument ones by an id per target.
+template <unsigned Id> void __cdecl StubVoid() { Record(Id); Disturb(); }
+template <unsigned Id> unsigned char __cdecl StubTick() {
+    Record(Id);
+    Disturb();
+    return static_cast<unsigned char>(Hash());
+}
+template <unsigned Id> void __cdecl StubObject(unsigned char* object) { Record(Id, Address(object)); Disturb(); }
+template <unsigned K> void __cdecl StubHandler(unsigned char* object) { Record(100 + K, Address(object)); Disturb(); }
+unsigned char __cdecl StubTurnTarget(unsigned char* context) {
+    Record(20, Address(context));
+    Disturb();
+    // The result from bits Disturb does not decide by: taken from the same low
+    // bits, every moved Sprite_Current came with a 0 result, and a control that
+    // stopped re-reading Sprite_Current after the call went unrefused.
+    const std::uint32_t h = Hash();
+    return static_cast<unsigned char>(h >> 31 ? (h >> 8) | 1 : 0);
+}
+// Byte arguments arrive as whole pushed registers from the copies: masked.
+void __cdecl StubFace(std::uint32_t direction) { Record(21, direction & 0xFF); Disturb(); }
+void __cdecl StubInheritKey() {
+    Record(28, Word(Sprite_Current + 0x32));
+    const std::uint32_t h = Hash();
+    if (h % 3 == 0) SetWord(Sprite_Current + 0x32, h >> 8);
+    if (h % 5 == 0) SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Hash() * 3));
+    if (h % 7 == 0) Sprite_Current = Pool(h >> 12);   // what the projection reads next
+}
+void __cdecl StubLoadVertex(const unsigned long* v) {   // x, y, z - not the pad (DIV-0023)
+    const auto* s = reinterpret_cast<const std::uint16_t*>(v);
+    Record(29, s[0] | static_cast<std::uint32_t>(s[1]) << 16, s[2]);
+}
+std::uint32_t FloatOf(float f) {
+    std::uint32_t bits;
+    std::memcpy(&bits, &f, sizeof bits);
+    return bits;
+}
+// A screen coordinate: special floats, or one on or next to the cull's edge
+// for the current sprite's margins (hi = 0x140 or 0xF0), halves included,
+// so that truncation toward zero shows.
+std::uint32_t ScreenFloat(unsigned axis) {
+    static const std::uint32_t kFloats[] = {0x7F800001u, 0x7FC00000u, 0xFFA00000u, 0x7F800000u, 0xFF800000u,
+                                            0x3F000000u, 0xBF000000u, 0x5F000000u, 0xDF000001u, 0x47000000u,
+                                            0xC7000080u, 0x00000000u, 0x80000000u, 0x477FFF00u};
+    const std::uint32_t h = Hash();
+    ++g_log_n;   // a new hash for the next
+    if (h % 4 == 0) return kFloats[(h >> 4) % (sizeof kFloats / sizeof kFloats[0])];
+    if (h % 4 == 1) return FloatOf(static_cast<float>(static_cast<std::int32_t>(h >> 8) % 0x300 - 0x100) + ((h >> 4) % 4) * 0.25f);
+    const unsigned char* const m = Sprite_ScreenMargins + ((Record54(Sprite_Current)[3] >> 3) & 1) * 4u;
+    const int edge = (h >> 8) % 2 ? (axis ? 0xF0 : 0x140) + m[axis * 2] : -static_cast<int>(m[axis * 2 + 1]);
+    const int near = edge + static_cast<int>((h >> 9) % 3) - 1;
+    static const float kFraction[] = {0.0f, 0.5f, -0.5f, 0.999f, -0.999f};
+    return FloatOf(static_cast<float>(near) + kFraction[(h >> 12) % 5]);
+}
+void __cdecl StubStoreXY(unsigned long* out) {
+    Record(31);
+    out[0] = ScreenFloat(0);
+    out[1] = ScreenFloat(1);
+    const std::uint32_t h = Hash();
+    if (h % 5 == 0) Sprite_Current = Pool(h >> 8);   // it is re-read for the depth's address
+    if (h % 7 == 0) Sprite_DrawListCount = static_cast<unsigned char>(0x26 + (h >> 16) % 4);
+}
+void __cdecl StubStoreDepth(long* out) {
+    Record(32, Address(out));
+    *out = static_cast<long>(Hash());
+    const std::uint32_t h = Hash();
+    if (h % 5 == 0) Sprite_Current = Pool(h >> 8);   // it is re-read for the stores
+}
+// The exchange does what the real one does - the sort reads the list after
+// it - and may change the count the sort re-reads.
+void __cdecl StubSwap(std::uint32_t a, std::uint32_t b) {
+    Record(36, a & 0xFF, b & 0xFF);
+    const std::uint32_t h = Hash();
+    if (h % 8 != 0 && (a & 0xFF) < 30 && (b & 0xFF) < 30) {
+        unsigned char* const t = Sprite_OverlayList[a & 0xFF];
+        Sprite_OverlayList[a & 0xFF] = Sprite_OverlayList[b & 0xFF];
+        Sprite_OverlayList[b & 0xFF] = t;
+    }
+    if (h % 13 == 0) Sprite_OverlayListCount = static_cast<unsigned char>((h >> 8) % 31);
+}
+void __cdecl StubSpriteDraw() {
+    Record(37, static_cast<std::uint32_t>(Long(Sprite_Current + 0x74)), static_cast<std::uint32_t>(Long(Sprite_Current + 0x78)));
+    const std::uint32_t h = Hash();
+    if (h % 9 == 0) Sprite_OverlayListCount = static_cast<unsigned char>((h >> 8) % 31);
+    if (h % 5 == 0) Sprite_Current = Pool(h >> 12);
+}
+
+const field_frame::CalleesFieldFrame kStubs = {
+    StubVoid<13>, StubVoid<14>, StubVoid<1>, StubVoid<2>, StubVoid<3>, StubVoid<4>, StubVoid<5>, StubVoid<6>,
+    StubVoid<7>, StubVoid<8>, StubVoid<9>, StubVoid<10>, StubVoid<11>, StubVoid<12>,
+    StubVoid<15>, StubVoid<16>, StubVoid<17>,
+    StubVoid<18>, StubVoid<19>, StubVoid<27>,
+    StubTurnTarget, Cast<void (__cdecl*)(unsigned char)>(&StubFace), StubObject<22>, StubVoid<23>,
+    StubObject<24>, StubTick<25>, StubTick<26>,
+    StubInheritKey, StubLoadVertex, StubVoid<30>, StubStoreXY, StubStoreDepth,
+    StubVoid<33>, StubVoid<34>, StubVoid<35>, Cast<void (__cdecl*)(unsigned long, unsigned long)>(&StubSwap),
+    StubSpriteDraw,
+};
+using Raw = const void*;
+const Raw kHandlerStubs[11] = {
+    reinterpret_cast<Raw>(&StubHandler<0>), reinterpret_cast<Raw>(&StubHandler<1>), reinterpret_cast<Raw>(&StubHandler<2>),
+    reinterpret_cast<Raw>(&StubHandler<3>), reinterpret_cast<Raw>(&StubHandler<4>), reinterpret_cast<Raw>(&StubHandler<5>),
+    reinterpret_cast<Raw>(&StubHandler<6>), reinterpret_cast<Raw>(&StubHandler<7>), reinterpret_cast<Raw>(&StubHandler<8>),
+    reinterpret_cast<Raw>(&StubHandler<9>), reinterpret_cast<Raw>(&StubHandler<10>),
+};
+
+Raw StubFor(std::uint32_t target) {
+    const auto f = [](auto p) { return reinterpret_cast<Raw>(p); };
+    switch (target) {
+    case 0x573080: return f(&StubVoid<1>);    // Kind2_Run
+    case 0x57B7B0: return f(&StubVoid<2>);    // Party_ExtraFrame
+    case 0x517350: return f(&StubVoid<3>);    // Field_MembersFrame
+    case 0x517490: return f(&StubVoid<4>);    // Field_ObjectsFrame
+    case 0x56E6C0: return f(&StubVoid<5>);    // AreaMap_Frame
+    case 0x57B780: return f(&StubVoid<6>);    // Party_ExtraScreens
+    case 0x531B60: return f(&StubVoid<7>);    // Party_UpdateScreens
+    case 0x5173E0: return f(&StubVoid<8>);    // Field_ObjectsScreen
+    case 0x494030: return f(&StubVoid<9>);    // Effect_RunObjects
+    case 0x455250: return f(&StubVoid<10>);   // Field_RunSlots
+    case 0x454AD0: return f(&StubVoid<11>);   // MoveScript_TintFrame
+    case 0x592F00: return f(&StubVoid<12>);   // Field_DrawFrame
+    case 0x56D690: return f(&StubVoid<13>);   // Field_ModeDispatch
+    case 0x59E230: return f(&StubVoid<14>);   // Field_RunTaskRecords
+    case 0x533760: return f(&StubVoid<15>);   // Field_PendingJump
+    case 0x52D8F0: return f(&StubVoid<16>);   // Field_LeaderFrame
+    case 0x51AC50: return f(&StubVoid<17>);   // Field_MemberFrame
+    case 0x57B830: return f(&StubVoid<18>);   // Sprite_UpdateScreenA
+    case 0x588F20: return f(&StubVoid<19>);   // Sprite_UpdateScreen
+    case 0x517E90: return f(&StubTurnTarget);
+    case 0x57C4C0: return f(&StubFace);
+    case 0x517F30: return f(&StubObject<22>);   // Field_ObjectIdle
+    case 0x519600: return f(&StubVoid<23>);     // Field_ObjectLinked
+    case 0x518B40: return f(&StubObject<24>);   // Field_ObjectIdleLong
+    case 0x5893A0: return f(&StubTick<25>);     // Sprite_ScriptTick
+    case 0x589410: return f(&StubTick<26>);     // Sprite_ScriptTickOnce
+    case 0x57B860: return f(&StubVoid<27>);     // Sprite_ProjectA
+    case 0x589770: return f(&StubInheritKey);
+    case 0x5A8E30: return f(&StubLoadVertex);
+    case 0x5A8E90: return f(&StubVoid<30>);     // Gte_Rtps
+    case 0x5A90B0: return f(&StubStoreXY);
+    case 0x5A94B0: return f(&StubStoreDepth);
+    case 0x5B9550: return nullptr;              // the CRT's _ftol: the copy keeps it
+    case 0x571AF0: return f(&StubVoid<33>);     // AreaMap_HeaderPass
+    case 0x592F20: return f(&StubVoid<34>);     // Sprite_DrawOverlays
+    case 0x593060: return f(&StubVoid<35>);     // Sprite_DrawPass
+    case 0x593020: return f(&StubSwap);
+    case 0x5935B0: return f(&StubSpriteDraw);
+    default: bof3::Fatal("field_frame: no stand-in for a call to 0x%X", (unsigned)target); return nullptr;
+    }
+}
+
+// The twelve copies and their calls out, listed by capstone 2026-09-22; every
+// other jump stays inside, and the only indirect calls are the handler
+// table's. Offsets are of the E8 or E9 byte.
+struct Call { std::uint32_t offset, target; };
+struct Clone { const char* name; std::uint32_t base, size; const Call* calls; int n_calls; };
+constexpr Call kFrameCalls[] = {{0x0, 0x573080}, {0x5, 0x57b7b0}, {0xa, 0x517350}, {0xf, 0x517490}, {0x14, 0x56e6c0},
+                                {0x19, 0x57b780}, {0x1e, 0x531b60}, {0x23, 0x5173e0}, {0x28, 0x494030}, {0x2d, 0x455250},
+                                {0x32, 0x454ad0}, {0x37, 0x592f00}};
+constexpr Call kScriptedCalls[] = {{0x0, 0x56d690}, {0x5, 0x59e230}, {0xa, 0x573080}, {0xf, 0x57b7b0}, {0x14, 0x517350},
+                                   {0x19, 0x517490}, {0x1e, 0x56e6c0}, {0x23, 0x57b780}, {0x28, 0x531b60}, {0x2d, 0x5173e0},
+                                   {0x32, 0x494030}, {0x37, 0x455250}, {0x3c, 0x454ad0}, {0x41, 0x592f00}};
+constexpr Call kMembersCalls[] = {{0x0, 0x533760}, {0x28, 0x52d8f0}, {0x59, 0x51ac50}, {0x85, 0x51ac50}};
+constexpr Call kScreenCalls[] = {{0x48, 0x57b830}, {0x4f, 0x588f20}};
+constexpr Call kObjectsCalls[] = {{0x58, 0x517e90}, {0xb6, 0x57c4c0}, {0xd0, 0x517f30}, {0xe2, 0x519600}, {0xfb, 0x518b40},
+                                  {0x12d, 0x57c4c0}, {0x162, 0x5893a0}, {0x177, 0x5893a0}, {0x17e, 0x589410}};
+constexpr Call kExtraScreensCalls[] = {{0x1c, 0x57b830}};
+constexpr Call kExtraFrameCalls[] = {{0x2f, 0x517e90}, {0x3a, 0x517f30}, {0x4a, 0x519600}};
+constexpr Call kScreenACalls[] = {{0x29, 0x57b860}};
+constexpr Call kProjectCalls[] = {{0xb5, 0x589770}, {0xf7, 0x5a8e30}, {0xfc, 0x5a8e90}, {0x106, 0x5a90b0},
+                                  {0x115, 0x5a94b0}, {0x12d, 0x5b9550}, {0x14d, 0x5b9550}};
+constexpr Call kDrawCalls[] = {{0x0, 0x571af0}, {0x5, 0x592f20}, {0xa, 0x593060}};
+constexpr Call kOverlayCalls[] = {{0x61, 0x593020}, {0xe5, 0x5935b0}};
+constexpr unsigned kCount = 12;
+const Clone kClones[kCount] = {
+    {"Field_Frame", 0x517200, 0x3C, kFrameCalls, 12},
+    {"Field_FrameScripted", 0x517240, 0x46, kScriptedCalls, 14},
+    {"Field_MembersFrame", 0x517350, 0x8B, kMembersCalls, 4},
+    {"Field_ObjectsScreen", 0x5173E0, 0x60, kScreenCalls, 2},
+    {"Field_ObjectsFrame", 0x517490, 0x1A3, kObjectsCalls, 9},
+    {"Party_ExtraScreens", 0x57B780, 0x2D, kExtraScreensCalls, 1},
+    {"Party_ExtraFrame", 0x57B7B0, 0x7B, kExtraFrameCalls, 3},
+    {"Sprite_UpdateScreenA", 0x57B830, 0x2E, kScreenACalls, 1},
+    {"Sprite_ProjectA", 0x57B860, 0x1FA, kProjectCalls, 7},
+    {"Field_DrawFrame", 0x592F00, 0x1C, kDrawCalls, 3},
+    {"Sprite_DrawOverlays", 0x592F20, 0xFE, kOverlayCalls, 2},
+    {"Sprite_SwapOverlays", 0x593020, 0x36, nullptr, 0},
+};
+constexpr unsigned kSwap = 11;
+
+struct Region { std::uint32_t at, size; };
+const Region kRegions[] = {
+    {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(Sprite_ObjectsExtra)), (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject))},
+    {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
+    {Address(Sprite_OverlayList), 30 * 4},
+    {Address(&Sprite_OverlayListCount), 1},
+    {Address(Sprite_DrawList), 40 * 4},
+    {Address(&Sprite_DrawListCount), 1},
+    {::bof3::Img(SharedScratch_addr), 4},
+    {Address(&Field_ScriptFlags), 2},
+    {Address(&Field_ScriptFlags2), 2},
+    {Address(&Field_MemberCount), 1},
+    {Address(&Field_StepCount), 2},
+    {Address(&Field_StepCountPrev), 2},
+    {Address(MapView_Origin), 4},
+    {Address(&Draw_OtSlot), 1},
+    {Address(&Draw_SortOnX), 1},
+    {Address(&Draw_PassFlags), 1},
+    {Address(g_records), sizeof g_records},
+};
+constexpr unsigned kRegionBytes = (Sprite_Objects_count * sizeof(records::SpriteObject)) + (Sprite_ObjectsExtra_count * sizeof(records::SpriteObject)) + (ObjTrio_count * sizeof(records::PartyMember)) + 120 + 1 + 160 + 1 + 4 +
+                                  2 + 2 + 1 + 2 + 2 + 4 + 1 + 1 + 1 + kRecords * 4;
+
+struct State {
+    unsigned char memory[kRegionBytes];
+    unsigned char* current;
+    unsigned char* active;
+    unsigned char* state;
+    Entry log[kLog];
+    unsigned log_n;
+};
+void Capture(State& s) {
+    unsigned at = 0;
+    for (const Region& r : kRegions) { std::memcpy(s.memory + at, At(r.at), r.size); at += r.size; }
+    s.current = Sprite_Current;
+    s.active = Field_ActiveMember;
+    s.state = Field_State;
+    std::memcpy(s.log, g_log, sizeof s.log);
+    s.log_n = g_log_n;
+}
+void Apply(const State& s) {
+    unsigned at = 0;
+    for (const Region& r : kRegions) { std::memcpy(At(r.at), s.memory + at, r.size); at += r.size; }
+    Sprite_Current = s.current;
+    Field_ActiveMember = s.active;
+    Field_State = s.state;
+    std::memset(g_log, 0, sizeof g_log);
+    g_log_n = 0;
+}
+
+std::uint32_t g_rng = 0x2545F491u;
+std::uint32_t Next() { g_rng ^= g_rng << 13; g_rng ^= g_rng >> 17; g_rng ^= g_rng << 5; return g_rng; }
+bool Often() { return Next() % 3 == 0; }
+bool Half() { return Next() % 2 == 0; }
+
+// The boundaries of one object's bytes, as the loops and the screen updates
+// test them.
+void SeedObject(unsigned char* o) {
+    o[0] = static_cast<unsigned char>(Next() % 4 ? (Next() | 1) : (Next() & ~1u));
+    o[1] = static_cast<unsigned char>(Often() ? 0x0A : Next() % 11);   // the handler index - never past the table
+    o[6] = static_cast<unsigned char>(Often() ? 0x0A : Often() ? 9 : Next() % 12);
+    o[7] = static_cast<unsigned char>(Next());
+    o[8] = static_cast<unsigned char>(Next());
+    o[9] = static_cast<unsigned char>(Half() ? 0 : Next() % 4);
+    o[0x24] = static_cast<unsigned char>(Next());
+    const std::uint32_t record = Address(g_records + (Next() % kRecords) * 4);
+    std::memcpy(o + 0x54, &record, sizeof record);
+    // height: a few values, so that the sort meets ties, and the s16 edges
+    static const std::uint16_t kHeights[] = {0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 0x100};
+    SetWord(o + 0x3E, Half() ? kHeights[Next() % 7] : Next());
+    if (Often()) SetWord(o + 0x34, 0);
+    if (Often()) SetWord(o + 0x38, 0);
+    o[0x80] = static_cast<unsigned char>(Next());
+    if (Half()) o[0x80] |= 0x20;
+    o[0x84] = static_cast<unsigned char>(Next() % 4 ? Next() % 5 : Next());
+    static const std::uint16_t k9C[] = {0x1D, 0x1E, 0x1F, 0x20, 0, 0xFFFF};
+    SetWord(o + 0x9C, Half() ? k9C[Next() % 6] : Next());
+}
+
+// DIV-0041's band (UC2), when the build is wide: Sprite_ProjectA with the
+// band armed at the build's columns against Capcom's, the whole state
+// compared - the band goes only to the side list, so nothing the original
+// keeps may differ - and the side list's append and restore on a list of
+// stand-in objects. Narrow there is no band: not run.
+struct BandCheck {
+    bool run, append_ok;
+    unsigned columns, rounds, noted, bad;
+};
+BandCheck BandSelfTest(void* theirs) {
+    BandCheck out{};
+    out.columns = Widescreen_Columns();
+    if (out.columns == 0) return out;
+    out.run = true;
+    static State input, their_out, our_out;
+    constexpr unsigned kBandRounds = 4000;
+    for (unsigned round = 0; round < kBandRounds; ++round) {
+        auto* bytes = reinterpret_cast<unsigned char*>(&input);
+        for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
+        input.current = Pool(Next());
+        input.active = Pool(Next());
+        input.state = Pool(Next());
+        Apply(input);
+        g_seed = Next();
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
+        Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);
+        Draw_OtSlot = static_cast<unsigned char>(Often() ? 4 : Next() % 8);
+        Capture(input);
+        unsigned noted = 0;
+        for (int pass = 0; pass < 2; ++pass) {
+            Apply(input);
+            field_frame::g_band_count = 0;
+            if (pass) field_frame::g_band_fill = static_cast<int>(out.columns);
+            reinterpret_cast<void (__cdecl*)()>(pass ? reinterpret_cast<void*>(&Sprite_ProjectA) : theirs)();
+            field_frame::g_band_fill = -1;
+            if (pass) noted = field_frame::g_band_count;
+            Capture(pass ? our_out : their_out);
+        }
+        out.noted += noted;
+        field_frame::g_band_count = 0;
+        if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++out.bad <= 8)
+            bof3::Log("shadow      field_frame DIV-0041 band MISMATCH: round %u", round);
+        ++out.rounds;
+    }
+
+    // The append: 0x26 entries the frame built, six noted - appended; its
+    // flag cleared since; a model; already listed; appended; no room left.
+    static unsigned char objects[8][kObjectBytes];
+    for (unsigned i = 0; i < 8; ++i) {
+        std::memset(objects[i], 0, kObjectBytes);
+        objects[i][0] = 0x81;
+        for (unsigned k = 0; k < 8; ++k) objects[i][0x40 + k] = static_cast<unsigned char>(0x10 * i + k);
+    }
+    objects[3][0] = 0x01;     // its flag cleared since
+    objects[4][0x24] = 0x40;  // a model
+    for (unsigned i = 0; i < 0x26; ++i) Sprite_DrawList[i] = objects[0];
+    Sprite_DrawList[7] = objects[5];   // already listed
+    Sprite_DrawListCount = 0x26;
+    field_frame::g_band_count = 0;
+    static const unsigned kNoted[] = {1, 3, 4, 5, 2, 6};
+    for (const unsigned i : kNoted) BandNote(objects[i]);
+    BandAppend();
+    bool ok = Sprite_DrawListCount == 0x28 && Sprite_DrawList[0x26] == objects[1] && Sprite_DrawList[0x27] == objects[2] &&
+              field_frame::g_band_added == 2 && field_frame::g_band_count == 0;
+    for (unsigned i = 0; i < 0x26; ++i) ok = ok && Sprite_DrawList[i] == (i == 7 ? objects[5] : objects[0]);
+    for (unsigned i = 0; i < 8; ++i) std::memset(objects[i] + 0x40, 0xEE, 8);   // the draw's scale writes
+    BandRestore();
+    for (unsigned i = 1; i <= 2; ++i)
+        for (unsigned k = 0; k < 8; ++k) ok = ok && objects[i][0x40 + k] == static_cast<unsigned char>(0x10 * i + k);
+    ok = ok && objects[6][0x40] == 0xEE && objects[5][0x40] == 0xEE && field_frame::g_band_added == 0;   // never appended: untouched
+    out.append_ok = ok;
+    return out;
+}
+
+void SelfTest(void* const (&theirs)[kCount]) {
+    constexpr unsigned kRounds = 24000;
+    unsigned region_bytes = 0;
+    for (const Region& r : kRegions) region_bytes += r.size;
+    if (region_bytes != kRegionBytes) bof3::Fatal("field_frame: regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
+    static State saved, input, their_out, our_out;
+    Capture(saved);
+    unsigned long saved_handlers[11];
+    std::memcpy(saved_handlers, Field_ObjectHandlers, sizeof saved_handlers);
+    for (unsigned k = 0; k < 11; ++k) Field_ObjectHandlers[k] = Address(kHandlerStubs[k]);
+    field_frame::g = kStubs;
+    const void* const ours[kCount] = {
+        reinterpret_cast<Raw>(&Field_Frame), reinterpret_cast<Raw>(&Field_FrameScripted), reinterpret_cast<Raw>(&Field_MembersFrame),
+        reinterpret_cast<Raw>(&Field_ObjectsScreen), reinterpret_cast<Raw>(&Field_ObjectsFrame), reinterpret_cast<Raw>(&Party_ExtraScreens),
+        reinterpret_cast<Raw>(&Party_ExtraFrame), reinterpret_cast<Raw>(&Sprite_UpdateScreenA), reinterpret_cast<Raw>(&Sprite_ProjectA),
+        reinterpret_cast<Raw>(&Field_DrawFrame), reinterpret_cast<Raw>(&Sprite_DrawOverlays), reinterpret_cast<Raw>(&Sprite_SwapOverlays),
+    };
+
+    unsigned bad = 0, calls = 0, per[kCount] = {}, drawn = 0, culled = 0, swaps = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        const unsigned k = round % kCount;
+        ++per[k];
+        auto* bytes = reinterpret_cast<unsigned char*>(&input);
+        for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
+        input.current = Pool(Next());
+        input.active = Pool(Next());
+        input.state = Pool(Next());
+        Apply(input);
+        g_seed = Next();
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(rv::Bytes(&Sprite_Objects[i]));
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(rv::Bytes(&Sprite_ObjectsExtra[i]));
+        for (unsigned i = 0; i < 3; ++i) SeedObject(rv::Bytes(&ObjTrio[i]));
+        for (unsigned i = 0; i < 30; ++i) Sprite_OverlayList[i] = Pool(Next());
+        Sprite_OverlayListCount = static_cast<unsigned char>(Next() % 4 ? Next() % 31 : Next() % 3);
+        Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);
+        Field_MemberCount = static_cast<unsigned char>(Next() % 5);
+        if (Next() % 6) Field_ScriptFlags2 &= static_cast<unsigned short>(~0x400u);
+        if (Half()) Field_ScriptFlags &= static_cast<unsigned short>(~7u);
+        if (Half()) Field_ScriptFlags2 &= static_cast<unsigned short>(~7u);
+        Draw_OtSlot = static_cast<unsigned char>(Often() ? 4 : Next() % 8);
+        if (Next() % 4) Draw_PassFlags |= 1;
+        Capture(input);
+        std::uint32_t a = 0, b = 0;   // the swap's arguments, stale upper bytes and all
+        if (k == kSwap) {
+            a = (Next() & ~0xFFu) | Next() % 30;
+            b = (Next() & ~0xFFu) | (Half() ? a & 0xFF : Next() % 30);
+        }
+        for (int pass = 0; pass < 2; ++pass) {
+            Apply(input);
+            const void* const fn = pass ? ours[k] : theirs[k];
+            if (k == kSwap) reinterpret_cast<void (__cdecl*)(std::uint32_t, std::uint32_t)>(const_cast<void*>(fn))(a, b);
+            else reinterpret_cast<void (__cdecl*)()>(const_cast<void*>(fn))();
+            Capture(pass ? our_out : their_out);
+        }
+        calls += their_out.log_n;
+        if (k == 8) (Sprite_Current[0] & 0x80) ? ++culled : ++drawn;   // ours, just run: the sprite it ended on
+        if (k == 10) for (unsigned i = 0; i < their_out.log_n && i < kLog; ++i) swaps += their_out.log[i].what == 36;
+        if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++bad <= 12) {
+            unsigned first = 0;
+            while (first < sizeof their_out && reinterpret_cast<unsigned char*>(&their_out)[first] == reinterpret_cast<unsigned char*>(&our_out)[first]) ++first;
+            bof3::Log("shadow      field_frame self-test MISMATCH: round %u, %s, log %u / %u, first difference at state byte 0x%X", round,
+                      kClones[k].name, their_out.log_n, our_out.log_n, first);
+        }
+    }
+    const BandCheck band = BandSelfTest(theirs[8]);
+    field_frame::g = kOriginals;
+    std::memcpy(Field_ObjectHandlers, saved_handlers, sizeof saved_handlers);
+    Apply(saved);
+    if (band.run)
+        bof3::Log("shadow      field_frame DIV-0041 band at %u columns: Sprite_ProjectA %u rounds, %u sprites noted for "
+                  "the band, the state compared with Capcom's, %u MISMATCHES; the append %s",
+                  band.columns, band.rounds, band.noted, band.bad, band.append_ok ? "ok" : "WRONG");
+    else
+        bof3::Log("shadow      field_frame DIV-0041 band: not run (narrow: no band)");
+    if (band.bad || (band.run && (!band.append_ok || band.noted == 0)))
+        bof3::Fatal("field_frame: the band's type-0x0A sprites change the original's state (%u of %u rounds, %u noted, "
+                    "append %s)", band.bad, band.rounds, band.noted, band.append_ok ? "ok" : "WRONG");
+    bof3::Log("shadow      field_frame self-test: %u rounds (%u per function), %u calls to the stand-ins, %u exchanges in the "
+              "sort, Sprite_ProjectA %u shown / %u culled, %u MISMATCHES; the 30 objects, the 4 extra, ObjTrio, "
+              "both sprite lists and counts, the flags, counts and draw bytes, the records and the stand-ins' log compared",
+              kRounds, per[0], calls, swaps, drawn, culled, bad);
+    if (bad) bof3::Fatal("the field frame loop differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
+}  // namespace
+
+void FieldFrame_Inject() {
+    if (bof3::WantsShadow("field_frame")) {
+        void* clones[kCount];
+        for (unsigned k = 0; k < kCount; ++k) {
+            const Clone& c = kClones[k];
+            bof3::CloneCall calls[16];
+            if (c.n_calls > 16) bof3::Fatal("field_frame: %s has %d calls", c.name, c.n_calls);
+            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
+            clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
+        }
+        SelfTest(clones);
+    }
+}

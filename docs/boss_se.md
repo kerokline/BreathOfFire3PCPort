@@ -7,6 +7,8 @@ with capstone and fuzzed through the boss harness ([`boss_harness.md`](boss_harn
 thirteen `Run`s, 0 mismatches; 145 controls planted, 141 refused by a count, 4 equivalent with their near variants refused (section 4). Fuzz only: no recorded
 route reaches a boss fight.
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/boss/boss_beyd.cpp`, `src/game/boss/boss_zig.cpp`, `src/game/boss/boss_25.cpp` and 7 more ([`source-layout.md`](source-layout.md)). `src/game/boss_se.cpp` itself is retired. A `src/game/boss_se.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_se.cpp:LINE` answers it.
+
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
 records), not memory of the game. Which fight a set-up is comes from the
 tool's rows and the code's `0x904AAA` compares; nothing here says what

@@ -11,6 +11,8 @@ fuzzed through the scenario harness in effect mode
 196,000 rounds, 0 mismatches; 101 of 101 controls refused - 100 by a count, one (38) by ours aborting, its near variant (101) refused by a count. **Fuzz only**: no recorded route
 enters any of the 49 (section 9).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_69.cpp`, `src/game/effect/effect_kind_63.cpp`, `src/game/effect/effect_kind_65.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/effect_3b.cpp` itself is retired. A `src/game/effect_3b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_3b.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x63: a disc of 32 shaded triangles on the ground at a fixed point that grows, holds and shrinks under a full-screen tint while every live sprite and member is refreshed, then a wait on the counter `0x903848` and the tint's fade | 10 | `Effect_KindHandlers[0x63]` (`0x6554DC`), `EffectKind63_States` `0x6549B8` (7) |

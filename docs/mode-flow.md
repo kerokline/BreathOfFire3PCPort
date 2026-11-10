@@ -5,6 +5,8 @@
 every call re-aimed at a recorder; 95 negative controls, 94 refused by a count and the other one unobservable. **Through the
 live batch check `ab24`**, with one fix (below).
 
+**Source layout (2026-11-09):** the 42 functions this group took live in the files of their translation units now: `src/game/core/transition.cpp`, `src/game/field/field_2.cpp`, `src/game/menu/item_trade.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/mode_flow.cpp` still held of ours is `src/game/core/mode_flow.cpp` now. A `src/game/mode_flow.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/mode_flow.cpp:LINE` answers it.
+
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062). The first all-ours hash run differed on one frame, frame 1: `Boot_Task`'s last call was compiled as a tail jump, so `Task_Exit` saw the task stack's 0 as its caller. Now a `call`, as Capcom's (`disable_tail_calls`, commit `f199624`); nothing in game reads it.
 
 Group K of the third parallel round
@@ -105,8 +107,8 @@ would call its own return address; ours aborts (CLAUDE.md rule 4).
 | 4 / 5 | `0x4951B0` / `0x4951D0` | `FadeSub(+-0x400, 1, 0)`, 32 frames |
 | 6 / 7 | `0x4951F0` / `0x495210` | `FadeSub(+-0x800, 1, 2)` - into OT slot 2 |
 | 8 / 9 | `0x495230` / `0x495250` | `FadeAdd(+-0x800, 1, 0)`: to / from white |
-| 10 / 17 | `0x495270` / `0x495450` | fade to black (step 0x400 / 0x200) while the camera swings away: each frame the tile is not done, yaw (`Camera_Angles[0]`) and the angle word (`Cond_AngleFB`'s low word) + 11, `Camera_Distance` - 50, `MapView_Redraw` 2 |
-| 11 / 18 | `0x4952D0` / `0x4954B0` | the swing back (byte for byte the same body): yaw `0xFEAB`, angle `0x355`; five frames of fade-in whatever the tile says; then each frame yaw and angle - 11 and distance + 50 until it **equals** `0x5DC`, the tile drawn until done; then yaw `0xFD56`, angle `0x200` |
+| 10 / 17 | `0x495270` / `0x495450` | fade to black (step 0x400 / 0x200) while the camera swings away: each frame the tile is not done, pitch (`Camera_Angles[0]`) and the angle word (`Cond_AngleFB`'s low word) + 11, `Camera_Distance` - 50, `MapView_Redraw` 2 |
+| 11 / 18 | `0x4952D0` / `0x4954B0` | the swing back (byte for byte the same body): pitch `0xFEAB`, angle `0x355`; five frames of fade-in whatever the tile says; then each frame pitch and angle - 11 and distance + 50 until it **equals** `0x5DC`, the tile drawn until done; then pitch `0xFD56`, angle `0x200` |
 | 12 | `0x4953A0` | distance `0x5DC` and a redraw, then `FadeSub(-0x800, 1, 0)` |
 | 13 / 14 | `0x4953D0` / `0x4953F0` | `FadeSub(+-0x200, 1, 0)`, 64 frames |
 | 15 / 16 | `0x495410` / `0x495430` | `FadeAdd(+-0x200, 1, 0)` |

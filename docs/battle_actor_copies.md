@@ -8,6 +8,8 @@ headless against a copy of Capcom's with every call re-aimed at a recorder:
 refused, and two are changes that change nothing (section 4). Not yet
 live-checked; the combat route reaches all sixteen.
 
+**Source layout (2026-11-09):** the 16 functions this group took live in the files of their translation units now: `src/game/battle/battle_item_cmd.cpp`, `src/game/battle/battle_3.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_actor_copies.cpp` itself is retired. A `src/game/battle_actor_copies.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_actor_copies.cpp:LINE` answers it.
+
 Every function is a *faithful* replacement, so no `DIVERGENCE.md` entry is
 owed. No defect of the original was found.
 

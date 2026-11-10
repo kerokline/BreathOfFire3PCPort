@@ -112,11 +112,15 @@ def render(measured, carried):
              '#' + '\t'.join(HDR) + '\n']
     stats = collections.Counter()
     moved = moved_keys(measured, carried)
+    relaid = relaid_keys(measured, carried)
     for key, _ln, s in measured:
         old = carried.get(key)
         if old is None and key in moved:
             old = moved[key]
             stats['carried by place'] += 1
+        if old is None and key in relaid:
+            old = relaid[key]
+            stats['carried across the layout'] += 1
         if old is not None:
             reason, evidence, source = old[8], old[9], old[10]
             stats['carried' if reason != '-' else 'unreviewed'] += 1
@@ -162,6 +166,110 @@ def moved_keys(measured, carried):
 
 def clean(x):
     return ' '.join(str(x).replace('\t', ' ').split()) or '-'
+
+
+_QUAL = re.compile(r'\b[A-Za-z_][A-Za-z_0-9]*::')
+
+
+def _renames():
+    """{(source file, old name): new name} from the source-layout round's rename table (the
+    helper renames of B0 and stage B; a qualify row renames nothing)."""
+    out = {}
+    path = os.path.join(ROOT, 'analysis', 'tu_renames.tsv')
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding='utf-8') as fh:
+        for line in fh:
+            if line.startswith('#') or not line.strip():
+                continue
+            c = line.rstrip('\n').split('\t')
+            if len(c) >= 4 and c[3] != 'qualify' and c[1] != c[2]:
+                out[(c[0], c[1])] = c[2]
+    return out
+
+
+def relaid_keys(measured, carried):
+    """{new key: old row} for the sites the source-layout round moved (docs/source-layout-round.md
+    4): a function's sites keep their order but change file (the move), their accessor's and their
+    function's name where a helper was renamed (analysis/tu_renames.tsv, by the old file), and the
+    `X::` qualifiers of their expression. Both sides are read without the file and without the
+    qualifiers, the old side with the renames applied, and paired on (function, shape, accessor,
+    expression, n). A helper the mover copied into several files pairs each copy's sites with the
+    one old row."""
+    renames = _renames()
+    keys = {k for k, _, _ in measured}
+
+    def norm(fn, shape, acc, expr, n):
+        # the census cuts an expression at 60 characters, so a qualified one loses its tail:
+        # the unqualified forms are compared on their first 40
+        return (fn, shape, acc, _QUAL.sub('', expr)[:40], n)
+
+    old_by = {}
+    for k, row in carried.items():       # a row still measured serves the copies of its helper too
+        rel, fn, shape, acc, expr, n = k
+        fn2 = renames.get((rel, fn), fn)
+        acc2 = renames.get((rel, acc), acc)
+        expr2 = expr
+        for (src, old), new in renames.items():
+            if src == rel and old in expr2:
+                expr2 = re.sub(r'\b%s\b' % re.escape(old), new, expr2)
+        old_by.setdefault(norm(fn2, shape, acc2, expr2, n), row)
+    # without the function: the name the heuristic reads for a one-line helper's site differs
+    # between the old file and the new (the previous function's end is what it walks back to), so
+    # a second table drops it and answers only where every old row of that (shape, accessor,
+    # expression, n) carries one reason
+    by_site = collections.defaultdict(list)       # (shape, accessor, expression, n) -> old rows
+    by_expr = collections.defaultdict(list)       # (shape, accessor, expression) -> old rows
+    by_text = collections.defaultdict(list)       # (shape, expression) -> old rows
+    for key, row in old_by.items():
+        by_site[key[1:]].append(row)
+        by_expr[key[1:4]].append(row)
+        by_text[(key[1], key[3])].append(row)
+
+    def one_reason(rows):
+        """The rows' one reason (column 8), when they all give the same and it is not `-`."""
+        reasons = {r[8] for r in rows}
+        return rows[0] if len(reasons) == 1 and reasons != {'-'} else None
+
+    out = {}
+    for k, _ln, s in measured:
+        if k in carried:
+            continue
+        rel, fn, shape, acc, expr, n = k
+        nk = norm(fn, shape, acc, expr, n)
+        row = old_by.get(nk)
+        if row is None:
+            row = one_reason(by_site.get(nk[1:], []))
+        if row is None:
+            # n counts within the function the heuristic read, which the new file changes
+            row = one_reason(by_expr.get(nk[1:4], []))
+        if row is None:
+            # the accessor the census names changes where a copied helper's base helper is seen
+            # through in one file and not the other (`B` -> `Mem`)
+            row = one_reason(by_text.get((nk[1], nk[3]), []))
+        if row is None:
+            # the cut falls elsewhere once the expression is qualified: one unqualified form is the
+            # other's prefix (24 characters at least), among the rows of the same shape
+            e = nk[3]
+            rows = [r for key2, r in old_by.items() if key2[1] == nk[1] and len(key2[3]) >= 24
+                    and len(e) >= 24 and (key2[3].startswith(e) or e.startswith(key2[3]))]
+            row = one_reason(rows)
+        if row is None:
+            # the site is a copy the mover made of a helper whose own rows give several reasons
+            # (by accessor or by caller): the copy's reason is that it is one, its evidence the
+            # reasons the original's rows give, each still on its own row
+            rows = by_text.get((nk[1], nk[3]), [])
+            if rows:
+                reasons = sorted({r[8] for r in rows if r[8] != '-'})
+                if reasons:
+                    row = list(rows[0])
+                    row[8] = 'layout-copy'
+                    row[9] = ("a copy of a file-local helper the source-layout round's mover made (its "
+                              "readers moved to several files); the original's rows give: " + ', '.join(reasons))
+                    row[10] = 'stage-b'
+        if row is not None:
+            out[k] = row
+    return out
 
 
 def regenerate(check):

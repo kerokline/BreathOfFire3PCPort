@@ -11,6 +11,8 @@ each read to its last instruction with capstone: the cut's 47 less its start
 The live route `dragonTransform.txt` enters four of them (section 10); the
 rest are fuzz-only.
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/battle/dragon_cmd.cpp`, `src/game/effect/effect.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_e5.cpp` still held of ours is `src/game/battle/battle_e5.cpp` now. A `src/game/battle_e5.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e5.cpp:LINE` answers it.
+
 Names are this group's, from what the code does and who calls it: none of
 the 52 has a name in the sibling (`pairs_propagated.json` pairs 44 of them
 with PSX addresses the sibling's `names/*.toml` and `symbols.toml` leave

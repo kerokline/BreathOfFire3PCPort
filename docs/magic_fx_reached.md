@@ -7,6 +7,8 @@ recorder; 78 negative controls, every one refused by a count (exit 3) in
 the one function it touches. Not yet through a live check: the coordinator's combat
 A/B after the merge.
 
+**Source layout (2026-11-09):** the 25 functions this group took live in the files of their translation units now: `src/game/magic/steal.cpp`, `src/game/magic/ebonfire_ring.cpp`, `src/game/magic/sparkle.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/magic_fx_reached.cpp` itself is retired. A `src/game/magic_fx_reached.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_fx_reached.cpp:LINE` answers it.
+
 Group CJ of the eighth round ([`takeover-queue-round8.md`](takeover-queue-round8.md)).
 The PSX `BMAGIC` overlays' code compiled into the exe, under the hosts
 `0x4ACA50`, `0x4B5350`, `0x4B8BD0`, `0x4C4C00`, `0x4F5050` and `0x4FAF90`

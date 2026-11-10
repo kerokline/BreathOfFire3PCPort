@@ -10,6 +10,8 @@ with capstone and fuzzed through the scenario harness's **field** mode (used
 unchanged): 294,000 rounds, **0 mismatches**; 119 of 121 controls refused, the two not refused equivalent mutants with refused near variants (section 6).
 Twelve `.data` tables named (thirteen until `8e652f8` gave `0x667354` to R2D). Fuzz only: no trace enters them (section 9).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the file of their translation unit now: `src/game/field/field_ability_2.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/rest_2e.cpp` still held of ours is `src/game/field/rest_2e.cpp` now. A `src/game/rest_2e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2e.cpp:LINE` answers it.
+
 **What the band is.** Three of the field menu's screens
 ([`menu-screens.md`](menu-screens.md) section 1: `FieldMenu_Run` jumps through
 `FieldMenu_States` by the menu block's mode `0x929F00`; each screen's dispatcher

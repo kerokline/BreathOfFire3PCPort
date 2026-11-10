@@ -8,6 +8,8 @@ only: the combat and world-map routes enter areas 29 and 33, but reach none
 of the 52 (section 8). No divergence; the five dispatchers through an area's
 state table abort past it (section 6).
 
+**Source layout (2026-11-09):** the 52 functions this group took live in the files of their translation units now: `src/game/area/area_37.cpp`, `src/game/area/area_32.cpp`, `src/game/area/area_27.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/area_w0c.cpp` itself is retired. A `src/game/area_w0c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w0c.cpp:LINE` answers it.
+
 Group AR0C of round ten's second wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 6). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):

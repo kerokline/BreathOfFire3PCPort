@@ -7,6 +7,8 @@ recorder and every table operand at a table of recorders: 22,000 rounds,
 0 mismatches. 115 negative controls were planted: 114 were refused by a count, and one was a change that changes nothing. `BOF3X_SHADOW='*'` passes. No live check yet:
 the coordinator's combat A/B after the merge is the first.
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the file of their translation unit now: `src/game/battle/battle_obj.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_obj_states.cpp` itself is retired. A `src/game/battle_obj_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_obj_states.cpp:LINE` answers it.
+
 This is group CG of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)): the handlers that
 `BattleObj_RunState` `0x4411E0` ([`battle_windows.md`](battle_windows.md))

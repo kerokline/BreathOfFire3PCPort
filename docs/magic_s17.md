@@ -5,6 +5,8 @@
 through the shared harness, 0 mismatches; 125 negative controls, every one refused by a count (exit 3). No recorded
 route casts any of them: fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/magic/leech_shell.cpp`, `src/game/magic/revive.cpp`, `src/game/magic/purify.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s17.cpp` itself is retired. A `src/game/magic_s17.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s17.cpp:LINE` answers it.
+
 Round nine, first spell wave ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)
 §4, row S17), taken with [`magic_harness.md`](magic_harness.md).
 

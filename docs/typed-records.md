@@ -670,7 +670,7 @@ Since the C4 audit (A F5) its fields `+0x80..+0x9F` are declared in `SpriteObjec
 | `+0x8C` | s32 | `target_x` | MoveCmd_OpF9's target on Field_ActiveMember, 16.16 (field_o.cpp); the placement op's home (wide_staging.cpp:572); zeroed by event_script.cpp:494 |
 | `+0x90` | s32 | `target_z` | (the same readers) |
 | `+0x94` | u32 | `best_score` | Field_ObjectBestDirection's running score, started 0 or 0xFFFFFF (field_c3.md); zeroed by field_o.cpp:1229 |
-| `+0x98` | u16 | `half_w` | the object's half-widths, /d/ >> 16 against them (field_c3.md Field_ObjectApproachDirection); op[3] (event_ops.cpp:199; event-ops.md) |
+| `+0x98` | u16 | `half_w` | the object's half-widths, /d/ >> 16 against them (field_c3.md Field_ObjectFleeDirection); op[3] (event_ops.cpp:199; event-ops.md) |
 | `+0x9A` | u16 | `half_d` | op[4] (event_ops.cpp:200) |
 | `+0x9C` | u16 | `counter` | counted up for every object in reach of the point ahead (event-ops.md); a u16 zeroed by field_objects.cpp |
 | `+0x9E` | u8 | `tag` | the boss set-ups' tag (boss_spawn.h; field_o.cpp:1157 op[0x10]; psp-battle-changes.md) |

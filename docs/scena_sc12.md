@@ -6,6 +6,8 @@ through the scenario harness ([`scenario_harness.md`](scenario_harness.md)):
 0 mismatches in 192,000 rounds (8,000 a function); 65 of 66 negative controls refused, the other an equivalent mutant whose near variant is refused. Fuzz only:
 no recorded route reaches chapter 12 (section 7).
 
+**Source layout (2026-11-09):** the 24 functions this group took live in the file of their translation unit now: `src/game/scenario/scena_12_2.cpp` ([`source-layout.md`](source-layout.md)). `src/game/scena_sc12.cpp` itself is retired. A `src/game/scena_sc12.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc12.cpp:LINE` answers it.
+
 Group SC12 of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3), in two

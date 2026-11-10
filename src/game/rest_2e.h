@@ -15,9 +15,9 @@
 // group's inject and its fuzz.
 #pragma once
 
-void Rest2E_Inject();
 
 namespace rest_2e {
+extern unsigned char g_sort_by_id;   // defined in rest_2e.cpp (source-layout B0: promoted for a moved reader)
 // BOF3X_SHADOW=rest_2e: the start-up fuzz, rest_2e_fuzz.cpp. Clones the 49
 // originals before Rest2E_Inject patches them.
 void SelfTest();

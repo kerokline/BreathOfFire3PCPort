@@ -19,6 +19,8 @@
 void Rest2H_Inject();
 
 namespace rest_2h {
+extern unsigned char g_pupil_label_off;   // defined in rest_2h.cpp (named here for a moved reader: source-layout B0)
+extern bool g_master_title_live;   // defined in rest_2h.cpp (named here for a moved reader: source-layout B0)
 // Where MasterWin_SlideOut reads its bound: widescreen.cpp's value for the
 // imm32 at 0x59C136 (DIV-0041 widens it; Widescreen_SlideOperand); the fuzz
 // aims it at its own copy's immediate.

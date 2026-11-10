@@ -2,4 +2,6 @@
 // 0x518980, 0x5197F0 and 0x518D10. docs/movement-script.md section 1b.
 #pragma once
 
+#include "game/field_objects_callees.h"
+
 void FieldObjects_Inject();

@@ -12,6 +12,8 @@ fuzzed through the scenario harness in effect mode
 route enters any of the 51 (section 9). Every row is effect code (no
 `hypothesis` row in the group; none left original).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_97.cpp`, `src/game/effect/effect_kind_9a.cpp`, `src/game/effect/effect_kind_94.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/effect_4d.cpp` itself is retired. A `src/game/effect_4d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4d.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x91: a full-screen tint brightened one step a frame over 0x3C frames, then message 0x86 opened; once it closes the chapter's step byte raised; the tint held (chapter 14's `Scena14_Run2` spawns it) | 5 | `Effect_KindHandlers[0x91]` (`0x655594`), `EffectKind91_States` `0x655100` (4) |

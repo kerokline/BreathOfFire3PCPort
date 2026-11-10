@@ -15,3 +15,7 @@ void Shell_Inject();
 // difference): the exe host's map step calls it after .data is placed; hosted,
 // Shell_Inject does, before the fuzz.
 void Shell_MapDefaultKeys();
+
+// Game_Init's body (shell.cpp), which Game_Init calls from its own file since the source-layout
+// round's moves (platform/magic_080.cpp): it returns where Game_Init jumps.
+extern "C" void* __cdecl Shell_GameInitBody(void);

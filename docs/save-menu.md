@@ -8,6 +8,8 @@ refused by comparison, 2 changes that change nothing); no divergence, one
 candidate defect (D38). Through the batch `ab26` - the shop A/B 35 of 35
 ([`takeover-queue-round6.md`](takeover-queue-round6.md) status))
 
+**Source layout (2026-11-09):** the 44 functions this group took live in the files of their translation units now: `src/game/core/sound.cpp`, `src/game/shop/shop_trade.cpp`, `src/game/shop/field_save.cpp` and 4 more ([`source-layout.md`](source-layout.md)). What `src/game/save_menu.cpp` still held of ours is `src/game/core/save_menu.cpp` now. A `src/game/save_menu.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/save_menu.cpp:LINE` answers it.
+
 The sixth round's queue ([`takeover-queue-round6.md`](takeover-queue-round6.md))
 gave group X 23 functions the owner's shop route reaches: the save files,
 the inn, the save menu's pieces, the shop's price helpers, the title menu's

@@ -16,6 +16,8 @@ rows of the cut are all functions. No full-frame fill is built by any of the
 cull bounds and DIV-0062's item array and item bound, all inside
 `AreaMapBD_BuildView` (section 2).
 
+**Source layout (2026-11-09):** the 32 functions this group took live in the files of their translation units now: `src/game/core/transition.cpp`, `src/game/effect/effect_kind_18_sub_44.cpp`, `src/game/effect/effect_kind_ac.cpp` and 8 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_3g.cpp` still held of ours is `src/game/effect/rest_3g.cpp` now. A `src/game/rest_3g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3g.cpp:LINE` answers it.
+
 The band is not one subsystem. By the code:
 
 | Rows | What | Names |

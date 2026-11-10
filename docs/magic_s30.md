@@ -8,6 +8,8 @@ count in the functions the plant touches, two by ours' own abort past a table
 Nothing recorded casts these spells, so this is fuzz only until the owner
 sees them cast.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the files of their translation units now: `src/game/magic/kaiser_ring.cpp`, `src/game/magic/venom_ring.cpp`, `src/game/magic/magic_fx.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s30.cpp` itself is retired. A `src/game/magic_s30.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s30.cpp:LINE` answers it.
+
 Round nine, second wave, group S30
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 

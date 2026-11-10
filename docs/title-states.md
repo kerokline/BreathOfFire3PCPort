@@ -7,6 +7,8 @@ goes through with the two functions under it. Each fuzzed against a copy of
 Capcom's with every call and tail jump re-aimed at a recorder; 40 negative
 controls, all refused. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 6 had it owed.
 
+**Source layout (2026-11-09):** the 17 functions this group took live in the files of their translation units now: `src/game/core/title.cpp`, `src/game/field/field_7.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/title_states.cpp` still held of ours is `src/game/core/title_states.cpp` now. A `src/game/title_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/title_states.cpp:LINE` answers it.
+
 This continues [`mode-tasks.md`](mode-tasks.md), which read task 1's body
 `Title_Task` `0x4621C0` and the three functions it runs around its state
 handler every frame, and listed the eight handlers as "read, left original".

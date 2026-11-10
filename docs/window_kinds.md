@@ -7,6 +7,8 @@ headless against a copy of Capcom's with every call re-aimed at a recorder:
 through a live batch: the coordinator's check after the merge is the combat
 route.
 
+**Source layout (2026-11-09):** the 12 functions this group took live in the file of their translation unit now: `src/game/menu/menu_list.cpp` ([`source-layout.md`](source-layout.md)). `src/game/window_kinds.cpp` itself is retired. A `src/game/window_kinds.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/window_kinds.cpp:LINE` answers it.
+
 Group CM of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). The queue listed
 eleven; the twelfth, `0x597D10`, is the third slot of one of the eleven's own

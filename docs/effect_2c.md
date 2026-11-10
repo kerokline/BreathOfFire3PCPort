@@ -14,6 +14,8 @@ section 8) without edits to it: 318,000 rounds, 0 mismatches.
 169 controls planted, 167 refused by a count, two equivalent (each with a near variant refused). **Fuzz only**: no recorded route enters any of the 53
 (section 9).
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_3d.cpp`, `src/game/effect/effect_kind_43.cpp`, `src/game/effect/effect_kind_44.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_2c.cpp` still held of ours is `src/game/effect/effect_2c.cpp` now. A `src/game/effect_2c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2c.cpp:LINE` answers it.
+
 All 53 are effect code. The two `hypothesis` rows of the cut (`0x475090`,
 `0x475760`, kinds 0x3F's and 0x40's dispatchers) are what the labelling pass
 said they were, and are taken.

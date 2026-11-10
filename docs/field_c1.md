@@ -13,6 +13,8 @@ through the scenario harness's field mode
 it: 246,000 rounds, **0 mismatches**. **237 controls planted one at a time: 235 refused by a count, two equivalent (no input can tell them apart), each with a near variant refused** (section 6). Fuzz-only, except
 what the whelp route very likely entered (section 9).
 
+**Source layout (2026-11-09):** the 41 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_17.cpp`, `src/game/effect/effect_kind_06.cpp`, `src/game/effect/effect_kind_34.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/field_c1.cpp` itself is retired. A `src/game/field_c1.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_c1.cpp:LINE` answers it.
+
 The band is labelled "field core" in the cut; read, it is almost all **effect
 records**: the 20 `Effect_Objects` (`0x7E11E0`, `0x80` bytes) that
 `Effect_RunObjects` runs every field frame through `Effect_KindHandlers`

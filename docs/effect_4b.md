@@ -18,6 +18,8 @@ the five `hypothesis` rows among them (the dispatchers of kinds 0x89, 0xA4,
 own, no ledger entry** (the tile's width is DIV-0041's since the round's
 end, section 1.3); no unwritten memory reaches an output (section 7).
 
+**Source layout (2026-11-09):** the 66 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_8c.cpp`, `src/game/effect/effect_kind_9d.cpp`, `src/game/effect/effect_kind_88.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/effect_4b.cpp` still held of ours is `src/game/effect/effect_4b.cpp` now. A `src/game/effect_4b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4b.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x87 (E4A's dispatcher `0x488F60` and states): six shaded panes of four `POLY_G3`s fanned over fourteen projected points of `0x654DA0`, stepped through four cases (a sound, a red / blue fade with the leader's animation, two green fades) | 5 | calls from E4A's `0x488F80`, `0x488FB0`, `0x488FE0` |

@@ -12,6 +12,8 @@ unchanged: 200,000 rounds, 0 mismatches. 94 controls planted one at a time: 93 r
 (`EffectGlowSparks_States`). One function has a live route
 (`EffectKind41_DrawNumber`, section 9); the rest are fuzz only.
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_48.cpp`, `src/game/effect/effect_kind_5d.cpp`, `src/game/effect/effect_kind_5f.cpp` and 5 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_3e.cpp` still held of ours is `src/game/effect/rest_3e.cpp` now. A `src/game/rest_3e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3e.cpp:LINE` answers it.
+
 **The band is effect code, all of it**, whatever the cut's classes said (26
 rows paired with SCENA code by the catalog, 6 `hypothesis` rows). The SCENA
 pairs are overlay addresses the scenario banks share with the PlayStation's

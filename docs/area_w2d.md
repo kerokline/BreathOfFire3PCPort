@@ -9,6 +9,8 @@ state-table dispatchers abort past their tables and the two divides abort
 on a zero divisor, where the original would jump into data or fault
 (section 6).
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/area/area_100.cpp`, `src/game/area/area_99.cpp`, `src/game/area/area_98.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/area_w2d.cpp` itself is retired. A `src/game/area_w2d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w2d.cpp:LINE` answers it.
+
 Group AR2D of round ten's fourth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 12). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)):
@@ -145,7 +147,7 @@ state 1), its state 1 `Area100_EffectB7Ring`.
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x4144E0` | `Area103_TalkByMember` | `0x51` | handler 0 (PSX `0x801F560C`) | kHandler | the script object's word `+8` = `Area103_FirstListedMember` + 2, `MoveScript_SetTurnTarget` on it, its bit `0x10` cleared, bit `0x20` by the running object's `+7` bit 4 |
+| `0x4144E0` | `Area103_TalkByMember` | `0x51` | handler 0 (PSX `0x801F560C`) | kHandler | the script object's word `+8` = `Area103_FirstListedMember` + 2, `Field_ObjectTalk` on it, its bit `0x10` cleared, bit `0x20` by the running object's `+7` bit 4 |
 | `0x414540` | `Area103_FirstListedMember` | `0x70` | called by handler 0 | kCallee | the first of `Area103_MemberKeys`' three that some member's `+0x89` holds, or `0xFF` |
 | `0x4145B0` | `Area103_SkipIfLeader89` | `0x1A` | handler 1 (PSX `0x801F5738`) | kHandler | the leader's `+0x89` not 0: the script position + `0x17` |
 | `0x4145D0` | `Area103_CountIfLeader89Zero` | `0x16` | handler 2 (PSX `0x801F5778`) | kHandler | the leader's `+0x89` 0: counter 0 + 1 |
@@ -194,7 +196,7 @@ bodies of area 98's block under 98, area 100's under 100.
   masks of words x, z and a value byte (area 98's init pushes x as a dword
   whose high half is the previous call's answer; the callee reads a word);
   `Effect_FindFree` `kByte 0xFF..0x03` (a slot of the first four records,
-  or none); `KeyItem_Has`, `MoveCmd_TestFB`, `MoveScript_SetTurnTarget`
+  or none); `KeyItem_Has`, `MoveCmd_TestFB`, `Field_ObjectTalk`
   `kFlag`; `Kind2_Place`; `MoveCmd_Move` (Capcom's); `ScriptFlags_Set40` /
   `Clear40`; `0x57C160` and `0x4220D0` by raw address (the latter logging
   the 12 bytes of the point it is handed, not its stack address); the
@@ -207,7 +209,7 @@ bodies of area 98's block under 98, area 100's under 100.
   chapter byte and the area number (read after it by
   `Area95_SpawnEffect37`); `Sprite_EnsureAnimation` and `Effect_FindFree`
   move the running object (and `Field_State`); `MoveCmd_Move`,
-  `Sprite_SetAnimation` and `MoveScript_SetTurnTarget` move the script
+  `Sprite_SetAnimation` and `Field_ObjectTalk` move the script
   object and the running object. The harness's own disturbance moves
   `Sprite_Current` about one call in 24.
 - **Data tables** swapped for recorders: `Area99_DriftStates`,
@@ -623,7 +625,7 @@ byte or count), D137 (divides by 0) in [`known-defects.md`](known-defects.md).
   `Sound_PlayEffect`, `Sprite_SetAnimation`, `Sprite_EnsureAnimation`,
   `ScriptFlags_Set40` / `Clear40`, `Flags_Set` / `Clear` / `Test`,
   `KeyItem_Has`, `Kind2_Place`, `MoveCmd_TestFB`,
-  `MoveScript_SetTurnTarget`, `Msg_OpenScript`, `Field_ChangeArea`. No
+  `Field_ObjectTalk`, `Msg_OpenScript`, `Field_ChangeArea`. No
   harness edit; no `AH_THEIRS` moved.
 - **Inbound** (for the rebinding pass): `Area_StepHook` (`0x56E050`, ours in
   `event_ops.cpp`) calls `0x413980` and `0x414330` through its raw

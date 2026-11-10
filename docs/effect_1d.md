@@ -12,6 +12,8 @@ fuzzed through the scenario harness in effect mode
 a count, one equivalent with its near variant refused. **Fuzz only**: no
 recorded route enters any of the 30 (section 9).
 
+**Source layout (2026-11-09):** the 30 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_21.cpp`, `src/game/effect/effect_kind_27.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_1d.cpp` itself is retired. A `src/game/effect_1d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1d.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0x21: an arm of four points round a centre, built and drawn by two callees nobody owns; grows, lifts, holds, swirls, folds | 7 | `Effect_KindHandlers[0x21]` (`0x6553D4`), `EffectKind21_States` `0x654284` (6) |

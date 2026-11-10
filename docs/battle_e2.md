@@ -13,6 +13,8 @@ errors. Every function is a faithful replacement: no `DIVERGENCE.md` entry is
 owed. The live route `dragonTransform.txt` enters four of them (section 10);
 the rest are fuzz-only.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/battle/battle_fx.cpp`, `src/game/battle/enemy_op.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_e2.cpp` itself is retired. A `src/game/battle_e2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e2.cpp:LINE` answers it.
+
 `tools/band_rows.py --group BE2` (2026-09-29) reads the 48 starts and flags
 nothing: no start of the cut is a non-function, no code between them is
 missing from the list, 0 extents differ from the cut by code (33 by trailing

@@ -13,6 +13,8 @@ through the scenario harness in field mode
 264,000 rounds, 0 mismatches. 166 controls planted one at a time, all refused by a count. **Fuzz only**: neither
 recorded route enters any of the 44 (section 9).
 
+**Source layout (2026-11-09):** the 44 functions this group took live in the file of their translation unit now: `src/game/effect/effect_kind_34.cpp` ([`source-layout.md`](source-layout.md)). `src/game/field_c2.cpp` itself is retired. A `src/game/field_c2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_c2.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | Kind 0x30: the pushed object - its states 1..3, the way test, its cells, 24 shards and 8 sparks | 13 | FC1's `0x46BB30` (`Effect_KindHandlers[0x30]`) through `0x653FE4` entries 1..3; direct calls; the engine's `0x46D710` / `0x46D770` (nobody's) |

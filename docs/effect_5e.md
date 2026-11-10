@@ -18,6 +18,8 @@ recorded route enters any of the 54 (section 9). Every row is effect code (no
 listed full-frame fills in this band, `0x507BDC` and `0x507CE3`, are
 widened** (section 2); no new ledger entry (the coordinator amends DIV-0041).
 
+**Source layout (2026-11-09):** the 54 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_3f.cpp`, `src/game/effect/effect_kind_18_sub_26.cpp`, `src/game/effect/effect_kind_18_sub_23.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_5e.cpp` itself is retired. A `src/game/effect_5e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_5e.cpp:LINE` answers it.
+
 All six are sub-kinds of effect kind 0x18: `Effect_KindHandlers[0x18]` is
 `EffectKind18_Run` `0x46D830` (ours), which jumps through
 `EffectKind18_States` by `+1`; `EffectKind18_Start` sets `+1` from the
