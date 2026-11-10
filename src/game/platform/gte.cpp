@@ -570,6 +570,16 @@ extern "C" long __cdecl Gte_RotTransPers(const short* vertex, unsigned long* sxy
     return Gte_Depth >> 2;
 }
 
+namespace {
+
+using RampFn = long (__cdecl*)(long);
+using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
+
+}  // namespace
+
+namespace psx_gte_float { RampFn g_ramp_clone = nullptr; }
+namespace psx_gte_float { PerspectiveFn g_perspective_clone = nullptr; }
+
 // original 0x5A8340: where a depth lies between two planes, 0 to 0x1000 - the
 // GTE's depth-cue interpolation factor by its shape. Truncated, not rounded.
 extern "C" long __cdecl Gte_DepthRamp(long value) {
