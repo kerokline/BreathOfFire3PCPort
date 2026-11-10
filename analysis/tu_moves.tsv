@@ -6410,6 +6410,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	kIconX	local		src/game/config_text.cpp	197	203	203	src/game/core/title.cpp	d3e6abb3
 0x461C00	Config_DrawControllerCell	func	tu_45fe60	src/game/config_text.cpp	220	239	293	src/game/core/title.cpp	d3e6abb3
 	mode_flow::g	seam		src/game/core/mode_flow.cpp	42	42	59	src/game/battle/dragon_cmd.cpp	98cb16c7
+	mode_tasks::g	seam		src/game/core/mode_tasks.cpp	48	48	48	src/game/core/title.cpp	3b04468d
 	save_menu::g	seam		src/game/core/save_menu.cpp	56	56	88	src/game/battle/dragon_cmd.cpp	98cb16c7
 		file		src/game/d3d_draw.cpp	1	1	173	src/game/platform/d3d_draw.cpp	b29e27f3
 	At	copied		src/game/d3d_draw.cpp	63	63	63	src/game/platform/d3d.cpp	d3e6abb3

@@ -291,6 +291,25 @@ Callees g = kOriginals;
 
 }  // namespace item_use
 
+// mode_tasks's callee seam, moved here from mode_tasks.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace mode_tasks {
+namespace {
+
+const mode_tasks::Callees kOriginals = {
+    Task_ClearPrivate, Task_Sleep, Title_CheckStart, Title_DrawBackdrop, Title_DrawLogo, File_LoadDone,
+    Transition_Start, Title_FadeMusic, Sound_PlayEffect, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite,
+    Gpu_SetSprt, Gpu_SetSemiTrans, Title_DrawSetA, Title_DrawSetB, Title_DrawSetC,
+    Field_ModeDispatch, Field_Frame,
+    Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
+};
+
+}  // namespace
+
+Callees g = kOriginals;
+
+}  // namespace mode_tasks
+
 // The item window's frame at its slide: a box 0x118 x 0x13 flags 0xF2 at (0x14,
 // 0x12 - 12 slide) and its outline 0x113 x 0xF at (0x16, 0x14 - 12 slide), the
 // slide read again for the outline (the original's y carries leftovers above
