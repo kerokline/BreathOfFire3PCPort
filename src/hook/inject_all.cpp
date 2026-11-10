@@ -2531,6 +2531,7 @@ void InjectAll() {
                                 // the fuzz only; after every harness's inject; after MenuFrame_Inject (DIV-0011) and
                                 // BattleDraw_Inject (DIV-0059), whose call sites inside 0x59AA80 / 0x59DBF0 ours reads,
                                 // and Widescreen_Inject (DIV-0041), whose bound inside 0x59C130 ours reads back
+    ShopWin2FromRest2h_Inject();
     ShopWin2_Inject();
     DInput_Inject();
     MenuList_Inject();

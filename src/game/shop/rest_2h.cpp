@@ -53,20 +53,6 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-namespace rest_2h {
-std::uint32_t g_master_bound = Low32(Widescreen_SlideOperand(at::kMasterBound.v));
-// DIVERGENCE DIV-0059: the master list's title centred on the width its pen
-// covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
-// after the fuzz, which compares with the original's 6 * count arithmetic.
-bool g_master_title_live = false;
-// DIVERGENCE DIV-0083: the pupils box's label (弟子, 0x66A1F8) and its own
-// box are the 2001 port's addition - the PlayStation's screen has the
-// portrait box alone (the owner's US capture, 2026-10-07). 0 until
-// Rest2H_Inject patches it to 1 under a Latin overlay, after the fuzz, under
-// the name MasterPupilLabel; BOF3X_ORIGINAL=MasterPupilLabel keeps the box.
-unsigned char g_pupil_label_off = 0;
-}  // namespace rest_2h
-
 namespace {
 
 namespace at = rest_2h::at;
@@ -160,13 +146,4 @@ void Rest2H_Inject() {
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; Capcom's -120 at every width since DIV-0041's faster slide)",
               static_cast<int>(Widescreen_SlideBound(at::kMasterBound.v)));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
-    rest_2h::g_master_title_live = true;   // DIV-0059, from here on
-    // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.
-    if (Lang_Latin()) {
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MasterPupilLabel",
-                         Low32(&rest_2h::g_pupil_label_off),
-                         &was, &is, 1);
-        bof3::Log("DIV-0083    the pupils box's label left out: %s", rest_2h::g_pupil_label_off ? "on" : "off");
-    }
 }
