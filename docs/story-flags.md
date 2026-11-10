@@ -20,6 +20,42 @@ saves. It holds no save and no dump of one.
 - **Event flags** at block `+0x650` are a separate array with their own setters.
   Not covered yet. Three are set one frame into a new game (3, 25, 27).
 
+### Other flag banks: finds and genes are not chapter flags
+
+READ 2026-11-09. Opening a chest or taking a gene does not touch a chapter row.
+Each has its own bank in the save block:
+
+| Bank | Block | Set by | Flag number from |
+|---|---|---|---|
+| Field object contents (chests, pick-ups) | `+0x6EC`, 32 bytes | `Field_ContentTake` (`field_e1.cpp`), bank `0x9040CC` | The object's byte `+5` in the area data |
+| A second find bank, with a counter at `+0x75C` | `+0x72C`, 32 bytes | `Field_PassageSteps` entry 1, bank `0x90410C` | The passage entry's byte `+4` |
+| Dragon genes | `+0xC70`, 18 bits | `Gene_Bits` `0x904650`, below | The gene's number |
+
+MEASURED: between `start.DAT` and `start_normal.DAT` the one item picked up changed
+exactly one byte at `+0x6EC`, beside its inventory slot.
+
+**Genes are set in five places.** A gene found in the field goes through one generic
+handler, `FieldTail_FlagMessage` (`field_e2.cpp`, original `0x56DE50`), which sets
+the gene's bit, shows message `0xFA` and plays a stream. It sets no chapter flag.
+Four genes are given by story scenes instead, each beside a chapter flag:
+
+| Gene | Scene | Chapter flag set at the same step |
+|---:|---|---|
+| 0 | `Scena03_Scene1` step 4, with item event `0x97` | chapter 3 flag 1 |
+| 6 | `Scena03_Scene8` step `0x14` | chapter 3 flag 30 |
+| 3 and 16 | `Scena08_Scene3` step `0x12`, the run that holds event battle `0x20` | chapter 8 flag 4 |
+
+By the order in Red Herring's editor (cited, not checked by us) those are Flame,
+Defender, Shadow and Fusion.
+
+**What this means for granting a gene early.** Set the gene's bit and leave the
+chapter flag alone. The chapter flag marks the scene as done, so setting it would
+skip the scene and whatever else the scene does. With only the bit set, the scene
+still plays when reached and sets the bit again, which changes nothing
+(`Flags_Set` only ORs the bit in). Not checked: what tests chapter 8's flag 4, and
+whether any event script in the game data tests a gene bit (`EventCond_Gene`) in a
+way that changes a scene. An in-game test is owed.
+
 ## 2. Method
 
 A chapter's code names its flags outright: `Flags_Set(Row(), n)`,
