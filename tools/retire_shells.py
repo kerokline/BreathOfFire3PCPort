@@ -400,6 +400,8 @@ def alone_on_its_lines(src: str, it: ci.Item) -> bool:
     """The item's lines hold nothing but the item (not `}  namespace x { Callees g = kOriginals; }`)."""
     lead = src[src.rfind("\n", 0, it.code_start) + 1:it.code_start]
     body = strip_comments(src[it.code_start:it.end]).rstrip()
+    if it.kind == "func":       # a helper of the seam (`template <class T> T* Raw(...) { ... }`): it ends at its brace
+        return not lead.strip() and body.endswith("}")
     return not lead.strip() and body.endswith(";") and body.count(";") >= 1 and not re.search(r";\s*\S", body.split("\n")[-1])
 
 

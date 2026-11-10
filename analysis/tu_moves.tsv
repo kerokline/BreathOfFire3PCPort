@@ -3424,6 +3424,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	battle_misc::g	seam		src/game/battle/battle_misc.cpp	57	57	78	src/game/battle/battle_3.cpp	98cb16c7
 	battle_phases::g	seam		src/game/battle/battle_phases.cpp	39	39	56	src/game/battle/battle_intro.cpp	98cb16c7
 	battle_result::g	seam		src/game/battle/battle_result_ours.cpp	48	48	64	src/game/battle/battle_result.cpp	98cb16c7
+	battle_sprites::g	seam		src/game/battle/battle_sprites.cpp	59	59	99	src/game/battle/dragon_cmd.cpp	8fa9d4cb
 	battle_turn_steps::g	seam		src/game/battle/battle_turn_steps.cpp	43	43	71	src/game/battle/battle_action.cpp	98cb16c7
 	battle_window_draw::g	seam		src/game/battle/battle_window_draw.cpp	46	46	65	src/game/battle/battle_3.cpp	98cb16c7
 	battle_windows::g	seam		src/game/battle/battle_windows.cpp	46	46	77	src/game/battle/battle_obj.cpp	98cb16c7
