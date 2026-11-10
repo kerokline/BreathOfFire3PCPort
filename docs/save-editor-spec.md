@@ -409,11 +409,18 @@ in the PSX layout (MEASURED):
   The first evidence that chapter baselines measured on one target carry to the
   others.
 
-Bits 8 and 9 of chapter 0's word are set on both disc saves and not on the PC one.
-Those saves also count two more battles. The owner (2026-11-09): the opening
-section has five possible battles, and the disc saves most likely fought all five.
-So bits 8 and 9 are probably the two optional battles, one bit each. To confirm:
-fight one of them on PC and compare.
+Bits 8 and 9 of chapter 0's word are set on both disc saves and not on the PC one,
+and those saves count two more battles. READ in our source, `Scena00_Run6`
+(`src/game/scena_sc0.cpp`, original `0x538F90`): the run sets flag 7, 8 or 9 as it
+starts event battle 4, 5 or 6, and `Scena00_Area18` starts the run for the second
+and third only while flag 8 or 9 is clear. [`boss-fights.md`](boss-fights.md) lists
+chapter 0's event battles as 1, 4, 5, 6 and 7, which is the owner's five. So the PC
+save fought battles 1, 4 and 7, and the disc saves all five. Each flag is set when
+its encounter starts, not when the battle is won.
+
+**This is the method for the flag documentation.** A chapter's code names its flags
+outright, as `Flags_Set(Row(), n)` and `Flags_Test(Row(), n)`, so each flag's
+meaning can be read from the function around it, and the saves confirm the reading.
 
 These two serve as the US and JP references for the first save point. A frame-1
 save like `start.DAT` has no disc equivalent, since the PSX cannot save there.
