@@ -145,8 +145,11 @@ PC offsets within the record (the PlayStation's are 4 lower from `+0x09` on).
 
 - No reader was found for the accuracy byte, and no setter for the halving bits.
 - Whether the PlayStation reads its twin of `+0x26` and of `+0xC84..+0xC9F`.
-- A note in `symbols.toml` says the two countdowns never reach zero; the pass
-  reads that they do. To be settled on the original's instructions.
+- Settled 2026-11-10: the two countdowns do reach zero and stop (`CountDown`,
+  `mode_flow.cpp`); the note that said never is corrected there and in `symbols.toml`.
+- Fatigue has two caps, 5 and 9, and both are the game's design (the owner,
+  2026-11-10): a member left down after a fight loses max HP up to the cap of 5
+  until an inn; area 189's walk without water goes on to 9.
 - Possible defects of the original that the passes list in their files' last
   sections. None is in `docs/known-defects.md` yet.
 - The passes are one reading each. Only the claims in section 4 are measured.
