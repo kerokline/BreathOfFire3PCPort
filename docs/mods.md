@@ -38,6 +38,9 @@ the text** box chooses it, and the launcher adds the layer to `BOF3X_OPT`.
 id = "furigana"            # [a-z0-9]+(-[a-z0-9]+)*: the folder name and the layer's middle
 name = "Japanese (Furigana)"
 version = "0.1.0"          # 1.2.3, optionally -beta / +build
+author = "Who made it"     # optional, up to 64 characters: shown on the Mods tab (issue 216)
+url = "https://..."        # optional: the author's page; http or https, shown as text, never opened
+credit = "One line"        # optional, up to 200 characters: the author's own line, shown when the mod is selected
 kind = "reading-row"       # a kind the tools know (KINDS in tools/mods.py); anything else is refused
 requires = ["ja-JP"]       # the language layers the install must hold (src/game/language_tags.h tags)
 
@@ -60,6 +63,7 @@ case below and checks the sentence):
 | a table or key `mod.toml`'s kind does not have | no hook, no command key, nothing for a later tool to misread |
 | more than 16 members, a member over 4 MiB unpacked, over 8 MiB in all, a zip over 8 MiB | the bounds; a member is read at most its header's size and the CRC must hold, so a lying header is refused as damaged |
 | an encrypted member, a name twice, not a zip, no `mod.toml` | |
+| `author` or `credit` empty, too long or holding a control character; `url` not an `http://` or `https://` address, or with a space | the three are text the launcher shows; nothing is opened, followed or run |
 | an `id` that is not lowercase letters, digits and single hyphens, or whose layer `ruby-<id>-<base>` is over 23 characters | the DLL's layer-name limit (`ConfigOptValid`) |
 | a retired bare language code (`ja`), a tag the game does not know | DIV-0005 |
 | `reading-row.base` not among `requires`, or a base the builder cannot read (today: only `ja-JP`, furigana) | |
@@ -83,8 +87,9 @@ is a newer zip of the same id); `add --json` says which version it replaced.
 
 `<home>\mods.toml` is written only by `mods.py`, in `sources.toml`'s shape: a
 `[[mod]]` table a mod, a `key = value` line each, the values JSON-quoted
-(`id, name, version, kind, requires, base, readings, files, zip, sha256,
-added`). The launcher reads it (`ConfigModsInstalled`) for the Settings box.
+(`id, name, version, author, url, credit, kind, requires, base, readings,
+files, zip, sha256, added`; the three credit keys only when the mod gives
+them). The launcher reads it (`ConfigModsInstalled`) for the Settings box.
 
 **Held** means the install holds a language layer: `cache\loc\<tag>\dat\` has
 a `.DAT`, or `game\DAT\<tag>.*.DAT` exists - the launcher's
@@ -126,7 +131,10 @@ place, so a mod added on the Mods tab is built without a whole setup.
 
 **The Mods tab** (`IDD_PAGE_MODS`, `sources_dialog.cpp ModsPageProc`): a
 sentence for what a mod is (and that side-loaded DAT / EMI files come later,
-IDEAS I33), the list - name, version, kind, state - owner-drawn so a mod the
+IDEAS I33), the list - name, author (`by ...`), version, state (2026-11-10,
+issue 216: the author in the row; the kind moved to the status line, which
+for the selected mod reads `<name> <version>, by <author>. <credit> <url>
+Kind: <kind>.`, or `The mod does not give its author.`) - owner-drawn so a mod the
 install cannot play is greyed with its reason (`needs ja-JP text: add that
 disc`, `not built: Data, Sources..., Build`, `built; over ja-JP text only`
 when another language is chosen in Settings, `problem: ...`), **Remove**, a

@@ -20,6 +20,7 @@
 #                           exist, every field fits its record, nothing overlaps
 #                           unmarked, every claimed field cites its reader
 #   tools/type1.py selftest the type-1 decompressor on synthetic input
+#   tools/vcdiff.py selftest the VCDIFF / xdelta reader on patches it makes itself
 #   tools/importer.py check the importer's recipes against fixtures/ (with
 #                           seq.py's round trip and fixtures/bgm.tsv's shape)
 #                           and exe_tables.py check
@@ -109,6 +110,9 @@ jobs:
 
       - name: The type-1 decompressor's self-test (no game data)
         run: python tools/type1.py selftest
+
+      - name: VCDIFF (xdelta) reader self-test
+        run: python tools/vcdiff.py selftest
 
       - name: The language converters' self-test (no game data)
         run: python tools/loc_build.py selftest

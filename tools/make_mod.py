@@ -35,7 +35,8 @@ import mods   # noqa: E402
 MODS = {
     "furigana": {
         "src": os.path.join(ROOT, "data", "furigana"),
-        "mod": {"id": "furigana", "name": "Japanese (Furigana)", "version": "0.1.0", "kind": "reading-row",
+        "mod": {"id": "furigana", "name": "Japanese (Furigana)", "version": "0.1.1", "author": "Kevin Kline",
+                "kind": "reading-row",
                 "requires": ["ja-JP"]},
         "table": {"base": "ja-JP", "readings": "readings.toml"},
     },
@@ -47,7 +48,8 @@ def mod_toml(spec):
     kind = mods.KINDS[m["kind"]]
     q = lambda v: json.dumps(v, ensure_ascii=False)
     lines = ["# Written by tools/make_mod.py (docs/mods.md).", "[mod]"]
-    lines += ["%s = %s" % (k, q(m[k])) for k in ("id", "name", "version", "kind", "requires")]
+    lines += ["%s = %s" % (k, q(m[k])) for k in ("id", "name", "version", "author", "url", "credit", "kind", "requires")
+              if k in m]
     lines += ["", "[%s]" % kind["table"]] + ["%s = %s" % (k, q(t[k])) for k in kind["keys"]]
     return ("\n".join(lines) + "\n").encode("utf-8")
 
