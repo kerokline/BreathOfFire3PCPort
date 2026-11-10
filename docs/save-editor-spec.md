@@ -337,7 +337,7 @@ A generator, not a template. No binary save is shipped.
    byte, then the whelp record.
 3. Write the target's layout, names and options.
 4. Scene state at the new-game chapter. That chapter's Start sets the area.
-5. Fill the two patterns at `+0xC28` and `+0xC48` (below).
+5. Fill `+0xC28..+0xC6F` with `0xFF`, as the first chapter's start does (below).
 6. Write the few remaining start-up fields (below), then seal.
 
 The test is a byte comparison against a save the game wrote at the first
@@ -367,7 +367,9 @@ MEASURED on `start.DAT`:
   4-byte rows. `+0xC48..+0xC6F` is one byte 40 times. Both are already there at
   frame 1 and unchanged in the second save. The block is in the image's
   uninitialised part (it sits at `0x9039E0`; the section's file data ends at
-  `0x676000`), so code writes them at start-up. That code is not found yet.
+  `0x676000`), so code writes them at start-up. READ: `Scena00_Start` writes -1 to
+  the 18 dwords `0x904608..0x90464F`, which is exactly this span, and the bytes
+  are all `0xFF` ([`story-flags.md`](story-flags.md) section 3).
 - **Three flags are set at frame 1:** bit 3 of chapter 0's flag word, and event
   flags 3, 25 and 27.
 - **Other start-up fields, to trace one by one:** the nine button masks, the
@@ -418,7 +420,8 @@ chapter 0's event battles as 1, 4, 5, 6 and 7, which is the owner's five. So the
 save fought battles 1, 4 and 7, and the disc saves all five. Each flag is set when
 its encounter starts, not when the battle is won.
 
-**This is the method for the flag documentation.** A chapter's code names its flags
+**This is the method for the flag documentation**, now in
+[`story-flags.md`](story-flags.md), with chapter 0 complete. A chapter's code names its flags
 outright, as `Flags_Set(Row(), n)` and `Flags_Test(Row(), n)`, so each flag's
 meaning can be read from the function around it, and the saves confirm the reading.
 
@@ -545,8 +548,8 @@ For later investigation:
 2. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
    no such saves, and the FR and DE serials are unconfirmed.
 3. Name codecs for the PSX EU, FR and DE releases.
-4. Which code writes the two patterns at `+0xC28` and `+0xC48`, and what they mean.
-   Their content is known (section 12.1).
+4. What the 18 dwords at `+0xC28` mean. Their writer and start value are known
+   (section 12.1).
 5. How the launcher turns the install's glyph codes into text it can draw. Until
    then, item and ability lists can show ids.
 6. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
