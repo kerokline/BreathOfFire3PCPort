@@ -7007,44 +7007,44 @@ site	src/game/field/leader_panel.cpp	846	narrow_call	image_local	live	s + 0xC	Ke
 site	src/game/field/leader_panel.cpp	848	narrow_call	image_local	live	t + 0xC	Key	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
 site	src/game/field/leader_panel.cpp	853	narrow_call	image_local	live	s + 0xC	Key	if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
 site	src/game/field/leader_panel.cpp	937	long	l	live	long	-	const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
-site	src/game/field/leader_panel.cpp	1919	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
-site	src/game/field/leader_panel.cpp	1955	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
-site	src/game/field/leader_panel.cpp	1956	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
-site	src/game/field/leader_panel.cpp	1998	long	l	live	long	-	Field_Kind2Z = static_cast<long>(static_cast<U>(Field_Kind2Z) - 0x8000u);
-site	src/game/field/leader_panel.cpp	2006	long	l	live	long	-	long depth;
-site	src/game/field/leader_panel.cpp	2008	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(prim + 8), &depth);
-site	src/game/field/leader_panel.cpp	2011	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<unsigned long*>(prim + 0x14), &depth);
-site	src/game/field/leader_panel.cpp	2245	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
-site	src/game/field/leader_panel.cpp	3066	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
-site	src/game/field/leader_panel.cpp	3068	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
-site	src/game/field/leader_panel.cpp	3069	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
-site	src/game/field/leader_panel.cpp	3072	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
-site	src/game/field/leader_panel.cpp	3074	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
-site	src/game/field/leader_panel.cpp	3076	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
-site	src/game/field/leader_panel.cpp	3078	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
-site	src/game/field/leader_panel.cpp	3088	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
-site	src/game/field/leader_panel.cpp	3091	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3095	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
-site	src/game/field/leader_panel.cpp	3098	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3101	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
-site	src/game/field/leader_panel.cpp	3102	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
-site	src/game/field/leader_panel.cpp	3103	narrow_call	image_local	live	after	Key	return Key(after);
-site	src/game/field/leader_panel.cpp	3111	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
-site	src/game/field/leader_panel.cpp	3112	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
-site	src/game/field/leader_panel.cpp	3123	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
-site	src/game/field/leader_panel.cpp	3139	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
-site	src/game/field/leader_panel.cpp	3191	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
-site	src/game/field/leader_panel.cpp	3217	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
-site	src/game/field/leader_panel.cpp	3219	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
-site	src/game/field/leader_panel.cpp	3220	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
-site	src/game/field/leader_panel.cpp	3221	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
-site	src/game/field/leader_panel.cpp	3273	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3279	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3282	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3323	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
-site	src/game/field/leader_panel.cpp	3526	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
-site	src/game/field/leader_panel.cpp	3533	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
-site	src/game/field/leader_panel.cpp	3540	low32	object_ours	live	&g_fish_count_word	Low32	bof3::PatchBytes(" ", Low32(&g_fish_count_word), &was, &is, 1);
+site	src/game/field/leader_panel.cpp	1920	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
+site	src/game/field/leader_panel.cpp	1956	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
+site	src/game/field/leader_panel.cpp	1957	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
+site	src/game/field/leader_panel.cpp	1999	long	l	live	long	-	Field_Kind2Z = static_cast<long>(static_cast<U>(Field_Kind2Z) - 0x8000u);
+site	src/game/field/leader_panel.cpp	2007	long	l	live	long	-	long depth;
+site	src/game/field/leader_panel.cpp	2009	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(prim + 8), &depth);
+site	src/game/field/leader_panel.cpp	2012	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<unsigned long*>(prim + 0x14), &depth);
+site	src/game/field/leader_panel.cpp	2246	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
+site	src/game/field/leader_panel.cpp	3067	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
+site	src/game/field/leader_panel.cpp	3069	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
+site	src/game/field/leader_panel.cpp	3070	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
+site	src/game/field/leader_panel.cpp	3073	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
+site	src/game/field/leader_panel.cpp	3075	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
+site	src/game/field/leader_panel.cpp	3077	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
+site	src/game/field/leader_panel.cpp	3079	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
+site	src/game/field/leader_panel.cpp	3089	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
+site	src/game/field/leader_panel.cpp	3092	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3096	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
+site	src/game/field/leader_panel.cpp	3099	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3102	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
+site	src/game/field/leader_panel.cpp	3103	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
+site	src/game/field/leader_panel.cpp	3104	narrow_call	image_local	live	after	Key	return Key(after);
+site	src/game/field/leader_panel.cpp	3112	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
+site	src/game/field/leader_panel.cpp	3113	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
+site	src/game/field/leader_panel.cpp	3124	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
+site	src/game/field/leader_panel.cpp	3140	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
+site	src/game/field/leader_panel.cpp	3192	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
+site	src/game/field/leader_panel.cpp	3218	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
+site	src/game/field/leader_panel.cpp	3220	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
+site	src/game/field/leader_panel.cpp	3221	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
+site	src/game/field/leader_panel.cpp	3222	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
+site	src/game/field/leader_panel.cpp	3274	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3280	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3283	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3324	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
+site	src/game/field/leader_panel.cpp	3527	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
+site	src/game/field/leader_panel.cpp	3534	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
+site	src/game/field/leader_panel.cpp	3541	low32	object_ours	live	&g_fish_count_word	Low32	bof3::PatchBytes(" ", Low32(&g_fish_count_word), &was, &is, 1);
 site	src/game/field/map_cells.cpp	27	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	27	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	64	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
