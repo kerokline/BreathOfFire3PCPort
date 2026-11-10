@@ -64,11 +64,7 @@ constexpr U kMemberStride = 0xA4;
 constexpr unsigned kMemberCount = 7;
 
 }  // namespace
-// DIVERGENCE DIV-0200 (faerie_name.h): 1 through PatchBytes("FaerieNameEnd")
-// in Rest4E_Inject, after the self-test. SlotName: entry e's name for a draw,
-// NUL-ended at its last whole glyph when on, else the table itself; the
-// buffer is the draw's, read before the next call.
-namespace rest_4e { std::uint8_t g_faerie_name_end = 0; }  namespace {
+namespace {
 
 constexpr ::bof3::image::Va kWinOff{WindowRecords_addr + 3}; // u8: window 0 shut (the slide waits for 0)
 
@@ -134,21 +130,6 @@ void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w,
 // The ranked lists (CommuRank_Modes by the mode 0x939A3E)
 // ===========================================================================
 
-// DIVERGENCE DIV-0064 group 14 (amended 2026-11-01, issue #177): set by
-// Rest4E_Inject after the self-test, for a Latin language (DIV-0056).
-namespace rest_4e { bool g_west_cause_column = false; }
-
 void Rest4E_Inject() {
     if (bof3::WantsShadow("rest_4e")) rest_4e::SelfTest();
-    {
-        // DIV-0200, after the self-test (which compares Capcom's draws).
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_4e::g_faerie_name_end)), &was, &is, 1);
-    }
-    // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01): after the self-test,
-    // which compares Capcom's column; a Latin language only (DIV-0056).
-    if (Lang_Latin()) {
-        rest_4e::g_west_cause_column = true;
-        bof3::Log("DIV-0064    the village's deaths page: the cause at x + 0x48, the Western discs' column");
-    }
 }

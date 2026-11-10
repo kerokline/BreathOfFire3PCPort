@@ -204,6 +204,12 @@ extern "C" void __cdecl CommuName_DrawHeader(void) {
 
 #pragma clang attribute pop
 
+// DIVERGENCE DIV-0200 (faerie_name.h): 1 through PatchBytes("FaerieNameEnd")
+// in Rest4E_Inject, after the self-test. SlotName: entry e's name for a draw,
+// NUL-ended at its last whole glyph when on, else the table itself; the
+// buffer is the draw's, read before the next call.
+namespace rest_4e { std::uint8_t g_faerie_name_end = 0; }
+
 // original 0x45E870: an entry's panel at (x, y) - a box 0x48 x 0x26, its frame
 // (CommuEntry_DrawPanelFrame), the entry's name (or, `editing` set, the name
 // being edited) at (x + 6, y + 4), a black 60 x 16 TILE at (x + 6, y + 0x12)
@@ -662,4 +668,9 @@ void CommuFromRest4e_Inject() {
     BOF3_INJECT(Commu_DrawTiledFrame);
     BOF3_INJECT(CommuName_CommitMember);
     BOF3_INJECT(CommuName_CommitEntry);
+    {
+        // DIV-0200, after the self-test (which compares Capcom's draws).
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_4e::g_faerie_name_end)), &was, &is, 1);
+    }
 }

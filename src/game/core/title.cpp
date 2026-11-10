@@ -791,6 +791,10 @@ extern "C" void __cdecl CommuRank_Show(void) {
 // 0x652AE4's next entry).
 extern "C" void __cdecl CommuRank_Close(void) { ++AreaW0c_TailState; }
 
+// DIVERGENCE DIV-0064 group 14 (amended 2026-11-01, issue #177): set by
+// Rest4E_Inject after the self-test, for a Latin language (DIV-0056).
+namespace rest_4e { bool g_west_cause_column = false; }
+
 // original 0x460730: the first list's page `page` (its low byte) at (x, y):
 // its heading (icon 1, message 0x38, the count 0x9039A0), then up to seven
 // rows from 0x9039C0 + 7 page, each the name of the entry its low 7 bits name
@@ -2206,6 +2210,12 @@ void TitleFromRest4e_Inject() {
     BOF3_INJECT(CommuRank_DrawListC);
     BOF3_INJECT(CommuRank_DrawBackdrop);
     BOF3_INJECT(CommuRank_DrawTile);
+    // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01): after the self-test,
+    // which compares Capcom's column; a Latin language only (DIV-0056).
+    if (Lang_Latin()) {
+        rest_4e::g_west_cause_column = true;
+        bof3::Log("DIV-0064    the village's deaths page: the cause at x + 0x48, the Western discs' column");
+    }
 }
 
 void TitleFromRest4f_Inject() {
