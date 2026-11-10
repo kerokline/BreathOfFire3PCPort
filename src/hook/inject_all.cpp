@@ -2551,6 +2551,7 @@ void InjectAll() {
                                 // call it by the address it had; before FishingText_Arm; no module patches bytes
                                 // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
                                 // yes_no_layout.cpp)
+    FieldSaveFromRest2c_Inject();
     ShopTrade_Inject();
     ShopResist_Inject();
     ShopBrowse_Inject();
