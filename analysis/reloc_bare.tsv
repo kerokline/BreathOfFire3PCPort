@@ -170,13 +170,13 @@ literal	src/game/area/area_42.cpp	0x418000	1	tE->step_x = 0x418000;
 literal	src/game/area/area_42.cpp	0x4D8000	1	rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0x4D8000);
 literal	src/game/area/area_43.cpp	0x800000	1	tE->height = static_cast<std::int32_t>(static_cast<U>(tO->height) + 0x800000u);
 literal	src/game/area/area_49.cpp	0x4D8000	1	if (x == 0x4D8000 && Cond_ByteFD == 0) AH_CALL(Area49_SwapFlags2To3)();
+literal	src/game/area/area_51.cpp	0x5FD001	1	const bool on = bof3::PatchBytes(" ", 0x5FD001, &was, &is, 1);
 literal	src/game/area/area_52.cpp	0x668000	1	extern " " void __cdecl Area52_MoveBlockB(void) { MoveBlock(0x668000); }
 literal	src/game/area/area_52.cpp	0x688000	1	extern " " void __cdecl Area52_MoveBlockA(void) { MoveBlock(0x688000); }
 literal	src/game/area/area_52.cpp	0x858000	1	if (rv::Current<records::SpriteObject>()->x != 0x858000) return;
 literal	src/game/area/area_52.cpp	0x880000	1	extern " " void __cdecl Area52_SpawnEffect48A(void) { SpawnEffect48(0x880000, 0x110000, 8); }
 literal	src/game/area/area_52.cpp	0x890000	1	extern " " void __cdecl Area52_SpawnEffect48B(void) { SpawnEffect48(0x890000, 0x118000, 0x10); }
 literal	src/game/area/area_95.cpp	0x410000	1	tE->x = 0x410000;
-literal	src/game/area/area_w1c.cpp	0x5FD001	1	const bool on = bof3::PatchBytes(" ", 0x5FD001, &was, &is, 1);
 literal	src/game/area/world_map_ours.cpp	0x65F5A8	1	constexpr U kSmallUV = 0x65F5A8;
 literal	src/game/area/world_map_ours.cpp	0x66A2FC	1	constexpr U kStandInStrings = 0x66A2FC;
 literal	src/game/area_cell_hook_callees.h	0x663008	1	constexpr unsigned kPairCount = (0x663008 - kPairs.v) / kPairStride;
@@ -855,6 +855,7 @@ literal	src/game/field/draw_pool.cpp	0x905F0E	1	{0x509910, 0x905F0E, 0x8E},
 literal	src/game/field/event_cond.cpp	0x00400000	1	return nan ? bits | 0x00400000u : bits;
 literal	src/game/field/event_cond.cpp	0x007FFFFF	1	const bool nan = (bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0;
 literal	src/game/field/event_cond.cpp	0x7F1BAC	1	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
+literal	src/game/field/field_3.cpp	0x65F5DC	1	constexpr std::uint32_t kPaceTable = 0x65F5DC;
 literal	src/game/field/field_3.cpp	0x65F624	1	constexpr std::uint32_t kAsideRows = 0x65F624;
 literal	src/game/field/field_4.cpp	0x9039A2	1	constexpr std::uint32_t kFlagsLo = 0x9039A2, kFlagsHi = 0x9039A3, kFlags2Lo = 0x905BA4, kFlags2Hi = 0x905BA5;
 literal	src/game/field/field_4.cpp	0x9039A3	1	constexpr std::uint32_t kFlagsLo = 0x9039A2, kFlagsHi = 0x9039A3, kFlags2Lo = 0x905BA4, kFlags2Hi = 0x905BA5;
@@ -1647,24 +1648,24 @@ literal	src/game/move_cmds_callees.h	0x904030	1	constexpr std::uint32_t kStoryFl
 literal	src/game/move_cmds_callees.h	0x904061	1	constexpr std::uint32_t kPartyFlags = 0x904061;
 literal	src/game/move_cmds_callees.h	0x904062	1	constexpr std::uint32_t kPartyLists = 0x904062;
 literal	src/game/move_cmds_callees.h	0x92A0C0	1	constexpr std::uint32_t kSavedSprite = 0x92A0C0;
-literal	src/game/platform/d3d_list.cpp	0x5A3A60	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A3B60	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A3D70	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A3E90	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A3FB0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A40C0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A41A0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-literal	src/game/platform/d3d_list.cpp	0x5A42E0	1	H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
-literal	src/game/platform/d3d_list.cpp	0x5A4400	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A4500	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A45B0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A46E0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A47F0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A4900	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
-literal	src/game/platform/d3d_list.cpp	0x5A4C40	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A3A60	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A3B60	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A3D70	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A3E90	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A3FB0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A40C0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A41A0	1	H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
+literal	src/game/platform/d3d.cpp	0x5A42E0	1	H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
+literal	src/game/platform/d3d.cpp	0x5A4400	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A4500	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A45B0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A46E0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A47F0	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A4900	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A4C40	1	H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
+literal	src/game/platform/d3d.cpp	0x5A5B21	1	constexpr std::uint32_t kMinFilterImm = 0x5A5B21;
+literal	src/game/platform/d3d.cpp	0x5A5B34	1	constexpr std::uint32_t kMagFilterImm = 0x5A5B34;
 literal	src/game/platform/d_input.cpp	0x5C4828	1	constexpr rdata::Const kKeyboardGuid{0x5C4828};
-literal	src/game/platform/gfx_filter.cpp	0x5A5B21	1	constexpr std::uint32_t kMinFilterImm = 0x5A5B21;
-literal	src/game/platform/gfx_filter.cpp	0x5A5B34	1	constexpr std::uint32_t kMagFilterImm = 0x5A5B34;
 literal	src/game/platform/sound_sp.cpp	0x00400000	1	SetDw(world.sprite + 0x34, 0x00400000u); SetS16(world.sprite + 0x2E, 0xA0); Law(world.sprite, &l, &r, &full);
 literal	src/game/platform/widescreen.cpp	0x51097E	1	{0x51097E, 0x5C4240, &g_wide_lo, 0x5C4240},
 literal	src/game/platform/widescreen.cpp	0x510991	1	{0x510991, 0x5C423C, &g_wide_hi, 0x5C423C},

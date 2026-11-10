@@ -2977,7 +2977,6 @@ src/game/area/area_w1b_fuzz.cpp	SelfTest	global	Mem	Area45_PlateAnims_addr	0	0x5
 src/game/area/area_w1b_fuzz.cpp	SelfTest	global	Mem	Area45_Directions_addr	0	0x5f770c	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area45_Directions_addr - -)	c4-tc
 src/game/area/area_w1b_fuzz.cpp	SelfTest	global	Mem	Area45_DriftUV_addr	0	0x5f772c	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area45_DriftUV_addr - -)	c4-tc
 src/game/area/area_w1b_fuzz.cpp	SelfTest	global	Mem	Area44_Gate0_addr	0	0x5f7074	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area44_Gate0_addr - -)	c4-tc
-src/game/area/area_w1c.cpp	B	global	Mem	at::kMessage	0	0x7dee48	-	no-entry	at::kMessage 0x7dee48 -	b0
 src/game/area/area_w1c_fuzz.cpp	Key	global	Mem	Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4	0	0x802000	-	expr	the address is part of a larger expression typed_convert does not rewrite (Sprite_ObjectsExtra_addr - -)	c4-tc
 src/game/area/area_w1c_fuzz.cpp	MovesSub	global	B	AreaW0c_TailSub_addr	0	0x9039f5	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailSub_addr - -)	c4-tc
 src/game/area/area_w1c_fuzz.cpp	MovesScriptObject	global	SetPointer	MoveScript_Object_addr	0	0x929e80	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (MoveScript_Object_addr - -)	c4-tc
@@ -3116,14 +3115,6 @@ src/game/area/area_w1e_fuzz.cpp	SelfTest	global	Mem	Area65_PlateAnims_addr	0	0x6
 src/game/area/area_w1e_fuzz.cpp	SelfTest	global	Mem	Area65_PlaceMessages_addr	0	0x604714	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area65_PlaceMessages_addr - -)	c4-tc
 src/game/area/area_w1e_fuzz.cpp	SelfTest	global	Mem	Area65_Directions_addr	0	0x604938	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area65_Directions_addr - -)	c4-tc
 src/game/area/area_w1e_fuzz.cpp	SelfTest	global	Mem	Area65_DriftUV_addr	0	0x604958	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area65_DriftUV_addr - -)	c4-tc
-src/game/area/area_w1f.cpp	B	global	Mem	at::kMessage	0	0x7dee48	-	no-entry	at::kMessage 0x7dee48 -	b0
-src/game/area/area_w1f.cpp	RunState	record	Mem	table + state * 4	0	-	param	computed	Mem(table + state * 4): offset not a constant	b1-area
-src/game/area/area_w1f.cpp	GlideStep	record	B	steps + (count & 0xF)	0	-	param	computed	B(steps + (count & 0xF)): offset not a constant	b1-area
-src/game/area/area_w1f.cpp	GlideStep	record	B	steps + (cur[0xA] & 0xF)	0	-	param	computed	B(steps + (cur[0xA] & 0xF)): offset not a constant	b1-area
-src/game/area/area_w1f.cpp	PlaceRandomObject	record	B	weights + chosen	0	-	-	computed	B(weights + chosen): offset not a constant	b1-area
-src/game/area/area_w1f.cpp	PlaceRandomObject	record	B	cells + pick * 2	0	-	-	computed	B(cells + pick * 2): offset not a constant	b1-area
-src/game/area/area_w1f.cpp	PlaceRandomObject	record	B	cells + pick * 2 + 1	0	-	-	family	B(cells + pick * 2 + 1): cells + pick * 2: family not established	b1-area
-src/game/area/area_w1f.cpp	PlaceRandomObject	global	Mem	ObjTrio_addr + 0x134	0	0x802e74	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (ObjTrio_addr - -)	c4-tc
 src/game/area/area_w1f_fuzz.cpp	Scribble	record	SetLong	p + i	0	-	-	computed	SetLong(p + i): offset not a constant	b1-area
 src/game/area/area_w1f_fuzz.cpp	AnyRecord	global	Mem	Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4	0	0x802000	-	expr	the address is part of a larger expression typed_convert does not rewrite (Sprite_ObjectsExtra_addr - -)	c4-tc
 src/game/area/area_w1f_fuzz.cpp	MovesMember	global	SetPointer	Field_ActiveMember_addr	0	0x9035a4	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Field_ActiveMember_addr - -)	c4-tc
@@ -3709,7 +3700,6 @@ src/game/area/area_w3c_fuzz.cpp	Disturb133	global	SetPointer	AreaW1a_FocusObject
 src/game/area/area_w3c_fuzz.cpp	Disturb133	global	B	AreaW0c_ChoiceAnswer_addr	0	0x7dee67	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_ChoiceAnswer_addr - -)	c4-tc
 src/game/area/area_w3c_fuzz.cpp	Disturb133	global	B	Cond_Flags_addr + 0xd2	0	0x904062	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
 src/game/area/area_w3c_fuzz.cpp	Disturb134	global	B	Cond_Flags_addr + 0xd2 + (v % 3)	0	0x903f90	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
-src/game/area/area_w3d.cpp	B	global	Mem	Effect_Objects_addr + slot * at::kEffectStride	0	0x7e11e0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
 src/game/area/area_w3d_fuzz.cpp	MovesCurrent	global	SetPointer	MoveScript_Object_addr	0	0x929e80	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (MoveScript_Object_addr - -)	c4-tc
 src/game/area/area_w3d_fuzz.cpp	SprintfEffect	global	B	AreaW0c_ChoiceAnswer_addr	0	0x7dee67	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_ChoiceAnswer_addr - -)	c4-tc
 src/game/area/area_w3d_fuzz.cpp	Kind2Effect	global	B	at::kCounter3	0	0x90384b	-	no-entry	at::kCounter3 0x90384b -	b0
@@ -5287,7 +5277,6 @@ src/game/battle/battle_e4_fuzz.cpp	Seed	global	M	at::kEntryOrder	0	0x904ab6	-	no
 src/game/battle/battle_e4_fuzz.cpp	Seed	global	M	at::kInventoryCounts	0	0x656b14	-	untyped-entry	at::kInventoryCounts 0x656b14 Inventory_CountLists	b0
 src/game/battle/battle_e4_fuzz.cpp	Seed	global	M	at::kPreview	0	0x675f18	-	no-entry	at::kPreview 0x675f18 -	b0
 src/game/battle/battle_e4_fuzz.cpp	Disturb	global	M	at::kPartyCount	0	0x904ab0	-	no-entry	at::kPartyCount 0x904ab0 -	b0
-src/game/battle/battle_e5.cpp	B	global	At	ObjTrio_addr + member * battle_e5::at::kPartyStride	0	0x802d40	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/battle/battle_e5_fuzz.cpp	static_assert	global	Mem	BattleE5_GeneCount_addr	0	0x904b87	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleE5_GeneCount_addr - -)	c4-tc
 src/game/battle/battle_e5_fuzz.cpp	static_assert	global	Mem	BattleE5_GeneCount_addr	1	0x904b87	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleE5_GeneCount_addr - -)	c4-tc
 src/game/battle/battle_e5_fuzz.cpp	PopupEffect	global	Pointer	BattleSprites_Action_addr	0	0x904b40	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattleSprites_Action_addr - -)	c4-tc
@@ -6293,6 +6282,9 @@ src/game/battle/battle_obj.cpp	ClearFormFlag	global	At	battle_e3::at::kRoundFlag
 src/game/battle/battle_obj.cpp	ClearFormFlag	global	At	battle_e3::at::kRoundFlags	2	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle/battle_obj.cpp	Task	global	At	BattleTask_Slots_addr + index * battle_obj_states::at::kTask	0	0x93a000	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleTask_Slots_addr - -)	stage-b (carried by hand from Task's row after the moves)
 src/game/battle/battle_obj.cpp	Addr	global	At	ObjTrio_addr + battle_windows::at::kObjectStride * i	0	0x802d40	-	layout-copy	a copy of a file-local helper the source-layout round's mover made (its readers moved to several files); the original's rows give: harness, ptr	stage-b
+src/game/battle/battle_obj.cpp	unsigned	global	-	at::kKindHandlers	0	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/battle/battle_obj.cpp	unsigned	global	-	at::kKindHandlers	1	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/battle/battle_obj.cpp	unsigned	global	-	at::kKindHandlers	2	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
 src/game/battle/battle_obj.cpp	BattleObj_StateInit	record	SetLong	S() + o	0	-	via=S	computed	PartyMember, offset o	b1-battle
 src/game/battle/battle_obj.cpp	BattleObj_StateInit	global	At	battle_obj_states::at::kPoseBase	0	0x904aac	-	no-entry	at::kPoseBase 0x904aac -	b0
 src/game/battle/battle_obj.cpp	BattleObj_PickPose	global	At	battle_windows::at::kBattleKind	0	0x904aa0	-	no-entry	at::kBattleKind 0x904aa0 -	b0
@@ -6647,7 +6639,6 @@ src/game/battle/battle_result_fuzz.cpp	Cover	global	-	at::kDropCount	0	0x904ae7	
 src/game/battle/battle_result_fuzz.cpp	SwapTable	record	SetPtr	table + 4 * i	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle/battle_result_fuzz.cpp	SelfTest	global	At	BattleResult_LevelUpSteps_addr + 4 * i	0	0x64afc0	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleResult_LevelUpSteps_addr - -)	c4-tc
 src/game/battle/battle_result_fuzz.cpp	SelfTest	global	At	BattleResult_RewardSteps_addr + 4 * i	0	0x64afc8	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleResult_RewardSteps_addr - -)	c4-tc
-src/game/battle/battle_result_ours.cpp	Byte	global	At	battle_result::at::kMembers	0	0x802dc0	-	untyped-entry	at::kMembers 0x802dc0 Text_CurrentName	b0
 src/game/battle/battle_setup_fuzz.cpp	P	record	SetWord	o + at::kPHp + 2 * (w % 5)	0	-	via=Obj	family	no record family established for this pointer here (via=Obj)	b1-battle
 src/game/battle/battle_setup_fuzz.cpp	P	record	SetWord	o + (party ? at::kPAgi : at::kEAgi)	0	-	via=Obj	family	no record family established for this pointer here (via=Obj)	b1-battle
 src/game/battle/battle_setup_fuzz.cpp	P	global	At	BattleFlow_AnimGate_addr	0	0x904b8e	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleFlow_AnimGate_addr - -)	c4-tc
@@ -6683,8 +6674,6 @@ src/game/battle/battle_setup_fuzz.cpp	Seed	global	At	at::kItemQueue	0	0x904acc	-
 src/game/battle/battle_setup_fuzz.cpp	Seed	global	At	at::kItemQueue	1	0x904acc	-	no-entry	at::kItemQueue 0x904acc -	b0
 src/game/battle/battle_setup_fuzz.cpp	Seed	global	At	at::kItemQueue	2	0x904acc	-	no-entry	at::kItemQueue 0x904acc -	b0
 src/game/battle/battle_setup_fuzz.cpp	Seed	global	At	at::kOpening	0	0x904b90	-	no-entry	at::kOpening 0x904b90 -	b0
-src/game/battle/battle_sprites.cpp	Enemy	global	At	Battle_Enemies_addr + i * battle_sprites::at::kEnemyStride	0	0x93b960	-	layout-copy	a copy of a file-local helper the source-layout round's mover made (its readers moved to several files); the original's rows give: harness, ptr, seam	stage-b
-src/game/battle/battle_sprites.cpp	Enemy	global	At	battle_sprites::at::kEnemyData	0	0x8c55c8	-	no-entry	at::kEnemyData 0x8c55c8 -	b0
 src/game/battle/battle_sprites_fuzz.cpp	PoolSprite	global	At	Battle_Enemies_addr + (k - 4) * at::kEnemyStride	0	0x93b960	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Battle_Enemies_addr - -)	c4-tc
 src/game/battle/battle_sprites_fuzz.cpp	Disturb	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle/battle_sprites_fuzz.cpp	Disturb	global	At	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
@@ -6862,9 +6851,6 @@ src/game/battle/battle_window_draw_fuzz.cpp	Seed	global	At	at::kWorking	0	0x802d
 src/game/battle/battle_window_draw_fuzz.cpp	Seed	record	SetWord	Ability(args.a[0]) + 0x14	0	-	via=Ability	not-record	not one of the nine records.h families (via=Ability)	b1-battle
 src/game/battle/battle_window_draw_fuzz.cpp	CoverApCost	global	At	CharacterRecords_addr + m * at::kCharStride	0	0x903a70	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (CharacterRecords_addr - -)	c4-tc
 src/game/battle/battle_window_draw_fuzz.cpp	CoverApCost	global	At	at::kWorking	0	0x802dc0	-	untyped-entry	at::kWorking 0x802dc0 Text_CurrentName	b0
-src/game/battle/battle_windows.cpp	unsigned	global	-	at::kKindHandlers	0	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/battle/battle_windows.cpp	unsigned	global	-	at::kKindHandlers	1	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/battle/battle_windows.cpp	unsigned	global	-	at::kKindHandlers	2	0x655350	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
 src/game/battle/battle_windows.cpp	PtrBattleWindows	global	PtrBattleWindows	battle_windows::at::kCurrent	0	0x905b84	-	pointer-in-integer	at::kCurrent 0x905b84 BattleWinStates_Current	b0
 src/game/battle/battle_windows.cpp	PtrBattleWindows	global	At	ObjTrio_addr + battle_windows::at::kObjectStride * i	0	0x802d40	-	layout-copy	a copy of a file-local helper the source-layout round's mover made (its readers moved to several files); the original's rows give: harness, ptr	stage-b
 src/game/battle/battle_windows_fuzz.cpp	Member	global	At	ObjTrio_addr + at::kObjectStride * i	0	0x802d40	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (ObjTrio_addr - -)	c4-tc
@@ -8742,8 +8728,6 @@ src/game/community/rest_4a_fuzz.cpp	Disturb	global	Mem	BattlePhases_B8B_addr	0	0
 src/game/community/rest_4a_fuzz.cpp	Disturb	global	Mem	Battle_PartyStanding_addr	0	0x904ab1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Battle_PartyStanding_addr - -)	c4-tc
 src/game/community/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/community/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
-src/game/community/rest_4b.cpp	B	record	L	table + 4 * static_cast<U>(index)	0	-	-	no-struct	L(table + 4 * static_cast<U>(index)): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/community/rest_4b.cpp	Slot	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/community/rest_4b_fuzz.cpp	B	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/community/rest_4b_fuzz.cpp	Move	global	B	AreaW0c_TailState_addr	0	0x9039f4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailState_addr - -)	c4-tc
 src/game/community/rest_4b_fuzz.cpp	Move	global	B	AreaW0c_TailSub_addr	0	0x9039f5	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailSub_addr - -)	c4-tc
@@ -8885,9 +8869,6 @@ src/game/community/rest_4c_fuzz.cpp	MoveCell	global	B	at::kCards	0	0x675f98	-	no
 src/game/community/rest_4c_fuzz.cpp	MoveCell	global	B	at::kDigits_addr	0	0x903850	-	expr	the address is part of a larger expression typed_convert does not rewrite (at::kDigits_addr - -)	c4-tc
 src/game/community/rest_4c_fuzz.cpp	MoveCell	global	B	(b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr	0	0x675f8f	-	expr	the address is part of a larger expression typed_convert does not rewrite (Rest4c_Lost_addr - -)	c4-tc
 src/game/community/rest_4c_fuzz.cpp	MoveCell	global	B	AreaW0c_TailState_addr	0	0x9039f4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailState_addr - -)	c4-tc
-src/game/community/rest_4d.cpp	Scratch	global	At	at::kTextScratch	0	0x904ba0	-	no-entry	at::kTextScratch 0x904ba0 -	b0
-src/game/community/rest_4d.cpp	Scratch	global	Text	at::kPoolWords	0	0x803580	-	no-entry	at::kPoolWords 0x803580 -	b0
-src/game/community/rest_4d.cpp	Scratch	record	At	words + 2u * static_cast<U>(index)	0	-	param	computed	param (At(words + 2u * static_cast<U>(index)))	b1-rest
 src/game/community/rest_4d_fuzz.cpp	Move	global	B	Rest4b_BoardStep_addr	0	0x939a40	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4b_BoardStep_addr - -)	c4-tc
 src/game/community/rest_4d_fuzz.cpp	Move	global	B	Rest4c_Step_addr	0	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
 src/game/community/rest_4d_fuzz.cpp	Move	global	B	Rest4b_BoardState_addr	0	0x939a3e	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4b_BoardState_addr - -)	c4-tc
@@ -8945,9 +8926,6 @@ src/game/community/rest_4d_fuzz.cpp	SlotEntryAbandoned	global	B	Rest4c_Step_addr
 src/game/community/rest_4d_fuzz.cpp	SlotEntryAbandoned	global	B	Rest4c_Step_addr	1	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
 src/game/community/rest_4d_fuzz.cpp	MemberEntryAbandoned	global	B	Rest4c_Step_addr	0	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
 src/game/community/rest_4d_fuzz.cpp	MemberEntryAbandoned	global	B	Rest4c_Step_addr	1	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
-src/game/community/rest_4e.cpp	Put	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
-src/game/community/rest_4e.cpp	Put	global	W	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
-src/game/community/rest_4e.cpp	Put	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/community/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	0	0x803580	-	no-entry	kPool 0x803580 -	b0
 src/game/community/rest_4e_fuzz.cpp	PointMessage	global	B	Config_WindowColour_addr	0	0x903a5a	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Config_WindowColour_addr - -)	c4-tc
 src/game/community/rest_4e_fuzz.cpp	PointMessage	global	Mem	kPool	1	0x803580	-	no-entry	kPool 0x803580 -	b0
@@ -10082,8 +10060,6 @@ src/game/effect/effect_2g_fuzz.cpp	Seed	global	Mem	at::kHit	1	0x903849	-	no-entr
 src/game/effect/effect_2g_fuzz.cpp	Seed	global	Mem	at::kHit	2	0x903849	-	no-entry	at::kHit 0x903849 -	b0
 src/game/effect/effect_2g_fuzz.cpp	Disturb	record	SetLong	s + 0x3C	0	-	base=Sprite_Current	harness	SetLong(s + 0x3c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect/effect_2g_fuzz.cpp	Disturb	record	SetWord	s + 0x58	0	-	base=Sprite_Current	harness	SetWord(s + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect/effect_3a.cpp	S	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
-src/game/effect/effect_3a.cpp	S	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
 src/game/effect/effect_3a_fuzz.cpp	FxStoreImage	record	Word	P(a[0]) + 4	0	-	via=P	base-form	Word(P(a[0]) + -): P(a[0])	b1-effect
 src/game/effect/effect_3a_fuzz.cpp	FxStoreImage	record	Word	P(a[0]) + 6	0	-	via=P	base-form	Word(P(a[0]) + -): P(a[0])	b1-effect
 src/game/effect/effect_3a_fuzz.cpp	-	global	-	at::kParticles	0	0x92df80	-	no-entry	at::kParticles 0x92df80 -	b0
@@ -10200,7 +10176,6 @@ src/game/effect/effect_4a_fuzz.cpp	Disturb	global	Mem	at::kCounterB	0	0x903849	-
 src/game/effect/effect_4a_fuzz.cpp	Disturb	global	Mem	ObjTrio_addr + 0x2cc	0	0x80300c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (ObjTrio_addr - -)	c4-tc
 src/game/effect/effect_4a_fuzz.cpp	Disturb	global	Mem	Input_Held_addr	0	0x7e1be8	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Input_Held_addr - -)	c4-tc
 src/game/effect/effect_4a_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
-src/game/effect/effect_4b.cpp	Dispatch	record	At	table + 4 * state	0	-	param	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect/effect_4b_fuzz.cpp	-	global	-	at::kKind87Points	0	0x654da0	-	no-entry	at::kKind87Points 0x654da0 -	b0
 src/game/effect/effect_4b_fuzz.cpp	Rec	record	SetLong	r + w	0	-	via=Pane	computed	SetLong(r + -): the offset is not a constant	b1-effect
 src/game/effect/effect_4b_fuzz.cpp	Rec	global	Mem	Effect4b_SoundIndex_addr	0	0x676280	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect4b_SoundIndex_addr - -)	c4-tc
@@ -14686,8 +14661,6 @@ src/game/effect/rest_3e_fuzz.cpp	Seed	record	SetLong	s + 0x10	0	-	base=Sprite_Cu
 src/game/effect/rest_3e_fuzz.cpp	Disturb	global	Mem	(v & 1) ? Rest3e_GlowSounded_addr : Rest3e_RiseSounded_addr	0	0x6761c9	-	expr	the address is part of a larger expression typed_convert does not rewrite (Rest3e_GlowSounded_addr - -)	c4-tc
 src/game/effect/rest_3e_fuzz.cpp	Disturb	global	Mem	Input_Pressed_addr	0	0x7e1bec	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Input_Pressed_addr - -)	c4-tc
 src/game/effect/rest_3e_fuzz.cpp	SelfTest	record	SetLong	table + 4 * i	0	-	base=EffectGlowSparks_States	computed	base=EffectGlowSparks_States (SetLong(table + 4 * i))	b1-rest
-src/game/effect/rest_3f.cpp	S	record	UL	from + i	0	-	-	computed	- (UL(from + i))	b1-rest
-src/game/effect/rest_3f.cpp	S	record	SetUL	to + i	0	-	-	computed	- (SetUL(to + i))	b1-rest
 src/game/effect/rest_3f_fuzz.cpp	-	global	-	at::kParticles	0	0x931980	-	no-entry	at::kParticles 0x931980 -	b0
 src/game/effect/rest_3f_fuzz.cpp	Rec	global	At	Rest3f_PixIndex_addr	0	0x6769ba	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Rest3f_PixIndex_addr - -)	c4-tc
 src/game/effect/rest_3f_fuzz.cpp	Rec	global	At	Rest3f_PixCursor_addr	0	0x6769b0	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Rest3f_PixCursor_addr - -)	c4-tc
@@ -16048,8 +16021,6 @@ src/game/field/field_trigger_01.cpp	FieldTrigger02	global	Row	at::kTextRow3	0	0x
 src/game/field/field_trigger_01.cpp	FieldTrigger03	global	Row	at::kTextRow0	0	0x904ce0	-	untyped-entry	at::kTextRow0 0x904ce0 Text_Records	b0
 src/game/field/field_trigger_01.cpp	FieldTrigger03	global	Row	at::kTextRow1	0	0x904d00	-	no-entry	at::kTextRow1 0x904d00 -	b0
 src/game/field/field_trigger_01.cpp	FieldTrigger03	global	Row	at::kTextRow2	0	0x904d20	-	no-entry	at::kTextRow2 0x904d20 -	b0
-src/game/field/inventory_ops.cpp	PosX	global	At	inventory_ops::at::kMemberPos	0	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
-src/game/field/inventory_ops.cpp	PosX	global	At	inventory_ops::at::kMemberPos	1	0x7e06e0	-	no-entry	at::kMemberPos 0x7e06e0 -	b0
 src/game/field/inventory_ops_fuzz.cpp	Obj	global	At	Encounter_Slots_addr + at::kEnemyStride * k	0	0x939f00	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Encounter_Slots_addr - -)	c4-tc
 src/game/field/inventory_ops_fuzz.cpp	Obj	global	At	CharacterRecords_addr + at::kRecordSize * i	0	0x903a70	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (CharacterRecords_addr - -)	c4-tc
 src/game/field/inventory_ops_fuzz.cpp	Obj	global	At	at::kScratchSprite	0	0x6bdff0	-	no-entry	at::kScratchSprite 0x6bdff0 -	b0
@@ -16937,10 +16908,6 @@ src/game/field/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect1e_PressNow_addr	0	0x6b
 src/game/field/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x290	0	0x7e1470	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
 src/game/field/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x201	0	0x7e13e1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
 src/game/field/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x2b0	0	0x7e1490	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
-src/game/field/rest_2d.cpp	BRest2d	record	At	table + 4 * index	0	-	-	layout-copy	a copy of a file-local helper the source-layout round's mover made (its readers moved to several files); the original's rows give: computed, family, no-struct, platform	stage-b
-src/game/field/rest_2d.cpp	MemberLabel	global	At	rest_2d::at::kMasterMessages	0	0x6644e8	-	no-entry	at::kMasterMessages 0x6644e8 -	b0
-src/game/field/rest_2d.cpp	MessageText	global	At	rest_2d::at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
-src/game/field/rest_2d.cpp	MessageText	global	At	rest_2d::at::kMessagePools	1	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
 src/game/field/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x90358E	0	0x90358e	-	width	raw literal on Field_ConfirmButtons: the access is not the entry's width / an element, or typed_convert --gate refused it	c2-rest
 src/game/field/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x903590	0	0x903590	-	width	raw literal on Field_CancelButtons: the access is not the entry's width / an element, or typed_convert --gate refused it	c2-rest
 src/game/field/rest_2d_fuzz.cpp	BaseOf	raw	Mem	0x7E1BEC	0	0x7e1bec	-	width	raw literal on Input_Pressed: the access is not the entry's width / an element, or typed_convert --gate refused it	c2-rest
@@ -22483,14 +22450,6 @@ src/game/menu/battle_e7_fuzz.cpp	Disturb	global	Mem	BattleE5_GeneRow_addr	0	0x90
 src/game/menu/battle_e7_fuzz.cpp	Disturb	global	Mem	at::kGeneList	0	0x904608	-	no-entry	at::kGeneList 0x904608 -	b0
 src/game/menu/battle_e7_fuzz.cpp	Disturb	global	Mem	BattleActorCopies_ItemActor_addr	0	0x929f06	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleActorCopies_ItemActor_addr - -)	c4-tc
 src/game/menu/battle_e7_fuzz.cpp	Disturb	global	Mem	BattleE1_Roster_addr	0	0x904aa7	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleE1_Roster_addr - -)	c4-tc
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	0	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	1	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	2	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	3	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	4	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	5	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	6	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
-src/game/menu/battle_win_states.cpp	-	global	-	at::kKinds	7	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
 src/game/menu/battle_win_states_fuzz.cpp	IdOf	global	At	BattleWinStates_Current_addr	0	0x905b84	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleWinStates_Current_addr - -)	c4-tc
 src/game/menu/battle_win_states_fuzz.cpp	IdOf	global	At	Battle_Enemies_addr + 0x80 + at::kEnemyStride * e	0	0x93b960	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Battle_Enemies_addr - -)	c4-tc
 src/game/menu/battle_win_states_fuzz.cpp	IdOf	global	At	ObjTrio_addr + at::kMemberStride * m	0	0x802d40	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (ObjTrio_addr - -)	c4-tc
@@ -22990,6 +22949,14 @@ src/game/menu/menu_list.cpp	PartyRecord	record	Word	moved + off	0	-	via=RecRest2
 src/game/menu/menu_list.cpp	PartyRecord	record	SetWord	r + off	0	-	via=RecRest2g	computed	via=Rec (SetWord(r + off))	b1-rest
 src/game/menu/menu_list.cpp	Record	global	BRest2h	rest_2h::at::kMemberMap	0	0x66972c	-	gate	at::kMemberMap 0x66972c Character_IndexById	b0
 src/game/menu/menu_list.cpp	Record	global	AtRest2h	rest_2h::at::kPrintBuf	0	0x904ba0	-	no-entry	at::kPrintBuf 0x904ba0 -	b0
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	0	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	1	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	2	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	3	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	4	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	5	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	6	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/menu/menu_list.cpp	-	global	-	at::kKinds	7	0x8c55c8	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
 src/game/menu/menu_list.cpp	BattleWin_CrossGrow	global	At	battle_win_states::at::kCrossGrow	0	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
 src/game/menu/menu_list.cpp	BattleWin_CrossGrow	global	At	battle_win_states::at::kCrossArms	0	0x64e2ac	-	no-entry	at::kCrossArms 0x64e2ac -	b0
 src/game/menu/menu_list.cpp	BattleWin_CrossGrow	global	At	battle_win_states::at::kCrossGrow	1	0x904abc	-	no-entry	at::kCrossGrow 0x904abc -	b0
@@ -23126,7 +23093,6 @@ src/game/menu/menu_list.cpp	MenuList_GeneWinDraw	global	TextRest2h	rest_2h::at::
 src/game/menu/menu_list.cpp	MenuList_GeneWinDraw	global	-	rest_2h::at::kGenePiecesA	0	0x66b1d8	-	no-entry	at::kGenePiecesA 0x66b1d8 -	b0
 src/game/menu/menu_list.cpp	MenuList_GeneWinDraw	global	-	rest_2h::at::kGenePiecesB	0	0x66b1e4	-	no-entry	at::kGenePiecesB 0x66b1e4 -	b0
 src/game/menu/menu_list.cpp	MenuList_GeneWinDraw	global	AtRest2h	rest_2h::at::kGeneList	1	0x6be0b0	-	no-entry	at::kGeneList 0x6be0b0 -	b0
-src/game/menu/menu_lists.cpp	void	record	At	table + index * 4	0	-	param	computed	computed offset or index (param)	b1-scen_ui
 src/game/menu/menu_lists_fuzz.cpp	Address	global	At	WindowRecords_addr + i * at::kRecordSize	0	0x803160	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (WindowRecords_addr - -)	c4-tc
 src/game/menu/menu_lists_fuzz.cpp	Address	global	At	BattleWinStates_Current_addr	0	0x905b84	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleWinStates_Current_addr - -)	c4-tc
 src/game/menu/menu_lists_fuzz.cpp	Current	global	At	BattleWinStates_Current_addr	0	0x905b84	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (BattleWinStates_Current_addr - -)	c4-tc
@@ -23718,7 +23684,7 @@ src/game/platform/d3d.cpp	D3d_DrawTile	global	At	Gfx_DrawTpage_addr	0	0x7ded14	-
 src/game/platform/d3d.cpp	D3d_DrawTile	record	PutLong	out + 0x10	0	-	via=Vertex	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Vertex)	b1-scen_ui
 src/game/platform/d3d.cpp	D3d_DrawTile	global	At	Gfx_DrawTpage_addr	1	0x7ded14	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_DrawTpage_addr - -)	c4-tc
 src/game/platform/d3d.cpp	D3d_DrawTile1	record	PutLong	out + 0x08	0	-	via=Vertex	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Vertex)	b1-scen_ui
-src/game/platform/d3d.cpp	D3d_DrawTile1	record	Long	prim + 0x10	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
+src/game/platform/d3d.cpp	D3d_DrawTile1	record	Long	prim + 0x10	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
 src/game/platform/d3d.cpp	D3d_DrawTile1	record	PutLong	out + 0x10	0	-	via=Vertex	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Vertex)	b1-scen_ui
 src/game/platform/d3d.cpp	D3d_DrawTile1	record	PutLong	out + 0x10	1	-	via=Vertex	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Vertex)	b1-scen_ui
 src/game/platform/d3d.cpp	D3d_DrawSprt	global	At	D3d_Vertices_addr	0	0x7ca958	-	layout-copy	a copy of a file-local helper the source-layout round's mover made (its readers moved to several files); the original's rows give: harness, ptr	stage-b
