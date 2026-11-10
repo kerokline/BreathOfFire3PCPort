@@ -1168,6 +1168,7 @@ void InjectAll() {
     MenuListFromMenuLists_Inject();
     ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
                                 // dispatch tables' entries swapped for recorders: order does not matter
+    FieldSaveFromShopStates_Inject();
     ShopMode_Inject();
     if (bof3::WantsShadow("worldmap_area")) worldmap_area::SelfTest();      // round 8 group DA: every call and tail jmp of its clones re-aimed at a recorder
                                 // and its seven .data dispatch tables swapped for recorders: order does not matter

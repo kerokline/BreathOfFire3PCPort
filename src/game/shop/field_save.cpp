@@ -1032,6 +1032,10 @@ extern "C" void __cdecl Save_QuickWrite(void) {
 
 #pragma clang attribute pop
 
+void FieldSaveFromShopStates_Inject() {
+    sound_in::Inject();  // DIV-0169: after the fuzz above, which ran Capcom's night
+}
+
 void FieldSaveFromRest2c_Inject() {
     // DIVERGENCE DIV-0076: after the self-test, which compares Capcom's summary.
     {

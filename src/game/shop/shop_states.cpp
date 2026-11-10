@@ -108,5 +108,4 @@ Handler Entry(shop_states::U table, unsigned index) { return shop_states::Fn<Han
 
 void ShopStates_Inject() {
     if (bof3::WantsShadow("shop_states")) shop_states::SelfTest();
-    sound_in::Inject();  // DIV-0169: after the fuzz above, which ran Capcom's night
 }
