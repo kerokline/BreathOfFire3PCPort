@@ -110,31 +110,8 @@ void MarkMember() {
 
 // --- part 6: the store (a first-list slot into the second list) --------------------------
 
-// original 0x451160 (0x64ED50[3]; PSX 0x800A3294): the overwrite prompt: line 0x62; the
-// repeat keys of 0xA000; cancel, or confirm on answer 1: sound 0x106, a step
-// back; confirm on 0: sound 0x104, the next step; else a repeat key flips the
-// answer (0x904B74 ^= 1); the hand at 0xD5 + 0x22 * answer (the dword), 0x18.
-//
-// As the original has it: the hand reads the dword at 0x904B74 (0x4511F2)
-// where every writer stores a word (0x451042, 0x4511EA, 0x431C70); the
-// PlayStation (US 0x800A632C, JP 0x800A332C) reads the answer as a u16. The
-// level-up notice's other reader (0x431C77) masks its dword with 0xFFFF, so
-// this is the only one that can see the halfword 0x904B76.
-//
-// DIVERGENCE DIV-0162: 1 through PatchBytes("StoreAskWord") in
-// BattleE5_Inject, after the self-test. The hand then reads the word, as the
-// PlayStation; the two differ only when 0x904B76 is not 0, which no
-// instruction of the exe names (D338).
-namespace battle_e5 { std::uint8_t g_store_ask_word = 0; }
-
 // ============================================================================
 
 void BattleE5_Inject() {
     if (bof3::WantsShadow("battle_e5")) battle_e5::SelfTest();
-    {
-        // DIV-0162: after the self-test, which compared Capcom's dword read.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("StoreAskWord", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
-        bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
-    }
 }

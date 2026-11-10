@@ -665,6 +665,34 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     }
 }
 
+// original 0x59D640: (member, x, y, set, flags, record) - the window at (x +
+// 4, y + 4) 0x78 by 0xA3; the member's name (CharacterRecords + 0xA4 member,
+// 5 characters at most) centred on x + 0x3E; the four stat labels 0x66A0F8..
+// at (x + 5, y + 0x27 + 13 k); Char_RecalcStats, then the four stats +0x24,
+// +0x26, +0x2A, +0x28 (by 0x64E324, 8-pixel font, at (x + 0x31, y + 0x1C + 13
+// k)). Unless flags bit 0: Equip_PreviewSet(member, set, marks, values) into
+// the stack, and per stat a bar 0x59DB70(x + 0x51, y + 0x1C + 13 k, 0x11 for
+// mark 4, 0x12 for 1, else 0x13, 0x1C, CLUT (0, 0x1E0), 0x80) and the value
+// in the mark's colour at (x + 0x59, same y). Then the six equipped items
+// (+0x12..+0x17, categories 0x66B5BC): the record's +0x10 = 0 first; row r
+// in colour 2 when it is the record's +0xB; with the record's +0xD bit 1, an
+// item Item_CanUse(2, the member 0x66972C[0x904065[s8 0x929F06]], category,
+// item) refuses is drawn dim in colour 7, and for one it allows on row +0xA
+// the record's +0x10 = category << 8 | item, and it is first drawn dim in
+// colour 7; the row +0xA / +0xB raised by 2 pixels; then its icon
+// (0x66B5B4) and name. Last the pieces 0x66B508 and the frame's edges.
+//
+// DIVERGENCE DIV-0065: the labels' row. The original draws label k at y +
+// 0x27 + 13 k and the values at y + 0x1C + 13 k, so each label sits two
+// pixels above the next stat's value - the first value has no label and the
+// fourth label is drawn under the frame, off the box. The field's member
+// panel (0x5738A0: the label at y + 8, the value at y + 0xA) has the label
+// two pixels above its own value; 0x27 is that relation one 13-pixel row
+// down, 0x1A + 0xD. Ours draws the labels at y + 0x1A + 13 k once the flag
+// is on; BattleE7_Inject sets it after the self-test, which compares the
+// original's rows.
+unsigned char g_equip_labels_row = 0;
+
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
@@ -1160,6 +1188,16 @@ extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam
         return 0;
     default:
         return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+    }
+}
+
+void BattleMenuWinFromBattleE7_Inject() {
+    // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleEquipLabelsRow", Low32(&g_equip_labels_row),
+                         &was, &is, 1);
+        bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
     }
 }
 

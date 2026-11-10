@@ -86,6 +86,12 @@ void PutByte(save_menu::U address, save_menu::U v) { AtSaveMenu(address)[0] = st
 // a constant is Japan's, asked through σ (docs/button-tests.md).
 using bof3x::input::sigma::Sigma;
 
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no
+// hand (YesNoFrame) over DIV-0027's re-spaced line, set with
+// menu_draw_helpers.cpp's g_shop_yes_no_line under a Latin overlay, after
+// the self-test, which compares the original's hand.
+unsigned char g_shop_yes_no_hand = 0;
+
 namespace {
 
 unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -1269,6 +1275,15 @@ extern "C" void __cdecl Shop_Equip(unsigned record, unsigned slot, unsigned item
 }
 
 #pragma clang attribute pop
+
+void ShopTradeFromShopStates2_Inject() {
+    if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopYesNoLayout", Low32(&g_shop_yes_no_hand),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the shop's buy / equip / sell yes / no hand over the re-spaced line");
+    }
+}
 
 void ShopTrade_Inject() {
     BOF3_INJECT(ShopTrade_Step);

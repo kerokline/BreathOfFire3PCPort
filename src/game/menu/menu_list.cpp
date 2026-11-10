@@ -202,6 +202,25 @@ using move_script::Word;
 
 }  // namespace battle_win_states
 
+// original 0x597230 (PSX 0x801E9470): state 1 - banner record k = +0xA of the
+// pool 0x93B8E0 (12 bytes a record): its text (+4) counted by
+// Text_GlyphCount; then, record re-read, a wide banner (+2 set) is the medium
+// box at (x - 0x10, y) and the text at x + 0x26 - 6 n, 0x12 characters; a
+// narrow one the small box at (x, y) and the text at x + 6 (6 - n), 8
+// characters; y + 3, colour +0xA, through Text_DrawAt. The record is re-read
+// after the count and after the box.
+//
+// DIVERGENCE DIV-0061: under a Latin language overlay the text is centred
+// on the width the pen covers (DIV-0006's advances) about the same middle -
+// x + 0x26 wide, x + 0x24 narrow - instead of by 6 units a glyph: the
+// owner's "Green Apple" and "Flare" left of centre, 2026-09-27. 0 until
+// BattleWinStates_Inject patches it to 1 under the name BattleBannerCentre,
+// so BOF3X_ORIGINAL=BattleBannerCentre and the fuzz keep the original's x.
+// The same flag lets the text run to half again the characters (amended for
+// issue 127): the room for 8 glyphs of 12 units holds 12 letters of 8, and
+// "Lucky Strike" and "Instant Kill", 12 each, drew as "Lucky St".
+unsigned char g_banner_centre = 0;
+
 namespace {
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
@@ -1389,6 +1408,32 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpS
     battle_result::g.exp_window[index]();
 }
 
+// original 0x5985A0 (PSX 0x801F06D4, paired): the EXP window's frame -
+// 0x5982D0(0x14, 0x28, 0x118, the record's height +9) - and one line per
+// party slot, y = 0x2C + 16 n (a byte): the name (Text_DrawAt at 0x19, 5
+// characters); at level 99 (byte +0xA of the slot's record is 0x63)
+// Msg_SystemPtr(0x41) at 0x55; otherwise the next level ("%2d" of level +
+// 1, Text_DrawFont12 at 0x85), the EXP still to go ("%6d" of 0x598810(n),
+// at 0xE3) and Msg_SystemPtr(0x15) at 0x55. Text record 2 is the scratch.
+//
+// As the original has it: the record 0x905B84 is read once, before the
+// frame; the count 0x904AB0 after the frame and after each line; the level
+// after the name. The original's frame height and y carry the upper half of
+// a register the caller left (ecx, esi) - 0x5982D0, Text_DrawAt and
+// Text_DrawFont12 read those arguments as words, and ours passes them
+// zero-extended; 0x598810 reads its slot as a byte.
+//
+// DIVERGENCE DIV-0060: under a Latin language overlay the line takes the US
+// release's layout - the EXP still to go right-aligned before the sentence,
+// the sentence, the next level at the right edge: "%6d" at 0x36, the
+// message at 0x82, "%2d" at 0x114 (read off the owner's photograph of the
+// US screen, 2026-09-27; the level-99 message at 0x82 too). The Chinese
+// layout puts the sentence at 0x55 and the level at 0x85, which the US
+// sentence "EXP to next level:" (144 units) runs over - the owner's "a
+// digit hidden in 'next'". Same calls, same order, other x. 0 until
+// BattleResult_Inject patches it to 1 under the name BattleResultExpLayout.
+unsigned char g_exp_layout_us = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawExp(void) {
     const unsigned char* const w = CurrentWindow();
     battle_result::g.draw_frame(0x14, 0x28, 0x118, w[9]);
@@ -2033,6 +2078,24 @@ extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
 
+// original 0x599A00 (PSX 0x800AEE34): the cursor box at (x, y), w by h (words): a LINE_F3
+// (x, y), (x, y), (x, y + h - 1) and a LINE_F4 (x, y), (x + w - 1, y), (x + w
+// - 1, y + h - 1), (x, y + h - 1), both in one colour - the brightness 0xFF,
+// or with `flash` a pulse of Frame_Counter (bit 3 set: ((c & 6) << 5) +
+// 0x3F; else ((~c & 6) << 5) + 0x3F) - in the channels `sides` bits 0..2 name
+// (bit 0 the prim's +6, bit 1 its +5, bit 2 its +4), 0 in the others.
+//
+// As the original has it: x, y, w and h are masked with 0xFFFF before `fild`
+// (0x599A6E..0x599A81), so a coordinate below 0 lands at 65,536 less it. The
+// PlayStation (US 0x800B1F04, JP 0x800AEF04: `sh` of x, y and y + h - 1 into
+// the LINE's vertex halfwords at 0x800AEEF4..0x800AEF08) keeps them signed.
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleE7_Inject, after the self-test. Each vertex is then the PlayStation's
+// signed halfword - x, y, x + w - 1 and y + h - 1 each cut to 16 bits and
+// sign-extended - so a box partly off the left or top edge clips (D336).
+namespace battle_e7 { std::uint8_t g_cursor_box_signed = 0; }
+
 extern "C" void __cdecl GeneWin_DrawCursorBox(U x, U y, U w, U h, U flash, U sides) {
     unsigned bright = 0xFF;
     if (flash & 0xFF) {
@@ -2202,6 +2265,14 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
 
 // original 0x599F70 (MenuList_IconStates[2]): down to y 0x2A.
 extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past::kAbove); }
+
+// DIVERGENCE DIV-0058: under a Latin language overlay the screen title is
+// centred on the width the pen will really cover (DIV-0006's advances)
+// instead of on 12 units a character - the owner's "Ability sits left of
+// centre" (known-defects.md D86). 0 until MenuLists_Inject patches it to 1
+// under the name MenuTitleCentre, so BOF3X_ORIGINAL=MenuTitleCentre and the
+// fuzz (which runs before the patch) keep the original's arithmetic.
+unsigned char g_title_centre = 0;
 
 // original 0x599FA0, kind 4: the state from 0x66B038, then the screen title -
 // Menu_DrawTitleBox(x, y, 0x48, 0x13, Config's colour) at the record's (+4,
@@ -2728,6 +2799,59 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
 // by every kind (read 2026-09-25), so a call is the jump.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
     Dispatch(::bof3::Img(Window_Handler7KindTable_addr), RecMenuDrawHelpers()[2]);
+}
+
+void MenuListFromBattleE7_Inject() {
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_e7::g_cursor_box_signed),
+                         &was, &is, 1);
+        bof3::Log("DIV-0161    the gene list's cursor box takes its corners signed, as the PlayStation (on unless the line above says OFF)");
+    }
+}
+
+void MenuListFromMenuLists_Inject() {
+    // DIVERGENCE DIV-0058: a Latin language overlay only - BOF3X_LANG set,
+    // not "original", not a full-width language (as MenuVerbs_Inject
+    // tests it): the screen title centred on its real width.
+    {
+        if (Lang_Latin()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("MenuTitleCentre",
+                             Low32(&g_title_centre),
+                             &was, &is, 1);
+            bof3::Log("DIV-0058    menu screen title centred on its width: %s", g_title_centre ? "on" : "off");
+        }
+    }
+}
+
+void MenuListFromBattleWinStates_Inject() {
+    // DIVERGENCE DIV-0061: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        if (Lang_Latin()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleBannerCentre",
+                             Low32(&g_banner_centre),
+                             &was, &is, 1);
+            bof3::Log("DIV-0061    action banners centred on their width: %s", g_banner_centre ? "on" : "off");
+        }
+    }
+}
+
+void MenuListFromBattleResult_Inject() {
+    // DIVERGENCE DIV-0060: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        if (Lang_Latin()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleResultExpLayout",
+                             Low32(&g_exp_layout_us),
+                             &was, &is, 1);
+            bof3::Log("DIV-0060    EXP line in the US layout: %s", g_exp_layout_us ? "on" : "off");
+        }
+    }
 }
 
 void MenuList_Inject() {

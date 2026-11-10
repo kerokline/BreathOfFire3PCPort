@@ -67,22 +67,6 @@ const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(move
 
 // ===========================================================================
 
-// original 0x444C40 (PSX 0x801DA048): cell `cell` of the battle's 16 x 8 strip -
-// draw mode page (0x3C0, 0) under abr 1; an SPRT of 16 x 8 at (u16 x, u16 y),
-// u = cell << 4 as a byte, v 0xD8, CLUT word 0x7800, shade 0x80.
-//
-// As the original has it: x and y are taken unsigned (`and 0xFFFF`, then
-// `fild`), where the other helpers here sign-extend - a coordinate below 0
-// lands at 65,536 less it. The PlayStation stores the halfwords, where the two
-// readings are the same (US 0x801DA078; on the JP disc the tail at 0x801DA048
-// stores x and y with `sh` into the SPRT's signed vertex halfwords +8, +0xA).
-//
-// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
-// BattleWindowDraw_Inject, after the self-test. x and y are then read as the
-// PlayStation stores them, signed halfwords, so a coordinate below 0 clips at
-// the screen's left or top edge (D336).
-namespace battle_window_draw { std::uint8_t g_draw_signed = 0; }
-
 // ===========================================================================
 // The skill list's helpers. The ability table 0x65C4C8 is 0x18 bytes a
 // record: the name in 16, then the PSX record's eight bytes (b0 at +0x10, the
@@ -93,11 +77,4 @@ namespace battle_window_draw { std::uint8_t g_draw_signed = 0; }
 void BattleWindowDraw_Inject() {
     g = kOriginals;
     if (bof3::WantsShadow("battle_window_draw")) SelfTest();
-    {
-        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_window_draw::g_draw_signed), &was, &is, 1);
-        bof3::Log("DIV-0161    the battle strip cell takes its x and y signed, as the PlayStation (on unless the line above says OFF)");
-    }
-
 }

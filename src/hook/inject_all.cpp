@@ -1086,6 +1086,7 @@ void InjectAll() {
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
+    Menu2FromMenuWindows_Inject();
     TextMsgBoxFromMenuWindows_Inject();
     DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     WinMain_Inject();           // the window and the frame loop (DIV-0032..0034): no clones, order does not matter
@@ -1102,6 +1103,7 @@ void InjectAll() {
                                 // does not matter (nothing before it patches bytes inside its six)
     BattleWindowDraw_Inject();  // every call of its clones re-aimed at a recorder and no byte of its bodies
                                 // patched by any module: order does not matter (none of it reaches a cull)
+    Battle3FromBattleWindowDraw_Inject();
     BattleWindows_Inject();     // every call of its clones re-aimed at a recorder, its state table, window-kind
                                 // handlers and switch table moved in the copies: order does not matter
     if (bof3::WantsShadow("battle_flow")) battle_flow::SelfTest();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
@@ -1132,8 +1134,10 @@ void InjectAll() {
     BattleResult_Inject();      // round 8 group CD: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed in the copies and two .data step tables swapped:
                                 // order does not matter
+    MenuListFromBattleResult_Inject();
     BattleWinStates_Inject();   // group CL (round 8): every call of its clones re-aimed at a recorder and its
                                 // seven stack tables' immediates re-aimed in the copies: order does not matter
+    MenuListFromBattleWinStates_Inject();
     if (bof3::WantsShadow("enemy_ai_ops")) enemy_ai_ops::SelfTest();        // round 8 group CF: every call of its clones re-aimed at a recorder and its op
                                 // tables' entries swapped: order does not matter (it clones before its own Inject)
     if (bof3::WantsShadow("battle_obj_states")) battle_obj_states::SelfTest();   // round 8 group CG: every call of its clones re-aimed at a recorder, its seven
@@ -1142,6 +1146,7 @@ void InjectAll() {
                                 // dispatch tables' entries swapped for recorders: order does not matter
     BattleActions_Inject();     // round 8 group CB: every call of its clones re-aimed at a recorder, the seven
                                 // step tables' entries swapped in .data: order does not matter
+    BattleActionFromBattleActions_Inject();
     if (bof3::WantsShadow("battle_actor_copies")) battle_actor_copies::SelfTest(); // round 8 group CH: every call of its clones re-aimed at a recorder and its five
                                 // .data tables' entries swapped for recorders: order does not matter
     BattlePhases_Inject();      // round 8 group CA: every call of its clones re-aimed at a recorder, its two
@@ -1151,6 +1156,7 @@ void InjectAll() {
     BattleTurnSteps_Inject();   // round 8 group CC: every call of its clones re-aimed at a recorder, two jump
                                 // tables relocated and eight .data dispatch tables swapped for recorders:
                                 // order does not matter
+    BattleActionFromBattleTurnSteps_Inject();
     if (bof3::WantsShadow("magic_fx_reached")) magic_fx_reached::SelfTest();    // round 8 group CJ: every call of its clones re-aimed at a recorder, its five stack
                                 // tables re-aimed in the copies and three .data tables swapped: order does not matter
     MagicFx3_Inject();
@@ -1163,8 +1169,10 @@ void InjectAll() {
     MenuWin_Inject();
     MenuLists_Inject();         // round 8 group DH: every call of its clones re-aimed at a recorder and its eight
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
+    MenuListFromMenuLists_Inject();
     ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
                                 // dispatch tables' entries swapped for recorders: order does not matter
+    FieldSaveFromShopStates_Inject();
     ShopMode_Inject();
     if (bof3::WantsShadow("worldmap_area")) worldmap_area::SelfTest();      // round 8 group DA: every call and tail jmp of its clones re-aimed at a recorder
                                 // and its seven .data dispatch tables swapped for recorders: order does not matter
@@ -1190,6 +1198,7 @@ void InjectAll() {
     Text_Inject();
     ShopStates2_Inject();       // round 8 group DG: every call of its clones re-aimed at a recorder and its two .data
                                 // dispatch blocks swapped for recorders: order does not matter
+    ShopTradeFromShopStates2_Inject();
     MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
                                 // table relocated in the copy; no module patches bytes inside its sixteen: order
                                 // does not matter
@@ -1972,6 +1981,8 @@ void InjectAll() {
                                 // calls re-aimed at the boss harness's recorders, its stack tables' immediates at
                                 // handler recorders; no module patches bytes inside its 31 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    BattleMenuWinFromBattleE7_Inject();
+    MenuListFromBattleE7_Inject();
     if (bof3::WantsShadow("battle_e1")) battle_e1::SelfTest();          // round 12 group BE1 (BATE's tally and equipment screens, the command menu's held
                                 // steps and auto battle, action kind 3, the ability notice, the result's counts and
                                 // level gain, the loss screen, 0x42D7A0..0x432B6A): its clones' calls re-aimed at the
@@ -1985,6 +1996,7 @@ void InjectAll() {
                                 // calls re-aimed at the boss harness's recorders, the Dragon run's six step tables
                                 // swapped for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    DragonCmdFromBattleE5_Inject();
     if (bof3::WantsShadow("battle_e6")) battle_e6::SelfTest();          // round 12 group BE6 (the transformation, the gene cost, BattleFx_Dispatch slots 15,
                                 // 16, 18, the stat rebuild, the member roll, the AP pop-up, the Field_Slots debts,
                                 // BMAGIC's four map cells; 0x451480..0x4552F5, 0x4CEB40..0x4CF4A3): its clones' calls
@@ -2529,6 +2541,7 @@ void InjectAll() {
                                 // the fuzz only; after every harness's inject; after MenuFrame_Inject (DIV-0011) and
                                 // BattleDraw_Inject (DIV-0059), whose call sites inside 0x59AA80 / 0x59DBF0 ours reads,
                                 // and Widescreen_Inject (DIV-0041), whose bound inside 0x59C130 ours reads back
+    ShopWin2FromRest2h_Inject();
     ShopWin2_Inject();
     DInput_Inject();
     MenuList_Inject();
@@ -2552,6 +2565,7 @@ void InjectAll() {
                                 // call it by the address it had; before FishingText_Arm; no module patches bytes
                                 // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
                                 // yes_no_layout.cpp)
+    FieldSaveFromRest2c_Inject();
     ShopTrade_Inject();
     ShopResist_Inject();
     ShopBrowse_Inject();

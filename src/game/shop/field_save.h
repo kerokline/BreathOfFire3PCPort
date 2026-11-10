@@ -3,3 +3,5 @@
 #pragma once
 
 void FieldSave_Inject();
+void FieldSaveFromRest2c_Inject();
+void FieldSaveFromShopStates_Inject();

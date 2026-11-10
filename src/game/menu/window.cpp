@@ -775,6 +775,17 @@ extern "C" void __cdecl Window_DrawLine(int x0, int y0, int x1, int y1, unsigned
     window_task::g.commit(1, 0x20);
 }
 
+namespace {
+
+// Text_DrawAt is not ours and ends in a committed primitive, so it is called
+// through a pointer the fuzz can aim at a recorder - for the original's copy
+// and for ours alike.
+using DrawAtFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
+
+}  // namespace
+
+namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
+
 // original 0x5961C0, the PSX Text_DrawImmediate's twin (sibling
 // TEXT_ENGINE.md: "y += 0x0D (immediate)"): draws `text` at (x, y), one
 // Text_DrawAt call a character, and returns one past the NUL that ended it.

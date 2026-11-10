@@ -675,6 +675,10 @@ extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
     return map_field_objects::g.pieces(x - 0x10, y, AtMapFieldObjects(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
 }
 
+namespace menu_windows {
+bool g_yes_no_div = false;
+}  // namespace menu_windows
+
 // original 0x5747D0 (PSX 0x801DA628): the Yes / No chooser (DIV-0027,
 // docs/glyph-draw.md section 7). System message 0xF at (0x1C, 0x16), the hand
 // at x 0xFE - 36 * s8 selection (0x929F0B), y 0x18. Then on this frame's

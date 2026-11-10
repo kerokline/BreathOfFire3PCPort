@@ -3,3 +3,4 @@
 #pragma once
 
 void ShopWin2_Inject();
+void ShopWin2FromRest2h_Inject();

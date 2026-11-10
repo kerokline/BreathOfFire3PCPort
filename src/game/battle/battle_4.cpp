@@ -411,6 +411,10 @@ extern "C" void __cdecl BossActor_Clear(unsigned tag) {
 }
 
 void Battle4FromBattleSprites_Inject() {
+    // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
+    // would write the kind's bit and the cheat would be silently half off.
+    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_SetupEnemy))
+        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_SetupEnemy ours, and it is disabled");
     BOF3_INJECT(Battle_InitEncounterKind);
     BOF3_INJECT(Battle_InitBossEncounter);
     BOF3_INJECT(Battle_InitEnemies);

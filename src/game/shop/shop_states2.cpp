@@ -43,12 +43,6 @@
 
 using namespace shop_states2;
 
-// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no
-// hand (YesNoFrame) over DIV-0027's re-spaced line, set with
-// menu_draw_helpers.cpp's g_shop_yes_no_line under a Latin overlay, after
-// the self-test, which compares the original's hand.
-unsigned char g_shop_yes_no_hand = 0;
-
 namespace {
 
 unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -111,10 +105,4 @@ Handler Entry(shop_states2::U table, shop_states2::U index, const char* who) {
 
 void ShopStates2_Inject() {
     if (bof3::WantsShadow("shop_states2")) shop_states2::SelfTest();
-    if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ShopYesNoLayout", Low32(&g_shop_yes_no_hand),
-                         &was, &is, 1);
-        bof3::Log("DIV-0027    the shop's buy / equip / sell yes / no hand over the re-spaced line");
-    }
 }
