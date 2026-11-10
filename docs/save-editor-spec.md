@@ -153,6 +153,12 @@ Class says how the editor treats a field:
 - **D:** derived. Regenerated on write, editable only on Advanced.
 - **P:** preserved byte for byte, shown in the hex view.
 
+**[`save-block.md`](save-block.md) is the later, byte-complete map (2026-11-10).**
+It corrects rows of this table: the options at `+0x78` (not the button mapping),
+`+0x74C..+0x750`, `+0x688` (three bit sets), `+0xB94` (the shared ability list),
+`+0xC28` (gene combinations, 6 rows and 12), the faerie values at `+0xCD0`, and
+the summary's 9-byte name. This table keeps the editing classes.
+
 | Offset | Size | Field | Class | Evidence |
 |---|---:|---|---|---|
 | `+0x000` | 16 | Scene state. Byte 0 is the chapter, byte 2 the state | A | READ, [`ending-backdrop.md`](ending-backdrop.md); CITED frost `SceneState` |
@@ -254,8 +260,8 @@ Record positions hold fixed characters. MEASURED `char_id` by position: 0 is
 | `+0x0E` | 6 | Weapon, shield, helm, armor, two accessories | E | MEASURED by the sibling |
 | `+0x14` | 4 | Current HP, AP | E | MEASURED: HP <= max on all |
 | `+0x18` | 1 | Unnamed | P | UNKNOWN |
-| `+0x19` | 1 | Fatigue | E | CITED |
-| `+0x1A` | 1 | Unnamed | P | UNKNOWN |
+| `+0x19` | 1 | Halving bits, not fatigue ([`save-block.md`](save-block.md) section 3) | A | READ; MEASURED 0 in 640 records |
+| `+0x1A` | 1 | Fatigue: the max-HP scale | E | READ, MEASURED |
 | `+0x1B` | 1 | Master | E | CITED |
 | `+0x1C` | 4 | Max HP, AP, current | D | READ: rebuilt on load |
 | `+0x20` | 28 | Live stats and live copies of `+0x4A..` | D | READ: `Char_RecalcStats` on every load, `TitleFlow_EnterGame` in `src/game/save_menu.cpp` |
