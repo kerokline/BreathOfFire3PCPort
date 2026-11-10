@@ -54,22 +54,6 @@ std::uint32_t Dword(std::uint32_t address) {
 void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address), &v, sizeof v); }
 std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
-// Win32 through the game's own import slots, as the originals call it.
-template <class Fn>
-Fn Import(std::uint32_t slot) {
-    std::uint32_t word;   // the import slot is a 32-bit word: Windows' function on i686, its thunk on x86-64 (design 4)
-    std::memcpy(&word, At(slot), sizeof word);
-    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-}
-void* __stdcall ImportCreateEvent(void* security, int manual, int initial, const char* name) {
-    return Import<void* (__stdcall*)(void*, int, int, const char*)>(::bof3::Img(Sound_ImportCreateEvent_addr))(security, manual, initial, name);
-}
-int __stdcall ImportCloseHandle(void* handle) { return Import<int (__stdcall*)(void*)>(::bof3::Img(Sound_ImportCloseHandle_addr))(handle); }
-unsigned __stdcall ImportMsgWait(unsigned count, const void* handles, int all, unsigned ms, unsigned mask) {
-    return Import<unsigned (__stdcall*)(unsigned, const void*, int, unsigned, unsigned)>(::bof3::Img(Sound_ImportMsgWait_addr))(count, handles, all,
-                                                                                                         ms, mask);
-}
-
 }  // namespace
 }  // namespace sound
 
@@ -108,15 +92,6 @@ std::uint8_t g_ring_log_hold = 0;
 
 namespace sound {
 
-const Callees kOriginals = {
-    Crt_sprintf, Crt_malloc, Crt_free, File_Open, File_Size, File_Read, File_Close,
-    Mp3_Create, Mp3_MemoryIo, Mp3_SetIo, Mp3_Open, Mp3_Start, Mp3_Decode, Mp3_Seek, Mp3_Destroy,
-    ImportCreateEvent, ImportCloseHandle, ImportMsgWait,
-    Music_LoadFile, Music_SetVolume, Music_Start, Music_FadeInEax, Music_Pump, Music_Stop, Wave_FindData, SndBuf_Write,
-    SndBuf_Play, SndBuf_Stop, SndBuf_CreateFromWave, Music_Release, Music_OpenDecoder, Music_CreateBuffer,
-    Music_SetNotify, Music_Decode,
-};
-Callees g = kOriginals;
 
 namespace {
 

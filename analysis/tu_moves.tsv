@@ -21199,6 +21199,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 	d3d_rest::g	seam		src/game/platform/d3d_rest.cpp	39	39	51	src/game/platform/d3d.cpp	98cb16c7
 	glyph_draw::g	seam		src/game/platform/glyph_draw.cpp	27	27	35	src/game/platform/d3d.cpp	98cb16c7
 	shell::g	seam		src/game/platform/shell.cpp	42	42	52	src/game/platform/magic_080.cpp	98cb16c7
+	sound::g	seam		src/game/platform/sound_ours.cpp	111	111	119	src/game/core/sound.cpp	a165d66e
 	sprt_draw::g	seam		src/game/platform/sprt_draw.cpp	80	80	87	src/game/platform/d3d.cpp	98cb16c7
 	tex_page::g	seam		src/game/platform/tex_page.cpp	34	34	40	src/game/platform/d3d.cpp	98cb16c7
 		file		src/game/prim.cpp	1	1	140	src/game/core/prim.cpp	b29e27f3
