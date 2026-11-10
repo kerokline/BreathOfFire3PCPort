@@ -383,7 +383,7 @@ def mods_checks(launcher, exe, report):
     shutil.rmtree(home, ignore_errors=True)
     rt = os.path.join(L, "runtime", "tools")
     os.makedirs(rt)
-    for f in ("mods.py", "language_tags.py"):
+    for f in ("mods.py", "language_tags.py", "build_reuse.py"):   # build_reuse: the build step's (5babe07d)
         shutil.copy(os.path.join(TOOLS, f), rt)
     with open(os.path.join(rt, "importer.py"), "w") as f:
         f.write("# the launcher's marker for this runtime (sources_dialog.cpp FindRuntime); never run by this test\n"
@@ -415,6 +415,10 @@ def mods_checks(launcher, exe, report):
         wait_idle(item)
         seen["log"] = text(item(IDC_MOD_LOG))
         seen["rows"] = items(item(IDC_MOD_LIST), False)
+        u.SendMessageW(item(IDC_MOD_LIST), LB_SETCURSEL, 0, 0)
+        u.SendMessageW(u.GetParent(item(IDC_MOD_LIST)), WM_COMMAND, (1 << 16) | IDC_MOD_LIST,
+                       item(IDC_MOD_LIST))   # LBN_SELCHANGE, to the page that owns the list
+        seen["credit"] = text(item(IDC_MOD_STATUS))
         shot(dlg, "mods_tab_not_built")
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         seen["ruby_original"] = items(item(IDC_RUBY), True)
@@ -427,13 +431,15 @@ def mods_checks(launcher, exe, report):
            seen.get("ui_after") == (True, True, 1) and lines(ini1 or "").get("ruby_ui") == "1",
            "%r %r" % (seen.get("ui_after"), lines(ini1 or "").get("ruby_ui")))
     report("  a good zip added; its build refused loudly, naming the builder",
-           "Added: Japanese (Furigana) 0.1.0" in seen.get("log", "") and "ruby_build.py" in seen.get("log", "")
+           "Added: Japanese (Furigana) 0.1.0, by A. Tester" in seen.get("log", "") and "ruby_build.py" in seen.get("log", "")
            and "not built" in seen.get("status_add", ""), "%r | %r" % (seen.get("status_add"), seen.get("log")))
     report("  a zip holding a .DAT refused with the reason", "Not added: AREA014.DAT: game data" in seen.get("log", ""))
     rows = seen.get("rows", [])
-    report("  listed: name, version, kind, not built - greyed",
-           len(rows) == 1 and rows[0][0].startswith("Japanese (Furigana)\t0.1.0\treading-row\tnot built") and rows[0][1] == 1,
+    report("  listed: name, author, version, not built - greyed",
+           len(rows) == 1 and rows[0][0].startswith("Japanese (Furigana)\tby A. Tester\t0.1.0\tnot built") and rows[0][1] == 1,
            repr(rows))
+    report("  selected: the status line names the mod, its author and its kind",
+           seen.get("credit") == "Japanese (Furigana) 0.1.0, by A. Tester. Kind: reading-row.", repr(seen.get("credit")))
     with open(os.path.join(home, "mods.toml"), encoding="utf-8") as f:
         report("  mods.toml lists it; mods\\furigana holds its two files",
                'id = "furigana"' in f.read() and sorted(os.listdir(os.path.join(home, "mods", "furigana")))

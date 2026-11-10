@@ -764,12 +764,13 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 // tools/mods.py beside the importer, on the same Python, one child at a time.
 // `list --json` gives one flat object a mod: id, name, version, kind,
 // requires, base, layer, state (built, not-built, needs, problem), needs,
-// problem. A mod the install cannot play is greyed in the list with its reason
+// problem, author, url, credit. A mod the install cannot play is greyed in the list with its reason
 // (the owner's rule, 2026-10-10): a language it needs and the install lacks,
 // a layer not built, or a base that is not the language chosen in Settings.
 
 struct ModRow {
     std::string id, name, version, kind, base, state, needs, problem;
+    std::string author, url, credit;   // who made it (docs/mods.md 2): shown, never opened or run
 };
 
 struct ModsState {
@@ -805,7 +806,8 @@ void ModsGreyed(HWND page, const ModsState& s) {
                  runnable && SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0) != LB_ERR);
 }
 
-// A row as the list shows it: name, version, kind, state; and whether it is greyed.
+// A row as the list shows it: name, author, version, state; and whether it is greyed.
+// The kind is on the status line when the row is selected (ModsCredit).
 std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     std::wstring state;
     greyed = true;
@@ -823,7 +825,22 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     } else {
         state = L"problem: " + Widen(r.problem.empty() ? std::string("unreadable") : r.problem);
     }
-    return Widen(r.name) + L"\t" + Widen(r.version) + L"\t" + Widen(r.kind) + L"\t" + state;
+    return Widen(r.name) + L"\t" + (r.author.empty() ? std::wstring() : L"by " + Widen(r.author)) + L"\t" +
+           Widen(r.version) + L"\t" + state;
+}
+
+// The status line for the selected mod: its name and version, who made it, the
+// author's own line and address when the mod gives them, and its kind.
+void ModsCredit(HWND page, const ModsState& s) {
+    const LRESULT i = SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0);
+    if (i == LB_ERR || static_cast<size_t>(i) >= s.rows.size()) return;
+    const ModRow& r = s.rows[static_cast<size_t>(i)];
+    std::wstring text = Widen(r.name) + L" " + Widen(r.version);
+    text += r.author.empty() ? L". The mod does not give its author." : L", by " + Widen(r.author) + L".";
+    if (!r.credit.empty()) text += L" " + Widen(r.credit);
+    if (!r.url.empty()) text += L" " + Widen(r.url);
+    text += L" Kind: " + Widen(r.kind) + L".";
+    ModStatus(page, text);
 }
 
 void ModsRender(HWND page, const ModsState& s) {
@@ -909,13 +926,16 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
     if (job == kModList && IsJsonObject(line)) {
         s.rows.push_back({JsonString(line, "id"), JsonString(line, "name"), JsonString(line, "version"),
                           JsonString(line, "kind"), JsonString(line, "base"), JsonString(line, "state"),
-                          JsonString(line, "needs"), JsonString(line, "problem")});
+                          JsonString(line, "needs"), JsonString(line, "problem"), JsonString(line, "author"),
+                          JsonString(line, "url"), JsonString(line, "credit")});
         return;
     }
     if (job == kModAdd && IsJsonObject(line)) {
         if (JsonTrue(line, "ok")) {
             const std::string replaced = JsonString(line, "replaced");
+            const std::string author = JsonString(line, "author");
             ModLog(page, L"Added: " + Widen(JsonString(line, "name")) + L" " + Widen(JsonString(line, "version")) +
+                             (author.empty() ? std::wstring() : L", by " + Widen(author)) +
                              (replaced.empty() ? std::wstring() : L" (replaces " + Widen(replaced) + L")") + L".");
             s.build_next = JsonString(line, "id");
             s.added_kind = JsonString(line, "kind");
@@ -993,9 +1013,9 @@ void ModsDraw(const DRAWITEMSTRUCT& d) {
     text.resize(static_cast<size_t>(n));
     SetBkMode(d.hDC, TRANSPARENT);
     SetTextColor(d.hDC, GetSysColor(d.itemData ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
-    // the columns: name, version, kind, state - at fixed shares of the list's width
+    // the columns: name, author, version, state - at fixed shares of the list's width
     const int w = d.rcItem.right - d.rcItem.left;
-    INT tabs[3] = {w * 30 / 100, w * 40 / 100, w * 57 / 100};
+    INT tabs[3] = {w * 30 / 100, w * 50 / 100, w * 58 / 100};
     const int x = d.rcItem.left + 2;
     TabbedTextOutW(d.hDC, x, d.rcItem.top + 1, text.c_str(), static_cast<int>(text.size()), 3, tabs, x);
     if ((d.itemState & ODS_FOCUS) && !(d.itemState & ODS_NOFOCUSRECT)) DrawFocusRect(d.hDC, &d.rcItem);
@@ -1075,7 +1095,10 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
             if (s) ModsRemove(page, *s);
             return TRUE;
         case IDC_MOD_LIST:
-            if (s && HIWORD(wp) == LBN_SELCHANGE) ModsGreyed(page, *s);
+            if (s && HIWORD(wp) == LBN_SELCHANGE) {
+                ModsGreyed(page, *s);
+                ModsCredit(page, *s);
+            }
             return TRUE;
         case IDOK:
         case IDCANCEL:   // Enter and Escape mean what they mean on the window

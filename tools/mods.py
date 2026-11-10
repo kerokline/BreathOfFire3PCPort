@@ -69,6 +69,11 @@ LAYER_MAX = 23
 ID_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 VERSION_RE = re.compile(r"[0-9]+(\.[0-9]+){0,3}([-+][0-9A-Za-z.]+)?")
 FILE_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+# Who made the mod (docs/mods.md 2; issue 216): shown on the Mods tab, so the
+# author of a repackaged romhack is credited where the player chooses it. All
+# three are text the launcher shows and never opens, runs or follows.
+CREDIT_KEYS = ("author", "url", "credit")
+URL_RE = re.compile(r"https?://[A-Za-z0-9._~:/?#@!$&'()*+,;=%\[\]-]{1,190}")
 # Kinds of file a mod never holds, whatever mod.toml says: game data (rule 1;
 # a text layer is derived game data, built on the player's machine) and programs.
 GAME_DATA_EXT = (".dat", ".emi", ".bin", ".iso", ".cue", ".str", ".xa", ".avi", ".mp3", ".at3", ".vag", ".vab")
@@ -197,10 +202,10 @@ def check_meta(doc):
     extra = sorted(set(doc) - {"mod", k["table"]})
     if extra:
         raise Refused("mod.toml: table %s is not one a %s mod has ([mod], [%s])" % (extra[0], kind, k["table"]))
-    extra = sorted(set(mod) - {"id", "name", "version", "kind", "requires"})
+    extra = sorted(set(mod) - {"id", "name", "version", "kind", "requires"} - set(CREDIT_KEYS))
     if extra:
-        raise Refused("mod.toml: [mod] has %s, which the tools do not know (id, name, version, kind, requires)"
-                      % extra[0])
+        raise Refused("mod.toml: [mod] has %s, which the tools do not know (id, name, version, kind, requires, "
+                      "author, url, credit)" % extra[0])
     meta = {"kind": kind}
     meta["id"] = _string(mod, "id", "mod", LAYER_MAX)
     if not ID_RE.fullmatch(meta["id"]):
@@ -211,6 +216,14 @@ def check_meta(doc):
     if not VERSION_RE.fullmatch(meta["version"]):
         raise Refused("mod.toml: mod.version %r is not a version (1.2.3, optionally -beta or +build)"
                       % meta["version"])
+    if "author" in mod:
+        meta["author"] = _string(mod, "author", "mod", 64)
+    if "credit" in mod:
+        meta["credit"] = _string(mod, "credit", "mod", 200)
+    if "url" in mod:
+        meta["url"] = _string(mod, "url", "mod", 200)
+        if not URL_RE.fullmatch(meta["url"]):
+            raise Refused("mod.toml: mod.url %r must be an http:// or https:// address with no spaces" % meta["url"])
     req = mod.get("requires")
     if not isinstance(req, list):
         raise Refused("mod.toml: mod.requires must be a list of language tags, e.g. [\"ja-JP\"]")
@@ -322,7 +335,8 @@ def mod_dir(h, mid):
     return os.path.join(h, MODS_DIR, mid)
 
 
-ROW_KEYS = ("id", "name", "version", "kind", "requires", "base", "readings", "files", "zip", "sha256", "added")
+ROW_KEYS = ("id", "name", "version", "author", "url", "credit", "kind", "requires", "base", "readings", "files",
+            "zip", "sha256", "added")
 
 
 def load_rows(h):
@@ -396,7 +410,8 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     o = {"path": path, "ok": ok, "id": r.get("id"), "name": r.get("name"), "version": r.get("version"),
          "kind": r.get("kind"), "requires": r.get("requires"), "base": r.get("base"),
          "layer": layer_name(r) if r.get("kind") in KINDS and r.get("id") else None,
-         "state": state, "needs": needs, "problem": problem}
+         "state": state, "needs": needs, "problem": problem,
+         "author": r.get("author"), "url": r.get("url"), "credit": r.get("credit")}
     o.update(more)
     return o
 
@@ -406,7 +421,8 @@ def _emit(o, as_json):
         print(json.dumps(o, ensure_ascii=False), flush=True)
     elif o["ok"]:
         extra = {"built": "built", "not-built": "not built yet", "needs": "needs %s" % o.get("needs")}.get(o["state"], "")
-        print("%s %s (%s, %s)%s" % (o["id"], o["version"], o["name"], o["kind"], ": " + extra if extra else ""),
+        by = ", by %s" % o["author"] if o.get("author") else ""
+        print("%s %s (%s%s, %s)%s" % (o["id"], o["version"], o["name"], by, o["kind"], ": " + extra if extra else ""),
               flush=True)
     else:
         print("%s: %s" % (o.get("path") or o.get("id"), o["problem"]), flush=True)
@@ -447,6 +463,7 @@ def cmd_add(a):
         shutil.rmtree(dst)
     os.rename(new, dst)
     row = {k: meta[k] for k in ("id", "name", "version", "kind", "requires")}
+    row.update({k: meta[k] for k in CREDIT_KEYS if k in meta})
     row.update({k: meta[k] for k in KINDS[meta["kind"]]["keys"]})
     row.update(files=meta["files"], zip=path, sha256=sha_file(path),
                added=datetime.datetime.now().isoformat(timespec="seconds"))
@@ -689,6 +706,7 @@ GOOD_MOD = b'''[mod]
 id = "furigana"
 name = "Japanese (Furigana)"
 version = "0.1.0"
+author = "A. Tester"
 kind = "reading-row"
 requires = ["ja-JP"]
 
@@ -719,6 +737,18 @@ def selftest(keep=None):
 
     cases = [
         ("good", [("mod.toml", GOOD_MOD), ("readings.toml", GOOD_READINGS)], None),
+        ("no_author", [("mod.toml", mod_toml(author=None)), ("readings.toml", GOOD_READINGS)], None),
+        ("credited", [("mod.toml", mod_toml(author='"Ben"\nurl = "https://example.org/hacks/1/"\ncredit = "Made by Ben. '
+                                                   'Shared with his permission."')), ("readings.toml", GOOD_READINGS)], None),
+        ("empty_author", [("mod.toml", mod_toml(author='"  "')), ("readings.toml", GOOD_READINGS)],
+         "mod.author must be a non-empty string"),
+        ("author_control", [("mod.toml", GOOD_MOD.replace(b'"A. Tester"', b'"Ben\\u001b[2J"')),
+                            ("readings.toml", GOOD_READINGS)],
+         "control character"),
+        ("url_not_http", [("mod.toml", mod_toml(author='"Ben"\nurl = "file:///C:/Windows/x"')),
+                          ("readings.toml", GOOD_READINGS)], "must be an http:// or https:// address"),
+        ("url_spaces", [("mod.toml", mod_toml(author='"Ben"\nurl = "https://example.org/a b"')),
+                        ("readings.toml", GOOD_READINGS)], "must be an http:// or https:// address"),
         ("unknown_kind", [("mod.toml", mod_toml(kind='"art-swap"')), ("readings.toml", GOOD_READINGS)],
          'kind "art-swap" is not one the tools know'),
         ("no_kind", [("mod.toml", mod_toml(kind=None)), ("readings.toml", GOOD_READINGS)], "kind (missing)"),
@@ -825,6 +855,8 @@ def selftest(keep=None):
     o = json.loads(out.splitlines()[-1])
     expect(rc == 0 and o["ok"] and o["state"] == "needs" and o["needs"] == "ja-JP",
            "add into a home without ja-JP: added, state needs ja-JP")
+    expect(o["author"] == "A. Tester" and o["url"] is None and load_rows(h)[0].get("author") == "A. Tester",
+           "  its author in the add's line and in mods.toml")
     expect(os.path.isfile(os.path.join(h, "mods", "furigana", "readings.toml")), "  unpacked to mods/furigana/")
     rc, out = run("add", zips["holds_dat"], "--home", h, "--json")
     expect(rc == 1 and not json.loads(out)["ok"] and len(load_rows(h)) == 1, "a refused zip: exit 1, the list unchanged")
