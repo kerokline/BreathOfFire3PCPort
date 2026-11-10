@@ -3,3 +3,4 @@
 #pragma once
 
 void MenuList_Inject();
+void MenuListFromBattleResult_Inject();

@@ -1389,6 +1389,32 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpS
     battle_result::g.exp_window[index]();
 }
 
+// original 0x5985A0 (PSX 0x801F06D4, paired): the EXP window's frame -
+// 0x5982D0(0x14, 0x28, 0x118, the record's height +9) - and one line per
+// party slot, y = 0x2C + 16 n (a byte): the name (Text_DrawAt at 0x19, 5
+// characters); at level 99 (byte +0xA of the slot's record is 0x63)
+// Msg_SystemPtr(0x41) at 0x55; otherwise the next level ("%2d" of level +
+// 1, Text_DrawFont12 at 0x85), the EXP still to go ("%6d" of 0x598810(n),
+// at 0xE3) and Msg_SystemPtr(0x15) at 0x55. Text record 2 is the scratch.
+//
+// As the original has it: the record 0x905B84 is read once, before the
+// frame; the count 0x904AB0 after the frame and after each line; the level
+// after the name. The original's frame height and y carry the upper half of
+// a register the caller left (ecx, esi) - 0x5982D0, Text_DrawAt and
+// Text_DrawFont12 read those arguments as words, and ours passes them
+// zero-extended; 0x598810 reads its slot as a byte.
+//
+// DIVERGENCE DIV-0060: under a Latin language overlay the line takes the US
+// release's layout - the EXP still to go right-aligned before the sentence,
+// the sentence, the next level at the right edge: "%6d" at 0x36, the
+// message at 0x82, "%2d" at 0x114 (read off the owner's photograph of the
+// US screen, 2026-09-27; the level-99 message at 0x82 too). The Chinese
+// layout puts the sentence at 0x55 and the level at 0x85, which the US
+// sentence "EXP to next level:" (144 units) runs over - the owner's "a
+// digit hidden in 'next'". Same calls, same order, other x. 0 until
+// BattleResult_Inject patches it to 1 under the name BattleResultExpLayout.
+unsigned char g_exp_layout_us = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawExp(void) {
     const unsigned char* const w = CurrentWindow();
     battle_result::g.draw_frame(0x14, 0x28, 0x118, w[9]);
@@ -2728,6 +2754,20 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
 // by every kind (read 2026-09-25), so a call is the jump.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
     Dispatch(::bof3::Img(Window_Handler7KindTable_addr), RecMenuDrawHelpers()[2]);
+}
+
+void MenuListFromBattleResult_Inject() {
+    // DIVERGENCE DIV-0060: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        if (Lang_Latin()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleResultExpLayout",
+                             Low32(&g_exp_layout_us),
+                             &was, &is, 1);
+            bof3::Log("DIV-0060    EXP line in the US layout: %s", g_exp_layout_us ? "on" : "off");
+        }
+    }
 }
 
 void MenuList_Inject() {

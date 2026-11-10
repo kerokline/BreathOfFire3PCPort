@@ -1130,6 +1130,7 @@ void InjectAll() {
     BattleResult_Inject();      // round 8 group CD: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed in the copies and two .data step tables swapped:
                                 // order does not matter
+    MenuListFromBattleResult_Inject();
     BattleWinStates_Inject();   // group CL (round 8): every call of its clones re-aimed at a recorder and its
                                 // seven stack tables' immediates re-aimed in the copies: order does not matter
     if (bof3::WantsShadow("enemy_ai_ops")) enemy_ai_ops::SelfTest();        // round 8 group CF: every call of its clones re-aimed at a recorder and its op
