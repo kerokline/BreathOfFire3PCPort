@@ -140,11 +140,11 @@ void SwingIn() {
 // A countdown: frames 29..0, then seconds and minutes 59..0, then hours.
 //
 // As the original has it: all four bytes zero means stopped; each byte is
-// decremented and tested as s8 (so 0x80 and above count as below zero); when
-// the minutes underflow at hour 0 the minutes and seconds are zeroed but the
-// frames byte was already reloaded with 29 - so a countdown never reaches
-// all-zero by itself, it runs 0:00:00 round every 30 frames (the PSX's
-// 0x80199D9C is the same).
+// decremented and tested as s8 (so 0x80 and above count as below zero). In
+// range a countdown reaches 0:00:00:00 and stops (corrected 2026-11-10; the
+// note here said never). The hour-0 branch below needs all zero before the
+// decrement, which the first test returns on: only a byte of 0x80 or more
+// reaches it (the PSX's 0x80199D9C is the same).
 void CountDown(std::uint32_t address) {
     unsigned char* const t = mode_flow::At(address);
     const unsigned char hours = t[0];

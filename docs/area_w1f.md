@@ -102,7 +102,7 @@ reaches it with random weights, section 3).
 
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
-| `0x40D650` | `Area74_ChoiceAsk92` | `0x3E` | choice 0 = handler 2 (PSX `0x801F2C04`) | kChoice | answer not 0: message `0x94`, the mark; 0: story flag `0x365` (the byte `0x90409C` bit `0x20`) message `0x92`, else `0x93` and the mark |
+| `0x40D650` | `Area74_ChoiceAsk92` | `0x3E` | choice 0 = handler 2 (PSX `0x801F2C04`) | kChoice | answer not 0: message `0x94`, the mark; 0: the byte `0x90409C` bit `0x20` (bit `0xA5` of the abilities-learnt set, not a story flag: [`save-block.md`](save-block.md)) message `0x92`, else `0x93` and the mark |
 | `0x40D690` | `Area74_ChoiceAnswer94` | `0x24` | choices 3, 4 = handlers 5, 6 (PSX `0x801F2CC0`, `0x801F2D04`: two bodies there) | kChoice | answer not 0: message `0x94`, the mark; 0: `0xFFFF` |
 | `0x40D6C0` | `Area74_PushToggleRow7` | `0xCC` | handler 0 (PSX `0x801F2D48`) | kHandler | the active member's `+0x80` bit 0 cleared; leader `+0x89` 2, the object's `+9` 0 and the leader's direction (`+8 & 7`) 5 or 1: the object turned to it; unless `Field_ObjectBlockedAhead(active member)`: its `+0x87` = 3, `MoveCmd_Move(script object, direction)`; direction 5: Cond row 7 flag 6 set ? cleared : flag 5 set; direction 1: flag 6 set; `Sound_PlayEffect(leader dword +0x2C + 0x100)` |
 | `0x40D790` | `Area74_ClearMemberBit0` | `0xD` | handler 1 (PSX `0x801F2E74`); `Area_ObjectHandler`'s fallback table `0x660CA0` entries 2, 4, 8 | kHandler | the active member's `+0x80` bit 0 cleared |

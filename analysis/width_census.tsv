@@ -6982,68 +6982,69 @@ site	src/game/field/leader_panel.cpp	75	narrow_call	image_local	live	table	Key	w
 site	src/game/field/leader_panel.cpp	76	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[step]))();
 site	src/game/field/leader_panel.cpp	76	widen	param	live	table[step]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[step]))();
 site	src/game/field/leader_panel.cpp	86	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	who, n, at::kSpriteCount, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + n * effect_1e::at::kSpriteStride));
-site	src/game/field/leader_panel.cpp	182	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/leader_panel.cpp	182	widen	param	live	a	unsigned char*	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/leader_panel.cpp	213	long	ul	live	unsigned long	-	void Dispatch(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* by) {
-site	src/game/field/leader_panel.cpp	217	narrow_call	image_local	live	table	Key	who, by, index, entries, Key(table));
-site	src/game/field/leader_panel.cpp	218	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	218	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	252	low32	helper_def	live	p	Low32	std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
-site	src/game/field/leader_panel.cpp	293	long	ul	live	unsigned long	-	void DispatchRest1f(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
-site	src/game/field/leader_panel.cpp	297	low32	image_local	live	table	Low32	who, by, index, count, static_cast<unsigned>(::bof3::VaOf(Low32(table))));
-site	src/game/field/leader_panel.cpp	298	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	298	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	301	long	ul	live	unsigned long	-	void ByStateRest1f(const char* who, const unsigned long* table, unsigned count) {
-site	src/game/field/leader_panel.cpp	305	long	ul	live	unsigned long	-	void ByStepRest1f(const char* who, const unsigned long* table, unsigned count) {
-site	src/game/field/leader_panel.cpp	411	low32	helper_def	live	p	Low32	U AddrOf(const void* p) { return Low32(p); }
-site	src/game/field/leader_panel.cpp	436	long	ul	live	unsigned long	-	void RunRest1g(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
-site	src/game/field/leader_panel.cpp	440	narrow_call	image_local	live	table	Key	who, byte, index, entries, (unsigned)Key(table));
-site	src/game/field/leader_panel.cpp	441	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	441	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
-site	src/game/field/leader_panel.cpp	454	long	l	live	long	-	short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z))); }
-site	src/game/field/leader_panel.cpp	454	long	l	live	long	-	short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z))); }
-site	src/game/field/leader_panel.cpp	500	long	l	live	long	-	const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
-site	src/game/field/leader_panel.cpp	824	narrow_call	image_local	live	s + 0xC	Key	SetL(Key(s + 0xC), held & 0xA000u);
-site	src/game/field/leader_panel.cpp	826	narrow_call	image_local	live	t + 0xC	Key	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
-site	src/game/field/leader_panel.cpp	831	narrow_call	image_local	live	s + 0xC	Key	if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
-site	src/game/field/leader_panel.cpp	915	long	l	live	long	-	const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
-site	src/game/field/leader_panel.cpp	1891	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
-site	src/game/field/leader_panel.cpp	1927	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
-site	src/game/field/leader_panel.cpp	1928	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
-site	src/game/field/leader_panel.cpp	1970	long	l	live	long	-	Field_Kind2Z = static_cast<long>(static_cast<U>(Field_Kind2Z) - 0x8000u);
-site	src/game/field/leader_panel.cpp	1978	long	l	live	long	-	long depth;
-site	src/game/field/leader_panel.cpp	1980	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(prim + 8), &depth);
-site	src/game/field/leader_panel.cpp	1983	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<unsigned long*>(prim + 0x14), &depth);
-site	src/game/field/leader_panel.cpp	2217	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
-site	src/game/field/leader_panel.cpp	3038	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
-site	src/game/field/leader_panel.cpp	3040	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
-site	src/game/field/leader_panel.cpp	3041	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
-site	src/game/field/leader_panel.cpp	3044	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
-site	src/game/field/leader_panel.cpp	3046	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
-site	src/game/field/leader_panel.cpp	3048	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
-site	src/game/field/leader_panel.cpp	3050	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
-site	src/game/field/leader_panel.cpp	3060	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
-site	src/game/field/leader_panel.cpp	3063	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3067	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
-site	src/game/field/leader_panel.cpp	3070	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
-site	src/game/field/leader_panel.cpp	3073	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
-site	src/game/field/leader_panel.cpp	3074	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
-site	src/game/field/leader_panel.cpp	3075	narrow_call	image_local	live	after	Key	return Key(after);
-site	src/game/field/leader_panel.cpp	3083	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
-site	src/game/field/leader_panel.cpp	3084	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
-site	src/game/field/leader_panel.cpp	3095	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
-site	src/game/field/leader_panel.cpp	3111	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
-site	src/game/field/leader_panel.cpp	3163	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
-site	src/game/field/leader_panel.cpp	3189	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
-site	src/game/field/leader_panel.cpp	3191	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
-site	src/game/field/leader_panel.cpp	3192	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
-site	src/game/field/leader_panel.cpp	3193	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
-site	src/game/field/leader_panel.cpp	3245	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3249	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3252	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
-site	src/game/field/leader_panel.cpp	3293	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
-site	src/game/field/leader_panel.cpp	3496	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
-site	src/game/field/leader_panel.cpp	3503	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
+site	src/game/field/leader_panel.cpp	204	uintptr	-	live	std::uintptr_t	-	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/leader_panel.cpp	204	widen	param	live	a	unsigned char*	unsigned char* AtEffect1f(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/leader_panel.cpp	235	long	ul	live	unsigned long	-	void Dispatch(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* by) {
+site	src/game/field/leader_panel.cpp	239	narrow_call	image_local	live	table	Key	who, by, index, entries, Key(table));
+site	src/game/field/leader_panel.cpp	240	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	240	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	274	low32	helper_def	live	p	Low32	std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
+site	src/game/field/leader_panel.cpp	315	long	ul	live	unsigned long	-	void DispatchRest1f(const char* who, const char* by, const unsigned long* table, unsigned count, unsigned index) {
+site	src/game/field/leader_panel.cpp	319	low32	image_local	live	table	Low32	who, by, index, count, static_cast<unsigned>(::bof3::VaOf(Low32(table))));
+site	src/game/field/leader_panel.cpp	320	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	320	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	323	long	ul	live	unsigned long	-	void ByStateRest1f(const char* who, const unsigned long* table, unsigned count) {
+site	src/game/field/leader_panel.cpp	327	long	ul	live	unsigned long	-	void ByStepRest1f(const char* who, const unsigned long* table, unsigned count) {
+site	src/game/field/leader_panel.cpp	433	low32	helper_def	live	p	Low32	U AddrOf(const void* p) { return Low32(p); }
+site	src/game/field/leader_panel.cpp	458	long	ul	live	unsigned long	-	void RunRest1g(const char* who, const unsigned long* table, unsigned entries, unsigned index, const char* byte) {
+site	src/game/field/leader_panel.cpp	462	narrow_call	image_local	live	table	Key	who, byte, index, entries, (unsigned)Key(table));
+site	src/game/field/leader_panel.cpp	463	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	463	widen	param	live	table[index]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+site	src/game/field/leader_panel.cpp	476	long	l	live	long	-	short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z))); }
+site	src/game/field/leader_panel.cpp	476	long	l	live	long	-	short Elevation(U x, U z) { return static_cast<short>(SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z))); }
+site	src/game/field/leader_panel.cpp	522	long	l	live	long	-	const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
+site	src/game/field/leader_panel.cpp	846	narrow_call	image_local	live	s + 0xC	Key	SetL(Key(s + 0xC), held & 0xA000u);
+site	src/game/field/leader_panel.cpp	848	narrow_call	image_local	live	t + 0xC	Key	SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
+site	src/game/field/leader_panel.cpp	853	narrow_call	image_local	live	s + 0xC	Key	if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
+site	src/game/field/leader_panel.cpp	937	long	l	live	long	-	const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
+site	src/game/field/leader_panel.cpp	1920	narrow_call	object_ours	live	&kEff6Shown	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Shown)) - 1);
+site	src/game/field/leader_panel.cpp	1956	narrow_call	object_ours	live	&kEff6Page	AddrOf	const auto page = static_cast<short>(WRest1g(AddrOf(&kEff6Page)) - 1);
+site	src/game/field/leader_panel.cpp	1957	narrow_call	object_ours	live	&kEff6Page	AddrOf	SetW(AddrOf(&kEff6Page), static_cast<U>(page));
+site	src/game/field/leader_panel.cpp	1999	long	l	live	long	-	Field_Kind2Z = static_cast<long>(static_cast<U>(Field_Kind2Z) - 0x8000u);
+site	src/game/field/leader_panel.cpp	2007	long	l	live	long	-	long depth;
+site	src/game/field/leader_panel.cpp	2009	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v0, reinterpret_cast<unsigned long*>(prim + 8), &depth);
+site	src/game/field/leader_panel.cpp	2012	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(v1, reinterpret_cast<unsigned long*>(prim + 0x14), &depth);
+site	src/game/field/leader_panel.cpp	2246	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	spot, kSpriteCount, index, (unsigned)(Key(rv::Bytes(Sprite_Objects)) + index * kSpriteStride));
+site	src/game/field/leader_panel.cpp	3067	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Sprite_UpdateScreenScaled(void) {
+site	src/game/field/leader_panel.cpp	3069	narrow_call	image_local	live	s + 0x3C	Key	const U held = LongEffect1f(Key(s + 0x3C));
+site	src/game/field/leader_panel.cpp	3070	narrow_call	image_local	live	s + 0x3C	Key	SetLongEffect1f(Key(s + 0x3C), 0);
+site	src/game/field/leader_panel.cpp	3073	narrow_call	image_local	live	after + 0x3C	Key	SetLongEffect1f(Key(after + 0x3C), held);
+site	src/game/field/leader_panel.cpp	3075	narrow_call	image_local	live	s + 0x60	Key	const SEffect1f far = static_cast<SEffect1f>(LongEffect1f(Key(s + 0x60)));
+site	src/game/field/leader_panel.cpp	3077	narrow_call	image_local	live	r + 0x60	Key	const U d = LongEffect1f(Key(r + 0x60));
+site	src/game/field/leader_panel.cpp	3079	narrow_call	image_local	live	r + 0x3E	Key	const U lift = static_cast<U>(static_cast<SEffect1f>(static_cast<short>(WordEffect1f(Key(r + 0x3E))))) << 1;
+site	src/game/field/leader_panel.cpp	3089	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(divisor(s, true)));
+site	src/game/field/leader_panel.cpp	3092	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3096	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), scale(far));
+site	src/game/field/leader_panel.cpp	3099	narrow_call	image_local	live	c + 0x44	Key	SetLongEffect1f(Key(c + 0x44), q);
+site	src/game/field/leader_panel.cpp	3102	narrow_call	image_local	live	s + 0x40	Key	SetLongEffect1f(Key(s + 0x40), 0);
+site	src/game/field/leader_panel.cpp	3103	narrow_call	image	live	Sprite_Current + 0x44	Key	SetLongEffect1f(Key(Sprite_Current + 0x44), 0);
+site	src/game/field/leader_panel.cpp	3104	narrow_call	image_local	live	after	Key	return Key(after);
+site	src/game/field/leader_panel.cpp	3112	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	const U kEnd = Key(rv::Bytes(Sprite_Objects)) + 30 * kStride;
+site	src/game/field/leader_panel.cpp	3113	narrow_call	image_local	live	rv::Bytes(Sprite_Objects)	Key	for (U record = Key(rv::Bytes(Sprite_Objects)); record < kEnd; record += kStride) {
+site	src/game/field/leader_panel.cpp	3124	narrow_call	image_local	live	rv::Bytes(Effect_Objects)	Key	unsigned char* const r = AtEffect1f(Key(rv::Bytes(Effect_Objects)) + record * 0x80);
+site	src/game/field/leader_panel.cpp	3140	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
+site	src/game/field/leader_panel.cpp	3192	narrow_call	image	live	UiSprite_Modes	Key	const U record = Key(UiSprite_Modes) + 16u * (index & 0xFF);
+site	src/game/field/leader_panel.cpp	3218	narrow_call	image	live	UiSprite_Sheet	Key	const U record = Key(UiSprite_Sheet) + 16u * (sprite & 0xFF);
+site	src/game/field/leader_panel.cpp	3220	narrow_call	pool	live	prim + 0x16	Key	SetWord(Key(prim + 0x16), clut);
+site	src/game/field/leader_panel.cpp	3221	narrow_call	pool	live	prim + 0x18	Key	SetWord(Key(prim + 0x18), WordEffect1f(record + 8));
+site	src/game/field/leader_panel.cpp	3222	narrow_call	pool	live	prim + 0x1A	Key	SetWord(Key(prim + 0x1A), WordEffect1f(record + 0xA));
+site	src/game/field/leader_panel.cpp	3274	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3280	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3283	narrow_call	image_local	live	name	KeyFieldE1	TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
+site	src/game/field/leader_panel.cpp	3324	narrow_call	image_local	live	text	KeyFieldE1	TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
+site	src/game/field/leader_panel.cpp	3527	low32	object_ours	live	&g_shop_ask_row	Low32	bof3::PatchBytes(" ", Low32(&g_shop_ask_row), &was,
+site	src/game/field/leader_panel.cpp	3534	low32	object_ours	live	&g_fish_panel_duck	Low32	bof3::PatchBytes(" ", Low32(&g_fish_panel_duck),
+site	src/game/field/leader_panel.cpp	3541	low32	object_ours	live	&g_fish_count_word	Low32	bof3::PatchBytes(" ", Low32(&g_fish_count_word), &was, &is, 1);
 site	src/game/field/map_cells.cpp	27	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	27	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/field/map_cells.cpp	64	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
@@ -12214,10 +12215,11 @@ site	src/game/scenario/scena_07_2.cpp	209	widen	other	live	Entry(::bof3::Img(Sce
 site	src/game/scenario/scena_07_2.cpp	294	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)))();
 site	src/game/scenario/scena_07_2.cpp	294	widen	other	live	Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)))();
 site	src/game/scenario/scena_07_2.cpp	806	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
-site	src/game/scenario/scena_07_2.cpp	1170	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
-site	src/game/scenario/scena_07_2.cpp	1170	widen	other	live	Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))	ObjectHandler [fn]	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
-site	src/game/scenario/scena_07_2.cpp	1322	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
-site	src/game/scenario/scena_07_2.cpp	1322	widen	other	live	Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1177	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
+site	src/game/scenario/scena_07_2.cpp	1177	widen	other	live	Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))	ObjectHandler [fn]	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
+site	src/game/scenario/scena_07_2.cpp	1329	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1329	widen	other	live	Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1371	low32	object_ours	live	&scena_sc7::g_gift_chest_row	Low32	bof3::PatchBytes(" ", Low32(&scena_sc7::g_gift_chest_row), &was, &is, 1);
 site	src/game/scenario/scena_08_2.cpp	141	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
 site	src/game/scenario/scena_08_2.cpp	199	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))))();
 site	src/game/scenario/scena_08_2.cpp	199	widen	other	live	Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))))();
@@ -14021,10 +14023,10 @@ site	src/input/button_tests.cpp	242	uintptr	-	live	std::uintptr_t	-	std::memcpy(
 site	src/input/button_tests.cpp	242	widen	param	live	c.address	void*	std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(c.address)), s.bytes + at, c.size);
 site	src/input/sigma.cpp	90	uintptr	-	live	std::uintptr_t	-	std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords.v))); }
 site	src/input/sigma.cpp	90	widen	img_place	live	::bof3::Img(kWords.v)	std::uint16_t*	std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords.v))); }
-site	src/input/sigma.cpp	183	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
-site	src/input/sigma.cpp	183	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
-site	src/input/sigma.cpp	493	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
-site	src/input/sigma.cpp	494	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
+site	src/input/sigma.cpp	195	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
+site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
+site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
+site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
 site	src/launcher/config.cpp	274	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
 site	src/launcher/config_dialog.cpp	1170	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
 site	src/launcher/config_dialog.cpp	1619	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
@@ -18664,7 +18666,7 @@ file	src/game/field/leader_panel.cpp	live	long	l	6
 file	src/game/field/leader_panel.cpp	live	long	ul	10
 file	src/game/field/leader_panel.cpp	live	low32	helper_def	3
 file	src/game/field/leader_panel.cpp	live	low32	image_local	1
-file	src/game/field/leader_panel.cpp	live	low32	object_ours	2
+file	src/game/field/leader_panel.cpp	live	low32	object_ours	3
 file	src/game/field/leader_panel.cpp	live	narrow_call	image	3
 file	src/game/field/leader_panel.cpp	live	narrow_call	image_local	28
 file	src/game/field/leader_panel.cpp	live	narrow_call	object_ours	3
@@ -20240,6 +20242,7 @@ file	src/game/scenario/scena_06_3.cpp	live	widen	img_place	1
 file	src/game/scenario/scena_06_3.cpp	live	widen	other	4
 file	src/game/scenario/scena_06_3.cpp	live	widen	param	4
 file	src/game/scenario/scena_07_2.cpp	live	long	l	1
+file	src/game/scenario/scena_07_2.cpp	live	low32	object_ours	1
 file	src/game/scenario/scena_07_2.cpp	live	uintptr	-	4
 file	src/game/scenario/scena_07_2.cpp	live	widen	other	4
 file	src/game/scenario/scena_08_2.cpp	live	long	l	5
@@ -20805,8 +20808,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16124
-#count sites_live	11907
+#count sites	16126
+#count sites_live	11909
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -21043,9 +21046,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	720
-#count low32_live	712
-#count low32_live_files	466
+#count low32	722
+#count low32_live	714
+#count low32_live_files	467
 #count low32_fuzz	8
 #count low32_fuzz_files	1
 #count low32_crt	1
@@ -21063,9 +21066,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	136
 #count low32_image_local_live	136
 #count low32_image_local_live_files	88
-#count low32_object_ours	86
-#count low32_object_ours_live	86
-#count low32_object_ours_live_files	62
+#count low32_object_ours	88
+#count low32_object_ours_live	88
+#count low32_object_ours_live_files	63
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14

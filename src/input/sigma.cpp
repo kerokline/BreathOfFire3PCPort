@@ -102,6 +102,18 @@ void Follow(const char* writer, const char* remedy) {
               "BOF3X_ORIGINAL=ButtonSigma for the original's flows)", writer, why.c_str(), remedy);
 }
 
+// A load's words that are not one button each (a hand-edited or converted
+// save): the release's Start-held reset in their place, the same words a
+// player gets by holding Start through the load. True when it replaced them,
+// with the reason. DIV-0133, amended 2026-11-10.
+bool ResetRefusedWords(std::uint16_t* w, Release r, std::string& why) {
+    if (Build(w, why).valid) return false;
+    std::uint16_t words[9];
+    DefaultWords(r, true, words);
+    std::memcpy(w, words, sizeof words);
+    return true;
+}
+
 void WriteStart(bool reset) {
     std::uint16_t words[9];
     DefaultWords(g_release, reset, words);
@@ -279,6 +291,16 @@ void SelfTest() {
             const Table t = Build(w, why);
             Check(!t.valid && !why.empty(), "a non-permutation accepted", b.word, b.value);
             refusals += t.valid ? 0u : 1u;
+            // The load's answer to it: each release's reset words, a table.
+            for (Release r : {Release::kJapan, Release::kWest, Release::kPspEu}) {
+                std::uint16_t x[9], want[9];
+                std::memcpy(x, w, sizeof x);
+                DefaultWords(r, true, want);
+                std::string reason, none;
+                Check(ResetRefusedWords(x, r, reason) && !reason.empty() && std::memcmp(x, want, sizeof x) == 0 &&
+                          Build(x, none).valid,
+                      "a refused load not reset to the release's words", b.word, static_cast<unsigned>(r));
+            }
         }
     }
     // 4. The release by source, the order of answer 2.
@@ -468,7 +490,18 @@ void LoadApplied(bool reset) {
         g_release_words = false;   // the save's words: the same save, the same words, on every install
         bof3::Log("sigma       the save's words loaded: a recipe's buttons pressed as recorded from here");
     }
-    if (g_sigma_on != 0) Follow("loading the save", "hold Start while the save loads to reset the buttons");
+    if (g_sigma_on != 0) {
+        // DIVERGENCE: DIV-0133 (amended 2026-11-10) - a save whose six lines are
+        // not one button each loads with the release's reset buttons.
+        const bool by_source = g_by_source != 0 && g_release != Release::kJapan;
+        std::string why;
+        if (ResetRefusedWords(Words(), by_source ? g_release : Release::kJapan, why)) {
+            g_release_words = by_source;
+            bof3::Log("ButtonSigma the save's Config is not one button for each line (%s): %s reset buttons loaded in its place",
+                      why.c_str(), ReleaseName(by_source ? g_release : Release::kJapan));
+        }
+        Follow("loading the save", "the reset words themselves: a fault of ours");
+    }
 }
 
 void Rebound() {

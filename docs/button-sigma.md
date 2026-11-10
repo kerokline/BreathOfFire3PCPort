@@ -74,9 +74,14 @@ which is the identity at R's defaults. The self-test checks both views
 **Refusal.** Each line's word, with word 0's L2 / R2 set aside, must hold
 exactly one of the six bits, and the six words must all differ. If not, the
 writer stops with a Fatal that names the writer, the line, the word and its
-value, and the remedy. After a load, the remedy is to hold Start while the
-save loads (`LoadMenu_Apply`'s reset), or to use
-`BOF3X_ORIGINAL=ButtonSigma`.
+value, and the remedy.
+
+**The load does not stop (amended 2026-11-10, the owner).** A save whose
+six words are refused loads with the release's Start-held reset words in
+their place, the same words `LoadMenu_Apply`'s reset writes, by source under
+DIV-0134. The log gets one line that names the reason. Before this the load
+stopped with a Fatal, which a converted or edited save could reach. The boot
+defaults, the rebind and a quickload still stop: those words are ours.
 
 The rebind can only swap, so it always leaves a permutation. The PlayStation
 saves are the same. Only a hand-edited save can be refused, or a save from
@@ -224,8 +229,9 @@ tables and 11 refusals.
   - The six words are read as a permutation `σ` of the six face and shoulder
     bits, in Japan's terms. The stage-B sites ask it through `Sigma` and
     `SigmaFrom`.
-  - Six words that are not one button each (a hand-edited save) are refused
-    with a Fatal that names the remedy. They are not guessed at.
+  - Six words that are not one button each (a hand-edited save) are not
+    guessed at: the load puts the release's reset words in their place and
+    logs why (amended 2026-11-10; a Fatal before).
   - At every release's defaults nothing changes: words 7 / 8 equal the
     originals and `σ` is the release's own map.
 - **Rationale:** the owner's answer 1. One flow, so that an icon that

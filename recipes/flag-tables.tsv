@@ -1,0 +1,44 @@
+# recipes/flag-tables.tsv: the layouts of the tables in BOF3.exe that hold story-flag numbers.
+# Layout only: no value from the exe or any game data is written here.
+# Read by tools/flag_tables.py, which reads the values from the player's own BOF3.exe.
+# Compiled 2026-11-09 from our reimplemented source and symbols.toml; evidence in docs/story-flags/flag-tables.md.
+# One line per flag field. kind: flag (a flag number), bits (a bit image copied over a bank),
+#   cond (a condition code), row (a Cond_Flags row number that picks the bank of a flag field).
+# bank: event (Cond_Flags + 0xA0), chapter N (Cond_Flags + 8N), current (Chapter_FlagRow),
+#   by-row (the row comes from another field), - (not a flag field).
+# A ? marks a column the source does not settle.
+name	address	count	stride	offset	width	kind	bank	adjust	used_by	confidence	note
+Area41_TriggerFlags	0x5F5F68	2	1	0	1	flag	event	+0	area_w1a.cpp:724	likely	area 41 object triggers 59 and 60; the code reads 0x5F5F2D + object +0x86, unbounded
+Area44_Switches	0x5F7082	4	5	3	1	flag	event	+0	area_w1b.cpp:625	read	area 44 floor switches (x, z, facing, flag, tail kind), toggled
+Area49_Zones	0x5FBB70	7	6	5	1	flag	event	+0	area_w1c.cpp:462	read	area 49 zones (x0, z0, x1, z1, direction, flag); set turns the direction by 4
+Area49_CellSwitches	0x5FBC44	9	4	3	1	flag	event	+0	area_w1c.cpp:525	read	area 49 cell switches (x, z, pose, flag), toggled
+Area52_CellSwitches	0x5FE0F0	4	5	3	1	flag	event	+0	area_w1c.cpp:895	read	area 52 cell switches (x, z, pose nibble, flag, tail state), toggled
+Area77_CellSwitches	0x60BBCC	2	4	3	1	flag	event	+0	area_w2a.cpp:156	read	area 77 cell switches (x, z, pose, flag), toggled
+Area86_Switches	0x611C7C	3	4	3	1	flag	event	+0	area_w2b.cpp:272	read	area 86 floor switches (x, z, facing, flag), toggled
+Area108_HookCells	0x61E63C	4	4	3	1	flag	event	+0	area_w2f.cpp:438	read	area 108 cell hook entries (x, z, direction, flag), toggled
+Area112_HookCells	0x61FF80	4	4	3	1	flag	event	+0	area_w2f.cpp:1135	read	area 112 cell hook entries (x, z, flag-bits byte, flag); each set once
+Area112_HookFlags	0x61FFA0	4	1	0	1	flag	event	+0	area_w2f.cpp:1145	read	area 112: flags an entry's byte 2 clears (bits 0..3) or sets (bits 4..7), by bit & 3
+Area117_Rects	0x6215A8	1	6	5	1	flag	event	+0	area_w3a.cpp:957	read	area 117 rectangle (x0, z0, x1, z1, facing, flag); set reverses the facing
+Area117_Switches	0x62160C	1	4	3	1	flag	event	+0	area_w3a.cpp:1010	read	area 117 floor switch (x, z, facing, flag), toggled
+Area118_Rects	0x621DF0	1	6	5	1	flag	event	+0	area_w3a.cpp:957	read	area 118 rectangle (x0, z0, x1, z1, facing, flag); set reverses the facing
+Area118_Switches	0x621E3C	1	4	3	1	flag	event	+0	area_w3a.cpp:1010	read	area 118 floor switch (x, z, facing, flag), toggled
+Area139_CellEntries	0x62EDBC	2	4	3	1	flag	event	+0	area_w3e.cpp:332	read	area 139 cell entries (x, z, direction nibble, flag), toggled
+Area140_CellEntries	0x62EFF8	8	6	3	1	flag	event	+0	area_w3e.cpp:549	read	area 140 cell entries (x, z, direction, flag, effect, rectangle); set, cleared by effect 0x71
+Area109_SwitchFlags	0x65DE60	3	1	0	1	flag	event	+0	rest_3g.cpp:598	read	area 109 switch: the three flags of the pattern, bits 0..2
+Area167_Switch	0x63C594	1	4	3	1	flag	event	+0	area_w4a.cpp:1205	read	area 167 cell switch (x, z, facing nibble, flag), toggled
+EffectKind18_06_Flags	0x65DB84	3	1	0	1	flag	event	+0	effect_5a.cpp:573	read	effect kind 0x18 sub-kind 6: the flag of set +0x36; a one-shot turn request
+EffectKind18_07_FlagRows	0x65DDB4	3	1	0	1	row	-	+0	effect_5a.cpp:168	read	sub-kind 7 doors: the Cond_Flags row of door +0xB; 0..19 a chapter row, 20..24 the event bank
+EffectKind18_07_FlagBits	0x65DDB8	3	1	0	1	flag	by-row	+64*(row-20) when row>=20	effect_5a.cpp:168	read	sub-kind 7 doors: the flag in the row EffectKind18_07_FlagRows gives, same index
+EffectKind18Sub0C_Flags	0x65DFC4	8	1	0	1	flag	event	+0	effect_5b.cpp:567	read	sub-kind 0x0C: the flag by column +0x36; set opens
+EffectKind18Sub13_Flags	0x65E010	4	1	0	1	flag	chapter 9	+0	effect_5b.cpp:799	read	sub-kind 0x13 by +0xB: the flag that shows the panel
+EffectKind18Sub13_Faces	0x65E014	4	1	0	1	flag	chapter 9	+0	effect_5b.cpp:817	read	sub-kind 0x13 by +0xB: the flag that picks the face
+EffectKind18_GateFlags	0x65E034	4	1	0	1	flag	chapter 9	+0	effect_5b.cpp:972	read	sub-kind 0x0F gate flag by +0x3A; also sub-kind 0x50's wall texture flag by +0xB (effect_5c.cpp:302)
+EffectKind18Sub50_Flags	0x65E094	4	1	0	1	flag	chapter 9	+0	effect_5c.cpp:278	read	sub-kind 0x50 wall by +0xB (1..2 as the start leaves it)
+EffectKind18Sub14_Flags	0x65E31C	2	1	0	1	flag	chapter 9	+0	effect_5d.cpp:1072	read	sub-kind 0x14 by place +0x36: the flag that starts the spawn
+EffectKind18Sub22_Flags	0x65E348	4	1	0	1	flag	event	+0	effect_5d.cpp:1390	read	sub-kind 0x22 by place +0x36: set lowers, clear raises
+EffectKind18Sub42_Places	0x65E8E0	3	4	3	1	flag	event	+0	effect_5f.cpp:501	read	sub-kind 0x42 places (x, z, variant, flag) by +0x36
+EffectKind18Sub5C_Flags	0x65F38C	2	1	0	1	flag	event	+0	effect_6d.cpp:270	read	sub-kind 0x5C two-panel door by variant +0x36: set while shut
+Scena10_Pickups	0x661528	16	6	0	1	flag	current	+32	scena_sc9b.cpp:2164	read	chapter 10 pick-up records (flag less 0x20, item less 0x4E, x word, z word)
+Scena15_Battles	0x6618C0	10	10	8	1	flag	current	+0	scena_sc15.cpp:620	likely	chapter 15 battle records, +8 the flag set after the battle; index unchecked, count from the table extent
+Scenario_SubInitTable	0x662CD8	16	1	0	1	bits	event	+0	title_states.cpp:450	read	bit image copied over event flags 0..127 at a New Game
+Area_MusicSets	0x669A48	12	8	?	1	flag	by-row	?	window_task.cpp:222	unknown	music sets: +0 a pointer to (+4) 3-byte entries (track, row, flag); the flag is behind a pointer

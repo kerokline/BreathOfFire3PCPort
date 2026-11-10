@@ -65,6 +65,10 @@ two-byte Chinese text — the enemy name went 8→12
 binaries": true of the stride, **not** of the layout. Any name transfer of
 record *field offsets* from the PSX corpus needs +4 past the name.
 
+**Corrected 2026-11-10: the summary does hold the 9-byte name**, bytes 0..4 at
+`+0xCA0` and bytes 5..8 at `+0xCB6` (`Save_BuildBlock`; measured on 80 saves,
+[`save-block.md`](save-block.md)). The paragraph below is the earlier reading.
+
 **The summary's 5-byte name did not widen.** The `+0xCA0` summary starts with a
 5-byte name then the leader's `char_id` at `+5`, on both sides. A PC name longer
 than two characters cannot fit; what the PC game does then is unobserved.

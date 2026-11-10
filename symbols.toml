@@ -7598,7 +7598,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/core/transition.cpp"
-evidence = "disasm 2026-09-22, 0x18F bytes, no calls: unless Field_Request is 9, the play clock 0x9040C8..CB (hours, minutes, seconds, frames at 30) ticks and stops at 99:59:59; then the two countdowns 0x90465C and 0x904660 (hours, minutes, seconds, frames) tick down, each byte tested as s8, and at hour 0 end on 0:00:00 with the frames reloaded - so never all zero again. PSX 0x80199CAC the same (gap pairing). hidden_b: 11,901 calls."
+evidence = "disasm 2026-09-22, 0x18F bytes, no calls: unless Field_Request is 9, the play clock 0x9040C8..CB (hours, minutes, seconds, frames at 30) ticks and stops at 99:59:59; then the two countdowns 0x90465C and 0x904660 (hours, minutes, seconds, frames) tick down, each byte tested as s8, down to 0:00:00:00, where they stop (corrected 2026-11-10: the hour-0 branch that reloads the frames needs an all-zero value before the decrement, which the first test returns on, so it is reached only with a byte of 0x80 or more; the earlier note here said never all zero again). PSX 0x80199CAC the same (gap pairing). hidden_b: 11,901 calls."
 
 [[func]]
 pc = 0x594E60

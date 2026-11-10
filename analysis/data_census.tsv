@@ -16087,164 +16087,164 @@ site	src/game/field/jump_child.cpp	348	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/field/jump_child.cpp	349	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/field/jump_child.cpp	350	record	SB	2	0x903852	base=kS	-	-	-	0
 site	src/game/field/leader_panel.cpp	99	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	206	global	BEffect1f	at::kRecord6	0x7e14e0	-	inside	Effect_Objects+0x300	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	234	global	BEffect1f	at::kAccessoryIds	0x9042d4	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	237	global	BEffect1f	at::kAccessoryKind	0x658462	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	273	global	-	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	413	record	Long	p + at	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	415	record	SetLong	p + at	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	417	record	Word	p + at	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	425	global	At	Fish_Kinds_addr + kKindStride * kind + at	0x66a690	-	exact	Fish_Kinds	unsigned char	0
-site	src/game/field/leader_panel.cpp	427	global	At	Fish_Kinds_addr + kKindStride * kind + at	0x66a690	-	exact	Fish_Kinds	unsigned char	0
-site	src/game/field/leader_panel.cpp	429	global	At	kDirAnims	0x660340	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	431	global	At	kDirAnims	0x660340	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	545	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	588	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	652	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	681	global	Pool	at::kPoolWord00	0x803600	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	708	global	Pool	at::kPoolWord00	0x803600	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	816	global	L	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	817	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	826	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	830	global	L	at::kEff0X	0x7e1214	-	inside	Effect_Objects+0x34	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	832	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	856	global	SetL	at::kCounter	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	905	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	906	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	921	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	928	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	929	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	930	record	Long	r + 8	-	via=RecordB	-	-	-	0
-site	src/game/field/leader_panel.cpp	934	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	935	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	936	record	Long	RecordB() + 8	-	via=RecordB	-	-	-	0
-site	src/game/field/leader_panel.cpp	939	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/field/leader_panel.cpp	940	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	944	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	945	record	Long	r + 8	-	via=RecordB	-	-	-	0
-site	src/game/field/leader_panel.cpp	950	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	951	record	Long	r + 4	-	via=RecordB	-	-	-	0
-site	src/game/field/leader_panel.cpp	954	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
-site	src/game/field/leader_panel.cpp	957	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	958	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	959	record	Long	r + 8	-	via=RecordB	-	-	-	0
-site	src/game/field/leader_panel.cpp	964	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	965	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	972	global	L	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	981	global	L	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	982	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1073	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1075	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1075	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1081	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1081	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1083	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1092	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1092	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1100	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1100	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1108	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1111	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1111	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1121	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1124	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1124	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	228	global	BEffect1f	at::kRecord6	0x7e14e0	-	inside	Effect_Objects+0x300	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	256	global	BEffect1f	at::kAccessoryIds	0x9042d4	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	259	global	BEffect1f	at::kAccessoryKind	0x658462	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	295	global	-	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	435	record	Long	p + at	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	437	record	SetLong	p + at	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	439	record	Word	p + at	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	447	global	At	Fish_Kinds_addr + kKindStride * kind + at	0x66a690	-	exact	Fish_Kinds	unsigned char	0
+site	src/game/field/leader_panel.cpp	449	global	At	Fish_Kinds_addr + kKindStride * kind + at	0x66a690	-	exact	Fish_Kinds	unsigned char	0
+site	src/game/field/leader_panel.cpp	451	global	At	kDirAnims	0x660340	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	453	global	At	kDirAnims	0x660340	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	567	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	610	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	674	global	At	kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	703	global	Pool	at::kPoolWord00	0x803600	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	730	global	Pool	at::kPoolWord00	0x803600	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	838	global	L	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	839	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	848	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	852	global	L	at::kEff0X	0x7e1214	-	inside	Effect_Objects+0x34	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	854	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	878	global	SetL	at::kCounter	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	927	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	928	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	943	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	950	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	951	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	952	record	Long	r + 8	-	via=RecordB	-	-	-	0
+site	src/game/field/leader_panel.cpp	956	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	957	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	958	record	Long	RecordB() + 8	-	via=RecordB	-	-	-	0
+site	src/game/field/leader_panel.cpp	961	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/field/leader_panel.cpp	962	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	966	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	967	record	Long	r + 8	-	via=RecordB	-	-	-	0
+site	src/game/field/leader_panel.cpp	972	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	973	record	Long	r + 4	-	via=RecordB	-	-	-	0
+site	src/game/field/leader_panel.cpp	976	raw	B	0x903850	0x903850	-	exact	SharedScratch	records::SharedScratch	0
+site	src/game/field/leader_panel.cpp	979	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	980	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	981	record	Long	r + 8	-	via=RecordB	-	-	-	0
+site	src/game/field/leader_panel.cpp	986	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	987	global	SetL	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	994	global	L	at::kEff0StepY	0x7e11f0	-	inside	Effect_Objects+0x10	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1003	global	L	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1004	global	SetL	at::kEff0StepX	0x7e11ec	-	inside	Effect_Objects+0xc	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1095	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1097	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1097	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1103	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1103	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1105	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1114	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1114	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1122	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1122	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
 site	src/game/field/leader_panel.cpp	1130	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1142	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1146	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1166	global	B	at::kBestCounts	0x9040ec	-	exact	Fish_RecordSizes	unsigned char	0
-site	src/game/field/leader_panel.cpp	1189	global	B	at::kKindSounds	0x66a6ad	-	inside	Fish_Kinds+0x1d	unsigned char	0
-site	src/game/field/leader_panel.cpp	1250	record	Word	p + 0x9C	-	via=Picked	-	-	-	0
-site	src/game/field/leader_panel.cpp	1399	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1399	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1610	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1634	global	At	at::kPoolWord20	0x803620	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1634	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1635	global	At	at::kPoolWord40	0x803640	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1635	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1636	global	At	at::kPoolWord5E	0x80365e	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1636	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1667	global	-	at::kLabelA	0x803622	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1667	global	-	at::kLabelB	0x803624	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1707	global	-	at::kLabelA	0x803622	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1707	global	-	at::kLabelB	0x803624	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1710	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1747	global	Label	at::kListLabelA	0x803626	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1752	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1754	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1777	global	Label	at::kListLabelB	0x803628	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1790	global	BEffect1f	at::kAccessoryIds	0x9042d4	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1878	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1885	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1891	global	WRest1g	kEff6Shown	0x7e151e	-	inside	Effect_Objects+0x33e	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1893	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1910	global	At	kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	1911	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1133	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1133	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1143	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1146	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1146	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1152	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1164	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1168	global	SetL	at::kEff5Frame	0x7e1470	-	inside	Effect_Objects+0x290	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1188	global	B	at::kBestCounts	0x9040ec	-	exact	Fish_RecordSizes	unsigned char	0
+site	src/game/field/leader_panel.cpp	1212	global	B	at::kKindSounds	0x66a6ad	-	inside	Fish_Kinds+0x1d	unsigned char	0
+site	src/game/field/leader_panel.cpp	1279	record	Word	p + 0x9C	-	via=Picked	-	-	-	0
+site	src/game/field/leader_panel.cpp	1428	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1428	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1639	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1663	global	At	at::kPoolWord20	0x803620	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1663	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1664	global	At	at::kPoolWord40	0x803640	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1664	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1665	global	At	at::kPoolWord5E	0x80365e	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1665	global	At	effect_1e::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1696	global	-	at::kLabelA	0x803622	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1696	global	-	at::kLabelB	0x803624	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1736	global	-	at::kLabelA	0x803622	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1736	global	-	at::kLabelB	0x803624	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1739	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1776	global	Label	at::kListLabelA	0x803626	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1781	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1783	global	BEffect1f	at::kExtraAccessory	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1806	global	Label	at::kListLabelB	0x803628	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1819	global	BEffect1f	at::kAccessoryIds	0x9042d4	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1907	global	At	kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1914	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1920	global	WRest1g	kEff6Shown	0x7e151e	-	inside	Effect_Objects+0x33e	records::EffectObject	0
 site	src/game/field/leader_panel.cpp	1922	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	1927	global	WRest1g	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1928	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
-site	src/game/field/leader_panel.cpp	1929	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2023	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
-site	src/game/field/leader_panel.cpp	2024	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
-site	src/game/field/leader_panel.cpp	2025	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
-site	src/game/field/leader_panel.cpp	2086	global	B	kItemA	0x904130	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2095	record	Bytes	rv::Bytes(&Effect_Objects[3])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2144	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2147	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2150	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2150	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2154	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2156	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2157	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2162	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2164	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2165	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2172	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2173	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2177	record	At	row + 4	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	2181	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2182	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2185	global	B	kComboStep	0x6bc70c	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2186	global	B	kComboTimer	0x6bc710	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2211	global	At	kSpotCounts	0x66a9cc	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2229	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2240	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2253	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2256	record	Word	am2 + 0x98	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2261	record	Word	AM() + 0x9C	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2266	record	Word	am + 0x9C	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2474	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2574	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	2663	record	At	chances + 4 * tier	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	2887	global	At	kS6Frames	0x660364	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	2904	record	Word	am + 0x9A	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2908	record	Word	am + 0x98	-	via=AM	-	-	-	0
-site	src/game/field/leader_panel.cpp	2942	record	Word	s + 0x14	-	via=S	-	-	-	0
-site	src/game/field/leader_panel.cpp	2953	global	At	MoveCmd_F9Steps_addr + 8u * s[8]	0x6696dc	-	exact	MoveCmd_F9Steps	long	0
-site	src/game/field/leader_panel.cpp	2955	global	At	MoveCmd_F9Steps_addr + 4 + 8u * s[8]	0x6696dc	-	exact	MoveCmd_F9Steps	long	0
-site	src/game/field/leader_panel.cpp	2995	record	At	at - 4	-	-	-	-	-	0
-site	src/game/field/leader_panel.cpp	3013	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
-site	src/game/field/leader_panel.cpp	3126	global	BEffect1f	effect_1f::at::kKindCounts	0x9040ec	-	exact	Fish_RecordSizes	unsigned char	0
-site	src/game/field/leader_panel.cpp	3217	record	SetWord	p + 0x16	-	via=DrawSprite	-	-	-	0
-site	src/game/field/leader_panel.cpp	3236	global	At	scenario_harness::at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3238	global	At	AreaW0b_ItemNameKey_addr	0x669cd8	-	exact	AreaW0b_ItemNameKey	unsigned long	0
-site	src/game/field/leader_panel.cpp	3243	global	At	at::kKindNames	0x656ff8	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3247	global	At	at::kCountFormat	0x64e324	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3251	global	At	at::kCountFormat	0x64e324	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3290	global	At	scenario_harness::at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3291	global	At	at::kTotalFormat	0x64add8	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3303	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3316	record	SetLong	p + 8	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/field/leader_panel.cpp	3317	record	SetLong	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/field/leader_panel.cpp	3318	record	SetLong	p + 0x14	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/field/leader_panel.cpp	3319	record	SetLong	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
-site	src/game/field/leader_panel.cpp	3331	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3332	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3333	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3342	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3343	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3353	global	BFieldE1	at::kItemCounts	0x904354	-	none	-	-	0
-site	src/game/field/leader_panel.cpp	3353	global	BFieldE1	at::kItemIds	0x904154	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1939	global	At	kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	1940	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1951	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	1956	global	WRest1g	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1957	global	SetW	kEff6Page	0x7e151c	-	inside	Effect_Objects+0x33c	records::EffectObject	0
+site	src/game/field/leader_panel.cpp	1958	record	Bytes	rv::Bytes(&Effect_Objects[6])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2052	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/field/leader_panel.cpp	2053	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/field/leader_panel.cpp	2054	global	B	kDrawMode	0x93985c	-	exact	Effect1g_TradeState	unsigned char	0
+site	src/game/field/leader_panel.cpp	2115	global	B	kItemA	0x904130	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2124	record	Bytes	rv::Bytes(&Effect_Objects[3])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2173	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2176	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2179	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2179	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2183	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2185	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2186	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2191	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2193	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2194	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2201	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2202	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2206	record	At	row + 4	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	2210	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2211	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2214	global	B	kComboStep	0x6bc70c	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2215	global	B	kComboTimer	0x6bc710	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2240	global	At	kSpotCounts	0x66a9cc	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2258	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2269	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2282	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2285	record	Word	am2 + 0x98	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2290	record	Word	AM() + 0x9C	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2295	record	Word	am + 0x9C	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2503	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2603	record	Bytes	rv::Bytes(&Effect_Objects[5])	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	2692	record	At	chances + 4 * tier	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	2916	global	At	kS6Frames	0x660364	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	2933	record	Word	am + 0x9A	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2937	record	Word	am + 0x98	-	via=AM	-	-	-	0
+site	src/game/field/leader_panel.cpp	2971	record	Word	s + 0x14	-	via=S	-	-	-	0
+site	src/game/field/leader_panel.cpp	2982	global	At	MoveCmd_F9Steps_addr + 8u * s[8]	0x6696dc	-	exact	MoveCmd_F9Steps	long	0
+site	src/game/field/leader_panel.cpp	2984	global	At	MoveCmd_F9Steps_addr + 4 + 8u * s[8]	0x6696dc	-	exact	MoveCmd_F9Steps	long	0
+site	src/game/field/leader_panel.cpp	3024	record	At	at - 4	-	-	-	-	-	0
+site	src/game/field/leader_panel.cpp	3042	record	Bytes	rv::Bytes(Effect_Objects)	-	base=Effect_Objects	-	-	-	0
+site	src/game/field/leader_panel.cpp	3155	global	BEffect1f	effect_1f::at::kKindCounts	0x9040ec	-	exact	Fish_RecordSizes	unsigned char	0
+site	src/game/field/leader_panel.cpp	3246	record	SetWord	p + 0x16	-	via=DrawSprite	-	-	-	0
+site	src/game/field/leader_panel.cpp	3265	global	At	scenario_harness::at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3267	global	At	AreaW0b_ItemNameKey_addr	0x669cd8	-	exact	AreaW0b_ItemNameKey	unsigned long	0
+site	src/game/field/leader_panel.cpp	3272	global	At	at::kKindNames	0x656ff8	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3277	global	At	at::kCountFormat	0x64e324	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3282	global	At	at::kCountFormat	0x64e324	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3321	global	At	scenario_harness::at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3322	global	At	at::kTotalFormat	0x64add8	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3334	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3347	record	SetLong	p + 8	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/field/leader_panel.cpp	3348	record	SetLong	p + 0xC	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/field/leader_panel.cpp	3349	record	SetLong	p + 0x14	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/field/leader_panel.cpp	3350	record	SetLong	p + 0x18	-	base=Gfx_PacketNext	-	-	-	0
+site	src/game/field/leader_panel.cpp	3362	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3363	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3364	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3373	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3374	global	PoolText	field_e1::at::kPools	0x803580	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3384	global	BFieldE1	at::kItemCounts	0x904354	-	none	-	-	0
+site	src/game/field/leader_panel.cpp	3384	global	BFieldE1	at::kItemIds	0x904154	-	none	-	-	0
 site	src/game/field/map_field_objects_fuzz.cpp	161	global	At	Sprite_Current_addr	0x937f88	-	exact	Sprite_Current	unsigned char *	1
 site	src/game/field/map_field_objects_fuzz.cpp	162	global	At	kScratchX_addr	0x903850	-	exact	SharedScratch	records::SharedScratch	1
 site	src/game/field/map_field_objects_fuzz.cpp	168	record	At	w.at + byte	-	-	-	-	-	1
@@ -24740,14 +24740,14 @@ site	src/game/scenario/scena_07_2.cpp	1028	global	TakeInto	scena_sc7::at::kSlot_
 site	src/game/scenario/scena_07_2.cpp	1064	global	Byte	scena_sc7::at::kShake7	0x661244	-	exact	Scena07_Shake	signed char	0
 site	src/game/scenario/scena_07_2.cpp	1079	global	At	Scena07_PlacedObjects_addr + 0x11 * i	0x661248	-	exact	Scena07_PlacedObjects	unsigned char	0
 site	src/game/scenario/scena_07_2.cpp	1081	global	Byte	scena_sc7::at::kPlacedSeat7	0x661338	-	exact	Scena07_PlacedSeats	unsigned char	0
-site	src/game/scenario/scena_07_2.cpp	1099	global	Byte	scena_sc7::at::kCounter1	0x903849	-	none	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1114	record	Long	name + i	-	via=SH_CALL	-	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1114	record	At	text + i	-	-	-	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1128	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/scenario/scena_07_2.cpp	1137	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/scenario/scena_07_2.cpp	1258	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
-site	src/game/scenario/scena_07_2.cpp	1258	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
-site	src/game/scenario/scena_07_2.cpp	1311	global	Byte	scena_sc7::at::kMembers	0x802d40	-	exact	ObjTrio	records::PartyMember	0
+site	src/game/scenario/scena_07_2.cpp	1105	global	Byte	scena_sc7::at::kCounter1	0x903849	-	none	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1120	record	Long	name + i	-	via=SH_CALL	-	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1120	record	At	text + i	-	-	-	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1135	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/scenario/scena_07_2.cpp	1144	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/scenario/scena_07_2.cpp	1265	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
+site	src/game/scenario/scena_07_2.cpp	1265	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
+site	src/game/scenario/scena_07_2.cpp	1318	global	Byte	scena_sc7::at::kMembers	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/scenario/scena_08.cpp	41	global	At	CharacterRecords_addr + Character_IndexById[k] * at::kRecord	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/scenario/scena_08_2.cpp	49	global	At	MoveScript_PartyRecords_addr + 0x66	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
 site	src/game/scenario/scena_08_2.cpp	53	global	At	MoveScript_PartyRecords_addr + 0x66	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
@@ -29040,8 +29040,8 @@ const	kDirectionAnimations	0x65f5bc	data	1	src/game/sprite_pose.h:22(sprite_pose
 const	kPaceTable	0x65f5dc	data	2	src/game/field/field_3.cpp:216(object_kinds::(anon));src/game/field/object_kinds.cpp:36((anon))	-	-	none	-	module
 const	kAsideRows	0x65f624	data	1	src/game/field/field_3.cpp:208((anon))	-	-	none	-	module
 const	kControlStates	0x65f99c	data	1	src/game/member_sprites_callees.h:26(member_sprites::at)	-	-	none	-	at
-const	kDirAnims	0x660340	data	1	src/game/field/leader_panel.cpp:385((anon))	-	-	none	-	module
-const	kS6Frames	0x660364	data	1	src/game/field/leader_panel.cpp:387((anon))	-	-	none	-	module
+const	kDirAnims	0x660340	data	1	src/game/field/leader_panel.cpp:407((anon))	-	-	none	-	module
+const	kS6Frames	0x660364	data	1	src/game/field/leader_panel.cpp:409((anon))	-	-	none	-	module
 const	kAnimationRemap	0x6608d8	data	1	src/game/field_event_callees.h:28(field_event::at)	-	-	none	-	at
 const	kFormation	0x6608f6	data	1	src/game/event_leader_callees.h:30(event_leader::at)	-	-	none	-	at
 const	kStepSounds	0x660960	data	1	src/game/event_ops_callees.h:62(event_ops::at)	-	-	none	-	at
@@ -29184,7 +29184,7 @@ const	kCellDelta	0x66971c	data	5	src/game/area_w1a_callees.h:71(area_w1a::at);sr
 const	kCellOffsets	0x66971c	data	1	src/game/member_sprites_callees.h:32(member_sprites::at)	-	-	none	-	at
 const	kCellOffsets	0x66971c	data	2	src/game/field/field_core.cpp:183((anon));src/game/field/rest_1f_fuzz.cpp:141(rest_1f::(anon))	-	-	none	-	module
 const	kDirPairs	0x66971c	data	1	src/game/field_e1_callees.h:54(field_e1::at)	-	-	none	-	at
-const	kF9StepsEnd	0x669720	data	1	src/game/field/leader_panel.cpp:390((anon))	-	-	none	-	module
+const	kF9StepsEnd	0x669720	data	1	src/game/field/leader_panel.cpp:412((anon))	-	-	none	-	module
 const	kEffectState	0x66972c	data	2	src/game/scena_sc13_callees.h:101(scena_sc13::at);src/game/scena_sc6_callees.h:90(scena_sc6::at)	Character_IndexById	data	exact	unsigned char	at
 const	kEffectState	0x66972c	data	2	src/game/field/field_ability_2.cpp:488((anon));src/game/menu/window.cpp:75((anon))	Character_IndexById	data	exact	unsigned char	module
 const	kEffectStates	0x66972c	data	1	src/game/area_w2e_callees.h:92(area_w2e::at)	Character_IndexById	data	exact	unsigned char	at
@@ -29254,11 +29254,11 @@ const	kPadNames	0x66a368	data	1	src/game/rest_4f_callees.h:54(rest_4f::at)	-	-	n
 const	kElementGlyphs	0x66a398	data	1	src/game/magic/identify.cpp:66((anon))	-	-	none	-	module
 const	kText1	0x66a3e0	data	1	src/game/magic/identify.cpp:51((anon))	-	-	none	-	module
 const	kText2	0x66a3e8	data	1	src/game/magic/identify.cpp:53((anon))	-	-	none	-	module
-const	kComboTable	0x66a4c8	data	1	src/game/field/leader_panel.cpp:379((anon))	-	-	none	-	module
-const	kRecordsA	0x66a4e8	data	1	src/game/field/leader_panel.cpp:381((anon))	-	-	none	-	module
-const	kRecordsB	0x66a528	data	1	src/game/field/leader_panel.cpp:383((anon))	-	-	none	-	module
+const	kComboTable	0x66a4c8	data	1	src/game/field/leader_panel.cpp:401((anon))	-	-	none	-	module
+const	kRecordsA	0x66a4e8	data	1	src/game/field/leader_panel.cpp:403((anon))	-	-	none	-	module
+const	kRecordsB	0x66a528	data	1	src/game/field/leader_panel.cpp:405((anon))	-	-	none	-	module
 const	kKindSounds	0x66a6ad	data	1	src/game/effect_1e_callees.h:38(effect_1e::at)	-	-	inside	unsigned char	at
-const	kSpotCounts	0x66a9cc	data	2	src/game/field/leader_panel.cpp:377((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
+const	kSpotCounts	0x66a9cc	data	2	src/game/field/leader_panel.cpp:399((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
 const	kTradeRecords	0x66ab58	data	2	src/game/effect_1g_callees.h:26(effect_1g::at);src/game/field_e2_callees.h:125(field_e2::at)	-	-	none	-	at
 const	kTradeNeeds	0x66ab5a	data	1	src/game/menu/item_trade.cpp:228((anon))	-	-	none	-	module
 const	kTradeIndex	0x66ad10	data	2	src/game/effect_1g_callees.h:25(effect_1g::at);src/game/field_e2_callees.h:124(field_e2::at)	-	-	none	-	at
@@ -29418,9 +29418,9 @@ const	kBanksAt	0x6bc5a4	data	1	src/game/platform/display_env_fuzz.cpp:70(display
 const	kTrackRing	0x6bc644	data	1	src/game/effect_6d_callees.h:27(effect_6d::at)	-	-	none	-	at
 const	kTrackHeads	0x6bc704	data	1	src/game/effect_6d_callees.h:30(effect_6d::at)	-	-	none	-	at
 const	kChoice	0x6bc709	data	1	src/game/effect_1e_callees.h:31(effect_1e::at)	Effect1e_Choice	data	exact	unsigned char	at
-const	kComboStep	0x6bc70c	data	2	src/game/field/leader_panel.cpp:355((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
+const	kComboStep	0x6bc70c	data	2	src/game/field/leader_panel.cpp:377((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
 const	kCounter	0x6bc70c	data	1	src/game/effect_1e_callees.h:32(effect_1e::at)	-	-	none	-	at
-const	kComboTimer	0x6bc710	data	2	src/game/field/leader_panel.cpp:357((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
+const	kComboTimer	0x6bc710	data	2	src/game/field/leader_panel.cpp:379((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
 const	kShakeShift	0x6bc740	data	1	src/game/scenario/scena_sc15_fuzz.cpp:72(scena_sc15::(anon))	Scena15_Bytes	data	exact	unsigned char	module
 const	kKept	0x6bc742	data	1	src/game/scenario/scena_15_2.cpp:99((anon))	-	-	inside	unsigned char	module
 const	kSlot	0x6bc743	data	1	src/game/scenario/scena_sc15_fuzz.cpp:72(scena_sc15::(anon))	-	-	inside	unsigned char	module
@@ -29568,15 +29568,15 @@ const	kFzKind2Sprite	0x7e0974	data	1	src/game/area/area_w3g_fuzz.cpp:68(area_w3g
 const	kEffects	0x7e11e0	data	7	src/game/scena_sc12_callees.h:53(scena_sc12::at);src/game/scena_sc13_callees.h:60(scena_sc13::at);src/game/scena_sc5_callees.h:69(scena_sc5::at);src/game/scena_sc6_callees.h:71(scena_sc6::at);src/game/scena_sc9a_callees.h:55(scena_sc9a::at);src/game/scena_sc9b_callees.h:53(scena_sc9b::at);src/game/scenario_harness.h:76(scenario_harness::at)	Effect_Objects	data	exact	records::EffectObject	at
 const	kRecord0	0x7e11e0	data	1	src/game/effect_1a_callees.h:83(effect_1a::at)	Effect_Objects	data	exact	records::EffectObject	at
 const	kEff0StepX	0x7e11ec	data	1	src/game/effect_1e_callees.h:48(effect_1e::at)	-	-	inside	records::EffectObject	at
-const	kEff0StepX	0x7e11ec	data	1	src/game/field/leader_panel.cpp:323((anon))	-	-	inside	records::EffectObject	module
+const	kEff0StepX	0x7e11ec	data	1	src/game/field/leader_panel.cpp:345((anon))	-	-	inside	records::EffectObject	module
 const	kEff0StepY	0x7e11f0	data	1	src/game/effect_1e_callees.h:49(effect_1e::at)	-	-	inside	records::EffectObject	at
-const	kEff0StepY	0x7e11f0	data	1	src/game/field/leader_panel.cpp:325((anon))	-	-	inside	records::EffectObject	module
+const	kEff0StepY	0x7e11f0	data	1	src/game/field/leader_panel.cpp:347((anon))	-	-	inside	records::EffectObject	module
 const	kEff0X	0x7e1214	data	1	src/game/effect_1e_callees.h:51(effect_1e::at)	-	-	inside	records::EffectObject	at
 const	kRecord2	0x7e12e0	data	1	src/game/effect_1a_callees.h:84(effect_1a::at)	-	-	inside	records::EffectObject	at
 const	kRecord3	0x7e1360	data	1	src/game/effect_1a_callees.h:85(effect_1a::at)	-	-	inside	records::EffectObject	at
 const	kEff5Frame	0x7e1470	data	1	src/game/effect_1e_callees.h:63(effect_1e::at)	-	-	inside	records::EffectObject	at
-const	kEff5Frame	0x7e1470	data	1	src/game/field/leader_panel.cpp:333((anon))	-	-	inside	records::EffectObject	module
-const	kEff5Level	0x7e1490	data	1	src/game/field/leader_panel.cpp:335((anon))	-	-	inside	records::EffectObject	module
+const	kEff5Frame	0x7e1470	data	1	src/game/field/leader_panel.cpp:355((anon))	-	-	inside	records::EffectObject	module
+const	kEff5Level	0x7e1490	data	1	src/game/field/leader_panel.cpp:357((anon))	-	-	inside	records::EffectObject	module
 const	kRecord6	0x7e14e0	data	1	src/game/effect_1f_callees.h:18(effect_1f::at)	-	-	inside	records::EffectObject	at
 const	kHeld	0x7e1be8	data	1	src/game/save_menu_callees.h:43(save_menu::at)	Input_Held	data	exact	unsigned short	at
 const	kInputHeld	0x7e1be8	data	2	src/game/area_w4e_callees.h:111(area_w4e::at);src/game/scena_sc13_callees.h:95(scena_sc13::at)	Input_Held	data	exact	unsigned short	at
@@ -29726,7 +29726,7 @@ const	kMessagePools	0x803580	data	3	src/game/rest_2d_callees.h:79(rest_2d::at);s
 const	kPool	0x803580	data	2	src/game/community/rest_4e_fuzz.cpp:197(rest_4e::(anon));src/game/text/text_draw.cpp:50((anon))	MessagePools	block	none	-	module
 const	kPoolWords	0x803580	data	1	src/game/rest_4d_callees.h:39(rest_4d::at)	MessagePools	block	none	-	at
 const	kPools	0x803580	data	3	src/game/effect_1b_callees.h:87(effect_1b::at);src/game/effect_1e_callees.h:39(effect_1e::at);src/game/field_e1_callees.h:91(field_e1::at)	MessagePools	block	none	-	at
-const	kPools	0x803580	data	2	src/game/field/leader_panel.cpp:370((anon));src/game/menu/window.cpp:77((anon))	MessagePools	block	none	-	module
+const	kPools	0x803580	data	2	src/game/field/leader_panel.cpp:392((anon));src/game/menu/window.cpp:77((anon))	MessagePools	block	none	-	module
 const	kScriptPool	0x803580	data	4	src/game/community/commu.cpp:74((anon));src/game/community/commu_music.cpp:51((anon));src/game/core/title.cpp:196((anon));src/game/msgbox_callees.h:63(msgbox)	MessagePools	block	none	-	module
 const	kAreaTextOffset	0x803584	data	1	src/game/area_w1e_callees.h:79(area_w1e::at)	-	-	none	-	at
 const	kAreaTextOffset45	0x803584	data	1	src/game/area_w1b_callees.h:115(area_w1b::at)	-	-	none	-	at
@@ -29734,7 +29734,7 @@ const	kPoolSelector	0x803584	data	1	src/game/msgbox_callees.h:64(msgbox)	-	-	non
 const	kAreaTextOffset	0x803588	data	1	src/game/area_w0b_callees.h:54(area_w0b::at)	-	-	none	-	at
 const	kAreaTextOffset	0x803588	data	1	src/game/world_map_callees.h:63(world_map)	-	-	none	-	module
 const	kPoolWord00	0x803600	data	1	src/game/effect_1e_callees.h:40(effect_1e::at)	-	-	none	-	at
-const	kPoolWordStage1	0x803600	data	1	src/game/field/leader_panel.cpp:368((anon))	-	-	none	-	module
+const	kPoolWordStage1	0x803600	data	1	src/game/field/leader_panel.cpp:390((anon))	-	-	none	-	module
 const	kPoolWordAsk	0x80360a	data	1	src/game/effect_1g_callees.h:31(effect_1g::at)	-	-	none	-	at
 const	kPoolWordName	0x80360c	data	1	src/game/field_e2_callees.h:130(field_e2::at)	-	-	none	-	at
 const	kPoolWordList	0x80360e	data	1	src/game/effect_1g_callees.h:32(effect_1g::at)	-	-	none	-	at
@@ -29751,9 +29751,9 @@ const	kLabelB	0x803624	data	1	src/game/effect_1f_callees.h:22(effect_1f::at)	-	-
 const	kListLabelA	0x803626	data	1	src/game/effect_1f_callees.h:23(effect_1f::at)	-	-	none	-	at
 const	kListLabelB	0x803628	data	1	src/game/effect_1f_callees.h:24(effect_1f::at)	-	-	none	-	at
 const	kPoolWord40	0x803640	data	1	src/game/effect_1e_callees.h:42(effect_1e::at)	-	-	none	-	at
-const	kPoolWordData	0x803642	data	1	src/game/field/leader_panel.cpp:364((anon))	-	-	none	-	module
+const	kPoolWordData	0x803642	data	1	src/game/field/leader_panel.cpp:386((anon))	-	-	none	-	module
 const	kPoolWord5E	0x80365e	data	1	src/game/effect_1e_callees.h:43(effect_1e::at)	-	-	none	-	at
-const	kPoolWordRule	0x803660	data	1	src/game/field/leader_panel.cpp:366((anon))	-	-	none	-	module
+const	kPoolWordRule	0x803660	data	1	src/game/field/leader_panel.cpp:388((anon))	-	-	none	-	module
 const	kTitleWords	0x803746	data	1	src/game/rest_4d_callees.h:41(rest_4d::at)	-	-	none	-	at
 const	kDrawWords	0x803780	data	1	src/game/rest_4d_callees.h:40(rest_4d::at)	-	-	none	-	at
 const	kExtraE1	0x80b024	data	1	src/game/area/area_w3b_fuzz.cpp:57(area_w3b::(anon))	-	-	none	-	module
@@ -30078,7 +30078,7 @@ const	kSelector	0x90412c	data	2	src/game/scena_sc12_callees.h:44(scena_sc12::at)
 const	kAccessoryA	0x904130	data	1	src/game/effect_1a_callees.h:98(effect_1a::at)	-	-	none	-	at
 const	kEquipA	0x904130	data	1	src/game/effect_1b_callees.h:84(effect_1b::at)	-	-	none	-	at
 const	kExtraAccessory	0x904130	data	2	src/game/char_stats_callees.h:44(char_stats::at);src/game/effect_1f_callees.h:28(effect_1f::at)	-	-	none	-	at
-const	kItemA	0x904130	data	2	src/game/field/leader_panel.cpp:350((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
+const	kItemA	0x904130	data	2	src/game/field/leader_panel.cpp:372((anon));src/game/field/rest_1g_fuzz.cpp:169(rest_1g::(anon))	-	-	none	-	module
 const	kMusicTrack	0x904131	data	2	src/game/area_w3c_callees.h:82(area_w3c::at);src/game/scena_sc13_callees.h:58(scena_sc13::at)	Music_Track	data	exact	unsigned char	at
 const	kKind65Count	0x904134	data	1	src/game/effect_3b_callees.h:42(effect_3b::at)	Game_BattleCount	data	exact	unsigned long	at
 const	kReturnPoint	0x904148	data	5	src/game/area_w2d_callees.h:49(area_w2d::at);src/game/area_w4d_callees.h:40(area_w4d::at);src/game/area_w4f_callees.h:89(area_w4f::at);src/game/event_leader_callees.h:56(event_leader::at);src/game/event_ops_callees.h:51(event_ops::at)	AreaW2d_ReturnPoint	data	exact	unsigned long	at
@@ -30503,7 +30503,7 @@ const	kPendingKind	0x937f98	data	2	src/game/area_w4f_callees.h:95(area_w4f::at);
 const	kGridWords	0x939820	data	1	src/game/rest_2g_callees.h:37(rest_2g::at)	-	-	none	-	at
 const	kScrollMarks	0x939848	data	1	src/game/battle_e7_callees.h:56(battle_e7::at)	-	-	none	-	at
 const	kScrollMarks2	0x939850	data	1	src/game/battle_e7_callees.h:57(battle_e7::at)	-	-	none	-	at
-const	kDrawMode	0x93985c	data	1	src/game/field/leader_panel.cpp:373((anon))	Effect1g_TradeState	data	exact	unsigned char	module
+const	kDrawMode	0x93985c	data	1	src/game/field/leader_panel.cpp:395((anon))	Effect1g_TradeState	data	exact	unsigned char	module
 const	kTradeStep	0x93985e	data	1	src/game/field_e2_callees.h:116(field_e2::at)	Effect1g_TradeStep	data	exact	unsigned char	at
 const	kEquipBytes	0x939880	data	1	src/game/field_s_callees.h:65(field_s::at)	-	-	none	-	at
 const	kEquipTops	0x939880	data	1	src/game/field/field_ability_2.cpp:180((anon))	-	-	none	-	module

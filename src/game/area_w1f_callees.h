@@ -47,8 +47,8 @@ constexpr ::bof3::image::Va kVar7{0x8034E4};
 // Cond_Flags row 7 (0x903F90 + 8 * 7): area 74's handler 0 toggles its flags
 // 5 and 6.
 // kCondRow7: now Cond_Flags[0x38] (symbols.toml).
-// The story-flag byte 0x90409C (flags 0x360..0x367): area 74's choice tests
-// its bit 0x20 (flag 0x365).
+// The byte 0x90409C: area 74's choice tests its bit 0x20. No story flag (they
+// stop at 0xFF): bit 0xA5 of the abilities-learnt set 0x904088 (docs/save-block.md).
 // kFlagByte9C: now AreaW1f_FlagByte9C (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).

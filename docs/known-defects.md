@@ -5802,7 +5802,11 @@ E1E's §10, E3A's §6). Kind 0x45's segment hang is D233's.
 - E1E L2: `LeaderPanel_S4Count` `0x529AE0` compares the byte `+9` with the
   picked record's word `+0x9C`: at 0x100 or more the step never ends;
   `LeaderPanel_S4Best` `0x5298F0` compares the word with a byte best and stores
-  its low byte. What ours does here the doc does not say.
+  its low byte. **Reach established 2026-11-10** (the save-block map): by
+  `Fish_Spawn`'s growth a kind whose top size is 232 or more can pass 255, and
+  the PC's fish table has one such kind; it needs a spawn at exactly the top
+  size and 16 odd rolls in a row. **Changed by DIV-0209:** the count reaches
+  the word and the record keeps 255.
 - E2F: `EffectKind51_DrawColumn` `0x47C870` - 65 angles and a byte row counter:
   a half-height above 0x20 reads past `EffectKind51_Angles`, one above 0x80
   never ends; the kind's states keep it within 0..0x20.
@@ -10874,3 +10878,22 @@ without that guard (matching).
 
 **Status:** open. Whether Chain can be selected before those scenes is not
 shown. To test: a crafted save with `0x904060` = 3 and two members in a fight.
+
+## D410 — The two gift chests of area 94 give their items again when first opened in chapter 7 (Capcom's; fixed by DIV-0210)
+
+**Seen:** not seen in play. Found 2026-11-10 by the story-flag maps
+([`story-flags.md`](story-flags.md) section 5); the owner knows the chests as
+the guest's awards in the harbour.
+
+**Established (2026-11-10, read):** `Scena07_Object3` and `Scena07_Object4` call
+`ObjectReward` `0x550C40`, which tests flags `0x22` and `0x23` of row 6
+(`Cond_Flags + 0x30`, the address itself). Area 94's placement script, in its
+chapter 7 case, sets the flag bank to 6 and tests the same two flags to place a
+closed chest with a trigger or an opened one (`tools/event_scan.py --area 94`).
+`Scena07_Scene7` `0x550930` gives the item and sets the flag in the running
+row, row 7. Nothing reads row 7's flags `0x22` and `0x23`. The placement script
+runs at every entry to the area and at every load, and `Inventory_Add` refuses
+only past 99. Chapter 6 reads and writes row 6 throughout, so a chest opened
+there is right in both chapters. No save on record has row 7's flag 34 or 35.
+
+**Status:** fixed by DIV-0210, not yet played.
