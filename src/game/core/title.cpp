@@ -27,6 +27,7 @@
 #include "game/mode_flow.h"
 #include "game/mode_flow_callees.h"
 #include "game/mode_tasks.h"
+#include "game/mode_tasks_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/prim.h"
 #include "game/psp_code.h"
