@@ -1,8 +1,8 @@
 # Story flags: what each chapter's flags mean, and what sets them
 
 **Status:** IN PROGRESS (2026-11-09). Every chapter row, 0..19, has a flag map in
-[`story-flags/`](story-flags/), read from our source. The maps of chapters 1..14
-are checked against real saves. The event flags are mapped too (section 9). One
+[`story-flags/`](story-flags/), read from our source. The maps of chapters 0..15
+are checked against 38 real saves, one of them made after the ending. The event flags are mapped too (section 9). One
 thing is checked in play: granting a gene early (section 1).
 
 Reference material for the save editor's story points
@@ -139,18 +139,32 @@ writes chapter byte 15 directly, without `Scenario_Start`. Any other answer
 restarts from boot and writes nothing. `Save_BuildBlock` copies event flag `0x92`
 into the slot summary, so it is the mark of a cleared game.
 
+**MEASURED on the owner's cleared save** (save 37, `game\game\BISLPS0F.DAT`,
+2026-11-09): chapter byte 15 with the working bytes zero, event flag 146 set,
+chapter 15's row holding 0..6 and 32..47 with 9..22 clear, as the code clears
+them. The summary byte at block `+0xCB4` is 1 in this save and 0 in every other
+save of the play folder, so that byte is the summary's copy of flag 146.
+
 ## 5. What was checked
 
 - **Against saves, mechanically.** Every flag set in any real save
-  ([`observed-rows.md`](story-flags/observed-rows.md), 21 saves) has a row in its
-  chapter's table: chapters 1..14, no exception. Each map's "End" section compares
+  ([`observed-rows.md`](story-flags/observed-rows.md), 38 saves) has a row in its
+  chapter's table, chapters 0..15, with one exception: **chapter 6's flag 6** is
+  set in the owner's PC playthrough from save 31 on, and the map found no code
+  that names it. Its setter is not found. Each map's "End" section compares
   its reading with the rows of saves past that chapter, and reports agreement.
 - **In the code, by a second read:** `Scenario_Start` and the advance in
   `Area_Enter`; `Scena17_EndReturn`; `Area108_TailPlace` starting chapter 8's
   run 3; chapter 0's eleven flags.
-- **Not checked:** everything else in the maps is one reading pass. Chapter 15's
-  row is empty in the only save inside it, so chapters 15..19 have no save
-  evidence. Nothing has been played.
+- **Not checked:** everything else in the maps is one reading pass. Chapters
+  16..19 have no save evidence, and none is expected: 16 is the demo, 17 is never
+  saved in, 18 and 19 never start. One thing has been played: the early gene
+  (section 1).
+- **The saves** grew on 2026-11-09 from 21 to 38: the owner's play folder and its
+  backups hold one PC playthrough, 17 saves from the opening to after the ending,
+  with at least one save in chapters 0..6, 8, 9, 12, 14 and 15. The chapter maps'
+  own "End" sections were written before these and compare with saves 1..22
+  only.
 
 ## 6. Things that cross chapters
 
@@ -265,15 +279,15 @@ Most event flags are world state, not story progress:
 
 ### Checked against the saves
 
-By the merge script, over the 21 real saves:
+By the merge script, over the 38 real saves:
 
 - **Set in every save:** 3, 25, 27, the seed.
-- **Named in code and set in no save:** 59 flags, most of them puzzle, signal and
-  per-visit flags, as their kinds predict. 146 is among them: no save held is past
-  the ending.
-- **Set in a save, with sites but no setter found:** 5, 6, 24, 26, 56..63, 93.
-- **Set in a save, with no site at all:** 14, 15, 71, 96..101, 131..133. (246..255
+- **Named in code and set in no save:** 50 flags, most of them puzzle, signal and
+  per-visit flags, as their kinds predict.
+- **Set in a save, with sites but no setter found:** 5, 6, 24, 26, 56..63, 92, 93.
+- **Set in a save, with no site at all:** 14, 15, 71, 96..101, 131..135. (246..255
   are the engine's loops.)
+- **Flag 146** is set in the cleared save and in no other.
 
 The last two lists are the gap. Their setters are most likely among the 53
 table-driven sites.

@@ -228,6 +228,7 @@ Derived. Regenerate it on write unless the player overrides it on Advanced.
 | `+0xCA8` | 1 | Level | Record 0's level | MEASURED 75 of 75 |
 | `+0xCAC` | 4 | Play clock | Equals `+0x6E8` | MEASURED 76 of 76 h:m:s |
 | `+0xCB0` | 4 | EXP | Record 0's EXP | MEASURED 75 of 75 |
+| `+0xCB4` | 1 | Cleared game | Event flag 146 | MEASURED: 1 in the cleared save, 0 in the 18 others of the play folder; READ in `Save_BuildBlock` |
 
 This follows record 0, not the walking leader. A first reading against the field
 order's leader matched 64 of 76.
@@ -603,6 +604,14 @@ and 1:38, US at 0:12, 4:59, 8:17 and 43:25.
 (owner, 2026-11-09: the other cards there are copies made from it): 0:28, 5:19 and
 12:48. The first pass skipped `.bak` files. Two were already in the set through
 those copies, and the 5:19 save, chapter 2, is new. `card2.mcd.bak` is empty.
+
+**The owner's play folder** (`game\game` and `game\backups`, read 2026-11-09 after
+the owner pointed at it): 44 PC save files, 19 distinct. Two were known (the
+first-save-point reference and the edited gene test). The other 17 are one real
+PC playthrough: chapters 0, 1, 1, 2, 3, 3, 4, 5, 6, 6, 8, 9, 9, 12, 14, 14 and a
+save made after the ending. They are the best evidence held for chapter
+baselines, and the cleared save gives the summary's "cleared" byte at `+0xCB4`
+([`story-flags.md`](story-flags.md) section 4).
 
 **Real PSX saves by chapter byte, all sources:** chapter 1 has seven, chapter 6
 five, chapter 2 two, and chapters 4, 5, 10, 14 and 15 one each. Chapters 0, 3, 7, 8, 9, 11, 12
