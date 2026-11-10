@@ -224,7 +224,8 @@ save of the play folder, so that byte is the summary's copy of flag 146.
     - **Verdict: real, and reachable by the data; not seen in play.** No save on
       record has row 7's flag 34 or 35. A play test: leave both chests in
       chapter 6, open one in chapter 7, leave the area and come back.
-    - A fix would be `ObjectReward` testing row 6 or the running row. Not made.
+    - **Fixed by DIV-0210** (the owner, 2026-11-10): `Scena07_Scene7` sets the
+      flag in chapter 6's row. Known-defects D410.
   - **Chapter 8's run 3, not a defect in play.** The code has no guard, but the
     scene is armed by `Area108_PlaceScene` matching the cart (extra object 1),
     and DIV-0182's measured run found area 108 with no cart after the fight:
