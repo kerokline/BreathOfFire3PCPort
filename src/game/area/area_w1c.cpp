@@ -87,16 +87,4 @@ void SetByte(unsigned x, unsigned z, unsigned value) { AH_CALL(AreaMap_SetByte)(
 
 void AreaW1c_Inject() {
     if (bof3::WantsShadow("area_w1c")) area_w1c::SelfTest();
-    {
-        // DIVERGENCE DIV-0176: Sunder's animation at Mt. Myrneg's entry (area
-        // 51, the +0x10 movement script 3 of the bank-0x44 object) is the
-        // looping cut 0x0F, not the once-and-hold cut 0x10 - the script's
-        // first op, `0E 10 01 01` at 0x5FD000 in BOF3.exe's .data, asks for
-        // 0x0F. One byte; the original in both hosts under
-        // BOF3X_ORIGINAL=SunderLoop. docs/cut-content.md 4.
-        static const std::uint8_t was = 0x10, is = 0x0F;
-        const bool on = bof3::PatchBytes("SunderLoop", 0x5FD001, &was, &is, 1);
-        bof3::Log("DIV-0176    Sunder's animation at Mt. Myrneg's entry loops (0x0F) until the scene reaches him: %s",
-                  on ? "on" : "off");
-    }
 }
