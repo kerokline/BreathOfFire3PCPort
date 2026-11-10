@@ -170,7 +170,8 @@ Built 2026-11-10 (mods.md 2 and 5):
 
 - `[mod] author = "TheGreatBen"`, and `url` and `credit` (one line the author
   chooses): optional for every kind, since furigana 0.1.0 is released without
-  them; a romhack kind will require `author` when it exists.
+  them; a romhack kind will require `author` when it exists. The furigana mod
+  names the owner from 0.1.1 (`tools/make_mod.py`; the owner's word, 2026-11-10).
 - The Mods list shows name, `by <author>`, version, state; the status line
   for the selected mod reads `<name> <version>, by <author>. <credit> <url>
   Kind: <kind>.` `mods.py list --json` and `<home>\mods.toml` carry the keys.
@@ -215,4 +216,3 @@ like this one is whole only after 6.
 - The 84 functions read against the readme: which feature each edit serves.
   "Probably" in section 4 item 4 is a reading of the readme against the
   sections touched, not a disassembly.
-- The furigana mod's `author` line: the owner's to choose.
