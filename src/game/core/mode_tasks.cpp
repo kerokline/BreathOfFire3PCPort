@@ -44,9 +44,9 @@ const mode_tasks::Callees kOriginals = {
     Field_ModeDispatch, Field_Frame,
     Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
 };
-}  namespace mode_tasks { Callees g = kOriginals; }
-
-namespace {
+}  namespace mode_tasks {
+Callees g = kOriginals;
+}  namespace {
 
 // --- BOF3X_SHADOW=mode_tasks: a differential fuzz, once at start-up --------
 // Six byte-copies, every call out re-aimed at the recorders below, and for
