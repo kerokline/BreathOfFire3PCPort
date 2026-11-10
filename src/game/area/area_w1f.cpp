@@ -164,9 +164,4 @@ void PlaceRandomObject(std::uint32_t cells, std::uint32_t weights) {
 
 void AreaW1f_Inject() {
     if (bof3::WantsShadow("area_w1f")) area_w1f::SelfTest();
-    // DIV-0188 guards the rope pull's judgement here; Capcom's
-    // Area75_PhasePlay would judge as before and the cheat would be silently
-    // half off.
-    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Area75_PhasePlay))
-        bof3::Fatal("BOF3X_NO_FAIL=1 needs Area75_PhasePlay ours, and it is disabled");
 }
