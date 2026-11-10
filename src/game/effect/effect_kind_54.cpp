@@ -769,4 +769,9 @@ void EffectKind54_Inject() {
     BOF3_INJECT(EffectKind5B_Glow);
     BOF3_INJECT(EffectKind5B_Fade);
     BOF3_INJECT(EffectKind5B_DrawBeam);
+    // DIV-0188: with the switch on, the chop's judgement must be ours - left
+    // as Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), the count would be judged as
+    // before and the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::EffectKind55_Finish))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind55_Finish ours, and it is disabled");
 }
