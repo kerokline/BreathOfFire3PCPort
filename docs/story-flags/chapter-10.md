@@ -182,5 +182,6 @@ masters' met bits, `rest_2c_callees.h:83`).
   `file scena_sc9b.cpp`, row "cur". It misses `Scena10_Object09` (25), and it
   gives `Area98_ChoiceFlag9` (26) to no chapter. The
   pickup flags are a non-literal `B(rec) + 0x20`; the 16 records' `+0` bytes
-  are 0..15 in `BOF3.exe` at `0x661528` (read 2026-11-09), so the flags are
-  32..47.
+  are in `BOF3.exe` at `0x661528`; their values are not quoted here (this repo reads
+  them from the player's exe, `python tools/flag_tables.py`). The saves show the
+  pick-up flags as 32..47.

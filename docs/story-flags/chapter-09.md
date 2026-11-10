@@ -105,18 +105,19 @@ read.
 
 **The flag tables in the effect files.** The effect sub-kinds read row 9 at its
 fixed address, so they work in any chapter. Their flag numbers are in tables in
-`BOF3.exe`, read 2026-11-09 for this page (four bytes each, flag numbers only):
+`BOF3.exe`. Their values are not quoted here (the owner, 2026-11-09: this repo reads them
+from the player's exe): `python tools/flag_tables.py` prints them.
 
 | Table | Read by | Flags |
 |---|---|---|
-| `0x65E010` | sub-kind 0x13 panel shown (`effect_5b.cpp:799, 813, 839`) | 0, 12, 13, 15 |
-| `0x65E014` | sub-kind 0x13 face (`effect_5b.cpp:817, 831, 857`) | 12, 13, 15, 17 |
-| `0x65E034` | sub-kind 0x0F gate (`effect_5b.cpp:999, 1067`, by `+0x3A`); sub-kind 0x50 texture (`effect_5c.cpp:302, 320, 352`) | 12, 13, 15, 17 |
-| `0x65E094` | sub-kind 0x50 wall (`effect_5c.cpp:279, 296, 331`, entries 1..2) | 0, 12, 13, 15 |
-| `0x65E31C` | sub-kind 0x14 (`effect_5d.cpp:1072`, two entries) | 38, 39 |
+| `0x65E010` | sub-kind 0x13 panel shown (`effect_5b.cpp:799, 813, 839`) | read at run time |
+| `0x65E014` | sub-kind 0x13 face (`effect_5b.cpp:817, 831, 857`) | read at run time |
+| `0x65E034` | sub-kind 0x0F gate (`effect_5b.cpp:999, 1067`, by `+0x3A`); sub-kind 0x50 texture (`effect_5c.cpp:302, 320, 352`) | read at run time |
+| `0x65E094` | sub-kind 0x50 wall (`effect_5c.cpp:279, 296, 331`, entries 1..2) | read at run time |
+| `0x65E31C` | sub-kind 0x14 (`effect_5d.cpp:1072`, two entries) | read at run time |
 
-So flags 12, 13, 15 and 17, set by run 6's four scenes, are the ones the
-gates, panels and walls show. Reading, not checked.
+So flags set by run 6's four scenes are the ones the gates, panels and walls
+show: which flag each shows is in the tables. Reading, not checked.
 
 ### Another chapter's row: chapter 6's flag 62
 
