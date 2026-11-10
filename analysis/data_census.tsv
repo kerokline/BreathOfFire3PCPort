@@ -24740,14 +24740,14 @@ site	src/game/scenario/scena_07_2.cpp	1028	global	TakeInto	scena_sc7::at::kSlot_
 site	src/game/scenario/scena_07_2.cpp	1064	global	Byte	scena_sc7::at::kShake7	0x661244	-	exact	Scena07_Shake	signed char	0
 site	src/game/scenario/scena_07_2.cpp	1079	global	At	Scena07_PlacedObjects_addr + 0x11 * i	0x661248	-	exact	Scena07_PlacedObjects	unsigned char	0
 site	src/game/scenario/scena_07_2.cpp	1081	global	Byte	scena_sc7::at::kPlacedSeat7	0x661338	-	exact	Scena07_PlacedSeats	unsigned char	0
-site	src/game/scenario/scena_07_2.cpp	1099	global	Byte	scena_sc7::at::kCounter1	0x903849	-	none	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1114	record	Long	name + i	-	via=SH_CALL	-	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1114	record	At	text + i	-	-	-	-	-	0
-site	src/game/scenario/scena_07_2.cpp	1128	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/scenario/scena_07_2.cpp	1137	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/scenario/scena_07_2.cpp	1258	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
-site	src/game/scenario/scena_07_2.cpp	1258	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
-site	src/game/scenario/scena_07_2.cpp	1311	global	Byte	scena_sc7::at::kMembers	0x802d40	-	exact	ObjTrio	records::PartyMember	0
+site	src/game/scenario/scena_07_2.cpp	1105	global	Byte	scena_sc7::at::kCounter1	0x903849	-	none	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1120	record	Long	name + i	-	via=SH_CALL	-	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1120	record	At	text + i	-	-	-	-	-	0
+site	src/game/scenario/scena_07_2.cpp	1135	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/scenario/scena_07_2.cpp	1144	global	-	scena_sc7::at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/scenario/scena_07_2.cpp	1265	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
+site	src/game/scenario/scena_07_2.cpp	1265	global	Byte	scena_sc7::at::kScriptFlagsHi	0x9039a3	-	inside	Field_ScriptFlags+0x1	unsigned short	0
+site	src/game/scenario/scena_07_2.cpp	1318	global	Byte	scena_sc7::at::kMembers	0x802d40	-	exact	ObjTrio	records::PartyMember	0
 site	src/game/scenario/scena_08.cpp	41	global	At	CharacterRecords_addr + Character_IndexById[k] * at::kRecord	0x903a70	-	exact	CharacterRecords	records::CharRecord	0
 site	src/game/scenario/scena_08_2.cpp	49	global	At	MoveScript_PartyRecords_addr + 0x66	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0
 site	src/game/scenario/scena_08_2.cpp	53	global	At	MoveScript_PartyRecords_addr + 0x66	0x8034e6	-	inside	MoveScript_PartyRecords+0x66	unsigned char	0

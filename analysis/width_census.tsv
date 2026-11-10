@@ -12215,10 +12215,11 @@ site	src/game/scenario/scena_07_2.cpp	209	widen	other	live	Entry(::bof3::Img(Sce
 site	src/game/scenario/scena_07_2.cpp	294	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)))();
 site	src/game/scenario/scena_07_2.cpp	294	widen	other	live	Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_Runs_addr), MoveScript_Var7)))();
 site	src/game/scenario/scena_07_2.cpp	806	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
-site	src/game/scenario/scena_07_2.cpp	1170	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
-site	src/game/scenario/scena_07_2.cpp	1170	widen	other	live	Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))	ObjectHandler [fn]	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
-site	src/game/scenario/scena_07_2.cpp	1322	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
-site	src/game/scenario/scena_07_2.cpp	1322	widen	other	live	Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1177	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
+site	src/game/scenario/scena_07_2.cpp	1177	widen	other	live	Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))	ObjectHandler [fn]	reinterpret_cast<ObjectHandler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_ObjectHandlers_addr), static_cast<int>(index))))(object, bank);
+site	src/game/scenario/scena_07_2.cpp	1329	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1329	widen	other	live	Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena07_CellHandlers_addr), static_cast<signed char>(r))))();
+site	src/game/scenario/scena_07_2.cpp	1371	low32	object_ours	live	&scena_sc7::g_gift_chest_row	Low32	bof3::PatchBytes(" ", Low32(&scena_sc7::g_gift_chest_row), &was, &is, 1);
 site	src/game/scenario/scena_08_2.cpp	141	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
 site	src/game/scenario/scena_08_2.cpp	199	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))))();
 site	src/game/scenario/scena_08_2.cpp	199	widen	other	live	Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena08_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))))();
@@ -20241,6 +20242,7 @@ file	src/game/scenario/scena_06_3.cpp	live	widen	img_place	1
 file	src/game/scenario/scena_06_3.cpp	live	widen	other	4
 file	src/game/scenario/scena_06_3.cpp	live	widen	param	4
 file	src/game/scenario/scena_07_2.cpp	live	long	l	1
+file	src/game/scenario/scena_07_2.cpp	live	low32	object_ours	1
 file	src/game/scenario/scena_07_2.cpp	live	uintptr	-	4
 file	src/game/scenario/scena_07_2.cpp	live	widen	other	4
 file	src/game/scenario/scena_08_2.cpp	live	long	l	5
@@ -20806,8 +20808,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16125
-#count sites_live	11908
+#count sites	16126
+#count sites_live	11909
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -21044,9 +21046,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	721
-#count low32_live	713
-#count low32_live_files	466
+#count low32	722
+#count low32_live	714
+#count low32_live_files	467
 #count low32_fuzz	8
 #count low32_fuzz_files	1
 #count low32_crt	1
@@ -21064,9 +21066,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	136
 #count low32_image_local_live	136
 #count low32_image_local_live_files	88
-#count low32_object_ours	87
-#count low32_object_ours_live	87
-#count low32_object_ours_live_files	62
+#count low32_object_ours	88
+#count low32_object_ours_live	88
+#count low32_object_ours_live_files	63
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14
