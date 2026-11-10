@@ -207,6 +207,20 @@ Callees g = kOriginals;
 
 }  // namespace field_event
 
+// frame_callees's callee seam, moved here from frame_callees.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace frame_callees {
+namespace {
+
+const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
+                            Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
+
+}  // namespace
+
+CalleesFrameCallees g = kOriginals;
+
+}  // namespace frame_callees
+
 // original 0x454960. The CLUT strip - VRAM rows 480..511, 256 cells wide - is
 // kept by game logic in the DAT arena and marked dirty; here it goes up,
 // row by changed row.

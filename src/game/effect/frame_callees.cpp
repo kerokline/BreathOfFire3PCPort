@@ -46,10 +46,6 @@ const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__
                             Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
 }  // namespace
 
-namespace frame_callees {
-CalleesFrameCallees g = kOriginals;
-}  // namespace frame_callees
-
 namespace {
 
 // --- BOF3X_SHADOW=frame_callees: a differential fuzz, once at start-up ------
