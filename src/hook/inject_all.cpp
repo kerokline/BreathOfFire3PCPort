@@ -2721,6 +2721,7 @@ void InjectAll() {
                                 // Direct3D handlers, POLY_FT3's two helpers, D3d_SetAlphaModulate, D3d_AfterDraw,
                                 // Gfx_StoreImage; Gfx_DrawOTag reaches them by the addresses they had; its clones' calls
                                 // re-aimed at its own recorders; before FishingText_Arm
+    D3dFromD3dRest_Inject();
     D3d_Inject();
     ModeRest_Inject();          // platform round step 2, group PM (GameMode_Handlers 3..6 and the steps of modes 3 and
                                 // 5, 0x495BB0..0x496226, and Sound_MusicPlaying 0x587C20): its clones' calls re-aimed

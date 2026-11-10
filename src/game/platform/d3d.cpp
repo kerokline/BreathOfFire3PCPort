@@ -3018,6 +3018,20 @@ long D3d_DrawTile(const unsigned char* prim) {
     return d3d_draw::DrawVertices(5, 4);
 }
 
+// 0x5A2220, table entry 16 (code 0x68, called at 0x59F17C): a one-pixel tile,
+// drawn as ONE point - float x +8, y +0xC, z +0x10; the colour as the tile's
+// (null specular, Gfx_DrawTpage); SetTexture(0, NULL); 0x437CC0(1) twice; the
+// blend; flat; a point list of 1. At a scale of 2 that is one pixel of the four
+// the PlayStation's pixel covers (docs/d3d-rest.md section 4).
+//
+// DIVERGENCE DIV-0077 (the owner, 2026-10-06): with g_tile1_quad on, the tile
+// is the PlayStation pixel's whole footprint - a D3d_ScaleX by D3d_ScaleY quad
+// from the scaled corner, as D3d_DrawTile draws a TILE of w = h = 1 (a
+// triangle strip of four); the colour, blend and shade as the point's. The
+// switch is set by D3dRest_Inject after the self-test, which compares the
+// point; BOF3X_TILE1=0 leaves it off (the original's point).
+unsigned char g_tile1_quad = 0;
+
 long D3d_DrawTile1(const unsigned char* prim) {
     unsigned long diffuse;
     d3d_rest::g.prim_color(prim[4], prim[5], prim[6], prim[7], d3d_rest::DrawMode(), &diffuse, nullptr);
@@ -3954,4 +3968,20 @@ void D3d_Inject() {
     BOF3_INJECT(SpriteCell_Add);
     BOF3_INJECT(Font_SetGlyphData);
     BOF3_INJECT(Snd_Init);
+}
+
+void D3dFromD3dRest_Inject() {
+    // DIVERGENCE DIV-0077: after the self-test, which compares Capcom's point.
+    {
+        char text[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_TILE1", text, sizeof text);
+        const bool off = n == 1 && text[0] == '0';
+        if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_TILE1 must be 0 or 1");
+        if (!off) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("Tile1Quad", Low32(&g_tile1_quad),
+                             &was, &is, 1);
+            bof3::Log("DIV-0077    TILE_1 drawn as a scale-sized quad, the PlayStation pixel's footprint (BOF3X_TILE1=0 for the point)");
+        }
+    }
 }
