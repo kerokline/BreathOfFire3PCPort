@@ -17,7 +17,9 @@ constexpr std::uint32_t kTextRecord = 0x20;
 // through a pointer the fuzz can aim at a recorder - for the original's copy
 // and for ours alike.
 using DrawAtFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-}  namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
+}  // namespace
+
+namespace text_immediate { DrawAtFn g_draw_at = Text_DrawAt; }
 namespace {
 const std::uint8_t* AtTextImmediate(std::uint32_t address) {
     return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(address));
