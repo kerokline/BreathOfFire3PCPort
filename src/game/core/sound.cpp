@@ -1158,7 +1158,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         }
         // DIV-0133 and DIV-0134 (docs/button-sigma.md): the Start-held reset
         // by source, then words 7 / 8 as Speak's and Action's and the table
-        // (a save whose six lines are not one button each refused) - nothing
+        // (a save whose six lines are not one button each: the reset's words) - nothing
         // until sigma::Arm, after every module's self-test.
         bof3x::input::sigma::LoadApplied(reset);
         Field_MemberCount = static_cast<save_menu::U>(save_menu::g.party_count(0));

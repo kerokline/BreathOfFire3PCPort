@@ -10270,6 +10270,16 @@ designed in rather than bolted on.
 - **Toward:** none - the PlayStation has the same third flow ("Yes" above)
 - **Languages:** any
 - **State:** active
+- **Amended 2026-11-10 (the owner: load a default instead of stopping):** a
+  save whose six words are not one button each no longer stops the game at
+  the load. `LoadApplied` puts the release's Start-held reset words in their
+  place (by source under DIV-0134, Japan's otherwise), builds the table from
+  them, and logs one `ButtonSigma` line with the reason. The original loads
+  such words as they are and has no table to build. Found by the save-block
+  map (2026-11-10): a converted or edited save could reach the Fatal. The
+  boot defaults, the rebind and a quickload still stop on a bad table, since
+  those words are ours. `BOF3X_SHADOW=sigma` now also checks that each of the
+  11 refused word sets resets to each release's words and builds a table.
 
 ### An install starts with the Config of the release it was built from
 
