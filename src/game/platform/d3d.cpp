@@ -1924,6 +1924,14 @@ extern "C" void __cdecl Gfx_ClearImage(const short* rect, unsigned char red, uns
     Gfx_InvalidateTextures(rect, 0);
 }
 
+namespace {
+
+using Original = void (__cdecl*)(const short*, int);
+
+}  // namespace
+
+namespace gfx_texcache { Original g_original_clone = nullptr; }
+
 // original 0x59E700. Throws away (mode 0) or marks stale (mode non-zero) every
 // cached texture built from the VRAM cells under rect: four s16, x y w h.
 // Callers: Gfx_LoadImage and 0x59E6EA (the end of a row-by-row fill of the
