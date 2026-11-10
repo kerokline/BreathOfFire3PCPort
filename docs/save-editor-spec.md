@@ -177,7 +177,7 @@ Class says how the editor treats a field:
 | `+0x678` | 4 | Zenny | E | MEASURED |
 | `+0x67C` | 4 | Unnamed, 3 bytes live | P | UNKNOWN |
 | `+0x680` | 1 | Active formation | E | CITED |
-| `+0x681` | 1 | Unlocked formations | E | CITED |
+| `+0x681` | 1 | Unlocked formations: bit n opens cell n of the formation grid (`TacticsFormation_Build`). Bits 0..2 are set at a new game; bits 3, 4, 5 are set once each by masters 0xB, 0xD, 0xE at 3 levels gained (`MasterGrant_Step1Member`) | E | READ, MEASURED (`0x07`, `0x1F`, `0x3F` on the samples) |
 | `+0x682` | 3 | Field order, character ids, `0xFF` empty | E | MEASURED |
 | `+0x685` | 3 | Battle order, same ids | E | MEASURED: a permutation of field order, 75 of 75 |
 | `+0x688` | 96 | Unnamed, 42 live | P | UNKNOWN |
@@ -198,7 +198,8 @@ Class says how the editor treats a field:
 | `+0xC14` | 92 | Unnamed. `+0xC28`: eight 4-byte rows, identical at a new game, one byte of each constant on every sample. `+0xC48`: 40 copies of one byte on every sample (section 12.1) | P | MEASURED shape, meaning UNKNOWN |
 | `+0xC70` | 3 | Dragon genes | E | CITED |
 | `+0xC73` | 1 | Unnamed | P | UNKNOWN |
-| `+0xC74` | 6 | Masters, written twice over | E | CITED |
+| `+0xC74` | 3 | Masters met, 17 bits: set when a master's introduction opens (`MasterTalk_IntroSay`) | E | READ, MEASURED |
+| `+0xC77` | 3 | Masters open, 17 bits: set when the introduction closes (`MasterTalk_IntroWait`); the masters window lists these. **Not a copy of `+0xC74`**: bit 9 is set later by a scenario step, and three samples have it met but not open. Bit 4 met and not open counts battles at `+0xC1B` up to 30 | E | READ, MEASURED |
 | `+0xC7A` | 2 | Unnamed | P | UNKNOWN |
 | `+0xC7C` | 8 | Celerity and Bonebreak timers | E | CITED |
 | `+0xC84` | 28 | Unnamed | P | UNKNOWN |
@@ -643,3 +644,6 @@ Found by reading its code. None has been reproduced in a run.
 - Deleted card entries are treated as live saves.
 - A file that cannot be read fails with no message on the page.
 - The slot summary is edited separately from the record it mirrors.
+- The masters are read from 3 bytes and written to those 3 and the next 3. The
+  second 3 are their own field (`+0xC77`, masters open), so a save through the
+  editor opens every master that was only met.
