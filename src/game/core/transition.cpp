@@ -553,6 +553,12 @@ extern "C" void __cdecl Field_Task(void) {
     }
 }
 
+namespace mode_flow {
+
+std::uint32_t g_area_track_fallback = 0;  // DIV-0092; 1 through PatchBytes("AreaTrackFallback") in ModeRest_Inject
+
+}  // namespace mode_flow
+
 // original 0x495840: Game_Mode 0, the start of a game (PSX 0x801980EC). The
 // party loaded from slot 0; the area change requested to the saved position
 // (area, flags, x, z at 0x903A04..0x903A0F); with the play clock not at zero

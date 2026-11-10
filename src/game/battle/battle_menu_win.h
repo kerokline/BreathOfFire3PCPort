@@ -3,3 +3,4 @@
 #pragma once
 
 void BattleMenuWin_Inject();
+void BattleMenuWinFromModeFlow_Inject();

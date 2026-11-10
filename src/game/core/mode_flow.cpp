@@ -28,8 +28,6 @@
 
 namespace mode_flow {
 
-std::uint32_t g_area_track_fallback = 0;  // DIV-0092; 1 through PatchBytes("AreaTrackFallback") in ModeRest_Inject
-
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -62,23 +60,6 @@ using namespace mode_flow;
 // tests are unsigned (>= 30, >= 60); at 99 hours a rollover of the minutes
 // holds the clock at 99:59:59 rather than counting the hour.
 
-// original 0x59E330 (PSX 0x8015990C, the JP executable): every window
-// record's in-use, handler, kind, state and pass bytes (+0..+3, +0xF)
-// zeroed, and the pass the walk starts from. No calls.
-//
-// As the original has it, and the JP disc: the other fields keep what the
-// last window left, and one is read before any write - +0xD bit 0 (no
-// frame), which Window_Grow / Window_Shrink read for kinds 1 and 2 and never
-// set, so a list or battle window that set it leaves the next window
-// frameless. The US executable's reset (PSX 0x80158E50) zeroes +0..+0x1F of
-// every record - the bytes, the words +4 / +6 and the eight words +0x10..
-// +0x1E - and leaves +0x20..+0x23, as here.
-//
-// DIVERGENCE DIV-0175 (known-defects D352): 1 through
-// PatchBytes("WindowResetFull") in ModeFlow_Inject, after the self-test,
-// which compared Capcom's five-field reset.
-namespace mode_flow { std::uint8_t g_reset_full = 0; }
-
 // ===========================================================================
 // Boot (0x496B60, 0x496C90) and the small resets
 // ===========================================================================
@@ -87,10 +68,4 @@ namespace mode_flow { std::uint8_t g_reset_full = 0; }
 
 void ModeFlow_Inject() {
     if (bof3::WantsShadow("mode_flow")) mode_flow::SelfTest();
-    {
-        // DIV-0175: after the self-test, which compared Capcom's five-field reset.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("WindowResetFull", Low32(&mode_flow::g_reset_full), &was, &is, 1);
-        bof3::Log("DIV-0175    the window reset clears +0..+0x1F of every record, as the US disc (on unless the line above says OFF)");
-    }
 }

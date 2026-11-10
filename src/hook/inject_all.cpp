@@ -1042,6 +1042,7 @@ void InjectAll() {
     Scena16_Inject();
     ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
                                 // re-aimed in the copy, the mode table swapped: order does not matter
+    BattleMenuWinFromModeFlow_Inject();
     TransitionFromModeFlow_Inject();
     TitleFromModeFlow_Inject();
     AreaDataReload_Inject();    // DIV-0182: a copy of two areas' .data, taken before any scene: before the
