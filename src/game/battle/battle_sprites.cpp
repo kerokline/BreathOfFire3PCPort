@@ -113,8 +113,4 @@ using namespace battle_sprites;
 
 void BattleSprites_Inject() {
     if (bof3::WantsShadow("battle_sprites")) battle_sprites::SelfTest();
-    // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
-    // would write the kind's bit and the cheat would be silently half off.
-    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_SetupEnemy))
-        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_SetupEnemy ours, and it is disabled");
 }
