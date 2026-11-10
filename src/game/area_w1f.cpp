@@ -360,8 +360,8 @@ extern "C" void __cdecl Area73_PlaceRandomObject(void) { PlaceRandomObject(::bof
 // ===========================================================================
 
 // original 0x40D650 (Area74_Choices[0] = Area74_Handlers[2]): answer not 0:
-// message 0x94 and the mark 6; 0: story flag 0x365 (the byte 0x90409C bit
-// 0x20) set message 0x92, else 0x93 and the mark.
+// message 0x94 and the mark 6; 0: the byte 0x90409C bit 0x20 (bit 0xA5 of the
+// abilities-learnt set 0x904088, no story flag) set: 0x92, else 0x93 and the mark.
 extern "C" void __cdecl Area74_ChoiceAsk92(void) {
     if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) != 0) {
         SetMessage(0x94);
