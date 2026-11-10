@@ -44,9 +44,6 @@ unsigned char& B(U address) { return *At(address); }
 const unsigned char* Text(U address) { return At(address); }
 
 }  // namespace
-// DIV-0075, set by Rest4D_Inject after the self-test: the two entry steps move
-// the step's step on, where the original's never does.
-namespace rest_4d { unsigned char g_entry_abandons = 0; }
 namespace {
 
 char* Scratch() { return reinterpret_cast<char*>(At(::bof3::Img(at::kTextScratch.v))); }
@@ -76,12 +73,4 @@ const unsigned char* PoolText(U words, int index) {
 
 void Rest4D_Inject() {
     if (bof3::WantsShadow("rest_4d")) rest_4d::SelfTest();
-    // DIVERGENCE DIV-0075: after the self-test, which compares Capcom's entry steps.
-    {
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("CommuNameEntryAbandons",
-                         Low32(&rest_4d::g_entry_abandons), &was, &is, 1);
-        bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
-    }
-    if (bof3::WantsShadow("rest_4d")) rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject
 }
