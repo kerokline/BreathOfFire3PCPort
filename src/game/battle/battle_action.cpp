@@ -1458,6 +1458,21 @@ extern "C" void __cdecl BattleRoundEnd_FasterStep() {
     [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleRoundEnd_FasterSteps_addr), BattleE4_Step2)();
 }
 
+// original 0x4302D0 (PSX 0x801D4B08, read: the same branches and the same loop
+// bounds): unless an extra round is running (0x904B7A) or the timer 0x904B8E
+// is, Battle_MarkFasterSide's al (0..3, through a four-entry jump table at
+// 0x4303B4) picks the extra round 0x904B7A, 1..3 - 2 in place of 1 or 3 when
+// 0x904AE4 is 2, and none in place of 1 then - and steps 0x904AA2 on. With
+// none (or al above 3), the round ends: flag 0x8000 cleared from members 0
+// and 1 and enemies 0..6 (as the original has it - neither loop reaches the
+// last of its array; section 4 of the doc), the round counted (0x904B90), the
+// extra round cleared, Battle_TickCounters, and 0x904AA1 on to the chain.
+//
+// DIVERGENCE DIV-0154: 1 through PatchBytes("ExtraRoundClear") in
+// BattleTurnSteps_Inject, after the self-test. The loops then clear the mark
+// from all three members and all eight enemies, the setter's bounds (D63).
+namespace battle_turn_steps { std::uint8_t g_extra_round_clear = 0; }
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_CheckFaster() {
     if (BattlePhases_B7A == 0 && BattleFlow_AnimGate == 0) {
         switch (battle_turn_steps::g.mark_faster() & 0xFF) {
@@ -2193,6 +2208,15 @@ extern "C" void __cdecl BattleEnd_ResultStep() {
 // (0x64AFAC: group CD's 0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30).
 extern "C" void __cdecl BattleEnd_ResultPage() {
     [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleResult_ExpSteps_addr), BattleE4_Step4)();
+}
+
+void BattleActionFromBattleTurnSteps_Inject() {
+    {
+        // DIV-0154: after the self-test, which compared Capcom's bounds.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ExtraRoundClear", Low32(&battle_turn_steps::g_extra_round_clear), &was, &is, 1);
+        bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
+    }
 }
 
 void BattleAction_Inject() {

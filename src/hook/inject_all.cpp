@@ -1148,6 +1148,7 @@ void InjectAll() {
     BattleTurnSteps_Inject();   // round 8 group CC: every call of its clones re-aimed at a recorder, two jump
                                 // tables relocated and eight .data dispatch tables swapped for recorders:
                                 // order does not matter
+    BattleActionFromBattleTurnSteps_Inject();
     if (bof3::WantsShadow("magic_fx_reached")) magic_fx_reached::SelfTest();    // round 8 group CJ: every call of its clones re-aimed at a recorder, its five stack
                                 // tables re-aimed in the copies and three .data tables swapped: order does not matter
     MagicFx3_Inject();

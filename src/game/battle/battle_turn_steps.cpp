@@ -55,21 +55,6 @@ using move_script::Word;
 // Phase 4: the round's end
 // ===========================================================================
 
-// original 0x4302D0 (PSX 0x801D4B08, read: the same branches and the same loop
-// bounds): unless an extra round is running (0x904B7A) or the timer 0x904B8E
-// is, Battle_MarkFasterSide's al (0..3, through a four-entry jump table at
-// 0x4303B4) picks the extra round 0x904B7A, 1..3 - 2 in place of 1 or 3 when
-// 0x904AE4 is 2, and none in place of 1 then - and steps 0x904AA2 on. With
-// none (or al above 3), the round ends: flag 0x8000 cleared from members 0
-// and 1 and enemies 0..6 (as the original has it - neither loop reaches the
-// last of its array; section 4 of the doc), the round counted (0x904B90), the
-// extra round cleared, Battle_TickCounters, and 0x904AA1 on to the chain.
-//
-// DIVERGENCE DIV-0154: 1 through PatchBytes("ExtraRoundClear") in
-// BattleTurnSteps_Inject, after the self-test. The loops then clear the mark
-// from all three members and all eight enemies, the setter's bounds (D63).
-namespace battle_turn_steps { std::uint8_t g_extra_round_clear = 0; }
-
 // ===========================================================================
 // Phase 5: the battle's end
 // ===========================================================================
@@ -78,10 +63,4 @@ namespace battle_turn_steps { std::uint8_t g_extra_round_clear = 0; }
 
 void BattleTurnSteps_Inject() {
     if (bof3::WantsShadow("battle_turn_steps")) battle_turn_steps::SelfTest();
-    {
-        // DIV-0154: after the self-test, which compared Capcom's bounds.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ExtraRoundClear", Low32(&battle_turn_steps::g_extra_round_clear), &was, &is, 1);
-        bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
-    }
 }
