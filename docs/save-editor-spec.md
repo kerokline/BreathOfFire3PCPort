@@ -156,7 +156,8 @@ Class says how the editor treats a field:
 | Offset | Size | Field | Class | Evidence |
 |---|---:|---|---|---|
 | `+0x000` | 16 | Scene state. Byte 0 is the chapter, byte 2 the state | A | READ, [`ending-backdrop.md`](ending-backdrop.md); CITED frost `SceneState` |
-| `+0x010` | 3 | Unnamed | P | UNKNOWN |
+| `+0x010` | 2 | Unnamed | P | UNKNOWN |
+| `+0x012` | 1 | "Event flags seeded": 0 makes the game seed event flags 0..127 from its table on the first field frame, then it is 1 | D | READ and MEASURED: 1 in every PC save ([`story-flags.md`](story-flags.md) section 9) |
 | `+0x013` | 3 | Scene event mode, step, selection | A | CITED |
 | `+0x016` | 10 | Unnamed, zero on every sample | P | MEASURED zero |
 | `+0x020` | 4 | Script variables | A | CITED |
@@ -171,7 +172,7 @@ Class says how the editor treats a field:
 | `+0x080` | 16 | Unnamed, 2 bytes live across `+0x07B..+0x08F` | P | UNKNOWN |
 | `+0x090` | 8 x `0xA4` | Character records, section 8 | | |
 | `+0x5B0` | 160 | Scene flag words, 8 bytes for each of 20 chapters | A | READ: `Cond_Flags` `0x903F90`; 82 bytes live |
-| `+0x650` | 40 | Event flags | A | READ: `Flag_Test` family; 21 bytes live |
+| `+0x650` | 40 | Event flags, 0..255 in the first 32 bytes | A | READ: [`story-flags.md`](story-flags.md) section 9; 21 bytes live |
 | `+0x66E` | 2 | Faerie village stage, inside the flags above | E | CITED Red Herring |
 | `+0x678` | 4 | Zenny | E | MEASURED |
 | `+0x67C` | 4 | Unnamed, 3 bytes live | P | UNKNOWN |
@@ -338,7 +339,10 @@ A generator, not a template. No binary save is shipped.
 3. Write the target's layout, names and options.
 4. Scene state at the new-game chapter. That chapter's Start sets the area.
 5. Fill `+0xC28..+0xC6F` with `0xFF`, as the first chapter's start does (below).
-6. Write the few remaining start-up fields (below), then seal.
+6. Seed event flags 0..127 from `Scenario_SubInitTable` (`0x662CD8`, 16 bytes),
+   read from the install like the default records, and write block `+0x12` as 1
+   ([`story-flags.md`](story-flags.md) section 9).
+7. Write the few remaining start-up fields (below), then seal.
 
 The test is a byte comparison against a save the game wrote at the first
 opportunity on a new game, per target. The references are held (below).

@@ -2,8 +2,8 @@
 
 **Status:** IN PROGRESS (2026-11-09). Every chapter row, 0..19, has a flag map in
 [`story-flags/`](story-flags/), read from our source. The maps of chapters 1..14
-are checked against real saves. Nothing is checked in play. The event flags are
-not mapped.
+are checked against real saves. The event flags are mapped too (section 9). One
+thing is checked in play: granting a gene early (section 1).
 
 Reference material for the save editor's story points
 ([`save-editor-spec.md`](save-editor-spec.md) section 12.2) and for the wiki:
@@ -17,8 +17,7 @@ flag numbers and their meanings. It holds no save and no dump of one.
 - **Numbering.** Flag `n` is bit `n & 7` of byte `n >> 3` of the row, low bit
   first (`Flags_Set`, `event_script.cpp`). MEASURED on `start_normal.DAT`.
 - **Event flags** at block `+0x650` (`Cond_Flags + 0xA0`) are a separate array
-  with their own setters, about 400 sites. Not mapped yet. Some chapter flags
-  wait on them (section 6).
+  with their own setters: section 9. Some chapter flags wait on them.
 
 ### Other flag banks: finds and genes are not chapter flags
 
@@ -54,8 +53,8 @@ Read for genes 3 and 16 ([`chapter-08.md`](story-flags/chapter-08.md)):
 - No code on the path to `Scena08_Scene3` reads `Gene_Bits`. With bit 16 already
   set the scene still plays and ORs both bits in again, which changes nothing.
 - The scene is not gated by chapter 8's flag 4. `Area108_TailPlace` state 9 starts
-  run 3 (`area_w2f.cpp`, checked), on a path gated by event flags `0x1B` and
-  `0x1D`. No code of ours tests chapter 8's flag 4.
+  run 3 (`area_w2f.cpp`, checked), on a path that tests the leader, the place and
+  event flag 27 (section 9). No code of ours tests chapter 8's flag 4.
 - **Played by the owner, 2026-11-09**, from `tools/recipe_saves/fusionEarly.DAT`
   (their save before that scene with gene bit 16 set and nothing else changed):
   the gene could be used in battle before the scene's fight, the scene that gives
@@ -178,7 +177,7 @@ into the slot summary, so it is the mark of a cleared game.
   tests chapter 6's, so a reward could be given twice; and nothing in the code
   stops chapter 8's run 3 from starting again. Neither is in `known-defects.md`
   until one is seen in play.
-- **The event flags** at `+0x650`.
+- **The event flags' missing setters** (section 9) and the table-driven sites.
 - **Chapter 0:** the area files are not searched for tests of its row.
 - **Two maps quote flag numbers read from `BOF3.exe`'s tables**
   (chapter 9's effect tables, chapter 10's pick-up records). The owner's call of
@@ -193,3 +192,116 @@ found by the reading passes: calls through the `g.flags_*` table (chapter 16),
 one-line object handlers, wrappers that fix the flag number (`SetAndEnd0`,
 `CellRun8`), `mode_states.cpp`'s chapter 1 functions, `area_w4e.cpp`'s `Row14()`,
 and a few sites given to the wrong function.
+
+## 9. The event flags
+
+The bank at `0x904030` (`Cond_Flags + 0xA0`), save block `+0x650`. Mapped
+2026-11-09 by nine reading passes, one per group of source files, in
+[`story-flags/event/`](story-flags/event/). A script merged their tables into
+[`story-flags/event-flags.md`](story-flags/event-flags.md): **454 sites naming 132
+flags**, by flag number, each with the saves it is set in. 53 more sites take
+their flag number from the game data.
+
+### Size
+
+`Flags_Set`, `Flags_Clear` and `Flags_Test` mask the flag number to 8 bits, so
+they reach flags 0..255, block `+0x650..+0x66F`. Flags 245..255 are written by
+loops in the engine and overlap the bytes at `+0x66E` that Red Herring's editor
+calls the faerie village stage. The eight bytes after flag 255, up to the zenny
+at `+0x678`, are not reached through this bank.
+
+### How they start (checked)
+
+- `TitleFlow_NewGame` does not clear the event bank. It clears block `+0x12`
+  (`0x9039F2`).
+- On the first field frame `Field_ModeTail` runs its state 0, `Scenario_SubInit`
+  (`title_states.cpp`), because that byte is 0. It copies a 16-byte table,
+  `Scenario_SubInitTable` `0x662CD8`, over flags 0..127 and sets the byte to 1.
+- MEASURED: the event bytes 0..15 of `start.DAT` equal that table in the owner's
+  `BOF3.exe`, bytes 16..39 are zero, and block `+0x12` is 1 in every PC save held.
+  Flags 3, 25 and 27 are the table's bits, and they are set in every real save.
+- **Flags 128..255 are never cleared at a new game**, by the code read. After a
+  load they hold what the save holds.
+
+For a created save: seed flags 0..127 from the table, read from the player's
+install, leave 128..255 zero, and **write block `+0x12` as 1**. With 0 there the
+game would seed flags 0..127 again on the first field frame and lose the save's.
+
+### Scripts in the game data can only test them
+
+READ by the engine pass ([`event/engine.md`](story-flags/event/engine.md)), the two
+script conditions checked by a second read. No event-script op and no
+movement-script command sets or clears an event flag: every set and clear names
+its flag in our code. Data reaches the bank by these paths, all tests:
+
+| Path | Function | Flag number from |
+|---|---|---|
+| Event-script condition 12 | `EventCond_StoryFlag` (`field_o.cpp`) | The operand byte |
+| Event-script condition 2, after op `F9 14` | `EventCond_Flag` (`event_script.cpp`): the row is the current chapter's by default, any row after `F9` | The operand byte |
+| Map-data condition codes, kinds `0x14` and `0x34` | `Area_TestCondition` (`map_cells.cpp`), from about 13 cell drawers | The code's low byte |
+| Music zones | `Area_ZoneTrack` (`window_task.cpp`) | A table entry |
+| Movement-script variable 12 | `MoveScript_Variable` (`move_cmds.cpp`) | Flags 0..31 as one dword |
+
+`Field_ObjectTriggerByKind` (`field_e2.cpp`) passes the bank to a handler chosen
+by an object's byte; the handlers are code and are in the area passes.
+
+So the missing setters below are not data scripts. They are code the passes did
+not resolve: table-driven sites, or helpers that take the number as an argument.
+
+### Kinds
+
+Most event flags are world state, not story progress:
+
+| Kind | Examples |
+|---|---|
+| Story progress across chapters | 67 (set at the start of chapters 8 and 13 and in chapter 10); 143 then 144 (a once-only sequence over areas 168 and 167); 146 (the cleared game) |
+| A choice that picks a destination | 147 and 148: the choice of area 100, read to pick one of four areas |
+| A set to complete | 109..112, one object trigger each in four areas; 113 when all four are set |
+| Switches, gates, levers | 79, 81..83 (area 106); 69 (the gate cells of area 100); 122..124 (area 141) |
+| Once-only scenes and gifts | 91, 107, 104, 121, 127, 149; 108 (one master's grant) |
+| Per-visit state | 116 (healed in areas 169 and 171, cleared on entry); 88 (areas 173 and 186) |
+| Puzzle and minigame work flags | 11, 17..23, 36..39, 65: set in no real save |
+| Signals between code | 28, a 15-frame latch that stops switches in four areas firing twice; flags that effects set or clear as they act |
+
+### Checked against the saves
+
+By the merge script, over the 21 real saves:
+
+- **Set in every save:** 3, 25, 27, the seed.
+- **Named in code and set in no save:** 59 flags, most of them puzzle, signal and
+  per-visit flags, as their kinds predict. 146 is among them: no save held is past
+  the ending.
+- **Set in a save, with sites but no setter found:** 5, 6, 24, 26, 56..63, 93.
+- **Set in a save, with no site at all:** 14, 15, 71, 96..101, 131..133. (246..255
+  are the engine's loops.)
+
+The last two lists are the gap. Their setters are most likely among the 53
+table-driven sites.
+
+### Other things the passes found
+
+- **Chapter flags and event flags depend on each other both ways.** Chapter 14's
+  flags 25 and 26 wait on event flag 122. Event flag 51, set by the choice of
+  area 112, is kept only if chapter 13's flag 16 is set.
+- **A fourth operation, toggle** (`Flags_Toggle`): eight sites.
+- **More small banks:** `0x904654`, block `+0xC74`, written by
+  `Area98_ChoiceFlag9`; and bits of `0x904061`, block `+0x681`, where three
+  masters keep their one-time grant. The save editor spec lists those two places
+  under Red Herring's names (masters, unlocked formations), so those names need a
+  second look.
+- **`Cond_ByteFD`**, the byte many area set-ups switch on, is still unnamed. Event
+  condition 8 compares it with an operand.
+- **The path into chapter 8's run 3**, read more closely by the area pass
+  ([`event/areas-w2f-w3a.md`](story-flags/event/areas-w2f-w3a.md)): the leader's id
+  must be 2 and the place 4; event flag 27 picks script 9 over script 8; state 5
+  sets flag 29, which nothing tests. This corrects
+  [`chapter-08.md`](story-flags/chapter-08.md), which called flags `0x1B` and
+  `0x1D` gates.
+
+### Corrections to the chapter maps, not yet applied
+
+From [`event/chapters.md`](story-flags/event/chapters.md): chapter 6 leaves out the
+branch of `Cell3` on chapter flag `0x2C`; chapter 9 misses the chapter 6 flag 62
+set at the same step; chapter 10 misses that the arrive hook starts run 12, which
+clears event flag 79; chapter 17 cites line 2682 for flag 146, and the set is on
+2684. Chapter 0 uses no event flag.
