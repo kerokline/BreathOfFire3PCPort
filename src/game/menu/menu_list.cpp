@@ -2248,6 +2248,14 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
 // original 0x599F70 (MenuList_IconStates[2]): down to y 0x2A.
 extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past::kAbove); }
 
+// DIVERGENCE DIV-0058: under a Latin language overlay the screen title is
+// centred on the width the pen will really cover (DIV-0006's advances)
+// instead of on 12 units a character - the owner's "Ability sits left of
+// centre" (known-defects.md D86). 0 until MenuLists_Inject patches it to 1
+// under the name MenuTitleCentre, so BOF3X_ORIGINAL=MenuTitleCentre and the
+// fuzz (which runs before the patch) keep the original's arithmetic.
+unsigned char g_title_centre = 0;
+
 // original 0x599FA0, kind 4: the state from 0x66B038, then the screen title -
 // Menu_DrawTitleBox(x, y, 0x48, 0x13, Config's colour) at the record's (+4,
 // +6) and the system text +0x10 (Msg_SystemPtr) through Text_DrawAt at (x +
@@ -2773,6 +2781,21 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
 // by every kind (read 2026-09-25), so a call is the jump.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
     Dispatch(::bof3::Img(Window_Handler7KindTable_addr), RecMenuDrawHelpers()[2]);
+}
+
+void MenuListFromMenuLists_Inject() {
+    // DIVERGENCE DIV-0058: a Latin language overlay only - BOF3X_LANG set,
+    // not "original", not a full-width language (as MenuVerbs_Inject
+    // tests it): the screen title centred on its real width.
+    {
+        if (Lang_Latin()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("MenuTitleCentre",
+                             Low32(&g_title_centre),
+                             &was, &is, 1);
+            bof3::Log("DIV-0058    menu screen title centred on its width: %s", g_title_centre ? "on" : "off");
+        }
+    }
 }
 
 void MenuListFromBattleWinStates_Inject() {

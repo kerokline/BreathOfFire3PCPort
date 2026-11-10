@@ -90,14 +90,6 @@ Step Entry(std::uint32_t table, unsigned index) {
 // Record handler 6: the top bar's windows
 // ===========================================================================
 
-// DIVERGENCE DIV-0058: under a Latin language overlay the screen title is
-// centred on the width the pen will really cover (DIV-0006's advances)
-// instead of on 12 units a character - the owner's "Ability sits left of
-// centre" (known-defects.md D86). 0 until MenuLists_Inject patches it to 1
-// under the name MenuTitleCentre, so BOF3X_ORIGINAL=MenuTitleCentre and the
-// fuzz (which runs before the patch) keep the original's arithmetic.
-unsigned char g_title_centre = 0;
-
 // ===========================================================================
 // The slide steps
 // ===========================================================================
@@ -111,16 +103,4 @@ unsigned char g_title_centre = 0;
 
 void MenuLists_Inject() {
     if (bof3::WantsShadow("menu_lists")) menu_lists::SelfTest();
-    // DIVERGENCE DIV-0058: a Latin language overlay only - BOF3X_LANG set,
-    // not "original", not a full-width language (as MenuVerbs_Inject
-    // tests it): the screen title centred on its real width.
-    {
-        if (Lang_Latin()) {
-            static const std::uint8_t was = 0, is = 1;
-            bof3::PatchBytes("MenuTitleCentre",
-                             Low32(&g_title_centre),
-                             &was, &is, 1);
-            bof3::Log("DIV-0058    menu screen title centred on its width: %s", g_title_centre ? "on" : "off");
-        }
-    }
 }

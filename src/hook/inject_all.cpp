@@ -1165,6 +1165,7 @@ void InjectAll() {
     MenuWin_Inject();
     MenuLists_Inject();         // round 8 group DH: every call of its clones re-aimed at a recorder and its eight
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
+    MenuListFromMenuLists_Inject();
     ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
                                 // dispatch tables' entries swapped for recorders: order does not matter
     ShopMode_Inject();
