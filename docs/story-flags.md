@@ -212,9 +212,18 @@ save of the play folder, so that byte is the summary's copy of flag 146.
       past 99. So a gift first taken in chapter 7 repeats at the next talk or
       the next entry, unless the area's scripts test row 7 and hide the giver:
       they can, and the source cannot say.
-    - **Verdict: cannot tell from source, likely reachable.** No save on record
-      has row 7's flag 34 or 35. A play test settles it: leave both gifts in
-      chapter 6, take one in chapter 7, talk again, then leave and come back.
+    - **The area's script settles the data side (read 2026-11-10 with
+      `tools/event_scan.py --area 94`).** The gifts are two chests in area 94
+      (the owner: Beyd's awards, chests in the harbour). They are not chests of
+      the find bank: the placement script places a closed chest with a trigger,
+      or an opened one, by flag `0x22` / `0x23`. In chapter 6's case it tests
+      the running row. In chapter 7's case it sets the flag bank to 6 first, so
+      it tests row 6 as `ObjectReward` does. So chapter 7 reads row 6 in both
+      places and writes row 7: a chest first opened in chapter 7 is placed
+      closed again at the next entry to the area, and gives its item again.
+    - **Verdict: real, and reachable by the data; not seen in play.** No save on
+      record has row 7's flag 34 or 35. A play test: leave both chests in
+      chapter 6, open one in chapter 7, leave the area and come back.
     - A fix would be `ObjectReward` testing row 6 or the running row. Not made.
   - **Chapter 8's run 3, not a defect in play.** The code has no guard, but the
     scene is armed by `Area108_PlaceScene` matching the cart (extra object 1),
