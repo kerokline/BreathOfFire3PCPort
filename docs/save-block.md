@@ -18,8 +18,8 @@ the saves; **UNTOUCHED** no code in `src/` reaches the bytes.
 | | Bytes |
 |---|---:|
 | The block | 4,272 |
-| With a writer or a reader read in code | 3,809 |
-| UNTOUCHED | 463 |
+| With a writer or a reader read in code | 3,810 |
+| UNTOUCHED | 462 |
 
 **Every UNTOUCHED byte is 0 in all 80 saves (MEASURED).** So no byte of a PC save
 is live without a known use. The meaning of a few read bytes is still thin
@@ -107,7 +107,7 @@ PC offsets within the record (the PlayStation's are 4 lower from `+0x09` on).
 - **By position, not by id:** the EXP curve is the record's index. Record 0 feeds
   the summary. Record 7 is reused for guests.
 - **Record 7's `+0x7E` is not an ability:** one minigame keeps its rank there
-  (5 in 17 saves measured).
+  (the value 5 in 17 of the 80 saves).
 - UNTOUCHED: PC `+0x3D..+0x3F`, `+0x5D..+0x5F`, `+0x8F..+0xA3`, 27 bytes a record.
 
 ## 4. Measured checks of the passes' claims
@@ -150,4 +150,9 @@ PC offsets within the record (the PlayStation's are 4 lower from `+0x09` on).
 - Possible defects of the original that the passes list in their files' last
   sections. None is in `docs/known-defects.md` yet.
 - The passes are one reading each. Only the claims in section 4 are measured.
-- The PlayStation saves were not part of the measurement.
+- The PlayStation code was not read. Its saves agree where a save can show it: on 20
+  distinct PlayStation blocks (US and JP cards) every UNTOUCHED byte is 0, the
+  halving byte is 0 in all 160 records and fatigue holds 1, 3 and 5, two blocks
+  hold `0A 07 FF` at `+0x13`, the option copies agree in all 20, no gene row and
+  no faerie stamp breaks its rule, and `+0xCB6..+0xCB9` (the PC's name bytes 5..8)
+  are 0.

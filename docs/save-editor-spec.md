@@ -153,76 +153,135 @@ Class says how the editor treats a field:
 - **D:** derived. Regenerated on write, editable only on Advanced.
 - **P:** preserved byte for byte, shown in the hex view.
 
-**[`save-block.md`](save-block.md) is the later, byte-complete map (2026-11-10).**
-It corrects rows of this table: the options at `+0x78` (not the button mapping),
-`+0x74C..+0x750`, `+0x688` (three bit sets), `+0xB94` (the shared ability list),
-`+0xC28` (gene combinations, 6 rows and 12), the faerie values at `+0xCD0`, and
-the summary's 9-byte name. This table keeps the editing classes.
+The table was rewritten on 2026-11-10 from [`save-block.md`](save-block.md) and
+its range files [A](save-block/range-a-head.md), [B](save-block/range-b-characters.md),
+[C](save-block/range-c-party.md), [D](save-block/range-d-skills.md) and
+[E](save-block/range-e-tail.md), which hold the evidence for each byte.
+UNTOUCHED there means no code in our source reaches the bytes.
 
 | Offset | Size | Field | Class | Evidence |
 |---|---:|---|---|---|
-| `+0x000` | 16 | Scene state. Byte 0 is the chapter, byte 2 the state | A | READ, [`ending-backdrop.md`](ending-backdrop.md); CITED frost `SceneState` |
-| `+0x010` | 2 | Unnamed | P | UNKNOWN |
-| `+0x012` | 1 | "Event flags seeded": 0 makes the game seed event flags 0..127 from its table on the first field frame, then it is 1 | D | READ and MEASURED: 1 in every PC save ([`story-flags.md`](story-flags.md) section 9) |
-| `+0x013` | 3 | Scene event mode, step, selection | A | CITED |
-| `+0x016` | 10 | Unnamed, zero on every sample | P | MEASURED zero |
-| `+0x020` | 4 | Script variables | A | CITED |
-| `+0x024` | 2 | Area, u16 | E | MEASURED: high byte zero on every sample |
-| `+0x026` | 1 | Entry kind | A | CITED |
-| `+0x027` | 1 | Facing | E | CITED; values seen are 1..5, 7 and `0x80` |
-| `+0x028` | 8 | Position x, z, 16.16 fixed | E | CITED sibling and frost; crafted saves rely on it |
-| `+0x030` | 64 | Unnamed, 6 bytes live | P | UNKNOWN |
+| `+0x000` | 1 | Chapter, s8, a copy made at save and copied back at load. Selects the flag row `+0x5B0 + 8 * chapter`; 0..19, not 16 | A | READ [A](save-block/range-a-head.md), [`ending-backdrop.md`](ending-backdrop.md); CITED frost `SceneState` |
+| `+0x001` | 1 | Status bits, copied the same way. Bit 7 starts the next chapter at the next area entry: clear it with a chapter set by hand | A | READ [A](save-block/range-a-head.md) |
+| `+0x002` | 1 | Chapter state. A load's area entry sets it to 1 | A | READ [A](save-block/range-a-head.md) |
+| `+0x003` | 1 | A chapter's own byte (chapter 17: the part) | A | READ [A](save-block/range-a-head.md) |
+| `+0x004` | 1 | The chapter's run | A | READ [A](save-block/range-a-head.md) |
+| `+0x005` | 1 | The step within the run | A | READ [A](save-block/range-a-head.md) |
+| `+0x006` | 2 | The chapter's timer, u16 | A | READ [A](save-block/range-a-head.md) |
+| `+0x008` | 2 | Step count as of the last field pass, u16 | A | READ [A](save-block/range-a-head.md); MEASURED: differs on every save (section 12.1) |
+| `+0x00A` | 6 | Copied at save and load, used by nothing else | A | READ [A](save-block/range-a-head.md); MEASURED 0 in all 80 PC saves |
+| `+0x010` | 2 | Written 0 with the tail block, never read | P | READ [A](save-block/range-a-head.md) |
+| `+0x012` | 1 | "Event flags seeded", the tail's phase: 0 makes the game seed event flags 0..127 from its table on the first field frame, then it is 1 | D | READ and MEASURED: 1 in every PC save ([`story-flags.md`](story-flags.md) section 9) |
+| `+0x013` | 1 | Field tail kind, run every field frame. Clear the tail (`+0x13..+0x17`) and script flag `0x40` in `+0x74D` together or not at all | A | READ [A](save-block/range-a-head.md); MEASURED: `+0x13..+0x15` is `0A 07 FF` in the 10 of 80 saves made at a save point, zeros in the other 70 |
+| `+0x014` | 1 | Field tail state | A | READ [A](save-block/range-a-head.md) |
+| `+0x015` | 1 | Field tail argument: a message id, a master, a table index, by kind | A | READ [A](save-block/range-a-head.md) |
+| `+0x016` | 2 | Field tail timer, u16; also the three-dial puzzle's answer | A | READ [A](save-block/range-a-head.md); MEASURED zero on the section 15 samples |
+| `+0x018` | 2 | Word written 0 with the tail block, never read | P | READ [A](save-block/range-a-head.md) |
+| `+0x01A` | 6 | Untouched | P | UNTOUCHED [A](save-block/range-a-head.md) |
+| `+0x020` | 4 | The movement script's four counter bytes, copied at save and load: per-area and per-chapter scratch | A | READ [A](save-block/range-a-head.md) |
+| `+0x024` | 2 | Area to resume in, u16. Also a new game's first area | E | READ [A](save-block/range-a-head.md); MEASURED: high byte zero on every sample |
+| `+0x026` | 1 | No PC code reads or writes it. frost calls it an entry kind | P | UNTOUCHED [A](save-block/range-a-head.md); CITED frost |
+| `+0x027` | 1 | Entry flags: facing in the low bits, bit 7 a drop-in | E | READ [A](save-block/range-a-head.md); values seen are 1..5, 7 and `0x80` |
+| `+0x028` | 4 | Position x, s32 16.16 fixed | E | READ [A](save-block/range-a-head.md); crafted saves rely on it |
+| `+0x02C` | 4 | Position z, s32 16.16 fixed | E | READ [A](save-block/range-a-head.md) |
+| `+0x030` | 8 | Scratch shared by chapters: a saved party, chapter 10's eight offering counts, member ids | A | READ [A](save-block/range-a-head.md) |
+| `+0x038` | 56 | Untouched | P | UNTOUCHED [A](save-block/range-a-head.md) |
 | `+0x070` | 2 | Checksum | D | MEASURED |
-| `+0x072` | 6 | Unnamed | P | MEASURED zero |
-| `+0x078` | 8 | Options. `+0x78` and `+0x7E` follow the button mapping, `+0x7B` probably the window background (section 12.1). frost cites sound mono at `+0x79` and window style at `+0x7A` | A | READ that the port honours them; bytes MEASURED as differences, meanings probable |
-| `+0x080` | 16 | Unnamed, 2 bytes live across `+0x07B..+0x08F` | P | UNKNOWN |
-| `+0x090` | 8 x `0xA4` | Character records, section 8 | | |
-| `+0x5B0` | 160 | Scene flag words, 8 bytes for each of 20 chapters | A | READ: `Cond_Flags` `0x903F90`; 82 bytes live |
-| `+0x650` | 40 | Event flags, 0..255 in the first 32 bytes | A | READ: [`story-flags.md`](story-flags.md) section 9; 21 bytes live |
-| `+0x66E` | 2 | Faerie village stage, inside the flags above | E | CITED Red Herring |
-| `+0x678` | 4 | Zenny | E | MEASURED |
-| `+0x67C` | 4 | Unnamed, 3 bytes live | P | UNKNOWN |
-| `+0x680` | 1 | Active formation | E | CITED |
+| `+0x072` | 2 | Upper half of the dword the load reads as the checksum; never written, ignored | P | READ [A](save-block/range-a-head.md); MEASURED zero |
+| `+0x074` | 4 | Untouched | P | UNTOUCHED [A](save-block/range-a-head.md) |
+| `+0x078` | 1 | Option: message speed 0..2. Not the button mapping | A | READ [A](save-block/range-a-head.md) |
+| `+0x079` | 1 | Option: sound, 0 stereo, 1 mono | A | READ [A](save-block/range-a-head.md) |
+| `+0x07A` | 1 | Option: window colour 0..3. Equals its summary copy `+0xCA9` | A | READ [A](save-block/range-a-head.md); MEASURED equal to `+0xCA9` in 80 of 80 |
+| `+0x07B` | 1 | Option: background 0..3. Equals its summary copy `+0xCAA` | A | READ [A](save-block/range-a-head.md); MEASURED equal to `+0xCAA` in 80 of 80 |
+| `+0x07C` | 1 | Set 0 at boot; no option sets it and the PC original never reads it | A | READ [A](save-block/range-a-head.md) |
+| `+0x07D` | 1 | Non-zero hides the battle command's label banner; no option sets it | A | READ [A](save-block/range-a-head.md) |
+| `+0x07E` | 1 | Option: dash, 0 manual, 1 auto. Not the button mapping | A | READ [A](save-block/range-a-head.md) |
+| `+0x07F` | 17 | Untouched | P | UNTOUCHED [A](save-block/range-a-head.md) |
+| `+0x090` | 8 x `0xA4` | Character records, section 8 | | READ [B](save-block/range-b-characters.md) |
+| `+0x5B0` | 160 | Chapter flag rows, 8 bytes for each of 20 chapters | A | READ: `Cond_Flags` `0x903F90` ([`story-flags.md`](story-flags.md)); 82 bytes live |
+| `+0x650` | 32 | Event flags 0..255. Flag 146 is the summary's cleared byte `+0xCB4`. Red Herring's editor calls `+0x66E..+0x66F` the faerie village stage; engine loops write flags 245..255 there | A | READ: [`story-flags.md`](story-flags.md) section 9; 21 bytes live; CITED Red Herring for the stage |
+| `+0x670` | 8 | Untouched | P | UNTOUCHED [C](save-block/range-c-party.md) |
+| `+0x678` | 4 | Zenny, u32, at most 9,999,999 | E | READ [C](save-block/range-c-party.md); MEASURED |
+| `+0x67C` | 2 | Area 189's walk: frame word, u16 | A | READ [C](save-block/range-c-party.md) |
+| `+0x67E` | 1 | Area 189's walk: walk count | A | READ [C](save-block/range-c-party.md) |
+| `+0x67F` | 1 | Area 189's walk: reserve | A | READ [C](save-block/range-c-party.md) |
+| `+0x680` | 1 | Active formation, a cell 0..5. Must be unlocked in `+0x681` and fit the party size | E | READ [C](save-block/range-c-party.md); MEASURED unlocked in 80 of 80 |
 | `+0x681` | 1 | Unlocked formations: bit n opens cell n of the formation grid (`TacticsFormation_Build`). Bits 0..2 are set at a new game; bits 3, 4, 5 are set once each by masters 0xB, 0xD, 0xE at 3 levels gained (`MasterGrant_Step1Member`) | E | READ, MEASURED (`0x07`, `0x1F`, `0x3F` on the samples) |
-| `+0x682` | 3 | Field order, character ids, `0xFF` empty | E | MEASURED |
-| `+0x685` | 3 | Battle order, same ids | E | MEASURED: a permutation of field order, 75 of 75 |
-| `+0x688` | 96 | Unnamed, 42 live | P | UNKNOWN |
-| `+0x6E8` | 4 | Play clock: h, m, s, frames | E | MEASURED |
-| `+0x6EC` | 32 | Unnamed, 22 live | P | UNKNOWN |
-| `+0x70C` | 32 | Fishing best catch, 23 used | E | CITED |
-| `+0x72C` | 32 | Unnamed, 14 live | P | UNKNOWN |
-| `+0x74C` | 1 | Loaded character index | A | CITED |
-| `+0x74D` | 4 | Unnamed, all live | P | UNKNOWN |
-| `+0x751` | 1 | BGM id | A | CITED |
-| `+0x752` | 2 | Unnamed | P | MEASURED zero |
-| `+0x754` | 4 | Battle count | A | MEASURED, section 12.1 |
-| `+0x758` | 28 | Lifetime zenny and unnamed | A / P | CITED |
-| `+0x774` | 512 | Item ids, 4 categories x 128 | E | MEASURED by the sibling's `save_tool.py verify` against disc tables |
-| `+0x974` | 512 | Item counts | E | as above |
-| `+0xB74` | 32 | Vital items | E | as above |
-| `+0xB94` | 128 | Skill notes | E | CITED |
-| `+0xC14` | 92 | Unnamed. `+0xC28`: eight 4-byte rows, identical at a new game, one byte of each constant on every sample. `+0xC48`: 40 copies of one byte on every sample (section 12.1) | P | MEASURED shape, meaning UNKNOWN |
-| `+0xC70` | 3 | Dragon genes | E | CITED |
-| `+0xC73` | 1 | Unnamed | P | UNKNOWN |
+| `+0x682` | 3 | Field order, character ids, `0xFF` at the end. The same ids as `+0x685`, each with its record's joined bit; `+0x74C` and the summary portraits follow it | E | READ [C](save-block/range-c-party.md); MEASURED |
+| `+0x685` | 3 | Battle order, the same ids | E | READ [C](save-block/range-c-party.md); MEASURED: a permutation of field order, 75 of 75 |
+| `+0x688` | 32 | Enemy kinds beaten, 256 bits | A | READ [C](save-block/range-c-party.md) |
+| `+0x6A8` | 32 | Abilities learnt, 256 bits. Setting a bit adds no ability to a list | A | READ [C](save-block/range-c-party.md) |
+| `+0x6C8` | 32 | Enemy kinds identified, 256 bits | A | READ [C](save-block/range-c-party.md) |
+| `+0x6E8` | 4 | Play clock: h, m, s, frames. Never all zero (that reads as a new game); equals the summary's `+0xCAC` | E | READ [C](save-block/range-c-party.md); MEASURED |
+| `+0x6EC` | 32 | Chest and field-object content flags | A | READ and MEASURED: [`story-flags.md`](story-flags.md) section 1 |
+| `+0x70C` | 32 | Largest catch for each kind of fish, 0 never caught; 23 used | E | READ [C](save-block/range-c-party.md) |
+| `+0x72C` | 32 | Passage find flags | A | READ [C](save-block/range-c-party.md) |
+| `+0x74C` | 1 | Party combination row for the field order's ids, bit 7 set by a load, `0xFF` none. The load loads the party's files by it, so it must match `+0x682` | A | READ [C](save-block/range-c-party.md); MEASURED: bit 7 set in 79 of 80, one save holds `0x02` |
+| `+0x74D` | 1 | `Field_ScriptFlags`' low byte, copied at save and back at load. Bit `0x40` goes with the field tail `+0x13..+0x17` | A | READ [C](save-block/range-c-party.md) |
+| `+0x74E` | 1 | Fishing lure, an item id held outside the inventory | E | READ [C](save-block/range-c-party.md) |
+| `+0x74F` | 1 | Fishing lure count: 1 with a lure, else 0 | E | READ [C](save-block/range-c-party.md) |
+| `+0x750` | 1 | Fishing rod, an item id held outside the inventory | E | READ [C](save-block/range-c-party.md) |
+| `+0x751` | 1 | Music track to restore after a load, `0xFF` none | A | READ [C](save-block/range-c-party.md) |
+| `+0x752` | 2 | Untouched | P | UNTOUCHED [C](save-block/range-c-party.md) |
+| `+0x754` | 4 | Battle count. Every faerie stamp stays at or below it | A | READ [C](save-block/range-c-party.md); MEASURED, section 12.1 |
+| `+0x758` | 4 | Zenny tally, u32: not every gain is counted | A | READ [C](save-block/range-c-party.md) |
+| `+0x75C` | 4 | Passage finds taken, u32 | A | READ [C](save-block/range-c-party.md) |
+| `+0x760` | 4 | Chest contents taken, u32 | A | READ [C](save-block/range-c-party.md) |
+| `+0x764` | 4 | Fishing sessions entered, u32 | A | READ [C](save-block/range-c-party.md) |
+| `+0x768` | 4 | Return trip: point x, 16.16 | A | READ [C](save-block/range-c-party.md) |
+| `+0x76C` | 4 | Return trip: point z, 16.16 | A | READ [C](save-block/range-c-party.md) |
+| `+0x770` | 2 | Return trip: area, u16 | A | READ [C](save-block/range-c-party.md) |
+| `+0x772` | 1 | Return trip: non-zero while away. Write 0 for a save not on a trip | A | READ [C](save-block/range-c-party.md) |
+| `+0x773` | 1 | Return trip: facing on arrival in area 189 | A | READ [C](save-block/range-c-party.md) |
+| `+0x774` | 512 | Item ids, 4 categories x 128 at `+0x774`, `+0x7F4`, `+0x874`, `+0x8F4`; 0 empty. One stack per id | E | READ [D](save-block/range-d-skills.md); MEASURED by the sibling's `save_tool.py verify` against disc tables |
+| `+0x974` | 512 | Item counts 1..99, parallel to the ids | E | as above |
+| `+0xB74` | 32 | Key items, ids only. Do not fill all 32: a 33rd lands in `+0xB94` | E | as above |
+| `+0xB94` | 128 | The shared ability list: 128 ability ids, gaps allowed. Keep an id here or in a member's list, not both | E | READ [D](save-block/range-d-skills.md) |
+| `+0xC14` | 1 | A rank 0..12 that area 113 reads for its reward | A | READ [D](save-block/range-d-skills.md) |
+| `+0xC15` | 5 | Untouched | P | UNTOUCHED [D](save-block/range-d-skills.md) |
+| `+0xC1A` | 1 | World-map display mode 0..2 | A | READ [D](save-block/range-d-skills.md) |
+| `+0xC1B` | 1 | Battles since master 4 was met, to 30 | A | READ [D](save-block/range-d-skills.md) |
+| `+0xC1C` | 9 | Battle item-window memory, page, scroll and cursor for each battle-party slot; follows the battle order | A | READ [D](save-block/range-d-skills.md) |
+| `+0xC25` | 3 | The party item list's page 0..3, top row and cursor | A | READ [D](save-block/range-d-skills.md) |
+| `+0xC28` | 24 | Six recent gene combinations, newest first, 4 bytes each: up to three gene numbers then `0xFF`, and a form byte. An empty row is four `0xFF`, never 0 | E | READ [D](save-block/range-d-skills.md); MEASURED with `+0xC40`: no row breaks the rule, 282 rows in use |
+| `+0xC40` | 48 | Twelve stored gene combinations, the same rows | E | READ [D](save-block/range-d-skills.md) |
+| `+0xC70` | 3 | Dragon genes, 18 bits | E | READ [D](save-block/range-d-skills.md) |
+| `+0xC73` | 1 | High byte of the gene dword: never written, must stay 0 | P | READ [D](save-block/range-d-skills.md) |
 | `+0xC74` | 3 | Masters met, 17 bits: set when a master's introduction opens (`MasterTalk_IntroSay`) | E | READ, MEASURED |
 | `+0xC77` | 3 | Masters open, 17 bits: set when the introduction closes (`MasterTalk_IntroWait`); the masters window lists these. **Not a copy of `+0xC74`**: bit 9 is set later by a scenario step, and three samples have it met but not open. Bit 4 met and not open counts battles at `+0xC1B` up to 30 | E | READ, MEASURED |
-| `+0xC7A` | 2 | Unnamed | P | UNKNOWN |
-| `+0xC7C` | 8 | Celerity and Bonebreak timers | E | CITED |
-| `+0xC84` | 28 | Unnamed | P | UNKNOWN |
-| `+0xCA0` | 28 | Slot summary, below | D | MEASURED |
-| `+0xCBC` | 18 | Nine button masks, u16 | A | CITED sibling and frost |
-| `+0xCCE` | 2 | Unnamed | P | UNKNOWN |
-| `+0xCD0` | 26 | Faerie battle counters at `+0xCD0`, `+0xCDC`, `+0xCE0`, u32, and unnamed bytes | E / P | CITED |
-| `+0xCEA` | 5 | Faerie food, max jobs, culture, clear and build power | E | CITED |
-| `+0xCEF` | 1 | Unnamed | P | UNKNOWN |
-| `+0xCF0` | 480 | Faerie jobs, 60 x 8 | E | READ: [`save-interchange.md`](save-interchange.md) section 2a |
-| `+0xED0` | 64 | Faerie rooms, 8 x 8 | E | CITED |
-| `+0xF10` | 300 | Faerie names, 60 x 5 | E | READ |
-| `+0x103C` | 116 | Tail, 1 byte live | P | MEASURED |
+| `+0xC7A` | 2 | Untouched | P | UNTOUCHED [D](save-block/range-d-skills.md) |
+| `+0xC7C` | 4 | Countdown shaped like the play clock; while it runs ability `0x3E` is refused. Set after the effect the source calls `Celerity_End` | E | READ [D](save-block/range-d-skills.md) |
+| `+0xC80` | 4 | The same kind of countdown for ability `0x15`, set by `Effect_DoubleDamage` | E | READ [D](save-block/range-d-skills.md); CITED the name Bonebreak |
+| `+0xC84` | 28 | Untouched | P | UNTOUCHED [D](save-block/range-d-skills.md) |
+| `+0xCA0` | 28 | Slot summary, below | D | READ [E](save-block/range-e-tail.md); MEASURED |
+| `+0xCBC` | 18 | Nine button words, u16: a copy of the live mapping at save, copied back at load. Must stay a valid mapping: with DIV-0133 on, our build stops at the load on a bad one | A | READ [E](save-block/range-e-tail.md) |
+| `+0xCCE` | 2 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
+| `+0xCD0` | 4 | Faerie village: battles counted toward its next story flag | A | READ [E](save-block/range-e-tail.md) |
+| `+0xCD4` | 4 | Faerie village: battle-count stamp of the last growth. At or below `+0x754` | A | READ [E](save-block/range-e-tail.md); MEASURED: no stamp above the count |
+| `+0xCD8` | 4 | Faerie village: stamp of the last shrink. At or below `+0x754` | A | as above |
+| `+0xCDC` | 4 | Faerie village: stamp of the last mood update. At or below `+0x754` | A | as above |
+| `+0xCE0` | 4 | Faerie village: stamp of the lit level. At or below `+0x754` | A | as above |
+| `+0xCE4` | 4 | Faerie village: stamp of the dark level. At or below `+0x754` | A | as above |
+| `+0xCE8` | 2 | Faerie village: the highest area number its queue has seen, u16 | A | READ [E](save-block/range-e-tail.md) |
+| `+0xCEA` | 1 | Faerie village: mood 0..99 | E | READ [E](save-block/range-e-tail.md); CITED Red Herring's name "food" |
+| `+0xCEB` | 1 | Faerie village: dark level, 1..10 once started | E | READ [E](save-block/range-e-tail.md); CITED "max jobs" |
+| `+0xCEC` | 1 | Faerie village: lit level 0..7 | E | READ [E](save-block/range-e-tail.md); CITED "culture" |
+| `+0xCED` | 1 | Faerie village: a bias rebuilt from the records at each entry | D | READ [E](save-block/range-e-tail.md); CITED "clear power" |
+| `+0xCEE` | 1 | Faerie village: the second bias, rebuilt the same way | D | READ [E](save-block/range-e-tail.md); CITED "build power" |
+| `+0xCEF` | 1 | Area 185's exit-square arm byte, transient. Write 0 | A | READ [E](save-block/range-e-tail.md) |
+| `+0xCF0` | 480 | Faerie records, 60 x 8: in use, place, state, a status byte, a battle-count stamp at or below `+0x754` | E | READ [E](save-block/range-e-tail.md) and [`save-interchange.md`](save-interchange.md) section 2a |
+| `+0xED0` | 64 | Faerie buildings, 8 x 8: kind, two rows, level, a battle-count stamp at or below `+0x754` | E | READ [E](save-block/range-e-tail.md) |
+| `+0xF10` | 300 | Faerie names, 60 x 5, by record | E | READ [E](save-block/range-e-tail.md) |
+| `+0x103C` | 4 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
+| `+0x1040` | 1 | **This project's own, not Capcom's:** the mountain-passes bits of DIV-0191, bit 0 only. The original ignores it | A | READ [E](save-block/range-e-tail.md); MEASURED 0 or 1, 1 in 9 saves |
+| `+0x1041` | 111 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
 
-**Coverage (MEASURED, 75 distinct blocks):** the existing editor writes 2,931 of
-the 4,272 bytes. Of the other 1,341, 527 are non-zero in at least one save and
-390 vary between saves. Every byte the editor does not know must survive a write.
+**Coverage:** of the 4,272 bytes, 3,810 have a writer or a reader in our source
+and 462 have none (READ, [`save-block.md`](save-block.md) section 1). Those 462
+are 0 in all 80 PC saves measured (MEASURED, 2026-11-10). The existing editor
+writes 2,931 of the 4,272 bytes (MEASURED, 75 distinct blocks); of the other
+1,341, 527 are non-zero in at least one save and 390 vary between saves. Every
+byte the editor does not know must survive a write.
 
 ### Slot summary at `+0xCA0`
 
@@ -230,52 +289,82 @@ Derived. Regenerate it on write unless the player overrides it on Advanced.
 
 | Offset | Size | Field | Rule | Evidence |
 |---|---:|---|---|---|
-| `+0xCA0` | 5 | Name | Record 0's name | MEASURED 73 of 75 |
-| `+0xCA5` | 3 | Portraits | Field order, with one substitution (id `0x0B`) | MEASURED 74 of 75; CITED rule |
-| `+0xCA8` | 1 | Level | Record 0's level | MEASURED 75 of 75 |
-| `+0xCAC` | 4 | Play clock | Equals `+0x6E8` | MEASURED 76 of 76 h:m:s |
-| `+0xCB0` | 4 | EXP | Record 0's EXP | MEASURED 75 of 75 |
+| `+0xCA0` | 5 | Name, bytes 0..4 | Record 0's name (DIV-0076, our default); the field leader's in Capcom's code | READ [E](save-block/range-e-tail.md); MEASURED: the 9-byte name is record 0's in 77 of 80, the field leader's in 67 |
+| `+0xCA5` | 3 | Portraits | Field order `+0x682`, id 4 written as `0x0B` unless `+0x74C & 0x7F` is 5 or `0xC` | READ [E](save-block/range-e-tail.md); MEASURED 74 of 75 |
+| `+0xCA8` | 1 | Level | Record 0's level | READ [E](save-block/range-e-tail.md); MEASURED 75 of 75 |
+| `+0xCA9` | 1 | Window colour | Equals `+0x7A` | READ [E](save-block/range-e-tail.md); MEASURED 80 of 80 |
+| `+0xCAA` | 1 | Background | Equals `+0x7B` | READ [E](save-block/range-e-tail.md); MEASURED 80 of 80 |
+| `+0xCAB` | 1 | Padding | Preserve | READ [E](save-block/range-e-tail.md) |
+| `+0xCAC` | 4 | Play clock | Equals `+0x6E8` | READ [E](save-block/range-e-tail.md); MEASURED 76 of 76 h:m:s |
+| `+0xCB0` | 4 | EXP | Record 0's EXP | READ [E](save-block/range-e-tail.md); MEASURED 75 of 75 |
 | `+0xCB4` | 1 | Cleared game | Event flag 146 | MEASURED: 1 in the cleared save, 0 in the 18 others of the play folder; READ in `Save_BuildBlock` |
+| `+0xCB5` | 1 | The slot's present flag once a save copies the summary; nothing writes it in the block | Write 0, never `0xFF`: that marks the slot empty | READ [E](save-block/range-e-tail.md) |
+| `+0xCB6` | 4 | Name, bytes 5..8 | From the same record as bytes 0..4 | READ [E](save-block/range-e-tail.md) |
+| `+0xCBA` | 2 | Padding | Preserve | READ [E](save-block/range-e-tail.md) |
 
-This follows record 0, not the walking leader. A first reading against the field
-order's leader matched 64 of 76.
+The name follows record 0 only with DIV-0076 on; Capcom's code takes the field
+leader's name, but record 0's level and EXP ([E](save-block/range-e-tail.md)
+section 4).
 
 ## 8. Character records
 
-Eight records, stride `0xA4`. **PSX layout below.** The PC name is 9 bytes, and
-every later field is 4 bytes further in. The stride is unchanged, so the PC gives
-up the last four bytes, which are zero in every sample of both kinds (MEASURED).
+Eight records, stride `0xA4`. **Both layouts below.** The PC name is 9 bytes, and
+every later field is 4 bytes further in: PC = PSX + 4 from PSX `+0x05` on. The
+stride is unchanged, so the PC gives up the PSX's last four bytes, which are zero
+in every sample of both kinds (MEASURED).
 
-Record positions hold fixed characters. MEASURED `char_id` by position: 0 is
-{0, 7, 9}, 1 is {1, 8}, positions 2 to 6 are their own number, 7 is 10.
+Record positions mostly hold fixed characters. MEASURED `char_id` by position: 0
+is {0, 7, 9}, 1 is {1, 8}, positions 2 to 6 are their own number, 7 is 10. The
+EXP curve follows the position, not the `char_id`, and record 7 is also reused
+for guests ([B](save-block/range-b-characters.md) section 4).
 
-| Offset | Size | Field | Class | Evidence |
-|---|---:|---|---|---|
-| `+0x00` | 5 | Name (PC: 9) | E | MEASURED |
-| `+0x05` | 1 | `char_id` | A | MEASURED |
-| `+0x06` | 1 | Level | E | MEASURED |
-| `+0x07` | 1 | Unnamed | P | UNKNOWN |
-| `+0x08` | 4 | EXP | E | MEASURED |
-| `+0x0C` | 2 | Status bits | A | CITED |
-| `+0x0E` | 6 | Weapon, shield, helm, armor, two accessories | E | MEASURED by the sibling |
-| `+0x14` | 4 | Current HP, AP | E | MEASURED: HP <= max on all |
-| `+0x18` | 1 | Unnamed | P | UNKNOWN |
-| `+0x19` | 1 | Halving bits, not fatigue ([`save-block.md`](save-block.md) section 3) | A | READ; MEASURED 0 in 640 records |
-| `+0x1A` | 1 | Fatigue: the max-HP scale | E | READ, MEASURED |
-| `+0x1B` | 1 | Master | E | CITED |
-| `+0x1C` | 4 | Max HP, AP, current | D | READ: rebuilt on load |
-| `+0x20` | 28 | Live stats and live copies of `+0x4A..` | D | READ: `Char_RecalcStats` on every load, `TitleFlow_EnterGame` in `src/game/save_menu.cpp` |
-| `+0x3C` | 4 | Base max HP, AP | E | CITED |
-| `+0x40` | 8 | Base power, defence, agility, intelligence, u16 | E | MEASURED: top bit clear in all 608 records |
-| `+0x48` | 2 | Unnamed | P | UNKNOWN |
-| `+0x4A` | 1 | Willpower | E | CITED |
-| `+0x4B` | 9 | Resistances | E | CITED |
-| `+0x54` | 5 | Surprise, reprisal, critical, dodge, accuracy | E | CITED |
-| `+0x59` | 3 | Unnamed, zero on every sample | P | MEASURED zero |
-| `+0x5C` | 40 | Four ability lists of 10: heal, assist, attack, skill | E | MEASURED by the sibling |
-| `+0x84` | 1 | Apprenticing level | E | CITED |
-| `+0x85` | 6 | Growth, **signed** bytes | E | MEASURED: 680 bytes have the top bit set |
-| `+0x8B` | 25 | Unused | P | MEASURED zero; highest live offset is `+0x8A` ([`save-interchange.md`](save-interchange.md)) |
+The game rebuilds PC `+0x20..+0x3F` from `+0x40..+0x5F`, the equipment and the
+master for all eight records on every load, and cuts HP to the new maximum; AP is
+not cut ([B](save-block/range-b-characters.md) section 1.1).
+
+| PSX | PC | Size | Field | Class | Evidence |
+|---|---|---:|---|---|---|
+| `+0x00` | `+0x00` | 5 (PC: 9) | Name. On the PC byte 8 is 0. Record 0's feeds the slot summary | E | MEASURED; READ [B](save-block/range-b-characters.md) |
+| `+0x05` | `+0x09` | 1 | `char_id`, the character the record holds. Change it only to a value the game puts at that position | A | MEASURED; READ [B](save-block/range-b-characters.md) |
+| `+0x06` | `+0x0A` | 1 | Level 1..99. Goes with the EXP | E | MEASURED; READ [B](save-block/range-b-characters.md) |
+| `+0x07` | `+0x0B` | 1 | Flags: bit 0 joined (needed by every id in the party lists), bit 1 fixed in the party screen, bit 2 cleared after a fight left KO | A | READ [B](save-block/range-b-characters.md); MEASURED values 0, 1, 3 |
+| `+0x08` | `+0x0C` | 4 | EXP, s32, at most 9,999,999 | E | MEASURED; READ [B](save-block/range-b-characters.md) |
+| `+0x0C` | `+0x10` | 2 | Status bits, u16. `0x4000` (KO) goes with HP 0; `0x2000` is rewritten on the next status draw | A | READ [B](save-block/range-b-characters.md) |
+| `+0x0E` | `+0x12` | 1 | Weapon id, 0 none | E | MEASURED by the sibling; READ [B](save-block/range-b-characters.md) |
+| `+0x0F` | `+0x13` | 3 | Three armour ids. The sibling calls them shield, helm, armor; the code does not name them | E | MEASURED by the sibling; READ [B](save-block/range-b-characters.md) |
+| `+0x12` | `+0x16` | 2 | Two accessory ids. An item worn is not also in the inventory count | E | MEASURED by the sibling; READ [B](save-block/range-b-characters.md) |
+| `+0x14` | `+0x18` | 2 | Current HP, u16. Cut to max HP on load | E | MEASURED: HP <= max on all; READ [B](save-block/range-b-characters.md) |
+| `+0x16` | `+0x1A` | 2 | Current AP, u16. Not cut on load: keep it at or below max AP | E | READ [B](save-block/range-b-characters.md) |
+| `+0x18` | `+0x1C` | 1 | Current willpower. Reset at the inn; keep it at or below the effective willpower | E | READ [B](save-block/range-b-characters.md) |
+| `+0x19` | `+0x1D` | 1 | Halving bits: each set bit raises one resistance class by 2. Not fatigue | A | READ [B](save-block/range-b-characters.md); MEASURED 0 in 640 records |
+| `+0x1A` | `+0x1E` | 1 | Fatigue: the max-HP scale 0..9. Up by one when a member ends a fight KO, cleared at the inn | E | READ [B](save-block/range-b-characters.md); MEASURED values 0, 1, 2, 5, 9 |
+| `+0x1B` | `+0x1F` | 1 | Master, `0xFF` none. Changes together with the apprenticing level and the growth bias | E | READ [B](save-block/range-b-characters.md) |
+| `+0x1C` | `+0x20` | 2 | Max HP, effective | D | READ [B](save-block/range-b-characters.md): rebuilt on load |
+| `+0x1E` | `+0x22` | 2 | Max AP, effective | D | as above |
+| `+0x20` | `+0x24` | 8 | Power, defence, agility, intelligence, effective, u16 | D | as above |
+| `+0x28` | `+0x2C` | 2 | A word, the effective copy of PC `+0x4C`; no reader found | D | as above |
+| `+0x2A` | `+0x2E` | 1 | Willpower, effective | D | as above |
+| `+0x2B` | `+0x2F` | 5 | Element classes, effective: fire, ice, lightning, earth, wind by the code's comment | D | as above |
+| `+0x30` | `+0x34` | 1 | Holy class, effective | D | as above |
+| `+0x31` | `+0x35` | 3 | Three status classes, effective | D | as above |
+| `+0x34` | `+0x38` | 5 | Surprise, reprisal, critical, dodge, accuracy, effective, in % | D | as above; CITED the name accuracy |
+| `+0x39` | `+0x3D` | 3 | Untouched but for the rebuild's copy from PC `+0x5D` | P | UNTOUCHED [B](save-block/range-b-characters.md) |
+| `+0x3C` | `+0x40` | 2 | Base max HP, u16, at most 999 | E | READ [B](save-block/range-b-characters.md) |
+| `+0x3E` | `+0x42` | 2 | Base max AP, u16 | E | READ [B](save-block/range-b-characters.md) |
+| `+0x40` | `+0x44` | 8 | Base power, defence, agility, intelligence, u16, at most 999 | E | MEASURED: top bit clear in all 608 records; READ [B](save-block/range-b-characters.md) |
+| `+0x48` | `+0x4C` | 2 | Base of the PC `+0x2C` word, set only by the default records; meaning not known | P | READ [B](save-block/range-b-characters.md), shape only |
+| `+0x4A` | `+0x4E` | 1 | Base willpower 0..99, made from the level at a new game | E | READ [B](save-block/range-b-characters.md) |
+| `+0x4B` | `+0x4F` | 9 | Base resistances: five elements, holy, three status classes; 0..6 or 7 | E | READ [B](save-block/range-b-characters.md) |
+| `+0x54` | `+0x58` | 5 | Base surprise, reprisal, critical, dodge, accuracy, 0..100 | E | READ [B](save-block/range-b-characters.md); CITED the name accuracy |
+| `+0x59` | `+0x5D` | 3 | Untouched but for the rebuild's copy | P | UNTOUCHED [B](save-block/range-b-characters.md); MEASURED zero |
+| `+0x5C` | `+0x60` | 10 | Ability list, type 0 (the sibling's heal): ids packed from the front | E | MEASURED by the sibling; READ [B](save-block/range-b-characters.md) |
+| `+0x66` | `+0x6A` | 10 | Ability list, type 1 (assist) | E | as above |
+| `+0x70` | `+0x74` | 10 | Ability list, type 2 (attack) | E | as above |
+| `+0x7A` | `+0x7E` | 10 | Ability list, type 3 (skill), the one the masters check. Record 7's first byte is a minigame's rank, not an ability | E | as above; MEASURED for record 7's first byte: 5 in 17 saves ([`save-block.md`](save-block.md) section 3) |
+| `+0x84` | `+0x88` | 1 | Level at apprenticing, 0 with no master; not above the level | E | READ [B](save-block/range-b-characters.md) |
+| `+0x85` | `+0x89` | 6 | Growth bias, **signed** bytes, for base max HP, max AP, power, defence, agility, intelligence: the master's six bytes, 0 with no master | E | MEASURED: 680 bytes have the top bit set; READ [B](save-block/range-b-characters.md) |
+| `+0x8B` | `+0x8F` | 21 | Untouched | P | UNTOUCHED [B](save-block/range-b-characters.md); highest live offset is PSX `+0x8A` ([`save-interchange.md`](save-interchange.md)) |
+| `+0xA0` | - | 4 | PSX only, no PC home: dropped in conversion to PC | P | MEASURED zero |
 
 **Signedness is per field and lives in the field table.** Read and write must use
 the same entry.
@@ -324,7 +413,8 @@ reference to test against.
 4. Summary: regenerated (section 7).
 5. Faerie names: copied as they are, with a warning if any are in use, since they
    stay in the source encoding.
-6. Control scheme: the option bytes travel with the save. The player chooses
+6. Control scheme: the button words at `+0xCBC` and the option bytes travel with
+   the save. The player chooses
    "keep" or "use this target's default".
 7. Seal: checksum last.
 
@@ -375,9 +465,10 @@ MEASURED on `start.DAT`:
   layer, DIV-0020), the derived byte at PC `+0x1C`, `+0x2E` and `+0x4E`, and three
   recalculated live stats at PC `+0x24`, `+0x26`, `+0x28`. The whelp record also
   differs at PC `+0x0B` and `+0x38`.
-- **The patterns near `+0xC28` are simple.** `+0xC28..+0xC47` is eight identical
-  4-byte rows. `+0xC48..+0xC6F` is one byte 40 times. Both are already there at
-  frame 1 and unchanged in the second save. The block is in the image's
+- **The patterns near `+0xC28` are simple.** `+0xC28..+0xC6F` is the empty rows
+  of the two gene-combination lists, 6 rows at `+0xC28` and 12 at `+0xC40`
+  ([D](save-block/range-d-skills.md)), not eight rows and 40 copies. Both are
+  already there at frame 1 and unchanged in the second save. The block is in the image's
   uninitialised part (it sits at `0x9039E0`; the section's file data ends at
   `0x676000`), so code writes them at start-up. READ: `Scena00_Start` writes -1 to
   the 18 dwords `0x904608..0x90464F`, which is exactly this span, and the bytes
@@ -447,7 +538,7 @@ RetroArch's. Against `start_normal.DAT` 19 bytes differ, every one accounted for
 | Bytes | Reading |
 |---|---|
 | `+0x6E9..+0x6EB`, `+0xCAD..+0xCAF`, `+0x70` | Clock, its summary copy, checksum |
-| `+0x78`, `+0x7E`, six button-mask bytes from `+0xCBC` | The button mapping. Equal on both US saves, different on PC |
+| `+0x78`, `+0x7E`, six button-mask bytes from `+0xCBC` | Message speed and dash (`+0x78`, `+0x7E`), and the button mapping (`+0xCBC`). Equal on both US saves, different on PC |
 | `+0x7B`, `+0xCAA` | Probably the window background and its summary copy: the owner chose a different background on this save, and both bytes differ from PC and from RetroArch's US save |
 | Record 7 `+0x14` | One HP byte |
 | `+0x08` | Scene byte 8. Differs on every save, so a counter or timer |
@@ -579,8 +670,8 @@ For later investigation:
 2. EU, FR and DE card file names. Red Herring's code accepts `SLES-01304`. We hold
    no such saves, and the FR and DE serials are unconfirmed.
 3. Name codecs for the PSX EU, FR and DE releases.
-4. What the 18 dwords at `+0xC28` mean. Their writer and start value are known
-   (section 12.1).
+4. Settled: the 18 dwords at `+0xC28` are the two gene-combination lists
+   (section 7, [D](save-block/range-d-skills.md)).
 5. How the launcher turns the install's glyph codes into text it can draw. Until
    then, item and ability lists can show ids.
 6. Which of the UNKNOWN bytes matter. They stay preserved meanwhile.
