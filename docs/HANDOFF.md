@@ -379,12 +379,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    the reading row is never armed (silent), and `BOF3X_TEXT_SPEED=1`, `BOF3X_UNLEARNED_BLUE=1`,
    `BOF3X_ENEMY_INFO=1`, `BOF3X_NO_FAIL=1` each stop the game at start. Repaired on this branch, and
    `InjectReport` now stops the game for any `IsEnabled` asked before its `Inject`.
-   **Pick up here: stage D** (round doc 6), one proof for stage C and I60: the ten routes on the exe host at
-   the default base and at `BOF3X_IMAGEBASE=0xA00000` with the state hash against the `orig4` pairs and against
-   the baseline's own build, the 64-bit build's routes beside them - **not run since B0**. It is staged as
-   `slc1109\d\proof_d.sh`; its launcher copies (`d\L32`, `d\L64`, `d\Lbase`) predate the flag and I60 and must
-   be copied again from `wt\build`, `wt\build-x86_64` and `base3\build` first. The machine must be hands-off;
-   the owner says when. Then STATUS, IDEAS I44's outcome, the PR. **Left of I60:** the self-tests written in a
+   **Stage D ran 2026-11-09 22:50 .. 01:13** (round doc 6, "Stage D as run"; `slc1109\d\proof_d.sh`, output
+   `d\proof_d.out`, hashes `d\sh`): ten routes, five runs each (the branch's build, `main` `7f215457`'s own
+   build, folded, moved to `0xA00000`, x86_64), all 50 `rc 0`. Branch against `main`'s build: identical on five
+   routes, the rest only on pages that differ between two runs of one build (`0x6C3000`'s heap pointers on
+   caughFish / masterAndManillo / worldMapAndAreaTransition, the sound page `0x7DE000` on combat, whelpBoss's
+   VRAM window on `main`'s run); dragonTransform's moved run differed once on 28 pages and was identical on
+   the second pair. **Pick up here: the PR**, at the owner's word (the branch is unpushed), then the owner's
+   eye on the reading row, which no route covers. **The `orig4` pairs are stale against `main`** (both builds
+   fail them alike): record them again at the merged tip before they gate anything. **Left of I60:** the self-tests written in a
    file of ours (to fuzz files, with I61), five files whose arming runs before their self-test, the six
    `<group>_ours.cpp` names, the mover's reconciliation (the tool on `main` is B3's; B5's `df5c19ce`,
    `cff3a6a0`, `984b1478` and B2's `35518a3e`, `2e28ee7d`, `25f8d0eb` were lost at the merges and none applies

@@ -10,8 +10,9 @@ round, IDEAS I60, run the same evening on that branch** at the owner's word,
 section 5 "The cleanup round, I60, as run": `-fno-auto-import`, 41 more
 seams, each switch and its arming beside its reader, 39 more shells retired,
 and a regression of stage B's found and repaired - checks that ran before
-the bind they test. Stage D, the ten-route proof, is next, has not run since
-B0, and covers stage C and I60 together.)
+the bind they test. **Stage D, the ten-route proof, run 2026-11-09 night**
+for stage C and I60 together, section 6 "Stage D as run": 50 runs, no
+difference that follows the branch. The PR is next, at the owner's word.)
 
 The typed-data round named every data access, the relocatable-image round
 removed every fixed address, and the 64-bit round builds the same source at
@@ -1340,6 +1341,55 @@ at `BOF3X_IMAGEBASE=0xA00000`, the state hash against the current references;
 the 64-bit build's routes beside them. STATUS, HANDOFF, IDEAS I44's outcome,
 this doc's "as run". **The ledger:** nothing a player sees changes, so no DIV
 is expected; the doc says so.
+
+### Stage D as run (2026-11-09 22:50 .. 2026-11-10 01:13, the machine hands-off at the owner's word)
+
+One proof for stage C and the cleanup round, on the tip `56c2ce44`'s builds
+(`slc1109\d\proof_d.sh`, its output `d\proof_d.out`, the hashes and logs
+`d\sh`). Ten routes, five runs each, one game at a time, on the exe host,
+`BOF3X_OPT=none BOF3X_LAYERING=0`, the skip list and `main`'s recipe saves:
+`c` the branch's i686 build; `b` `main` `7f215457`'s own build (`slb1108\base2`,
+without `-fno-auto-import`, so the flag is in the comparison too); `cf` the
+branch's build with the hash folded to `0xA00000`; `cm` the image moved to
+`0xA00000`; `x64` the branch's x86_64 build. All 50 runs ended `rc 0`.
+
+| Route (ticks) | `b` / `c` | `cf` / `cm` | `c` / `x64` |
+|---|---|---|---|
+| combat (2,625) | `0x7DE000`, 11 ticks | identical | `0x7DE000`, the same 11 ticks |
+| caughFish (3,841) | `0x6C3000` from tick 395 | the same | the same |
+| cutsceneAndNue (7,425) | identical | identical | identical |
+| dragonTransform (4,289) | identical | 28 pages at 18 ticks; identical on the second pair | identical |
+| field_menu (1,409) | identical | identical | identical |
+| masterAndManillo (5,505) | `0x6C3000` from tick 324 | the same | the same |
+| menu_screens (1,729) | identical | identical | identical |
+| shop (3,137) | identical | identical | `0x7DE000`, 1 tick |
+| whelpBoss (13,185) | 9 pages, ticks 10,561..12,293 | identical | identical |
+| worldMapAndAreaTransition (2,113) | `0x6C3000` from tick 1,098 | the same | the same |
+
+**Read as:** every difference is on a page that differs between two runs of
+one build ([`state-hash.md`](state-hash.md) 6, [`x64-build-round.md`](x64-build-round.md)'s
+table). `0x6C3000` from 395 / 324 / 1,098 is the `Gfx_ClutRows` heap pointers,
+at the ticks the 64-bit round measured, and it differs in pairs that do not
+hold the branch against anything (`cf` / `cm`). `0x7DE000` is the sound page:
+combat's 11 ticks are the `c` run's alone (`b`'s check against the references
+lacks the line, and `c` / `x64` shows the same 11). whelpBoss's nine pages
+(the VRAM shadow, `0x937000`, `0x7DE000`) are the `b` run's: `c` reads 11
+lines against the references where `b` reads 20, and `c` is identical to
+`x64`. dragonTransform's 28 pages (the sound page, then the VRAM shadow) were
+the first `cm` run's alone: run again (`d\rerun_dt.sh`), `cf2` / `cm2`,
+`cf` / `cf2` and `cf` / `cm2` are identical on all 4,289 ticks, `cm` / `cm2`
+differs on the 28. **No route shows a difference that follows the branch.**
+
+**Against the `orig4` pairs** every route fails, `c` and `b` alike, with the
+same text on eight routes (combat and whelpBoss differ by the run noise
+above): the pairs of 2026-10-23 are stale against `main`, which is why `b` is
+the baseline here. They want recording again before they gate anything.
+
+**Not seen by this proof:** the reading row. The ten routes play the Chinese
+script, so the `IsEnabled` repair (the cleanup round's step 5), which arms the
+row on `c` and not on `b`, moves no page here; it is proven by the start-up
+measurement only, and by nobody's eye yet. **The ledger:** nothing a player
+sees changed by the moves; no DIV, no D number.
 
 ## 7. For the owner
 
