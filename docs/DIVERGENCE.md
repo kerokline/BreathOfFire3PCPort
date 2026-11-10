@@ -10280,6 +10280,11 @@ designed in rather than bolted on.
   boot defaults, the rebind and a quickload still stop on a bad table, since
   those words are ours. `BOF3X_SHADOW=sigma` now also checks that each of the
   11 refused word sets resets to each release's words and builds a table.
+  Live, 2026-11-10: a copy of the `combat` recipe save with Move's word set to
+  Action's (checksum redone) loaded from the title on the exe host; the log
+  reads "the save's Config is not one button for each line (Action's word 6
+  is 0x0040, a button another line is on): Japan's reset buttons loaded in
+  its place" and the game ran on. Self-test 0 mismatches.
 
 ### An install starts with the Config of the release it was built from
 
