@@ -68,7 +68,11 @@ those four first-entry set-ups as done before the player has control.
 |---|---|---|
 | `start.DAT`, one frame into a new game | 3 | `Scena00_Area18` ran its opening set-up. `Scena00_Run5` step 0 had not run yet |
 | `start_normal.DAT`, first save point, 3 battles | 0..7, 10 | Battles 1, 4 and 7 fought. 5 and 6 skipped |
+| English psxrecomp card, 0:11, 3 battles | 0..7, 10 | The same three battles as the PC save |
 | US 0:12 and JP 0:25 (RetroArch), 5 battles | 0..10 | All five battles fought |
+
+Block `+0x68B` also differs between the three-battle and five-battle saves, so it
+follows the optional encounters too. Not read yet.
 
 The battle counts and the flags agree with the owner's account: the section has
 five possible battles ([`boss-fights.md`](boss-fights.md): event battles 1, 4, 5,

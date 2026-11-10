@@ -167,7 +167,7 @@ Class says how the editor treats a field:
 | `+0x030` | 64 | Unnamed, 6 bytes live | P | UNKNOWN |
 | `+0x070` | 2 | Checksum | D | MEASURED |
 | `+0x072` | 6 | Unnamed | P | MEASURED zero |
-| `+0x078` | 8 | Options, control scheme likely. Sound mono at `+0x79`, window style at `+0x7A` | A | READ that the port honours them; individual bytes CITED |
+| `+0x078` | 8 | Options. `+0x78` and `+0x7E` follow the button mapping, `+0x7B` probably the window background (section 12.1). frost cites sound mono at `+0x79` and window style at `+0x7A` | A | READ that the port honours them; bytes MEASURED as differences, meanings probable |
 | `+0x080` | 16 | Unnamed, 2 bytes live across `+0x07B..+0x08F` | P | UNKNOWN |
 | `+0x090` | 8 x `0xA4` | Character records, section 8 | | |
 | `+0x5B0` | 160 | Scene flag words, 8 bytes for each of 20 chapters | A | READ: `Cond_Flags` `0x903F90`; 82 bytes live |
@@ -425,7 +425,24 @@ its encounter starts, not when the battle is won.
 outright, as `Flags_Set(Row(), n)` and `Flags_Test(Row(), n)`, so each flag's
 meaning can be read from the function around it, and the saves confirm the reading.
 
-These two serve as the US and JP references for the first save point. A frame-1
+**A third save at the same point** (owner, 2026-11-09): the English psxrecomp card,
+`../BreathOfFire3EnglishRecomp/saves/card1.mcd`, 0:11 in, three battles. It is the
+same raw card format, and its header frame and unused frames are byte-identical to
+RetroArch's. Against `start_normal.DAT` 19 bytes differ, every one accounted for:
+
+| Bytes | Reading |
+|---|---|
+| `+0x6E9..+0x6EB`, `+0xCAD..+0xCAF`, `+0x70` | Clock, its summary copy, checksum |
+| `+0x78`, `+0x7E`, six button-mask bytes from `+0xCBC` | The button mapping. Equal on both US saves, different on PC |
+| `+0x7B`, `+0xCAA` | Probably the window background and its summary copy: the owner chose a different background on this save, and both bytes differ from PC and from RetroArch's US save |
+| Record 7 `+0x14` | One HP byte |
+| `+0x08` | Scene byte 8. Differs on every save, so a counter or timer |
+
+Its flags equal the PC save's exactly. Against RetroArch's US save, which fought
+all five battles, it differs in the battle count, chapter 0's flags 8 and 9, and
+`+0x68B`, so `+0x68B` also follows the optional battles.
+
+These serve as the US and JP references for the first save point. A frame-1
 save like `start.DAT` has no disc equivalent, since the PSX cannot save there.
 
 ### 12.2 Story points
