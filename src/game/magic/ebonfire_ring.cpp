@@ -7,13 +7,10 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_items.h"
 #include "game/battle_items_callees.h"
 #include "game/cheats.h"
-#include "game/magic_fx_reached.h"
 #include "game/magic_fx_reached_callees.h"
 #include "game/magic_harness.h"
-#include "game/magic_s10.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -170,6 +167,105 @@ void Rtp4(unsigned char* prim, unsigned step) {
 }  // namespace
 
 #define S10_EXPORT extern "C" __attribute__((disable_tail_calls))
+
+// battle_items's callee seam, moved here from battle_items.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_items {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kCommitSorted.v)),
+    Math_Sin,
+    Math_Cos,
+    Gpu_SetPolyG3,
+    Gpu_SetLineG2,
+    Gpu_SetLineG3,
+    Gpu_SetTile1,
+    Gpu_SetPolyGT4,
+    Gpu_SetSemiTrans,
+    Gpu_GetTPage,
+    Gpu_GetClut,
+    As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
+    As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
+    As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
+                       long*)>(&Gte_RotTransPers4),
+    As<void (__cdecl*)(unsigned char*)>(&Gte_PrimDepths3_10B),
+    As<void (__cdecl*)(unsigned char*)>(&Gte_PrimDepths4_14),
+    Gte_StoreDepthF,
+    Gte_PushMatrix,
+    As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
+    Gte_RotMatrix,
+    Gte_MulMatrix0,
+    Gte_SetRotMatrix,
+    Gte_SetTransMatrix,
+    Rand,
+    As<void (__cdecl*)(unsigned)>(&Sprite_SetAnimation),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kEnemyAnimation.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kActorIsOut.v)),
+    Fn<unsigned char (__cdecl*)(unsigned char*, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kSetTint.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kActorSound.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemySound.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPlayById.v)),
+    SndStream_Stop,
+    As<void* (__cdecl*)(const unsigned char*)>(&SndBuf_CreateFromWave),
+    Wave_FindData,
+    SndBuf_Write,
+    Sparkle_Free,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_items
+
+// magic_fx_reached's callee seam, moved here from magic_fx_reached.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace magic_fx_reached {
+
+const Callees kOriginals = {
+    {FxDiscFan_Start, FxDiscFan_Grow, FxDiscFan_Fade},
+    {Steal_Start, Steal_Wait, Steal_Report, MagicFx_EndWhenIdle},
+    {Fn<Handler>(::bof3::Code(kCloneSize)), StealClone_Run, StealClone_Finish, Fn<Handler>(::bof3::Code(kCloneFree))},
+    {Sparkle_Spawn, Fn<Handler>(::bof3::Code(kSparkleTint)), Fn<Handler>(::bof3::Code(kSparkleBrighten)), Fn<Handler>(::bof3::Code(kSparkleThin)), Sparkle_End,
+     Fn<Handler>(::bof3::Code(kSparkleDone))},
+    {Sparkle_Launch, Sparkle_Rise, Sparkle_Fade},
+    BattleActor_UpdateScreenXY,
+    MagicFx_DrawDisc,
+    MagicFx_PushActorMatrix,
+    MagicFx_DrawFan,
+    Gte_PopMatrix,
+    MagicFx_DrawRing,
+    BattleTask_Create,
+    BattleTask_FreeCurrent,
+    Battle_SetTargetFlags,
+    Battle_SetTargetFlag40,
+    Sound_PlayById,
+    Sound_PlayEffect,
+    BattleActor_SetAnimation,
+    Rand,
+    Inventory_Add,
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemName)),
+    Msg_SystemPtr,
+    BattleQueue_Push,
+    Sprite_ScriptTickOnce,
+    BattleActor_PlaySound,
+    Sprite_UpdateScreen,
+    Sparkle_Dispatch,
+    Sparkle_Alloc,
+    Sprite_ReleaseTint,
+    BattleActor_Flash,
+    Sparkle_DrawDisc,
+    Sparkle_DrawRaysG2,
+    Sparkle_DrawRaysG3,
+    AreaMap_TintClut,
+};
+Callees g = kOriginals;
+
+}  // namespace magic_fx_reached
 
 // original 0x4AD130 (shared with the twin effect 0x4ACFE0): +9 and +0xA up
 // by one; at +9 = 0x10 the phase on.

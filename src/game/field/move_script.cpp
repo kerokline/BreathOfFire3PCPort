@@ -15,7 +15,6 @@
 #include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_groups.h"
 #include "game/move_script.h"
@@ -131,6 +130,43 @@ void PlaceAndGround(unsigned char* sprite, const unsigned char* operands) {
 }
 
 }  // namespace
+
+namespace move_script {
+namespace {
+
+const CalleesMoveScript kOriginalsMoveScript = {
+    MoveScript_ObjectKind, MoveCmd_Move, MoveCmd_MoveKind2,
+    MoveScript_Group6, MoveScript_Group8, MoveScript_Group9, MoveScript_GroupC, MoveScript_GroupD, MoveScript_GroupE,
+    MoveScript_GroupB, MoveScript_FindLabel, MoveScript_Variable, ObjTrio_ClearBit40, ObjTrio_SetBit40,
+    AreaMap_Elevation, Sprite_SetAnimation, Sprite_SetAnimationAt, ScriptFlags_Clear40, ScriptFlags_Set40,
+    MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
+    MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
+};
+
+}  // namespace
+
+CalleesMoveScript gMoveScript = kOriginalsMoveScript;
+
+}  // namespace move_script
+
+// move_groups's callee seam, moved here from move_groups.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace move_groups {
+namespace {
+
+const move_groups::CalleesMoveGroups kOriginalsMoveGroups = {
+    MoveScript_ObjectKind, Sprite_FaceDirection, Field_ObjectTalk, MoveCmd_OpE7, MoveCmd_OpE9,
+    Sprite_SetTint, Sprite_ReleaseTint, Sprite_SetAnimation, Sprite_SetAnimationBank, AreaMap_Elevation,
+    MapView_SetElevation, Sprite_ScriptPeek, Sound_PlayById, Sound_PlayEffect, Music_Play, Music_FadeOutStop,
+    Music_FadeIn, Music_FadeOut, Port_DroppedCall, MoveCmd_OpDB, MoveCmd_TestFB, MoveCmd_TestFC, Effect_Spawn,
+    Effect_SpawnAt, MoveCmd_HandlePosition, MoveCmd_Op87, MoveCmd_Op88, Sound_LoadStream, Sound_StreamDone,
+};
+
+}  // namespace
+
+CalleesMoveGroups g = kOriginalsMoveGroups;
+
+}  // namespace move_groups
 
 // original 0x576B50: one step of an object's movement script (PSX
 // FUN_801A9D38). The flow pass first, then one op by its high nibble, then

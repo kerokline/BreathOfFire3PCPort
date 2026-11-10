@@ -15,11 +15,9 @@
 #include "game/core/title_callees.h"
 #include "game/draw_emit.h"
 #include "game/faerie_name.h"
-#include "game/field_c1.h"
 #include "game/field_c1_callees.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
-#include "game/item_use.h"
 #include "game/item_use_callees.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
@@ -29,6 +27,7 @@
 #include "game/mode_flow.h"
 #include "game/mode_flow_callees.h"
 #include "game/mode_tasks.h"
+#include "game/mode_tasks_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/prim.h"
 #include "game/psp_code.h"
@@ -264,6 +263,52 @@ void OpenMessage(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
 void Box(int x, int y, int w, int h, int flags) { SH_CALL(Menu_DrawBox)(x, y, w, h, flags, static_cast<unsigned char>(Config_WindowColour)); }
 
 }  // namespace
+
+// item_use's callee seam, moved here from item_use.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace item_use {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Char_HealHp,
+    Char_HealAp,
+    Char_ClearStatus,
+    Stat_AddCap999,
+    Stat_AddCap99,
+    Stat_AddClamped,
+    Party_Count,
+    Rand,
+    Char_RecalcStats,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
+    Flags_Test,
+    Fn<void (__cdecl*)()>(::bof3::Code(kSystemChoice.v)),
+};
+Callees g = kOriginals;
+
+}  // namespace item_use
+
+// mode_tasks's callee seam, moved here from mode_tasks.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace mode_tasks {
+namespace {
+
+const mode_tasks::Callees kOriginals = {
+    Task_ClearPrivate, Task_Sleep, Title_CheckStart, Title_DrawBackdrop, Title_DrawLogo, File_LoadDone,
+    Transition_Start, Title_FadeMusic, Sound_PlayEffect, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite,
+    Gpu_SetSprt, Gpu_SetSemiTrans, Title_DrawSetA, Title_DrawSetB, Title_DrawSetC,
+    Field_ModeDispatch, Field_Frame,
+    Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
+};
+
+}  // namespace
+
+Callees g = kOriginals;
+
+}  // namespace mode_tasks
 
 // The item window's frame at its slide: a box 0x118 x 0x13 flags 0xF2 at (0x14,
 // 0x12 - 12 slide) and its outline 0x113 x 0xF at (0x16, 0x14 - 12 slide), the
@@ -765,6 +810,10 @@ extern "C" void __cdecl CommuRank_Show(void) {
 // original 0x460720: CommuRank_Modes[2] - 0x9039F4 + 1 (the facility table
 // 0x652AE4's next entry).
 extern "C" void __cdecl CommuRank_Close(void) { ++AreaW0c_TailState; }
+
+// DIVERGENCE DIV-0064 group 14 (amended 2026-11-01, issue #177): set by
+// Rest4E_Inject after the self-test, for a Latin language (DIV-0056).
+namespace rest_4e { bool g_west_cause_column = false; }
 
 // original 0x460730: the first list's page `page` (its low byte) at (x, y):
 // its heading (icon 1, message 0x38, the count 0x9039A0), then up to seven
@@ -1689,6 +1738,22 @@ extern "C" void __cdecl Title_Task(void) {
     }
 }
 
+// title_states's gTitleStates, moved here from title_states.cpp (docs/source-layout-round.md 5): the
+// table the title's state handlers call through; its initialiser's constants copied, the same text.
+namespace {
+
+constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
+
+const title_states::CalleesTitleStates kOriginalsTitleStates = {
+    Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
+    Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
+    Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
+    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
+};
+
+}  // namespace
+namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
+
 // original 0x462200: Title_States entry 0 (PSX 0x801D0C90). Loads the title's
 // DAT, then starts the backdrop's fade-in and the title music.
 //
@@ -2021,6 +2086,8 @@ extern "C" void __cdecl Title_DrawLogo(void) {
     mode_tasks::g.set_c(-6, 0x1C, flag_a, static_cast<unsigned char>(Title_LogoShadeA));
 }
 
+namespace title_states { bool g_psp_title = false; }
+
 // original 0x462820: the logo's first set (PSX 0x801D12CC): sprite 1 through
 // OT slot 1, sprites 8 and 9 through slot 2, each semi-transparent by `flag`
 // and shaded `shade`; then, once the backdrop is gone and the logo shown,
@@ -2181,6 +2248,12 @@ void TitleFromRest4e_Inject() {
     BOF3_INJECT(CommuRank_DrawListC);
     BOF3_INJECT(CommuRank_DrawBackdrop);
     BOF3_INJECT(CommuRank_DrawTile);
+    // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01): after the self-test,
+    // which compares Capcom's column; a Latin language only (DIV-0056).
+    if (Lang_Latin()) {
+        rest_4e::g_west_cause_column = true;
+        bof3::Log("DIV-0064    the village's deaths page: the cause at x + 0x48, the Western discs' column");
+    }
 }
 
 void TitleFromRest4f_Inject() {
@@ -2201,6 +2274,8 @@ void TitleFromRest4f_Inject() {
 }
 
 void TitleFromTitleStates_Inject() {
+    title_states::g_psp_title = psp_code::PspBase();
+    if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

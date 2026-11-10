@@ -57,6 +57,15 @@ unsigned Amount(unsigned caster, int k) {
     return static_cast<unsigned>((stat + 100) * k / 100);
 }
 
+}  // namespace
+
+// DIVERGENCE DIV-0208: 1 through PatchBytes("FieldHealParty") in Rest2D_Inject,
+// after the self-test. The walk then reads the party list, as the item heals
+// do, not the rows the world map leaves holding Ryu alone in row 0 (D408).
+namespace rest_2d { std::uint8_t g_field_heal_party = 0; }
+
+namespace {
+
 unsigned HealAll(unsigned caster, unsigned battle, int k) {
     unsigned char any = 0;
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
@@ -165,4 +174,10 @@ void FieldAbility_Inject() {
     BOF3_INJECT(FieldAbility_ClearA0);
     BOF3_INJECT(FieldAbility_HealFullClearA0);
     BOF3_INJECT(FieldAbility_Use);
+    {
+        // DIV-0208: after the self-test, which compared Capcom's walk.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FieldHealParty", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
+        bof3::Log("DIV-0208    a field heal for the whole party walks the party list (on unless the line above says OFF)");
+    }
 }

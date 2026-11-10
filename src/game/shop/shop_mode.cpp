@@ -6,7 +6,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/shop_states.h"
 #include "game/shop_states_callees.h"
 #include "game/sound_in.h"
 #include "hook/detour.h"
@@ -56,6 +55,21 @@ using Handler = void (__cdecl*)();
 Handler Entry(shop_states::U table, unsigned index) { return shop_states::Fn<Handler>(LongShopStates(table + index * 4)); }
 
 }  // namespace
+
+// shop_states's callee seam, moved here from shop_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace shop_states {
+
+const Callees kOriginals = {
+    Menu_DrawTitleBox, Menu_DrawMoneyBox, Text_DrawAt, Msg_SystemPtr, Msg_OpenSystem,
+    Sound_PlayEffect, Sound_LoadStream, Sound_StreamDone,
+    SaveMenu_DrawSlots, Save_ReadSummaries, Input_AutoRepeat, Menu_YesNo,
+    Transition_Start, Sprite_FaceDirection, Window_ResetAll,
+    Crt_sprintf, TextRecord_Set, SaveMenu_DrawChoices, Menu_DrawBlackScreen, Party_RestoreAll,
+};
+Callees g = kOriginals;
+
+}  // namespace shop_states
 
 // original 0x57F500: `jmp [ShopMode_States + 4 * (0x929F00 & 0xFF)]` - the
 // state byte read as the low byte of a dword. Jumped to by Game_Mode 7's step

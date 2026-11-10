@@ -11,6 +11,8 @@ one `Run`, 186,000 rounds, 0 mismatches. 25 controls planted: 23 refused by a co
 entered by the owner's `dragonTransform` recipe (section 9); the rest are
 fuzz only.
 
+**Source layout (2026-11-09):** the 31 functions this group took live in the files of their translation units now: `src/game/menu/menu_list.cpp`, `src/game/battle/battle_menu_win.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_e7.cpp` still held of ours is `src/game/menu/battle_e7.cpp` now. A `src/game/battle_e7.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e7.cpp:LINE` answers it.
+
 Names are from the code and its callers: `pairs_propagated.json` pairs most
 of the band with PSX addresses (`0x801EFE60..0x801F093C` for the result
 windows, `0x800AD3C0..0x800B025C` for the rest), but the sibling's corpus

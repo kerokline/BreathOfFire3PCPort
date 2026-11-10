@@ -143,6 +143,12 @@ jobs:
       - name: The source-layout round's rename record - every rename done in its file (no game data)
         run: python tools/tu_renames.py --check
 
+      - name: Every function of Capcom's is in its translation unit's file (no game data)
+        run: python tools/tu_census.py --check --strict
+
+      - name: No flat src/game/*.cpp but the harness files and the runtime's (no game data)
+        run: python tools/retire_shells.py --check --strict
+
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system
     # compiler and unit-tested on synthetic samples and songs - no game data

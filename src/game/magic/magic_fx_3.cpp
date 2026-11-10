@@ -6,7 +6,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/cheats.h"
-#include "game/magic_fx_reached.h"
 #include "game/magic_fx_reached_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

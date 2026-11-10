@@ -10,15 +10,10 @@
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/area_backdrop.h"
 #include "game/area_backdrop_callees.h"
 #include "game/display_setup.h"
-#include "game/effect_5a.h"
 #include "game/effect_5a_callees.h"
-#include "game/fmv_play.h"
 #include "game/game_clock.h"
-#include "game/gfx_frame.h"
-#include "game/magic_c1.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
 #include "game/msgbox.h"
@@ -358,6 +353,30 @@ void PadReset_Frame() {
 }
 
 }  // namespace
+
+// shell's callee seam, moved here from shell.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace shell {
+namespace {
+
+template <class To, class From>
+To Cast(From f) { return reinterpret_cast<To>(reinterpret_cast<void*>(f)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Pad_Read,
+    Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (__cdecl*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
+    Cfg_SetKeyTable, Cfg_SetDefaultKeys,
+    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
+    Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
+    reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+    Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
+    Gpu_ClearOTagR, Gpu_AddPrim,
+};
+Callees g = kOriginals;
+
+}  // namespace shell
 
 // F11: the last frame presented, written beside the DLL as
 // bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).

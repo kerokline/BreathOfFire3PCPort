@@ -714,6 +714,10 @@ extern "C" void __cdecl CommuName_SlotEntryIn(void) {
     Rest4c_Step = step;
 }
 
+// DIV-0075, set by Rest4D_Inject after the self-test: the two entry steps move
+// the step's step on, where the original's never does.
+namespace rest_4d { unsigned char g_entry_abandons = 0; }
+
 // original 0x45D730, step 7.1: the cursor slot's panel (flag 1), the column's
 // grey line at (0x4A + 12 * column, 0x42), the entry's draws, 0x675F96 =
 // BareRetZero (0). The original stops here: the PlayStation's input step
@@ -1061,6 +1065,14 @@ extern "C" void __cdecl CommuName_End(void) {
 #pragma clang attribute pop
 
 void CommuName_Inject() {
+    // DIVERGENCE DIV-0075: after the self-test, which compares Capcom's entry steps.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("CommuNameEntryAbandons",
+                         Low32(&rest_4d::g_entry_abandons), &was, &is, 1);
+        bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
+    }
+    if (bof3::WantsShadow("rest_4d")) rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject
     BOF3_INJECT(CommuDraw_Dispatch);
     BOF3_INJECT(CommuDraw_OpenStep);
     BOF3_INJECT(CommuDraw_FadeOut);

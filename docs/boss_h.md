@@ -12,6 +12,8 @@ combat route is an ordinary encounter). Also named: `Boss_SetupTable`,
 hooks, and the eight tables round seven called `EnemyOp_StepsB..F` /
 `EnemyOp_ActSubsB..E`, re-attributed to their kinds (section 7).
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the files of their translation units now: `src/game/boss/boss_nina.cpp`, `src/game/boss/boss_torast.cpp`, `src/game/area/bare_ret.cpp` and 5 more ([`source-layout.md`](source-layout.md)). `src/game/boss_h.cpp` itself is retired. A `src/game/boss_h.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_h.cpp:LINE` answers it.
+
 Enemy and fight names below are `tools/boss_rows.py --disc`'s (the US disc's
 area records), not memory of the game.
 

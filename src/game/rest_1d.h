@@ -108,7 +108,6 @@ void __cdecl PartyAction12_Form0EffectSet(void);
 
 }  // extern "C"
 
-void Rest1D_Inject();
 
 namespace rest_1d {
 // BOF3X_SHADOW=rest_1d: the start-up fuzz, rest_1d_fuzz.cpp. Clones the 46

@@ -10,6 +10,8 @@ with capstone and fuzzed through the scenario harness in field mode
 392,000 rounds, 0 mismatches. 108 controls planted one at a time: 105 refused, 3 equivalent mutants not refused, each with its near variant refused (section 5). No recorded route enters any
 of the 49 (section 9): fuzz only.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/field/party_action.cpp`, `src/game/field/field_core.cpp`, `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1f.cpp` itself is retired. A `src/game/rest_1f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1f.cpp:LINE` answers it.
+
 The band is three things, not one (the cut's `unit` column guessed "field
 core" for all 49):
 

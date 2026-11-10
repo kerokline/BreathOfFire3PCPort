@@ -11,7 +11,6 @@
 
 #include <cstdint>
 
-void BattleE5_Inject();
 
 namespace battle_e5 {
 extern std::uint8_t g_store_ask_word;   // defined in battle_e5.cpp (source-layout B0: promoted for a moved reader)

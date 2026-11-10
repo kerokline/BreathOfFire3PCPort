@@ -25,7 +25,6 @@
 #include "game/map_field_objects.h"
 #include "game/map_field_objects_callees.h"
 #include "game/map_rim.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script.h"
 #include "game/move_script_bytes.h"
@@ -33,10 +32,7 @@
 #include "game/rdata_consts.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_2b.h"
 #include "game/rest_2b_callees.h"
-#include "game/scena_sx.h"
-#include "game/scena_sx2.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -83,6 +79,12 @@ const unsigned char* Record54(const unsigned char* sprite) {
     std::memcpy(&p, sprite + 0x54, sizeof p);
     return At(p);
 }
+
+}  // namespace
+namespace field_frame { BandSprite g_band[0x28]; }
+namespace field_frame { unsigned g_band_count; }
+namespace field_frame { int g_band_fill = -1; }   // the self-test's columns; -1 is Widescreen_Fill()
+namespace {
 
 void BandNote(unsigned char* sprite) {
     if (field_frame::g_band_count < sizeof field_frame::g_band / sizeof field_frame::g_band[0]) field_frame::g_band[field_frame::g_band_count++].sprite = sprite;
@@ -281,6 +283,18 @@ constexpr unsigned kPrimBytes = 0x48, kQuadBytes = 0x28, kRecordBytes = 12;
 const unsigned char* ObjectData() { return Get<const unsigned char*>(Sprite_Current, 0x54); }
 
 }  // namespace
+
+// sprite_pose's callee seam, moved here from sprite_pose.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace sprite_pose {
+
+const Callees kOriginals = {
+    Sprite_SetAnimationAt, Sprite_SetAnimation, Sprite_EnsureAnimation, Sprite_SetAnimationBank,
+    Field_MemberSprite, Sprite_SetFrameQueueUpload, Sprite_ScriptStart, Effect_ReleaseAt,
+};
+Callees g = kOriginals;
+
+}  // namespace sprite_pose
 
 // original 0x57B780: the four extra party objects' screen update (PSX
 // FUN_8015B148): Sprite_UpdateScreenA for each present (bit 0) and not
@@ -556,6 +570,13 @@ extern "C" void __cdecl Camera_LoadMatrix(short* matrix) {
     Gte_SetRotMatrix(reinterpret_cast<const unsigned long*>(matrix));
     Gte_SetTransMatrix(reinterpret_cast<const unsigned long*>(matrix));
 }
+
+namespace {
+using HandleFn = unsigned char (__cdecl*)(unsigned);
+}  // namespace
+// --- BOF3X_SHADOW=sprite_find, live: every call in game runs the original's
+// clone first, then ours from the same state, and the results are compared.
+namespace sprite_find { HandleFn g_handle_live = nullptr; }
 
 extern "C" unsigned char __cdecl Sprite_ObjectByHandle(unsigned char handle) {
     const unsigned char ours = ObjectByHandle(handle);

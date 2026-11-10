@@ -5,7 +5,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/field_modes.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

@@ -20,7 +20,6 @@
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
-#include "game/worldmap_area.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"

@@ -23,7 +23,6 @@
 
 #include <cstdint>
 
-void Rest4E_Inject();
 
 namespace rest_4e {
 extern std::uint8_t g_faerie_name_end;   // defined in rest_4e.cpp (source-layout B0: promoted for a moved reader)

@@ -8,7 +8,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss/boss_weretigr_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_sa.h"
 #include "game/boss_sa_callees.h"
 #include "game/boss_sg.h"
 #include "game/boss_sg_callees.h"

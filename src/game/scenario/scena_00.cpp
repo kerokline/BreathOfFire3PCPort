@@ -6,13 +6,11 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/event_ops.h"
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/scena_sc0.h"
 #include "game/scena_sc0_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

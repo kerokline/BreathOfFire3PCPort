@@ -9,6 +9,8 @@ refused only by a fault and replaced, one blind at first and refused once the
 fuzz was sharpened (section 4.1). No divergence. One candidate defect of
 Capcom's (section 5). **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); the combat A/B reaches all six.
 
+**Source layout (2026-11-09):** the 6 functions this group took live in the files of their translation units now: `src/game/platform/d3d.cpp`, `src/game/battle/battle_menu_win.cpp`, `src/game/field/area_map.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_draw.cpp` still held of ours is `src/game/platform/battle_draw.cpp` now. A `src/game/battle_draw.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_draw.cpp:LINE` answers it.
+
 Group BJ of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). Every claim below is
 from capstone over `bof3/BOF3.exe` on 2026-09-23 (the scratchpad's `bjdis.py`,

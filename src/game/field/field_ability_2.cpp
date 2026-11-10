@@ -437,6 +437,20 @@ constexpr ::bof3::image::Va kWeaponIds{0x9041D4};       // [1]
 
 constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
 
+}  // namespace
+
+// DIVERGENCE DIV-0189: the two consumable sorts order each bucket. The
+// original's NormalItem / CombatItem sorts are a partition: the items whose
+// flag bit (bit 0 field-usable, bit 1 battle-usable) is set go first, and
+// within each half the bubble sort, being stable, leaves the list in the
+// order the player had it. Ours, once g_sort_by_id is armed (after the
+// self-test, PatchBytes "ItemSortById"), sorts within each half by the item
+// id ascending - the record's index in the consumables table, the EMI's
+// order (Green Apple 1 .. Water Jug 91). Unarmed, the original's partition.
+namespace rest_2e { unsigned char g_sort_by_id = 0; }
+
+namespace {
+
 // The pair (x, y) of non-empty entries exchanged: y's flag bit set and x's
 // clear (the original's rule), or - armed - both alike and y's id the lower.
 bool ConsumableGoesFirst(UC x, UC y, UC bit) {
@@ -3508,4 +3522,15 @@ void FieldAbility2_Inject() {
     BOF3_INJECT(TacticsMembers_Swap);
     BOF3_INJECT(FieldMenu_FreeRecords12To18);
     BOF3_INJECT(FieldMenu_State8Run);
+}
+
+void FieldAbility2FromRest2e_Inject() {
+    {
+        // DIV-0189: armed after the self-test, which compares the two
+        // consumable sorts with Capcom's partition.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ItemSortById", Low32(&rest_2e::g_sort_by_id), &was, &is, 1);
+        bof3::Log("DIV-0189    the Items screen's NormalItem / CombatItem sorts order each half by item id: %s",
+                  rest_2e::g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
+    }
 }

@@ -4,6 +4,8 @@
 headless; the live check (the world-map route's A/B, then the shop's) is the
 coordinator's, after the merge
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the files of their translation units now: `src/game/menu/menu_list.cpp`, `src/game/field/field_menu.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/menu_lists.cpp` still held of ours is `src/game/menu/menu_lists.cpp` now. A `src/game/menu_lists.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/menu_lists.cpp:LINE` answers it.
+
 Group DH of round eight ([`takeover-queue-round8.md`](takeover-queue-round8.md)),
 wave B. Two runs of Capcom's code, both reached by the recorded routes:
 

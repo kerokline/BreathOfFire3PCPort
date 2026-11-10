@@ -13,6 +13,8 @@ planted one at a time, 130 refused by a count, 3 equivalent** (each with a
 near variant refused, section 7). Thirteen state tables named. **Fuzz only**:
 no recorded route enters any of the 70 (section 9).
 
+**Source layout (2026-11-09):** the 70 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_0f.cpp`, `src/game/effect/effect_kind_09.cpp`, `src/game/effect/world_map.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_1a.cpp` still held of ours is `src/game/effect/effect_1a.cpp` now. A `src/game/effect_1a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1a.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | Dispatchers: kinds 1, 2, 3, 5, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xF, 0x1A by +1; kinds 0xE and 0x16 by the world map's record; kind 0x5C by the area | 16 | `Effect_KindHandlers` `0x655350` (`Effect_RunObjects` calls entry `+5`) |

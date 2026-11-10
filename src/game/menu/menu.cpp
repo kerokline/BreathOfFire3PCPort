@@ -115,6 +115,16 @@ unsigned char ShownMember() {
     return Character_IndexById[id];
 }
 
+}  // namespace
+
+// A title of a table of pointers, centred on 13 six-unit columns - or, under
+// DIVERGENCE DIV-0059, on the width its pen covers.
+// g_title_live is set by FieldO_Inject after the fuzz, which runs later than
+// BattleDraw_Inject's patch and compares with the original's arithmetic.
+namespace field_o { bool g_title_live = false; }
+
+namespace {
+
 int Centred(int x, unsigned n, const unsigned char* title) {
     const int count = static_cast<int>(n);
     return x + (field_o::g_title_live ? ListTitle_X(title, count) : 6 * (0xD - count));
@@ -444,6 +454,13 @@ extern "C" void __cdecl Menu_DrawItemIcon(int x, int y, int icon, int shade) {
     menu_windows::g.icon(x, y, icon, shade);
 }
 
+// DIVERGENCE DIV-0084: the icon wheel's formation name centred on x + 0x27,
+// as the US release draws it (its small-text draw takes the middle), where
+// the port starts its four-glyph names at x + 0x16. 0 until FieldO_Inject
+// patches it to 1 under a Latin overlay, after the fuzz, under the name
+// FormationNameCentre.
+namespace field_o { unsigned char g_wheel_name_centre = 0; }
+
 // original 0x573F70: a kind's name, a turned triangle and up to three icons
 // (the field menu's panel list, 0x59A46E: the panel's +0xA kind, +0xC the lit
 // bits, +0x10 the angle). Box (x + 3, y + 3) 0x45 x 0x30; the name, 28-byte
@@ -657,6 +674,10 @@ extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
     }
     return map_field_objects::g.pieces(x - 0x10, y, AtMapFieldObjects(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
 }
+
+namespace menu_windows {
+bool g_yes_no_div = false;
+}  // namespace menu_windows
 
 // original 0x5747D0 (PSX 0x801DA628): the Yes / No chooser (DIV-0027,
 // docs/glyph-draw.md section 7). System message 0xF at (0x1C, 0x16), the hand
@@ -1390,6 +1411,28 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Menu_DrawScrollBar)(AtFieldO(::bof3::Img(field_o::at::kListIds)), panel[0xA], PanelX(panel) + 0x90, PanelY(panel) + 0x18, 9, 0x80, 0x74);
 }
 
+// original 0x576960: a save or load slot (SaveMenu_DrawSlots 0x588D6B; the
+// save header's summary, or 0 for an empty slot). Box (x + 8, y) 0xC8 x 0x30,
+// the slot's number (0x6639D4) at (x + 9, y + 5); with a summary: a draw mode,
+// the party's three icons (+5..+7, 0xFF none) through Menu_DrawBigIcon at
+// x + 0x56, 41 apart, the name - +0..+4 and the four bytes +0x16 copied to
+// 0x904BA0 - through Text_DrawAt (five characters) at (x + the inset, y + 2),
+// the level +8 (0x64D3EC) at (x + 0x1F, y + 0x18), the time +0xC / +0xD
+// (0x654830) and two colons (0x6639D0) at x + 0x27, Menu_DrawExpBar(x + 0x14,
+// y + 0x12, 0, level, +0x10); without one the text 0x669CCC at (x + 0x13,
+// y + 2). Then the frame pieces 0x663584 (flags 2 when +0x14 is set, else 0)
+// and, with +0x14 set, piece 0x3D at (x + 0x32, y + 0x16).
+// The inset is the disp8 at 0x576A48 - 0x13 as Capcom shipped it, 0x15 under
+// DIV-0029 (YesNoLayout_Inject patches those bytes) - as yes_no_layout.cpp
+// holds it (YesNoLayout_SaveNameInset; docs/operand-store.md).
+// DIVERGENCE (exe-gap round, group AU; the coordinator numbers it): an empty
+// slot draws no text, as the US PlayStation release draws it and as a
+// disc-built image already did (0x669CCC is a gap there, zero). 0 until
+// FieldO_Inject patches it to 1, after the fuzz, under the name SaveSlotBlank
+// (BOF3X_ORIGINAL=SaveSlotBlank, or BOF3X_OFF, draws the port's string).
+
+namespace field_o { unsigned char g_empty_slot_blank = 0; }
+
 extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const unsigned char* summary) {
     SH_CALL(Menu_DrawBox)(x + 8, y, 0xC8, 0x30, 0, Style());
     Sprintf(::bof3::Img(field_o::at::kFmtSlot), slot & 0xFF);
@@ -1450,4 +1493,24 @@ void Menu_Inject() {
     BOF3_INJECT(Menu_DrawBorder);
     BOF3_INJECT(Menu_DrawItemPanel);
     BOF3_INJECT(Menu_DrawSaveSlot);
+}
+
+void MenuFromFieldO_Inject() {
+    field_o::g_title_live = true;   // DIV-0059, from here on
+    // DIVERGENCE DIV-0084: a Latin language overlay only, as DIV-0059's switch.
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FormationNameCentre",
+                         Low32(&field_o::g_wheel_name_centre),
+                         &was, &is, 1);
+        bof3::Log("DIV-0084    formation names centred: %s", field_o::g_wheel_name_centre ? "on" : "off");
+    }
+    // An empty save slot drawn blank on every install and language (the
+    // owner's call of 2026-10-31, docs/exe-gap-round.md 7).
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SaveSlotBlank", Low32(&field_o::g_empty_slot_blank),
+                         &was, &is, 1);
+        bof3::Log("SaveSlotBlank  an empty save slot draws %s", field_o::g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
+    }
 }

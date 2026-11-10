@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stage B0 is complete on `source-layout/stage-b` (main 7f215457 merged in, the mover refuses nothing, the move map written, the ten-route state-hash proof passed 2026-11-09); stage B's moves done 2026-11-09 on `source-layout/stage-b` 2ee99f2a, stage C next, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stages B0 and B are in `main` (PR #214) and stage C is done on `source-layout/stage-c` (2026-11-09: the shells retired, the files of ours moved whole, both gates 0 differ), stage D's ten-route proof next, item 14b; D406's listen owed)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -361,52 +361,59 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **After this round:** IDEAS I53 (the wide image, one struct at a time, gated by the hash) and I5's
    translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
-14b. **The source-layout round: stage A in `main` (PR #207), stages B0 and B done on `source-layout/stage-b`**
-   (off `main` `67c3259b`, `main` 7f215457 merged in; root `C:\Users\kerok\bof3x-runs\slb1108` for B0 and
-   `slb1109` for the moves, `slb1108\base2` the gate's baseline = main 7f215457 at both widths;
-   [`source-layout-round.md`](source-layout-round.md) section 4 "Stage B0 as run" and "Stage B as run", the
-   owner's calls in 7a and 7b). **The moves are done (2026-11-09):** six groups B1..B6 (B4 split at the owner's
-   word), 10,088 functions into 609 files under 14 folders, merged one at a time with the gate after each;
-   the tip `2ee99f2a` (669 commits over `main`, unpushed, tree clean) builds at both widths, both gates read
-   **0 differ** (`--inject-ok` on both; the i686 classes `data-layout,i686-fold,i686-inline,i686-convention,
-   inline,refptr,harness`), `tu_renames.py --check` 1793 rows 0 problems, `tu_census.py --check` every function
-   in its proposed file, `move_funcs.py --check` nothing to move; the three self-tests on the tip's build:
-   hosted shadow suite exit 0 with 0 FATAL and every MISMATCHES 0, the exe host exit 0, moved (0xA00000) exit 0 (`slb1109\f_*.log`). The exception table has 3,994 rows, each with its gate line and commit. The 597 flat
-   `src/game/*.cpp` files hold no `impl` function now: each keeps its `_Inject()`, its self-test, its fuzz rows
-   and the copied helpers. Reports `slb1109\reports\b<n>.md`, the common brief `slb1109\briefs\common.md`
-   (the coordinator's notes appended), gate and build logs `slb1109\m<n>_*.txt`, `final_gate*.txt`, `f_*.log`.
-   **The day's decisions** are in 7a (the owner's `refptr` and i686 `inline`; the coordinator's owner-following
-   of exception tables and statics, the operand-width pooled constant, `data-layout` for a move's placement,
-   the `harness` class) and in section 4's "Stage B as run" (the mover's lessons by group, the merges' findings).
-   **Pick up here: stage C** (the staging is round doc 5 "Stage C staging", the owner's calls before launch in 7c; a tool C0, then four folder groups C1..C4 and the merges): empty the 597 flat shells - move each source's
-   remaining `_Inject()` registrations, self-test and fuzz rows to the new files (one fuzz file per new file),
-   delete the shells, regenerate the hosted build's fuzz table, `tu_census.py --check` in `checks.yml`,
-   `cite_lookup.py --scan` over the docs, `docs/source-layout.md`, SCAFFOLDING and README; then stage D (round
-   doc 6: the ten routes at both image bases with the state hash against the `orig4` pairs and against base2's
-   own build - **not yet run on the stage B tip** - the shadow suite, the 64-bit build's routes, STATUS, the
-   ledger note) and stage E (I48, the comment clean-up). Before stage C, reconcile the mover: the tip's is B3's;
-   B5's `#undef far/near` and template naming and B2's refusals were superseded at the merges (their branches
-   hold them: `source-layout/b5` df5c19ce, cff3a6a0, 984b1478; `source-layout/b2` 35518a3e, 2e28ee7d,
-   25f8d0eb). **For the owner:** `-fno-auto-import` (B3 measured: every `refptr` row would go, a new baseline
-   and a DLL-import check the cost); the 32 x86_64 and 2 i686 `inline` rows B3 flagged as register allocation
-   only; the shop-route signature shift that is main's own (below, unchanged). **Traps paid today:** the git
-   stash list is shared by every worktree of a repo (two groups swapped hunks; no stash in a shared repo);
-   `git commit --amend` loses the trailer and is out even on unpushed commits; six agents' shadow suites on
-   one game folder collide when a `timeout` kills a launcher while its game runs on (run alone, wait for the
-   log); the mover's dry run cannot see what the compiler sees (two `at`s meeting, an undeclared helper, a
-   `<windows.h>` macro) - plan on one build round per group; a merge of two groups that moved out of one
-   source needs its hunks resolved by "what both sides kept" and then a parse and a scan for indented
-   statements at brace depth 0 (`scan_fragments.py` in the session scratchpad; the fix commits name it);
-   two targets of one stem in two folders need folder-named inject functions; an exception table or a static
-   local differs only because its function did - pair it, never row it alone; the typed-data census
-   counts a copied helper's raw site once per copy, so a move round regenerates `analysis/data_census.tsv`
-   with the reason in the commit, and `typed_left.py` must be run on the committed list, never twice in a
-   row (a regeneration rewrites the keys it then reads as carried). The main-side finding stands:
-   the shop route's signature moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at
-   ticks 2714..2757, a mode transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect
-   main's merges on `tools/recipes/shop.txt` with the state hash, then ledger or fix. Worktrees
-   `slb1108\r1..r4, c, t, s, a, p, g, q, n, n2, h, k` and `slb1109\b1..b6` are removable after the merge
-   into `main`; the launcher copies `slb1109\*_L` and `f_L` too.
+14b. **The source-layout round: stages A, B0 and B in `main` (PRs #207, #214); stage C and the cleanup round (I60) done on `source-layout/stage-c`, unpushed**
+   (off `main` `1a817eba`, 2026-11-09; root `C:\Users\kerok\bof3x-runs\slc1109`: worktree `wt`, scripts and logs
+   `scratch`, the launcher copy `c_L`, the baseline `base3`, the agents' worktrees `k1`..`k4` and reports
+   `reports`; [`source-layout-round.md`](source-layout-round.md) section 5, "Stage C as run" and "The cleanup
+   round, I60, as run", the owner's calls in 7c; [`source-layout.md`](source-layout.md) is the tree's reader,
+   generated by `tools/source_layout_doc.py`). **Stage C:** `tools/retire_shells.py` moved the 253 fuzz files and
+   158 files of ours whole into their folders and retired 177 pure shells. **I60, the same evening, before
+   stage D at the owner's word:** `-fno-auto-import` (the gate's baseline is now `slc1109\base3`, `main`
+   `7f215457` plus the flag; no `refptr` class left); 41 more seams to their group's lowest function's file;
+   four agents (K1..K4, 70 files) put each switch and its arming beside its reader, the arming in the unit
+   file's `_Inject()` or a new `<Home>From<Group>_Inject()` on the line after the group's; 39 files left as
+   pure shells retired, 119 files of ours stay. Both gates **0 differ** against base3 (1,881 exception rows);
+   the hosted shadow suite, the exe host and the moved image exit 0, the 963 self-test lines the same as stage
+   B's (`scratch\i60_st`); the censuses regenerated, no count higher; every CI check passes locally.
+   **`main` is wrong until this merges:** stage B left `IsEnabled` checks running before the bind they test -
+   the reading row is never armed (silent), and `BOF3X_TEXT_SPEED=1`, `BOF3X_UNLEARNED_BLUE=1`,
+   `BOF3X_ENEMY_INFO=1`, `BOF3X_NO_FAIL=1` each stop the game at start. Repaired on this branch, and
+   `InjectReport` now stops the game for any `IsEnabled` asked before its `Inject`.
+   **Stage D ran 2026-11-09 22:50 .. 01:13** (round doc 6, "Stage D as run"; `slc1109\d\proof_d.sh`, output
+   `d\proof_d.out`, hashes `d\sh`): ten routes, five runs each (the branch's build, `main` `7f215457`'s own
+   build, folded, moved to `0xA00000`, x86_64), all 50 `rc 0`. Branch against `main`'s build: identical on five
+   routes, the rest only on pages that differ between two runs of one build (`0x6C3000`'s heap pointers on
+   caughFish / masterAndManillo / worldMapAndAreaTransition, the sound page `0x7DE000` on combat, whelpBoss's
+   VRAM window on `main`'s run); dragonTransform's moved run differed once on 28 pages and was identical on
+   the second pair. **Pick up here: the PR**, at the owner's word (the branch is unpushed), then the owner's
+   eye on the reading row, which no route covers. **The `orig4` pairs are stale against `main`** (both builds
+   fail them alike): record them again at the merged tip before they gate anything. **Left of I60:** the self-tests written in a
+   file of ours (to fuzz files, with I61), five files whose arming runs before their self-test, the six
+   `<group>_ours.cpp` names, the mover's reconciliation (the tool on `main` is B3's; B5's `df5c19ce`,
+   `cff3a6a0`, `984b1478` and B2's `35518a3e`, `2e28ee7d`, `25f8d0eb` were lost at the merges and none applies
+   as a patch), I48's comments (stage E). **Commands:** the gate is `scratch\gate.sh TAG` (both widths against
+   base3), the build `scratch\build.sh TAG`, the self-tests `scratch\st.sh`. **Traps paid in I60:** a check
+   that asks `IsEnabled` belongs after the bind it tests, in the file that binds it; an agent's zero-context
+   `git apply --cached` lands hunks lines off (gate per commit, or squash the branch); after each merge prune
+   the exception rows the gate calls unused, since one group's variable can undo another's row; a loop that
+   deletes stale objects must name the target's object directory or it deletes every target's.
+   **Traps paid in stage C:** a build directory
+   that saw files in their old place keeps their objects and the gate reads them too - delete the objects
+   whose source is gone before gating; a whole-file move changes `__FILE__` and a deleted include line changes
+   `__LINE__`, both code on x86_64 (`--moved-map` for the first, two comment lines in `scenario_harness.cpp`
+   for the second, until stage E); a here-document passed to `python -` loses a level of backslashes on this
+   machine's tool path - write a script with a regex or an escape to a file; the census files key by path, so
+   substitute the moved paths first (a commit of its own) and regenerate after, and `typed_left.py` runs once
+   on the committed list. **Traps carried from stage B:** the git stash list is shared by every worktree of a
+   repo (no stash); `git commit --amend` loses the trailer; shadow suites of several builds on one game
+   folder collide (run alone, wait for the log); a merge of two groups that moved out of one source is
+   resolved by "what both sides kept", then parsed and scanned for statements at brace depth 0; an exception
+   table or a static local follows its function. **The main-side finding stands:** the shop route's signature
+   moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode
+   transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect main's merges on
+   `tools/recipes/shop.txt` with the state hash, then ledger or fix; stage D will meet it. Removable after the
+   merge into `main`: every worktree under `slb1108`, `slb1109`, `sl1107` and `slc1109`, and the launcher
+   copies beside them (keep `slc1109\base3` until stage D has run).
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages

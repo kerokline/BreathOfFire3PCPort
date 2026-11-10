@@ -8,17 +8,12 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/battle/battle_3_callees.h"
-#include "game/battle_actor_copies.h"
 #include "game/battle_actor_copies_callees.h"
-#include "game/battle_damage.h"
 #include "game/battle_damage_callees.h"
-#include "game/battle_e4.h"
 #include "game/battle_e4_callees.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
 #include "game/battle_misc.h"
 #include "game/battle_misc_callees.h"
-#include "game/battle_setup.h"
 #include "game/battle_setup_callees.h"
 #include "game/battle_text.h"
 #include "game/battle_window_draw.h"
@@ -30,7 +25,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
 #include "game/text_pairs.h"
 #include "game/widescreen.h"
@@ -434,6 +428,138 @@ int Percent(int value, int percent, int cap) {
 }
 
 }  // namespace
+
+// battle_actor_copies's callee seam, moved here from battle_actor_copies.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_actor_copies {
+namespace {
+
+template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+using F0 = U (__cdecl*)();
+using F1 = U (__cdecl*)(U);
+using F2 = U (__cdecl*)(U, U);
+using F3 = U (__cdecl*)(U, U, U);
+
+}  // namespace
+
+const Callees kOriginals = {
+    As<F2>(BattleBanner_SetMessage),
+    As<F1>(Battle_DefaultTarget),
+    Fn<F1>(::bof3::Code(kPrevTarget.v)),
+    As<F3>(Battle_WrapIndex),
+    As<F1>(Input_AutoRepeat),
+    As<F1>(Sound_PlayEffect),
+    As<F0>(ItemMenu_SetupForActor),
+    As<F3>(Char_AbilityList),
+    As<F1>(Msg_SystemPtr),
+    As<F0>(ItemMenu_CanUseSelected),
+    As<F0>(Battle_ReturnTrue),
+    As<F0>(ItemMenu_FreeWindows),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_actor_copies
+
+// battle_damage's callee seam, moved here from battle_damage.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_damage {
+namespace {
+
+template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_ActorCanAct,
+    Battle_ActorCanCommand,
+    Battle_LevelClass,
+    Battle_CalcDamage,
+    Battle_BaseDamage,
+    Battle_ScaleDamage,
+    Battle_ElementAffinity,
+    EnemyAI_RowDone,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleBanner_Add)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_StatusResisted80)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_InflictStatus)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_ClearStatus)),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_HitOrMissParty)),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_HitOrMissEnemy)),
+    Fn<int (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PartyDefenceMean)),
+    Fn<int (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_PsiStatusDeathAffinity)),
+    Rand,
+    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::EnemyAI_OtherRowsDone)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_damage
+
+// battle_misc's callee seam, moved here from battle_misc.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_misc {
+namespace {
+
+template <typename T> T* Fn(U address) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(address)); }
+template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+using F0 = U __cdecl();
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<U __cdecl(U, U, U, U, U)>(::bof3::Code(bof3::addr::Sprite_SetTint)),
+    As<U (__cdecl*)(U)>(Sound_PlayEffect),
+    As<U (__cdecl*)(U)>(Sound_LoadStream),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Char_AbilityList)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Skill_CanUse)),
+    As<U (__cdecl*)()>(Window_FreeCurrent),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::EnemyAI_CondElement)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_RowDone)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<F0>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
+    As<U (__cdecl*)()>(Sprite_UpdateScreenA),
+    Fn<F0>(::bof3::Code(bof3::addr::Sprite_UpdateScreenSlot)),
+    As<U (__cdecl*)()>(Battle_InitActorContext),
+    As<U (__cdecl*)(U, U, U)>(Str_CopyN),
+    As<U (__cdecl*)(U, U, U, U, U, U)>(BattleBanner_Set),
+    {Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kBannerKind1.v)), Fn<F0>(::bof3::Code(kBannerKind2.v)), Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kRetOnly.v))},
+};
+Callees g = kOriginals;
+
+}  // namespace battle_misc
+
+// battle_window_draw's callee seam, moved here from battle_window_draw.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_window_draw {
+
+const Callees kOriginals = {
+    Window_Alloc,
+    Crt_sprintf,
+    Gpu_GetTPage,
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_GetClut,
+    Gpu_SetSprt,
+    Gpu_SetPolyF4,
+    Gpu_SetSemiTrans,
+    Gpu_SetTile,
+    Gpu_SetPolyFT4,
+    Gpu_SetLineF2,
+    Menu_DrawIcon8,
+    Text_CharCount,
+    Text_DrawAt,
+    Text_DrawFont8,
+    Skill_ApCost,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_window_draw
 
 // original 0x442FA0 (PSX 0x801D74DC): the party row - the frame of edge
 // pieces and tiles sized by the member count 0x904AB0 at (x, y), then per
@@ -1032,6 +1158,22 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
     p[0x45] = 0xDF;
     battle_window_draw::g.commit(1, 0x48);
 }
+
+// original 0x444C40 (PSX 0x801DA048): cell `cell` of the battle's 16 x 8 strip -
+// draw mode page (0x3C0, 0) under abr 1; an SPRT of 16 x 8 at (u16 x, u16 y),
+// u = cell << 4 as a byte, v 0xD8, CLUT word 0x7800, shade 0x80.
+//
+// As the original has it: x and y are taken unsigned (`and 0xFFFF`, then
+// `fild`), where the other helpers here sign-extend - a coordinate below 0
+// lands at 65,536 less it. The PlayStation stores the halfwords, where the two
+// readings are the same (US 0x801DA078; on the JP disc the tail at 0x801DA048
+// stores x and y with `sh` into the SPRT's signed vertex halfwords +8, +0xA).
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleWindowDraw_Inject, after the self-test. x and y are then read as the
+// PlayStation stores them, signed halfwords, so a coordinate below 0 clips at
+// the screen's left or top edge (D336).
+namespace battle_window_draw { std::uint8_t g_draw_signed = 0; }
 
 extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     const unsigned page = battle_window_draw::g.get_tpage(0, 1, 0x3C0, 0);
@@ -2266,6 +2408,15 @@ extern "C" void __cdecl BattleTarget_Dispatch(void) { Dispatch(BattleTarget_Step
 extern "C" void __cdecl BattleTarget_ShowPrompt(void) {
     battle_actor_copies::g.set_message(0, 0);
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
+}
+
+void Battle3FromBattleWindowDraw_Inject() {
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_window_draw::g_draw_signed), &was, &is, 1);
+        bof3::Log("DIV-0161    the battle strip cell takes its x and y signed, as the PlayStation (on unless the line above says OFF)");
+    }
 }
 
 void Battle3_Inject() {

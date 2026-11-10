@@ -392,4 +392,9 @@ void EffectKind8c_Inject() {
     BOF3_INJECT(EffectKind8C_Judge);
     BOF3_INJECT(EffectKind8C_Pass);
     BOF3_INJECT(EffectKind8C_Fail);
+    // DIV-0188: with the switch on, the well's losing state must be ours -
+    // left as Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), a loss would stand and
+    // the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::EffectKind8C_Fail))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind8C_Fail ours, and it is disabled");
 }

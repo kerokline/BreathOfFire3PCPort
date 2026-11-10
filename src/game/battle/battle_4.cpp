@@ -5,10 +5,8 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/boss_harness.h"
-#include "game/boss_spawn.h"
 #include "game/cheats.h"
 #include "game/draw_pool.h"
 #include "game/map_rim.h"
@@ -417,6 +415,11 @@ void Battle4FromBattleSprites_Inject() {
     BOF3_INJECT(Battle_InitEnemies);
     BOF3_INJECT(Battle_SetupEnemy);
     BOF3_INJECT(Battle_CopyEnemyData);
+    // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
+    // would write the kind's bit and the cheat would be silently half off. After the bind:
+    // IsEnabled answers "not ours" for a function no Inject has named yet.
+    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_SetupEnemy))
+        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_SetupEnemy ours, and it is disabled");
 }
 
 void Battle4FromBossSpawn_Inject() {
@@ -431,4 +434,8 @@ void Battle4FromBossSpawn_Inject() {
 void Battle4FromRest3g_Inject() {
     BOF3_INJECT(Battle_PlaceBossActors);
     BOF3_INJECT(Battle_PlaceBossActor);
+    // DIV-0187 writes a boss's +0x8F here; Capcom's Battle_PlaceBossActor
+    // would clear it and the cheat would miss every boss. After the bind.
+    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_PlaceBossActor))
+        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_PlaceBossActor ours, and it is disabled");
 }

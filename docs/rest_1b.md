@@ -12,6 +12,8 @@ unchanged: 188,000 rounds, 0 mismatches. 88 controls planted one at a time: 85 r
 recorded route enters any of the 47 (section 9). No divergence, no full-frame
 fill, no byte patch inside the band.
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the file of their translation unit now: `src/game/field/party_action.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1b.cpp` itself is retired. A `src/game/rest_1b.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1b.cpp:LINE` answers it.
+
 The band is one thing: the party sets' field actions for sets 2..6, the
 pattern the PSX kept per character set in the PLP overlays. A party set's
 action is reached two ways - leader state 10 (`Field_ActionState`

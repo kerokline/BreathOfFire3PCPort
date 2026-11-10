@@ -109,7 +109,6 @@ void __cdecl EffectKind56_DrawCross(long x, long z, long height, unsigned semi);
 
 }  // extern "C"
 
-void Effect2F_Inject();
 
 namespace effect_2f {
 // BOF3X_SHADOW=effect_2f: the start-up fuzz, effect_2f_fuzz.cpp. Clones every

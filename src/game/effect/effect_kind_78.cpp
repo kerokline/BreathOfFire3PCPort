@@ -7,7 +7,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/draw_pool.h"
-#include "game/effect_3d.h"
 #include "game/effect_3d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"

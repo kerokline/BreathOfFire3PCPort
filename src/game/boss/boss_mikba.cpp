@@ -9,7 +9,6 @@
 #include "game/boss_harness.h"
 #include "game/boss_sg.h"
 #include "game/boss_sg_callees.h"
-#include "game/boss_sh.h"
 #include "game/boss_sh_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

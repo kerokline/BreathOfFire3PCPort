@@ -80,7 +80,6 @@ unsigned char __cdecl PartyAction2_CellStrike(unsigned x, unsigned z);   // 0x51
 
 }  // extern "C"
 
-void Rest1A_Inject();
 
 namespace rest_1a {
 // BOF3X_SHADOW=rest_1a: the start-up fuzz, rest_1a_fuzz.cpp. Clones the 49

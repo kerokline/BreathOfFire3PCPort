@@ -224,6 +224,10 @@ def check(path: Path) -> int:
                                + (f" nor in the files it moved into ({', '.join(homes)})" if homes else ""))
             else:
                 homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
+                # the source's own <stem>_callees.h stays where it was when the source moves whole (stage C)
+                seam = src[:-len(".cpp")] + "_callees.h" if src.endswith(".cpp") else ""
+                if seam and (ROOT / seam).is_file():
+                    homes.append(seam)
                 if "::" not in r["new_name"] and not any(r["new_name"] in defined_names(p) for p in homes):
                     bad.append(f"{r['new_name']} is defined in none of the files {src} moved into "
                                f"({', '.join(homes) or 'none in the tree'})")

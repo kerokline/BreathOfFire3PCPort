@@ -9,6 +9,8 @@ negative controls: 90 were refused by a comparison and 2 are changes that
 change nothing (section 3.2). No divergence. No defect that the game reaches.
 **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 5 had it owed.
 
+**Source layout (2026-11-09):** the 27 functions this group took live in the files of their translation units now: `src/game/battle/battle_3.cpp`, `src/game/battle/battle_banner.cpp`, `src/game/battle/battle_item_cmd.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/battle_misc.cpp` still held of ours is `src/game/battle/battle_misc.cpp` now. A `src/game/battle_misc.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_misc.cpp:LINE` answers it.
+
 This is group BF of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The functions are
 the battle engine's small helpers that the owner's combat route reaches:

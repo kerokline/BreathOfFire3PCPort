@@ -3,3 +3,4 @@
 #pragma once
 
 void Tex_Inject();
+void TexFromTexPage_Inject();

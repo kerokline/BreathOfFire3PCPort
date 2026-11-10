@@ -5,7 +5,6 @@
 
 #include <cstdint>
 
-void SpritePose_Inject();
 
 namespace sprite_pose {
 extern std::uint8_t g_reach_word;   // defined in sprite_pose.cpp (source-layout B0: promoted for a moved reader)

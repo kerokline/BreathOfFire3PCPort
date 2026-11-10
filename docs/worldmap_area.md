@@ -2,6 +2,8 @@
 
 **Status:** IN PROGRESS (2026-09-25)
 
+**Source layout (2026-11-09):** the 30 functions this group took live in the files of their translation units now: `src/game/area/world_map_33.cpp`, `src/game/effect/effect_kind_06.cpp`, `src/game/effect/world_map.cpp` and 5 more ([`source-layout.md`](source-layout.md)). `src/game/worldmap_area.cpp` itself is retired. A `src/game/worldmap_area.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/worldmap_area.cpp:LINE` answers it.
+
 Group DA of the eighth round ([`takeover-queue-round8.md`](takeover-queue-round8.md)).
 **Thirty of the queue's thirty-one functions are ours** (`src/game/worldmap_area.cpp`).
 Each was read to its last instruction with capstone over `bof3/BOF3.exe` on

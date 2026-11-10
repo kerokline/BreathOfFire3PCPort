@@ -7,6 +7,8 @@ recorder: 38,000 rounds, 0 mismatches; 62 negative controls, 60 refused by a
 count, two not refused because they change nothing. `BOF3X_SHADOW='*'` passes.
 **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 5 had it owed.
 
+**Source layout (2026-11-09):** the 19 functions this group took live in the files of their translation units now: `src/game/battle/battle_3.cpp`, `src/game/menu/char.cpp`, `src/game/menu/menu_2.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_window_draw.cpp` still held of ours is `src/game/battle/battle_window_draw.cpp` now. A `src/game/battle_window_draw.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_window_draw.cpp:LINE` answers it.
+
 Group BD of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)): the openers of
 battle windows 1..4, the primitives the battle window handlers of group BC

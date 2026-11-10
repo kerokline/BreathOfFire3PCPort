@@ -9,7 +9,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/cheats.h"
 #include "game/effect/effect_kind_87_callees.h"
-#include "game/effect_4a.h"
 #include "game/effect_4a_callees.h"
 #include "game/effect_4b.h"
 #include "game/effect_4b_callees.h"

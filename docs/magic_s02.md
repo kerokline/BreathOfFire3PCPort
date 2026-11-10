@@ -7,6 +7,8 @@ it: 0 mismatches over 96,000 rounds. 230 of 231 negative controls refused (229 b
 one left is an equivalent mutant, whose near variant was refused. Nothing recorded casts
 these abilities, so this is fuzz only until the owner sees them used.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/magic/super_combo.cpp`, `src/game/magic/elem_strike.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/magic_s02.cpp` still held of ours is `src/game/magic/magic_s02.cpp` now. A `src/game/magic_s02.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s02.cpp:LINE` answers it.
+
 Round nine, third spell wave, group S02
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)): 0 mismatches in
 124,000 rounds; 211 of 214 negative controls refused by a count, the other three two equivalent mutants (near variants refused) and one refused by a fault (section 10). Fuzz only: no recorded route casts any of
 them (section 10).
 
+**Source layout (2026-11-09):** the 62 functions this group took live in the files of their translation units now: `src/game/magic/pentagram.cpp`, `src/game/magic/wall_of_fire_child.cpp`, `src/game/magic/magic_213_mote.cpp` and 2 more ([`source-layout.md`](source-layout.md)). `src/game/magic_c1.cpp` itself is retired. A `src/game/magic_c1.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_c1.cpp:LINE` answers it.
+
 Group C1 of round nine's second spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4):
 the rows TCRF's "Entirely Unused" skills load

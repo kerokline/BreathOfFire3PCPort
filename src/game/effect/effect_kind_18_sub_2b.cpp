@@ -5,7 +5,6 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_5g.h"
 #include "game/effect_5g_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

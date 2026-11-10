@@ -3,6 +3,8 @@
 **Status:** IN PROGRESS (2026-09-22 — ten functions ours, fuzzed headless;
 through the live batch `ab24`)
 
+**Source layout (2026-11-09):** the 10 functions this group took live in the files of their translation units now: `src/game/field/sprite.cpp`, `src/game/effect/effect_2.cpp`, `src/game/field/event_cond.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/sprite_pose.cpp` still held of ours is `src/game/field/sprite_pose.cpp` now. A `src/game/sprite_pose.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/sprite_pose.cpp:LINE` answers it.
+
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
 What a sprite object does when something asks it to play an animation or

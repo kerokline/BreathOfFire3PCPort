@@ -112,6 +112,10 @@ void GrownLayerBelow(unsigned char item) {
     if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(kLayer));
 }
 
+}  // namespace
+namespace field_frame { unsigned g_band_added; }
+namespace {
+
 // Just before the draw pass: each noted sprite still flagged off screen, still
 // not a model and not already on the list, appended while the list has room.
 void BandAppend() {
@@ -441,6 +445,18 @@ extern "C" void __cdecl Sprite_SwapOverlays(unsigned long a, unsigned long b) {
     Sprite_OverlayList[b & 0xFF] = first;
     Sprite_OverlayList[a & 0xFF] = second;
 }
+
+namespace {
+// The three callees that are not ours, through pointers so that the start-up
+// fuzz can stand recording functions in for them - for the original's copy
+// and for ours alike.
+using OpenFn = void (__cdecl*)(int);
+using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
+using DrawFn = void (__cdecl*)();
+}  // namespace
+namespace draw_pass { OpenFn g_open = DrawLayer_Open; }
+namespace draw_pass { AddRecordsFn g_add_records = Sprite_AddDrawRecords; }
+namespace draw_pass { DrawFn g_draw = Sprite_Draw; }
 
 // original 0x593060: the field's draw-order pass, once a logic frame
 // (docs/sprite-draw-order.md section 2).

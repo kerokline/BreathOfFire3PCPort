@@ -15,6 +15,8 @@ dispatcher reaches, divides by a byte that can be 0, or writes through an
 index past the 30 field objects or the 20 effect records, ours aborts with a
 message (section 6).
 
+**Source layout (2026-11-09):** the 46 functions this group took live in the files of their translation units now: `src/game/area/area_135.cpp`, `src/game/area/area_134.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/area_w3d.cpp` still held of ours is `src/game/area/area_w3d.cpp` now. A `src/game/area_w3d.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w3d.cpp:LINE` answers it.
+
 Group AR3D of round ten's fifth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 15). The
 band is the tool's (`tools/area_rows.py`, [`area-rows.md`](area-rows.md)): one

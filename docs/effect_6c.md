@@ -17,6 +17,8 @@ with capstone and fuzzed through the scenario harness in effect mode
 200,000 rounds, 0 mismatches; controls in section 6. **Fuzz only**: no
 recorded route enters any of the 50 (section 9).
 
+**Source layout (2026-11-09):** the 50 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_18_sub_5b.cpp`, `src/game/effect/effect_kind_18_sub_59.cpp`, `src/game/effect/effect_kind_18_sub_44.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/effect_6c.cpp` itself is retired. A `src/game/effect_6c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_6c.cpp:LINE` answers it.
+
 **One row is not effect code and is taken anyway** (its tier is `part5`,
 catalogued, so it is the group's - the 2026-09-29 addendum):
 `AreaMap_CornerHeight` `0x511C10`, the map's height at a 16.16 point from

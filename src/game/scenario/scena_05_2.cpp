@@ -5,7 +5,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/scena_sc5.h"
 #include "game/scena_sc5_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

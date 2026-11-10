@@ -121,7 +121,6 @@ void __cdecl EffectDrops_Launch(unsigned char* drop);
 
 }  // extern "C"
 
-void Effect2A_Inject();
 
 namespace effect_2a {
 // BOF3X_SHADOW=effect_2a: the start-up fuzz, effect_2a_fuzz.cpp. Clones every

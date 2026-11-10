@@ -5,9 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_e3.h"
 #include "game/battle_e3_callees.h"
-#include "game/battle_obj_states.h"
 #include "game/battle_obj_states_callees.h"
 #include "game/battle_windows.h"
 #include "game/battle_windows_callees.h"
@@ -186,6 +184,71 @@ unsigned char* Sprite() { return Sprite_Current; }
 unsigned char* MemberBattleWindows(unsigned i) { return battle_windows::At(::bof3::Img(ObjTrio_addr) + battle_windows::at::kObjectStride * i); }
 
 }  // namespace
+
+// battle_obj_states's callee seam, moved here from battle_obj_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_obj_states {
+namespace {
+
+const std::uint32_t* Table(std::uint32_t address) { return reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Table(::bof3::Img(BattleObj_StateTable_addr) + 0x34), Table(::bof3::Img(BattleObj_StateTable_addr) + 0x3c), Table(::bof3::Img(BattleObj_StateTable_addr) + 0x68), Table(::bof3::Img(BattleObj_SwingSubs_addr)),
+    Table(::bof3::Img(BattleObj_CastSubs_addr)), Table(::bof3::Img(BattleObj_CastDoneSubs_addr)), Table(::bof3::Img(BattleObj_State12Subs_addr)),
+    BattleObj_EndAction,
+    BattleObj_PickPose, BattleObj_ScriptTick, BattleObj_ScriptTickOnce, AreaMap_Elevation, Sprite_EnsureAnimation,
+    Sprite_SetTint, Tint_Release, Battle_RollPendingFlag, Rand, Battle_PlayActorCue, BattleTask_Create,
+    Battle_SetTargetFlag40, File_LoadDone, Battle_LoadSoundByKey, Battle_ClearActorBit,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_obj_states
+
+// battle_windows's callee seam, moved here from battle_windows.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_windows {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Gpu_GetTPage,
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_SetPolyFT4,
+    Text_DrawAt,
+    Text_DrawFont8,
+    Crt_sprintf,
+    Menu_DrawIcon,
+    Sprite_UpdateScreen,
+    reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTick)),
+    reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTickOnce)),
+    reinterpret_cast<unsigned (__cdecl*)(unsigned)>(reinterpret_cast<void*>(&Sprite_EnsureAnimation)),
+    Fn<unsigned (__cdecl*)(unsigned, std::uint32_t, unsigned)>(::bof3::Code(kPoseFrom.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawValue.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawEdge.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawTile.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawTileRgb.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawBar.v)),
+    Fn<void (__cdecl*)(int, int, unsigned)>(::bof3::Code(kDrawDigit.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLinePlain.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi0.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi1.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kEnemyNameShown.v)),
+    Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kTinyFont.v)),
+    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleObj_StateTable_addr))),
+    {at::kKindHandlers[0], at::kKindHandlers[1], at::kKindHandlers[2]},
+    BattleObj_RunState,
+    BattleWin_DrawCommandIcon,
+    BattleWin_DrawMessageBox,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_windows
 
 // original 0x441100: each of the three party objects 0x802D40 + 0x14C i made
 // Field_State and Sprite_Current, then its state step (the third a tail jump,

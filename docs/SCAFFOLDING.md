@@ -164,12 +164,20 @@ of its callers:
 
 1. Read it. Record what you learned in its `evidence` field — a signature in
    `symbols.toml` is a claim about the binary and the evidence rule applies.
-2. Write it, whole, in the module it belongs to under `src/game/`, as
-   `extern "C"` with the recorded calling convention.
-3. Add `impl = "src/game/<file>.cpp"` to its entry.
-4. Add `BOF3_INJECT(Name);` to that module's `<Module>_Inject()` — **next to
+2. Write it, whole, in the file of its translation unit under
+   `src/game/<folder>/` ([`source-layout.md`](source-layout.md): its row in
+   `analysis/tu_layout.tsv` names the file), as `extern "C"` with the
+   recorded calling convention. Code of ours that is not Capcom's goes
+   beside the unit it serves, in that folder; nothing new goes flat in
+   `src/game/`, which holds the shared headers, the harness files and the
+   runtime's file alone (CI: `tools/retire_shells.py --check --strict`).
+3. Add `impl = "src/game/<folder>/<file>.cpp"` to its entry (CI:
+   `tools/tu_census.py --check --strict`, every function in its unit's file).
+4. Add `BOF3_INJECT(Name);` to that file's `<File>_Inject()` — **next to
    the code, not in a central table**, so the address and the implementation
-   are reviewed in one diff. `src/hook/inject_all.cpp` only lists modules.
+   are reviewed in one diff. `src/hook/inject_all.cpp` only lists the files'
+   `_Inject()` functions and the groups' self-tests, each self-test before
+   the binds of the functions it compares.
 5. If behaviour differs from the original *in any way a player or another
    function could observe*, it needs a [`DIVERGENCE.md`](DIVERGENCE.md) entry
    before it merges (rule 2). A faithful replacement needs none.

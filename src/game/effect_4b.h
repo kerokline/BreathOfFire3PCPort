@@ -8,7 +8,6 @@
 
 #include <cstdint>
 
-void Effect4B_Inject();
 
 namespace effect_4b {
 extern std::uint32_t g_hologram_clear;   // defined in effect_4b.cpp (source-layout B0: promoted for a moved reader)

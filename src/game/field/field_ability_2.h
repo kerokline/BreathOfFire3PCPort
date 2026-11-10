@@ -3,3 +3,4 @@
 #pragma once
 
 void FieldAbility2_Inject();
+void FieldAbility2FromRest2e_Inject();

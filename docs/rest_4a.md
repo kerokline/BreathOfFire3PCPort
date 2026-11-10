@@ -21,6 +21,8 @@ a ledger entry** (section 7, L1): `Battle_RandomLiveEnemy` reads up to six
 bytes of its own stack frame it never wrote when five or more enemies are
 standing; ours takes them as 0.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/community/commu_sim.cpp`, `src/game/field/field_trigger_01.cpp`, `src/game/battle/dragon_cmd.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/rest_4a.cpp` itself is retired. A `src/game/rest_4a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4a.cpp:LINE` answers it.
+
 The cut called the band "field core below the community rows" with 20 rows
 under "table 0x6529E4 read by 0x456D50" (that reader is R4B's, and none of
 these rows is in its table). By the code it is three things:

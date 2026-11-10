@@ -12,25 +12,19 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/area_entry.h"
 #include "game/area_entry_callees.h"
-#include "game/event_leader.h"
 #include "game/event_leader_callees.h"
-#include "game/event_objs.h"
 #include "game/event_objs_callees.h"
-#include "game/event_ops.h"
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/field/field_6_callees.h"
 #include "game/field_blocked.h"
-#include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/field_e2.h"
 #include "game/field_e2_callees.h"
 #include "game/field_event.h"
 #include "game/field_event_callees.h"
 #include "game/field_input.h"
-#include "game/field_modes.h"
 #include "game/field_modes_callees.h"
 #include "game/frame_callees.h"
 #include "game/inventory_ops.h"
@@ -40,8 +34,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/scena_sx.h"
-#include "game/scena_sx2.h"
 #include "game/scena_sx2_callees.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -492,6 +484,94 @@ std::int32_t WrappingDistance(std::int32_t a, std::int32_t b) {
 }
 
 }  // namespace
+
+// area_entry's callee seam, moved here from area_entry.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace area_entry {
+
+const Callees kOriginals = {
+    Flags_Test,         Area_ClassifyPending, Area_PickMusic,     Kind2_Place,       Member_ClearState, ScriptContext_Reset,
+    Sprite_LoadPalette, Field_MemberSprite,   Party_SetUpMembers, Party_SwapMembers, ObjTrio_SwapFields,
+};
+Callees g = kOriginals;
+
+}  // namespace area_entry
+
+// event_objs's callee seam, moved here from event_objs.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace event_objs {
+namespace {
+
+template <typename F>
+F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Field_JumpSetUp,
+    Field_JumpCamera,
+    Field_JumpStart,
+    Fn<long (__cdecl*)(long, long, unsigned)>(::bof3::Code(kSlopeAt.v)),
+    MapView_GroundAt,
+    Sprite_ShadeRaise,
+    Sprite_LoadPalette,
+    AreaMap_CellsAll,
+    AreaMap_CellsAll4,
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsAllWide.v)),
+    AreaMap_CellsNone,
+    AreaMap_CellsNone4,
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsNoneWide.v)),
+    AreaMap_ByteAt,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFloorHurt.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFlash.v)),
+    Party_Count,
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kHpLose.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kHpGain.v)),
+    Effect_FindFree,
+    Field_TileTurn,
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kTurnProbe.v)),
+    Actor_EquipCount,
+};
+Callees g = kOriginals;
+
+}  // namespace event_objs
+
+// field_modes's callee seam, moved here from field_modes.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_modes {
+
+const Callees kOriginals = {
+    Scenario_CallA,
+    reinterpret_cast<void (__cdecl*)(int, int, int, int)>(::bof3::Code(kChangeArea.v)),
+    reinterpret_cast<void (__cdecl*)(int)>(::bof3::Code(kStartMusic.v)),
+    File_LoadDone,
+    Task_Sleep,
+    reinterpret_cast<void (__cdecl*)()>(::bof3::Code(kTaskEnd.v)),
+    ObjTrio_SetBit40,
+    Flags_Test,
+    Flags_Set,
+    ScriptFlags_Set40,
+    MapView_SetElevation,
+    Kind2_Place,
+    reinterpret_cast<unsigned char (__cdecl*)()>(::bof3::Code(kEffectAlloc.v)),
+    reinterpret_cast<void (__cdecl*)(int)>(::bof3::Code(kPlaceParty.v)),
+    Sound_PlayEffect,
+    Music_FadeOutStop,
+    Transition_Start,
+    Music_Play,
+    Text_DrawAt,
+    reinterpret_cast<void (__cdecl*)(unsigned short)>(::bof3::Code(kOpenScript.v)),
+    reinterpret_cast<void (__cdecl*)()>(::bof3::Code(kViewShift.v)),
+    ClutStrip_FadeTo,
+    ClutStrip_Restore,
+    Scena16_Area1F,
+    Scena16_Area04,
+    Scena16_Area02,
+    Field_ModeTail,
+};
+Callees g = kOriginals;
+
+}  // namespace field_modes
 
 // original 0x531120: the cells of `code` around Sprite_Current when its +0x34
 // or +0x38 (the fractions) are not 0 - by which is not 0, rows of two or three

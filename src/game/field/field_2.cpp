@@ -12,9 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/area_data_reload.h"
-#include "game/battle_e6.h"
 #include "game/battle_e6_callees.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"
@@ -24,6 +22,7 @@
 #include "game/field_event.h"
 #include "game/field_event_callees.h"
 #include "game/frame_callees.h"
+#include "game/frame_callees_callees.h"
 #include "game/gfx_flush.h"
 #include "game/mode_flow.h"
 #include "game/mode_flow_callees.h"
@@ -31,7 +30,6 @@
 #include "game/music_seq.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_4a.h"
 #include "game/rest_4a_callees.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
@@ -165,6 +163,62 @@ void PutWord(save_menu::U address, save_menu::U v) {
 }
 
 }  // namespace
+
+// field_event's callee seam, moved here from field_event.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_event {
+namespace {
+
+// A function pointer as another function type, through an integer.
+template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+// Every callee. Those this module implements are ours (their names are bound
+// to our functions by symbols.gen.h); the unnamed ones are Capcom's addresses,
+// typed from their call sites and, where read, their first instructions
+// (docs/field-event.md, section 3).
+const Callees kOriginals = {
+    Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderStates_addr)),
+    Sprite_ClearSteps, MapView_GroundAt, Field_LeaderAnimation,
+    reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderControlSteps_addr)), Sprite_ScriptTick,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile89)), Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile8A)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderIdleTest)),
+    {Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderCellEvent)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderTalkTest)),
+     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderSwapTest)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderMenuTest)),
+     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderCheckTest)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderRequest4Test)),
+     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderRequest9Test))},
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderDirection)),
+    Area_ZoneAt, Rand, Party_Count, Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Actor_EquipCount)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_EnsureAnimation)),
+    Flags_Test, Sprite_SetAnimationBank, Field_MemberSprite, Field_PartyLoad, Sprite_ReleaseTint, Sprite_LoadPalette,
+    Field_PartyPosition, Fn<void (__cdecl*)(long, long, unsigned)>(::bof3::Code(bof3::addr::Field_LeaderPlaceOffset)),
+    Party_ClearActive, Field_LeaderFrame, Field_MemberFrame,
+    reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_PendingJumps_addr)),
+    Party_ClearAll, Sprite_SetTint, Field_MemberTimers,
+    Party_JoinReset, Member_ClearState,
+    PartySet_LoadFirst, PartySet_LoadSecond, File_LoadDone, Task_Sleep, PartySet_Find, PartySet_Select,
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::PartySet_ErrorLoop)), LoadDatFile,
+    MapView_CheckHeightScale, AreaMap_Elevation,
+    Tint_Release,
+};
+Callees g = kOriginals;
+
+}  // namespace field_event
+
+// frame_callees's callee seam, moved here from frame_callees.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace frame_callees {
+namespace {
+
+const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
+                            Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
+
+}  // namespace
+
+CalleesFrameCallees g = kOriginals;
+
+}  // namespace frame_callees
 
 // original 0x454960. The CLUT strip - VRAM rows 480..511, 256 cells wide - is
 // kept by game logic in the DAT arena and marked dirty; here it goes up,

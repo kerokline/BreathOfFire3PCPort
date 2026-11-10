@@ -11,11 +11,9 @@
 #include "game/battle/battle_action_callees.h"
 #include "game/battle_actions.h"
 #include "game/battle_actions_callees.h"
-#include "game/battle_e1.h"
 #include "game/battle_e1_callees.h"
 #include "game/battle_phases.h"
 #include "game/battle_phases_callees.h"
-#include "game/battle_setup.h"
 #include "game/battle_setup_callees.h"
 #include "game/battle_turn_steps.h"
 #include "game/battle_turn_steps_callees.h"
@@ -25,7 +23,6 @@
 #include "game/psp_code.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "game/sound.h"
 #include "game/sound_st.h"
@@ -61,6 +58,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 }  // namespace battle_actions
+
+// DIVERGENCE DIV-0179, the unlearned skill in blue (BOF3X_UNLEARNED_BLUE=1,
+// unlearned_blue= in bof3x.ini; off by default). The banner pool 0x93B8E0, 8
+// entries of 0xC: +0xA is the text colour BattleWin_BannerRun 0x597C70 hands
+// Text_DrawAt, which FillBanner always sets to 0. Colour 3 is the sky-blue
+// row of FIRST.DAT's text CLUT strip (kind 0, tag 0x8000).
+namespace battle_actions { bool g_unlearned_blue = false; }
 
 namespace {
 
@@ -350,6 +354,124 @@ unsigned long DispatchRest3a(const char* who, U table, unsigned index, unsigned 
 }
 
 }  // namespace
+
+// battle_setup's callee seam, moved here from battle_setup.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_setup {
+namespace {
+
+template <typename F> F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorAbsent.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorCanAct.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetPending.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessage.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessageAt.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kStatusTint.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPartyName.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyName.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kWakeRoll.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetHpChange.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kEnemyOutpaces.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)),
+    Sprite_ReleaseTint,
+    Msg_SystemPtr,
+    Window_Alloc,
+    Rand,
+    Battle_ActorSkipped,
+    Battle_OpenMsgWindow,
+    Battle_ClearStatus,
+    Battle_ActorStanding,
+    Battle_PartyOutpaces,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_setup
+
+// battle_actions's callee seam, moved here from battle_actions.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_actions {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_MemberAutoTarget,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyPickAction.v)),
+    Battle_ClearActingFlags,
+    Battle_OpenMsgWindow,
+    Msg_SystemPtr,
+    BattleBanner_Add,
+    Battle_SetActorBit,
+    Battle_ActionSuitsTarget,
+    Battle_RemoveFromTurnOrder,
+    Str_CopyN,
+    Skill_ApCost,
+    Battle_PickFlag8Member,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kPickTarget.v)),
+    Magic_LoadForAbility,
+    File_LoadDone,
+    Battle_StartAbilityMagic,
+    Battle_ItemSuitsTarget,
+    Battle_ReturnQueuedItem,
+    Item_NamePtr,
+    Magic_LoadForItem,
+    Battle_StartItemMagic,
+    Battle_AnyFlagF0,
+    LoadDatFile,
+    Gfx_ClutStripCopyRow,
+    Battle_SettleFlag8,
+    BattleQueue_Push,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_actions
+
+// battle_turn_steps's callee seam, moved here from battle_turn_steps.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_turn_steps {
+namespace {
+
+template <typename F> F Fn(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_MarkFasterSide)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_TickCounters)),
+    {Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Expire4000)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Restore800)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_PartyWake40)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_EnemyWake40)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_PartyWake20)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_EnemyWake20)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_Status80)), Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_HpDrift)),
+     Fn<unsigned (__cdecl*)()>(::bof3::Code(bof3::addr::BattleStep_ApUpkeep))},
+    Fn<void (__cdecl*)(int)>(::bof3::Code(bof3::addr::LoadDatFile)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_ClearCommands)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Battle_ClearStatus)),
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(bof3::addr::Sprite_ReleaseTint)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ReturnQueuedItem)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Port_DroppedCall)),  // Port_DroppedCall (ours; called by its address)
+    Fn<void (__cdecl*)(int)>(::bof3::Code(bof3::addr::Music_FadeOutStop)),
+    Fn<void (__cdecl*)(unsigned, int)>(::bof3::Code(bof3::addr::Music_Play)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_OpenMsgWindow)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_OpeningMessage)),
+    Fn<int (__cdecl*)()>(::bof3::Code(bof3::addr::File_LoadDone)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kWriteBackMember.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Window_ResetAll)),
+    Fn<void (__cdecl*)()>(::bof3::Code(kClearEnemies.v)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::BattleTask_ClearAll)),
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(bof3::addr::Char_RecalcStats)),
+    Fn<void (__cdecl*)()>(::bof3::Code(kReloadParty.v)),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_turn_steps
 
 // original 0x42E990 (no PSX twin paired): phase 1's entry. A tail jump
 // through Battle_InputSteps 0x64AE28 by the step 0x904AA1: Battle_RoundStart,
@@ -1131,6 +1253,29 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
     BattleE4_Step2 = BattleE4_Step2 + 1;
 }
 
+// original 0x42FD20 (PSX 0x801D3E60): for kind 4, the ability row of the id
+// 0x904B80 (by the whole u16), for kind 5 the item row of the record's u16
+// +2 (battle_flow.md's ItemRow); when that row's magic file is not 0xFFFF,
+// LoadDatFile(0xD0). Any kind: 0x904AA2 counts one.
+//
+// As the original has it: the ability row is indexed by the whole word
+// (Magic_LoadForAbility uses its low byte); neither index is checked.
+//
+// DIVERGENCE DIV-0167: the PlayStation first keys off voices 16..23
+// (`SsUtKeyOffV` 0x8016F10C for s0 = 0x10..0x17, JP 0x801D3E68..0x801D3E84;
+// US 0x801D3E88.., the same words but the call's target), cutting what the
+// previous action's effect still sounds; the PC has no such step. With the
+// switch (PatchBytes("EffectKeyOff") in BattleActions_Inject, after the
+// self-test), the same point stops those voices' channels
+// (sound::KeyOffEffectVoices, game/sound.h).
+//
+// DIVERGENCE DIV-0174: the same key-off reaching a one-shot - the buffer each
+// of those channels last played without a loop, remembered DLL-side by
+// Sound_PlayEffect - under its own switch (PatchBytes("OneShotKeyOff"), after
+// the self-test as above; sound_st::KeyOffOneShots, game/sound_st.h), so the
+// loops' stop and the one-shots' bisect apart.
+namespace battle_actions { std::uint8_t g_effect_key_off = 0; }
+
 extern "C" void __cdecl BattleAction_EffectPreload(void) {
     if (battle_actions::g_effect_key_off) sound::KeyOffEffectVoices();  // DIV-0167
     if (sound_st::g_one_shot_key_off) sound_st::KeyOffOneShots();  // DIV-0174
@@ -1342,6 +1487,21 @@ extern "C" void __cdecl BattleRoundEnd_Step() {
 extern "C" void __cdecl BattleRoundEnd_FasterStep() {
     [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleRoundEnd_FasterSteps_addr), BattleE4_Step2)();
 }
+
+// original 0x4302D0 (PSX 0x801D4B08, read: the same branches and the same loop
+// bounds): unless an extra round is running (0x904B7A) or the timer 0x904B8E
+// is, Battle_MarkFasterSide's al (0..3, through a four-entry jump table at
+// 0x4303B4) picks the extra round 0x904B7A, 1..3 - 2 in place of 1 or 3 when
+// 0x904AE4 is 2, and none in place of 1 then - and steps 0x904AA2 on. With
+// none (or al above 3), the round ends: flag 0x8000 cleared from members 0
+// and 1 and enemies 0..6 (as the original has it - neither loop reaches the
+// last of its array; section 4 of the doc), the round counted (0x904B90), the
+// extra round cleared, Battle_TickCounters, and 0x904AA1 on to the chain.
+//
+// DIVERGENCE DIV-0154: 1 through PatchBytes("ExtraRoundClear") in
+// BattleTurnSteps_Inject, after the self-test. The loops then clear the mark
+// from all three members and all eight enemies, the setter's bounds (D63).
+namespace battle_turn_steps { std::uint8_t g_extra_round_clear = 0; }
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_CheckFaster() {
     if (BattlePhases_B7A == 0 && BattleFlow_AnimGate == 0) {
@@ -2080,6 +2240,38 @@ extern "C" void __cdecl BattleEnd_ResultPage() {
     [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleResult_ExpSteps_addr), BattleE4_Step4)();
 }
 
+void BattleActionFromBattleActions_Inject() {
+    {
+        // DIV-0167: after the self-test, which compared Capcom's preload.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EffectKeyOff", Low32(&battle_actions::g_effect_key_off), &was, &is, 1);
+        bof3::Log("DIV-0167    a battle action's effect stops the sound-effect channels the last one left (on unless the line above says OFF)");
+    }
+    sound_st::ArmOneShotKeyOff();  // DIV-0174: after the self-test, which compared Capcom's preload
+    // DIV-0179: BOF3X_UNLEARNED_BLUE = 0 (the original's white, the default)
+    // or 1; read after the self-test, which compared the banner with it off,
+    // and after the injects, so that IsEnabled sees the check ours.
+    {
+        char v[8] = "0";
+        const DWORD n = GetEnvironmentVariableA("BOF3X_UNLEARNED_BLUE", v, sizeof v);
+        if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
+            bof3::Fatal("BOF3X_UNLEARNED_BLUE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
+        battle_actions::g_unlearned_blue = v[0] == '1';
+        // its check that BattleAction_AbilityCheck is ours: in BattleAction_Inject,
+        // after the bind it tests
+        if (battle_actions::g_unlearned_blue) bof3::Log("DIV-0179    an enemy's skill the party can still learn has its name in blue");
+    }
+}
+
+void BattleActionFromBattleTurnSteps_Inject() {
+    {
+        // DIV-0154: after the self-test, which compared Capcom's bounds.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ExtraRoundClear", Low32(&battle_turn_steps::g_extra_round_clear), &was, &is, 1);
+        bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
+    }
+}
+
 void BattleAction_Inject() {
     BOF3_INJECT(BattleInput_Dispatch);
     BOF3_INJECT(Battle_RoundStart);
@@ -2108,6 +2300,8 @@ void BattleAction_Inject() {
     BOF3_INJECT(BattleAction_Kind3Wait);
     BOF3_INJECT(BattleAction_AbilityStep);
     BOF3_INJECT(BattleAction_AbilityCheck);
+    if (battle_actions::g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
+        bof3::Fatal("BOF3X_UNLEARNED_BLUE=1 needs BattleAction_AbilityCheck ours, and it is disabled");
     BOF3_INJECT(BattleAction_AbilityCommit);
     BOF3_INJECT(BattleAction_PickRandomAbility);
     BOF3_INJECT(BattleAction_AbilityStart);

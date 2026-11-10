@@ -3,3 +3,4 @@
 #pragma once
 
 void Battle3_Inject();
+void Battle3FromBattleWindowDraw_Inject();

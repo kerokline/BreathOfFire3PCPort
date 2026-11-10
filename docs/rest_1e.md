@@ -12,6 +12,8 @@ and fuzzed through the scenario harness in field mode
 refused (section 6). 28 state tables named. No recorded route enters any of
 the 47 (section 9): fuzz only.
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the file of their translation unit now: `src/game/field/party_action.cpp` ([`source-layout.md`](source-layout.md)). `src/game/rest_1e.cpp` itself is retired. A `src/game/rest_1e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_1e.cpp:LINE` answers it.
+
 The band is one thing: the field actions of four party sets, reached through
 `Field_ActionBySet` / `Field_FormActions` (by the party set) and then through
 per-set tables. Every start the cut lists is a function (each has its own

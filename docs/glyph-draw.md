@@ -6,6 +6,8 @@ DIV-0027 built, all three confirmed in game by the owner 2026-09-23
 (DIVERGENCE.md); through the batch `ab25` and `ab25b` -
 [`takeover-queue-round4.md`](takeover-queue-round4.md) status)
 
+**Source layout (2026-11-09):** the 2 functions this group took live in the file of their translation unit now: `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/glyph_draw.cpp` still held of ours is `src/game/platform/glyph_draw.cpp` now. A `src/game/glyph_draw.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/glyph_draw.cpp:LINE` answers it.
+
 Every glyph the port draws - Chinese or the overlay's Latin - reaches the
 screen through one Direct3D handler, `D3d_DrawGlyph` `0x5A2900`, and the
 texture cache under it, `Font_GlyphTexture` `0x5A2BC0`. Both are ours now

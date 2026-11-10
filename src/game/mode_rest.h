@@ -24,7 +24,6 @@
 
 #include <cstdint>
 
-void ModeRest_Inject();
 
 namespace mode_rest {
 extern std::uint8_t g_event_keeps_music;   // defined in mode_rest.cpp (source-layout B0: promoted for a moved reader)

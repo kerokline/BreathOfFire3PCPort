@@ -9,6 +9,8 @@ of Capcom's with every call out re-aimed at a recorder; 48 negative controls,
 comparison it was meant to test covered by another control), one not refused
 and shown below to be a change that changes nothing. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 7 had it owed.
 
+**Source layout (2026-11-09):** the 31 functions this group took live in the files of their translation units now: `src/game/field/field_6.cpp`, `src/game/field/mode_11.cpp`, `src/game/field/field_4.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/field_event.cpp` still held of ours is `src/game/field/field_event.cpp` now. A `src/game/field_event.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_event.cpp:LINE` answers it.
+
 [`attract-remaining.md`](attract-remaining.md) section 4.6 catalogued this
 block as "the `0x52D8F0`..`0x536AC0` block the area set-up and the field frame
 call into", unread. This document reads the half of it the attract sequence

@@ -7,22 +7,16 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle/enemy_op_callees.h"
-#include "game/battle_e2.h"
 #include "game/battle_e2_callees.h"
-#include "game/battle_e3.h"
 #include "game/battle_e3_callees.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
-#include "game/battle_fx_tasks.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"
-#include "game/enemy_ai_ops.h"
 #include "game/enemy_ai_ops_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3a.h"
 #include "game/rest_3a_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -252,6 +246,27 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
 }
 
 }  // namespace
+
+// enemy_ai_ops's callee seam, moved here from enemy_ai_ops.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace enemy_ai_ops {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    BattleEnemy_SetAnimation, BattleEnemy_ScriptTick, BattleEnemy_ScriptTickOnce, BattleEnemy_Chance70,
+    Battle_EnemyDefeated,
+    Sprite_ScriptTickOnce, Battle_StatusTint, Sprite_SetTint, Tint_Release, Sprite_ReleaseTint, Battle_ApplyDamage,
+    Effect_ApplyResult, Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemClass.v)), Battle_SetDamagePopup,
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kApPopup.v)), EnemyAI_TurnCheck, Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPlayCue.v)),
+    Sound_PlayEffect, Battle_PlayHitSound, Battle_SetHitPopup, Battle_ClearActorBit,
+};
+Callees g = kOriginals;
+
+}  // namespace enemy_ai_ops
 
 // original 0x435830 (no PSX twin paired): once a frame from the battle's
 // frame. Each of the eight enemy objects whose byte +0 is not zero becomes

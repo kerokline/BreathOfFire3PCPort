@@ -8,7 +8,6 @@
 
 #include <cstdint>
 
-void AreaW3d_Inject();
 
 namespace area_w3d {
 extern std::uint8_t g_place_marker;   // defined in area_w3d.cpp (source-layout B0: promoted for a moved reader)

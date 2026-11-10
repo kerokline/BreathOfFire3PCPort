@@ -12,7 +12,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/cheats.h"
 #include "game/effect/effect_kind_5d_callees.h"
-#include "game/effect_2g.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
 #include "game/labels.h"
@@ -617,6 +616,10 @@ extern "C" void __cdecl EffectKind5E_DrawList(void) {
     }
 }
 
+// DIVERGENCE: DIV-0137 - 1 after this module's self-test (PatchBytes
+// "DockLegend", BOF3X_ORIGINAL=DockLegend for the page as it is).
+namespace rest_3e::dock { unsigned char g_on = 0; }
+
 // original 0x47FBE0: the panel - its box (Menu_DrawBox, flags 0, the style),
 // then an FT4 over it (CLUT x 0x20; the corners the box's, the low words) with
 // u 0xC0 / (w byte - 0x41), v 0x50 / (h byte + 0x50), colour 0x80, committed
@@ -718,4 +721,10 @@ void EffectKind5dFromRest3e_Inject() {
     BOF3_INJECT(EffectKind5E_DrawMenu);
     BOF3_INJECT(EffectKind5E_DrawList);
     BOF3_INJECT(EffectKind5E_DrawPanel);
+    // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
+    // fuzz above, which compares Capcom's one quad).
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("DockLegend", Low32(&rest_3e::dock::g_on), &was, &is, 1);
+    bof3::Log("DockLegend the dock's legend shows the buttons the Config has its three tests on: %s",
+              rest_3e::dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
 }

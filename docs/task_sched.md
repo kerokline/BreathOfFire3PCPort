@@ -6,6 +6,8 @@ against one copy of Capcom's unit on stacks of the fuzz's own: 20,000
 rounds, 0 mismatches. Thirty-three negative controls: 30 refused by a count (exit 3), 3 by a fault of the self-test. Not yet through a live check: the
 coordinator's batch after the merge (section 7 says what it must look at).
 
+**Source layout (2026-11-09):** the 8 functions this group took live in the file of their translation unit now: `src/game/core/task.cpp` ([`source-layout.md`](source-layout.md)). `src/game/task_sched.cpp` itself is retired. A `src/game/task_sched.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/task_sched.cpp:LINE` answers it.
+
 Group EA of the ninth round. The three recorded routes (shop, world map,
 combat), traced all-original under a first-call trace of every
 pointer-reached start on 2026-09-25, enter one hand-written unit of

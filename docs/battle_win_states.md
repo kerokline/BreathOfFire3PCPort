@@ -8,6 +8,8 @@ stack-table immediate re-aimed at a recorder: 57,000 rounds, 0 mismatches;
 nothing the pool can hold. `BOF3X_SHADOW='*'` passes. Not yet live-checked:
 the combat A/B after the merge is the check of the whole.
 
+**Source layout (2026-11-09):** the 19 functions this group took live in the file of their translation unit now: `src/game/menu/menu_list.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_win_states.cpp` still held of ours is `src/game/menu/battle_win_states.cpp` now. A `src/game/battle_win_states.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_win_states.cpp:LINE` answers it.
+
 Group CL of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)): the battle's window
 states - record handler 3 of `Field_RunTaskRecords` and everything under it.

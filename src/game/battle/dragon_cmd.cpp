@@ -17,9 +17,7 @@
 #include "game/battle/dragon_cmd_callees.h"
 #include "game/battle_e5.h"
 #include "game/battle_e5_callees.h"
-#include "game/battle_e6.h"
 #include "game/battle_e6_callees.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/battle_text.h"
 #include "game/boss_harness.h"
@@ -31,7 +29,6 @@
 #include "game/fishing_text.h"
 #include "game/labels.h"
 #include "game/language_tags.h"
-#include "game/magic_engine.h"
 #include "game/magic_harness.h"
 #include "game/map_layers.h"
 #include "game/menu_verbs.h"
@@ -45,9 +42,7 @@
 #include "game/quick_menu.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3d.h"
 #include "game/rest_3d_callees.h"
-#include "game/rest_4a.h"
 #include "game/rest_4a_callees.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
@@ -593,6 +588,128 @@ void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
 }  // namespace
 
 #pragma clang attribute pop
+
+// mode_flow's callee seam, moved here from mode_flow.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace mode_flow {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Task_Sleep, Task_Exit, Task_Create, Task_ClearPrivate,
+    Transition_FadeSub, Transition_FadeAdd, Transition_DrawTile, Window_ResetAll, Game_ClockTick,
+    Transition_Start, Field_WaitTransition, Area_Enter, Area_EntryWalk, MoveScript_TintReset,
+    Field_SlotRelease, Field_SlotsReleaseAll, Gfx_ClutStripRestore, File_LoadDone, Gfx_ClearRect,
+    Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetTile, Gpu_SetSemiTrans,
+    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kEntryPoint.v)), Field_EncounterThresholdRoll,
+    Field_Frame, Effect_ClearAll, Music_Play, LoadDatFile, Field_PartySetUp, Area_ZoneIdAt, Field_ViewReset,
+    Gte_SetColorMatrix, Scenario_Start, Area_RunPlacement, Flags_Clear, Field_ModeDispatch, Field_PartyFirstFrame,
+    MoveCmd_TestFB, Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPlaceParty.v)), Field_MembersFrame, Port_DroppedCall,
+    Title_Task, Gfx_ClearImage,
+    {Transition_Kind00, Transition_Kind01, Transition_Kind02, Transition_Kind03, Transition_Kind04,
+     Transition_Kind05, Transition_Kind06, Transition_Kind07, Transition_Kind08, Transition_Kind09,
+     Transition_Kind10, Transition_Kind11, Transition_Kind12, Transition_Kind13, Transition_Kind14,
+     Transition_Kind15, Transition_Kind16, Transition_Kind17, Transition_Kind18, Transition_Kind19,
+     Transition_Kind20},
+};
+Callees g = kOriginals;
+
+}  // namespace mode_flow
+
+// save_menu's callee seam, moved here from save_menu.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace save_menu {
+namespace {
+
+template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    File_Open, File_Size, File_Seek, File_Read, File_Close,
+    Crt_malloc, Crt_free, Crt_sprintf,
+    Crt_findfirst, Crt_findnext,
+    Rand,
+    Snd_LoadBank, Sound_PlayEffect, Music_Stop, Music_Start, Music_SetVolume, Music_IsPlaying,
+    Fn<void (__cdecl*)(const void*)>(::bof3::Code(kVoicePlay.v)), Fn<int (__cdecl*)()>(::bof3::Code(kVoiceIsPlaying.v)),
+    Char_ClearStatus,
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(kRecalcStats.v)),
+    Flags_Test, Party_Count,
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemPrice.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kShopFlag.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryRemove.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
+    Fn<void (__cdecl*)(int, int, int, int, int, unsigned)>(::bof3::Code(kWindowFrame.v)),
+    Fn<void (__cdecl*)(int, int, int, int)>(::bof3::Code(kWindowBox.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kWindowBack.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned)>(::bof3::Code(kWindowFrame5.v)),
+    Fn<void (__cdecl*)(unsigned, int, int, const unsigned char*)>(::bof3::Code(kSlotDraw.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, int)>(::bof3::Code(kSlotCursor.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kMenuYesNo.v)),
+    Msg_SystemPtr, Text_DrawAt,
+    Fn<void (__cdecl*)(int, int, int)>(::bof3::Code(kDrawHand.v)),
+    Input_AutoRepeat,
+    Gpu_SetTile, Gpu_SetSprt, Gpu_SetSemiTrans, Gpu_SetDrawMode, Gpu_GetTPage, Gpu_GetClut, Gfx_CommitPrim,
+    Transition_Start, Field_MemberSprite, Sprite_SetAnimation, NewGame_InitCharacters, Scenario_Start,
+    Scenario_Load, Field_PartyLoad, PartySet_Select, File_LoadDone, Task_Sleep,
+    Fn<void (__cdecl*)(U)>(::bof3::Code(kTaskRestart.v)),
+    Save_ListFiles, Save_ReadFile, Save_ReadSummaries,
+    TitleMenu_DrawFrame, TitleMenu_DrawRows, TitleMenu_DrawRow, TitleMenu_DrawPiece, SaveMenu_DrawSlots,
+    NewGame_RollGrowth, NewGame_RollSum,
+};
+Callees g = kOriginals;
+
+}  // namespace save_menu
+
+// battle_sprites's callee seam, moved here from battle_sprites.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_sprites {
+
+template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+const Callees kOriginals = {
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Rand,
+    Raw<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_SetActorBit)),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::AbilityList_Add)),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Item_UseFlags)),   // group TWO's (2026-10-06): by address, the value unchanged
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Stat_AddClamped,
+    Stat_AddCap100,
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Window_Alloc)),
+    Sound_PlayEffect,
+    AreaMap_Elevation,
+    Sprite_SetAnimationBank,
+    Sprite_UpdateScreen,
+    // rebound 2026-09-29 (round twelve, BE6): the values unchanged, the fuzz keys on them
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberRollByAction)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActionBitSet)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberListFull)),
+    Battle_MemberCoinFlip,
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_AutoTargetCheck)),   // R4A's (round 14): by address, the value unchanged
+    Raw<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberAutoFixed)),            // R4A's
+    Raw<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PickEnemyTarget)),
+    Battle_MemberOutAction,
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberActionIs0E)),   // R4A's
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_RandomOtherMember)),  // R4A's
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_RandomEnemy)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_DefaultTarget)),
+    ClutMap_Mark,
+    ClutMap_FindFree,
+    ClutMap_FindOwner,
+    Raw<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PlaceBossActors)),   // R3G's: by address, as the other groups' above
+    Battle_InitBossEncounter,
+    Battle_InitEnemies,
+    Battle_SetupEnemy,
+    Battle_CopyEnemyData,
+    Battle_SetEnemyOffset,
+    Battle_EnemyKindFlag,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_sprites
 
 // original 0x44F770: the status rate - as Battle_PsiStatusDeathAffinity with
 // the table 0x64E96C, and 0xFFFF (the rolls' "cannot be resisted") when the
@@ -1314,6 +1431,23 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
     }
     MoveCursor(::bof3::Img(Window19_addr), keys, 0xB, 9);
 }
+
+// original 0x451160 (0x64ED50[3]; PSX 0x800A3294): the overwrite prompt: line 0x62; the
+// repeat keys of 0xA000; cancel, or confirm on answer 1: sound 0x106, a step
+// back; confirm on 0: sound 0x104, the next step; else a repeat key flips the
+// answer (0x904B74 ^= 1); the hand at 0xD5 + 0x22 * answer (the dword), 0x18.
+//
+// As the original has it: the hand reads the dword at 0x904B74 (0x4511F2)
+// where every writer stores a word (0x451042, 0x4511EA, 0x431C70); the
+// PlayStation (US 0x800A632C, JP 0x800A332C) reads the answer as a u16. The
+// level-up notice's other reader (0x431C77) masks its dword with 0xFFFF, so
+// this is the only one that can see the halfword 0x904B76.
+//
+// DIVERGENCE DIV-0162: 1 through PatchBytes("StoreAskWord") in
+// BattleE5_Inject, after the self-test. The hand then reads the word, as the
+// PlayStation; the two differ only when 0x904B76 is not 0, which no
+// instruction of the exe names (D338).
+namespace battle_e5 { std::uint8_t g_store_ask_word = 0; }
 
 extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     ShowLine(Line(0x62));
@@ -2897,6 +3031,15 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
 // (File_LoadDone 0x801636F0), the PC's loads are synchronous, so every wait
 // loop's first question is answered "done".
 extern "C" int __cdecl File_LoadDone(void) { return 1; }
+
+void DragonCmdFromBattleE5_Inject() {
+    {
+        // DIV-0162: after the self-test, which compared Capcom's dword read.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("StoreAskWord", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
+        bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
+    }
+}
 
 void DragonCmd_Inject() {
     BOF3_INJECT(Battle_StatusResistRate);

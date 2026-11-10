@@ -6,6 +6,8 @@ through the shared harness, with 0 mismatches over 112,000 rounds. There are
 98 negative controls, and every one is refused. Nothing recorded casts these
 spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 56 functions this group took live in the files of their translation units now: `src/game/magic/myollnir.cpp`, `src/game/magic/blizzard_shard.cpp`, `src/game/magic/jolt_bolt.cpp` and 1 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s22.cpp` itself is retired. A `src/game/magic_s22.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s22.cpp:LINE` answers it.
+
 This is round nine, first wave, group S22
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
 It takes four `Magic_Rows` overlays:

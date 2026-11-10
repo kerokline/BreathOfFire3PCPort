@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 120,000 rounds. 334 negative controls planted: 331 refused by a count (exit 3), one (H4) by a fault with its near variant (H4b) refused by a count, two equivalent (G48, G51) with their near variants refused. Nothing recorded
 casts these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 60 functions this group took live in the files of their translation units now: `src/game/magic/geo_breath_child.cpp`, `src/game/magic/magma_breath_record.cpp`, `src/game/battle/battle_fx_2.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/magic_s37.cpp` itself is retired. A `src/game/magic_s37.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s37.cpp:LINE` answers it.
+
 Round nine, fifth spell wave, group S37
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

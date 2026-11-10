@@ -10,6 +10,8 @@ reading) and Head Cracker's unbounded waits (section 6 - by reading, the
 target-state wait ends for ordinary targets; the reported freeze is not
 explained).
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the files of their translation units now: `src/game/boss/head_cracker.cpp`, `src/game/boss/head_cracker_rock.cpp`, `src/game/magic/paralyzer.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/magic_engine.cpp` itself is retired. A `src/game/magic_engine.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_engine.cpp:LINE` answers it.
+
 Group E of round nine's second spell wave
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3,
 §4). No `DIVERGENCE.md` entry: every function is a faithful replacement,

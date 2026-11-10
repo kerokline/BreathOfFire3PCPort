@@ -17,7 +17,6 @@
 #include "game/mode_flow_callees.h"
 #include "game/mode_rest.h"
 #include "game/mode_rest_callees.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
 #include "game/mode_tasks.h"
 #include "game/move_script_bytes.h"
@@ -343,6 +342,36 @@ void MenuModeEnter(int file) {
 
 }  // namespace
 
+// mode_states's callee seam, moved here from mode_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace mode_states {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    {MsgBox_SysChoice80, MsgBox_SysChoice81, MsgBox_SysChoice82, MsgBox_SysChoice83, MsgBox_SysChoice84,
+     MsgBox_SysChoice85, MsgBox_SysChoice86, MsgBox_SysChoice87, MsgBox_SysChoice88, MsgBox_SysChoice89,
+     MsgBox_SysChoice8A, MsgBox_SysChoice8B, MsgBox_SysChoice8C, MsgBox_SysChoice8D, MsgBox_SysChoice8E,
+     MsgBox_SysChoice8F},
+    {0x4981F1, 0x4983F1},
+    Look_Return, Field_LoadingFrame, Menu_Frame,
+    Field_Frame, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripCopyRow, Sprite_FaceDirection,
+    Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
+    AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects,
+    MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
+    Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
+    Sprite_ShadeFadeBegin, Sprite_ShadeFadeStep,
+    Flags_Test, Flags_Set, ScriptFlags_Set40, Music_LoadFile, Music_FadeOutStop, Sound_PlayEffect,
+    Effect_FindFree, Scenario_CallA, AreaMap_SetupEntries, MoveCmd_TestFB, Field_ChangeArea,
+    Menu_DrawHand,
+};
+Callees g = kOriginals;
+
+}  // namespace mode_states
+
 // original 0x495040 (PSX 0x8014EB68): unless Transition_Busy is set (a
 // transition already running), the kind to the word 0x66C828 and task 2
 // started at 0x495070.
@@ -523,6 +552,12 @@ extern "C" void __cdecl Field_Task(void) {
         mode_flow::g.sleep(1);
     }
 }
+
+namespace mode_flow {
+
+std::uint32_t g_area_track_fallback = 0;  // DIV-0092; 1 through PatchBytes("AreaTrackFallback") in ModeRest_Inject
+
+}  // namespace mode_flow
 
 // original 0x495840: Game_Mode 0, the start of a game (PSX 0x801980EC). The
 // party loaded from slot 0; the area change requested to the saved position
@@ -880,6 +915,10 @@ extern "C" void __cdecl GameMode5_ToPlaces(void) {
     BattleFrames();
     if (SH_CALL(File_LoadDone)() != 0 && placed != 0 && Field_Kind2Hold == 0) StepUp();
 }
+
+// DIVERGENCE DIV-0149: 1 through PatchBytes("EventBattleKeepsMusic") in
+// ModeRest_Inject, after the self-test.
+namespace mode_rest { std::uint8_t g_event_keeps_music = 0; }
 
 // original 0x495FD0 (GameMode5_Steps[3]; PSX 0x80198C94): Field_PartyLoad(1),
 // Encounter_PartyAtPlaces, the two frames; Music_FadeOutStop(0xA) unless
@@ -1490,6 +1529,21 @@ void TransitionFromModeFlow_Inject() {
 }
 
 void TransitionFromModeRest_Inject() {
+    {
+        // DIV-0092: armed here because ModeFlow_Inject (and its fuzz of
+        // GameMode_Start) ran earlier in InjectAll; both fuzzes see Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("AreaTrackFallback",
+                         Low32(&mode_flow::g_area_track_fallback), was, is, 4);
+        bof3::Log("DIV-0092    the field's music after a battle, and after a load of a save without a track, is the area's own (on unless the line above says OFF)");
+    }
+    {
+        // DIV-0149: after the self-test, which compared Capcom's GameMode5_Load.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EventBattleKeepsMusic", Low32(&mode_rest::g_event_keeps_music),
+                         &was, &is, 1);
+        bof3::Log("DIV-0149    an event battle with no music of its own leaves the scene's song playing (on unless the line above says OFF)");
+    }
     BOF3_INJECT(GameMode3_Run);
     BOF3_INJECT(GameMode3_Enter);
     BOF3_INJECT(GameMode3_Leave);

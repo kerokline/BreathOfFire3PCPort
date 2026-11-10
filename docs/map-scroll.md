@@ -8,6 +8,8 @@ at a recording stand-in, 0 mismatches, and 48 of 50 negative controls refused
 by a count (section 5). **Not yet through the live batch check** - that runs
 centrally after the merge.
 
+**Source layout (2026-11-09):** the 9 functions this group took live in the file of their translation unit now: `src/game/field/area_map.cpp` ([`source-layout.md`](source-layout.md)). `src/game/map_scroll.cpp` itself is retired. A `src/game/map_scroll.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/map_scroll.cpp:LINE` answers it.
+
 Handoff item 0000, the second parallel round, group F. Last round took
 `AreaMap_Frame` `0x56E6C0` and the view's rebuild
 ([`map-layers.md`](map-layers.md)); this is what `AreaMap_Frame` calls when

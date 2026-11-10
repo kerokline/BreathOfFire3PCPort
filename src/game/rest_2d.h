@@ -93,7 +93,6 @@ void __cdecl FieldMenuItems_State5ByStep(void);      // 0x58B1C0
 
 }  // extern "C"
 
-void Rest2D_Inject();
 
 namespace rest_2d {
 extern std::uint8_t g_field_heal_party;   // defined in rest_2d.cpp (source-layout B0: promoted for a moved reader)

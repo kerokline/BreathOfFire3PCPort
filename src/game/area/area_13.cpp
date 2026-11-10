@@ -5,7 +5,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w0a.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

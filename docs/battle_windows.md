@@ -7,6 +7,8 @@ headless against a copy of Capcom's with every call re-aimed at a recorder:
 count, three not refused because they change nothing. `BOF3X_SHADOW='*'` passes.
 **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 6 had it owed.
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the files of their translation units now: `src/game/battle/battle_3.cpp`, `src/game/battle/battle_obj.cpp`, `src/game/menu/menu_list.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_windows.cpp` still held of ours is `src/game/battle/battle_windows.cpp` now. A `src/game/battle_windows.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_windows.cpp:LINE` answers it.
+
 Group BC of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)): the handlers the
 window task `0x596A90` calls in battle - the party row, the command cross, the

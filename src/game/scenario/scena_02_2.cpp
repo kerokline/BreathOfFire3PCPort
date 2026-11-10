@@ -7,7 +7,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/scena_sc2.h"
 #include "game/scena_sc2_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

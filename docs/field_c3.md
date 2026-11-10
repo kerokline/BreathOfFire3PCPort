@@ -14,6 +14,8 @@ section 7) without edits to it: 189,000 rounds, 0 mismatches. 160 controls plant
 Fuzz-only except `FieldCore_ScriptMove`, which the whelp route enters
 (section 9).
 
+**Source layout (2026-11-09):** the 63 functions this group took live in the files of their translation units now: `src/game/field/field_core.cpp`, `src/game/field/field_3.cpp` ([`source-layout.md`](source-layout.md)). `src/game/field_c3.cpp` itself is retired. A `src/game/field_c3.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_c3.cpp:LINE` answers it.
+
 The band is two runs of the field's resident code: `0x5172C0..0x5195F9`
 (object steering among the field objects' kind handlers, whose other
 functions are ours since round eight, [`object-kinds.md`](object-kinds.md))

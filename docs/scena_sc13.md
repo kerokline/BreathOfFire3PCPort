@@ -7,6 +7,8 @@ two runs (chapter 13's 23 with `Cond_ByteFA` 13, chapter 14's 28 with 14):
 0 mismatches in 816,000 rounds (16,000 a function); 238 of 240 negative controls refused by a count, the other two equivalent mutants whose near variants are refused. Fuzz only:
 no recorded route reaches chapters 13 or 14 (section 8).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/scenario/scena_14_2.cpp`, `src/game/scenario/scena_13_2.cpp` ([`source-layout.md`](source-layout.md)). `src/game/scena_sc13.cpp` itself is retired. A `src/game/scena_sc13.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc13.cpp:LINE` answers it.
+
 Group SC13 of round ten's third wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §9,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3). The brief

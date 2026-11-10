@@ -7,9 +7,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/area/area_75_callees.h"
 #include "game/area_harness.h"
-#include "game/area_w1f.h"
 #include "game/area_w1f_callees.h"
-#include "game/area_w2a.h"
 #include "game/area_w2a_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"
@@ -958,4 +956,9 @@ void Area75_Inject() {
     BOF3_INJECT(Area75_DrawCounters);
     BOF3_INJECT(Area75_DrawWindow);
     BOF3_INJECT(Area76_StepDisarmTail5);
+    // DIV-0188 guards the rope pull's judgement here; Capcom's
+    // Area75_PhasePlay would judge as before and the cheat would be silently
+    // half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Area75_PhasePlay))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs Area75_PhasePlay ours, and it is disabled");
 }

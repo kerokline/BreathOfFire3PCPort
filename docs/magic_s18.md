@@ -6,6 +6,8 @@ through the spell harness ([`magic_harness.md`](magic_harness.md)), 0
 mismatches in 84,000 rounds; 121 negative controls, every one refused by a count (exit 3) in the function it touches. No recorded route casts
 either overlay: fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 42 functions this group took live in the files of their translation units now: `src/game/magic/drain_orb_a.cpp`, `src/game/magic/buff_spike.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s18.cpp` itself is retired. A `src/game/magic_s18.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s18.cpp:LINE` answers it.
+
 Group S18 of the spell round ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)
 section 4): two overlays of `Magic_Rows`, whole.
 

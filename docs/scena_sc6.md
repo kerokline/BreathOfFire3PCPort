@@ -7,6 +7,8 @@ through the scenario harness ([`scenario_harness.md`](scenario_harness.md)):
 controls planted, 92 refused by a count** (at least one per function);
 `BOF3X_SHADOW='*'` exit 0. Fuzz only: no route was played (section 7).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the file of their translation unit now: `src/game/scenario/scena_06_3.cpp` ([`source-layout.md`](source-layout.md)). `src/game/scena_sc6.cpp` itself is retired. A `src/game/scena_sc6.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc6.cpp:LINE` answers it.
+
 Group SC6 of round ten's second wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §6,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3), one stage:

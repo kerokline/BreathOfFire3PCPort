@@ -10,6 +10,8 @@ at a recorder: **35 x 10,000 rounds, 559,326 stand-in calls, 0 mismatches**;
 that change nothing** (section 9). The fuzz also caught a **clang miscompile**
 (section 8). **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35; section 10 had it owed.
 
+**Source layout (2026-11-09):** the 35 functions this group took live in the files of their translation units now: `src/game/field/field_4.cpp`, `src/game/field/field_7.cpp`, `src/game/field/field_5.cpp` and 3 more ([`source-layout.md`](source-layout.md)). `src/game/event_ops.cpp` itself is retired. A `src/game/event_ops.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/event_ops.cpp:LINE` answers it.
+
 Group V1 of the sixth round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)), "the event script's
 shop and scene ops". Read, the row is three things, none of them a shop:

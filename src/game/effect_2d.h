@@ -104,7 +104,6 @@ void __cdecl EffectKind49_V4Run(void);
 
 }  // extern "C"
 
-void Effect2D_Inject();
 
 namespace effect_2d {
 // BOF3X_SHADOW=effect_2d: the start-up fuzz, effect_2d_fuzz.cpp. Clones every

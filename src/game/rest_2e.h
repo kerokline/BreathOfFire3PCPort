@@ -15,7 +15,6 @@
 // group's inject and its fuzz.
 #pragma once
 
-void Rest2E_Inject();
 
 namespace rest_2e {
 extern unsigned char g_sort_by_id;   // defined in rest_2e.cpp (source-layout B0: promoted for a moved reader)

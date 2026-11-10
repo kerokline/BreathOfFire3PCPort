@@ -13,6 +13,8 @@ field mode ([`scenario_harness.md`](scenario_harness.md) section 7) without
 edits to it: 306,000 rounds, 0 mismatches. 135 controls planted one at a time: 132 refused by a count, 2 by a crash (their near variants by a count), 1 equivalent (its near variant refused).
 Fuzz-only except the three the owner's routes enter (section 9).
 
+**Source layout (2026-11-09):** the 51 functions this group took live in the files of their translation units now: `src/game/field/field_6.cpp`, `src/game/field/field_7.cpp`, `src/game/field/mode_11.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/field_e2.cpp` still held of ours is `src/game/field/field_e2.cpp` now. A `src/game/field_e2.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_e2.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | The event script's rest: `Scenario_CallB`, the after-battle tally and its two record counts, `Field_FaceMode11Object`, `Field_FloorHurt`, the wide cell tests, `Field_ObjectTrigger` and the two hooks under it | 13 | direct calls from ours (the chapter code, `GameMode_Field`, `Field_FloorDamage`, `AreaMap_CellsAll` / `None`, `Field_WayBlocked`, `Field_ObjectIdle`, `Field_LeaderTalkTest`), FC3 and FE1, and `Field_LeaderStates[14]` / `0x65F960[14]` |

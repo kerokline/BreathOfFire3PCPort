@@ -9,13 +9,11 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/area_data_reload.h"
-#include "game/area_entry.h"
 #include "game/area_entry_callees.h"
 #include "game/effect_1g.h"
 #include "game/effect_1g_callees.h"
 #include "game/field_e2.h"
 #include "game/field_e2_callees.h"
-#include "game/game_last.h"
 #include "game/game_last_callees.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
@@ -243,6 +241,58 @@ using move_script::Word;
 
 }  // namespace window_task
 
+// window_task's callee seam, moved here from window_task.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace window_task {
+namespace {
+
+template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Area_ClassifyPending,
+    Area_PickMusic,
+    Area_ZoneAtIn,
+    Window_DrawFrame,
+    Window_DrawOutline,
+    Window_DrawLine,
+    Window_FreeCurrent,
+    Flags_Test,
+    As<unsigned char(__cdecl*)()>(::bof3::Code(kMsgBoxFrameTask.v)),
+    Gpu_SetDrawMode,
+    Gfx_CommitPrim,
+    Gpu_SetTile,
+    Gpu_SetPolyGT4,
+    Gpu_SetLineF4,
+    Gpu_SetLineF2,
+    Gpu_SetSemiTrans,
+    Gpu_GetTPage,
+    Gpu_GetClut,
+    As<Handler>(::bof3::Code(kListSetUp.v)),
+    As<Handler>(::bof3::Code(kListDraw.v)),
+    As<Handler>(::bof3::Code(kListCursorDraw.v)),
+    As<Handler>(::bof3::Code(kSetDraw.v)),
+    As<Handler>(::bof3::Code(kSetCursorDraw.v)),
+    {As<Handler>(::bof3::Code(kRecordHandlers[0])), As<Handler>(::bof3::Code(kRecordHandlers[1])), As<Handler>(::bof3::Code(kRecordHandlers[2])),
+     As<Handler>(::bof3::Code(kRecordHandlers[3])), As<Handler>(::bof3::Code(kRecordHandlers[4])), As<Handler>(::bof3::Code(kRecordHandlers[5])),
+     As<Handler>(::bof3::Code(kRecordHandlers[6])), As<Handler>(::bof3::Code(kRecordHandlers[7])), As<Handler>(::bof3::Code(kRecordHandlers[8]))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0States)), As<Handler>(::bof3::Code(bof3::addr::Window_Kind1States)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2States))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Close))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
+};
+Callees g = kOriginals;
+
+}  // namespace window_task
+
 // original 0x593950 (GameMode8_TradeStep's tail jump 0x52CF30): xor eax, eax;
 // mov al, [0x93985C]; jmp [ItemTrade_States + eax * 4] - unchecked. The three
 // states are ItemTrade_Open, ItemTrade_Run, ItemTrade_Leave (all ours); the
@@ -417,6 +467,17 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     SH_AT(void (__cdecl*)(), field_e2::at::kTradeCount.v)();
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
 }
+
+// DIVERGENCE DIV-0027 (amended 2026-10-03, after the live check): the per-item
+// "Is <item> OK?" answers. Capcom draws the two answer words, one space apart,
+// at x 0xDE and the hand at 0xDC + 36 * the answer - stops fitted to the Chinese
+// words: under the English overlay the hand on No covers Yes (the owner's
+// masterAndManillo.txt, frames 2700 and 3030). With the flag on (FieldE2_Inject,
+// a Latin overlay, after the self-test) the layout is the load / save screen's,
+// as the leave prompt's is (effect_1g.cpp, yes_no_layout.cpp): the first answer
+// three spaces further left, the second where it was, the hand two units left
+// of each.
+unsigned char g_trade_confirm_layout = 0;
 
 // original 0x593E60 (ItemTrade_RunSteps[2]): the yes / no. Left or right
 // (Input_AutoRepeat of 0xA000) flips the hand 0x6BE08F, sound 0x100. Else
@@ -1176,4 +1237,15 @@ void ItemTrade_Inject() {
     BOF3_INJECT(Area_ZoneIdAt);
     BOF3_INJECT(Area_PickMusic);
     BOF3_INJECT(Area_ZoneAtIn);
+}
+
+void ItemTradeFromFieldE2_Inject() {
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's prompt; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("TradeConfirmLayout", Low32(&g_trade_confirm_layout),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
+    }
 }

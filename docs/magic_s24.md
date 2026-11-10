@@ -6,6 +6,8 @@ headless through the shared harness with 0 mismatches, and every planted
 control is refused, except one equivalent mutant (section 4). No recorded route casts
 these spells, so they stay fuzz-only until the owner looks at them.
 
+**Source layout (2026-11-09):** the 47 functions this group took live in the files of their translation units now: `src/game/magic/fx_104.cpp`, `src/game/magic/fx_105.cpp`, `src/game/magic/fx_106.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s24.cpp` itself is retired. A `src/game/magic_s24.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s24.cpp:LINE` answers it.
+
 Group S24 of round nine ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4),
 taken with the spell harness ([`magic_harness.md`](magic_harness.md)).
 Three `Magic_Rows` overlays, contiguous in the band:

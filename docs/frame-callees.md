@@ -7,6 +7,8 @@ each fuzzed against a byte-copy of Capcom's at start-up
 (`BOF3X_SHADOW=frame_callees`, 24,000 rounds, 0 mismatches) with
 49 of 51 planted bugs refused, the other two changes that change nothing. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)).
 
+**Source layout (2026-11-09):** the 8 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_06.cpp`, `src/game/field/field_2.cpp`, `src/game/effect/effect_gte.cpp` and 1 more ([`source-layout.md`](source-layout.md)). What `src/game/frame_callees.cpp` still held of ours is `src/game/effect/frame_callees.cpp` now. A `src/game/frame_callees.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/frame_callees.cpp:LINE` answers it.
+
 [`field-frame.md`](field-frame.md) section 3 left these as the field frame's
 unread callees: `Field_Frame` / `Field_FrameScripted` (`0x517200` /
 `0x517240`) call `Party_UpdateScreens`, `Effect_RunObjects`,

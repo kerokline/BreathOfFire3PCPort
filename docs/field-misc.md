@@ -6,6 +6,8 @@ instruction and against its PSX twin where one is paired, fuzzed against
 Capcom's at start-up (`BOF3X_SHADOW=field_misc`, 170,000 rounds, 0 mismatches)
 with 77 negative controls: 70 refused by a comparison, 3 that change nothing, 2 mis-planted and planted again, 2 refused only by a fault and replaced (section 3.1). No divergence, no defect. **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35 and the attract batch; section 6 had it owed.
 
+**Source layout (2026-11-09):** the 16 functions this group took live in the files of their translation units now: `src/game/field/area_map.cpp`, `src/game/platform/d3d.cpp`, `src/game/platform/gpu.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/field_misc.cpp` still held of ours is `src/game/field/field_misc.cpp` now. A `src/game/field_misc.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_misc.cpp:LINE` answers it.
+
 Group M of the sixth parallel round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)): what the owner's shop
 route (`tools/recipes/shop.txt`) reaches and the attract sequence does not, in

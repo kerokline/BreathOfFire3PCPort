@@ -38,7 +38,6 @@ unsigned char* __cdecl UiSprite_Draw(unsigned sprite, unsigned slot, int x, int 
 
 }  // extern "C"
 
-void Effect1F_Inject();
 
 namespace effect_1f {
 // BOF3X_SHADOW=effect_1f: the start-up fuzz, effect_1f_fuzz.cpp. Clones the

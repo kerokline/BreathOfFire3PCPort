@@ -3,3 +3,4 @@
 #pragma once
 
 void Menu_Inject();
+void MenuFromFieldO_Inject();

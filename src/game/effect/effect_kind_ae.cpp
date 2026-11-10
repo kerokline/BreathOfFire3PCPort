@@ -9,7 +9,6 @@
 #include "game/cheats.h"
 #include "game/draw_pool.h"
 #include "game/effect/effect_kind_ae_callees.h"
-#include "game/effect_4f.h"
 #include "game/effect_4f_callees.h"
 #include "game/effect_gte.h"
 #include "game/map_rim.h"

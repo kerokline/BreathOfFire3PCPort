@@ -151,6 +151,13 @@ extern "C" float* __cdecl EffectGte_ProjectPoint(const long* point, float* out) 
     return screen + 2;
 }
 
+namespace effect_gte {
+// DIV-0126 (docs/lighthouse-rays.md): 1 through PatchBytes("DiagonalIdentity")
+// in EffectGte_Inject, after the fuzz, which runs Capcom's 1s. While 0 the
+// diagonal is Capcom's PC value, 1; set, it is the PlayStation twin's 0x1000.
+std::uint32_t g_identity = 0;
+}  // namespace effect_gte
+
 // original 0x494180 (0x2F bytes): nine word stores - 1, 0, 0, 0, 1, 0, 0, 0,
 // 1 - at +0..+0x10, in that order. eax is the matrix (loaded first).
 // DIV-0126: with the switch armed the diagonal is 0x1000, the GTE's identity in
@@ -209,6 +216,15 @@ extern "C" long __cdecl EffectGte_ProjectSize(const long* point, const short* si
 }
 
 void EffectEffectGteFromEffectGte_Inject() {
+    {
+        // DIV-0126: armed after the fuzz above, which sees Capcom's 1s.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        const bool on = bof3::PatchBytes(
+            "DiagonalIdentity", Low32(&effect_gte::g_identity),
+            was, is, 4);
+        if (on && bof3::WantsShadow("effect_gte")) effect_gte::IdentityCheck();
+        bof3::Log("DIV-0126    EffectGte_SetDiagonalOne's diagonal is 0x1000, the PlayStation's identity (on unless the line above says OFF)");
+    }
     BOF3_INJECT(EffectGte_LoadMapCamera);
     BOF3_INJECT(EffectGte_ProjectPoint);
     BOF3_INJECT(EffectGte_SetDiagonalOne);

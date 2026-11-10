@@ -16,6 +16,8 @@ Two of the 65 (`EffectSpecks_Spawn`, `EffectSpecks_Draw`) are entered by the
 recorded whelp route through E1C's kind 0x1C (section 9); the rest are fuzz
 only. No start dropped: none is a case or a shared tail.
 
+**Source layout (2026-11-09):** the 65 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_2d.cpp`, `src/game/effect/effect_kind_2e.cpp`, `src/game/effect/effect_kind_29.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/effect_2a.cpp` itself is retired. A `src/game/effect_2a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2a.cpp:LINE` answers it.
+
 Every row is effect code: the seven `hypothesis` rows are the four-instruction
 dispatchers of kinds 0x28, 0x29, 0x2A, 0x2C and 0x2D (`Effect_KindHandlers`
 entries 0x28..0x2E point at all seven), and the catalogued rows are their

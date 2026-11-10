@@ -12,6 +12,8 @@ fuzzed through the scenario harness in field mode
 244,000 rounds, 0 mismatches. **188 controls planted** one at a time: 186 refused by a count, 2 equivalent mutants not refused, each with its near variant refused (section 6). No recorded route is traced
 entering any of the 61 (section 9): fuzz only here.
 
+**Source layout (2026-11-09):** the 61 functions this group took live in the files of their translation units now: `src/game/menu/master_talk_2.cpp`, `src/game/shop/field_save.cpp`, `src/game/shop/shop_browse.cpp` and 6 more ([`source-layout.md`](source-layout.md)). What `src/game/rest_2c.cpp` still held of ours is `src/game/shop/rest_2c.cpp` now. A `src/game/rest_2c.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_2c.cpp:LINE` answers it.
+
 The band is not one thing. In address order it holds: **the figure record's
 moves** (`0x9398E0`, the record R2B's `0x57F320` dispatches on its `+1`
 through `0x663E28`); **the inn's, save point's and rest's last states** (the

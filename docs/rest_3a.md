@@ -17,6 +17,8 @@ round-13 `nue` hash route), `0x404180` before `WorldMap_FrameStep` was ours
 flash and the tint draw through BE4's `BattleWin_DrawTileRgb` /
 `_DrawTileTint`, ours, whose fills are theirs); no ledger entry owed.
 
+**Source layout (2026-11-09):** the 45 functions this group took live in the files of their translation units now: `src/game/battle/battle_fx.cpp`, `src/game/battle/battle_extra.cpp`, `src/game/battle/battle_action.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/rest_3a.cpp` itself is retired. A `src/game/rest_3a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_3a.cpp:LINE` answers it.
+
 Game facts below are what the code does. Where a name says "loss" it follows
 [`battle_turn_steps.md`](battle_turn_steps.md) and
 [`battle_e1.md`](battle_e1.md) (`0x904AE8` bit 0's way out); "flash",

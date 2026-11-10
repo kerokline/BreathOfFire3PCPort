@@ -23,7 +23,6 @@
 #include "game/d3d_lines.h"
 #include "game/dat_load.h"
 #include "game/display_setup.h"
-#include "game/fmv_play.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/menu_draw_helpers.h"
@@ -666,6 +665,34 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     }
 }
 
+// original 0x59D640: (member, x, y, set, flags, record) - the window at (x +
+// 4, y + 4) 0x78 by 0xA3; the member's name (CharacterRecords + 0xA4 member,
+// 5 characters at most) centred on x + 0x3E; the four stat labels 0x66A0F8..
+// at (x + 5, y + 0x27 + 13 k); Char_RecalcStats, then the four stats +0x24,
+// +0x26, +0x2A, +0x28 (by 0x64E324, 8-pixel font, at (x + 0x31, y + 0x1C + 13
+// k)). Unless flags bit 0: Equip_PreviewSet(member, set, marks, values) into
+// the stack, and per stat a bar 0x59DB70(x + 0x51, y + 0x1C + 13 k, 0x11 for
+// mark 4, 0x12 for 1, else 0x13, 0x1C, CLUT (0, 0x1E0), 0x80) and the value
+// in the mark's colour at (x + 0x59, same y). Then the six equipped items
+// (+0x12..+0x17, categories 0x66B5BC): the record's +0x10 = 0 first; row r
+// in colour 2 when it is the record's +0xB; with the record's +0xD bit 1, an
+// item Item_CanUse(2, the member 0x66972C[0x904065[s8 0x929F06]], category,
+// item) refuses is drawn dim in colour 7, and for one it allows on row +0xA
+// the record's +0x10 = category << 8 | item, and it is first drawn dim in
+// colour 7; the row +0xA / +0xB raised by 2 pixels; then its icon
+// (0x66B5B4) and name. Last the pieces 0x66B508 and the frame's edges.
+//
+// DIVERGENCE DIV-0065: the labels' row. The original draws label k at y +
+// 0x27 + 13 k and the values at y + 0x1C + 13 k, so each label sits two
+// pixels above the next stat's value - the first value has no label and the
+// fourth label is drawn under the frame, off the box. The field's member
+// panel (0x5738A0: the label at y + 8, the value at y + 0xA) has the label
+// two pixels above its own value; 0x27 is that relation one 13-pixel row
+// down, 0x1A + 0xD. Ours draws the labels at y + 0x1A + 13 k once the flag
+// is on; BattleE7_Inject sets it after the self-test, which compares the
+// original's rows.
+unsigned char g_equip_labels_row = 0;
+
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
@@ -957,6 +984,23 @@ extern "C" void __cdecl Window_FreeCurrent(void) {
     Rec()[3] = 0;
 }
 
+// original 0x59E330 (PSX 0x8015990C, the JP executable): every window
+// record's in-use, handler, kind, state and pass bytes (+0..+3, +0xF)
+// zeroed, and the pass the walk starts from. No calls.
+//
+// As the original has it, and the JP disc: the other fields keep what the
+// last window left, and one is read before any write - +0xD bit 0 (no
+// frame), which Window_Grow / Window_Shrink read for kinds 1 and 2 and never
+// set, so a list or battle window that set it leaves the next window
+// frameless. The US executable's reset (PSX 0x80158E50) zeroes +0..+0x1F of
+// every record - the bytes, the words +4 / +6 and the eight words +0x10..
+// +0x1E - and leaves +0x20..+0x23, as here.
+//
+// DIVERGENCE DIV-0175 (known-defects D352): 1 through
+// PatchBytes("WindowResetFull") in ModeFlow_Inject, after the self-test,
+// which compared Capcom's five-field reset.
+namespace mode_flow { std::uint8_t g_reset_full = 0; }
+
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
         unsigned char* const r = mode_flow::At(::bof3::Img(WindowRecords_addr) + i * 0x24);
@@ -1164,6 +1208,16 @@ extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam
     }
 }
 
+void BattleMenuWinFromBattleE7_Inject() {
+    // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleEquipLabelsRow", Low32(&g_equip_labels_row),
+                         &was, &is, 1);
+        bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
+    }
+}
+
 void BattleMenuWin_Inject() {
     BOF3_INJECT(BattleMenuWin_ItemListRun);
     BOF3_INJECT(BattleMenuWin_ItemListSlideRight);
@@ -1187,4 +1241,13 @@ void BattleMenuWin_Inject() {
     BOF3_INJECT(Window_ResetAll);
     BOF3_INJECT(Fmv_Play);
     BOF3_INJECT(Fmv_WndProc);
+}
+
+void BattleMenuWinFromModeFlow_Inject() {
+    {
+        // DIV-0175: after the self-test, which compared Capcom's five-field reset.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("WindowResetFull", Low32(&mode_flow::g_reset_full), &was, &is, 1);
+        bof3::Log("DIV-0175    the window reset clears +0..+0x1F of every record, as the US disc (on unless the line above says OFF)");
+    }
 }

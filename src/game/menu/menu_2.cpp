@@ -20,7 +20,6 @@
 #include "game/rdata_consts.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_2b.h"
 #include "game/rest_2b_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shoulder_glyphs.h"
@@ -191,6 +190,37 @@ extern "C" void __cdecl Menu_DrawGreyHLine(int x, int y, unsigned w, unsigned br
     PutRest2b<float>(p, 0xC, static_cast<float>(y0));
     SH_CALL(Gfx_CommitPrim)(1, 0x20);
 }
+
+// original 0x57CF60 (PSX 0x801AF3F0): the menu box - a window of x, y, w, h (16
+// bits each) in POLY_FT4s of the 16 x 16 tile at (0, 0xF0), repeated through
+// a draw mode whose texture window is that tile (a RECT in the packet pool),
+// then a draw mode with the window back to the whole page.
+//
+// Three quads - a left end 4 wide, a middle, a right end 4 wide - or four when
+// w is 0x100 or more (the middle split at w / 2). The shade is 0x48 for kind
+// (flags & 0xF) 1, else 0xAC; kind 2 is semi-transparent with the CLUT half a
+// row on. Flag 0x80 moves the left end's top vertex down 4, 0x20 its bottom
+// up 4; 0x40 and 0x10 the right end's likewise. The CLUT is
+// GetClut(colour * 32 (+ 16), 0x1E1).
+//
+// Each quad after the first is a byte copy of the one before it, then
+// changed - so it carries what the pool's commit wrote into the first one.
+// And the quads are placed at 0x48-byte steps from the first, not where
+// Gfx_PacketNext is after each commit (the same when the pool has room).
+//
+// As the original has it: the middle quads' bottom v is h's low byte where
+// the ends' is (y + h)'s - the texture's rows are out of phase with the ends
+// when y is not a multiple of 16 (D39, docs/known-defects.md).
+//
+// DIVERGENCE DIV-0165 (known-defects D348): the original takes x and y as
+// unsigned words (`and esi, 0xffff` / `and eax, 0xffff` at 0x57D009 /
+// 0x57D00F before the `fild`), so a box slid past the left or top edge is
+// placed 65,536 pixels away and its fill vanishes while Menu_DrawPiece's
+// frame (`movsx`) still draws. The PSX (0x801AF3F0) stores into signed
+// vertex halfwords and the GPU clips. With g_signed_xy (1 through
+// PatchBytes("MenuSignedXY") in MenuWindows_Inject, after the self-test) x
+// and y are sign-extended words; w and h stay unsigned, as on both.
+namespace menu_windows { std::uint8_t g_signed_xy = 0; }
 
 extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int colour) {
     const auto kind = static_cast<unsigned char>(flags & 0xF);
@@ -719,6 +749,15 @@ extern "C" unsigned char __cdecl Menu_ListScroll(unsigned char* top, unsigned ch
     const unsigned char v = *top;
     *state = static_cast<unsigned char>((hi << 4) + lo);
     return v;
+}
+
+void Menu2FromMenuWindows_Inject() {
+    {
+        // DIV-0165: after the self-test, which compared Capcom's unsigned words.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MenuSignedXY", Low32(&menu_windows::g_signed_xy), &was, &is, 1);
+        bof3::Log("DIV-0165    Menu_DrawBox and Menu_DrawIcon8 take x and y as signed words (on unless the line above says OFF)");
+    }
 }
 
 void Menu2_Inject() {

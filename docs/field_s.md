@@ -11,6 +11,8 @@ mode ([`scenario_harness.md`](scenario_harness.md) section 7) without edits
 to it: one `Run`, 212,000 rounds, 0 mismatches; 188 controls planted one at a time, 183 refused by a count, 5 equivalent mutants each with a near variant refused (section 6). Fuzz only: neither
 recorded route enters any of the 53 (section 9).
 
+**Source layout (2026-11-09):** the 53 functions this group took live in the files of their translation units now: `src/game/shop/shared_list.cpp`, `src/game/field/party_form.cpp`, `src/game/shop/shop_resist.cpp` and 3 more ([`source-layout.md`](source-layout.md)). What `src/game/field_s.cpp` still held of ours is `src/game/shop/field_s.cpp` now. A `src/game/field_s.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_s.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | The field save's confirm | 1 | `FieldSave_States[3]` (`0x663FA0`) |

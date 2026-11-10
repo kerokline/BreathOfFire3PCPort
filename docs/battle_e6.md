@@ -10,6 +10,8 @@ five `Run`s, 234,000 rounds, 0 mismatches. 66 controls planted: 65 refused by a 
 `dragonTransform` recipe enters 15 of the 39 (section 9); the rest are fuzz
 only.
 
+**Source layout (2026-11-09):** the 39 functions this group took live in the files of their translation units now: `src/game/battle/dragon_cmd.cpp`, `src/game/field/quake.cpp`, `src/game/field/field_2.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_e6.cpp` itself is retired. A `src/game/battle_e6.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e6.cpp:LINE` answers it.
+
 What a gene or a form is in the game is not stated here: the names say what
 the code does with bytes (the chosen genes at `0x904B84`, the form code
 `0x904B89`), from the code, the callers' docs and the owner's recipe (the

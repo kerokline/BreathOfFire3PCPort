@@ -9,6 +9,8 @@ fuzzed against a copy of Capcom's with every call re-aimed at a recorder,
 placement scripts decodes (`tools/event_scan.py`) and is byte-identical to the
 PlayStation disc's. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 8 had it owed.
 
+**Source layout (2026-11-09):** the 28 functions this group took live in the files of their translation units now: `src/game/field/event_script.cpp`, `src/game/field/event_cond.cpp`, `src/game/field/event_op.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/event_script.cpp` still held of ours is `src/game/field/event_script_ours.cpp` now. A `src/game/event_script.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/event_script.cpp:LINE` answers it.
+
 [`attract-remaining.md`](attract-remaining.md) section 4.5 catalogued the
 `0x579740`..`0x57BA60` run as "entered only a few dozen times, from
 `0x594E60`; what it sets up is unread". This document reads it. The *other*

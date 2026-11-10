@@ -12,7 +12,6 @@
 #include "game/music_seq.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/save_io.h"
 #include "game/save_menu.h"
 #include "game/save_menu_callees.h"
 #include "game/sound_in.h"

@@ -5,6 +5,8 @@ scenario harness, 0 mismatches in 294,000 rounds; 106 of 106 controls
 refused. Fuzz only. Round ten wave two group CALLS
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 6).
 
+**Source layout (2026-11-09):** the 98 functions this group took live in the files of their translation units now: `src/game/scenario/scena_09.cpp`, `src/game/scenario/scena_14.cpp`, `src/game/scenario/scena_05.cpp` and 17 more ([`source-layout.md`](source-layout.md)). What `src/game/scena_calls.cpp` still held of ours is `src/game/scenario/scena_calls.cpp` now. A `src/game/scena_calls.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_calls.cpp:LINE` answers it.
+
 `src/game/scena_calls.cpp` (ours), `scena_calls.h`, `scena_calls_callees.h`
 (the raw addresses), `scena_calls_fuzz.cpp` (the group). Shadow name
 `scena_calls`.

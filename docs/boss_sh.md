@@ -8,6 +8,8 @@ last instruction with capstone and fuzzed through the boss harness
 298,000 rounds. 127 controls planted: 126 refused by a count, one by its own `Fatal` with its near variant refused by a count (section 5). Fuzz only: no recorded route reaches a boss
 fight. No divergence.
 
+**Source layout (2026-11-09):** the 46 functions this group took live in the files of their translation units now: `src/game/boss/boss_angler.cpp`, `src/game/boss/boss_gaist.cpp`, `src/game/boss/boss_mikba.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/boss_sh.cpp` itself is retired. A `src/game/boss_sh.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/boss_sh.cpp:LINE` answers it.
+
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
 records), not memory of the game; which fight a set-up is comes from the
 tool's rows and the code, section 1.

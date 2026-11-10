@@ -23,7 +23,6 @@
 #include "game/save_menu_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shop/field_save_callees.h"
-#include "game/shop_states.h"
 #include "game/shop_states_callees.h"
 #include "game/sound_in.h"
 #include "game/title_menu.h"
@@ -910,6 +909,26 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
     if (static_cast<std::uint32_t>(AreaW1c_Byte9045FB) < 0x1E) AreaW1c_Byte9045FB = 0;
 }
 
+// original 0x5806F0: the live block 0x9039E0 gathered and copied out. Into
+// the block: the chapter dwords 0x8034E0 / E4 / E8 / EC; the counters'
+// bytes 0x903848..0x90384B; ObjTrio's leader +0x34 / +0x38 and its +8 byte;
+// Game_AreaNumber; 0x903A50 = 0. The summary 0x904680: the buttons' dwords
+// 0x903580 / 84 / 88 / 8C and word 0x903590 after it; the leader's name -
+// the record of Character_IndexById[party id 0], strncpy 5 bytes, then 4
+// from its +5 (both the C runtime's, through); the three party ids (id 4 as
+// FormOf); record 0's +0xA (not the leader's), the dword 0x9040C8, the style
+// bytes 0x903A5A / 0x903A5B, record 0's +0xC dword; Flags_Test(story flags,
+// 0x92)'s al; 0x90412D = Field_ScriptFlags' byte 0x9039A2. Then the block's
+// 0x10B0 bytes copied to 0x92A0E0 and summed (a 32-bit sum, its low word
+// stored at 0x92A150 - the copy of the block's +0x70, which was 0 while
+// summed), the next 0xD50 bytes cleared, and the summary copied to the
+// slot's (0x9036D4).
+// DIVERGENCE DIV-0076 (the owner, 2026-10-05): the summary's name is the
+// leader's where its level and +0xC are record 0's; with the switch on, ours
+// takes the name from record 0 too. The switch is set by Rest2C_Inject after
+// the self-test, which compares Capcom's mix.
+unsigned char g_summary_record0 = 0;
+
 extern "C" void __cdecl Save_BuildBlock(void) {
     PutL(::bof3::Img(rest_2c::at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
     PutL(::bof3::Img(rest_2c::at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
@@ -1011,6 +1030,20 @@ extern "C" void __cdecl Save_QuickWrite(void) {
 }
 
 #pragma clang attribute pop
+
+void FieldSaveFromShopStates_Inject() {
+    sound_in::Inject();  // DIV-0169: after the fuzz above, which ran Capcom's night
+}
+
+void FieldSaveFromRest2c_Inject() {
+    // DIVERGENCE DIV-0076: after the self-test, which compares Capcom's summary.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SaveSummaryRecord0",
+                         Low32(&g_summary_record0), &was, &is, 1);
+        bof3::Log("DIV-0076    the save slot's summary names record 0, whose level it already shows");
+    }
+}
 
 void FieldSave_Inject() {
     BOF3_INJECT(Inn_Dispatch);

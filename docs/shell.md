@@ -10,6 +10,8 @@ count, 1 that changes nothing).
 Headless only: the live check is the state hash after the merge (section 6).
 No divergence; two latent defects of Capcom's described (section 3).)
 
+**Source layout (2026-11-09):** the 7 functions this group took live in the files of their translation units now: `src/game/platform/magic_080.cpp`, `src/game/platform/cfg.cpp`, `src/game/platform/file.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/shell.cpp` still held of ours is `src/game/platform/shell.cpp` now. A `src/game/shell.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/shell.cpp:LINE` answers it.
+
 The platform read pass ([`platform-read-pass.md`](platform-read-pass.md)
 section 2) filed seven starts as "Windows shell" by their address and found
 every one entered by every traced run. They are game code - the pad latch,

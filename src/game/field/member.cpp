@@ -6,9 +6,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field/member_callees.h"
-#include "game/field_hidden.h"
 #include "game/field_hidden_callees.h"
-#include "game/member_sprites.h"
 #include "game/member_sprites_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
@@ -129,6 +127,93 @@ HandlerRest1a CodeAt(URest1a table, unsigned count, unsigned index, const char* 
 }
 
 }  // namespace
+
+// field_hidden's callee seam, moved here from field_hidden.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace field_hidden {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Fn<Byte0>(::bof3::Code(bof3::addr::Sprite_ScriptTick)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Sprite_ScriptTickOnce)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Effect_FindFree)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_SetAnimation)),
+    Fn<std::uint32_t (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_EnsureAnimation)),
+    Fn<Byte0>(::bof3::Code(kTargetAhead.v)),
+    Fn<long (__cdecl*)(long, long, unsigned long)>(::bof3::Code(bof3::addr::MapView_SlopeAt)),
+    Fn<long (__cdecl*)(long, long)>(::bof3::Code(bof3::addr::MapView_GroundAt)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sound_PlayEffect)),
+    Fn<std::uint32_t (__cdecl*)(long, long, unsigned)>(::bof3::Code(bof3::addr::Sprite_ObjectAt)),
+    Fn<std::uint32_t (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Field_CellPickup)),
+    Fn<std::uint32_t (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::AreaMap_ByteAt)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSpawnAtCell.v)),
+    Rand,   // the CRT's rand, ours since crt_rest
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFoundZenny.v)),
+    Fn<unsigned char* (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Item_NamePtr)),
+    Fn<std::uint32_t (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Inventory_Add)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Msg_OpenSystem)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kClearCell.v)),
+    Fn<unsigned char* (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_SetFrameQueueUpload)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Sprite_ScriptStart)),
+    Fn<void (__cdecl*)(unsigned, unsigned char*, unsigned)>(::bof3::Code(bof3::addr::Sprite_CopyFrames)),
+    Fn<long (__cdecl*)(long, long)>(::bof3::Code(bof3::addr::AreaMap_Elevation)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Encounter_PickRow)),
+    Fn<std::uint32_t (__cdecl*)(const unsigned char*)>(::bof3::Code(bof3::addr::Encounter_FillSlots)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Encounter_PlaceParty)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Encounter_PlaceEnemies)),
+    Fn<Byte0>(::bof3::Code(bof3::addr::Encounter_EnemiesReachable)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Gte_PushMatrix)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Gte_PopMatrix)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Encounter_AimCamera)),
+    Fn<std::uint32_t (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Party_Count)),
+    Fn<std::uint32_t (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(bof3::addr::Encounter_OnScreen)),
+};
+Callees g = kOriginals;
+
+}  // namespace field_hidden
+
+// member_sprites's callee seam, moved here from member_sprites.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace member_sprites {
+namespace {
+
+template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+// Every callee. Those this module implements are ours (their names are bound
+// to our functions by symbols.gen.h); the unnamed ones are other groups' or
+// nobody's, Capcom's addresses typed from their call sites and, where read,
+// their first instructions (docs/member-sprites.md, section 3).
+const Callees kOriginals = {
+    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Member_States_addr)),
+    Sprite_ClearSteps, MapView_GroundAt, Sprite_SetAnimation,
+    reinterpret_cast<const std::uint32_t*>(::bof3::Img(at::kControlStates.v)), Sprite_ScriptTick,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile89)), Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile8A)),
+    Sprite_EnsureAnimation, Member_Idle, Member_FollowStep,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderPushObjects)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_JumpSetUp)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_JumpCheckHeight)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderStepTick)),
+    Member_WalkEnd,
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_EquipTick)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_Bit20Tick)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_Bit80Tick)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_FloorDamage)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_TileD0)),
+    Member_Follow,
+    Member_CatchUp, Field_DirectionTo, Member_StepAhead,
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, long)>(::bof3::Code(bof3::addr::Field_WayBlocked)),
+    Field_CellAhead, Fn<long (__cdecl*)(long, long, unsigned)>(::bof3::Code(bof3::addr::MapView_SlopeAt)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::AreaMap_CellNibble)),
+    Rand,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_CellAheadRaised)), Field_CellAheadFlat,
+    Field_ReadCells, Field_CellClass, Field_TurnUnless, Field_CellSlope, Field_CellPairTurn,
+    Field_CellKind,
+    AreaMap_ByteAt, Field_CellFacing, Field_ObjectAhead,
+};
+Callees g = kOriginals;
+
+}  // namespace member_sprites
 
 // original 0x51AC50: a party member's frame (PSX 0x801BCE40), called by
 // Field_MembersFrame for members 1 and 2 and by Field_PartyFirstFrame.

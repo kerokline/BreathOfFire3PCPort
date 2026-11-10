@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_flow.h"
 #include "game/battle_flow_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"

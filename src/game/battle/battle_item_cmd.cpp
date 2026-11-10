@@ -8,11 +8,8 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/battle/battle_item_cmd_callees.h"
-#include "game/battle_actor_copies.h"
 #include "game/battle_actor_copies_callees.h"
-#include "game/battle_e4.h"
 #include "game/battle_e4_callees.h"
-#include "game/battle_menu_states.h"
 #include "game/battle_menu_states_callees.h"
 #include "game/battle_misc.h"
 #include "game/battle_misc_callees.h"
@@ -21,7 +18,6 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -477,6 +473,35 @@ void CloseWait() {
 }
 
 }  // namespace
+
+// battle_menu_states's callee seam, moved here from battle_menu_states.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_menu_states {
+namespace {
+
+template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    Battle_DefaultTarget,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPrevTarget.v)),
+    Battle_WrapIndex,
+    BattleBanner_SetMessage,
+    Input_AutoRepeat,
+    Sound_PlayEffect,
+    Msg_SystemPtr,
+    BattleQueue_Push,
+    ItemMenu_SetupForParty,
+    ItemMenu_FreeWindows,
+    Item_HelpMessage,
+    Item_CanUse,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemFlags.v)),
+    Battle_ReturnTrue,
+};
+Callees g = kOriginals;
+
+}  // namespace battle_menu_states
 
 // original 0x447140: entry (dword 0x904AA4 & 0xFF) of BattleTarget_Picks
 // 0x64E3F4 - 0x447160, 0x447190, 0x447290 (the party's side, R3B's BattleTarget_PickParty),

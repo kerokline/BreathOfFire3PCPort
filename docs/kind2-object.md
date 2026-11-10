@@ -7,6 +7,8 @@ fuzzed against a clone of Capcom's with negative controls at start-up
 (`BOF3X_SHADOW=kind2_object`, `=area_slope`). **Not yet through the batch
 check in game** - that runs centrally after the merge.
 
+**Source layout (2026-11-09):** the 7 functions this group took live in the file of their translation unit now: `src/game/field/area_map.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/kind2_object.cpp` still held of ours is `src/game/field/kind2_object.cpp` now. A `src/game/kind2_object.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/kind2_object.cpp:LINE` answers it.
+
 Group B of the parallel takeover of the field's frame loop
 ([`HANDOFF.md`](HANDOFF.md) "Pick up here", target 1). The script it runs is
 the movement script of [`movement-script.md`](movement-script.md); this is

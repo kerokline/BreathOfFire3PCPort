@@ -5,6 +5,8 @@ twelve functions ours, faithful, fuzzed and controlled headless; no
 divergence; through the batch `ab25` (oracle, memory dump, frame hash) and `ab25b` (the capture A/Bs, run with `ab26`) - [`takeover-queue-round4.md`](takeover-queue-round4.md) status.
 Two latent defects written down, D27 and D28)
 
+**Source layout (2026-11-09):** the 11 functions this group took live in the file of their translation unit now: `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/d3d_draw.cpp` still held of ours is `src/game/platform/d3d_draw.cpp` now. A `src/game/d3d_draw.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/d3d_draw.cpp:LINE` answers it.
+
 Everything the port draws under Direct3D goes through one walk of the PSX
 ordering table, `Gfx_DrawOTag` `0x59EE50`, which hands each primitive to a
 handler by its GPU code. This group took over the walk, the six handlers that

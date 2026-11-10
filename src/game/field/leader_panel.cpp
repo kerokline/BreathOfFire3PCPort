@@ -11,7 +11,6 @@
 #include "game/effect_1f.h"
 #include "game/effect_1f_callees.h"
 #include "game/field/leader_panel_callees.h"
-#include "game/field_e1.h"
 #include "game/field_e1_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
@@ -19,7 +18,6 @@
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1f.h"
-#include "game/rest_1g.h"
 #include "game/scenario_harness.h"
 #include "game/sound.h"
 #include "game/widescreen.h"
@@ -1360,6 +1358,23 @@ extern "C" void __cdecl LeaderPanel_S4AnyKey(void) {
     Shade();
 }
 
+// original 0x529FA0 (PSX twin 0x801DC14C): LeaderPanel_Stage4Steps[13] - the
+// panel with message 0x44; up / down toggle +6 (sound 0x100); else 0x20
+// (sound 0x103) or 0x40 (+6 = 1, sound 0x106), then sound 0x102 and +3 up;
+// the hand at 0xAA + 12 a +6; Sprite_ScriptTick, the shade.
+//
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the hand's row. Message
+// 0x44 (in area 30's pool: Manillo's "want to buy anything?", the answers on
+// its last two rows) is drawn by FieldPanel_DrawMessage at y 0x94, its first
+// row at 0x9C, rows 12 apart; the original's hand at 0xAA + 12 * the answer
+// is the row-1 answer of a one-row question - the Chinese line's shape. The
+// English question takes two rows, so the hand pointed at the question's
+// second row (the owner's capture, 2026-10-03). With the flag on (a Latin
+// overlay; set after the self-test, which compares the original's draw) the
+// row of the first answer is counted from the message itself: the number of
+// newlines less one, so a one-row question gives the original's 0xAA.
+unsigned char g_shop_ask_row = 0;
+
 extern "C" void __cdecl LeaderPanel_S4Again(void) {
     PanelHead("LeaderPanel_S4Again");
     Total(0x9C);
@@ -1524,6 +1539,12 @@ extern "C" void __cdecl LeaderPanel_S9(void) {
     Shade();
     Run("LeaderPanel_S9", LeaderPanel_Stage9Steps, LeaderPanel_Stage9Steps_count);
 }
+
+// DIVERGENCE DIV-0132: 1 (PatchBytes "FishPanelDuck", after the self-test,
+// which compares Capcom's fades) - the panel ducks the music as the
+// PlayStation's twins do (SsSepSetDecrescendo / SsSepSetCrescendo(0, 0, 0x14,
+// 0x10)) instead of fading it to nothing and back to 127.
+unsigned char g_fish_panel_duck = 0;
 
 // original 0x52A440 (PSX twin 0x801DC908): LeaderPanel_Stage9Steps[0] - with
 // effect record 3 idle: Music_FadeOut(0x10), sound 0x102, record 6's +1 up,
@@ -3465,4 +3486,22 @@ void LeaderPanel_Inject() {
     BOF3_INJECT(FieldPanel_DrawBox2);
     BOF3_INJECT(Inventory_Holds38To4DAt99);
     BOF3_INJECT(FieldPanel_DrawBlink);
+}
+
+void LeaderPanelFromEffect1e_Inject() {
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's hand; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopAskRow", Low32(&g_shop_ask_row), &was,
+                         &is, 1);
+        bof3::Log("DIV-0027    the field panel's message 0x44: the hand on the row of its first answer");
+    }
+    // DIVERGENCE DIV-0132: after the self-test, which compares Capcom's fades.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FishPanelDuck", Low32(&g_fish_panel_duck),
+                         &was, &is, 1);
+        bof3::Log("DIV-0132    the fishing panel ducks the music as the PlayStation does (on unless the line above says OFF)");
+    }
 }

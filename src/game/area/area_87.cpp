@@ -5,10 +5,8 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/area_backdrop.h"
 #include "game/area_backdrop_callees.h"
 #include "game/area_harness.h"
-#include "game/area_w2b.h"
 #include "game/area_w2b_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"
@@ -16,7 +14,6 @@
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "game/world_map.h"
-#include "game/worldmap_area.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -630,6 +627,19 @@ template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinter
 }  // namespace
 
 }  // namespace worldmap_area
+
+// area_backdrop's callee seam, moved here from area_backdrop.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace area_backdrop {
+
+const Callees kOriginals = {
+    Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetPolyG4, Gpu_SetSemiTrans,
+    Area_TestCondition, Gpu_SetDrawMove,
+    Gpu_SetPolyF4,
+};
+Callees g = kOriginals;
+
+}  // namespace area_backdrop
 
 // original 0x40FC40 (the init of areas 65 and 87 - their descriptors'
 // +0x40 - in area 86's block by address): when the party came from area 0x3C

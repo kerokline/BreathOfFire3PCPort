@@ -12,6 +12,8 @@ frame ([`boss_harness.md`](boss_harness.md) section 10) without edits to it:
 two `Run`s, 294,000 rounds, 0 mismatches. 93 controls planted one at a time, all refused by a count.
 Fuzz-only except the four the dragon route enters (section 9).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/battle/battle_obj.cpp`, `src/game/battle/enemy_op.cpp`, `src/game/boss/boss_myria_fx.cpp` ([`source-layout.md`](source-layout.md)). `src/game/battle_e3.cpp` itself is retired. A `src/game/battle_e3.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_e3.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | The enemy ops: `EnemyOp_Steps` entries 7 (the cast), 8 (its end), 9 (the leave) and their sub-steps | 11 | `EnemyOp_Steps` `0x64B1A0` and the 59 boss step tables' entries 7..9 (read in place), `BossNina_WalkSteps[2]` |

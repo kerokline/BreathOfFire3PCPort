@@ -80,8 +80,12 @@ def find_now(path: str, name: str):
     fi = items_now(path)
     if fi is None:
         return None
+    ns, _, short = name.rpartition("::")     # a seam's row names it `<group>::g`
     for it in fi.leaves():
-        if name in it.names or "/".join(it.names) == name:
+        if ns:
+            if short in it.names and it.ns == (ns,):
+                return it.code_line, it
+        elif name in it.names or "/".join(it.names) == name:
             return it.code_line, it
     return None
 
@@ -91,7 +95,15 @@ class Lookup:
         self.rows = load_map(map_path)
         self.by_old: dict[str, list[dict]] = {}
         self.by_name: dict[str, list[dict]] = {}
+        self.whole: dict[str, str] = {}      # a file that moved whole: old path -> where it is now (stage C)
+        self.retired: set[str] = set()       # a pure shell, deleted in stage C
         for r in self.rows:
+            if r["kind"] == "file":
+                self.whole[r["old_path"]] = r["new_path"]
+                continue
+            if r["kind"] == "shell":
+                self.retired.add(r["old_path"])
+                continue
             self.by_old.setdefault(r["old_path"], []).append(r)
             self.by_name.setdefault(r["name"], []).append(r)
 
@@ -109,17 +121,27 @@ class Lookup:
 
     def resolve(self, path: str, line: int | None) -> tuple[bool, str]:
         rows = self.by_old.get(path, [])
-        exists = (ROOT / path).exists()
+        here = self.whole.get(path, path)     # the file itself, where it is now
+        exists = (ROOT / here).exists()
+        moved = f" (the file moved whole from {path})" if here != path else ""
         if line is None:
             if exists:
-                return True, path + (" (some of its items moved: " + ", ".join(sorted({r["new_path"] for r in rows})) + ")"
-                                     if rows else "")
+                return True, here + moved + (" (some of its items moved: " + ", ".join(sorted({r["new_path"] for r in rows})) + ")"
+                                             if rows else "")
             if rows:
                 return True, f"{path} is gone; its items went to " + ", ".join(sorted({r["new_path"] for r in rows}))
+            if path in self.retired:
+                return True, f"{path} is gone: a shell stage C retired, nothing of Capcom's left in it"
+            if here in self.retired:
+                return True, f"{path} moved whole to {here} and was retired there (the cleanup round): nothing left in it but its self-test call"
+            if path.endswith(".h") and path[:-2] + ".cpp" in self.retired:
+                return True, f"{path} is gone with its shell (stage C): it declared the group's _Inject() and SelfTest() alone"
             return False, "no such file, and no move came from it"
         if not rows:
             if exists:
-                return True, f"{path}:{line} (no move touched the file)"
+                return True, f"{here}:{line}" + (moved or " (no move touched the file)")
+            if path in self.retired:
+                return False, f"{path} is gone (a shell stage C retired) and line {line} was in no moved item"
             return False, "no such file, and no move came from it"
         hits = [r for r in rows if int(r["old_first"]) <= line <= int(r["old_last"])]
         if hits:
@@ -129,12 +151,13 @@ class Lookup:
             if now is None:
                 return False, f"{r['kind']} {r['name']}{pc} moved to {r['new_path']} but is not found there now"
             if r["kind"] == "copied":        # the original stayed; the target holds a copy
-                stay = self.where(r["name"], path) if exists else None
+                stay = self.where(r["name"], here) if exists else None
                 copies = sorted({x["new_path"] for x in hits if x["name"] == r["name"]})
                 return True, (f"local {r['name']}, " + (f"still {stay}" if stay else "gone from it")
                               + f"; copied to {', '.join(copies)}")
             return True, f"{r['kind']} {r['name']}{pc}, now {now}"
-        base = rows[0]["base"]
+        # the tree the citation was written against: the oldest rows' base (a seam's row is stage C's)
+        base = next((r["base"] for r in rows if r["kind"] != "seam"), rows[0]["base"])
         fi = items_at(base, path)
         if fi is None:
             return False, f"git show {base}:{path} failed"
@@ -149,8 +172,17 @@ class Lookup:
                     if it is not None and it.kind == "pp" else "in no item (a file comment or a blank line)")
             return False, f"line {line} of {path} at {base} is {what}, in a file a move touched"
         name = it.names[0]
-        now = self.where(name, path if exists else None)
+        now = self.where(name, here if exists else None)
         if now is None:
+            # the cleanup round (I60): the file moved whole, gave up its seam and its switches, and was retired
+            for r in self.by_old.get(here, []):
+                if r["kind"] == "seam":
+                    f = find_now(r["new_path"], name)
+                    if f:
+                        return True, f"{it.kind} {name} (line {line} at {base}), with the group's seam now {r['new_path']}:{f[0]}"
+            if here in self.retired and name.endswith("_Inject"):
+                return True, (f"{name} (line {line} at {base}) is gone with its shell (the cleanup round): the self-test call is in "
+                              "src/hook/inject_all.cpp, each arming beside its reader (docs/source-layout.md)")
             return False, f"{name} (line {line} at {base}) is not found in the tree now"
         return True, f"{it.kind} {name} (line {line} at {base}), now {now}"
 

@@ -5,5 +5,4 @@
 // Gfx_StoreImage, the VRAM shadow's read-back. docs/d3d-rest.md.
 #pragma once
 
-void D3dRest_Inject();
 extern unsigned char g_tile1_quad;   // defined in d3d_rest.cpp, armed by D3dRest_Inject (named here for a moved reader: source-layout B0)

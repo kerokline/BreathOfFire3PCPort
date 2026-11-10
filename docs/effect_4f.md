@@ -17,6 +17,8 @@ original has it (`EffectKindAD_DrawArc`'s second vertex depth, section 7).
 **Fuzz only**: no recorded route enters any of the 49 (section 10). Every row
 of the cut is effect code, the seven `hypothesis` rows too: none left original.
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_ae.cpp`, `src/game/effect/effect_kind_b9.cpp`, `src/game/effect/effect_kind_b1.cpp` and 4 more ([`source-layout.md`](source-layout.md)). `src/game/effect_4f.cpp` itself is retired. A `src/game/effect_4f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_4f.cpp:LINE` answers it.
+
 | Kind | Functions | Reached through |
 |---|--:|---|
 | 0xAA: a dispatcher only (its three states are catalog part 6) | 1 | `Effect_KindHandlers[0xAA]` (`0x6555F8`), `EffectKindAA_States` `0x6552A0` (3) |

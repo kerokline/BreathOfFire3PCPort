@@ -10,6 +10,8 @@ controls (section 6). **Not yet through the live batch check** - that runs
 centrally after the merge; ten of the twenty are never reached by the
 attract cycle (section 7).
 
+**Source layout (2026-11-09):** the 20 functions this group took live in the file of their translation unit now: `src/game/field/field_3.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/object_kinds.cpp` still held of ours is `src/game/field/object_kinds.cpp` now. A `src/game/object_kinds.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/object_kinds.cpp:LINE` answers it.
+
 Group C of the parallel takeover of the field's frame (2026-09-22). The
 loops that call all of this - `0x517490` (the 30 field objects) and
 `0x57B7B0` (the party) - are group A's; [`movement-script.md`](movement-script.md)

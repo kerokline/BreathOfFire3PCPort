@@ -7,6 +7,8 @@ mismatches. 112 negative controls were planted, and all 112 were refused.
 Not yet through a live check: the coordinator runs the combat A/B after the
 merge.
 
+**Source layout (2026-11-09):** the 22 functions this group took live in the file of their translation unit now: `src/game/battle/enemy_op.cpp` ([`source-layout.md`](source-layout.md)). `src/game/enemy_ai_ops.cpp` itself is retired. A `src/game/enemy_ai_ops.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/enemy_ai_ops.cpp:LINE` answers it.
+
 This is group CF of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. No defect of the

@@ -15,4 +15,3 @@ extern std::uint8_t g_reset_full;   // defined in mode_flow.cpp (source-layout B
 extern std::uint32_t g_area_track_fallback;
 }  // namespace mode_flow
 
-void ModeFlow_Inject();

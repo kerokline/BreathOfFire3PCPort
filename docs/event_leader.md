@@ -7,6 +7,8 @@ every call and tail jump re-aimed at a recorder: 27,000 rounds, 0
 mismatches; 95 negative controls, 94 refused by a count and one a change that changes nothing (section 5). The live check (the shop, world-map and combat
 routes) is the coordinator's, after the merge.
 
+**Source layout (2026-11-09):** the 27 functions this group took live in the files of their translation units now: `src/game/field/field_4.cpp`, `src/game/field/field_6.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/event_leader.cpp` still held of ours is `src/game/field/event_leader.cpp` now. A `src/game/event_leader.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/event_leader.cpp:LINE` answers it.
+
 Group DC of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). The layer is the
 one [`field-event.md`](field-event.md) (group B) and

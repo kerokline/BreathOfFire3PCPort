@@ -9,6 +9,8 @@ enters eight of them, and the ninth, `Snd_Init`, runs once per run, before the f
 hash sees what it leaves. No divergence; latent defects of Capcom's
 described in section 3, none fixed.
 
+**Source layout (2026-11-09):** the 9 functions this group took live in the files of their translation units now: `src/game/core/sound.cpp`, `src/game/platform/music.cpp`, `src/game/platform/d3d.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/sound_rest.cpp` still held of ours is `src/game/platform/sound_rest.cpp` now. A `src/game/sound_rest.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/sound_rest.cpp:LINE` answers it.
+
 The platform round's step 2 ([`platform-layers-plan.md`](platform-layers-plan.md)
 section 4), group PS: the sound row of
 [`platform-read-pass.md`](platform-read-pass.md) section 2 - the seven

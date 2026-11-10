@@ -17,6 +17,8 @@ without edits to it: 372,000 rounds, 0 mismatches. 126 controls planted one at a
 equivalent with its near variant refused (section 6).
 **Fuzz only**: no recorded route enters any of the 62 (section 9).
 
+**Source layout (2026-11-09):** the 62 functions this group took live in the files of their translation units now: `src/game/effect/effect_kind_51.cpp`, `src/game/effect/effect_kind_66.cpp`, `src/game/effect/effect_kind_4e.cpp` ([`source-layout.md`](source-layout.md)). `src/game/effect_2f.cpp` itself is retired. A `src/game/effect_2f.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_2f.cpp:LINE` answers it.
+
 All 62 are effect code, the four `hypothesis` rows of the labelling pass among
 them (`0x47B7D0` kind 0x4E's disc, `0x47B970` and `0x47D600` two kinds'
 dispatchers, `0x47C150` a kind-0x52 sub-state): none is left original.

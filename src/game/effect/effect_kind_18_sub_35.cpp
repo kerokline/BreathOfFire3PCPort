@@ -5,7 +5,6 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
-#include "game/effect_6b.h"
 #include "game/effect_6b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"

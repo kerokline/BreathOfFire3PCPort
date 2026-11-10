@@ -7,12 +7,9 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field/field_core_callees.h"
-#include "game/field_c3.h"
 #include "game/field_c3_callees.h"
 #include "game/labels.h"
-#include "game/member_sprites.h"
 #include "game/member_sprites_callees.h"
-#include "game/mode_states.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

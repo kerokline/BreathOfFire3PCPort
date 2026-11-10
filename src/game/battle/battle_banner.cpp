@@ -7,13 +7,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/battle_e4.h"
 #include "game/battle_e4_callees.h"
 #include "game/battle_misc.h"
 #include "game/battle_misc_callees.h"
-#include "game/battle_odds.h"
 #include "game/battle_odds_callees.h"
-#include "game/battle_setup.h"
 #include "game/battle_setup_callees.h"
 #include "game/battle_text.h"
 #include "game/boss_harness.h"
@@ -97,6 +94,28 @@ battle_odds::U WordBattleOdds(const unsigned char* p) {
 battle_odds::U BannerCurrent() { return BattleMisc_BannerCurrent; }
 
 }  // namespace
+
+// battle_odds's callee seam, moved here from battle_odds.cpp by tools/retire_shells.py
+// (docs/source-layout-round.md 5): the group's lowest function lives in this file.
+namespace battle_odds {
+namespace {
+
+template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
+
+}  // namespace
+
+const Callees kOriginals = {
+    As<U (__cdecl*)(U)>(BattleBanner_NoneOfKind),
+    As<U (__cdecl*)(U, U, U)>(Battle_CalcDamage),
+    As<U (__cdecl*)()>(BattleTask_FreeCurrent),
+    As<U (__cdecl*)(U)>(Sprite_ReleaseTint),
+    As<U (__cdecl*)(U, U, U, U, U)>(Sprite_SetTint),
+    As<U (__cdecl*)()>(BattleActor_FxSize),
+    As<U (__cdecl*)(U)>(Battle_SetTargetFlag40),
+};
+Callees g = kOriginals;
+
+}  // namespace battle_odds
 
 // original 0x44A5C0 (PSX 0x801DE404 BattleBanner_Dispatch): kBannerKinds = 0; for
 // layer 0 then 1, each of the 8 entries: made kBannerCurrent (every entry, before

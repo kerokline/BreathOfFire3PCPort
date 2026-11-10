@@ -7,6 +7,8 @@ copy of Capcom's with every call re-aimed at a recorder: 23,000 rounds, 0
 mismatches. 118 negative controls were planted: 117 were refused by a count,
 and one (M2) is a change that changes nothing.
 
+**Source layout (2026-11-09):** the 23 functions this group took live in the file of their translation unit now: `src/game/battle/battle_action.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/battle_actions.cpp` still held of ours is `src/game/battle/battle_actions.cpp` now. A `src/game/battle_actions.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/battle_actions.cpp:LINE` answers it.
+
 This is group CB of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. Two latent

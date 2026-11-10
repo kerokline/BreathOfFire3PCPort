@@ -86,4 +86,3 @@ extern unsigned char g_entry_abandons;   // defined in rest_4d.cpp (source-layou
 void SelfTest();           // rest_4d_fuzz.cpp
 void EntryAbandonTest();   // rest_4d_fuzz.cpp: DIV-0075's row, run once the switch is set
 }
-void Rest4D_Inject();

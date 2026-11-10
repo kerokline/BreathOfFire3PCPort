@@ -11,7 +11,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect/effect_shards_callees.h"
-#include "game/effect_1c.h"
 #include "game/effect_1c_callees.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"

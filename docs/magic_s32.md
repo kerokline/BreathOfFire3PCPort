@@ -6,6 +6,8 @@ the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
 it: 0 mismatches over 72,000 rounds. 155 of 159 negative controls refused, every one by a count (exit 3); the four standing are equivalent mutants, each with a near variant refused (section 6). Nothing recorded casts
 these spells, so this is fuzz only until the owner sees them cast.
 
+**Source layout (2026-11-09):** the 36 functions this group took live in the files of their translation units now: `src/game/magic/wall_of_fire_child.cpp`, `src/game/magic/eye_beam.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_s32.cpp` itself is retired. A `src/game/magic_s32.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_s32.cpp:LINE` answers it.
+
 Round nine, fifth spell wave, group S32
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4, §6b).
 

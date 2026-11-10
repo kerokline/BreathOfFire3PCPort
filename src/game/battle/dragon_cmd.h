@@ -3,3 +3,4 @@
 #pragma once
 
 void DragonCmd_Inject();
+void DragonCmdFromBattleE5_Inject();

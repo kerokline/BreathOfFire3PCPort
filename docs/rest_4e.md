@@ -15,6 +15,8 @@ only**: no recorded route enters the faerie village (section 9). No harness
 row edited, no raw reference rebound (section 10). No divergence and nothing
 for the ledger; one abort the coordinator should weigh (section 7, L5).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/core/title.cpp`, `src/game/community/commu_music.cpp`, `src/game/community/commu.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/rest_4e.cpp` still held of ours is `src/game/community/rest_4e.cpp` now. A `src/game/rest_4e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/rest_4e.cpp:LINE` answers it.
+
 **What the band is.** The community band (`0x452DD0..0x464B60`, the faerie
 village, areas 175..185; [`labelling-pass.md`](labelling-pass.md) section 5)
 is resident code on the PC. This group's 48 are reached from the field

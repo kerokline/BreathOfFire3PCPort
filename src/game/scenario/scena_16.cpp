@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/move_cmds.h"
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

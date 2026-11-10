@@ -7,7 +7,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect/effect_kind_3d_callees.h"
-#include "game/effect_2b.h"
 #include "game/effect_2b_callees.h"
 #include "game/effect_2c.h"
 #include "game/effect_2c_callees.h"

@@ -6,6 +6,5 @@
 // from the intro's state machine at 0x495E90). docs/inventory_ops.md.
 #pragma once
 
-void InventoryOps_Inject();
 extern unsigned char g_on_screen_lower_bounds;   // defined in inventory_ops.cpp, armed by InventoryOps_Inject (named here for a moved reader: source-layout B0)
 extern bool g_on_screen_log;   // defined in inventory_ops.cpp, armed by InventoryOps_Inject (named here for a moved reader: source-layout B0)

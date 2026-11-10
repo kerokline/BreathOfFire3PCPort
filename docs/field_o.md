@@ -16,6 +16,8 @@ through the scenario harness's field mode
 two others equivalent with refused near variants (section 6). Fuzz-only except the
 eight the whelp route and the one the dragon route enter (section 9).
 
+**Source layout (2026-11-09):** the 41 functions this group took live in the files of their translation units now: `src/game/field/event_cond.cpp`, `src/game/menu/menu.cpp`, `src/game/field/move_cmd.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/field_o.cpp` still held of ours is `src/game/field/field_o.cpp` now. A `src/game/field_o.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/field_o.cpp:LINE` answers it.
+
 | Part | Functions | Reached through |
 |---|--:|---|
 | The menu panels: stats, EXP, the icon wheel, a 16 x 8 tile, the equipment compare, the ability and item lists, the save slot | 8 | direct calls: the field menu's panel list `0x596980..0x59AA80` (Capcom's, no group's), FS's shop `0x581300`, ours `SaveMenu_DrawSlots` |

@@ -6,6 +6,8 @@ through the shared harness with DIV-0046 on and off; 28 negative controls,
 every one refused by a count (exit 3) in the one function it touches. No
 recorded route casts Steal: fuzz only until the owner's eye.
 
+**Source layout (2026-11-09):** the 3 functions this group took live in the file of their translation unit now: `src/game/magic/skill_steal.cpp` ([`source-layout.md`](source-layout.md)). `src/game/magic_steal.cpp` itself is retired. A `src/game/magic_steal.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/magic_steal.cpp:LINE` answers it.
+
 Group SH of round nine ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
 The proof that the harness ([`magic_harness.md`](magic_harness.md)) takes
 one overlay end to end: `Magic_Rows` row 87, file `0x2AD` = the PSX's

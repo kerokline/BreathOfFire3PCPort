@@ -10,6 +10,8 @@ its last instruction with capstone and fuzzed through the scenario harness's
 8): 144,000 rounds, **0 mismatches**; 58 of 58 controls refused. Ten `.data` tables
 named. No route recorded so far enters any of the 48: fuzz only (section 9).
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the file of their translation unit now: `src/game/field/leader_panel.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_1e.cpp` still held of ours is `src/game/field/effect_1e.cpp` now. A `src/game/effect_1e.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1e.cpp:LINE` answers it.
+
 **The cut's label does not hold.** The 48 are not effect-kind states. Every
 one is a step of the **leader's state 9**: `Field_LeaderStates[9]` (`0x528880`,
 not in the cut) jumps through a twelve-entry table by `Sprite_Current +2`, and

@@ -58,7 +58,6 @@ void __cdecl LinkedObject_SpawnEffect32(unsigned sub);
 
 }  // extern "C"
 
-void Rest2A_Inject();
 
 namespace rest_2a {
 // BOF3X_SHADOW=rest_2a: the start-up fuzz, rest_2a_fuzz.cpp. Clones the 22

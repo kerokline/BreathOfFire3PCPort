@@ -3,3 +3,4 @@
 #pragma once
 
 void ItemTrade_Inject();
+void ItemTradeFromFieldE2_Inject();

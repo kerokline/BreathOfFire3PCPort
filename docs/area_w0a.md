@@ -8,6 +8,8 @@ only: no recorded route reaches any area of the band (section 6). No
 divergence; two unchecked state dispatches abort past their table (section
 7).
 
+**Source layout (2026-11-09):** the 49 functions this group took live in the files of their translation units now: `src/game/area/area_08.cpp`, `src/game/area/area_07.cpp`, `src/game/area/area_15.cpp` and 9 more ([`source-layout.md`](source-layout.md)). `src/game/area_w0a.cpp` itself is retired. A `src/game/area_w0a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w0a.cpp:LINE` answers it.
+
 Group AR0A of round ten's second wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §6,
 [`takeover-queue-areas.md`](takeover-queue-areas.md)): the band

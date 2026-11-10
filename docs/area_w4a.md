@@ -8,6 +8,8 @@ planted, 221 refused by a count and 3 by ours' abort with their near variants
 refused by a count (section 10). Fuzz only: no recorded route reaches any of the 48 (section 8).
 No divergence.
 
+**Source layout (2026-11-09):** the 48 functions this group took live in the files of their translation units now: `src/game/area/area_152.cpp`, `src/game/area/area_167.cpp`, `src/game/area/area_154.cpp` and 2 more ([`source-layout.md`](source-layout.md)). What `src/game/area_w4a.cpp` still held of ours is `src/game/area/area_w4a.cpp` now. A `src/game/area_w4a.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/area_w4a.cpp:LINE` answers it.
+
 Group AR4A of round ten's sixth wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) section 18): the
 band `0x4249D0..0x426560`, whole areas as `tools/area_rows.py --groups` cut

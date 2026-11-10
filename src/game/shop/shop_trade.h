@@ -3,3 +3,4 @@
 #pragma once
 
 void ShopTrade_Inject();
+void ShopTradeFromShopStates2_Inject();

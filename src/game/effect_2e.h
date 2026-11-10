@@ -92,7 +92,6 @@ void __cdecl EffectKind4E_Shrink(void);
 
 }  // extern "C"
 
-void Effect2E_Inject();
 
 namespace effect_2e {
 // BOF3X_SHADOW=effect_2e: the start-up fuzz, effect_2e_fuzz.cpp. Clones every

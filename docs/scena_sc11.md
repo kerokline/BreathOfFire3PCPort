@@ -8,6 +8,8 @@ planted, **52 refused by a count, 2 by a fault** (each with a near variant
 refused by a count); `BOF3X_SHADOW='*'` exit 0. Fuzz only: no recorded route
 plays chapter 11 (section 8).
 
+**Source layout (2026-11-09):** the 30 functions this group took live in the file of their translation unit now: `src/game/scenario/scena_11.cpp` ([`source-layout.md`](source-layout.md)). `src/game/scena_sc11.cpp` itself is retired. A `src/game/scena_sc11.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/scena_sc11.cpp:LINE` answers it.
+
 Group SC11 of round ten's first wave ([`takeover-queue-round10.md`](takeover-queue-round10.md)
 §1; the plan [`takeover-queue-scenario.md`](takeover-queue-scenario.md)).
 

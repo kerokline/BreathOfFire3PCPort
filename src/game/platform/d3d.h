@@ -3,3 +3,5 @@
 #pragma once
 
 void D3d_Inject();
+void D3dFromD3dRest_Inject();
+void D3dFromGfxFilter_Inject();

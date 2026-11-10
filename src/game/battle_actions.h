@@ -8,7 +8,6 @@
 
 #include <cstdint>
 
-void BattleActions_Inject();
 
 namespace battle_actions {
 extern std::uint8_t g_effect_key_off;   // defined in battle_actions.cpp (source-layout B0: promoted for a moved reader)

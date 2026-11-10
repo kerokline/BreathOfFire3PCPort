@@ -11,6 +11,8 @@ capstone and fuzzed through the scenario harness's field mode
 by a count (section 9). Fuzz-only: no recorded route enters any of them
 (section 10).
 
+**Source layout (2026-11-09):** the 14 functions this group took live in the file of their translation unit now: `src/game/menu/item_trade.cpp` ([`source-layout.md`](source-layout.md)). What `src/game/effect_1g.cpp` still held of ours is `src/game/menu/effect_1g.cpp` now. A `src/game/effect_1g.cpp` path or line below is as it was written; `python tools/cite_lookup.py src/game/effect_1g.cpp:LINE` answers it.
+
 ## 0. What these are - not effect code
 
 The cut filed the band `0x594060..0x594D8A` under the effect engine (unit
