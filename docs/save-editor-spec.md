@@ -593,8 +593,13 @@ checksums. A third `.mcr` is an empty card. The `.srm.bsv` is an input recording
 (magic `BSV1`), not a card. Nine saves, of which six are new to the set: JP at 0:25
 and 1:38, US at 0:12, 4:59, 8:17 and 43:25.
 
+**The sibling's `saves/card1.mcd.bak`** holds the authentic psxrecomp JP saves
+(owner, 2026-11-09: the other cards there are copies made from it): 0:28, 5:19 and
+12:48. The first pass skipped `.bak` files. Two were already in the set through
+those copies, and the 5:19 save, chapter 2, is new. `card2.mcd.bak` is empty.
+
 **Real PSX saves by chapter byte, all sources:** chapter 1 has seven, chapter 6
-five, and chapters 2, 4, 5, 10, 14 and 15 one each. Chapters 0, 3, 7, 8, 9, 11, 12
+five, chapter 2 two, and chapters 4, 5, 10, 14 and 15 one each. Chapters 0, 3, 7, 8, 9, 11, 12
 and 13 have none. These are the saves chapter baselines can use.
 
 The coverage count transcribes each saver in Red Herring's editor to a byte map at

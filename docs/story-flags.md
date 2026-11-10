@@ -78,6 +78,16 @@ The battle counts and the flags agree with the owner's account: the section has
 five possible battles ([`boss-fights.md`](boss-fights.md): event battles 1, 4, 5,
 6 and 7), three fought on PC and all five on the disc saves.
 
+The authentic psxrecomp JP saves (`card1.mcd.bak` in the sibling: 0:28, 5:19 and
+12:48) all have 0..7 and 10 as well, the three-battle route.
+
+**A finished chapter's row stays as it was left.** MEASURED on those three saves:
+chapter 0's row is identical at 0:28, 5:19 and 12:48, and chapter 1's row is
+identical at 5:19 (chapter 2) and 12:48 (chapter 5). Chapter 2's row gains flags
+between those two, since the 5:19 save is inside chapter 2. So a chapter-start
+baseline is the rows of every earlier chapter as they were left, plus an empty row
+for the new one.
+
 **Baseline on leaving chapter 0:** flags 0..7 and 10 are set on every route.
 Flags 8 and 9 are the two optional encounters.
 
