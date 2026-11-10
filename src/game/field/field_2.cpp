@@ -23,6 +23,7 @@
 #include "game/field_event.h"
 #include "game/field_event_callees.h"
 #include "game/frame_callees.h"
+#include "game/frame_callees_callees.h"
 #include "game/gfx_flush.h"
 #include "game/mode_flow.h"
 #include "game/mode_flow_callees.h"
