@@ -68,8 +68,8 @@ Evidence tags used below:
 
 The raw-card format covers every emulator named so far. Mednafen, Beetle
 per-card files and psxrecomp all hold the same 128 KiB image (MEASURED, section
-15), so they differ by file name only. RetroArch's `.srm` cards are the same size,
-but their contents have not been checked. The target picker offers "PC" or "memory
+15), so they differ by file name only. RetroArch's `.srm` cards are the same
+format too (MEASURED, section 15). The target picker offers "PC" or "memory
 card" plus the release, and the file extension is the player's choice.
 
 **Out of scope for now:**
@@ -341,8 +341,7 @@ A generator, not a template. No binary save is shipped.
 6. Write the few remaining start-up fields (below), then seal.
 
 The test is a byte comparison against a save the game wrote at the first
-opportunity on a new game, per target. The PC reference is held (below). The US
-and JP ones are still owed.
+opportunity on a new game, per target. The references are held (below).
 
 On PC the new-game chapter is 0, read (`Scenario_Start(0)` in `TitleFlow_NewGame`,
 `save_menu.cpp`) and now measured. frost cites `Scene_Start(16)` on the PSX, so
@@ -390,6 +389,32 @@ MEASURED between the two saves (36 bytes differ, checksum aside):
 
 So the opening section's whole effect on a save is 36 bytes. That is the size of
 thing a chapter-start baseline row has to hold.
+
+#### The same point on the US and JP discs
+
+RetroArch's earliest saves are at the same save point: US at 0:12 and JP at 0:25,
+both chapter 1, area `0x0A`. Against `start_normal.DAT`, with the PC records put
+in the PSX layout (MEASURED):
+
+- **US: 20 bytes differ.** The clock and its summary copy, the checksum, two option
+  bytes (`+0x78`, `+0x7E`), six button-mask bytes, the battle count (5 against 3),
+  one HP byte, scene byte 8, `+0x68B`, and two more bits of chapter 0's flag word
+  (8 and 9).
+- **The character names are the same bytes.** An English PC install stores the
+  names the US disc does, so on that install names convert without a table.
+- **JP: 65 bytes differ.** The same kinds of difference, plus the names in its own
+  encoding and a few more items picked up.
+- **Scene bytes 0..5 and the event flags are identical on all three.** So the
+  chapter byte and the flags mean the same thing on PC, US and JP at this point.
+  The first evidence that chapter baselines measured on one target carry to the
+  others.
+
+Bits 8 and 9 of chapter 0's word are set on both disc saves and not on the PC one.
+Those saves also count two more battles, so the likely reading is optional events
+in the opening section. Not established.
+
+These two serve as the US and JP references for the first save point. A frame-1
+save like `start.DAT` has no disc equivalent, since the PSX cannot save there.
 
 ### 12.2 Story points
 
@@ -503,8 +528,8 @@ Fixtures are local saves and are never committed.
 
 For the owner:
 
-1. **Reference new-game saves on US and JP.** The PC pair is recorded (section
-   12.1).
+1. **Saves in the chapters no real PSX save covers:** 0, 3, 7, 8, 9, 11, 12 and 13
+   (section 15). The new-game references are held for PC, US and JP (section 12.1).
 
 For later investigation:
 
@@ -532,11 +557,16 @@ Limits: the PC set is mostly crafted recipe saves, so some scene bytes are not w
 the game would write. No EU, FR or DE save is in the set, and the latest PSX save
 is about 42 hours in.
 
-**Sources not yet measured,** named by the owner for baselines and format checks:
-the English and Japanese cards in RetroArch's saves folder
-(`E:\SteamLibrary\steamapps\common\RetroArch\saves`: `.mcr` and `.srm`, 128 KiB
-each). Its `.srm.bsv` is an input recording, not a card. The psxrecomp JP cards in
-the sibling's `saves/` are already in the set above.
+**RetroArch's cards, read 2026-11-09** (`E:\SteamLibrary\steamapps\common\RetroArch\saves`,
+read in place): two `.mcr` and two `.srm` hold BoF3 saves, and all four are the
+same raw card format, with valid directory checksums, `SC` headers and block
+checksums. A third `.mcr` is an empty card. The `.srm.bsv` is an input recording
+(magic `BSV1`), not a card. Nine saves, of which six are new to the set: JP at 0:25
+and 1:38, US at 0:12, 4:59, 8:17 and 43:25.
+
+**Real PSX saves by chapter byte, all sources:** chapter 1 has seven, chapter 6
+five, and chapters 2, 4, 5, 10, 14 and 15 one each. Chapters 0, 3, 7, 8, 9, 11, 12
+and 13 have none. These are the saves chapter baselines can use.
 
 The coverage count transcribes each saver in Red Herring's editor to a byte map at
 commit `7c93fd3`, then compares it with the samples.
