@@ -410,8 +410,10 @@ in the PSX layout (MEASURED):
   others.
 
 Bits 8 and 9 of chapter 0's word are set on both disc saves and not on the PC one.
-Those saves also count two more battles, so the likely reading is optional events
-in the opening section. Not established.
+Those saves also count two more battles. The owner (2026-11-09): the opening
+section has five possible battles, and the disc saves most likely fought all five.
+So bits 8 and 9 are probably the two optional battles, one bit each. To confirm:
+fight one of them on PC and compare.
 
 These two serve as the US and JP references for the first save point. A frame-1
 save like `start.DAT` has no disc equivalent, since the PSX cannot save there.
