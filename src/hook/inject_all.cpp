@@ -1009,6 +1009,7 @@ void InjectAll() {
     PsxGteTransform_Inject();   // likewise
     PsxGpu_Inject();
     PsxGte_Inject();
+    GteFromPsxGte_Inject();
     PsxGteFloat_Inject();
     FieldFrame_Inject();        // every call of its clones re-aimed, the handler table swapped: order does not matter
     Sprite2_Inject();

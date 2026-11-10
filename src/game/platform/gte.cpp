@@ -417,6 +417,14 @@ extern "C" void __cdecl Gte_ApplyMatrixSV(const short* matrix, const short* vect
     out[1] = static_cast<short>(row[1]);
 }
 
+namespace psx_gte {
+// DIV-0178 (docs/issue-121-lift-stall.md 8): 1 through
+// PatchBytes("ApplyMatrixLVExact") in PsxGte_Inject, after the fuzz, which
+// runs Capcom's wrapping products. While 0 Gte_ApplyMatrixLV is the port's;
+// set, its products are exact, as the PlayStation's libgte computes them.
+std::uint32_t g_lv_exact = 0;
+}  // namespace psx_gte
+
 // original 0x5A7CF0: the same with a VECTOR in - 32-bit components, so here the
 // products wrap too. libgte ApplyMatrixLV.
 //
@@ -882,4 +890,14 @@ void Gte_Inject() {
     BOF3_INJECT(Gte_PrimDepths3_10C);
     BOF3_INJECT(Gte_PrimDepths4_10C);
     BOF3_INJECT(Gte_StoreDepthQuarter);
+}
+
+void GteFromPsxGte_Inject() {
+    {
+        // DIV-0178: armed after the fuzz above, which sees Capcom's wrapping products.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("ApplyMatrixLVExact",
+                         Low32(&psx_gte::g_lv_exact), was, is, 4);
+        bof3::Log("DIV-0178    Gte_ApplyMatrixLV's products are exact, as the PlayStation's libgte computes them (on unless the line above says OFF)");
+    }
 }
