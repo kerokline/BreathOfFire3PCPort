@@ -193,10 +193,6 @@ save of the play folder, so that byte is the summary's copy of flag 146.
   until one is seen in play.
 - **The event flags' missing setters** (section 9) and the table-driven sites.
 - **Chapter 0:** the area files are not searched for tests of its row.
-- **Two maps quote flag numbers read from `BOF3.exe`'s tables**
-  (chapter 9's effect tables, chapter 10's pick-up records). The owner's call of
-  2026-11-09 covers flag documentation as reference material; this use is noted
-  for the owner to confirm.
 
 ## 8. The extractor
 
@@ -289,8 +285,29 @@ By the merge script, over the 38 real saves:
   are the engine's loops.)
 - **Flag 146** is set in the cleared save and in no other.
 
-The last two lists are the gap. Their setters are most likely among the 53
-table-driven sites.
+The last two lists were the gap, and the tables close it. Run on the owner's
+`BOF3.exe`, `tools/flag_tables.py` finds every flag of both lists among the
+values of the switch, cell and trigger tables, so their setters are the
+table-driven sites (2026-11-09). Chapter 6's flag 6 (section 5) is still without
+a setter.
+
+### The tables in the exe
+
+Some sites take their flag number from a table in the executable. **This repo
+does not quote those values** (the owner, 2026-11-09): it reads them from the
+player's exe when they are wanted.
+
+- [`../recipes/flag-tables.tsv`](../recipes/flag-tables.tsv): the layout of each
+  table, 33 tables, with no values. Compiled from the source by one reading pass;
+  [`story-flags/flag-tables.md`](story-flags/flag-tables.md) gives the evidence
+  for each layout.
+- `python tools/flag_tables.py --exe <BOF3.exe>` prints the flag numbers. Checked
+  on the owner's exe: the new-game seed reads back as flags 3, 25 and 27, as the
+  saves show, and no table gives a number outside its bank.
+- One table is not read: `Area_MusicSets` holds pointers, which the recipe cannot
+  follow.
+- The tool can write the values as a page for use outside this repo, and refuses
+  a path inside it.
 
 ### Other things the passes found
 
