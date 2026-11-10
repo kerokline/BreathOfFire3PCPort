@@ -626,6 +626,58 @@ and a hex view of the P-class bytes.
 feature, so it gets a [`DIVERGENCE.md`](DIVERGENCE.md) entry when it ships, as
 the suites did (DIV-0107).
 
+### Checks on write
+
+From the byte map ([`save-block.md`](save-block.md) section 5 and the range files'
+third sections) and the review of 2026-11-10. "Warnings, not walls" still holds:
+only a value the game reads with no bound is refused.
+
+**Set by the editor, not asked (D-class and copies):**
+
+- The checksum, and the slot summary from record 0 (name in 5 + 4 bytes, level,
+  EXP), the clock copy, the two option copies `+0xCA9`, `+0xCAA`, the cleared byte.
+  `+0xCB5` is written 0.
+- The party-combination byte `+0x74C`, from the field order. The table that maps
+  three ids to a row is read from the player's install.
+- The battle order, kept a permutation of the field order.
+- Record `+0x20..+0x3F` (PC) is left alone: the game rebuilds it at load.
+- A change to the battle count `+0x754` moves every faerie stamp by the same
+  amount: `+0xCD4..+0xCE7`, each faerie record's `+4`, each building's `+4`.
+- An item that is equipped is taken out of the inventory count, and put back when
+  it is taken off.
+- On a write to a PlayStation card: `+0x1040` (ours, DIV-0191) is 0, and the
+  options `+0x7C`, `+0x7D`, which no PC screen sets, are 0 unless the source was a
+  PlayStation save.
+
+**Refused, with a message that names the field:**
+
+- A chapter outside 0..19, or 16.
+- Message speed `+0x78` outside 0..2; window colour `+0x7A` and background `+0x7B`
+  outside 0..3. The game uses them as indexes with no bound.
+- Button words that are not one button for each line. Our build loads such a
+  save with the reset buttons (DIV-0133, amended 2026-11-10); the original and the
+  PlayStation load them as they are.
+- A play clock of all zero in a save that is not a new game: the game reads it as
+  one.
+- An active formation that is not unlocked, or not allowed for the party size.
+- A gene combination row with a gap, or with a first byte of `0xFF` and a form
+  byte that is not `0xFF`. A non-zero top byte of the gene dword.
+- Bit 7 of the last byte of either find bank (`+0x70B`, `+0x74B`): it makes every
+  object or passage that has no flag read as taken.
+- A faerie stamp above the battle count.
+
+**Warned, and written if the player says so:**
+
+- EXP past the stored level: the next level-up grants every level between.
+- A level at joining a master above the level; a master byte, a level at joining
+  and six growth bytes that do not go together.
+- AP above its maximum. Fatigue above 9. Current willpower above the effective one.
+- A member in the party lists without the joined bit, or the reverse.
+- The mode tail `+0x13..+0x17` cleared without script flag `0x40` in `+0x74D`, or
+  the reverse.
+- A character id that the game does not put at that record position.
+- Record 7's `+0x7E` is shown as a minigame's prize rank, not as an ability.
+
 ### Code
 
 ```
