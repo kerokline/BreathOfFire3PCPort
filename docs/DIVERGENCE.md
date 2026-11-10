@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 209 entries, DIV-0001..0209, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 210 entries, DIV-0001..0210, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15393,5 +15393,42 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=FishCountWord (ini off=)
 - **Toward:** none - every release keeps the bug
+- **Languages:** any
+- **State:** active
+
+### The two gift chests opened in chapter 7 stay open
+
+- **ID:** DIV-0210
+- **Date:** 2026-11-10
+- **Subsystem:** scenario chapter 7 - `Scena07_Scene7` `0x550930` (ours,
+  `src/game/scenario/scena_07_2.cpp`); known-defects D410
+- **Tier:** Intent - Capcom's bug; chapter 7 reads chapter 6's row for these
+  two flags in both places that ask, and writes the other row
+- **Original behaviour:** two chests in area 94 hold a weapon and an armour,
+  one more than the guest record's weapon byte and third armour byte. They are
+  not chests of the find bank: flags `0x22` and `0x23` of a chapter row say
+  whether each was taken. In chapter 6 the flags are read and set in the
+  running row, row 6. In chapter 7 the area's placement script sets its flag
+  bank to 6 before it tests them, and `ObjectReward` `0x550C40` tests row 6 by
+  its address, but `Scena07_Scene7` sets the flag in the running row, row 7,
+  which nothing reads. A chest first opened in chapter 7 is placed closed
+  again at the next entry to the area and gives its item again, up to 99.
+- **New behaviour:** `Scena07_Scene7` sets the flag in chapter 6's row, so the
+  chest is placed opened from then on, as one opened in chapter 6 is. Row 7's
+  flags `0x22` and `0x23` are no longer written. A chest opened in chapter 6
+  is as before.
+- **Rationale:** the owner, 2026-11-10: point all of them at chapter 6's
+  flags. Found by the story-flag maps ([`story-flags.md`](story-flags.md)
+  section 5) and settled on the area's script (`tools/event_scan.py --area 94`).
+- **Also in the PSX version?** Not read. The PC's code is Capcom's port of it,
+  and the area script is the disc's data.
+- **Verification:** builds; armed after the `scena_sc7` self-test, which
+  compares Capcom's row. Not yet played.
+- **Reversible?** `BOF3X_ORIGINAL=GiftChestRow`.
+  A player turns it off with `BOF3X_OFF=GiftChestRow` (the ini's `off=`).
+- **Switch:** GiftChestRow
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=GiftChestRow (ini off=)
+- **Toward:** none - not known on any other release
 - **Languages:** any
 - **State:** active

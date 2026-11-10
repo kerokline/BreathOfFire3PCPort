@@ -10878,3 +10878,22 @@ without that guard (matching).
 
 **Status:** open. Whether Chain can be selected before those scenes is not
 shown. To test: a crafted save with `0x904060` = 3 and two members in a fight.
+
+## D410 — The two gift chests of area 94 give their items again when first opened in chapter 7 (Capcom's; fixed by DIV-0210)
+
+**Seen:** not seen in play. Found 2026-11-10 by the story-flag maps
+([`story-flags.md`](story-flags.md) section 5); the owner knows the chests as
+the guest's awards in the harbour.
+
+**Established (2026-11-10, read):** `Scena07_Object3` and `Scena07_Object4` call
+`ObjectReward` `0x550C40`, which tests flags `0x22` and `0x23` of row 6
+(`Cond_Flags + 0x30`, the address itself). Area 94's placement script, in its
+chapter 7 case, sets the flag bank to 6 and tests the same two flags to place a
+closed chest with a trigger or an opened one (`tools/event_scan.py --area 94`).
+`Scena07_Scene7` `0x550930` gives the item and sets the flag in the running
+row, row 7. Nothing reads row 7's flags `0x22` and `0x23`. The placement script
+runs at every entry to the area and at every load, and `Inventory_Add` refuses
+only past 99. Chapter 6 reads and writes row 6 throughout, so a chest opened
+there is right in both chapters. No save on record has row 7's flag 34 or 35.
+
+**Status:** fixed by DIV-0210, not yet played.

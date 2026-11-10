@@ -1087,6 +1087,12 @@ extern "C" void __cdecl Scena07_PlaceObjects(void) {
     }
 }
 
+// DIVERGENCE DIV-0210: 1 through PatchBytes("GiftChestRow") in Scena072_Inject,
+// after the self-test. Run 7 then records its two gifts in chapter 6's row,
+// the row ObjectReward and area 94's placement script test in chapter 7,
+// not in the running row, which nothing reads (D410).
+namespace scena_sc7 { std::uint8_t g_gift_chest_row = 0; }
+
 // original 0x550930: run 7, steps 0..0x15 (a byte table of 0x16 at 0x550B08
 // into a jump table of 7 at 0x550AEC): two item rewards - counter 0 = 0x1E /
 // 0x23 armed; on 0x1F / 0x24 Inventory_Add of item [0x903EFE] + 1 (category
@@ -1113,7 +1119,8 @@ extern "C" void __cdecl Scena07_Scene7(void) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(category, id2);
         for (unsigned i = 0; i < 16; i += 4) SetLong(At(text + i), Long(name + i));
         Message(message);
-        SetFlag(flag);
+        if (scena_sc7::g_gift_chest_row != 0) SH_CALL(Flags_Set)(&Cond_Flags[0x30], flag);   // DIV-0210: chapter 6's row
+        else SetFlag(flag);
         Sound(0x106);
         SetStep(0x15);
     };
@@ -1358,4 +1365,10 @@ void Scena072_Inject() {
     BOF3_INJECT(Scena07_PartyHas89State2);
     BOF3_INJECT(Scena07_CellHook);
     BOF3_INJECT(Scena07_Cell0);
+    {
+        // DIV-0210: after the self-test, which compared Capcom's row.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("GiftChestRow", Low32(&scena_sc7::g_gift_chest_row), &was, &is, 1);
+        bof3::Log("DIV-0210    chapter 7 records the two gift chests in chapter 6's row (on unless the line above says OFF)");
+    }
 }

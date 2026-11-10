@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 204;
+inline constexpr std::size_t kSwitchCount = 205;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -277,9 +277,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "FinNight", 0, 8},   // DIV-0207
     {SwitchForm::Name, "FieldHealParty", 0, 14},   // DIV-0208
     {SwitchForm::Name, "FishCountWord", 0, 13},   // DIV-0209
+    {SwitchForm::Name, "GiftChestRow", 0, 12},   // DIV-0210
 };
 
-inline constexpr std::size_t kEntryCount = 209;
+inline constexpr std::size_t kEntryCount = 210;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -699,6 +700,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 202, 1, true, Player::Yes, 0, kLangAny},
     {209, "The catch panel counts a fish's size past 255, and the record keeps 255",
      Tier::Intent, State::Active, 0, 203, 1, true, Player::Yes, 0, kLangAny},
+    {210, "The two gift chests opened in chapter 7 stay open",
+     Tier::Intent, State::Active, 0, 204, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

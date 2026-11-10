@@ -6598,6 +6598,7 @@ switch	Gfx_StoreImage	detour	costly		src/game/platform/d3d.cpp:3911	BOF3_INJECT
 switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3933	BOF3_INJECT
 switch	Gfx_UploadLzss	detour	costly		src/game/core/title.cpp:2210	BOF3_INJECT
 switch	Gfx_UploadPacked5	detour	costly		src/game/core/title.cpp:2209	BOF3_INJECT
+switch	GiftChestRow	code	yes		src/game/scenario/scena_07_2.cpp:1371	PatchBytes
 switch	GlyphTexelCentres	code	yes		src/game/platform/glyph_draw.cpp:56	PatchBytes
 switch	Gpu_AddPrim	detour	costly		src/game/platform/gpu.cpp:240	BOF3_INJECT
 switch	Gpu_ClearOTagR	detour	costly		src/game/platform/gpu_2.cpp:222	BOF3_INJECT
@@ -8841,36 +8842,36 @@ switch	Scena06_Set015ReloadJoin15	detour	costly		src/game/scenario/scena_06.cpp:
 switch	Scena06_Set015ReloadJoin5	detour	costly		src/game/scenario/scena_06.cpp:71	BOF3_INJECT
 switch	Scena06_Start	detour	costly		src/game/scenario/scena_06_3.cpp:2353	BOF3_INJECT
 switch	Scena06_StepHook	detour	costly		src/game/scenario/scena_06_3.cpp:2395	BOF3_INJECT
-switch	Scena07_ArriveHook	detour	costly		src/game/scenario/scena_07_2.cpp:1357	BOF3_INJECT
-switch	Scena07_Cell0	detour	costly		src/game/scenario/scena_07_2.cpp:1360	BOF3_INJECT
-switch	Scena07_CellHook	detour	costly		src/game/scenario/scena_07_2.cpp:1359	BOF3_INJECT
-switch	Scena07_EnterArea	detour	costly		src/game/scenario/scena_07_2.cpp:1336	BOF3_INJECT
-switch	Scena07_Frame	detour	costly		src/game/scenario/scena_07_2.cpp:1334	BOF3_INJECT
+switch	Scena07_ArriveHook	detour	costly		src/game/scenario/scena_07_2.cpp:1364	BOF3_INJECT
+switch	Scena07_Cell0	detour	costly		src/game/scenario/scena_07_2.cpp:1367	BOF3_INJECT
+switch	Scena07_CellHook	detour	costly		src/game/scenario/scena_07_2.cpp:1366	BOF3_INJECT
+switch	Scena07_EnterArea	detour	costly		src/game/scenario/scena_07_2.cpp:1343	BOF3_INJECT
+switch	Scena07_Frame	detour	costly		src/game/scenario/scena_07_2.cpp:1341	BOF3_INJECT
 switch	Scena07_Leave2Out1562	detour	costly		src/game/scenario/scena_07.cpp:71	BOF3_INJECT
 switch	Scena07_LeaveThird	detour	costly		src/game/scenario/scena_07.cpp:70	BOF3_INJECT
-switch	Scena07_Object0	detour	costly		src/game/scenario/scena_07_2.cpp:1350	BOF3_INJECT
-switch	Scena07_Object1	detour	costly		src/game/scenario/scena_07_2.cpp:1351	BOF3_INJECT
-switch	Scena07_Object2	detour	costly		src/game/scenario/scena_07_2.cpp:1352	BOF3_INJECT
-switch	Scena07_Object3	detour	costly		src/game/scenario/scena_07_2.cpp:1353	BOF3_INJECT
-switch	Scena07_Object4	detour	costly		src/game/scenario/scena_07_2.cpp:1354	BOF3_INJECT
-switch	Scena07_ObjectHook	detour	costly		src/game/scenario/scena_07_2.cpp:1349	BOF3_INJECT
+switch	Scena07_Object0	detour	costly		src/game/scenario/scena_07_2.cpp:1357	BOF3_INJECT
+switch	Scena07_Object1	detour	costly		src/game/scenario/scena_07_2.cpp:1358	BOF3_INJECT
+switch	Scena07_Object2	detour	costly		src/game/scenario/scena_07_2.cpp:1359	BOF3_INJECT
+switch	Scena07_Object3	detour	costly		src/game/scenario/scena_07_2.cpp:1360	BOF3_INJECT
+switch	Scena07_Object4	detour	costly		src/game/scenario/scena_07_2.cpp:1361	BOF3_INJECT
+switch	Scena07_ObjectHook	detour	costly		src/game/scenario/scena_07_2.cpp:1356	BOF3_INJECT
 switch	Scena07_Party012	detour	costly		src/game/scenario/scena_07.cpp:69	BOF3_INJECT
-switch	Scena07_PartyHas89State2	detour	costly		src/game/scenario/scena_07_2.cpp:1358	BOF3_INJECT
-switch	Scena07_PlaceObjects	detour	costly		src/game/scenario/scena_07_2.cpp:1346	BOF3_INJECT
-switch	Scena07_Run	detour	costly		src/game/scenario/scena_07_2.cpp:1337	BOF3_INJECT
-switch	Scena07_Scene1	detour	costly		src/game/scenario/scena_07_2.cpp:1338	BOF3_INJECT
-switch	Scena07_Scene2	detour	costly		src/game/scenario/scena_07_2.cpp:1339	BOF3_INJECT
-switch	Scena07_Scene3	detour	costly		src/game/scenario/scena_07_2.cpp:1340	BOF3_INJECT
-switch	Scena07_Scene4	detour	costly		src/game/scenario/scena_07_2.cpp:1341	BOF3_INJECT
-switch	Scena07_Scene5	detour	costly		src/game/scenario/scena_07_2.cpp:1343	BOF3_INJECT
-switch	Scena07_Scene6	detour	costly		src/game/scenario/scena_07_2.cpp:1344	BOF3_INJECT
-switch	Scena07_Scene7	detour	costly		src/game/scenario/scena_07_2.cpp:1347	BOF3_INJECT
-switch	Scena07_Scene8	detour	costly		src/game/scenario/scena_07_2.cpp:1348	BOF3_INJECT
-switch	Scena07_ShakeCamera	detour	costly		src/game/scenario/scena_07_2.cpp:1345	BOF3_INJECT
-switch	Scena07_Start	detour	costly		src/game/scenario/scena_07_2.cpp:1335	BOF3_INJECT
-switch	Scena07_StepHook	detour	costly		src/game/scenario/scena_07_2.cpp:1356	BOF3_INJECT
-switch	Scena07_TakeEffect49	detour	costly		src/game/scenario/scena_07_2.cpp:1355	BOF3_INJECT
-switch	Scena07_TimedEffects	detour	costly		src/game/scenario/scena_07_2.cpp:1342	BOF3_INJECT
+switch	Scena07_PartyHas89State2	detour	costly		src/game/scenario/scena_07_2.cpp:1365	BOF3_INJECT
+switch	Scena07_PlaceObjects	detour	costly		src/game/scenario/scena_07_2.cpp:1353	BOF3_INJECT
+switch	Scena07_Run	detour	costly		src/game/scenario/scena_07_2.cpp:1344	BOF3_INJECT
+switch	Scena07_Scene1	detour	costly		src/game/scenario/scena_07_2.cpp:1345	BOF3_INJECT
+switch	Scena07_Scene2	detour	costly		src/game/scenario/scena_07_2.cpp:1346	BOF3_INJECT
+switch	Scena07_Scene3	detour	costly		src/game/scenario/scena_07_2.cpp:1347	BOF3_INJECT
+switch	Scena07_Scene4	detour	costly		src/game/scenario/scena_07_2.cpp:1348	BOF3_INJECT
+switch	Scena07_Scene5	detour	costly		src/game/scenario/scena_07_2.cpp:1350	BOF3_INJECT
+switch	Scena07_Scene6	detour	costly		src/game/scenario/scena_07_2.cpp:1351	BOF3_INJECT
+switch	Scena07_Scene7	detour	costly		src/game/scenario/scena_07_2.cpp:1354	BOF3_INJECT
+switch	Scena07_Scene8	detour	costly		src/game/scenario/scena_07_2.cpp:1355	BOF3_INJECT
+switch	Scena07_ShakeCamera	detour	costly		src/game/scenario/scena_07_2.cpp:1352	BOF3_INJECT
+switch	Scena07_Start	detour	costly		src/game/scenario/scena_07_2.cpp:1342	BOF3_INJECT
+switch	Scena07_StepHook	detour	costly		src/game/scenario/scena_07_2.cpp:1363	BOF3_INJECT
+switch	Scena07_TakeEffect49	detour	costly		src/game/scenario/scena_07_2.cpp:1362	BOF3_INJECT
+switch	Scena07_TimedEffects	detour	costly		src/game/scenario/scena_07_2.cpp:1349	BOF3_INJECT
 switch	Scena08_ArriveHook	detour	costly		src/game/scenario/scena_08_2.cpp:1609	BOF3_INJECT
 switch	Scena08_EnterArea	detour	costly		src/game/scenario/scena_08_2.cpp:1588	BOF3_INJECT
 switch	Scena08_Frame	detour	costly		src/game/scenario/scena_08_2.cpp:1585	BOF3_INJECT
@@ -10663,3 +10664,4 @@ entry	DIV-0206	code,launcher	yes	PixelRoom, env:BOF3X_OFF, ini:off		tier Intent;
 entry	DIV-0207	code,launcher	yes	FinNight, env:BOF3X_OFF, ini:off		tier Intent; kind code
 entry	DIV-0208	code,launcher	yes	FieldHealParty, env:BOF3X_OFF, ini:off		tier Intent; kind code
 entry	DIV-0209	code,launcher	yes	FishCountWord, env:BOF3X_OFF, ini:off		tier Intent; kind code
+entry	DIV-0210	code,launcher	yes	GiftChestRow, env:BOF3X_OFF, ini:off		tier Intent; kind code
