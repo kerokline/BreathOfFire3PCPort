@@ -151,7 +151,24 @@ PC offsets within the record (the PlayStation's are 4 lower from `+0x09` on).
   2026-11-10): a member left down after a fight loses max HP up to the cap of 5
   until an inn; area 189's walk without water goes on to 9.
 - Possible defects of the original that the passes list in their files' last
-  sections. None is in `docs/known-defects.md` yet.
+  sections, reviewed 2026-11-10:
+  - **Not defects:** a new game after a game (every way back to the title runs
+    `Boot_Task`, which zeroes the block; only a failed load, which copies the
+    file in before the checksum is tested, leaves data for a new game);
+    equipment used up by a revive (`BattleObj_Fall`, `battle_e3.cpp:706`, zeroes
+    the real record's byte before the revive runs); the two fatigue caps.
+  - **Real, Capcom's: a fish past 255.** `Fish_Spawn` (`rest_1g.cpp:668`) lets a
+    fish at its kind's top size M grow by up to M / 10 + 1, and the record and
+    the catch panel's count hold a byte. Read from the owner's exe with the
+    layout `Fish_Kinds` `0x66A690 + 36 * kind + 0x1F`: one kind has an M that
+    lets the size pass 255. The catch panel's count-up (`LeaderPanel_S4Count`)
+    then never ends, which is D208's fishing case, listed there as latent.
+    Rare: a spawn at exactly M, then enough of the growth rolls.
+  - **Ours, changed:** a save with a bad button mapping stopped our build at
+    the load; it loads with the reset buttons now (DIV-0133's amendment, on
+    branch `fix/button-words-fallback`).
+  - The rest need an edited or damaged save, and are the editor's checks on
+    write ([`save-editor-spec.md`](save-editor-spec.md) section 13).
 - The passes are one reading each. Only the claims in section 4 are measured.
 - The PlayStation code was not read. Its saves agree where a save can show it: on 20
   distinct PlayStation blocks (US and JP cards) every UNTOUCHED byte is 0, the

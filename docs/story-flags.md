@@ -151,7 +151,11 @@ save of the play folder, so that byte is the summary's copy of flag 146.
   ([`observed-rows.md`](story-flags/observed-rows.md), 38 saves) has a row in its
   chapter's table, chapters 0..15, with one exception: **chapter 6's flag 6** is
   set in the owner's PC playthrough from save 31 on, and the map found no code
-  that names it. Its setter is not found. Each map's "End" section compares
+  that names it. **Found 2026-11-10:** `Area41_ChoiceGiveItem`
+  (`area_w1a.cpp:609`), area 41's choice 3, adds an item and sets flag 6 of the
+  running row. It is once for each row, not once a game, so it sets flag 6 in
+  whatever chapter the choice is taken in (chapters 3 and 9 already cite it).
+  The chapter 6 pass read chapter 6's code only. Each map's "End" section compares
   its reading with the rows of saves past that chapter, and reports agreement.
 - **In the code, by a second read:** `Scenario_Start` and the advance in
   `Area_Enter`; `Scena17_EndReturn`; `Area108_TailPlace` starting chapter 8's
@@ -186,11 +190,21 @@ save of the play folder, so that byte is the summary's copy of flag 146.
   bit, and some steps have no starter in our code: chapter 10's run 7, chapter 14's
   `Scena14_Run1` step `0x19` (flags 2 and 3), the second branch of
   `Scena15_Run5`. A data read or a run would settle each.
-- **Two possible defects, Capcom's if real, seen in the read only:**
-  `Scena07_Scene7` records its rewards in chapter 7's row while `ObjectReward`
-  tests chapter 6's, so a reward could be given twice; and nothing in the code
-  stops chapter 8's run 3 from starting again. Neither is in `known-defects.md`
-  until one is seen in play.
+- **Two possible defects, traced 2026-11-10 (one reading pass, source only):**
+  - **Chapter 7's gift, a real mismatch, Capcom's.** In chapter 7 `ObjectReward`
+    (`scena_sc7.cpp:1192`) tests the fixed row 6 (`0x903FC0`, as the original's
+    `0x550C40` does) for flags `0x22` and `0x23`, and `Scena07_Scene7` sets them
+    in the running row, 7. A player who took the gift in chapter 6 is refused,
+    as meant. One who first takes it in chapter 7 sets row 7's flag, which
+    nothing tests, so the code would give it again at the object's next
+    trigger. The object fires once until its `+0x86` is armed again; what arms
+    it, and whether the data hides the object, is not traced. No save on record
+    has row 7's flag 34 or 35.
+  - **Chapter 8's run 3, not a defect in play.** The code has no guard, but the
+    scene is armed by `Area108_PlaceScene` matching the cart (extra object 1),
+    and DIV-0182's measured run found area 108 with no cart after the fight:
+    the area's data decides. Which flag the data tests is not known.
+  Neither is in `known-defects.md`.
 - **The event flags' missing setters** (section 9) and the table-driven sites.
 - **Chapter 0:** the area files are not searched for tests of its row.
 
@@ -288,8 +302,8 @@ By the merge script, over the 38 real saves:
 The last two lists were the gap, and the tables close it. Run on the owner's
 `BOF3.exe`, `tools/flag_tables.py` finds every flag of both lists among the
 values of the switch, cell and trigger tables, so their setters are the
-table-driven sites (2026-11-09). Chapter 6's flag 6 (section 5) is still without
-a setter.
+table-driven sites (2026-11-09). Chapter 6's flag 6 has its setter since
+2026-11-10 (section 5).
 
 ### The tables in the exe
 
