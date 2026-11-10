@@ -7,6 +7,11 @@ One section per save, earliest first. Each lists the flags set in every chapter 
 (block `+0x5B0 + 8c`) and in the event flags (block `+0x650`). Crafted saves are left
 out: a chapter-jump save keeps its parent's flags.
 
+**Save 21 is probably crafted** (found by the chapters 9..10 reading pass): its
+chapter byte is 10 and chapter 10's row lacks flags 59..61, yet its chapter 11..14
+rows equal save 20's. Treat it as a copy of save 20 with the chapter changed, not
+as evidence.
+
 | # | System | Source | Clock | Chapter | State | Area | Battles |
 |---:|---|---|---|---:|---:|---:|---:|
 | 1 | PC | start.DAT | 00:00 | 0 | 2 | 24 | 0 |

@@ -1,24 +1,24 @@
 # Story flags: what each chapter's flags mean, and what sets them
 
-**Status:** IN PROGRESS (2026-11-09). Chapter 0 is complete. The other chapters
-are not started.
+**Status:** IN PROGRESS (2026-11-09). Every chapter row, 0..19, has a flag map in
+[`story-flags/`](story-flags/), read from our source. The maps of chapters 1..14
+are checked against real saves. Nothing is checked in play. The event flags are
+not mapped.
 
 Reference material for the save editor's story points
-([`save-editor-spec.md`](save-editor-spec.md) section 12.2) and for the wiki. A
-table of flag numbers and meanings, read from our source and checked against
-saves. It holds no save and no dump of one.
+([`save-editor-spec.md`](save-editor-spec.md) section 12.2) and for the wiki:
+flag numbers and their meanings. It holds no save and no dump of one.
 
 ## 1. Where the flags are
 
 - **Chapter flags.** `Cond_Flags` `0x903F90`, save block `+0x5B0`: one 8-byte row
-  per chapter, so chapter `c`'s row is at block `+0x5B0 + 8c`.
-  `Chapter_FlagRow` `0x929ED0` points at the current chapter's row, as
-  `Scenario_Start` sets it.
+  of 64 flags per chapter, chapters 0..19. Chapter `c`'s row is at block
+  `+0x5B0 + 8c`. `Chapter_FlagRow` `0x929ED0` points at the current chapter's row.
 - **Numbering.** Flag `n` is bit `n & 7` of byte `n >> 3` of the row, low bit
-  first. MEASURED: flags 0..7 and 10 of chapter 0 read back as bits 0..7 and 10 of
-  the row in `start_normal.DAT`.
-- **Event flags** at block `+0x650` are a separate array with their own setters.
-  Not covered yet. Three are set one frame into a new game (3, 25, 27).
+  first (`Flags_Set`, `event_script.cpp`). MEASURED on `start_normal.DAT`.
+- **Event flags** at block `+0x650` (`Cond_Flags + 0xA0`) are a separate array
+  with their own setters, about 400 sites. Not mapped yet. Some chapter flags
+  wait on them (section 6).
 
 ### Other flag banks: finds and genes are not chapter flags
 
@@ -48,98 +48,146 @@ Four genes are given by story scenes instead, each beside a chapter flag:
 By the order in Red Herring's editor (cited, not checked by us) those are Flame,
 Defender, Shadow and Fusion.
 
-**What this means for granting a gene early.** Set the gene's bit and leave the
-chapter flag alone. The chapter flag marks the scene as done, so setting it would
-skip the scene and whatever else the scene does. With only the bit set, the scene
-still plays when reached and sets the bit again, which changes nothing
-(`Flags_Set` only ORs the bit in). Not checked: what tests chapter 8's flag 4, and
-whether any event script in the game data tests a gene bit (`EventCond_Gene`) in a
-way that changes a scene. An in-game test is owed.
+**Granting a gene early.** Set the gene's bit and leave the chapter flag alone.
+Read for genes 3 and 16 ([`chapter-08.md`](story-flags/chapter-08.md)):
 
-## 2. Method
+- No code on the path to `Scena08_Scene3` reads `Gene_Bits`. With bit 16 already
+  set the scene still plays and ORs both bits in again, which changes nothing.
+- The scene is not gated by chapter 8's flag 4. `Area108_TailPlace` state 9 starts
+  run 3 (`area_w2f.cpp`, checked), on a path gated by event flags `0x1B` and
+  `0x1D`. No code of ours tests chapter 8's flag 4.
+- Not covered by a code read: event scripts in the game data can test a chapter
+  flag (condition 2) or a gene bit (condition 16). **A play test is owed.**
+  `tools/recipe_saves/fusionEarly.DAT` is the owner's save before that scene with
+  gene bit 16 set and nothing else changed.
 
-A chapter's code names its flags outright: `Flags_Set(Row(), n)`,
-`Flags_Test(Row(), n)` and `Flags_Clear(Row(), n)` in `src/game/scena_sc*.cpp`
-(109, 38 and 22 calls across the chapters). So:
+## 2. How a chapter starts and ends
 
-1. List every call in the chapter's file with its function and step.
-2. Read the function around each one for what the flag gates.
-3. Check the reading against real saves from that chapter.
+READ and checked 2026-11-09 (`Scenario_Start` in `title_states.cpp`, `Area_Enter`
+in `mode_flow.cpp`).
 
-Code outside the chapter files can reach the same rows (`Area_TestCondition`
-tests `Cond_Flags + 8 * (kind & 0x1F)`), so step 1 must also search the area files
-for a chapter before its table is called complete. For chapter 0 that search is
-still owed.
+- **A chapter ends** when its last scene sets bit 7 of `Field_StatusBits`
+  (`Field_SetStatus80`, `StatusBit80`), usually beside a final flag and an area
+  change. Nothing else happens until the party next enters an area.
+- **The next chapter starts on that area entry.** `Area_Enter` adds one to the
+  chapter byte and calls `Scenario_Start`. Chapter 16 is skipped: 15 goes to 17.
+- **`Scenario_Start(c)`** writes the chapter byte, zeroes the scenario's working
+  bytes (state, run, step, timer), zeroes **the first dword of chapter `c`'s row**,
+  points `Chapter_FlagRow` at the row and loads the chapter's data file
+  (`0x306 + c`).
+- **Only flags 0..31 are cleared at a chapter start.** Flags 32..63 are not. In a
+  normal game they are still zero, since nothing has set them. A created save
+  must leave them zero.
 
-## 3. Chapter 0 (the opening: the whelp)
+So for the save editor:
 
-Source: `src/game/scena_sc0.cpp`. Every `Flags_Set` in the file is in this table.
-The file has no `Flags_Clear`.
+- **The start of chapter `c`:** chapter byte `c`, working bytes zero, row `c`
+  empty, every earlier row as that chapter left it.
+- **The end of a chapter is not "every flag set".** It is the row as the last
+  scene leaves it. Each map's "End" section gives that row: the flags always set,
+  the optional ones, the alternatives and the ones cleared on the way.
 
-| Flag | Set by | When | What it gates |
-|---:|---|---|---|
-| 0 | `Scena00_EnterArea`; also `Scena00_Run5` step 0 | First entry to area 4 | Area 4's first-entry scene (run 2) plays once |
-| 1 | `Scena00_EnterArea`; also `Scena00_Run5` step 0 | First entry to area `0x1F` | Area `0x1F`'s first-entry scene (run 3) plays once |
-| 2 | `Scena00_Area02`; also `Scena00_Run5` step 0 | First entry to area 2 | Area 2's first set-up (camera, elevation) runs once |
-| 3 | `Scena00_Area18`; also `Scena00_Run5` step 0 | First set-up of area `0x18`, on the first frame of a new game | Area `0x18`'s opening set-up (music, camera) runs once |
-| 4 | `Scena00_Run5` step `0xA` | The opening sequence ends, before the change into area `0x18` | Nothing in this file tests it |
-| 5 | `Scena00_Run5` step `0xF` | Event battle 1 starts | `Scena00_Area18`: the member set-up after that battle |
-| 6 | `Scena00_Run8` step 0 | Entering area `0x18` by entrance 0 | `Scena00_StepHook`: arms the trigger for event battle 7, the boss, in area 2 |
-| 7 | `Scena00_Run6` step `0xA` | Event battle 4's encounter starts (step trigger in area `0x18`) | The trigger fires once |
-| 8 | `Scena00_Run6` step `0x14` | Event battle 5's encounter starts (area `0x18`, entrance 2) | The encounter happens once |
-| 9 | `Scena00_Run6` step `0x1E` | Event battle 6's encounter starts (area `0x18`, entrance 4) | The encounter happens once |
-| 10 | `Scena00_Area02` | The next entry to area 2 after flag 2 | That entry's set-up runs once |
+## 3. Kinds of flag
 
-"Entrance" is `Cond_ByteFD`, the byte the area set-up switches on. That it is the
-entrance used is a reading, not checked.
+A flag left clear at the end of a chapter is not always a thing the player missed.
+The maps give each flag one of these kinds:
 
-`Scena00_Run5` step 0 sets flags 0..3 together, so the opening sequence marks
-those four first-entry set-ups as done before the player has control.
-
-**Flags are set when an encounter starts, not when its battle is won.**
-
-### Checked against saves
-
-| Save | Flags set | Reading |
+| Kind | Meaning | Example |
 |---|---|---|
-| `start.DAT`, one frame into a new game | 3 | `Scena00_Area18` ran its opening set-up. `Scena00_Run5` step 0 had not run yet |
-| `start_normal.DAT`, first save point, 3 battles | 0..7, 10 | Battles 1, 4 and 7 fought. 5 and 6 skipped |
-| English psxrecomp card, 0:11, 3 battles | 0..7, 10 | The same three battles as the PC save |
-| US 0:12 and JP 0:25 (RetroArch), 5 battles | 0..10 | All five battles fought |
+| progress | Set on every route through the chapter | Chapter 0 flags 4..7 |
+| once-only set-up | Marks a first-entry scene or set-up as done | Chapter 0 flags 0..3 |
+| optional | Set only if the player does a thing | Chapter 0 flags 8, 9: two optional battles |
+| choice | One of a set of alternatives | Chapter 1 flags 60, 61; chapter 2 flags 40, 41 |
+| party pick | One flag of a group, chosen by the party at that time | Chapter 12 flags 26..35 and 50..59; chapter 13 flags 24, 25, 27 |
+| transient | Set, then cleared before the chapter ends | Chapter 1 flags 16, 63 |
+| state | Follows a thing in the world and can change back | Chapter 4 flags 8..11, the levers of area 40, reset on most entries |
+| unused | No code names it, or code only tests it | Chapter 1 flags 8, 14, 17, 19, 23 |
 
-Block `+0x68B` also differs between the three-battle and five-battle saves, so it
-follows the optional encounters too. Not read yet.
+## 4. The chapters
 
-The battle counts and the flags agree with the owner's account: the section has
-five possible battles ([`boss-fights.md`](boss-fights.md): event battles 1, 4, 5,
-6 and 7), three fought on PC and all five on the disc saves.
+Each row links to the chapter's map. "End" is the scene that sets the advance bit.
+The flag counts and ends are the reading passes' (one pass per chapter file,
+2026-11-09). Section 5 says what was checked.
 
-The authentic psxrecomp JP saves (`card1.mcd.bak` in the sibling: 0:28, 5:19 and
-12:48) all have 0..7 and 10 as well, the three-battle route.
+| Chapter | Flags named | End | Notes |
+|---:|---:|---|---|
+| [0](story-flags/chapter-00.md) | 11 | `Scena00_Run11` step 9, to area 9 | The opening. Starts from New Game |
+| [1](story-flags/chapter-01.md) | 33 | Run `0xE` step 9, to area 15 | Needs flag 60, one outcome of a choice |
+| [2](story-flags/chapter-02.md) | 52 | `Scena02_Scene15` step 7, flag 32 | Six flags set by area 26's code |
+| [3](story-flags/chapter-03.md) | 32 | `Scena03_Scene8` step `0x14`, flag 30 | Gives genes 0 and 6 |
+| [4](story-flags/chapter-04.md) | 13 | Run 2 step `0x16`, flag 12 | Flags 8..11 are lever states |
+| [5](story-flags/chapter-05.md) | 53 | Entering area `0x2D` with flag 50, sets flag 62 | Event battles 18..20 set five flags |
+| [6](story-flags/chapter-06.md) | 45 | Entering area `0x4C` with flag 44, sets flag 63 | Chapter 9 also writes flag 62 |
+| [7](story-flags/chapter-07.md) | 15 | `Scena07_Scene6` step `0x27`, to area `0x20` | |
+| [8](story-flags/chapter-08.md) | 26 | `Scena08_Scene11` step `0x15` | Gives genes 3 and 16 |
+| [9](story-flags/chapter-09.md) | 56 | Area `0x52` step hook, flag 33, then run 11 | Effect code reads this row in any chapter |
+| [10](story-flags/chapter-10.md) | 55 | `Run7Body` step `0xF` | Flags 32..47 are pick-ups |
+| [11](story-flags/chapter-11.md) | 18 | `Scena11_Scene9` step 9, to area `0x79` | Nothing clears a flag |
+| [12](story-flags/chapter-12.md) | 39 | `Scena12_Run9` step `0x2F`, flag 63 | Two party-pick groups. Flag 2 chooses a boss's enemy data |
+| [13](story-flags/chapter-13.md) | 35 | `Scena13_Run8` step `0xB`, flag 30 | |
+| [14](story-flags/chapter-14.md) | 35 | `Scena14_Run7` step `0x20`, flag 49 | Mostly touched from area files. Chapter 15 writes flags 1..3 |
+| [15](story-flags/chapter-15.md) | 39 | `Scena15_Run6` step `0x36`, to area `0xC7` | Two outcomes: flag 18 restarts from boot, flag 17 goes to the ending |
+| [16](story-flags/chapter-16.md) | 4 | Back to the title | The title demo. Never reached from 15 |
+| [17](story-flags/chapter-17.md) | 0 | `Scena17_EndReturn` | The ending. Returns to chapter 15, below |
+| [18](story-flags/chapter-18.md) | 0 | - | Nothing starts it |
+| [19](story-flags/chapter-19.md) | 0 | - | Nothing starts it |
 
-**A finished chapter's row stays as it was left.** MEASURED on those three saves:
-chapter 0's row is identical at 0:28, 5:19 and 12:48, and chapter 1's row is
-identical at 5:19 (chapter 2) and 12:48 (chapter 5). Chapter 2's row gains flags
-between those two, since the 5:19 save is inside chapter 2. So a chapter-start
-baseline is the rows of every earlier chapter as they were left, plus an empty row
-for the new one.
+**After the ending** (checked in `Scena17_EndReturn`, `scena_sc15.cpp`): one answer
+to the last prompt sets event flag `0x92`, clears chapter 15's flags 9..22, and
+writes chapter byte 15 directly, without `Scenario_Start`. Any other answer
+restarts from boot and writes nothing. `Save_BuildBlock` copies event flag `0x92`
+into the slot summary, so it is the mark of a cleared game.
 
-**Baseline on leaving chapter 0:** flags 0..7 and 10 are set on every route.
-Flags 8 and 9 are the two optional encounters.
+## 5. What was checked
 
-Chapter 1's row has flags 0 and 1 set at the first save point on all three saves.
-Their setters belong to chapter 1's table.
+- **Against saves, mechanically.** Every flag set in any real save
+  ([`observed-rows.md`](story-flags/observed-rows.md), 21 saves) has a row in its
+  chapter's table: chapters 1..14, no exception. Each map's "End" section compares
+  its reading with the rows of saves past that chapter, and reports agreement.
+- **In the code, by a second read:** `Scenario_Start` and the advance in
+  `Area_Enter`; `Scena17_EndReturn`; `Area108_TailPlace` starting chapter 8's
+  run 3; chapter 0's eleven flags.
+- **Not checked:** everything else in the maps is one reading pass. Chapter 15's
+  row is empty in the only save inside it, so chapters 15..19 have no save
+  evidence. Nothing has been played.
 
-### Also set by the chapter's start
+## 6. Things that cross chapters
 
-`Scena00_Start` (original `0x537F30`) writes -1 to the 18 dwords
-`0x904608..0x90464F`. That is block `+0xC28..+0xC6F`, and those 72 bytes are all
-`0xFF` in `start.DAT` (MEASURED). This is the writer the save editor spec was
-looking for. What the dwords hold later is not established: in later saves one
-byte of each of the first eight stays `0xFF` and the other three vary.
+- **A finished row is usually frozen, with known exceptions.** MEASURED on the
+  authentic psxrecomp JP saves: chapter 0's row is identical at 0:28, 5:19 and
+  12:48, and chapter 1's at 5:19 and 12:48. The exceptions read from code:
+  chapter 9 sets and clears chapter 6's flag 62; chapter 15 writes chapter 14's
+  flags 1..3; the ending clears chapter 15's flags 9..22.
+- **Fixed-row code runs in any chapter.** The effect files read chapter 9's row at
+  its fixed address, and battle code tests chapter 1's flag 22.
+- **Chapter flags can wait on event flags.** Chapter 14's flags 25 and 26 wait on
+  event flag 122 ([`chapter-14.md`](story-flags/chapter-14.md)).
+- **`Area21_ChoiceTrade` sets flag 18 of whichever row is current.** It is in the
+  saves' chapter 8 row.
 
-## 4. To do
+## 7. Open
 
-- Chapter 0: search the area files for tests of chapter 0's row.
-- Chapters 1..15 and 17, by the same method.
-- The event flags at `+0x650` and their setters.
+- **Scripts in the game data.** Event conditions can test a chapter flag or a gene
+  bit, and some steps have no starter in our code: chapter 10's run 7, chapter 14's
+  `Scena14_Run1` step `0x19` (flags 2 and 3), the second branch of
+  `Scena15_Run5`. A data read or a run would settle each.
+- **Two possible defects, Capcom's if real, seen in the read only:**
+  `Scena07_Scene7` records its rewards in chapter 7's row while `ObjectReward`
+  tests chapter 6's, so a reward could be given twice; and nothing in the code
+  stops chapter 8's run 3 from starting again. Neither is in `known-defects.md`
+  until one is seen in play.
+- **The event flags** at `+0x650`.
+- **Chapter 0:** the area files are not searched for tests of its row.
+- **Two maps quote flag numbers read from `BOF3.exe`'s tables**
+  (chapter 9's effect tables, chapter 10's pick-up records). The owner's call of
+  2026-11-09 covers flag documentation as reference material; this use is noted
+  for the owner to confirm.
+
+## 8. The extractor
+
+`tools/story_flags.py` lists flag sites: `census`, `summary`, `chapter N`,
+`file NAME.cpp`. It is a first pass, and the maps are the record. Known gaps,
+found by the reading passes: calls through the `g.flags_*` table (chapter 16),
+one-line object handlers, wrappers that fix the flag number (`SetAndEnd0`,
+`CellRun8`), `mode_states.cpp`'s chapter 1 functions, `area_w4e.cpp`'s `Row14()`,
+and a few sites given to the wrong function.

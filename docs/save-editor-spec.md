@@ -369,7 +369,7 @@ MEASURED on `start.DAT`:
   uninitialised part (it sits at `0x9039E0`; the section's file data ends at
   `0x676000`), so code writes them at start-up. READ: `Scena00_Start` writes -1 to
   the 18 dwords `0x904608..0x90464F`, which is exactly this span, and the bytes
-  are all `0xFF` ([`story-flags.md`](story-flags.md) section 3).
+  are all `0xFF` ([`story-flags/chapter-00.md`](story-flags/chapter-00.md)).
 - **Three flags are set at frame 1:** bit 3 of chapter 0's flag word, and event
   flags 3, 25 and 27.
 - **Other start-up fields, to trace one by one:** the nine button masks, the
@@ -421,7 +421,9 @@ save fought battles 1, 4 and 7, and the disc saves all five. Each flag is set wh
 its encounter starts, not when the battle is won.
 
 **This is the method for the flag documentation**, now in
-[`story-flags.md`](story-flags.md), with chapter 0 complete. A chapter's code names its flags
+[`story-flags.md`](story-flags.md), with a map of every chapter. Its section 2
+gives how a chapter starts and ends, which is what a story-point row must
+reproduce. A chapter's code names its flags
 outright, as `Flags_Set(Row(), n)` and `Flags_Test(Row(), n)`, so each flag's
 meaning can be read from the function around it, and the saves confirm the reading.
 
