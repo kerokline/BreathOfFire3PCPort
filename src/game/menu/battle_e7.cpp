@@ -71,72 +71,12 @@ const unsigned char* Text(U address) { return move_script::At(address); }
 // 0x5989B0 / 0x5989F0, kinds 1..4 the stack dispatchers below)
 // ===========================================================================
 
-// original 0x599A00 (PSX 0x800AEE34): the cursor box at (x, y), w by h (words): a LINE_F3
-// (x, y), (x, y), (x, y + h - 1) and a LINE_F4 (x, y), (x + w - 1, y), (x + w
-// - 1, y + h - 1), (x, y + h - 1), both in one colour - the brightness 0xFF,
-// or with `flash` a pulse of Frame_Counter (bit 3 set: ((c & 6) << 5) +
-// 0x3F; else ((~c & 6) << 5) + 0x3F) - in the channels `sides` bits 0..2 name
-// (bit 0 the prim's +6, bit 1 its +5, bit 2 its +4), 0 in the others.
-//
-// As the original has it: x, y, w and h are masked with 0xFFFF before `fild`
-// (0x599A6E..0x599A81), so a coordinate below 0 lands at 65,536 less it. The
-// PlayStation (US 0x800B1F04, JP 0x800AEF04: `sh` of x, y and y + h - 1 into
-// the LINE's vertex halfwords at 0x800AEEF4..0x800AEF08) keeps them signed.
-//
-// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
-// BattleE7_Inject, after the self-test. Each vertex is then the PlayStation's
-// signed halfword - x, y, x + w - 1 and y + h - 1 each cut to 16 bits and
-// sign-extended - so a box partly off the left or top edge clips (D336).
-namespace battle_e7 { std::uint8_t g_cursor_box_signed = 0; }
-
 // ===========================================================================
 // The battle menu's equipment window (Window_Handler8Kinds kind 3, 0x59CC10)
 // ===========================================================================
-
-// original 0x59D640: (member, x, y, set, flags, record) - the window at (x +
-// 4, y + 4) 0x78 by 0xA3; the member's name (CharacterRecords + 0xA4 member,
-// 5 characters at most) centred on x + 0x3E; the four stat labels 0x66A0F8..
-// at (x + 5, y + 0x27 + 13 k); Char_RecalcStats, then the four stats +0x24,
-// +0x26, +0x2A, +0x28 (by 0x64E324, 8-pixel font, at (x + 0x31, y + 0x1C + 13
-// k)). Unless flags bit 0: Equip_PreviewSet(member, set, marks, values) into
-// the stack, and per stat a bar 0x59DB70(x + 0x51, y + 0x1C + 13 k, 0x11 for
-// mark 4, 0x12 for 1, else 0x13, 0x1C, CLUT (0, 0x1E0), 0x80) and the value
-// in the mark's colour at (x + 0x59, same y). Then the six equipped items
-// (+0x12..+0x17, categories 0x66B5BC): the record's +0x10 = 0 first; row r
-// in colour 2 when it is the record's +0xB; with the record's +0xD bit 1, an
-// item Item_CanUse(2, the member 0x66972C[0x904065[s8 0x929F06]], category,
-// item) refuses is drawn dim in colour 7, and for one it allows on row +0xA
-// the record's +0x10 = category << 8 | item, and it is first drawn dim in
-// colour 7; the row +0xA / +0xB raised by 2 pixels; then its icon
-// (0x66B5B4) and name. Last the pieces 0x66B508 and the frame's edges.
-//
-// DIVERGENCE DIV-0065: the labels' row. The original draws label k at y +
-// 0x27 + 13 k and the values at y + 0x1C + 13 k, so each label sits two
-// pixels above the next stat's value - the first value has no label and the
-// fourth label is drawn under the frame, off the box. The field's member
-// panel (0x5738A0: the label at y + 8, the value at y + 0xA) has the label
-// two pixels above its own value; 0x27 is that relation one 13-pixel row
-// down, 0x1A + 0xD. Ours draws the labels at y + 0x1A + 13 k once the flag
-// is on; BattleE7_Inject sets it after the self-test, which compares the
-// original's rows.
-unsigned char g_equip_labels_row = 0;
 
 // ============================================================================
 
 void BattleE7_Inject() {
     if (bof3::WantsShadow("battle_e7")) battle_e7::SelfTest();
-    // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
-    {
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleEquipLabelsRow", Low32(&g_equip_labels_row),
-                         &was, &is, 1);
-        bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
-    }
-    {
-        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
-        static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_e7::g_cursor_box_signed),
-                         &was, &is, 1);
-        bof3::Log("DIV-0161    the gene list's cursor box takes its corners signed, as the PlayStation (on unless the line above says OFF)");
-    }
 }

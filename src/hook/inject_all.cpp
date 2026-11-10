@@ -1974,6 +1974,8 @@ void InjectAll() {
                                 // calls re-aimed at the boss harness's recorders, its stack tables' immediates at
                                 // handler recorders; no module patches bytes inside its 31 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    BattleMenuWinFromBattleE7_Inject();
+    MenuListFromBattleE7_Inject();
     if (bof3::WantsShadow("battle_e1")) battle_e1::SelfTest();          // round 12 group BE1 (BATE's tally and equipment screens, the command menu's held
                                 // steps and auto battle, action kind 3, the ability notice, the result's counts and
                                 // level gain, the loss screen, 0x42D7A0..0x432B6A): its clones' calls re-aimed at the

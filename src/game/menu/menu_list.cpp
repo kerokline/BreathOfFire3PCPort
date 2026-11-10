@@ -2078,6 +2078,24 @@ extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
 
+// original 0x599A00 (PSX 0x800AEE34): the cursor box at (x, y), w by h (words): a LINE_F3
+// (x, y), (x, y), (x, y + h - 1) and a LINE_F4 (x, y), (x + w - 1, y), (x + w
+// - 1, y + h - 1), (x, y + h - 1), both in one colour - the brightness 0xFF,
+// or with `flash` a pulse of Frame_Counter (bit 3 set: ((c & 6) << 5) +
+// 0x3F; else ((~c & 6) << 5) + 0x3F) - in the channels `sides` bits 0..2 name
+// (bit 0 the prim's +6, bit 1 its +5, bit 2 its +4), 0 in the others.
+//
+// As the original has it: x, y, w and h are masked with 0xFFFF before `fild`
+// (0x599A6E..0x599A81), so a coordinate below 0 lands at 65,536 less it. The
+// PlayStation (US 0x800B1F04, JP 0x800AEF04: `sh` of x, y and y + h - 1 into
+// the LINE's vertex halfwords at 0x800AEEF4..0x800AEF08) keeps them signed.
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleE7_Inject, after the self-test. Each vertex is then the PlayStation's
+// signed halfword - x, y, x + w - 1 and y + h - 1 each cut to 16 bits and
+// sign-extended - so a box partly off the left or top edge clips (D336).
+namespace battle_e7 { std::uint8_t g_cursor_box_signed = 0; }
+
 extern "C" void __cdecl GeneWin_DrawCursorBox(U x, U y, U w, U h, U flash, U sides) {
     unsigned bright = 0xFF;
     if (flash & 0xFF) {
@@ -2781,6 +2799,16 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
 // by every kind (read 2026-09-25), so a call is the jump.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
     Dispatch(::bof3::Img(Window_Handler7KindTable_addr), RecMenuDrawHelpers()[2]);
+}
+
+void MenuListFromBattleE7_Inject() {
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_e7::g_cursor_box_signed),
+                         &was, &is, 1);
+        bof3::Log("DIV-0161    the gene list's cursor box takes its corners signed, as the PlayStation (on unless the line above says OFF)");
+    }
 }
 
 void MenuListFromMenuLists_Inject() {

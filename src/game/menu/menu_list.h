@@ -6,3 +6,4 @@ void MenuList_Inject();
 void MenuListFromBattleResult_Inject();
 void MenuListFromBattleWinStates_Inject();
 void MenuListFromMenuLists_Inject();
+void MenuListFromBattleE7_Inject();
