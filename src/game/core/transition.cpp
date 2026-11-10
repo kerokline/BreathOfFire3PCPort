@@ -916,6 +916,10 @@ extern "C" void __cdecl GameMode5_ToPlaces(void) {
     if (SH_CALL(File_LoadDone)() != 0 && placed != 0 && Field_Kind2Hold == 0) StepUp();
 }
 
+// DIVERGENCE DIV-0149: 1 through PatchBytes("EventBattleKeepsMusic") in
+// ModeRest_Inject, after the self-test.
+namespace mode_rest { std::uint8_t g_event_keeps_music = 0; }
+
 // original 0x495FD0 (GameMode5_Steps[3]; PSX 0x80198C94): Field_PartyLoad(1),
 // Encounter_PartyAtPlaces, the two frames; Music_FadeOutStop(0xA) unless
 // 0x904AE5 bit 6 or Music_Track 0xFF; the battle's file and track - an event
@@ -1525,6 +1529,21 @@ void TransitionFromModeFlow_Inject() {
 }
 
 void TransitionFromModeRest_Inject() {
+    {
+        // DIV-0092: armed here because ModeFlow_Inject (and its fuzz of
+        // GameMode_Start) ran earlier in InjectAll; both fuzzes see Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("AreaTrackFallback",
+                         Low32(&mode_flow::g_area_track_fallback), was, is, 4);
+        bof3::Log("DIV-0092    the field's music after a battle, and after a load of a save without a track, is the area's own (on unless the line above says OFF)");
+    }
+    {
+        // DIV-0149: after the self-test, which compared Capcom's GameMode5_Load.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("EventBattleKeepsMusic", Low32(&mode_rest::g_event_keeps_music),
+                         &was, &is, 1);
+        bof3::Log("DIV-0149    an event battle with no music of its own leaves the scene's song playing (on unless the line above says OFF)");
+    }
     BOF3_INJECT(GameMode3_Run);
     BOF3_INJECT(GameMode3_Enter);
     BOF3_INJECT(GameMode3_Leave);
