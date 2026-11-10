@@ -70,6 +70,28 @@ void SlideY(int by, short bound, bool below, short to) {
 
 }  // namespace
 
+// original 0x59B240, kind 0: the step (ShopWin_TitleSteps by +3: a bare ret,
+// 0x59A3A0, 0x59A3D0 - group DH's slides), then the title box
+// Menu_DrawTitleBox(+4, +6, 0x118, 0x13, the window colour 0x903A5A); then,
+// when the word +0x10 is not 0, system message +0x10 (Msg_SystemPtr) through
+// Text_DrawAt at (+4 + 7, +6 + 3), colour 0, to its end; and when +0x10 is
+// 0x36, 0x49, 0x4A or 0x52, system message 0xF at the same place after it.
+//
+// As the original has it: the colour is read after the step; the record after
+// the step, after the box, after each Msg_SystemPtr and after the first
+// Text_DrawAt (whose +0x10 is tested again). The original's id argument is
+// the record pointer's upper half over the word; Msg_SystemPtr reads the low
+// word alone.
+//
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no.
+// System message 0xF is Menu_YesNo's own line, and the hand the shop's steps
+// place (shop_states2.cpp's YesNoFrame, field_s.cpp's SharedList_UseItem) was
+// fitted, like Menu_YesNo's, to the Chinese line. With the flag on (a Latin
+// overlay; set after the self-test, which compares the original's draw) the
+// line is DIV-0027's re-spaced one - Yes three spaces left, No kept - and the
+// hands move with it (YesNoLayout_ShopHandX).
+unsigned char g_shop_yes_no_line = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(void) {
     Step(::bof3::Img(ShopWin_TitleSteps_addr));
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
@@ -141,6 +163,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
 }
 
 void ShopWin_Inject() {
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's line; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopYesNoLayout", Low32(&g_shop_yes_no_line),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the shop's yes / no line re-spaced as Menu_YesNo's");
+    }
     BOF3_INJECT(ShopWin_TitleRun);
     BOF3_INJECT(ShopWin_ButtonsRun);
     BOF3_INJECT(ShopWin_MoneyRun);
