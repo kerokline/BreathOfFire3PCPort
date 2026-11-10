@@ -72,25 +72,6 @@ namespace {
 // ===========================================================================
 // Kind 3: the action banner
 
-// original 0x597230 (PSX 0x801E9470): state 1 - banner record k = +0xA of the
-// pool 0x93B8E0 (12 bytes a record): its text (+4) counted by
-// Text_GlyphCount; then, record re-read, a wide banner (+2 set) is the medium
-// box at (x - 0x10, y) and the text at x + 0x26 - 6 n, 0x12 characters; a
-// narrow one the small box at (x, y) and the text at x + 6 (6 - n), 8
-// characters; y + 3, colour +0xA, through Text_DrawAt. The record is re-read
-// after the count and after the box.
-//
-// DIVERGENCE DIV-0061: under a Latin language overlay the text is centred
-// on the width the pen covers (DIV-0006's advances) about the same middle -
-// x + 0x26 wide, x + 0x24 narrow - instead of by 6 units a glyph: the
-// owner's "Green Apple" and "Flare" left of centre, 2026-09-27. 0 until
-// BattleWinStates_Inject patches it to 1 under the name BattleBannerCentre,
-// so BOF3X_ORIGINAL=BattleBannerCentre and the fuzz keep the original's x.
-// The same flag lets the text run to half again the characters (amended for
-// issue 127): the room for 8 glyphs of 12 units holds 12 letters of 8, and
-// "Lucky Strike" and "Instant Kill", 12 each, drew as "Lucky St".
-unsigned char g_banner_centre = 0;
-
 // ===========================================================================
 // Kind 4: an enemy's gauge
 
@@ -102,16 +83,4 @@ unsigned char g_banner_centre = 0;
 void BattleWinStates_Inject() {
     g = kOriginals;
     if (bof3::WantsShadow("battle_win_states")) SelfTest();
-    // DIVERGENCE DIV-0061: a Latin language overlay only, as MenuLists_Inject
-    // tests it for DIV-0058.
-    {
-        if (Lang_Latin()) {
-            static const std::uint8_t was = 0, is = 1;
-            bof3::PatchBytes("BattleBannerCentre",
-                             Low32(&g_banner_centre),
-                             &was, &is, 1);
-            bof3::Log("DIV-0061    action banners centred on their width: %s", g_banner_centre ? "on" : "off");
-        }
-    }
-
 }

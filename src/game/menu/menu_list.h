@@ -4,3 +4,4 @@
 
 void MenuList_Inject();
 void MenuListFromBattleResult_Inject();
+void MenuListFromBattleWinStates_Inject();
