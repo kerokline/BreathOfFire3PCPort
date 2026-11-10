@@ -113,6 +113,28 @@ void Icon(U x, unsigned kind) { SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int
 
 void KindRow(unsigned kind, unsigned count, unsigned row) { SH_CALL(FieldPanel_DrawKindRow)(kind, count, row); }
 
+// DIVERGENCE DIV-0209: 1 (PatchBytes "FishCountWord", after the self-test,
+// which compares Capcom's byte count). A catch's size is a word and can pass
+// 255 (Fish_Spawn's growth); the catch panel counts and prints it as a word
+// and the record keeps 255 (D208's fishing case).
+unsigned char g_fish_count_word = 0;
+// The count's high byte beside the panel's +9, ours: 0 from LeaderPanel_S4RowIn.
+unsigned g_fish_count_high = 0;
+// The number FieldPanel_DrawKindRow prints in place of its byte, or -1.
+int g_fish_row_number = -1;
+
+// A row for a size word: past 255 under DIV-0209 the word is printed, and the
+// points are those of 255 (at or above the kind's threshold, so the full ones).
+void SizeRow(unsigned kind, unsigned size, unsigned row) {
+    if (g_fish_count_word != 0 && size > 0xFF) {
+        g_fish_row_number = static_cast<int>(size & 0xFFFF);
+        KindRow(kind, 0xFF, row);
+        g_fish_row_number = -1;
+        return;
+    }
+    KindRow(kind, size & 0xFF, row);
+}
+
 void Total(U y) { SH_CALL(FieldPanel_DrawTotal)(0xB0, static_cast<int>(y)); }
 
 void Message(U y, unsigned id) { SH_CALL(FieldPanel_DrawMessage)(8, static_cast<int>(y), id); }
@@ -139,7 +161,7 @@ void PanelHead(const char* who) {
     Header(0);
     Icon(0x80, PickedKind(who));
     unsigned char* const p = Picked(who);
-    KindRow(p[6], p[0x9C], 0);
+    SizeRow(p[6], rv::As<records::SpriteObject>(p)->counter, 0);
 }
 
 // 0x5296F9 and 0x5297C4's pull: the picked record's +0x1C moved by 0xFE less
@@ -1166,7 +1188,8 @@ extern "C" void __cdecl LeaderPanel_S4Best(void) {
         unsigned char& best = B(::bof3::Img(at::kBestCounts.v) + p[6]);
         if (po->counter > best) {
             Effect1e_Blink = 1;
-            best = p[0x9C];
+            // DIV-0209: a size past 255 keeps 255, not its low byte.
+            best = g_fish_count_word != 0 && po->counter > 0xFF ? 0xFF : p[0x9C];
         }
         Sound(0x102);
         S()[9] = 8;
@@ -1221,6 +1244,7 @@ extern "C" void __cdecl LeaderPanel_S4RowIn(void) {
     s[9] = static_cast<unsigned char>(s[9] - 1);
     Header(0);
     Icon(0x80, PickedKind("LeaderPanel_S4RowIn"));
+    g_fish_count_high = 0;   // DIV-0209: the count starts over
     const unsigned row = S()[9];
     KindRow(PickedKind("LeaderPanel_S4RowIn"), 0, row);
     s = S();
@@ -1234,20 +1258,24 @@ extern "C" void __cdecl LeaderPanel_S4RowIn(void) {
 // count +9); at the count, the blink's sound 0x20D, sound 0x102, +9 = 4, +3
 // up; Sprite_ScriptTick, the shade.
 extern "C" void __cdecl LeaderPanel_S4Count(void) {
+    // DIV-0209: the count is +9 with a high byte of ours, so a size past 255
+    // is reached. Off, the high byte stays 0 and the count is Capcom's byte.
+    if (g_fish_count_word == 0) g_fish_count_high = 0;
     if (Input_Pressed & Sigma(0x20)) {
         unsigned char* const p = Picked("LeaderPanel_S4Count");
         S()[9] = p[0x9C];
+        if (g_fish_count_word != 0) g_fish_count_high = rv::As<records::SpriteObject>(p)->counter >> 8;
     } else {
         unsigned char* const s = S();
         s[9] = static_cast<unsigned char>(s[9] + 1);
+        if (g_fish_count_word != 0 && s[9] == 0) ++g_fish_count_high;
     }
     Header(0);
     Icon(0x80, PickedKind("LeaderPanel_S4Count"));
-    const unsigned count = S()[9];
-    KindRow(PickedKind("LeaderPanel_S4Count"), count, 0);
+    const unsigned count = (g_fish_count_high << 8) | S()[9];
+    SizeRow(PickedKind("LeaderPanel_S4Count"), count, 0);
     unsigned char* const p = Picked("LeaderPanel_S4Count");
-    unsigned char* const s = S();
-    if (static_cast<std::uint16_t>(s[9]) == Word(p + 0x9C)) {
+    if (static_cast<std::uint16_t>(count) == Word(p + 0x9C)) {
         if (Effect1e_Blink != 0) Sound(0x20D);
         Sound(0x102);
         S()[9] = 4;
@@ -1418,7 +1446,7 @@ extern "C" void __cdecl LeaderPanel_S4Out(void) {
     const unsigned char kind = PickedKind("LeaderPanel_S4Out");
     Icon(48u * S()[9] + 0x80u, kind);
     unsigned char* const p = Picked("LeaderPanel_S4Out");
-    KindRow(p[6], p[0x9C], S()[9]);
+    SizeRow(p[6], rv::As<records::SpriteObject>(p)->counter, S()[9]);
     Total(30u * S()[9] + 0x9Cu);
     s = S();
     const unsigned char how = s[0xB];
@@ -3244,8 +3272,10 @@ extern "C" void __cdecl FieldPanel_DrawKindRow(unsigned kind, unsigned count, un
     }
     TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
     if (k == 0xFF) return;
+    // DIV-0209: SizeRow's word in place of the byte, for a size past 255.
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))),
-                         static_cast<unsigned>(static_cast<unsigned char>(count)));
+                         g_fish_row_number >= 0 ? static_cast<unsigned>(g_fish_row_number)
+                                                : static_cast<unsigned>(static_cast<unsigned char>(count)));
     TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
     const unsigned points = KindPoints(kind, static_cast<unsigned char>(count)) & 0xFFFFu;
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))), points);
@@ -3503,5 +3533,11 @@ void LeaderPanelFromEffect1e_Inject() {
         bof3::PatchBytes("FishPanelDuck", Low32(&g_fish_panel_duck),
                          &was, &is, 1);
         bof3::Log("DIV-0132    the fishing panel ducks the music as the PlayStation does (on unless the line above says OFF)");
+    }
+    // DIVERGENCE DIV-0209: after the self-test, which compares Capcom's byte count.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FishCountWord", Low32(&g_fish_count_word), &was, &is, 1);
+        bof3::Log("DIV-0209    the catch panel counts a size past 255 and the record keeps 255 (on unless the line above says OFF)");
     }
 }

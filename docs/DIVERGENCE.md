@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 208 entries, DIV-0001..0208, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 209 entries, DIV-0001..0209, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10270,6 +10270,21 @@ designed in rather than bolted on.
 - **Toward:** none - the PlayStation has the same third flow ("Yes" above)
 - **Languages:** any
 - **State:** active
+- **Amended 2026-11-10 (the owner: load a default instead of stopping):** a
+  save whose six words are not one button each no longer stops the game at
+  the load. `LoadApplied` puts the release's Start-held reset words in their
+  place (by source under DIV-0134, Japan's otherwise), builds the table from
+  them, and logs one `ButtonSigma` line with the reason. The original loads
+  such words as they are and has no table to build. Found by the save-block
+  map (2026-11-10): a converted or edited save could reach the Fatal. The
+  boot defaults, the rebind and a quickload still stop on a bad table, since
+  those words are ours. `BOF3X_SHADOW=sigma` now also checks that each of the
+  11 refused word sets resets to each release's words and builds a table.
+  Live, 2026-11-10: a copy of the `combat` recipe save with Move's word set to
+  Action's (checksum redone) loaded from the title on the exe host; the log
+  reads "the save's Config is not one button for each line (Action's word 6
+  is 0x0040, a button another line is on): Japan's reset buttons loaded in
+  its place" and the game ran on. Self-test 0 mismatches.
 
 ### An install starts with the Config of the release it was built from
 
@@ -15336,6 +15351,47 @@ designed in rather than bolted on.
 - **Switch:** FieldHealParty
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=FieldHealParty (ini off=)
+- **Toward:** none - every release keeps the bug
+- **Languages:** any
+- **State:** active
+
+### The catch panel counts a fish's size past 255, and the record keeps 255
+
+- **ID:** DIV-0209
+- **Date:** 2026-11-10
+- **Subsystem:** fishing, the catch panel - `LeaderPanel_S4Count` `0x529AE0`,
+  `LeaderPanel_S4Best` `0x5298F0`, the panel's head and its way out, and
+  `FieldPanel_DrawKindRow` `0x52D140` (all ours,
+  `src/game/field/leader_panel.cpp`); known-defects D208, its fishing case
+- **Tier:** Intent - Capcom's bug; the count plainly means to reach the size
+- **Original behaviour:** a fish's size is a word. `Fish_Spawn` lets a fish at
+  its kind's top size grow by one for each odd roll, up to a tenth of the top
+  size and one more, so a kind whose top size is 232 or more can pass 255. The
+  catch panel counts a byte up to the size and compares the byte with the word:
+  at 256 or more the count never ends, and the confirm button, which sets the
+  byte to the size's low byte, does not end it either. The record of the kind
+  is a byte and takes the size's low byte, so 265 would be kept as 9, with the
+  points of 9.
+- **New behaviour:** the count is the panel's byte with a high byte of ours
+  beside it, so it reaches the size and the step ends; the confirm button sets
+  both. The panel prints the size as a word while it counts and after. The
+  record keeps 255 for a size past 255, and the points shown are those of 255,
+  which are the kind's full points (255 is at or above every top size). A size
+  of 255 or less is counted, printed and kept as before.
+- **Rationale:** the owner, 2026-11-10: cap the record at 255 where the byte
+  holds no more, and let the number count up so that the count ends. Found by
+  the save-block map ([`save-block.md`](save-block.md) section 6).
+- **Also in the PSX version?** By the twins' addresses, yes
+  (`LeaderPanel_S4Best` PSX `0x801DB5D4`, `Fish_Spawn` PSX `0x801DE218`); the
+  PlayStation code was not read for this entry.
+- **Verification:** builds; armed after the self-test, which compares Capcom's
+  byte count. Not seen in play, and not likely to be: the size must spawn at
+  exactly the top size and then roll odd 16 times in a row.
+- **Reversible?** `BOF3X_ORIGINAL=FishCountWord`.
+  A player turns it off with `BOF3X_OFF=FishCountWord` (the ini's `off=`).
+- **Switch:** FishCountWord
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=FishCountWord (ini off=)
 - **Toward:** none - every release keeps the bug
 - **Languages:** any
 - **State:** active
