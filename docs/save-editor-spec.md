@@ -188,7 +188,7 @@ Class says how the editor treats a field:
 | `+0x74D` | 4 | Unnamed, all live | P | UNKNOWN |
 | `+0x751` | 1 | BGM id | A | CITED |
 | `+0x752` | 2 | Unnamed | P | MEASURED zero |
-| `+0x754` | 4 | Battle count | A | CITED |
+| `+0x754` | 4 | Battle count | A | MEASURED, section 12.1 |
 | `+0x758` | 28 | Lifetime zenny and unnamed | A / P | CITED |
 | `+0x774` | 512 | Item ids, 4 categories x 128 | E | MEASURED by the sibling's `save_tool.py verify` against disc tables |
 | `+0x974` | 512 | Item counts | E | as above |
@@ -381,7 +381,8 @@ MEASURED between the two saves (36 bytes differ, checksum aside):
   changes.
 - **The item picked up** takes slot 0 of inventory category 1: one id byte at
   `+0x7F4` and one count byte at `+0x9F4`.
-- **The battle count** at `+0x754` goes from 0 to 3.
+- **The battle count** at `+0x754` goes from 0 to 3. The owner fought three
+  battles in that section, the boss included, so the field counts battles fought.
 - **The lead changes** from id 10 to id 9 in both orders, and record 0's
   `char_id` becomes 9.
 - Also changed, meaning not established: `+0x20`, `+0x68B`, `+0x6EC`, `+0x760`,
