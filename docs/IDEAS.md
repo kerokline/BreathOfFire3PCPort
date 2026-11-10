@@ -2523,3 +2523,31 @@ A takeover group's fuzz file is one table driven by one harness object (`Group`:
 
 ### Outcome
 _(2026-11-09) open; nothing built._
+
+## I62 — Linux: the release under Proton, then a native build
+
+**Ask (2026-11-10, the owner; issue #215):** a player asked for a Linux-compatible build; stage the two tiers so they are on hand.
+**Kind:** platform. **Feasibility:** HIGH for tier 1 (a test pass, no code planned), MEDIUM for tier 2 (a round the size of the 64-bit build round).   **Gated on:** a Linux tester for tier 1; the owner's word, the renderer's remainder (I31) and the six calls for tier 2.
+
+The staging is [`linux-round.md`](linux-round.md). Tier 1 runs the Windows release under Proton / Wine against a twelve-row checklist and documents the result; the one observation so far is issue #215's screenshot, where the launcher starts under UMU-Proton 10 and shows DIV-0102's message for an install not set up. Tier 2 is an x86-64 ELF of the 64-bit host: an operating-system seam, the window and input on SDL3, a second renderer backend beside Direct3D 11, the low-memory design probed on Linux, the stack switch under the System V calling convention, then the ten state-hash routes against the Windows 64-bit references. It is I33's portable platform layer taken up. A native launcher is a third tier, not staged.
+
+**First concrete step:** send the checklist of `linux-round.md` section 2 to a Linux tester with the released zips, and read the `bof3x.log` that comes back.
+
+### Outcome
+_(2026-11-10) open; staged, nothing built or run on Linux._
+
+## I63 — A second renderer backend: Vulkan or OpenGL beside Direct3D 11
+
+**Ask (2026-11-10, the owner):** after the first Proton pass, consider a GL or Vulkan renderer; write the idea down.
+**Kind:** platform / renderer. **Feasibility:** MEDIUM.   **Gated on:** the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2), so the backend is written once against what that round leaves; the owner's call on the API ([`linux-round.md`](linux-round.md) section 6, call 1).
+
+**What it is for.** A native Linux build (I62's tier 2) has no Direct3D, so it needs this. Proton does not: the first pass ([`linux-round.md`](linux-round.md) 2a, 2b) drew the game right through DXVK once the shaders stopped being compiled at start-up (D411), so Direct3D 11 was never the fault there. On Windows the gain is small - a path for a machine whose Direct3D 11 driver is poor - and the cost is a second backend to keep equal.
+
+**What exists.** The game records a frame and `render_shim.cpp` (1,347 lines) hands it to `render_d3d11.cpp` (1,159 lines): pre-transformed vertices, no depth test, no culling, one scene shader with a dual-source-blend variant (DIV-0160), a present pass, the SatPixie filter's five shaders, texture page uploads, and the readbacks the harness's shots use (`fb_grab.cpp`, `gfx_snapshot.cpp`). The ten shaders are HLSL, now compiled at build time by `tools/compile_shaders.py`; a second backend needs them in its own form (SPIR-V or GLSL), by a translator at build time or by hand.
+
+**The choices.** SDL3's GPU API (proposed: SDL3 is already built in; one backend reaches Vulkan on Linux and Direct3D 12 or Vulkan on Windows; whether it covers dual-source blending and the readbacks is the first thing to read); OpenGL 3.3 (simple, reaches old hardware, one more shader dialect); Vulkan by hand (the most code for nothing the other two lack here).
+
+**First concrete step:** write down the interface `render_shim.cpp` asks of the backend ([`linux-round.md`](linux-round.md) stage LA4), read SDL3's GPU documentation against it - dual-source blend, the staging readback, dynamic vertex buffers - and build the present pass alone on the second backend on Windows, compared with Direct3D 11's frame for a recipe's shots. Direct3D 11 stays the Windows default until every route's shots match.
+
+### Outcome
+_(2026-11-10) open; nothing built._

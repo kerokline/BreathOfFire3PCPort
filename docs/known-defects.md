@@ -10897,3 +10897,66 @@ only past 99. Chapter 6 reads and writes row 6 throughout, so a chest opened
 there is right in both chapters. No save on record has row 7's flag 34 or 35.
 
 **Status:** fixed by DIV-0210, not yet played.
+
+## D411 — Under Proton the scene is drawn under a screen-wide colour gradient: Wine's HLSL compiler miscompiles the scene shader (the platform's; fixed 2026-11-10: the build carries the bytecode)
+
+**Seen:** 2026-11-10, the `v0.1.0-beta.1` 32-bit zip under UMU-Proton 10.0-4
+(DXVK 2.5.1 on llvmpipe, WSL2), a disc-only US install, the attract scenes:
+green at the top of the picture, blue at the bottom left, red at the bottom
+right, over everything but the text windows
+(`D:\bof3x-runs\linux1110\shots_boot86w`).
+
+**Established (2026-11-10, by A/B):** the same run with Windows'
+`d3dcompiler_47.dll` beside `bof3x.exe` and `WINEDLLOVERRIDES=d3dcompiler_47=n,b`
+draws the title, the scenes and a battle right (`shots_boot86n`,
+`shots_combat86s`); nothing else changed. The colours read as each vertex's
+clip-space position in place of its diffuse colour, so the compiled vertex
+shader's outputs and the pixel shader's inputs do not line up; which of the two
+is wrong was not read. `render_d3d11.cpp` compiles `kSceneShader` at start-up by
+`D3DCompile` (`Compile`, line 313), and under Wine that call goes to Wine's own
+compiler.
+
+**Status:** fixed on `fix/proton-d411-d412` (2026-11-10;
+[`linux-round.md`](linux-round.md) 2b): `tools/compile_shaders.py` writes
+`src/render/shaders_compiled.h` and the renderer compiles nothing at start-up
+unless `BOF3X_PIXEL_OFFSET` is set. Under Proton with no native DLL the route's
+7 frames are byte-identical to the release's under Microsoft's compiler; on
+Windows the frames are identical to a start-up compile's. Not seen on a
+hardware driver, before or after.
+
+## D412 — The 64-bit build stops on its first frame under Wine: the C runtime's `FILE*` lies above 4 GB (ours, the narrow image's premise; fixed 2026-11-10: a table of ours)
+
+**Seen:** 2026-11-10, the `v0.1.0-beta.1` 64-bit zip under UMU-Proton 10.0-4:
+`FATAL: ... slot32.h:89 operator=: 00006FFFFFA6BA28 lies above 4 GB` after
+`fb_grab` on frame 1, on each start that reached the loop
+(`D:\bof3x-runs\linux1110\bof3x_boot64b.log`).
+
+**Established (2026-11-10):** a `+loaddll` run places the address in Wine's
+`ucrtbase.dll` (loaded at `0x6FFFFF9E0000`, `sechost.dll` next at
+`0x6FFFFFAC0000`). `Crt_fopen` (`src/game/crt_rest.cpp:283`) returns
+`std::fopen`'s result and `src/game/platform/file.cpp` stores it in a game
+word. Windows' runtime allocates the object on the heap, below 4 GB with ASLR
+off ([`x64-build-design.md`](x64-build-design.md)); Wine's keeps its first
+streams in the DLL's own data. That this store, not another, is the one that
+stopped the run is read from the address and the code, not from a stack.
+
+**Status:** fixed on `fix/proton-d411-d412` (2026-11-10;
+[`linux-round.md`](linux-round.md) 2b): `src/common/file_token.h` - a `FILE*`
+above 4 GB is kept in a table in `bof3x.dll` and the word holds the slot's
+address; one below 4 GB goes into the word as before. The 64-bit build then
+plays the `combat` route under Proton, its frames pixel-identical to the 32-bit
+build's. No other pointer above 4 GB was met on that route or the opening;
+the rest of the game under Wine is not played.
+
+## D413 — numpy does not import in the bundled Python under Wine (the platform's; open)
+
+**Seen:** 2026-11-10, the release's `runtime\python\python.exe` under
+UMU-Proton 10.0-4: `import numpy` aborts with `Call ... to unimplemented
+function ucrtbase.dll.crealf`. Pillow and capstone import.
+
+**Established:** `tools/at3.py` is the one shipped tool that imports numpy, in
+three functions. A set-up from the US PlayStation disc completes under Proton
+without reaching it. A set-up with the PSP Europe image stopped earlier, for
+want of ffmpeg, so whether a PSP source's set-up reaches numpy was not seen.
+
+**Status:** open; bounded by a PSP set-up run with ffmpeg present.

@@ -1,0 +1,162 @@
+#!/usr/bin/env python
+"""Compile the renderer's HLSL to bytecode the build carries.
+
+    python tools/compile_shaders.py            write src/render/shaders_compiled.h (Windows)
+    python tools/compile_shaders.py --check    the header matches today's sources (any system)
+
+Why (known-defects D411, docs/linux-round.md 2a): the renderer called
+D3DCompile at start-up. Under Wine and Proton that call goes to Wine's own
+HLSL compiler, which compiled the scene shader so that a vertex's colour read
+as its position. The bytecode is ours to carry - it is the compiler's output
+for our own source - so the build holds it and the game compiles nothing
+unless BOF3X_PIXEL_OFFSET asks for another offset.
+
+The sources stay where they are, as raw strings in src/render/*.cpp; this
+tool reads them from there. The header records each source's sha256 (line
+ends as LF, as the compiler gives the string to the program); the game checks
+it at start-up and --check checks it in CI, so an edited shader with a stale
+header stops by name rather than drawing the old one.
+
+Writing needs Windows' d3dcompiler_47.dll (System32), called through ctypes
+with the arguments the renderer passed: optimisation level 3, the macro
+PIXEL_OFFSET=0.5 for the two shaders of render_d3d11.cpp, the source name
+"satpixie" and no macros for satpixie.cpp's.
+"""
+import argparse
+import ctypes
+import hashlib
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, 'src', 'render', 'shaders_compiled.h')
+D3DCOMPILE_OPTIMIZATION_LEVEL3 = 1 << 15
+PIXEL_OFFSET = b'0.5'   # render_d3d11.cpp's g_pixel_offset default
+
+# (set name, file, the raw string's variable, D3DCompile's source name, macros, [(entry, profile)])
+SETS = [
+    ('Scene', 'src/render/render_d3d11.cpp', 'kSceneShader', None, [(b'PIXEL_OFFSET', PIXEL_OFFSET)],
+     [('VS', 'vs_4_0'), ('PS', 'ps_4_0'), ('PSStp', 'ps_4_0')]),
+    ('Present', 'src/render/render_d3d11.cpp', 'kPresentShader', None, [(b'PIXEL_OFFSET', PIXEL_OFFSET)],
+     [('VS', 'vs_4_0'), ('PS', 'ps_4_0')]),
+    ('SatPixie', 'src/render/satpixie.cpp', 'kShader', b'satpixie', [],
+     [('VS', 'vs_4_0'), ('Accumulate', 'ps_4_0'), ('BlurHoriz', 'ps_4_0'), ('BlurVert', 'ps_4_0'),
+      ('Picture', 'ps_4_0')]),
+]
+
+
+def source(path, var):
+    """The raw string's bytes as the program holds them: LF line ends, no NUL."""
+    with open(os.path.join(ROOT, path), 'rb') as f:
+        text = f.read().replace(b'\r\n', b'\n')
+    m = re.search(rb'const char ' + var.encode() + rb'\[\] = R"\((.*?)\)";', text, re.S)
+    if not m:
+        sys.exit(f'{path}: no raw string `const char {var}[] = R"(...)";`')
+    return m.group(1)
+
+
+def digest(src, name, macros, entries):
+    """What the bytecode depends on: the source and every argument of the compile."""
+    h = hashlib.sha256()
+    h.update(src)
+    h.update(b'\0' + (name or b'') + b'\0')
+    for k, v in macros:
+        h.update(k + b'=' + v + b'\0')
+    for entry, profile in entries:
+        h.update(f'{entry}:{profile}'.encode() + b'\0')
+    return h.hexdigest()
+
+
+def source_digest(src):
+    return hashlib.sha256(src).hexdigest()
+
+
+class Macro(ctypes.Structure):
+    _fields_ = [('Name', ctypes.c_char_p), ('Definition', ctypes.c_char_p)]
+
+
+def blob_bytes(blob):
+    """ID3DBlob: vtable slots 2 Release, 3 GetBufferPointer, 4 GetBufferSize."""
+    vtbl = ctypes.cast(ctypes.cast(blob, ctypes.POINTER(ctypes.c_void_p))[0], ctypes.POINTER(ctypes.c_void_p))
+    get_ptr = ctypes.WINFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)(vtbl[3])
+    get_size = ctypes.WINFUNCTYPE(ctypes.c_size_t, ctypes.c_void_p)(vtbl[4])
+    release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtbl[2])
+    data = ctypes.string_at(get_ptr(blob), get_size(blob))
+    release(blob)
+    return data
+
+
+def compile_one(dll, src, name, macros, entry, profile):
+    arr = (Macro * (len(macros) + 1))(*[Macro(k, v) for k, v in macros], Macro(None, None))
+    code, errors = ctypes.c_void_p(), ctypes.c_void_p()
+    hr = dll.D3DCompile(src, ctypes.c_size_t(len(src)), name, arr, None, entry.encode(), profile.encode(),
+                        D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, ctypes.byref(code), ctypes.byref(errors))
+    msg = blob_bytes(errors).decode('utf-8', 'replace') if errors else ''
+    if hr < 0:
+        sys.exit(f'{entry} ({profile}) failed to compile, HRESULT 0x{hr & 0xFFFFFFFF:08X}: {msg}')
+    return blob_bytes(code)
+
+
+def render():
+    if os.name != 'nt':
+        sys.exit('writing the header needs Windows (d3dcompiler_47.dll); --check runs anywhere')
+    dll = ctypes.WinDLL('d3dcompiler_47.dll')
+    dll.D3DCompile.restype = ctypes.c_long
+    dll.D3DCompile.argtypes = [ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_void_p,
+                               ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint, ctypes.c_uint,
+                               ctypes.c_void_p, ctypes.c_void_p]
+    out = ['// Generated by tools/compile_shaders.py - do not edit; run it again after a shader changes.',
+           '// The renderer\'s HLSL (the raw strings of render_d3d11.cpp and satpixie.cpp) compiled by',
+           '// Windows\' d3dcompiler_47.dll, so that the game compiles nothing at start-up',
+           '// (known-defects D411: Wine\'s own HLSL compiler miscompiled the scene shader).',
+           '// k<Set>SourceSha256: the source the bytecode was made from (LF line ends); the game',
+           '// checks it against the string it holds. k<Set>Key: source and compile arguments, for --check.',
+           '#pragma once', '', 'namespace bof3::shaders {', '']
+    total = 0
+    for set_name, path, var, name, macros, entries in SETS:
+        src = source(path, var)
+        out.append(f'inline constexpr char k{set_name}SourceSha256[] = "{source_digest(src)}";')
+        out.append(f'inline constexpr char k{set_name}Key[] = "{digest(src, name, macros, entries)}";')
+        for entry, profile in entries:
+            code = compile_one(dll, src, name, macros, entry, profile)
+            total += len(code)
+            out.append(f'// {var} {entry} ({profile}), {len(code)} bytes')
+            out.append(f'inline constexpr unsigned char k{set_name}{entry}[] = {{')
+            for i in range(0, len(code), 24):
+                out.append('    ' + ','.join(f'0x{b:02X}' for b in code[i:i + 24]) + ',')
+            out.append('};')
+        out.append('')
+    out.append('}  // namespace bof3::shaders')
+    with open(OUT, 'w', newline='\n') as f:
+        f.write('\n'.join(out) + '\n')
+    print(f'{os.path.relpath(OUT, ROOT)}: {sum(len(s[5]) for s in SETS)} shaders, {total} bytes of bytecode')
+
+
+def check():
+    try:
+        with open(OUT, encoding='utf-8') as f:
+            header = f.read()
+    except OSError:
+        sys.exit(f'{os.path.relpath(OUT, ROOT)} is missing: run tools/compile_shaders.py on Windows')
+    bad = 0
+    for set_name, path, var, name, macros, entries in SETS:
+        want = digest(source(path, var), name, macros, entries)
+        m = re.search(rf'k{set_name}Key\[\] = "([0-9a-f]+)"', header)
+        if not m or m.group(1) != want:
+            print(f'STALE {set_name}: {path} `{var}` or its compile arguments changed since the header was made')
+            bad += 1
+        for entry, _ in entries:
+            if f'k{set_name}{entry}[]' not in header:
+                print(f'MISSING {set_name}{entry}')
+                bad += 1
+    if bad:
+        sys.exit('src/render/shaders_compiled.h is stale: run tools/compile_shaders.py on Windows and commit it')
+    print(f'shaders_compiled.h matches the {len(SETS)} sources')
+
+
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    ap.add_argument('--check', action='store_true', help='compare the header with the sources; write nothing')
+    a = ap.parse_args()
+    check() if a.check else render()
