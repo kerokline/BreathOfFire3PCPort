@@ -2062,6 +2062,8 @@ extern "C" void __cdecl Gfx_LoadImageIfChanged(const short* rect, const void* pi
     }
 }
 
+namespace gfx_clut { bool g_stp_test = false; }   // the self-test's: DIV-0160's rule without the backend
+
 // original 0x59EBB0. Converts w cells of VRAM row y, from x, into the row's
 // buffer. As the original has it: nothing is checked - not y against the 512
 // rows, not x + w against the buffer's 1,024 cells; and the generation moves
