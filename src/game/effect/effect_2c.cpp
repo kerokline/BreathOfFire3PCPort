@@ -124,20 +124,7 @@ void DrawMode(U abr, int dtd, U slot) {
 }
 
 }  // namespace
-// DIVERGENCE DIV-0186 (D217, issue #163): kind 0x6B's particles. The original
-// writes one 0x14-byte particle per opaque pixel of the 80 x 72 read-back at
-// 0x92EC80 with no bound; the room before Gfx_CurrentEnv (0x937F84) holds
-// 1,881, and the 1,882nd overwrites Sprite_Current - the crash of issue #163,
-// measured 2026-10-29 on the owner's gaistFullRoute: the Gaist's collapsed
-// body in record 2, 2,201 pixels. Ours: once g_ash_room is armed (after the
-// self-test, PatchBytes "AshRoom") the particles go to a room of ours that
-// holds the rectangle's every pixel (5,760), so the whole sprite crumbles;
-// the count, the order, the fields and the draw are the original's. Nothing
-// but these three states names the particles (a raw scan of the image: 0x92EC80
-// only at 0x475F76, 0x4760E7 and, as +1, 0x476145), and the frame 0x6544A8
-// that sizes them is read and never written. BOF3X_ORIGINAL=AshRoom (or
-// BOF3X_OFF) leaves them at 0x92EC80, the overrun with them.
-namespace effect_2c { unsigned char g_ash_room = 0; }  namespace {
+namespace {
 
 // +1 up, Sprite_Current read afresh.
 void NextState() {
@@ -185,10 +172,4 @@ float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 void Effect2C_Inject() {
     if (bof3::WantsShadow("effect_2c")) effect_2c::SelfTest();
-    // DIV-0186: armed after the self-test, which compares ours with Capcom's at
-    // 0x92EC80.
-    static const std::uint8_t ash_was = 0, ash_is = 1;
-    bof3::PatchBytes("AshRoom", AddressOfEffect2c(&effect_2c::g_ash_room), &ash_was, &ash_is, 1);
-    bof3::Log("DIV-0186    kind 0x6B's particles in a room of %u (the original's holds 1,881): %s", at::kPixelRoom,
-              effect_2c::g_ash_room ? "on" : "OFF (BOF3X_ORIGINAL=AshRoom)");
 }
