@@ -25,6 +25,22 @@ namespace at = effect_kind_a0::at;
 
 }  // namespace
 
+// DIVERGENCE DIV-0206 (D217's shape, docs/rest_3f.md section 7): kinds 0xA1 and
+// 0xA3's particles. The original writes one 0x14-byte particle per opaque
+// pixel of the captured rectangle at 0x931980 with no bound; Sprite_Current
+// (0x937F88) lies 1,306 particles in, and capture record 1 is 0x60 x 0x78
+// (11,520). Seen 2026-11-07 on the owner's myriaFightAndEnding route: in
+// Myria's chamber Garr and Rei, with more than 1,306 opaque pixels, vanished
+// and came back in a blink where Nina and Momo scattered and gathered. Ours:
+// once g_pixel_room is armed (after the self-test, PatchBytes "PixelRoom",
+// the switch shared with kind 0x61's room in effect_3a.cpp) the particles go
+// to a room of ours that holds the rectangle's every pixel; the cursor, the
+// count, the fields, the flight and the draw are the original's. The three
+// cursor cells and the particles are named by these ten functions only (the
+// doc's raw scan). BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at
+// 0x931980, the overrun with them.
+namespace rest_3f { unsigned char g_pixel_room = 0; }
+
 namespace {
 
 using U = std::uint32_t;
@@ -1202,4 +1218,10 @@ void EffectKindA0FromRest3f_Inject() {
     BOF3_INJECT(EffectKindA3_AimPixels);
     BOF3_INJECT(EffectKindA3_MovePixels);
     BOF3_INJECT(EffectKindA2_DrawRing);
+    // DIV-0206: armed after the self-test, which compares ours with Capcom's at
+    // 0x931980.
+    static const std::uint8_t pixel_was = 0, pixel_is = 1;
+    bof3::PatchBytes("PixelRoom", Low32(&rest_3f::g_pixel_room), &pixel_was, &pixel_is, 1);
+    bof3::Log("DIV-0206    kinds 0xA1 / 0xA3's particles in a room of %u (the original's holds 1,306): %s", at::kPartRoom,
+              rest_3f::g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
 }
