@@ -130,6 +130,12 @@ site	src/audio/sound_sdl.cpp	1270	fmt_place	word	live	(unsigned)kSlotVa	%08X	if 
 site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
 site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
 site	src/common/asm_name.h	20	asm	other	live	(empty)	-	#define BOF3_ASM_NAME(name) __asm__(BOF3_SYM(name))
+site	src/common/file_token.cpp	21	uintptr	-	live	std::uintptr_t	-	const auto p = reinterpret_cast<std::uintptr_t>(token);
+site	src/common/file_token.cpp	22	uintptr	-	live	std::uintptr_t	-	const auto lo = reinterpret_cast<std::uintptr_t>(&g_streams[0]);
+site	src/common/file_token.cpp	30	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(stream) <= 0xFFFFFFFFu) return stream;
+site	src/common/file_token.cpp	36	fmt_place	pointer	live	static_cast<void*>(stream)	%p	Log("file: the C runtime's FILE %p lies above 4 GB (Wine's ucrtbase); the game's words hold slots of a "
+site	src/common/file_token.cpp	37	fmt_place	pointer	live	static_cast<void*>(stream)	%p	"table of ours at %p (known-defects D412)", static_cast<void*>(stream), static_cast<void*>(&g_streams[0]));
+site	src/common/file_token.cpp	48	fmt_place	pointer	live	token	%p	if (!stream) Fatal("file: the stream token %p names an empty slot (used after its close?)", token);
 site	src/common/image_base.h	67	width_if	logic	live	-	#if defined(__i386__)	#if defined(__i386__)
 site	src/common/image_base.h	69	asm	fs	live	movl %%fs:0x30, %0	movl	asm("movl %%fs:0x30, %0\n\t"
 site	src/common/image_base.h	69	fs_read	asm	live	movl %%fs:0x30, %0	-	asm("movl %%fs:0x30, %0\n\t"
@@ -3023,15 +3029,15 @@ site	src/game/core/transition.cpp	1483	uintptr	-	live	std::uintptr_t	-	mode_flow
 site	src/game/core/transition.cpp	1483	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
 site	src/game/core/transition.cpp	1537	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
 site	src/game/core/transition.cpp	1543	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
-site	src/game/crt_rest.cpp	75	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
-site	src/game/crt_rest.cpp	76	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
-site	src/game/crt_rest.cpp	78	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
-site	src/game/crt_rest.cpp	86	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
-site	src/game/crt_rest.cpp	88	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
-site	src/game/crt_rest.cpp	267	long	l	live	long	-	extern " " long __cdecl Crt_findfirst(const char* pattern, void* found) {
-site	src/game/crt_rest.cpp	268	long	l	live	long	-	return static_cast<long>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
-site	src/game/crt_rest.cpp	271	long	l	live	long	-	extern " " int __cdecl Crt_findnext(long handle, void* found) {
-site	src/game/crt_rest.cpp	454	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
+site	src/game/crt_rest.cpp	76	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
+site	src/game/crt_rest.cpp	77	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
+site	src/game/crt_rest.cpp	79	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
+site	src/game/crt_rest.cpp	87	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
+site	src/game/crt_rest.cpp	89	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
+site	src/game/crt_rest.cpp	268	long	l	live	long	-	extern " " long __cdecl Crt_findfirst(const char* pattern, void* found) {
+site	src/game/crt_rest.cpp	269	long	l	live	long	-	return static_cast<long>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
+site	src/game/crt_rest.cpp	272	long	l	live	long	-	extern " " int __cdecl Crt_findnext(long handle, void* found) {
+site	src/game/crt_rest.cpp	457	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)ours	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)theirs	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	123	narrow	crt	fuzz	Crt_GetPtd	-	const auto get_ptd = static_cast<U>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));
@@ -14086,13 +14092,13 @@ site	src/render/gfx_snapshot.cpp	439	narrow_call	image	live	Gfx_PixelFormat	Va	{
 site	src/render/gfx_snapshot.cpp	444	fmt_place	pointer	live	n.at	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	444	fmt_place	word	live	n.symbol	%08X	if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
 site	src/render/gfx_snapshot.cpp	446	narrow_call	image	live	&D3d_ShadeModeCache	Va	if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal(" ");
-site	src/render/render_d3d11.cpp	112	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
-site	src/render/render_d3d11.cpp	113	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
-site	src/render/render_d3d11.cpp	122	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	487	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
-site	src/render/render_d3d11.cpp	498	ptr_overlay	unread	live	HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GpuTexture)));
-site	src/render/render_d3d11.cpp	863	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(hr));
-site	src/render/render_d3d11.cpp	1137	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_d3d11.cpp	115	asm	cw	live	fnstcw %0	fnstcw	FpuGuard() { __asm__ volatile("fnstcw %0" : "=m"(cw_)); }
+site	src/render/render_d3d11.cpp	116	asm	cw	live	fldcw %0	fldcw	~FpuGuard() { __asm__ volatile("fldcw %0" : : "m"(cw_)); }
+site	src/render/render_d3d11.cpp	125	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
+site	src/render/render_d3d11.cpp	524	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
+site	src/render/render_d3d11.cpp	535	ptr_overlay	unread	live	HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GpuTexture))	GpuTexture	g = static_cast<GpuTexture*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GpuTexture)));
+site	src/render/render_d3d11.cpp	900	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(hr));
+site	src/render/render_d3d11.cpp	1178	ptr_overlay	unread	live	s->gpu	GpuTexture	auto* g = static_cast<GpuTexture*>(s->gpu);
 site	src/render/render_shim.cpp	26	long	l	live	long	-	using Rect = long[4];
 site	src/render/render_shim.cpp	80	long	l	live	long	-	template <int kObject, int kSlot> long __stdcall Unsupported(void*) {
 site	src/render/render_shim.cpp	115	ptr_overlay	unread	live	Bytes(texture) - offsetof(Surface, texture_vtable)	Surface	return reinterpret_cast<Surface*>(Bytes(texture) - offsetof(Surface, texture_vtable));
@@ -14225,7 +14231,7 @@ site	src/render/render_shim.cpp	1014	long	l	live	long	-	if (!material || Long(ma
 site	src/render/render_shim.cpp	1025	long	l	live	long	-	long __stdcall Material_GetHandle(void*, void*, U* handle) {
 site	src/render/render_shim.cpp	1026	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
 site	src/render/render_shim.cpp	1128	ptr_overlay	unread	live	Alloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(Alloc(sizeof(Surface)));
-site	src/render/satpixie.cpp	232	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
+site	src/render/satpixie.cpp	234	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
 site	src/video/fmv_dump.cpp	36	long	l	live	long	-	const long size = std::ftell(in);
 site	symbols.toml	607	ptr_member	ours_crt	live	File_Slots	void * [16]	0x7de3e4
 site	symbols.toml	790	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
@@ -16149,6 +16155,8 @@ file	src/audio/sound_sdl.cpp	live	sizeof_ptr	-	2
 file	src/audio/sound_sdl.cpp	live	uintptr	-	4
 file	src/audio/sound_sdl.cpp	live	widen	param	1
 file	src/common/asm_name.h	live	asm	other	1
+file	src/common/file_token.cpp	live	fmt_place	pointer	3
+file	src/common/file_token.cpp	live	uintptr	-	3
 file	src/common/image_base.h	live	asm	fs	1
 file	src/common/image_base.h	live	asm	other	2
 file	src/common/image_base.h	live	fmt_place	pointer	2
@@ -20808,8 +20816,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16126
-#count sites_live	11909
+#count sites	16132
+#count sites_live	11915
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -20984,25 +20992,25 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	12
 #count sizeof_ptr_-_live	12
 #count sizeof_ptr_-_live_files	7
-#count uintptr	1852
-#count uintptr_live	1186
-#count uintptr_live_files	496
+#count uintptr	1855
+#count uintptr_live	1189
+#count uintptr_live_files	497
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1852
-#count uintptr_-_live	1186
-#count uintptr_-_live_files	496
-#count fmt_place	468
-#count fmt_place_live	398
-#count fmt_place_live_files	59
+#count uintptr_-	1855
+#count uintptr_-_live	1189
+#count uintptr_-_live_files	497
+#count fmt_place	471
+#count fmt_place_live	401
+#count fmt_place_live_files	60
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
 #count fmt_place_narrowed_live	17
 #count fmt_place_narrowed_live_files	8
-#count fmt_place_pointer	107
-#count fmt_place_pointer_live	92
-#count fmt_place_pointer_live_files	29
+#count fmt_place_pointer	110
+#count fmt_place_pointer_live	95
+#count fmt_place_pointer_live_files	30
 #count fmt_place_word	337
 #count fmt_place_word_live	289
 #count fmt_place_word_live_files	48

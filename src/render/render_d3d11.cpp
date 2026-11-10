@@ -15,10 +15,13 @@
 #include <dxgi.h>
 
 #include <cstring>
+#include <string>
 
+#include "common/sha256.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
 #include "render/satpixie.h"
+#include "render/shaders_compiled.h"
 
 namespace render {
 namespace {
@@ -297,6 +300,13 @@ float4 PS(PSIn i) : SV_Target { return float4(tex.Sample(smp, i.uv).rgb, 1.0); }
 // D3D8-to-9 wrappers' value) against rb1's 27 captures that differ at edges.
 // Digits, one point and a sign only; anything else is refused.
 char g_pixel_offset[24] = "0.5";
+// Set by BOF3X_PIXEL_OFFSET alone: the scene and present shaders are compiled
+// at start-up with that offset. Unset, nothing is compiled: the build's
+// bytecode is used (shaders_compiled.h, tools/compile_shaders.py), which is
+// Windows' compiler's output for these sources at 0.5. Compiling at start-up
+// drew the scene under a colour gradient under Wine and Proton, whose own HLSL
+// compiler answers D3DCompile there (known-defects D411).
+bool g_compile_at_start;
 
 void ReadPixelOffset() {
     char text[24];
@@ -307,7 +317,8 @@ void ReadPixelOffset() {
         if (!((*p >= '0' && *p <= '9') || *p == '.' || (*p == '-' && p == text)))
             bof3::Fatal("BOF3X_PIXEL_OFFSET=%s: a decimal number", text);
     std::memcpy(g_pixel_offset, text, sizeof text);
-    bof3::Log("render: scene pixel-centre offset %s (BOF3X_PIXEL_OFFSET)", g_pixel_offset);
+    g_compile_at_start = true;
+    bof3::Log("render: scene pixel-centre offset %s (BOF3X_PIXEL_OFFSET); the shaders are compiled at start-up", g_pixel_offset);
 }
 
 ID3DBlob* Compile(const char* source, const char* entry, const char* profile) {
@@ -322,6 +333,32 @@ ID3DBlob* Compile(const char* source, const char* entry, const char* profile) {
     }
     Release(errors);
     return code;
+}
+
+// A shader's bytecode: the build's, or - under BOF3X_PIXEL_OFFSET - this
+// start's compile, whose blob is held until Done().
+struct Code {
+    const void* data;
+    SIZE_T size;
+    ID3DBlob* blob;
+    void Done() { Release(blob); }
+};
+
+template <std::size_t N>
+Code Shader(const char* source, const char* entry, const char* profile, const unsigned char (&built)[N]) {
+    if (!g_compile_at_start) return {built, N, nullptr};
+    ID3DBlob* blob = Compile(source, entry, profile);
+    return {blob->GetBufferPointer(), blob->GetBufferSize(), blob};
+}
+
+// The build's bytecode was made from the source this build holds: an edited
+// shader with a stale shaders_compiled.h stops here by name.
+void CheckShaderSource(const char* name, const char* source, const char* sha256) {
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(source, std::strlen(source), hex)) bof3::Fatal("render: sha256 of the %s shader failed", name);
+    if (hex != sha256)
+        bof3::Fatal("render: the %s shader's source (sha256 %s) is not the one shaders_compiled.h was made from (%s): "
+                    "run tools/compile_shaders.py and build again", name, hex.c_str(), sha256);
 }
 
 // --- set-up ----------------------------------------------------------------------------
@@ -890,17 +927,21 @@ void InitOnFiber(const Options& options) {
     MakeTarget((options.logical_w + 2 * options.pad_x) * options.scale, options.logical_h * options.scale);
     ReadPixelOffset();
 
-    ID3DBlob* vs = Compile(kSceneShader, "VS", "vs_4_0");
-    ID3DBlob* ps = Compile(kSceneShader, "PS", "ps_4_0");
-    Check(g_device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "CreateVertexShader");
-    Check(g_device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, &g_ps), "CreatePixelShader");
+    if (!g_compile_at_start) {
+        CheckShaderSource("scene", kSceneShader, bof3::shaders::kSceneSourceSha256);
+        CheckShaderSource("present", kPresentShader, bof3::shaders::kPresentSourceSha256);
+        bof3::Log("render: shaders from the build's bytecode (tools/compile_shaders.py); nothing compiled at start-up");
+    }
+    Code vs = Shader(kSceneShader, "VS", "vs_4_0", bof3::shaders::kSceneVS);
+    Code ps = Shader(kSceneShader, "PS", "ps_4_0", bof3::shaders::kScenePS);
+    Check(g_device->CreateVertexShader(vs.data, vs.size, nullptr, &g_vs), "CreateVertexShader");
+    Check(g_device->CreatePixelShader(ps.data, ps.size, nullptr, &g_ps), "CreatePixelShader");
     {
         // DIV-0160 step 3: the draw by texel. Dual-source blending is core
         // from feature level 10_0, the lowest this device is made at.
-        ID3DBlob* ps_stp = Compile(kSceneShader, "PSStp", "ps_4_0");
-        Check(g_device->CreatePixelShader(ps_stp->GetBufferPointer(), ps_stp->GetBufferSize(), nullptr, &g_ps_stp),
-              "CreatePixelShader (PSStp)");
-        ps_stp->Release();
+        Code ps_stp = Shader(kSceneShader, "PSStp", "ps_4_0", bof3::shaders::kScenePSStp);
+        Check(g_device->CreatePixelShader(ps_stp.data, ps_stp.size, nullptr, &g_ps_stp), "CreatePixelShader (PSStp)");
+        ps_stp.Done();
         D3D11_BLEND_DESC b = {};
         b.RenderTarget[0].BlendEnable = TRUE;
         b.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC1_ALPHA;
@@ -918,15 +959,15 @@ void InitOnFiber(const Options& options) {
         {"COLOR", 1, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
-    Check(g_device->CreateInputLayout(layout, 4, vs->GetBufferPointer(), vs->GetBufferSize(), &g_layout), "CreateInputLayout");
-    vs->Release();
-    ps->Release();
-    ID3DBlob* pvs = Compile(kPresentShader, "VS", "vs_4_0");
-    ID3DBlob* pps = Compile(kPresentShader, "PS", "ps_4_0");
-    Check(g_device->CreateVertexShader(pvs->GetBufferPointer(), pvs->GetBufferSize(), nullptr, &g_present_vs), "CreateVertexShader (present)");
-    Check(g_device->CreatePixelShader(pps->GetBufferPointer(), pps->GetBufferSize(), nullptr, &g_present_ps), "CreatePixelShader (present)");
-    pvs->Release();
-    pps->Release();
+    Check(g_device->CreateInputLayout(layout, 4, vs.data, vs.size, &g_layout), "CreateInputLayout");
+    vs.Done();
+    ps.Done();
+    Code pvs = Shader(kPresentShader, "VS", "vs_4_0", bof3::shaders::kPresentVS);
+    Code pps = Shader(kPresentShader, "PS", "ps_4_0", bof3::shaders::kPresentPS);
+    Check(g_device->CreateVertexShader(pvs.data, pvs.size, nullptr, &g_present_vs), "CreateVertexShader (present)");
+    Check(g_device->CreatePixelShader(pps.data, pps.size, nullptr, &g_present_ps), "CreatePixelShader (present)");
+    pvs.Done();
+    pps.Done();
 
     const Frame& frame = CurrentFrame();
     g_vertex_capacity = frame.max_vertices;

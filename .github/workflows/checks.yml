@@ -140,6 +140,9 @@ jobs:
       - name: The width census - no new site in a live file that assumes a 32-bit pointer (no game data)
         run: python tools/width_census.py --check
 
+      - name: The compiled shaders are made from today's shader sources (no game data)
+        run: python tools/compile_shaders.py --check
+
       - name: The source-layout round's rename record - every rename done in its file (no game data)
         run: python tools/tu_renames.py --check
 

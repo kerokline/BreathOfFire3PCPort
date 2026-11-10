@@ -24,6 +24,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/file_token.h"
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -281,32 +282,34 @@ extern "C" int __cdecl Crt_findnext(long handle, void* found) {
 // original 0x5B9B6D: fopen, MSVC 6's over _fsopen with _SH_DENYNO; the
 // toolchain's opens shared alike. Modes "rb", "wb", "rt".
 extern "C" void* __cdecl Crt_fopen(const char* path, const char* mode) {
-    return std::fopen(path, mode);
+    return bof3::FileToken(std::fopen(path, mode));   // file_token.h: the FILE* itself but on x86-64 above 4 GB (D412)
 }
 
 // original 0x5B9993.
 extern "C" int __cdecl Crt_fclose(void* stream) {
-    return std::fclose(static_cast<std::FILE*>(stream));
+    std::FILE* file = bof3::FileOfToken(stream);
+    bof3::FileTokenFree(stream);
+    return std::fclose(file);
 }
 
 // original 0x5B9D4E.
 extern "C" unsigned __cdecl Crt_fread(void* dst, unsigned size, unsigned count, void* stream) {
-    return static_cast<unsigned>(std::fread(dst, size, count, static_cast<std::FILE*>(stream)));
+    return static_cast<unsigned>(std::fread(dst, size, count, bof3::FileOfToken(stream)));
 }
 
 // original 0x5B9E65.
 extern "C" unsigned __cdecl Crt_fwrite(const void* src, unsigned size, unsigned count, void* stream) {
-    return static_cast<unsigned>(std::fwrite(src, size, count, static_cast<std::FILE*>(stream)));
+    return static_cast<unsigned>(std::fwrite(src, size, count, bof3::FileOfToken(stream)));
 }
 
 // original 0x5B9F9E: 0, or -1.
 extern "C" int __cdecl Crt_fseek(void* stream, int offset, int whence) {
-    return std::fseek(static_cast<std::FILE*>(stream), offset, whence);
+    return std::fseek(bof3::FileOfToken(stream), offset, whence);
 }
 
 // original 0x5C3660: the stream's descriptor (MSVC 6's FILE._file).
 extern "C" int __cdecl Crt_fileno(void* stream) {
-    return _fileno(static_cast<std::FILE*>(stream));
+    return _fileno(bof3::FileOfToken(stream));
 }
 
 // original 0x5C35D6: the descriptor's length, -1 for a bad one.
@@ -316,7 +319,7 @@ extern "C" int __cdecl Crt_filelength(int fd) {
 
 // original 0x5B9ADA: fgets - Cfg_Load's two lines of BOF3.CFG, a text stream.
 extern "C" char* __cdecl Crt_fgets(char* buf, int n, void* stream) {
-    return std::fgets(buf, n, static_cast<std::FILE*>(stream));
+    return std::fgets(buf, n, bof3::FileOfToken(stream));
 }
 
 // original 0x5B9660 / 0x5BA221 / 0x5B9577: malloc, calloc and free of MSVC

@@ -18,12 +18,14 @@
 #include "render/satpixie.h"
 
 #include <windows.h>
-#include <d3dcompiler.h>
 
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
+#include "common/sha256.h"
 #include "hook/log.h"
+#include "render/shaders_compiled.h"
 
 namespace render {
 namespace {
@@ -232,23 +234,23 @@ void Check(HRESULT hr, const char* what) {
     if (FAILED(hr)) bof3::Fatal("render: SatPixie %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(hr));
 }
 
-ID3DBlob* Compile(const char* entry, const char* profile) {
-    ID3DBlob* code = nullptr;
-    ID3DBlob* errors = nullptr;
-    const HRESULT hr = D3DCompile(kShader, sizeof kShader - 1, "satpixie", nullptr, nullptr, entry, profile,
-                                  D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
-    if (FAILED(hr))
-        bof3::Fatal("render: SatPixie shader %s failed to compile: %s", entry,
-                    errors ? static_cast<const char*>(errors->GetBufferPointer()) : "(no message)");
-    if (errors) errors->Release();
-    return code;
+// The shaders are the build's bytecode (shaders_compiled.h, made from kShader
+// by tools/compile_shaders.py with Windows' compiler): nothing is compiled at
+// start-up, since under Wine and Proton D3DCompile is Wine's own compiler
+// (known-defects D411). The source this build holds is checked against the one
+// the bytecode was made from.
+void CheckSource() {
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(kShader, sizeof kShader - 1, hex)) bof3::Fatal("render: sha256 of the SatPixie shader failed");
+    if (hex != bof3::shaders::kSatPixieSourceSha256)
+        bof3::Fatal("render: the SatPixie shader's source (sha256 %s) is not the one shaders_compiled.h was made from (%s): "
+                    "run tools/compile_shaders.py and build again", hex.c_str(), bof3::shaders::kSatPixieSourceSha256);
 }
 
-ID3D11PixelShader* Pixel(ID3D11Device* device, const char* entry) {
-    ID3DBlob* code = Compile(entry, "ps_4_0");
+template <std::size_t N>
+ID3D11PixelShader* Pixel(ID3D11Device* device, const char* entry, const unsigned char (&code)[N]) {
     ID3D11PixelShader* out = nullptr;
-    Check(device->CreatePixelShader(code->GetBufferPointer(), code->GetBufferSize(), nullptr, &out), entry);
-    code->Release();
+    Check(device->CreatePixelShader(code, N, nullptr, &out), entry);
     return out;
 }
 
@@ -326,13 +328,12 @@ void SatpixieResize(ID3D11Device* device, U target_w, U target_h, U) { MakeSized
 
 void SatpixieInit(ID3D11Device* device, U target_w, U target_h, U) {
     ReadKnobs();
-    ID3DBlob* vs = Compile("VS", "vs_4_0");
-    Check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "VS");
-    vs->Release();
-    g_accumulate = Pixel(device, "Accumulate");
-    g_blur_h = Pixel(device, "BlurHoriz");
-    g_blur_v = Pixel(device, "BlurVert");
-    g_picture = Pixel(device, "Picture");
+    CheckSource();
+    Check(device->CreateVertexShader(bof3::shaders::kSatPixieVS, sizeof bof3::shaders::kSatPixieVS, nullptr, &g_vs), "VS");
+    g_accumulate = Pixel(device, "Accumulate", bof3::shaders::kSatPixieAccumulate);
+    g_blur_h = Pixel(device, "BlurHoriz", bof3::shaders::kSatPixieBlurHoriz);
+    g_blur_v = Pixel(device, "BlurVert", bof3::shaders::kSatPixieBlurVert);
+    g_picture = Pixel(device, "Picture", bof3::shaders::kSatPixiePicture);
 
     D3D11_BUFFER_DESC b = {};
     b.ByteWidth = sizeof(Params);

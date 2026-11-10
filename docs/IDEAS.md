@@ -2523,3 +2523,15 @@ A takeover group's fuzz file is one table driven by one harness object (`Group`:
 
 ### Outcome
 _(2026-11-09) open; nothing built._
+
+## I62 — Linux: the release under Proton, then a native build
+
+**Ask (2026-11-10, the owner; issue #215):** a player asked for a Linux-compatible build; stage the two tiers so they are on hand.
+**Kind:** platform. **Feasibility:** HIGH for tier 1 (a test pass, no code planned), MEDIUM for tier 2 (a round the size of the 64-bit build round).   **Gated on:** a Linux tester for tier 1; the owner's word, the renderer's remainder (I31) and the six calls for tier 2.
+
+The staging is [`linux-round.md`](linux-round.md). Tier 1 runs the Windows release under Proton / Wine against a twelve-row checklist and documents the result; the one observation so far is issue #215's screenshot, where the launcher starts under UMU-Proton 10 and shows DIV-0102's message for an install not set up. Tier 2 is an x86-64 ELF of the 64-bit host: an operating-system seam, the window and input on SDL3, a second renderer backend beside Direct3D 11, the low-memory design probed on Linux, the stack switch under the System V calling convention, then the ten state-hash routes against the Windows 64-bit references. It is I33's portable platform layer taken up. A native launcher is a third tier, not staged.
+
+**First concrete step:** send the checklist of `linux-round.md` section 2 to a Linux tester with the released zips, and read the `bof3x.log` that comes back.
+
+### Outcome
+_(2026-11-10) open; staged, nothing built or run on Linux._
