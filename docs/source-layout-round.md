@@ -5,9 +5,13 @@ and B, the moves, merged as PR #214 on 2026-11-09, section 4; **stage C run
 2026-11-09** on `source-layout/stage-c` off `main` `1a817eba`, section 5
 "Stage C as run": 177 pure shells retired, the fuzz files and 158 files of
 ours moved whole into the folders, both gates 0 differ, the three self-tests
-pass, [`source-layout.md`](source-layout.md) the tree's reader. Stage D, the
-ten-route proof, is next and has not run since B0; the cleanup round after
-it is IDEAS I60.)
+pass, [`source-layout.md`](source-layout.md) the tree's reader. **The cleanup
+round, IDEAS I60, run the same evening on that branch** at the owner's word,
+section 5 "The cleanup round, I60, as run": `-fno-auto-import`, 41 more
+seams, each switch and its arming beside its reader, 39 more shells retired,
+and a regression of stage B's found and repaired - checks that ran before
+the bind they test. Stage D, the ten-route proof, is next, has not run since
+B0, and covers stage C and I60 together.)
 
 The typed-data round named every data access, the relocatable-image round
 removed every fixed address, and the 64-bit round builds the same source at
@@ -1223,6 +1227,99 @@ way arrives broken (three times); write the script to a file. The gate reads
 every object under `CMakeFiles`, the stale ones too. A whole-file move
 changes `__FILE__`, and a deleted include line changes `__LINE__`: both are
 code on x86_64.
+
+### The cleanup round, I60, as run (2026-11-09 evening, on `source-layout/stage-c`, before stage D)
+
+The owner asked for I60 before stage D, so one proof covers stage C and this.
+Three calls first: the tool, then agents; `-fno-auto-import` adopted before
+the moves; the 34 register-allocation `inline` rows accepted as they are.
+Nothing a player sees changes by intent, so no DIV and no D number - with one
+exception, a regression this round found and repaired (step 5).
+
+1. **`-fno-auto-import`** (and `-Wl,--disable-auto-import`) in
+   `CMakeLists.txt`: a reader of a variable of ours in another file loads it
+   directly, not through a `.refptr` slot. The gate's baseline became
+   `slc1109\base3`: `main` `7f215457` with the flag, built at both widths.
+   Removing the `refptr` rows blind left 31 and 67 differences (the rows had
+   hidden a second difference in the same function), so the rows went back,
+   the unused ones were pruned, the `refptr` ones dropped and 98 re-classed
+   with B3's `classify.py` (69 `inline`, 29 `low32-site`): 3,681 rows to
+   1,778, no `refptr` class left. The three self-tests on the flag's build
+   passed before anything else moved.
+2. **The seams** (`tools/retire_shells.py --seams`): the callee seam still in
+   a file of ours goes to the file of the group's lowest function, with the
+   file-locals it reaches copied. The tool plans every seam before it writes
+   one, and refuses a name clash in the group's namespace, a file-scope
+   declaration the home does not hold, a home that does not see the seam's
+   declaration, and a seam that shares its line. 32 by the tool first, 8 more
+   by the groups after a line split or an include, 1 at the end
+   (`battle_sprites`): 41, with stage C's 28 the map's 69 `seam` rows.
+   `world_map_ours.cpp` keeps its seam (its `As` helper is state the file's
+   other code reaches).
+3. **Each switch and its arming beside its reader**, four agents in worktrees
+   off `0b19226a` (K1 field, 20 files; K2 platform and core, 12; K3 battle,
+   menu, shop, text, 16; K4 effect, area, community, scenario, boss, magic,
+   minigame, 22; the contract is `slc1109\briefs\common.md`, the reports
+   `slc1109\reports\k1.md`..`k4.md`). The variable goes before the first
+   function of Capcom's that reads it; its arming goes, verbatim, into the
+   unit file's `_Inject()`, or into a new `<Home>From<Group>_Inject()` called
+   on the line after the group's `_Inject()`, so every arming still runs
+   after its group's self-test. Where a file of ours lost lines in front of
+   a `Low32()`, a comment of the same length names the new home (x86_64
+   carries the line number in the failure path). Merged one at a time, both
+   gates after each: K1 squashed (four of its 24 commits did not build), K3,
+   K2, K4 as merges. Two rows crossed between groups at the merges
+   (`g_equip_labels_row`; `g_psp_title` and `rest_4e::g_west_cause_column`,
+   both now in `core/title.cpp`, where the base's file-local pairs with one
+   of them per object).
+4. **The shells that left:** 39 files of ours were pure shells after the
+   moves (a self-test call and nothing else); `retire_shells.py` now finds a
+   shell in its folder as well as a flat one, and retired them (nine headers
+   with them). `cite_lookup.py` answers a citation of such a file.
+5. **A regression found, on `main` since PR #214.** `bof3::IsEnabled` answers
+   "not ours" for a function no `Inject` has named yet. Stage B put the binds
+   into the unit files' inject functions, which run after the group's
+   `_Inject()`; a check left in the group's `_Inject()` then ran before the
+   bind it tests. Read from the code by K3 and K4, then measured: the reading
+   row was never armed (`ruby::g_armed`, silently), and `BOF3X_TEXT_SPEED=1`,
+   `BOF3X_UNLEARNED_BLUE=1`, `BOF3X_ENEMY_INFO=1` and `BOF3X_NO_FAIL=1` each
+   stopped the game at start. Every such check now runs after its bind
+   (`MsgBox_ArmAfterBinds` is new), and the hook layer guards the class:
+   `IsEnabled` records an address asked about before any `Inject` names it,
+   and `InjectReport` stops the game for each one an `Inject` named
+   afterwards. Measured with the exe-host self-test, the four switches and
+   `BOF3X_DESERT_FAERIE` set, at `BOF3X_WIDE` 0, 1 and 2: exit 0, no early
+   check. The guard's three functions are `harness` rows (code of ours
+   changed on purpose, no game function). No ledger entry: the entries'
+   behaviour is what the ledger already says; `main` is wrong until this
+   branch merges.
+
+**The gate on the tip**, against base3: `0 differ` at both widths; the
+exception table holds 1,881 rows (1,159 `inline`, 325 `data-layout`, 217
+`low32-site`, 89 `x64-indirect`, 56 `i686-fold`, 14 `i686-convention`, 12
+`harness`, 9 `i686-inline`). **The self-tests on the tip:** the hosted shadow suite, the exe host and the moved image exit 0; the suite's 963 self-test lines are the same, in the same order, as stage B's, 0 FATAL, 0 mismatches (logs `slc1109\scratch\i60_st`).
+**The censuses** regenerated, every count the same or lower (one row more in
+`reloc_bare.tsv`: `kPaceTable`, a constant copied with a seam).
+
+**What `src/game/` holds now:** 14 folders with 609 unit files, 253 fuzz
+files and 119 files of ours; flat, 9 sources and 398 headers.
+
+**Left, and why:** 119 files of ours stay. 73 hold functions of ours (the
+modules). The rest hold a self-test written in the file - making each the
+group's fuzz file is I61's neighbour and was not done - or an arming that
+must run before the self-test (`area_w4a`, `rest_3g`, `rest_4f`,
+`magic_s02`, `magic_s20`: `Operand` / `OperandExpect`), or a part of
+`MenuWindows_Inject` that runs before its self-test. The six
+`<group>_ours.cpp` keep their names. The mover's reconciliation and I48's
+comments (stage E) are as they were.
+
+**Traps paid:** an agent that stages one file's hunks with a zero-context
+`git apply --cached` lands them lines off; gate per commit or squash. A
+`data-layout` row one group adds can stop differing when another group's
+variable lands in the same object: prune by the gate's `unused` line after
+each merge. A loop that deletes "objects whose source is gone" must strip
+the object directory of the target it means, or it deletes every other
+target's objects too.
 
 ## 5a. Stage E: the comment clean-up (I48), at the end (the owner's call 5)
 
