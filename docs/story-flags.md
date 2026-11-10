@@ -56,10 +56,12 @@ Read for genes 3 and 16 ([`chapter-08.md`](story-flags/chapter-08.md)):
 - The scene is not gated by chapter 8's flag 4. `Area108_TailPlace` state 9 starts
   run 3 (`area_w2f.cpp`, checked), on a path gated by event flags `0x1B` and
   `0x1D`. No code of ours tests chapter 8's flag 4.
-- Not covered by a code read: event scripts in the game data can test a chapter
-  flag (condition 2) or a gene bit (condition 16). **A play test is owed.**
-  `tools/recipe_saves/fusionEarly.DAT` is the owner's save before that scene with
-  gene bit 16 set and nothing else changed.
+- **Played by the owner, 2026-11-09**, from `tools/recipe_saves/fusionEarly.DAT`
+  (their save before that scene with gene bit 16 set and nothing else changed):
+  the gene could be used in battle before the scene's fight, and the scene that
+  gives the genes played with no fault seen. So setting the bit alone grants the
+  gene, and the game's data scripts did not object on this path. Not reported:
+  the story after the scene.
 
 ## 2. How a chapter starts and ends
 
