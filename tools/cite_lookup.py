@@ -132,6 +132,8 @@ class Lookup:
                 return True, f"{path} is gone; its items went to " + ", ".join(sorted({r["new_path"] for r in rows}))
             if path in self.retired:
                 return True, f"{path} is gone: a shell stage C retired, nothing of Capcom's left in it"
+            if here in self.retired:
+                return True, f"{path} moved whole to {here} and was retired there (the cleanup round): nothing left in it but its self-test call"
             if path.endswith(".h") and path[:-2] + ".cpp" in self.retired:
                 return True, f"{path} is gone with its shell (stage C): it declared the group's _Inject() and SelfTest() alone"
             return False, "no such file, and no move came from it"
@@ -172,6 +174,15 @@ class Lookup:
         name = it.names[0]
         now = self.where(name, here if exists else None)
         if now is None:
+            # the cleanup round (I60): the file moved whole, gave up its seam and its switches, and was retired
+            for r in self.by_old.get(here, []):
+                if r["kind"] == "seam":
+                    f = find_now(r["new_path"], name)
+                    if f:
+                        return True, f"{it.kind} {name} (line {line} at {base}), with the group's seam now {r['new_path']}:{f[0]}"
+            if here in self.retired and name.endswith("_Inject"):
+                return True, (f"{name} (line {line} at {base}) is gone with its shell (the cleanup round): the self-test call is in "
+                              "src/hook/inject_all.cpp, each arming beside its reader (docs/source-layout.md)")
             return False, f"{name} (line {line} at {base}) is not found in the tree now"
         return True, f"{it.kind} {name} (line {line} at {base}), now {now}"
 

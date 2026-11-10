@@ -109,7 +109,6 @@ unsigned char* __cdecl EffectKind44_SparkFind(void);
 
 }  // extern "C"
 
-void Effect2C_Inject();
 
 namespace effect_2c {
 extern unsigned char g_ash_room;   // defined in effect_2c.cpp (source-layout B0: promoted for a moved reader)

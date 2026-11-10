@@ -6,7 +6,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/shop_states.h"
 #include "game/shop_states_callees.h"
 #include "game/sound_in.h"
 #include "hook/detour.h"

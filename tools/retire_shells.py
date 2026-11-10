@@ -384,6 +384,16 @@ def includers(include: str) -> list[str]:
 
 # --- the seams still in a file of ours (the cleanup round, IDEAS I60) ------------------------
 
+def ours_in_folders() -> list[tuple[str, str]]:
+    """(group stem, path) of the files of ours that moved whole into a folder (the map's `file` rows) and are
+    still there, fuzz files apart."""
+    out = set()
+    for r in mf.load_map(MAP):
+        if r["kind"] == "file" and r["new_path"] and not r["new_path"].endswith("_fuzz.cpp") and (ROOT / r["new_path"]).is_file():
+            out.add((Path(r["old_path"]).stem, r["new_path"]))
+    return sorted(out)
+
+
 def ours_with_seam() -> list[Shell]:
     """The files that moved whole (the map's file rows) and still define their group's `g`."""
     out = []
@@ -524,6 +534,12 @@ def main() -> int:
                 continue
             sh = Shell(stem)
             if sh.pure and (not only or stem in only):
+                shells.append(ShellPlan(sh, low))
+        # the cleanup round (I60): a file of ours that moved whole into its folder and has since given up its
+        # switches and its seam is a pure shell too
+        for stem, path in ours_in_folders():
+            sh = Shell(stem, path)
+            if sh.pure and sh.g is None and (not only or sh.stem in only):
                 shells.append(ShellPlan(sh, low))
         if problems:
             for p in problems:

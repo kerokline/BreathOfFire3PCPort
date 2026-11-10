@@ -23,7 +23,6 @@
 #include "game/save_menu_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shop/field_save_callees.h"
-#include "game/shop_states.h"
 #include "game/shop_states_callees.h"
 #include "game/sound_in.h"
 #include "game/title_menu.h"

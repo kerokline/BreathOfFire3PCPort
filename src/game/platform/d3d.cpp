@@ -51,7 +51,6 @@
 #include "game/sprt_draw.h"
 #include "game/sprt_draw_callees.h"
 #include "game/tex_cells_callees.h"
-#include "game/tex_page.h"
 #include "game/tex_page_callees.h"
 #include "game/text_advance.h"
 #include "game/text_draw.h"

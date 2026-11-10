@@ -7,7 +7,6 @@
 // field mode (scenario_harness.h, Group::field). docs/field_o.md.
 #pragma once
 
-void FieldO_Inject();
 
 namespace field_o {
 extern unsigned char g_empty_slot_blank;   // defined in field_o.cpp (source-layout B0: promoted for a moved reader)

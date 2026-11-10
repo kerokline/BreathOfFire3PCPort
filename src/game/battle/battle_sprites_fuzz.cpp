@@ -28,7 +28,6 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"

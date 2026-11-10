@@ -19,7 +19,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
-#include "game/effect_2g.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"

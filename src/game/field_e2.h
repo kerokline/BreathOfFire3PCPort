@@ -6,7 +6,6 @@
 
 #include <cstdint>
 
-void FieldE2_Inject();
 extern unsigned char g_trade_confirm_layout;   // defined in field_e2.cpp, armed by FieldE2_Inject (named here for a moved reader: source-layout B0)
 
 namespace field_e2 {

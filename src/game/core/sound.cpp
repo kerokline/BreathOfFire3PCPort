@@ -14,7 +14,6 @@
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/cheats.h"
 #include "game/dat_cache.h"

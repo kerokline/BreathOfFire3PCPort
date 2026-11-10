@@ -10,27 +10,27 @@ Every function of Capcom's that is ours lives in the file of the translation uni
 
 | Folder | What it holds | Unit files | Functions | Fuzz files | Files of ours |
 |---|---|---:|---:|---:|---:|
-| `area/` | the area overlays (the PlayStation's `AREAnnn.EMI`), one file an area or a world's shared code | 150 | 1,496 | 31 | 6 |
-| `battle/` | the battle engine | 23 | 728 | 24 | 11 |
+| `area/` | the area overlays (the PlayStation's `AREAnnn.EMI`), one file an area or a world's shared code | 150 | 1,496 | 31 | 3 |
+| `battle/` | the battle engine | 23 | 728 | 24 | 6 |
 | `boss/` | the boss overlays | 60 | 537 | 12 | 1 |
-| `community/` | the faerie village | 6 | 239 | 5 | 3 |
-| `core/` | the game's frame, modes, title and load | 5 | 192 | 5 | 12 |
-| `effect/` | the effect kinds and the effect engine | 123 | 2,083 | 42 | 13 |
-| `field/` | the field: maps, objects, members, events | 31 | 1,192 | 38 | 43 |
+| `community/` | the faerie village | 6 | 239 | 5 | 0 |
+| `core/` | the game's frame, modes, title and load | 5 | 192 | 5 | 10 |
+| `effect/` | the effect kinds and the effect engine | 123 | 2,083 | 42 | 6 |
+| `field/` | the field: maps, objects, members, events | 31 | 1,192 | 38 | 33 |
 | `magic/` | the spell overlays | 132 | 1,994 | 46 | 2 |
-| `menu/` | the menus and their windows | 13 | 374 | 11 | 11 |
-| `minigame/` | the minigames | 1 | 38 | 1 | 1 |
-| `platform/` | the port's own layer: Direct3D, sound, the PlayStation library's stand-ins | 11 | 225 | 15 | 33 |
+| `menu/` | the menus and their windows | 13 | 374 | 11 | 9 |
+| `minigame/` | the minigames | 1 | 38 | 1 | 0 |
+| `platform/` | the port's own layer: Direct3D, sound, the PlayStation library's stand-ins | 11 | 225 | 15 | 30 |
 | `scenario/` | the scenario chapters | 43 | 733 | 16 | 4 |
-| `shop/` | the shops and the camp | 8 | 164 | 6 | 6 |
+| `shop/` | the shops and the camp | 8 | 164 | 6 | 3 |
 | `text/` | text drawing and the message box | 3 | 74 | 1 | 12 |
 
 Beside the unit files a folder holds:
 
 - **the fuzz files** (`<group>_fuzz.cpp`): the start-up differential fuzz of one takeover group, named after the group, in the folder most of the group's functions went to. A group's `SelfTest()` is called from `src/hook/inject_all.cpp`, before the group's functions are bound;
-- **files of ours** (section 3): what a takeover group's file still held that is not Capcom's - a divergence's switch and its arming, a self-test written in the file, a module of ours - moved whole in stage C and to be dissolved in the cleanup round.
+- **files of ours** (section 3): what a takeover group's file still held that is not Capcom's - a module of ours, a self-test written in the file, a switch whose arming must run before the group's self-test - moved whole in stage C. The cleanup round (I60) put each other switch and its arming beside its reader in the unit file, and retired the files left empty.
 
-**Flat in `src/game/`:** 9 sources - the harness files shared by many groups and the runtime's file, whose range is outside the round (`area_harness.cpp`, `boss_harness.cpp`, `boss_harness_eh.cpp`, `crt_rest.cpp`, `crt_rest_fuzz.cpp`, `magic_harness.cpp`, `scenario_harness.cpp`, `scenario_harness_ekh.cpp`, `scenario_harness_fh.cpp`) - and 407 headers: the shared ones (`records.h`, `record_views.h`, `move_script_bytes.h`, the harness headers, `widescreen.h`), each group's `<group>_callees.h` (its callee constants and seam, stage E's to retire) and the headers of the files of ours. An include is always `game/<name>.h` or `game/<folder>/<name>.h`.
+**Flat in `src/game/`:** 9 sources - the harness files shared by many groups and the runtime's file, whose range is outside the round (`area_harness.cpp`, `boss_harness.cpp`, `boss_harness_eh.cpp`, `crt_rest.cpp`, `crt_rest_fuzz.cpp`, `magic_harness.cpp`, `scenario_harness.cpp`, `scenario_harness_ekh.cpp`, `scenario_harness_fh.cpp`) - and 398 headers: the shared ones (`records.h`, `record_views.h`, `move_script_bytes.h`, the harness headers, `widescreen.h`), each group's `<group>_callees.h` (its callee constants and seam, stage E's to retire) and the headers of the files of ours. An include is always `game/<name>.h` or `game/<folder>/<name>.h`.
 
 **Where a new function goes.** A function of Capcom's taken over later goes into the file of its unit: its row in `analysis/tu_layout.tsv` names it (`tools/tu_census.py --check --strict` fails otherwise). Code of ours that is not Capcom's goes beside the unit it serves, in that folder, in a file of its own or in the unit's file; never flat in `src/game/` (`tools/retire_shells.py --check --strict`). `tools/cite_lookup.py` answers a path written before the round.
 
@@ -198,20 +198,20 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | File | Range | Units | Functions (j / p / g) | PlayStation unit | Seams |
 |---|---|---:|---|---|---|
 | `battle_extra.cpp` | `0x42D710..0x42E370` | 1 | 25 (0 / 0 / 25) |  |  |
-| `battle_intro.cpp` | `0x42E370..0x42E990` | 2 | 9 (5 / 0 / 4) | BATTLE.EMI (4) | `battle_flow::g` |
-| `battle_action.cpp` | `0x42E990..0x431940` | 1 | 83 (79 / 0 / 4) | BATTLE.EMI (56) | `battle_setup::g` |
-| `battle_result.cpp` | `0x431940..0x432430` | 1 | 16 (0 / 0 / 16) |  |  |
+| `battle_intro.cpp` | `0x42E370..0x42E990` | 2 | 9 (5 / 0 / 4) | BATTLE.EMI (4) | `battle_flow::g`, `battle_phases::g` |
+| `battle_action.cpp` | `0x42E990..0x431940` | 1 | 83 (79 / 0 / 4) | BATTLE.EMI (56) | `battle_actions::g`, `battle_setup::g`, `battle_turn_steps::g` |
+| `battle_result.cpp` | `0x431940..0x432430` | 1 | 16 (0 / 0 / 16) |  | `battle_result::g` |
 | `battle_loss.cpp` | `0x432430..0x432B70` | 1 | 10 (3 / 0 / 7) |  |  |
 | `battle_fx.cpp` | `0x432B70..0x435110` | 1 | 62 (0 / 3 / 59) | BATTLE.EMI (3) | `battle_fx_tasks::g` |
 | `battle_task.cpp` | `0x435110..0x435830` | 1 | 7 (5 / 0 / 2) | BATTLE.EMI (4) |  |
 | `enemy_op.cpp` | `0x435830..0x437780` | 1 | 72 (65 / 0 / 7) | BATTLE.EMI (43) | `enemy_ai_ops::g` |
 | `battle.cpp` | `0x437780..0x4378D0` | 3 | 4 (2 / 0 / 2) | BATTLE.EMI (2) |  |
 | `battle_2.cpp` | `0x437930..0x437A10` | 1 | 2 (2 / 0 / 0) | BATTLE.EMI (2) |  |
-| `battle_obj.cpp` | `0x441100..0x442FA0` | 1 | 62 (55 / 0 / 7) | BATTLE.EMI (39) | `battle_obj_states::g` |
-| `battle_3.cpp` | `0x442FA0..0x447140` | 1 | 83 (81 / 0 / 2) | BATTLE.EMI (71) | `battle_actor_copies::g`, `battle_damage::g` |
+| `battle_obj.cpp` | `0x441100..0x442FA0` | 1 | 62 (55 / 0 / 7) | BATTLE.EMI (39) | `battle_obj_states::g`, `battle_windows::g` |
+| `battle_3.cpp` | `0x442FA0..0x447140` | 1 | 83 (81 / 0 / 2) | BATTLE.EMI (71) | `battle_actor_copies::g`, `battle_damage::g`, `battle_misc::g`, `battle_window_draw::g` |
 | `battle_item_cmd.cpp` | `0x447140..0x44A5C0` | 1 | 79 (79 / 0 / 0) | BATTLE.EMI (74) | `battle_menu_states::g` |
 | `battle_banner.cpp` | `0x44A5C0..0x44AAD0` | 1 | 15 (15 / 0 / 0) | BATTLE.EMI (14) | `battle_odds::g` |
-| `dragon_cmd.cpp` | `0x44F770..0x454820` | 1 | 114 (87 / 26 / 1) | BATTLE.EMI (71) |  |
+| `dragon_cmd.cpp` | `0x44F770..0x454820` | 1 | 114 (87 / 26 / 1) | BATTLE.EMI (71) | `battle_sprites::g`, `mode_flow::g`, `save_menu::g` |
 | `battle_4.cpp` | `0x494280..0x494A80` | 1 | 13 (13 / 0 / 0) | BATTLE.EMI (8) |  |
 | `battle_5.cpp` | `0x494A80..0x495040` | 1 | 5 (0 / 0 / 5) | BATTLE.EMI (1) |  |
 | `counter_mark.cpp` | `0x4A6DF0..0x4A7830` | 1 | 13 (13 / 0 / 0) | MAGIC042.EMI (8) |  |
@@ -301,10 +301,10 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 
 | File | Range | Units | Functions (j / p / g) | PlayStation unit | Seams |
 |---|---|---:|---|---|---|
-| `title.cpp` | `0x45FE60..0x462A90` | 1 | 59 (12 / 0 / 47) | GAME.EMI (18) | `item_use::g` |
+| `title.cpp` | `0x45FE60..0x462A90` | 1 | 59 (12 / 0 / 47) | GAME.EMI (18) | `item_use::g`, `mode_tasks::g` |
 | `transition.cpp` | `0x495040..0x496CC0` | 1 | 66 (36 / 4 / 26) | GAME.EMI (18) | `mode_states::g` |
 | `main_cannon.cpp` | `0x4E7FF0..0x4E8660` | 1 | 11 (10 / 0 / 1) | MAGIC138.EMI (9) |  |
-| `sound.cpp` | `0x587740..0x588F00` | 1 | 48 (26 / 0 / 22) | START.EMI (3) | `display_env::g` |
+| `sound.cpp` | `0x587740..0x588F00` | 1 | 48 (26 / 0 / 22) | START.EMI (3) | `display_env::g`, `sound::g` |
 | `task.cpp` | `0x5A98A0..0x5A9A59` | 1 | 8 (8 / 0 / 0) |  |  |
 
 ### `effect/`
@@ -441,30 +441,30 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 |---|---|---:|---|---|---|
 | `field.cpp` | `0x4410B0..0x441100` | 1 | 1 (0 / 0 / 1) | GAME.EMI (1) |  |
 | `save.cpp` | `0x454820..0x454960` | 1 | 3 (0 / 0 / 3) |  |  |
-| `field_2.cpp` | `0x454960..0x455450` | 1 | 19 (12 / 0 / 7) | GAME.EMI (12) |  |
+| `field_2.cpp` | `0x454960..0x455450` | 1 | 19 (12 / 0 / 7) | GAME.EMI (12) | `field_event::g`, `frame_callees::g` |
 | `field_trigger_01.cpp` | `0x456B20..0x456D50` | 1 | 12 (0 / 0 / 12) |  |  |
 | `char.cpp` | `0x498DE0..0x498FE0` | 1 | 1 (0 / 0 / 1) | GAME.EMI (1) |  |
 | `jump_child.cpp` | `0x499750..0x499D80` | 1 | 10 (10 / 0 / 0) | MAGIC001.EMI (7) |  |
 | `quake.cpp` | `0x4CE100..0x4CF5F0` | 1 | 10 (10 / 0 / 0) | MAGIC102.EMI (7) |  |
-| `field_3.cpp` | `0x517200..0x519890` | 1 | 55 (46 / 0 / 9) | GAME.EMI (49) | `move_cmds::g` |
+| `field_3.cpp` | `0x517200..0x519890` | 1 | 55 (46 / 0 / 9) | GAME.EMI (49) | `field_frame::g`, `field_misc::g`, `field_objects::g`, `move_cmds::g` |
 | `member.cpp` | `0x51AC50..0x51BE90` | 1 | 17 (10 / 0 / 7) | GAME.EMI (15) | `field_hidden::g`, `member_sprites::g` |
 | `party_action.cpp` | `0x51BE90..0x525370` | 1 | 288 (0 / 0 / 288) |  |  |
 | `field_core.cpp` | `0x525370..0x528880` | 1 | 72 (57 / 0 / 15) | GAME.EMI (30) |  |
 | `leader_panel.cpp` | `0x528880..0x52D8F0` | 1 | 123 (123 / 0 / 0) | AREA030.EMI (89) |  |
-| `field_4.cpp` | `0x52D8F0..0x530A50` | 1 | 70 (53 / 0 / 17) | GAME.EMI (61) | `event_ops::g` |
+| `field_4.cpp` | `0x52D8F0..0x530A50` | 1 | 70 (53 / 0 / 17) | GAME.EMI (61) | `event_leader::g`, `event_ops::g`, `inventory_ops::g` |
 | `field_5.cpp` | `0x530A50..0x531120` | 1 | 4 (4 / 0 / 0) | GAME.EMI (4) |  |
 | `field_6.cpp` | `0x531120..0x5366A0` | 2 | 103 (43 / 0 / 60) | GAME.EMI (84) | `area_entry::g`, `event_objs::g`, `field_modes::g` |
 | `mode_11.cpp` | `0x5366A0..0x537540` | 1 | 22 (13 / 0 / 9) | main (18) |  |
 | `field_7.cpp` | `0x56D5E0..0x56E6C0` | 1 | 25 (25 / 0 / 0) | GAME.EMI (20) |  |
-| `area_map.cpp` | `0x56E6C0..0x573560` | 2 | 69 (57 / 0 / 12) | main (45) | `map_scroll::g` |
-| `move_script.cpp` | `0x576B50..0x579390` | 1 | 16 (16 / 0 / 0) | GAME.EMI (16) |  |
+| `area_map.cpp` | `0x56E6C0..0x573560` | 2 | 69 (57 / 0 / 12) | main (45) | `battle_draw::g`, `map_field_objects::g`, `map_layers::g`, `map_scroll::g` |
+| `move_script.cpp` | `0x576B50..0x579390` | 1 | 16 (16 / 0 / 0) | GAME.EMI (16) | `move_groups::g` |
 | `move_cmd.cpp` | `0x579390..0x579740` | 1 | 9 (7 / 0 / 2) | GAME.EMI (5) |  |
-| `event_script.cpp` | `0x579740..0x57B100` | 1 | 27 (24 / 0 / 3) | GAME.EMI (27) |  |
+| `event_script.cpp` | `0x579740..0x57B100` | 1 | 27 (24 / 0 / 3) | GAME.EMI (27) | `event_script::g` |
 | `event_op.cpp` | `0x57B100..0x57B780` | 1 | 6 (5 / 0 / 1) | GAME.EMI (6) |  |
-| `event_cond.cpp` | `0x57B780..0x57CEF0` | 1 | 56 (56 / 0 / 0) | main (36) |  |
+| `event_cond.cpp` | `0x57B780..0x57CEF0` | 1 | 56 (56 / 0 / 0) | main (36) | `sprite_pose::g` |
 | `party_form.cpp` | `0x580A40..0x5818B0` | 1 | 16 (14 / 0 / 2) | SHOP.EMI (7) |  |
-| `sprite.cpp` | `0x588F00..0x589810` | 1 | 17 (15 / 0 / 2) | main (8) |  |
-| `field_menu.cpp` | `0x589970..0x58A0E0` | 1 | 9 (2 / 0 / 7) | START.EMI (2) |  |
+| `sprite.cpp` | `0x588F00..0x589810` | 1 | 17 (15 / 0 / 2) | main (8) | `sprite_screen::g` |
+| `field_menu.cpp` | `0x589970..0x58A0E0` | 1 | 9 (2 / 0 / 7) | START.EMI (2) | `menu_lists::g` |
 | `field_ability.cpp` | `0x58A0E0..0x58A4C0` | 1 | 11 (0 / 0 / 11) |  |  |
 | `field_menu_status.cpp` | `0x58A4C0..0x58AAE0` | 1 | 10 (0 / 0 / 10) |  |  |
 | `field_ability_2.cpp` | `0x58AAE0..0x5902E0` | 1 | 83 (80 / 0 / 3) | START.EMI (31) |  |
@@ -620,9 +620,9 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `master_quit.cpp` | `0x586D20..0x587740` | 1 | 18 (18 / 0 / 0) | SISYOU.EMI (15) |  |
 | `config_menu.cpp` | `0x5902E0..0x5903F0` | 1 | 4 (0 / 0 / 4) |  |  |
 | `char.cpp` | `0x5903F0..0x591F30` | 1 | 40 (37 / 0 / 3) | main (36) | `char_stats::g` |
-| `item_trade.cpp` | `0x593950..0x5954B0` | 1 | 31 (22 / 8 / 1) | AREA030.EMI (21) |  |
+| `item_trade.cpp` | `0x593950..0x5954B0` | 1 | 31 (22 / 8 / 1) | AREA030.EMI (21) | `window_task::g` |
 | `window.cpp` | `0x5954B0..0x596FA0` | 1 | 37 (4 / 0 / 33) | main (7) |  |
-| `menu_list.cpp` | `0x596FA0..0x59B240` | 1 | 137 (100 / 0 / 37) | START.EMI (7) | `window_kinds::g` |
+| `menu_list.cpp` | `0x596FA0..0x59B240` | 1 | 137 (100 / 0 / 37) | START.EMI (7) | `battle_win_states::g`, `menu_draw_helpers::g`, `window_kinds::g` |
 | `menu_win.cpp` | `0x59B440..0x59B470` | 1 | 1 (0 / 0 / 1) |  |  |
 | `window_2.cpp` | `0x59CB00..0x59CB40` | 2 | 2 (0 / 0 / 2) |  |  |
 
@@ -636,8 +636,8 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 
 | File | Range | Units | Functions (j / p / g) | PlayStation unit | Seams |
 |---|---|---:|---|---|---|
-| `magic_080.cpp` | `0x4FC330..0x4FD470` | 1 | 17 (11 / 0 / 6) | MAGIC080.EMI (4) |  |
-| `d3d.cpp` | `0x59E650..0x5A6980` | 2 | 72 (51 / 0 / 21) |  | `psx_rest::g`, `tex_cells::g` |
+| `magic_080.cpp` | `0x4FC330..0x4FD470` | 1 | 17 (11 / 0 / 6) | MAGIC080.EMI (4) | `shell::g` |
+| `d3d.cpp` | `0x59E650..0x5A6980` | 2 | 72 (51 / 0 / 21) |  | `d3d_draw::g`, `d3d_list::g`, `d3d_rest::g`, `glyph_draw::g`, `psx_rest::g`, `sprt_draw::g`, `tex_cells::g`, `tex_page::g` |
 | `music.cpp` | `0x5A6980..0x5A72C0` | 1 | 24 (0 / 0 / 24) |  |  |
 | `file.cpp` | `0x5A72C0..0x5A7540` | 1 | 9 (4 / 0 / 5) |  |  |
 | `gpu.cpp` | `0x5A7540..0x5A7810` | 1 | 25 (4 / 0 / 21) | main (18) |  |
@@ -700,9 +700,9 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 
 | File | Range | Units | Functions (j / p / g) | PlayStation unit | Seams |
 |---|---|---:|---|---|---|
-| `shop_mode.cpp` | `0x57F500..0x57F650` | 1 | 3 (0 / 0 / 3) | SHOP.EMI (1) |  |
+| `shop_mode.cpp` | `0x57F500..0x57F650` | 1 | 3 (0 / 0 / 3) | SHOP.EMI (1) | `shop_states::g` |
 | `field_save.cpp` | `0x57F650..0x580A40` | 1 | 41 (38 / 0 / 3) | SHOP.EMI (18) |  |
-| `shop_trade.cpp` | `0x5818B0..0x583350` | 1 | 31 (21 / 0 / 10) | SHOP.EMI (2) |  |
+| `shop_trade.cpp` | `0x5818B0..0x583350` | 1 | 31 (21 / 0 / 10) | SHOP.EMI (2) | `shop_states2::g` |
 | `shop_browse.cpp` | `0x583350..0x5837E0` | 1 | 13 (0 / 0 / 13) |  |  |
 | `shop_resist.cpp` | `0x5837E0..0x584180` | 1 | 12 (0 / 0 / 12) |  |  |
 | `shared_list.cpp` | `0x584180..0x585A00` | 1 | 22 (21 / 0 / 1) | SHOP.EMI (18) |  |
@@ -713,43 +713,30 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 
 | File | Range | Units | Functions (j / p / g) | PlayStation unit | Seams |
 |---|---|---:|---|---|---|
-| `msg_box.cpp` | `0x4976D0..0x498DE0` | 1 | 63 (62 / 0 / 1) | main (30) |  |
+| `msg_box.cpp` | `0x4976D0..0x498DE0` | 1 | 63 (62 / 0 / 1) | main (30) | `menu_windows::g`, `msgbox::g` |
 | `text.cpp` | `0x516B30..0x5171E0` | 1 | 7 (7 / 0 / 0) | main (5) |  |
 | `tex.cpp` | `0x5A9A59..0x5AA03E` | 2 | 4 (0 / 0 / 4) |  |  |
 
 ## 3. The files of ours
 
-158 files moved whole in stage C, unchanged inside (177 pure shells were retired beside them). Each still carries its old group's name; one that met a unit file's name is `<group>_ours.cpp`. Its header stays flat.
+119 files that moved whole in stage C are still here (216 pure shells were retired, in stage C and in the cleanup round). Each still carries its old group's name; one that met a unit file's name is `<group>_ours.cpp`. Its header stays flat.
 
 | File | Was |
 |---|---|
-| `area/area_w1c.cpp` | `src/game/area_w1c.cpp` |
-| `area/area_w1f.cpp` | `src/game/area_w1f.cpp` |
 | `area/area_w3c.cpp` | `src/game/area_w3c.cpp` |
-| `area/area_w3d.cpp` | `src/game/area_w3d.cpp` |
 | `area/area_w4a.cpp` | `src/game/area_w4a.cpp` |
 | `area/world_map_ours.cpp` | `src/game/world_map.cpp` |
-| `battle/battle_actions.cpp` | `src/game/battle_actions.cpp` |
-| `battle/battle_e5.cpp` | `src/game/battle_e5.cpp` |
 | `battle/battle_misc.cpp` | `src/game/battle_misc.cpp` |
 | `battle/battle_phases.cpp` | `src/game/battle_phases.cpp` |
-| `battle/battle_result_ours.cpp` | `src/game/battle_result.cpp` |
-| `battle/battle_sprites.cpp` | `src/game/battle_sprites.cpp` |
 | `battle/battle_text.cpp` | `src/game/battle_text.cpp` |
-| `battle/battle_turn_steps.cpp` | `src/game/battle_turn_steps.cpp` |
 | `battle/battle_window_draw.cpp` | `src/game/battle_window_draw.cpp` |
 | `battle/battle_windows.cpp` | `src/game/battle_windows.cpp` |
 | `battle/dat_load.cpp` | `src/game/dat_load.cpp` |
 | `boss/boss_sg.cpp` | `src/game/boss_sg.cpp` |
-| `community/rest_4b.cpp` | `src/game/rest_4b.cpp` |
-| `community/rest_4d.cpp` | `src/game/rest_4d.cpp` |
-| `community/rest_4e.cpp` | `src/game/rest_4e.cpp` |
 | `core/area_data_reload.cpp` | `src/game/area_data_reload.cpp` |
 | `core/cheats.cpp` | `src/game/cheats.cpp` |
 | `core/config_text.cpp` | `src/game/config_text.cpp` |
 | `core/gfx_unpack.cpp` | `src/game/gfx_unpack.cpp` |
-| `core/mode_flow.cpp` | `src/game/mode_flow.cpp` |
-| `core/mode_rest.cpp` | `src/game/mode_rest.cpp` |
 | `core/mode_tasks.cpp` | `src/game/mode_tasks.cpp` |
 | `core/prim.cpp` | `src/game/prim.cpp` |
 | `core/psp_code.cpp` | `src/game/psp_code.cpp` |
@@ -758,15 +745,8 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `core/title_states.cpp` | `src/game/title_states.cpp` |
 | `effect/effect_1a.cpp` | `src/game/effect_1a.cpp` |
 | `effect/effect_1b.cpp` | `src/game/effect_1b.cpp` |
-| `effect/effect_2c.cpp` | `src/game/effect_2c.cpp` |
-| `effect/effect_2d.cpp` | `src/game/effect_2d.cpp` |
-| `effect/effect_2g.cpp` | `src/game/effect_2g.cpp` |
-| `effect/effect_3a.cpp` | `src/game/effect_3a.cpp` |
-| `effect/effect_4b.cpp` | `src/game/effect_4b.cpp` |
-| `effect/effect_gte_ours.cpp` | `src/game/effect_gte.cpp` |
 | `effect/frame_callees.cpp` | `src/game/frame_callees.cpp` |
 | `effect/rest_3e.cpp` | `src/game/rest_3e.cpp` |
-| `effect/rest_3f.cpp` | `src/game/rest_3f.cpp` |
 | `effect/rest_3g.cpp` | `src/game/rest_3g.cpp` |
 | `effect/rest_4f.cpp` | `src/game/rest_4f.cpp` |
 | `field/area_slope.cpp` | `src/game/area_slope.cpp` |
@@ -775,20 +755,14 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `field/draw_layers.cpp` | `src/game/draw_layers.cpp` |
 | `field/draw_pass.cpp` | `src/game/draw_pass.cpp` |
 | `field/draw_pool.cpp` | `src/game/draw_pool.cpp` |
-| `field/effect_1e.cpp` | `src/game/effect_1e.cpp` |
-| `field/event_leader.cpp` | `src/game/event_leader.cpp` |
 | `field/event_script_ours.cpp` | `src/game/event_script.cpp` |
 | `field/faerie_ring.cpp` | `src/game/faerie_ring.cpp` |
 | `field/field_blocked.cpp` | `src/game/field_blocked.cpp` |
-| `field/field_e2.cpp` | `src/game/field_e2.cpp` |
-| `field/field_event.cpp` | `src/game/field_event.cpp` |
 | `field/field_frame.cpp` | `src/game/field_frame.cpp` |
 | `field/field_input.cpp` | `src/game/field_input.cpp` |
 | `field/field_misc.cpp` | `src/game/field_misc.cpp` |
-| `field/field_o.cpp` | `src/game/field_o.cpp` |
 | `field/field_objects.cpp` | `src/game/field_objects.cpp` |
 | `field/gfx_flush.cpp` | `src/game/gfx_flush.cpp` |
-| `field/inventory_ops.cpp` | `src/game/inventory_ops.cpp` |
 | `field/kind2_object.cpp` | `src/game/kind2_object.cpp` |
 | `field/layering.cpp` | `src/game/layering.cpp` |
 | `field/map_cells.cpp` | `src/game/map_cells.cpp` |
@@ -799,43 +773,34 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `field/move_groups.cpp` | `src/game/move_groups.cpp` |
 | `field/move_script_ours.cpp` | `src/game/move_script.cpp` |
 | `field/object_kinds.cpp` | `src/game/object_kinds.cpp` |
-| `field/rest_2d.cpp` | `src/game/rest_2d.cpp` |
-| `field/rest_2e.cpp` | `src/game/rest_2e.cpp` |
-| `field/rest_2f.cpp` | `src/game/rest_2f.cpp` |
 | `field/sprite_anim.cpp` | `src/game/sprite_anim.cpp` |
 | `field/sprite_clut.cpp` | `src/game/sprite_clut.cpp` |
 | `field/sprite_draw.cpp` | `src/game/sprite_draw.cpp` |
 | `field/sprite_find.cpp` | `src/game/sprite_find.cpp` |
 | `field/sprite_order.cpp` | `src/game/sprite_order.cpp` |
-| `field/sprite_pose.cpp` | `src/game/sprite_pose.cpp` |
 | `field/sprite_records.cpp` | `src/game/sprite_records.cpp` |
 | `field/sprite_screen.cpp` | `src/game/sprite_screen.cpp` |
 | `field/wide_rand.cpp` | `src/game/wide_rand.cpp` |
 | `field/wide_staging.cpp` | `src/game/wide_staging.cpp` |
 | `magic/magic_s02.cpp` | `src/game/magic_s02.cpp` |
 | `magic/magic_s20.cpp` | `src/game/magic_s20.cpp` |
-| `menu/battle_e7.cpp` | `src/game/battle_e7.cpp` |
 | `menu/battle_win_states.cpp` | `src/game/battle_win_states.cpp` |
 | `menu/effect_1g.cpp` | `src/game/effect_1g.cpp` |
 | `menu/menu_frame.cpp` | `src/game/menu_frame.cpp` |
-| `menu/menu_lists.cpp` | `src/game/menu_lists.cpp` |
 | `menu/menu_verbs.cpp` | `src/game/menu_verbs.cpp` |
 | `menu/menu_windows.cpp` | `src/game/menu_windows.cpp` |
 | `menu/quick_menu.cpp` | `src/game/quick_menu.cpp` |
 | `menu/text_immediate.cpp` | `src/game/text_immediate.cpp` |
 | `menu/window_task.cpp` | `src/game/window_task.cpp` |
 | `menu/yes_no_layout.cpp` | `src/game/yes_no_layout.cpp` |
-| `minigame/rest_2b.cpp` | `src/game/rest_2b.cpp` |
 | `platform/battle_draw.cpp` | `src/game/battle_draw.cpp` |
 | `platform/d3d_draw.cpp` | `src/game/d3d_draw.cpp` |
 | `platform/d3d_lines.cpp` | `src/game/d3d_lines.cpp` |
 | `platform/d3d_list.cpp` | `src/game/d3d_list.cpp` |
-| `platform/d3d_rest.cpp` | `src/game/d3d_rest.cpp` |
 | `platform/dat_cache.cpp` | `src/game/dat_cache.cpp` |
 | `platform/display_setup.cpp` | `src/game/display_setup.cpp` |
 | `platform/game_clock.cpp` | `src/game/game_clock.cpp` |
 | `platform/gfx_clut.cpp` | `src/game/gfx_clut.cpp` |
-| `platform/gfx_filter.cpp` | `src/game/gfx_filter.cpp` |
 | `platform/gfx_texcache.cpp` | `src/game/gfx_texcache.cpp` |
 | `platform/gfx_vram_ops.cpp` | `src/game/gfx_vram_ops.cpp` |
 | `platform/glyph_draw.cpp` | `src/game/glyph_draw.cpp` |
@@ -856,7 +821,6 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `platform/sound_sp.cpp` | `src/game/sound_sp.cpp` |
 | `platform/sound_st.cpp` | `src/game/sound_st.cpp` |
 | `platform/sprt_draw.cpp` | `src/game/sprt_draw.cpp` |
-| `platform/tex_page.cpp` | `src/game/tex_page.cpp` |
 | `platform/widescreen.cpp` | `src/game/widescreen.cpp` |
 | `platform/win_main.cpp` | `src/game/win_main.cpp` |
 | `scenario/scena_calls.cpp` | `src/game/scena_calls.cpp` |
@@ -865,10 +829,7 @@ One row a file: its `.text` range (the lowest unit's start to the highest unit's
 | `scenario/scena_sc9b.cpp` | `src/game/scena_sc9b.cpp` |
 | `shop/field_s.cpp` | `src/game/field_s.cpp` |
 | `shop/menu_draw_helpers.cpp` | `src/game/menu_draw_helpers.cpp` |
-| `shop/rest_2c.cpp` | `src/game/rest_2c.cpp` |
 | `shop/rest_2h.cpp` | `src/game/rest_2h.cpp` |
-| `shop/shop_states.cpp` | `src/game/shop_states.cpp` |
-| `shop/shop_states2.cpp` | `src/game/shop_states2.cpp` |
 | `text/char_names.cpp` | `src/game/char_names.cpp` |
 | `text/fishing_text.cpp` | `src/game/fishing_text.cpp` |
 | `text/labels.cpp` | `src/game/labels.cpp` |

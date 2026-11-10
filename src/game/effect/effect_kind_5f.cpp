@@ -13,7 +13,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/cheats.h"
 #include "game/effect/effect_kind_5f_callees.h"
-#include "game/effect_2g.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_3a.h"
 #include "game/effect_3a_callees.h"

@@ -83,7 +83,6 @@ void __cdecl CommuBoard_PickHelp(unsigned char* cell);                          
 
 }  // extern "C"
 
-void Rest4B_Inject();
 extern unsigned char g_board_yes_no_layout;   // defined in rest_4b.cpp, armed by Rest4B_Inject (named here for a moved reader: source-layout B0)
 
 namespace rest_4b {

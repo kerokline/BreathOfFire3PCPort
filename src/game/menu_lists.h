@@ -5,5 +5,4 @@
 // the menu and shop windows share (0x599B50..0x59A6A7). docs/menu_lists.md.
 #pragma once
 
-void MenuLists_Inject();
 extern unsigned char g_title_centre;   // defined in menu_lists.cpp, armed by MenuLists_Inject (named here for a moved reader: source-layout B0)

@@ -18,7 +18,6 @@
 #include "game/battle_e5.h"
 #include "game/battle_e5_callees.h"
 #include "game/battle_e6_callees.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/battle_text.h"
 #include "game/boss_harness.h"

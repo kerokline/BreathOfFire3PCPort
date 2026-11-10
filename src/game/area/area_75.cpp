@@ -7,7 +7,6 @@
 #include "bof3/symbols.gen.h"
 #include "game/area/area_75_callees.h"
 #include "game/area_harness.h"
-#include "game/area_w1f.h"
 #include "game/area_w1f_callees.h"
 #include "game/area_w2a_callees.h"
 #include "game/cheats.h"

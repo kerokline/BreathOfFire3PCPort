@@ -9,7 +9,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/band_census.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/cheats.h"
 #include "game/field_hidden_callees.h"

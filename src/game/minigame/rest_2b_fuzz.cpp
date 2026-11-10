@@ -16,7 +16,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
-#include "game/rest_2b.h"
 #include "game/rest_2b_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"

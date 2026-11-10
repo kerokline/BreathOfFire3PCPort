@@ -6,7 +6,6 @@
 
 #include <cstdint>
 
-void FieldEvent_Inject();
 
 namespace field_event {
 extern std::uint8_t g_mantle_cap;   // defined in field_event.cpp (source-layout B0: promoted for a moved reader)

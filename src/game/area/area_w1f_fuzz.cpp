@@ -14,7 +14,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
-#include "game/area_w1f.h"
 #include "game/area_w1f_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/log.h"

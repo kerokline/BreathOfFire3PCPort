@@ -21,7 +21,6 @@
 
 #include <cstdint>
 
-void Rest2F_Inject();
 
 namespace rest_2f {
 extern std::uint32_t g_title_call;   // defined in rest_2f.cpp (source-layout B0: promoted for a moved reader)

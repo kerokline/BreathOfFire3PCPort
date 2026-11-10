@@ -13,7 +13,6 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/area_entry_callees.h"
-#include "game/event_leader.h"
 #include "game/event_leader_callees.h"
 #include "game/event_objs_callees.h"
 #include "game/event_ops_callees.h"

@@ -65,7 +65,7 @@ def build() -> str:
             whole.append((r["old_path"], r["new_path"]))
         elif r["kind"] == "shell":
             retired += 1
-    remainders = sorted((n, o) for o, n in whole if not n.endswith("_fuzz.cpp"))
+    remainders = sorted((n, o) for o, n in whole if not n.endswith("_fuzz.cpp") and (ROOT / n).is_file())
     fuzz = Counter(n.split("/")[2] for o, n in whole if n.endswith("_fuzz.cpp"))
     flat = sorted(p.name for p in GAME.glob("*.cpp"))
     flat_h = len(list(GAME.glob("*.h")))
@@ -110,8 +110,9 @@ def build() -> str:
              "group, named after the group, in the folder most of the group's functions went to. A group's "
              "`SelfTest()` is called from `src/hook/inject_all.cpp`, before the group's functions are bound;")
     L.append("- **files of ours** (section 3): what a takeover group's file still held that is not "
-             "Capcom's - a divergence's switch and its arming, a self-test written in the file, a module "
-             "of ours - moved whole in stage C and to be dissolved in the cleanup round.")
+             "Capcom's - a module of ours, a self-test written in the file, a switch whose arming must run "
+             "before the group's self-test - moved whole in stage C. The cleanup round (I60) put each other "
+             "switch and its arming beside its reader in the unit file, and retired the files left empty.")
     L.append("")
     L.append(f"**Flat in `src/game/`:** {len(flat)} sources - the harness files shared by many groups and "
              f"the runtime's file, whose range is outside the round ({', '.join('`' + n + '`' for n in flat)}) - "
@@ -155,9 +156,9 @@ def build() -> str:
     L.append("")
     L.append("## 3. The files of ours")
     L.append("")
-    L.append(f"{len(remainders)} files moved whole in stage C, unchanged inside ({retired} pure shells were "
-             "retired beside them). Each still carries its old group's name; one that met a unit file's "
-             "name is `<group>_ours.cpp`. Its header stays flat.")
+    L.append(f"{len(remainders)} files that moved whole in stage C are still here ({retired} pure shells were "
+             "retired, in stage C and in the cleanup round). Each still carries its old group's name; one that "
+             "met a unit file's name is `<group>_ours.cpp`. Its header stays flat.")
     L.append("")
     L.append("| File | Was |")
     L.append("|---|---|")

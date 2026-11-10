@@ -7,7 +7,6 @@
 // symbols.gen.h (each has an `impl` in symbols.toml).
 #pragma once
 
-void Effect3A_Inject();
 
 namespace effect_3a {
 extern unsigned char g_pixel_room;   // defined in effect_3a.cpp (source-layout B0: promoted for a moved reader)

@@ -20,7 +20,6 @@
 #include "game/rdata_consts.h"
 #include "game/record_views.h"
 #include "game/records.h"
-#include "game/rest_2b.h"
 #include "game/rest_2b_callees.h"
 #include "game/scenario_harness.h"
 #include "game/shoulder_glyphs.h"

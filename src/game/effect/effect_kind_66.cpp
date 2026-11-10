@@ -9,7 +9,6 @@
 #include "game/effect/effect_kind_66_callees.h"
 #include "game/effect_2f.h"
 #include "game/effect_2f_callees.h"
-#include "game/effect_2g.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
 #include "game/labels.h"

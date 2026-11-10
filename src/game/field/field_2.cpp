@@ -13,7 +13,6 @@
 #include "common/asm_name.h"
 #include "game/area_data_reload.h"
 #include "game/battle_e6_callees.h"
-#include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/boss_harness.h"
 #include "game/cheats.h"

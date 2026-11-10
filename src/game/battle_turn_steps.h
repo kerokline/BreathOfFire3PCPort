@@ -7,7 +7,6 @@
 
 #include <cstdint>
 
-void BattleTurnSteps_Inject();
 
 namespace battle_turn_steps {
 extern std::uint8_t g_extra_round_clear;   // defined in battle_turn_steps.cpp (source-layout B0: promoted for a moved reader)
