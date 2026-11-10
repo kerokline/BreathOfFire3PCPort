@@ -1386,6 +1386,23 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
     MoveCursor(::bof3::Img(Window19_addr), keys, 0xB, 9);
 }
 
+// original 0x451160 (0x64ED50[3]; PSX 0x800A3294): the overwrite prompt: line 0x62; the
+// repeat keys of 0xA000; cancel, or confirm on answer 1: sound 0x106, a step
+// back; confirm on 0: sound 0x104, the next step; else a repeat key flips the
+// answer (0x904B74 ^= 1); the hand at 0xD5 + 0x22 * answer (the dword), 0x18.
+//
+// As the original has it: the hand reads the dword at 0x904B74 (0x4511F2)
+// where every writer stores a word (0x451042, 0x4511EA, 0x431C70); the
+// PlayStation (US 0x800A632C, JP 0x800A332C) reads the answer as a u16. The
+// level-up notice's other reader (0x431C77) masks its dword with 0xFFFF, so
+// this is the only one that can see the halfword 0x904B76.
+//
+// DIVERGENCE DIV-0162: 1 through PatchBytes("StoreAskWord") in
+// BattleE5_Inject, after the self-test. The hand then reads the word, as the
+// PlayStation; the two differ only when 0x904B76 is not 0, which no
+// instruction of the exe names (D338).
+namespace battle_e5 { std::uint8_t g_store_ask_word = 0; }
+
 extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     ShowLine(Line(0x62));
     const U keys = Repeat(0xA000);
@@ -2968,6 +2985,15 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
 // (File_LoadDone 0x801636F0), the PC's loads are synchronous, so every wait
 // loop's first question is answered "done".
 extern "C" int __cdecl File_LoadDone(void) { return 1; }
+
+void DragonCmdFromBattleE5_Inject() {
+    {
+        // DIV-0162: after the self-test, which compared Capcom's dword read.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("StoreAskWord", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
+        bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
+    }
+}
 
 void DragonCmd_Inject() {
     BOF3_INJECT(Battle_StatusResistRate);

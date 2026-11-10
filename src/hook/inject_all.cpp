@@ -1981,6 +1981,7 @@ void InjectAll() {
                                 // calls re-aimed at the boss harness's recorders, the Dragon run's six step tables
                                 // swapped for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    DragonCmdFromBattleE5_Inject();
     if (bof3::WantsShadow("battle_e6")) battle_e6::SelfTest();          // round 12 group BE6 (the transformation, the gene cost, BattleFx_Dispatch slots 15,
                                 // 16, 18, the stat rebuild, the member roll, the AP pop-up, the Field_Slots debts,
                                 // BMAGIC's four map cells; 0x451480..0x4552F5, 0x4CEB40..0x4CF4A3): its clones' calls
