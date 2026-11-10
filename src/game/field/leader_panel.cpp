@@ -1275,7 +1275,8 @@ extern "C" void __cdecl LeaderPanel_S4Count(void) {
     const unsigned count = (g_fish_count_high << 8) | S()[9];
     SizeRow(PickedKind("LeaderPanel_S4Count"), count, 0);
     unsigned char* const p = Picked("LeaderPanel_S4Count");
-    if (static_cast<std::uint16_t>(count) == Word(p + 0x9C)) {
+    unsigned char* const s = S();   // read again after the draws, as the original does
+    if (static_cast<std::uint16_t>((g_fish_count_high << 8) | s[9]) == Word(p + 0x9C)) {
         if (Effect1e_Blink != 0) Sound(0x20D);
         Sound(0x102);
         S()[9] = 4;
