@@ -163,7 +163,9 @@ PC offsets within the record (the PlayStation's are 4 lower from `+0x09` on).
     layout `Fish_Kinds` `0x66A690 + 36 * kind + 0x1F`: one kind has an M that
     lets the size pass 255. The catch panel's count-up (`LeaderPanel_S4Count`)
     then never ends, which is D208's fishing case, listed there as latent.
-    Rare: a spawn at exactly M, then enough of the growth rolls.
+    Out of reach in practice: the size must spawn at exactly M (one value in
+    256), and the growth stops at the first even roll, so 16 odd rolls in a row
+    are wanted: about one spawn of that kind in 17 million. Not changed.
   - **Ours, changed:** a save with a bad button mapping stopped our build at
     the load; it loads with the reset buttons now (DIV-0133's amendment, on
     branch `fix/button-words-fallback`).
