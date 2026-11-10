@@ -172,6 +172,8 @@ extern "C" void __cdecl EffectKind9D_Run(void) {
     Dispatch("EffectKind9D_Run", AddressOf(EffectKind9D_States), EffectKind9D_States_count);
 }
 
+namespace effect_4b { std::uint32_t g_hologram_clear = 0; }   // DIV-0142's amendment; 1 through PatchBytes("SpriteCapture") in Effect4B_Inject
+
 // original 0x489D90 (state 0): nothing while Field_Request is 3 or 1. Else
 // the field object of +0xB: its +0x24 bit 3 set, its words +0x2E / +0x30 the
 // record's, its point +0x34.. the record's point; the colour +0x5D..+0x5F 0;
@@ -481,4 +483,9 @@ void EffectKind9d_Inject() {
     BOF3_INJECT(EffectKindA4_Brighten);
     BOF3_INJECT(EffectKindA4_Hold);
     BOF3_INJECT(EffectKindA4_MarkSprites);
+    {
+        // DIV-0142's amendment (issue #191): armed after the fuzz, which compares Capcom's start.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("SpriteCapture", Low32(&effect_4b::g_hologram_clear), was, is, 4);
+    }
 }
