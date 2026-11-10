@@ -8,6 +8,7 @@
 #pragma once
 
 void MsgBox_Inject();
+void MsgBox_ArmAfterBinds();
 
 // DIV-0140's self-test (text_draw.cpp, ButtonText_Arm): MsgBox_Step run over
 // `msg` until `glyphs` characters are drawn, from a box at (0x10, 0x20), every

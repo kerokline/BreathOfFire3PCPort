@@ -2257,8 +2257,8 @@ void BattleActionFromBattleActions_Inject() {
         if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
             bof3::Fatal("BOF3X_UNLEARNED_BLUE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
         battle_actions::g_unlearned_blue = v[0] == '1';
-        if (battle_actions::g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
-            bof3::Fatal("BOF3X_UNLEARNED_BLUE=1 needs BattleAction_AbilityCheck ours, and it is disabled");
+        // its check that BattleAction_AbilityCheck is ours: in BattleAction_Inject,
+        // after the bind it tests
         if (battle_actions::g_unlearned_blue) bof3::Log("DIV-0179    an enemy's skill the party can still learn has its name in blue");
     }
 }
@@ -2300,6 +2300,8 @@ void BattleAction_Inject() {
     BOF3_INJECT(BattleAction_Kind3Wait);
     BOF3_INJECT(BattleAction_AbilityStep);
     BOF3_INJECT(BattleAction_AbilityCheck);
+    if (battle_actions::g_unlearned_blue && !bof3::IsEnabled(bof3::addr::BattleAction_AbilityCheck))
+        bof3::Fatal("BOF3X_UNLEARNED_BLUE=1 needs BattleAction_AbilityCheck ours, and it is disabled");
     BOF3_INJECT(BattleAction_AbilityCommit);
     BOF3_INJECT(BattleAction_PickRandomAbility);
     BOF3_INJECT(BattleAction_AbilityStart);

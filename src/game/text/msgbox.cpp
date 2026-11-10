@@ -761,6 +761,11 @@ void MsgBox_Inject() {
                          Low32(&g_effect_space_skips), &was, &is, 1);
         bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
     }
+}
+
+// After TextMsgBoxFromMsgbox_Inject, which binds MsgBox_Step and MsgBox_StatePrint: IsEnabled answers "not ours"
+// for a function no Inject has named yet.
+void MsgBox_ArmAfterBinds() {
     // The reading row needs the walk and the printer both ours.
     ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
     // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.

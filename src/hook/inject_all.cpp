@@ -1036,6 +1036,7 @@ void InjectAll() {
     MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
                                 // dispatch table's immediates too: order does not matter
     TextMsgBoxFromMsgbox_Inject();
+    MsgBox_ArmAfterBinds();     // the reading row and the faster text ask IsEnabled of what the line above binds
     WindowTask_Inject();        // every call of its clones is re-aimed at a recorder and every
                                 // stack-built table re-aimed in the copy, so order does not matter
     SpritePose_Inject();        // every call of its clones re-aimed at a recorder or at another of its

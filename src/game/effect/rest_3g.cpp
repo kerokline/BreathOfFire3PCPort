@@ -137,8 +137,8 @@ void Rest3G_Inject() {
     bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt.v, &kWideYFloat, 4);
     bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt.v, &kNarrowYFloat, 4);
     if (bof3::WantsShadow("rest_3g")) rest_3g::SelfTest();
-    // DIV-0187 writes a boss's +0x8F here; Capcom's Battle_PlaceBossActor
-    // would clear it and the cheat would miss every boss.
-    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_PlaceBossActor))
-        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_PlaceBossActor ours, and it is disabled");
+    // DIV-0187's check that Battle_PlaceBossActor is ours: in Battle4FromRest3g_Inject
+    // (battle/battle_4.cpp), after the bind it tests.
+
+
 }
