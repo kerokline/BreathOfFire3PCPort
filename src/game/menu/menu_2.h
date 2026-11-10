@@ -3,3 +3,4 @@
 #pragma once
 
 void Menu2_Inject();
+void Menu2FromMenuWindows_Inject();

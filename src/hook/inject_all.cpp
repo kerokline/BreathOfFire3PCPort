@@ -1084,6 +1084,7 @@ void InjectAll() {
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
+    Menu2FromMenuWindows_Inject();
     TextMsgBoxFromMenuWindows_Inject();
     DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     WinMain_Inject();           // the window and the frame loop (DIV-0032..0034): no clones, order does not matter
