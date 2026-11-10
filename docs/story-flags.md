@@ -58,10 +58,10 @@ Read for genes 3 and 16 ([`chapter-08.md`](story-flags/chapter-08.md)):
   `0x1D`. No code of ours tests chapter 8's flag 4.
 - **Played by the owner, 2026-11-09**, from `tools/recipe_saves/fusionEarly.DAT`
   (their save before that scene with gene bit 16 set and nothing else changed):
-  the gene could be used in battle before the scene's fight, and the scene that
-  gives the genes played with no fault seen. So setting the bit alone grants the
-  gene, and the game's data scripts did not object on this path. Not reported:
-  the story after the scene.
+  the gene could be used in battle before the scene's fight, the scene that gives
+  the genes played with no fault seen, gene 3 arrived as normal, and the story
+  went on as normal afterwards. So setting the bit alone grants the gene, and the
+  game's data scripts did not object on this path.
 
 ## 2. How a chapter starts and ends
 
