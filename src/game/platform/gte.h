@@ -3,3 +3,4 @@
 #pragma once
 
 void Gte_Inject();
+void GteFromPsxGte_Inject();

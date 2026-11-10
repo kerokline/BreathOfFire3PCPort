@@ -983,6 +983,7 @@ void InjectAll() {
     GfxVramOps_Inject();
     Gfx_Inject();
     GfxFilter_Inject();
+    D3dFromGfxFilter_Inject();
     Cheats_Inject();            // DIV-0045 / DIV-0046, BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL: nothing when unset
     PspCode_Inject();           // DIV-0108: BOF3X_PSP, or the cache's base_policy; before the battle modules
     MenuFrame_Inject();
@@ -1009,6 +1010,7 @@ void InjectAll() {
     PsxGteTransform_Inject();   // likewise
     PsxGpu_Inject();
     PsxGte_Inject();
+    GteFromPsxGte_Inject();
     PsxGteFloat_Inject();
     FieldFrame_Inject();        // every call of its clones re-aimed, the handler table swapped: order does not matter
     Sprite2_Inject();
@@ -1044,6 +1046,7 @@ void InjectAll() {
     Scena16_Inject();
     ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
                                 // re-aimed in the copy, the mode table swapped: order does not matter
+    BattleMenuWinFromModeFlow_Inject();
     TransitionFromModeFlow_Inject();
     TitleFromModeFlow_Inject();
     AreaDataReload_Inject();    // DIV-0182: a copy of two areas' .data, taken before any scene: before the
@@ -1064,6 +1067,7 @@ void InjectAll() {
                                 // clones, the surfaces, viewport and material fakes: order does not matter
     TexPage_Inject();           // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper and converter copies, DirectDraw a fake: order does not matter
+    TexFromTexPage_Inject();
     if (bof3::WantsShadow("tex_cells")) tex_cells::SelfTest();          // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper copies, DirectDraw and the device fakes: order does not matter
     Tex_Inject();
@@ -2742,6 +2746,7 @@ void InjectAll() {
                                 // Direct3D handlers, POLY_FT3's two helpers, D3d_SetAlphaModulate, D3d_AfterDraw,
                                 // Gfx_StoreImage; Gfx_DrawOTag reaches them by the addresses they had; its clones' calls
                                 // re-aimed at its own recorders; before FishingText_Arm
+    D3dFromD3dRest_Inject();
     D3d_Inject();
     ModeRest_Inject();          // platform round step 2, group PM (GameMode_Handlers 3..6 and the steps of modes 3 and
                                 // 5, 0x495BB0..0x496226, and Sound_MusicPlaying 0x587C20): its clones' calls re-aimed

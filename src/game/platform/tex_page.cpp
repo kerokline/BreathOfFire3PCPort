@@ -31,7 +31,7 @@
 
 namespace tex_page {
 
-std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOpaque") in TexPage_Inject
+// g_direct_opaque (DIV-0159) is in text/tex.cpp, beside Tex_Convert16, which reads it.
 
 namespace {
 
@@ -66,29 +66,4 @@ using namespace tex_page;
 
 void TexPage_Inject() {
     if (bof3::WantsShadow("tex_page")) tex_page::SelfTest();
-    {
-        // DIV-0159: armed after the fuzz, which compares Capcom's rule.
-        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        const bool direct = bof3::PatchBytes(
-            "DirectOpaque", Low32(&g_direct_opaque), was, is, 4);
-        bof3::Log("DIV-0159    a direct-colour page's texels are opaque but for 0, as Gfx_ConvertRow's are (on unless "
-                  "the line above says OFF)");
-        // DIV-0160: the textures carry bit 15 - armed after the gfx_clut and
-        // tex_page fuzzes, and only with DIV-0159: without it a direct-colour
-        // texel has alpha clear on a colour, which DIV-0160 reads as drawn.
-        if (direct) {
-            const bool texels = bof3::PatchBytes(
-                "StpTexels", Low32(&render::g_stp_texels), was, is, 4);
-            bof3::Log("DIV-0160    the textures carry the PlayStation's bit 15 (alpha clear on a colour), under our "
-                      "backend (on unless the line above says OFF)");
-            if (texels) {
-                bof3::PatchBytes("StpBlend",
-                                 Low32(&render::g_stp_blend), was, is, 4);
-                bof3::Log("DIV-0160    a semi-transparent primitive blends only its bit-15 texels, the others opaque "
-                          "(on unless the line above says OFF)");
-            }
-        } else {
-            bof3::Log("DIV-0160    off: it needs DIV-0159 (DirectOpaque)");
-        }
-    }
 }

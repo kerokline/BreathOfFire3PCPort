@@ -44,8 +44,8 @@ const mode_tasks::Callees kOriginals = {
     Field_ModeDispatch, Field_Frame,
     Field_WaitTransition, Music_FadeOut, Music_FadeOutStop,
 };
-}  namespace mode_tasks { Callees g = kOriginals; }
-
+}  // namespace
+// mode_tasks::g, the callee seam, is in core/title.cpp, the file of the group's lowest function.
 namespace {
 
 // --- BOF3X_SHADOW=mode_tasks: a differential fuzz, once at start-up --------

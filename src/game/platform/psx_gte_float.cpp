@@ -41,9 +41,6 @@ void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
 
 using RampFn = long (__cdecl*)(long);
 using PerspectiveFn = void (__cdecl*)(float*, float*, long*);
-}  namespace psx_gte_float { RampFn g_ramp_clone = nullptr; }
-namespace psx_gte_float { PerspectiveFn g_perspective_clone = nullptr; }
-namespace {
 
 // --- the same switch, once at start-up: a differential fuzz -----------------------
 // One round: randomise the globals these read and a scratch area, run one

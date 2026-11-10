@@ -126,7 +126,7 @@ TexCacheEntry* Table() { return reinterpret_cast<TexCacheEntry*>(Gfx_TexCache); 
 // What this cannot see is the ORDER of Releases - only which entries went.
 
 using Original = void (__cdecl*)(const short*, int);
-}  namespace gfx_texcache { Original g_original_clone = nullptr; }  namespace {
+
 
 // --- the same switch, once at start-up: a differential fuzz ---------------------
 // The attract sequence only ever calls with mode 0 and never makes the second

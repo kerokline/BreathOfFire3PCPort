@@ -4,3 +4,4 @@
 
 void BattleMenuWin_Inject();
 void BattleMenuWinFromBattleE7_Inject();
+void BattleMenuWinFromModeFlow_Inject();

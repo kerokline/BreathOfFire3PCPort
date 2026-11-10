@@ -36,7 +36,6 @@ static_assert(sizeof(PixelFormat) == sizeof(unsigned long) * Gfx_PixelFormat_cou
 std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x); }
 
 }  // namespace
-namespace gfx_clut { bool g_stp_test = false; }   // the self-test's: DIV-0160's rule without the backend
 // --- BOF3X_SHADOW: a start-up differential fuzz against clones -----------------
 // (docs/SCAFFOLDING.md section 2). The DLL is injected before the game has run:
 // the shadow, the row table and the pixel format are all still zero, and the
