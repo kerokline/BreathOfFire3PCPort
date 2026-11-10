@@ -1714,6 +1714,22 @@ extern "C" void __cdecl Title_Task(void) {
     }
 }
 
+// title_states's gTitleStates, moved here from title_states.cpp (docs/source-layout-round.md 5): the
+// table the title's state handlers call through; its initialiser's constants copied, the same text.
+namespace {
+
+constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
+
+const title_states::CalleesTitleStates kOriginalsTitleStates = {
+    Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
+    Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
+    Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
+    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
+};
+
+}  // namespace
+namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
+
 // original 0x462200: Title_States entry 0 (PSX 0x801D0C90). Loads the title's
 // DAT, then starts the backdrop's fade-in and the title music.
 //
@@ -2046,6 +2062,8 @@ extern "C" void __cdecl Title_DrawLogo(void) {
     mode_tasks::g.set_c(-6, 0x1C, flag_a, static_cast<unsigned char>(Title_LogoShadeA));
 }
 
+namespace title_states { bool g_psp_title = false; }
+
 // original 0x462820: the logo's first set (PSX 0x801D12CC): sprite 1 through
 // OT slot 1, sprites 8 and 9 through slot 2, each semi-transparent by `flag`
 // and shaded `shade`; then, once the backdrop is gone and the logo shown,
@@ -2226,6 +2244,8 @@ void TitleFromRest4f_Inject() {
 }
 
 void TitleFromTitleStates_Inject() {
+    title_states::g_psp_title = psp_code::PspBase();
+    if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

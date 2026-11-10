@@ -29,15 +29,15 @@ constexpr ::bof3::image::Va kPlayClock{0x9040C8};      // four bytes zeroed star
 constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
 constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
 
-}  namespace title_states { bool g_psp_title = false; }
-namespace {
+
+
 const title_states::CalleesTitleStates kOriginalsTitleStates = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
     Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
-}  namespace title_states { CalleesTitleStates gTitleStates = kOriginalsTitleStates; }
+}  // namespace
 //
 //
 //
@@ -511,6 +511,4 @@ void TitleStates_Inject() {
         }
         SelfTest(clones);
     }
-    title_states::g_psp_title = psp_code::PspBase();
-    if (title_states::g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
 }
