@@ -5802,7 +5802,11 @@ E1E's §10, E3A's §6). Kind 0x45's segment hang is D233's.
 - E1E L2: `LeaderPanel_S4Count` `0x529AE0` compares the byte `+9` with the
   picked record's word `+0x9C`: at 0x100 or more the step never ends;
   `LeaderPanel_S4Best` `0x5298F0` compares the word with a byte best and stores
-  its low byte. What ours does here the doc does not say.
+  its low byte. **Reach established 2026-11-10** (the save-block map): by
+  `Fish_Spawn`'s growth a kind whose top size is 232 or more can pass 255, and
+  the PC's fish table has one such kind; it needs a spawn at exactly the top
+  size and 16 odd rolls in a row. **Changed by DIV-0209:** the count reaches
+  the word and the record keeps 255.
 - E2F: `EffectKind51_DrawColumn` `0x47C870` - 65 angles and a byte row counter:
   a half-height above 0x20 reads past `EffectKind51_Angles`, one above 0x80
   never ends; the kind's states keep it within 0..0x20.
