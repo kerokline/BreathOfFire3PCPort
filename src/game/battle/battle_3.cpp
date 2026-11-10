@@ -1159,6 +1159,22 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
     battle_window_draw::g.commit(1, 0x48);
 }
 
+// original 0x444C40 (PSX 0x801DA048): cell `cell` of the battle's 16 x 8 strip -
+// draw mode page (0x3C0, 0) under abr 1; an SPRT of 16 x 8 at (u16 x, u16 y),
+// u = cell << 4 as a byte, v 0xD8, CLUT word 0x7800, shade 0x80.
+//
+// As the original has it: x and y are taken unsigned (`and 0xFFFF`, then
+// `fild`), where the other helpers here sign-extend - a coordinate below 0
+// lands at 65,536 less it. The PlayStation stores the halfwords, where the two
+// readings are the same (US 0x801DA078; on the JP disc the tail at 0x801DA048
+// stores x and y with `sh` into the SPRT's signed vertex halfwords +8, +0xA).
+//
+// DIVERGENCE DIV-0161: 1 through PatchBytes("BattleDrawSigned") in
+// BattleWindowDraw_Inject, after the self-test. x and y are then read as the
+// PlayStation stores them, signed halfwords, so a coordinate below 0 clips at
+// the screen's left or top edge (D336).
+namespace battle_window_draw { std::uint8_t g_draw_signed = 0; }
+
 extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     const unsigned page = battle_window_draw::g.get_tpage(0, 1, 0x3C0, 0);
     battle_window_draw::g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
@@ -2392,6 +2408,15 @@ extern "C" void __cdecl BattleTarget_Dispatch(void) { Dispatch(BattleTarget_Step
 extern "C" void __cdecl BattleTarget_ShowPrompt(void) {
     battle_actor_copies::g.set_message(0, 0);
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
+}
+
+void Battle3FromBattleWindowDraw_Inject() {
+    {
+        // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleDrawSigned", Low32(&battle_window_draw::g_draw_signed), &was, &is, 1);
+        bof3::Log("DIV-0161    the battle strip cell takes its x and y signed, as the PlayStation (on unless the line above says OFF)");
+    }
 }
 
 void Battle3_Inject() {

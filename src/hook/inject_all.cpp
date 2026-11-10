@@ -1100,6 +1100,7 @@ void InjectAll() {
                                 // does not matter (nothing before it patches bytes inside its six)
     BattleWindowDraw_Inject();  // every call of its clones re-aimed at a recorder and no byte of its bodies
                                 // patched by any module: order does not matter (none of it reaches a cull)
+    Battle3FromBattleWindowDraw_Inject();
     BattleWindows_Inject();     // every call of its clones re-aimed at a recorder, its state table, window-kind
                                 // handlers and switch table moved in the copies: order does not matter
     if (bof3::WantsShadow("battle_flow")) battle_flow::SelfTest();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
