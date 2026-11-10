@@ -6623,6 +6623,7 @@ pc	name	kind	unit	old_path	old_first	old_def	old_last	new_path	base
 0x56FBD0	DrawItemPool_Alloc	func	tu_56e6c0	src/game/draw_pool.cpp	149	154	160	src/game/field/area_map.cpp	d3e6abb3
 0x56FC70	DrawItemPool_Release	func	tu_56e6c0	src/game/draw_pool.cpp	162	168	173	src/game/field/area_map.cpp	d3e6abb3
 0x56FC00	DrawItemPool_ReleaseCell	func	tu_56e6c0	src/game/draw_pool.cpp	175	183	198	src/game/field/area_map.cpp	d3e6abb3
+	frame_callees::g	seam		src/game/effect/frame_callees.cpp	50	50	50	src/game/field/field_2.cpp	fa270ef5
 		file		src/game/effect_1a.cpp	1	1	256	src/game/effect/effect_1a.cpp	b29e27f3
 	U	copied		src/game/effect_1a.cpp	52	52	52	src/game/effect/effect_kind_09.cpp	d3e6abb3
 	U	copied		src/game/effect_1a.cpp	52	52	52	src/game/effect/effect_kind_0f.cpp	d3e6abb3

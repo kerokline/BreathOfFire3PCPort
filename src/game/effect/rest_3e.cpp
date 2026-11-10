@@ -246,9 +246,7 @@ bool Plan(const Shape baked[kRows], const std::uint16_t wanted[kRows], Row out[k
     return true;
 }
 
-// DIVERGENCE: DIV-0137 - 1 after this module's self-test (PatchBytes
-// "DockLegend", BOF3X_ORIGINAL=DockLegend for the page as it is).
-}  }  namespace rest_3e::dock { unsigned char g_on = 0; }  namespace { namespace dock {
+}  }  namespace { namespace dock {
 
 // The self-test (BOF3X_SHADOW=rest_3e, after the fuzz): the rule on shapes
 // drawn here by rule - no page's texels are copied - at every place in the
@@ -394,10 +392,4 @@ void Rest3E_Inject() {
         rest_3e::SelfTest();
         dock::SelfTest();
     }
-    // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
-    // fuzz above, which compares Capcom's one quad).
-    static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("DockLegend", Low32(&rest_3e::dock::g_on), &was, &is, 1);
-    bof3::Log("DockLegend the dock's legend shows the buttons the Config has its three tests on: %s",
-              rest_3e::dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
 }

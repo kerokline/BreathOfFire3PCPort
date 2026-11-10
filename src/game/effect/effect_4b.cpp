@@ -79,7 +79,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-}  namespace effect_4b { std::uint32_t g_hologram_clear = 0; }  namespace {   // DIV-0142's amendment; 1 through PatchBytes("SpriteCapture") in Effect4B_Inject
+}  namespace {
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
@@ -166,14 +166,4 @@ unsigned char* Member(unsigned m, const char* who) {
 
 void Effect4B_Inject() {
     if (bof3::WantsShadow("effect_4b")) effect_4b::SelfTest();
-    {
-        // DIV-0142's amendment (issue #191): armed after the fuzz, which compares Capcom's start.
-        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        bof3::PatchBytes("SpriteCapture", Low32(&effect_4b::g_hologram_clear), was, is, 4);
-    }
-    // DIV-0188: with the switch on, the well's losing state must be ours -
-    // left as Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), a loss would stand and
-    // the cheat would be silently half off.
-    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::EffectKind8C_Fail))
-        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind8C_Fail ours, and it is disabled");
 }

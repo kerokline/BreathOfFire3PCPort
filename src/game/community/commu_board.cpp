@@ -811,6 +811,10 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
     SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x54, hy, 0);
 }
 
+// DIVERGENCE DIV-0200 (faerie_name.h): 1 through PatchBytes("FaerieNameEnd")
+// in Rest4B_Inject, after the self-test.
+namespace rest_4b { std::uint8_t g_faerie_name_end = 0; }
+
 // original 0x458830: a record's card at (x, y): two boxes (Menu_DrawBox: the
 // shadow at +4 0x81, the card 0x80, in the window style), the frame
 // (CommuBoard_DrawCardFrame), the record's 5-byte name (0x9048F0 + 5 * record)
@@ -956,6 +960,21 @@ extern "C" void __cdecl CommuBoard_DrawBar(int x, int y, int w, unsigned row, un
     p[0x36] = db;
     SH_CALL(Gfx_CommitPrim)(1, 0x44);
 }
+
+// DIVERGENCE DIV-0027 (amended 2026-10-26, issue 152): the faerie board's
+// "Do you accept?  Yes No" (help 0x3D) marks its answer with a flashing tile,
+// not a hand, and the original places the tile at 0xD0 + 36 * the answer,
+// 0x19 + 12 * the answer wide - the Chinese line's words. The English line the
+// overlay carries puts Yes at 245 and No at 277, so the tile on Yes sat in the
+// gap before it and on No covered Yes (the owner's screenshots). The US disc's
+// twin (COMMU01.EMI, 0x801D3038, read 2026-10-26) draws the same line at the
+// same place and its tile at 0xF4 + 32 * the answer, 0x19 - 8 * the answer
+// wide: one unit left of each word, one wider than it. With the flag on
+// (Rest4B_Inject, a Latin overlay, after the self-test, which compares the
+// original's draw) the line is re-spaced and the tile measured from it as the
+// other prompts' hands are (yes_no_layout.cpp's YesNoLayout_Tail): the
+// word's pen place less one, the word's width plus one, in any language.
+unsigned char g_board_yes_no_layout = 0;
 
 // original 0x458D70: the board's panel. The title box (0x14, 0x12) 0x118 by
 // 0x13 and its notched outline; the help line's message (0x675F7A, unless
@@ -2951,6 +2970,19 @@ void CommuBoardFromRest4b_Inject() {
     BOF3_INJECT(CommuBoard_PlaceRecord);
     BOF3_INJECT(CommuBoard_SlotHelp);
     BOF3_INJECT(CommuBoard_PickHelp);
+    {
+        // DIV-0200, after the self-test (which compares Capcom's draw).
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_4b::g_faerie_name_end)), &was, &is, 1);
+    }
+    // DIVERGENCE DIV-0027 (amended 2026-10-26): after the self-test, which
+    // compares the original's panel; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BoardYesNoLayout", Low32(&g_board_yes_no_layout),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the faerie board's \"Do you accept?\": answers re-spaced, the tile over each");
+    }
 }
 
 void CommuBoardFromRest4c_Inject() {

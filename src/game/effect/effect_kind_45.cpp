@@ -449,4 +449,9 @@ void EffectKind45_Inject() {
     BOF3_INJECT(EffectKind45_DrawSegment);
     BOF3_INJECT(EffectKind45_Plot);
     BOF3_INJECT(EffectKind45_FillRect);
+    // DIV-0188 guards the lighthouse gauge's judgement in EffectKind45_Tune
+    // and _Aim; Capcom's would judge as before and the cheat would be silently
+    // half off.
+    if (Cheats_MinigameNoFail() && (!bof3::IsEnabled(bof3::addr::EffectKind45_Tune) || !bof3::IsEnabled(bof3::addr::EffectKind45_Aim)))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind45_Tune and EffectKind45_Aim ours, and one is disabled");
 }

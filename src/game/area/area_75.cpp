@@ -957,4 +957,9 @@ void Area75_Inject() {
     BOF3_INJECT(Area75_DrawCounters);
     BOF3_INJECT(Area75_DrawWindow);
     BOF3_INJECT(Area76_StepDisarmTail5);
+    // DIV-0188 guards the rope pull's judgement here; Capcom's
+    // Area75_PhasePlay would judge as before and the cheat would be silently
+    // half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Area75_PhasePlay))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs Area75_PhasePlay ours, and it is disabled");
 }

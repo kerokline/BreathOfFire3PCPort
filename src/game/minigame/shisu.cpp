@@ -1022,4 +1022,9 @@ void Shisu_Inject() {
     BOF3_INJECT(MasterFigure_Settle);
     BOF3_INJECT(MasterFigure_Hold);
     BOF3_INJECT(MasterFigure_TurnOn);
+    // DIV-0188: with the switch on, the shisu's ranking must be ours - left as
+    // Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), the score would rank as before
+    // and the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Shisu_Result))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs Shisu_Result ours, and it is disabled");
 }
