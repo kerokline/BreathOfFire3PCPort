@@ -983,6 +983,7 @@ void InjectAll() {
     GfxVramOps_Inject();
     Gfx_Inject();
     GfxFilter_Inject();
+    D3dFromGfxFilter_Inject();
     Cheats_Inject();            // DIV-0045 / DIV-0046, BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL: nothing when unset
     PspCode_Inject();           // DIV-0108: BOF3X_PSP, or the cache's base_policy; before the battle modules
     MenuFrame_Inject();
