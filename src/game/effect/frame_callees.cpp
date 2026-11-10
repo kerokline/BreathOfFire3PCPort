@@ -44,7 +44,11 @@ QuotRem Idiv(std::int32_t dividend, std::int32_t divisor) {
 
 const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Field_RunSlot))),   // R4A's (round 14): by address, the value unchanged
                             Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
-}  namespace frame_callees { CalleesFrameCallees g = kOriginals; }
+}  // namespace
+
+namespace frame_callees {
+CalleesFrameCallees g = kOriginals;
+}  // namespace frame_callees
 
 namespace {
 
