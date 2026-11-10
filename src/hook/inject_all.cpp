@@ -1139,6 +1139,7 @@ void InjectAll() {
                                 // dispatch tables' entries swapped for recorders: order does not matter
     BattleActions_Inject();     // round 8 group CB: every call of its clones re-aimed at a recorder, the seven
                                 // step tables' entries swapped in .data: order does not matter
+    BattleActionFromBattleActions_Inject();
     if (bof3::WantsShadow("battle_actor_copies")) battle_actor_copies::SelfTest(); // round 8 group CH: every call of its clones re-aimed at a recorder and its five
                                 // .data tables' entries swapped for recorders: order does not matter
     BattlePhases_Inject();      // round 8 group CA: every call of its clones re-aimed at a recorder, its two

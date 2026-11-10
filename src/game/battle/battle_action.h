@@ -4,3 +4,4 @@
 
 void BattleAction_Inject();
 void BattleActionFromBattleTurnSteps_Inject();
+void BattleActionFromBattleActions_Inject();
