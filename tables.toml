@@ -32,6 +32,11 @@
 #     in_image        why this table stays in the image and is not a file of
 #                     base/exe/tables/ (docs/image-layer-round.md 2, M1): its
 #                     bytes are the engine's to fill, not a disc's
+#     holes           why some bytes of this table are another owner's on some
+#                     build (a name the language layer writes, bytes no rule
+#                     places): the table is still a file of count * stride
+#                     bytes, and those bytes stay the image's and are zero in
+#                     the file (tools/exe_tables.py carve_tables)
 #     pc_twin         instead of `symbol`, for a disc table with no PC
 #                     counterpart: why there is none
 #     count_status, count_cite   how sure the count is, where no reader
@@ -3243,3 +3248,13 @@ file = "BOOT.BIN"
 addr = 0x002EFBE8
 status = "evidence"
 cite = "tables.py locate 2026-11-11: exe_maps/psp-eu.tsv; 204 of 204 bytes equal"
+
+[[table]]
+key = "char_defaults"
+symbol = "Char_DefaultRecords"
+group = "progression"
+what = "a character's record as a new game starts it: a 9-byte name, then level, EXP, stats, equipment and abilities"
+index = "roster index 0..6, then the record NewGame_InitCharacters copies into the whelp's slot"
+count = 8
+stride = 164
+holes = "the first record's name is the language layer's on every disc (recipes/exe-gaps.tsv, 0x64B390..0x64B397), and on the European PSP disc three more records have name bytes no rule places; no disc holds the table whole, so it has no [[table.psx]] row and its other bytes come through the map"

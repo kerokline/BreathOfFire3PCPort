@@ -515,38 +515,49 @@ Each of the 38 ranges was read against the install's image map
 | **Padding** after a table of an odd length, or before one at an odd address | 43 in 28 ranges | each run is the last one to three bytes of a mapped run that ends on a 4-byte boundary, or the first of one that starts off it; the original has zeros there (once, two bytes of its own leftovers) and the patched disc has other leftovers | not the hack's numbers. Still laid as raw ranges on a disc-built image, where no reader reads them; not carried on a PC-built one |
 | `Ability_EffectIndex`: the effect handler of an ability | 9 in 2 ranges | `symbols.toml`: one byte an ability id, read by `Effect_ApplyResult` | **catalogued** as `ability_effect_index` (228 by 1; the count is the abilities table's, a hypothesis) |
 | The masters' ability grants | 2 in 2 ranges: two abilities change places in one master's list | `MasterGrant_Step1Member` 0x5873C0 reads six (levels, ability) pairs at `0x6642A4 + 12 * master`; the data had no name | **named** `Master_AbilityGrants` and **catalogued** as `master_abilities` (17 by 12; 17 by the extent, a hypothesis) |
-| `Char_DefaultRecords`: the records a new game starts each character with | 10 in 7 ranges | `NewGame_InitCharacters` 0x437820 | **not catalogued: it cannot be a table file as the files are today** (below) |
+| `Char_DefaultRecords`: the records a new game starts each character with | 10 in 7 ranges | `NewGame_InitCharacters` 0x437820 | **catalogued** as `char_defaults` (8 by 164), **a table file with holes** (below) |
 
-**Why the starting records are not a file.** A table file is one run of
-`count * stride` bytes and the image has no other owner inside it. The first
-seven bytes of the first record are the hero's default name, which the
-language layer owns (`recipes/exe-gaps.tsv`: a `gap`, answered `layer`, on
-every build), and on the European PSP disc three more records have name bytes
-no rule places. A file over them is refused by the engine at start (`the
-accepted row "layer" 0x64B390..0x64B397 is on no gap range of the image`) -
-tried, and taken back out. Carrying these ten bytes on a PC install needs one
-of: a table file with holes for a name the language owns (an engine and format
-change of the image-layer round's, DIV-0212 amended), or choice (b) of call 6.
-Until then: carried on a disc-built install as raw ranges, not carried on a
-PC-built one, counted in the build's line and in `report.toml`.
+**The starting records: a table file with holes.** A table file was one run
+of `count * stride` bytes with no other owner inside it. The first seven bytes
+of the first record are the hero's default name, which the language layer
+owns (`recipes/exe-gaps.tsv`: a `gap`, answered `layer`, on every build), and
+on the European PSP disc three more records have name bytes no rule places. A
+plain file over them is refused by the engine at start (`the accepted row
+"layer" 0x64B390..0x64B397 is on no gap range of the image`) - tried first.
+So, at the owner's word, a table may say `holes` in `tables.toml`
+(DIV-0212 as amended):
 
-**Both catalogued tables are found on all seven discs** (`tables.py locate`,
+- `tools/exe_tables.py` `carve_tables` cuts out only the table's runs of a
+  disc's or the exe's bytes, one `file` range of `data.toml` each; a range of
+  another class inside the table stays as it is, and the file holds zero
+  there. The file is still the whole table.
+- The engine (`src/hook/exe_image.cpp` `LayBaseTable`) lays each `file`
+  range's own part of the file; a range must lie inside its table's row.
+- No disc holds this table whole, so it has no `[[table.psx]]` row: its bytes
+  reach the image through the map, as before, and are then cut into the file.
+- On a PC-built image the table is one range with no hole. On the US disc it
+  is one range from the eighth byte; on the European PSP disc six.
+
+**The other two tables are found on all seven discs** (`tables.py locate`,
 the rows in `tables.toml`), so every install kind gets them as files.
 
 **Checked.**
 
 | Check | Result |
 |---|---|
-| `tables.py check` | 33 tables, 125 fields, 0 errors |
-| The image, built again from the US disc and from `BOF3.exe` (`exe_tables.py build`) | 29 table files each (27 before); **the image as mapped is the same bytes as before** on both (the hash data.toml and the manifest record does not change) |
+| `tables.py check` | 34 tables, 125 fields, 0 errors |
+| The image, built again from each of the seven discs and from `BOF3.exe` (`exe_tables.py build`, then `verify`) | 30 table files each (27 before); **every image as mapped is the same bytes as before** (the hash data.toml and the manifest record does not change); `verify`: 0 problems on each |
+| The engine's table-files self-test | a table with a hole laid in two ranges, the hole left as the image has it; a range that starts before its table refused |
 | `data_diff.py run` on the seven discs, then `check` | `recipes/data-diff.tsv` written again: both new tables compared on every build, 0 holes, 0 differences; 618 rows as before |
 | `importer.py check`, `exe_own.py check`, `exe_scan.py --accepted`, `data_census.py`, `reloc_census.py`, `gen_symbols.py`, the ledger checks | pass |
-| The mod rebuilt on the US disc-only install and on the PC-based one | **2,419 bytes of 9 tables as cells on both** (2,408 of 7 before); the other 53 bytes are raw ranges on the disc-only install and not carried on the PC-based one (43 padding, 10 the starting records) |
-| The exe host's self-test, disc-only (started by the launcher, no `BOF3X_OPT`) and on the PC game folder | exit 0, no Fatal; `9 tables, 1220 cells, 2419 bytes ... 2419 of them differ` on both; the disc-only install's mapped `.data` hash with the mod is the one of 5c and 5d (the same bytes, more of them from table files) |
+| The mod rebuilt on the US disc-only install and on the PC-based one | **2,429 bytes of 10 tables as cells on both** (2,408 of 7 before): every table number the hack changes. The other 43 bytes, the padding, are raw ranges on the disc-only install and not carried on the PC-based one |
+| The exe host's self-test, disc-only (started by the launcher, no `BOF3X_OPT`) and on the PC game folder | exit 0, no Fatal; `10 tables, 1227 cells, 2429 bytes ... 2429 of them differ` on both; the disc-only install's mapped `.data` hash with the mod is the one of 5c and 5d (the same bytes, more of them from table files) |
 
-An install built before this commit has 27 table files and its mod layer the
-7-table form: both still load (nothing reads a table the cache does not have);
-the two new tables come with the next build of the install.
+An install built before these commits has 27 table files and its mod layer
+the 7-table form: both still load (nothing reads a table the cache does not
+have); the three new tables come with the next build of the install. An
+install built after them needs this engine: an older `bof3x.exe` refuses a
+disc-built image whose `char_defaults` range is not its whole row.
 
 **Seen in play (the owner, 2026-11-11, the disc-only play copy):** the hack's
 text is there, and a save made with the original's numbers showed a character
@@ -625,12 +636,12 @@ The calls as they were put:
    one rule for every install and makes the bytes readable.
 
    **The owner, 2026-11-11: "lets catalog those tables so we can fill them
-   in". As run (5e):** two tables catalogued, one that cannot be yet, and 43
-   of the 64 bytes are not table numbers at all.
+   in"; then, for the one that could not be a file, "Let's have a table to
+   fill the hole". As run (5e):** three tables catalogued, the third as a
+   table file with holes; 43 of the 64 bytes are not table numbers at all.
 
 Calls 1, 2 and 4 gate group D alone; call 3 gates group C; call 5 gates one
-chunk; call 6 is answered, with one table left (5e). Groups A, B and E needed
-none of them.
+chunk; call 6 is answered (5e). Groups A, B and E needed none of them.
 
 ## 8. Not in this round
 

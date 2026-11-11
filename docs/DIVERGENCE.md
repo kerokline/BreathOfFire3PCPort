@@ -15600,6 +15600,25 @@ designed in rather than bolted on.
 - **Rationale:** a table is then one file of the install on every install
   kind, and a layer or a mod lays over the same thing everywhere. The exe is
   a source the importer reads, as a disc is.
+- **Amended 2026-11-11 (the disc-patch round's call 6,
+  [`disc-patch-round.md`](disc-patch-round.md) 5e): a table file with
+  holes.** A catalogued table that says `holes` in `tables.toml` is still one
+  file of `count * stride` bytes, but the bytes of it that another owner has
+  on a build stay the image's: `tools/exe_tables.py` cuts out only its runs
+  of a disc's or the exe's bytes, one `file` range each, and the engine lays
+  each range's own part of the file (`LayBaseTable`). The first table of the
+  kind is `char_defaults` (`Char_DefaultRecords`, the records a new game
+  starts each character with): the first record's name is the language
+  layer's on every disc, and three more records' names are unplaced on the
+  European PSP disc. On a PC-built image the table has no hole. **What the
+  game reads does not change**: every image as mapped hashes as before, on
+  the seven discs and from `BOF3.exe`. Two more tables became files the plain
+  way (`ability_effect_index`, `master_abilities`). Verification: the
+  engine's table-files self-test (a table with a hole laid in two ranges, a
+  range that starts before its table refused); `exe_tables.py build` and
+  `verify` for the seven discs and `BOF3.exe`, each image hash the one
+  recorded before; the exe host's self-test on a US disc-only install (30
+  table files) and on a PC game folder.
 - **Also in the PSX version?** No: the PlayStation loads its tables from the
   disc's files, which is the shape this moves toward.
 - **Verification:** the exe host's self-test on a PC game folder with a cache

@@ -172,6 +172,12 @@ cache\base\exe\tables\tables.toml  per file: key, address, count, stride, sha256
   generated binding, as every other address the engine uses; the copy in the
   cache's `tables.toml` is for the check that both agree.
 
+**Since 2026-11-11 (DIV-0212 as amended; [`disc-patch-round.md`](disc-patch-round.md)
+5e): a table with holes.** A table that says `holes` in `tables.toml` has one
+`file` range for each run of it that is a disc's or the exe's bytes; the bytes
+between are another range's (a name the language layer writes) and are zero
+in the file. `char_defaults` is the first. The catalogue has 30 file tables.
+
 ### 3.2 In a layer
 
 ```

@@ -1889,6 +1889,7 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
 
 TABLES_DIR, TABLES_TOML = "tables", "tables.toml"
 FILE_HOWS = ("exe", "table", "widen")      # the classes a file table's bytes may have before it is cut out
+HOLE_FILE_HOWS = FILE_HOWS + ("map", "place")   # and of a table with `holes`: a disc's bytes by the map too
 RANGE_LINE = re.compile(r'^  \[0x([0-9A-F]+), 0x([0-9A-F]+), "([^"]*)", "([^"]*)"\],$')
 
 
@@ -1912,32 +1913,64 @@ def file_tables():
     return out
 
 
+def hole_tables():
+    """The keys of the catalogued tables that say `holes` in tables.toml: a
+    table some of whose bytes another owner has on some build (a name the
+    language layer writes, bytes no rule places)."""
+    cat, _, _ = tables.load()
+    return {t["key"] for t in cat["table"] if "holes" in t}
+
+
 def carve_tables(rows, img, bid):
     """The image's range rows [(lo, hi, how, from)] and bytes with every file
-    table cut out: (rows with one `file` row a table, the image zero there,
+    table cut out: (rows with the table's `file` rows, the image zero there,
     [(key, lo, hi, count, stride, bytes, what it was)]). A table on a class
     that is not a disc's or the exe's own bytes is refused: it must say
-    `in_image` in tables.toml, with the reason."""
+    `in_image` in tables.toml, with the reason.
+
+    A table with `holes` (DIV-0212 as amended 2026-11-11): its bytes of a
+    disc's or the exe's (HOLE_FILE_HOWS) are cut out, as one `file` row for
+    each run of them; a range of any other class inside it stays the image's,
+    row and bytes, and the file holds zero there. The file is still the whole
+    table, `count * stride` bytes."""
     out, cut, carved = list(rows), bytearray(img), []
+    holes = hole_tables()
     for key, lo, hi, count, stride in file_tables():
-        was, keep = [], []
+        was, keep, parts = [], [], []
+        hows = HOLE_FILE_HOWS if key in holes else FILE_HOWS
         for r in out:
             if r[1] <= lo or r[0] >= hi:
                 keep.append(r)
                 continue
-            if r[2] not in FILE_HOWS:
-                fail("table %s 0x%06X..0x%06X lies on a `%s` range (0x%06X..0x%06X) of the %s image: not bytes a "
-                     "file can hold. Give it `in_image` in tables.toml, with why." % (key, lo, hi, r[2], r[0], r[1], bid))
+            if r[2] not in hows:
+                if key not in holes:
+                    fail("table %s 0x%06X..0x%06X lies on a `%s` range (0x%06X..0x%06X) of the %s image: not bytes a "
+                         "file can hold. Give it `in_image` in tables.toml, with why." % (key, lo, hi, r[2], r[0], r[1], bid))
+                if r[0] < lo or r[1] > hi:
+                    fail("table %s 0x%06X..0x%06X: the `%s` range 0x%06X..0x%06X of the %s image crosses its edge; a "
+                         "hole lies inside its table" % (key, lo, hi, r[2], r[0], r[1], bid))
+                keep.append(r)                   # a hole: the image's, as it is
+                continue
             if not was:
                 was.append("%s %s" % (r[2], r[3]))
             if r[0] < lo:
                 keep.append((r[0], lo, r[2], r[3]))
             if r[1] > hi:
                 keep.append((hi, r[1], r[2], r[3]))
-        keep.append((lo, hi, "file", key))
+            a, b = max(r[0], lo), min(r[1], hi)
+            if parts and parts[-1][1] == a:
+                parts[-1][1] = b
+            else:
+                parts.append([a, b])
+        if not parts:
+            fail("table %s 0x%06X..0x%06X: no byte of it is a disc's or the exe's in the %s image" % (key, lo, hi, bid))
+        body = bytearray(hi - lo)
+        for a, b in parts:
+            keep.append((a, b, "file", key))
+            body[a - lo:b - lo] = img[a - DATA_LO:b - DATA_LO]
+            cut[a - DATA_LO:b - DATA_LO] = bytes(b - a)
         out = sorted(keep)
-        carved.append((key, lo, hi, count, stride, bytes(img[lo - DATA_LO:hi - DATA_LO]), "; ".join(was)))
-        cut[lo - DATA_LO:hi - DATA_LO] = bytes(hi - lo)
+        carved.append((key, lo, hi, count, stride, bytes(body), "; ".join(was)))
     return out, bytes(cut), carved
 
 
@@ -1984,18 +2017,18 @@ def read_image(d, errs=None):
         if os.path.exists(os.path.join(d, TABLES_DIR, TABLES_TOML)):
             with open(os.path.join(d, TABLES_DIR, TABLES_TOML), "rb") as f:
                 rows = {r[0]: r for r in tomllib.load(f)["tables"]}
-        for lo, hi, key in files:
+        for lo, hi, key in files:           # a table with holes has a `file` range for each run it owns
             r = rows.get(key)
             path = os.path.join(d, TABLES_DIR, key + ".bin")
-            if r is None or (r[1], r[2]) != (lo, hi) or not os.path.exists(path):
+            if r is None or not (r[1] <= lo < hi <= r[2]) or not os.path.exists(path):
                 bad("base/exe/tables/: no file and row for %s at 0x%06X..0x%06X" % (key, lo, hi))
                 continue
             with open(path, "rb") as f:
                 body = f.read()
-            if len(body) != hi - lo or sha(body) != r[5]:
+            if len(body) != r[2] - r[1] or sha(body) != r[5]:
                 bad("base/exe/tables/%s.bin: not the file tables.toml records" % key)
                 continue
-            img[lo - DATA_LO:hi - DATA_LO] = body
+            img[lo - DATA_LO:hi - DATA_LO] = body[lo - r[1]:hi - r[1]]
         whole = sha(bytes(img))
         if whole != meta.get("image_sha256"):
             bad("base/exe/: the image with its table files hashes %s, data.toml says %s" % (whole, meta.get("image_sha256")))
