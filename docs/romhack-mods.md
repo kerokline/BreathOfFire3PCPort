@@ -3,7 +3,8 @@
 **Status:** IN PROGRESS 2026-11-10 (issue 216). Measured: one hack applied to
 a scratch copy of the owner's US disc and read edit by edit. Built: the patch
 reader (`tools/vcdiff.py`), the census (`tools/disc_patch_census.py`) and the
-author on the Mods tab (section 5). Not built: any way for the hack to reach
+author on the Mods tab (section 5). Measured 2026-11-11: the disc-patch
+round's five questions (section 8). Not built: any way for the hack to reach
 the game. The design it lands on is IDEAS I58 (EMI patch mods); this note says
 what I58 gets right, what it did not know, and the order of work.
 
@@ -58,7 +59,7 @@ everything after it:
 | `0x80010000` | per-area script and text block | 66 (79) | 291 | about 25,900; 66 of the 79 copies resized | yes (kept) - through the language layer |
 | `0x8001A000` | shared text pool of BATTLE / BOSS / AFLDKWA / FIRST | 2 (44) | 157 | about 3,600, resized | yes (kept) - language layer |
 | `0x800E4000` | per-area enemy and formation table | 49 (51) | 212 | about 780 | yes (kept), `widen` transform |
-| `0x0E001000` kind 3, `0x00000002` kind 7 | two images (areas 63, 115), one kind-7 section (area 154) | 3 | - | 1,413 / 295 / 14,041 raw | the images yes; kind 7 dropped |
+| `0x0E001000` kind 3, `0x00000002` kind 7 | two images (areas 63, 115), one kind-7 section (area 154) | 3 | - | 1,413 / 295 / 14,041 raw | the images yes; the kind-7 section too, as the area's sound bank (section 8, M4: the census says `dropped`, which is wrong for a bank) |
 | `0x80096800` | BATTLE section 15, the battle overlay's data and code (42 copies, all the same) | 1 (42) | 335 | about 1,450, **8 bytes longer**, a 12-byte block moved | no (dropped) |
 | `0x80195800` | `GAME.EMI` section 0: the content tables | 1 | 129 | about 5,900, 872 deleted and 468 inserted inside it, same size | no (no PC container) |
 | `0x801D0C00` | menu and battle overlays (BATTLE 3, SHOP, SHISU, STATUS, SISYOU, COMMU, START, areas 30 / 89 / 129) | 13 (57) | 279 | about 2,500, some resized | no (dropped) |
@@ -211,8 +212,116 @@ like this one is whole only after 6.
 
 ## 7. Open
 
-- Whether `loc_build.py` takes the patched text and script blocks as they are.
-- Area 154's kind-7 section: what it is.
+- Area 154's sound bank: whether its change is meant (section 8, M4).
+- `disc_patch_census.py` calls a bank's sections `dropped`; the PC keeps them
+  as a kind-2 chunk. To correct when the builder is written.
 - The 84 functions read against the readme: which feature each edit serves.
   "Probably" in section 4 item 4 is a reading of the readme against the
   sections touched, not a disassembly.
+
+## 8. The disc-patch round's group M (2026-11-11)
+
+The five questions of [`disc-patch-round.md`](disc-patch-round.md) section 1,
+run on `main` `8d2d987d`. Scratch root `D:\bof3x-runs\dp1111`: a psx-us
+disc-only cache with en-US built that day (`cache_orig`), the scripts and
+their logs. The patched track is the one of section 1. No byte of the game is
+in this section.
+
+**M1. `loc_build.py` and the patched disc.** `loc_build.py all --disc <patched
+track> --cache <a copy of cache_orig> --lang en-US`:
+
+- It stops at `names: the character records differ from the PC's past their
+  names`. `convert_char_names` finds the default names in `START.EMI` by the
+  numbers that follow each name and checks them against the image; the hack
+  changed those numbers (the census's `Char_DefaultRecords` runs).
+- Before that it lists 51 `SKIP ... enemy records: ... numbers differ` (41) or
+  `the headers differ` (10): an area whose enemy table is not the base's keeps
+  no names from the disc. Not a stop.
+- With every such check answered yes by a wrapper, it stops at the next table
+  it finds the same way: `labels: formations 0 holds a code this language does
+  not have`, after `formation pairs` did not match. A waived landmark reads
+  the wrong bytes, so waiving is not a route.
+- **On a hybrid disc it builds, exit 0, no SKIP.** The hybrid is the original
+  disc's file tree, with a section of the patched disc put in where the two
+  differ and the section's load address is `0x80010000`, `0x8001A000` or
+  `0x0E001000` (`loc_hybrid.py`, a wrapper round `psx_disc.Disc.read` that
+  rebuilds the EMI). It took 79 + 44 + 2 sections, the census's copies exactly.
+
+The hybrid's `loc\en-US\dat\` against the original's, chunk by chunk (254
+files each):
+
+| Chunk | Differ | Of them resized |
+|---|---|---|
+| kind 0, tag 0 (an area's script and text block) | 78, in 78 files | 66 |
+| kind 0, tag `0x4000` (the shared text pool) | 44, in 44 files | 44 |
+| kind 19, tag 0 (DIV-0203's corrected copy, areas 191 and 192) | 2 | 2 |
+| kind 1, tag `0x0E001000` (area 115's page) | 1 | 0 |
+
+125 chunks in 123 files, and nothing else. 79 patched script sections give 78
+changed blocks: one area's edit does not reach the PC's block on a disc-only
+install (it does on a PC-based one, M5: area 7).
+
+**M2. A mod's chunk over a language's.** Read, not run
+(`src/game/battle/dat_load.cpp`, `dragon_cmd.cpp` `LoadDatFile`): the shipped
+file or the cache's, then the language layer, then each `BOF3X_OPT` layer in
+the list's order; every chunk goes to the handler of its kind, and kind 0
+copies the payload to its tag. So the last layer walked wins a tag, and a mod
+layer holds whole chunks. A kind-19 chunk is taken in any layer and must
+follow the kind-0 block of its tag in the same file. A language's enemy names
+are separate kind-0 chunks of 12 bytes at `0xC2000 + 0x48 + 0x8C * record`,
+over the base's table at `0xC2000`: a mod layer that carries a whole table
+must carry the names after it. The live proof is the round's acceptance (a
+text change read back from memory).
+
+**M3. The patch's literal bytes** (`m3_add.py`: the instruction stream of all
+53 windows walked, every ADD and RUN placed in the patched track and, for user
+data, in the patched disc's file tree and against the census's edit runs):
+
+| | Bytes |
+|---|---|
+| ADD, in a sector's address and mode bytes | 302,896 |
+| ADD, in a sector's error-correction and detection bytes, and 64 of subheader | 228,214 |
+| ADD, user data, inside one of the author's edit runs | 27,607 |
+| ADD, user data, outside every file (directories, path tables) | 6,687 |
+| ADD, user data, **the game's bytes the encoder found no copy for** | **1,981** (1,648 in changed files outside every edit run, 333 in files that only moved) |
+| RUN (one byte repeated), 3,111 runs | 4,129,805, all but 462 in user data: fill |
+
+567,385 ADD bytes in 193,685 runs. The answer for rule 1 is 1,981, not zero;
+an edit run also holds the game's own bytes where the author changed some of a
+record and the diff is greedy.
+
+**M4. The three sections that are not text or tables.**
+
+- **Area 154, section 2 (kind 7, load address 2)** is the sample body of the
+  area's sound bank: sections 0, 1 and 2 are the bank's header (kind 6), cue
+  table (8) and samples (7), which `vag.py` turns into the PC's kind-2 chunk.
+  The header and the cue table are the same on both discs. The body differs
+  in one run, `0x17000` to `0x1A7FF`: seven whole sectors, none of them a
+  sector of the original disc. They lie in samples 10 to 12 of 16. The bank
+  built from the patched sections is 469,616 bytes; from the original,
+  631,064. `importer.py`'s bank path returns nothing for a bank that is not
+  the recipe's, which is why the experiment of section 3 said the sound built
+  unchanged: it took the recipe's bank from elsewhere. Whether the author
+  meant a sound change is not known; the readme names none.
+- **Area 63's image** (kind 3 on the disc) is a base chunk on the PC, copied
+  (`psx-us:copy`): the patched section is the chunk. The change is in three
+  rows of the page.
+- **Area 115's image** is not a base chunk: the PC's is a page with words
+  painted on, a language's, and `loc_build.py` builds en-US's from the disc.
+  Through the hybrid it comes out as one changed kind-1 chunk (M1's table).
+
+**M5. A PC-based install.** `loc_build.py all --disc ... --game <a copy of the
+PC's BOF3.exe and DAT>`, the way `importer.py build_languages` runs it, with
+the original disc and with the hybrid (text sections only):
+
+| Chunk | Differ |
+|---|---|
+| kind 0, tag 0 | 79, in 79 files (the disc-only 78 and area 7) |
+| kind 0, tag `0x4000` | 44 |
+| kind 19, tag 0 | 2 |
+
+The hybrid's run keeps 497 text slots as the PC shipped them where the
+original's keeps 496: one slot the hack changed falls back to the PC's own
+text on this install kind. Which one is not looked up. The enemy tables were
+not built for this install kind here; they are base chunks from the disc
+either way.

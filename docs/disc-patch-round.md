@@ -1,11 +1,19 @@
 # The disc-patch round: a romhack's kept-section changes as a mod
 
-**Status:** STAGED 2026-11-10 (issue 216; nothing of the round built). Step 4
-of [`romhack-mods.md`](romhack-mods.md) section 6, staged for another session.
-Read that note first: it holds the measurements this plan stands on. Branch
-`mods/romhack-216` holds the three things the round starts from:
-`tools/vcdiff.py`, `tools/disc_patch_census.py`, and `author` / `url` /
-`credit` in `mod.toml` and on the Mods tab.
+**Status:** IN PROGRESS (issue 216). Staged 2026-11-10; staged again
+2026-11-11 against `main` `8d2d987d`, after the image-layer round merged (PR
+224), and group M run the same day: its five measurements are in
+[`romhack-mods.md`](romhack-mods.md) section 8 and they change sections 1 and 3
+below. Nothing of groups A to E is built. Step 4 of romhack-mods.md section 6.
+Read that note first: it holds the measurements this plan stands on. `main`
+holds the three things the round starts from: `tools/vcdiff.py`,
+`tools/disc_patch_census.py`, and `author` / `url` / `credit` in `mod.toml` and
+on the Mods tab.
+
+**This round is the gate for the image-layer round's group D** (a romhack's
+edits to the rows of a table, [`image-layer-round.md`](image-layer-round.md) 5):
+that group is written into this round's builder, so it is group E here and
+starts when group B is done.
 
 The owner (2026-11-09, issue 216): a process that turns a romhack into a mod
 package, "exactly the kind of mod people would be used to"; the first one is
@@ -22,7 +30,9 @@ the chunks that come out different: that set is the mod's layer,
 `cache\opt\<layer>\dat\`, listed in the manifest as the mod's. Nothing about a
 section's format is learned again, and the importer's hash gates are not
 touched, because the importer never sees the patched disc - the mod's step
-does. This round carries only what the PC holds as DAT chunks (662 of this
+does. The text builder does not see the patched disc whole either: it is given
+the original disc with the patched sections put in only where the PC keeps the
+section (group M, measurement 1). This round carries only what the PC holds as DAT chunks (662 of this
 hack's 1,551 edit runs: scripts, text, enemy tables, images). Everything else
 is counted and reported to the player, never dropped in silence.
 
@@ -39,7 +49,17 @@ Settled by the measurements (romhack-mods.md 1 to 3):
   longer). So the round does not go through `importer.py build`.
 - 52 base chunks differ: 51 enemy tables (`widen`) and area 63's image.
 
-Not measured, and first in the round (group M):
+### 1a. Group M as run (2026-11-11; romhack-mods.md 8 has the numbers)
+
+| | Asked | Answer | What it changes |
+|---|---|---|---|
+| 1 | Does `loc_build.py` take the patched disc? | **No, and yes.** The patched disc whole is refused twice: the builder finds its label tables in the overlays by Capcom's numbers around them, and the hack changed those numbers (the character records, the formation pairs). Given the original disc with the patched sections put in at `0x80010000`, `0x8001A000` and `0x0E001000` only, it builds with no refusal: 78 area script blocks, 44 pool chunks, 2 corrected copies (kind 19, DIV-0203) and 1 area page differ from the original's layer, and nothing else | step 4 below builds from a **hybrid disc**; the label and name edits in the overlays are group E's |
+| 2 | An `opt/` chunk over a `loc/` chunk of the same tag | **The last one walked wins**: `LoadDatFile` walks the file, then the language layer, then each `BOF3X_OPT` layer in order, and a kind-0 chunk is copied to its tag whoever sent it (`dat_load.cpp`, read; not run). So the layer holds whole chunks. One consequence: a language's enemy names are 12-byte chunks laid over the base's table, so the mod's whole table, walked later, blanks them | step 3 writes the names again after each enemy table |
+| 3 | What the patch's ADD data is | 567,385 literal bytes: 531,110 are sector addresses and error-correction bytes, 27,607 the author's edits, 6,687 the disc's directory, **1,981 Capcom's bytes** carried as they are. 4,129,805 more bytes are 3,111 runs of one repeated byte (fill) | owner call 2: not zero, so the file stays out of the repository |
+| 4 | Area 154's kind-7 section; the two images | The kind-7 section is **the sample body of the area's sound bank**, which the PC keeps as a kind-2 chunk: the census's `dropped` is wrong for it. Seven whole sectors differ and the bank built from it is 161,448 bytes shorter. Area 63's image is a base chunk, copied; area 115's is a language page, built by `loc_build.py` | owner call 5 (new): is the bank change meant |
+| 5 | A PC-based install | The same text set, one more area block (79), and one more text slot kept as the PC shipped it (497 against 496) | step 4 runs the way the install's language layer was built; the layer is built per install, not shipped |
+
+The five as they were asked:
 
 1. **Does `loc_build.py` take the patched disc?** `loc_build.py all --disc
    <patched> --cache <a copy of a psx-us cache> --lang en-US`, then its
@@ -104,7 +124,10 @@ result_sha256 = "830f07f8..."      # of the patched data track
 general first).
 
 1. Find the player's disc of `build` (`<home>\sources.toml`). None held: the
-   mod's state is `needs`, with the disc named, as a language is today.
+   mod's state is `needs`, with the disc named, as a language is today. A
+   source may be a `.zip` (the owner's install holds its discs that way): the
+   importer's own unpacking under `<home>\cache\tmp` is used, and the patch
+   reads the data track from there.
 2. `vcdiff.apply_file` into a temporary folder under the home (443 MiB; say so
    before, remove after, also on failure). Check `result_sha256`.
 3. **Base chunks.** For every recipe row the build is a source of, get the
@@ -112,11 +135,28 @@ general first).
    transform (`importer.DiscSource.get`, `TRANSFORMS`); where they differ, the
    patched payload is a chunk of the layer. The experiment's wrapper
    (`build_as_us2.py`, romhack-mods.md 3) is this loop with a counter.
-4. **Language chunks.** Run `loc_build.py` on the patched disc the way the
+   - **An enemy table is followed by its names.** The layer is walked after
+     the language layer, so a whole table from it blanks the names the
+     language laid (1a, row 2). After each enemy table the layer holds the
+     language's name chunks again, made by `loc_build.convert_enemy_names`
+     from the patched table and the patched disc, so a name the hack changed
+     is the hack's.
+   - **A sound bank** does not go through `TRANSFORMS` (`vag.importer_source`,
+     which returns nothing for a bank that is not the recipe's). The step
+     builds each bank from both discs and compares. A changed bank is carried
+     or reported by owner call 5; until that call it is reported.
+4. **Language chunks.** Not the patched disc: `loc_build.py` refuses it (1a,
+   row 1). The step gives the builder a **hybrid disc**: the original disc's
+   files, with a section of the patched disc put in where the two differ and
+   the section's load address is one the PC keeps as text or as a page
+   (`0x80010000`, `0x8001A000`, `0x0E001000`; the list is in the tool, with the
+   reason for each). `loc_build.py` gets one new input for it (a disc object
+   in place of a path; no change to what it builds). It runs the way the
    install's language layer was built (disc-only, or against the PC's files),
    into a scratch folder; every chunk that differs from the install's
-   `loc\<tag>\` chunk goes into the layer. The original's side is already in
-   the cache, so this is one run of about 80 seconds.
+   `loc\<tag>\` chunk goes into the layer, a kind-19 corrected copy with the
+   kind-0 block it follows. The original's side is already in the cache, so
+   this is one run of about 85 seconds.
 5. Write `opt\mod-<id>\dat\`, list every chunk in the manifest as
    `mod:<id>@<version>:<build>` (mods.md 4's rows).
 6. **The report.** Run the census's comparison (`disc_patch_census.py` as a
@@ -135,7 +175,9 @@ the section and the builder's sentence. No partial layer (rule 4).
 ## 4. The launcher
 
 - **On and off.** A built `disc-patch` mod needs a switch. The reading-row
-  mod has the *Row above the text* box; this kind has nothing. Proposed: a
+  mod has the *Row above the text* box; this kind has nothing, and neither has
+  `table-edit` (the image-layer round: a table mod is on when it is built,
+  `ConfigModLayers`). One answer for both kinds. Proposed: a
   check box column on the Mods list for kinds that are simply on or off,
   written as `mods=<id>,<id>` in `bof3x.ini`, and the launcher adds
   `mod-<id>` to `BOF3X_OPT` after the `opt=` layers when the mod is built,
@@ -158,7 +200,19 @@ the section and the builder's sentence. No partial layer (rule 4).
 | **C** | The report (step 6) and the launcher (section 4) | the builder, `sources_dialog.cpp`, `config.cpp`, `dialog_test.py`, `config_tests.cpp` | `dialog_test.py` passes with a fake built `mod-` layer: ticked, unticked, greyed |
 | **D** | `make_mod.py definitive` and the release | `tools/make_mod.py`, `release.yml`, `THIRD_PARTY.md` | after owner calls 1 and 2 |
 
-A before B; C beside B; M before all of them; D last.
+| **E** | The image-layer round's group D: a changed dropped section's data runs placed through `exe_maps` onto table cells (`opt\mod-<id>\exe\tables.toml`) and raw ranges, the map translated where the hack moved bytes (romhack-mods.md 4 item 2); what does not place is refused by file, section, range and reason, and counted in the report | `tools/disc_patch_build.py`; `tools/exe_tables.py` read only, if it can be | the 240 data runs of the census each land in a cell, a raw range, or a named refusal; the mapped `.data` with the layer differs from the plain one in exactly those bytes |
+
+M is done. A before B; C beside B; E after B; D last.
+
+**Group E's first questions**, from group M: (1) the two landmarks that stopped
+`loc_build.py` (the character records and the formation pairs) are data runs E
+carries, so the same numbers are read by two builders - say which owns each;
+(2) a name the hack changed inside a dropped section (a new ability's name) is
+text, a language's, and a table cell cannot hold it (the image-layer round's
+call 4): it needs the hybrid disc to take that section with the landmark
+translated, not waived; (3) `base\exe` is in the table-file form now, so the
+scratch caches of 2026-11-10 are not this round's - `D:\bof3x-runs\dp1111`
+has fresh ones.
 
 ## 6. Acceptance
 
@@ -193,14 +247,29 @@ A before B; C beside B; M before all of them; D last.
    can sit under `data/mods/` with his permission recorded in
    `THIRD_PARTY.md`. Either way the permission (who, when, the condition) is
    written down before the first release that carries it.
-3. **The switch**: a check box on the Mods list (section 4), or something else.
+   **Measured 2026-11-11: not zero** (1,981 bytes of the game carried as
+   they are, 1a row 3). So by this rule the author's file is not committed.
+3. **The switch**: a check box on the Mods list (section 4), or something
+   else. It now decides for `table-edit` mods too.
 4. **Other languages.** The enemy tables are the same in every language; the
    script and text edits are English. Offer the neutral half over other text
    later, or keep the hack English-only as its author made it.
 
+5. **Area 154's sound bank** (new, 1a row 4). Seven whole sectors of the
+   bank's sample body differ on the patched disc and the readme names no
+   sound change. Three samples decode shorter and the bank loses 161,448
+   bytes. It may be meant, or a mark the author's disc tool left. Choices:
+   (a) do not carry a changed bank, report it, and ask the author; (b) carry
+   it as the disc has it. I recommend (a).
+
+Calls 1, 2 and 4 gate group D alone; call 3 gates group C; call 5 gates one
+chunk. Groups A, B and E need none of them.
+
 ## 8. Not in this round
 
-- The image layer and the translated map (step 5; 240 data runs).
+- (The image layer and the translated map, step 5's 240 data runs, were out
+  of this round as staged. The image layer exists since PR 224, so they are
+  group E.)
 - Any engine behaviour (step 6; 84 functions). No DIV entry is opened here.
 - Other patch formats (PPF, IPS, BPS) and other secondary compressors.
 - `make_mod.py emi-patch`, the tool that makes a patch from an edited EMI
@@ -216,8 +285,10 @@ and C land. `docs/DIVERGENCE.md` is read before either.
 
 | | |
 |---|---|
-| Branch | `mods/romhack-216` (worktree `C:\Users\kerok\bof3x-runs\rh216\wt`) |
-| Scratch root | `D:\bof3x-runs\romhack216`: `dl\` the author's archive unpacked; `out\de_track1.bin` the patched track; `out\census.tsv`; `cache_orig\` a psx-us disc-only cache with en-US (built 2026-11-10); `cache_hack\` the stopped experiment |
+| Branch | `disc-patch/round`, from `main` `8d2d987d` (worktree `C:\Users\kerok\bof3x-runs\dp1111\wt`). `mods/romhack-216` is merged |
+| This round's scratch root | `D:\bof3x-runs\dp1111`: `cache_orig\` a psx-us disc-only cache with en-US built by `main`'s tools (table files in `base\exe`); `cache_hack2\` the same with the hybrid's language layer; `pc_orig\`, `pc_hack\` the PC's files with each language layer; the scripts `m3_add.py` (measurement 3), `loc_hybrid.py` (the hybrid disc, as a wrapper), `loc_diff.py`; the logs |
+| The 2026-11-10 scratch root | `D:\bof3x-runs\romhack216`: `dl\` the author's archive unpacked; `out\de_track1.bin` the patched track; `out\census.tsv`; `cache_orig\` a psx-us disc-only cache with en-US (built 2026-11-10); `cache_hack\` the stopped experiment |
 | The original disc | `D:\bof3x-runs\discs\Breath of Fire III (USA).cue` |
 | The US function map | `D:\bof3x-runs\frost\map` (`--twins`) |
-| Experiment wrappers | `D:of3x-runsomhack216	oolsuild_as_us2.py` (importer build from the patched disc, the hash gate waived and counted: romhack-mods.md 3) |
+| Experiment wrappers | `D:\bof3x-runs\romhack216\tools\build_as_us2.py` (importer build from the patched disc, the hash gate waived and counted: romhack-mods.md 3) |
+omhack216	oolsuild_as_us2.py` (importer build from the patched disc, the hash gate waived and counted: romhack-mods.md 3) |

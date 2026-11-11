@@ -243,7 +243,7 @@ after [`disc-patch-round.md`](disc-patch-round.md)'s group B.
 | **A** | the loader: `tables.toml` + per-table files in a layer, `cells`, the conflict log, the `file` class, the self-test with synthetic tables (no game data) | `src/hook/exe_image.cpp`, `.h` | M |
 | **B** | the base: `exe_tables.py` writes `base\exe\tables\`, `data.bin` zero there; `psp_layers.py` writes `psp-tables` in the new form; `importer.py verify` knows both | `tools/exe_tables.py`, `tools/psp_layers.py`, `tools/importer.py`, `recipes/psp-layers.toml` | M; merges with A |
 | **C** | the mod kind: `mods.py` kind `table-edit` and its builder, `tables.py export`, `make_mod.py table-edit`, `mods.py selftest` with a synthetic table | `tools/mods.py`, `tools/table_edit_build.py` (new), `tools/tables.py`, `tools/make_mod.py`, `docs/mods.md` | A and B |
-| **D** | conversion: a changed dropped section placed through `exe_maps` onto table cells and raw ranges, with a refusal that names file, section, range and reason for what does not place | `tools/disc_patch_build.py` (the disc-patch round's) | the disc-patch round's group B; may be a later round |
+| **D** | conversion: a changed dropped section placed through `exe_maps` onto table cells and raw ranges, with a refusal that names file, section, range and reason for what does not place | `tools/disc_patch_build.py` (the disc-patch round's) | the disc-patch round's group B; may be a later round; staged there as its group E (2026-11-11) |
 
 A and B change what the exe host reads at start, so they merge together and
 are gated together (section 6). C touches no engine file.
