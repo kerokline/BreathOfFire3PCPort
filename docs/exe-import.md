@@ -49,6 +49,15 @@ and in `analysis/exe_import/`.
    records it in the manifest; `verify` checks it against `recipes/exe.toml`;
    `check` checks the recipe.
 
+> **Since 2026-11-11 (the image-layer round):** `data.bin` no longer holds the
+> 27 `tables.toml` tables that can be files. Each is
+> `base/exe/tables/<key>.bin`, its range in `data.toml` is class `file`, and
+> `data.toml`'s `image_sha256` (the hash `recipes/exe.toml` records) is of the
+> image with the files laid in; `sha256` is `data.bin`'s own. Every tool reads
+> the image through `exe_tables.read_image`, which lays them in; the engine
+> does the same (`src/hook/exe_image.cpp` `ComposeBase`).
+> [`image-layer-round.md`](image-layer-round.md) 3.1.
+
 ## 1. The format
 
 ```

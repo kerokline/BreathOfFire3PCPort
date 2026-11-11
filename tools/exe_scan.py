@@ -194,8 +194,7 @@ def main():
             cache = os.path.join(tmp, "cache")
             exe_tables.build_from(src, bid, cache)
             build, ranges = read_ranges(os.path.join(cache, "base", "exe", "data.toml"))
-            with open(os.path.join(cache, "base", "exe", "data.bin"), "rb") as f:
-                img = f.read()
+            _, img = exe_tables.read_image(os.path.join(cache, "base", "exe"))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
         total, by_sym = scan_one(pc, img, ranges, syms)

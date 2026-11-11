@@ -9002,6 +9002,30 @@ designed in rather than bolted on.
   over a disc-built image, a range on a class that must equal the PC's. The
   hosted build refuses the layer (its `.data` is Capcom's, the A/B and
   shadow reference).
+- **Amended 2026-11-11 (the image-layer round, groups A and B;
+  [`image-layer-round.md`](image-layer-round.md)):** the layer's form is one
+  file a table. `opt\psp-tables\exe\` holds `tables.toml`, `exp_table.bin`
+  and `consumables.bin` - each the whole table of the PSP-built image - and
+  the toml's `cells` name the bytes that are the layer's (every record, a
+  name field left out, as before); the exe host lays only those. The same
+  6,096 bytes are laid and the same 250 change. A `place.toml` without
+  `kind = "raw"` - the form above - is refused with a sentence that says to
+  rebuild the install; `place.toml` + `place.bin` with that line stays for
+  byte ranges outside every table, and nothing writes one yet. Any layer
+  `opt=` names may carry an `exe\` part in this form, and where two layers
+  write one byte with different values the later in `opt=`'s order wins,
+  with a line in the log (the owner, 2026-11-11). Only `psp-tables` is built
+  today, so no install's bytes change. Refused as before, and also: a table
+  file of another size or hash, a cell past its table, a table that is not
+  at the base's place. **The base's tables are files too:**
+  `tools/exe_tables.py` cuts 27 `tables.toml` tables (20,744 bytes) out of
+  `base\exe\data.bin` into `base\exe\tables\<key>.bin`, and the exe host
+  lays them back before anything reads the image (`ComposeBase`). The image
+  the engine maps is the same bytes: each of the eight builds' images, with
+  its table files laid in, hashes as `recipes/exe.toml` records it, and the
+  exe host's `.data as mapped` line is the same hash from an image written
+  whole and from one with table files, on every build (the round doc,
+  "A and B as run").
 - **Rationale:** the owner's data suite; the bytes are DIV-0104's.
 - **Also in the PSX version?** No: the PSP's changes.
 - **Verification:** `exe_cmp.py` (the layer laid as the exe host lays it,

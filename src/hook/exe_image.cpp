@@ -44,6 +44,8 @@ struct Image {
 // with each in a disc-built image, and whether the bytes must then equal the
 // PC's .data (the comparison when BOF3.exe is there too):
 //   map, place, table, widen       copied (a disc's numbers may differ: logged)
+//   file                           a tables.toml table: zero in data.bin, laid from tables\<key>.bin
+//                                  by ComposeBase before the copy; then as `table`
 //   exe                            copied; must equal the file's when it is there (only a pc-zh image has it)
 //   rebuilt, layout                copied; the PC's pointer by construction (must equal)
 //   own                            filled by ExeOwn_Fill after the copy (must equal)
@@ -62,7 +64,7 @@ struct Class {
 constexpr Class kClasses[] = {{"exe", true},     {"map", false},     {"place", false},   {"table", false},
                               {"widen", false},  {"rebuilt", true},  {"layout", true},   {"own", true},
                               {"keys", true},    {"none", true},     {"language", false}, {"unread", false},
-                              {"gap", false},    {"pointer", true}};
+                              {"gap", false},    {"pointer", true},  {"file", false}};
 
 const Class* ClassOf(const Range& r) {
     for (const Class& c : kClasses)
@@ -390,6 +392,121 @@ std::vector<unsigned char> ReadBin(const std::string& path, std::uint32_t size) 
     return out;
 }
 
+// --- The base's table files (docs/image-layer-round.md 3.1) ----------
+//
+// tools/exe_tables.py cuts every tables.toml table that can be a file out of
+// data.bin: the range is class `file`, zero in data.bin, `from` the table's
+// key, and the bytes are base\exe\tables\<key>.bin, one row each in
+// tables\tables.toml: ["key", 0xPC, 0xEND, count, stride, "sha256", "what it was"].
+// ComposeBase lays them back before anything else reads the image, so the
+// bytes the engine maps are the ones the image held whole.
+struct TableRow {
+    std::string key, sha256;
+    std::uint32_t lo, hi, count, stride;
+};
+
+bool ParseTableRows(const std::string& text, std::vector<TableRow>* out, std::string* why) {
+    out->clear();
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        const char* p = line.c_str();
+        while (*p == ' ') ++p;
+        unsigned a = 0, b = 0, c = 0, s = 0;
+        char key[128] = {}, h[128] = {};
+        if (std::sscanf(p, "[\"%127[^\"]\", 0x%x, 0x%x, %u, %u, \"%127[^\"]\"", key, &a, &b, &c, &s, h) != 6) continue;
+        if (b <= a || !c || !s || static_cast<std::uint64_t>(c) * s != b - a || std::strlen(h) != 64) {
+            *why = std::string("the row of table ") + key + " is not one tools/exe_tables.py wrote";
+            return false;
+        }
+        out->push_back({key, h, a, b, c, s});
+    }
+    if (out->empty()) {
+        *why = "no table rows";
+        return false;
+    }
+    return true;
+}
+
+// `body`, the file of `row`, laid at the image's `file` range `r` (`img` holds
+// va's byte at img[0]). False with `why`, laying nothing, unless the row is
+// the range's, the file the row's, and data.bin zero there.
+bool LayBaseTable(const TableRow& row, const std::vector<unsigned char>& body, const Range& r, unsigned char* img,
+                  std::uint32_t va, std::string* why) {
+    char msg[256];
+    if (row.lo != r.lo || row.hi != r.hi) {
+        std::snprintf(msg, sizeof msg, "tables.toml has %s at 0x%X..0x%X, data.toml's file range is 0x%X..0x%X",
+                      row.key.c_str(), (unsigned)row.lo, (unsigned)row.hi, (unsigned)r.lo, (unsigned)r.hi);
+        *why = msg;
+        return false;
+    }
+    if (body.size() != row.hi - row.lo) {
+        std::snprintf(msg, sizeof msg, "%s.bin holds %u bytes, the table %u", row.key.c_str(), (unsigned)body.size(),
+                      (unsigned)(row.hi - row.lo));
+        *why = msg;
+        return false;
+    }
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(body.data(), body.size(), hex) || hex != row.sha256) {
+        *why = row.key + ".bin is not the file tables.toml's sha256 names";
+        return false;
+    }
+    for (std::uint32_t a = r.lo; a < r.hi; ++a)
+        if (img[a - va]) {
+            std::snprintf(msg, sizeof msg, "data.bin is not zero at 0x%X, inside the file range of %s", (unsigned)a,
+                          row.key.c_str());
+            *why = msg;
+            return false;
+        }
+    std::memcpy(img + (r.lo - va), body.data(), body.size());
+    return true;
+}
+
+// The rows of the base ComposeBase last laid in ExeImage_Source: a layer's
+// table must be the same table at the same place.
+std::vector<TableRow> g_base_tables;
+
+// Every `file` range of `im` filled in `bin` from exe_dir's tables\. An image
+// written before the table files has no such range: nothing to do. Anything
+// missing or wrong is a Fatal that names the file.
+std::vector<TableRow> ComposeBase(const std::string& exe_dir, const Image& im, std::vector<unsigned char>& bin) {
+    std::vector<TableRow> rows;
+    std::uint32_t files = 0, bytes = 0;
+    for (const Range& r : im.ranges) files += r.how == "file";
+    if (!files) return rows;
+    const std::string dir = exe_dir + "tables\\";
+    std::string why;
+    if (!ParseTableRows(ReadWhole(dir + "tables.toml"), &rows, &why))
+        Fatal("BOF3X_EXEIMAGE: %stables.toml: %s. Rebuild the cache (tools/importer.py build).", dir.c_str(), why.c_str());
+    for (const Range& r : im.ranges) {
+        if (r.how != "file") continue;
+        const TableRow* row = nullptr;
+        for (const TableRow& t : rows)
+            if (t.key == r.from) row = &t;
+        if (!row || r.from.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789_") != std::string::npos)
+            Fatal("BOF3X_EXEIMAGE: %stables.toml has no row for the table \"%s\" that data.toml's range 0x%X..0x%X "
+                  "names. Rebuild the cache (tools/importer.py build).",
+                  dir.c_str(), r.from.c_str(), (unsigned)r.lo, (unsigned)r.hi);
+        const std::string path = dir + r.from + ".bin";
+        FILE* f = OpenUtf8(path);
+        if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s, a table of this install's game data. Rebuild the cache "
+                      "(tools/importer.py build).", path.c_str());
+        std::vector<unsigned char> body(r.hi - r.lo + 1);
+        body.resize(std::fread(body.data(), 1, body.size(), f));
+        std::fclose(f);
+        if (!LayBaseTable(*row, body, r, bin.data(), im.va, &why))
+            Fatal("BOF3X_EXEIMAGE: %s: %s. Rebuild the cache (tools/importer.py build).", path.c_str(), why.c_str());
+        bytes += r.hi - r.lo;
+    }
+    Log("BOF3X_EXEIMAGE: %u table files, %u bytes, laid into the image from %s (docs/image-layer-round.md)", (unsigned)files,
+        (unsigned)bytes, dir.c_str());
+    return rows;
+}
+
 // BOF3.exe's .data: (address, initialised size, virtual size) - its section
 // table's values (exe_layout.h), where this read the running image's header
 // before the exe host existed; the exe host checks them against the
@@ -412,7 +529,8 @@ void ExeImage_Check() {
     if (im.va != va || im.size != raw || im.bss_end != va + vsz)
         Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), the running .data 0x%X + 0x%X (to 0x%X)",
               (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)raw, (unsigned)(va + vsz));
-    const std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
+    std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
+    ComposeBase(exe_dir, im, bin);   // the table files, laid where data.bin leaves them out
     auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
 
     // .bss: zero-initialised by the loader, as state 3's engine must do itself.
@@ -424,7 +542,7 @@ void ExeImage_Check() {
     struct Count { const char* how; std::uint32_t equal, total; };
     Count by[] = {{"exe", 0, 0},     {"map", 0, 0},    {"place", 0, 0},    {"table", 0, 0},  {"widen", 0, 0},
                   {"rebuilt", 0, 0}, {"layout", 0, 0}, {"own", 0, 0},      {"keys", 0, 0},   {"none", 0, 0},
-                  {"language", 0, 0}, {"unread", 0, 0}, {"gap", 0, 0},     {"pointer", 0, 0}};
+                  {"language", 0, 0}, {"unread", 0, 0}, {"gap", 0, 0},     {"pointer", 0, 0}, {"file", 0, 0}};
     std::uint32_t covered = va;
     for (const Range& r : im.ranges) {
         if (r.lo != covered || r.hi <= r.lo || r.hi > va + raw)
@@ -483,7 +601,8 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
     }
     if (covered != va + size)
         Fatal("BOF3X_EXEIMAGE: data.toml's ranges end at 0x%X, not 0x%X", (unsigned)covered, (unsigned)(va + size));
-    const std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
+    std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
+    g_base_tables = ComposeBase(exe_dir, im, bin);   // the table files, laid where data.bin leaves them out
 
     if (im.build == "pc-zh") {
         std::memcpy(to, bin.data(), im.size);
@@ -572,7 +691,21 @@ ExeImageRange ExeImage_MappedRange(int i) {
     return {r.lo, r.hi, r.how.c_str(), r.from.c_str()};
 }
 
-// --- DIV-0111: the exe tables layer ----------------------------------------------
+// --- DIV-0111: a layer's part over .data --------------------------------
+//
+// A layer's exe\ directory holds two things, either or both
+// (docs/image-layer-round.md 3.2):
+//   tables.toml + <key>.bin   one whole file a tables.toml table the layer
+//                             changes, and `cells`, the byte runs of each that
+//                             are the layer's own; only those are laid
+//   place.toml + place.bin    byte ranges of .data outside every table, by
+//                             address, `kind = "raw"`. A place.toml without
+//                             that line is the form before the table files
+//                             (psp-tables as tools/psp_layers.py wrote it until
+//                             2026-11-11): refused, with the rebuild sentence.
+// Layers are laid in BOF3X_OPT's order; where two write one byte with
+// different values the later wins, and the exe host logs it (the owner,
+// 2026-11-11).
 namespace {
 
 struct OptRange {
@@ -580,16 +713,17 @@ struct OptRange {
     std::string what;
 };
 struct OptTables {
-    std::string build, file, sha256;
+    std::string build, file, sha256, kind;
     std::uint32_t bytes = 0;
     std::vector<OptRange> ranges;
 };
 
-// place.toml as tools/psp_layers.py build_exe writes it: `key = value` lines,
-// then one `[0x.., 0x.., "what"],` line a range. Only that shape; false with
-// `why` otherwise.
-bool ParseOptTables(const std::string& text, OptTables* out, std::string* why) {
+// place.toml: `key = value` lines, then one `[0x.., 0x.., "what"],` line a
+// range. Only that shape; false with `why` otherwise. `old_form` is set when
+// the file is whole but for the `kind = "raw"` line.
+bool ParseOptTables(const std::string& text, OptTables* out, std::string* why, bool* old_form = nullptr) {
     *out = OptTables{};
+    if (old_form) *old_form = false;
     std::size_t at = 0;
     while (at < text.size()) {
         std::size_t end = text.find('\n', at);
@@ -605,21 +739,75 @@ bool ParseOptTables(const std::string& text, OptTables* out, std::string* why) {
         else if (std::sscanf(p, "build = \"%127[^\"]\"", s) == 1) out->build = s;
         else if (std::sscanf(p, "file = \"%127[^\"]\"", s) == 1) out->file = s;
         else if (std::sscanf(p, "sha256 = \"%127[^\"]\"", s) == 1) out->sha256 = s;
+        else if (std::sscanf(p, "kind = \"%127[^\"]\"", s) == 1) out->kind = s;
         else if (std::sscanf(p, "bytes = %u", &a) == 1) out->bytes = a;
     }
     if (out->build.empty() || out->file != "place.bin" || out->sha256.size() != 64 || out->ranges.empty()) {
-        *why = "not a place.toml tools/psp_layers.py wrote (build, file = \"place.bin\", sha256, ranges)";
+        *why = "not a place.toml of byte ranges (build, kind = \"raw\", file = \"place.bin\", sha256, ranges)";
+        return false;
+    }
+    if (out->kind != "raw") {
+        if (old_form) *old_form = true;
+        *why = "a place.toml written before the table files (no kind = \"raw\"): its tables are now one file each";
         return false;
     }
     return true;
 }
 
-// The layer's ranges and bytes against .data [va, va + size), the mapped image
+// Who wrote each byte of .data among the layers so far (1-based, 0 nobody),
+// and what two layers disagreed on.
+struct Conflict {
+    std::string what;        // a table's key, or "ranges"
+    unsigned earlier, bytes; // the layer that lost (1-based), the bytes it lost
+};
+struct Laid {
+    std::vector<std::uint8_t> owner;
+    std::vector<Conflict> conflicts;
+    void Note(const std::string& what, unsigned earlier) {
+        for (Conflict& c : conflicts)
+            if (c.what == what && c.earlier == earlier) {
+                ++c.bytes;
+                return;
+            }
+        conflicts.push_back({what, earlier, 1});
+    }
+};
+
+// One byte of layer `index` (1-based) over .data; counted when it changes it.
+void Put(unsigned char* data, std::uint32_t off, unsigned char v, unsigned index, const std::string& what, Laid* laid,
+         int* changed) {
+    if (laid && off < laid->owner.size()) {
+        const unsigned was = laid->owner[off];
+        if (was && was != index && data[off] != v) laid->Note(what, was);
+        laid->owner[off] = static_cast<std::uint8_t>(index);
+    }
+    *changed += data[off] != v;
+    data[off] = v;
+}
+
+// Whether [lo, hi) touches a range of the mapped image that must equal the
+// PC's; `why` names it.
+bool OnMustEqual(const Image* mapped, std::uint32_t lo, std::uint32_t hi, const char* what, std::string* why) {
+    if (!mapped) return false;
+    for (const Range& m : mapped->ranges) {
+        if (m.hi <= lo || m.lo >= hi) continue;
+        if (!ClassOf(m)->must_equal) continue;
+        char msg[320];
+        std::snprintf(msg, sizeof msg, "0x%X..0x%X (%s) lies on 0x%X..0x%X, class %s of the mapped %s image, which "
+                      "must equal the PC's", (unsigned)lo, (unsigned)hi, what, (unsigned)m.lo, (unsigned)m.hi,
+                      m.how.c_str(), mapped->build.c_str());
+        *why = msg;
+        return true;
+    }
+    return false;
+}
+
+// The raw ranges and bytes against .data [va, va + size), the mapped image
 // (when one is: each range's bytes in a class that need not equal the PC's)
 // and laid over `data` (va's byte at data[0]). Returns the bytes that changed,
 // or -1 with `why`, laying nothing.
-long LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, unsigned char* data, std::uint32_t va,
-                  std::uint32_t size, const Image* mapped, std::string* why) {
+int LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, unsigned char* data, std::uint32_t va,
+                  std::uint32_t size, const Image* mapped, std::string* why, unsigned index = 1, Laid* laid = nullptr) {
     char msg[256];
     std::uint32_t total = 0, prev = va;
     for (const OptRange& r : t.ranges) {
@@ -631,17 +819,7 @@ long LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, uns
         }
         prev = r.hi;
         total += r.hi - r.lo;
-        if (!mapped) continue;
-        for (const Range& m : mapped->ranges) {
-            if (m.hi <= r.lo || m.lo >= r.hi) continue;
-            if (ClassOf(m)->must_equal) {
-                std::snprintf(msg, sizeof msg, "range 0x%X..0x%X (%s) lies on 0x%X..0x%X, class %s of the mapped %s "
-                              "image, which must equal the PC's", (unsigned)r.lo, (unsigned)r.hi, r.what.c_str(),
-                              (unsigned)m.lo, (unsigned)m.hi, m.how.c_str(), mapped->build.c_str());
-                *why = msg;
-                return -1;
-            }
-        }
+        if (OnMustEqual(mapped, r.lo, r.hi, r.what.c_str(), why)) return -1;
     }
     if (total != bin.size() || total != t.bytes) {
         std::snprintf(msg, sizeof msg, "the ranges hold %u bytes, place.bin %u, place.toml says %u", (unsigned)total,
@@ -654,13 +832,133 @@ long LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, uns
         *why = "place.bin is not the file place.toml's sha256 names";
         return -1;
     }
-    long changed = 0;
+    int changed = 0;
     std::size_t off = 0;
     for (const OptRange& r : t.ranges)
-        for (std::uint32_t a = r.lo; a < r.hi; ++a, ++off) {
-            changed += data[a - va] != bin[off];
-            data[a - va] = bin[off];
+        for (std::uint32_t a = r.lo; a < r.hi; ++a, ++off) Put(data, a - va, bin[off], index, "ranges", laid, &changed);
+    return changed;
+}
+
+// A layer's tables.toml (tools/psp_layers.py build_exe, and a mod's builder):
+//   tables = [ ["key", 0xPC, count, stride, "sha256 of <key>.bin"], ]
+//   cells  = [ ["key", record, at, length], ]   - `length` bytes from byte
+//                                                 `at` of `record`, the layer's own
+struct LayerTable {
+    std::string key, sha256;
+    std::uint32_t lo, count, stride;
+};
+struct LayerCell {
+    std::string key;
+    std::uint32_t record, at, length;
+};
+struct LayerTables {
+    std::string build;
+    std::vector<LayerTable> tables;
+    std::vector<LayerCell> cells;
+};
+
+bool ParseLayerTables(const std::string& text, LayerTables* out, std::string* why) {
+    *out = LayerTables{};
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        const char* p = line.c_str();
+        while (*p == ' ') ++p;
+        unsigned a = 0, b = 0, c = 0;
+        char s[128] = {}, h[128] = {};
+        if (std::sscanf(p, "[\"%127[^\"]\", 0x%x, %u, %u, \"%127[^\"]\"]", s, &a, &b, &c, h) == 5)
+            out->tables.push_back({s, h, a, b, c});
+        else if (std::sscanf(p, "[\"%127[^\"]\", %u, %u, %u]", s, &a, &b, &c) == 4) out->cells.push_back({s, a, b, c});
+        else if (std::sscanf(p, "build = \"%127[^\"]\"", s) == 1) out->build = s;
+    }
+    if (out->build.empty() || out->tables.empty() || out->cells.empty()) {
+        *why = "not a layer's tables.toml (build, tables, cells)";
+        return false;
+    }
+    return true;
+}
+
+// The layer's tables against .data, the base's table files (when the mapped
+// base has them: the same table at the same place) and the mapped image, then
+// its cells laid over `data`. `files[i]` is tables[i]'s <key>.bin. Returns the
+// bytes that changed, or -1 with `why`, laying nothing.
+int LayLayerTables(const LayerTables& t, const std::vector<std::vector<unsigned char>>& files, unsigned char* data,
+                    std::uint32_t va, std::uint32_t size, const Image* mapped, const std::vector<TableRow>* base,
+                    std::string* why, unsigned index = 1, Laid* laid = nullptr) {
+    char msg[320];
+    const auto fail = [&]() {
+        *why = msg;
+        return -1;
+    };
+    for (std::size_t i = 0; i < t.tables.size(); ++i) {
+        const LayerTable& lt = t.tables[i];
+        const std::uint64_t bytes = static_cast<std::uint64_t>(lt.count) * lt.stride;
+        if (!lt.count || !lt.stride || lt.lo < va || bytes > size || lt.lo - va > size - bytes) {
+            std::snprintf(msg, sizeof msg, "table %s (0x%X, %u records of %u bytes) is not inside .data 0x%X..0x%X",
+                          lt.key.c_str(), (unsigned)lt.lo, (unsigned)lt.count, (unsigned)lt.stride, (unsigned)va,
+                          (unsigned)(va + size));
+            return fail();
         }
+        for (std::size_t j = 0; j < i; ++j)
+            if (t.tables[j].key == lt.key) {
+                std::snprintf(msg, sizeof msg, "table %s is listed twice", lt.key.c_str());
+                return fail();
+            }
+        if (base)
+            for (const TableRow& b : *base)
+                if (b.key == lt.key && (b.lo != lt.lo || b.count != lt.count || b.stride != lt.stride)) {
+                    std::snprintf(msg, sizeof msg, "table %s is 0x%X, %u x %u in the layer and 0x%X, %u x %u in the "
+                                  "base: the layer was built for another release", lt.key.c_str(), (unsigned)lt.lo,
+                                  (unsigned)lt.count, (unsigned)lt.stride, (unsigned)b.lo, (unsigned)b.count,
+                                  (unsigned)b.stride);
+                    return fail();
+                }
+        if (i >= files.size() || files[i].size() != bytes) {
+            std::snprintf(msg, sizeof msg, "%s.bin holds %u bytes, the table %u", lt.key.c_str(),
+                          (unsigned)(i < files.size() ? files[i].size() : 0), (unsigned)bytes);
+            return fail();
+        }
+        std::string hex;
+        if (!bof3x::Sha256HexBytes(files[i].data(), files[i].size(), hex) || hex != lt.sha256) {
+            std::snprintf(msg, sizeof msg, "%s.bin is not the file tables.toml's sha256 names", lt.key.c_str());
+            return fail();
+        }
+    }
+    struct Run {
+        std::size_t table;
+        std::uint32_t off, length;
+    };
+    std::vector<Run> runs;
+    for (const LayerCell& c : t.cells) {
+        std::size_t i = 0;
+        while (i < t.tables.size() && t.tables[i].key != c.key) ++i;
+        if (i == t.tables.size()) {
+            std::snprintf(msg, sizeof msg, "a cell names table %s, which the layer does not carry", c.key.c_str());
+            return fail();
+        }
+        const LayerTable& lt = t.tables[i];
+        const std::uint64_t bytes = static_cast<std::uint64_t>(lt.count) * lt.stride;
+        const std::uint64_t off = static_cast<std::uint64_t>(c.record) * lt.stride + c.at;
+        if (c.record >= lt.count || c.at >= lt.stride || !c.length || off + c.length > bytes) {
+            std::snprintf(msg, sizeof msg, "cell %s record %u +%u, %u bytes, is past the table (%u records of %u bytes)",
+                          c.key.c_str(), (unsigned)c.record, (unsigned)c.at, (unsigned)c.length, (unsigned)lt.count,
+                          (unsigned)lt.stride);
+            return fail();
+        }
+        const std::uint32_t lo = lt.lo + static_cast<std::uint32_t>(off);
+        if (OnMustEqual(mapped, lo, lo + c.length, c.key.c_str(), why)) return -1;
+        runs.push_back({i, static_cast<std::uint32_t>(off), c.length});
+    }
+    int changed = 0;
+    for (const Run& r : runs) {
+        const LayerTable& lt = t.tables[r.table];
+        for (std::uint32_t k = 0; k < r.length; ++k)
+            Put(data, lt.lo - va + r.off + k, files[r.table][r.off + k], index, lt.key, laid, &changed);
+    }
     return changed;
 }
 
@@ -672,6 +970,13 @@ bool ReadText(const std::string& path, std::string* out) {
     std::size_t n;
     while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out->append(buf, n);
     std::fclose(f);
+    return true;
+}
+
+bool ReadBytes(const std::string& path, std::vector<unsigned char>* out) {
+    std::string s;
+    if (!ReadText(path, &s)) return false;
+    out->assign(s.begin(), s.end());
     return true;
 }
 
@@ -690,6 +995,11 @@ void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
     std::string base(root, r);
     while (base.size() > 1 && (base.back() == '\\' || base.back() == '/')) base.pop_back();
     std::string list(opt, n);
+    std::vector<std::string> names;   // the layers with an exe part, in order: a conflict's line names them
+    Laid laid;
+    auto* data = static_cast<unsigned char*>(to);
+    const Image* mapped = g_disc_mapped ? &g_mapped : nullptr;
+    const char* over = g_disc_mapped ? g_mapped.build.c_str() : "the file's or a pc-zh image";
     std::size_t at = 0;
     while (at <= list.size()) {
         std::size_t end = list.find(',', at);
@@ -701,25 +1011,61 @@ void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
                                  std::string::npos)
             continue;
         const std::string dir = base + "\\opt\\" + layer + "\\exe\\";
-        std::string text;
-        if (!ReadText(dir + "place.toml", &text)) continue;   // no exe part
-        OptTables t;
+        std::string tables_text, place_text;
+        const bool has_tables = ReadText(dir + "tables.toml", &tables_text);
+        const bool has_place = ReadText(dir + "place.toml", &place_text);
+        if (!has_tables && !has_place) continue;   // no exe part
+        if (names.size() >= 255) Fatal("DIV-0111: more than 255 layers with an exe part");
+        names.push_back(layer);
+        const unsigned index = static_cast<unsigned>(names.size());
+        if (laid.owner.empty()) laid.owner.assign(size, 0);
+        const std::size_t before = laid.conflicts.size();
         std::string why;
-        if (!ParseOptTables(text, &t, &why)) Fatal("DIV-0111: %splace.toml: %s", dir.c_str(), why.c_str());
-        FILE* f = std::fopen((dir + t.file).c_str(), "rb");
-        if (!f) Fatal("DIV-0111: %s%s does not open", dir.c_str(), t.file.c_str());
-        std::vector<unsigned char> bin;
-        unsigned char buf[4096];
-        std::size_t got;
-        while ((got = std::fread(buf, 1, sizeof buf, f)) > 0) bin.insert(bin.end(), buf, buf + got);
-        std::fclose(f);
-        const long changed = LayOptTables(t, bin, static_cast<unsigned char*>(to), va, size,
-                                          g_disc_mapped ? &g_mapped : nullptr, &why);
-        if (changed < 0) Fatal("DIV-0111: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
-        Log("DIV-0111    layer %s: %u ranges, %u bytes of the %s image's .data laid over .data (%s); %ld of them "
-            "differ from what was there",
-            layer.c_str(), (unsigned)t.ranges.size(), (unsigned)t.bytes, t.build.c_str(),
-            g_disc_mapped ? g_mapped.build.c_str() : "the file's or a pc-zh image", changed);
+        if (has_tables) {
+            LayerTables t;
+            if (!ParseLayerTables(tables_text, &t, &why)) Fatal("DIV-0111: %stables.toml: %s", dir.c_str(), why.c_str());
+            std::vector<std::vector<unsigned char>> files(t.tables.size());
+            for (std::size_t i = 0; i < t.tables.size(); ++i) {
+                const std::string& key = t.tables[i].key;
+                if (key.empty() || key.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789_") != std::string::npos)
+                    Fatal("DIV-0111: %stables.toml names a table \"%s\": not a tables.toml key", dir.c_str(), key.c_str());
+                if (!ReadBytes(dir + key + ".bin", &files[i])) Fatal("DIV-0111: %s%s.bin does not open", dir.c_str(), key.c_str());
+            }
+            const int changed = LayLayerTables(t, files, data, va, size, mapped, g_base_tables.empty() ? nullptr : &g_base_tables,
+                                                &why, index, &laid);
+            if (changed < 0) Fatal("DIV-0111: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
+            std::uint32_t bytes = 0;
+            for (const LayerCell& c : t.cells) bytes += c.length;
+            Log("DIV-0111    layer %s: %u tables, %u cells, %u bytes of the %s image's tables laid over .data (%s); %d "
+                "of them differ from what was there",
+                layer.c_str(), (unsigned)t.tables.size(), (unsigned)t.cells.size(), (unsigned)bytes, t.build.c_str(),
+                over, changed);
+        }
+        if (has_place) {
+            OptTables t;
+            bool old_form = false;
+            if (!ParseOptTables(place_text, &t, &why, &old_form)) {
+                if (old_form)
+                    Fatal("This install's optional layer \"%s\" was built by an older release. This release reads a "
+                          "layer's tables as one file each. Rebuild the install: in the launcher's Sources page add "
+                          "the disc again, or run tools/importer.py build.\n\nDIV-0111: %splace.toml: %s",
+                          layer.c_str(), dir.c_str(), why.c_str());
+                Fatal("DIV-0111: %splace.toml: %s", dir.c_str(), why.c_str());
+            }
+            std::vector<unsigned char> bin;
+            if (!ReadBytes(dir + t.file, &bin)) Fatal("DIV-0111: %s%s does not open", dir.c_str(), t.file.c_str());
+            const int changed = LayOptTables(t, bin, data, va, size, mapped, &why, index, &laid);
+            if (changed < 0) Fatal("DIV-0111: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
+            Log("DIV-0111    layer %s: %u ranges, %u bytes of the %s image's .data laid over .data (%s); %d of them "
+                "differ from what was there",
+                layer.c_str(), (unsigned)t.ranges.size(), (unsigned)t.bytes, t.build.c_str(), over, changed);
+        }
+        for (std::size_t i = before; i < laid.conflicts.size(); ++i) {
+            const Conflict& c = laid.conflicts[i];
+            Log("DIV-0111    layers %s and %s both write %s: %u bytes with different values; %s is later in the order "
+                "and wins",
+                names[c.earlier - 1].c_str(), layer.c_str(), c.what.c_str(), c.bytes, layer.c_str());
+        }
     }
 }
 
@@ -729,14 +1075,14 @@ void ExeImage_OptSelfTest() {
     std::vector<unsigned char> bin = {1, 2, 3, 4, 5, 6};
     std::string hex;
     if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), hex)) Fatal("DIV-0111 self-test: no SHA-256");
-    const std::string good = "build = \"psp-xx\"\nimage_sha256 = \"x\"\nfile = \"place.bin\"\nsha256 = \"" + hex +
-                             "\"\nbytes = 6\n\nranges = [\n  [0x001004, 0x001008, \"a\"],\n  [0x001010, 0x001012, \"b\"],\n]\n";
+    const std::string good = "build = \"psp-xx\"\nkind = \"raw\"\nimage_sha256 = \"x\"\nfile = \"place.bin\"\nsha256 = \"" +
+                             hex + "\"\nbytes = 6\n\nranges = [\n  [0x001004, 0x001008, \"a\"],\n  [0x001010, 0x001012, \"b\"],\n]\n";
     OptTables t;
     std::string why;
     std::vector<unsigned char> data(kSize, 0xEE);
     data[0x10] = 5;   // one byte already the layer's
     const bool parsed = ParseOptTables(good, &t, &why) && t.ranges.size() == 2 && t.bytes == 6;
-    const long changed = parsed ? LayOptTables(t, bin, data.data(), kVa, kSize, nullptr, &why) : -1;
+    const int changed = parsed ? LayOptTables(t, bin, data.data(), kVa, kSize, nullptr, &why) : -1;
     bool laid = changed == 5;
     for (std::uint32_t i = 0; i < kSize; ++i) {
         const int want = i >= 4 && i < 8 ? int(i - 3) : i == 0x10 ? 5 : i == 0x11 ? 6 : 0xEE;
@@ -767,16 +1113,151 @@ void ExeImage_OptSelfTest() {
     im.build = "psx-xx";
     im.ranges = {{0x1000, 0x1010, "map", ""}, {0x1010, 0x1040, "layout", ""}};
     refuse(good, bin, &im);                                                         // on a must-equal class
+    std::string old = good;
+    old.erase(old.find("kind = \"raw\"\n"), 13);
+    bool old_form = false;
+    OptTables o;
+    const bool old_refused = !ParseOptTables(old, &o, &why, &old_form) && old_form;  // the form before the table files
     im.ranges[1].how = "table";
     std::vector<unsigned char> d2(kSize, 0xEE);
     OptTables v;
     const bool over_disc = ParseOptTables(good, &v, &why) && LayOptTables(v, bin, d2.data(), kVa, kSize, &im, &why) == 6;
-    if (!parsed || !laid || refused != 5 || !over_disc)
-        Fatal("DIV-0111 self-test: parse %s, laid %s (%ld changed), over a disc image's table class %s, %u of 5 controls "
-              "refused", parsed ? "ok" : "WRONG", laid ? "ok" : "WRONG", changed, over_disc ? "ok" : "WRONG", refused);
+    if (!parsed || !laid || refused != 5 || !over_disc || !old_refused)
+        Fatal("DIV-0111 self-test: parse %s, laid %s (%d changed), over a disc image's table class %s, %u of 5 controls "
+              "refused, the old form %s", parsed ? "ok" : "WRONG", laid ? "ok" : "WRONG", changed,
+              over_disc ? "ok" : "WRONG", refused, old_refused ? "refused" : "NOT refused");
     Log("shadow      DIV-0111 self-test: a place.toml parsed, its two ranges laid (5 bytes changed, one already the "
         "layer's), and over a disc image's table class; 5 controls refused with nothing laid (a wrong hash, a range "
-        "outside .data, ranges out of order, a byte count that differs, a range on a must-equal class)");
+        "outside .data, ranges out of order, a byte count that differs, a range on a must-equal class); a place.toml "
+        "without kind = \"raw\" refused as the old form");
+
+    // --- The table files (the amendment of 2026-11-11). A table `tab` of 4 records of 4 bytes at
+    // 0x1010, the base's file laid whole, then two layers on it.
+    unsigned ok = 0, checks = 0;
+    const auto check = [&](bool right, const char* what) {
+        ++checks;
+        if (right) ++ok;
+        else Log("shadow      DIV-0111 table-files self-test: WRONG - %s", what);
+    };
+    const auto sha = [](const std::vector<unsigned char>& b) {
+        std::string h;
+        if (!bof3x::Sha256HexBytes(b.data(), b.size(), h)) Fatal("DIV-0111 table-files self-test: no SHA-256");
+        return h;
+    };
+    std::vector<unsigned char> body(16);
+    for (std::size_t i = 0; i < body.size(); ++i) body[i] = static_cast<unsigned char>(0x40 + i);
+    const std::string rows_text = "build = \"psx-xx\"\n\ntables = [\n  [\"tab\", 0x001010, 0x001020, 4, 4, \"" + sha(body) +
+                                  "\", \"table A@0x80000000\"],\n]\n";
+    std::vector<TableRow> rows;
+    check(ParseTableRows(rows_text, &rows, &why) && rows.size() == 1 && rows[0].key == "tab" && rows[0].lo == 0x1010 &&
+              rows[0].hi == 0x1020 && rows[0].count == 4 && rows[0].stride == 4,
+          "the base's tables.toml parsed: one table");
+    const Range file_range{0x1010, 0x1020, "file", "tab"};
+    std::vector<unsigned char> img(kSize, 0);
+    img[0] = 0x11;
+    const bool base_laid = !rows.empty() && LayBaseTable(rows[0], body, file_range, img.data(), kVa, &why);
+    bool base_right = base_laid && img[0] == 0x11;
+    for (std::uint32_t i = 0; i < 16 && base_right; ++i) base_right = img[0x10 + i] == body[i];
+    check(base_right, "the base's table file laid at its range, nothing else touched");
+    const auto base_refused = [&](const TableRow& row, const std::vector<unsigned char>& b, const Range& r, unsigned char at0x10) {
+        std::vector<unsigned char> d(kSize, 0);
+        d[0x10] = at0x10;
+        const std::vector<unsigned char> was = d;
+        std::string w;
+        return !LayBaseTable(row, b, r, d.data(), kVa, &w) && d == was;
+    };
+    if (!rows.empty()) {
+        std::vector<unsigned char> flipped = body, shorter(body.begin(), body.end() - 1);
+        flipped[3] ^= 1;
+        check(base_refused(rows[0], flipped, file_range, 0), "a base table file of another hash refused");
+        check(base_refused(rows[0], shorter, file_range, 0), "a short base table file refused");
+        check(base_refused(rows[0], body, Range{0x1014, 0x1024, "file", "tab"}, 0), "a base table whose range is not its row's refused");
+        check(base_refused(rows[0], body, file_range, 7), "a base table over bytes data.bin does not leave zero refused");
+    }
+    // Two layers. A changes record 1 whole and byte +2 of record 3; B changes
+    // bytes +1..+2 of record 1 (two bytes A wrote, with other values) and
+    // byte +0 of record 0.
+    std::vector<unsigned char> a_file = body, b_file = body;
+    for (int k = 0; k < 4; ++k) a_file[4 + k] = static_cast<unsigned char>(0xA0 + k);
+    a_file[14] = 0xAE;
+    b_file[5] = 0xB1;
+    b_file[6] = 0xB2;
+    b_file[0] = 0xB0;
+    const auto layer_text = [&](const std::vector<unsigned char>& file, const char* cells) {
+        return "build = \"psp-xx\"\n\ntables = [\n  [\"tab\", 0x001010, 4, 4, \"" + sha(file) + "\"],\n]\n\ncells = [\n" +
+               cells + "]\n";
+    };
+    const std::string a_text = layer_text(a_file, "  [\"tab\", 1, 0, 4],\n  [\"tab\", 3, 2, 1],\n");
+    const std::string b_text = layer_text(b_file, "  [\"tab\", 1, 1, 2],\n  [\"tab\", 0, 0, 1],\n");
+    LayerTables la, lb;
+    check(ParseLayerTables(a_text, &la, &why) && la.tables.size() == 1 && la.cells.size() == 2 &&
+              ParseLayerTables(b_text, &lb, &why) && lb.cells.size() == 2,
+          "two layers' tables.toml parsed");
+    Laid both;
+    both.owner.assign(kSize, 0);
+    Image mapped_ok;
+    mapped_ok.build = "psx-xx";
+    mapped_ok.ranges = {{0x1000, 0x1010, "map", ""}, {0x1010, 0x1020, "file", "tab"}, {0x1020, 0x1040, "layout", ""}};
+    const int ca = LayLayerTables(la, {a_file}, img.data(), kVa, kSize, &mapped_ok, &rows, &why, 1, &both);
+    const int cb = LayLayerTables(lb, {b_file}, img.data(), kVa, kSize, &mapped_ok, &rows, &why, 2, &both);
+    std::vector<unsigned char> want(kSize, 0);
+    want[0] = 0x11;
+    for (std::uint32_t i = 0; i < 16; ++i) want[0x10 + i] = body[i];
+    want[0x10] = 0xB0;
+    want[0x14] = 0xA0;
+    want[0x15] = 0xB1;
+    want[0x16] = 0xB2;
+    want[0x17] = 0xA3;
+    want[0x1E] = 0xAE;
+    check(ca == 5 && cb == 3 && img == want, "two layers laid: only their cells, the later layer's value where both wrote");
+    check(both.conflicts.size() == 1 && both.conflicts[0].what == "tab" && both.conflicts[0].earlier == 1 &&
+              both.conflicts[0].bytes == 2,
+          "the two bytes both layers wrote counted once, against the earlier layer");
+    const auto layer_refused = [&](const std::string& text, const std::vector<unsigned char>& file, const Image* mapped) {
+        LayerTables u;
+        std::string w;
+        std::vector<unsigned char> d = want;
+        const bool no = !ParseLayerTables(text, &u, &w) || LayLayerTables(u, {file}, d.data(), kVa, kSize, mapped, &rows, &w) < 0;
+        return no && d == want;
+    };
+    std::vector<unsigned char> a_flipped = a_file, a_short(a_file.begin(), a_file.end() - 1);
+    a_flipped[9] ^= 1;
+    check(layer_refused(a_text, a_flipped, nullptr), "a layer's table file of another hash refused");
+    check(layer_refused(a_text, a_short, nullptr), "a short layer table file refused");
+    check(layer_refused(layer_text(a_file, "  [\"tab\", 3, 2, 3],\n"), a_file, nullptr), "a cell past the table refused");
+    check(layer_refused(layer_text(a_file, "  [\"tab\", 4, 0, 1],\n"), a_file, nullptr), "a cell of a record past the count refused");
+    check(layer_refused(layer_text(a_file, "  [\"other\", 0, 0, 1],\n"), a_file, nullptr), "a cell of a table the layer does not carry refused");
+    Image must;
+    must.build = "psx-xx";
+    must.ranges = {{0x1000, 0x1018, "map", ""}, {0x1018, 0x1040, "layout", ""}};
+    check(layer_refused(a_text, a_file, &must), "a cell on a must-equal class refused");
+    std::string moved = a_text;
+    moved.replace(moved.find("0x001010"), 8, "0x001014");
+    check(layer_refused(moved, a_file, nullptr), "a layer whose table is not at the base's place refused");
+    std::string out_of_data = a_text;
+    out_of_data.replace(out_of_data.find("0x001010"), 8, "0x001038");
+    {
+        LayerTables u;
+        std::string w;
+        std::vector<unsigned char> d = want;
+        check(ParseLayerTables(out_of_data, &u, &w) && LayLayerTables(u, {a_file}, d.data(), kVa, kSize, nullptr, nullptr, &w) < 0 &&
+                  d == want,
+              "a table that runs past .data refused");
+    }
+    if (ok != checks) Fatal("DIV-0111 table-files self-test: %u of %u checks right (each WRONG line above)", ok, checks);
+    Log("shadow      DIV-0111 table-files self-test: %u checks right - the base's tables.toml parsed and its file laid at its range; "
+        "four bad base files refused (hash, size, range, bytes not zero under it); two layers' cells laid, the later "
+        "winning two bytes, counted; eight bad layers refused with nothing laid (hash, size, a cell past the table, a "
+        "record past the count, a table not carried, a must-equal class, a table not at the base's place, a table "
+        "past .data)",
+        checks);
+}
+
+void ExeImage_LogMapped(const void* at, std::uint32_t size) {
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(static_cast<const unsigned char*>(at), size, hex)) Fatal("exe_image: no SHA-256 of .data");
+    Log("exe_image   .data as mapped (the image or the file, the table files, the fills, the layers): %u bytes, sha256 %s",
+        (unsigned)size, hex.c_str());
 }
 
 void ExeImage_CompareWithFile() {

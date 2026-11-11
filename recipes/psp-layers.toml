@@ -13,8 +13,9 @@
 #         Music_LoadFile's seam (DIV-0087, src/game/music_seq.cpp)
 #   snd   opt/<name>/snd/NAME.DAT, base/snd's form: Sound_LoadStream (DIV-0089,
 #         src/game/dat_cache.cpp SoundPath)
-#   exe   opt/<name>/exe/place.toml + place.bin: byte ranges of .data laid over the
-#         image at map time, in the exe host only (src/hook/exe_image.cpp)
+#   exe   opt/<name>/exe/tables.toml + one <key>.bin a table: the cells of each table
+#         that are the layer's, laid over .data at map time, in the exe host only
+#         (src/hook/exe_image.cpp; docs/image-layer-round.md 3.2)
 #   dat   opt/<name>/dat/NAME.DAT, ordinary containers: LoadDatFile (DIV-0086)
 # `from` is the builds that carry it (PSP discs, fixtures.toml ids); a layer is built
 # only beside a PlayStation base (manifest base_policy "psx") - on a PSP base it is

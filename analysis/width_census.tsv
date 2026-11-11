@@ -13420,77 +13420,73 @@ site	src/hook/exe_host.cpp	228	fmt_place	word	live	(unsigned)hi	%08X	Log("fence:
 site	src/hook/exe_host.cpp	228	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
 site	src/hook/exe_host.cpp	228	fmt_place	word	live	(unsigned)lo	%08X	Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
 site	src/hook/exe_host.cpp	317	fmt_place	word	live	(unsigned)(kGameVa + i)	%08X	if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
-site	src/hook/exe_host.cpp	331	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
-site	src/hook/exe_host.cpp	332	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host.cpp	332	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
-site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
-site	src/hook/exe_host.cpp	371	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
-site	src/hook/exe_host.cpp	377	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	377	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	377	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	377	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
-site	src/hook/exe_host.cpp	395	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
-site	src/hook/exe_host.cpp	413	import_slot	windows_function	live	DSOUND.dll!#1	FARPROC	0x5C4014 kSlots
-site	src/hook/exe_host.cpp	414	import_slot	windows_function	live	GDI32.dll!SetTextColor	FARPROC	0x5C4020 kSlots
-site	src/hook/exe_host.cpp	415	import_slot	windows_function	live	GDI32.dll!SetBkMode	FARPROC	0x5C4024 kSlots
-site	src/hook/exe_host.cpp	416	import_slot	windows_function	live	GDI32.dll!TextOutA	FARPROC	0x5C4028 kSlots
-site	src/hook/exe_host.cpp	417	import_slot	windows_function	live	KERNEL32.dll!GetTickCount	FARPROC	0x5C407C kSlots
-site	src/hook/exe_host.cpp	418	import_slot	windows_function	live	KERNEL32.dll!CreateEventA	FARPROC	0x5C4080 kSlots
-site	src/hook/exe_host.cpp	419	import_slot	windows_function	live	KERNEL32.dll!CloseHandle	FARPROC	0x5C4084 kSlots
-site	src/hook/exe_host.cpp	420	import_slot	windows_function	live	KERNEL32.dll!GetDriveTypeA	FARPROC	0x5C4088 kSlots
-site	src/hook/exe_host.cpp	421	import_slot	windows_function	live	KERNEL32.dll!ExitProcess	FARPROC	0x5C40B8 kSlots
-site	src/hook/exe_host.cpp	422	import_slot	windows_function	live	KERNEL32.dll!TerminateProcess	FARPROC	0x5C4114 kSlots
-site	src/hook/exe_host.cpp	423	import_slot	windows_function	live	USER32.dll!PostQuitMessage	FARPROC	0x5C4158 kSlots
-site	src/hook/exe_host.cpp	424	import_slot	windows_function	live	USER32.dll!MsgWaitForMultipleObjects	FARPROC	0x5C4164 kSlots
-site	src/hook/exe_host.cpp	425	import_slot	windows_function	live	USER32.dll!IntersectRect	FARPROC	0x5C4168 kSlots
-site	src/hook/exe_host.cpp	426	import_slot	windows_function	live	USER32.dll!MessageBoxA	FARPROC	0x5C4174 kSlots
-site	src/hook/exe_host.cpp	432	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!dll) Fatal("slots: cannot load %s for the slot 0x%08X, error %lu", s.dll, (unsigned)s.at, GetLastError());
-site	src/hook/exe_host.cpp	434	uintptr	-	live	std::uintptr_t	-	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
-site	src/hook/exe_host.cpp	434	widen	param	live	s.ordinal	LPCSTR	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
-site	src/hook/exe_host.cpp	435	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!fn) Fatal("slots: %s has no %s%s (#%u) for the slot 0x%08X", s.dll, s.name ? s.name : "ordinal", s.name ? "" : "",
-site	src/hook/exe_host.cpp	442	width_if	logic	live	Resolve	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/exe_host.cpp	464	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(Resolve(s)))
-site	src/hook/exe_host.cpp	465	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host.cpp	465	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
-site	src/hook/exe_host.cpp	471	uintptr	-	live	std::uintptr_t	-	const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
-site	src/hook/exe_host.cpp	475	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. (16 apart, below 4 GB; docs/x64-build-design.md 4) "
-site	src/hook/exe_host.cpp	489	fmt_place	pointer	live	(unsigned)s.at	%08X	if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
-site	src/hook/exe_host.cpp	506	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
-site	src/hook/exe_host.cpp	507	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
-site	src/hook/exe_host.cpp	508	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
-site	src/hook/exe_host.cpp	509	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
-site	src/hook/exe_host.cpp	512	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
-site	src/hook/exe_host.cpp	532	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("stub: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
-site	src/hook/exe_host.cpp	533	fmt_place	word	live	(unsigned)a	%08X	if (m.Protect != PAGE_NOACCESS) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
-site	src/hook/exe_host.cpp	534	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
-site	src/hook/exe_host.cpp	536	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	536	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	536	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	536	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
-site	src/hook/exe_host.cpp	547	width_if	logic	live	Unhandled	#if defined(__x86_64__)	#if defined(__x86_64__)
-site	src/hook/exe_host.cpp	551	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	551	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	555	long	ul	live	unsigned long	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	555	narrow	windows	live	info->ExceptionRecord->ExceptionAddress	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	555	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
-site	src/hook/exe_host.cpp	621	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
-site	src/hook/exe_host.cpp	664	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
-site	src/hook/exe_host.cpp	676	fmt_place	word	live	(unsigned)va	%08X	if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
-site	src/hook/exe_host.cpp	677	fmt_place	word	live	(unsigned)va	%08X	if (g_exe == INVALID_HANDLE_VALUE) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
-site	src/hook/exe_host.cpp	683	fmt_place	word	live	(unsigned)va	%08X	Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
+site	src/hook/exe_host.cpp	332	fmt_place	word	live	(unsigned)a	%08X	if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
+site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)kDataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host.cpp	333	fmt_place	word	live	(unsigned)kRdataVa	%08X	Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+site	src/hook/exe_host.cpp	334	fmt_place	word	live	(unsigned)kDataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	334	fmt_place	word	live	(unsigned)kRdataBytes	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	334	fmt_place	word	live	(unsigned)kRdataVa	%08X	"zero 0x%08X..0x%08X (virtual end 0x%08X)",
+site	src/hook/exe_host.cpp	372	fmt_place	word	live	(unsigned)r.pc	%08X	Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
+site	src/hook/exe_host.cpp	378	fmt_place	word	live	(unsigned)v	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	378	fmt_place	word	live	(unsigned)va	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	378	fmt_place	word	live	(unsigned)want.hi	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	378	fmt_place	word	live	(unsigned)want.lo	%08X	Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+site	src/hook/exe_host.cpp	396	fmt_place	word	live	words[rebase::kData]	%08X	"their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
+site	src/hook/exe_host.cpp	414	import_slot	windows_function	live	DSOUND.dll!#1	FARPROC	0x5C4014 kSlots
+site	src/hook/exe_host.cpp	415	import_slot	windows_function	live	GDI32.dll!SetTextColor	FARPROC	0x5C4020 kSlots
+site	src/hook/exe_host.cpp	416	import_slot	windows_function	live	GDI32.dll!SetBkMode	FARPROC	0x5C4024 kSlots
+site	src/hook/exe_host.cpp	417	import_slot	windows_function	live	GDI32.dll!TextOutA	FARPROC	0x5C4028 kSlots
+site	src/hook/exe_host.cpp	418	import_slot	windows_function	live	KERNEL32.dll!GetTickCount	FARPROC	0x5C407C kSlots
+site	src/hook/exe_host.cpp	419	import_slot	windows_function	live	KERNEL32.dll!CreateEventA	FARPROC	0x5C4080 kSlots
+site	src/hook/exe_host.cpp	420	import_slot	windows_function	live	KERNEL32.dll!CloseHandle	FARPROC	0x5C4084 kSlots
+site	src/hook/exe_host.cpp	421	import_slot	windows_function	live	KERNEL32.dll!GetDriveTypeA	FARPROC	0x5C4088 kSlots
+site	src/hook/exe_host.cpp	422	import_slot	windows_function	live	KERNEL32.dll!ExitProcess	FARPROC	0x5C40B8 kSlots
+site	src/hook/exe_host.cpp	423	import_slot	windows_function	live	KERNEL32.dll!TerminateProcess	FARPROC	0x5C4114 kSlots
+site	src/hook/exe_host.cpp	424	import_slot	windows_function	live	USER32.dll!PostQuitMessage	FARPROC	0x5C4158 kSlots
+site	src/hook/exe_host.cpp	425	import_slot	windows_function	live	USER32.dll!MsgWaitForMultipleObjects	FARPROC	0x5C4164 kSlots
+site	src/hook/exe_host.cpp	426	import_slot	windows_function	live	USER32.dll!IntersectRect	FARPROC	0x5C4168 kSlots
+site	src/hook/exe_host.cpp	427	import_slot	windows_function	live	USER32.dll!MessageBoxA	FARPROC	0x5C4174 kSlots
+site	src/hook/exe_host.cpp	433	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!dll) Fatal("slots: cannot load %s for the slot 0x%08X, error %lu", s.dll, (unsigned)s.at, GetLastError());
+site	src/hook/exe_host.cpp	435	uintptr	-	live	std::uintptr_t	-	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
+site	src/hook/exe_host.cpp	435	widen	param	live	s.ordinal	LPCSTR	: GetProcAddress(dll, reinterpret_cast<LPCSTR>(static_cast<std::uintptr_t>(s.ordinal)));
+site	src/hook/exe_host.cpp	436	fmt_place	pointer	live	(unsigned)s.at	%08X	if (!fn) Fatal("slots: %s has no %s%s (#%u) for the slot 0x%08X", s.dll, s.name ? s.name : "ordinal", s.name ? "" : "",
+site	src/hook/exe_host.cpp	443	width_if	logic	live	Resolve	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/exe_host.cpp	465	uintptr	-	live	std::uintptr_t	-	if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(Resolve(s)))
+site	src/hook/exe_host.cpp	466	fmt_place	pointer	live	(unsigned)s.at	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host.cpp	466	fmt_place	word	live	(unsigned)thunk[i]	%08X	Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+site	src/hook/exe_host.cpp	472	uintptr	-	live	std::uintptr_t	-	const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
+site	src/hook/exe_host.cpp	476	fmt_place	word	live	(unsigned)thunk[0]	%08X	Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. (16 apart, below 4 GB; docs/x64-build-design.md 4) "
+site	src/hook/exe_host.cpp	490	fmt_place	pointer	live	(unsigned)s.at	%08X	if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
+site	src/hook/exe_host.cpp	507	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(before));
+site	src/hook/exe_host.cpp	508	asm	cw	live	fldcw %0	fldcw	asm volatile("fldcw %0" : : "m"(cw));
+site	src/hook/exe_host.cpp	509	asm	cw	live	fnstcw %0	fnstcw	asm volatile("fnstcw %0" : "=m"(after));
+site	src/hook/exe_host.cpp	510	asm	cw	live	stmxcsr %0	stmxcsr	asm volatile("stmxcsr %0" : "=m"(mxcsr));
+site	src/hook/exe_host.cpp	513	fmt_place	word	live	before	%08X	"Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
+site	src/hook/exe_host.cpp	533	fmt_place	word	live	(unsigned)a	%08X	if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("stub: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+site	src/hook/exe_host.cpp	534	fmt_place	word	live	(unsigned)a	%08X	if (m.Protect != PAGE_NOACCESS) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
+site	src/hook/exe_host.cpp	535	narrow_call	windows	live	m.BaseAddress	AsU32	a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
+site	src/hook/exe_host.cpp	537	fmt_place	word	live	(unsigned)(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	537	fmt_place	word	live	(unsigned)Img(kStubVa + kStubSize)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	537	fmt_place	word	live	(unsigned)Img(kStubVa)	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	537	fmt_place	word	live	(unsigned)kStubVa	%08X	Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+site	src/hook/exe_host.cpp	548	width_if	logic	live	Unhandled	#if defined(__x86_64__)	#if defined(__x86_64__)
+site	src/hook/exe_host.cpp	552	long	l	live	long	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	552	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	556	long	ul	live	unsigned long	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	556	narrow	windows	live	info->ExceptionRecord->ExceptionAddress	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	556	uintptr	-	live	std::uintptr_t	-	static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+site	src/hook/exe_host.cpp	622	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: hinstance %p, show %d, on thread %lu", hinstance, show, GetCurrentThreadId());
+site	src/hook/exe_host.cpp	665	fmt_place	pointer	live	hinstance	%p	Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
+site	src/hook/exe_host.cpp	677	fmt_place	word	live	(unsigned)va	%08X	if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
+site	src/hook/exe_host.cpp	678	fmt_place	word	live	(unsigned)va	%08X	if (g_exe == INVALID_HANDLE_VALUE) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
+site	src/hook/exe_host.cpp	684	fmt_place	word	live	(unsigned)va	%08X	Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
 site	src/hook/exe_icon.cpp	60	widen	img_place	live	::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4	const std::uint8_t*	const auto* p = reinterpret_cast<const std::uint8_t*>(
 site	src/hook/exe_icon.cpp	61	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
 site	src/hook/exe_icon.cpp	379	long	ul	live	unsigned long	-	wsprintfA(t, " ", static_cast<unsigned long>(hr));
-site	src/hook/exe_image.cpp	416	uintptr	-	live	std::uintptr_t	-	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
-site	src/hook/exe_image.cpp	416	widen	other	live	Img(va)	unsigned char*	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
-site	src/hook/exe_image.cpp	621	long	l	live	long	-	long LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, unsigned char* data, std::uint32_t va,
-site	src/hook/exe_image.cpp	657	long	l	live	long	-	long changed = 0;
-site	src/hook/exe_image.cpp	716	long	l	live	long	-	const long changed = LayOptTables(t, bin, static_cast<unsigned char*>(to), va, size,
-site	src/hook/exe_image.cpp	739	long	l	live	long	-	const long changed = parsed ? LayOptTables(t, bin, data.data(), kVa, kSize, nullptr, &why) : -1;
-site	src/hook/exe_image.cpp	792	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
-site	src/hook/exe_image.cpp	792	widen	other	live	Img(im.va)	const unsigned char*	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
+site	src/hook/exe_image.cpp	534	uintptr	-	live	std::uintptr_t	-	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
+site	src/hook/exe_image.cpp	534	widen	other	live	Img(va)	unsigned char*	auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
+site	src/hook/exe_image.cpp	1273	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
+site	src/hook/exe_image.cpp	1273	widen	other	live	Img(im.va)	const unsigned char*	const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
 site	src/hook/exe_own.cpp	345	uintptr	-	live	std::uintptr_t	-	const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(Img(kDataVa)));
 site	src/hook/exe_own.cpp	345	widen	other	live	Img(kDataVa)	const std::uint8_t*	const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(Img(kDataVa)));
 site	src/hook/gapwatch.cpp	60	uintptr	-	live	std::uintptr_t	-	std::uintptr_t eip;
@@ -14033,10 +14029,10 @@ site	src/input/sigma.cpp	195	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(j
 site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
-site	src/launcher/config.cpp	274	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config_dialog.cpp	1170	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
-site	src/launcher/config_dialog.cpp	1619	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/config_dialog.cpp	1623	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
+site	src/launcher/config.cpp	275	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
+site	src/launcher/config_dialog.cpp	1171	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
+site	src/launcher/config_dialog.cpp	1629	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+site	src/launcher/config_dialog.cpp	1633	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
 site	src/launcher/launcher.cpp	146	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	146	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	148	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
@@ -20685,7 +20681,6 @@ file	src/hook/exe_host.cpp	live	width_if	logic	2
 file	src/hook/exe_icon.cpp	live	long	ul	1
 file	src/hook/exe_icon.cpp	live	uintptr	-	1
 file	src/hook/exe_icon.cpp	live	widen	img_place	1
-file	src/hook/exe_image.cpp	live	long	l	4
 file	src/hook/exe_image.cpp	live	uintptr	-	2
 file	src/hook/exe_image.cpp	live	widen	other	2
 file	src/hook/exe_own.cpp	live	uintptr	-	1
@@ -20816,8 +20811,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16132
-#count sites_live	11915
+#count sites	16128
+#count sites_live	11911
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -20904,9 +20899,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	7386
-#count long_live	6641
-#count long_live_files	496
+#count long	7382
+#count long_live	6637
+#count long_live_files	495
 #count long_fuzz	745
 #count long_fuzz_files	79
 #count long_ctype:long	42
@@ -20918,9 +20913,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	3988
-#count long_l_live	3404
-#count long_l_live_files	388
+#count long_l	3984
+#count long_l_live	3400
+#count long_l_live_files	387
 #count long_ul	1610
 #count long_ul_live	1449
 #count long_ul_live_files	289
@@ -21133,13 +21128,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	14
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	5598
+#count long_src	5594
 #count long_src_game	5092
 #count long_src_game_ul	1416
 #count long_ctype	1788
-#count callconv_CALLBACK	18
+#count callconv_CALLBACK	19
 #count callconv_CALLBACK_fuzz	1
-#count callconv_CALLBACK_live	17
+#count callconv_CALLBACK_live	18
 #count callconv_WINAPI	25
 #count callconv_WINAPI_live	25
 #count callconv___cdecl	16404

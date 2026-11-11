@@ -1,8 +1,11 @@
 # The image-layer round: the exe's tables as one file per table
 
-**Status:** STAGED 2026-11-11 (IDEAS I58, its second step; nothing of the round
-built). Section 1's numbers were measured on `main` `7a495bd6`; everything
-else is a plan, and section 2 lists what it does not yet know.
+**Status:** IN PROGRESS (IDEAS I58, its second step; staged 2026-11-11 and
+groups A and B built the same day on `image-layer/round`, section 5a - the
+image proven the same on every build, the state-hash routes still owed;
+groups C and D not started). Section 1's numbers were measured on `main`
+`7a495bd6`. Sections 3 and 9 are the plan as staged; where the build differs,
+section 5a says so.
 
 The owner (2026-11-06, I58): move the tables the PC port holds in `BOF3.exe`
 back into data files, so mods that edit them can be converted and the source
@@ -243,6 +246,120 @@ after [`disc-patch-round.md`](disc-patch-round.md)'s group B.
 
 A and B change what the exe host reads at start, so they merge together and
 are gated together (section 6). C touches no engine file.
+
+## 5a. A and B as run (2026-11-11, branch `image-layer/round`)
+
+One session, no agents. Scratch root `C:\Users\kerok\bof3x-runs\il1111` (its
+own game folders and caches, junctions to the exe-gap round's end batch for
+everything but `base\exe`; the scripts `build_b.sh`, `build_a.sh`,
+`run_st2.sh`, `run_st3.sh` are there).
+
+**What was built.**
+
+- `tools/exe_tables.py`: `file_tables`, `carve_tables`, `write_tables`,
+  `read_image`. `write_exe` cuts the 27 file tables out of the image after it
+  is whole: `data.bin` zero there, `tables\<key>.bin`, `tables\tables.toml`,
+  the range rows split around each table with class `file`. `data.toml` has
+  two hashes: `sha256` (of `data.bin` as written) and `image_sha256` (of the
+  image with the files laid in, the hash `recipes/exe.toml` records, so no
+  recipe changed). `read_image` is the one reader; `verify_cache`,
+  `gate_skip`, `importer.py verify`, `loc_build.py` (`DiscCache`),
+  `exe_scan.py` and `psp_layers.py` go through it. A table on a class that is
+  not `exe`, `table` or `widen` stops the build and asks for `in_image`.
+- `tables.toml`: `in_image = "<why>"` on `area_descriptors`, `sin_table` and
+  `key_defaults` (M1).
+- `src/hook/exe_image.cpp`: `ComposeBase` (the base's files laid into the
+  image right after `data.bin` is read, in `ExeImage_Source` and the hosted
+  `ExeImage_Check`); the class `file`; a layer's `tables.toml` reader and
+  `LayLayerTables`; the per-byte record of which layer wrote what, and the
+  line when two disagree; `ExeImage_LogMapped`, one line with the sha256 of
+  `.data` as the game starts with it. `dat_cache.cpp` and the launcher's
+  `config.cpp` see an exe part in `exe\tables.toml` as well as
+  `exe\place.toml`.
+- `tools/psp_layers.py`: `psp-tables` written as `tables.toml`,
+  `exp_table.bin`, `consumables.bin` (`exe_tables_of`, `build_exe`,
+  `verify_layer`).
+
+**Where the build differs from sections 3 and 9 as staged.**
+
+- **A base table file holds the bytes the image held**, name field and all. On
+  a disc build the name fields are zero, as planned. On a PC-built image they
+  are the PC's own name bytes, because that image must equal `BOF3.exe`'s
+  `.data` byte for byte.
+- **A layer's `tables.toml` carries each table's address, count and stride**
+  (`["key", 0xPC, count, stride, "sha256"]`); cells are still `[key, record,
+  at, length]`. The engine has no copy of the catalogue, so the layer says
+  where its table is, and a layer whose table is not at the base's place is
+  refused. A layer is built on the player's machine by the tools of the
+  release that reads it, so "a layer survives a table moving" was not worth a
+  catalogue in the engine.
+- **Raw ranges need `kind = "raw"`** in `place.toml`. That one line is how the
+  old `psp-tables` form is told from a raw-range layer.
+- **A PC install that reads `.data` from `BOF3.exe`** (no `BOF3X_EXEIMAGE`) has
+  no base table files in use: the player's exe is the source there, as
+  before. Layers lay over it the same way.
+- **No new ledger entry yet.** No install's bytes change: the image is the
+  same image, and the one layer that exists changes the same 250 bytes.
+  DIV-0111 is amended with the new form, the any-layer rule and the
+  later-wins rule. The new entry comes with group C, which gives a player the
+  first way to make such a layer.
+
+**Acceptance 1, the image is the same image.**
+
+| Check | Result |
+|---|---|
+| `exe_tables.py build` for the seven discs and `BOF3.exe` | all exit 0; each disc image, its 27 table files laid in, hashes as `recipes/exe.toml` records it (`build_from`'s own check); the PC one equals `BOF3.exe`'s `.data` byte for byte |
+| `read_image` + `verify_cache` on the eight | 27 file ranges, 20,744 bytes, every one zero in `data.bin`; 0 problems |
+| exe host self-test (`BOF3X_SELFTEST_ONLY=1`), side a = `base\exe` written by `main`'s tools, side b = this branch's, both on this branch's engine, each of the seven disc builds | 14 runs, exit 0, no Fatal; **the `.data as mapped` sha256 of a and b is the same on every build**; b logs `27 table files, 20744 bytes` |
+| the same pair with `BOF3.exe` present (the US image, `ExeImage_CompareWithFile`) | both `630005 of 638976 bytes equal`, same mapped hash |
+| a PC-built image as the source, a and b | same mapped hash, and it is the hash of `BOF3.exe`'s `.data` |
+| a PC install reading the file | the same hash again |
+
+**Acceptance 3 and 4.**
+
+| Check | Result |
+|---|---|
+| `psp-tables` built from the PSP Europe disc in the new form, laid in Python over the PC's, the US and the European images | 2 tables, 93 cells, 6,096 bytes; **250 bytes change** over each |
+| the exe host with it, over the US disc-built image and over the PC's file | `2 tables, 93 cells, 6096 bytes ... 250 of them differ`, exit 0 |
+| `psp-tables` in the old form (written by `main`'s tools) | exit 3, the rebuild sentence, then `place.toml: a place.toml written before the table files` |
+| one byte of `base\exe\tables\weapons.bin` flipped | exit 3: `weapons.bin is not the file tables.toml's sha256 names. Rebuild the cache` |
+| `psp-tables` and a second layer writing the first two bytes of `exp_table` with other values | exit 0; `layers psp-tables and mod-x both write exp_table: 2 bytes with different values; mod-x is later in the order and wins` |
+| `BOF3X_SHADOW=dat_cache` (the developer launcher) | the raw-range self-test with its 5 controls and the old form refused; the table-files self-test, 17 checks right |
+
+**M5, run.** Each disc build's table files against the PC-built ones: 20 of 27
+identical on the five PSX discs and PSP Japan, 19 on PSP Europe. The files
+that differ: the six name tables (the PC's name bytes against blank fields,
+3,073 bytes, the same count on every disc), then one table a build -
+`event_op_lengths` (1 byte, JP), `fishing_rule_lines` (13 bytes on the US,
+European, French and PSP Europe discs, 15 on the German), and on both PSP
+discs `exp_table` (249) and one more byte of `consumables`: DIV-0111's 250.
+
+**Repository checks.** `tables.py check`, `importer.py check`, `exe_tables.py
+check`, `exe_own.py check`, `exe_scan.py --accepted`, `data_diff.py check`,
+`loc_build.py selftest`, `suites.py check`, `psp_layers.py check`,
+`ledger_check.py`, `ledger_switches.py --check`, `ledger_registry.py --check`,
+`tu_census.py --check --strict`, `data_census.py --check`, `reloc_census.py
+--check`, `width_census.py --check`: all pass. The 32-bit build is clean.
+`config_tests.exe`: 3,604 checks, 2 failures, the same two on `main` on this
+machine (`as shipped, original: 82 entries off ... got 88`, `BOF3X_OFF is the
+union`); not this round's.
+
+**Not done.**
+
+- **Acceptance 2, the state-hash routes.** Not run: they need a hands-off
+  machine and the owner was at it. The mapped-hash equality above is the
+  stronger statement for the no-layer case (the game starts from the same
+  bytes); the routes are still owed before a merge, with no layer and with
+  `psp-tables`.
+- **The 64-bit build** was not built here; CI builds it.
+- **A whole `importer.py build`** (the manifest, a language layer built
+  against the new `base\exe`, `verify`) was not run end to end; `loc_build`
+  reads the image through `read_image`, and its self-test passes, but no
+  language layer was rebuilt.
+- **M3's rest, M4 and M6**: readers that index past a count, the start-up
+  cost (the self-test runs took as long as before to the eye; not timed), and
+  `.rdata`.
+- Nobody has played it.
 
 ## 6. Acceptance
 

@@ -543,6 +543,9 @@ bool HasLayerPart(const char* layer, const char* part) {
     Join(dir, sizeof dir, root, "opt\\", layer, "");
     char sub[kPathMax + 1];
     if (std::strcmp(part, "exe") == 0) {
+        // the tables (docs/image-layer-round.md 3.2), or byte ranges outside them
+        Join(sub, sizeof sub, dir, "exe\\tables.toml", "", "");
+        if (g_c.io.exists(sub)) return true;
         Join(sub, sizeof sub, dir, "exe\\place.toml", "", "");
         return g_c.io.exists(sub);
     }

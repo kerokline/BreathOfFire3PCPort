@@ -48,7 +48,7 @@ const CacheManifest& CachedManifest(const std::wstring& cache) {
     return s_man;
 }
 
-// <cache>\opt\<name>\<part> holds a .DAT (exe: exe\place.toml) - the DLL's
+// <cache>\opt\<name>\<part> holds a .DAT (exe: exe\tables.toml or exe\place.toml) - the DLL's
 // own test (dat_cache::HasLayerPart), the manifest's listing included.
 bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_t* part) {
     if (cache.empty() || !ManifestOffersLayer(CachedManifest(cache), name)) return false;
@@ -56,7 +56,8 @@ bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
     pattern += L"\\";
     pattern += part;
-    return AnyMatch(pattern + (std::wcscmp(part, L"exe") == 0 ? L"\\place.toml" : L"\\*.DAT"));
+    if (std::wcscmp(part, L"exe") != 0) return AnyMatch(pattern + L"\\*.DAT");
+    return AnyMatch(pattern + L"\\tables.toml") || AnyMatch(pattern + L"\\place.toml");
 }
 
 // DIV-0089: <cache>\<kind>\<name>\dat\ holds a .DAT - the DLL's own test
