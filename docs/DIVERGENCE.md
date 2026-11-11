@@ -15462,7 +15462,8 @@ designed in rather than bolted on.
   launcher, written from our own documents and measurements, opened from the
   Mods tab as the CRT options are opened from Settings.
 - **Also in the PSX version?** No: the PlayStation release has no launcher.
-  Memory cards are not read or written by this version of the editor.
+  Since 2026-11-11 the editor reads and writes PlayStation memory card
+  files too (the amendment below).
 - **Verification:** `tools/launcher_host/save_tests.cpp`, 939 checks and 0
   failures on 114 real PC saves (round trip, each field's own text, one
   edit, the battle count); the window driven in a scratch copy of an install
@@ -15474,6 +15475,41 @@ designed in rather than bolted on.
   field with the area's entrances, read from the install's `BOF3.exe`
   ([`save-editor.md`](save-editor.md) 4.1, 4.2); the faerie village and
   Options behind the advanced box.
+  Amended 2026-11-11: **memory cards and conversion.** The file box opens a
+  raw memory card file (131,072 bytes, as Mednafen, RetroArch and psxrecomp
+  write) and lists its saves of the game; "Write to" offers each of them, a
+  new save on the card, and a card file that is not there yet. A save
+  written from a card to a PC slot or the reverse is converted: the
+  character records change layout (the name is 5 bytes on the PlayStation
+  and 9 on the PC), the names the game gave (the eight characters' and the
+  faeries' defaults) are written as the destination release's from a map of
+  each release's default names, the player's own names as they are, and on
+  the way to a card the byte of DIV-0191 and the two options no PC screen
+  sets are cleared; the editor says so and asks first. A card write keeps the card
+  from before in `save-backups`, changes the block's bytes only, and
+  rewrites the card screen's title when the time or level it shows changed.
+  ([`save-editor.md`](save-editor.md) 7; `src/launcher/save/card.cpp`.)
+  Every name of the map is read from the player's install: the builder of
+  a language layer (`tools/loc_build.py` `save_names_chunk`) now writes the
+  disc's own eight and sixty names and its card file name into the layer's
+  `FIRST.DAT` (chunk kind 20, which the engine passes over), and the PC's
+  are the layers' and the exe's. A new card save is offered for the
+  releases installed as languages - the US, Japan, European, French and
+  German discs give `BASLUS-00422`, `BISLPS-00990`, `BESLES-01304`,
+  `-01319`, `-01320` - and a layer built before 2026-11-11 gives none
+  until it is built again
+  ([`save-editor.md`](save-editor.md) 8; `src/launcher/save/namemap.cpp`).
+  Verification: `save_tests.cpp` 1,557 checks, 0 failures on 113 PC saves
+  and 46 saves of 45 real cards (the five releases) (the layouts there and back, an unedited
+  card byte for byte, an empty card equal to the emulator's, each save's
+  names to the other release and back); the card-to-PC block equal to
+  `tools/save_convert.py`'s on 32 of 32 but for the names; the window
+  driven by `tools/launcher_host/save_editor_drive.py` with a Japan card
+  and a US card, then a German, a French and a European one, 33 checks
+  each, on installs with three and four languages; the
+  five discs' layers built with the chunk, `loc_build.py selftest`.
+  **Not done:** no save from the PC game has been loaded on a PlayStation
+  or an emulator.
 - **Reversible?** The player does not open it. Each save it replaces is in
   `save-backups\`.
 - **Switch:** none

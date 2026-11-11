@@ -639,6 +639,22 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   (`tools/launcher_host/save_tests.cpp`; fixtures are the player's saves, never committed). The owner has
   the build in `game\` and has opened it on the real saves.
 
+  **Memory cards and conversion (2026-11-11, branch `launcher/save-editor-cards`,
+  [`save-editor.md`](save-editor.md) 7):** the file box opens a raw card file and lists its saves; "Write to"
+  takes a card save, a new save on the card or a new card file, and a save that changes kind is converted
+  (`src/launcher/save/card.cpp`), with the names the game gave written as the other release's
+  (`namemap.cpp`, [`save-editor.md`](save-editor.md) 8: every name is read from the install - `loc_build.py`
+  now writes each disc's own names and card file name into its layer's `FIRST.DAT` as chunk kind 20, and a new
+  card save is offered for the languages installed. **A layer built before 2026-11-11 has no chunk: build the
+  languages again**, the owner's `game\` included; whether the launcher's stale check offers that rebuild by
+  itself for this change was not run). `save_tests.cpp --layers`: 1,557 checks, 0 failures, 113 PC saves and 46 saves of 45 real cards; the window driven by `tools/launcher_host/save_editor_drive.py` (33 checks; it finds its
+  windows by the process it started). **Owed:** a save from the PC game loaded on a PlayStation emulator
+  (Mednafen or the sibling's psxrecomp): the card is checked for structure only, and the button words and
+  the PC's option bytes have never been read by a PlayStation build. Then the owner's eye on the two file
+  boxes. Not built: EU, FR and DE card names for a new save (a save of those releases opens and is
+  replaced), a name codec per release (a name the player wrote is written as it is),  DexDrive `.gme` and single-save
+  files.
+
   **Owed before it is called done:**
   - **An edited save loaded and played in the game.** Nobody has. Start small: zenny, an item, a weapon;
     then a party change (the party row `+0x74C`), an area and entrance change, a gene and a master.

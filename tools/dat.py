@@ -54,7 +54,8 @@ KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours,
          16: "fishing text (ours, DIV-0069)",
          17: "the release's staff roll (ours, DIV-0148)",
          18: "reading-row side chunk (ours, docs/reading-row.md 1)",
-         19: "corrected text block (ours, DIV-0203)"}
+         19: "corrected text block (ours, DIV-0203)",
+         20: "the disc's save names, for the launcher's save editor (ours, DIV-0211)"}
 # Kinds 18 and 19 are the chunks whose fourth header word is not zero: 18
 # carries the pool half (0 or 1) the side chunk's slots index
 # (docs/reading-row.md 1.1), 19 the correction group whose switch governs it
