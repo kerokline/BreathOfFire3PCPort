@@ -147,7 +147,7 @@ At map time: the image, the engine's fills, the base's table files, then each
 layer in `BOF3X_OPT`'s order (its tables, then its raw ranges), then the
 compare with the file where there is one. When two layers write one byte with
 different values, the later layer wins and the exe host logs one line per
-table with both layers' names and the cell count (owner call 3). A cell on a
+table with both layers' names and the cell count (the owner, section 7 call 3). A cell on a
 must-equal class is refused, as now.
 
 ## 4. The mod kind
@@ -223,29 +223,34 @@ are gated together (section 6). C touches no engine file.
    `tables.py dump` on the running install's files agrees both times.
 6. The start-up cost from M4, measured again, and stated.
 
-## 7. Owner calls
+## 7. The owner's calls (answered 2026-11-11)
 
-1. **What a table file holds.** Recommended: binary records in the PC's
-   stride, as section 3 has it, with `tables.py export` giving CSV and the mod
-   format being text. The engine then reads bytes it lays without parsing, and
-   a table with unread fields (`tables.toml` has several `unread_*`) loses
-   nothing. The other way, a text file the engine parses at start, is readable
-   without a tool but needs every byte of every record named first.
-2. **The base too, or layers only.** Recommended: both, as written. Layers
-   alone would give mods their files and leave the tables inside `data.bin`,
-   which is not what was asked. The cost of the base half is acceptance 1 on
+1. **What a table file holds: binary records in the PC's stride**, as section
+   3 has it, with `tables.py export` giving CSV and the mod format being text.
+   The engine lays bytes without parsing, and a table with unread fields
+   (`tables.toml` has several `unread_*`) loses nothing.
+2. **The base too**, as written, not layers alone. The cost is acceptance 1 on
    every install kind.
-3. **Two mods on one cell.** Recommended: the later mod in the Mods tab's
-   order wins, the launcher says so beside both mods, the log has the line.
-   I58 as written refuses instead unless the order says which wins; the order
-   always says, so the refusal would never fire.
-4. **Names.** A table file has none, so a `table-edit` mod cannot rename an
-   item; that is a text mod. Say if item names should be reachable from the
-   same mod file (it would then need the language tag and the text tables'
-   route, a larger step).
-5. **When.** This round does not depend on the disc-patch round (groups M, A,
-   B, C touch none of its files), so it can run first. Group D needs that
-   round's builder.
+3. **Two mods on one cell: the later mod in the Mods tab's order wins**; the
+   launcher says so beside both mods and the log has the line. (I58 as written
+   refused instead unless the order says which wins; the order always says.)
+4. **Names: for reading, never for the game.** A table file has no name and
+   the game reads none from one. The owner: pull the names from their own map
+   "as a title / natural language read, but not as a name the game reads". So:
+   - `tables.py export` adds a `name` column to each CSV of a table that has a
+     name field, filled from the install's language (the text the engine would
+     write into that record's name field for the language given, English
+     where the install has it). The column is a title for the row. `make_mod.py
+     table-edit` ignores it, and a change to it is reported as ignored with
+     the sentence that a rename is a text mod.
+   - The Mods tab, and any refusal that names a record, shows the record's
+     name beside its number, looked up at display time from the player's own
+     install.
+   - A `[[set]]` row still names a record by number. The name is not in the
+     mod zip (it is the game's text, rule 1) and not a key (it changes with
+     the language).
+5. **When: before the disc-patch round.** Groups M, A, B, C touch none of its
+   files. Group D needs that round's builder.
 
 ## 8. Not in this round
 
