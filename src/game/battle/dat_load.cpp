@@ -489,6 +489,9 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
     case 19:  // DIV-0203: ours.
         TakeCorrected(h, payload);
         break;
+    case 20:  // the disc's save names (tools/loc_build.py save_names_chunk): the launcher's save editor
+              // reads them, the game does not. Ours (DIV-0211).
+        break;
     default:
         break;
     }

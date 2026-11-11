@@ -28,6 +28,8 @@ using Block = std::array<std::uint8_t, kBlockSize>;
 // The u16 at +0x70: the byte sum of the block with that word counted as zero.
 std::uint16_t Checksum(const Block& block);
 std::uint16_t StoredChecksum(const Block& block);
+// Writes the checksum of the block as it is now.
+void Seal(Block& block);
 
 // The install's names, for the lists a field offers. Empty where the install
 // has none the launcher can read (save_names.cpp).
@@ -124,12 +126,17 @@ struct Issue {
 // What is wrong with `now` that was not already wrong with `before`.
 std::vector<Issue> Check(const Block& before, const Block& now, const PartyTable& table);
 
-// The PC file. ReadPcFile refuses a file that is not 0x12B0 bytes; a wrong
+// The PC file. ReadPcFile refuses a file that is not 0x12B0 bytes (a memory
+// card file is card.h's); a wrong
 // checksum is not a refusal, the caller asks StoredChecksum. WritePcFile
 // writes beside the target, reads the bytes back, keeps the file it replaces
 // in `backup_dir` (made if absent; `backup` names the copy) and then replaces.
 bool ReadPcFile(const std::wstring& path, Block& block, std::string& why);
 bool WritePcFile(const std::wstring& path, const Block& block, const std::wstring& backup_dir, std::wstring& backup,
                  std::string& why);
+// The write that WritePcFile and the card file share: `bytes` beside `path`,
+// read back, the file from before kept in `backup_dir`, then the replace.
+bool WriteKept(const std::wstring& path, const std::vector<char>& bytes, const std::wstring& backup_dir,
+               std::wstring& backup, std::string& why);
 
 }  // namespace bof3x::save
