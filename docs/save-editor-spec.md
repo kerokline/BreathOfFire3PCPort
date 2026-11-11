@@ -1,6 +1,8 @@
 # Save editor for the launcher: specification
 
-**Status:** DRAFT (2026-11-09). Nothing is built. The format facts tagged
+**Status:** DRAFT (2026-11-09). **Since 2026-11-10 stages 1, 3 and 4 of section
+16 are built for PC save files: [`save-editor.md`](save-editor.md) says what
+was built and where it differs from this page.** The format facts tagged
 MEASURED were checked that day against the saves in section 15. Everything else
 carries its tag. The owner's calls so far are in section 1, the open ones in
 section 14.

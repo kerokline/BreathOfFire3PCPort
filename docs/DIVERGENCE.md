@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 210 entries, DIV-0001..0210, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 211 entries, DIV-0001..0211, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15430,5 +15430,50 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=GiftChestRow (ini off=)
 - **Toward:** none - not known on any other release
+- **Languages:** any
+- **State:** active
+
+### The launcher has a save editor
+
+- **ID:** DIV-0211
+- **Date:** 2026-11-10
+- **Subsystem:** launcher (`src/launcher/save/block.cpp`, `names.cpp`,
+  `save_dialog.cpp`, `launcher.rc` `IDD_SAVEEDIT`;
+  [`save-editor.md`](save-editor.md), [`save-editor-spec.md`](save-editor-spec.md))
+- **Tier:** Extension - a tool beside the game. It changes no game code and
+  no behaviour of the game; it writes the save files the game reads.
+- **Original behaviour:** the 2001 port has no settings program and no tool
+  for its save files ([`launcher-settings.md`](launcher-settings.md) 1). A
+  save changes only when the game writes it.
+- **New behaviour:** the launcher's Mods tab has a **Save Editor...** button
+  that opens a dialog over the sixteen save files `BISLPS00..0F.DAT` of the
+  game folder (never the quicksaves `10..1F`). It shows each field of the
+  save block from one field table and writes the fields the player changes:
+  zenny, play time, position, the party, the eight character records, the
+  inventory, key items, skills, genes, masters, fishing, the faerie village,
+  options, and with "Show advanced fields" the story state, the flags and the
+  counters. On Save it sets the fields that follow from an edit (the slot
+  summary, the party row, the faerie stamps, the checksum), refuses values
+  that the game reads with no bound, keeps the file it replaces in
+  `<game folder>\save-backups\`, and does not write while the game runs. A
+  save nobody edited is written byte for byte. The names in its lists are
+  read from the player's install; none is in the launcher.
+- **Rationale:** the owner, 2026-11-09 and 2026-11-10: a native editor in the
+  launcher, written from our own documents and measurements, opened from the
+  Mods tab as the CRT options are opened from Settings.
+- **Also in the PSX version?** No: the PlayStation release has no launcher.
+  Memory cards are not read or written by this version of the editor.
+- **Verification:** `tools/launcher_host/save_tests.cpp`, 939 checks and 0
+  failures on 114 real PC saves (round trip, each field's own text, one
+  edit, the battle count); the window driven in a scratch copy of an install
+  (an out-of-range value refused; zenny and a weapon set and saved: the file
+  differs in those bytes and the checksum, and the backup is the file from
+  before). **Not done:** no edited save has been loaded in the game.
+- **Reversible?** The player does not open it. Each save it replaces is in
+  `save-backups\`.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the launcher's dialog itself; it does nothing until the player opens it and saves
+- **Toward:** none - no release has a save editor
 - **Languages:** any
 - **State:** active

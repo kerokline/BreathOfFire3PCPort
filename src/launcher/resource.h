@@ -169,3 +169,19 @@
 #define IDC_PRESETNOTE   1731
 #define IDC_PRESETLIST   1732
 #define IDC_PRESETGREY   1733
+// The save editor (docs/save-editor.md; src/launcher/save_dialog.cpp), and its
+// button on the Mods tab's sub-row.
+#define IDC_SAVEEDITOR   1038
+#define IDD_SAVEEDIT     107
+#define IDC_SE_SLOT      1800
+#define IDC_SE_RELOAD    1801
+#define IDC_SE_FILENOTE  1802
+#define IDC_SE_SECTIONS  1803
+#define IDC_SE_RECORD    1804
+#define IDC_SE_FIELDS    1805
+#define IDC_SE_VALUE     1806
+#define IDC_SE_NOTE      1807
+#define IDC_SE_ADVANCED  1808
+#define IDC_SE_STATUS    1809
+#define IDC_SE_TARGET    1810
+#define IDC_SE_SAVE      1811

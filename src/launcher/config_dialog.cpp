@@ -24,6 +24,7 @@
 #include "launcher/ledger_registry.h"
 #include "launcher/music_player.h"
 #include "launcher/resource.h"
+#include "launcher/save_dialog.h"
 #include "launcher/sources_dialog.h"
 #include "launcher/suites.h"
 
@@ -1548,6 +1549,15 @@ void ShowPage(HWND dlg, DialogState& state, int page) {
         ShowWindow(GetDlgItem(dlg, IDC_SUB0 + j), k > 1 && j < k ? SW_SHOW : SW_HIDE);
     for (int j = 0; j < kSheetsMax; ++j)
         ShowWindow(GetDlgItem(dlg, IDC_SHEET0 + j), sheets > 1 && j < sheets ? SW_SHOW : SW_HIDE);
+    // The save editor's button: on the Mods tab, after its sub-tabs.
+    if (page == kPageMods && k >= 1) {
+        RECT last;
+        GetWindowRect(GetDlgItem(dlg, IDC_SUB0 + k - 1), &last);
+        MapWindowPoints(nullptr, dlg, reinterpret_cast<POINT*>(&last), 2);
+        SetWindowPos(GetDlgItem(dlg, IDC_SAVEEDITOR), GetDlgItem(dlg, IDC_SUB0 + k - 1), last.right + Px(state, 6),
+                     last.top, last.right - last.left, last.bottom - last.top, SWP_NOACTIVATE);
+    }
+    ShowWindow(GetDlgItem(dlg, IDC_SAVEEDITOR), page == kPageMods ? SW_SHOW : SW_HIDE);
     SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, title ? IDOK : IDC_TAB0 + page)), TRUE);
     // the window and every page and control on it, so nothing shows the face before
     RedrawWindow(dlg, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
@@ -1745,6 +1755,11 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         case IDC_LOOKOPTIONS:
             SatpixieOptions(dlg, state->cfg->sp);
+            return TRUE;
+        case IDC_SAVEEDITOR:
+            // The names come from the layer of the language that the game plays now.
+            SaveEditorRun(dlg, state->game_dir, ConfigCacheDataRoot(*state->cfg),
+                          ConfigLanguagePlayed(state->game_dir, *state->cfg));
             return TRUE;
         case IDC_CH_STEAL:
         case IDC_CH_INFO:

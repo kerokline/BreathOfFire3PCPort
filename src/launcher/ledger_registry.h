@@ -280,7 +280,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "GiftChestRow", 0, 12},   // DIV-0210
 };
 
-inline constexpr std::size_t kEntryCount = 210;
+inline constexpr std::size_t kEntryCount = 211;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -702,6 +702,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 203, 1, true, Player::Yes, 0, kLangAny},
     {210, "The two gift chests opened in chapter 7 stay open",
      Tier::Intent, State::Active, 0, 204, 1, true, Player::Yes, 0, kLangAny},
+    {211, "The launcher has a save editor",
+     Tier::Extension, State::Active, 0, 205, 0, true, Player::Never, 0, kLangAny},
 };
 
 // The switches of one entry.

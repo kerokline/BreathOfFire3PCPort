@@ -631,6 +631,14 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **The save editor, first version (2026-11-10, branch `launcher/save-editor`, DIV-0211,
+  [`save-editor.md`](save-editor.md)).** The Mods tab's Save Editor... button and its dialog: PC save files,
+  every field from one table, the advanced fields, checks and backups on save. Format tests: 939 checks, 0
+  failures on 114 real PC saves. **Owed:** an edited save loaded and played in the game (nobody has); the
+  owner's eye on the window; `dialog_test.py` was not run (it finds the launcher's window by its title, and the
+  owner's own launcher was open). **Next stages** (spec section 16): memory cards and conversion, creation from
+  nothing, story points; names for genes, masters, fish and areas; the EXP-past-level warning.
+
 - **The beta's docs branch (2026-11-08):** `docs/beta-readiness-1107` in the main checkout - the checklist, the
   notes `docs/releases/v0.1.0-beta.1.md`, the README's status line, `.github/ISSUE_TEMPLATE/bug-report.md` and
   this rewrite; the PR to come, then the tag from `main` (item 0).

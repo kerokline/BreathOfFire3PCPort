@@ -65,4 +65,16 @@ bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& key
     return true;
 }
 
+bool ExePartyTable(const std::wstring& exe, std::vector<unsigned char>& rows, std::string& why) {
+    return ExeImageRead(exe, MoveScript_EffectArg_addr + 0xC, 19 * 3, rows, why);
+}
+
+NameTableTags ExeNameTableTags() {
+    // Ability_Records' names start 8 bytes into NameTable_Abilities: the first
+    // name there is ability 1's (symbols.toml, NameTable_Abilities' note).
+    namespace a = ::bof3::addr;
+    return {a::NameTable_Consumables, a::NameTable_KeyItems,    a::NameTable_Weapons,
+            a::NameTable_Armour,      a::NameTable_Accessories, a::NameTable_Abilities + 8};
+}
+
 }  // namespace bof3x
