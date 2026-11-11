@@ -203,7 +203,8 @@ Launcher text follows ASD-STE100.
    text and script blocks through `loc_build.py`, as an `opt/` layer over
    `en-US`. This is I58's first step with the patch format settled. The enemy
    balance and every text change play at this point.
-5. **The image layer with the translated map**: `GAME.EMI` and BATTLE 15's
+5. **Built 2026-11-11 ([`disc-patch-round.md`](disc-patch-round.md) 3b, 5c): 2,408 bytes
+   of seven table files and 64 loose bytes. The image layer with the translated map**: `GAME.EMI` and BATTLE 15's
    tables (the 240 data runs). I58's second step plus item 2 of section 4.
 6. **The behaviours**, one DIV each, from the census. The open-ended part;
    each is also a toggle a player without the hack can use.

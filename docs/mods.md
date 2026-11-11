@@ -322,8 +322,10 @@ The disc-patch round's group A ([`disc-patch-round.md`](disc-patch-round.md) 2
 and 5a). A romhack as its author released it: the `.xdelta` of a disc's data
 track, untouched. `tools/disc_patch_build.py` builds it into two layers
 (5b there): `mod-<id>`, what no language owns, and `mod-<id>-<tag>`, its
-edits to the text of its disc's language. The launcher does not hand them to
-the game yet (the round's group C).
+edits to the text of its disc's language. The first also holds the numbers
+the hack changed in the tables the PC keeps in its `.data` (3b there), as
+cells of the table files. The launcher does not hand them to the game yet
+(the round's group C).
 
 ```toml
 # mod.toml

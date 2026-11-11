@@ -4,9 +4,10 @@
 2026-11-11 against `main` `8d2d987d`, after the image-layer round merged (PR
 224), and group M run the same day: its five measurements are in
 [`romhack-mods.md`](romhack-mods.md) section 8 and they change sections 1 and 3
-below. Groups A and B are built (5a, 5b): the mod builds on the player's
-machine and the launcher does not hand its layers to the game yet (group C).
-C, D and E are not built. Step 4 of romhack-mods.md section 6.
+below. Groups A, B and E are built (5a, 5b, 5c): the mod builds on the
+player's machine, with the overlays' table numbers as cells of the table files
+(the image-layer round's group D), and the launcher does not hand its layers to
+the game yet (group C). C and D are not built. Step 4 of romhack-mods.md section 6.
 Read that note first: it holds the measurements this plan stands on. `main`
 holds the three things the round starts from: `tools/vcdiff.py`,
 `tools/disc_patch_census.py`, and `author` / `url` / `credit` in `mod.toml` and
@@ -188,6 +189,47 @@ language - the install's own name chunks for those areas, copied from
 `loc\<other>\`. Until that exists the launcher offers the mod over its own
 language only.
 
+### 3b. The overlays' data (group E, as built: 5c)
+
+The PC holds the overlays' tables in `.data`, at addresses of its own, and the
+image builder (`tools/exe_tables.py`) fills them from the disc by address. A
+hack moves bytes inside an overlay, so its sections cannot be handed over as
+they are. Each changed overlay section is first put back at the original's
+addresses (`unmoved_section`):
+
+| What the two sections show | What is done |
+|---|---|
+| a run of the same length that differs | taken, where it is now |
+| a word that differs only by a distance bytes moved (a pointer, a jump, the low half of an address) | left the original's: it is the patch tool's relinking, and the PC's pointers are its own |
+| bytes put in and taken out so that the shift comes back to what it was, inside one table the PC holds at an address of its own, or with nothing in the section relinked by a distance inside it | a rewrite in place (a record with a new name and numbers, a list reshuffled): taken address for address |
+| the same, with a pointer relinked by such a distance; or a shift that does not come back | bytes moved: the same-length edits follow them to the original's address; the bytes put in or taken out have no address there and are not placed |
+
+Then `exe_tables.disc_image` builds the image from the original disc and from
+that one, the pointer words are masked in both, and the bytes that differ are
+the mod's:
+
+- a byte in a table that is a file: a cell of `opt\mod-<id>\exe\tables.toml`,
+  in a copy of the install's own table file (image-layer-round.md 3.2);
+- any other byte: a raw range of `opt\mod-<id>\exe\place.toml`, where the
+  install's image is of a class a layer may write. A PC-built image
+  (DIV-0212) is the PC's own outside the table files, so there those bytes
+  are not carried, and counted (owner call 6);
+- a pointer the hack aims elsewhere, and a length change on bytes the image
+  takes: not carried, counted, each length change with its file, section,
+  address and lengths.
+
+**The text builder sees the same world.** `loc_build.py` is given the hybrid
+disc with these un-moved overlay sections in it as well as the patched text
+sections, and reads the image with the mod's bytes laid over it
+(`loc_build.image_overlay`). The tables it finds by Capcom's numbers are then
+found by the hack's numbers on both sides, and a name the hack changed in an
+overlay table is built into the text layer as that language's name chunk.
+This is what answers group M's first refusal for good: nothing is waived.
+
+The rule in the third row is a judgement, not a proof: it reads "nothing was
+relinked by that distance" as "nothing moved". A hack that moves a table and
+relinks nothing would be taken wrong. The self-test has both shapes.
+
 A patched section that passes no transform (a kind-1 image that does not
 decode, a text block `loc_build.py` refuses) stops the build with the file,
 the section and the builder's sentence. No partial layer (rule 4).
@@ -339,6 +381,61 @@ has fresh ones.
 - The launcher does not know the kind's layers, DIV-0157 is not amended, and
   nobody has played it.
 
+## 5c. Group E as run (2026-11-11): the image-layer round's group D
+
+**What was built.**
+
+- `tools/disc_patch_build.py`: `unmoved_section`, `UnmovedDisc`,
+  `image_changes`, `write_image_part` (section 3b); `HybridDisc` takes the
+  un-moved overlays; the text builder's child lays the mod's bytes over the
+  image it reads, from the moment the disc is opened (a PC install's
+  `BOF3.exe` is checked before that, as it is). `edits`, `moved_by` and
+  `relocation` moved here from `disc_patch_census.py`, which imports them.
+- `tools/loc_build.py`: `image_overlay` and `overlaid`, used by both image
+  readers (`PcInstall.exe`, `DiscCache.exe`); empty outside this build.
+- `tools/mods.py`: a layer with only raw ranges counts as built.
+- No engine file: the loader of the image-layer round takes both forms as
+  they are.
+
+**Measured on the real patch first** (`e_measure.py`), then built:
+
+| | |
+|---|---|
+| Image bytes that differ, pointer words masked | **2,472**: 2,408 in seven tables that are files, 64 in 38 runs outside them |
+| The seven tables | `exp_table` 2,132 bytes in 618 records; `shop_records` 149 in 10; `abilities` 105 in 73; `weapons` 12 in 6; `armour` 5 in 4; `accessories` 4 in 3; `event_op_lengths` 1 |
+| The 64 loose bytes | under 29 symbols: `Char_DefaultRecords` 10, `Ability_EffectIndex` 9, the rest 1 to 3 bytes each in the areas' and effects' own tables |
+| Pointer words the hack aims elsewhere | 0, once a relinked word inside a longer run is told from an edit (198 bytes before that) |
+| Length changes on bytes the image takes | 0, once a rewrite inside a fixed table is taken in place (13 before, all in tables: the shop records, an ability's record, the character records) |
+| Names the hack changed in the overlay tables | 12: 1 consumable, 6 armour, 1 accessory, 4 abilities. Carried in the text layer as four kind-5 name chunks of `FIRST.DAT` |
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `disc_patch_build.py selftest` | 39 checks, 0 failures: the six shapes of section 3b's table, the un-moved disc and the hybrid over it, cells cut at a record's end, raw ranges in order, a must-equal byte kept and counted, a table file that is not the install's refused |
+| `mods.py`, `loc_build.py`, `vcdiff.py` self-tests; `importer.py check` | pass |
+| The real patch, US disc-only install | exit 0 in about 90 s. `mod-definitive`: 52 chunks, 7 table files with 1,209 cells (2,408 bytes), 38 raw ranges (64 bytes). `mod-definitive-en-US`: 345 chunks (5b's 341 and the four name chunks). Nothing refused. Built three times: the same bytes |
+| The real patch, PC-based install (zipped disc) | exit 0 in 50 s. The same 2,408 bytes of cells; **the 64 loose bytes not carried**, said in the build's line; 346 text chunks |
+| The exe host's self-test, disc-only, both layers (`run_st.sh`) | exit 0; `7 tables, 1209 cells, 2408 bytes ... 2408 of them differ`; `38 ranges, 64 bytes ... 64 of them differ`; the mapped `.data` hash is another than with no layer. The same counts from Python over `read_image` |
+| The exe host's self-test on a PC game folder with the PC-built image (`run_st_pc.sh`) | exit 0; `base/exe (pc-zh) is BOF3.exe's .data, byte for byte`, then `7 tables, 1209 cells, 2408 bytes ... 2408 of them differ` |
+
+**Not carried, and said by the build:** the overlays' code (169 changed
+sections in 121 files were read for their tables only), one sound section,
+the boot program (5 places: its file table follows the disc's layout, its
+other edits are not read), and on a PC-built image the 64 loose bytes.
+
+**Not done.**
+
+- **What each number is.** The cells are bytes that differ, placed by
+  address. No table was read back by field against the hack's readme (the
+  readme does not give numbers), and no value was looked at in the game.
+- **The live half**, as in 5b: no route, no save loaded, nobody has played it.
+- **The census against the build**, row by row: the census counts 240 data
+  runs by its own alignment; the build places bytes. The two were not
+  reconciled run by run.
+- The other install kinds (a European or Japanese base with the US disc for
+  text) were not built.
+
 ## 6. Acceptance
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
@@ -397,8 +494,19 @@ The calls as they were put:
    (a) do not carry a changed bank, report it, and ask the author; (b) carry
    it as the disc has it. I recommend (a).
 
+6. **The loose bytes on a PC install** (new, from group E). 64 bytes of this
+   hack's table numbers lie outside the tables that are files. A disc-built
+   image takes them as raw ranges. A PC-built image (DIV-0212) is class `exe`
+   there, which the engine holds equal to `BOF3.exe`, so on a PC install they
+   are not carried. Choices: (a) leave it, and catalogue those tables when
+   they come up (each catalogued table becomes a file, and then carries on
+   every install); (b) let a layer's raw range lie over a PC-built image
+   (an engine change, DIV-0111 and DIV-0212 amended). I recommend (a) with
+   `Char_DefaultRecords` and `Ability_EffectIndex` catalogued first: it keeps
+   one rule for every install and makes the bytes readable.
+
 Calls 1, 2 and 4 gate group D alone; call 3 gates group C; call 5 gates one
-chunk. Groups A, B and E need none of them.
+chunk; call 6 is open. Groups A, B and E needed none of them.
 
 ## 8. Not in this round
 

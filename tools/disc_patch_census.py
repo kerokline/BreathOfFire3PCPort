@@ -45,52 +45,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import psx_disc   # noqa: E402
 
-ANCHOR = 12          # bytes that must agree for two streams to be back in step
-
-
-def emi_sections(blob):
-    count, = struct.unpack_from("<I", blob, 0)
-    out, pos = [], 0x800
-    for i in range(count):
-        size, dest = struct.unpack_from("<II", blob, 0x10 + 16 * i)
-        kind, = struct.unpack_from("<H", blob, 0x1C + 16 * i)
-        out.append((i, kind, dest, blob[pos:pos + size]))
-        pos += ((size + 0x7FF) >> 11) * 0x800
-    return out
-
-
-def edits(a, b):
-    """[(a0, a1, b0, b1)]: the runs where a and b differ, found by walking both
-    and, at a difference, taking the nearest place the next ANCHOR bytes agree
-    again. Greedy, so not minimal, but an insertion or a deletion stays one run."""
-    out = []
-    i = j = 0
-    na, nb = len(a), len(b)
-    while i < na and j < nb:
-        if a[i] == b[j]:
-            while i + 4096 <= na and j + 4096 <= nb and a[i:i + 4096] == b[j:j + 4096]:
-                i += 4096
-                j += 4096
-            while i < na and j < nb and a[i] == b[j]:
-                i += 1
-                j += 1
-            continue
-        best = None
-        for da in range(0, 8192):
-            if i + da + ANCHOR > na or (best is not None and da >= best[0] + best[1]):
-                break
-            k = b.find(a[i + da:i + da + ANCHOR], j, j + 16384)
-            if k >= 0 and (best is None or da + (k - j) < best[0] + best[1]):
-                best = (da, k - j)
-        if best is None:
-            out.append((i, na, j, nb))
-            return out
-        out.append((i, i + best[0], j, j + best[1]))
-        i += best[0]
-        j += best[1]
-    if i < na or j < nb:
-        out.append((i, na, j, nb))
-    return out
+from disc_patch_build import ANCHOR, edits, moved_by, relocation   # noqa: E402,F401  (the builder's own)
 
 
 def load_maps(build):
@@ -164,45 +119,6 @@ def target_sections(disc, funcs):
         if idx < len(secs):
             out[hashlib.sha1(secs[idx][3]).digest()] = target
     return out
-
-
-def moved_by(runs):
-    """The distances bytes of a section moved by: each running total of what
-    the edit runs inserted and deleted, 0 left out."""
-    out, d = set(), 0
-    for a0, a1, b0, b1 in runs:
-        d += (b1 - b0) - (a1 - a0)
-        if d:
-            out.add(d)
-        if (b1 - b0) != (a1 - a0):
-            out.add((b1 - b0) - (a1 - a0))
-    return out
-
-
-def relocation(da, db, a0, a1, b0, b1, shifts):
-    """When a same-length run inside one word is only an address that follows
-    moved bytes - a jump target, a 16-bit offset or a pointer word that differs
-    by one of `shifts` - that distance; else None. The edit is the patch tool's
-    relinking, not a change the author made by hand."""
-    if not shifts or a1 - a0 != b1 - b0 or a1 - a0 > 4 or (a0 & ~3) != ((a1 - 1) & ~3) or (a0 & 3) != (b0 & 3):
-        return None
-    w0, = struct.unpack_from("<I", da, a0 & ~3)
-    w1, = struct.unpack_from("<I", db, b0 & ~3)
-    d32 = (w1 - w0) & 0xFFFFFFFF
-    d32 -= (d32 & 0x80000000) << 1
-    if d32 in shifts:                                   # a pointer word, or an immediate with no carry
-        return d32
-    if (w0 >> 26) == (w1 >> 26) and (w0 >> 26) in (2, 3):   # j, jal: a word index
-        d = ((w1 - w0) & 0x3FFFFFF)
-        d -= (d & 0x2000000) << 1
-        if d * 4 in shifts:
-            return d * 4
-    if (w0 >> 16) == (w1 >> 16):                        # the low half of an address
-        d = (w1 - w0) & 0xFFFF
-        d -= (d & 0x8000) << 1
-        if d in shifts:
-            return d
-    return None
 
 
 def looks_like_code(md, sec, off):

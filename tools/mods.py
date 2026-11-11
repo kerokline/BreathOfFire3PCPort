@@ -467,10 +467,11 @@ def manifest_lists(cache, layer):
 
 
 def built(cache, layer):
-    """The layer is in the cache and listed: its DAT containers, or - a table
-    layer - its exe/tables.toml."""
+    """The layer is in the cache and listed: its DAT containers, or its image
+    part - exe/tables.toml (a table layer's), exe/place.toml (raw ranges)."""
     there = _has_dat(os.path.join(cache, "opt", layer, "dat")) or \
-        os.path.isfile(os.path.join(cache, "opt", layer, "exe", "tables.toml"))
+        os.path.isfile(os.path.join(cache, "opt", layer, "exe", "tables.toml")) or \
+        os.path.isfile(os.path.join(cache, "opt", layer, "exe", "place.toml"))
     return there and manifest_lists(cache, layer)
 
 

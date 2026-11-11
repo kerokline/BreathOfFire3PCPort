@@ -19,7 +19,15 @@ its build step, run by `mods.py build` and by setup on the player's machine:
      `mod-<id>-<tag>`, and after it that language's names for every enemy
      table of the first layer (the engine walks a mod's layer after the
      language's, so a whole table blanks the names the language laid);
-  5. both layers into <cache>/opt/, and their manifest rows returned.
+  5. the overlays' data (docs/disc-patch-round.md 3b): every other changed
+     section of an overlay is put back at the original's addresses - an edit
+     in place taken, an address the patch tool only relinked left alone, a
+     block that moved followed - and tools/exe_tables.py builds the .data
+     image from the original disc and from that one. The bytes that differ
+     are the mod's: a byte in a table that is a file becomes a cell of
+     `mod-<id>`'s exe/tables.toml, any other a raw range of its exe/place.toml
+     where the install's image lets a layer write there;
+  6. both layers into <cache>/opt/, and their manifest rows returned.
 
 Nothing about a section's format is learned here: the importer's transforms
 and loc_build.py do the reading. The patched disc is never handed to either
@@ -27,14 +35,16 @@ whole - loc_build.py finds its tables in the overlays by Capcom's numbers and
 refuses a disc whose numbers a hack changed (docs/romhack-mods.md 8, M1).
 
 What is NOT carried is said, never dropped in silence: a changed sound bank
-(the owner's call 5), and every changed section the PC does not keep as a DAT
-chunk (the overlays' tables and code: the round's group E and after).
+(the owner's call 5), a table that changed its length, a pointer the hack
+aimed elsewhere, a byte the install's image keeps as the PC's own, and the
+overlays' code, which the PC does not run (each a behaviour of ours to offer).
 
     python tools/disc_patch_build.py selftest      # synthetic EMIs and containers, no game data
 
 Everything written is derived game data and stays in the player's cache
 (CLAUDE.md rule 1).
 """
+import collections
 import hashlib
 import json
 import os
@@ -105,10 +115,14 @@ def hybrid_emi(ob, nb, kept=KEPT):
 
 class HybridDisc:
     """The original disc's file tree; an EMI both discs hold is hybrid_emi's.
-    What loc_build.py is given in place of a disc (its `disc_opener`)."""
+    What loc_build.py is given in place of a disc (its `disc_opener`).
+    `unmoved`: an UnmovedDisc, whose overlay sections are taken in place of
+    the original's - the hack's table numbers and the names beside them, at
+    the original's addresses, so that loc_build.py reads the names the hack
+    changed."""
 
-    def __init__(self, orig, patched, kept=KEPT):
-        self.orig, self.patched, self.kept = orig, patched, kept
+    def __init__(self, orig, patched, kept=KEPT, unmoved=None):
+        self.orig, self.patched, self.kept, self.unmoved = orig, patched, kept, unmoved
         self.files = orig.files
         self.took = {}
 
@@ -120,6 +134,8 @@ class HybridDisc:
         nb = self.patched.read(key)
         if nb == ob:
             return ob
+        if self.unmoved is not None:
+            ob = self.unmoved.read(key)         # the same section list and sizes as the original
         try:
             blob, took = hybrid_emi(ob, nb, self.kept)
         except Bad as e:
@@ -136,6 +152,366 @@ class HybridDisc:
 
     def extent(self, lba, size):
         return self.orig.extent(lba, size)
+
+
+# ---------------------------------------------------------------- one section against its patched self
+
+ANCHOR = 12          # bytes that must agree for two streams to be back in step
+
+
+def edits(a, b):
+    """[(a0, a1, b0, b1)]: the runs where a and b differ, found by walking both
+    and, at a difference, taking the nearest place the next ANCHOR bytes agree
+    again. Greedy, so not minimal, but an insertion or a deletion stays one run."""
+    out = []
+    i = j = 0
+    na, nb = len(a), len(b)
+    while i < na and j < nb:
+        if a[i] == b[j]:
+            while i + 4096 <= na and j + 4096 <= nb and a[i:i + 4096] == b[j:j + 4096]:
+                i += 4096
+                j += 4096
+            while i < na and j < nb and a[i] == b[j]:
+                i += 1
+                j += 1
+            continue
+        best = None
+        for da in range(0, 8192):
+            if i + da + ANCHOR > na or (best is not None and da >= best[0] + best[1]):
+                break
+            k = b.find(a[i + da:i + da + ANCHOR], j, j + 16384)
+            if k >= 0 and (best is None or da + (k - j) < best[0] + best[1]):
+                best = (da, k - j)
+        if best is None:
+            out.append((i, na, j, nb))
+            return out
+        out.append((i, i + best[0], j, j + best[1]))
+        i += best[0]
+        j += best[1]
+    if i < na or j < nb:
+        out.append((i, na, j, nb))
+    return out
+
+
+def moved_by(runs):
+    """The distances bytes of a section moved by: each running total of what
+    the edit runs inserted and deleted, 0 left out."""
+    out, d = set(), 0
+    for a0, a1, b0, b1 in runs:
+        d += (b1 - b0) - (a1 - a0)
+        if d:
+            out.add(d)
+        if (b1 - b0) != (a1 - a0):
+            out.add((b1 - b0) - (a1 - a0))
+    return out
+
+
+def relocation(da, db, a0, a1, b0, b1, shifts):
+    """When a same-length run inside one word is only an address that follows
+    moved bytes - a jump target, a 16-bit offset or a pointer word that differs
+    by one of `shifts` - that distance; else None. The edit is the patch tool's
+    relinking, not a change the author made by hand."""
+    if not shifts or a1 - a0 != b1 - b0 or a1 - a0 > 4 or (a0 & ~3) != ((a1 - 1) & ~3) or (a0 & 3) != (b0 & 3):
+        return None
+    if (a0 & ~3) + 4 > len(da) or (b0 & ~3) + 4 > len(db):
+        return None
+    w0, = struct.unpack_from("<I", da, a0 & ~3)
+    w1, = struct.unpack_from("<I", db, b0 & ~3)
+    d32 = (w1 - w0) & 0xFFFFFFFF
+    d32 -= (d32 & 0x80000000) << 1
+    if d32 in shifts:                                   # a pointer word, or an immediate with no carry
+        return d32
+    if (w0 >> 26) == (w1 >> 26) and (w0 >> 26) in (2, 3):   # j, jal: a word index
+        d = ((w1 - w0) & 0x3FFFFFF)
+        d -= (d & 0x2000000) << 1
+        if d * 4 in shifts:
+            return d * 4
+    if (w0 >> 16) == (w1 >> 16):                        # the low half of an address
+        d = (w1 - w0) & 0xFFFF
+        d -= (d & 0x8000) << 1
+        if d in shifts:
+            return d
+    return None
+
+
+def _words(a0, a1, b0):
+    """A same-length run cut at the original's word boundaries: (a from, a to, b from)."""
+    p = a0
+    while p < a1:
+        q = min(a1, (p | 3) + 1)
+        yield p, q, b0 + p - a0
+        p = q
+
+
+def unmoved_section(da, db, fixed=()):
+    """The patched section `db` at the original `da`'s addresses: (bytes of
+    da's length, [(a0, a1, b0, b1) not placed], counts). `fixed`: the
+    [(from, to)] offsets of the section that the PC holds as tables at
+    addresses of its own.
+
+    - An edit of the same length is taken, where it is now.
+    - A word that differs only by a distance bytes moved (`relocation`) is the
+      patch tool's relinking and stays the original's: the PC's pointers are
+      its own.
+    - A run that changes length opens a stretch that ends where the running
+      shift is what it was. If the stretch lies inside one `fixed` table, or
+      nothing in the section was relinked by a distance inside the stretch,
+      nothing in it moved as far as any reader knows: it was rewritten in
+      place (a record with new text and numbers, a list whose entries were
+      reshuffled) and is taken address for address. Otherwise bytes moved: the
+      same-length edits follow them, and the bytes put in or taken out have no
+      address in the original and are not placed.
+    - A stretch that never closes moves the rest of the section; likewise."""
+    runs = edits(da, db)
+    shifts = moved_by(runs)
+    relinked = collections.Counter()
+    for a0, a1, b0, b1 in runs:
+        if a1 - a0 == b1 - b0:
+            for p, q, bp in _words(a0, a1, b0):
+                r = relocation(da, db, p, q, bp, bp + q - p, shifts)
+                if r is not None:
+                    relinked[r] += 1
+    u, unplaced, n = bytearray(da), [], collections.Counter()
+
+    def put(a0, a1, b0):
+        for p, q, bp in _words(a0, a1, b0):
+            if relocation(da, db, p, q, bp, bp + q - p, shifts) is None:
+                u[p:q] = db[bp:bp + q - p]
+            else:
+                n["relinked"] += 1
+
+    i, d = 0, 0
+    while i < len(runs):
+        a0, a1, b0, b1 = runs[i]
+        if a1 - a0 == b1 - b0:
+            put(a0, a1, b0)
+            n["edits"] += 1
+            i += 1
+            continue
+        j, dd, inner, closed = i, d, set(), False
+        while j < len(runs):
+            x0, x1, y0, y1 = runs[j]
+            dd += (y1 - y0) - (x1 - x0)
+            inner.add((y1 - y0) - (x1 - x0))
+            j += 1
+            if dd == d:
+                closed = True
+                break
+            inner.add(dd)
+        lo, hi = runs[i][0], runs[j - 1][1]
+        if closed and (any(f0 <= lo and hi <= f1 for f0, f1 in fixed) or not any(relinked[x] for x in inner)):
+            put(lo, hi, lo + d)
+            n["rewritten in place"] += 1
+        else:
+            for x0, x1, y0, y1 in runs[i:j]:
+                if x1 - x0 == y1 - y0:
+                    put(x0, x1, y0)
+                    n["edits"] += 1
+                else:
+                    unplaced.append((x0, x1, y0, y1))
+                    n["length changes"] += 1
+        i, d = j, dd
+    return bytes(u), unplaced, n
+
+
+class UnmovedDisc:
+    """The original disc's file tree; every section of an overlay that the
+    patch changed is unmoved_section's (the sections the PC keeps as chunks
+    stay the original's here: they are the DAT layers' work). What
+    tools/exe_tables.py is given to build the patched .data image from."""
+
+    def __init__(self, orig, patched, fixed=None):
+        """`fixed`: {(EMI path under the data root, section): [(from, to)]},
+        the offsets the PC's image takes as tables (unmoved_section)."""
+        self.orig, self.patched, self.fixed = orig, patched, fixed or {}
+        self.files = orig.files
+        self.unplaced, self.counts, self._memo = {}, collections.Counter(), {}
+
+    @staticmethod
+    def overlay(kind, dest):
+        return kind == 0 and dest >> 24 == 0x80 and dest not in KEPT and dest != ENEMY_DEST
+
+    def read(self, name):
+        key = name.upper().replace("\\", "/")
+        if key in self._memo:
+            return self._memo[key]
+        out = ob = self.orig.read(key)
+        if key.endswith(".EMI") and key in self.patched.files and ob[8:16] == b"MATH_TBL":
+            nb = self.patched.read(key)
+            if nb != ob:
+                so, sn = emi_sections(ob), emi_sections(nb)
+                if len(so) != len(sn):
+                    raise Bad("%s: the patch changes how many sections the file has" % key)
+                body = []
+                for (i, kind, dest, da), (_, _, _, db) in zip(so, sn):
+                    sec = da
+                    if da != db and self.overlay(kind, dest):
+                        rel = key.split("/", 1)[1] if key.startswith("BIN/") else key
+                        sec, unplaced, n = unmoved_section(da, db, self.fixed.get((rel, i), ()))
+                        self.counts.update(n)
+                        if unplaced:
+                            self.unplaced[(key, i)] = (dest, unplaced)
+                    body.append(sec + bytes(-len(sec) % 0x800))
+                out = ob[:0x800] + b"".join(body)
+        self._memo[key] = out
+        return out
+
+    def find(self, basename):
+        return self.orig.find(basename)
+
+    def sector(self, lba):
+        return self.orig.sector(lba)
+
+    def extent(self, lba, size):
+        return self.orig.extent(lba, size)
+
+
+# ---------------------------------------------------------------- the .data image
+
+# The classes of an image's ranges a layer may write (src/hook/exe_image.cpp
+# kClasses: the others must equal the PC's).
+LAYER_CLASSES = ("map", "place", "table", "widen", "language", "unread", "gap", "file")
+
+
+def image_changes(orig, patched, build_id):
+    """{PC address: byte} - where the .data image built from the patched
+    disc's overlays differs from the original disc's - what was not placed:
+    {"pointer": bytes in pointer words, "length": [(file, section, disc
+    address, old length, new length, PC address)] runs that change length on
+    bytes the image takes, "counts": unmoved_section's}, and the UnmovedDisc
+    the image was built from."""
+    import exe_tables
+    import exe_twins
+    places = exe_tables.load_places().get(build_id, ())
+    pointers = exe_tables.load_pointers()
+    try:
+        img0, owner0, ranges0 = exe_tables.disc_image(orig, build_id, places)
+        fixed = collections.defaultdict(list)
+        bases = {(f, sec): base for f, sec, base, _ in exe_twins.sources(orig)}
+        for r_lo, r_hi, how, where, addr in ranges0:
+            f, _, sec = where.split(":")[0].partition("#")
+            if addr is not None and sec and (f, int(sec)) in bases:
+                fixed[(f, int(sec))].append((addr - bases[(f, int(sec))], addr - bases[(f, int(sec))] + r_hi - r_lo))
+        hybrid = UnmovedDisc(orig, patched, fixed)
+        img1, owner1, ranges1 = exe_tables.disc_image(hybrid, build_id, places)
+    except SystemExit as e:
+        raise Bad("the image builder refused the patched overlays: %s" % e)
+    if [r[:4] for r in ranges0] != [r[:4] for r in ranges1]:
+        raise Bad("with the patch the image builder places a table somewhere else, which this release cannot carry")
+    before = sum(1 for x, y in zip(img0, img1) if x != y)
+    exe_tables.mask(img0, owner0, pointers)
+    exe_tables.mask(img1, owner1, pointers)
+    lo = exe_tables.DATA_LO
+    changes = {lo + k: img1[k] for k in range(len(img0)) if img0[k] != img1[k]}
+    segs = collections.defaultdict(list)
+    for r_lo, r_hi, how, where, addr in ranges0:
+        if addr is not None:
+            segs[where.split(":")[0]].append((addr, addr + r_hi - r_lo, r_lo))
+    length = []
+    for (key, i), (dest, runs) in sorted(hybrid.unplaced.items()):
+        rel = key.split("/", 1)[1] if key.startswith("BIN/") else key
+        for a0, a1, b0, b1 in runs:
+            for s0, s1, pc in segs.get("%s#%d" % (rel, i), ()):
+                if min(dest + max(a1, a0 + 1), s1) > max(dest + a0, s0):
+                    length.append((rel, i, dest + a0, a1 - a0, b1 - b0, pc + max(0, dest + a0 - s0)))
+    return changes, {"pointer": before - len(changes), "length": length, "counts": hybrid.counts}, hybrid
+
+
+def write_image_part(cache, root, layer, changes, where):
+    """The mod's image part into root/<layer>/exe/: a byte in a table that is
+    a file as a cell of tables.toml (the install's whole table file with the
+    mod's bytes, docs/image-layer-round.md 3.2), any other as a raw range of
+    place.toml where the install's image is of a class a layer may write.
+    ([(file name, sha256)], {"cells", "tables", "raw", "kept": bytes the
+    install's image keeps as the PC's own})."""
+    import tomllib
+    exe = os.path.join(cache, "base", "exe")
+    try:
+        with open(os.path.join(exe, "data.toml"), "rb") as f:
+            image = tomllib.load(f)["image"]
+        with open(os.path.join(exe, "tables", "tables.toml"), "rb") as f:
+            rows = sorted(tomllib.load(f)["tables"], key=lambda r: r[1])
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        raise Bad("this install's game data has no table files (base\\exe\\tables): it was built by an older "
+                  "release. Build the install again on the Sources page")
+    classes = sorted((r[0], r[1], r[2]) for r in image["ranges"])
+    bodies, cells, raw, kept = {}, collections.defaultdict(set), [], 0
+    for pc in sorted(changes):
+        row = next((r for r in rows if r[1] <= pc < r[2]), None)
+        if row is not None:
+            key, t_lo, t_hi, count, stride = row[:5]
+            if key not in bodies:
+                with open(os.path.join(exe, "tables", key + ".bin"), "rb") as f:
+                    body = f.read()
+                if len(body) != t_hi - t_lo or sha(body) != row[5]:
+                    raise Bad("the install's table file %s.bin is not the one its tables.toml records; build the "
+                              "install again on the Sources page" % key)
+                bodies[key] = bytearray(body)
+            bodies[key][pc - t_lo] = changes[pc]
+            cells[key].add(pc - t_lo)
+            continue
+        how = next((h for c_lo, c_hi, h in classes if c_lo <= pc < c_hi), None)
+        if how in LAYER_CLASSES:
+            raw.append(pc)
+        else:
+            kept += 1
+    d = os.path.join(root, layer, "exe")
+    os.makedirs(d)
+    wrote, ncells = [], 0
+    if bodies:
+        lines = ["# opt/%s/exe/tables.toml - written by tools/disc_patch_build.py (docs/disc-patch-round.md 3b)." % layer,
+                 "# One file a table the mod changes: <key>.bin is the install's whole table with the mod's",
+                 "# bytes in it. `cells` are the bytes that are the mod's - [key, record, at, length] -",
+                 "# and only those are laid over .data (src/hook/exe_image.cpp).",
+                 "", "build = %s" % json.dumps(where), "", "tables = ["]
+        cell_lines = []
+        by_key = {r[0]: r for r in rows}
+        for key in sorted(bodies, key=lambda k: by_key[k][1]):
+            r, body = by_key[key], bytes(bodies[key])
+            with open(os.path.join(d, key + ".bin"), "wb") as f:
+                f.write(body)
+            lines.append('  ["%s", 0x%06X, %d, %d, "%s"],' % (key, r[1], r[3], r[4], sha(body)))
+            wrote.append((key + ".bin", sha(body)))
+            run = None                              # [record, at, length]: a run of the mod's bytes inside one record
+            for off in sorted(cells[key]):
+                rec, at = divmod(off, r[4])
+                if run and run[0] == rec and run[1] + run[2] == at:
+                    run[2] += 1
+                else:
+                    if run:
+                        cell_lines.append('  ["%s", %d, %d, %d],' % (key, run[0], run[1], run[2]))
+                    run = [rec, at, 1]
+            cell_lines.append('  ["%s", %d, %d, %d],' % (key, run[0], run[1], run[2]))
+            ncells += len(cells[key])
+        text = ("\n".join(lines + ["]", "", "cells = ["] + cell_lines + ["]"]) + "\n").encode("utf-8")
+        with open(os.path.join(d, "tables.toml"), "wb") as f:
+            f.write(text)
+        wrote.append(("tables.toml", sha(text)))
+    if raw:
+        ranges = []
+        for pc in raw:
+            if ranges and ranges[-1][1] == pc:
+                ranges[-1][1] = pc + 1
+            else:
+                ranges.append([pc, pc + 1])
+        blob = bytes(changes[pc] for pc in raw)
+        with open(os.path.join(d, "place.bin"), "wb") as f:
+            f.write(blob)
+        text = ("\n".join(
+            ["# opt/%s/exe/place.toml - written by tools/disc_patch_build.py (docs/disc-patch-round.md 3b)." % layer,
+             "# The mod's bytes of .data outside every table that is a file, by address; place.bin holds",
+             "# them in this order (src/hook/exe_image.cpp).",
+             "", "build = %s" % json.dumps(where), 'kind = "raw"', 'file = "place.bin"', 'sha256 = "%s"' % sha(blob),
+             "bytes = %d" % len(blob), "", "ranges = ["] +
+            ['  [0x%06X, 0x%06X, "mod"],' % (a, b) for a, b in ranges] + ["]"]) + "\n").encode("utf-8")
+        with open(os.path.join(d, "place.toml"), "wb") as f:
+            f.write(text)
+        wrote += [("place.bin", sha(blob)), ("place.toml", sha(text))]
+    if not wrote:
+        os.rmdir(d)
+        if not os.listdir(os.path.join(root, layer)):
+            os.rmdir(os.path.join(root, layer))
+    return wrote, {"cells": ncells, "tables": len(bodies), "raw": len(raw), "kept": kept}
 
 
 # ---------------------------------------------------------------- the two discs, section by section
@@ -259,7 +635,7 @@ def write_layer(root, layer, files, where):
     """A layer's containers into root/<layer>/dat/; the manifest's rows
     [(name, chunk index, where, sha256)]."""
     d = os.path.join(root, layer, "dat")
-    os.makedirs(d)
+    os.makedirs(d, exist_ok=True)
     rows = []
     for name in sorted(files):
         with open(os.path.join(d, name), "wb") as f:
@@ -321,7 +697,7 @@ def _unlink_dir(dst):
         shutil.rmtree(dst, ignore_errors=True)
 
 
-def run_loc(mode, tag, orig_path, patched_path, cache, pc_rows, work, enemy_names, say):
+def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say):
     """loc_build.py on the hybrid disc, the way the install's layer was built:
     the folder of its containers, and the folder of the names containers for
     `enemy_names` (DAT names). A child process: loc_build.py keeps a disc's
@@ -332,7 +708,7 @@ def run_loc(mode, tag, orig_path, patched_path, cache, pc_rows, work, enemy_name
     jobs = os.path.join(work, "names.json")
     with open(jobs, "w") as f:
         json.dump(sorted(enemy_names), f)
-    cmd = [sys.executable, os.path.abspath(__file__), "_loc", orig_path, patched_path, jobs, names_dir,
+    cmd = [sys.executable, os.path.abspath(__file__), "_loc", orig_path, patched_path, jobs, names_dir, build_id,
            "all", "--disc", orig_path, "--lang", tag]
     view = None
     try:
@@ -382,13 +758,24 @@ def cmd_loc(argv):
     """The child of run_loc: loc_build.py with the hybrid disc, then the names
     of the enemy tables the patch changed, made by loc_build's own converter
     from the patched disc while its language is still set up."""
-    orig_path, patched_path, jobs, names_dir = argv[:4]
+    orig_path, patched_path, jobs, names_dir, build_id = argv[:5]
     import importer
     import loc_build
     import psx_disc
     orig, patched = psx_disc.Disc(orig_path), psx_disc.Disc(patched_path)
-    loc_build.disc_opener = lambda path: HybridDisc(orig, patched)
-    sys.argv = ["loc_build.py"] + argv[4:]
+    try:
+        changes, _, unmoved = image_changes(orig, patched, build_id)
+    except Bad as e:
+        print("disc_patch_build: %s" % e)
+        return 1
+
+    def opener(path):
+        # the mod's numbers over the image from here on: loc_build.py opens the disc after it has
+        # checked that a PC install's BOF3.exe is the one it knows, which must see the exe as it is
+        loc_build.image_overlay = changes
+        return HybridDisc(orig, patched, unmoved=unmoved)
+    loc_build.disc_opener = opener
+    sys.argv = ["loc_build.py"] + argv[5:]
     try:
         rc = loc_build.main()
     except Bad as e:
@@ -485,14 +872,22 @@ def build(home, cache, mod_folder, row, tag, where, say):
                                   importer.sources_of)
         sound = sorted(k for k, v in changed.items() if v[0] in SOUND_TYPES)
         text_secs = sorted(k for k, v in changed.items() if v[1] in KEPT)
-        other = sorted(k for k, v in changed.items() if k not in used and v[0] not in SOUND_TYPES and v[1] not in KEPT)
+        other = sorted(k for k, v in changed.items() if k not in used and v[0] not in SOUND_TYPES and v[1] not in KEPT
+                       and not UnmovedDisc.overlay(v[0], v[1]))
+        overlays = sorted(k for k, v in changed.items() if k not in used and UnmovedDisc.overlay(v[0], v[1]))
         enemy = sorted(n for n, chunks in base.items() if any(t == importer.ENEMY_TAG for _, t, _ in chunks))
+
+        say("Building the overlays' tables with the patch's numbers")
+        image, notes, _ = image_changes(orig.disc, patched.disc, build_id)
+        boot = 0
+        if orig.boot and orig.boot in patched.disc.files:
+            boot = len(edits(orig.disc.read(orig.boot), patched.disc.read(orig.boot)))
 
         mode = loc_mode(cache, tag, build_id)
         say("Building the %s text with the patch's text (the text builder, about two minutes)" % tag)
         orig.disc.f.close()
         patched.disc.f.close()
-        new_loc, names_dir = run_loc(mode, tag, disc_path, patched_path, cache, rows, work, enemy, say)
+        new_loc, names_dir = run_loc(mode, tag, build_id, disc_path, patched_path, cache, rows, work, enemy, say)
         text = diff_layer(os.path.join(cache, "loc", tag, "dat"), new_loc)
         for name in enemy:
             with open(os.path.join(names_dir, name), "rb") as f:
@@ -503,11 +898,14 @@ def build(home, cache, mod_folder, row, tag, where, say):
         out = {}
         if base:
             out[first] = write_layer(staged, first, {n: [(k, t, 0, b) for k, t, b in c] for n, c in base.items()}, where)
+        wrote, placed = write_image_part(cache, staged, first, image, where) if image else ([], None)
+        if wrote:
+            out[first] = out.get(first, []) + [("exe/" + n, i, where, h) for i, (n, h) in enumerate(wrote)]
         if text:
             out[second] = write_layer(staged, second, text, where)
         if not out:
             raise Bad("the patch changes nothing this release can carry (%d sections changed, none of them one the "
-                      "PC keeps as a chunk)" % len(changed))
+                      "PC keeps as a chunk or a table)" % len(changed))
         opt = os.path.join(cache, "opt")
         os.makedirs(opt, exist_ok=True)
         for layer in (first, second):
@@ -517,15 +915,36 @@ def build(home, cache, mod_folder, row, tag, where, say):
             else:
                 out[layer] = []
         say("  %s: %d chunks in %d files (enemy tables and pictures, for any text)"
-            % (first, len(out[first]), len(base)))
+            % (first, sum(len(c) for c in base.values()), len(base)))
+        if placed:
+            say("  %s: %d bytes of %d tables that are files, and %d bytes of other tables (the overlays' numbers)"
+                % (first, placed["cells"], placed["tables"], placed["raw"]))
+            if placed["kept"]:
+                say("  not carried: %d bytes of the overlays' numbers outside the tables that are files; this install's "
+                    "image keeps them as the PC's own" % placed["kept"])
+        if notes["length"]:
+            say("  not carried: %d places where the patch changes a table's length" % len(notes["length"]))
+            for rel, i, addr, old, new, pc in notes["length"]:
+                say("    %s section %d at 0x%08X: %d bytes become %d (PC 0x%06X)" % (rel, i, addr, old, new, pc), quiet=True)
+        n = notes["counts"]
+        say("  the overlays: %d edits taken, %d rewrites in place, %d relinked addresses left as the PC's, %d length "
+            "changes followed" % (n["edits"], n["rewritten in place"], n["relinked"], n["length changes"]), quiet=True)
+        if boot:
+            say("  not carried: the boot program, which differs in %d places (its file table follows the disc's "
+                "layout; its other changes are not read)" % boot)
+        if notes["pointer"]:
+            say("  not carried: %d bytes of pointers the patch aims elsewhere (the PC's pointers are its own)"
+                % notes["pointer"])
         say("  %s: %d chunks in %d files (%s text, and its names for %d enemy tables)"
             % (second, len(out[second]), len(text), tag, len(enemy)))
         if sound:
             say("  not carried: %d changed sound sections in %d files (a changed sound bank is not built)"
                 % (len(sound), len({k for k, _ in sound})))
+        say("  %d changed overlay sections in %d files were read for their tables; their code is not carried (the PC "
+            "does not run it)" % (len(overlays), len({k for k, _ in overlays})))
         if other:
-            say("  not carried: %d changed sections in %d files that the PC does not keep as data chunks (the "
-                "overlays' tables and code)" % (len(other), len({k for k, _ in other})))
+            say("  not carried: %d changed sections in %d files of a kind this release does not read"
+                % (len(other), len({k for k, _ in other})))
         say("  %d text and page sections went through the text builder" % len(text_secs), quiet=True)
         return out
     finally:
@@ -639,8 +1058,94 @@ def selftest():
     refused(lambda: collect_base(recipe, "psx-xx", ch, tr, sources_of), "is not one this release has",
             "collect: a recipe step this release lacks")
 
+    # one section against its patched self. 0x80100000 is where the section loads.
+    def word(v):
+        return struct.pack("<I", v)
+
+    filler = bytes((7 * i + 3) & 0xFF for i in range(64))
+    da = filler + word(0x80100060) + bytes(range(100, 132)) + b"TABLE-OF-NUMBERS" + filler[::-1]
+    db = bytearray(da)
+    db[70] ^= 0xFF                                    # an edit in place
+    u, unplaced, n = unmoved_section(da, bytes(db))
+    expect(u == bytes(db) and not unplaced and n["edits"] == 1, "unmoved: an edit of the same length is taken")
+    grown = da[:16] + b"\xAA" * 8 + da[16:64] + word(0x80100068) + da[68:]     # 8 bytes put in; the pointer relinked
+    u, unplaced, n = unmoved_section(da, grown)
+    expect(u == da and unplaced == [(16, 16, 16, 24)] and n["relinked"] == 1 and n["length changes"] == 1,
+           "unmoved: bytes put in are not placed, and the pointer the tool relinked stays the original's")
+    grown2 = bytearray(grown)
+    grown2[8 + 100] ^= 0x55                           # and an edit after the insertion: old offset 100
+    u, unplaced, n = unmoved_section(da, bytes(grown2))
+    expect(u == da[:100] + bytes([da[100] ^ 0x55]) + da[101:] and len(unplaced) == 1,
+           "unmoved: an edit after bytes that moved lands at the original's address")
+    table = b"TABLE-OF-NUMBERS"
+    at = da.index(table)
+    shuffled = da[:at] + b"NEW!" + table[:12] + da[at + 16:]                    # put in 4, take out 4: no pointer moved
+    u, unplaced, n = unmoved_section(da, shuffled)
+    expect(u == shuffled and not unplaced and n["rewritten in place"] == 1,
+           "unmoved: a list rewritten in place (put in and taken out, nothing relinked) is taken address for address")
+    both = da[:16] + b"\xAA" * 8 + da[16:40] + da[48:64] + word(0x80100068) + da[68:]   # +8 then -8, a pointer moved by 8
+    u, unplaced, n = unmoved_section(da, both)
+    expect(len(unplaced) == 2 and n["rewritten in place"] == 0,
+           "unmoved: the same shape with a pointer relinked by that distance is bytes that moved, not placed")
+    u, unplaced, n = unmoved_section(da, both, fixed=[(0, 64)])
+    expect(not unplaced and u[:64] == both[:64] and n["rewritten in place"] == 1,
+           "unmoved: inside a table the PC holds at its own address it is a rewrite in place")
+    o2 = _Disc({"BIN/W/AREA001.EMI": _emi([(0, 0x80010000, text), (0, 0x80100000, da)])})
+    n2 = _Disc({"BIN/W/AREA001.EMI": _emi([(0, 0x80010000, text2), (0, 0x80100000, bytes(db))])})
+    um = UnmovedDisc(o2, n2)
+    got = emi_sections(um.read("BIN/W/AREA001.EMI"))
+    expect([x[3] for x in got] == [text, bytes(db)] and um.counts["edits"] == 1,
+           "unmoved disc: the overlay's section with the edit, the text section the original's")
+    hy = HybridDisc(o2, n2, unmoved=um)
+    expect([x[3] for x in emi_sections(hy.read("BIN/W/AREA001.EMI"))] == [text2, bytes(db)],
+           "hybrid disc over it: the patched text and the overlay's edit together")
+
     root = tempfile.mkdtemp(prefix="bof3x_dpb_")
     try:
+        # the image part: a cache of this test's own, a table of zeros
+        ic = os.path.join(root, "icache")
+        os.makedirs(os.path.join(ic, "base", "exe", "tables"))
+        zeros = bytes(40)
+        with open(os.path.join(ic, "base", "exe", "tables", "things.bin"), "wb") as f:
+            f.write(zeros)
+        with open(os.path.join(ic, "base", "exe", "tables", "tables.toml"), "w") as f:
+            f.write('build = "test"\ntables = [\n  ["things", 0x600100, 0x600128, 5, 8, "%s", "test"],\n]\n' % sha(zeros))
+        with open(os.path.join(ic, "base", "exe", "data.toml"), "w") as f:
+            f.write('[image]\nranges = [\n  [0x600000, 0x600100, "map", "x"],\n  [0x600100, 0x600128, "file", "things"],\n'
+                    '  [0x600128, 0x600200, "exe", "x"],\n]\n')
+        ch = {0x600101: 1, 0x600102: 2, 0x600107: 7, 0x600108: 8, 0x600010: 0x10, 0x600011: 0x11, 0x600020: 0x20,
+              0x600130: 0x30}
+        wrote, placed = write_image_part(ic, os.path.join(root, "iout"), "mod-x", ch, "mod:x@1:psx-xx")
+        import tomllib
+        d = os.path.join(root, "iout", "mod-x", "exe")
+        with open(os.path.join(d, "tables.toml"), "rb") as f:
+            tt = tomllib.load(f)
+        with open(os.path.join(d, "place.toml"), "rb") as f:
+            pt = tomllib.load(f)
+        with open(os.path.join(d, "things.bin"), "rb") as f:
+            body = f.read()
+        with open(os.path.join(d, "place.bin"), "rb") as f:
+            blob = f.read()
+        expect(tt["cells"] == [["things", 0, 1, 2], ["things", 0, 7, 1], ["things", 1, 0, 1]]
+               and tt["tables"] == [["things", 0x600100, 5, 8, sha(body)]] and body[1:3] == b"\x01\x02" and body[7:9] == b"\x07\x08"
+               and sum(body) == 18, "image part: a table's bytes as cells, a run cut at the record's end")
+        expect(pt["kind"] == "raw" and pt["ranges"] == [[0x600010, 0x600012, "mod"], [0x600020, 0x600021, "mod"]]
+               and pt["bytes"] == 3 and blob == b"\x10\x11\x20" and pt["sha256"] == sha(blob),
+               "image part: the other bytes as raw ranges, in order")
+        expect(placed == {"cells": 4, "tables": 1, "raw": 3, "kept": 1} and [w[0] for w in wrote] ==
+               ["things.bin", "tables.toml", "place.bin", "place.toml"],
+               "image part: a byte on a class that must equal the PC's is kept and counted")
+        wrote, placed = write_image_part(ic, os.path.join(root, "iout2"), "mod-x", {0x600130: 1}, "w")
+        expect(wrote == [] and placed["kept"] == 1 and not os.path.exists(os.path.join(root, "iout2", "mod-x")),
+               "image part: nothing a layer may write leaves no folder")
+        with open(os.path.join(ic, "base", "exe", "tables", "things.bin"), "wb") as f:
+            f.write(bytes(39) + b"\1")
+        refused(lambda: write_image_part(ic, os.path.join(root, "iout3"), "mod-x", ch, "w"), "is not the one its tables.toml",
+                "image part: a table file that is not the install's own")
+        os.remove(os.path.join(ic, "base", "exe", "tables", "tables.toml"))
+        refused(lambda: write_image_part(ic, os.path.join(root, "iout4"), "mod-x", ch, "w"), "no table files",
+                "image part: an install from before the table files")
+
         old, new = os.path.join(root, "old"), os.path.join(root, "new")
         os.makedirs(old)
         os.makedirs(new)
