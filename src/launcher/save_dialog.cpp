@@ -372,6 +372,16 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         FillSlots(dlg, *s);
         FillSections(dlg, *s);
         Refresh(dlg, *s);
+        // The window opens on the first slot that holds a good save, so it never
+        // starts empty on an install that has saves.
+        for (int i = 0; i < save::kSlots; ++i) {
+            save::Block b;
+            std::string why;
+            if (save::ReadPcFile(SlotPath(*s, i), b, why) && save::Checksum(b) == save::StoredChecksum(b)) {
+                Open(dlg, *s, i, std::wstring());
+                break;
+            }
+        }
         std::wstring intro = s->names.item[0].empty()
                                  ? L"This install has no names that the editor can show. The lists show numbers."
                                  : L"";

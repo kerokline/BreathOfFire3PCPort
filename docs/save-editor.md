@@ -30,7 +30,7 @@ width, signedness and class.
 
 ## 2. The window
 
-- **Save file:** the sixteen slots `BISLPS00..0F.DAT` of the game folder, each
+- **Save file:** the window opens on the first slot that holds a good save. The box lists the sixteen slots `BISLPS00..0F.DAT` of the game folder, each
   with the name, level and play time of its save, and "A different file..." for
   a PC save anywhere else. `BISLPS10..1F` are quicksaves and are not listed.
 - **The sections**, on the left: Game, Party, Characters, Inventory, Key items,
