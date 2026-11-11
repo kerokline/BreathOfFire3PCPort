@@ -1,0 +1,225 @@
+# The save editor's reference names (docs/save-editor.md section 4). The build copies this file
+# beside the launcher, and the editor reads that copy: edit this one.
+# UTF-8, tab-separated. Columns: kind id name x z flags status source.
+#   kind    master | gene | formation | fish | chapter | area | entrance
+#   id      the number the save holds (decimal or 0x hex); for an entrance, the area
+#   name    what the editor shows beside the number
+#   x z flags   an entrance's position in cells and its entry flags byte; empty for the other kinds
+#   status source   this repository's own record of where the name comes from; the editor does not read them
+# Masters, genes, formations and fish are the US release's words, read by index from an install's
+# English text (2026-11-10). A chapter's label and most area names are ours, for recognition: an
+# area's `cited` name is one source's word for the place, and is not always the game's own.
+# Areas with no row show as a number. The entrances of an area are not here: the editor reads them
+# from the install's BOF3.exe (Area_Descriptors' link lists). An `entrance` row adds one by hand.
+master	0	Bunyan				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x111 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	1	Mygas				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x112 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	2	Yggdrasil				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x113 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	3	D'lonzo				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x114 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	4	Fahl				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x115 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	5	Durandal				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x116 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	6	Giotto				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x117 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	7	Hondara				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x118 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	8	Emitai				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x119 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	9	Deis				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11A = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	10	Hachio				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11B = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	11	Bais				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11C = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	12	Lang				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11D = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	13	Lee				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11E = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	14	Wynn				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x11F = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	15	Ladon				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x120 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+master	16	Meryleep				measured	en-US.FIRST.DAT system pool (kind 0 tag 0x4000) msg 0x121 = 0x111+n; MasterWin_DrawList 0x59C2C0 draws msg 0x110+(bit+1) (src/game/shop/shop_win_2.cpp:607); frost records.md agrees
+gene	0	Flame				measured	en-US.FIRST.DAT system pool msg 0x4172 = 0x4172+n (block 1 index 0x172); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	1	Frost				measured	en-US.FIRST.DAT system pool msg 0x4173 = 0x4172+n (block 1 index 0x173); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	2	Thunder				measured	en-US.FIRST.DAT system pool msg 0x4174 = 0x4172+n (block 1 index 0x174); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	3	Shadow				measured	en-US.FIRST.DAT system pool msg 0x4175 = 0x4172+n (block 1 index 0x175); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	4	Radiance				measured	en-US.FIRST.DAT system pool msg 0x4176 = 0x4172+n (block 1 index 0x176); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	5	Force				measured	en-US.FIRST.DAT system pool msg 0x4177 = 0x4172+n (block 1 index 0x177); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	6	Defender				measured	en-US.FIRST.DAT system pool msg 0x4178 = 0x4172+n (block 1 index 0x178); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	7	Eldritch				measured	en-US.FIRST.DAT system pool msg 0x4179 = 0x4172+n (block 1 index 0x179); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	8	Miracle				measured	en-US.FIRST.DAT system pool msg 0x417A = 0x4172+n (block 1 index 0x17A); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	9	Gross				measured	en-US.FIRST.DAT system pool msg 0x417B = 0x4172+n (block 1 index 0x17B); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	10	Thorn				measured	en-US.FIRST.DAT system pool msg 0x417C = 0x4172+n (block 1 index 0x17C); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	11	Reverse				measured	en-US.FIRST.DAT system pool msg 0x417D = 0x4172+n (block 1 index 0x17D); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	12	Mutant				measured	en-US.FIRST.DAT system pool msg 0x417E = 0x4172+n (block 1 index 0x17E); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	13	???				measured	en-US.FIRST.DAT system pool msg 0x417F = 0x4172+n (block 1 index 0x17F); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	14	Trance				measured	en-US.FIRST.DAT system pool msg 0x4180 = 0x4172+n (block 1 index 0x180); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	15	Failure				measured	en-US.FIRST.DAT system pool msg 0x4181 = 0x4172+n (block 1 index 0x181); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	16	Fusion				measured	en-US.FIRST.DAT system pool msg 0x4182 = 0x4172+n (block 1 index 0x182); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+gene	17	Infinity				measured	en-US.FIRST.DAT system pool msg 0x4183 = 0x4172+n (block 1 index 0x183); MenuList_GeneWinDraw 0x59AE00 draws msg 0x4171+(bit+1) (src/game/menu/menu_list.cpp:2766); frost gene.h GENE_* agrees
+formation	0	Normal				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x77; system msg 0x3E; frost PARTY_FORMATION_* agrees
+formation	1	Attack				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x78; system msg 0x3F; frost PARTY_FORMATION_* agrees
+formation	2	Defense				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x79; system msg 0x40; frost PARTY_FORMATION_* agrees
+formation	3	Chain				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x7A; system msg 0x41; frost PARTY_FORMATION_* agrees
+formation	4	Magic				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x7B; system msg 0x42; frost PARTY_FORMATION_* agrees
+formation	5	Refuge				measured	en-US.FIRST.DAT DIV-0064 label chunk (kind 15 tag 0xA) entry 4+n = exe 0x6636B0+28*(4+n); TacticsFormation_Build 0x58FD60 sets wheel kind n+4 for 3 members (src/game/field/field_ability_2.cpp:3292); help msg 0x7C; system msg 0x43; frost PARTY_FORMATION_* agrees
+fish	0	Jellyfish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x38 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	1	Pirana				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x39 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	2	Puffer				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3A (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	3	Trout				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3B (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	4	RainbowTrout				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3C (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	5	Red Catfish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3D (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	6	Bass				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3E (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	7	MartianSquid				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x3F (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	8	Black Bass				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x40 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	9	Barandy				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x41 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	10	Man-o'-War				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x42 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	11	Flying Fish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x43 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	12	Blowfish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x44 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	13	Sea Bream				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x45 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	14	Sea Bass				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x46 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	15	Black Porgy				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x47 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	16	Octopus				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x48 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	17	Angler				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x49 (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	18	Devilfish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x4A (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	19	Spearfish				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x4B (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	20	Whale				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x4C (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	21	Mackerel				measured	en-US.FIRST.DAT kind-5 names chunk tag 0x656B28 entry 0x4D (consumable item 0x38+k) = exe 0x656FF8+22*k; FieldPanel_DrawKindRow 0x52D140 (src/game/field/leader_panel.cpp:3272); frost item.h ITEM_* agrees for 0x39 and 0x4D
+fish	22	Manillo				measured	kind 0x16 special case: FieldPanel_DrawKindRow copies exe 0x669CD8 (src/game/field/leader_panel.cpp:3267), written from en-US.FIRST.DAT chunk kind 11 (DIV-0020, the fish merchant)
+chapter	0	Opening: Dauna Mine; ends in Cedar Woods, area 9				cited	docs/boss-fights.md:65-71; docs/story-flags/chapter-00.md:43
+chapter	1	Mt. Glaus, the Nue; ends at McNeil Manor, area 15				cited	docs/boss-fights.md:66-67; docs/story-flags/chapter-01.md:109-113
+chapter	2	McNeil Manor and the burning treehouse: Amalgam, Balio and Sunder				cited	docs/boss-fights.md:72-79; docs/story-flags/chapter-02.md:129-133
+chapter	3	Wyndia: jail fight with Balio, Sunder, Nina; ends in area 71				cited	docs/boss-fights.md:80; docs/story-flags/chapter-03.md:92-96
+chapter	4	The tower and its levers (area 40), no event battle; ends going to area 54				cited	docs/story-flags.md:104,119; docs/story-flags/chapter-04.md:64-66
+chapter	5	Contest of Champions and Garr; ends on the Central Wyndia map				cited	docs/boss-fights.md:81-86; docs/story-flags/chapter-05.md:122-126
+chapter	6	Stallion, Beyd, Gazer at the lighthouse; ends entering area 76				cited	docs/boss-fights.md:87-92; docs/story-flags/chapter-06.md:123-127
+chapter	7	Ends with Garr				cited	docs/boss-fights.md:95 (run 6 step 0x12); docs/story-flags/chapter-07.md:73-76 (run 6 step 0x27)
+chapter	8	Ends with Mikba				cited	docs/boss-fights.md:98 (run 0xB step 0xA); docs/story-flags/chapter-08.md:198-200 (run 11 step 0x15)
+chapter	9	HugeSlug and Shroom; ends at area 82				cited	docs/boss-fights.md:108-109; docs/story-flags/chapter-09.md:136-139
+chapter	10	Angler and Gaist; ends sailing to the Middle Sea, area 121				cited	docs/boss-fights.md:99-100; docs/story-flags/chapter-10.md:96-99
+chapter	11	No event battle; ends on the Middle Sea, area 121				cited	docs/story-flags/chapter-11.md:82-85; no chapter 11 row in docs/boss-fights.md:63-110
+chapter	12	Ends with Ammonite				cited	docs/boss-fights.md:102 (run 9 step 0x16); docs/story-flags/chapter-12.md:94-96 (run 9 step 0x2F)
+chapter	13	Elder at Dragnier; ends on the Lost Shore map				cited	docs/boss-fights.md:101; docs/story-flags/chapter-13.md:84-87 (to area 0x97)
+chapter	14	Ends with D>Lord				cited	docs/boss-fights.md:104-107 (run 7 step 0x18); docs/story-flags/chapter-14.md:88-91 (run 7 step 0x20)
+chapter	15	Ends with Myria				cited	docs/boss-fights.md:110 (run 6 step 0xD); docs/story-flags/chapter-15.md:112-116 (run 6 step 0x36)
+chapter	16	Title demo				cited	docs/story-flags.md:74,131; docs/story-flags/chapter-16.md:5
+chapter	17	Ending				cited	docs/story-flags.md:132; docs/story-flags/chapter-17.md:5
+chapter	18	Unused (nothing starts it)				cited	docs/story-flags.md:133; docs/story-flags/chapter-18.md:38
+chapter	19	Unused (nothing starts it)				cited	docs/story-flags.md:134; docs/story-flags/chapter-19.md:40
+area	0	McNeil Village (spring)				measured	game/game/DAT/en-US.AREA000.DAT msg caption "Spring in McNeil"; ../BreathOfFire3Recomp/names/places.toml id 0 en "McNeil Village" (S)
+area	1	Dauna Mine - outside entrance				cited	../BreathOfFire3Recomp/names/areas.toml AREA001 "Dauna Mines - Outside Entrance"; places.toml id 1 "Dauna Mine"; US: "Dauna Mine"
+area	2	Dauna Mine - Moss Dragon				cited	../BreathOfFire3Recomp/names/areas.toml AREA002 "Dauna Mine - Moss Dragon"
+area	3	Cedar Woods - pond (spring)				measured	game/game/DAT/en-US.AREA003.DAT caption "Cedar Woods, Spring"; ../BreathOfFire3Recomp/names/areas.toml AREA003 "Cedar Woods Pond - Spring"
+area	4	Dauna Mine - minecart				cited	../BreathOfFire3Recomp/names/areas.toml AREA004 "Dauna Mine - Minecart"
+area	5	Cedar Woods - treehouse (spring)				cited	../BreathOfFire3Recomp/names/areas.toml AREA005 "Cedar Woods Treehouse - Spring"; docs/psp-code-diff-field-1.md:471 "Rei's hideout"
+area	6	Cedar Woods (spring)				cited	../BreathOfFire3Recomp/names/places.toml id 6 en "Cedar Woods" (S, from AREA009's caption)
+area	7	McNeil Village (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA007 "MacNeil Village - Fall"; places.toml id 7 "McNeil Village" (A); US: "McNeil"
+area	8	Cedar Woods - pond (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA008 "Cedar Woods Pond - Fall"
+area	9	Cedar Woods (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA009 "Cedar Woods - Fall"; places.toml id 9 (caption)
+area	10	Cedar Woods - treehouse (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA010 "Cedar Woods Treehouse - Fall"
+area	11	Cedar Woods - burning treehouse				cited	../BreathOfFire3Recomp/names/areas.toml AREA011 "Burning Treehouse"; docs/opt-layers.md:172
+area	13	Farm (spring)				measured	game/game/DAT/en-US.AREA013.DAT caption "Spring on the farm"; ../BreathOfFire3Recomp/names/areas.toml AREA013 "Farm Fields - Spring"
+area	14	Farm (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA014 "Farm Fields - Fall"; places.toml id 14 "Farm"
+area	15	McNeil Manor (spring)				measured	game/game/DAT/en-US.AREA015.DAT caption "McNeil Manor, spring"; ../BreathOfFire3Recomp/names/areas.toml AREA015 "Farm (Outside Manor) - Night"
+area	16	World map - Yraall Region (spring)				measured	game/game/DAT/en-US.AREA016.DAT msg 4 "Yraall Region"; season: ../BreathOfFire3Recomp/names/places.toml id 16 (S); world map: docs/worldmap_area.md:232
+area	17	Farm - outside the manor (fall)				cited	../BreathOfFire3Recomp/names/areas.toml AREA017 "Farm (Outside Manor)"; season: places.toml id 17 (A)
+area	19	Yraall Road				cited	../BreathOfFire3Recomp/names/areas.toml AREA019 "Yraall Highway"; US: "Yraall Road"; save tools/recipe_saves/yraallRoad.DAT is in area 19
+area	20	Battlefield - Yraall Region / Middle Sea				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (world map 16 -> 20, 121 -> 20)
+area	21	Syn City				cited	../BreathOfFire3Recomp/names/places.toml id 21 en "Syn City"; US: "Syn City"
+area	22	Mt. Glaus - cave				measured	game/game/DAT/en-US.AREA022.DAT caption "Mt. Glaus..."; ../BreathOfFire3Recomp/names/areas.toml AREA022 "Nu Cave"; docs/boss-fights.md:67 (Nue, area 22)
+area	23	Mt. Glaus				measured	game/game/DAT/en-US.AREA023.DAT caption "Mt. Glaus"; ../BreathOfFire3Recomp/names/places.toml id 23
+area	24	Dauna Mine				cited	../BreathOfFire3Recomp/names/areas.toml AREA024 "Dauna Mine - Ryu"; docs/boss-fights.md:65 (fight 1, area 24)
+area	26	McNeil Manor - gardens				cited	../BreathOfFire3Recomp/names/areas.toml AREA026 "McNeil Manor (Gardens)"
+area	27	McNeil Manor				cited	../BreathOfFire3Recomp/names/areas.toml AREA027 "McNeil Manor"
+area	28	McNeil Manor - rooftop				cited	../BreathOfFire3Recomp/names/areas.toml AREA028 "McNeil Rooftop"; docs/known-defects.md:9450
+area	29	Battlefield - Yraall Region (fall)				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (33 -> 29)
+area	30	Fishing spot				cited	../BreathOfFire3Recomp/names/areas.toml AREA030 "Fishing"; docs/DIVERGENCE.md:1889 (Manillo, area 30)
+area	31	Dauna Mine - elevator				cited	../BreathOfFire3Recomp/names/areas.toml AREA031 "Dauna Mine - Elevator"
+area	33	World map - Yraall Region (fall)				measured	game/game/DAT/en-US.AREA033.DAT msg 4 "Yraall Region"; season: ../BreathOfFire3Recomp/names/areas.toml AREA033
+area	35	Ogre Road				cited	../BreathOfFire3Recomp/names/places.toml id 35 en "Ogre Road"; US: "Ogre Road"
+area	37	Wyndia				cited	../BreathOfFire3Recomp/names/areas.toml AREA037 "Wyndia"; places.toml id 37
+area	39	Castle Wyndia - throne room				measured	game/game/DAT/en-US.AREA039.DAT caption "Castle Wyndia"; ../BreathOfFire3Recomp/names/areas.toml AREA039 "Wyndia Castle - Throne Room"
+area	40	Tower - inside				cited	../BreathOfFire3Recomp/names/areas.toml AREA040 "Inside Tower"
+area	41	Wyndia - jail				cited	../BreathOfFire3Recomp/names/areas.toml AREA041 "Wyndia Jail"
+area	42	Tower				cited	../BreathOfFire3Recomp/names/areas.toml AREA042 "Tower"
+area	43	Checkpoint				cited	../BreathOfFire3Recomp/names/places.toml id 43 en "Checkpoint"; docs/ultrawide-patch-cells.md:389
+area	44	Tower - upper floor				cited	../BreathOfFire3Recomp/names/areas.toml AREA044 "Upper Tower"
+area	45	World map - Central Wyndia				measured	game/game/DAT/en-US.AREA045.DAT msg 2 "Central Wyndia"; world map: docs/worldmap_area.md:232
+area	46	Checkpoint				cited	../BreathOfFire3Recomp/names/areas.toml AREA046 "Checkpoint"; places.toml id 46
+area	47	Castle Wyndia - wall				cited	../BreathOfFire3Recomp/names/areas.toml AREA047 "Wyndia Castle Wall"; US: "Castle Wyndia"
+area	48	Tower - top				cited	../BreathOfFire3Recomp/names/areas.toml AREA048 "Tower Top"
+area	49	Research Plant				cited	../BreathOfFire3Recomp/names/areas.toml AREA049 "Research Plant"; US: "Research Plant"
+area	50	Genmel - Contest of Champions				measured	game/game/DAT/en-US.AREA050.DAT captions "The Contest of Champions", "Genmel"
+area	51	Mt. Myrneg				measured	game/game/DAT/en-US.AREA051.DAT caption "Mt. Myrneg"; docs/cut-content.md:136
+area	52	Dump site				cited	../BreathOfFire3Recomp/names/areas.toml AREA052 "Dump Site"
+area	54	Tower Rocket				cited	../BreathOfFire3Recomp/names/areas.toml AREA054 "Tower Rocket"; docs/HANDOFF.md:194 ("area 54 (the rocket route)")
+area	55	Yggdrasil				measured	game/game/DAT/en-US.AREA055.DAT caption "*Yggdrasil*"
+area	56	Wyndia - tomb exit				cited	../BreathOfFire3Recomp/names/areas.toml AREA056 "Wyndia - Tomb Exit"
+area	57	Rhapala				cited	../BreathOfFire3Recomp/names/areas.toml AREA057 "Rapala"; US: "Rhapala"
+area	58	Junk Town				cited	../BreathOfFire3Recomp/names/areas.toml AREA058 "Junk Town"; places.toml id 58; US: "Junk Town"
+area	60	Bridge				cited	../BreathOfFire3Recomp/names/areas.toml AREA060 "Bridge"; save tools/recipe_saves/bridgeWalk.DAT is in area 60
+area	61	Magus's Grove				cited	../BreathOfFire3Recomp/names/areas.toml AREA061 "Magus's Grove" (US spelling not found in the en-US layer)
+area	62	House near Maekyss Gorge				cited	docs/door-sweep.md:274 ("the house near Maekyss Gorge): area 62")
+area	63	Battlefield - Central Wyndia				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (45 -> 63)
+area	64	Battlefield - Eastern Wyndia				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (65 -> 64)
+area	65	World map - Eastern Wyndia				measured	game/game/DAT/en-US.AREA065.DAT msg 2 "Eastern Wyndia"; world map: docs/worldmap_area.md:232
+area	67	Maekyss Gorge				cited	../BreathOfFire3Recomp/names/places.toml id 67 en "Maekyss Gorge"; US has "Maekyss" (and "Maekyss River"), not "Gorge"
+area	68	Coffee Shop				cited	../BreathOfFire3Recomp/names/places.toml id 68 en "Coffee Shop" (areas.toml "Tea Shop"); docs/cheats.md:311 (the well, area 68)
+area	69	Eygnock Road				cited	../BreathOfFire3Recomp/names/places.toml id 69 en "Eygnock Road" (areas.toml "Eggnog Highway"; neither spelling in the en-US layer)
+area	70	Mt. Levett - inside				cited	docs/mountain-passes.md:161 ("area 70 (Mt. Levett's interior")
+area	71	Boumou Mountain - far side				cited	../BreathOfFire3Recomp/names/areas.toml AREA071 "Boumou Mountain - Farside" (US spelling not found)
+area	72	Battlefield - Rhapala Region				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (87 -> 72)
+area	73	Battlefield - Urkan Region				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (88 -> 73)
+area	74	Urkan Tapa				cited	../BreathOfFire3Recomp/names/places.toml id 74 en "Urkan Tapa"; US: "Urkan Tapa"
+area	75	Steel Beach				cited	../BreathOfFire3Recomp/names/places.toml id 75 en "Steel Beach"; US: "Steel Beach"; tools/recipe_saves/README.md:25 ("area 75, the beach")
+area	77	Lighthouse				cited	../BreathOfFire3Recomp/names/places.toml id 77 en "Lighthouse"; docs/DIVERGENCE.md:9791 ("the lighthouse (area 77")
+area	82	Angel Tower - entrance				cited	memory/angel-tower-areas.md ("82 (entrance)"); link 88 -> 82 measured
+area	83	Angel Tower - block room				cited	tools/recipe_saves/README.md:24 ("Angel Tower's block room (AREA083)"); docs/DIVERGENCE.md:5812
+area	84	Angel Tower - inside				cited	memory/angel-tower-areas.md ("84 and 83 (interior")
+area	85	Angel Tower - top				cited	memory/angel-tower-areas.md ("85 (the top)")
+area	86	Container ship				cited	../BreathOfFire3Recomp/names/areas.toml AREA086 "Container Ship"
+area	87	World map - Rhapala Region				measured	game/game/DAT/en-US.AREA087.DAT msg 0 "Rhapala Region"
+area	88	World map - Urkan Region				measured	game/game/DAT/en-US.AREA088.DAT msg 0 "Urkan Region"
+area	90	Camp				cited	../BreathOfFire3Recomp/names/areas.toml AREA090 "Camp"; docs/campfire-and-crystal.md:61 (AREA090, the field camp)
+area	91	Meryleep's pond				cited	../BreathOfFire3Recomp/names/areas.toml AREA091 "Meryleep's Pond"; US: "Meryleep"
+area	94	Rhapala - docks				cited	../BreathOfFire3Recomp/names/areas.toml AREA094 "Rapala Docks"; US: "Rhapala"
+area	97	Mt. Zublo - cave entrance				cited	docs/door-sweep.md:275 ("Mt. Zublo's cave entrance, the way to Deis's temple", area 97)
+area	98	Deis's temple				cited	../BreathOfFire3Recomp/names/areas.toml AREA098 "Deis's Temple"; docs/door-sweep.md:277; US: "Deis"
+area	99	Boumou Mountain				cited	../BreathOfFire3Recomp/names/areas.toml AREA099 "Boumou Mountain" (US spelling not found)
+area	100	Relay Point B				cited	../BreathOfFire3Recomp/names/areas.toml AREA100 "Relay Point B"; docs/region-diff.md:457; US: "Relay Point"
+area	104	World map (area 104)				code	docs/worldmap_area.md:232 (WorldMap_Records area bytes)
+area	105	Tide Palace				cited	../BreathOfFire3Recomp/names/areas.toml AREA105 "Tide Palace"
+area	108	Dauna Mine - minecart (chapter 8)				cited	docs/known-defects.md:3743 ("the Dauna Mine's area 108 the cart")
+area	110	Battlefield - Dauna Hills				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (115 -> 110)
+area	111	Steel Tower				cited	../BreathOfFire3Recomp/names/places.toml id 111 en "Steel Tower"; docs/ultrawide-patch-cells.md:231
+area	112	Relay Point A				cited	../BreathOfFire3Recomp/names/areas.toml AREA112 "Relay Point A"; docs/region-diff.md:458
+area	115	World map - Dauna Hills				measured	game/game/DAT/en-US.AREA115.DAT msg 0 "Dauna Hills"
+area	120	Cliff				cited	../BreathOfFire3Recomp/names/areas.toml AREA120 "Cliff"; places.toml id 120
+area	121	World map - Middle Sea				measured	game/game/DAT/en-US.AREA121.DAT msg 0 "The Middle Sea"
+area	124	Battlefield - Lost Shore				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (151 -> 124)
+area	125	Battlefield - Desert				cited	D:/bof3x-runs/frost/wiki-pr/src/content/docs/data/programs.md:79 (152 -> 125)
+area	128	Dock				cited	../BreathOfFire3Recomp/names/areas.toml AREA128 "Dock"; tools/recipe_saves/README.md:32 ("the dock (area 128)")
+area	134	Freighter				cited	../BreathOfFire3Recomp/names/places.toml id 134 en "Freighter"; US: "freighter"
+area	141	Ryu's dream 1				cited	../BreathOfFire3Recomp/names/areas.toml AREA141 "Ryu's Dream 1"
+area	142	Ryu's dream 2				cited	../BreathOfFire3Recomp/names/areas.toml AREA142 "Ryu's Dream 2"
+area	143	Dragnier				cited	../BreathOfFire3Recomp/names/places.toml id 143 en "Dragnier"; US: "Dragnier"
+area	144	Dragnier				cited	../BreathOfFire3Recomp/names/places.toml id 144 en "Dragnier"
+area	145	Colony				cited	../BreathOfFire3Recomp/names/places.toml id 145 en "Colony"; US: "Colony"
+area	146	Container Yard				cited	../BreathOfFire3Recomp/names/places.toml id 146 en "Container Yard"
+area	147	Caer Xhan				cited	../BreathOfFire3Recomp/names/areas.toml AREA147 "Caer Xhan"; places.toml id 147; US: "Caer Xhan"
+area	148	Caer Xhan - elevator				cited	../BreathOfFire3Recomp/names/areas.toml AREA148 "Caer Xhan - Elevator"
+area	150	Oasis				cited	../BreathOfFire3Recomp/names/areas.toml AREA150 "Oasis"; places.toml id 150
+area	151	World map - Lost Shore				measured	game/game/DAT/en-US.AREA151.DAT msg 0 "Lost Shore"
+area	152	World map - Desert				measured	game/game/DAT/en-US.AREA152.DAT msg 0 "Desert"
+area	155	Kombinat				cited	../BreathOfFire3Recomp/names/places.toml id 155 en "Kombinat"; US: "Kombinat"
+area	167	Station Myria - outside				cited	../BreathOfFire3Recomp/names/areas.toml AREA167 "Station Myria - Outside"
+area	168	Station Myria				cited	../BreathOfFire3Recomp/names/areas.toml AREA168 "Station Myria"
+area	171	Station Myria - garden				cited	../BreathOfFire3Recomp/names/areas.toml AREA171 "Station Myria - Garden"
+area	172	Teepo's garden				cited	../BreathOfFire3Recomp/names/areas.toml AREA172 "Teepo's Garden"
+area	175	Faerie Village				cited	../BreathOfFire3Recomp/names/areas.toml AREA175 "Fairy Village"; US: "Faerie Village"; docs/DIVERGENCE.md:11507
+area	176	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	177	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	178	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	179	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	180	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	181	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	182	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	183	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	184	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	185	Faerie Village				cited	docs/DIVERGENCE.md:14472 ("areas 175..185 (the faerie village)")
+area	188	Freighter				cited	../BreathOfFire3Recomp/names/places.toml id 188 en "Freighter" (dev label)
+area	189	Desert of Death				cited	tools/recipe_saves/README.md:31 ("the Desert of Death (area 189)"); US: "Desert of Death"
+area	191	Desert camp				cited	tools/recipe_saves/README.md:31 ("the desert camp (area 191)")
+area	195	Mt. Zublo				cited	../BreathOfFire3Recomp/names/areas.toml AREA195 "Zublo Volcano"; US: "Mt. Zublo"
+area	196	Manmo's sand hill				cited	tools/recipe_saves/README.md:31 ("Manmo's sand hill and its fight (area 196"); docs/takeover-queue-round13.md:1028
+area	198	Myria's chamber				cited	docs/STATUS.md:96 ("Area 198, Myria's chamber")
+area	199	Ending - desert scene				cited	docs/ending-backdrop.md:16; tools/recipe_saves/README.md:34 ("the ending's desert scene")

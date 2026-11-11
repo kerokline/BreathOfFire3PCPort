@@ -13,6 +13,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,20 @@ struct Names {
     std::vector<std::string> item[4];   // by inventory category: items, weapons, armour, accessories
     std::vector<std::string> key;       // key items
     std::vector<std::string> ability;   // by ability id; [0] is empty
+
+    // The reference names (data/save-names.tsv, the copy beside the launcher):
+    // what the game calls a master, a gene, a formation, a kind of fish, and
+    // our labels for a chapter and an area, each by its number. Any may be empty.
+    std::map<unsigned, std::string> master, gene, formation, fish, chapter, area;
+    // A known place to come into an area: the position and the entry flags
+    // that the game gives the party there.
+    struct Entrance {
+        unsigned area;
+        std::string name;
+        double x, z;
+        int flags;   // the entry flags byte, or -1 where the table has none
+    };
+    std::vector<Entrance> entrances;
 };
 
 enum class Type {
@@ -46,9 +61,13 @@ enum class Type {
     kFixed,      // s32, 16.16
     kHex,        // `size` bytes, shown as hex
     kStack,      // an item id at `at` and its count at `at2`
+    kPosition,   // two 16.16 numbers, x at `at` and z at `at2`: "47, 15"
 };
 
-enum class List { kNone, kItem0, kItem1, kItem2, kItem3, kKeyItem, kAbility, kMember };
+enum class List {
+    kNone, kItem0, kItem1, kItem2, kItem3, kKeyItem, kAbility, kMember,
+    kMaster, kFormation, kChapter, kArea,   // by the reference names
+};
 
 // The spec's classes (section 7): E a normal field, A advanced, D derived (the
 // game or the editor makes it; shown, not edited), P preserved (shown as hex).
@@ -71,8 +90,9 @@ struct Section {
 };
 
 const std::vector<Section>& Sections();
-// A section's fields for one of its records, advanced ones included.
-std::vector<Field> SectionFields(int section, int record);
+// A section's fields for one of its records, advanced ones included. The
+// names give a field its label where the game has a word for it ("Gene 4 - ...").
+std::vector<Field> SectionFields(int section, int record, const Names& names);
 // The words for a record in the section's box: "Record 1 - Ryu", "Weapons".
 std::string RecordLabel(const Block& block, int section, int record, const Names& names);
 

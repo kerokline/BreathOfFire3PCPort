@@ -19,7 +19,8 @@ dialog of its own, as the CRT options do (`IDD_SAVEEDIT`, `launcher.rc`).
 
 ```
 src/launcher/save/block.h/.cpp   the block, checksum, field table, checks, the PC file
-src/launcher/save/names.h/.cpp   the lists of names, read from the install
+src/launcher/save/names.h/.cpp   the lists of names, read from the install and from save-names.tsv
+data/save-names.tsv              the reference names; the build copies it beside the launcher
 src/launcher/save_dialog.cpp     the window
 tools/launcher_host/save_tests.cpp   the format tests
 ```
@@ -34,18 +35,26 @@ width, signedness and class.
   with the name, level and play time of its save, and "A different file..." for
   a PC save anywhere else. `BISLPS10..1F` are quicksaves and are not listed.
 - **The sections**, on the left: Game, Party, Characters, Inventory, Key items,
-  Party skills, Dragon genes, Masters, Fishing, Faerie village, Faeries, Faerie
-  buildings, Options. A section with several records (the eight characters, the
-  four inventory categories, the 60 faeries) has a box to select the record.
+  Party skills, Dragon genes, Masters, Fishing. A section with several records
+  (the eight characters, the four inventory categories) has a box to select the
+  record. The faerie village's three sections and Options are behind the
+  advanced box (the owner, 2026-11-10).
+- **Area and Position** (Game): the area shows its name beside its number and
+  offers the named areas. Position is one field, `x, z` in cells (`47, 15.5`),
+  and its list is the known entrances of the area the save is in, each as
+  `x, z - from <the areas it comes from>`. A pick from the list sets the
+  position and the entry flags; typing two numbers sets the position alone.
 - **The fields** of the section: the field, its value, and the value in the
   file when the player changed it.
 - **Value:** one box for the field selected. A field with a list (an item, an
   ability, a party member, a switch) offers the list, and a pick from it is set
   at once. Enter, or Set, sets what was typed: a number, a name from the list,
   `12 x 3` for an item and a count. A double-click changes a switch.
-- **Show advanced fields** adds the spec's A, D and P classes: six more
-  sections (Story state, Chapter flags, Event flags, Records and finds,
-  Counters, Other bytes) and the advanced fields of the others. A derived or
+- **Show advanced fields** adds the spec's A, D and P classes: ten more
+  sections (Faerie village, Faeries, Faerie buildings, Options, Story state,
+  Chapter flags, Event flags, Records and finds, Counters, Other bytes) and the
+  advanced fields of the others. The chapter, an advanced field of Game, shows
+  its label. A derived or
   preserved field is shown and cannot be changed.
 - **Write to:** the slot to save to, the opened one by default. **Save** writes
   it.
@@ -107,7 +116,58 @@ Read from the player's install, never from the repository
   other name, and every name of the Chinese and Japanese installs, is shown and
   written as its glyph codes: `hex:8A 88 8A 89`.
 - On an install with no Latin layer the lists show numbers. The window says so.
-- Genes, masters, fish and areas have no names yet: they are numbers.
+
+### 4.1 The reference names: `data/save-names.tsv`
+
+Checked in, as the Jukebox's `music-names.tsv` is, and copied beside the
+launcher by the build and the release; the editor reads that copy. UTF-8,
+tab-separated: `kind id name x z flags status source`. The editor reads the
+first six columns; `status` and `source` are the record of where each name
+comes from. A row can be edited or added by hand.
+
+| Kind | Rows | From (2026-11-10) |
+|---|--:|---|
+| `master` | 17 | The US text, read by index from an install's English layer: the masters window draws system message `0x110 + (bit + 1)` (`MasterWin_DrawList`) |
+| `gene` | 18 | The same way: the gene window draws message `0x4171 + (bit + 1)` (`MenuList_GeneWinDraw`). Gene 13's name is `???` in the game's own text |
+| `formation` | 6 | The tactics wheel's entry for cell n (`TacticsFormation_Build`), checked against the help lines `0x77 + n`: Normal, Attack, Defense, Chain, Magic, Refuge |
+| `fish` | 23 | Kind k is consumable item `0x38 + k` (`FieldPanel_DrawKindRow`); kind 22 copies the fish merchant's name. Where the install gives item names, the editor takes kinds 0..21 from them, in the install's language |
+| `chapter` | 20 | Our labels, from [`boss-fights.md`](boss-fights.md) and each chapter file's end: "Ends with <boss>" only where the fight is in the run that ends the chapter |
+| `area` | 128 of 200 | 20 from the US text (area captions, region names); 107 cited from one source each (the sibling's `names/areas.toml` and `places.toml`, our docs); 72 areas have no name and show as a number |
+
+The two countdowns are labelled by the names of abilities `0x3E` and `0x15`
+from the install's ability names (Celerity and Bonebreak on the US text):
+`Skill_CanUse` refuses each while its countdown runs.
+
+Six cited area names do not appear in the US text and may not be the game's
+words: Magus's Grove (61), Eygnock Road (69), Mt. Levett (70), Boumou Mountain
+(71, 99) and the "Gorge" of Maekyss Gorge (67).
+
+### 4.2 Entrances: read from the install, not shipped
+
+A save's area, position and entry flags are exactly what a door hands
+`Field_ChangeArea`: the load passes them to it unchanged. The doors are the
+link lists of `Area_Descriptors` in `BOF3.exe` (a descriptor's `+0x20`, 12
+bytes a link, `Area_LinkAt`; [`area-entry.md`](area-entry.md) section 1), so
+**an entrance into an area is every link of any area that leads to it**.
+
+`ExeAreaLinks` (`exe_image.cpp`) reads them from the player's file with
+`Area_LinkAt`'s arithmetic (`(w & 0xFF80) << 8` is the save's 16.16 position,
+in half cells; flags `& 0x8F`), indirect links' alternatives included. It
+leaves out a link to cell 0, 0 and the one list that eleven areas share as a
+placeholder. The editor groups the links of one position and names the group
+by the areas it comes from. The values are an exe table's, so they are read
+at run time and are not in the repository (the owner's call of 2026-11-09 for
+exe tables). An install with no `BOF3.exe` has no entrance list.
+
+Measured by the research pass (2026-11-10): the static read gives 1,542 links
+in 192 areas, with no difference from the running game's own dump of the door
+sweep, and on the 1,517 doors that sweep drove the leader stood on exactly
+these cells. 64 of 86 real PC saves are within 10 cells of an entrance of
+their area. 177 areas have an entrance.
+
+Not in the list: the arrivals that a script makes with literal arguments (357
+in our source), which can depend on the story state; and the areas no link
+leads to (battlefields, the ending).
 
 ## 5. Tests
 
@@ -146,6 +206,9 @@ record that holds nobody yet), so the level field takes 0..99.
 - **EXP past the level** is not warned: it needs the EXP curve from the
   install.
 - **The button words** are shown and cannot be changed.
+- **An entrance is a place, not a promise.** The list does not know the story
+  state: an indirect link's alternative is offered whether or not its flag
+  holds, and the editor does not check that the area fits the chapter.
 - **A bad checksum** asks once, then opens the save for editing; the spec opens
   it read-only until "Open anyway".
 - **The pad** does not move through this dialog; the keyboard and the mouse do.

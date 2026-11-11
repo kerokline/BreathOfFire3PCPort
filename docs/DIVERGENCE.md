@@ -15469,6 +15469,11 @@ designed in rather than bolted on.
   (an out-of-range value refused; zenny and a weapon set and saved: the file
   differs in those bytes and the checksum, and the backup is the file from
   before). **Not done:** no edited save has been loaded in the game.
+  Amended 2026-11-10: names for masters, genes, formations, fish, chapters
+  and areas from `data/save-names.tsv` beside the launcher; one Position
+  field with the area's entrances, read from the install's `BOF3.exe`
+  ([`save-editor.md`](save-editor.md) 4.1, 4.2); the faerie village and
+  Options behind the advanced box.
 - **Reversible?** The player does not open it. Each save it replaces is in
   `save-backups\`.
 - **Switch:** none

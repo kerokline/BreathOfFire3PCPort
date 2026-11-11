@@ -184,7 +184,7 @@ void FillFields(HWND dlg, State& s) {
     const int section = Section(dlg, s);
     if (s.loaded && section >= 0) {
         const int record = Selected(dlg, IDC_SE_RECORD);
-        for (save::Field& f : save::SectionFields(section, record < 0 ? 0 : record))
+        for (save::Field& f : save::SectionFields(section, record < 0 ? 0 : record, s.names))
             if (s.advanced || f.cls == 'E') s.fields.push_back(std::move(f));
         for (int i = 0; i < static_cast<int>(s.fields.size()); ++i) {
             const std::wstring label = W(s.fields[static_cast<size_t>(i)].label);
@@ -351,7 +351,7 @@ void InitList(HWND dlg) {
     const struct {
         const wchar_t* title;
         int width;
-    } columns[] = {{L"Field", w * 42 / 100}, {L"Value", w * 33 / 100}, {L"In the file", w * 25 / 100}};
+    } columns[] = {{L"Field", w * 32 / 100}, {L"Value", w * 43 / 100}, {L"In the file", w * 25 / 100}};
     for (int i = 0; i < 3; ++i) {
         LVCOLUMNW c{};
         c.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
@@ -496,8 +496,53 @@ void SaveEditorRun(HWND owner, const std::wstring& game_dir, const std::wstring&
     if (s.names.item[0].empty() && !cache.empty())
         s.names = save::LoadNames(cache + L"\\loc\\" + tag + L"\\dat\\FIRST.DAT", tags, latin);
 
+    // The reference names, beside the launcher (data/save-names.tsv; as the Jukebox's music-names.tsv).
+    wchar_t self[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(nullptr, self, MAX_PATH);
+    std::wstring beside(self, n < MAX_PATH ? n : 0);
+    beside.erase(beside.find_last_of(L"\\/") == std::wstring::npos ? 0 : beside.find_last_of(L"\\/"));
+    save::LoadReferenceNames(beside + L"\\save-names.tsv", s.names);
+    // A kind of fish is an item of the install (item 0x38 + kind, which the
+    // fishing panel's row reads: FieldPanel_DrawKindRow), so where the install
+    // gives item names the fish take them, in the install's language.
+    for (unsigned k = 0; k < 22; ++k)
+        if (0x38 + k < s.names.item[0].size() && !s.names.item[0][0x38 + k].empty())
+            s.names.fish[k] = s.names.item[0][0x38 + k];
+
     std::string why;
     if (!ExePartyTable(s.game_dir + L"\\BOF3.exe", s.table, why)) s.table.clear();
+
+    // The ways into each area, from the install's link lists: one entrance for
+    // each different position, named by the areas it comes from.
+    std::vector<AreaLink> links;
+    if (ExeAreaLinks(s.game_dir + L"\\BOF3.exe", links, why)) {
+        const auto place = [&s](unsigned area) {
+            const auto it = s.names.area.find(area);
+            return it == s.names.area.end() ? "area " + std::to_string(area) : it->second + " (" + std::to_string(area) + ")";
+        };
+        struct Group {
+            const AreaLink* first;
+            std::vector<unsigned> from;
+        };
+        std::vector<Group> groups;
+        for (const AreaLink& l : links) {
+            Group* g = nullptr;
+            for (Group& have : groups)
+                if (have.first->to == l.to && have.first->x == l.x && have.first->z == l.z && have.first->flags == l.flags) g = &have;
+            if (!g) {
+                groups.push_back({&l, {}});
+                g = &groups.back();
+            }
+            bool listed = false;
+            for (const unsigned f : g->from) listed = listed || f == l.from;
+            if (!listed) g->from.push_back(l.from);
+        }
+        for (const Group& g : groups) {
+            std::string name = "from ";
+            for (std::size_t i = 0; i < g.from.size(); ++i) name += (i ? ", " : "") + place(g.from[i]);
+            s.names.entrances.push_back({g.first->to, name, g.first->x / 65536.0, g.first->z / 65536.0, g.first->flags});
+        }
+    }
 
     DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_SAVEEDIT), owner, Proc, reinterpret_cast<LPARAM>(&s));
 }

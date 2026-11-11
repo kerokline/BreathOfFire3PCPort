@@ -34,4 +34,17 @@ struct NameTableTags {
 };
 NameTableTags ExeNameTableTags();
 
+// The ways into each area, for the save editor's entrance list: every link of
+// every area's link list (Area_Descriptors -> a descriptor's +0x20, 12 bytes a
+// link; Area_LinkAt 0x5951D0 reads them when the leader steps on one;
+// docs/area-entry.md section 1), as the position Area_LinkAt would hand
+// Field_ChangeArea - which is what a save's area, position and entry flags
+// are. Read from the file, never copied into our source.
+struct AreaLink {
+    std::uint16_t from, to;   // the area the link is in, and the area it leads to
+    std::int32_t x, z;        // 16.16, the save's +0x28 / +0x2C
+    std::uint8_t flags;       // the save's +0x27
+};
+bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::string& why);
+
 }  // namespace bof3x

@@ -98,6 +98,12 @@ Field Name(std::string label, std::uint32_t at, std::uint32_t size, std::int64_t
 
 std::string N(unsigned n) { return std::to_string(n); }
 
+// "Gene 4", or "Gene 4 - <its name>" where the reference names have one.
+std::string Named(const char* what, unsigned n, const std::map<unsigned, std::string>& names) {
+    const auto it = names.find(n);
+    return std::string(what) + " " + N(n) + (it == names.end() ? std::string() : " - " + it->second);
+}
+
 enum SectionId {
     kSecGame,
     kSecParty,
@@ -130,27 +136,35 @@ void GameFields(std::vector<Field>& f) {
     f.push_back(Rng("Zenny", 0x678, 4, 0, 9999999));
     f.push_back(Typed("Play time", Type::kClock, kClock, 4, 'E',
                       "Hours:minutes:seconds.frames. Do not set all to zero: the game reads that as a new game."));
-    f.push_back(Num("Area", 0x24, 2, 'E', "The area number where the game continues."));
-    f.push_back(Typed("Position X", Type::kFixed, 0x28, 4));
-    f.push_back(Typed("Position Z", Type::kFixed, 0x2C, 4));
+    Field area = Num("Area", 0x24, 2, 'E', "The area number where the game continues. Change the position also.");
+    area.list = List::kArea;
+    f.push_back(std::move(area));
+    Field at = Typed("Position", Type::kPosition, 0x28, 4, 'E',
+                     "X, then Z, as in: 47, 15. Or select an entrance of the area: that sets the entry flags also.");
+    at.at2 = 0x2C;
+    f.push_back(std::move(at));
     f.push_back(Num("Entry flags", 0x27, 1, 'E', "The low bits are the direction. 128 drops the party in."));
-    f.push_back(Rng("Chapter", 0x00, 1, 0, 19, 'A',
-                    "0 to 19, not 16. This is the row of chapter flags that the game uses. If you change it, "
-                    "set Chapter status bit 7 to Off."));
+    Field chapter = Rng("Chapter", 0x00, 1, 0, 19, 'A',
+                        "0 to 19, not 16. This is the row of chapter flags that the game uses. If you change it, "
+                        "set Chapter status bit 7 to Off.");
+    chapter.list = List::kChapter;
+    f.push_back(std::move(chapter));
     f.push_back(Num("Battle count", kBattleCount, 4, 'A',
                     "When you change it, the editor moves each faerie village stamp by the same amount."));
 }
 
-void PartyFields(std::vector<Field>& f) {
+void PartyFields(std::vector<Field>& f, const Names& names) {
     const std::string order = "A member id, or 255 for an empty place. Empty places come last. "
                               "Each member must have its Joined bit.";
     for (unsigned i = 0; i < 3; ++i) f.push_back(Lst("Field order " + N(i + 1), kFieldOrder + i, List::kMember, 'E', order));
     for (unsigned i = 0; i < 3; ++i)
         f.push_back(Lst("Battle order " + N(i + 1), kBattleOrder + i, List::kMember, 'E',
                         "The same members as the field order. The editor copies the field order when they differ."));
-    f.push_back(Rng("Formation", 0x680, 1, 0, 5, 'E',
-                    "A formation number from 0 to 5. It must be unlocked. One member: 0. Two members: 0 to 2."));
-    for (unsigned i = 0; i < 6; ++i) f.push_back(Bit("Formation " + N(i) + " unlocked", 0x681, i));
+    Field formation = Rng("Formation", 0x680, 1, 0, 5, 'E',
+                          "A formation number from 0 to 5. It must be unlocked. One member: 0. Two members: 0 to 2.");
+    formation.list = List::kFormation;
+    f.push_back(std::move(formation));
+    for (unsigned i = 0; i < 6; ++i) f.push_back(Bit(Named("Formation", i, names.formation) + " unlocked", 0x681, i));
     f.push_back(Num("Party row", kPartySet, 1, 'D', "Set by the editor from the field order."));
 }
 
@@ -177,7 +191,7 @@ void CharacterFields(std::vector<Field>& f, unsigned record) {
     f.push_back(Num("Willpower", b + 0x1C, 1, 'E', "The current value. An inn sets it again."));
     f.push_back(Num("Base willpower", b + 0x4E, 1, 'E', "0 to 99."));
     f.push_back(Num("Fatigue", b + 0x1E, 1, 'E', "0 to 9. Each step decreases the maximum HP. An inn clears it."));
-    f.push_back(Num("Master", b + 0x1F, 1, 'E',
+    f.push_back(Lst("Master", b + 0x1F, List::kMaster, 'E',
                     "A master number, or 255 for no master. Change the level at apprenticing and the growth also."));
     f.push_back(Num("Level at apprenticing", b + 0x88, 1, 'E', "0 with no master. Not above the level."));
     const char* const growth[6] = {"maximum HP", "maximum AP", "power", "defense", "agility", "intelligence"};
@@ -215,30 +229,38 @@ void CharacterFields(std::vector<Field>& f, unsigned record) {
     f.push_back(Num("Intelligence", b + 0x2A, 2, 'D', made));
 }
 
-void DragonFields(std::vector<Field>& f) {
-    for (unsigned i = 0; i < 18; ++i) f.push_back(BankBit("Gene " + N(i + 1), 0xC70, i));
+void DragonFields(std::vector<Field>& f, const Names& names) {
+    // Numbered from 0, as the combination rows below number them.
+    for (unsigned i = 0; i < 18; ++i) f.push_back(BankBit(Named("Gene", i, names.gene), 0xC70, i));
     const std::string row = "Four bytes: three gene numbers (0 to 17, then FF) and the form. An empty row is FF FF FF FF.";
     for (unsigned i = 0; i < 6; ++i) f.push_back(Typed("Recent combination " + N(i + 1), Type::kHex, 0xC28 + 4 * i, 4, 'A', row));
     for (unsigned i = 0; i < 12; ++i) f.push_back(Typed("Stored combination " + N(i + 1), Type::kHex, 0xC40 + 4 * i, 4, 'A', row));
 }
 
-void MasterFields(std::vector<Field>& f) {
+void MasterFields(std::vector<Field>& f, const Names& names) {
     for (unsigned i = 0; i < 17; ++i)
-        f.push_back(BankBit("Master " + N(i) + " met", 0xC74, i, 'E', "Set when the introduction of the master starts."));
+        f.push_back(BankBit(Named("Master", i, names.master) + ": met", 0xC74, i, 'E',
+                            "Set when the introduction of the master starts."));
     for (unsigned i = 0; i < 17; ++i)
-        f.push_back(BankBit("Master " + N(i) + " available", 0xC77, i, 'E',
+        f.push_back(BankBit(Named("Master", i, names.master) + ": available", 0xC77, i, 'E',
                             "The masters window shows the masters that have this bit."));
-    f.push_back(Typed("Countdown 1", Type::kClock, 0xC7C, 4, 'E', "While this runs, the game refuses ability 62."));
-    f.push_back(Typed("Countdown 2", Type::kClock, 0xC80, 4, 'E', "While this runs, the game refuses ability 21."));
+    // The two countdowns, by the ability each one stops (0x3E and 0x15): the
+    // ability's name from the install where it has one.
+    const auto countdown = [&names](unsigned ability) {
+        const bool known = ability < names.ability.size() && !names.ability[ability].empty();
+        return "Countdown: " + (known ? names.ability[ability] : "ability " + N(ability));
+    };
+    f.push_back(Typed(countdown(0x3E), Type::kClock, 0xC7C, 4, 'E', "While this runs, the game refuses ability 62."));
+    f.push_back(Typed(countdown(0x15), Type::kClock, 0xC80, 4, 'E', "While this runs, the game refuses ability 21."));
     f.push_back(Num("Battles after master 4 was met", 0xC1B, 1, 'A', "Counts to 30."));
 }
 
-void FishingFields(std::vector<Field>& f) {
+void FishingFields(std::vector<Field>& f, const Names& names) {
     f.push_back(Num("Rod", 0x750, 1, 'E', "An item number. The rod is not in the inventory."));
     f.push_back(Num("Lure", 0x74E, 1, 'E', "An item number. The lure is not in the inventory."));
     f.push_back(Rng("Lure count", 0x74F, 1, 0, 1, 'E', "1 with a lure, 0 with no lure."));
     for (unsigned i = 0; i < 23; ++i)
-        f.push_back(Num("Largest fish, kind " + N(i + 1), 0x70C + i, 1, 'E', "0: not caught."));
+        f.push_back(Num("Largest: " + Named("fish", i, names.fish), 0x70C + i, 1, 'E', "The size. 0: not caught."));
     f.push_back(Num("Fishing sessions", 0x764, 4, 'A'));
 }
 
@@ -471,9 +493,30 @@ std::string MemberName(const Block& b, unsigned id, const Names& names) {
     return name.compare(0, 4, "hex:") == 0 ? std::string() : name;
 }
 
+// The reference names behind a list, or null.
+const std::map<unsigned, std::string>* MapOf(List list, const Names& names) {
+    switch (list) {
+    case List::kMaster:
+        return &names.master;
+    case List::kFormation:
+        return &names.formation;
+    case List::kChapter:
+        return &names.chapter;
+    case List::kArea:
+        return &names.area;
+    default:
+        return nullptr;
+    }
+}
+
 // The name a list gives a value, or empty.
 std::string ListName(const Block& b, List list, std::uint64_t v, const Names& names) {
     if (list == List::kMember) return MemberName(b, static_cast<unsigned>(v), names);
+    if (const std::map<unsigned, std::string>* m = MapOf(list, names)) {
+        if (list == List::kMaster && v == 0xFF) return "None";
+        const auto it = m->find(static_cast<unsigned>(v));
+        return it == m->end() ? std::string() : it->second;
+    }
     const std::vector<std::string>* l = ListOf(list, names);
     if (v == 0 && list != List::kNone) return "None";
     return l && v < l->size() ? (*l)[static_cast<std::size_t>(v)] : std::string();
@@ -510,6 +553,18 @@ bool ParseNumber(const Block& b, const std::string& raw, List list, const Names&
         }
         return false;
     }
+    if (const std::map<unsigned, std::string>* m = MapOf(list, names)) {
+        if (list == List::kMaster && SameText(text, "None")) {
+            out = 0xFF;
+            return true;
+        }
+        for (const auto& [id, name] : *m)
+            if (SameText(text, name)) {
+                out = id;
+                return true;
+            }
+        return false;
+    }
     if (list != List::kNone && (SameText(text, "None") || SameText(text, "Empty"))) {
         out = 0;
         return true;
@@ -521,6 +576,40 @@ bool ParseNumber(const Block& b, const std::string& raw, List list, const Names&
                 return true;
             }
     return false;
+}
+
+// A 16.16 number as text and back: exact both ways (six decimals hold 1/65536).
+std::string FixedText(std::int64_t raw) {
+    char text[32];
+    std::snprintf(text, sizeof text, "%.6f", static_cast<double>(raw) / 65536.0);
+    std::string s = text;
+    while (s.back() == '0') s.pop_back();
+    if (s.back() == '.') s.pop_back();
+    return s;
+}
+std::int64_t ToFixed(double v) {
+    const double scaled = v * 65536.0;
+    return static_cast<std::int64_t>(scaled < 0 ? scaled - 0.5 : scaled + 0.5);
+}
+bool ParseFixed(const std::string& raw, std::int64_t& out) {
+    const std::string text = Trim(raw);
+    char* end = nullptr;
+    const double v = std::strtod(text.c_str(), &end);
+    if (text.empty() || end == text.c_str() || !Trim(end).empty() || v < -32768.0 || v >= 32768.0) return false;
+    out = ToFixed(v);
+    return true;
+}
+
+// An entrance as the value box lists it, and the entrance of the block's area
+// at a position, if the reference names have one there.
+std::string EntranceText(const Names::Entrance& e) {
+    return FixedText(ToFixed(e.x)) + ", " + FixedText(ToFixed(e.z)) + " - " + e.name;
+}
+const Names::Entrance* EntranceAt(const Block& b, const Names& names, std::int64_t x, std::int64_t z) {
+    const unsigned area = static_cast<unsigned>(Get(b, 0x24, 2));
+    for (const Names::Entrance& e : names.entrances)
+        if (e.area == area && ToFixed(e.x) == x && ToFixed(e.z) == z) return &e;
+    return nullptr;
 }
 
 std::string RangeWhy(const Field& f) {
@@ -690,10 +779,11 @@ const std::vector<Section>& Sections() {
         {"Dragon genes", 1, false},
         {"Masters", 1, false},
         {"Fishing", 1, false},
-        {"Faerie village", 1, false},
-        {"Faeries", static_cast<int>(kFaerieCount), false},
-        {"Faerie buildings", static_cast<int>(kBuildingCount), false},
-        {"Options", 1, false},
+        // Behind the advanced box (the owner, 2026-11-10).
+        {"Faerie village", 1, true},
+        {"Faeries", static_cast<int>(kFaerieCount), true},
+        {"Faerie buildings", static_cast<int>(kBuildingCount), true},
+        {"Options", 1, true},
         {"Story state", 1, true},
         {"Chapter flags", 20, true},
         {"Event flags", 1, true},
@@ -704,7 +794,7 @@ const std::vector<Section>& Sections() {
     return sections;
 }
 
-std::vector<Field> SectionFields(int section, int record) {
+std::vector<Field> SectionFields(int section, int record, const Names& names) {
     std::vector<Field> f;
     const unsigned r = record < 0 ? 0u : static_cast<unsigned>(record);
     switch (section) {
@@ -712,7 +802,7 @@ std::vector<Field> SectionFields(int section, int record) {
         GameFields(f);
         break;
     case kSecParty:
-        PartyFields(f);
+        PartyFields(f, names);
         break;
     case kSecCharacters:
         if (r < kCharCount) CharacterFields(f, r);
@@ -738,13 +828,13 @@ std::vector<Field> SectionFields(int section, int record) {
                             "Keep an ability here or in the list of a member, not in the two."));
         break;
     case kSecDragon:
-        DragonFields(f);
+        DragonFields(f, names);
         break;
     case kSecMasters:
-        MasterFields(f);
+        MasterFields(f, names);
         break;
     case kSecFishing:
-        FishingFields(f);
+        FishingFields(f, names);
         break;
     case kSecVillage:
         VillageFields(f);
@@ -801,7 +891,7 @@ std::string RecordLabel(const Block& block, int section, int record, const Names
     case kSecBuildings:
         return "Building " + N(r + 1);
     case kSecChapterFlags:
-        return "Chapter " + N(r);
+        return Named("Chapter", r, names.chapter);
     case kSecBanks:
         return kBankName[r < 5 ? r : 0];
     default:
@@ -836,13 +926,8 @@ std::string FieldText(const Block& block, const Field& f, const Names& names) {
     case Type::kClock:
         std::snprintf(text, sizeof text, "%u:%02u:%02u.%02u", block[f.at], block[f.at + 1], block[f.at + 2], block[f.at + 3]);
         return text;
-    case Type::kFixed: {
-        std::snprintf(text, sizeof text, "%.6f", static_cast<double>(GetSigned(block, f.at, 4)) / 65536.0);
-        std::string s = text;
-        while (s.back() == '0') s.pop_back();
-        if (s.back() == '.') s.pop_back();
-        return s;
-    }
+    case Type::kFixed:
+        return FixedText(GetSigned(block, f.at, 4));
     case Type::kHex: {
         std::string s;
         for (std::uint32_t i = 0; i < f.size; ++i) {
@@ -855,6 +940,12 @@ std::string FieldText(const Block& block, const Field& f, const Names& names) {
         const std::uint64_t id = block[f.at];
         if (id == 0) return "Empty";
         return WithName(id, ListName(block, f.list, id, names)) + " x " + std::to_string(block[f.at2]);
+    }
+    case Type::kPosition: {
+        const std::int64_t x = GetSigned(block, f.at, 4), z = GetSigned(block, f.at2, 4);
+        std::string s = FixedText(x) + ", " + FixedText(z);
+        if (const Names::Entrance* e = EntranceAt(block, names, x, z)) s += " - " + e->name;
+        return s;
     }
     }
     return {};
@@ -914,14 +1005,38 @@ bool FieldSet(Block& block, const Field& f, const std::string& raw, const Names&
         return true;
     }
     case Type::kFixed: {
-        char* end = nullptr;
-        const double v = std::strtod(text.c_str(), &end);
-        if (end == text.c_str() || !Trim(end).empty() || v < -32768.0 || v >= 32768.0) {
+        std::int64_t v = 0;
+        if (!ParseFixed(text, v)) {
             why = "Write a number from -32768 to 32767. It can have a fraction.";
             return false;
         }
-        const double scaled = v * 65536.0;
-        Put(block, f.at, 4, static_cast<std::uint64_t>(static_cast<std::int64_t>(scaled < 0 ? scaled - 0.5 : scaled + 0.5)));
+        Put(block, f.at, 4, static_cast<std::uint64_t>(v));
+        return true;
+    }
+    case Type::kPosition: {
+        // An entrance of the area by its name, or as the list writes it
+        // ("47, 15 - from the world map"): its position and its entry flags.
+        const unsigned area = static_cast<unsigned>(Get(block, 0x24, 2));
+        for (const Names::Entrance& e : names.entrances) {
+            if (e.area != area) continue;
+            if (!SameText(text, e.name) && !SameText(text, EntranceText(e))) continue;
+            Put(block, f.at, 4, static_cast<std::uint64_t>(ToFixed(e.x)));
+            Put(block, f.at2, 4, static_cast<std::uint64_t>(ToFixed(e.z)));
+            if (e.flags >= 0) block[0x27] = static_cast<std::uint8_t>(e.flags);
+            return true;
+        }
+        // Two numbers. Words after them (a name the list wrote) are not read.
+        const std::size_t comma = text.find(',');
+        std::int64_t x = 0, z = 0;
+        std::string second = comma == std::string::npos ? std::string() : Trim(text.substr(comma + 1));
+        const std::size_t dash = second.find(" - ");
+        if (dash != std::string::npos) second = second.substr(0, dash);
+        if (comma == std::string::npos || !ParseFixed(text.substr(0, comma), x) || !ParseFixed(second, z)) {
+            why = "Write X, then a comma, then Z, as in: 47, 15. Or select an entrance from the list.";
+            return false;
+        }
+        Put(block, f.at, 4, static_cast<std::uint64_t>(x));
+        Put(block, f.at2, 4, static_cast<std::uint64_t>(z));
         return true;
     }
     case Type::kHex: {
@@ -970,7 +1085,19 @@ std::vector<std::string> FieldChoices(const Block& block, const Field& f, const 
     std::vector<std::string> out;
     if (FieldReadOnly(f)) return out;
     if (f.type == Type::kBit) return {"On", "Off"};
+    if (f.type == Type::kPosition) {
+        const unsigned area = static_cast<unsigned>(Get(block, 0x24, 2));
+        for (const Names::Entrance& e : names.entrances)
+            if (e.area == area) out.push_back(EntranceText(e));
+        return out;
+    }
     if (f.type != Type::kUnsigned && f.type != Type::kStack) return out;
+    if (const std::map<unsigned, std::string>* m = MapOf(f.list, names)) {
+        for (const auto& [id, name] : *m)
+            if (static_cast<std::int64_t>(id) >= f.lo && static_cast<std::int64_t>(id) <= f.hi) out.push_back(WithName(id, name));
+        if (f.list == List::kMaster) out.push_back("255 - None");
+        return out;
+    }
     if (f.list == List::kMember) {
         for (unsigned i = 0; i < kCharCount; ++i) {
             const unsigned id = block[kChars + kCharStride * i + 0x09];

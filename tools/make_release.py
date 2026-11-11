@@ -12,7 +12,7 @@ the 64-bit developer build, -win-x64.zip; docs/x64-build-round.md 6). The
 width is read from the build's bof3x.exe; only the README's last paragraph
 differs, and the bundled importer is the same amd64 Python either way:
 
-    bof3x-launcher.exe  bof3x.dll  bof3x.exe  music-names.tsv
+    bof3x-launcher.exe  bof3x.dll  bof3x.exe  music-names.tsv  save-names.tsv
     README.txt  LICENSE  THIRD_PARTY.md  THIRD_PARTY_RUNTIME.txt
     runtime/python/       python.org's embeddable CPython (amd64), its ._pth
                           naming ../tools and Lib/site-packages; numpy, Pillow
@@ -89,7 +89,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_reuse import SHIPPED_DATA as DATA   # noqa: E402
 # Copied beside the launcher.
 TOP = [("LICENSE", "LICENSE"), ("docs/THIRD_PARTY.md", "THIRD_PARTY.md")]
-BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv")
+BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv", "save-names.tsv")
 
 # Kinds of file that are game data, or disc images of it: never in a release.
 GAME_DATA_EXT = (".dat", ".bin", ".iso", ".cue", ".chd", ".cso", ".avi", ".mp3", ".str", ".xa", ".emi", ".pmf",

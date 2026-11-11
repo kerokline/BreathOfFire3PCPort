@@ -26,4 +26,12 @@ bool LanguageIsLatin(const std::string& language);
 // there, or holds no name chunk, gives no names: the editor then shows numbers.
 Names LoadNames(const std::wstring& first_dat, const NameTags& tags, bool latin);
 
+// The reference names (data/save-names.tsv, which the build copies beside the
+// launcher): masters, genes, formations, kinds of fish, chapters, areas and the
+// areas' entrances, added to `names`. UTF-8, tab-separated, `#` lines are
+// comments; the columns are `kind id name x z flags`, and any after them are
+// the repository's own notes. A line the reader does not know is skipped; a
+// file that is not there adds nothing, and the editor shows numbers.
+void LoadReferenceNames(const std::wstring& tsv, Names& names);
+
 }  // namespace bof3x::save

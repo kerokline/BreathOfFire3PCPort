@@ -63,7 +63,7 @@ void TestTable() {
     const std::vector<Section>& all = Sections();
     for (std::size_t s = 0; s < all.size(); ++s)
         for (int r = 0; r < all[s].records; ++r)
-            for (const Field& f : SectionFields(static_cast<int>(s), r)) {
+            for (const Field& f : SectionFields(static_cast<int>(s), r, Names())) {
                 ++fields;
                 const std::size_t bytes = f.type == Type::kBit ? 1 : f.size;
                 if (f.at + bytes > kBlockSize || (f.type == Type::kStack && f.at2 >= kBlockSize)) {
@@ -81,6 +81,8 @@ void TestTable() {
                     for (std::size_t i = 0; i < f.size * 8; ++i) claim(f.at * 8 + i);
                     if (f.type == Type::kStack)
                         for (std::size_t i = 0; i < 8; ++i) claim(f.at2 * 8 + i);
+                    if (f.type == Type::kPosition)
+                        for (std::size_t i = 0; i < 32; ++i) claim(f.at2 * 8 + i);
                 }
             }
     Expect(fields > 2000, "the table has its fields");
@@ -97,7 +99,7 @@ void TestText() {
     latin.item[1] = {"", "Dagger", "BallockKnife"};
     std::string why;
     const int chars = SectionNamed("Characters"), game = SectionNamed("Game"), items = SectionNamed("Inventory");
-    const std::vector<Field> c0 = SectionFields(chars, 0);
+    const std::vector<Field> c0 = SectionFields(chars, 0, latin);
     const Field* name = Find(c0, "Name");
     Expect(name && FieldSet(b, *name, "Ryu", latin, why) && FieldText(b, *name, latin) == "Ryu", "a Latin name");
     Expect(name && !FieldSet(b, *name, "NineChars", latin, why), "a name of nine letters is refused");
@@ -117,15 +119,33 @@ void TestText() {
     Expect(growth && FieldSet(b, *growth, "-3", latin, why) && b[growth->at] == 0xFD && FieldText(b, *growth, latin) == "-3",
            "a signed byte");
 
-    const std::vector<Field> g = SectionFields(game, 0);
-    const Field* x = Find(g, "Position X");
-    Expect(x && FieldSet(b, *x, "-12.5", latin, why) && FieldText(b, *x, latin) == "-12.5", "a 16.16 number");
+    // The reference names: an area's name, its entrances, a master.
+    latin.area[10] = "A place";
+    latin.master[3] = "A master";
+    latin.entrances.push_back({10, "from the west", 47.0, 15.5, 3});
+    latin.entrances.push_back({11, "another area's", 1.0, 2.0, 1});
+    const std::vector<Field> g = SectionFields(game, 0, latin);
+    const Field* x = Find(g, "Position");
+    Expect(x && FieldSet(b, *x, "-12.5, 3", latin, why) && FieldText(b, *x, latin) == "-12.5, 3", "a position");
+    Expect(x && !FieldSet(b, *x, "12", latin, why) && !FieldSet(b, *x, "from the west", latin, why),
+           "one number, and an entrance of a different area, are refused");
+    const Field* area = Find(g, "Area");
+    Expect(area && FieldSet(b, *area, "a place", latin, why) && FieldText(b, *area, latin) == "10 - A place", "an area by its name");
+    Expect(x && FieldChoices(b, *x, latin) == std::vector<std::string>{"47, 15.5 - from the west"}, "the area's entrances");
+    Expect(x && FieldSet(b, *x, "47, 15.5 - from the west", latin, why) && b[0x27] == 3 &&
+               FieldText(b, *x, latin) == "47, 15.5 - from the west",
+           "an entrance sets the position and the entry flags");
+    Expect(x && FieldSet(b, *x, "from the west", latin, why), "an entrance by its name");
+    const Field* master = Find(c0, "Master");
+    Expect(master && FieldSet(b, *master, "A master", latin, why) && FieldText(b, *master, latin) == "3 - A master" &&
+               FieldSet(b, *master, "None", latin, why) && b[master->at] == 0xFF,
+           "a master by its name, and none");
     const Field* clock = Find(g, "Play time");
     Expect(clock && FieldSet(b, *clock, "12:34:56", latin, why) && b[clock->at] == 12 && b[clock->at + 2] == 56, "a clock");
     const Field* zenny = Find(g, "Zenny");
     Expect(zenny && !FieldSet(b, *zenny, "10000000", latin, why), "zenny above the most");
 
-    const std::vector<Field> w = SectionFields(items, 1);
+    const std::vector<Field> w = SectionFields(items, 1, latin);
     Expect(FieldSet(b, w[0], "Dagger x 3", latin, why) && b[w[0].at] == 1 && b[w[0].at2] == 3, "a stack by name");
     Expect(FieldText(b, w[0], latin) == "1 - Dagger x 3", "a stack's text");
     Expect(FieldSet(b, w[0], "2", latin, why) && b[w[0].at] == 2 && b[w[0].at2] == 3, "a stack keeps its count");
@@ -152,7 +172,7 @@ void TestFixture(const fs::path& path, const Block& b) {
     const std::vector<Section>& all = Sections();
     for (std::size_t s = 0; s < all.size(); ++s)
         for (int r = 0; r < all[s].records; ++r)
-            for (const Field& f : SectionFields(static_cast<int>(s), r)) {
+            for (const Field& f : SectionFields(static_cast<int>(s), r, names)) {
                 if (FieldReadOnly(f)) continue;
                 Block copy = b;
                 std::string why;
@@ -171,7 +191,7 @@ void TestFixture(const fs::path& path, const Block& b) {
     if (refused) std::printf("note: %s%d field value(s) outside the field's limits; first: %s\n", who.c_str(), refused, first.c_str());
 
     // One edit: zenny changes itself and the checksum.
-    const std::vector<Field> g = SectionFields(SectionNamed("Game"), 0);
+    const std::vector<Field> g = SectionFields(SectionNamed("Game"), 0, names);
     std::string why;
     Block edit = b;
     FieldSet(edit, *Find(g, "Zenny"), b[0x678] == 0x39 ? "12346" : "12345", names, why);
@@ -181,7 +201,7 @@ void TestFixture(const fs::path& path, const Block& b) {
     Expect(Checksum(out) == StoredChecksum(out), who + "the checksum is correct after an edit");
 
     // Record 0's level and EXP go to the summary.
-    const std::vector<Field> c0 = SectionFields(SectionNamed("Characters"), 0);
+    const std::vector<Field> c0 = SectionFields(SectionNamed("Characters"), 0, names);
     edit = b;
     FieldSet(edit, *Find(c0, "Level"), b[0x9A] == 42 ? "43" : "42", names, why);
     FieldSet(edit, *Find(c0, "EXP"), "123456", names, why);

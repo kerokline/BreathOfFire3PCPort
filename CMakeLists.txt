@@ -334,6 +334,13 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
 add_dependencies(bof3x_launcher bof3x_music_names)
+# The save editor's reference names (docs/save-editor.md section 4), the same way.
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/save-names.tsv"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/save-names.tsv" "${CMAKE_BINARY_DIR}/save-names.tsv"
+  DEPENDS "${CMAKE_SOURCE_DIR}/data/save-names.tsv"
+  VERBATIM)
+add_custom_target(bof3x_save_names DEPENDS "${CMAKE_BINARY_DIR}/save-names.tsv")
+add_dependencies(bof3x_launcher bof3x_save_names)
 
 # --- every object, no link ---------------------------------------------------
 # The x86_64 CI job's compile step (docs/x64-build-round.md 3 "XA4"): a

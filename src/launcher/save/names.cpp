@@ -1,5 +1,6 @@
 #include "launcher/save/names.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -69,6 +70,46 @@ Names LoadNames(const std::wstring& first_dat, const NameTags& tags, bool latin)
         p += 16 + size;
     }
     return names;
+}
+
+void LoadReferenceNames(const std::wstring& tsv, Names& names) {
+    std::ifstream in(std::filesystem::path(tsv), std::ios::binary);
+    std::string line;
+    while (std::getline(in, line)) {
+        while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) line.pop_back();
+        if (line.empty() || line[0] == '#') continue;
+        std::vector<std::string> col;
+        for (std::size_t at = 0;;) {
+            const std::size_t tab = line.find('\t', at);
+            col.push_back(line.substr(at, tab == std::string::npos ? std::string::npos : tab - at));
+            if (tab == std::string::npos) break;
+            at = tab + 1;
+        }
+        if (col.size() < 3 || col[1].empty() || col[2].empty()) continue;
+        char* end = nullptr;
+        const auto id = std::strtoul(col[1].c_str(), &end, 0);
+        if (*end) continue;
+        const std::string& kind = col[0];
+        std::map<unsigned, std::string>* to = kind == "master" ? &names.master
+                                              : kind == "gene" ? &names.gene
+                                              : kind == "formation" ? &names.formation
+                                              : kind == "fish" ? &names.fish
+                                              : kind == "chapter" ? &names.chapter
+                                              : kind == "area" ? &names.area
+                                              : nullptr;
+        if (to) {
+            (*to)[static_cast<unsigned>(id)] = col[2];
+        } else if (kind == "entrance" && col.size() >= 5 && !col[3].empty() && !col[4].empty()) {
+            Names::Entrance e{static_cast<unsigned>(id), col[2], 0.0, 0.0, -1};
+            char* ex = nullptr;
+            char* ez = nullptr;
+            e.x = std::strtod(col[3].c_str(), &ex);
+            e.z = std::strtod(col[4].c_str(), &ez);
+            if (*ex || *ez) continue;
+            if (col.size() >= 6 && !col[5].empty()) e.flags = static_cast<int>(std::strtol(col[5].c_str(), nullptr, 0)) & 0xFF;
+            names.entrances.push_back(std::move(e));
+        }
+    }
 }
 
 }  // namespace bof3x::save
