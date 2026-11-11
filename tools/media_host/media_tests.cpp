@@ -308,6 +308,22 @@ void TestClip() {
     bool doubled = true;
     for (std::size_t k = 0; k < 1046; ++k) doubled = doubled && m[2 * k] == m[2 * k + 1];
     CHECK(doubled);
+
+    // the MP3 seam's frames (src/audio/mp3.cpp, DIV-0215): reads of 1,152
+    // frames, every one full but the last, ceil(TotalFrames / 1152) of them,
+    // then 0; after Rewind the same again
+    const Bytes long_clip = MakeClip(37800, 2, 40);   // 40 x 112 = 4480 a side -> 5227 frames
+    CHECK(c.Open(long_clip.data(), long_clip.size(), why, sizeof(why)));
+    for (int pass = 0; pass < 2; ++pass) {
+        std::vector<std::int16_t> frame(2 * 1152);
+        std::uint64_t frames = 0, sum = 0;
+        for (std::size_t n; (n = c.Read(frame.data(), 1152)) != 0; ++frames) {
+            CHECK(n == 1152 || sum + n == c.TotalFrames());
+            sum += n;
+        }
+        CHECK(sum == c.TotalFrames() && frames == (c.TotalFrames() + 1151) / 1152 && c.Read(frame.data(), 1152) == 0);
+        c.Rewind();
+    }
 }
 
 // ---- the STR movie ----------------------------------------------------------

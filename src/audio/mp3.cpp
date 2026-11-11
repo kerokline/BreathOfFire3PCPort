@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/sound_callees.h"
 #include "hook/log.h"
+#include "media/xa_clip.h"
 
 // third_party/minimp3/minimp3.h, verbatim (docs/THIRD_PARTY.md section 3).
 // 16-bit output, the x86 SSE2 path when the CPU has it (its own test).
@@ -43,6 +44,7 @@ struct Decoder {
     bool opened, started;
     Frame frame_store;
     mp3dec_t dec;
+    media::XaClip* clip;       // DIV-0215: set when the file is an XA clip (a PlayStation disc's jingle), else null
 };
 static_assert(offsetof(Decoder, frame) == 0x14, "the frame pointer is read at decoder + 0x14");
 static_assert(offsetof(Frame, bytes) == 8, "the frame's bytes are read at frame + 8");
@@ -137,6 +139,17 @@ int __stdcall Open(void* decoder, const char* name, int mode) {
     d->pos = 0;
     d->opened = true;
     d->started = false;
+    delete d->clip;
+    d->clip = nullptr;
+    if (media::IsXaClip(d->data, d->size)) {
+        // DIVERGENCE DIV-0215: a jingle the importer kept as an XA clip is
+        // decoded and resampled by media::XaClip, handed out in the frames of
+        // an MP3 (kFrameBytes; the last one short).
+        d->clip = new media::XaClip;
+        char why[160];
+        if (!d->clip->Open(d->data, d->size, why, sizeof why))
+            bof3::Fatal("DIV-0215: the XA clip %s is not a valid clip: %s", name, why);
+    }
     return 0;
 }
 
@@ -144,6 +157,7 @@ int __stdcall Start(void* decoder) {
     Decoder* d = D(decoder);
     if (!d->opened) return -1;
     mp3dec_init(&d->dec);
+    if (d->clip) d->clip->Rewind();
     d->pos = 0;
     d->started = true;
     FrameOf(d)->bytes = 0;
@@ -222,6 +236,15 @@ namespace {
 int __stdcall DecodeFrame(void* decoder, void* out) {
     Decoder* d = D(decoder);
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Decode before Mp3_Start");
+    if (d->clip) {   // DIV-0215: up to 1,152 stereo frames of the clip; none left is the end of the stream
+        const std::size_t frames = d->clip->Read(static_cast<std::int16_t*>(out), kFrameBytes / 4);
+        if (frames == 0) {
+            FrameOf(d)->bytes = kEosBytes;
+            return sound::kEndOfStream;
+        }
+        FrameOf(d)->bytes = static_cast<std::uint32_t>(frames) * 4;
+        return 0;
+    }
     for (;;) {
         if (d->pos >= d->size) {
             FrameOf(d)->bytes = kEosBytes;
@@ -254,11 +277,13 @@ int __stdcall Seek(void* decoder, int position) {
     Decoder* d = D(decoder);
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Seek before Mp3_Start");
     mp3dec_init(&d->dec);
+    if (d->clip) d->clip->Rewind();   // DIV-0215: the same samples again
     d->pos = 0;
     return 0;
 }
 
 int __stdcall Destroy(void* decoder) {
+    delete D(decoder)->clip;
     delete D(decoder);
     return 0;
 }
@@ -446,7 +471,24 @@ std::uint32_t WalkFrames(const std::uint8_t* b, std::size_t n) {
 
 }  // namespace
 
+bool IsClip(const void* file, std::uint32_t size) {
+    return media::IsXaClip(static_cast<const std::uint8_t*>(file), size);
+}
+
+void RefuseClipUnlessOurs(const void* file, std::uint32_t size, const char* what) {
+    if (!IsClip(file, size) || g_active) return;
+    bof3::Fatal("DIV-0215: %s is an XA clip (a PlayStation disc's jingle), which only our decoder reads; Capcom's "
+                "MP3 decoder cannot decode it (BOF3X_MP3=original). Unset BOF3X_MP3, or use an MP3 jingle", what);
+}
+
 std::uint32_t CountFrames(const void* file, std::uint32_t size) {
+    if (IsClip(file, size)) {   // DIV-0215: the clip's frames of 1,152 samples, the last one short
+        media::XaClip clip;
+        char why[160];
+        if (!clip.Open(static_cast<const std::uint8_t*>(file), size, why, sizeof why))
+            bof3::Fatal("DIV-0215: an XA clip that does not open: %s", why);
+        return static_cast<std::uint32_t>((clip.TotalFrames() + 1151) / 1152);
+    }
     return WalkFrames(static_cast<const std::uint8_t*>(file), size);
 }
 
@@ -513,7 +555,7 @@ void CompareCorpus(const char* tsv_path) {
                       "eos_kind_capcom\teos_bytes_ours\teos_kind_ours\treplay_capcom\treplay_ours\tsamples\tdiffering\t"
                       "max_abs\trms\tframes_differing\tworst_frame\tworst_frame_max\tshape\n");
     const char* dirs[2] = {"BGM", "SND"};
-    unsigned files = 0, same = 0;
+    unsigned files = 0, same = 0, clips = 0;
     std::uint32_t max_abs = 0;
     double worst_rms = 0;
     const DWORD t0 = GetTickCount();
@@ -533,7 +575,10 @@ void CompareCorpus(const char* tsv_path) {
             if (fh == INVALID_HANDLE_VALUE) continue;
             ReadFile(fh, first, 4, &got, nullptr);
             CloseHandle(fh);
-            if (!LooksMp3(first, got)) continue;
+            if (!LooksMp3(first, got)) {
+                if (media::IsXaClip(first, got)) ++clips;   // DIV-0215: not an MP3; Capcom's decoder cannot read it
+                continue;
+            }
             ++files;
             Diff d;
             Run a, b;
@@ -547,6 +592,8 @@ void CompareCorpus(const char* tsv_path) {
     bof3::Log("DIV-0091    compare: %u MP3 files of BGM\\ and SND\\ through both decoders in %lu ms, %u the same shape; "
               "max |delta| %u, worst RMS %.4f (16-bit units); %s",
               files, static_cast<unsigned long>(GetTickCount() - t0), same, max_abs, worst_rms, tsv_path);
+    if (clips)
+        bof3::Log("DIV-0215    compare: %u XA clips of BGM\\ and SND\\ left out (not MP3s; only our decoder reads them)", clips);
 }
 
 }  // namespace
@@ -617,6 +664,30 @@ void SelfTest() {
               "at the end of the stream; the replay after Seek(0) identical over all %u frames; the size@address name "
               "round-trips",
               path, ours.frames, ours.frame_bytes, ours.eos_bytes, ours.replay_frames);
+
+    // DIV-0215: an XA clip (silent groups: a header and 200 zero groups, 37,800
+    // Hz stereo) through the same seam: 1,152-sample frames, the last one
+    // short, as many as CountFrames says, the end of the stream stored, the
+    // replay after Seek(0) the same length.
+    std::vector<std::uint8_t> clip(24 + 128 * 200, 0);
+    static const std::uint8_t kHead[24] = {'B', 'O', 'F', '3', 'X', 'A', 0, 1, 0xA8, 0x93, 0, 0, 2, 0, 4, 0, 200, 0, 0, 0, 0, 0, 0, 0};
+    std::memcpy(clip.data(), kHead, sizeof kHead);
+    const std::uint32_t expect = CountFrames(clip.data(), static_cast<std::uint32_t>(clip.size()));
+    Run c;
+    DecodeAll(Ours(), clip.data(), static_cast<std::uint32_t>(clip.size()), expect - 1, &c);   // the last frame is short: the replay stops before it
+    const std::uint32_t samples = static_cast<std::uint32_t>(c.pcm.size() / 2);
+    media::XaClip probe;
+    char why[160];
+    if (!probe.Open(clip.data(), clip.size(), why, sizeof why)) bof3::Fatal("DIV-0215 self-test: the clip does not open: %s", why);
+    if (!c.opened || c.frames != expect || c.frames != (samples + 1151) / 1152 || samples != probe.TotalFrames() ||
+        c.frame_bytes != kFrameBytes || c.eos_bytes != kEosBytes || !c.replay_identical || c.replay_frames != c.frames - 1)
+        bof3::Fatal("DIV-0215 self-test: an XA clip - %u frames decoded against %u counted, %u samples of %u, %u bytes a "
+                    "frame, %u stored at the end, the replay %s over %u frames",
+                    c.frames, expect, samples, static_cast<std::uint32_t>(probe.TotalFrames()), c.frame_bytes,
+                    c.eos_bytes, c.replay_identical ? "identical" : "DIFFERENT", c.replay_frames);
+    bof3::Log("shadow      DIV-0215 self-test: an XA clip of %u samples - %u frames of 1,152 (the last short), as many as "
+              "CountFrames says; the replay after Seek(0) identical",
+              samples, c.frames);
 }
 
 }  // namespace mp3dec

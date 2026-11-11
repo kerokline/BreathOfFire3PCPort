@@ -191,7 +191,7 @@ set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # dinput and dxguid: the SDK's c_dfDIKeyboard and its GUID_Key, static data
 # (src/game/rdata_consts.cpp); no import of dinput.dll, which pad_read.cpp
 # loads itself.
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static)
+target_link_libraries(bof3x PRIVATE bof3x_media d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static)
 # A fixed load address (the owner, 2026-10-19; docs/quicksave.md 4a): a
 # quicksave's task stacks hold return addresses into this DLL and the span
 # holds pointers into it, so a quick-load is good only where the DLL sat at
@@ -309,7 +309,7 @@ function(bof3x_add_launcher target output hosted)
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-  target_link_libraries(${target} PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
+  target_link_libraries(${target} PRIVATE bof3x_media bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
   # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
   # (launcher.cpp) writes to the terminal it was started from.
   target_link_options(${target} PRIVATE -municode -mwindows)
@@ -322,10 +322,11 @@ bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
 add_executable(bof3x_fmvdump src/video/fmv_dump.cpp src/video/avi_reader.cpp src/video/cinepak.cpp
   src/video/msvideo1.cpp src/video/movie.cpp)
 target_include_directories(bof3x_fmvdump PRIVATE src)
+target_link_libraries(bof3x_fmvdump PRIVATE bof3x_media)
 set_target_properties(bof3x_fmvdump PROPERTIES OUTPUT_NAME "bof3x-fmvdump")
 # bof3x_media: the STR / XA decoders and the XA clip reader (src/media,
-# docs/psx-media-round.md). No operating-system header; not linked into
-# anything yet (unit M3 does that). Host tests: tools/media_host.
+# docs/psx-media-round.md). No operating-system header; linked into bof3x.dll,
+# the launchers and bof3x-fmvdump. Host tests: tools/media_host.
 add_library(bof3x_media STATIC
   src/media/xa_adpcm.cpp
   src/media/resample.cpp
