@@ -101,6 +101,51 @@ yet a named table keeps travelling as byte ranges, as today.
 M decides the list of tables that become files in this round. A table that
 fails 1 or 3 stays in the image with its reason written in `tables.toml`.
 
+### M1 to M3 as run (2026-11-11; M4, M5 and M6 not run)
+
+Read from the seven disc-built images of the exe-gap round's end batch
+(`C:\Users\kerok\bof3x-runs\eg1031\end\c_<build>\base\exe\data.toml`, generated
+2026-10-31, one per disc build) against this branch's `tables.toml` and
+`symbols.toml`; the two scripts are `bof3x-runs\il1111\m.py` and `m2.py`. The
+images are eleven days old; group B runs M1 again on fresh ones.
+
+**M1. 27 of the 30 tables are `table` or `widen` in all seven images, whole.**
+The six item and ability tables are `widen` (13,156 bytes), 21 are `table`.
+Three are not file tables:
+
+| Table | Bytes | Class | Why it stays in the image |
+|---|---|---|---|
+| `area_descriptors` | 800 | `layout` in five builds; `layout` + `rebuilt` in two | all pointer words, the PC's layout; must equal |
+| `key_defaults` | 128 | `keys` in all seven | `Shell_MapDefaultKeys` writes it; must equal |
+| `sin_table` | 2,050 | `table` in five builds, `own` in two | a library table the engine fills where no disc places it; not game content |
+
+So the round's file tables are **27 tables, 20,744 bytes** (23,722 less the
+three). Which two builds differ for `area_descriptors` and for `sin_table` is
+in the script's output and was not written down.
+
+**M2. `symbols.toml` names 55,200 bytes of `.data` outside the catalogue.** Of
+its 3,250 `[[data]]` entries, 2,457 are in initialised `.data`; 36 are
+pointer-typed and 72 have a `ctype` with no simple size (records, or none),
+and were left out. The rest cover 58,012 bytes, 55,200 of them outside every
+catalogued table, in 2,102 arrays. By the US image's classes:
+
+| Class | Bytes named outside the catalogue | What it means for a file |
+|---|---|---|
+| `map` + `place` | 20,770 | disc content with a name and a length: can become a file table once `tables.toml` has its stride and count |
+| `layout` + `rebuilt` | 33,851 | pointer words (handler tables, lists of addresses): the engine's, never a file |
+| `none`, `language`, `own`, `unread`, `gap` | 579 | not disc content |
+
+The whole US image by class, for scale: `map` 468,248, `place` 9,539,
+`widen` 13,156, `table` 9,638, `layout` 46,652, `rebuilt` 28,672, `unread`
+37,270, `own` 18,918, `none` 3,321, `language` 2,817, `gap` 617, `keys` 128.
+**About 457,000 bytes of disc content (`map` + `place` less the 20,770) have
+no name yet.** That is section 8's cataloguing work, and it is most of the
+image; this round makes the form, not the catalogue.
+
+**M3, in part.** M1 answers the pointer half: no file table has a byte on a
+pointer class (`pointer`, `rebuilt`, `layout`). The item tables' chain and
+readers that index past a count are not checked.
+
 ## 3. The files
 
 ### 3.1 In the base
