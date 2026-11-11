@@ -1,9 +1,10 @@
 # The image-layer round: the exe's tables as one file per table
 
 **Status:** IN PROGRESS (IDEAS I58, its second step; staged 2026-11-11 and
-groups A and B built the same day on `image-layer/round`, section 5a - the
-image proven the same on every build, the state-hash routes still owed;
-groups C and D not started). Section 1's numbers were measured on `main`
+groups A, B and C built the same day on `image-layer/round`, sections 5a to
+5c - the image proven the same on every build, a PC install on the same
+route (DIV-0212), the `table-edit` mod kind (DIV-0213); the state-hash routes
+and the owner's look still owed; group D not started). Section 1's numbers were measured on `main`
 `7a495bd6`. Sections 3 and 9 are the plan as staged; where the build differs,
 section 5a says so.
 
@@ -392,6 +393,69 @@ there is no cache and for the developer's A/B reference.
 
 `config_tests.exe` after the presets' rows were regenerated: 3,621 checks, the
 same 2 failures as `main`.
+
+## 5c. Group C as run (2026-11-11, DIV-0213)
+
+**What was built.**
+
+- `tools/table_edit_build.py` (new): `parse` (an `edits.toml` document against
+  the catalogue), `build` (the layer from the install's own table files),
+  `columns` (a table's CSV columns and where each is in the record), and a
+  self-test.
+- `tools/mods.py`: the kind `table-edit` (`[table-edit] edits = "edits.toml"`),
+  its layer `mod-<id>`, the rows checked when the zip is added, the build step
+  (`build_table_layer`), the layer's two files listed in the manifest's
+  `[cache] opt` rows.
+- `tools/tables.py export --cache <cache> --csv <dir> [--lang <tag>]`: one CSV
+  a table from `base\exe\tables\`, the columns of `dump`; the `name` column is
+  the language's own name for the record, read from the language layer's name
+  chunks (`loc\<tag>\dat\FIRST.DAT`, kind 5) and decoded for reading. English
+  is taken when the install holds it.
+- `tools/make_mod.py table-edit --from <dir> --to <dir> --id .. --title ..
+  --out <zip>`: the numbers that differ between two export folders, as
+  `[[set]]` rows; a changed `name` is counted, reported and left out.
+- `src/launcher/config.cpp` `ConfigModLayers`: every built `table-edit` mod's
+  layer added to the layers the game is given, after the others, in
+  `mods.toml`'s order. `opt=none` leaves them off, as it leaves every layer
+  off. A mod that is listed and not built is left off with a line.
+
+**Where the build differs from section 4 as staged.**
+
+- **The `[[set]]` rows are in `edits.toml`, not in `mod.toml`.** `mod.toml`
+  names the file (`[table-edit] edits = "edits.toml"`), as a reading-row mod
+  names its readings; the zip holds the two files.
+- **A repeated field's column is `name_<n>`** (as `tables.py dump` writes it),
+  and a bit field is set by its own column: the byte's other bits are kept.
+  Two mods that set different bit fields of one byte still meet on that byte,
+  and the later mod's byte wins whole.
+- **`requires` is an empty list**: a table mod needs no language.
+- **The name beside the number in the Mods tab and in a refusal** (the
+  owner's call 4, second bullet) is not built. The CSV's title column is.
+- **No on/off switch for one mod.** A mod is on when it is built and off when
+  it is removed.
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `table_edit_build.py selftest` | 20 documents accepted or refused as meant (a table that stays in the image, a record past the table, a field the table does not have, a name, a byte in a name field, a value that does not fit, a cell set twice, two bit fields of one word accepted ...), then a build over a table of zeros: 0 failures |
+| `mods.py selftest` | 0 failures, with six table-edit zips (a zip that holds a table refused as game data, an id too long for the layer name) and the add / build / list / remove cycle |
+| `make_mod.py --selftest` | 0 failures: one number in the zip, the changed name left out, two equal folders refused |
+| `config_tests.exe` | 3,642 checks; `ConfigModLayers`'s 5 pass; the same 2 failures as `main` |
+| `tables.py export` on a US disc-built cache | 27 CSVs; every record of the six name tables has an English title (one ability record has none, the one the language layer does not cover), no byte left undecoded |
+| end to end, a US disc-built cache of its own (`run_e2e.sh`): export, one number of one weapon record raised by 1 and its title changed, `make_mod.py table-edit`, `mods.py add`, `mods.py build`, the exe host's self-test | the zip holds `mod.toml` and `edits.toml`; the title change is reported and left out; added and not built: the launcher's "not built ... left off" line and the plain mapped hash; built: `layer mod-e2e-one: 1 tables, 1 cells, 1 bytes ... 1 of them differ` and another mapped hash |
+| a second mod setting the same number to another value | both layers laid in the list's order; `layers mod-e2e-one and mod-e2e-two both write weapons: 1 bytes with different values; mod-e2e-two is later in the order and wins` |
+| both removed | no layer line; the mapped hash is the one from before any mod |
+
+**Not done.**
+
+- **Acceptance 5, the owner's look.** Nobody has seen a changed number in the
+  game, or added a table mod on the Mods tab by hand: the tab's rows for this
+  kind were not looked at in the window.
+- A PC-built install was not used for the end-to-end run (the layer's cells
+  lay the same way there; 5b's `psp-tables` run shows a layer over it).
+- Names other than Latin ones show as escapes in the CSV's title column.
+- `importer.py verify` on a cache with a mod's layer was not run.
 
 ## 6. Acceptance
 

@@ -686,6 +686,26 @@ void TestHostedOpt() {
     Check(bof3x::ConfigOptHosted("psp-art,psp-tables,area4-walls", std::wstring(), dropped) == "psp-art,area4-walls" &&
               dropped == std::vector<std::string>{"psp-tables"},
           "ConfigOptHosted: psp-tables dropped by its recipe part, no cache needed");
+    {
+        // DIV-0213: the table-edit mods of mods.toml, in its order, after the other layers
+        const std::wstring th = Temp(L"bof3x_te_home");
+        MakeDirs(th);
+        WriteAll(th + L"\\mods.toml",
+                 "[[mod]]\nid = \"b-mod\"\nname = \"B\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
+                 "[[mod]]\nid = \"furigana\"\nname = \"F\"\nversion = \"1.0\"\nkind = \"reading-row\"\nrequires = [\"ja-JP\"]\n\n"
+                 "[[mod]]\nid = \"a-mod\"\nname = \"A\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
+                 "[[mod]]\nid = \"unbuilt\"\nname = \"U\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n");
+        const std::wstring tc = FakeCache(L"bof3x_te_cache", {{"mod-b-mod", L"exe"}, {"mod-a-mod", L"exe"}}, nullptr);
+        Check(bof3x::ConfigModLayers(th, tc, "area4-walls") == "area4-walls,mod-b-mod,mod-a-mod",
+              "ConfigModLayers: the built table-edit mods after the other layers, in mods.toml's order");
+        Check(bof3x::ConfigModLayers(th, tc, "") == "mod-b-mod,mod-a-mod", "ConfigModLayers: with no other layer");
+        Check(bof3x::ConfigModLayers(th, tc, "mod-a-mod") == "mod-a-mod,mod-b-mod",
+              "ConfigModLayers: a layer opt= names already is not added twice");
+        Check(bof3x::ConfigModLayers(std::wstring(), tc, "x") == "x", "ConfigModLayers: no home, nothing added");
+        Check(bof3x::ConfigModLayers(th, tc, "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15") ==
+                  "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,mod-b-mod",
+              "ConfigModLayers: the sixteenth layer is the last one added");
+    }
     // a layer no recipe names, whose cache tree has an exe part: the DLL's test
     const std::wstring mod = FakeCache(L"bof3x_rf_cache_mod", {{"mod-x", L"exe"}, {"mod-y", L"dat"}}, nullptr);
     dropped.clear();

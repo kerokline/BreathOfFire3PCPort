@@ -13,6 +13,9 @@ to analysis/, which is gitignored.
     python tools/tables.py dump --group items --disc DISC --game bof3 --csv analysis/tables
                                                        # a build with no recorded address: found by the
                                                        # PC table's numeric bytes, as loc_build.py does
+    python tools/tables.py export --cache CACHE --csv DIR  # one CSV a table from an install's own table
+                                                       # files, with the language's names as a title
+                                                       # column: the view a table-edit mod is made from
     python tools/tables.py locate --game bof3 --disc DISC [--disc DISC ...]
                                                        # every table's place in each disc, as
                                                        # [[table.psx]] rows to review and paste
@@ -464,6 +467,100 @@ def cmd_dump(a, cat, syms, builds):
     return 0
 
 
+def name_titles(cache, lang):
+    """{PC address of a record's name field: its text} from a language layer of
+    the cache: the name chunks loc_build.py writes into loc/<lang>/dat/FIRST.DAT
+    (kind 5, tag = the address of the first record's name field, 16 bytes a
+    record at the table's stride - tools/loc_build.py convert_names). The text
+    is for reading: a Latin name decodes whole; a byte with no letter here
+    (another script's glyph) shows as a backslash, x and its two hex digits."""
+    import dat
+    import loc_build
+    path = os.path.join(cache, "loc", lang, "dat", "FIRST.DAT")
+    if not os.path.isfile(path):
+        return {}
+    extra = {v: k for k, v in loc_build.LATIN_CODE.items() if k != " "}
+    out = {}
+    blob, chunks = dat.load(path)
+    for c in chunks:
+        if c.kind != loc_build.KIND_NAMES:
+            continue
+        body = blob[c.offset:c.offset + c.size]
+        for i in range(len(body) // PC_NAME_LEN):
+            raw = body[i * PC_NAME_LEN:(i + 1) * PC_NAME_LEN].split(b"\0")[0]
+            text, k = "", 0
+            while k < len(raw):
+                b = raw[k]
+                if b & 0x80 and k + 1 < len(raw):      # a glyph past the shipped table: the donor's own code
+                    code = (((b & 0x7F) << 8) | raw[k + 1]) - loc_build.APPEND_AT + loc_build.FIRST_CODE
+                    text += extra.get(code, "\\x%02X\\x%02X" % (b, raw[k + 1]))
+                    k += 2
+                else:
+                    text += chr(b) if 0x20 <= b < 0x7F else "\\x%02X" % b
+                    k += 1
+            out[(c.tag, i)] = text
+    return out
+
+
+def title_of(titles, tags, t, base, record):
+    """The title of `record` of table `t` (at `base`): the name chunk whose
+    records are this table's, by address."""
+    name = t.get("name")
+    if name is None:
+        return None
+    va = base + record * t["stride"] + name["at"]
+    for tag in tags:
+        if va >= tag and (va - tag) % t["stride"] == 0 and ((tag, (va - tag) // t["stride"]) in titles):
+            return titles[(tag, (va - tag) // t["stride"])]
+    return ""
+
+
+def cmd_export(a, cat, syms, builds):
+    """One CSV a table from an install's own table files (docs/image-layer-round.md 4):
+    <cache>/base/exe/tables/<key>.bin, the columns of `dump`. A table with a
+    name field gets a `name` column from the install's language layer - a title
+    for the row, never read back (make_mod.py table-edit ignores it)."""
+    errs = check(cat, syms, builds)
+    if errs:
+        fail("the catalog has %d error(s); run `tables.py check`" % len(errs))
+    td = os.path.join(a.cache, "base", "exe", "tables")
+    if not os.path.isfile(os.path.join(td, "tables.toml")):
+        fail("%s has no base/exe/tables/ (an install built before the table files): build it again" % a.cache)
+    with open(os.path.join(td, "tables.toml"), "rb") as f:
+        rows = {r[0]: r for r in tomllib.load(f)["tables"]}
+    loc = os.path.join(a.cache, "loc")
+    held = sorted(d for d in os.listdir(loc)) if os.path.isdir(loc) else []
+    lang = a.lang or next((d for d in held if d.startswith("en-")), None) or (held[0] if held else None)
+    if a.lang and a.lang not in held:
+        fail("%s holds no language %s (it has: %s)" % (a.cache, a.lang, ", ".join(held) or "none"))
+    titles = name_titles(a.cache, lang) if lang else {}
+    tags = sorted({tag for tag, _ in titles})
+    os.makedirs(a.csv, exist_ok=True)
+    n = 0
+    for t in selected(a, cat):
+        r = rows.get(t["key"])
+        if r is None:
+            if a.tables:
+                fail("%s is not a table file of this install (%s)" % (t["key"], t.get("in_image", "not in the PC's data")))
+            continue
+        with open(os.path.join(td, t["key"] + ".bin"), "rb") as f:
+            raw = f.read()
+        if len(raw) != t["count"] * t["stride"]:
+            fail("%s.bin holds %d bytes, the catalogue's table %d: build the install again" % (t["key"], len(raw), t["count"] * t["stride"]))
+        recs = records(t, raw, PC_NAME_LEN)
+        for rec in recs:
+            if "name" in rec:
+                rec["name"] = title_of(titles, tags, t, r[1], rec["id"])
+        path = os.path.join(a.csv, t["key"] + ".csv")
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(recs[0].keys()))
+            w.writeheader()
+            w.writerows(recs)
+        n += 1
+    print("export: %d tables -> %s (names: %s)" % (n, a.csv, lang or "none - the install holds no language layer"))
+    return 0
+
+
 def pc_addr(t, syms):
     return syms[t["symbol"]] if "symbol" in t else None
 
@@ -550,6 +647,13 @@ def main():
     p.add_argument("--disc", help="a PSX disc image (.cue, .bin or .iso)")
     p.add_argument("--csv", help="write <dir>/<build>/<table>.csv (use analysis/: it is gitignored)")
     p.set_defaults(fn=cmd_dump)
+    p = sub.add_parser("export")
+    p.add_argument("tables", nargs="*")
+    p.add_argument("--group")
+    p.add_argument("--cache", required=True, help="an install's cache (base/exe/tables/)")
+    p.add_argument("--csv", required=True, help="write <dir>/<table>.csv (outside the repository, or under analysis/)")
+    p.add_argument("--lang", help="the language layer the name column is read from (default: English, if held)")
+    p.set_defaults(fn=cmd_export)
     p = sub.add_parser("locate")
     p.add_argument("tables", nargs="*")
     p.add_argument("--group")
@@ -557,7 +661,7 @@ def main():
     p.add_argument("--disc", action="append", required=True, help="a PSX or PSP disc image")
     p.set_defaults(fn=cmd_locate)
     a = ap.parse_args()
-    if a.cmd == "dump" and a.csv and not os.path.abspath(a.csv).startswith(os.path.join(ROOT, "analysis")) \
+    if a.cmd in ("dump", "export") and a.csv and not os.path.abspath(a.csv).startswith(os.path.join(ROOT, "analysis")) \
             and os.path.abspath(a.csv).startswith(ROOT):
         fail("--csv inside the repository must be under analysis/ (gitignored): the output is game data")
     cat, syms, builds = load()

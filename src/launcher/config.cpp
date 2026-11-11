@@ -495,6 +495,11 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
                 wanted += (wanted.empty() ? "" : ",") + ruby;
             }
         }
+        // DIVERGENCE DIV-0213: the table-edit mods (docs/image-layer-round.md 4),
+        // after every other layer and in the Mods tab's order, so that the
+        // later mod wins a cell two of them set. opt=none is no layer at all,
+        // a mod's tables too.
+        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted);
         if (!wanted.empty()) {
             std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
             if (hosted) {
@@ -1082,6 +1087,33 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
         else if (key == "base") m.base = v;
     }
     out.erase(std::remove_if(out.begin(), out.end(), [](const ModInfo& m) { return m.id.empty(); }), out.end());
+    return out;
+}
+
+std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted) {
+    std::string out = wanted;
+    size_t count = 0;
+    for (size_t at = 0; !out.empty() && at <= out.size(); ++count) {
+        const size_t end = std::min(out.find(',', at), out.size());
+        at = end + 1;
+    }
+    for (const ModInfo& m : ConfigModsInstalled(home)) {
+        if (m.kind != "table-edit") continue;
+        const std::string layer = "mod-" + m.id;
+        if (("," + out + ",").find("," + layer + ",") != std::string::npos) continue;   // opt= names it already
+        if (!CacheHasLayerPart(cache, layer.c_str(), L"exe")) {
+            std::fprintf(stderr, "bof3x-launcher: the mod %s is in the list but its tables are not built (layer %s); "
+                         "left off. Build it on the Mods tab.\n", m.id.c_str(), layer.c_str());
+            continue;
+        }
+        if (count >= 16) {   // dat_load.cpp kOptMax
+            std::fprintf(stderr, "bof3x-launcher: 16 layers are named already, the most the game takes; the mod %s "
+                         "is left off\n", m.id.c_str());
+            continue;
+        }
+        out += (out.empty() ? "" : ",") + layer;
+        ++count;
+    }
     return out;
 }
 

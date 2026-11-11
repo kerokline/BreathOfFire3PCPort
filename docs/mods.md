@@ -255,3 +255,63 @@ repository.
   is not built into.
 - Mods of any other kind (art, scenario; IDEAS I33) - the `kind` field is
   open, the tools refuse what they do not know.
+
+## 9. A second kind: `table-edit` (2026-11-11, DIV-0213)
+
+The image-layer round's group C ([`image-layer-round.md`](image-layer-round.md)
+4 and 5c). A mod that changes numbers of the game's tables.
+
+```toml
+# mod.toml
+[mod]
+id = "example"            # the layer is mod-<id>: 19 characters at most
+name = "..."
+version = "1.0"
+author = "..."
+kind = "table-edit"
+requires = []
+
+[table-edit]
+edits = "edits.toml"
+```
+
+```toml
+# edits.toml
+[[set]]
+table = "weapons"         # a tables.toml key
+record = 12               # the CSV's id column
+field = "attack"          # a column of the CSV
+value = 40
+
+[[set]]                   # a byte no field names yet
+table = "weapons"
+record = 12
+at = 0x11
+type = "u8"
+value = 3
+```
+
+- The zip holds the author's numbers only. It holds no table and no record of
+  the game's, and a `.bin` in it is refused as game data like any other.
+- **To make one:** `python tools/tables.py export --cache <home>\cache --csv
+  <a folder>` writes one CSV a table, with the language's names as a `name`
+  column for reading. Copy the folder, change numbers in the copy, then
+  `python tools/make_mod.py table-edit --from <the export> --to <the copy>
+  --id <id> --title "<name>" --out <zip>`. A changed `name` is left out and
+  said: a rename is a text mod. The CSVs are game data; they stay on the
+  machine that made them.
+- **What `mods.py add` refuses:** a table the catalogue does not have, or one
+  that stays in the image; a record past the table; a field the table does
+  not have; a value the type does not hold; `name`, or a byte in a name
+  field; one cell set twice.
+- **The build step** (`tools/table_edit_build.py`) copies the install's
+  `base\exe\tables\<key>.bin`, writes the numbers, and emits
+  `cache\opt\mod-<id>\exe\` with `cells` naming exactly the edited bytes. An
+  install built before the table files is refused with the sentence that says
+  to build it again.
+- **The launcher** adds each built table mod's layer after the other layers,
+  in this list's order; where two mods set one byte the later wins and the
+  game's log says so. `opt=none` leaves them off. The hosted build takes none.
+- **Not yet:** a row's name beside its number on the Mods tab; a switch to
+  turn one mod off without removing it; a romhack's edits converted to rows
+  (the round's group D).

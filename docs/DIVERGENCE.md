@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 212 entries, DIV-0001..0212, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 213 entries, DIV-0001..0213, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15552,5 +15552,56 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - `BOF3X_EXEFILE=1` (no ini key); the bytes are the same either way
 - **Toward:** psx - the tables read from data files, as the disc's are
+- **Languages:** any
+- **State:** active
+
+### A mod can change the numbers of the game's tables
+
+- **ID:** DIV-0213
+- **Date:** 2026-11-11
+- **Subsystem:** mods - `tools/mods.py` (kind `table-edit`),
+  `tools/table_edit_build.py`, `tools/tables.py export`,
+  `tools/make_mod.py table-edit`; `src/launcher/config.cpp` `ConfigModLayers`;
+  the layer is laid by DIV-0111's loader (`src/hook/exe_image.cpp`
+  `LayLayerTables`); [`image-layer-round.md`](image-layer-round.md) 4 and 5c,
+  [`mods.md`](mods.md)
+- **Tier:** Extension - the player's own choice of another person's numbers;
+  nothing changes until a mod is added and built
+- **Original behaviour:** the numbers of the game's tables (an item's price,
+  a weapon's attack, the level table) are the release's, in `BOF3.exe`.
+- **New behaviour:** a mod of kind `table-edit` is a zip of `mod.toml` and
+  `edits.toml`: `[[set]]` rows, each one number - a table of `tables.toml`, a
+  record, a field (or an offset and a type for a byte no field names), a
+  value. It holds no table and no record of the game's. On the player's
+  machine the build step copies the install's own table file, writes the
+  numbers in, and emits the layer `mod-<id>` (`exe\tables.toml`, one file a
+  table, `cells` exactly the edited bytes). The launcher adds every built
+  `table-edit` mod's layer to the layers the game is given, after the others
+  and in the Mods tab's order; the exe host lays the cells over `.data` at
+  start. Where two mods set one byte the later one wins and the log says so.
+  Refused when the mod is added: a table the catalogue does not have or that
+  stays in the image (`in_image`), a record past the table, a field the table
+  does not have, a value its type does not hold, a name (the language's
+  text: a text mod's), a byte in a name field, one cell set twice. The hosted
+  build takes no such layer (DIV-0111).
+- **Rationale:** the owner, 2026-11-06 and 2026-11-11: mods that edit the
+  game's tables, made and shared without the game's data, with the tables
+  readable as files outside the exe.
+- **Also in the PSX version?** No: a PlayStation mod of these tables is a
+  patched disc. Converting one is the round's group D.
+- **Verification:** `table_edit_build.py selftest` (20 documents accepted or
+  refused, a build over a table of zeros, 0 failures); `mods.py selftest` and
+  `make_mod.py --selftest` with their table-edit cases; `config_tests.exe`
+  (`ConfigModLayers`, 5 checks); end to end on a US disc-built cache: the
+  CSVs exported, one number changed, the mod made, added and built, and the
+  exe host's line `layer mod-...: 1 tables, 1 cells` with the bytes that
+  differ (the round doc, 5c). **Not played:** nobody has looked at the
+  changed number in the game.
+- **Reversible?** Remove the mod on the Mods tab; or `opt=none`, which gives
+  the game no layer at all.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - no mod is added by default; a mod is removed on the Mods tab, and `opt=none` leaves every mod's tables off
+- **Toward:** none - no release has mods
 - **Languages:** any
 - **State:** active
