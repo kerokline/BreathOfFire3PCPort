@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 205;
+inline constexpr std::size_t kSwitchCount = 206;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -278,9 +278,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "FieldHealParty", 0, 14},   // DIV-0208
     {SwitchForm::Name, "FishCountWord", 0, 13},   // DIV-0209
     {SwitchForm::Name, "GiftChestRow", 0, 12},   // DIV-0210
+    {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0212
 };
 
-inline constexpr std::size_t kEntryCount = 211;
+inline constexpr std::size_t kEntryCount = 212;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -704,6 +705,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 204, 1, true, Player::Yes, 0, kLangAny},
     {211, "The launcher has a save editor",
      Tier::Extension, State::Active, 0, 205, 0, true, Player::Never, 0, kLangAny},
+    {212, "A PC install reads .data from the cache's image and its table files",
+     Tier::Sensible, State::Active, 0, 205, 1, true, Player::Yes, kTowardPsx, kLangAny},
 };
 
 // The switches of one entry.

@@ -295,14 +295,12 @@ everything but `base\exe`; the scripts `build_b.sh`, `build_a.sh`,
   catalogue in the engine.
 - **Raw ranges need `kind = "raw"`** in `place.toml`. That one line is how the
   old `psp-tables` form is told from a raw-range layer.
-- **A PC install that reads `.data` from `BOF3.exe`** (no `BOF3X_EXEIMAGE`) has
-  no base table files in use: the player's exe is the source there, as
-  before. Layers lay over it the same way.
-- **No new ledger entry yet.** No install's bytes change: the image is the
-  same image, and the one layer that exists changes the same 250 bytes.
-  DIV-0111 is amended with the new form, the any-layer rule and the
-  later-wins rule. The new entry comes with group C, which gives a player the
-  first way to make such a layer.
+- **A PC install that reads `.data` from `BOF3.exe`** had no base table files
+  in use when A and B were built. The owner asked why it should differ; it
+  no longer does (section 5b, DIV-0212).
+- **The ledger.** DIV-0111 is amended with the new form, the any-layer rule
+  and the later-wins rule: no install's bytes change by them. DIV-0212 is the
+  PC install's source (5b). Group C's mod kind gets its own entry.
 
 **Acceptance 1, the image is the same image.**
 
@@ -360,6 +358,40 @@ union`); not this round's.
   cost (the self-test runs took as long as before to the eye; not timed), and
   `.rdata`.
 - Nobody has played it.
+
+## 5b. One route for every install kind (2026-11-11, DIV-0212)
+
+The owner, on reading 5a: "Why would we have the pc installs differ from the
+others?" - and then: add the unified route, with the old path kept where
+there is no cache and for the developer's A/B reference.
+
+- **The launcher** (`src/launcher/launcher.cpp`, after the preset and the ini
+  have set their variables): on a PC install (`BOF3.exe` there, not the hosted
+  build) whose cache holds an image built from `BOF3.exe` (`base\exe\data.toml`
+  says `build = "pc-zh"`), it sets `BOF3X_EXEIMAGE` to the cache and says so.
+- **The engine** (`ExeImage_Source`): a PC-built image, with its table files
+  laid in, is compared with the `.data` of the `BOF3.exe` that is there before
+  it is mapped. One byte of difference is a Fatal that names the file
+  (`data.bin` or `tables\<key>.bin`) and tells the player to rebuild, or to
+  use a mod to change a table. A base table file is therefore not a place to
+  edit: a change goes in a layer.
+- **The file is still the source** with no cache; with a cache whose image a
+  disc built (not the PC's bytes); with `BOF3X_EXEIMAGE` set by hand; under
+  `BOF3X_EXEFILE=1`, the entry's switch, which the `shipped` and `repaired`
+  presets send; and in the hosted build (`--host bof3`), Capcom's `.data`,
+  the A/B and shadow reference.
+
+| Run (the exe host's self-test, a PC game folder, `run_st4.sh` / `run_st5.sh`) | Result |
+|---|---|
+| a cache with the PC-built image | exit 0; the launcher's `.data from <cache>` line; `27 table files, 20744 bytes`; `base/exe (pc-zh) is BOF3.exe's .data, byte for byte: 638976 bytes compared`; mapped sha256 `b9f91e23...`, the hash of `BOF3.exe`'s `.data` |
+| the same, `BOF3X_EXEFILE=1` | exit 0; no image lines; the same mapped hash |
+| the same, `BOF3X_PRESET=shipped` | exit 0; the preset sets `BOF3X_EXEFILE=1`; the same mapped hash |
+| the same, `opt=psp-tables` | exit 0; `250 of them differ`; the mapped hash equal to the one of the layer over the file (5a) |
+| one byte of `tables\weapons.bin` flipped and its hash in `tables.toml` made to match | exit 3: `This install's game data is not the data of this BOF3.exe ...`, then the file, the address and both bytes |
+| a cache whose image the US disc built, beside `BOF3.exe` | exit 0; the file is read; the same mapped hash as the first row |
+
+`config_tests.exe` after the presets' rows were regenerated: 3,621 checks, the
+same 2 failures as `main`.
 
 ## 6. Acceptance
 

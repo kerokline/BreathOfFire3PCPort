@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 211 entries, DIV-0001..0211, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 212 entries, DIV-0001..0212, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15504,5 +15504,53 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - the launcher's dialog itself; it does nothing until the player opens it and saves
 - **Toward:** none - no release has a save editor
+- **Languages:** any
+- **State:** active
+
+### A PC install reads .data from the cache's image and its table files
+
+- **ID:** DIV-0212
+- **Date:** 2026-11-11
+- **Subsystem:** the exe host's data mapping - `src/launcher/launcher.cpp`
+  (`CacheImageIsPcBuilt`, the block after the preset), `src/hook/exe_image.cpp`
+  `ExeImage_Source`; [`image-layer-round.md`](image-layer-round.md) 5b
+- **Tier:** Sensible - where the bytes are read from, not what they are; the
+  owner, 2026-11-11: one route for every install kind, the tables as files
+  outside the exe
+- **Original behaviour:** `BOF3.exe` is the program and its `.data`: the
+  loader maps the tables with the code. Our exe host, on a PC install, read
+  `.data` out of the player's `BOF3.exe` at start, and read a cache's
+  `base\exe` image only where there is no `BOF3.exe` (a disc-built install).
+- **New behaviour:** on a PC install whose cache holds the image
+  `tools/exe_tables.py` built from `BOF3.exe` (`base\exe\data.toml`,
+  `build = "pc-zh"`), the launcher names the cache as the source
+  (`BOF3X_EXEIMAGE`), as it does for a disc-built install. The exe host maps
+  `data.bin` with the 27 table files of `base\exe\tables\` laid in
+  (DIV-0111's amendment of this date), and first compares the result with
+  the `.data` of the `BOF3.exe` that is there: one byte of difference is a
+  Fatal that names the file and tells the player to rebuild, or to use a mod
+  to change a table. So the bytes the game starts with are the file's, as
+  before. `BOF3.exe` is still read for `.data` when there is no cache, when
+  the cache's image was built from a disc (those bytes are not the PC's),
+  when `BOF3X_EXEIMAGE` is set by hand, and in the hosted build
+  (`--host bof3`), which runs inside the file and is the A/B and shadow
+  reference.
+- **Rationale:** a table is then one file of the install on every install
+  kind, and a layer or a mod lays over the same thing everywhere. The exe is
+  a source the importer reads, as a disc is.
+- **Also in the PSX version?** No: the PlayStation loads its tables from the
+  disc's files, which is the shape this moves toward.
+- **Verification:** the exe host's self-test on a PC game folder with a cache
+  holding the PC-built image: the launcher's line, `base/exe (pc-zh) is
+  BOF3.exe's .data, byte for byte`, and the `.data as mapped` sha256 equal to
+  the one with `BOF3X_EXEFILE=1` and to the hash of `BOF3.exe`'s `.data`; one
+  byte of a table file flipped: exit 3 with the rebuild sentence; a cache
+  whose image a disc built, beside `BOF3.exe`: the file is read, as before
+  (the round doc, 5b). **Not played. Not run:** the state-hash routes.
+- **Reversible?** `BOF3X_EXEFILE=1`: the file is the source, as before.
+- **Switch:** env:BOF3X_EXEFILE=1 - read by `src/launcher/launcher.cpp`, which then does not name the cache as the image's source
+- **Default:** on
+- **Player:** yes - `BOF3X_EXEFILE=1` (no ini key); the bytes are the same either way
+- **Toward:** psx - the tables read from data files, as the disc's are
 - **Languages:** any
 - **State:** active

@@ -1305,6 +1305,8 @@ std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, co
     if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
         return "a disc-built install (no BOF3.exe) has gaps in its .data, and this value stops the game at all "
                "gaps, also at the gaps that this release accepts";
+    if (name == "BOF3X_EXEFILE" && value == "1" && !pc)
+        return "a disc-built install (no BOF3.exe) has no file to read the game's tables from (DIV-0212)";
     return std::string();
 }
 

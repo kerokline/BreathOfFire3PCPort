@@ -605,6 +605,32 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
     g_base_tables = ComposeBase(exe_dir, im, bin);   // the table files, laid where data.bin leaves them out
 
     if (im.build == "pc-zh") {
+        // DIV-0212: a PC install reads this image in place of the file's
+        // .data. With the file there, the two must be the same bytes: an image
+        // that is not this BOF3.exe's (a damaged cache, a table file changed
+        // by hand) is refused, never run. A change belongs in a layer.
+        if (ExeFile_Present()) {
+            std::vector<unsigned char> pc(im.size);
+            ExeFile_Read(im.va, pc.data(), im.size);
+            for (std::uint32_t i = 0; i < im.size; ++i)
+                if (pc[i] != bin[i]) {
+                    const char* in = "data.bin";
+                    std::string table;
+                    for (const Range& r : im.ranges)
+                        if (r.how == "file" && r.lo <= im.va + i && im.va + i < r.hi) {
+                            table = "tables\\" + r.from + ".bin";
+                            in = table.c_str();
+                        }
+                    Fatal("This install's game data is not the data of this BOF3.exe. Rebuild the install: in the "
+                          "launcher's Sources page add the game again, or run tools/importer.py build. To change a "
+                          "table, use a mod; the files of base\\exe are checked against the game.\n\n"
+                          "BOF3X_EXEIMAGE: %s%s differs from BOF3.exe's .data at 0x%06X (the image 0x%02X, the "
+                          "file 0x%02X); BOF3X_EXEFILE=1 reads the file",
+                          exe_dir.c_str(), in, (unsigned)(im.va + i), (unsigned)bin[i], (unsigned)pc[i]);
+                }
+            Log("BOF3X_EXEIMAGE: base/exe (pc-zh) is BOF3.exe's .data, byte for byte: %u bytes compared (DIV-0212)",
+                (unsigned)im.size);
+        }
         std::memcpy(to, bin.data(), im.size);
         // The bytes no disc carries that are the engine's own (exe_own.h):
         // checked against the image before they are written, so that a pc-zh
