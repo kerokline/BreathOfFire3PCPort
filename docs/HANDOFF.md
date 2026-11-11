@@ -637,7 +637,9 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   failures on 114 real PC saves. **Owed:** an edited save loaded and played in the game (nobody has); the
   owner's eye on the window; `dialog_test.py` was not run (it finds the launcher's window by its title, and the
   owner's own launcher was open). **Next stages** (spec section 16): memory cards and conversion, creation from
-  nothing, story points; names for genes, masters, fish and areas; the EXP-past-level warning.
+  nothing, story points; the EXP-past-level warning. **Second pass the same day:** names from
+  `data/save-names.tsv`, one Position field with the area's entrances read from `BOF3.exe`. **A task for it**
+  ([`IDEAS.md`](IDEAS.md) I58): the entrance list on installs with no `BOF3.exe`, read from the area EMIs.
 
 - **The beta's docs branch (2026-11-08):** `docs/beta-readiness-1107` in the main checkout - the checklist, the
   notes `docs/releases/v0.1.0-beta.1.md`, the README's status line, `.github/ISSUE_TEMPLATE/bug-report.md` and

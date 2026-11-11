@@ -46,6 +46,14 @@ The queue's "94 call sites" for `0x531F90` is the count of distinct callers
 
 ### `Area_LinkAt(x, z)` - `0x5951D0`
 
+**Where the lists are on a disc (measured 2026-11-10, the JP disc):** each
+area's link list is in its own `AREAnnn.EMI`, in the overlay section that
+loads at `0x801F2C00`; 191 of the PC's 192 lists are there byte for byte
+(area 30's was not found). The PC port dropped that section from its `DAT\`
+and holds the lists in `BOF3.exe`. The task that follows from it is in
+[`IDEAS.md`](IDEAS.md) I58; the save editor reads the lists for its entrances
+([`save-editor.md`](save-editor.md) 4.2).
+
 The descriptor's `+0x20` points at 12-byte links and `+0x30` holds the index
 of the last (so there are `+0x30 + 1`). A link is a run of `+9` cells starting
 at (`+0`, `+1`), along z when `+8` is non-zero and along x when it is zero.

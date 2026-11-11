@@ -157,7 +157,11 @@ leaves out a link to cell 0, 0 and the one list that eleven areas share as a
 placeholder. The editor groups the links of one position and names the group
 by the areas it comes from. The values are an exe table's, so they are read
 at run time and are not in the repository (the owner's call of 2026-11-09 for
-exe tables). An install with no `BOF3.exe` has no entrance list.
+exe tables). An install with no `BOF3.exe` has no entrance list. **The lists
+are on the discs too**: each area's is in its own `AREAnnn.EMI`, in the section
+that loads at `0x801F2C00`, byte for byte the exe's for 191 of 192 areas on
+the JP disc (measured 2026-11-10). Reading them there for a disc-built install
+is a task under [`IDEAS.md`](IDEAS.md) I58.
 
 Measured by the research pass (2026-11-10): the static read gives 1,542 links
 in 192 areas, with no difference from the running game's own dump of the door
