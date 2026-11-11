@@ -287,7 +287,7 @@ that with a ratchet as the typed-data round held its census.
   loads at a moved base, which the relocatable-image round already runs);
   `mmap_min_addr` on the common distributions and the Deck; the task stacks
   below 4 GB.
-- **LA3, the asm and the calling convention.** Which of the 174 asm blocks
+- **LA3, the asm and the calling convention.** Which of the 328 asm statements
   name a Win64 register rule (the stack switch saves `rbx`, `rbp`, `rsi`,
   `rdi`, `r12`..`r15` and `xmm6`..`xmm15`; System V's callee-saved set is
   different and has no callee-saved `xmm`). Two roads, settled by a build:
@@ -306,6 +306,139 @@ that with a ratchet as the typed-data round held its census.
   Linux place (XDG).
 
 **Gate:** documents and a tool; the Windows objects unchanged.
+
+### Stage LA as run (2026-11-11)
+
+Read-only: no file under `src/` changed. The tools are `tools/os_census.py`
+(output `analysis/os_census.tsv`, checked by `python tools/os_census.py
+--check`), and under `tools/linux_probe/`: `lowmem_probe.cpp`,
+`msabi_probe.cpp`, `asm_by_abi.py`, `linux_check.py`. Machine: CachyOS,
+kernel 7.3.1-1-cachyos, clang 23.1.4.
+
+**LA1, the census.** `python tools/os_census.py --counts` gives 4,598 sites in
+140 files: 1,643 calls, 1,456 constants, 1,325 types, 174 includes. By class:
+
+| Class | Sites | Class | Sites |
+|---|---:|---|---:|
+| launcher | 1,811 | thread | 79 |
+| harness-only | 696 | input | 49 |
+| type_only | 502 | crt | 43 |
+| file | 340 | fault | 39 |
+| process | 298 | clock | 28 |
+| graphics | 227 | hash | 19 |
+| window | 162 | dialog | 17 |
+| memory | 144 | fiber | 12 |
+| umbrella (the `windows.h` row) | 130 | sound | 2 |
+
+The launcher and the harness files are 2,507 of the sites; the other 2,091
+are what a native build must provide or remove. A site's class follows the
+file first (harness-only by name, launcher by folder), then the type rule, then
+the API group. The calls, by the area that makes them, are in the TSV
+(`--list CLASS`, `--files PREFIX`). The ones outside the launcher and the
+harness files: `game/platform` 146, `hook` 304 (a Windows-only layer), `render`
+52, `game` other 104, `audio` 34, `common` 25.
+
+**The 65 files.** `python tools/os_census.py --outside src/game/platform`:
+65 files outside `platform` include `windows.h`, so the doc's figure holds.
+Of them 17 are fuzz, harness or census files (hosted i686 only). The other 48:
+
+- 24 take nothing from it (empty-stub compile below).
+- 16 take `GetEnvironmentVariableA/W` and `DWORD` only: the `BOF3X_` switches.
+- 1 takes `_stricmp` only (`dragon_cmd.cpp`).
+- 7 take services: `battle_menu_win.cpp` (the FMV player: GDI, a message loop,
+  the clock, heap, a thread wait, files), `dat_load.cpp` (file walk, module
+  path), `crt_rest.cpp` (environment, `_findfirst32`, `_filelength`,
+  `_fileno`, `_stricmp`), `draw_pool.cpp` (`VirtualQuery`/`VirtualAlloc`),
+  `faerie_ring.cpp` (`CreateFile`/`ReadFile`), `kind2_object.cpp`
+  (`FlushInstructionCache`), `quick_menu.cpp` (temp dir, process id, `VK_F5`).
+
+Check by a second method: `python tools/linux_probe/linux_check.py stub FILE...`
+compiles each of the 65 `-fsyntax-only` on `x86_64-linux-gnu` with empty
+`windows.h`, `dinput.h`, `io.h`, `malloc.h`. 25 files compile with no error
+besides the layout asserts below (24 "nothing" files plus `field_2.cpp`,
+whose `io.h` include is dead); the others fail on exactly the names above. The
+`#include <windows.h>` count by `grep -rE '#\s*include\s*<windows.h>' src | wc -l`
+is 132, against 130 include rows in the census; the two are not accounted for.
+
+A finding for stage LB: every file fails 2,938 `static_assert`s of the generated
+`symbols.gen.h` on Linux, because the layout asserts count `long` as 4 bytes
+and LP64 makes it 8. (`linux_check.py stub` counts them apart.)
+
+**LA2, low memory.** `lowmem_probe.cpp` (built `-no-pie -Wl,-Ttext-segment=0x10000000`,
+run with the image base as argument):
+
+- `mmap_min_addr` 65,536; `randomize_va_space` 2; `overcommit_memory` 0
+  (`/proc/sys/vm/*`). This machine only.
+- Linked at 0x10000000, the image maps at `0x400000` and at `0xA00000` with
+  `MAP_FIXED_NOREPLACE`; write and read of 1,423 pages pass; a `jmp rel32`
+  stub placed in the ELF reaches it (+264,241,723 bytes) and returns.
+- Linked at the default (`-no-pie`, base `0x400000`): mapping `0x400000` fails
+  with EEXIST, as the ELF is there. A small ELF with the image at `0xA00000`
+  works; the real engine's size is not known, and must fit in
+  `0x400000`..`0xA00000`.
+- A PIE ELF (base `0x55...`): the image maps, but the `rel32` stub cannot reach
+  the ELF (distance 9.4e13). PIE needs the 64-bit-thunk mode, or a low link.
+- Task stacks below 4 GB: fixed at `0x60000` (1 MB, Windows' place), `MAP_32BIT`
+  and a hint at `0x20000000` all work, each with a stack switch that saves a
+  32-bit word. A 1 GB reserve at `0x40000000` works (it takes `MAP_32BIT`'s
+  room, so the order of the reservations is a design item).
+- The heap: glibc's default puts 0 of 48 blocks of 64 MB below 4 GB.
+  `mallopt(M_MMAP_THRESHOLD)` is capped at 32 MB and does not help.
+  `M_MMAP_MAX` 0 forces the `brk` heap and puts 47 or 48 of 48 below 4 GB; a
+  block fails when it meets a stack mapping. A hard guarantee needs our own
+  arena at the `Crt_malloc` chokepoint.
+- The moved base `0xA00000` gives `0xA00000`..`0xF8F000`, which does not meet
+  Capcom's range. The ordering tables' 24-bit links keep the image under 16 MB,
+  so the base can move inside `0x10000`..`0xA70000`.
+
+Design the probes support: a non-PIE ELF linked at a high address
+(`-Ttext-segment`), the data image mapped by `MAP_FIXED_NOREPLACE` at
+`0x400000` or the moved base, the stacks and the heap in an arena we reserve
+below 4 GB before `main`.
+
+**LA3, the asm.** `python tools/linux_probe/asm_by_abi.py`: 328 `asm`
+statements in all (`tools/width_census.py` counts 322 blocks and 6 label
+aliases; the 174 earlier in this doc is stale). Of them: fuzz (common) 127,
+live common 153, live i686 24, live x86-64 24. The 24 live x86-64 blocks, read
+by hand: 10 depend on the Win64 rule and 14 do not (the script's text rule says
+11; `Task_Exit` is a false hit, `rcx` is a scratch there).
+
+Depend on it:
+
+- `src/audio/mp3.cpp:205` `Decode` (`rcx`/`rdx`, `subq $32`; the callee
+  `DecodeFrame` must be `ms_abi`)
+- `src/game/battle/battle_3.cpp:2182` `Battle_StatusTint` (`testb $0x80,%cl`)
+- `src/game/field/event_cond.cpp:860` `ScriptFlags_Clear40` (`movl %eax,%ecx`)
+- `src/game/field/field_6.cpp:2292` `Scenario_CallA` and `:2333`
+  `Scenario_CallB` (`rcx`, and `rdx`/`r8`/`r9` forwarded by tail jumps)
+- `src/game/platform/magic_080.cpp:1031` `Cfg_Load` (`leaq 0x20(%rsp),%rcx`,
+  frame `$0x68`, callee `Shell_CfgLoadFrame`)
+- `src/game/task_switch_x86_64.h`: `Task_RunAll` (:119, pushes the Win64 set,
+  a superset, harmless under System V), `Task_SetStackBase` (:167, `rcx` and 40
+  bytes of home space for `StackWatch_AtSetStackBase`), `Task_Sleep` (:214,
+  argument in `cx`), `Task_Restart` (:233, argument in `rcx`).
+
+The other 14 are `Task_BackToScheduler`, `Task_Exit`, the `jmp` forwarders
+(`Sound_StopMusic`, `Sound_ResumeAll`, `Sound_MusicPlaying`, `LoadMenu_Error`,
+`Music_Halt`, `Music_IsPlaying`, `SndStream_IsPlaying`,
+`ScenaCall_SaveAndLeave`, `Scena15_LeaveAllParty7`), the two in `image_base.h`
+and `stackwatch.cpp:303`. A forwarder passes `ecx` on unchanged, so it works
+when caller and body share one ABI.
+
+**ms_abi verdict.** One asm text can serve both: `linux_check.py asm` compiles
+11 files on `x86_64-linux-gnu` as they are and with
+`-D__cdecl=__attribute__((ms_abi))`; the 19 naked functions in them (the six
+in `task.cpp` and the rest of the list above that fall in those files) come out
+byte-identical. `msabi_probe.cpp` runs the `mp3`, `Battle_StatusTint` and
+`Cfg_Load` texts against a callee of each ABI: they are right with an `ms_abi`
+callee (`Cfg_Load`'s frame is wrong with a System V one). The `mp3` text is
+unchanged; only the compiler's own prologue differs (it saves `rsi`, `rdi`,
+`xmm6`..`xmm15`). A sample of 24 files (every 30th non-fuzz `src/game` `.cpp`)
+adds no error with `-D__cdecl=ms_abi`. Road: map `__cdecl` to `ms_abi` on the
+Linux target. `__stdcall` must stay System V: DXVK-native's headers define it
+(and `WINAPI`, `STDMETHODCALLTYPE`) as empty, so the calls into DXVK and SDL
+keep their ABI. The second road (a System V variant of the stack-switch
+blocks) is not needed.
 
 ### Stage LB - make the source portable, on Windows
 
@@ -430,22 +563,26 @@ does not rewrite it. Three stand-ins, cheapest first:
   should; it was not seen.
 - That the 32-bit build runs without `PROTON_USE_WOW64=1` where 32-bit
   graphics drivers are installed.
-- `mmap_min_addr` read 65,536 in this machine's WSL2 (`/proc/sys/vm/mmap_min_addr`,
-  2026-11-10). Not read on the other distributions players use or on
-  SteamOS; that an ELF of ours can keep `0x400000`..`0x98F000` free or
-  occupy it as the PE does.
-- What the 65 game files outside `platform` use from `windows.h`. The one
-  file sampled (`src/game/field/area_map.cpp`) showed only the project's own
-  accessors; that is one file.
+- `mmap_min_addr` read 65,536 on this machine (section 4, LA2, `/proc/sys/vm/mmap_min_addr`;
+  an earlier read in WSL2 gave the same). Not read on the other
+  distributions players use or on SteamOS. Answered here: an ELF linked high
+  can leave `0x400000`..`0x98F000` free (or the base can move to `0xA00000`);
+  not known: that the real engine's ELF fits below `0xA00000`.
+- What the 65 game files outside `platform` use from `windows.h`: answered in
+  section 4 (24 nothing, 16 environment switches, 1 `_stricmp`, 7 services,
+  17 harness files). Not accounted for: 132 `#include <windows.h>` lines by
+  `grep`, 130 include rows in the census.
 - Which side of the renderer's interface `src/game/platform/d3d.cpp` is on.
-- Whether a switch exists that forces a crash for the checklist's row 11
-  (a search of `src` for `CRASHTEST` found none; the reporter's doc was not
-  read for another name).
+- A crash switch for the checklist's row 11: `BOF3X_CRASH_TEST=<seconds>`, named in
+  the header comment of `src/hook/crash.cpp`; a search for `CRASHTEST` had
+  missed it. Not run.
 - That SDL3's GPU API covers what `render_d3d11.cpp` does (the present pass,
   the readbacks, the texture page uploads). LA4 reads it against SDL's
   documentation before call 1 is made.
-- The count of asm blocks that depend on the Win64 register rule; LA3
-  measures it.
+- The Win64 asm count is 10 of 24 live x86-64 blocks (section 4, LA3). Not run:
+  a full task switch under `ms_abi` on Linux; the whole tree under
+  `ms_abi` (24 files and the 11 asm files were compiled); a call across the
+  SDL or DXVK boundary; the probes on a kernel other than 7.3.1.
 
 ## 8. Not in these tiers
 
