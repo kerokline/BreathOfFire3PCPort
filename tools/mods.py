@@ -106,7 +106,24 @@ KINDS = {
         "file_ext": {"edits": ".toml"},
         "builder": "table_edit_build.py",
     },
+    # A romhack as its author released it (docs/disc-patch-round.md): the
+    # .xdelta of a disc's data track, untouched, and the two hashes that say
+    # which file it is and what it must make. `builds`: the discs the builder
+    # has been run on, each with the language its text is and the name the
+    # Sources page gives it - a closed list, widened when another is measured.
+    "disc-patch": {
+        "table": "disc-patch",
+        "keys": {"build": "build", "patch": "file", "patch_sha256": "sha256", "result_sha256": "sha256"},
+        "file_ext": {"patch": ".xdelta"},
+        "builds": {"psx-us": ("en-US", "PlayStation, USA")},
+        "author": True,
+        "builder": "disc_patch_build.py",
+    },
 }
+
+# What a disc-patch mod's patch may write: a CD's data track is under 800 MiB.
+RESULT_MAX = 800 << 20
+SHA_RE = re.compile(r"[0-9a-f]{64}")
 
 
 class Refused(Exception):
@@ -121,7 +138,7 @@ def layer_name(meta):
     """The optional layer a mod's step builds (docs/reading-row.md 1.3)."""
     if meta["kind"] == "reading-row":
         return "ruby-%s-%s" % (meta["id"], meta["base"])
-    if meta["kind"] == "table-edit":
+    if meta["kind"] in ("table-edit", "disc-patch"):
         return "mod-%s" % meta["id"]
     raise BuildError("no layer is defined for kind %r" % meta["kind"])
 
@@ -255,6 +272,17 @@ def check_meta(doc):
         where = "%s.%s" % (k["table"], key)
         if how == "tag":
             meta[key] = _tag(t.get(key), where)
+        elif how == "build":
+            v = t.get(key)
+            if not isinstance(v, str) or v not in k["builds"]:
+                raise Refused("mod.toml: %s is %s, not a disc a %s mod can be made for (%s)"
+                              % (where, json.dumps(v) if v is not None else "(missing)", kind, ", ".join(k["builds"])))
+            meta[key] = v
+        elif how == "sha256":
+            v = t.get(key)
+            if not isinstance(v, str) or not SHA_RE.fullmatch(v):
+                raise Refused("mod.toml: %s must be a sha256, 64 lowercase hex digits" % where)
+            meta[key] = v
         else:
             v = _string(t, key, k["table"], 64)
             if not FILE_RE.fullmatch(v) or v == MOD_TOML:
@@ -270,6 +298,14 @@ def check_meta(doc):
         if meta["base"] not in k["bases"]:
             raise Refused("mod.toml: reading-row.base %s - the reading-row builder reads %s text only"
                           % (meta["base"], " and ".join(k["bases"])))
+    if k.get("author") and "author" not in meta:
+        raise Refused("mod.toml: a %s mod must name its author (mod.author): it carries another person's work"
+                      % kind)
+    if kind == "disc-patch":
+        tag = k["builds"][meta["build"]][0]
+        if tag not in meta["requires"]:
+            raise Refused("mod.toml: a patch of the %s disc changes %s text, so mod.requires must name %s"
+                          % (meta["build"], tag, tag))
     meta["files"] = files
     meta["layer"] = layer_name(meta)
     if len(meta["layer"]) > LAYER_MAX:
@@ -331,6 +367,20 @@ def read_zip(path):
             table_edit_build.parse(_toml(data[meta["edits"]], meta["edits"]))
         except table_edit_build.Bad as e:
             raise Refused("%s: %s" % (meta["edits"], e))
+    if meta["kind"] == "disc-patch":
+        # the author's file, byte for byte, and a patch this release can read:
+        # refused now, not after the player's disc has been copied
+        import vcdiff
+        patch = data[meta["patch"]]
+        if sha_bytes(patch) != meta["patch_sha256"]:
+            raise Refused("%s is not the file mod.toml's patch_sha256 names" % meta["patch"])
+        try:
+            vcdiff.header(patch)
+            total = sum(w["target_len"] for w in vcdiff.windows(patch))
+        except vcdiff.PatchError as e:
+            raise Refused("%s: %s" % (meta["patch"], e))
+        if total > RESULT_MAX:
+            raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (meta["patch"], total, RESULT_MAX))
     return meta, data
 
 
@@ -357,7 +407,7 @@ def mod_dir(h, mid):
 
 
 ROW_KEYS = ("id", "name", "version", "author", "url", "credit", "kind", "requires", "base", "readings", "edits",
-            "files", "zip", "sha256", "added")
+            "build", "patch", "patch_sha256", "result_sha256", "files", "zip", "sha256", "added")
 
 
 def load_rows(h):
@@ -413,9 +463,26 @@ def built(cache, layer):
     return there and manifest_lists(cache, layer)
 
 
+def holds_build(h, build):
+    """Whether the player's source list, H/sources.toml, has a disc of `build`
+    (docs/install-sources.md): a disc-patch mod's step reads that disc."""
+    import tomllib
+    p = os.path.join(h, "sources.toml")
+    if not os.path.isfile(p):
+        return False
+    try:
+        with open(p, "rb") as f:
+            rows = tomllib.load(f).get("source", [])
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    return any(isinstance(x, dict) and x.get("build") == build for x in rows)
+
+
 def state_of(h, r, cache=None):
     """(state, needs, problem): built, not-built, needs (a required language layer
-    not held: `needs` names them) or problem (the mod's files are not there)."""
+    not held: `needs` names them), needs-disc (a disc-patch mod whose disc is not
+    in the source list: `needs` is the disc's name, `problem` the sentence) or
+    problem (the mod's files are not there)."""
     cache = cache or os.path.join(h, "cache")
     d = mod_dir(h, r["id"])
     missing = [n for n in [MOD_TOML] + list(r.get("files", [])) if not os.path.isfile(os.path.join(d, n))]
@@ -426,6 +493,13 @@ def state_of(h, r, cache=None):
     lack = [t for t in r.get("requires", []) if not held(h, t, cache)]
     if lack:
         return "needs", ", ".join(lack), None
+    if r["kind"] == "disc-patch":
+        k = KINDS["disc-patch"]
+        if r.get("build") not in k["builds"]:
+            return "problem", None, "it is for the disc %r, which this release cannot build from; remove the mod" % r.get("build")
+        if not holds_build(h, r["build"]):
+            disc = k["builds"][r["build"]][1]
+            return "needs-disc", disc, "it needs the disc %s: add it on Data, Sources" % disc
     if built(cache, layer_name(r)):
         return "built", None, None
     return "not-built", None, None
@@ -445,7 +519,8 @@ def _emit(o, as_json):
     if as_json:
         print(json.dumps(o, ensure_ascii=False), flush=True)
     elif o["ok"]:
-        extra = {"built": "built", "not-built": "not built yet", "needs": "needs %s" % o.get("needs")}.get(o["state"], "")
+        extra = {"built": "built", "not-built": "not built yet", "needs": "needs %s" % o.get("needs"),
+                 "needs-disc": "needs the disc %s" % o.get("needs")}.get(o["state"], "")
         by = ", by %s" % o["author"] if o.get("author") else ""
         print("%s %s (%s%s, %s)%s" % (o["id"], o["version"], o["name"], by, o["kind"], ": " + extra if extra else ""),
               flush=True)
@@ -681,8 +756,33 @@ def build_table_layer(h, cache, r, say, builder=None):
     return layer
 
 
+def build_patch_layer(h, cache, r, say, builder=None):
+    """A disc-patch mod's layer into `cache`: the chunks the builders make
+    differently from the player's disc with the author's patch on it
+    (tools/disc_patch_build.py, docs/disc-patch-round.md 3), listed in the
+    manifest. BuildError when the builder is not in the release, or the disc,
+    the patch or what the patch makes is not what mod.toml names."""
+    layer, what = layer_name(r), "the mod %s (%s)" % (r["id"], r["name"])
+    builder = builder or builder_path(r["kind"])
+    if not os.path.isfile(builder):
+        raise BuildError("%s needs the disc-patch builder, tools/%s, and this release does not have it, so it "
+                         "cannot be built" % (what[0].upper() + what[1:], KINDS[r["kind"]]["builder"]))
+    import disc_patch_build
+    where = "mod:%s@%s:%s" % (r["id"], r["version"], r["build"])
+    say("Building %s into opt/%s" % (what, layer))
+    try:
+        rows = disc_patch_build.build(h, cache, layer, mod_dir(h, r["id"]), r, where, say)
+    except disc_patch_build.Bad as e:
+        raise BuildError("%s cannot be built: %s" % (what[0].upper() + what[1:], e))
+    _manifest_rows(cache, layer, rows)
+    say("Built %s: opt/%s, %d chunk(s)" % (what, layer, len(rows)))
+    return layer
+
+
 def build_one(h, cache, r, say, builder=None, reuse=None):
     """One mod's layer into `cache` (its data from H/mods/<id>/)."""
+    if r["kind"] == "disc-patch":
+        return build_patch_layer(h, cache, r, say, builder if builder and builder.endswith("disc_patch_build.py") else None)
     if r["kind"] == "table-edit":
         return build_table_layer(h, cache, r, say, builder if builder and builder.endswith("table_edit_build.py") else None)
     return build_layer(cache, layer_name(r), r["kind"], r["base"], os.path.join(mod_dir(h, r["id"]), r["readings"]),
@@ -691,9 +791,10 @@ def build_one(h, cache, r, say, builder=None, reuse=None):
 
 
 def setup_step(h, cache, say, only=None, builder=None, reuse=None):
-    """The reading-row layers into `cache`, after its language layers (setup's
+    """The mods' layers into `cache`, after its language layers (setup's
     new cache, or the home's own for `build`): every listed mod's. A mod whose `requires` the install lacks is skipped with a
-    line naming the layers; anything else that cannot be built raises
+    line naming the layers, and a disc-patch mod whose disc is not in the source
+    list with a line naming the disc; anything else that cannot be built raises
     BuildError. `reuse`: setup's previous cache, whose layer is taken when
     built the same way (build_layer). Returns (built layers, skipped mod ids)."""
     done = []
@@ -710,6 +811,11 @@ def setup_step(h, cache, say, only=None, builder=None, reuse=None):
         if st == "needs":
             say("The mod %s (%s) is skipped: it needs the %s language layer, which this install does not hold "
                 "(add a disc with that language on the Sources page)" % (r["id"], r["name"], needs))
+            skipped.append(r["id"])
+            continue
+        if st == "needs-disc":
+            say("The mod %s (%s) is skipped: it needs the disc %s, which is not in this install's sources (add it on "
+                "the Sources page)" % (r["id"], r["name"], needs))
             skipped.append(r["id"])
             continue
         done.append(build_one(h, cache, r, say, builder, reuse))
@@ -1025,6 +1131,93 @@ def selftest(keep=None):
     with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:
         expect(rc == 0 and not os.path.exists(os.path.join(cache, "opt", "mod-sharper")) and "mod-sharper" not in f.read(),
                "remove: the table layer and its manifest rows gone")
+    # A disc-patch mod (docs/disc-patch-round.md 2): a patch tools/vcdiff.py makes
+    # here over bytes of its own, so no game data; refusals, then its states.
+    import vcdiff
+    src = bytes(range(256)) * 16
+    patch, _ = vcdiff.make_patch(src, [([("copy", 0, 1024, 0), ("add", b"a romhack"), ("copy", 2048, 512, 0)],
+                                        len(src), 0, 0, True, 1)])
+    big, _ = vcdiff.make_patch(b"", [([("run", 0, 1 << 20)], 0, 0, 0, False, 1)] * 2)   # 2 MiB, against a bound of 1 here
+
+    def dp_toml(**over):
+        mod = {"id": '"definitive"', "name": '"Definitive Edition"', "version": '"1.0"', "author": '"A. Hacker"',
+               "kind": '"disc-patch"', "requires": '["en-US"]'}
+        tab = {"build": '"psx-us"', "patch": '"hack.xdelta"', "patch_sha256": '"%s"' % sha_bytes(patch),
+               "result_sha256": '"%s"' % ("0" * 64)}
+        for key, v in over.items():
+            (mod if key in mod else tab)[key] = v
+        return ("[mod]\n" + "".join("%s = %s\n" % kv for kv in mod.items() if kv[1] is not None) + "\n[disc-patch]\n" +
+                "".join("%s = %s\n" % kv for kv in tab.items() if kv[1] is not None)).encode()
+
+    dp = {}
+    for name, members, want in (
+            ("dp_good", [("mod.toml", dp_toml()), ("hack.xdelta", patch)], None),
+            ("dp_no_author", [("mod.toml", dp_toml(author=None)), ("hack.xdelta", patch)], "must name its author"),
+            ("dp_other_disc", [("mod.toml", dp_toml(build='"psx-xx"')), ("hack.xdelta", patch)],
+             "not a disc a disc-patch mod can be made for (psx-us)"),
+            ("dp_no_text", [("mod.toml", dp_toml(requires="[]")), ("hack.xdelta", patch)], "mod.requires must name en-US"),
+            ("dp_not_xdelta", [("mod.toml", dp_toml(patch='"hack.toml"')), ("hack.toml", b"a = 1\n")],
+             "must be a .xdelta file"),
+            ("dp_other_file", [("mod.toml", dp_toml()), ("hack.xdelta", patch + b"\0")],
+             "is not the file mod.toml's patch_sha256 names"),
+            ("dp_bad_sha", [("mod.toml", dp_toml(result_sha256='"ABC"')), ("hack.xdelta", patch)],
+             "must be a sha256, 64 lowercase hex digits"),
+            ("dp_not_vcdiff", [("mod.toml", dp_toml(patch_sha256='"%s"' % sha_bytes(b"PATCH" * 40))),
+                               ("hack.xdelta", b"PATCH" * 40)], "not a VCDIFF patch"),
+            ("dp_too_big", [("mod.toml", dp_toml(patch_sha256='"%s"' % sha_bytes(big))), ("hack.xdelta", big)],
+             "a disc's data track may be"),
+            ("dp_holds_track", [("mod.toml", dp_toml()), ("hack.xdelta", patch), ("track1.bin", b"\0" * 16)], "game data"),
+            ("dp_long_id", [("mod.toml", dp_toml(id='"a-mod-id-of-20-chars"')), ("hack.xdelta", patch)],
+             "longer than the 23 characters"),
+            ("te_holds_patch", [("mod.toml", TE_MOD), ("edits.toml", TE_EDITS), ("hack.xdelta", patch)],
+             "which mod.toml does not name")):
+        dp[name] = make_zip(os.path.join(root, name + ".zip"), members)
+        bound = RESULT_MAX
+        try:
+            if name == "dp_too_big":
+                globals()["RESULT_MAX"] = 1 << 20
+            meta, _ = read_zip(dp[name])
+            got = None
+        except Refused as e:
+            got = str(e)
+        finally:
+            globals()["RESULT_MAX"] = bound
+        if want is None:
+            expect(got is None and meta["layer"] == "mod-definitive" and meta["build"] == "psx-us",
+                   "%s: accepted, layer mod-definitive" % name)
+        else:
+            expect(got is not None and want in got, "%s: refused (%s)" % (name, (got or "")[:60]))
+    rc, out = run("add", dp["dp_good"], "--home", h, "--json")
+    o = json.loads(out.splitlines()[-1])
+    expect(rc == 0 and o["ok"] and o["state"] == "needs" and o["needs"] == "en-US",
+           "a disc-patch mod added with no en-US text: state needs en-US")
+    os.makedirs(os.path.join(cache, "loc", "en-US", "dat"))
+    with open(os.path.join(cache, "loc", "en-US", "dat", "AREA000.DAT"), "wb") as f:
+        f.write(b"\0" * 16)
+    rc, out = run("list", "--home", h, "--json")
+    o = json.loads(out.splitlines()[-1])
+    expect(o["ok"] and o["state"] == "needs-disc" and o["needs"] == "PlayStation, USA" and "Data, Sources" in o["problem"],
+           "  with the text and no disc in sources.toml: state needs-disc, the disc named")
+    said = []
+    done, skipped = setup_step(h, cache, lambda t, quiet=False: said.append(t))
+    expect(done == [] and skipped == ["definitive"] and any("needs the disc PlayStation, USA" in t for t in said),
+           "  the build step skips it with a line that names the disc")
+    with open(os.path.join(h, "sources.toml"), "w", newline="\n") as f:
+        f.write('[[source]]\npath = "C:\\\\nowhere\\\\us.cue"\nbuild = "psx-us"\nkind = "psx"\n')
+    rc, out = run("list", "--home", h, "--json")
+    o = json.loads(out.splitlines()[-1])
+    expect(o["state"] == "not-built" and o["problem"] is None, "  with the disc listed: state not-built")
+    with open(os.path.join(mods_file(h)), encoding="utf-8") as f:
+        row = [r for r in tomllib.loads(f.read())["mod"] if r["id"] == "definitive"][0]
+    expect(row["build"] == "psx-us" and row["patch"] == "hack.xdelta" and row["patch_sha256"] == sha_bytes(patch)
+           and row["author"] == "A. Hacker", "  mods.toml keeps the disc, the patch and both hashes")
+    try:
+        build_patch_layer(h, cache, row, lambda t, quiet=False: None, builder=os.path.join(root, "no_such_builder.py"))
+        expect(False, "a release without the builder: refused")
+    except BuildError as e:
+        expect("does not have it" in str(e), "  a release without the disc-patch builder: the build refused, by name")
+    rc, out = run("remove", "definitive", "--home", h)
+    expect(rc == 0 and not os.path.exists(os.path.join(h, "mods", "definitive")), "remove: the patch gone from the home")
     if not keep:
         shutil.rmtree(root, ignore_errors=True)
     else:

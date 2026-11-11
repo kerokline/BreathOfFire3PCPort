@@ -4,7 +4,7 @@
 2026-11-11 against `main` `8d2d987d`, after the image-layer round merged (PR
 224), and group M run the same day: its five measurements are in
 [`romhack-mods.md`](romhack-mods.md) section 8 and they change sections 1 and 3
-below. Nothing of groups A to E is built. Step 4 of romhack-mods.md section 6.
+below. Group A is built (5a); B to E are not. Step 4 of romhack-mods.md section 6.
 Read that note first: it holds the measurements this plan stands on. `main`
 holds the three things the round starts from: `tools/vcdiff.py`,
 `tools/disc_patch_census.py`, and `author` / `url` / `credit` in `mod.toml` and
@@ -213,6 +213,43 @@ call 4): it needs the hybrid disc to take that section with the landmark
 translated, not waived; (3) `base\exe` is in the table-file form now, so the
 scratch caches of 2026-11-10 are not this round's - `D:\bof3x-runs\dp1111`
 has fresh ones.
+
+## 5a. Group A as run (2026-11-11)
+
+`tools/mods.py` alone; no engine or launcher file.
+
+- **The kind** `disc-patch`: `[disc-patch]` with `build`, `patch`,
+  `patch_sha256`, `result_sha256`; the layer `mod-<id>`. `build` is one of a
+  closed list in the tool, each with its language and its name on the Sources
+  page: `psx-us` alone, the one disc the builder's parts have been run on.
+- **Refused when the zip is added**, each with its sentence: no `author`; a
+  disc not in the list; `requires` without the disc's language; a patch that is
+  not a `.xdelta`; a patch that is not the file `patch_sha256` names; a hash
+  that is not 64 hex digits; a file `vcdiff.py` cannot read (not VCDIFF,
+  another secondary compressor, a damaged header); a patch that writes more
+  than 800 MiB. `.xdelta` is no new exception in the member rules: a zip holds
+  only the files `mod.toml` names, and only this kind's `patch` key takes one.
+- **A new state, `needs-disc`**: the language is held and the source list
+  (`<home>\sources.toml`) has no disc of `build`. `needs` is the disc's name
+  and `problem` the sentence, so the launcher as it is today shows the
+  sentence; group C gives it its own row text. The build step skips such a mod
+  with a line, as it skips a mod whose language is not held.
+- **The build step** calls `disc_patch_build.build(home, cache, layer, the
+  mod's folder, its row, the manifest's source word, say)`, which returns the
+  manifest rows and raises `disc_patch_build.Bad`. That tool is group B's. Until
+  it exists a `disc-patch` mod's build stops with "this release does not have
+  it", and `make_release.py` refuses to pack (an import it cannot place): no
+  release is cut between A and B.
+- **Checked:** `mods.py selftest`, 0 failures, with 12 new zips (one accepted,
+  eleven refusals, the patch made by `vcdiff.make_patch` over bytes of its
+  own) and the cycle: added with no en-US text (`needs`), with the text and no
+  disc (`needs-disc`, the step's skip line), with the disc listed
+  (`not-built`), the row in `mods.toml`, the build refused by name where the
+  builder is not there, removed. The author's real patch in a zip with the two
+  real hashes: `mods.py check` accepts it (the zip is 1,016,112 bytes, in the
+  scratch root, never in the repository).
+- **Not done:** DIV-0157's amendment waits for the first group that changes
+  what a player gets (B with C). `docs/mods.md` has the kind's section.
 
 ## 6. Acceptance
 
