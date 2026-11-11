@@ -1,7 +1,7 @@
 # The PSX media round: the logo movie and the jingles without ffmpeg
 
-**Status:** IN PROGRESS (staged 2026-11-11 on `psx-media/own-decoders` off
-`main` `8d2d987d`)
+**Status:** DONE (2026-11-11, `psx-media/own-decoders` off `main`
+`8d2d987d`; M1..M4 as one commit each, section 5 the proof)
 
 A PlayStation disc is the most common source of an install
 ([`disc-only-install.md`](disc-only-install.md)). Two of its pieces still need
@@ -123,3 +123,30 @@ One branch, one commit for each unit, signed off (CLAUDE.md rule 7).
   PSNR above 40 dB if the bitstream is read right).
 - The size of the clip files (about 2.6 MB for `PURE` against 4.3 MB for
   its MP3, by arithmetic).
+
+## 5. As run (2026-11-11)
+
+- **M1** (`src/media`): `media_tests` 237,969 checks, 0 failed (also under
+  ASan / UBSan). On the US disc's `CAPCOM30.STR`: 231 of 231 frames, mean
+  PSNR 53.87 dB (lowest 44.65) against ffmpeg's `psxstr` + `mdec` decode;
+  the movie's 576,576 PCM samples and the 11 jingles' 37.8 kHz decode equal
+  `tools/xa.py`'s sample for sample. The i686 build (under Wine) gives the
+  same frames and resampled samples as the host build.
+- **M2** (the importer): a set-up from the US disc with no ffmpeg on the
+  `PATH` writes `base/fmv/CAPCOM30.STR` (1,155 raw sectors, source hash as
+  measured) and 11 clip files; `verify` passes them.
+- **M3** (the engine): both widths build, the imports system DLLs only;
+  `bof3x-fmvdump` gives 231 frames at 640 x 480 and 37,800 Hz stereo, the
+  i686 and x86_64 outputs byte-identical. Every no-game-data gate of
+  `checks.yml` passes.
+- **Under Proton Experimental on a Linux machine** (the release zip built
+  from this branch, an RTX 5090): the importer's bundled Python sets the
+  install up from the US disc with no ffmpeg in the prefix and prints no
+  ffmpeg warning; the game logs `DIV-0214 CAPCOM.AVI is not there;
+  CAPCOM30.STR plays in its place`, 231 frames at 30 a second, PCM 37,800
+  Hz stereo, and goes on to the title; the owner heard the sound. The
+  jingles' in-game play (an inn, a fanfare) was not reached in these runs.
+
+**Not verified:** the jingles heard in a scene; the ten state-hash routes
+(the change is the movie before the loop and the music seam's clip path;
+an MP3 decodes as before); a Windows play by the owner.
