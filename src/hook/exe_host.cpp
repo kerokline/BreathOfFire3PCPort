@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): it loads BOF3.exe as a PE image into this process.
 // The exe host's start-up: Engine_Main, called by bof3x.exe's entry on the
 // process's main thread once the loader is done (docs/state3-design.md
 // section 4, in its order). DllMain has only opened the log and told the

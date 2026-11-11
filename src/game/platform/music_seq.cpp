@@ -3,7 +3,9 @@
 // byte of game data - the self-test builds its own song and bank.
 #include "game/music_seq.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <fstream>
+#include <system_error>
 
 #include <cmath>
 #include <cstdarg>
@@ -21,6 +23,7 @@
 #include "game/music_resume.h"
 #include "game/sound_callees.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace music_seq {
 namespace {
@@ -37,7 +40,7 @@ using sound::g;
 // (0x5A7380, ours in file_io.cpp) retries a failed open with File_CdRoot in
 // front in a 0x50-byte buffer; it skips that retry for a path that would not
 // fit (DIV-0087), so a cache path may be as long as fopen allows.
-constexpr std::size_t kPathMax = MAX_PATH - 1;
+constexpr std::size_t kPathMax = bof3::os::kMaxPath - 1;
 // The longest path built: <root>\base\bgm\bank\ + a 15-character bank name +
 // .DAT (a song's, <root>\base\bgm\ + ten digits + .DAT, is shorter).
 constexpr std::size_t kLongestTail = sizeof "\\base\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1;
@@ -47,8 +50,17 @@ constexpr std::size_t kRootMax = kPathMax - kLongestTail;
 constexpr int kPiece = 1024;
 
 bool FileExists(const char* path) {
-    const DWORD a = GetFileAttributesA(path);
-    return a != INVALID_FILE_ATTRIBUTES && !(a & FILE_ATTRIBUTE_DIRECTORY);
+    return bof3::os::IsFile(path);
+}
+
+// lstrcmpiA's equality for ASCII names: the case of a letter does not count.
+bool SameName(const char* a, const char* b) {
+    for (; *a && *b; ++a, ++b) {
+        const char x = *a >= 'A' && *a <= 'Z' ? static_cast<char>(*a + 32) : *a;
+        const char y = *b >= 'A' && *b <= 'Z' ? static_cast<char>(*b + 32) : *b;
+        if (x != y) return false;
+    }
+    return *a == *b;
 }
 
 struct State {
@@ -137,20 +149,17 @@ void ParseBank(const char* path, const std::vector<std::uint8_t>& bytes, const s
 
 // The whole of `path` by Win32 (start-up only: the cache's check).
 void ReadWhole(const char* path, std::vector<std::uint8_t>* out) {
-    const HANDLE h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h == INVALID_HANDLE_VALUE) bof3::Fatal("DIV-0087: %s does not open (error %lu)", path, GetLastError());
-    LARGE_INTEGER size;
+    std::ifstream h(bof3::os::Path(path), std::ios::binary);
+    if (!h) bof3::Fatal("DIV-0087: %s does not open", path);
+    h.seekg(0, std::ios::end);
+    const long long size = static_cast<long long>(h.tellg());
     // far above any song or bank (a bank's samples fit 0x6B6C0 bytes)
-    constexpr LONGLONG kFileMax = 64ll << 20;
-    if (!GetFileSizeEx(h, &size) || size.QuadPart <= 0 || size.QuadPart > kFileMax) {
-        CloseHandle(h);
-        bof3::Fatal("DIV-0087: %s has %lld bytes", path, static_cast<long long>(size.QuadPart));
-    }
-    out->resize(static_cast<std::size_t>(size.QuadPart));
-    DWORD got = 0;
-    const BOOL ok = ReadFile(h, out->data(), static_cast<DWORD>(out->size()), &got, nullptr);
-    CloseHandle(h);
-    if (!ok || got != out->size()) bof3::Fatal("DIV-0087: %s: read %lu of %zu bytes", path, got, out->size());
+    constexpr long long kFileMax = 64ll << 20;
+    if (!h || size <= 0 || size > kFileMax) bof3::Fatal("DIV-0087: %s has %lld bytes", path, size);
+    h.seekg(0);
+    out->resize(static_cast<std::size_t>(size));
+    h.read(reinterpret_cast<char*>(out->data()), static_cast<std::streamsize>(size));
+    if (static_cast<std::size_t>(h.gcount()) != out->size()) bof3::Fatal("DIV-0087: %s: read %lld of %zu bytes", path, static_cast<long long>(h.gcount()), out->size());
 }
 
 // Every song file the seam could be asked for in one bgm directory (base\bgm
@@ -162,27 +171,22 @@ void ReadWhole(const char* path, std::vector<std::uint8_t>* out) {
 void CheckCache(const char* dir) {
     char pattern[kPathMax + 1];
     std::snprintf(pattern, sizeof pattern, "%s\\*.DAT", dir);
-    WIN32_FIND_DATAA found;
-    const HANDLE find = FindFirstFileA(pattern, &found);
-    if (find == INVALID_HANDLE_VALUE) {
-        const DWORD e = GetLastError();
-        if (e != ERROR_FILE_NOT_FOUND) bof3::Fatal("DIV-0087: cannot list %s (error %lu)", pattern, e);
-        bof3::Log("DIV-0087    %s holds no song", dir);
-        return;
-    }
+    // A folder that is not there cannot be listed; one with no .DAT holds no song.
+    std::error_code dir_ec;
+    if (!std::filesystem::is_directory(bof3::os::Path(dir), dir_ec)) bof3::Fatal("DIV-0087: cannot list %s", pattern);
     std::vector<std::string> banks;
     std::vector<std::uint8_t> bytes;
     unsigned songs = 0;
-    do {
-        if (found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-        const char* name = found.cFileName;
+    const std::size_t listed = bof3::os::WalkDirectory(pattern, [&](const bof3::os::DirEntry& found) {
+        if (found.is_directory) return true;
+        const char* name = found.name.c_str();
         std::size_t digits = 0;
         while (name[digits] >= '0' && name[digits] <= '9') ++digits;
-        if (digits == 0 || digits > 9) continue;
+        if (digits == 0 || digits > 9) return true;
         const unsigned track = static_cast<unsigned>(std::strtoul(name, nullptr, 10));
         char expect[16];
         std::snprintf(expect, sizeof expect, "%03u.DAT", track);
-        if (lstrcmpiA(expect, name) != 0) continue;  // not a name LoadFile builds
+        if (!SameName(expect, name)) return true;  // not a name LoadFile builds
         char path[kPathMax + 1];
         std::snprintf(path, sizeof path, "%s\\%s", dir, expect);
         ReadWhole(path, &bytes);
@@ -194,7 +198,7 @@ void CheckCache(const char* dir) {
         ++songs;
         bool seen = false;
         for (const std::string& b : banks) seen = seen || b == song.bank;
-        if (seen) continue;
+        if (seen) return true;
         char bank_path[kPathMax + 1];
         std::snprintf(bank_path, sizeof bank_path, "%s\\bank\\%s.DAT", dir, song.bank.c_str());
         if (!FileExists(bank_path)) bof3::Fatal("DIV-0087: %s wants %s, which is not there", path, bank_path);
@@ -202,10 +206,12 @@ void CheckCache(const char* dir) {
         psx::Bank bank;
         ParseBank(bank_path, bytes, song.bank, &bank);
         banks.push_back(song.bank);
-    } while (FindNextFileA(find, &found));
-    const DWORD e = GetLastError();
-    FindClose(find);
-    if (e != ERROR_NO_MORE_FILES) bof3::Fatal("DIV-0087: listing %s stopped (error %lu)", pattern, e);
+        return true;
+    });
+    if (listed == 0) {
+        bof3::Log("DIV-0087    %s holds no song", dir);
+        return;
+    }
     bof3::Log("DIV-0087    the cache checked: %s, %u songs and %u banks parse", dir, songs,
               static_cast<unsigned>(banks.size()));
 }
@@ -407,8 +413,7 @@ namespace {
 std::vector<std::string> SourceDirs(const char* root, bool psp_base, bool psp_first, const char* part) {
     const bool bgm = std::strcmp(part, "bgm") == 0;
     const auto is_dir = [](const std::string& d) {
-        const DWORD a = GetFileAttributesA(d.c_str());
-        return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
+        return bof3::os::IsDirectory(d.c_str());
     };
     std::vector<std::string> psx, psp;
     const std::string base = std::string(root) + "\\base\\" + part;
@@ -435,7 +440,7 @@ const char* SourceName(char source) {
 
 void Arm() {
     char mode[8];
-    const DWORD m = GetEnvironmentVariableA("BOF3X_MUSIC", mode, sizeof mode);
+    const std::uint32_t m = bof3::os::GetEnv("BOF3X_MUSIC", mode, sizeof mode);
     // DIV-0150: psx, psp, pc choose a source; seq and mp3 (DIV-0087) as before
     if (m >= sizeof mode || (m != 0 && std::strcmp(mode, "seq") != 0 && std::strcmp(mode, "mp3") != 0 &&
                              std::strcmp(mode, "psx") != 0 && std::strcmp(mode, "psp") != 0 &&
@@ -444,8 +449,8 @@ void Arm() {
     const char source = m == 0 ? 0 : std::strcmp(mode, "psx") == 0 ? 'x' : std::strcmp(mode, "psp") == 0 ? 'p'
                                                                    : std::strcmp(mode, "pc") == 0    ? 'c'
                                                                                                       : 0;
-    char root[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
+    char root[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
     if (n >= sizeof root) bof3::Fatal("DIV-0087: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
     if (n == 0) {
         bof3::Log("DIV-0087    no cache (BOF3X_CACHE unset): every track plays its MP3");
@@ -453,17 +458,15 @@ void Arm() {
     }
     std::size_t len = n;
     while (len > 1 && (root[len - 1] == '\\' || root[len - 1] == '/')) root[--len] = 0;
-    const DWORD a = GetFileAttributesA(root);
-    if (a == INVALID_FILE_ATTRIBUTES || !(a & FILE_ATTRIBUTE_DIRECTORY))
+    if (!bof3::os::IsDirectory(root))
         bof3::Fatal("DIV-0087: BOF3X_CACHE=%s is not a directory", root);
     if (len > kRootMax)
         bof3::Fatal("DIV-0087: BOF3X_CACHE=%s is %u characters; its longest path (a bank) must stay within MAX_PATH, "
                     "so at most %u",
                     root, static_cast<unsigned>(len), static_cast<unsigned>(kRootMax));
-    char bgm[MAX_PATH + 16];
+    char bgm[bof3::os::kMaxPath + 16];
     std::snprintf(bgm, sizeof bgm, "%s\\base\\bgm", root);
-    const DWORD b = GetFileAttributesA(bgm);
-    const bool base = b != INVALID_FILE_ATTRIBUTES && (b & FILE_ATTRIBUTE_DIRECTORY);
+    const bool base = bof3::os::IsDirectory(bgm);
     // DIV-0109: the layers BOF3X_OPT names with a bgm part (DatLoad_Inject read
     // and checked them; dat_cache answers for the same root, BOF3X_CACHE)
     std::vector<std::string> layers;

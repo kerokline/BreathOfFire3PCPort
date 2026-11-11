@@ -7,7 +7,6 @@
 // large local: these methods run on whatever stack the game calls them from.
 #include "render/render_shim.h"
 
-#include <windows.h>
 
 #include <cstddef>
 #include <cstdlib>
@@ -17,6 +16,7 @@
 #include "game/pillarbox.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
+#include "os/os.h"
 
 namespace render {
 namespace {
@@ -47,11 +47,8 @@ constexpr U kFxFillColor = 0x50;
 // DDPF_*
 constexpr U kPfRgb = 0x40;
 
-void* Heap() { return GetProcessHeap(); }
-void* Alloc(U bytes) { return HeapAlloc(Heap(), HEAP_ZERO_MEMORY, bytes); }
-void Free(void* p) {
-    if (p) HeapFree(Heap(), 0, p);
-}
+void* Alloc(U bytes) { return std::calloc(1, bytes); }
+void Free(void* p) { std::free(p); }
 
 U Long(const void* p) {
     U v;
@@ -316,7 +313,7 @@ U g_n_walks;
 
 bool FrameHashOn() {
     static int on = -1;
-    if (on < 0) on = GetEnvironmentVariableA("BOF3X_FRAMEHASH", nullptr, 0) > 0 ? 1 : 0;
+    if (on < 0) on = bof3::os::GetEnv("BOF3X_FRAMEHASH", nullptr, 0) > 0 ? 1 : 0;
     return on != 0;
 }
 
@@ -840,7 +837,7 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
         static U want = 0xFFFFFFFF, logged = 0;
         if (want == 0xFFFFFFFF) {
             char text[16];
-            want = GetEnvironmentVariableA("BOF3X_DRAWLOG_RGB", text, sizeof text) > 0 ? std::strtoul(text, nullptr, 16) & 0xFFFFFF : 0x1000000;
+            want = bof3::os::GetEnv("BOF3X_DRAWLOG_RGB", text, sizeof text) > 0 ? std::strtoul(text, nullptr, 16) & 0xFFFFFF : 0x1000000;
         }
         if (want < 0x1000000 && logged < 64) {
             for (U i = 0; i < count; ++i) {

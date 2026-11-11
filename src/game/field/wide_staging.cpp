@@ -2,7 +2,6 @@
 // of the ultrawide round, armed only when the view is wide.
 #include "game/wide_staging.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -17,6 +16,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace wide_staging {
 
@@ -705,7 +705,7 @@ void Check(bool ok, const char* what, int a = 0, int b = 0) {
 
 unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned hi) {
     char text[32];
-    const DWORD n = GetEnvironmentVariableA(name, text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0) return fallback;
     if (n >= sizeof text) bof3::Fatal("%s: too long", name);
     char* end = nullptr;

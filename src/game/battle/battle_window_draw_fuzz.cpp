@@ -27,7 +27,6 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include <windows.h>
 
 namespace battle_window_draw {
 namespace {

@@ -32,7 +32,6 @@
 // slide at MasterWin_SlideOut (bound 0x59C136, read as widescreen.cpp holds it).
 #include "game/rest_2h.h"
 
-#include <windows.h>
 #define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
 

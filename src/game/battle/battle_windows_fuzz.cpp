@@ -33,7 +33,7 @@
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include <windows.h>
+#include "os/os.h"
 
 namespace battle_windows {
 namespace {
@@ -743,7 +743,7 @@ void SelfTest() {
     const unsigned short saved_cw = GetControlWord();
     char trace_env[16] = {};
     unsigned trace_round = ~0u;
-    if (GetEnvironmentVariableA("BOF3X_BW_TRACE", trace_env, sizeof trace_env) != 0) {
+    if (bof3::os::GetEnv("BOF3X_BW_TRACE", trace_env, sizeof trace_env) != 0) {
         trace_round = 0;
         for (const char* p = trace_env; *p >= '0' && *p <= '9'; ++p) trace_round = trace_round * 10 + (*p - '0');
     }

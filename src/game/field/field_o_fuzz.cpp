@@ -34,6 +34,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 #include <windows.h>
 
@@ -526,7 +527,7 @@ void SelfTest() {
     unsigned n = kCount;
     for (unsigned k = 0; k < kCount; ++k) g_real[k] = k;
     char only[64];
-    const DWORD got = GetEnvironmentVariableA("BOF3X_FO_ONLY", only, sizeof only);
+    const DWORD got = bof3::os::GetEnv("BOF3X_FO_ONLY", only, sizeof only);
     if (got > 0 && got < sizeof only) {
         unsigned k = 0;
         while (k < kCount && std::strcmp(kClones[k].name, only) != 0) ++k;
@@ -543,7 +544,7 @@ void SelfTest() {
     g.args = Args;
     g.field = true;
     char rounds[16];   // BOF3X_FO_ROUNDS=n: the rounds per function (a control's re-run)
-    const DWORD rn = GetEnvironmentVariableA("BOF3X_FO_ROUNDS", rounds, sizeof rounds);
+    const DWORD rn = bof3::os::GetEnv("BOF3X_FO_ROUNDS", rounds, sizeof rounds);
     if (rn > 0 && rn < sizeof rounds) g.rounds = static_cast<unsigned>(std::strtoul(rounds, nullptr, 10));
     sh::Run(g);
 }

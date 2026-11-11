@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): it is the DLL entry point.
 // bof3x.dll entry point, in either host (hook/host.h).
 //
 // Hosted: loaded into BOF3.exe by bof3x-launcher --host bof3 while the

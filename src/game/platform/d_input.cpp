@@ -5,7 +5,6 @@
 #include <cstring>
 #include <dinput.h>
 #include <vector>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
@@ -25,6 +24,7 @@
 #include "hook/log.h"
 #include "input/bindings.h"
 #include "input/pad_sdl.h"
+#include "os/os.h"
 
 namespace {
 
@@ -75,7 +75,7 @@ void PadLogLine(const char* line) { bof3::Log("%s", line); }
 
 Layout LayoutFromEnv(Layout fallback) {
     char v[32] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PAD_LAYOUT", v, sizeof v);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PAD_LAYOUT", v, sizeof v);
     if (n == 0 || n >= sizeof v) return fallback;
     const int l = input::LayoutFromName(v);
     if (l < 0) {
@@ -92,7 +92,7 @@ void LoadPadMap() {
     pad_read::g_pad_map = defaults.pad;
     Layout layout = defaults.layout;
     char text[2048] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PAD", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PAD", text, sizeof text);
     if (n > 0 && n < sizeof text) {
         std::vector<input::PadBinding> pad;
         const int understood = input::ParsePad(text, ',', pad, layout);
@@ -118,7 +118,7 @@ unsigned PadWord() {
 // stands as the original left it.
 void LoadKeyTable() {
     char text[4096] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_KEYS", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_KEYS", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) {
         bof3::Log("pad: BOF3X_KEYS too long (%lu); the game's own table", static_cast<unsigned long>(n));

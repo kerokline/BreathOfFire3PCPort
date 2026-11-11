@@ -194,7 +194,7 @@ set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # dinput and dxguid: the SDK's c_dfDIKeyboard and its GUID_Key, static data
 # (src/game/rdata_consts.cpp); no import of dinput.dll, which pad_read.cpp
 # loads itself.
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static bof3x_os)
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm ole32 windowscodecs dinput dxguid SDL3::SDL3-static bof3x_os)
 # A fixed load address (the owner, 2026-10-19; docs/quicksave.md 4a): a
 # quicksave's task stacks hold return addresses into this DLL and the span
 # holds pointers into it, so a quick-load is good only where the DLL sat at
@@ -312,7 +312,7 @@ function(bof3x_add_launcher target output hosted)
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-  target_link_libraries(${target} PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static bof3x_os)
+  target_link_libraries(${target} PRIVATE comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static bof3x_os)
   # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
   # (launcher.cpp) writes to the terminal it was started from.
   target_link_options(${target} PRIVATE -municode -mwindows)

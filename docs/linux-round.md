@@ -460,6 +460,53 @@ the next.
 anything a player could tell apart (the second backend, the SDL window),
 each with a ledger entry if it is one.
 
+### LB1 as run: the operating-system seam (`src/os`)
+
+`src/os` is a subsystem: one header per service in `bof3::os`, a backend per
+system in `src/os/win32` and `src/os/posix` (CMake picks the folder), built as
+the static library `bof3x_os`. `os/os.h` only includes the others. No
+platform `#if` appears outside the backends; inside them the only one beyond
+the folder choice is the `BOF3X_OS_SDL` switch of the POSIX message box. The C++ standard stays C++20, and
+where the standard library covers a service the engine uses it; `bof3::os` holds
+only what it cannot do.
+
+| Service | Where | Why |
+|---|---|---|
+| Memory at a fixed address: reserve, commit, protect, release, query, flush | `os/memory.h` | The standard library cannot place pages. |
+| Clocks | `os/clock.h` | `game_clock.cpp` (DIV-0022, DIV-0047) keeps `GetTickCount64`'s 15.6 ms step, `GetTickCount`'s wrap and QPC's frequency; `steady_clock` changes all three. |
+| Environment, own path, last error, thread and process numbers | `os/env.h` | `std::getenv` returns the ANSI code page on Windows, and 113 sites rely on `GetEnvironmentVariable`'s size contract. |
+| UTF-8 path, the game's `DAT\AREA*.DAT` walk, case-insensitive name compare | `os/file.h` | Portable code over `std::filesystem`, no backend. |
+| UTF-8 and `wchar_t` | `os/text.h` | Inline over `std::filesystem::path`. |
+| The fatal message box | `os/dialog.h` | `MessageBoxA` on Windows (DIV-0039 is unchanged); stderr and SDL3 on POSIX. |
+| SHA-256 | `common/sha256.h` | Our own routine replaces BCrypt; nothing per system. |
+
+Dropped because the standard library covers them: files (`std::ifstream`,
+`std::ofstream`, `std::filesystem`), threads, mutexes and events (`std::thread`,
+`std::mutex`; no engine call site used them), the heap (`std::malloc`,
+`std::calloc`, `std::free`).
+
+**Windows-only, by design:** the launcher, `write_watch`, `gapwatch`, `calltrace`
+(harness-only watchers), the PE exe host (`exe_host.cpp`, `exe_icon.cpp`,
+`dllmain.cpp`, and the PE-header readers `host.cpp`, `detour.cpp`,
+`exe_image.cpp`), and `MiniDumpWriteDump` in `crash.cpp`. They need the PE
+format or a Windows API with no portable form.
+
+**The gate.** `python tools/os_census.py --boundary` (CI job `os-host`) fails
+when a live file outside `src/os` and `src/launcher` includes `<windows.h>` or
+calls a Win32 name that `bof3::os` replaces. `BOUNDARY_WAITING` in that file
+lists the files that still do, each with the unit that removes them (`W`,
+`L2`, `L3`). The list may only shrink; an entry that no longer breaks the rule
+fails the gate.
+
+**For L2 and L3:** the window (`window.h`), input (`input.h`), fibers
+(`context.h`) and the fault catcher (`fault.h`) belong in this same subsystem,
+one header each with a backend in `win32/` and `posix/`.
+
+**Not done in L1:** `log.cpp` and `snapshot.cpp` still call the system directly
+(the log writer thread, files and fibers); they are listed under L3 because the
+log flush runs on the crash path and the snapshot owns the fibers. The LP64
+`static_assert` failures LA found are not L1's.
+
 ### Stage LC - link and run on Linux
 
 - A CMake preset for the ELF, clang, SDL3 from source as today.

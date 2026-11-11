@@ -1,6 +1,5 @@
 #include "game/event_script.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -13,6 +12,7 @@
 #include "game/wide_staging.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // The event script interpreter and the flag helpers - see docs/event-script.md
 // for each function, its PSX twin and the fuzz.
@@ -150,7 +150,7 @@ void MountainPasses_Arm() {
 // without the cell.
 void DesertFaerie_Arm() {
     char v[8] = "0";
-    const DWORD n = GetEnvironmentVariableA("BOF3X_DESERT_FAERIE", v, sizeof v);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_DESERT_FAERIE", v, sizeof v);
     if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
         bof3::Fatal("BOF3X_DESERT_FAERIE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
     g_desert_faerie = v[0] == '1';

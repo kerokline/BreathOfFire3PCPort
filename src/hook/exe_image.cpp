@@ -15,6 +15,7 @@
 #include "hook/exe_layout.h"
 #include "hook/exe_own.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -115,13 +116,13 @@ bool g_disc_mapped = false;
 // outside the ANSI code page reads whole (docs/disc-only-round-review.md 2).
 std::string ImageDir() {
     wchar_t w[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", w, MAX_PATH);
+    const DWORD n = bof3::os::GetEnvW(L"BOF3X_EXEIMAGE", w, MAX_PATH);
     if (n == 0) return std::string();
     if (n >= MAX_PATH) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)MAX_PATH);
     const int len = WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), nullptr, 0, nullptr, nullptr);
     std::string out(static_cast<std::size_t>(len > 0 ? len : 0), '\0');
     if (len <= 0 || WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), &out[0], len, nullptr, nullptr) != len)
-        Fatal("BOF3X_EXEIMAGE: the path does not convert to UTF-8 (error %lu)", GetLastError());
+        Fatal("BOF3X_EXEIMAGE: the path does not convert to UTF-8 (error %lu)", static_cast<unsigned long>(bof3::os::LastError()));
     return out;
 }
 
@@ -207,7 +208,7 @@ enum class Strict { kAccepted, kLenient, kEvery };
 
 Strict StrictMode() {
     char v[8] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_EXEIMAGE_STRICT", v, sizeof v);
+    const DWORD n = bof3::os::GetEnv("BOF3X_EXEIMAGE_STRICT", v, sizeof v);
     if (n == 0) return Strict::kAccepted;
     if (n < sizeof v && std::strcmp(v, "0") == 0) return Strict::kLenient;
     if (n < sizeof v && std::strcmp(v, "1") == 0) return Strict::kEvery;
@@ -579,7 +580,7 @@ void ExeImage_Check() {
 }
 
 bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end) {
-    const bool selftest = GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0;
+    const bool selftest = bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0;
     const Strict mode = StrictMode();   // read on every install, so that a misspelt value stops a PC install too
     const std::string dir = ImageDir();
     if (dir.empty()) {
@@ -1010,13 +1011,13 @@ bool ReadBytes(const std::string& path, std::vector<unsigned char>* out) {
 
 void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
     char opt[16 * 24];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", opt, sizeof opt);
+    const DWORD n = bof3::os::GetEnv("BOF3X_OPT", opt, sizeof opt);
     if (n == 0 || n >= sizeof opt) return;   // none, or too long: ReadOptLayers refuses it at injection
     char data_mode[4];
-    const DWORD m = GetEnvironmentVariableA("BOF3X_CACHE_DATA", data_mode, sizeof data_mode);
+    const DWORD m = bof3::os::GetEnv("BOF3X_CACHE_DATA", data_mode, sizeof data_mode);
     if (m == 1 && data_mode[0] == '0') return;   // the cache for the music only (DIV-0089)
     char root[MAX_PATH];
-    const DWORD r = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
+    const DWORD r = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
     if (r == 0 || r >= sizeof root) return;
     std::string base(root, r);
     while (base.size() > 1 && (base.back() == '\\' || base.back() == '/')) base.pop_back();

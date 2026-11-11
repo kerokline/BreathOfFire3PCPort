@@ -17,7 +17,6 @@
 // move Sprite_Current or Field_State, which the callers read again.
 //
 // Nothing here reaches the CRT of BOF3.exe: Rand is a stand-in like the rest.
-#include <windows.h>
 
 #include <array>
 #include <cstdint>
@@ -32,6 +31,7 @@
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace event_ops {
 namespace {
@@ -771,7 +771,7 @@ void MakeClones() {
         auto* code = static_cast<unsigned char*>(copy);
         if (c.entries) move_script::Relocate(copy, c.base, c.size, {c.disp, c.table, c.entries});
         if (c.chapter) PatchDword(code, c.chapter, Scenario_Hooks_addr, Address(g_stubs.chapter_hooks), "chapter table operand", c);
-        FlushInstructionCache(GetCurrentProcess(), copy, c.size);
+        bof3::os::FlushCode(copy, c.size);
         g_theirs[k] = copy;
     }
 }
@@ -1234,7 +1234,7 @@ void SelfTest() {
     g = g_stubs;
     char only_name[64] = {};
     unsigned only = ~0u;
-    if (GetEnvironmentVariableA("BOF3X_EVENT_OPS_ONLY", only_name, sizeof only_name))
+    if (bof3::os::GetEnv("BOF3X_EVENT_OPS_ONLY", only_name, sizeof only_name))
         for (unsigned k = 0; k < kFns; ++k)
             if (std::strcmp(kClones[k].name, only_name) == 0) only = k;
     RunTests(10000, only);

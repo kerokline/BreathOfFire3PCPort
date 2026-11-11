@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): a harness-only call tracer over the Windows exception machinery.
 #include "hook/calltrace.h"
 
 #include <windows.h>

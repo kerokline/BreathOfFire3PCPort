@@ -1,12 +1,13 @@
+#include <cstdint>
 #include "game/lang_layout.h"
+#include "os/os.h"
 
-#include <windows.h>
 
 #include <cstring>
 
 bool Lang_FullWidth() {
     char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n == 0 || n >= sizeof lang) return false;
     // The primary subtag of a BCP 47 tag: `ja` of `ja-JP`, `zh` of `zh-CN`.
     // A bare `ja` is retired (DIV-0005) and stops the game at injection
@@ -17,14 +18,14 @@ bool Lang_FullWidth() {
 
 bool Lang_Latin() {
     char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return false;
     return !Lang_FullWidth();
 }
 
 bool Lang_Japanese() {
     char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
     if (n == 0 || n >= sizeof lang) return false;
     const char* dash = std::strchr(lang, '-');
     const size_t primary = dash ? static_cast<size_t>(dash - lang) : std::strlen(lang);

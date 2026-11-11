@@ -41,7 +41,6 @@
 // two calls re-aimed) and Manillo's in effect_1g.cpp (ours).
 #include "game/yes_no_layout.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>

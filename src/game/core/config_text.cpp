@@ -37,7 +37,6 @@
 // of the width. The width arithmetic is the original's.
 #include "game/config_text.h"
 
-#include <windows.h>
 
 #include <cstring>
 

@@ -17,7 +17,8 @@
 #include "game/menu_verbs.h"
 #include "hook/exe_host.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <system_error>
 
 #include <cstdint>
 #include <cstdio>
@@ -39,6 +40,7 @@
 #include "hook/exe_image.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace {
 
@@ -126,7 +128,10 @@ namespace dat_load { bool g_opt_cached[kOptMax]; }
 // original makes - unless the DIV-0089 self-test stands them in, as it does
 // the chunks' handler.
 namespace dat_load { dat_cache::Io g_io = dat_cache::GameIo(); }  namespace {
-bool InstallHas(const char* path) { return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES; }
+bool InstallHas(const char* path) {
+    std::error_code ec;
+    return std::filesystem::exists(bof3::os::Path(path), ec);
+}
 }  namespace dat_load { bool (*g_install_has)(const char*) = InstallHas; }  namespace {
 void TakeChunk(void* ctx, const ChunkHeader& h, std::uint8_t* payload);
 }  namespace dat_load { dat_cache::ChunkFn g_take = TakeChunk; }
@@ -136,7 +141,7 @@ void TakeChunk(void* ctx, const ChunkHeader& h, std::uint8_t* payload);
 // the layer, the cache's file or none; otherwise `install`, the install's
 // DAT\<layer>.<name>, when it exists - the original's test.
 namespace dat_load { void WalkOverlay(const char* kind, const char* layer, bool cached, const char* name, const char* install) {
-    static char cache[MAX_PATH];  // static: the 16 KB coroutine stack
+    static char cache[bof3::os::kMaxPath];  // static: the 16 KB coroutine stack
     const bool armed = dat_cache::Armed();
     bool has = false;
     if (armed && cached) {
@@ -173,17 +178,15 @@ namespace dat_load { const void* g_datlog_caller; }
 namespace dat_load { int g_datlog_index = -1; }
 
 namespace dat_load { void DatLog(const char* from, const char* path) {
-    static char module[MAX_PATH];  // static: the 16 KB coroutine stack
+    static std::string module;  // static: the 16 KB coroutine stack
     const char* base = "?";
     auto at = reinterpret_cast<std::uintptr_t>(dat_load::g_datlog_caller);
     std::uintptr_t off = at;
-    HMODULE m = nullptr;
-    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           static_cast<LPCSTR>(dat_load::g_datlog_caller), &m) &&
-        GetModuleFileNameA(m, module, sizeof module)) {
-        const char* slash = std::strrchr(module, '\\');
-        base = slash ? slash + 1 : module;
-        off = at - reinterpret_cast<std::uintptr_t>(m);
+    std::uintptr_t m = 0;
+    if (bof3::os::ModulePath(dat_load::g_datlog_caller, &module, &m)) {
+        const std::size_t slash = module.find_last_of("\\/");
+        base = slash == std::string::npos ? module.c_str() : module.c_str() + slash + 1;
+        off = at - m;
     }
     bof3::Log("datlog      f%u area %u mode %u file 0x%03X %s %s caller 0x%08X (%s+0x%X)",
               static_cast<unsigned>(Frame_Counter), static_cast<unsigned>(Game_AreaNumber),
@@ -199,25 +202,22 @@ namespace {
 bool g_opt_banks;
 
 bool LayerFilesHaveBank(const char* pattern, const char* dir) {
-    WIN32_FIND_DATAA fd;
-    const HANDLE h = FindFirstFileA(pattern, &fd);
-    if (h == INVALID_HANDLE_VALUE) return false;
     bool bank = false;
     const dat_cache::Io io = dat_cache::GameIo();
-    do {
-        char path[MAX_PATH];
-        if (std::snprintf(path, sizeof path, "%s%s", dir, fd.cFileName) >= static_cast<int>(sizeof path)) continue;
+    bof3::os::WalkDirectory(pattern, [&](const bof3::os::DirEntry& fd) {
+        char path[bof3::os::kMaxPath];
+        if (std::snprintf(path, sizeof path, "%s%s", dir, fd.name.c_str()) >= static_cast<int>(sizeof path)) return true;
         std::int8_t kinds[256];
         const int n = io.count(path, kinds, 256);
         for (int k = 0; k < n && !bank; ++k) bank = kinds[k] == 2;
-    } while (!bank && FindNextFileA(h, &fd));
-    FindClose(h);
+        return !bank;
+    });
     return bank;
 }
 
 bool OptLayersHaveBanks() {
     for (int i = 0; i < dat_load::g_opt_count; ++i) {
-        char pattern[MAX_PATH], dir[MAX_PATH];
+        char pattern[bof3::os::kMaxPath], dir[bof3::os::kMaxPath];
         if (dat_load::g_opt_cached[i] && dat_cache::Root()) {
             std::snprintf(dir, sizeof dir, "%s\\opt\\%s\\dat\\", dat_cache::Root(), dat_load::g_opt[i]);
             std::snprintf(pattern, sizeof pattern, "%s*.DAT", dir);
@@ -540,8 +540,8 @@ namespace {
 // BOF3X_OPT set by hand.
 void ReadOptLayers() {
     char list[kOptMax * kOptName];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", list, sizeof list);
-    if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_OPT", list, sizeof list);
+    if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", static_cast<unsigned long>(n), (unsigned)sizeof list - 1);
     if (n == 0 || std::strcmp(list, "original") == 0 || std::strcmp(list, "none") == 0) return;
     for (char* p = list;;) {
         char* end = std::strchr(p, ',');
@@ -559,15 +559,13 @@ void ReadOptLayers() {
             if (std::strcmp(dat_load::g_opt[i], name) == 0) bof3::Fatal("DIV-0086: BOF3X_OPT names %s twice", name);
         char pattern[kOptPath];
         Crt_sprintf(pattern, "DAT\\%s.*.DAT", name);
-        WIN32_FIND_DATAA fd;
-        const HANDLE h = FindFirstFileA(pattern, &fd);
+        const bool found = bof3::os::WalkDirectory(pattern, [](const bof3::os::DirEntry&) { return false; }) != 0;
         // DIV-0109..0111 (docs/launcher-suites.md 9): a layer may be only songs, sound
         // files or .data ranges, which the cache alone holds (importer.py
         // install refuses them)
         const bool parts = dat_cache::HasLayerPart(name, "bgm") || dat_cache::HasLayerPart(name, "snd") ||
                            dat_cache::HasLayerPart(name, "exe");
-        if (h != INVALID_HANDLE_VALUE) FindClose(h);
-        else if (!dat_cache::HasLayer("opt", name) && !parts)  // DIV-0089: or the cache's opt\<layer>\dat
+        if (!found && !dat_cache::HasLayer("opt", name) && !parts)  // DIV-0089: or the cache's opt\<layer>\dat
             bof3::Fatal("DIV-0086: BOF3X_OPT names %s, but there is no %s (tools/importer.py install --opt %s)%s%s%s",
                         name, pattern, name, dat_cache::Root() ? " and no " : "",
                         dat_cache::Root() ? dat_cache::Root() : "",
@@ -600,7 +598,7 @@ void ReadOptLayers() {
 // refused rather than ignored.
 void RetiredAreaWallsSwitch() {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_AREA4_WALLS", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_AREA4_WALLS", text, sizeof text);
     if (n == 0) return;
     if (n == 1 && text[0] == '0') {
         for (int i = 0; i < dat_load::g_opt_count; ++i)
@@ -647,7 +645,7 @@ void CacheSelfTest() {
         const char* n = Dat_FileNames[i];
         if (!n || std::strlen(n) > 12) continue;
         if (index < 0) index = static_cast<int>(i);
-        else if (lstrcmpiA(n, Dat_FileNames[index]) != 0) index2 = static_cast<int>(i);
+        else if (!bof3::os::SameName(n, Dat_FileNames[index])) index2 = static_cast<int>(i);
     }
     if (index2 < 0) bof3::Fatal("DIV-0089 self-test: Dat_FileNames has no two names");
     const std::string name = Dat_FileNames[index].Native(), name2 = Dat_FileNames[index2].Native();
@@ -700,7 +698,7 @@ void CacheSelfTest() {
     g_walked = &walked;
     const auto opened_any = [&](const std::string& p) {
         for (const std::string& o : opened)
-            if (lstrcmpiA(o.c_str(), p.c_str()) == 0) return true;
+            if (bof3::os::SameName(o.c_str(), p.c_str())) return true;
         return false;
     };
 
@@ -770,10 +768,7 @@ void RefuseOriginalWithoutChinese() {
     for (const char* tag : bof3x::kLanguageTags) {
         char pattern[32];
         std::snprintf(pattern, sizeof pattern, "DAT\\%s.*.DAT", tag);
-        WIN32_FIND_DATAA fd;
-        const HANDLE h = FindFirstFileA(pattern, &fd);
-        const bool installed = h != INVALID_HANDLE_VALUE;
-        if (installed) FindClose(h);
+        const bool installed = bof3::os::WalkDirectory(pattern, [](const bof3::os::DirEntry&) { return false; }) != 0;
         if (!installed && !dat_cache::HasLayer("loc", tag)) continue;
         if (!held.empty()) held += ", ";
         held += tag;
@@ -794,7 +789,7 @@ void DatLoad_Inject() {
         bof3::ExeImage_OptSelfTest();  // DIV-0111's reader (the exe host lays it; this tests it on synthetic files)
     }
     dat_cache::Configure();  // DIV-0089: before the layers are read, whose test it answers too
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", dat_load::g_lang, sizeof dat_load::g_lang);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LANG", dat_load::g_lang, sizeof dat_load::g_lang);
     if (n == 0 || n >= sizeof dat_load::g_lang || std::strcmp(dat_load::g_lang, "original") == 0) dat_load::g_lang[0] = 0;
     // The bare codes of before 2026-10-08 are retired, not read (DIV-0005):
     // DAT\en.* is no overlay this project builds any more.
@@ -805,7 +800,7 @@ void DatLoad_Inject() {
         // "preset="), logged once beside the language. Read only to be logged:
         // the launcher has already applied it, through BOF3X_OFF and the others.
         char preset[32];
-        const DWORD pn = GetEnvironmentVariableA("BOF3X_PRESET", preset, sizeof preset);
+        const std::uint32_t pn = bof3::os::GetEnv("BOF3X_PRESET", preset, sizeof preset);
         bof3::Log("preset      %s (BOF3X_PRESET), language %s",
                   pn == 0 ? "none named (not started by the launcher)" : pn >= sizeof preset ? "(too long)" : preset,
                   dat_load::g_lang[0] ? dat_load::g_lang : "original");
@@ -835,7 +830,7 @@ void DatLoad_Inject() {
     }
     RetiredAreaWallsSwitch();
     char datlog[4];
-    const DWORD dn = GetEnvironmentVariableA("BOF3X_DATLOG", datlog, sizeof datlog);
+    const std::uint32_t dn = bof3::os::GetEnv("BOF3X_DATLOG", datlog, sizeof datlog);
     dat_load::g_datlog = dn > 0 && dn < sizeof datlog && std::strcmp(datlog, "0") != 0;
     if (dat_load::g_datlog) bof3::Log("datlog      BOF3X_DATLOG: a line per file LoadDatFile walks");
     {

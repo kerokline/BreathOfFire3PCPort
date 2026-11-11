@@ -30,6 +30,7 @@
 #include "hook/log.h"
 #include "input/sigma.h"
 #include "version.gen.h"
+#include "os/os.h"
 
 namespace bof3 {
 
@@ -221,22 +222,13 @@ Span CurrentSpan() {
     return {image, {items, draw_pool_room::kBytes}};
 }
 
-bool Writable(DWORD protect) {
-    return (protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0;
-}
-bool Readable(DWORD protect) {
-    return !(protect & (PAGE_GUARD | PAGE_NOACCESS)) &&
-           (protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
-                       PAGE_EXECUTE_WRITECOPY)) != 0;
-}
-
 // Every page of [base, base + bytes) committed and readable.
 bool Committed(U base, U bytes) {
     for (U at = base; at < base + bytes;) {
-        MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery(At(at), &mbi, sizeof mbi) == 0) return false;
-        if (mbi.State != MEM_COMMIT || !Readable(mbi.Protect)) return false;
-        at = Va(mbi.BaseAddress) + static_cast<U>(mbi.RegionSize);
+        os::MemInfo mbi;
+        if (!os::MemQuery(At(at), &mbi)) return false;
+        if (mbi.state != os::MemState::Committed || !mbi.readable) return false;
+        at = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
     }
     return true;
 }
@@ -246,17 +238,17 @@ bool Committed(U base, U bytes) {
 // writable a page at a time and back).
 void WriteRange(U base, const unsigned char* from, U bytes) {
     for (U at = base; at < base + bytes;) {
-        MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery(At(at), &mbi, sizeof mbi) == 0 || mbi.State != MEM_COMMIT)
+        os::MemInfo mbi;
+        if (!os::MemQuery(At(at), &mbi) || mbi.state != os::MemState::Committed)
             Fatal("snapshot: 0x%08X is not committed memory, inside a range checked before the restore began", at);
-        U end = Va(mbi.BaseAddress) + static_cast<U>(mbi.RegionSize);
+        U end = Va(reinterpret_cast<const void*>(mbi.base)) + static_cast<U>(mbi.size);
         if (end > base + bytes) end = base + bytes;
-        DWORD old = 0;
-        const bool open = Writable(mbi.Protect);
-        if (!open && !VirtualProtect(At(at), end - at, PAGE_READWRITE, &old))
-            Fatal("snapshot: VirtualProtect(0x%08X, 0x%X) failed (%lu)", at, end - at, GetLastError());
+        os::ProtSave old;
+        const bool open = mbi.writable;
+        if (!open && !os::MemProtect(At(at), end - at, os::Prot::ReadWrite, &old))
+            Fatal("snapshot: MemProtect(0x%08X, 0x%X) failed (%lu)", at, end - at, (unsigned long)os::LastError());
         std::memcpy(At(at), from + (at - base), end - at);
-        if (!open) VirtualProtect(At(at), end - at, old, &old);
+        if (!open) os::MemRestore(At(at), end - at, old);
         at = end;
     }
 }
@@ -268,10 +260,10 @@ U ArenaCommitted(U top) {
     if (top < kArenaBytes) return 0;
     U lo = top;
     while (lo > top - kArenaBytes) {
-        MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery(At(lo - 1), &mbi, sizeof mbi) == 0) break;
-        if (mbi.State != MEM_COMMIT || !Readable(mbi.Protect)) break;
-        const U region = Va(mbi.BaseAddress);
+        os::MemInfo mbi;
+        if (!os::MemQuery(At(lo - 1), &mbi)) break;
+        if (mbi.state != os::MemState::Committed || !mbi.readable) break;
+        const U region = Va(reinterpret_cast<const void*>(mbi.base));
         lo = region > top - kArenaBytes ? region : top - kArenaBytes;
     }
     return top - lo;
@@ -315,7 +307,7 @@ const BuildId& EnsureBuild() {
     wchar_t path[MAX_PATH];
     HMODULE module = OurModule();
     const DWORD n = GetModuleFileNameW(module, path, MAX_PATH);
-    if (n == 0 || n >= MAX_PATH) Fatal("snapshot: bof3x.dll's own path is not known (%lu)", GetLastError());
+    if (n == 0 || n >= MAX_PATH) Fatal("snapshot: bof3x.dll's own path is not known (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
     std::string hex, why;
     if (!bof3x::Sha256Hex(path, hex, why) || hex.size() != sizeof build.sha)
         Fatal("snapshot: cannot hash bof3x.dll (%s): %s", Utf8Path(path).text, why.c_str());
@@ -561,7 +553,7 @@ bool Exists(const std::wstring& path) { return GetFileAttributesW(path.c_str()) 
 bool Rotate(const std::wstring& dir, std::string& why) {
     const std::wstring top = SlotPath(dir, kLastSlot);
     if (Exists(top) && !DeleteFileW(top.c_str())) {
-        why = Printf("%s could not be deleted (error %lu)", SlotName(kLastSlot).c_str(), GetLastError());
+        why = Printf("%s could not be deleted (error %lu)", SlotName(kLastSlot).c_str(), static_cast<unsigned long>(bof3::os::LastError()));
         return false;
     }
     for (unsigned slot = kLastSlot - 1; slot + 1 > kFirstSlot; --slot) {
@@ -569,7 +561,7 @@ bool Rotate(const std::wstring& dir, std::string& why) {
         if (!Exists(from)) continue;
         if (!MoveFileExW(from.c_str(), SlotPath(dir, slot + 1).c_str(), 0)) {
             why = Printf("%s could not be renamed to %s (error %lu)", SlotName(slot).c_str(), SlotName(slot + 1).c_str(),
-                         GetLastError());
+                         static_cast<unsigned long>(bof3::os::LastError()));
             return false;
         }
     }
@@ -579,7 +571,7 @@ bool Rotate(const std::wstring& dir, std::string& why) {
 bool WriteAll(const std::wstring& path, const std::vector<unsigned char>& bytes, std::string& why) {
     HANDLE f = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (f == INVALID_HANDLE_VALUE) {
-        why = Printf("cannot create %s (error %lu)", Utf8Path(path.c_str()).text, GetLastError());
+        why = Printf("cannot create %s (error %lu)", Utf8Path(path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
         return false;
     }
     DWORD wrote = 0;
@@ -587,7 +579,7 @@ bool WriteAll(const std::wstring& path, const std::vector<unsigned char>& bytes,
     // On the disk before the rename makes it the newest: a power cut after the
     // rename must not leave a slot of zeros (the review of PR #95).
     if (ok) ok = FlushFileBuffers(f);
-    const DWORD error = GetLastError();
+    const DWORD error = bof3::os::LastError();
     CloseHandle(f);
     if (!ok || wrote != bytes.size()) {
         DeleteFileW(path.c_str());
@@ -609,7 +601,7 @@ bool WriteNewest(const std::wstring& dir, const std::vector<unsigned char>& byte
     }
     if (!MoveFileExW(tmp.c_str(), SlotPath(dir, kFirstSlot).c_str(), MOVEFILE_REPLACE_EXISTING)) {
         why = Printf("BISLPS10.TMP could not be renamed to %s (error %lu); the history moved up a slot", SlotName(kFirstSlot).c_str(),
-                     GetLastError());
+                     static_cast<unsigned long>(bof3::os::LastError()));
         return false;
     }
     return true;
@@ -619,7 +611,7 @@ bool ReadSlot(const std::wstring& dir, unsigned slot, std::vector<unsigned char>
     const std::wstring path = SlotPath(dir, slot);
     HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (f == INVALID_HANDLE_VALUE) {
-        const DWORD error = GetLastError();
+        const DWORD error = bof3::os::LastError();
         why = error == ERROR_FILE_NOT_FOUND ? Printf("no quicksave in slot %X (%s)", slot, SlotName(slot).c_str())
                                             : Printf("cannot open %s (error %lu)", SlotName(slot).c_str(), error);
         return false;
@@ -671,12 +663,12 @@ void OnOwnStack(const std::function<void()>& job) {
         caller = GetCurrentFiber();
     } else {
         caller = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-        if (!caller) Fatal("snapshot: ConvertThreadToFiberEx failed (%lu)", GetLastError());
+        if (!caller) Fatal("snapshot: ConvertThreadToFiberEx failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
         converted = true;
     }
     if (!g_own_fiber) {
         g_own_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &OwnFiber, nullptr);
-        if (!g_own_fiber) Fatal("snapshot: CreateFiberEx failed (%lu)", GetLastError());
+        if (!g_own_fiber) Fatal("snapshot: CreateFiberEx failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
     }
     asm volatile("fnstcw %0" : "=m"(g_own_cw));
     g_return_fiber = caller;
@@ -684,7 +676,7 @@ void OnOwnStack(const std::function<void()>& job) {
     SwitchToFiber(g_own_fiber);
     // Back on the caller's own fiber: a thread made a fiber here is given
     // back as it came (the renderer converts the main thread itself later).
-    if (converted && !ConvertFiberToThread()) Fatal("snapshot: ConvertFiberToThread failed (%lu)", GetLastError());
+    if (converted && !ConvertFiberToThread()) Fatal("snapshot: ConvertFiberToThread failed (%lu)", static_cast<unsigned long>(bof3::os::LastError()));
 }
 
 // --- the keys ------------------------------------------------------------------
@@ -1091,9 +1083,9 @@ void SelfTest() {
     const DWORD n = GetTempPathW(MAX_PATH, temp);
     if (n == 0 || n >= MAX_PATH - 48) Fatal("snapshot self-test: no temporary directory");
     wchar_t name[48];
-    std::swprintf(name, 48, L"bof3x-snapshot-%lu\\", GetCurrentProcessId());
+    std::swprintf(name, 48, L"bof3x-snapshot-%lu\\", static_cast<unsigned long>(bof3::os::ProcessId()));
     const std::wstring dir = std::wstring(temp) + name;
-    if (!CreateDirectoryW(dir.c_str(), nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
+    if (!CreateDirectoryW(dir.c_str(), nullptr) && bof3::os::LastError() != ERROR_ALREADY_EXISTS)
         Fatal("snapshot self-test: cannot create %s", Utf8Path(dir.c_str()).text);
     SelfTestSpan(dir);
     SelfTestStCheck();
@@ -1154,7 +1146,7 @@ void Snapshot_Pending() {
     // BOF3X_GAPWATCH guards .data pages and parks them by the latch's count
     // (gapwatch.h): a copy of the span would fault through every guard, and a
     // restore would undo its bookkeeping. Refused while it is armed.
-    if (GetEnvironmentVariableA("BOF3X_GAPWATCH", nullptr, 0) > 0) {
+    if (bof3::os::GetEnv("BOF3X_GAPWATCH", nullptr, 0) > 0) {
         Log("quicksave   %s refused: BOF3X_GAPWATCH is armed", request == Request::Take ? "F6" : "F7");
         Show(request == Request::Take ? "Quicksave refused: the read watch" : "Quickload refused: the read watch");
         return;
@@ -1189,7 +1181,7 @@ void Snapshot_Inject() {
     // host does not map); this test compares nothing of Capcom's and the exe
     // host's span is the one players have, so there it runs on every
     // BOF3X_SELFTEST_ONLY start, as ExeIcon_SelfTest does.
-    if (IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("snapshot")) SelfTest();
+    if (IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("snapshot")) SelfTest();
     Snapshot_Register("ST", &StSave, &StRestore, nullptr, &StCheck);   // after DrawPool_Grow, sigma::Arm and MsgPool_Relocate's inject
 }
 

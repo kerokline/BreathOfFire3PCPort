@@ -30,7 +30,6 @@
 // room; nothing here runs on a task's 16 KB stack.
 #include "game/pad_read.h"
 
-#include <windows.h>
 #include <dinput.h>
 
 #include <cstdint>
@@ -43,6 +42,7 @@
 #include "hook/log.h"
 #include "input/bindings.h"
 #include "input/pad_sdl.h"
+#include "os/os.h"
 
 namespace {
 
@@ -79,7 +79,7 @@ void PadLogLine(const char* line) { bof3::Log("%s", line); }
 
 Layout LayoutFromEnv(Layout fallback) {
     char v[32] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PAD_LAYOUT", v, sizeof v);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PAD_LAYOUT", v, sizeof v);
     if (n == 0 || n >= sizeof v) return fallback;
     const int l = input::LayoutFromName(v);
     if (l < 0) {
@@ -96,7 +96,7 @@ void LoadPadMap() {
     pad_read::g_pad_map = defaults.pad;
     Layout layout = defaults.layout;
     char text[2048] = {};
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PAD", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PAD", text, sizeof text);
     if (n > 0 && n < sizeof text) {
         std::vector<input::PadBinding> pad;
         const int understood = input::ParsePad(text, ',', pad, layout);

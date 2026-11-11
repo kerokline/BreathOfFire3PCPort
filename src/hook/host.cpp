@@ -8,6 +8,7 @@
 #include "bof3/symbols.gen.h"
 #include "hook/exe_layout.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -101,7 +102,7 @@ void DetectHost() {
     // BOF3X_IMAGEBASE, the launcher's developer switch: the executable it
     // started must be the one at that base.
     char asked[32];
-    if (const DWORD n = GetEnvironmentVariableA("BOF3X_IMAGEBASE", asked, sizeof asked); n > 0 && n < sizeof asked) {
+    if (const DWORD n = bof3::os::GetEnv("BOF3X_IMAGEBASE", asked, sizeof asked); n > 0 && n < sizeof asked) {
         char* tail = nullptr;
         const unsigned long want = std::strtoul(asked, &tail, 0);
         if (!tail || *tail || want != image)

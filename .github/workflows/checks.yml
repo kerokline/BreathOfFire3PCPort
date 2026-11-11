@@ -179,6 +179,34 @@ jobs:
       - name: seq_tests
         run: '"$RUNNER_TEMP/bgm-host/seq_tests"'
 
+  os-host:
+    # The operating-system seam's POSIX backend (src/os/posix, docs/linux-round.md
+    # LB1) built with the system compiler and run on the runner itself: memory at
+    # fixed addresses, the directory walk, clocks, the environment - synthetic
+    # data only. Also the boundary gate: nothing outside src/os, src/launcher and
+    # the harness files reaches the system past the seam.
+    name: OS seam host suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S tools/os_host -B "$RUNNER_TEMP/os-host"
+          cmake --build "$RUNNER_TEMP/os-host" -j 4
+
+      - name: os_tests
+        run: '"$RUNNER_TEMP/os-host/os_tests"'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Boundary gate
+        run: |
+          python tools/os_census.py --check
+          python tools/os_census.py --boundary
+
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
     # synthetic corpus, fuzz it against the original bytes in Unicorn, and

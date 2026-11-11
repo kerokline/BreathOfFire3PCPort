@@ -28,7 +28,6 @@
 #include "game/d3d_lines.h"
 
 #include <cstdint>
-#include <windows.h>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -40,6 +39,7 @@
 #include "hook/log.h"
 #include "render/fb_grab.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace d3d_draw {
 
@@ -112,7 +112,7 @@ std::uint8_t g_cell_vram = 0;   // 1 through PatchBytes("CellTextureVram") in D3
 namespace d3d_draw { CellFoot g_cell_foot[128]; }  namespace {
 }  namespace d3d_draw { bool PoseLogOn() {
     static int on = -1;
-    if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
+    if (on < 0) { char v[8]; on = bof3::os::GetEnv("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
     return on == 1;
 } }  void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
     if (!g_cell_vram) return;

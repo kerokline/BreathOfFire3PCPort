@@ -1,6 +1,5 @@
 #include "game/cheats.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -8,6 +7,7 @@
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // Cheats: the same three the archival sibling offers as mods (its
 // docs/EXP_BOOST.md and docs/STEAL.md) as launcher settings here, and two
@@ -95,7 +95,7 @@ constexpr long kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorousl
 // not a whole number 0 or more is a Fatal, as a wrong BOF3X_FILTER is.
 std::uint32_t Multiplier(const char* var) {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA(var, text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv(var, text, sizeof text);
     if (n == 0) return 1;
     char* end = nullptr;
     const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
@@ -111,7 +111,7 @@ std::uint32_t Multiplier(const char* var) {
 // BOF3X_FILTER is.
 bool Flag(const char* var) {
     char text[8];
-    const DWORD n = GetEnvironmentVariableA(var, text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv(var, text, sizeof text);
     if (n == 0) return false;
     if (n >= sizeof text || (text[0] != '0' && text[0] != '1') || text[1] != '\0') bof3::Fatal("%s must be 0 or 1", var);
     return text[0] == '1';

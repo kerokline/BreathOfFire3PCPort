@@ -1,6 +1,5 @@
 #include "game/text_draw.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -15,6 +14,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "os/os.h"
 
 namespace {
 
@@ -255,7 +255,7 @@ void TextDraw_Inject() {
         SelfTest(bof3::CloneOriginal("Text_DrawString", bof3::addr::Text_DrawString, kSize, calls, 1));
     }
     char flag[8];
-    text_draw::g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
+    text_draw::g_textlog = bof3::os::GetEnv("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
     if (text_draw::g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }
 

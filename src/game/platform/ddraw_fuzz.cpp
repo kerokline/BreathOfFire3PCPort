@@ -2,13 +2,13 @@
 // section 5.
 #include "game/ddraw_fuzz.h"
 
-#include <windows.h>
 
 #include <cstdio>
 #include <cstring>
 #include <utility>
 
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace ddraw_fuzz {
 
@@ -520,8 +520,8 @@ void Build() {
     g_dd_vtbl[kCreateSurface] = F(&DCreateSurface);
     for (int pass = 0; pass < 2; ++pass) {
         g_arena[pass] = static_cast<unsigned char*>(
-            VirtualAlloc(nullptr, static_cast<SIZE_T>(kMaxSurfaces) * kSlotBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: VirtualAlloc of the pixel arena failed, error %lu", GetLastError());
+            bof3::os::MemAlloc(nullptr, static_cast<std::size_t>(kMaxSurfaces) * kSlotBytes, bof3::os::Prot::ReadWrite));
+        if (!g_arena[pass]) bof3::Fatal("ddraw_fuzz: MemAlloc of the pixel arena failed, error %lu", (unsigned long)bof3::os::LastError());
     }
 }
 

@@ -1,6 +1,7 @@
 // Moved here by tools/move_funcs.py from battle_draw.cpp, battle_e7.cpp, fmv_play.cpp, menu_draw_helpers.cpp, mode_flow.cpp, msgbox.cpp, rest_2h.cpp, window_task.cpp (docs/source-layout-round.md).
 #include "game/battle/battle_menu_win.h"
 
+#include <fstream>
 #include <SDL3/SDL.h>
 #include <bit>
 #include <cstddef>
@@ -9,7 +10,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <dinput.h>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/area_data_reload.h"
@@ -52,6 +52,7 @@
 #include "hook/log.h"
 #include "input/sigma.h"
 #include "video/movie.h"
+#include "os/os.h"
 
 namespace {
 
@@ -167,36 +168,35 @@ void LogNotOpened(const char* filename, const char* why) {
 // The file's bytes, read whole (both movies are under 5 MB). Null when it
 // cannot be opened or read, with the reason in `why`.
 std::uint8_t* ReadWhole(const char* path, std::size_t* size, char* why, std::size_t why_n) {
-    HANDLE f = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) {
-        std::snprintf(why, why_n, "error %lu", GetLastError());
+    std::ifstream f(bof3::os::Path(path), std::ios::binary);
+    if (!f) {
+        std::snprintf(why, why_n, "cannot open");
         return nullptr;
     }
-    LARGE_INTEGER n;
-    if (!GetFileSizeEx(f, &n) || n.QuadPart <= 0 || n.QuadPart > 256 * 1024 * 1024) {
-        std::snprintf(why, why_n, "its size (%lld bytes) is not one this reads", static_cast<long long>(n.QuadPart));
-        CloseHandle(f);
+    f.seekg(0, std::ios::end);
+    const long long n = static_cast<long long>(f.tellg());
+    f.seekg(0);
+    if (!f || n <= 0 || n > 256 * 1024 * 1024) {
+        std::snprintf(why, why_n, "its size (%lld bytes) is not one this reads", n);
         return nullptr;
     }
-    auto* data = static_cast<std::uint8_t*>(HeapAlloc(GetProcessHeap(), 0, static_cast<SIZE_T>(n.QuadPart)));
+    auto* data = static_cast<std::uint8_t*>(std::malloc(static_cast<std::size_t>(n)));
     if (!data) {
-        std::snprintf(why, why_n, "no memory for %lld bytes", static_cast<long long>(n.QuadPart));
-        CloseHandle(f);
+        std::snprintf(why, why_n, "no memory for %lld bytes", static_cast<long long>(n));
         return nullptr;
     }
     std::size_t got = 0;
-    while (got < static_cast<std::size_t>(n.QuadPart)) {
-        DWORD read = 0;
-        const DWORD want = static_cast<DWORD>(static_cast<std::size_t>(n.QuadPart) - got > 0x1000000 ? 0x1000000 : static_cast<std::size_t>(n.QuadPart) - got);
-        if (!ReadFile(f, data + got, want, &read, nullptr) || read == 0) {
-            std::snprintf(why, why_n, "read error %lu at %zu", GetLastError(), got);
-            HeapFree(GetProcessHeap(), 0, data);
-            CloseHandle(f);
+    while (got < static_cast<std::size_t>(n)) {
+        const std::size_t want = static_cast<std::size_t>(n) - got > 0x1000000 ? 0x1000000 : static_cast<std::size_t>(n) - got;
+        f.read(reinterpret_cast<char*>(data + got), static_cast<std::streamsize>(want));
+        const std::size_t read = static_cast<std::size_t>(f.gcount());
+        if (read == 0) {
+            std::snprintf(why, why_n, "read error at %zu", got);
+            std::free(data);
             return nullptr;
         }
         got += read;
     }
-    CloseHandle(f);
     *size = got;
     return data;
 }
@@ -244,11 +244,7 @@ void DrawToWindow() {
     ReleaseDC(g_playing->hwnd, dc);
 }
 
-LONGLONG Now() {
-    LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    return t.QuadPart;
-}
+LONGLONG Now() { return static_cast<LONGLONG>(bof3::os::Counter()); }
 
 // WM_ACTIVATEAPP's pair, in place of MCI's "pause vfw" / "resume vfw": the
 // clock stops with the picture, and the audio stream with them.
@@ -1041,7 +1037,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     video::Movie movie;
     if (!movie.Open(data, size, why, sizeof why)) {
         LogNotOpened(filename, why);
-        HeapFree(GetProcessHeap(), 0, data);
+        std::free(data);
         return;
     }
 
@@ -1078,8 +1074,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     playing.audio = OpenAudio(movie, filename);
     g_playing = &playing;
 
-    LARGE_INTEGER freq;
-    QueryPerformanceFrequency(&freq);
+    const std::uint64_t freq = bof3::os::CounterFrequency();
     const LONGLONG t0 = Now();
     if (playing.audio) SDL_ResumeAudioStreamDevice(playing.audio);
     Fmv_Playing = 1;
@@ -1118,7 +1113,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
         DWORD wait = 16;
         if (!playing.paused) {
             const double elapsed =
-                static_cast<double>(Now() - t0 - playing.paused_ticks) / static_cast<double>(freq.QuadPart);
+                static_cast<double>(Now() - t0 - playing.paused_ticks) / static_cast<double>(freq);
             if (elapsed >= end_s) {   // the video's end - MCI's notify
                 Fmv_Playing = 0;
                 break;
@@ -1144,12 +1139,12 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     // The stop and close: the audio stream and the subclass.
     bof3::Log("DIV-0205    %s: %s after %.2f s, %u of %u frames shown%s", filename,
               shown >= frames ? "ended" : "skipped",
-              static_cast<double>(Now() - t0 - playing.paused_ticks) / static_cast<double>(freq.QuadPart), shown, frames,
+              static_cast<double>(Now() - t0 - playing.paused_ticks) / static_cast<double>(freq), shown, frames,
               faulted ? ", a decode fault held the picture" : "");
     CloseAudio(playing.audio);
     g_playing = nullptr;
     SetWindowLongPtrA(hwnd, GWLP_WNDPROC, saved_proc);
-    HeapFree(GetProcessHeap(), 0, data);
+    std::free(data);
 }
 
 // original 0x59E570 (read whole, 0xD4 bytes; DIV-0049): the window procedure

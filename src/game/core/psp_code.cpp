@@ -1,6 +1,5 @@
 #include "game/psp_code.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -9,6 +8,7 @@
 #include "common/cache_manifest.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // DIV-0108: the PSP's two battle rules and their switch. What each rule
 // is, and the PSP instructions it reproduces, is in psp_code.h and
@@ -35,7 +35,7 @@ constexpr Item kItems[] = {{"duel-loss", kDuelLoss}, {"myria-item", kMyriaItem}}
 // game starts (ManifestRefusal): the default cannot be guessed.
 std::string BasePolicy(std::string& where) {
     wchar_t root[1024];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, 1024);
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_CACHE", root, 1024);
     if (n == 0 || n >= 1024) return std::string();
     std::wstring path(root, n);
     while (!path.empty() && (path.back() == L'\\' || path.back() == L'/')) path.pop_back();
@@ -49,9 +49,9 @@ std::string BasePolicy(std::string& where) {
 // BOF3X_PSP as a mask, or false when it is unset.
 bool FromEnvironment(unsigned& mask) {
     char list[128];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PSP", list, sizeof list);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PSP", list, sizeof list);
     if (n == 0) return false;
-    if (n >= sizeof list) bof3::Fatal("DIV-0108: BOF3X_PSP is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
+    if (n >= sizeof list) bof3::Fatal("DIV-0108: BOF3X_PSP is %lu characters; at most %u", static_cast<unsigned long>(n), (unsigned)sizeof list - 1);
     mask = 0;
     if (std::strcmp(list, "none") == 0) return true;
     const char* p = list;

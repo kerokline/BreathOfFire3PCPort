@@ -44,6 +44,8 @@
 // load, against the Input_Held the quicksave holds).
 #include "game/quick_menu.h"
 
+#include <filesystem>
+#include <system_error>
 #include <windows.h>
 
 #include <cstdint>
@@ -61,6 +63,7 @@
 #include "hook/input_script.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/os.h"
 
 namespace {
 
@@ -277,13 +280,15 @@ void WriteFake(const std::string& path, unsigned char mark) {
 }
 
 void ListsSelfTest() {
-    char tmp[MAX_PATH];
-    if (!GetTempPathA(sizeof tmp, tmp)) Fail("GetTempPath");
-    char dir_a[MAX_PATH], dir_b[MAX_PATH];
-    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp, GetCurrentProcessId());
-    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp, GetCurrentProcessId());
-    CreateDirectoryA(dir_a, nullptr);
-    CreateDirectoryA(dir_b, nullptr);
+    std::error_code ec;
+    const std::u8string tmp8 = std::filesystem::temp_directory_path(ec).u8string();
+    if (ec || tmp8.empty()) Fail("temp_directory_path");
+    const std::string tmp = std::string(tmp8.begin(), tmp8.end()) + static_cast<char>(std::filesystem::path::preferred_separator);
+    char dir_a[bof3::os::kMaxPath], dir_b[bof3::os::kMaxPath];
+    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
+    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
+    std::filesystem::create_directories(bof3::os::Path(dir_a), ec);
+    std::filesystem::create_directories(bof3::os::Path(dir_b), ec);
     std::vector<std::string> made;
     const auto Make = [&](const char* dir, const char* name, unsigned char mark) {
         made.push_back(std::string(dir) + name);
@@ -367,9 +372,9 @@ void ListsSelfTest() {
     Guard("the ?? list of A wrote past its table");
     if (twenty != 16) Fail("the ?? list of A's twenty matches is not 16");
 
-    for (const std::string& f : made) DeleteFileA(f.c_str());
-    RemoveDirectoryA(dir_a);
-    RemoveDirectoryA(dir_b);
+    for (const std::string& f : made) std::filesystem::remove(bof3::os::Path(f.c_str()), ec);
+    std::filesystem::remove(bof3::os::Path(dir_a), ec);
+    std::filesystem::remove(bof3::os::Path(dir_b), ec);
     bof3::Log("shadow      quick menu self-test: the save list 16 of 17 (BISLPS0?.DAT, BISLPS0G.DAT not stored), the quick "
               "list 3 with gaps (slots 0, 3, F) and 16 of 17, each summary its own file's; BISLPS??.DAT shows "
               "BISLPS10.DAT as save slot 0 (the trap)");
@@ -525,7 +530,7 @@ void QuickMenu_AfterPoint() {
 }
 
 void QuickMenu_Inject() {
-    if (IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("quick_menu")) {
+    if (IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("quick_menu")) {
         ListsSelfTest();
         CursorSelfTest();
     }

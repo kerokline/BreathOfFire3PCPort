@@ -1,6 +1,5 @@
 #include "game/map_rim.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -11,6 +10,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/os.h"
 
 // The field's view ring grown for the wide picture: see the header, and
 // docs/wide-ring-read.md section 6 for the plan this builds to.
@@ -679,7 +679,7 @@ void SelfTest() {
 void Arm() {
     if (bof3::WantsShadow("map_rim")) SelfTest();
     char text[8];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_RING", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_RING", text, sizeof text);
     if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_WIDE_RING must be 0 or 1");
     const bool off = n == 1 && text[0] == '0';
     ExtraReset(0);

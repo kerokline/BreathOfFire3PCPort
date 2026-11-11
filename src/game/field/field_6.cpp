@@ -8,7 +8,6 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"

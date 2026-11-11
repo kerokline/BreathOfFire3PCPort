@@ -3,7 +3,6 @@
 // it reads, and writes its own file only.
 #include "game/band_census.h"
 
-#include <windows.h>
 
 #include <cmath>
 #include <cstdint>
@@ -20,6 +19,7 @@
 #include "hook/detour.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace band_census {
 
@@ -636,7 +636,7 @@ void SelfTest() {
 
 unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned hi) {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA(name, text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0) return fallback;
     char* end = nullptr;
     const unsigned long v = n < sizeof text ? std::strtoul(text, &end, 10) : 0;
@@ -657,8 +657,8 @@ void AtExit() {
 
 void Inject() {
     if (bof3::WantsShadow("band_census")) SelfTest();
-    char path[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_BANDLOG", path, sizeof path);
+    char path[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_BANDLOG", path, sizeof path);
     if (n == 0) return;
     if (n >= sizeof path) bof3::Fatal("BOF3X_BANDLOG is longer than %u bytes", static_cast<unsigned>(sizeof path));
     g_park = EnvUnsigned("BOF3X_BANDLOG_PARK", 30, 1, 100000);

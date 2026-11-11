@@ -24,7 +24,6 @@
 // with its far-edge table. Disassembly 2026-09-23 (widescreen.md section 3b).
 #include "game/widescreen.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -36,6 +35,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/os.h"
 
 using U = std::uint32_t;
 
@@ -230,7 +230,7 @@ int Drawn(const Split& e, int L) {
 short Widescreen_SlideLogic(short bound) {
     static const bool control = [] {
         char text[8];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_SL_CONTROL", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_SL_CONTROL", text, sizeof text);
         const bool on = n != 0 && n < sizeof text && std::strcmp(text, "1") == 0;
         if (on)
             bof3::Log("DIV-0041    BOF3X_SL_CONTROL=1: the slide-off states decide by the bound moved out by the columns "
@@ -345,7 +345,7 @@ unsigned Widescreen_Columns() {
     static int columns = -1;
     if (columns >= 0) return static_cast<unsigned>(columns);
     char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE", text, sizeof text);
     if (n == 0 || std::strcmp(text, "0") == 0) columns = 0;
     else if (n < sizeof text && std::strcmp(text, "1") == 0) columns = kColumns16x9;
     else if (n < sizeof text && std::strcmp(text, "2") == 0) columns = kColumns21x9;
@@ -428,7 +428,7 @@ void Widescreen_Inject() {
         // experiments (2026-10-07, the owner's waterfall); the rule's unless set
         // (DIV-0041: 100 at 53 columns, 167 at 120).
         char text[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_TERRAIN", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
             char* end = nullptr;
             const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
@@ -443,7 +443,7 @@ void Widescreen_Inject() {
     g_inset_columns = inset_asked;
     {
         char text[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_INSET", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_WIDE_INSET", text, sizeof text);
         if (n != 0) {
             char* end = nullptr;
             const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;

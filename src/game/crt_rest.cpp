@@ -14,7 +14,6 @@
 #include "game/crt_rest.h"
 
 #include <io.h>
-#include <windows.h>
 
 #include <cstdarg>
 #include <cstddef>
@@ -28,6 +27,7 @@
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace crt_rest {
 namespace {
@@ -450,9 +450,9 @@ void CrtRest_Inject() {
     // is refused there, so Rand is always ours and RandCount_Start never
     // reads the copy (without this every recipe run of bof3x.exe stopped
     // here, 2026-10-11).
-    if ((GetEnvironmentVariableA("BOF3X_INPUT", nullptr, 0) > 0 ||
-         GetEnvironmentVariableA("BOF3X_RECORD", nullptr, 0) > 0) &&
-        GetEnvironmentVariableA("BOF3X_CALLTRACE", nullptr, 0) == 0 && !bof3::IsExeHost()) {
+    if ((bof3::os::GetEnv("BOF3X_INPUT", nullptr, 0) > 0 ||
+         bof3::os::GetEnv("BOF3X_RECORD", nullptr, 0) > 0) &&
+        bof3::os::GetEnv("BOF3X_CALLTRACE", nullptr, 0) == 0 && !bof3::IsExeHost()) {
         constexpr std::uint32_t kRandSize = 0x22;
         const auto get_ptd = Low32(Crt_GetPtd);   // still Capcom's
         const bof3::CloneCall calls[] = {{0, nullptr, get_ptd}};

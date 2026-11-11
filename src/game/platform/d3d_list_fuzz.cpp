@@ -14,7 +14,6 @@
 // recorders sometimes cut or re-route the link of the node they were handed,
 // set the after-draw word, flip the render flag or the draw-enable byte - the
 // draw reads the first two after each handler, and must not re-read the others.
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -26,6 +25,7 @@
 #include "game/d3d_list_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace d3d_list {
 namespace {
@@ -208,7 +208,7 @@ DrawFn CloneDraw() {
     if (!code) bof3::Fatal("Gfx_DrawOTag: CloneOriginal returned null");
     Relocate(code, 0x6A, 0x450, 25);    // jmp [ecx*4 + 0x59F2A0] at +0x67
     Relocate(code, 0x255, 0x588, 26);   // jmp [ecx*4 + 0x59F3D8] at +0x252
-    FlushInstructionCache(GetCurrentProcess(), code, kCloneBytes);
+    bof3::os::FlushCode(code, kCloneBytes);
     return reinterpret_cast<DrawFn>(code);
 }
 

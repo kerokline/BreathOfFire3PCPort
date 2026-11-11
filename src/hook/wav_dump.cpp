@@ -73,6 +73,7 @@
 #include "common/image_base.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -248,7 +249,7 @@ void MixBuffer(Buffer& b, std::size_t at, std::size_t n) {
 void WriteAll(const void* p, DWORD n) {
     DWORD done = 0;
     if (!WriteFile(g_file, p, n, &done, nullptr) || done != n)
-        Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, GetLastError());
+        Fatal("wav: writing %s failed, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
 }
 
 void PutDword(std::uint8_t* p, std::uint32_t v) { std::memcpy(p, &v, 4); }
@@ -295,7 +296,7 @@ void OpenFile() {
     g_path = g_dir + L"\\" + number + g_label + L".wav";
     g_file = CreateFileW(g_path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (g_file == INVALID_HANDLE_VALUE)
-        Fatal("wav: cannot create %s, error %lu", Utf8Path(g_path.c_str()).text, GetLastError());
+        Fatal("wav: cannot create %s, error %lu", Utf8Path(g_path.c_str()).text, static_cast<unsigned long>(bof3::os::LastError()));
     std::uint8_t h[44];
     Header(h, 0);
     WriteAll(h, sizeof h);
@@ -493,11 +494,11 @@ long __stdcall HookSetFrequency(void* self, unsigned long frequency) {
 }
 
 void PatchSlot(void** slot, void* to) {
-    DWORD old = 0;
-    if (!VirtualProtect(slot, sizeof(void*), PAGE_EXECUTE_READWRITE, &old))
-        Fatal("wav: VirtualProtect(%p) failed, error %lu", static_cast<void*>(slot), GetLastError());
+    os::ProtSave old;
+    if (!os::MemProtect(slot, sizeof(void*), os::Prot::ReadWriteExec, &old))
+        Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
     *slot = to;
-    VirtualProtect(slot, sizeof(void*), old, &old);
+    os::MemRestore(slot, sizeof(void*), old);
 }
 
 // The import slot is a 32-bit word of the image in either width: our hook's
@@ -505,11 +506,11 @@ void PatchSlot(void** slot, void* to) {
 // over the slot beside it.
 void PatchSlotWord(void** slot, void* to) {
     const std::uint32_t word = Low32(to);   // the hook is ours, below 4 GB by the DLL's placement
-    DWORD old = 0;
-    if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old))
-        Fatal("wav: VirtualProtect(%p) failed, error %lu", static_cast<void*>(slot), GetLastError());
+    os::ProtSave old;
+    if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old))
+        Fatal("wav: MemProtect(%p) failed, error %lu", static_cast<void*>(slot), (unsigned long)os::LastError());
     std::memcpy(slot, &word, 4);
-    VirtualProtect(slot, 4, old, &old);
+    os::MemRestore(slot, 4, old);
 }
 
 void HookBufferVtable(void* object) {
@@ -619,19 +620,19 @@ bool WavDump_On() { return g_on; }
 
 void WavDump_Start() {
     wchar_t dir[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_WAV_DIR", dir, MAX_PATH);
+    const DWORD n = bof3::os::GetEnvW(L"BOF3X_WAV_DIR", dir, MAX_PATH);
     if (n == 0) return;
     if (n >= MAX_PATH) Fatal("BOF3X_WAV_DIR: the path is %lu characters, over MAX_PATH", static_cast<unsigned long>(n));
     InitializeCriticalSection(&g_lock);
     g_dir = dir;
     while (!g_dir.empty() && (g_dir.back() == L'\\' || g_dir.back() == L'/')) g_dir.pop_back();
     wchar_t label[128];
-    const DWORD ln = GetEnvironmentVariableW(L"BOF3X_WAV_LABEL", label, 128);
+    const DWORD ln = bof3::os::GetEnvW(L"BOF3X_WAV_LABEL", label, 128);
     if (ln > 0 && ln < 128) {
         g_label = Clean(label);
     } else {
         wchar_t recipe[MAX_PATH];
-        const DWORD rn = GetEnvironmentVariableW(L"BOF3X_INPUT", recipe, MAX_PATH);
+        const DWORD rn = bof3::os::GetEnvW(L"BOF3X_INPUT", recipe, MAX_PATH);
         std::wstring stem = L"play";
         if (rn > 0 && rn < MAX_PATH) {
             stem = recipe;
@@ -649,7 +650,7 @@ void WavDump_Start() {
         g_frame_ms = kCapcomFrameMs;
     } else {
         char text[32];
-        const DWORD fn = GetEnvironmentVariableA("BOF3X_FRAME_MS", text, sizeof text);
+        const DWORD fn = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
         if (fn > 0 && fn < sizeof text) {
             char* end = nullptr;
             const double v = std::strtod(text, &end);
@@ -657,7 +658,7 @@ void WavDump_Start() {
         }
     }
     char speed[8];
-    if (GetEnvironmentVariableA("BOF3X_SPEED", speed, sizeof speed) > 0 && std::strcmp(speed, "1") != 0)
+    if (bof3::os::GetEnv("BOF3X_SPEED", speed, sizeof speed) > 0 && std::strcmp(speed, "1") != 0)
         Log("wav         BOF3X_SPEED=%s: the logic frames outrun the device, so the music's queue runs dry (counted as "
             "underrun samples); effects are mixed as ever", speed);
 

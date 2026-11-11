@@ -383,6 +383,70 @@ def check(path, sites):
     return bad
 
 
+# ---- the boundary gate -------------------------------------------------------
+# Stage LB1 (docs/linux-round.md): the engine reaches the system through src/os.
+# A live file outside src/os and src/launcher (harness-only files are marked by
+# the census itself) that includes windows.h, or uses a Win32 name that bof3::os
+# replaces, fails the gate - unless it waits for a later unit: BOUNDARY_WAITING
+# names that unit. The list may only shrink: an entry whose file no longer
+# breaks the rule fails too, so it is removed with the work that emptied it.
+REPLACED_CLASSES = ('memory', 'file', 'clock', 'hash')
+REPLACED_CALLS = {'GetEnvironmentVariableA', 'GetEnvironmentVariableW', 'GetLastError', 'GetCurrentThreadId',
+                  'GetCurrentProcessId', 'GetModuleFileNameA', 'GetModuleFileNameW', 'GetModuleHandleExW',
+                  'MessageBoxA', 'MessageBoxW'}
+BOUNDARY_WAITING = {
+    'src/hook/exe_host.cpp': 'W: the PE exe host loader, Windows only by design',
+    'src/hook/exe_icon.cpp': 'W: the PE exe host, Windows only by design',
+    'src/hook/dllmain.cpp': 'W: the DLL entry, Windows only by design',
+    'src/hook/host.cpp': 'W: reads the PE headers of the host process',
+    'src/hook/detour.cpp': 'W: reads the PE headers of the host process',
+    'src/hook/exe_image.cpp': 'W: the PE image of BOF3.exe',
+    'src/hook/crash.cpp': 'L3: crash catching (SEH, MiniDumpWriteDump)',
+    'src/hook/stackwatch.cpp': 'L3: crash catching (the stack walk)',
+    'src/hook/cpu_context.h': 'L3: crash catching (CONTEXT)',
+    'src/hook/snapshot.cpp': 'L3: fibers (ConvertThreadToFiber)',
+    'src/hook/log.cpp': 'L3: the log writer thread flushes from the crash path',
+    'src/audio/sound_sdl.cpp': 'L3: the DirectSound notify events',
+    'src/game/text/msgbox.cpp': 'L2: key codes (VK_*)',
+    'src/game/menu/quick_menu.cpp': 'L2: key codes (VK_*)',
+    'src/game/platform/win_main.cpp': 'L2: the window and its message loop',
+    'src/game/platform/display_setup.cpp': 'L2: the window and the monitor',
+    'src/game/platform/d3d.cpp': 'L2: the window (HWND)',
+    'src/game/platform/magic_080.cpp': 'L2: the window and its message loop',
+}
+
+
+def boundary_violations(sites):
+    bad = collections.defaultdict(list)
+    for s in sites:
+        if s.file.startswith(('src/os/', 'src/launcher/')) or s.cls in ('launcher', 'harness-only') or is_harness(s.file):
+            continue
+        if s.kind == 'include' and s.token == 'windows.h':
+            bad[s.file].append((s.line, 'include <windows.h>'))
+        elif s.kind == 'call' and (s.cls in REPLACED_CLASSES or s.token in REPLACED_CALLS):
+            bad[s.file].append((s.line, s.token))
+    return bad
+
+
+def boundary(sites):
+    bad = boundary_violations(sites)
+    fail = 0
+    for f in sorted(bad):
+        if f in BOUNDARY_WAITING:
+            continue
+        fail += 1
+        for line, what in bad[f]:
+            print(f'{f}:{line}: {what}: use bof3::os (src/os/os.h), or list the file in BOUNDARY_WAITING with its unit')
+    for f in sorted(BOUNDARY_WAITING):
+        if f not in bad:
+            fail += 1
+            print(f'{f}: listed in BOUNDARY_WAITING but no longer breaks the rule: remove the entry')
+    if fail:
+        return 1
+    print(f'os_census --boundary: ok ({len(bad)} files wait for {len({v.split(':')[0] for v in BOUNDARY_WAITING.values()})} later units)')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--out', default=DEFAULT_OUT)
@@ -390,6 +454,7 @@ def main():
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--list', metavar='CLASS')
     ap.add_argument('--files', nargs='?', const='src/', metavar='PREFIX')
+    ap.add_argument('--boundary', action='store_true', help='fail when a file outside src/os, src/launcher and the harness-only files reaches the system past the seam')
     ap.add_argument('--outside', metavar='PREFIX', help='game files outside PREFIX that include windows.h, and what they take')
     a = ap.parse_args()
 
@@ -397,6 +462,8 @@ def main():
     sites = scan(files)
     frows = file_rows(files, sites)
 
+    if a.boundary:
+        return boundary(sites)
     if a.list:
         for s in sites:
             if s.cls == a.list:

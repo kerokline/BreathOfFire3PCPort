@@ -75,6 +75,7 @@
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -1258,10 +1259,10 @@ void SoundSdl_Start() {
         Log("DIV-0201    SoundSdl: off was asked for, but the 64-bit build has no DirectSound path; the switch is ignored and the "
             "sound output is SDL3's");
         void* const slot = Widen<void>(Img(kSlotVa));
-        DWORD old = 0;
-        if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old)) Fatal("sound_sdl: VirtualProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, GetLastError());
+        os::ProtSave old;
+        if (!os::MemProtect(slot, 4, os::Prot::ReadWrite, &old)) Fatal("sound_sdl: MemProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, (unsigned long)os::LastError());
         std::memcpy(slot, ours, 4);
-        VirtualProtect(slot, 4, old, &old);
+        os::MemRestore(slot, 4, old);
         g_on = true;
     }
     std::uint32_t after;

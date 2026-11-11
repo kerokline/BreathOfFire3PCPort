@@ -14,7 +14,6 @@
 // is given.
 #include "game/kind2_object.h"
 
-#include <windows.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -26,6 +25,7 @@
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace {
 
@@ -284,7 +284,7 @@ void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<kind2_object::H
         bof3::Fatal("kind2_object: %s has no jmp [eax*4 + 0x%X] at +7", c.name, (unsigned)c.table);
     disp = Address(table);
     std::memcpy(code + kTableDisp, &disp, sizeof disp);
-    FlushInstructionCache(GetCurrentProcess(), copy, c.size);
+    bof3::os::FlushCode(copy, c.size);
 }
 
 void SelfTest(void* const (&theirs)[kCount]) {

@@ -1,6 +1,5 @@
 #include "game/game_clock.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -9,6 +8,7 @@
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // DIV-0022 (docs/known-defects.md D5). GetTickCount is the exe's only clock,
 // and WinMain is its only reader: it loads the import slot into a register
@@ -30,19 +30,20 @@
 
 namespace {
 
-ULONGLONG g_start;
-DWORD g_base;
-ULONGLONG g_paused_at;   // 0: running
+std::uint64_t g_start;
+std::uint32_t g_base;
+std::uint64_t g_paused_at;   // 0: running
 
-// The high-resolution clock beside it, in QueryPerformanceCounter ticks.
-LARGE_INTEGER g_qpf, g_qpc_start;
-LONGLONG g_qpc_paused_at;   // 0: running
+// The high-resolution clock beside it, in os::Counter's ticks (QueryPerformanceCounter's on Windows).
+std::uint64_t g_qpf;
+std::int64_t g_qpc_start;
+std::int64_t g_qpc_paused_at;   // 0: running
 
 // Time spent paused is taken out by moving the start forward, so the clock
 // resumes from where it stopped.
-DWORD WINAPI SessionTickCount() {
-    const ULONGLONG now = g_paused_at ? g_paused_at : GetTickCount64();
-    return g_base + static_cast<DWORD>(now - g_start);
+std::uint32_t __stdcall SessionTickCount() {
+    const std::uint64_t now = g_paused_at ? g_paused_at : bof3::os::TickMs64();
+    return g_base + static_cast<std::uint32_t>(now - g_start);
 }
 
 bool g_ours;
@@ -51,38 +52,34 @@ bool g_ours;
 
 bool GameClock_Pause() {
     if (!g_ours || g_paused_at) return false;
-    g_paused_at = GetTickCount64();
+    g_paused_at = bof3::os::TickMs64();
     if (g_paused_at == 0) g_paused_at = 1;
-    LARGE_INTEGER q;
-    QueryPerformanceCounter(&q);
-    g_qpc_paused_at = q.QuadPart ? q.QuadPart : 1;
+    const std::int64_t q = static_cast<std::int64_t>(bof3::os::Counter());
+    g_qpc_paused_at = q ? q : 1;
     return true;
 }
 
 void GameClock_Resume() {
     if (!g_paused_at) return;
-    g_start += GetTickCount64() - g_paused_at;
+    g_start += bof3::os::TickMs64() - g_paused_at;
     g_paused_at = 0;
-    LARGE_INTEGER q;
-    QueryPerformanceCounter(&q);
-    g_qpc_start.QuadPart += q.QuadPart - g_qpc_paused_at;
+    const std::int64_t q = static_cast<std::int64_t>(bof3::os::Counter());
+    g_qpc_start += q - g_qpc_paused_at;
     g_qpc_paused_at = 0;
 }
 
 double GameClock_NowMs() {
-    LARGE_INTEGER q;
-    if (g_qpc_paused_at) q.QuadPart = g_qpc_paused_at;
-    else QueryPerformanceCounter(&q);
-    return static_cast<double>(q.QuadPart - g_qpc_start.QuadPart) * 1000.0 / static_cast<double>(g_qpf.QuadPart);
+    const std::int64_t q = g_qpc_paused_at ? g_qpc_paused_at : static_cast<std::int64_t>(bof3::os::Counter());
+    return static_cast<double>(q - g_qpc_start) * 1000.0 / static_cast<double>(g_qpf);
 }
 
 void GameClock_Inject() {
     char text[32];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_TICK_BASE", text, sizeof text);
-    if (n > 0 && n < sizeof text) g_base = static_cast<DWORD>(std::strtoul(text, nullptr, 0));
-    g_start = GetTickCount64();
-    QueryPerformanceFrequency(&g_qpf);
-    QueryPerformanceCounter(&g_qpc_start);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_TICK_BASE", text, sizeof text);
+    if (n > 0 && n < sizeof text) g_base = static_cast<std::uint32_t>(std::strtoul(text, nullptr, 0));
+    g_start = bof3::os::TickMs64();
+    g_qpf = bof3::os::CounterFrequency();
+    g_qpc_start = static_cast<std::int64_t>(bof3::os::Counter());
 
     // The slot must already be bound - hosted, the loader bound the imports
     // before the DLL was injected; in bof3x.exe, BindSlots did. `expected` is
@@ -106,5 +103,5 @@ void GameClock_Inject() {
     bof3::PatchBytes("Game_Clock", Imp_GetTickCount_addr, expected, replacement, 4);
     g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount.Native()) == ours;
     if (g_ours)
-        bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", g_base);
+        bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", static_cast<unsigned long>(g_base));
 }

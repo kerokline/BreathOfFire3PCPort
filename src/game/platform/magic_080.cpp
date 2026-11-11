@@ -42,6 +42,7 @@
 #include "input/bindings.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace {
 
@@ -234,13 +235,9 @@ DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount.Na
 // window comes back at its size. Used when its frame still fits the work
 // area and its top-left is on a monitor; else the computed placement.
 std::wstring PlacementPath() {
-    HMODULE self = nullptr;
-    wchar_t path[MAX_PATH];
-    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            reinterpret_cast<LPCWSTR>(&PlacementPath), &self) ||
-        GetModuleFileNameW(self, path, MAX_PATH) == 0)
-        return L"";
-    std::wstring p = path;
+    std::string self;
+    if (!bof3::os::ModulePath(reinterpret_cast<const void*>(&PlacementPath), &self)) return L"";
+    std::wstring p = bof3::os::ToWide(self.c_str());
     const size_t slash = p.find_last_of(L"\\/");
     return (slash == std::wstring::npos ? p : p.substr(0, slash)) + L"\\bof3x.window";
 }
@@ -382,8 +379,11 @@ Callees g = kOriginals;
 // bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
 void SaveFrameBesideDll() {
     wchar_t path[MAX_PATH];
-    const DWORD n = GetModuleFileNameW(GetModuleHandleW(L"bof3x.dll"), path, MAX_PATH);
-    if (n == 0 || n >= MAX_PATH) return;
+    std::string self;
+    if (!bof3::os::ModulePath(reinterpret_cast<const void*>(&SaveFrameBesideDll), &self)) return;
+    const std::wstring wide = bof3::os::ToWide(self.c_str());
+    if (wide.empty() || wide.size() >= MAX_PATH) return;
+    std::wmemcpy(path, wide.c_str(), wide.size() + 1);
     wchar_t* slash = wcsrchr(path, L'\\');
     if (!slash) return;
     const size_t room = MAX_PATH - static_cast<size_t>(slash + 1 - path);
@@ -729,16 +729,16 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     win_main::g_loop_ours = true;
     {
         char text[32];
-        if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') win_main::g_background = false;
-        const DWORD n = GetEnvironmentVariableA("BOF3X_FRAME_MS", text, sizeof text);
+        if (bof3::os::GetEnv("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') win_main::g_background = false;
+        const DWORD n = bof3::os::GetEnv("BOF3X_FRAME_MS", text, sizeof text);
         if (n > 0) {
             char* end = nullptr;
             const double v = n < sizeof text ? std::strtod(text, &end) : 0.0;
             if (end == nullptr || *end != '\0' || !(v >= 1.0 && v <= 1000.0)) bof3::Fatal("BOF3X_FRAME_MS must be 1..1000");
             g_frame_ms = v;
         }
-        if (GetEnvironmentVariableA("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
-        const DWORD sn = GetEnvironmentVariableA("BOF3X_SPEED", text, sizeof text);
+        if (bof3::os::GetEnv("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
+        const DWORD sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
             const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
@@ -758,7 +758,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         // BOF3.exe beside the game the install is the PC's and the original
         // probe decides (DIV-0100's "Reversible?"; review item 2).
         if (!bof3::ExeImage_DiscMapped() || bof3::ExeFile_Present()) {
-            MessageBoxA(nullptr, kInsertDisc, kError, MB_ICONHAND);   // DIV-0039
+            bof3::os::ShowMessage(kError, kInsertDisc, true, false);   // DIV-0039
             return 1;
         }
         File_CdRoot()[0] = 0;
@@ -831,8 +831,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         unsigned long logic_at_fps_tick = 0;
         // BOF3X_FPS_LOG: time inside the draw branch (present included) and
         // inside the logic, QueryPerformanceCounter ticks, per second.
-        LARGE_INTEGER qpf = {}, q0 = {}, q1 = {}, q2 = {};
-        QueryPerformanceFrequency(&qpf);
+        std::int64_t q0 = 0, q1 = 0, q2 = 0;
+        const std::uint64_t qpf = bof3::os::CounterFrequency();
         long long draw_ticks = 0, logic_ticks = 0;
         MSG msg;
         bool quit = false;
@@ -909,7 +909,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // A late frame is not drawn - except one a scripted shot is
                 // about to save, so a capture is the same frame at any speed.
                 if (now < deadline || bof3::InputScript_ShotPending()) {
-                    if (g_fps_log) QueryPerformanceCounter(&q0);
+                    if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
                     Gpu_PutDrawEnv(env + 0x14);
@@ -924,8 +924,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     }
                     ++frames_drawn;
                     if (g_fps_log) {
-                        QueryPerformanceCounter(&q1);
-                        draw_ticks += q1.QuadPart - q0.QuadPart;
+                        q1 = static_cast<std::int64_t>(bof3::os::Counter());
+                        draw_ticks += q1 - q0;
                     }
                     // DIV-0095: the exe host's icon, once the VRAM shadow holds
                     // its sheet; on this thread, which owns the window.
@@ -941,7 +941,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     last_fps_tick = last_tick;
                     Crt_sprintf(fps, StrWinMain(::bof3::Img(kStrFrameRate.v)), frames_drawn);
                     if (g_fps_log) {
-                        const double ms = 1000.0 / static_cast<double>(qpf.QuadPart);
+                        const double ms = 1000.0 / static_cast<double>(qpf);
                         const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
                         bof3::Log("fps         %d drawn, %lu logic, speed x%d; draw %.2f ms each, logic %.2f ms each", frames_drawn,
                                   logic, speed, frames_drawn ? static_cast<double>(draw_ticks) * ms / frames_drawn : 0.0,
@@ -961,7 +961,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
                 Gfx_BeginFrame();
                 SpriteCell_Reset();
-                if (g_fps_log) QueryPerformanceCounter(&q2);
+                if (g_fps_log) q2 = static_cast<std::int64_t>(bof3::os::Counter());
                 if (!Game_Paused) {
                     // Through the original's entry, not straight to ours: the
                     // call tracer counts a frame as an arrival at 0x5A98A0,
@@ -980,8 +980,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 }
                 bof3::orig::Gfx_LinkOTags();
                 if (g_fps_log) {
-                    QueryPerformanceCounter(&q1);
-                    logic_ticks += q1.QuadPart - q2.QuadPart;
+                    q1 = static_cast<std::int64_t>(bof3::os::Counter());
+                    logic_ticks += q1 - q2;
                 }
                 Frame_Counter += 1;
                 // The quicksave point (docs/quicksave.md 2): every task is

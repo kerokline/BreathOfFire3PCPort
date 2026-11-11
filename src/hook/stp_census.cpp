@@ -1,8 +1,10 @@
 // BOF3X_STPCENSUS - see stp_census.h and docs/stp-census.md.
 #include "hook/stp_census.h"
 
-#include <windows.h>
 
+#include <cstdint>
+#include <filesystem>
+#include <system_error>
 #include <cstdio>
 #include <cstring>
 #include <map>
@@ -13,6 +15,7 @@
 #include "game/records_gpu.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace stp_census {
 
@@ -20,7 +23,7 @@ bool g_on = false;
 
 namespace {
 
-char g_path[MAX_PATH];
+char g_path[bof3::os::kMaxPath];
 unsigned g_frames = 0;           // Direct3D frames walked
 unsigned g_frames_changed = 0;   // of them, frames with a draw holding a bit-15-clear texel
 bool g_frame_changed = false;
@@ -101,7 +104,7 @@ void SampleCells(unsigned first, unsigned count, unsigned clut, Count* c) {
 // Written beside the file and moved over it: the harness's TerminateProcess
 // can land mid-write, and a truncated census lost a whole run (away1027).
 void Write() {
-    char tmp[MAX_PATH + 8];
+    char tmp[bof3::os::kMaxPath + 8];
     std::snprintf(tmp, sizeof tmp, "%s.tmp", g_path);
     FILE* f = std::fopen(tmp, "w");
     if (!f) return;
@@ -115,13 +118,14 @@ void Write() {
                      static_cast<short>(k.window_x), static_cast<short>(k.window_y), static_cast<short>(k.window_w),
                      static_cast<short>(k.window_h), r.draws, r.frames, r.first, r.last, r.zero, r.stp, r.opaque,
                      r.only_stp, r.only_opaque, r.mixed, r.clear, r.u0, r.v0, r.u1, r.v1, r.x0, r.y0, r.x1, r.y1);
-    if (std::fclose(f) == 0) MoveFileExA(tmp, g_path, MOVEFILE_REPLACE_EXISTING);
+    std::error_code rename_ec;
+    if (std::fclose(f) == 0) std::filesystem::rename(bof3::os::Path(tmp), bof3::os::Path(g_path), rename_ec);
 }
 
 }  // namespace
 
 void Start() {
-    const DWORD n = GetEnvironmentVariableA("BOF3X_STPCENSUS", g_path, sizeof g_path);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_STPCENSUS", g_path, sizeof g_path);
     if (n == 0 || n >= sizeof g_path) return;
     g_on = true;
     bof3::Log("stpcensus   on: %s, rewritten every 60 Direct3D frames", g_path);

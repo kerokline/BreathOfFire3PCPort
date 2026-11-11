@@ -1,35 +1,34 @@
 #include "common/home.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <system_error>
+#include <cstdint>
+
+#include "os/os.h"
 
 namespace bof3x {
 namespace {
 
-bool IsDirectory(const std::wstring& path) {
-    const DWORD at = GetFileAttributesW(path.c_str());
-    return at != INVALID_FILE_ATTRIBUTES && (at & FILE_ATTRIBUTE_DIRECTORY);
-}
+constexpr std::uint32_t kMaxPath = 260;   // the limit this folder's paths were always read under
 
-bool IsFile(const std::wstring& path) {
-    const DWORD at = GetFileAttributesW(path.c_str());
-    return at != INVALID_FILE_ATTRIBUTES && !(at & FILE_ATTRIBUTE_DIRECTORY);
-}
+bool IsDirectory(const std::wstring& path) { return bof3::os::IsDirectory(bof3::os::ToUtf8(path.c_str()).c_str()); }
+
+bool IsFile(const std::wstring& path) { return bof3::os::IsFile(bof3::os::ToUtf8(path.c_str()).c_str()); }
 
 }  // namespace
 
 std::wstring HomeDir() {
     std::wstring home;
-    wchar_t env[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_HOME", env, MAX_PATH);
-    if (n > 0 && n < MAX_PATH) {
-        wchar_t full[MAX_PATH];
-        const DWORD m = GetFullPathNameW(env, MAX_PATH, full, nullptr);
-        home = m > 0 && m < MAX_PATH ? std::wstring(full, m) : std::wstring(env, n);
+    wchar_t env[kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_HOME", env, kMaxPath);
+    if (n > 0 && n < kMaxPath) {
+        std::error_code ec;
+        const std::filesystem::path full = std::filesystem::absolute(std::filesystem::path(env), ec).lexically_normal();
+        home = ec ? std::wstring(env, n) : full.wstring();
     } else {
-        wchar_t self[MAX_PATH];
-        const DWORD m = GetModuleFileNameW(nullptr, self, MAX_PATH);
-        if (m == 0 || m >= MAX_PATH) return std::wstring();
-        home.assign(self, m);
+        std::string self;
+        if (!bof3::os::ExecutablePath(&self)) return std::wstring();
+        home = bof3::os::ToWide(self.c_str());
         home = home.substr(0, home.find_last_of(L"\\/"));
     }
     while (home.size() > 3 && (home.back() == L'\\' || home.back() == L'/')) home.pop_back();

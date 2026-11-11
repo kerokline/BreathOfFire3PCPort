@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/button_text.h"

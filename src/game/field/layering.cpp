@@ -1,6 +1,5 @@
 #include "game/layering.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -13,6 +12,7 @@
 #include "hook/draw_order.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/os.h"
 
 namespace layering {
 
@@ -57,7 +57,7 @@ unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<unsigned char*
 
 int EnvInt(const char* name, int fallback, int lo, int hi) {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA(name, text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv(name, text, sizeof text);
     if (n == 0 || n >= sizeof text) return fallback;
     char* end = nullptr;
     const long v = std::strtol(text, &end, 10);

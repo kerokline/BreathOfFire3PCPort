@@ -20,13 +20,13 @@
 #include <cstdint>
 #include <cstring>
 
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace mode_states {
 namespace {
@@ -353,15 +353,15 @@ constexpr std::uint32_t kChoiceHandlers[16] = {0x498AD0, 0x498B00, 0x498B30, 0x4
 struct Tail { std::uint32_t at, size; };
 constexpr Tail kTails[2] = {{0x4981F1, 0x3C}, {0x4983F1, 0x1B}};
 void* Thunk(const void* choice, const Tail& tail) {
-    void* const code = VirtualAlloc(nullptr, 5 + tail.size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    if (!code) bof3::Fatal("mode_states: VirtualAlloc for a commit's thunk failed");
+    void* const code = bof3::os::MemAlloc(nullptr, 5 + tail.size, bof3::os::Prot::ReadWriteExec);
+    if (!code) bof3::Fatal("mode_states: MemAlloc for a commit's thunk failed");
     auto* b = static_cast<std::uint8_t*>(code);
     b[0] = 0xE8;
     const std::int32_t rel = static_cast<std::int32_t>(Address(choice) - (Address(code) + 5));
     std::memcpy(b + 1, &rel, sizeof rel);
     std::memcpy(b + 5, At(tail.at), tail.size);
     if (b[5 + tail.size - 1] != 0xC3) bof3::Fatal("mode_states: the commit tail at 0x%X does not end in a ret", static_cast<unsigned>(tail.at));
-    FlushInstructionCache(GetCurrentProcess(), code, 5 + tail.size);
+    bof3::os::FlushCode(code, 5 + tail.size);
     return code;
 }
 

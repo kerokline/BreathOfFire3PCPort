@@ -1,6 +1,5 @@
 #include "game/map_layers.h"
 
-#include <windows.h>
 
 #include "game/draw_pool.h"
 #include "game/faerie_ring.h"
@@ -17,6 +16,7 @@
 #include "hook/draw_order.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
+#include "os/os.h"
 
 // The view's frame, its rebuild and the area header's pass - see
 // docs/map-layers.md for each function, its PSX twin and the fuzz.
@@ -71,7 +71,7 @@ void MapLayers_Inject() {
     if (bof3::WantsShadow("map_layers")) map_layers::SelfTest();
     {
         char text[8];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_ZERO", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_SIDE_ZERO", text, sizeof text);
         // An experiment's switch (2026-10-07, the owner's "waterfall"), off
         // unless BOF3X_SIDE_ZERO=1; DIV-0085 "Reversible?" names it.
         if (n >= sizeof text || (n != 0 && !((text[0] == '0' || text[0] == '1') && text[1] == 0)))
@@ -125,7 +125,7 @@ void SnapshotSides() {
 
 void ArmSideDup() {
     char text[8];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_DUP", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_SIDE_DUP", text, sizeof text);
     if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_SIDE_DUP must be 0 or 1");
     if (n == 1 && text[0] == '0') {
         bof3::Log("DIV-0085 off (BOF3X_SIDE_DUP=0): a cell given a second side face at run time reads the next "

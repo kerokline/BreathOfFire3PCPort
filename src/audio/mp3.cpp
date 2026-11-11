@@ -1,7 +1,8 @@
 // DIV-0091: minimp3 behind the music seam (mp3.h; docs/mp3-decoder.md).
 #include "audio/mp3.h"
 
-#include <windows.h>
+#include <cstdint>
+#include <fstream>
 
 #include <cmath>
 #include <cstddef>
@@ -21,6 +22,7 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wimplicit-fallthrough"
 #include "minimp3/minimp3.h"
+#include "os/os.h"
 #pragma clang diagnostic pop
 
 namespace mp3dec {
@@ -181,10 +183,9 @@ int __stdcall DecodeFrame(void* decoder, void* out);
 
 int __stdcall Decode(void* decoder, void* out) {
     if (!g_stack) {
-        g_stack = static_cast<unsigned char*>(VirtualAlloc(nullptr, kStackBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+        g_stack = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kStackBytes, bof3::os::Prot::ReadWrite));
         if (!g_stack) bof3::Fatal("DIV-0091: no memory for the decoder's stack");
-        DWORD old;
-        VirtualProtect(g_stack, 4096, PAGE_NOACCESS, &old);  // a guard page under it: an overrun faults, never wanders
+        bof3::os::MemProtect(g_stack, 4096, bof3::os::Prot::None);  // a guard page under it: an overrun faults, never wanders
     }
     const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
     int result;
@@ -410,14 +411,16 @@ Diff Compare(const Run& a, const Run& b) {
 }
 
 bool ReadWhole(const char* path, std::vector<std::uint8_t>* out) {
-    HANDLE h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
-    if (h == INVALID_HANDLE_VALUE) return false;
-    const DWORD size = GetFileSize(h, nullptr);
+    std::ifstream h(bof3::os::Path(path), std::ios::binary);
+    if (!h) return false;
+    h.seekg(0, std::ios::end);
+    const long long file_size = static_cast<long long>(h.tellg());
+    if (!h || file_size < 0 || file_size >= 0xFFFFFFFFll) return false;
+    h.seekg(0);
+    const std::uint32_t size = static_cast<std::uint32_t>(file_size);
     out->resize(size);
-    DWORD got = 0;
-    const bool ok = size == 0 || (ReadFile(h, out->data(), size, &got, nullptr) && got == size);
-    CloseHandle(h);
-    return ok;
+    return size == 0 || (h.read(reinterpret_cast<char*>(out->data()), static_cast<std::streamsize>(size)) &&
+                         static_cast<std::uint32_t>(h.gcount()) == size);
 }
 
 bool LooksMp3(const std::uint8_t* b, std::size_t n) { return n >= 4 && b[0] == 0xFF && (b[1] & 0xE0) == 0xE0; }
@@ -456,9 +459,9 @@ namespace {
 // decoders' PCM of the named files written there, raw 16-bit stereo, for a
 // third decoder's verdict (docs/mp3-decoder.md 2).
 void DumpPcm(const char* file_name, const Run& capcom, const Run& ours) {
-    char dir[MAX_PATH], names[1024];
-    if (GetEnvironmentVariableA("BOF3X_MP3_DUMP", dir, sizeof dir) == 0) return;
-    const DWORD n = GetEnvironmentVariableA("BOF3X_MP3_DUMP_FILES", names, sizeof names);
+    char dir[bof3::os::kMaxPath], names[1024];
+    if (bof3::os::GetEnv("BOF3X_MP3_DUMP", dir, sizeof dir) == 0) return;
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_MP3_DUMP_FILES", names, sizeof names);
     if (n == 0 || n >= sizeof names) return;
     bool listed = false;
     const std::size_t len = std::strlen(file_name);
@@ -472,7 +475,7 @@ void DumpPcm(const char* file_name, const Run& capcom, const Run& ours) {
     const Run* runs[2] = {&capcom, &ours};
     const char* tags[2] = {"capcom", "ours"};
     for (int i = 0; i < 2; ++i) {
-        char path[MAX_PATH];
+        char path[bof3::os::kMaxPath];
         std::snprintf(path, sizeof path, "%s\\%s.%s.pcm", dir, file_name, tags[i]);
         std::FILE* f = std::fopen(path, "wb");
         if (!f) bof3::Fatal("DIV-0091: cannot write %s", path);
@@ -516,44 +519,40 @@ void CompareCorpus(const char* tsv_path) {
     unsigned files = 0, same = 0;
     std::uint32_t max_abs = 0;
     double worst_rms = 0;
-    const DWORD t0 = GetTickCount();
+    const std::uint32_t t0 = bof3::os::TickMs32();
     for (const char* dir : dirs) {
-        char pattern[MAX_PATH];
+        char pattern[bof3::os::kMaxPath];
         std::snprintf(pattern, sizeof pattern, "%s\\*", dir);
-        WIN32_FIND_DATAA f;
-        HANDLE h = FindFirstFileA(pattern, &f);
-        if (h == INVALID_HANDLE_VALUE) continue;
-        do {
-            if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-            char path[MAX_PATH];
-            std::snprintf(path, sizeof path, "%s\\%s", dir, f.cFileName);
+        bof3::os::WalkDirectory(pattern, [&](const bof3::os::DirEntry& f) {
+            if (f.is_directory) return true;
+            char path[bof3::os::kMaxPath];
+            std::snprintf(path, sizeof path, "%s\\%s", dir, f.name.c_str());
             std::uint8_t first[4] = {0, 0, 0, 0};
-            DWORD got = 0;
-            HANDLE fh = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
-            if (fh == INVALID_HANDLE_VALUE) continue;
-            ReadFile(fh, first, 4, &got, nullptr);
-            CloseHandle(fh);
-            if (!LooksMp3(first, got)) continue;
+            std::ifstream fh(bof3::os::Path(path), std::ios::binary);
+            if (!fh) return true;
+            fh.read(reinterpret_cast<char*>(first), 4);
+            const std::uint32_t got = static_cast<std::uint32_t>(fh.gcount());
+            if (!LooksMp3(first, got)) return true;
             ++files;
             Diff d;
             Run a, b;
             if (CompareFile(path, tsv, &d, &a, &b)) ++same;
             if (d.max_abs > max_abs) max_abs = d.max_abs;
             if (d.rms > worst_rms) worst_rms = d.rms;
-        } while (FindNextFileA(h, &f));
-        FindClose(h);
+            return true;
+        });
     }
     std::fclose(tsv);
     bof3::Log("DIV-0091    compare: %u MP3 files of BGM\\ and SND\\ through both decoders in %lu ms, %u the same shape; "
               "max |delta| %u, worst RMS %.4f (16-bit units); %s",
-              files, static_cast<unsigned long>(GetTickCount() - t0), same, max_abs, worst_rms, tsv_path);
+              files, static_cast<unsigned long>(bof3::os::TickMs32() - t0), same, max_abs, worst_rms, tsv_path);
 }
 
 }  // namespace
 
 void Arm() {
     char mode[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_MP3", mode, sizeof mode);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_MP3", mode, sizeof mode);
     if (n >= sizeof mode || (n != 0 && std::strcmp(mode, "minimp3") != 0 && std::strcmp(mode, "original") != 0))
         bof3::Fatal("DIV-0091: BOF3X_MP3 must be minimp3 or original");
     if (n != 0 && std::strcmp(mode, "original") == 0) {
@@ -577,14 +576,14 @@ void Arm() {
 // the comparison against it runs from WinMain, the first code of ours with
 // the runtime under it, and ends the process there.
 void CompareAtStart() {
-    char tsv[MAX_PATH];
-    const DWORD t = GetEnvironmentVariableA("BOF3X_MP3_COMPARE", tsv, sizeof tsv);
+    char tsv[bof3::os::kMaxPath];
+    const std::uint32_t t = bof3::os::GetEnv("BOF3X_MP3_COMPARE", tsv, sizeof tsv);
     if (t >= sizeof tsv) bof3::Fatal("DIV-0091: BOF3X_MP3_COMPARE is %lu characters", static_cast<unsigned long>(t));
     if (t == 0) return;
     CompareCorpus(tsv);
     bof3::Log("DIV-0091    compare only: done, ending the process");
     bof3::LogClose();
-    TerminateProcess(GetCurrentProcess(), 0);
+    std::_Exit(0);
 }
 
 // --- BOF3X_SHADOW=sound -------------------------------------------------------

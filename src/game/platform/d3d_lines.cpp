@@ -12,7 +12,6 @@
 // is one pixel, as the PlayStation's was.
 #include "game/d3d_lines.h"
 
-#include <windows.h>
 
 #include <cmath>
 #include <cstdint>
@@ -21,6 +20,7 @@
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace d3d_lines {
 
@@ -114,7 +114,7 @@ long DrawWide(unsigned corners) {
 
 void Arm() {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LINES", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_LINES", text, sizeof text);
     if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_LINES must be 0 or 1");
     if (n == 1 && text[0] == '0') {
         bof3::Log("DIV-0079    off (BOF3X_LINES=0): LINE primitives one screen pixel wide, the original's strip");

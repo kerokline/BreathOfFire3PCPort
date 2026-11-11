@@ -73,6 +73,7 @@
 #include "render/fb_grab.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace {
 
@@ -951,11 +952,11 @@ render::Options ReadOptions(HWND hwnd, bool borderless) {
     o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 c) k wide (c 53 or 120), the view centred in it
     display_setup::g_scale = k;
     o.point_filter = false;
-    if (GetEnvironmentVariableA("BOF3X_FILTER", text, sizeof text) > 0) {
+    if (bof3::os::GetEnv("BOF3X_FILTER", text, sizeof text) > 0) {
         if (std::strcmp(text, "point") == 0) o.point_filter = true;
         else if (std::strcmp(text, "linear") != 0) bof3::Fatal("BOF3X_FILTER=%s: point or linear", text);
     }
-    o.vsync = GetEnvironmentVariableA("BOF3X_VSYNC", nullptr, 0) > 0;
+    o.vsync = bof3::os::GetEnv("BOF3X_VSYNC", nullptr, 0) > 0;
     o.snap = DisplaySetup_Snap();
     return o;
 }
@@ -2585,7 +2586,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         static unsigned full_logged = 0;
         if (!asked) {
             char text[8];
-            want = GetEnvironmentVariableA("BOF3X_TEXPAGELOG", text, sizeof text) != 0 && text[0] == '1';
+            want = bof3::os::GetEnv("BOF3X_TEXPAGELOG", text, sizeof text) != 0 && text[0] == '1';
             asked = true;
         }
         if (slot == 0x20 && full_logged < 64) {
@@ -3983,7 +3984,7 @@ void D3dFromD3dRest_Inject() {
     // DIVERGENCE DIV-0077: after the self-test, which compares Capcom's point.
     {
         char text[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_TILE1", text, sizeof text);
+        const DWORD n = bof3::os::GetEnv("BOF3X_TILE1", text, sizeof text);
         const bool off = n == 1 && text[0] == '0';
         if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_TILE1 must be 0 or 1");
         if (!off) {
@@ -4027,7 +4028,7 @@ constexpr std::uint32_t kMagFilterImm = 0x5A5B34;   // the 02 of `push 2` at 0x5
 
 void D3dFromGfxFilter_Inject() {
     char mode[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_FILTER", mode, sizeof mode);
+    const DWORD n = bof3::os::GetEnv("BOF3X_FILTER", mode, sizeof mode);
     if (n == 0) return;
     if (n >= sizeof mode || (std::strcmp(mode, "point") != 0 && std::strcmp(mode, "linear") != 0))
         bof3::Fatal("BOF3X_FILTER must be 'point' or 'linear'");

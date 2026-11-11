@@ -22,6 +22,7 @@
 #include "hook/wav_dump.h"
 #include "input/sigma.h"
 #include "render/render_d3d11.h"
+#include "os/os.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
 // line, '#' to end of line is a comment, buttons joined with '+':
@@ -268,11 +269,10 @@ unsigned Width(int line, const std::string& tok) {
 // with the image's base.
 std::uint32_t Address(int line, const std::string& tok, unsigned width) {
     const std::uint32_t a = Number(line, tok);
-    MEMORY_BASIC_INFORMATION mi{};
+    os::MemInfo mi;
     const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
-    if (!VirtualQuery(p, &mi, sizeof mi) || mi.State != MEM_COMMIT ||
-        (mi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) ||
-        ::bof3::Img(a) + width > reinterpret_cast<std::uintptr_t>(mi.BaseAddress) + mi.RegionSize)
+    if (!os::MemQuery(p, &mi) || mi.state != os::MemState::Committed || !(mi.readable || mi.writable || mi.executable) ||
+        mi.guard || ::bof3::Img(a) + width > mi.base + mi.size)
         ParseError(line, "address not readable", tok);
     return a;
 }
@@ -406,9 +406,9 @@ void Load(const char* path) {
             st.width = Width(line, t[2]);
             st.addr = Address(line, t[1], st.width);
             st.value = Number(line, t[3]);
-            MEMORY_BASIC_INFORMATION mi{};
-            VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi, sizeof mi);
-            if (!(mi.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
+            os::MemInfo mi;
+            os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi);
+            if (!mi.writable)
                 ParseError(line, "address not writable", t[1]);
         } else if (w == "music") {
             // music TRACK [FRAMES]: the game's Music_Play(TRACK, FRAMES) called at
@@ -673,10 +673,10 @@ constexpr std::uint32_t kPendingXAddr = 0x903860;   // Field_ChangeArea's x (win
 
 bool Readable(std::uint32_t a, std::uint32_t n) {
     if (a < 0x10000 || n == 0) return false;
-    MEMORY_BASIC_INFORMATION mi{};
-    if (!VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi, sizeof mi)) return false;
-    if (mi.State != MEM_COMMIT || (mi.Protect & (PAGE_NOACCESS | PAGE_GUARD))) return false;
-    return a + n <= reinterpret_cast<std::uintptr_t>(mi.BaseAddress) + mi.RegionSize;
+    os::MemInfo mi;
+    if (!os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), &mi)) return false;
+    if (mi.state != os::MemState::Committed || !(mi.readable || mi.writable || mi.executable) || mi.guard) return false;
+    return a + n <= mi.base + mi.size;
 }
 
 void LogLinks() {
@@ -1165,8 +1165,8 @@ void RecordStart(const char* path) {
     g_rec = std::fopen(path, "w");
     if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);
     char lang[16] = "(unset)", filter[16] = "(unset)";
-    GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
-    GetEnvironmentVariableA("BOF3X_FILTER", filter, sizeof filter);
+    bof3::os::GetEnv("BOF3X_LANG", lang, sizeof lang);
+    bof3::os::GetEnv("BOF3X_FILTER", filter, sizeof filter);
     std::fprintf(g_rec,
                  "# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from\n"
                  "# recipe frame 0. BOF3X_LANG=%s BOF3X_FILTER=%s - play it back with the same\n"
@@ -1201,7 +1201,7 @@ void RandCountStart() {
     // among them when BOF3X_ORIGINAL leaves it Capcom's, and crt_rest makes
     // no copy of Rand under BOF3X_CALLTRACE.
     char trace[4];
-    if (GetEnvironmentVariableA("BOF3X_CALLTRACE", trace, sizeof trace)) {
+    if (bof3::os::GetEnv("BOF3X_CALLTRACE", trace, sizeof trace)) {
         Log("input       randlog: off under BOF3X_CALLTRACE (Rand's entry is the trace's)");
         return;
     }
@@ -1298,8 +1298,8 @@ bool InputScript_PausedWord(unsigned short* word) {
 void InputScript_Start() {
     char path[MAX_PATH];
     char rec[MAX_PATH];
-    const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
-    const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
+    const DWORD r = bof3::os::GetEnv("BOF3X_RECORD", rec, sizeof rec);
+    const DWORD n = bof3::os::GetEnv("BOF3X_INPUT", path, sizeof path);
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
     const bool hashing = StateHash_Start();
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
@@ -1324,13 +1324,13 @@ void InputScript_Start() {
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
     wchar_t dir[MAX_PATH];
-    const DWORD dn = GetEnvironmentVariableW(L"BOF3X_SHOT_DIR", dir, MAX_PATH);
+    const DWORD dn = bof3::os::GetEnvW(L"BOF3X_SHOT_DIR", dir, MAX_PATH);
     if (dn > 0 && dn < MAX_PATH) {
         g_shot_dir = dir;
         Log("input       shots are written by the game to %s (BOF3X_SHOT_DIR)", Utf8Path(dir).text);
     }
     char every[16];
-    const DWORD en = GetEnvironmentVariableA("BOF3X_SHOT_EVERY", every, sizeof every);
+    const DWORD en = bof3::os::GetEnv("BOF3X_SHOT_EVERY", every, sizeof every);
     if (en > 0 && en < sizeof every) {
         char* end = nullptr;
         const unsigned long v = std::strtoul(every, &end, 10);
@@ -1340,12 +1340,12 @@ void InputScript_Start() {
         Log("input       a frame every %u recipe frames to the shot directory (BOF3X_SHOT_EVERY)", g_every);
     }
     char wait[8];
-    if (GetEnvironmentVariableA("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
+    if (bof3::os::GetEnv("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
         // Named for the process, so the driver can find it by pid.
         wchar_t name[64];
-        std::swprintf(name, 64, L"Local\\bof3x_shot_%lu", GetCurrentProcessId());
+        std::swprintf(name, 64, L"Local\\bof3x_shot_%lu", static_cast<unsigned long>(bof3::os::ProcessId()));
         g_release = CreateEventW(nullptr, FALSE, FALSE, name);
-        if (!g_release) Fatal("BOF3X_SHOT_WAIT: CreateEvent failed, error %lu", GetLastError());
+        if (!g_release) Fatal("BOF3X_SHOT_WAIT: CreateEvent failed, error %lu", static_cast<unsigned long>(bof3::os::LastError()));
         Log("input       shots freeze the game until released (BOF3X_SHOT_WAIT)");
     }
     // Not an Inject: nothing of Capcom's is replaced, and BOF3X_ORIGINAL has

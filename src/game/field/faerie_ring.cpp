@@ -29,7 +29,7 @@
 
 #include "game/faerie_ring.h"
 
-#include <windows.h>
+#include <fstream>
 
 #include <cstdint>
 #include <cstring>
@@ -39,6 +39,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace {
 
@@ -111,14 +112,16 @@ void TakeChunk(void* ctx, const dat_cache::Chunk& c, std::uint8_t* payload) {
 // optional layers are not walked (the ring is the shipped one).
 bool ReadRingFile(RingFile* f, const char** why) {
     if (dat_cache::WalkShipped(kRingFile, TakeChunk, f)) return true;
-    const HANDLE h = CreateFileA("DAT\\AREA151.DAT", GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                 FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h == INVALID_HANDLE_VALUE) { *why = "DAT\\AREA151.DAT cannot be opened"; return false; }
-    const DWORD size = GetFileSize(h, nullptr);
+    std::ifstream h(bof3::os::Path("DAT\\AREA151.DAT"), std::ios::binary);
+    if (!h) { *why = "DAT\\AREA151.DAT cannot be opened"; return false; }
+    h.seekg(0, std::ios::end);
+    const long long file_size = static_cast<long long>(h.tellg());
+    const bool sized = h && file_size >= 0 && file_size < 0xFFFFFFFFll;
+    h.seekg(0);
+    const std::uint32_t size = sized ? static_cast<std::uint32_t>(file_size) : 0;
     std::vector<std::uint8_t> data(size);
-    DWORD got = 0;
-    const BOOL ok = size != INVALID_FILE_SIZE && ReadFile(h, data.data(), size, &got, nullptr) && got == size;
-    CloseHandle(h);
+    const bool ok = sized && h.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(size)) &&
+                    static_cast<std::uint32_t>(h.gcount()) == size;
     if (!ok) { *why = "DAT\\AREA151.DAT cannot be read"; return false; }
     for (std::size_t at = 0; at + sizeof(dat_cache::Chunk) <= data.size();) {
         dat_cache::Chunk c;

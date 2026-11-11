@@ -24,7 +24,6 @@
 // division faults), an actor index +0x148 above 7, a member index +5 or +6
 // above 3, and a catch-up distance of more than about 13 tries (the tries
 // grow as the square of it, all of them stand-in calls).
-#include <windows.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,6 +36,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace member_sprites {
 namespace {
@@ -516,7 +516,7 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
         bof3::Fatal("member_sprites: %s has no [eax*4 + 0x%X] at +0x%X", c.name, (unsigned)original, (unsigned)at);
     disp = Address(table);
     std::memcpy(code + at + 3, &disp, sizeof disp);
-    FlushInstructionCache(GetCurrentProcess(), copy, c.size);
+    bof3::os::FlushCode(copy, c.size);
 }
 
 // --- the state compared -------------------------------------------------------------
@@ -770,7 +770,7 @@ void SelfTest() {
     move_script::Relocate(theirs[kFollow], 0x51AD60, 0x260, {0xB8, 0x244, 7});
     move_script::Relocate(theirs[kStepAhead], 0x51B430, 0x198, {0x118, 0x178, 8});
     move_script::Relocate(theirs[kCellKind], 0x528370, 0x3BD, {0xFE, 0x2A8, 9});
-    for (const Kind k : {kFollow, kStepAhead, kCellKind}) FlushInstructionCache(GetCurrentProcess(), theirs[k], kClones[k].size);
+    for (const Kind k : {kFollow, kStepAhead, kCellKind}) bof3::os::FlushCode(theirs[k], kClones[k].size);
 
     static State saved, input, their_out, our_out;
     Capture(saved);

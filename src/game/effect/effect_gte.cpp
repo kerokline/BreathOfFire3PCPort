@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <cstring>
 #include <utility>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/cheats.h"
@@ -24,6 +23,7 @@
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace {
 
@@ -93,7 +93,7 @@ extern "C" void __cdecl Effect_RunObjects(void) {
     static int log_on = -1;
     if (log_on < 0) {
         char v[8];
-        log_on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
+        log_on = bof3::os::GetEnv("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
     }
     for (unsigned n = kEffects; n != 0; --n, object += kEffectBytes) {
         if (object[0] == 0) continue;

@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): a harness-only watcher over VirtualProtect and guard pages.
 // BOF3X_WRITEWATCH - see write_watch.h and docs/write-watch.md.
 #include "hook/write_watch.h"
 

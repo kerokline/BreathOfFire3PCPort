@@ -8,7 +8,6 @@
 // Menu_PieceRect's table 0x663C8C, the stand-in codes from 0x66A2FC.
 #include "game/shoulder_glyphs.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -22,6 +21,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "os/os.h"
 
 namespace shoulder_glyphs {
 namespace {
@@ -414,7 +414,7 @@ void Arm() {
     // on the page, so the corner's L1 / R1 are the Config panel's glyphs too.
     std::string how = "no cache named: the install's own page";
     wchar_t root[1024];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, 1024);
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_CACHE", root, 1024);
     if (n > 0 && n < 1024) {
         std::wstring path(root, n);
         while (!path.empty() && (path.back() == L'\\' || path.back() == L'/')) path.pop_back();
