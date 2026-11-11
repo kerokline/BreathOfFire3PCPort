@@ -2472,6 +2472,8 @@ So the exe's tables are not a duplicate of anything in `DAT/`. They sat inside t
 
 **First concrete step, when wanted:** `emi-patch` for kept sections alone. One patched AREA image section built as a DAT layer, the rest refused, `mods.py selftest` extended with a synthetic patch (no game data), and one end-to-end run on the owner's machine with a real patch against the held JP or US disc. The image layer is the second step, and the first `GAME.EMI` table edit (one field of a `tables.toml` table) the proof of it, checked with `tables.py dump` against the patched EMI.
 
+**Staged (2026-11-11):** the image layer as its own round, [`image-layer-round.md`](image-layer-round.md), after the owner chose one file per table. The kept-section step is [`disc-patch-round.md`](disc-patch-round.md).
+
 ### A first reader of the EMI-held tables: the save editor's entrances (task, 2026-11-10, the owner)
 
 The save editor's entrance list ([`save-editor.md`](save-editor.md) 4.2) is the area link lists, which it reads
