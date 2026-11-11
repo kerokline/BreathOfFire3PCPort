@@ -946,9 +946,86 @@ def build(home, cache, mod_folder, row, tag, where, say):
             say("  not carried: %d changed sections in %d files of a kind this release does not read"
                 % (len(other), len({k for k, _ in other})))
         say("  %d text and page sections went through the text builder" % len(text_secs), quiet=True)
+        write_report(mod_folder, where, {
+            "base_chunks": sum(len(c) for c in base.values()), "enemy_tables": len(enemy),
+            "text_chunks": len(out[second]), "text_sections": len(text_secs),
+            "table_bytes": placed["cells"] if placed else 0, "tables": placed["tables"] if placed else 0,
+            "other_table_bytes": placed["raw"] if placed else 0,
+        }, {
+            "program_sections": len(overlays), "program_files": len({k for k, _ in overlays}),
+            "sound_sections": len(sound), "boot_places": boot, "other_sections": len(other),
+            "table_bytes": placed["kept"] if placed else 0, "pointer_bytes": notes["pointer"],
+            "length_changes": len(notes["length"]),
+        })
         return out
     finally:
         shutil.rmtree(work, ignore_errors=True)
+
+
+REPORT = "report.toml"
+
+
+def write_report(mod_folder, where, carried, not_carried):
+    """<the mod's folder>/report.toml: what this build of the mod has and what
+    of the patch it does not have, as counts (docs/disc-patch-round.md 3 step
+    6). Counts only: no byte of the game or of the patch."""
+    lines = ["# What this build of the mod has, and what of the author's patch it does not have.",
+             "# Written by tools/disc_patch_build.py when the mod is built; counts only.",
+             'source = "%s"' % where, "", "[carried]"]
+    lines += ["%s = %d" % (k, v) for k, v in carried.items()]
+    lines += ["", "[not_carried]"]
+    lines += ["%s = %d" % (k, v) for k, v in not_carried.items()]
+    tmp = os.path.join(mod_folder, REPORT + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines) + "\n")
+    os.replace(tmp, os.path.join(mod_folder, REPORT))
+
+
+def read_report(mod_folder):
+    """(carries, lacks): two sentences for the Mods tab from report.toml, each
+    None when there is nothing to say; (None, None) when the file is not
+    there or is not one this tool wrote."""
+    import tomllib
+    try:
+        with open(os.path.join(mod_folder, REPORT), "rb") as f:
+            rep = tomllib.load(f)
+        c, n = rep["carried"], rep["not_carried"]
+        def count(v, word):
+            return "%d %s%s" % (v, word, "" if v == 1 else "s")
+
+        def num(d, k):
+            v = d.get(k, 0)
+            if not isinstance(v, int) or isinstance(v, bool) or v < 0:
+                raise ValueError(k)
+            return v
+        has = []
+        if num(c, "enemy_tables"):
+            has.append(count(num(c, "enemy_tables"), "enemy table"))
+        if num(c, "base_chunks") > num(c, "enemy_tables"):
+            has.append(count(num(c, "base_chunks") - num(c, "enemy_tables"), "picture"))
+        if num(c, "text_sections"):
+            has.append(count(num(c, "text_sections"), "text section"))
+        if num(c, "table_bytes") + num(c, "other_table_bytes"):
+            has.append(count(num(c, "table_bytes") + num(c, "other_table_bytes"), "byte") + " of table numbers")
+        lack = []
+        if num(n, "program_sections"):
+            lack.append("the program changes in " + count(num(n, "program_sections"), "section"))
+        if num(n, "boot_places"):
+            lack.append("the changes to the boot program")
+        if num(n, "sound_sections"):
+            lack.append(count(num(n, "sound_sections"), "sound section"))
+        if num(n, "table_bytes"):
+            lack.append(count(num(n, "table_bytes"), "byte") + " of table numbers")
+        if num(n, "pointer_bytes"):
+            lack.append(count(num(n, "pointer_bytes"), "byte") + " of pointers")
+        if num(n, "length_changes"):
+            lack.append(count(num(n, "length_changes"), "change") + " to the length of a table")
+        if num(n, "other_sections"):
+            lack.append(count(num(n, "other_sections"), "other section"))
+    except (OSError, KeyError, ValueError, AttributeError, tomllib.TOMLDecodeError):
+        return None, None
+    return ("This build of the mod has these changes: %s." % ", ".join(has) if has else None,
+            "It does not have these changes of the patch: %s." % ", ".join(lack) if lack else None)
 
 
 # ---------------------------------------------------------------- the self-test
@@ -1200,6 +1277,27 @@ def selftest():
         refused(lambda: build(home, cache, home, row, "xx-XX", "w", lambda t, quiet=False: None), "is not there",
                 "build: a disc that is listed and gone")
         expect(not os.path.exists(os.path.join(home, "mods", ".build-x")), "  and no scratch folder left")
+
+        # the report: counts in, two sentences out
+        rd = os.path.join(root, "report")
+        os.makedirs(rd)
+        expect(read_report(rd) == (None, None), "report: none before a build")
+        write_report(rd, "mod:x@1:psx-xx",
+                     {"base_chunks": 4, "enemy_tables": 3, "text_chunks": 9, "text_sections": 5, "table_bytes": 20,
+                      "tables": 2, "other_table_bytes": 6},
+                     {"program_sections": 7, "program_files": 4, "sound_sections": 1, "boot_places": 2,
+                      "other_sections": 0, "table_bytes": 0, "pointer_bytes": 0, "length_changes": 0})
+        expect(read_report(rd) == (
+            "This build of the mod has these changes: 3 enemy tables, 1 picture, 5 text sections, 26 bytes of table "
+            "numbers.",
+            "It does not have these changes of the patch: the program changes in 7 sections, the changes to the boot "
+            "program, 1 sound section."), "report: what the build has and what it does not have, as sentences")
+        write_report(rd, "w", {"enemy_tables": 1}, {})
+        expect(read_report(rd) == ("This build of the mod has these changes: 1 enemy table.", None),
+               "report: nothing left out, no second sentence")
+        with open(os.path.join(rd, REPORT), "w") as f:
+            f.write('[carried]\nenemy_tables = "many"\n[not_carried]\n')
+        expect(read_report(rd) == (None, None), "report: a file this tool did not write says nothing")
     finally:
         shutil.rmtree(root, ignore_errors=True)
     print("disc_patch_build selftest: %d failure(s)" % len(fails))

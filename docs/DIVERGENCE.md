@@ -12011,6 +12011,32 @@ designed in rather than bolted on.
   `BOF3X_OPT` when that layer is built, else plays without one and says so on
   stderr. The **furigana zip** (`make_mod.py furigana`, from
   `data/furigana/`) is attached to releases by `release.yml`.
+- **Amended 2026-11-11 (the disc-patch round, issue 216;
+  [`disc-patch-round.md`](disc-patch-round.md)):** a third kind,
+  `disc-patch` - a romhack as its author released it, the `.xdelta` of a
+  disc's data track, with `author` required. `mods.py add` checks the patch's
+  hash and that it is VCDIFF; a mod whose disc is not in the source list is
+  listed as `needs-disc`. `tools/disc_patch_build.py` applies the patch to a
+  scratch copy of the player's own disc and builds two layers from what
+  differs: `mod-<id>` (enemy tables, pictures, and the overlays' table
+  numbers as cells of the table files, DIV-0111 and DIV-0213's forms) and
+  `mod-<id>-<tag>` (the text of the disc's language). The overlays' program
+  changes, a changed sound bank and the boot program are **not carried**;
+  the build counts them into `<home>\mods\<id>\report.toml` and the Mods
+  tab says so. The launcher hands both layers to the game after every other
+  layer, in the Mods tab's order, when the language played is `<tag>`; under
+  another language the mod is left off whole. **A check box at the left of
+  the row** (the owner's call, 2026-11-11) turns a `disc-patch` or
+  `table-edit` mod off: `mods_off=<id>,<id>` in `bof3x.ini`, empty by
+  default, so a mod is on when it is added. What a romhack changes in play is
+  its author's and is no entry of this ledger. Verification: the self-tests
+  of `disc_patch_build.py`, `mods.py` and `vcdiff.py`; `config_tests`
+  (`ConfigModLayers`, `ConfigModHosted`, `mods_off=`); `dialog_test.py` 89
+  checks; on a US disc-only install the real patch built and the exe host's
+  self-test, started by the launcher with no `BOF3X_OPT`, took both layers
+  with the box ticked and none with it not ticked (disc-patch-round.md 5d).
+  **No route run and not played by the owner.** Languages: a `disc-patch`
+  mod is for `en-US` text (the US disc is the one disc its builder knows).
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50
@@ -15633,6 +15659,10 @@ designed in rather than bolted on.
   exe host's line `layer mod-...: 1 tables, 1 cells` with the bytes that
   differ (the round doc, 5c). **Not played:** nobody has looked at the
   changed number in the game.
+- **Amended 2026-11-11 (the disc-patch round):** the check box at the left of
+  the mod's row on the Mods tab turns it off without a remove
+  (`mods_off=<id>` in `bof3x.ini`; DIV-0157 as amended). A mod is still on
+  when it is built.
 - **Reversible?** Remove the mod on the Mods tab; or `opt=none`, which gives
   the game no layer at all.
 - **Switch:** ini:opt=

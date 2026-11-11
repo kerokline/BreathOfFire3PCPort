@@ -4,10 +4,12 @@
 2026-11-11 against `main` `8d2d987d`, after the image-layer round merged (PR
 224), and group M run the same day: its five measurements are in
 [`romhack-mods.md`](romhack-mods.md) section 8 and they change sections 1 and 3
-below. Groups A, B and E are built (5a, 5b, 5c): the mod builds on the
+below. Groups A, B, E and C are built (5a, 5b, 5c, 5d): the mod builds on the
 player's machine, with the overlays' table numbers as cells of the table files
-(the image-layer round's group D), and the launcher does not hand its layers to
-the game yet (group C). C and D are not built. Step 4 of romhack-mods.md section 6.
+(the image-layer round's group D), and the launcher hands its layers to the
+game, with a check box at the left of the mod's row to turn it off. D (the
+release) is held by the owner's call 1. Nobody has played it. Step 4 of
+romhack-mods.md section 6.
 Read that note first: it holds the measurements this plan stands on. `main`
 holds the three things the round starts from: `tools/vcdiff.py`,
 `tools/disc_patch_census.py`, and `author` / `url` / `credit` in `mod.toml` and
@@ -236,6 +238,13 @@ the section and the builder's sentence. No partial layer (rule 4).
 
 ## 4. The launcher
 
+**As built (group C, 5d), where it differs from the proposal below:** the ini
+line is `mods_off=<id>,<id>` - the mods to keep off - and a mod is **on when
+it is added**. A `table-edit` mod was on when built before this round
+(DIV-0213), and one rule for both kinds is the owner's call 3; with the list
+of the ones that are off, an ini from before the box still plays every mod it
+played. The report's sentences are in the log box, not in the row.
+
 - **On and off.** A built `disc-patch` mod needs a switch. The reading-row
   mod has the *Row above the text* box; this kind has nothing, and neither has
   `table-edit` (the image-layer round: a table mod is on when it is built,
@@ -436,6 +445,66 @@ other edits are not read), and on a PC-built image the 64 loose bytes.
 - The other install kinds (a European or Japanese base with the US disc for
   text) were not built.
 
+## 5d. Group C as run (2026-11-11)
+
+**What was built.**
+
+- **The hand-over** (`src/launcher/config.cpp` `ConfigModLayers`): after the
+  ini's layers and the row above the text, in the Mods tab's order, every
+  `table-edit` mod's `mod-<id>` and every `disc-patch` mod's `mod-<id>` then
+  `mod-<id>-<tag>`. A disc-patch mod goes over whole or not at all: left off
+  with a line on stderr when the language played is not its text's (3a: the
+  first layer alone would blank the enemy names), when it is not built, or
+  when its layers would pass the game's 16. `opt=none` is still no layer at
+  all. For the hosted build, which cannot take a layer with an exe part, the
+  text layer is dropped with the first (`ConfigModHosted`).
+- **`mods_off=`** in `bof3x.ini`: the ids of the mods to keep off, kept as
+  written. Empty by default.
+- **The check box** (`sources_dialog.cpp`): a column at the left of the Mods
+  list; a box on each `table-edit` and `disc-patch` row, none on a
+  reading-row mod (that one is chosen in Settings). A click on the box or
+  Space on the row changes it; the row says `built: on` or `built: off`. The
+  window keeps the new `mods_off=` and saves it on any way out, as it does
+  for the *Row above the text* toggle. A greyed row keeps its box and a click
+  does not change it. An add turns the mod on (its id leaves `mods_off=`).
+- **The rows' words:** `needs the disc PlayStation, USA: add it on Data,
+  Sources`; `built; only with en-US text`; `built: on`; `built: off`. After a
+  build of an on/off mod the status line is `The mod is ready. It is on.`
+- **The report** (section 3 step 6): the build writes
+  `<home>\mods\<id>\report.toml`, counts only - `[carried]` (base chunks,
+  enemy tables, text chunks and sections, table bytes) and `[not_carried]`
+  (overlay sections read for their tables and not for their program, sound
+  sections, places in the boot program, table bytes the install's image
+  keeps, pointer bytes, length changes, other sections). `mods.py list
+  --json` gives two sentences from it (`carries`, `lacks`) and the text's
+  language (`language`); the Mods tab writes the two sentences to its log
+  when the mod is selected. The census is not run again for it: the counts
+  are the build's own.
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `disc_patch_build.py selftest` | 43 checks, 0 failures (the report: none before a build, the two sentences, nothing left out, a file the tool did not write) |
+| `mods.py selftest` | 0 failures (`language`, `carries` and `lacks` for a built disc-patch mod) |
+| `config_tests.exe` | 3,654 checks; the 12 new ones pass (a mod `mods_off=` names, both layers in order, another language, two layers past 16, the hosted pair, `mods_off=` read and written); the same 2 failures as `main` (the presets' count) |
+| `dialog_test.py`, with a made-up built disc-patch mod (no patch read, nothing built) | 89 checks, 0 failures: the box ticked and the row `built: on`; the log's two sentences; a click unticks it and `mods_off=hack` is written; read back unticked, Space ticks it, `mods_off=` written empty; under ja-JP the row greyed with `only with en-US text` and a click changes nothing; with no disc in the source list the row names the disc. Captured: `D:\bof3x-runs\dp1111\shots_c\` |
+| The real mod rebuilt on the US disc-only install | exit 0 in 86 s, the layers as 5c; `report.toml`: 51 enemy tables, 1 picture, 125 text sections, 2,472 bytes of table numbers; not carried: the program changes in 169 sections, the boot program, 1 sound section |
+| The exe host's self-test started by the new launcher, **no `BOF3X_OPT` in the environment** (`run_c.sh`; `language=en-US`) | exit 0, no Fatal. Box ticked: both layers taken (`optional layer 2, DAT\mod-definitive.*`, `layer 3, DAT\mod-definitive-en-US.*`), `7 tables, 1209 cells, 2408 bytes`, `38 ranges, 64 bytes`, the mapped `.data` hash the one of 5c's run with the layers named by hand. `mods_off=definitive`, and `opt=none`: no mod layer, the mapped `.data` hash the one with no layer |
+
+**Not done.**
+
+- **Nobody has played it**, and no route was run: the launcher now hands the
+  layers over, so the live half of section 6 (the state hash with the mod
+  off, a save loaded with it on and a table and a text change read back) can
+  be run on a hands-off machine.
+- The launcher was not started on the PC-based scratch install
+  (`home_pc`), and no install with a second language was built, so "left off
+  under another language" is checked by `config_tests` and the dialog test,
+  not by a start.
+- The row's box is drawn by the list (one owner-drawn row); a screen reader
+  reads the row's words `built: on` and `built: off`, not a check box.
+
 ## 6. Acceptance
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
@@ -521,8 +590,9 @@ chunk; call 6 is open. Groups A, B and E needed none of them.
 ## 9. Ledger
 
 A mod's changes are the modder's and are not DIV entries. The mechanism is:
-DIV-0157 (mods) is amended for the new kind and the `mods=` line when group A
-and C land. `docs/DIVERGENCE.md` is read before either.
+DIV-0157 (mods) is amended for the new kind, the check box and the
+`mods_off=` line (2026-11-11, with group C), and DIV-0213 for the same box
+over a `table-edit` mod.
 
 ## 10. Where things are
 

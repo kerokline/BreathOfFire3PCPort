@@ -198,7 +198,7 @@ Launcher text follows ASD-STE100.
 3. **Done 2026-11-10: the author on the launcher** (section 5; `author`,
    `url` and `credit` are optional in `mod.toml`, since furigana 0.1.0 is
    released without them).
-4. **Built 2026-11-11, the launcher's half open
+4. **Built 2026-11-11, the launcher's half too (5d)
    ([`disc-patch-round.md`](disc-patch-round.md) 5a, 5b). Kind `disc-patch`, kept sections only**: enemy tables, images, and the
    text and script blocks through `loc_build.py`, as an `opt/` layer over
    `en-US`. This is I58's first step with the patch format settled. The enemy

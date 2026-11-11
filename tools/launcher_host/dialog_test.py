@@ -537,6 +537,94 @@ def mods_checks(launcher, exe, report):
            got.get("rows") == [] and not os.path.exists(os.path.join(home, "mods", "furigana"))
            and not os.path.exists(os.path.join(home, "cache", "opt", "ruby-furigana-ja-JP"))
            and not any("Furigana" in t for t, _ in got.get("entries", [])), repr(got))
+
+    # 5. The check box at the left of a row (docs/disc-patch-round.md 4; the owner's call,
+    #    2026-11-11): a disc-patch mod as mods.py lists a built one - its row, its disc in the
+    #    source list, its two layers in the home's cache, its build's report. Files of this
+    #    test's own; nothing is built and no patch is read.
+    shutil.copy(os.path.join(TOOLS, "disc_patch_build.py"), rt)
+    import disc_patch_build
+    md = os.path.join(home, "mods", "hack")
+    os.makedirs(md)
+    for n in ("mod.toml", "hack.xdelta"):
+        with open(os.path.join(md, n), "w") as f:
+            f.write("# dialog_test\n")
+    with open(os.path.join(home, "mods.toml"), "w", newline="\n") as f:
+        f.write('[[mod]]\nid = "hack"\nname = "A Hack"\nversion = "1.0"\nauthor = "A. Hacker"\nkind = "disc-patch"\n'
+                'requires = ["en-US"]\nbuild = "psx-us"\npatch = "hack.xdelta"\nfiles = ["hack.xdelta"]\n')
+    with open(os.path.join(home, "sources.toml"), "w", newline="\n") as f:
+        f.write('[[source]]\npath = "C:/nowhere/us.cue"\nbuild = "psx-us"\nkind = "psx"\n')
+    for layer in ("mod-hack", "mod-hack-en-US"):
+        d = os.path.join(hc, "opt", layer, "dat")
+        os.makedirs(d)
+        with open(os.path.join(d, "AREA000.DAT"), "wb") as f:
+            f.write(b"\0" * 16)
+        mods._manifest_rows(hc, layer, [("AREA000.DAT", 0, "mod:hack@1.0:psx-us", "00")])
+    disc_patch_build.write_report(md, "mod:hack@1.0:psx-us", {"enemy_tables": 2, "text_sections": 3},
+                                  {"program_sections": 4})
+    WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, VK_SPACE, MSG_TOGGLE = 0x100, 0x201, 0x202, 0x20, 0x8000 + 25
+    got = {}
+
+    def open_mods(item):
+        u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
+        wait_idle(item)
+        lst = item(IDC_MOD_LIST)
+        got["rows"] = items(lst, False)
+        u.SendMessageW(lst, LB_SETCURSEL, 0, 0)
+        u.SendMessageW(u.GetParent(lst), WM_COMMAND, (1 << 16) | IDC_MOD_LIST, lst)   # LBN_SELCHANGE
+        return lst
+
+    def after(item, lst):
+        time.sleep(0.4)             # the box's message is posted
+        got["after"] = items(lst, False)
+
+    def act_click(dlg, item):
+        lst = open_mods(item)
+        got["log"] = text(item(IDC_MOD_LOG))
+        shot(dlg, "mods_tab_check_box_on")
+        u.SendMessageW(lst, WM_LBUTTONDOWN, 1, (4 << 16) | 4)    # a click on the row's box
+        u.SendMessageW(lst, WM_LBUTTONUP, 0, (4 << 16) | 4)
+        after(item, lst)
+        shot(dlg, "mods_tab_check_box_off")
+    _, ini, _ = run("[bof3x]\nopt=\ncache=\nlanguage=en-US\n", act_click, env)
+    report("A built disc-patch mod, its text's language played: its box ticked, the row says on",
+           got.get("rows") == [("A Hack\tby A. Hacker\t1.0\tbuilt: on", 6)], repr(got.get("rows")))
+    report("  selected: the log says what the build has and what it does not have",
+           "This build of the mod has these changes: 2 enemy tables, 3 text sections." in got.get("log", "")
+           and "It does not have these changes of the patch: the program changes in 4 sections." in got.get("log", ""),
+           got.get("log", "")[-200:])
+    report("  a click on the box: not ticked, the row says off",
+           got.get("after") == [("A Hack\tby A. Hacker\t1.0\tbuilt: off", 2)], repr(got.get("after")))
+    report("  mods_off=hack written", lines(ini or "").get("mods_off") == "hack", repr(lines(ini or "").get("mods_off")))
+
+    def act_space(dlg, item):
+        lst = open_mods(item)
+        u.SendMessageW(lst, WM_KEYDOWN, VK_SPACE, 0)
+        after(item, lst)
+    _, ini, _ = run(ini, act_space, env)
+    report("mods_off=hack read: the box not ticked; Space on the row ticks it; mods_off= written empty",
+           got.get("rows") == [("A Hack\tby A. Hacker\t1.0\tbuilt: off", 2)]
+           and got.get("after") == [("A Hack\tby A. Hacker\t1.0\tbuilt: on", 6)]
+           and lines(ini or "x=y").get("mods_off") == "", "%r %r %r" % (got.get("rows"), got.get("after"),
+                                                                    lines(ini or "").get("mods_off")))
+
+    def act_other(dlg, item):
+        lst = open_mods(item)
+        u.SendMessageW(u.GetParent(lst), MSG_TOGGLE, 0, 0)
+        u.SendMessageW(lst, WM_LBUTTONDOWN, 1, (4 << 16) | 4)
+        u.SendMessageW(lst, WM_LBUTTONUP, 0, (4 << 16) | 4)
+        after(item, lst)
+        shot(dlg, "mods_tab_check_box_greyed")
+    _, ini, _ = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\n", act_other, env)
+    report("Another language played: the row greyed with the mod's language, its box kept and not changed by a click",
+           got.get("rows") == [("A Hack\tby A. Hacker\t1.0\tbuilt; only with en-US text", 7)]
+           and got.get("after") == got.get("rows") and lines(ini or "x=y").get("mods_off") == "",
+           "%r %r" % (got.get("rows"), got.get("after")))
+    os.remove(os.path.join(home, "sources.toml"))
+    _, ini, _ = run("[bof3x]\nopt=\ncache=\nlanguage=en-US\n", lambda dlg, item: open_mods(item), env)
+    report("Its disc not in the source list: the row greyed, the disc named",
+           got.get("rows") == [("A Hack\tby A. Hacker\t1.0\tneeds the disc PlayStation, USA: add it on Data, Sources", 7)],
+           repr(got.get("rows")))
     return True
 
 

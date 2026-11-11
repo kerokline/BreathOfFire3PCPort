@@ -525,6 +525,15 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
          and r.get("build") in KINDS["disc-patch"]["builds"] else None,
          "state": state, "needs": needs, "problem": problem,
          "author": r.get("author"), "url": r.get("url"), "credit": r.get("credit")}
+    if o["text_layer"]:
+        # the language of its text, and what its build has and does not have (the Mods tab's log)
+        o["language"] = KINDS["disc-patch"]["builds"][r["build"]][0]
+        if state == "built" and path:
+            try:
+                import disc_patch_build
+                o["carries"], o["lacks"] = disc_patch_build.read_report(path)
+            except ImportError:      # a release without the builder: the mod is listed, its report is not read
+                pass
     o.update(more)
     return o
 
@@ -1255,7 +1264,17 @@ def selftest(keep=None):
         f.write(b"\0" * 16)
     _manifest_rows(cache, "mod-definitive-en-US", [("AREA000.DAT", 0, "mod:definitive@1.0:psx-us", "00")])
     rc, out = run("list", "--home", h, "--json")
-    expect(json.loads(out.splitlines()[-1])["state"] == "built", "  its text layer alone in the cache: state built")
+    o = json.loads(out.splitlines()[-1])
+    expect(o["state"] == "built" and o["language"] == "en-US" and o.get("carries") is None,
+           "  its text layer alone in the cache: state built; its text's language named; no report, no sentence")
+    import disc_patch_build
+    disc_patch_build.write_report(mod_dir(h, "definitive"), "w", {"enemy_tables": 2, "text_sections": 3},
+                                  {"program_sections": 4})
+    rc, out = run("list", "--home", h, "--json")
+    o = json.loads(out.splitlines()[-1])
+    expect(o["carries"] == "This build of the mod has these changes: 2 enemy tables, 3 text sections."
+           and o["lacks"] == "It does not have these changes of the patch: the program changes in 4 sections.",
+           "  with its build's report.toml: what it has and what it does not have, for the Mods tab")
     rc, out = run("remove", "definitive", "--home", h)
     with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:
         expect(rc == 0 and not os.path.exists(os.path.join(h, "mods", "definitive"))

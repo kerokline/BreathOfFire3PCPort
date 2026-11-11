@@ -1643,6 +1643,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         }
         if (!LoadPicture(*state)) std::fprintf(stderr, "bof3x-launcher: the title page's picture could not be decoded\n");
         Populate(dlg, *state);
+        if (HWND mods = SubPageOf(*state, IDD_PAGE_MODS))
+            SendMessageW(mods, kMsgModsOff, 0, reinterpret_cast<LPARAM>(&state->cfg->mods_off));
         CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), state->cfg->cheats);
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
@@ -1662,6 +1664,14 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     }
     case kMsgModsChanged:   // the Mods page added, built or removed one
         if (state) RubyRefresh(dlg, *state);
+        return TRUE;
+    case kMsgModsOffChanged:
+        // A mod's check box changed (docs/disc-patch-round.md 4): into cfg, and
+        // the window saves cfg on any way out, as for the toggle below.
+        if (state) {
+            state->cfg->mods_off = *reinterpret_cast<const std::string*>(lp);
+            state->applied = true;
+        }
         return TRUE;
     case kMsgModsReadingRowAdded:
         // A reading-row mod added: Extras' toggle on and the box shown at once
