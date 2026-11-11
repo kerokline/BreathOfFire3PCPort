@@ -323,6 +323,15 @@ add_executable(bof3x_fmvdump src/video/fmv_dump.cpp src/video/avi_reader.cpp src
   src/video/msvideo1.cpp src/video/movie.cpp)
 target_include_directories(bof3x_fmvdump PRIVATE src)
 set_target_properties(bof3x_fmvdump PROPERTIES OUTPUT_NAME "bof3x-fmvdump")
+# bof3x_media: the STR / XA decoders and the XA clip reader (src/media,
+# docs/psx-media-round.md). No operating-system header; not linked into
+# anything yet (unit M3 does that). Host tests: tools/media_host.
+add_library(bof3x_media STATIC
+  src/media/xa_adpcm.cpp
+  src/media/resample.cpp
+  src/media/xa_clip.cpp
+  src/media/str_movie.cpp)
+target_include_directories(bof3x_media PRIVATE src)
 # The developer launcher starts BOF3.exe with the DLL injected, which only a
 # 32-bit process can do to a 32-bit one: the hosted build's alone.
 if(BOF3X_HOSTED_BUILD)
