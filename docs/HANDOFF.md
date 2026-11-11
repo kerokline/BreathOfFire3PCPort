@@ -631,16 +631,48 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **The save editor, first version (2026-11-10, branch `launcher/save-editor`, DIV-0211,
-  [`save-editor.md`](save-editor.md)).** The Mods tab's Save Editor... button and its dialog: PC save files,
-  every field from one table, the advanced fields, checks and backups on save. Format tests: 939 checks, 0
-  failures on 114 real PC saves. **Owed:** an edited save loaded and played in the game (nobody has); the
-  owner's eye on the window; `dialog_test.py` was not run (it finds the launcher's window by its title, and the
-  owner's own launcher was open). **Next stages** (spec section 16): memory cards and conversion, creation from
-  nothing, story points; the EXP-past-level warning. **Second pass the same day:** names from
-  `data/save-names.tsv`, one Position field with the area's entrances read from `BOF3.exe`. **A task for it**
-  ([`IDEAS.md`](IDEAS.md) I58): the entrance list on installs with no `BOF3.exe`, read from the area EMIs.
+- **The save editor (2026-11-10, branch `launcher/save-editor`, DIV-0211, [`save-editor.md`](save-editor.md)).**
+  The Mods tab's Save Editor... button and its dialog, for PC save files: every field from one table
+  (`src/launcher/save/block.cpp`), the advanced fields, checks and backups on save, names from
+  `data/save-names.tsv` beside the launcher, one Position field with the area's entrances read from
+  `BOF3.exe`. Format tests: 937 checks, 0 failures on 113 real PC saves
+  (`tools/launcher_host/save_tests.cpp`; fixtures are the player's saves, never committed). The owner has
+  the build in `game\` and has opened it on the real saves.
 
+  **Owed before it is called done:**
+  - **An edited save loaded and played in the game.** Nobody has. Start small: zenny, an item, a weapon;
+    then a party change (the party row `+0x74C`), an area and entrance change, a gene and a master.
+  - **`tools/launcher_host/dialog_test.py` was not run** against the new button on the Mods row: it finds the
+    launcher by its window title and presses Play, and the owner's launcher was open. Run it with no other
+    launcher open, or change it to find its own process's window first (the scratch driver of this session
+    did: windows by the PID it started).
+  - The pad does not move through the editor's dialog (`padnav` is private to `config_dialog.cpp`).
+
+  **Next, in the order talked about (2026-11-10):**
+  1. **The entrance list on installs with no `BOF3.exe`**, and the knowledge map for the link lists: the
+     task under [`IDEAS.md`](IDEAS.md) I58. The lists are in each area's own `AREAnnn.EMI` (the section at
+     `0x801F2C00`), 191 of 192 byte for byte on the JP disc. The party table (`ExePartyTable`) has the
+     same gap on a disc-built install and goes with it.
+  2. **Names still missing or doubtful.** 72 of 200 areas have no name and show as a number; six cited
+     names may not be the US words (areas 61, 67, 69, 70, 71, 99); several chapter labels still say "ends
+     in area N". All of it is rows of `data/save-names.tsv`, editable by hand; the list of unnamed areas
+     is in the research notes (`C:\Users\kerok\bof3x-runs\se1110\research\names-b.md` section 2, not in
+     the repo). The file is English only: masters, genes and formations could be read from the install's
+     own text instead (system pool messages `0x111 + n`, `0x4172 + n`, label entries `4 + n`), as the fish
+     already are from the item names.
+  3. **Entrances beyond doors.** The list is the link lists only. Not in it: the 357 scripted arrivals
+     (`Field_ChangeArea` with literal arguments in our source), which can depend on the story state. The
+     list does not know the story state either: an indirect link's alternative is offered whether or not
+     its flag holds.
+  4. **Bring the faerie village and Options back out of the advanced box** when their pages are worth
+     showing (the owner put them there "for now"): the village wants names for building kinds and places.
+  5. **The spec's later stages** ([`save-editor-spec.md`](save-editor-spec.md) section 16): memory cards and
+     conversion (stage 2; `tools/save_convert.py` is the reference), creation from nothing (stage 5), story
+     points (stage 6; the chapter maps in [`story-flags.md`](story-flags.md) are its material).
+  6. **Smaller things left out on purpose:** equipment does not move the inventory count; no warning for
+     EXP past the level (needs the install's EXP curve); the button words are read-only; a save with a bad
+     checksum opens for editing after one question, not read-only.
+  7. `tools/recipe_saves/README.md` says `ammoniteBoss.DAT` is in area 134; the save holds 137.
 - **The beta's docs branch (2026-11-08):** `docs/beta-readiness-1107` in the main checkout - the checklist, the
   notes `docs/releases/v0.1.0-beta.1.md`, the README's status line, `.github/ISSUE_TEMPLATE/bug-report.md` and
   this rewrite; the PR to come, then the tag from `main` (item 0).
