@@ -379,19 +379,47 @@ does not rewrite it. Three stand-ins, cheapest first:
    on Windows from one backend. The alternative is OpenGL 3.3, which is
    simpler and reaches older hardware. Either needs the shaders in a second
    form; how is LA4's finding.
+   **Measured 2026-11-11 (`tools/linux_probe/dxvk_probe.cpp`): a third road,
+   DXVK-native** - DXVK v3.1.1 built as Linux libraries (`meson
+   -Dnative_sdl3=enabled`; zlib licence, permissive), Direct3D 11 on Vulkan
+   with an SDL3 window as the swap chain's `HWND`. The probe, a native x86-64
+   ELF, makes the device and swap chain as `InitOnFiber` does, creates the
+   present shaders from `shaders_compiled.h` (Windows' compiler's DXBC,
+   unchanged), draws a 320 x 240 picture doubled to 640 x 480 and reads it
+   back: 0 of 307,200 pixels differ; 19,557 presents a second on an RTX 5090.
+   It keeps `render_d3d11.cpp` and the shaders as they are, so no second
+   backend and no second shader form. `render_d3d11.cpp` against DXVK's
+   headers (`clang++ -fsyntax-only`): every Direct3D 11 and DXGI name
+   resolves; what does not is Win32 alone - the heap (11 sites), environment
+   (5), thread id (5), last error (3), `GetClientRect` (2), the render fiber
+   (5) and one file write - the OS seam LB1 and LB6 already plan.
+   `D3DCompile` has no native implementation, so `BOF3X_PIXEL_OFFSET` would
+   refuse there. **Decided (the owner, 2026-11-11): DXVK-native for the
+   Linux build; Windows keeps Microsoft's Direct3D 11, with no DXVK switch**
+   - on Windows DXVK would add a Vulkan 1.3 requirement and DLLs to ship for
+   no gain a player sees; the native build and Proton already give a Vulkan
+   comparison when one is wanted. `render_d3d11.cpp` stays the one renderer
+   source.
 2. **Whether Direct3D 11 stays on Windows** once the second backend passes.
    Proposed: yes, as the default there for a release, with the new backend a
    switch; then the owner's call.
-3. **The importer on Linux.** The system's Python with a requirements file
-   (proposed, for a first native release), or wait for I40.
-4. **DirectInput.** Retire it for SDL3 on both systems (proposed, one input
-   path to test), or keep it as a Windows-only path.
-5. **The release's form.** A plain tarball (proposed for the first), an
-   AppImage, or a Flatpak. The Deck is served by any of them as a non-Steam
-   game.
-6. **The order.** Proposed: tier 1 now; tier 2 after the renderer's
-   remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2),
-   because LB5 writes against whatever that round leaves.
+3. **The importer on Linux.** **Decided (2026-11-11): the system's Python
+   with a requirements file** for the first native release; I40 later. The
+   importer already runs on Linux's own Python (the PSX media round's M2
+   set-up ran on this machine's).
+4. **DirectInput.** **Decided: retired for SDL3 on both systems** - one
+   input path to test. A ledger entry where a player could tell.
+5. **The release's form.** **Decided: a plain tarball first** - the ELF,
+   DXVK-native's `libdxvk_d3d11.so` and `libdxvk_dxgi.so`, a start script that
+   runs the importer's `setup` and the game. The Deck takes it as a non-Steam
+   game. No native launcher yet (section 5, stand-in 2).
+6. **The order.** **Decided: the minimum native path now**, in gated units on
+   one branch, each proven on Windows before the next (section 4's method):
+   L1 the OS seam; L2 the window, keyboard and pad on SDL3 and the movie
+   drawn by the renderer; L3 the fibers and the crash reporter's catcher; L4
+   the ELF link (the low-memory image from LA2, `ms_abi` where LA3 says,
+   DXVK-native fetched pinned like llvm-mingw); L5 the proof (routes against
+   the Windows 64-bit build), the CI job and the tarball.
 
 ## 7. Not verified
 
