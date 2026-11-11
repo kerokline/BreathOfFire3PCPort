@@ -161,7 +161,11 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   row (16 dialog units) and the page's group box shortens by as much; shown,
   they move back down (the owner, 2026-10-22: "gives slightly more space";
   `RubyUiShow`, checked in `dialog_test.py` by the Look box's top). The SatPixie options, the capture,
-  the Jukebox and the Sources page are still their own dialogs. Since
+  the Jukebox and the Sources page are still their own dialogs. **Since
+  2026-11-10 the Mods tab's sub-row has a third button, Save Editor...**
+  (`IDC_SAVEEDITOR`, a push button placed after the sub-tabs by `ShowPage`,
+  shown on the Mods tab only): it opens the save editor, a dialog of its own
+  (`IDD_SAVEEDIT`, DIV-0211, [`save-editor.md`](save-editor.md)). Since
   2026-10-28 (the ledger-fields round's stage D) **Settings has two
   sub-pages, Settings and Preset**: the Preset page holds the preset's box
   and the list of what it changes (section 3.3), which does not fit beside

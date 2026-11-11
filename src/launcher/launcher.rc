@@ -53,6 +53,10 @@ BEGIN
     // sub-tab with more than one page (the Cheats sub-tab's Page 1 / Page 2).
     AUTORADIOBUTTON "", 1036, 0, 0, 50, 14, BS_PUSHLIKE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "", 1037, 0, 0, 50, 14, BS_PUSHLIKE
+    // The save editor's button, after the Mods tab's sub-tabs (the owner's
+    // place for it, 2026-11-10): it opens a dialog of its own, as the CRT
+    // options do. Shown on the Mods tab only.
+    PUSHBUTTON      "Save &Editor...", IDC_SAVEEDITOR, 0, 0, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 // The title page's picture: a screenshot on the terms of docs/LICENSING.md
@@ -520,4 +524,35 @@ BEGIN
     LTEXT           "", IDC_SO_HOME, 7, 258, 270, 9, SS_PATHELLIPSIS
     PUSHBUTTON      "&Build the install", IDC_SO_BUILD, 281, 255, 64, 14
     PUSHBUTTON      "&Close", IDCANCEL, 349, 255, 44, 14
+END
+
+// The save editor (docs/save-editor.md; src/launcher/save_dialog.cpp): the
+// sections, the fields of the section selected, and one value box. Every row
+// is made from the field table (src/launcher/save/block.cpp). IDOK is Set, so
+// Enter in the value box sets the value.
+IDD_SAVEEDIT DIALOGEX 0, 0, 430, 292
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Editor - bof3x"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "Save &file:", -1, 7, 9, 40, 9
+    COMBOBOX        IDC_SE_SLOT, 50, 7, 250, 220, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Reload", IDC_SE_RELOAD, 306, 6, 56, 14
+    LTEXT           "", IDC_SE_FILENOTE, 7, 25, 416, 9, SS_ENDELLIPSIS
+
+    LISTBOX         IDC_SE_SECTIONS, 7, 38, 96, 178, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER | WS_TABSTOP
+    COMBOBOX        IDC_SE_RECORD, 109, 38, 314, 220, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "", IDC_SE_FIELDS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 109, 54, 314, 162
+
+    AUTOCHECKBOX    "Show &advanced fields", IDC_SE_ADVANCED, 7, 221, 98, 10
+    LTEXT           "&Value:", -1, 109, 222, 28, 9
+    COMBOBOX        IDC_SE_VALUE, 139, 220, 222, 180, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "S&et", IDOK, 367, 219, 56, 14
+    LTEXT           "", IDC_SE_NOTE, 109, 237, 314, 18
+
+    LTEXT           "", IDC_SE_STATUS, 7, 258, 416, 9, SS_ENDELLIPSIS
+    LTEXT           "&Write to:", -1, 7, 274, 36, 9
+    COMBOBOX        IDC_SE_TARGET, 46, 272, 250, 220, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Save", IDC_SE_SAVE, 306, 271, 56, 14
+    PUSHBUTTON      "&Close", IDCANCEL, 367, 271, 56, 14
 END

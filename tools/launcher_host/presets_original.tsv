@@ -211,6 +211,7 @@ original	as-shipped	off	DIV-0207	FinNight	The ending's disc holds at 1,000 and t
 original	as-shipped	off	DIV-0208	FieldHealParty	A field heal for the whole party heals the whole party on the world map	Player yes
 original	as-shipped	off	DIV-0209	FishCountWord	The catch panel counts a fish's size past 255, and the record keeps 255	Player yes
 original	as-shipped	off	DIV-0210	GiftChestRow	The two gift chests opened in chapter 7 stay open	Player yes
+original	as-shipped	never	DIV-0211	none	The launcher has a save editor	Player never: Forced or one-way
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -344,6 +345,7 @@ original	repaired	off	DIV-0201	SoundSdl	Play the sound through SDL3 audio, with 
 original	repaired	off	DIV-0202	CapcomMovieOnly	The start plays Capcom's logo movie alone, and setup leaves out the porting house's	Player yes
 original	repaired	already-off	DIV-0204	ini:desert_faerie=0	A second faerie village entrance on the desert map, near Caer Xhan	Default off: already off
 original	repaired	cannot	DIV-0205	Fmv_Play	The FMVs decoded by our own AVI, Cinepak and Video 1 decoders, not MCI	Player costly: the original is only Capcom's function; this build cannot
+original	repaired	never	DIV-0211	none	The launcher has a save editor	Player never: Forced or one-way
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 original	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

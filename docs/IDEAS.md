@@ -102,7 +102,7 @@ rule ([`README.md`](README.md)) here too.
 | I55 | A readable form of the cache: a `decompile` / `compile` pair beside the importer (one folder per container, one file per chunk, PNG for images, text for text blocks, TOML / TSV for tables), the decompiled tree a working copy and never an authority, the mod zip the exchange format, `compile` refusing rather than guessing; an editor program later, if ever, over the same compiler | tooling / mods | MEDIUM | open 2026-11-01 (the owner): the talk-through of how game repos keep sources and builds apart; nothing measured; first step kind-1 images, gated byte-identical |
 | I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
 | I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
-| I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind |
+| I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind. 2026-11-10: a task under it, the save editor's entrance list read from the area EMIs for installs with no `BOF3.exe` (191 of 192 link lists found byte for byte in the JP disc's own `AREAnnn.EMI`) |
 | I59 | Two battle repairs from the review of Red Herring's notes: Escape's enemy agility (it reads the wrong objects, and on the PC leftovers from earlier fights) and the skills' turn priority (the learn difficulty removes it) | game behaviour / battle | HIGH | open 2026-11-08 (the owner): put off, nothing built |
 | I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | run 2026-11-09 on `source-layout/stage-c`, before stage D, at the owner's word; the written-in self-tests, the mover and I48 left |
 | I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
@@ -2472,8 +2472,46 @@ So the exe's tables are not a duplicate of anything in `DAT/`. They sat inside t
 
 **First concrete step, when wanted:** `emi-patch` for kept sections alone. One patched AREA image section built as a DAT layer, the rest refused, `mods.py selftest` extended with a synthetic patch (no game data), and one end-to-end run on the owner's machine with a real patch against the held JP or US disc. The image layer is the second step, and the first `GAME.EMI` table edit (one field of a `tables.toml` table) the proof of it, checked with `tables.py dump` against the patched EMI.
 
+### A first reader of the EMI-held tables: the save editor's entrances (task, 2026-11-10, the owner)
+
+The save editor's entrance list ([`save-editor.md`](save-editor.md) 4.2) is the area link lists, which it reads
+from `BOF3.exe` (`ExeAreaLinks`). An install with no `BOF3.exe` has no list. The lists are on every disc, so
+this task is one concrete piece of the effort above: read a table from the EMI it came from.
+
+**Measured 2026-11-10, read-only** (the exe's link bytes searched for in `analysis/emi-jp`, the JP disc):
+
+- Each area's link list is in **that area's own `AREAnnn.EMI`**, in the overlay section that loads at
+  `0x801F2C00` (the "each AREA's `0x801F2C00` section" row of the table above). **191 of 192 lists are byte
+  for byte the exe's.** The section's index varies (13 for 177 lists, 14 for 10, 9 and 3 for two each); the
+  load address does not, so the address is how to find it.
+- Area 5 for an example: `WORLD00/AREA005.EMI`, section 13, the links `0xDC` into the section.
+- **Area 30** (the fishing spot): its 24-byte list was not found in its own EMI. Not chased.
+- `exe_maps/psx-jp.tsv` already places 150 of the lists (149 identical through the map); the other 42 fall in
+  the map's gaps.
+- Not compared: the descriptors that point at the lists, the indirect links' alternatives (`+0x24`, `+0x28`),
+  and any disc but the JP one.
+
+**The task, two parts:**
+
+1. **The knowledge map.** Record the lists' place for every held build: close the 42 gaps in `exe_maps/`
+   (or say why a gap stays), settle area 30, and compare the US, EU and PSP builds' lists with the JP one's.
+   The descriptor is the open part: `Area_Descriptors` is all pointer words and is filled from no disc
+   ([`exe-import.md`](exe-import.md)), so say how a reader finds the list, its length (`+0x30`) and the
+   alternatives inside the section without the exe's descriptor. [`area-entry.md`](area-entry.md) section 1
+   takes the result.
+2. **The entrance list on an install that is not from the PC.** The editor reads the lists from what a
+   disc-built install holds: the cache's image `base\exe\data.bin` where the rebuild fills these ranges, or
+   the area EMIs' sections where the cache keeps them. Find out which the cache has before choosing. Same
+   rule as today: read at run time, nothing of the table in the repository. Done when the editor's Position
+   list on a PSX-only and a PSP-only install equals the list a PC install gives for the same areas, with the
+   differences between builds named.
+
+**Not in this task:** the party table (`ExePartyTable`) has the same gap on a disc-built install and wants the
+same treatment after it; the scripted arrivals stay out of the list.
+
 ### Outcome
 _(2026-11-06) open; the measurement above, nothing built._
+_(2026-11-10) the entrance task added above; measured, nothing built._
 
 ## I59 — Two battle repairs: Escape's enemy agility and the skills' turn priority
 

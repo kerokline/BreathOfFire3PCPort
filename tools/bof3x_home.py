@@ -4,7 +4,7 @@
 docs/install-sources.md section 2. A release (tools/make_release.py) is one
 folder, the *home*, holding the launcher and everything the importer writes:
 
-    <home>/bof3x-launcher.exe, bof3x.dll, bof3x.exe, music-names.tsv
+    <home>/bof3x-launcher.exe, bof3x.dll, bof3x.exe, music-names.tsv, save-names.tsv
     <home>/runtime/python/      the bundled interpreter
     <home>/runtime/tools/       these scripts; runtime/ also holds fixtures/,
                                 recipes/ and the rest the importer reads
