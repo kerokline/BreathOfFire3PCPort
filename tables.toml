@@ -3090,3 +3090,156 @@ name = "message"
 meaning = "an id in the fishing area's message pool (MessagePools); 0xFFFF: a blank row"
 status = "evidence"
 cite = "EffectKind0F_DrawMessageList 0x468560, docs/effect_1b.md"
+
+# ---------------------------------------------------------------------------
+# Catalogued 2026-11-11 for the disc-patch round's call 6 (docs/disc-patch-round.md 7):
+# tables a romhack changes that were bytes of the image map, so that their
+# numbers are cells of a table file on every install.
+
+[[table]]
+key = "ability_effect_index"
+symbol = "Ability_EffectIndex"
+group = "battle"
+what = "the Effect_Handlers slot an ability's result goes through"
+index = "ability id"
+count = 228
+stride = 1
+count_status = "hypothesis"
+count_cite = "one byte an ability, and the abilities table has 228 records; symbols.toml Ability_EffectIndex: count unread, at most 0x1EC to Item_EffectIndexTables; Effect_ApplyResult 0x44B9F0 does not bound the id"
+
+[[table.psx]]
+build = "psx-jp"
+file = "BATTLE/BATTLE.EMI"
+section = 15
+addr = 0x800B1438
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-jp.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psx-us"
+file = "BATTLE/BATTLE.EMI"
+section = 15
+addr = 0x800B44F8
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-us.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psx-fr"
+file = "BATTLE/BATTLE.EMI"
+section = 15
+addr = 0x800B44F8
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-fr.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psx-de"
+file = "BATTLE/BATTLE.EMI"
+section = 15
+addr = 0x800B44F8
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-de.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psx-eu-en"
+file = "BATTLE/BATTLE.EMI"
+section = 15
+addr = 0x800B44F8
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-eu-en.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psp-jp"
+file = "BOOT.BIN"
+addr = 0x002F0638
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psp-jp.tsv; 228 of 228 bytes equal"
+
+[[table.psx]]
+build = "psp-eu"
+file = "BOOT.BIN"
+addr = 0x002F0448
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psp-eu.tsv; 228 of 228 bytes equal"
+
+[[table]]
+key = "master_abilities"
+symbol = "Master_AbilityGrants"
+group = "progression"
+what = "the abilities a master grants: six (levels gained under the master, ability) pairs"
+index = "master number"
+count = 17
+stride = 12
+count_status = "hypothesis"
+count_cite = "17 masters by the extent: 0xCC bytes from 0x6642A4 to the masters' growth bytes at 0x664370; MasterGrant_Step1Member 0x5873C0 does not bound the master number"
+
+[[table.field]]
+at = 0x0
+type = "u8"
+repeat = [6, 2]
+name = "levels"
+meaning = "levels gained under the master at which pair n is granted"
+status = "evidence"
+cite = "symbols.toml MasterGrant_Step1Member 0x5873C0: the first pair with level <= level - the level at apprenticing"
+
+[[table.field]]
+at = 0x1
+type = "u8"
+repeat = [6, 2]
+name = "ability"
+meaning = "the ability id of pair n"
+status = "evidence"
+cite = "symbols.toml MasterGrant_Step1Member 0x5873C0: AbilityList_Add(ability, member, 0, 0)"
+
+[[table.psx]]
+build = "psx-jp"
+file = "ETC/SISYOU.EMI"
+section = 0
+addr = 0x801D4094
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-jp.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psx-us"
+file = "ETC/SISYOU.EMI"
+section = 0
+addr = 0x801D4088
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-us.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psx-fr"
+file = "ETC/SISYOU.EMI"
+section = 0
+addr = 0x801D4088
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-fr.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psx-de"
+file = "ETC/SISYOU.EMI"
+section = 0
+addr = 0x801D4090
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-de.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psx-eu-en"
+file = "ETC/SISYOU.EMI"
+section = 0
+addr = 0x801D4088
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psx-eu-en.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psp-jp"
+file = "BOOT.BIN"
+addr = 0x002EFE08
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psp-jp.tsv; 204 of 204 bytes equal"
+
+[[table.psx]]
+build = "psp-eu"
+file = "BOOT.BIN"
+addr = 0x002EFBE8
+status = "evidence"
+cite = "tables.py locate 2026-11-11: exe_maps/psp-eu.tsv; 204 of 204 bytes equal"

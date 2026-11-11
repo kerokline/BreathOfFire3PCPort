@@ -505,6 +505,56 @@ other edits are not read), and on a PC-built image the 64 loose bytes.
 - The row's box is drawn by the list (one owner-drawn row); a screen reader
   reads the row's words `built: on` and `built: off`, not a check box.
 
+## 5e. Call 6 as run (2026-11-11): what the 64 loose bytes are
+
+Each of the 38 ranges was read against the install's image map
+(`base\exe\data.toml`) and the bytes on both sides (in memory; none here).
+
+| What | Bytes | Evidence | Now |
+|---|---|---|---|
+| **Padding** after a table of an odd length, or before one at an odd address | 43 in 28 ranges | each run is the last one to three bytes of a mapped run that ends on a 4-byte boundary, or the first of one that starts off it; the original has zeros there (once, two bytes of its own leftovers) and the patched disc has other leftovers | not the hack's numbers. Still laid as raw ranges on a disc-built image, where no reader reads them; not carried on a PC-built one |
+| `Ability_EffectIndex`: the effect handler of an ability | 9 in 2 ranges | `symbols.toml`: one byte an ability id, read by `Effect_ApplyResult` | **catalogued** as `ability_effect_index` (228 by 1; the count is the abilities table's, a hypothesis) |
+| The masters' ability grants | 2 in 2 ranges: two abilities change places in one master's list | `MasterGrant_Step1Member` 0x5873C0 reads six (levels, ability) pairs at `0x6642A4 + 12 * master`; the data had no name | **named** `Master_AbilityGrants` and **catalogued** as `master_abilities` (17 by 12; 17 by the extent, a hypothesis) |
+| `Char_DefaultRecords`: the records a new game starts each character with | 10 in 7 ranges | `NewGame_InitCharacters` 0x437820 | **not catalogued: it cannot be a table file as the files are today** (below) |
+
+**Why the starting records are not a file.** A table file is one run of
+`count * stride` bytes and the image has no other owner inside it. The first
+seven bytes of the first record are the hero's default name, which the
+language layer owns (`recipes/exe-gaps.tsv`: a `gap`, answered `layer`, on
+every build), and on the European PSP disc three more records have name bytes
+no rule places. A file over them is refused by the engine at start (`the
+accepted row "layer" 0x64B390..0x64B397 is on no gap range of the image`) -
+tried, and taken back out. Carrying these ten bytes on a PC install needs one
+of: a table file with holes for a name the language owns (an engine and format
+change of the image-layer round's, DIV-0212 amended), or choice (b) of call 6.
+Until then: carried on a disc-built install as raw ranges, not carried on a
+PC-built one, counted in the build's line and in `report.toml`.
+
+**Both catalogued tables are found on all seven discs** (`tables.py locate`,
+the rows in `tables.toml`), so every install kind gets them as files.
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `tables.py check` | 33 tables, 125 fields, 0 errors |
+| The image, built again from the US disc and from `BOF3.exe` (`exe_tables.py build`) | 29 table files each (27 before); **the image as mapped is the same bytes as before** on both (the hash data.toml and the manifest record does not change) |
+| `data_diff.py run` on the seven discs, then `check` | `recipes/data-diff.tsv` written again: both new tables compared on every build, 0 holes, 0 differences; 618 rows as before |
+| `importer.py check`, `exe_own.py check`, `exe_scan.py --accepted`, `data_census.py`, `reloc_census.py`, `gen_symbols.py`, the ledger checks | pass |
+| The mod rebuilt on the US disc-only install and on the PC-based one | **2,419 bytes of 9 tables as cells on both** (2,408 of 7 before); the other 53 bytes are raw ranges on the disc-only install and not carried on the PC-based one (43 padding, 10 the starting records) |
+| The exe host's self-test, disc-only (started by the launcher, no `BOF3X_OPT`) and on the PC game folder | exit 0, no Fatal; `9 tables, 1220 cells, 2419 bytes ... 2419 of them differ` on both; the disc-only install's mapped `.data` hash with the mod is the one of 5c and 5d (the same bytes, more of them from table files) |
+
+An install built before this commit has 27 table files and its mod layer the
+7-table form: both still load (nothing reads a table the cache does not have);
+the two new tables come with the next build of the install.
+
+**Seen in play (the owner, 2026-11-11, the disc-only play copy):** the hack's
+text is there, and a save made with the original's numbers showed a character
+whose EXP was past the mod's next two levels (the EXP bar drawn about three
+times its width); the next battle gave the levels and the bar was right
+again. That is the mod's `exp_table` cells read by the game. A save from
+before a mod that changes the EXP table can show this once.
+
 ## 6. Acceptance
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
@@ -574,8 +624,13 @@ The calls as they were put:
    `Char_DefaultRecords` and `Ability_EffectIndex` catalogued first: it keeps
    one rule for every install and makes the bytes readable.
 
+   **The owner, 2026-11-11: "lets catalog those tables so we can fill them
+   in". As run (5e):** two tables catalogued, one that cannot be yet, and 43
+   of the 64 bytes are not table numbers at all.
+
 Calls 1, 2 and 4 gate group D alone; call 3 gates group C; call 5 gates one
-chunk; call 6 is open. Groups A, B and E needed none of them.
+chunk; call 6 is answered, with one table left (5e). Groups A, B and E needed
+none of them.
 
 ## 8. Not in this round
 
