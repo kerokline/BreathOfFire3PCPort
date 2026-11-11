@@ -155,6 +155,7 @@ set(_dll_sources
   src/hook/exe_icon.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
+  src/common/file_token.cpp
   src/common/cache_manifest.cpp
   src/hook/bind.cpp
   src/hook/detour.cpp

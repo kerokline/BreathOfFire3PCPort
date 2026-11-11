@@ -222,3 +222,15 @@ Affirmer's express Statement of Purpose.
 For more information, please see
 <http://creativecommons.org/publicdomain/zero/1.0/>
 ```
+
+## 4. xdelta3 (the DJW stage of `tools/vcdiff.py`; read, not carried)
+
+`tools/vcdiff.py` reads a romhack's `.xdelta` (docs/romhack-mods.md). The
+VCDIFF container is RFC 3284. The secondary compressor xdelta3 calls DJW has no
+specification but its source, so its decoder here was written from a reading of
+`xdelta3/xdelta3-djw.h` in <https://github.com/jmacd/xdelta> (Copyright 2016
+Joshua MacDonald, Apache License 2.0), 2026-11-10. No line of that file is in
+this repository: the Python is this project's own, and what it shares with the
+source is the format - the bit order, the field widths, and the 21-entry
+starting order of the code-length list (`DJW_CLEN_MTF`). Listed here so the
+origin of that format knowledge is on record; no notice is owed for it.

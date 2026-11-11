@@ -20,6 +20,7 @@
 #                           exist, every field fits its record, nothing overlaps
 #                           unmarked, every claimed field cites its reader
 #   tools/type1.py selftest the type-1 decompressor on synthetic input
+#   tools/vcdiff.py selftest the VCDIFF / xdelta reader on patches it makes itself
 #   tools/importer.py check the importer's recipes against fixtures/ (with
 #                           seq.py's round trip and fixtures/bgm.tsv's shape)
 #                           and exe_tables.py check
@@ -110,6 +111,9 @@ jobs:
       - name: The type-1 decompressor's self-test (no game data)
         run: python tools/type1.py selftest
 
+      - name: VCDIFF (xdelta) reader self-test
+        run: python tools/vcdiff.py selftest
+
       - name: The language converters' self-test (no game data)
         run: python tools/loc_build.py selftest
 
@@ -139,6 +143,9 @@ jobs:
 
       - name: The width census - no new site in a live file that assumes a 32-bit pointer (no game data)
         run: python tools/width_census.py --check
+
+      - name: The compiled shaders are made from today's shader sources (no game data)
+        run: python tools/compile_shaders.py --check
 
       - name: The source-layout round's rename record - every rename done in its file (no game data)
         run: python tools/tu_renames.py --check
