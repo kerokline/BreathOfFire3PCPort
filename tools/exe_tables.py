@@ -54,6 +54,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import struct
 import sys
 import tomllib
@@ -1783,8 +1784,6 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
     every range that was written and every one that was not, with why."""
     d = os.path.join(out, "base", "exe")
     os.makedirs(d, exist_ok=True)
-    with open(os.path.join(d, "data.bin"), "wb") as f:
-        f.write(img)
     lines = ["# base/exe/data.toml - written by tools/exe_tables.py (docs/exe-import.md).",
              "# data.bin is BOF3.exe's initialised .data in the PC's layout, to be mapped at `va`;",
              "# [va + size, bss_end) is zero-initialised. Each range: [pc, end, how, from] -",
@@ -1802,8 +1801,12 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# `none` (the PC's bytes are zero there too). On a disc build `accepted` follows: each",
              "# [answer, pc, end] the answer recipes/exe-gaps-accepted.tsv gives a `gap` range; the engine",
              "# refuses a `gap` range with none, and an image without the list (src/hook/exe_image.cpp).",
+             "# `file` (docs/image-layer-round.md): a tables.toml table, `from` its key - zero in data.bin,",
+             "# its bytes in tables/<key>.bin, laid there at map time. `sha256` is data.bin's;",
+             "# `image_sha256` the image's with every table file laid in (recipes/exe.toml's hash).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
-             "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
+             "bss_end = 0x%06X" % bss_end, 'sha256 = "@DATA_BIN_SHA@"', 'image_sha256 = "%s"' % sha(img),
+             'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
              'generated = "%s"' % datetime.date.today().isoformat(), "", "ranges = ["]
     if owner is None:
@@ -1846,6 +1849,21 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
                 if kp == "gap":
                     (answers if ap else unanswered).append((p, q, ap, wp))
                 p = q
+    # The file tables cut out (carve_tables): the rows split around each, the
+    # image zero there, the bytes in tables/.
+    first = lines.index("ranges = [") + 1
+    rows = []
+    for line in lines[first:]:
+        m = RANGE_LINE.match(line)
+        if not m:
+            fail("write_exe: a range line carve_tables does not read: %s" % line)
+        rows.append((int(m.group(1), 16), int(m.group(2), 16), m.group(3), m.group(4)))
+    rows, cut, carved = carve_tables(rows, img, bid)
+    lines[first:] = ['  [0x%06X, 0x%06X, "%s", "%s"],' % r for r in rows]
+    lines[lines.index('sha256 = "@DATA_BIN_SHA@"')] = 'sha256 = "%s"' % sha(cut)
+    with open(os.path.join(d, "data.bin"), "wb") as f:
+        f.write(cut)
+    write_tables(d, bid, carved)
     lines.append("]")
     if owner is not None:
         # The answers, after the ranges and in their order: a list the engine
@@ -1860,6 +1878,128 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
     with open(os.path.join(d, "data.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     return sha(img)
+
+
+# ------------------------------------------------------------------ the table files
+#
+# docs/image-layer-round.md 3.1: every tables.toml table that can be a file is
+# written beside the image, base/exe/tables/<key>.bin, and data.bin is zero
+# there (class `file`). The engine lays the files back at map time
+# (src/hook/exe_image.cpp ComposeBase); read_image does the same for the tools.
+
+TABLES_DIR, TABLES_TOML = "tables", "tables.toml"
+FILE_HOWS = ("exe", "table", "widen")      # the classes a file table's bytes may have before it is cut out
+RANGE_LINE = re.compile(r'^  \[0x([0-9A-F]+), 0x([0-9A-F]+), "([^"]*)", "([^"]*)"\],$')
+
+
+def file_tables():
+    """[(key, lo, hi, count, stride)] by address: the catalogued tables that are
+    files. A table with `in_image` in tables.toml stays in the image (its
+    reason is there); one with no PC symbol is not in .data."""
+    cat, syms, _ = tables.load()
+    out = []
+    for t in cat["table"]:
+        if "symbol" not in t or "in_image" in t:
+            continue
+        lo, hi = table_span(t, syms)
+        if not (DATA_LO <= lo < hi <= DATA_HI):
+            fail("table %s 0x%06X..0x%06X is not inside .data" % (t["key"], lo, hi))
+        out.append((t["key"], lo, hi, t["count"], t["stride"]))
+    out.sort(key=lambda r: r[1])
+    for a, b in zip(out, out[1:]):
+        if b[1] < a[2]:
+            fail("tables %s and %s overlap at 0x%06X" % (a[0], b[0], b[1]))
+    return out
+
+
+def carve_tables(rows, img, bid):
+    """The image's range rows [(lo, hi, how, from)] and bytes with every file
+    table cut out: (rows with one `file` row a table, the image zero there,
+    [(key, lo, hi, count, stride, bytes, what it was)]). A table on a class
+    that is not a disc's or the exe's own bytes is refused: it must say
+    `in_image` in tables.toml, with the reason."""
+    out, cut, carved = list(rows), bytearray(img), []
+    for key, lo, hi, count, stride in file_tables():
+        was, keep = [], []
+        for r in out:
+            if r[1] <= lo or r[0] >= hi:
+                keep.append(r)
+                continue
+            if r[2] not in FILE_HOWS:
+                fail("table %s 0x%06X..0x%06X lies on a `%s` range (0x%06X..0x%06X) of the %s image: not bytes a "
+                     "file can hold. Give it `in_image` in tables.toml, with why." % (key, lo, hi, r[2], r[0], r[1], bid))
+            if not was:
+                was.append("%s %s" % (r[2], r[3]))
+            if r[0] < lo:
+                keep.append((r[0], lo, r[2], r[3]))
+            if r[1] > hi:
+                keep.append((hi, r[1], r[2], r[3]))
+        keep.append((lo, hi, "file", key))
+        out = sorted(keep)
+        carved.append((key, lo, hi, count, stride, bytes(img[lo - DATA_LO:hi - DATA_LO]), "; ".join(was)))
+        cut[lo - DATA_LO:hi - DATA_LO] = bytes(hi - lo)
+    return out, bytes(cut), carved
+
+
+def write_tables(d, bid, carved):
+    """base/exe/tables/: one file a table and tables.toml naming each."""
+    td = os.path.join(d, TABLES_DIR)
+    if os.path.isdir(td):
+        shutil.rmtree(td)
+    os.makedirs(td)
+    lines = ["# base/exe/tables/tables.toml - written by tools/exe_tables.py (docs/image-layer-round.md 3.1).",
+             "# One file a tables.toml table: <key>.bin is the table's records in the PC's stride, the",
+             "# bytes data.bin's `file` range of that key leaves zero. Each row: [key, pc, end, count,",
+             "# stride, sha256 of the file, the class and place its first bytes had in the image]. The",
+             "# engine lays every file at its `pc` before anything reads .data (src/hook/exe_image.cpp).",
+             "", 'build = "%s"' % bid, "", "tables = ["]
+    for key, lo, hi, count, stride, body, was in carved:
+        with open(os.path.join(td, key + ".bin"), "wb") as f:
+            f.write(body)
+        lines.append('  ["%s", 0x%06X, 0x%06X, %d, %d, "%s", %s],' % (key, lo, hi, count, stride, sha(body), json.dumps(was)))
+    lines.append("]")
+    with open(os.path.join(td, TABLES_TOML), "w", newline="\n", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+
+
+def read_image(d, errs=None):
+    """A base/exe/ directory's image as the engine maps it: (data.toml's [image],
+    the bytes) - data.bin with every `file` range's table file laid in. An image
+    written before the table files has no such range and is data.bin whole. A
+    file that is absent, of another size or hash is a failure - or, with `errs`
+    a list, a line there (verify)."""
+    def bad(msg):
+        if errs is None:
+            fail(msg)
+        errs.append(msg)
+    with open(os.path.join(d, "data.toml"), "rb") as f:
+        meta = tomllib.load(f)["image"]
+    with open(os.path.join(d, meta["file"]), "rb") as f:
+        img = bytearray(f.read())
+    if sha(bytes(img)) != meta["sha256"]:
+        bad("base/exe/%s: hashes %s, data.toml says %s" % (meta["file"], sha(bytes(img)), meta["sha256"]))
+    files = [(lo, hi, src) for lo, hi, how, src in meta["ranges"] if how == "file"]
+    if files:
+        rows = {}
+        if os.path.exists(os.path.join(d, TABLES_DIR, TABLES_TOML)):
+            with open(os.path.join(d, TABLES_DIR, TABLES_TOML), "rb") as f:
+                rows = {r[0]: r for r in tomllib.load(f)["tables"]}
+        for lo, hi, key in files:
+            r = rows.get(key)
+            path = os.path.join(d, TABLES_DIR, key + ".bin")
+            if r is None or (r[1], r[2]) != (lo, hi) or not os.path.exists(path):
+                bad("base/exe/tables/: no file and row for %s at 0x%06X..0x%06X" % (key, lo, hi))
+                continue
+            with open(path, "rb") as f:
+                body = f.read()
+            if len(body) != hi - lo or sha(body) != r[5]:
+                bad("base/exe/tables/%s.bin: not the file tables.toml records" % key)
+                continue
+            img[lo - DATA_LO:hi - DATA_LO] = body
+        whole = sha(bytes(img))
+        if whole != meta.get("image_sha256"):
+            bad("base/exe/: the image with its table files hashes %s, data.toml says %s" % (whole, meta.get("image_sha256")))
+    return meta, bytes(img)
 
 
 def build_from(path, bid, out):
@@ -1891,14 +2031,10 @@ def verify_cache(cache, info=None):
         return ["base/exe/: absent"]
     with open(os.path.join(d, "data.toml"), "rb") as f:
         meta = tomllib.load(f)
-    img = meta["image"]
-    with open(os.path.join(d, img["file"]), "rb") as f:
-        raw = f.read()
+    errs = []
+    img, raw = read_image(d, errs)               # the image whole: data.bin and its table files
     h = sha(raw)
     rec = load_recipe()["build"].get(img["build"])
-    errs = []
-    if h != img["sha256"]:
-        errs.append("base/exe/%s: hashes %s, data.toml says %s" % (img["file"], h, img["sha256"]))
     if rec is None:
         errs.append("base/exe/: build %s has no image in recipes/exe.toml" % img["build"])
     elif h != rec["sha256"]:
@@ -1925,7 +2061,7 @@ def verify_cache(cache, info=None):
 SKIP_FILE = os.path.join(ROOT, "tools", "statehash_skip.txt")
 GATE_NOT_PC = ("language", "unread", "gap")           # data.toml classes whose bytes are not the PC's at the map
 GATE_FILLED = ("layout", "own", "keys")                # the PC's bytes at the map (ExeImage_CompareWithFile's Fatal)
-GATE_PLACED = ("map", "place", "table", "widen")       # the disc's bytes: skipped where they differ from the PC's
+GATE_PLACED = ("map", "place", "table", "widen", "file")   # the disc's bytes: skipped where they differ from the PC's
 
 
 def gate_skip(cache, exe, with_filled=False):
@@ -1944,8 +2080,7 @@ def gate_skip(cache, exe, with_filled=False):
         fail("%s is built from BOF3.exe: its image is the PC's; the gate wants a disc-built cache" % cache)
     if "gaps" not in meta:
         fail("%s was built before recipes/exe-gaps.tsv: rebuild it" % cache)
-    with open(os.path.join(d, meta["file"]), "rb") as f:
-        img = f.read()
+    _, img = read_image(d)
     pc, _ = pc_data(exe)
     with open(SKIP_FILE, encoding="utf-8") as f:
         text = f.read()

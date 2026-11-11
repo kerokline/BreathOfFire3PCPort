@@ -1391,7 +1391,7 @@ class DiscCache:
     are blank -, or `exe`); a `pointer` or `none` byte is zero. Overlays go to
     <cache>/loc/<tag>/dat/<NAME>.DAT, the layout importer.py writes."""
     disc_only = True
-    CARRIED = ("exe", "map", "table", "widen")
+    CARRIED = ("exe", "map", "table", "widen", "file")
 
     def __init__(self, cache):
         import tomllib
@@ -1402,10 +1402,8 @@ class DiscCache:
             raise SystemExit("%s: not an importer cache with base/dat/ and base/exe/ (importer.py build writes both)" % cache)
         with open(meta_path, "rb") as f:
             meta = tomllib.load(f)
-        with open(os.path.join(cache, "base", "exe", meta["image"]["file"]), "rb") as f:
-            self.image = f.read()
-        if hashlib.sha256(self.image).hexdigest() != meta["image"]["sha256"]:
-            raise SystemExit("%s: base/exe/data.bin does not hash as data.toml says" % cache)
+        import exe_tables        # the image whole: data.bin and its table files (docs/image-layer-round.md)
+        _, self.image = exe_tables.read_image(os.path.join(cache, "base", "exe"))
         self.va, self.build = meta["image"]["va"], meta["image"]["build"]
         self.ranges = sorted((lo, hi, how) for lo, hi, how, _ in meta["image"]["ranges"])
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recipes", "pc-zh.toml"), "rb") as f:

@@ -429,6 +429,15 @@ struct ModInfo {
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 
+// DIVERGENCE DIV-0213 (docs/image-layer-round.md 4): `wanted`, the layers the
+// game is about to be given, with the layer mod-<id> of every table-edit mod
+// <home>\mods.toml lists added at its end, in that file's order - the Mods
+// tab's - so that the later mod wins a cell two mods set. A mod whose layer the
+// cache does not hold with its tables (not built) is left off with a line; so
+// is one past the game's 16 layers. A layer `wanted` names already is not
+// added twice.
+std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted);
+
 // The start's rule for an ini without a ruby_ui= line (written before the
 // toggle existed): the toggle comes up on when <home>\mods.toml lists a
 // reading-row mod, so a player who installed the furigana mod before the box

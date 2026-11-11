@@ -1524,7 +1524,8 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
             lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
         lines.append("]")
     if exe:
-        lines += ["", "# base/exe/data.bin: BOF3.exe's .data in the PC's layout (tools/exe_tables.py).", "[exe]",
+        lines += ["", "# base/exe/data.bin: BOF3.exe's .data in the PC's layout (tools/exe_tables.py); the hash is the",
+                  "# image's with its table files laid in (base/exe/tables/, docs/image-layer-round.md).", "[exe]",
                   "build = %s" % toml_str(exe[0]), 'file = "base/exe/data.bin"', "sha256 = %s" % toml_str(exe[1])]
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.toml"), "w", newline="\n", encoding="utf-8") as f:
@@ -2399,9 +2400,8 @@ def cmd_verify(a):
         exe = tomllib.load(fh).get("exe")
     if exe:
         errs = exe_tables.verify_cache(a.cache)
-        with open(os.path.join(a.cache, exe["file"]), "rb") as fh:
-            if sha(fh.read()) != exe["sha256"]:
-                errs.append("%s: not the image the manifest recorded" % exe["file"])
+        if sha(exe_tables.read_image(os.path.join(a.cache, "base", "exe"), errs)[1]) != exe["sha256"]:
+            errs.append("%s: not the image the manifest recorded" % exe["file"])
         print("  base/exe/ (%s): %s" % (exe["build"], "; ".join(errs) if errs else
                                          "the image recipes/exe.toml records for it"))
         bad += errs

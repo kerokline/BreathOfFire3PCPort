@@ -29,6 +29,9 @@
 #                     list when which one holds the table is not settled. A
 #                     PSP disc has two rows where the table is in both its ELF
 #                     and its EMI copy; the PSP's own code reads the ELF's
+#     in_image        why this table stays in the image and is not a file of
+#                     base/exe/tables/ (docs/image-layer-round.md 2, M1): its
+#                     bytes are the engine's to fill, not a disc's
 #     pc_twin         instead of `symbol`, for a disc table with no PC
 #                     counterpart: why there is none
 #     count_status, count_cite   how sure the count is, where no reader
@@ -2290,6 +2293,7 @@ cite = "magic_steal.cpp:107-126"
 
 [[table]]
 key = "area_descriptors"
+in_image = "every word is a pointer of the PC's layout (data.toml classes layout and rebuilt), which must equal the PC's"
 symbol = "Area_Descriptors"
 group = "field"
 what = "a pointer to an area's descriptor (its handler array +0x3C, entry lists +0x10 / +0x1C)"
@@ -2777,6 +2781,7 @@ cite = "sprite_screen.cpp:75"
 
 [[table]]
 key = "sin_table"
+in_image = "a library table, not game content: the engine fills it where no disc places it (class own on the PSP builds)"
 symbol = "Math_SinTable"
 group = "library"
 what = "a quarter-wave sine, 4096 the unit"
@@ -2829,6 +2834,7 @@ cite = "psx_gpu.cpp:206; symbols.toml Math_SinTable"
 
 [[table]]
 key = "key_defaults"
+in_image = "Shell_MapDefaultKeys writes it from the engine's rule (class keys), which must equal the PC's"
 symbol = "Key_TableDefault"
 group = "platform"
 what = "a default key binding: DirectInput scan code and pad bits (PC only: no disc has one)"

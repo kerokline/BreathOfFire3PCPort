@@ -74,7 +74,7 @@ bool HasLayer(const char* kind, const char* layer);
 // layer may carry parts besides dat\ - "bgm" (songs and banks, Music_LoadFile's
 // seam, music_seq.cpp), "snd" (Sound_LoadStream's files, SoundPath below) and
 // "exe" (ranges of .data the exe host lays, exe_image.cpp). True when the
-// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\place.toml), and the
+// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\tables.toml or exe\place.toml), and the
 // manifest lists the layer (as HasLayer). The bgm part is the music's: it is
 // read whenever the cache is in use for music, under BOF3X_CACHE_DATA=0 too
 // ("the cache for the music only", docs/cache-read.md 6); the snd, exe and dat

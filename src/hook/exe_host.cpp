@@ -322,7 +322,8 @@ void CopyData() {
     const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
     if (!from_cache) ReadAt(g_data.raw, Place(kDataVa), kDataBytes, ".data");
     Shell_MapDefaultKeys();   // Key_TableDefault from the engine's rule, against the file's when it is there
-    ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's .data ranges
+    ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's part
+    ExeImage_LogMapped(Place(kDataVa), kDataBytes);
     ExeImage_CompareWithFile();   // a disc-built image, filled, against the file's .data when it is there
 
     // .bss: the original loader zeroed it, and so did ours - asserted, to

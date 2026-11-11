@@ -114,6 +114,9 @@ jobs:
       - name: VCDIFF (xdelta) reader self-test
         run: python tools/vcdiff.py selftest
 
+      - name: The table-edit mod builder's self-test (no game data)
+        run: python tools/table_edit_build.py selftest
+
       - name: The language converters' self-test (no game data)
         run: python tools/loc_build.py selftest
 

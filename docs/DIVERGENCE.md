@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 211 entries, DIV-0001..0211, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 213 entries, DIV-0001..0213, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9002,6 +9002,30 @@ designed in rather than bolted on.
   over a disc-built image, a range on a class that must equal the PC's. The
   hosted build refuses the layer (its `.data` is Capcom's, the A/B and
   shadow reference).
+- **Amended 2026-11-11 (the image-layer round, groups A and B;
+  [`image-layer-round.md`](image-layer-round.md)):** the layer's form is one
+  file a table. `opt\psp-tables\exe\` holds `tables.toml`, `exp_table.bin`
+  and `consumables.bin` - each the whole table of the PSP-built image - and
+  the toml's `cells` name the bytes that are the layer's (every record, a
+  name field left out, as before); the exe host lays only those. The same
+  6,096 bytes are laid and the same 250 change. A `place.toml` without
+  `kind = "raw"` - the form above - is refused with a sentence that says to
+  rebuild the install; `place.toml` + `place.bin` with that line stays for
+  byte ranges outside every table, and nothing writes one yet. Any layer
+  `opt=` names may carry an `exe\` part in this form, and where two layers
+  write one byte with different values the later in `opt=`'s order wins,
+  with a line in the log (the owner, 2026-11-11). Only `psp-tables` is built
+  today, so no install's bytes change. Refused as before, and also: a table
+  file of another size or hash, a cell past its table, a table that is not
+  at the base's place. **The base's tables are files too:**
+  `tools/exe_tables.py` cuts 27 `tables.toml` tables (20,744 bytes) out of
+  `base\exe\data.bin` into `base\exe\tables\<key>.bin`, and the exe host
+  lays them back before anything reads the image (`ComposeBase`). The image
+  the engine maps is the same bytes: each of the eight builds' images, with
+  its table files laid in, hashes as `recipes/exe.toml` records it, and the
+  exe host's `.data as mapped` line is the same hash from an image written
+  whole and from one with table files, on every build (the round doc,
+  "A and B as run").
 - **Rationale:** the owner's data suite; the bytes are DIV-0104's.
 - **Also in the PSX version?** No: the PSP's changes.
 - **Verification:** `exe_cmp.py` (the layer laid as the exe host lays it,
@@ -15516,5 +15540,104 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - the launcher's dialog itself; it does nothing until the player opens it and saves
 - **Toward:** none - no release has a save editor
+- **Languages:** any
+- **State:** active
+
+### A PC install reads .data from the cache's image and its table files
+
+- **ID:** DIV-0212
+- **Date:** 2026-11-11
+- **Subsystem:** the exe host's data mapping - `src/launcher/launcher.cpp`
+  (`CacheImageIsPcBuilt`, the block after the preset), `src/hook/exe_image.cpp`
+  `ExeImage_Source`; [`image-layer-round.md`](image-layer-round.md) 5b
+- **Tier:** Sensible - where the bytes are read from, not what they are; the
+  owner, 2026-11-11: one route for every install kind, the tables as files
+  outside the exe
+- **Original behaviour:** `BOF3.exe` is the program and its `.data`: the
+  loader maps the tables with the code. Our exe host, on a PC install, read
+  `.data` out of the player's `BOF3.exe` at start, and read a cache's
+  `base\exe` image only where there is no `BOF3.exe` (a disc-built install).
+- **New behaviour:** on a PC install whose cache holds the image
+  `tools/exe_tables.py` built from `BOF3.exe` (`base\exe\data.toml`,
+  `build = "pc-zh"`), the launcher names the cache as the source
+  (`BOF3X_EXEIMAGE`), as it does for a disc-built install. The exe host maps
+  `data.bin` with the 27 table files of `base\exe\tables\` laid in
+  (DIV-0111's amendment of this date), and first compares the result with
+  the `.data` of the `BOF3.exe` that is there: one byte of difference is a
+  Fatal that names the file and tells the player to rebuild, or to use a mod
+  to change a table. So the bytes the game starts with are the file's, as
+  before. `BOF3.exe` is still read for `.data` when there is no cache, when
+  the cache's image was built from a disc (those bytes are not the PC's),
+  when `BOF3X_EXEIMAGE` is set by hand, and in the hosted build
+  (`--host bof3`), which runs inside the file and is the A/B and shadow
+  reference.
+- **Rationale:** a table is then one file of the install on every install
+  kind, and a layer or a mod lays over the same thing everywhere. The exe is
+  a source the importer reads, as a disc is.
+- **Also in the PSX version?** No: the PlayStation loads its tables from the
+  disc's files, which is the shape this moves toward.
+- **Verification:** the exe host's self-test on a PC game folder with a cache
+  holding the PC-built image: the launcher's line, `base/exe (pc-zh) is
+  BOF3.exe's .data, byte for byte`, and the `.data as mapped` sha256 equal to
+  the one with `BOF3X_EXEFILE=1` and to the hash of `BOF3.exe`'s `.data`; one
+  byte of a table file flipped: exit 3 with the rebuild sentence; a cache
+  whose image a disc built, beside `BOF3.exe`: the file is read, as before
+  (the round doc, 5b). **Not played. Not run:** the state-hash routes.
+- **Reversible?** `BOF3X_EXEFILE=1`: the file is the source, as before.
+- **Switch:** env:BOF3X_EXEFILE=1 - read by `src/launcher/launcher.cpp`, which then does not name the cache as the image's source
+- **Default:** on
+- **Player:** yes - `BOF3X_EXEFILE=1` (no ini key); the bytes are the same either way
+- **Toward:** psx - the tables read from data files, as the disc's are
+- **Languages:** any
+- **State:** active
+
+### A mod can change the numbers of the game's tables
+
+- **ID:** DIV-0213
+- **Date:** 2026-11-11
+- **Subsystem:** mods - `tools/mods.py` (kind `table-edit`),
+  `tools/table_edit_build.py`, `tools/tables.py export`,
+  `tools/make_mod.py table-edit`; `src/launcher/config.cpp` `ConfigModLayers`;
+  the layer is laid by DIV-0111's loader (`src/hook/exe_image.cpp`
+  `LayLayerTables`); [`image-layer-round.md`](image-layer-round.md) 4 and 5c,
+  [`mods.md`](mods.md)
+- **Tier:** Extension - the player's own choice of another person's numbers;
+  nothing changes until a mod is added and built
+- **Original behaviour:** the numbers of the game's tables (an item's price,
+  a weapon's attack, the level table) are the release's, in `BOF3.exe`.
+- **New behaviour:** a mod of kind `table-edit` is a zip of `mod.toml` and
+  `edits.toml`: `[[set]]` rows, each one number - a table of `tables.toml`, a
+  record, a field (or an offset and a type for a byte no field names), a
+  value. It holds no table and no record of the game's. On the player's
+  machine the build step copies the install's own table file, writes the
+  numbers in, and emits the layer `mod-<id>` (`exe\tables.toml`, one file a
+  table, `cells` exactly the edited bytes). The launcher adds every built
+  `table-edit` mod's layer to the layers the game is given, after the others
+  and in the Mods tab's order; the exe host lays the cells over `.data` at
+  start. Where two mods set one byte the later one wins and the log says so.
+  Refused when the mod is added: a table the catalogue does not have or that
+  stays in the image (`in_image`), a record past the table, a field the table
+  does not have, a value its type does not hold, a name (the language's
+  text: a text mod's), a byte in a name field, one cell set twice. The hosted
+  build takes no such layer (DIV-0111).
+- **Rationale:** the owner, 2026-11-06 and 2026-11-11: mods that edit the
+  game's tables, made and shared without the game's data, with the tables
+  readable as files outside the exe.
+- **Also in the PSX version?** No: a PlayStation mod of these tables is a
+  patched disc. Converting one is the round's group D.
+- **Verification:** `table_edit_build.py selftest` (20 documents accepted or
+  refused, a build over a table of zeros, 0 failures); `mods.py selftest` and
+  `make_mod.py --selftest` with their table-edit cases; `config_tests.exe`
+  (`ConfigModLayers`, 5 checks); end to end on a US disc-built cache: the
+  CSVs exported, one number changed, the mod made, added and built, and the
+  exe host's line `layer mod-...: 1 tables, 1 cells` with the bytes that
+  differ (the round doc, 5c). **Not played:** nobody has looked at the
+  changed number in the game.
+- **Reversible?** Remove the mod on the Mods tab; or `opt=none`, which gives
+  the game no layer at all.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - no mod is added by default; a mod is removed on the Mods tab, and `opt=none` leaves every mod's tables off
+- **Toward:** none - no release has mods
 - **Languages:** any
 - **State:** active

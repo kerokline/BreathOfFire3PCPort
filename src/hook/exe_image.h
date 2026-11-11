@@ -62,21 +62,39 @@ struct ExeImageRange {
 int ExeImage_MappedRanges();
 ExeImageRange ExeImage_MappedRange(int i);
 
-// DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9): the exe host, after
-// .data is in place (the file's or BOF3X_EXEIMAGE's, filled) and before the
-// compare below: each layer BOF3X_OPT names whose cache (BOF3X_CACHE, not
-// under BOF3X_CACHE_DATA=0) has opt\<layer>\exe\place.toml is laid over .data
-// at `to`, in BOF3X_OPT's order - place.bin's bytes at the toml's ranges, the
-// file's sha256 and size checked, every range inside .data and, over a
-// disc-built image, in a class that need not equal the PC's. A malformed
-// layer is a Fatal. Nothing when no such layer is named. The hosted build
-// refuses such a layer (dat_load.cpp ReadOptLayers): it keeps Capcom's .data.
+// DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9,
+// docs/image-layer-round.md 3): the exe host, after .data is in place (the
+// file's or BOF3X_EXEIMAGE's, filled) and before the compare below. Each layer
+// BOF3X_OPT names whose cache (BOF3X_CACHE, not under BOF3X_CACHE_DATA=0) has
+// an opt\<layer>\exe\ part is laid over .data at `to`, in BOF3X_OPT's order:
+//   tables.toml + <key>.bin   one whole file a table the layer changes; only
+//                             the toml's `cells` (record, offset, length) are
+//                             laid. Each file's size and sha256 checked, the
+//                             table inside .data and at the base's place
+//   place.toml + place.bin    byte ranges outside the tables (`kind = "raw"`);
+//                             a place.toml without that line is the form of
+//                             before the table files: a Fatal that says to
+//                             rebuild
+// Over a disc-built image every byte laid is in a class that need not equal
+// the PC's. Where two layers write one byte with different values the later
+// wins and a line says so. A malformed layer is a Fatal. Nothing when no such
+// layer is named. The hosted build refuses such a layer (dat_load.cpp
+// ReadOptLayers): it keeps Capcom's .data.
 void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size);
 
-// BOF3X_SHADOW=dat_cache: the layer's reader and laying on synthetic files in
-// memory, with controls (a wrong hash, a range outside .data, ranges out of
-// order, a byte count that differs, a range over a must-equal class).
+// BOF3X_SHADOW=dat_cache: the readers and the laying on synthetic files in
+// memory, with controls - the raw ranges (a wrong hash, a range outside
+// .data, ranges out of order, a byte count that differs, a range over a
+// must-equal class, the old form), the base's table files (hash, size, range,
+// bytes not zero under it), and two layers on one table (the later wins,
+// counted; eight bad layers refused).
 void ExeImage_OptSelfTest();
+
+// One line with the sha256 of .data as the game will start with it: after the
+// image or the file, the base's table files, the engine's fills and every
+// layer. Two installs that log the same hash start from the same bytes
+// (docs/image-layer-round.md 6, acceptance 1).
+void ExeImage_LogMapped(const void* at, std::uint32_t size);
 
 // After every fill (the engine's own regions, the key table): a mapped
 // disc-built image against the file's .data when BOF3.exe is there, every

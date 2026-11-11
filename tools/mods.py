@@ -13,11 +13,16 @@ docs/mods.md is the contract. A mod is a zip holding `mod.toml` at its root and 
 data files it names, **never code**: nothing in a zip is executed, imported or
 evaluated, and a zip holding anything mod.toml does not name is refused whole.
 The kinds are a closed set (KINDS); a kind the tools do not know is refused with
-its name. Today there is one, `reading-row` (the reading-row round,
+its name. Today there are two. `reading-row` (the reading-row round,
 docs/reading-row-round.md section 2 ML): a row above each text row of the
 dialogue box, built on the player's machine by tools/ruby_build.py into the
 optional text layer `ruby-<id>-<base>` (docs/reading-row.md section 1) - a layer
 the launcher's *Row above the text* box offers and adds to BOF3X_OPT.
+`table-edit` (the image-layer round, docs/image-layer-round.md 4): numbers of the
+game's tables, as text rows in `edits.toml`, built by tools/table_edit_build.py
+into the layer `mod-<id>` - one file a table over the install's own table files
+- which the launcher adds to BOF3X_OPT after the other layers, in this list's
+order (the later mod wins a cell two mods both set).
 
 The home's `mods.toml` is written only by this tool, in the shape of
 `sources.toml` (docs/install-sources.md section 3): one `[[mod]]` table a mod, a
@@ -95,6 +100,12 @@ KINDS = {
         "builder": "ruby_build.py",
         "mode": "furigana",
     },
+    "table-edit": {
+        "table": "table-edit",
+        "keys": {"edits": "file"},
+        "file_ext": {"edits": ".toml"},
+        "builder": "table_edit_build.py",
+    },
 }
 
 
@@ -110,6 +121,8 @@ def layer_name(meta):
     """The optional layer a mod's step builds (docs/reading-row.md 1.3)."""
     if meta["kind"] == "reading-row":
         return "ruby-%s-%s" % (meta["id"], meta["base"])
+    if meta["kind"] == "table-edit":
+        return "mod-%s" % meta["id"]
     raise BuildError("no layer is defined for kind %r" % meta["kind"])
 
 
@@ -310,6 +323,14 @@ def read_zip(path):
     for n in meta["files"]:
         if n.lower().endswith(".toml"):
             _toml(data[n], n)
+    if meta["kind"] == "table-edit":
+        # every row against the catalogue now, so that a mod that cannot be built
+        # is refused when it is added and not at the next setup
+        import table_edit_build
+        try:
+            table_edit_build.parse(_toml(data[meta["edits"]], meta["edits"]))
+        except table_edit_build.Bad as e:
+            raise Refused("%s: %s" % (meta["edits"], e))
     return meta, data
 
 
@@ -335,8 +356,8 @@ def mod_dir(h, mid):
     return os.path.join(h, MODS_DIR, mid)
 
 
-ROW_KEYS = ("id", "name", "version", "author", "url", "credit", "kind", "requires", "base", "readings", "files",
-            "zip", "sha256", "added")
+ROW_KEYS = ("id", "name", "version", "author", "url", "credit", "kind", "requires", "base", "readings", "edits",
+            "files", "zip", "sha256", "added")
 
 
 def load_rows(h):
@@ -385,7 +406,11 @@ def manifest_lists(cache, layer):
 
 
 def built(cache, layer):
-    return _has_dat(os.path.join(cache, "opt", layer, "dat")) and manifest_lists(cache, layer)
+    """The layer is in the cache and listed: its DAT containers, or - a table
+    layer - its exe/tables.toml."""
+    there = _has_dat(os.path.join(cache, "opt", layer, "dat")) or \
+        os.path.isfile(os.path.join(cache, "opt", layer, "exe", "tables.toml"))
+    return there and manifest_lists(cache, layer)
 
 
 def state_of(h, r, cache=None):
@@ -634,8 +659,32 @@ def build_layer(cache, layer, kind, base, readings, where, what, say, builder=No
     return layer
 
 
+def build_table_layer(h, cache, r, say, builder=None):
+    """A table-edit mod's layer into `cache`: the install's own table files with
+    the mod's numbers, one file a table (tools/table_edit_build.py), listed in
+    the manifest. BuildError when the builder is not in the release, or the
+    edits or the install's tables are not what it needs."""
+    layer, what = layer_name(r), "the mod %s (%s)" % (r["id"], r["name"])
+    builder = builder or builder_path(r["kind"])
+    if not os.path.isfile(builder):
+        raise BuildError("%s needs the table builder, tools/%s, and this release does not have it, so it cannot "
+                         "be built" % (what[0].upper() + what[1:], KINDS[r["kind"]]["builder"]))
+    import table_edit_build
+    where = "mod:%s@%s" % (r["id"], r["version"])
+    say("Building %s into opt/%s" % (what, layer))
+    try:
+        wrote = table_edit_build.build(cache, layer, os.path.join(mod_dir(h, r["id"]), r["edits"]), where)
+    except table_edit_build.Bad as e:
+        raise BuildError("%s cannot be built: %s" % (what[0].upper() + what[1:], e))
+    _manifest_rows(cache, layer, [("exe/" + n, i, where, hh) for i, (n, hh) in enumerate(wrote)])
+    say("Built %s: opt/%s, %d table file(s)" % (what, layer, len(wrote) - 1))
+    return layer
+
+
 def build_one(h, cache, r, say, builder=None, reuse=None):
-    """One mod's layer into `cache` (its readings from H/mods/<id>/)."""
+    """One mod's layer into `cache` (its data from H/mods/<id>/)."""
+    if r["kind"] == "table-edit":
+        return build_table_layer(h, cache, r, say, builder if builder and builder.endswith("table_edit_build.py") else None)
     return build_layer(cache, layer_name(r), r["kind"], r["base"], os.path.join(mod_dir(h, r["id"]), r["readings"]),
                        "mod:%s@%s:%s" % (r["id"], r["version"], r["base"]), "the mod %s (%s)" % (r["id"], r["name"]),
                        say, builder, reuse)
@@ -910,6 +959,72 @@ def selftest(keep=None):
            "remove: the folder, the row, the layer and its manifest rows gone")
     rc, out = run("remove", "furigana", "--home", h)
     expect(rc == 1 and "not installed" in out, "remove again: exit 1")
+
+    # A table-edit mod (docs/image-layer-round.md 4): refusals, then the cycle
+    # over a table file of zeros - the catalogue's key, count and stride, no value.
+    import tables
+    import tomllib
+    cat, _, _ = tables.load()
+    wt = next(x for x in cat["table"] if x["key"] == "weapons")
+    TE_MOD = (b'[mod]\nid = "sharper"\nname = "Sharper"\nversion = "1.0"\nauthor = "A. Tester"\n'
+              b'kind = "table-edit"\nrequires = []\n\n[table-edit]\nedits = "edits.toml"\n')
+    TE_EDITS = ('[[set]]\ntable = "weapons"\nrecord = 2\nat = %d\ntype = "u8"\nvalue = 9\n' % (wt["stride"] - 1)).encode()
+    te = {}
+    for name, members in (
+            ("te_good", [("mod.toml", TE_MOD), ("edits.toml", TE_EDITS)]),
+            ("te_no_rows", [("mod.toml", TE_MOD), ("edits.toml", b"# nothing\n")]),
+            ("te_unknown_table", [("mod.toml", TE_MOD), ("edits.toml", TE_EDITS.replace(b"weapons", b"hats"))]),
+            ("te_name", [("mod.toml", TE_MOD), ("edits.toml", b'[[set]]\ntable = "weapons"\nrecord = 2\nfield = "name"\nvalue = 1\n')]),
+            ("te_holds_table", [("mod.toml", TE_MOD), ("edits.toml", TE_EDITS), ("weapons.bin", b"\0" * 16)]),
+            ("te_long_id", [("mod.toml", TE_MOD.replace(b'"sharper"', b'"a-mod-id-of-20-chars"')), ("edits.toml", TE_EDITS)])):
+        te[name] = make_zip(os.path.join(root, name + ".zip"), members)
+    for name, want in (("te_good", None), ("te_no_rows", "edits.toml: no [[set]] row"),
+                       ("te_unknown_table", "is not a table of the catalogue"), ("te_name", "a name is not a table's number"),
+                       ("te_holds_table", "game data"), ("te_long_id", "longer than the 23 characters")):
+        try:
+            meta, _ = read_zip(te[name])
+            got = None
+        except Refused as e:
+            got = str(e)
+        if want is None:
+            expect(got is None and meta["layer"] == "mod-sharper", "%s: accepted, layer mod-sharper" % name)
+        else:
+            expect(got is not None and want in got, "%s: refused (%s)" % (name, (got or "")[:60]))
+    rc, out = run("add", te["te_good"], "--home", h, "--json")
+    o = json.loads(out.splitlines()[-1])
+    expect(rc == 0 and o["ok"] and o["state"] == "not-built" and o["layer"] == "mod-sharper",
+           "a table-edit mod added: state not-built (it needs no language)")
+    try:
+        setup_step(h, cache, lambda t, quiet=False: None)
+        expect(False, "an install with no table files: refused")
+    except BuildError as e:
+        expect("no table files" in str(e), "an install with no table files: the build refused, with the rebuild sentence")
+    td = os.path.join(cache, "base", "exe", "tables")
+    os.makedirs(td)
+    zeros = bytes(wt["count"] * wt["stride"])
+    with open(os.path.join(td, "weapons.bin"), "wb") as f:
+        f.write(zeros)
+    with open(os.path.join(td, "tables.toml"), "w", newline="\n") as f:
+        f.write('build = "test"\n\ntables = [\n  ["weapons", 0x%06X, 0x%06X, %d, %d, "%s", "test"],\n]\n'
+                % (0x600000, 0x600000 + len(zeros), wt["count"], wt["stride"], sha_bytes(zeros)))
+    done, _ = setup_step(h, cache, lambda t, quiet=False: None)
+    d = os.path.join(cache, "opt", "mod-sharper", "exe")
+    with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:
+        man = f.read()
+    rows = [r for r in tomllib.loads(man)["cache"]["opt"] if r[1] == "opt/mod-sharper"]
+    with open(os.path.join(d, "weapons.bin"), "rb") as f:
+        body = f.read()
+    expect(done == ["mod-sharper"] and len(rows) == 2 and rows[0][3] == "mod:sharper@1.0" and
+           body[3 * wt["stride"] - 1] == 9 and sum(body) == 9,
+           "the table layer built: one byte of the table changed, both files listed in the manifest")
+    with open(os.path.join(d, "tables.toml"), "rb") as f:
+        expect(tomllib.load(f)["cells"] == [["weapons", 2, wt["stride"] - 1, 1]], "  its cells: the one byte the mod set")
+    rc, out = run("list", "--home", h, "--json")
+    expect(json.loads(out)["state"] == "built", "  list: state built")
+    rc, out = run("remove", "sharper", "--home", h)
+    with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:
+        expect(rc == 0 and not os.path.exists(os.path.join(cache, "opt", "mod-sharper")) and "mod-sharper" not in f.read(),
+               "remove: the table layer and its manifest rows gone")
     if not keep:
         shutil.rmtree(root, ignore_errors=True)
     else:

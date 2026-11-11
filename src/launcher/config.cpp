@@ -48,7 +48,7 @@ const CacheManifest& CachedManifest(const std::wstring& cache) {
     return s_man;
 }
 
-// <cache>\opt\<name>\<part> holds a .DAT (exe: exe\place.toml) - the DLL's
+// <cache>\opt\<name>\<part> holds a .DAT (exe: exe\tables.toml or exe\place.toml) - the DLL's
 // own test (dat_cache::HasLayerPart), the manifest's listing included.
 bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_t* part) {
     if (cache.empty() || !ManifestOffersLayer(CachedManifest(cache), name)) return false;
@@ -56,7 +56,8 @@ bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
     pattern += L"\\";
     pattern += part;
-    return AnyMatch(pattern + (std::wcscmp(part, L"exe") == 0 ? L"\\place.toml" : L"\\*.DAT"));
+    if (std::wcscmp(part, L"exe") != 0) return AnyMatch(pattern + L"\\*.DAT");
+    return AnyMatch(pattern + L"\\tables.toml") || AnyMatch(pattern + L"\\place.toml");
 }
 
 // DIV-0089: <cache>\<kind>\<name>\dat\ holds a .DAT - the DLL's own test
@@ -494,6 +495,11 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
                 wanted += (wanted.empty() ? "" : ",") + ruby;
             }
         }
+        // DIVERGENCE DIV-0213: the table-edit mods (docs/image-layer-round.md 4),
+        // after every other layer and in the Mods tab's order, so that the
+        // later mod wins a cell two of them set. opt=none is no layer at all,
+        // a mod's tables too.
+        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted);
         if (!wanted.empty()) {
             std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
             if (hosted) {
@@ -1084,6 +1090,33 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
     return out;
 }
 
+std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted) {
+    std::string out = wanted;
+    size_t count = 0;
+    for (size_t at = 0; !out.empty() && at <= out.size(); ++count) {
+        const size_t end = std::min(out.find(',', at), out.size());
+        at = end + 1;
+    }
+    for (const ModInfo& m : ConfigModsInstalled(home)) {
+        if (m.kind != "table-edit") continue;
+        const std::string layer = "mod-" + m.id;
+        if (("," + out + ",").find("," + layer + ",") != std::string::npos) continue;   // opt= names it already
+        if (!CacheHasLayerPart(cache, layer.c_str(), L"exe")) {
+            std::fprintf(stderr, "bof3x-launcher: the mod %s is in the list but its tables are not built (layer %s); "
+                         "left off. Build it on the Mods tab.\n", m.id.c_str(), layer.c_str());
+            continue;
+        }
+        if (count >= 16) {   // dat_load.cpp kOptMax
+            std::fprintf(stderr, "bof3x-launcher: 16 layers are named already, the most the game takes; the mod %s "
+                         "is left off\n", m.id.c_str());
+            continue;
+        }
+        out += (out.empty() ? "" : ",") + layer;
+        ++count;
+    }
+    return out;
+}
+
 std::string ConfigRubyKey(const std::string& value) {
     std::string k;
     for (char c : value) k += (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a') : c;
@@ -1304,6 +1337,8 @@ std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, co
     if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
         return "a disc-built install (no BOF3.exe) has gaps in its .data, and this value stops the game at all "
                "gaps, also at the gaps that this release accepts";
+    if (name == "BOF3X_EXEFILE" && value == "1" && !pc)
+        return "a disc-built install (no BOF3.exe) has no file to read the game's tables from (DIV-0212)";
     return std::string();
 }
 

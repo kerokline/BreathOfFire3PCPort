@@ -25,8 +25,8 @@ PSP = ("psp-jp", "psp-eu")
 # data.toml's classes whose bytes a disc gave (exe_tables.py write_exe): a layer
 # byte must be one of them in the PSP-built image, so that it is the PSP's value
 # and not a zero the image left unfilled.
-DISC_HOWS = ("map", "place", "table", "widen")
-EXE_FILE, EXE_BIN = "place.toml", "place.bin"
+DISC_HOWS = ("map", "place", "table", "widen", "file")
+EXE_FILE = "tables.toml"          # an exe layer: tables.toml and one <key>.bin a table (docs/image-layer-round.md 3.2)
 MANIFEST_TABLE = "psp_layers"
 
 
@@ -91,6 +91,31 @@ def exe_ranges(layer):
         else:
             merged.append([lo, hi, key])
     return [tuple(m) for m in merged]
+
+
+def exe_tables_of(layer):
+    """[(key, pc, count, stride, [(record, at, length)])] in the layer's order: each
+    table and the cells that are the layer's - every byte of every record but a
+    name field, the rule exe_ranges states by address. A table with no name is
+    one cell."""
+    import tables
+    cat, syms, _ = tables.load()
+    name_len = cat["meta"]["name_len"]["pc-zh"]
+    by_key = {t["key"]: t for t in cat["table"]}
+    out = []
+    for key in layer["tables"]:
+        t = by_key[key]
+        name, stride, cells = t.get("name"), t["stride"], []
+        if name is None:
+            cells.append((0, 0, t["count"] * stride))
+        else:
+            for r in range(t["count"]):
+                if name["at"] > 0:
+                    cells.append((r, 0, name["at"]))
+                if name["at"] + name_len < stride:
+                    cells.append((r, name["at"] + name_len, stride - name["at"] - name_len))
+        out.append((key, syms[t["symbol"]], t["count"], stride, cells))
+    return out
 
 
 def dat_rows(layer, standins=None, recipe=None):
@@ -185,42 +210,44 @@ def build_snd(name, layer, disc, out):
 
 def build_exe(name, layer, disc, out):
     import exe_tables
-    ranges = exe_ranges(layer)
+    tabs = exe_tables_of(layer)
     with tempfile.TemporaryDirectory(dir=out, prefix=".psp_layers_") as tmp:
         bid, h = exe_tables.build_from(disc.path, disc.id, tmp)
-        with open(os.path.join(tmp, "base", "exe", "data.bin"), "rb") as fh:
-            img = fh.read()
-        with open(os.path.join(tmp, "base", "exe", "data.toml"), "rb") as fh:
-            meta = tomllib.load(fh)
-    va = meta["image"]["va"]
+        meta, img = exe_tables.read_image(os.path.join(tmp, "base", "exe"))   # the image whole, its table files laid in
+    va = meta["va"]
     how = {}
-    for lo, hi, k, _ in meta["image"]["ranges"]:
+    for lo, hi, k, _ in meta["ranges"]:
         for a in range(lo, hi):
             how[a] = k
-    for lo, hi, what in ranges:
+    for lo, hi, what in exe_ranges(layer):
         bad = [a for a in range(lo, hi) if how.get(a) not in DISC_HOWS]
         if bad:
             raise SystemExit("--opt %s: 0x%06X (%s) is `%s` in the %s image, not a byte the disc gave"
                              % (name, bad[0], what, how.get(bad[0]), bid))
-    body = b"".join(img[lo - va:hi - va] for lo, hi, _ in ranges)
     root = os.path.join(out, "opt", name)
     _fresh(os.path.join(root, "exe"))
-    with open(os.path.join(root, "exe", EXE_BIN), "wb") as fh:
-        fh.write(body)
-    lines = ["# opt/%s/exe/%s - written by tools/psp_layers.py (docs/launcher-suites.md 9)." % (name, EXE_FILE),
-             "# %s holds these ranges of the %s-built .data image, in order; the exe host lays" % (EXE_BIN, bid),
-             "# them over .data when BOF3X_OPT names the layer (src/hook/exe_image.cpp).",
-             "", 'build = "%s"' % bid, 'image_sha256 = "%s"' % h, 'file = "%s"' % EXE_BIN,
-             'sha256 = "%s"' % sha(body), "bytes = %d" % len(body), "", "ranges = ["]
-    lines += ['  [0x%06X, 0x%06X, "%s"],' % r for r in ranges]
-    lines.append("]")
+    lines = ["# opt/%s/exe/%s - written by tools/psp_layers.py (docs/image-layer-round.md 3.2)." % (name, EXE_FILE),
+             "# One file a table: <key>.bin is the whole table of the %s-built .data image. `cells`" % bid,
+             "# are the bytes of it that are this layer's - [key, record, at, length]: `length` bytes",
+             "# from byte `at` of `record`. The exe host lays only those over .data when BOF3X_OPT",
+             "# names the layer (src/hook/exe_image.cpp).",
+             "", 'build = "%s"' % bid, 'image_sha256 = "%s"' % h, "", "tables = ["]
+    rows, cells, total = [], [], 0
+    for key, pc, count, stride, cs in tabs:
+        body = img[pc - va:pc - va + count * stride]
+        with open(os.path.join(root, "exe", key + ".bin"), "wb") as fh:
+            fh.write(body)
+        lines.append('  ["%s", 0x%06X, %d, %d, "%s"],' % (key, pc, count, stride, sha(body)))
+        rows.append((name, "opt/%s/exe/%s.bin" % (name, key), "%s:exe:%s" % (bid, h), sha(body)))
+        cells += ['  ["%s", %d, %d, %d],' % ((key,) + c) for c in cs]
+        total += sum(c[2] for c in cs)
+    lines += ["]", "", "cells = ["] + cells + ["]"]
     with open(os.path.join(root, "exe", EXE_FILE), "w", newline="\n", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
     with open(os.path.join(root, "exe", EXE_FILE), "rb") as fh:
         th = sha(fh.read())
-    print("  opt/%-16s %d ranges, %d bytes of the %s image's .data" % (name, len(ranges), len(body), bid))
-    return [(name, "opt/%s/exe/%s" % (name, EXE_BIN), "%s:exe:%s" % (bid, h), sha(body)),
-            (name, "opt/%s/exe/%s" % (name, EXE_FILE), "%s:exe:%s" % (bid, h), th)]
+    print("  opt/%-16s %d tables, %d cells, %d bytes of the %s image's .data" % (name, len(tabs), len(cells), total, bid))
+    return rows + [(name, "opt/%s/exe/%s" % (name, EXE_FILE), "%s:exe:%s" % (bid, h), th)]
 
 
 def build_dat(name, layer, sources, out):
@@ -482,15 +509,25 @@ def verify_layer(cache, name):
                 bad.append("%s: not what ppms.py makes of the %s disc (fixtures/bgm-psp.tsv)" % (p, bid))
     elif part == "exe":
         toml_path = os.path.join(root, "exe", EXE_FILE)
-        if os.path.exists(toml_path):
+        if os.path.exists(os.path.join(root, "exe", "place.toml")):
+            bad.append("exe/place.toml: the layer's form before the table files; build it again")
+        if not os.path.exists(toml_path):
+            bad.append("exe/%s: absent" % EXE_FILE)
+        else:
             with open(toml_path, "rb") as fh:
                 meta = tomllib.load(fh)
-            if [tuple(x) for x in meta["ranges"]] != exe_ranges(layer):
-                bad.append("%s: its ranges are not the rule's (recipes/psp-layers.toml)" % EXE_FILE)
-            with open(os.path.join(root, "exe", EXE_BIN), "rb") as fh:
-                body = fh.read()
-            if sha(body) != meta["sha256"] or len(body) != sum(hi - lo for lo, hi, _ in meta["ranges"]):
-                bad.append("%s: not the %s its %s records" % (EXE_BIN, EXE_BIN, EXE_FILE))
+            tabs = exe_tables_of(layer)
+            if [tuple(x[:4]) for x in meta.get("tables", [])] != [t[:4] for t in tabs] or \
+                    [tuple(x) for x in meta.get("cells", [])] != [(t[0],) + c for t in tabs for c in t[4]]:
+                bad.append("%s: its tables and cells are not the rule's (recipes/psp-layers.toml)" % EXE_FILE)
+            for key, _, count, stride, want in meta.get("tables", []):
+                path = os.path.join(root, "exe", key + ".bin")
+                body = b""
+                if os.path.exists(path):
+                    with open(path, "rb") as fh:
+                        body = fh.read()
+                if sha(body) != want or len(body) != count * stride:
+                    bad.append("%s.bin: not the file its %s records" % (key, EXE_FILE))
             import exe_tables
             if exe_tables.load_recipe()["build"].get(meta["build"], {}).get("sha256") != meta["image_sha256"]:
                 bad.append("%s: cut from an image recipes/exe.toml does not record for %s" % (EXE_FILE, meta["build"]))

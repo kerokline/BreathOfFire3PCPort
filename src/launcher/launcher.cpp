@@ -92,6 +92,19 @@ bool FileExists(const std::wstring& path) {
     return attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+// Whether <cache>\base\exe\data.toml is an image tools/exe_tables.py built from
+// BOF3.exe (`build = "pc-zh"`): the PC's own bytes, which a PC install may read
+// in place of the file's (DIV-0212). A disc-built image is not.
+bool CacheImageIsPcBuilt(const std::wstring& cache) {
+    FILE* f = _wfopen((cache + L"\\base\\exe\\data.toml").c_str(), L"rb");
+    if (!f) return false;
+    char line[1024];
+    bool pc = false;
+    while (!pc && std::fgets(line, sizeof line, f)) pc = std::strncmp(line, "build = \"pc-zh\"", 15) == 0;
+    std::fclose(f);
+    return pc;
+}
+
 std::wstring FullPath(const std::wstring& path) {
     wchar_t buf[MAX_PATH];
     DWORD n = GetFullPathNameW(path.c_str(), MAX_PATH, buf, nullptr);
@@ -620,6 +633,30 @@ int wmain(int argc, wchar_t** argv) {
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
     bof3x::ConfigPresetEnvironment(plan);   // before the ini's, which then keep them
     bof3x::ConfigApplyEnvironment(game_dir, played, hosted);   // hosted: no layer that build refuses
+
+    if (exe_present && !hosted) {
+        // DIVERGENCE DIV-0212: a PC install whose cache holds the image built
+        // from BOF3.exe reads .data from the cache too - the image and its
+        // table files (docs/image-layer-round.md 5b) - so that every install
+        // kind has one source. The bytes are the file's: the engine compares
+        // them with BOF3.exe's .data before it goes on (exe_image.cpp). The
+        // file stays the source with no cache, with a cache whose image a
+        // disc built (those are not the PC's bytes), under BOF3X_EXEFILE=1,
+        // and in the hosted build, which runs inside the file. After the
+        // preset and the ini, which may set the switch or the cache.
+        const std::wstring cache = bof3x::ConfigCacheDataRoot(played);
+        wchar_t set[4];
+        const bool image_set = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", set, 4) > 0;
+        const DWORD from_file = GetEnvironmentVariableW(L"BOF3X_EXEFILE", set, 4);
+        if (from_file != 0 && !(from_file == 1 && (set[0] == L'0' || set[0] == L'1')))
+            Die(L"BOF3X_EXEFILE takes 1 (read .data from BOF3.exe though the cache holds its image) or 0.");
+        const bool want_file = from_file == 1 && set[0] == L'1';
+        if (!image_set && !want_file && !cache.empty() && CacheImageIsPcBuilt(cache)) {
+            SetEnvironmentVariableW(L"BOF3X_EXEIMAGE", cache.c_str());
+            std::fwprintf(stderr, L"bof3x-launcher: .data from %ls (the image built from BOF3.exe and its table files; "
+                                  L"BOF3X_EXEFILE=1 for the file)\n", cache.c_str());
+        }
+    }
 
     STARTUPINFOW si{};
     si.cb = sizeof si;
