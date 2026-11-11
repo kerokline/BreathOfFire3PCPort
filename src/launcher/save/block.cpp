@@ -1181,10 +1181,6 @@ bool ReadPcFile(const std::wstring& path, Block& block, std::string& why) {
         return false;
     }
     std::vector<char> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    if (bytes.size() == 0x20000 && bytes[0] == 'M' && bytes[1] == 'C') {
-        why = "This is a memory card file. This version of the editor opens the save files of the PC game only.";
-        return false;
-    }
     if (bytes.size() != kPcFileSize) {
         why = "This is not a save file of the PC game: its size is " + std::to_string(bytes.size()) +
               " bytes, not 4784.";
@@ -1196,10 +1192,17 @@ bool ReadPcFile(const std::wstring& path, Block& block, std::string& why) {
 
 bool WritePcFile(const std::wstring& path, const Block& block, const std::wstring& backup_dir, std::wstring& backup,
                  std::string& why) {
-    namespace fs = std::filesystem;
-    backup.clear();
     std::vector<char> bytes(kPcFileSize, 0);
     std::memcpy(bytes.data(), block.data(), kBlockSize);
+    return WriteKept(path, bytes, backup_dir, backup, why);
+}
+
+void Seal(Block& block) { Put(block, 0x70, 2, Checksum(block)); }
+
+bool WriteKept(const std::wstring& path, const std::vector<char>& bytes, const std::wstring& backup_dir,
+               std::wstring& backup, std::string& why) {
+    namespace fs = std::filesystem;
+    backup.clear();
     const fs::path target(path), temp(path + L".tmp");
     std::error_code ec;
     {

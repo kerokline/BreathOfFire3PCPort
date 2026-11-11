@@ -2096,6 +2096,33 @@ KIND_CHAR_NAMES = 10
 CHAR_RECORDS, CHAR_STRIDE, CHAR_COUNT, CHAR_NAME_PC, CHAR_NAME_US = 0x64B390, 0xA4, 8, 9, 5
 
 
+# The save editor's name map (docs/save-editor.md section 8): what this disc
+# itself stores in a save, as the disc holds it and not as the port's font
+# draws it. A save holds text in two tables' worth of names - the eight
+# characters' and the sixty faeries' - and each release gives them from its
+# own default records; the launcher changes a save between a memory card and
+# the PC by them. One chunk, tag 0, read by the launcher alone (the engine
+# passes over a kind it does not know): a version byte 1, the card file name
+# the release gives its saves without the two digits (20 bytes, NUL-filled:
+# "BASLUS-00422BOF3", found in START.EMI), the eight names (5 bytes each, as
+# in the default records) and the sixty (5 bytes each, 0xFF-filled as in the
+# trait records). Written only when all three were found: a PlayStation disc.
+KIND_SAVE_NAMES = 20
+SAVE_FILE_NAME = re.compile(rb"B[A-Z]S[A-Z]{3}-[0-9]{5}BOF3")
+save_names = {}     # "chars": 8 x 5 bytes, "faeries": 60 x 5 bytes - what the converters found on this disc
+
+
+def save_names_chunk(start_file):
+    """[(kind, tag, payload)] for the save editor, or [] where the disc has no card saves or a part is missing."""
+    found = SAVE_FILE_NAME.search(start_file) if start_file else None
+    chars, faeries = save_names.get("chars"), save_names.get("faeries")
+    if not found or not chars or not faeries:
+        return []
+    if len(chars) != CHAR_COUNT or len(faeries) != FAERIE_COUNT or any(len(n) != 5 for n in chars + faeries):
+        raise SystemExit("save names: not eight and sixty names of five bytes")
+    return [(KIND_SAVE_NAMES, 0, bytes([1]) + found.group(0).ljust(20, b"\0") + b"".join(chars) + b"".join(faeries))]
+
+
 def convert_char_names(game, donor):
     """[(kind, tag, payload)] for the default names, or [] if `donor` (START.EMI) has none."""
     tail_len = CHAR_STRIDE - CHAR_NAME_PC
@@ -2107,6 +2134,7 @@ def convert_char_names(game, donor):
     records = [donor[base + k * CHAR_STRIDE:base + k * CHAR_STRIDE + CHAR_NAME_US + tail_len] for k in range(CHAR_COUNT)]
     if not same_anchor(game, "char tails", b"".join(us[CHAR_NAME_US:] for us in records)):
         raise SystemExit("names: the character records differ from the PC's past their names")
+    save_names["chars"] = [bytes(us[:CHAR_NAME_US]) for us in records]
     for k in range(CHAR_COUNT):
         us = records[k]
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
@@ -3425,6 +3453,8 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         while at >= 5 and faeries is None:
             base = at - 5
             if same(disc_stats(blob, base)):
+                save_names["faeries"] = [bytes(blob[base + FAERIE_DISC_STRIDE * r:base + FAERIE_DISC_STRIDE * r + 5])
+                                         for r in range(FAERIE_COUNT)]
                 faeries = []
                 for r in range(FAERIE_COUNT):
                     name = blob[base + FAERIE_DISC_STRIDE * r:base + FAERIE_DISC_STRIDE * r + 5].rstrip(b"\xff\0")
@@ -5099,6 +5129,7 @@ def reset_donor():
     ext_last, donor_ja, ja_sheets = EXT_FIRST - 1, False, None
     ja_pairs.clear()
     button_counts.clear()
+    save_names.clear()
     set_button_area("", None, False)
 
 
@@ -5456,6 +5487,14 @@ def build_all(args, disc_path):
     if donor_ja and ja_pairs:
         overlays["FIRST.DAT"] = ja_pair_chunks(overlays["FIRST.DAT"])
         print("pair codes: %d from glyph 0x%X (DIV-0057)" % (len(ja_pairs), PAIR_AT))
+    if not args.only:
+        # After the pair codes: these bytes are the disc's own, never the port's glyph codes.
+        start_file = disc.find("START.EMI")
+        saves = save_names_chunk(None if is_psp(disc) or not start_file else disc.read(start_file[0]))
+        overlays["FIRST.DAT"] += saves
+        print("save names: " + ("8 and 60, card file name %s (kind %d, for the save editor)"
+                                % (saves[0][2][1:21].rstrip(b"\0").decode("ascii"), KIND_SAVE_NAMES)
+                                if saves else "none (no card saves on this disc, or a part not found)"))
     for name, chunks in overlays.items():
         write_overlay(src.out_path(args.lang, name), chunks)
     how = "left empty, disc-only" if src.disc_only else "kept as shipped"
@@ -6068,7 +6107,30 @@ def selftest_corrections():
           "inside the word refused; the rule table's %d rules name words and no button area" % len(TEXT_CORRECTIONS))
 
 
+def selftest_save_names():
+    """The save editor's chunk: written whole or not at all."""
+    chars, faeries = [b"Ryu\0\0"] * CHAR_COUNT, [b"Pao\xff\xff"] * FAERIE_COUNT
+    start = b"\0\0junk BASLUS-00422BOF3%02d\0"
+    save_names.clear()
+    assert save_names_chunk(start) == [], "save names: a chunk with no names found"
+    save_names.update(chars=chars, faeries=faeries)
+    assert save_names_chunk(None) == [] and save_names_chunk(b"no file name here") == [], "save names: a chunk with no card file name"
+    (kind, tag, payload), = save_names_chunk(start)
+    assert (kind, tag, len(payload)) == (KIND_SAVE_NAMES, 0, 1 + 20 + 5 * (CHAR_COUNT + FAERIE_COUNT)), "save names: the chunk's size"
+    assert payload[:21] == b"\x01BASLUS-00422BOF3\0\0\0\0" and payload[21:26] == chars[0] and payload[-5:] == faeries[-1], \
+        "save names: the version, the file name, the names"
+    save_names["chars"] = chars[:-1]
+    try:
+        save_names_chunk(start)
+        raise AssertionError("save names: seven names accepted")
+    except SystemExit:
+        pass
+    save_names.clear()
+    print("  save names: the chunk whole or not at all; no card file name, no chunk; a short list refused")
+
+
 def cmd_selftest(args):
+    selftest_save_names()
     selftest_corrections()
     selftest_empty_records()
     selftest_rules()

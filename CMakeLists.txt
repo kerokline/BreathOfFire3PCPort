@@ -280,6 +280,8 @@ add_library(bof3x_launcher_parts OBJECT
   src/launcher/music_player.cpp
   src/launcher/save_dialog.cpp
   src/launcher/save/block.cpp
+  src/launcher/save/card.cpp
+  src/launcher/save/namemap.cpp
   src/launcher/save/names.cpp
   src/launcher/sources_dialog.cpp
   src/launcher/suites.cpp
