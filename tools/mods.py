@@ -143,6 +143,16 @@ def layer_name(meta):
     raise BuildError("no layer is defined for kind %r" % meta["kind"])
 
 
+def layers_of(meta):
+    """Every optional layer a mod's step may build. A disc-patch mod has two
+    (docs/disc-patch-round.md 3a): `mod-<id>`, what no language owns, and
+    `mod-<id>-<tag>`, its edits to the text of its disc's language."""
+    if meta["kind"] == "disc-patch":
+        tag = KINDS["disc-patch"]["builds"][meta["build"]][0]
+        return [layer_name(meta), "%s-%s" % (layer_name(meta), tag)]
+    return [layer_name(meta)]
+
+
 # ---------------------------------------------------------------- the zip
 
 def _member_problem(info):
@@ -308,9 +318,10 @@ def check_meta(doc):
                           % (meta["build"], tag, tag))
     meta["files"] = files
     meta["layer"] = layer_name(meta)
-    if len(meta["layer"]) > LAYER_MAX:
+    longest = max(layers_of(meta), key=len)
+    if len(longest) > LAYER_MAX:
         raise Refused("mod.toml: the layer %s is longer than the %d characters a layer name may have; "
-                      "a shorter mod.id fits" % (meta["layer"], LAYER_MAX))
+                      "a shorter mod.id fits" % (longest, LAYER_MAX))
     return meta
 
 
@@ -500,7 +511,7 @@ def state_of(h, r, cache=None):
         if not holds_build(h, r["build"]):
             disc = k["builds"][r["build"]][1]
             return "needs-disc", disc, "it needs the disc %s: add it on Data, Sources" % disc
-    if built(cache, layer_name(r)):
+    if any(built(cache, layer) for layer in layers_of(r)):
         return "built", None, None
     return "not-built", None, None
 
@@ -509,6 +520,8 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     o = {"path": path, "ok": ok, "id": r.get("id"), "name": r.get("name"), "version": r.get("version"),
          "kind": r.get("kind"), "requires": r.get("requires"), "base": r.get("base"),
          "layer": layer_name(r) if r.get("kind") in KINDS and r.get("id") else None,
+         "text_layer": layers_of(r)[1] if r.get("kind") == "disc-patch" and r.get("id")
+         and r.get("build") in KINDS["disc-patch"]["builds"] else None,
          "state": state, "needs": needs, "problem": problem,
          "author": r.get("author"), "url": r.get("url"), "credit": r.get("credit")}
     o.update(more)
@@ -591,7 +604,12 @@ def cmd_remove(a):
     shutil.rmtree(mod_dir(h, a.id), ignore_errors=True)
     cache = os.path.join(h, "cache")
     if gone.get("kind") in KINDS and os.path.isdir(cache):
-        remove_layer(cache, layer_name(gone))
+        try:
+            layers = layers_of(gone)
+        except KeyError:            # a row for a disc this release does not know
+            layers = [layer_name(gone)]
+        for layer in layers:
+            remove_layer(cache, layer)
     save_rows(h, keep)
     print("removed: %s" % a.id, flush=True)
     return 0
@@ -757,12 +775,14 @@ def build_table_layer(h, cache, r, say, builder=None):
 
 
 def build_patch_layer(h, cache, r, say, builder=None):
-    """A disc-patch mod's layer into `cache`: the chunks the builders make
+    """A disc-patch mod's layers into `cache`: the chunks the builders make
     differently from the player's disc with the author's patch on it
-    (tools/disc_patch_build.py, docs/disc-patch-round.md 3), listed in the
-    manifest. BuildError when the builder is not in the release, or the disc,
-    the patch or what the patch makes is not what mod.toml names."""
+    (tools/disc_patch_build.py, docs/disc-patch-round.md 3 and 3a), listed in
+    the manifest; the layers that hold a chunk. BuildError when the builder is
+    not in the release, or the disc, the patch or what the patch makes is not
+    what mod.toml names."""
     layer, what = layer_name(r), "the mod %s (%s)" % (r["id"], r["name"])
+    tag = KINDS["disc-patch"]["builds"][r["build"]][0]
     builder = builder or builder_path(r["kind"])
     if not os.path.isfile(builder):
         raise BuildError("%s needs the disc-patch builder, tools/%s, and this release does not have it, so it "
@@ -771,12 +791,14 @@ def build_patch_layer(h, cache, r, say, builder=None):
     where = "mod:%s@%s:%s" % (r["id"], r["version"], r["build"])
     say("Building %s into opt/%s" % (what, layer))
     try:
-        rows = disc_patch_build.build(h, cache, layer, mod_dir(h, r["id"]), r, where, say)
+        layers = disc_patch_build.build(h, cache, mod_dir(h, r["id"]), r, tag, where, say)
     except disc_patch_build.Bad as e:
         raise BuildError("%s cannot be built: %s" % (what[0].upper() + what[1:], e))
-    _manifest_rows(cache, layer, rows)
-    say("Built %s: opt/%s, %d chunk(s)" % (what, layer, len(rows)))
-    return layer
+    for name in layers_of(r):
+        _manifest_rows(cache, name, layers.get(name, []))
+    done = [name for name in layers_of(r) if layers.get(name)]
+    say("Built %s: %s" % (what, ", ".join("opt/%s, %d chunk(s)" % (name, len(layers[name])) for name in done)))
+    return done
 
 
 def build_one(h, cache, r, say, builder=None, reuse=None):
@@ -818,7 +840,8 @@ def setup_step(h, cache, say, only=None, builder=None, reuse=None):
                 "the Sources page)" % (r["id"], r["name"], needs))
             skipped.append(r["id"])
             continue
-        done.append(build_one(h, cache, r, say, builder, reuse))
+        got = build_one(h, cache, r, say, builder, reuse)
+        done += got if isinstance(got, list) else [got]
     return done, skipped
 
 
@@ -1169,6 +1192,8 @@ def selftest(keep=None):
             ("dp_holds_track", [("mod.toml", dp_toml()), ("hack.xdelta", patch), ("track1.bin", b"\0" * 16)], "game data"),
             ("dp_long_id", [("mod.toml", dp_toml(id='"a-mod-id-of-20-chars"')), ("hack.xdelta", patch)],
              "longer than the 23 characters"),
+            ("dp_id_14", [("mod.toml", dp_toml(id='"fourteen-chars"')), ("hack.xdelta", patch)],
+             "the layer mod-fourteen-chars-en-US is longer"),
             ("te_holds_patch", [("mod.toml", TE_MOD), ("edits.toml", TE_EDITS), ("hack.xdelta", patch)],
              "which mod.toml does not name")):
         dp[name] = make_zip(os.path.join(root, name + ".zip"), members)
@@ -1206,7 +1231,8 @@ def selftest(keep=None):
         f.write('[[source]]\npath = "C:\\\\nowhere\\\\us.cue"\nbuild = "psx-us"\nkind = "psx"\n')
     rc, out = run("list", "--home", h, "--json")
     o = json.loads(out.splitlines()[-1])
-    expect(o["state"] == "not-built" and o["problem"] is None, "  with the disc listed: state not-built")
+    expect(o["state"] == "not-built" and o["problem"] is None and o["layer"] == "mod-definitive"
+           and o["text_layer"] == "mod-definitive-en-US", "  with the disc listed: state not-built; its two layers named")
     with open(os.path.join(mods_file(h)), encoding="utf-8") as f:
         row = [r for r in tomllib.loads(f.read())["mod"] if r["id"] == "definitive"][0]
     expect(row["build"] == "psx-us" and row["patch"] == "hack.xdelta" and row["patch_sha256"] == sha_bytes(patch)
@@ -1216,8 +1242,24 @@ def selftest(keep=None):
         expect(False, "a release without the builder: refused")
     except BuildError as e:
         expect("does not have it" in str(e), "  a release without the disc-patch builder: the build refused, by name")
+    try:
+        setup_step(h, cache, lambda t, quiet=False: None, only="definitive")
+        expect(False, "a disc that is listed and not there: refused")
+    except BuildError as e:
+        expect("is not there" in str(e), "  the builder run: a disc that is listed and not there is refused, by path")
+    # the text layer alone is a built mod (a hack that changes text and no table)
+    td = os.path.join(cache, "opt", "mod-definitive-en-US", "dat")
+    os.makedirs(td)
+    with open(os.path.join(td, "AREA000.DAT"), "wb") as f:
+        f.write(b"\0" * 16)
+    _manifest_rows(cache, "mod-definitive-en-US", [("AREA000.DAT", 0, "mod:definitive@1.0:psx-us", "00")])
+    rc, out = run("list", "--home", h, "--json")
+    expect(json.loads(out.splitlines()[-1])["state"] == "built", "  its text layer alone in the cache: state built")
     rc, out = run("remove", "definitive", "--home", h)
-    expect(rc == 0 and not os.path.exists(os.path.join(h, "mods", "definitive")), "remove: the patch gone from the home")
+    with open(os.path.join(cache, "manifest.toml"), encoding="utf-8") as f:
+        expect(rc == 0 and not os.path.exists(os.path.join(h, "mods", "definitive"))
+               and not os.path.exists(os.path.join(cache, "opt", "mod-definitive-en-US")) and "mod-definitive" not in f.read(),
+               "remove: the patch gone from the home, both layers and their manifest rows from the cache")
     if not keep:
         shutil.rmtree(root, ignore_errors=True)
     else:

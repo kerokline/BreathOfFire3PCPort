@@ -204,6 +204,7 @@ jobs:
           python tools/mods.py selftest
           python tools/make_mod.py --selftest
           python tools/table_edit_build.py selftest
+          python tools/disc_patch_build.py selftest
           if [ -f data/furigana/readings.toml ]; then
             ver="$(python tools/make_mod.py furigana --version-of)"
             python tools/make_mod.py furigana --out "build/release/furigana-$ver.zip"

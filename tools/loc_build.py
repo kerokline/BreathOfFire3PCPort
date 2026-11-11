@@ -344,10 +344,16 @@ class PspDisc:
         return (self.text_end, len(self.boot()))
 
 
+# What opens a disc image. tools/disc_patch_build.py puts its hybrid disc here
+# (the original disc with a romhack's text sections, docs/disc-patch-round.md
+# 3 step 4): an object with psx_disc.Disc's `files`, `read` and `find`.
+disc_opener = psx_disc.Disc
+
+
 def open_disc(path):
     """A disc image for the converters: a PlayStation disc as it is, a PSP disc
     through PspDisc."""
-    disc = psx_disc.Disc(path)
+    disc = disc_opener(path)
     if "SYSTEM.CNF" not in disc.files and "UMD_DATA.BIN" in disc.files:
         return PspDisc(disc)
     return disc

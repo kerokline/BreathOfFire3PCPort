@@ -4,7 +4,9 @@
 2026-11-11 against `main` `8d2d987d`, after the image-layer round merged (PR
 224), and group M run the same day: its five measurements are in
 [`romhack-mods.md`](romhack-mods.md) section 8 and they change sections 1 and 3
-below. Group A is built (5a); B to E are not. Step 4 of romhack-mods.md section 6.
+below. Groups A and B are built (5a, 5b): the mod builds on the player's
+machine and the launcher does not hand its layers to the game yet (group C).
+C, D and E are not built. Step 4 of romhack-mods.md section 6.
 Read that note first: it holds the measurements this plan stands on. `main`
 holds the three things the round starts from: `tools/vcdiff.py`,
 `tools/disc_patch_census.py`, and `author` / `url` / `credit` in `mod.toml` and
@@ -157,7 +159,7 @@ general first).
    `loc\<tag>\` chunk goes into the layer, a kind-19 corrected copy with the
    kind-0 block it follows. The original's side is already in the cache, so
    this is one run of about 85 seconds.
-5. Write `opt\mod-<id>\dat\`, list every chunk in the manifest as
+5. Write the two layers (3a), list every chunk in the manifest as
    `mod:<id>@<version>:<build>` (mods.md 4's rows).
 6. **The report.** Run the census's comparison (`disc_patch_census.py` as a
    module) and write `<home>\mods\<id>\report.toml`: edit runs carried, by
@@ -167,6 +169,24 @@ general first).
    honesty rule: the player sees "carries the enemy and text changes; 429 of
    the hack's changes need parts this release does not have", not a mod that
    looks whole.
+
+### 3a. Two layers (the owner's call 4)
+
+| Layer | Holds | Played over |
+|---|---|---|
+| `opt\mod-<id>\dat\` | step 3's base chunks: enemy tables with their name fields blank, base images | any text |
+| `opt\mod-<id>-<tag>\dat\` | step 4's chunks (script and text blocks, the text pools, a language's pages, corrected copies) and, for every enemy table of the first layer, that language's names again | `<tag>` text alone: the engine refuses a layer whose name ends in another language's tag (`LayerLanguage`) |
+
+The text layer is walked after the first, so its names land on the tables.
+`<tag>` is the language of the disc the patch was made against. With the two
+names an id is 13 characters at most for a tag of five (`en-US`), since a layer
+name holds 23.
+
+**Over another language** (not built in this round): the first layer alone
+would blank that language's enemy names, so it needs a names part for that
+language - the install's own name chunks for those areas, copied from
+`loc\<other>\`. Until that exists the launcher offers the mod over its own
+language only.
 
 A patched section that passes no transform (a kind-1 image that does not
 decode, a text block `loc_build.py` refuses) stops the build with the file,
@@ -251,6 +271,74 @@ has fresh ones.
 - **Not done:** DIV-0157's amendment waits for the first group that changes
   what a player gets (B with C). `docs/mods.md` has the kind's section.
 
+## 5b. Group B as run (2026-11-11)
+
+**What was built.**
+
+- `tools/disc_patch_build.py` (new): steps 1 to 5 of section 3 and the two
+  layers of 3a. `build(home, cache, the mod's folder, its row, the language
+  tag, the manifest's source word, say)` returns each layer's manifest rows.
+  Its parts: `changed_sections` (the two discs, EMI by EMI), `collect_base`
+  (a changed section through the recipe row's own transform, both sides),
+  `HybridDisc` and `hybrid_emi`, `run_loc` (the text builder in a child
+  process, against a view of the cache's `base\` or a scratch copy of the PC
+  game, as the install's own layer was built - the manifest says which),
+  `diff_layer`, `write_layer`.
+- `tools/loc_build.py`: one line of behaviour, `disc_opener`, the thing
+  `open_disc` calls (it was `psx_disc.Disc`, and still is by default).
+- `tools/mods.py`: `layers_of` (a `disc-patch` mod's two layers), the id
+  bound by the longer one (13 characters for `en-US`), `built` when either
+  layer is in the cache, both removed with the mod, `text_layer` in the JSON
+  for the launcher.
+- CI: `disc_patch_build.py selftest` in `checks.yml` and `release.yml`.
+
+**Where the build differs from section 3 as staged.**
+
+- **The enemy names come from the text builder's child process**, after its
+  run, by `loc_build.convert_enemy_names` on the patched table and the patched
+  disc's section, while the language's font tables are still set up. A name
+  the hack changed is then the hack's. (On this hack all 216 come out as the
+  install's own.)
+- **The scratch folder is `<home>\mods\.build-<id>`**, removed when the build
+  ends, also on a refusal. It holds the patched track (422 MiB for this
+  disc), an unpacked `.zip` disc, and the text builder's output.
+- **A patch that changes nothing the PC keeps** is refused, by count.
+- **The report file (step 6) is group C's.** The build says what it does not
+  carry in two lines; nothing writes `report.toml` yet.
+- **The sound bank** is compared by its sections, not built: a changed
+  section of a bank's header, samples or cues is counted and not carried (the
+  owner's call 5).
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `disc_patch_build.py selftest` (synthetic EMIs, recipe rows and containers; no game data) | 25 checks, 0 failures: the hybrid EMI and its two refusals, the changed-section walk, the collect step with its controls (another build, a transform that takes the change away, a transform that refuses, a step the release lacks), the layer diff with its three refusals, the containers read back, the install's source row and layer mode, a listed disc that is gone, no scratch folder left |
+| `mods.py selftest` | 0 failures, with the id of 14 characters refused and the text layer alone counted as built |
+| The real patch on a US disc-only install (`D:\bof3x-runs\dp1111\home`, `mods.py add` then `build`) | exit 0 in 74 s. `mod-definitive`: **52 chunks in 52 files, the 51 enemy tables and area 63's image - group M's list.** `mod-definitive-en-US`: 341 chunks in 165 files - 78 script and text blocks, 44 pools, 2 corrected copies, area 115's page (group M's 125) and 216 enemy names |
+| Built a second time | both layers the same bytes (the sha256 over every file of each) |
+| `mods.py remove` | both layers gone, the manifest the bytes it was before the mod, the scratch folder gone |
+| The real patch on a PC-based install with the disc as a `.zip` (`home_pc`: the PC game folder and the owner's zipped US disc) | exit 0 in 34 s, the zip unpacked and removed. The first layer is the same bytes as on the disc-only install. The text layer: 342 chunks in 166 files (79 blocks, as M5) |
+| The engine's walk, modelled (`tools/cache_walk.py` `State`: base, `loc\en-US`, then the layers), every container | 166 of 742 containers end differently with both layers; **0 bytes change outside the layers' own chunks**; all 51 enemy tables are the patched table with the install's names; with the first layer alone the 216 names are blank, which is why the two go together |
+| The exe host's self-test on the disc-only cache, `BOF3X_LANG=en-US` (`run_st.sh`; the image-layer round's build, the same engine as `main`) | no layer, both layers, the first alone: exit 0, no Fatal, each layer taken as `the cache's opt layer`; the mapped `.data` hash the same in all three (the mod has no image part) |
+
+**Not done.**
+
+- **Acceptance's live half.** No route was run: the state hash with the mod
+  installed and off, and a save loaded with it on and an enemy table and a
+  text change read back from memory. Both need a hands-off machine and, for
+  "on", the launcher handing the layers over (group C) or `BOF3X_OPT` by hand.
+- **The control "the text layer under another language is refused"** was not
+  run: the scratch install holds en-US alone, and the launcher stops a
+  disc-only install before the engine is asked. The rule is the engine's own
+  (`ReadOptLayers`, DIV-0086).
+- **The census's 662 against the build.** The build's own lines say 125 text
+  and page sections went through the text builder, 52 base chunks were taken,
+  1 sound section and 169 other sections were not carried. That the 169 are
+  exactly the census's dropped sections was not cross-checked row by row.
+- The launcher does not know the kind's layers, DIV-0157 is not amended, and
+  nobody has played it.
+
 ## 6. Acceptance
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
@@ -267,7 +355,17 @@ has fresh ones.
 - The owner plays it. Which changes to look for is the owner's to say from
   the hack's readme.
 
-## 7. Owner calls
+## 7. Owner calls (answered 2026-11-11, after group M)
+
+| Call | The owner | So |
+|---|---|---|
+| 1 | "I agree, no reason to ship a partial hack" | (a): the kind is built, the Definitive Edition zip is not released until the hack is whole. Group D waits |
+| 2 | (by its own rule, M3) | the author's `.xdelta` is not committed |
+| 3 | "on off switches would be nice, yeah. maybe just a checkbox on the left side of the mod row" | a check box at the left of each mod's row on the Mods list, for every kind that is simply on or off (`disc-patch`, `table-edit`). Group C |
+| 4 | "if the language edits are localization targeted ... the single localization layer is edited and the rest of the changes remain applicable to all" | **two layers a mod**: `mod-<id>` holds what no language owns (enemy tables, base images; later the table cells), and `mod-<id>-<tag>` holds the edits to that language's text. The first can be played over any text, the second only over its own (section 3a) |
+| 5 | "Hold off on the sound bank"; frost's idea of a more true-to-PSX sequencer goes down as an idea for later | a changed bank is not carried and is counted in the report. IDEAS I64 |
+
+The calls as they were put:
 
 1. **Ship a partial hack?** After this round the mod carries the enemy and
    text edits, and none of the EXP tables, shop stock, battle tables or code.

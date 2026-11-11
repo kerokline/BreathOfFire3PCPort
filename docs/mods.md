@@ -316,17 +316,19 @@ value = 3
   turn one mod off without removing it; a romhack's edits converted to rows
   (the round's group D).
 
-## 10. A third kind: `disc-patch` (2026-11-11, the kind only)
+## 10. A third kind: `disc-patch` (2026-11-11; the launcher's half not built)
 
 The disc-patch round's group A ([`disc-patch-round.md`](disc-patch-round.md) 2
 and 5a). A romhack as its author released it: the `.xdelta` of a disc's data
-track, untouched. The builder is that round's group B and is not written; a
-mod of this kind can be added and listed, and its build stops by name.
+track, untouched. `tools/disc_patch_build.py` builds it into two layers
+(5b there): `mod-<id>`, what no language owns, and `mod-<id>-<tag>`, its
+edits to the text of its disc's language. The launcher does not hand them to
+the game yet (the round's group C).
 
 ```toml
 # mod.toml
 [mod]
-id = "example"            # the layer is mod-<id>: 19 characters at most
+id = "example"            # the layers are mod-<id> and mod-<id>-<tag>: 13 characters at most for en-US
 name = "..."
 version = "1.0"
 author = "..."            # required for this kind
