@@ -571,21 +571,13 @@ For the owner:
    champion keeps their level. The mode still stands down through chapter 0.
    This changes SC's stamp (a second site at New Game, which overwrites
    whatever the block held: New Game does not zero it) and is LV's to build.
-2. **Willpower: asked, not yet answered.** The owner: "why would willpower
-   decrease to 0 if levels don't increase it?" Because New Game sets it once
-   from the starting level (`(level << 4) / divisor + add`,
-   `src/game/battle/battle.cpp:113-127`), so a record that starts above
-   level 1 starts with more of it, and a level-up never touches it again.
-   Recomputing for level 1 gives what a level-1 start would have had;
-   leaving it gives the champion the head start of their default level.
-   Recommended now, on the owner's reasoning that levels do not raise it:
-   leave it as the default record has it. The owner's word.
-3. **Record 1's starting level.** The owner recalls it as 1. The PC exe's
-   default record 1 holds level 5 at `+0xA` (read 2026-11-12), its EXP sits
-   in level 5's window and its lists hold the table's skills for levels 2 to
-   5 (M10). Not checked: the level the owner sees in play at the join, and
-   the disc-built installs' `char_defaults`. LV reads the default record's
-   level, whatever it is, so the build is right either way.
+2. **Willpower is left as the default record has it.** The owner: "if
+   nothing raises it, nothing should lower it." (New Game sets it once from
+   the starting level, `(level << 4) / divisor + add`,
+   `src/game/battle/battle.cpp:113-127`, and a level-up never touches it; LV
+   does not touch it either. 6b's step 4 is dropped.)
+3. **Record 1 starts at level 5**, the owner confirms (the default record's
+   `+0xA`, read 2026-11-12).
 4. **Record 4 keeps chapter 8's boost.** "Rei can keep his personal boost."
 5. **The champion fights before the story introduces them.** Yes; SC's
    constant stays true.
@@ -598,7 +590,7 @@ For the owner:
    fights." under it. The list's label is "Character:" to match. (The owner's
    own text; CLAUDE.md's STE rule is for text this project drafts.)
 
-Still open: willpower (item 2); whether a `BOF3X_SOLO` value that names no
+Still open: whether a `BOF3X_SOLO` value that names no
 champion stops the game with the mode off (4a).
 
 ## 7. Not in this round
