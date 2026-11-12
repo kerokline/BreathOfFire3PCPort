@@ -6,6 +6,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field/field_ability_2_callees.h"
+#include "game/field/field_idle.h"
 #include "game/field_s.h"
 #include "game/field_s_callees.h"
 #include "game/lang_layout.h"
@@ -23,6 +24,7 @@
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -2825,6 +2827,23 @@ extern "C" void __cdecl Tactics_Open(void) {
 // step on by the choice + 1 (2 formation, 3 members). Cancel: sounds 0x102,
 // 0x106, records 11 and 18 to state 1 (out), 19..21 closed, the step on by 3
 // (4, the close).
+//
+// TacticsClose is the cancel's stores after its sounds, as the original has
+// them; DIV-0217's refused member change shares them (PSX 0x801D9A88).
+namespace {
+void TacticsClose() {
+    const unsigned char step = FieldS_State;
+    BRest2f(Rec(11, 3)) = 1;
+    BRest2f(Rec(18, 3)) = 1;
+    BRest2f(Rec(21, 0)) = 0;
+    BRest2f(Rec(19, 0)) = 0;
+    BRest2f(Rec(20, 0)) = 0;
+    FieldS_State = static_cast<unsigned char>(step + 3);
+    FieldS_Step = 0;
+    BRest2f(::bof3::Img(kTimer.v)) = 5;
+}
+}  // namespace
+
 extern "C" void __cdecl Tactics_Top(void) {
     Backdrop();
     const unsigned choice = Rest2f_TopChoice;
@@ -2850,6 +2869,20 @@ extern "C" void __cdecl Tactics_Top(void) {
             SH_CALL(TacticsFormation_Build)();
         } else if (Field_InputFlags & 1) {
             SH_CALL(TacticsMembers_Build)();
+        } else if (bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere)) {
+            // DIV-0217 AllyAnywhere. The Definitive Edition romhack (evidence:
+            // the patched US disc, START.EMI 8 = STATUS.EMI 0, Tactics_Top's
+            // twin 0x801D98BC, the refusal's call at 0x801D99F8 turned into a
+            // jump to 0x801E3600): the refused member change sets its two
+            // flags (field_idle.h), plays 0x104, and closes Tactics by the
+            // cancel branch's stores without the cancel's two sounds. The top
+            // bar then closes the menu, and the idle field frame raises the
+            // party swap (FieldIdle_Tick).
+            field_idle::g_ally_pending = 1;
+            field_idle::g_ally_close_menu = 1;
+            SoundRest2f(0x104);
+            TacticsClose();
+            return;
         } else {
             SoundRest2f(0x107);
             return;
@@ -2868,15 +2901,7 @@ extern "C" void __cdecl Tactics_Top(void) {
     if (!(static_cast<std::uint32_t>(Field_CancelButtons) & now)) return;
     SoundRest2f(0x102);
     SoundRest2f(0x106);
-    const unsigned char step = FieldS_State;
-    BRest2f(Rec(11, 3)) = 1;
-    BRest2f(Rec(18, 3)) = 1;
-    BRest2f(Rec(21, 0)) = 0;
-    BRest2f(Rec(19, 0)) = 0;
-    BRest2f(Rec(20, 0)) = 0;
-    FieldS_State = static_cast<unsigned char>(step + 3);
-    FieldS_Step = 0;
-    BRest2f(::bof3::Img(kTimer.v)) = 5;
+    TacticsClose();
 }
 
 // original 0x58F2F0: TacticsMenu_Steps[2] - jmp through TacticsFormation_Steps

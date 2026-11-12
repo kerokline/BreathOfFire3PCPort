@@ -41,6 +41,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
+   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): eight built and proven with the game, none
+     played. **Next:** the owner's play of each (6b and 6c list what to look for; `DoubleHitSwords` and `SmokeSkill`'s encounter
+     side have no automated cover, 6c); the owner's word on `TownWarp` and `LevelSkillCatchUp` (they would be the next two ledger
+     entries; the reading is `D:\bof3x-runs\de1112\reading\game_summary.md` and `menu_summary.md`), on the leave pose
+     skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
+     `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
+     The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
    - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
    - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner's look at a

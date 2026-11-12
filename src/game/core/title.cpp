@@ -43,6 +43,7 @@
 #include "game/title_states.h"
 #include "game/wide_rand.h"
 #include "game/widescreen.h"
+#include "hook/behaviour.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -368,8 +369,13 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
         if (past > cx) cx = past;
     }
     SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(::bof3::Img(kTextBuffer.v)));
+    // DIV-0220 VillageCountPlural (off by default): the plural (slot 1) for
+    // every count, a count of one too - the Definitive Edition romhack's
+    // change; evidence: its patched US disc, COMMU05 section 7 at PSX
+    // 0x801D1048 and 0x801D129C (both lists' count-of-one test removed).
     if (words)
-        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, BRest4e(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
+        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF,
+                             Labels_Slot(14, BRest4e(count) == 1 && !bof3::BehaviourOn(bof3::behaviours::Id::VillageCountPlural) ? 2 : 1));   // a letter's gap after the count, as the US screen has
     else
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
 }
@@ -1848,12 +1854,20 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
 //
 // As the original has it: the state set to 0 returns without the badge; the
 // pad is read as the dword at Input_Pressed and only bit 0x800 tested.
+//
+// DIV-0222 DemoSkipButtons (off by default): Start or any of the four face
+// buttons (0x8F0: Start 0x800, square 0x80, cross 0x40, circle 0x20, triangle
+// 0x10) ends the demo - the Definitive Edition romhack's change; evidence:
+// its patched US disc, GAME section 1 at PSX 0x801D0F54 (the mask's
+// immediate). The buttons are the pad's, not Config lines, so no Sigma, as
+// the Start test has none.
 extern "C" void __cdecl Title_StateDemo(void) {
     if (TaskZeroState() == 0) {
         Title_State = 0;
         return;
     }
-    if (title_states::gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
+    const unsigned skip = bof3::BehaviourOn(bof3::behaviours::Id::DemoSkipButtons) ? 0x8F0u : 0x800u;
+    if (title_states::gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & skip) != 0) {
         MoveScript_Var7 = 1;
         title_states::gTitleStates.transition(4);
         title_states::gTitleStates.music_fade_stop(8);

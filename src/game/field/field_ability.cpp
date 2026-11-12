@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/field/field_idle.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -12,6 +13,7 @@
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
 #include "game/yes_no_layout.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -113,8 +115,21 @@ extern "C" unsigned __cdecl FieldAbility_Clear80(unsigned, unsigned target, unsi
     return Done(SH_CALL(Char_ClearStatus)(target, 0x80, battle));
 }
 
-// original 0x58A340 (3 bytes), [7]: al 4.
-extern "C" unsigned char __cdecl FieldAbility_NoEffect(unsigned, unsigned, unsigned) { return 4; }
+// original 0x58A340 (3 bytes), [7]: al 4. FieldAbility_Use gives it ability
+// 0x50 alone.
+//
+// DIV-0218 SmokeSkill. The Definitive Edition romhack (evidence: the patched
+// US disc, START.EMI 8 = STATUS.EMI 0, this handler's twin 0x801E7C70 made a
+// jump to GAME.EMI's new 0x801AE2B4): the handler sets the encounter
+// counter to 128 (field_idle.h) and answers 1, so FieldAbility_Use takes the
+// AP cost and the menu plays its "used" sound. Field_EncounterDue spends it.
+extern "C" unsigned char __cdecl FieldAbility_NoEffect(unsigned, unsigned, unsigned) {
+    if (bof3::BehaviourOn(bof3::behaviours::Id::SmokeSkill)) {
+        field_idle::g_smoke_steps = 0x80;
+        return 1;
+    }
+    return 4;
+}
 
 // original 0x58A350 (0x21 bytes), [8]: Char_ClearStatus(target, 0xA0, battle).
 extern "C" unsigned __cdecl FieldAbility_ClearA0(unsigned, unsigned target, unsigned battle) {

@@ -14,7 +14,11 @@ is one row:
     dest, kind              the section's load address and type
     where                   kept (the PC has it as a DAT chunk: dat index, kind) |
                             dropped (an overlay the port compiled into BOF3.exe) |
-                            none (the EMI has no PC container) | boot | file
+                            none (the EMI has no PC container) | boot | file |
+                            outside (sectors the patched disc's directory does not
+                            list and ORIG does not hold the same: `file` is the first LBA, one
+                            row a section of an EMI there, one row for sectors that
+                            are no EMI; docs/mods.md 11)
     addr, old, new          the run's address in ORIG and its length before and after
     is                      code | data | code? | data? | moved | - (kept sections: not asked)
                             moved: an address that changed only because the bytes it
@@ -45,7 +49,10 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import psx_disc   # noqa: E402
 
-from disc_patch_build import ANCHOR, edits, moved_by, relocation   # noqa: E402,F401  (the builder's own)
+from disc_patch_build import ANCHOR, edits, moved_by, relocation, outside_files   # noqa: E402,F401  (the builder's own)
+# emi_sections too: 85f9bda4 removed this file's own copy for the builder's and left no import for it, so the
+# census stopped at its first changed EMI with a NameError (found 2026-11-12)
+from disc_patch_build import emi_sections   # noqa: E402
 
 
 def load_maps(build):
@@ -266,6 +273,22 @@ def main():
             else:
                 for a0, a1, b0, b1 in edits(ob, nb):
                     rows.append([rel, "-", 1, "", "", "file", "+0x%X" % a0, a1 - a0, b1 - b0, "-", ""])
+
+    # files outside the directory (docs/mods.md 11): the build does not carry them; the census names them
+    outside = outside_files(o, n)
+    for x in outside:
+        place = "LBA 0x%X" % x["lba"]
+        if x["sections"] is None:
+            rows.append([place, "-", 1, "", "", "outside", "", 0, x["sectors"] * 2048, "-",
+                         "%d sectors the directory does not list, not an EMI" % x["sectors"]])
+            continue
+        for i, kind, dest, size in x["sections"]:
+            rows.append([place, i, 1, "%08X" % dest, kind, "outside", "", 0, size, "-",
+                         "an EMI of %d sectors the directory does not list" % x["sectors"]])
+    print("outside the directory: %d EMIs (%d sectors), %d other sectors" % (
+        sum(1 for x in outside if x["sections"] is not None),
+        sum(x["sectors"] for x in outside if x["sections"] is not None),
+        sum(x["sectors"] for x in outside if x["sections"] is None)))
 
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", newline="\n") as f:

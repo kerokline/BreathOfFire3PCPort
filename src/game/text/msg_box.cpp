@@ -9,6 +9,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/button_text.h"
 #include "game/dat_load.h"
+#include "game/field/field_idle.h"   // DIV-0223: TextArea
 #include "game/item_use_callees.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
@@ -56,10 +57,15 @@ namespace {
 // Choice ids below 0x80 through the area's own table, the rest through
 // MsgBox_SystemChoice. The area descriptor is re-read for each call, as in
 // the original: Game_AreaNumber zero-extended, the id's low byte.
+//
+// DIV-0223 CampMasters: while a master's talk from the master list holds the
+// master's home area's text block, the home area's table (field_idle.h
+// TextArea) - the hack points the standing descriptor's +0x34 at a copy of it;
+// this is the one reader of +0x34.
 void CommitChoice() {
     const unsigned id = ItemUse_ChoiceId;
     if (id < 0x80) {
-        const unsigned char* const desc = Area_Descriptors[Game_AreaNumber];
+        const unsigned char* const desc = Area_Descriptors[field_idle::TextArea(Game_AreaNumber)];
         const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));   // 32-bit code words
         table[id]();
     } else {

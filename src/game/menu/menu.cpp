@@ -26,6 +26,7 @@
 #include "game/text_pairs.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -742,7 +743,17 @@ extern "C" void __cdecl Menu_DrawButtonRow(int x, int y, int set, int sel, int) 
         if (selected >= sets[s5]) colour = 0;
         else colour = (i == selected) ? 0 : 7;
         const unsigned char verb = sets[s5 + 1 + i];
-        if (verb == 0x12 && !(Field_InputFlags & 1)) colour = 7;
+        // DIV-0217 AllyAnywhere. The Definitive Edition romhack (evidence: the
+        // patched US disc, START.EMI 8 = STATUS.EMI 0's copy of this function,
+        // 0x801DDC74, its grey store at 0x801DDD80 made a nop) no longer greys
+        // verb 0x12, the member change, in the field menu's copy only; the
+        // other overlays' copies keep it. The PC has one function for all of
+        // them: the field menu's draws are told apart by Game_Mode 3, the
+        // menu (GameMode_Field's Field_Request 1), the mode the START overlay
+        // runs in. Verb 0x12 is in one set only, 7, Tactics' row.
+        if (verb == 0x12 && !(Field_InputFlags & 1) &&
+            !(bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere) && Game_Mode == 3))
+            colour = 7;
         if (verb == 8) {
             if ((menu_windows::g.has_key_item(0xF) & 0xFF) == 0) {
                 if ((menu_windows::g.count_owned(0, 0x58, 0) & 0xFFFF) == 0) colour = 7;

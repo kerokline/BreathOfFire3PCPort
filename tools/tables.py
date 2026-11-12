@@ -115,6 +115,19 @@ def check(cat, syms, builds):
             last = fld["at"] + (n_rep - 1) * step
             if not 0 <= fld["at"] or last + width > stride:
                 errs.append("%s: +0x%X..+0x%X is outside the 0x%X-byte record" % (fw, fld["at"], last + width, stride))
+            if "range" in fld:
+                # the values a reader takes (docs/mods.md 11): a pair of ints inside the type, cited
+                code = TYPES[fld["type"]][0]
+                t_lo, t_hi = (-(1 << (8 * width - 1)), (1 << (8 * width - 1)) - 1) if code[1].islower() \
+                    else (0, (1 << (8 * width)) - 1)
+                rg = fld["range"]
+                if "bits" in fld:
+                    errs.append("%s: a range on a bit field (give it to the whole word)" % fw)
+                elif not (isinstance(rg, list) and len(rg) == 2 and all(isinstance(v, int) for v in rg)
+                          and t_lo <= rg[0] <= rg[1] <= t_hi):
+                    errs.append("%s: range %r is not [lo, hi] inside a %s" % (fw, rg, fld["type"]))
+                elif fld.get("status") != "evidence":
+                    errs.append("%s: a range is a reader's bound, so the field's status is evidence" % fw)
             if "bits" in fld:
                 lo, hi = fld["bits"]
                 if not 0 <= lo <= hi < 8 * width:
@@ -363,6 +376,24 @@ def records(t, raw, name_len):
                 row[fld["name"] if n_rep == 1 else "%s_%d" % (fld["name"], r)] = v
         rows.append(row)
     return rows
+
+
+def out_of_bounds(t, rec):
+    """The first field of the PC record `rec` (bytes, the table's stride) whose
+    value is outside the field's `range` - (field name, copy, value) - or None.
+    A field with no `range` takes any value. docs/mods.md 11: a record the
+    original leaves all zero is a mod's to fill only when this is None."""
+    for fld in t.get("field", []):
+        if "range" not in fld or "bits" in fld:
+            continue
+        code, width = TYPES[fld["type"]]
+        lo, hi = fld["range"]
+        n_rep, step = fld.get("repeat", [1, width])
+        for r in range(n_rep):
+            v = struct.unpack_from(code, rec, fld["at"] + r * step)[0]
+            if not lo <= v <= hi:
+                return fld["name"], r, v
+    return None
 
 
 # ------------------------------------------------------------------ commands

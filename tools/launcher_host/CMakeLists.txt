@@ -7,7 +7,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(bof3x_launcher_host CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+# C++20 and the OS seam's library, as the main build: src/common's files call bof3::os (src/os/os.h,
+# whose text.h needs std::u8string) since the Linux round's LB1; with C++17 and no library the host
+# build stopped at home.cpp (found 2026-11-12)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -23,7 +26,9 @@ add_custom_command(
 add_executable(config_tests config_tests.cpp ${REPO_SRC}/launcher/config.cpp ${REPO_SRC}/launcher/suites.cpp
                ${REPO_SRC}/common/cache_manifest.cpp ${REPO_SRC}/common/home.cpp
                ${REPO_SRC}/input/bindings.cpp "${_suites_hdr}")
+add_subdirectory(${REPO_SRC}/os "${CMAKE_BINARY_DIR}/os")
 target_include_directories(config_tests PRIVATE ${REPO_SRC} "${CMAKE_BINARY_DIR}/gen")
+target_link_libraries(config_tests PRIVATE bof3x_os)
 target_compile_options(config_tests PRIVATE -Wall -Wextra)
 # The presets' reference rows (tools/ledger_registry.py presets --tsv), read by TestPresetsFixture.
 target_compile_definitions(config_tests PRIVATE BOF3X_LAUNCHER_HOST_DIR="${CMAKE_CURRENT_SOURCE_DIR}")

@@ -375,6 +375,28 @@ std::string JsonString(const std::string& line, const char* key) {
     return out;
 }
 
+// A list of strings (["a", "b"]), each unescaped as JsonString does; empty when
+// absent, null or not a list.
+std::vector<std::string> JsonStrings(const std::string& line, const char* key) {
+    std::vector<std::string> out;
+    size_t at = JsonValueAt(line, key);
+    if (at == std::string::npos || line[at] != '[') return out;
+    for (++at; at < line.size() && line[at] != ']';) {
+        if (line[at] == ' ' || line[at] == ',') {
+            ++at;
+            continue;
+        }
+        if (line[at] != '"') break;
+        // one element: the line from its quote, read as a value of its own
+        const std::string one = "{\"v\": " + line.substr(at) + "}";
+        out.push_back(JsonString(one, "v"));
+        for (++at; at < line.size() && line[at] != '"'; ++at)
+            if (line[at] == '\\') ++at;
+        ++at;   // past the closing quote
+    }
+    return out;
+}
+
 bool JsonTrue(const std::string& line, const char* key) {
     const size_t at = JsonValueAt(line, key);
     return at != std::string::npos && line.compare(at, 4, "true") == 0;
@@ -778,6 +800,9 @@ struct ModRow {
     std::string id, name, version, kind, base, state, needs, problem;
     std::string author, url, credit;   // who made it (docs/mods.md 2): shown, never opened or run
     std::string language, carries, lacks;
+    // the engine's behaviours it turns on (mod.toml's needs) and those this release does not have
+    // (docs/mods.md 11): a mod that misses one is greyed and never handed over
+    std::vector<std::string> behaviours, missing;
 };
 
 bool ModOnOff(const ModRow& r) { return r.kind == "disc-patch" || r.kind == "table-edit"; }
@@ -822,7 +847,12 @@ void ModsGreyed(HWND page, const ModsState& s) {
 std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     std::wstring state;
     greyed = true;
-    if (r.state == "built") {
+    if (!r.missing.empty()) {
+        std::string names;
+        for (const std::string& n : r.missing) names += (names.empty() ? "" : ", ") + n;
+        state = L"needs " + Widen(names) + (r.missing.size() == 1 ? L": this release does not have it"
+                                                                   : L": this release does not have them");
+    } else if (r.state == "built") {
         if (r.kind == "reading-row" && r.base != s.language) {
             state = L"built; only with " + Widen(r.base) + L" text";
         } else if (r.kind == "disc-patch" && r.language != s.language) {
@@ -858,6 +888,14 @@ void ModsCredit(HWND page, const ModsState& s) {
     if (!r.credit.empty()) text += L" " + Widen(r.credit);
     if (!r.url.empty()) text += L" " + Widen(r.url);
     text += L" Kind: " + Widen(r.kind) + L".";
+    if (!r.behaviours.empty()) {
+        // where a behaviour is on because a mod asked, the mod says so (docs/mods.md 11)
+        std::string names;
+        for (const std::string& n : r.behaviours) names += (names.empty() ? "" : ", ") + n;
+        text += (r.missing.empty() ? L" When it is on, it turns on these behaviours of the game: "
+                                   : L" It needs these behaviours of the game: ") + Widen(names) + L".";
+        if (!r.missing.empty()) text += L" This release does not have all of them, so the mod stays off.";
+    }
     ModStatus(page, text);
 }
 
@@ -1001,7 +1039,8 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
                           JsonString(line, "kind"), JsonString(line, "base"), JsonString(line, "state"),
                           JsonString(line, "needs"), JsonString(line, "problem"), JsonString(line, "author"),
                           JsonString(line, "url"), JsonString(line, "credit"), JsonString(line, "language"),
-                          JsonString(line, "carries"), JsonString(line, "lacks")});
+                          JsonString(line, "carries"), JsonString(line, "lacks"),
+                          JsonStrings(line, "behaviours"), JsonStrings(line, "missing")});
         return;
     }
     if (job == kModAdd && IsJsonObject(line)) {

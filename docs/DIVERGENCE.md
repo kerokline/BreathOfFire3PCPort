@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 215 entries, DIV-0001..0215, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 223 entries, DIV-0001..0223, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -12037,6 +12037,31 @@ designed in rather than bolted on.
   with the box ticked and none with it not ticked (disc-patch-round.md 5d).
   **No route run and not played by the owner.** Languages: a `disc-patch`
   mod is for `en-US` text (the US disc is the one disc its builder knows).
+- **Amended 2026-11-12 (the behaviours round's foundation;
+  [`mods.md`](mods.md) 11, [`disc-patch-round.md`](disc-patch-round.md) 6a):**
+  a `disc-patch` or `table-edit` mod may name **the behaviours it needs from
+  the engine**, `needs = ["<Name>", ...]` in `[mod]`. A behaviour is a change
+  of ours under its own ledger entry, `Switch: <Name>`, `Default: off`;
+  the game turns it on only when `BOF3X_ON` names it (`src/hook/behaviour.cpp`,
+  read by both hosts first in `InjectAll`; a name that is no behaviour of the
+  release stops the game, each one on is logged, one `BOF3X_OFF` also names
+  stays off). The launcher composes `BOF3X_ON` from the ini's new `on=` and
+  the needs of every mod whose layers it hands over - both or neither - and
+  writes on stderr which mod turned on which behaviour; `off=` wins over a
+  need, and the launcher says the mod is not complete. A mod that needs a
+  behaviour this release does not have (`mods.py list`'s `missing`, from the
+  same generated `src/hook/code_names.h` the game is built with) is greyed on
+  the Mods list with the names and is never handed over; the selected mod's
+  status line names the behaviours it turns on. The build of a `disc-patch`
+  mod also leaves out what is not the mod's to carry, counted in
+  `report.toml`: bytes the patch writes into a table's records that the
+  original leaves all zero when the filled record is outside the table's
+  field bounds (`tables.toml` `range`; D415), the records `mod.toml`'s new
+  `skip` names, and the files the patched disc holds outside its directory.
+  Verification: `mods.py`, `disc_patch_build.py` self-tests; `config_tests`;
+  `ledger_check.py` and `ledger_switches.py --check`; the engine's parser
+  self-test is built and **not run** (no game was started this day); the real
+  patch built offline. No behaviour exists yet, so no mod can be handed one.
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50
@@ -15829,5 +15854,499 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - one-way: the old path (the player's ffmpeg and libmp3lame at import) was removed, not kept beside
 - **Toward:** none - the sound was the disc's clip before too; only its decoder changed
+- **Languages:** any
+- **State:** active
+
+### Three swords hit twice: the Definitive Edition's attack hook, as a mod behaviour
+
+- **ID:** DIV-0216
+- **Date:** 2026-11-12
+- **Subsystem:** battle actions - `BattleAction_EnterKind` `0x42F4C0` and
+  `BattleAction_AbilityCheck` `0x42F680` (ours, with the test
+  `DoubleHitSword`, in `src/game/battle/battle_action.cpp`); the romhack
+  mod of [`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - a romhack's rule change, carried for its mod
+- **Original behaviour:** a member's plain attack (command kind 1) runs as an
+  attack whatever the weapon. Ability 0x77 costs its record's AP
+  (`Skill_ApCost`) for anyone.
+- **New behaviour:** with the behaviour on, both hooks of TheGreatBen's
+  Definitive Edition (used with permission), mirrored as the patched US disc
+  has them. The shared test: the actor byte `0x904B34` is below 3 and that
+  member's weapon byte (`PartyMember::weapon`, +0x92) is 6, 9 or 0x18.
+  (1) In `BattleAction_EnterKind`, after the event-battle hook and before the
+  step stores: when the command kind `0x904B35` is 1 and the test holds, the
+  kind byte becomes 4, the acting block's action record (the pointer at
+  `0x904B40`) gets action id 0x77, and 4 goes to `0x904AA2`: the attack runs
+  the ability steps as ability 0x77. (2) In `BattleAction_AbilityCheck`, where
+  the cost is stored (`0x904B88`, after both the `Skill_ApCost` path and the
+  0x97 path): when the id word `0x904B80` is 0x77 and the test holds, the cost
+  is 0. The status test before it and the AP test after it are unchanged. Off,
+  both functions are today's, step for step.
+  **The open points, settled from the listings and our source.** (a) Dragon
+  forms: the hack's test reads only the kind, the actor byte and the weapon
+  byte - no form or status test - and nothing in our battle code writes
+  `PartyMember::weapon` (only a scenario script does), so a member in a
+  dragon form whose command kind is 1 is converted too. Mirrored, the hack's
+  own behaviour. Whether a dragon's attack reaches `EnterKind` as kind 1 is not
+  read; unverified until played. (b) Automatic attacks: every kind-1 action of
+  a member passes `EnterKind`, so the conversion also takes a confused or
+  automatic member's attack (`Battle_MemberAutoTarget` `0x453FA0` and
+  `Battle_MemberAutoFixed` `0x454290` set the kind to 1), auto-battle's
+  (`AutoBattle_FillCommands` `0x446720` gives +0x125 = 1), and a member's
+  counter-attack (`0x430010` swaps the blocks and sets the kind to 1; the
+  record written is then the one at the swapped block's +0xC). Mirrored. The
+  ability path's target checks (`Battle_ActionSuitsTarget`) are not the
+  attack's. Also the hack's: a member who uses ability 0x77 itself while
+  holding one of the swords pays nothing. (c) Where the second hit comes from
+  is in none of this code: it is data the mod carries (ability 0x77's effect
+  cell, `ability_effect_index`, becomes slot 39) or the row-0 animation's
+  script. Unverified until played.
+- **Rationale:** the romhack mod's code change (issue 216, the disc-patch
+  round): a mod's data rides on layers, its code changes become behaviours
+  of ours, off unless the mod's `needs` asks ([`mods.md`](mods.md) 11).
+- **Also in the PSX version?** No - Capcom's releases have neither hook. The
+  evidence is the patched US disc's BATTLE section 3: `0x801D2FE8` jumps to a
+  payload at `0x801D8090` (EnterKind, PSX `0x801D2FC0`) and `0x801D3560` to
+  one at `0x801D8108` (AbilityCheck, PSX `0x801D3304`), both in the unreached
+  body of the twin of `BattleWin_DrawSmallBox` `0x443740`, which ours keeps.
+  The PSX weapon byte (`0x80145F12 + 0x140 * member`) is the one Capcom's own
+  battle code reads there, our `PartyMember::weapon` (the weapon-0x4A test at
+  PSX `0x801DBF58` is ours at `battle_3.cpp`'s `pr->weapon == 'J'`).
+- **Verification:** builds at both widths; off by default, so the hosted
+  `battle_actions` fuzz (`kEnterKind`, `kAbilityCheck`) compares today's logic.
+  **Not played:** a fight with one of the three swords under
+  `BOF3X_ON=DoubleHitSwords` (and the mod) is owed: the attack shows as ability
+  0x77, costs no AP, and hits twice.
+- **Reversible?** Off unless asked: `BOF3X_ON=DoubleHitSwords` (the ini's
+  `on=`, or the mod's `needs`) turns it on; `BOF3X_OFF=DoubleHitSwords` wins.
+- **Switch:** DoubleHitSwords
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is a romhack's
+- **Languages:** any
+- **State:** active
+
+### A member change refused off the world map opens the party swap instead (a mod's)
+
+- **ID:** DIV-0217
+- **Date:** 2026-11-12
+- **Subsystem:** the camp menu - `Tactics_Top` `0x58F170`
+  (`src/game/field/field_ability_2.cpp`), `FieldMenu_TopBarInput` `0x589B70`
+  (`src/game/field/field_menu.cpp`), `Menu_DrawButtonRow` `0x574890`
+  (`src/game/menu/menu.cpp`), `Field_ModeTailRun` `0x56D920` and the field's
+  idle frame `FieldIdle_Tick` (ours, `src/game/field/field_7.cpp`,
+  `field_idle.h`), `GameMode_Start` `0x495840`
+  (`src/game/core/transition.cpp`); the Definitive Edition romhack's "Ally"
+  ([`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b)
+- **Tier:** Extension - a rule of play: where the party may be changed
+- **Original behaviour:** in the camp menu's Tactics screen the member change
+  needs bit 0 of `Field_InputFlags` (the world map). Without it the choice
+  plays sound `0x107` and does nothing, and its button (verb `0x12`, set 7)
+  is drawn greyed.
+- **New behaviour:** with the behaviour on, the refused member change sets
+  two flags of ours, plays `0x104` and closes Tactics by the cancel's stores
+  without the cancel's two sounds; the top bar, seeing the first flag, clears
+  it and closes the menu as a cancel does; the next field frame with no tail
+  armed and `Field_Request` 0 clears the second flag and raises
+  `Field_Request` 6 - the request `Party_Join` raises when a fourth member
+  joins, the party swap screen (`GameMode_Field` case 6, ShopMode 6
+  `PartyForm_Dispatch`); a request already pending makes it wait a frame. The
+  button is no longer greyed when the menu (`Game_Mode` 3) draws it: the hack
+  changed only the START / STATUS overlay's copy of the row function, and the
+  PC's one function serves four overlays; verb `0x12` is in set 7 only
+  (Tactics), read from `Menu_ButtonSets`' nine sets. The flags are statics of
+  ours: not in the save, cleared at the start of every started or loaded game
+  (`GameMode_Start`), and taken and put back by the quicksave (participant
+  `BEHAVIOURS`); the state hash does not see them (statics of our module).
+  Off, every one of these sites runs the original's path.
+- **Rationale:** the romhack's feature, integrated as a mod with its author's
+  permission; the mod turns it on by its `needs` (docs/mods.md 11). The
+  hack's code, on the patched US disc: `Tactics_Top`'s twin `0x801D98BC`
+  (the refusal's call at `0x801D99F8` made a jump to new code at
+  `0x801E3600`, which sets the bytes `0x801AE3E6` and `0x801AE3E7`, plays
+  `0x104` and joins the cancel at `0x801D9A88`), the top bar's twin
+  `0x801D1B60` (`0x801D1D10` to `0x801E3620`, which forces the cancel
+  test), the row's copy `0x801DDC74` (the grey store `0x801DDD80` a nop), and
+  GAME.EMI's slot-0 tail chain (`Field_ModeTailKinds` slot 0 `0x801C84BC`
+  pointed at `0x801AE340`; the Ally case `0x801B5860` writes 6 into the
+  request byte `0x80143BB0`, as US `Party_Join` does). The hack's bytes
+  live in GAME.EMI space it freed, so they are RAM only. The one
+  departure: on the PSX they survive a load from the menu; ours are cleared
+  at a game's start, so a load never opens a swap the previous game asked
+  for. An unreferenced payload at `0x801E3644` (record 0's must-stay bit,
+  then the members screen) is not reached on the disc and not built.
+- **Also in the PSX version?** No: the release refuses, as the PC does. The
+  romhack's patched US disc has it.
+- **Verification:** builds at both widths; `ledger_switches.py --check`,
+  `ledger_check.py`. Not yet run with the game: under `BOF3X_ON=AllyAnywhere`,
+  in a town, the camp menu's Tactics member button drawn white, the choice
+  closing the menu and opening the party swap, the party changed and the
+  field back; on the world map the original's members screen; off, the button
+  greyed and `0x107`; a quick-load between the choice and the swap.
+- **Reversible?** Off unless a mod's `needs` or the player's `on=` names it.
+- **Switch:** AllyAnywhere
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - a romhack's change; no release has it
+- **Languages:** any
+- **State:** active
+
+### Smoke used in the field holds off encounters for 128 checks (a mod's)
+
+- **ID:** DIV-0218
+- **Date:** 2026-11-12
+- **Subsystem:** field abilities and encounters - `FieldAbility_NoEffect`
+  `0x58A340` (`FieldAbility_Effects[7]`, `src/game/field/field_ability.cpp`),
+  `Field_EncounterDue` `0x530030` (`src/game/field/field_4.cpp`), the counter
+  of ours in `src/game/field/field_idle.h` / `field_7.cpp`, `GameMode_Start`
+  `0x495840`; the Definitive Edition romhack's Smoke
+  ([`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b)
+- **Tier:** Extension - a skill given an effect it did not have
+- **Original behaviour:** ability `0x50` used from the field menu reaches
+  handler 7, which answers 4: nothing happens, no AP is taken, the menu plays
+  `0x107`. `Field_EncounterDue` is asked once a step by its two callers
+  (`Field_LeaderWalk` on the world map, where a yes raises the "(!)" marker,
+  and `Field_LeaderStepLands` elsewhere, where it starts the battle; the two
+  calls in the binary, at `0x52DD97` and `0x52E8E7`, measured).
+- **New behaviour:** with the behaviour on, handler 7 sets a 16-bit counter
+  of ours to 128 (again to 128 if it is running) and answers 1, so
+  `FieldAbility_Use` takes the cost and the menu plays its "used" sound
+  (`0x109` on the no-target path, `field_ability_2.cpp`). While the
+  counter is not 0, `Field_EncounterDue` does nothing of its own: it lowers
+  the counter by one, sets `Field_StepCount` to 0, plays `0x10C` when the
+  counter reaches 0, and answers 0. So 128 checks - one a step, in an area with
+  encounters or without, on the world map or off it - give no encounter, and
+  the step count starts from 0 after them. The world map's "(!)" marker comes
+  from the same function, so it is held off too; a marker already up is not
+  taken down (its steps do not ask the function). A fight that a
+  script starts does not pass this function and is not affected. The counter
+  is not in the save, is cleared at the start of every started or loaded game
+  (`GameMode_Start`), and is taken and put back by the quicksave (participant
+  `BEHAVIOURS`, version 2); the state hash does not see it. Off, both
+  functions run the original's path. That Ryu learns `0x50` at level 12, its
+  name and its cost are the mod's table data, not this entry's.
+- **Rationale:** the romhack's feature, integrated as a mod with its author's
+  permission; the mod turns it on by its `needs` (docs/mods.md 11). The
+  hack's code, on the patched US disc: handler 7's twin `0x801E7C70` (START.EMI
+  8 = STATUS.EMI 0) made a jump to new code at GAME.EMI `0x801AE2B4`, which
+  stores 128 in the halfword `0x801AE2B0` and answers 1; `Field_EncounterDue`'s
+  twin `0x801B3EB0` entered by a jump to `0x801AE2C8`, which, with the
+  halfword not 0, lowers it, clears the step count `0x80143F22`, calls the
+  sound with `0x10C` when it reaches 0, and answers 0, and else runs the
+  displaced first load and the original's rest. The one departure: on the PSX
+  the halfword survives a load from the menu; ours is cleared at a game's
+  start. The readme's "(!)" exception is not in the code: no path of the
+  hack's tests the world map or the marker.
+- **Also in the PSX version?** No: the release's Smoke has no field effect,
+  as the PC's. The romhack's patched US disc has it.
+- **Verification:** builds at both widths; `ledger_switches.py --check`,
+  `ledger_check.py`. Not yet run with the game: under `BOF3X_ON=SmokeSkill`,
+  Smoke used from the field menu with enough AP (the AP taken, `0x109`), then
+  128 steps in an encounter area with no battle and `0x10C` at the end, then
+  battles again; on the world map no "(!)" for 128 steps; off, `0x107` and no
+  AP taken; a quick-load in the middle of the count keeps the count left.
+- **Reversible?** Off unless a mod's `needs` or the player's `on=` names it.
+- **Switch:** SmokeSkill
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - a romhack's change; no release has it
+- **Languages:** any
+- **State:** active
+
+### A mod can make two masters' tests easier: ten weapons, and no item at area 91
+
+- **ID:** DIV-0219
+- **Date:** 2026-11-12
+- **Subsystem:** field areas - `Area68_ChoiceAskCount` `0x40CF50` (ours,
+  `src/game/area/area_68.cpp`) and `Area91_State0CheckItem57` `0x412000`
+  (ours, `src/game/area/area_91.cpp`); the behaviour `EasierMasters`
+  ([`mods.md`](mods.md) 11); [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** (1) area 68's choice handler 2: an answer of 0
+  counts the weapons list (`Inventory_CountUsed(1)`, the non-zero ids of
+  category 1, docs/char-stats.md 212); at 15 or more it sets message `0x82`,
+  else message `0x83` and the answer mark 6 (a non-zero answer: message
+  `0x84` and the mark). (2) area 91's object state 0: when the party list's
+  first byte is 6 or 3, `Inventory_Count(0, 0x57, 0)` (item `0x57`, the Faerie
+  Tiara of [`item-use.md`](item-use.md) 3); none held: `Cond_ByteFE` 1, the
+  active member's `+0x80` bit 0 cleared, sound `0x201`; held:
+  `ScriptFlags_Set40` and the state + 1. Any other first byte: the bit
+  cleared, nothing else.
+- **New behaviour:** with `EasierMasters` on, (1) the threshold is 10, not
+  15; (2) with the first byte 6 or 3 the item is not counted and the "held"
+  path is taken (`ScriptFlags_Set40`, the state + 1). The other paths, the
+  messages and the mark are unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: AREA068 section 13 at PSX `0x801F38E8`, the compare's
+  immediate 15 -> 10; AREA091 section 13 at `0x801F2DFC`, the item count's
+  call replaced by a call of `ScriptFlags_Set40` (US `0x8015C088`, which
+  returns a non-zero pointer, so the branch to the "held" path is always
+  taken; measured on the US boot EXE). The hack therefore calls
+  `ScriptFlags_Set40` twice on that path; it ORs the same two bits, so ours
+  calls it once and leaves the same state. **Unconfirmed:** the readme names
+  this feature for two masters, D'Lonzo (the weapons) and Merryleep (the
+  faerie village); that area 68's handler is D'Lonzo's test and area 91's
+  Merryleep's is the reader's inference from the weapon count and the
+  tiara, for the owner to confirm.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`.
+- **Also in the PSX version?** No - Capcom's PlayStation releases test 15 and
+  the item, as the PC does; only the romhack changes them.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the two functions are the same logic as
+  before, so the hosted fuzz rows (`area_w1f_fuzz.cpp`,
+  `area_w2c_fuzz.cpp`) compare as before. **Not played:** nobody has talked
+  to either master with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=EasierMasters` keeps it off.
+- **Switch:** EasierMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can make the village lists' word after a count always plural
+
+- **ID:** DIV-0220
+- **Date:** 2026-11-12
+- **Subsystem:** the faerie village's ranked lists - `ListHeading` (ours,
+  `src/game/core/title.cpp`), the heading `CommuRank_DrawListA` `0x460730`
+  and `CommuRank_DrawListB` `0x460920` draw; DIV-0064 group 14; the
+  behaviour `VillageCountPlural` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's text choice, shown only when a mod
+  asks for it
+- **Original behaviour:** the PC draws one Chinese glyph after the count.
+  Under a language whose layer has written DIV-0064's group 14 (the village's
+  five words, from the player's PlayStation disc), ours draws the group's
+  slot 2, the singular, for a count of 1 and slot 1, the plural, for any other
+  count - as the US release does (COMMU05 section 7: both lists test the
+  count against 1 and pick one of two words).
+- **New behaviour:** with `VillageCountPlural` on, slot 1, the plural, for
+  every count. Nothing else of the heading changes, and with group 14 not
+  written (the port's own text) the glyph is drawn as before. This is the
+  Definitive Edition romhack's change (TheGreatBen, used with permission),
+  read from its patched US disc: COMMU05 section 7, `0x801D1048` and
+  `0x801D129C`, the count-of-one test removed from both lists, each now
+  passing one word. Measured by comparing strings without printing them
+  (scratch `D:\bof3x-runs\de1112\b3\cmpstr.py`): the word each patched list
+  passes equals the original's plural of that list, and the two singular
+  strings are gone from the patched section. The plural is there under a
+  Western layer: group 14 is written only with all five slots filled
+  (`loc_build.py`, the village words), and an `en-US` start logs `DIV-0064:
+  5 of 5 village words` (`D:\bof3x-runs\amm1103\m1.log`). The mod's own
+  layer is built from the hybrid disc (disc-patch-round.md, the build's
+  hybrid-disc step), whose COMMU05 is the original's, so its group 14 keeps both words; the code
+  change is what makes the plural constant.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** No - the US release picks the singular for
+  one (its COMMU05, read for this entry); only the romhack does not.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the slot chosen is the same expression as
+  before, and the behaviour is asked only for a count of 1, so
+  `rest_4e_fuzz.cpp`'s rows for the two lists compare as before. **Not
+  played:** nobody has looked at a list with one faerie with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=VillageCountPlural` keeps it off.
+- **Switch:** VillageCountPlural
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can shorten the two five-hour skill lockouts to 40 minutes
+
+- **ID:** DIV-0221
+- **Date:** 2026-11-12
+- **Subsystem:** the play clock - `CountDown`, called by `Game_ClockTick`
+  `0x496870` (ours, `src/game/core/transition.cpp`) for the two countdowns
+  `ModeFlow_CountdownA` `0x90465C` and `Rest3c_Byte660` `0x904660`; their
+  reader `Skill_CanUse` (`src/game/menu/menu_2.cpp`); the behaviour
+  `ShortSkillLockout` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's balance choice, played only when a
+  mod asks for it
+- **Original behaviour:** each countdown is four bytes, hours, minutes,
+  seconds, frames, ticked down once a frame by `Game_ClockTick` (frames
+  29..0, a reload of 0x1D, so a countdown second is 30 frames, as the play
+  clock's). Two writers start them at 5 hours: `Celerity_End` `0x4B2040`
+  (`ModeFlow_CountdownA`) and `Effect_DoubleDamage` `0x44D180` (effect slot
+  62, `Rest3c_Byte660`). `Skill_CanUse` refuses ability `0x3E` in battle
+  while `ModeFlow_CountdownA` is not all zero, and ability `0x15` while
+  `Rest3c_Byte660` is not. In `src/` (the fuzz files aside) nothing else
+  names either countdown (the save block's copies aside); `symbols.toml` records four absolute
+  operands for each address in `BOF3.exe`.
+- **New behaviour:** with `ShortSkillLockout` on, the frames byte reloads
+  with 3, not 0x1D, in both countdowns: a countdown second is 4 frames, 7.5
+  times faster, so five hours of countdown last 72,000 ticks, 40 minutes on
+  the play clock (which counts 30 ticks a second). A countdown already
+  running when the behaviour is turned on finishes its current second at the
+  old length. The play clock is unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: GAME section 0, `Game_ClockTick` at US `0x80198CAC` (JP
+  `0x80199CAC`), the reload's immediate at `0x80198DD4` and at `0x80198E90`, 0x1D -> 3.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it. It is not the readme's faster
+  faerie village: the village's simulation (`src/game/community/`) times
+  itself by `Game_BattleCount` and reads neither countdown.
+- **Also in the PSX version?** No - Capcom's PlayStation releases reload 0x1D,
+  as the PC does; only the romhack changes it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the reload is 0x1D as before, so
+  `mode_flow_fuzz.cpp`'s `Game_ClockTick` row compares as before. **Not
+  played:** nobody has timed a lockout with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=ShortSkillLockout` keeps it off. The countdowns are in the save
+  block, so a save made with it on holds a countdown that runs at 30 frames a
+  second again once it is off.
+- **Switch:** ShortSkillLockout
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can let the four face buttons end the title demo, as well as Start
+
+- **ID:** DIV-0222
+- **Date:** 2026-11-12
+- **Subsystem:** the title - `Title_StateDemo` `0x462370` (ours,
+  `src/game/core/title.cpp`), the title's state 5; the behaviour
+  `DemoSkipButtons` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** while the attract demo runs, with the load done and
+  no transition busy, a press of Start (`Input_Pressed` bit `0x800`) ends it:
+  `MoveScript_Var7` 1, transition 4, the music faded out, the state + 1. No
+  other button does. The US PlayStation release tests the mask `0x9FF` at the
+  same point (US `Title_StateDemo` `0x801D0F00`): Start, Select, the four face
+  buttons and the four shoulder buttons. The PC tests Start alone.
+- **New behaviour:** with `DemoSkipButtons` on, the mask is `0x8F0`: Start
+  or any of the four face buttons (triangle `0x10`, circle `0x20`, cross
+  `0x40`, square `0x80`; the bits of [`button-sigma.md`](button-sigma.md) 2)
+  ends the demo; Select and the shoulder buttons do not. The test reads
+  `Input_Pressed` as before. The PC's pad word carries the PlayStation's
+  bits (the keyboard map `Key_TableDefault` and the pad send them), and the
+  bits here are buttons, not Config lines, so the mask is not passed through
+  `Sigma`, as the Start test is not. This is the Definitive Edition romhack's
+  change (TheGreatBen, used with permission), read from its patched US disc:
+  GAME section 1 at PSX `0x801D0F54`, the mask's immediate `0x9FF` ->
+  `0x8F0`.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** Partly - the US release ends the demo on more
+  buttons than this (`0x9FF`); the mask `0x8F0` is the romhack's.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the mask is `0x800` as before, so
+  `title_states.cpp`'s `Title_StateDemo` row compares as before. **Not
+  played:** nobody has ended the demo with a face button with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=DemoSkipButtons` keeps it off.
+- **Switch:** DemoSkipButtons
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has this mask; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can let the player talk to a master from the master list, wherever the party stands
+
+- **ID:** DIV-0223
+- **Date:** 2026-11-12
+- **Subsystem:** the master list and the master's talk - `ShopBrowse_Choose`
+  `0x5833E0` (`src/game/shop/shop_browse.cpp`), `Field_ModeTailRun`
+  `0x56D920` and `FieldIdle_Tick` (ours), `FieldTail_LoadBank` `0x56D930`
+  (`src/game/field/field_7.cpp`, `field_idle.h`), `MasterScreen_State6Leave`
+  `0x5876F0` (`src/game/menu/master_quit.cpp`), the choice commit's table
+  (`CommitChoice`, `src/game/text/msg_box.cpp`), the dialogue-button area test
+  (`InButtonArea`, `src/game/text/text_draw.cpp`), the text-block walk
+  (`DatLoad_TextBlock*`, `src/game/battle/dat_load.cpp`), `GameMode_Start`;
+  the behaviour `CampMasters` ([`mods.md`](mods.md) 11);
+  [`camp-masters.md`](camp-masters.md), [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** the master list shows, for a chosen master, the
+  master's entry (the detail page, sounds `0x103` and `0x102`). A master's
+  talk (tail kind 4, `FieldTail_LoadBank`, the `MasterTalk_*` machine) runs
+  only when the master's own area arms it, standing beside the master: it
+  reads that area's text block (`MessagePools`) and its choice table (the
+  area descriptor's `+0x34`).
+- **New behaviour:** with `CampMasters` on, a confirm on a listed master
+  stores the master (a static of ours) and closes the list as a cancel does
+  (`0x106`, `0x102`, the list's close, the field); an empty row still plays
+  `0x107`. The next field frame with no tail armed clears it, marks the talk
+  as a camp talk, calls `ScriptFlags_Set40` and arms tail kind 4 at state 0
+  with the master as its argument; the chain of the idle frame goes on, as
+  the hack's does. `Field_ModeTailRun` reads the tail kind once (the
+  original's single `jmp [table + 4 * kind]`), so the tail runs from the next
+  frame, as on the PlayStation. In the tail's state 1, before the talk
+  starts, the master's home area's text block (list entries 0..16: areas 3,
+  61, 55, 68, 50, 59, 113, 74, 116, 98, 41, 37, 37, 37, 37, 143, 91) - the
+  kind-0 chunk of tag 0 of `DAT\AREA<home>.DAT` through the language and
+  optional layers, with the reading row's side chunk and a corrected block
+  of tag 0, nothing else of the file - lands over the arena after the bytes
+  it covers are saved, and the choice commit and the dialogue-button test
+  read the home area's descriptor and number. In state 3, before the bank
+  reload, the bytes and the standing area's reading-row side chunk are put
+  back and the talk's flags cleared. The talk's leave pose (masters 3, 5 and
+  9 give `Sprite_Objects[byte 0x90384B]` a state byte) is skipped during a
+  camp talk: the master's sprite is in its own area, and from the camp the
+  byte names another object or none (ours aborts past the 30 records). The
+  talk ends on the field. The statics are not in the save, are cleared at
+  every game's start, and are in the quicksave participant `BEHAVIOURS`
+  (version 3, with the saved bytes); a record taken inside a camp talk is
+  refused when the behaviour is off. Off, every site runs the original's
+  path.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme: masters "can also now be accessed from the master
+  tab in the camp menu". The hack's code, on the patched US disc: SHOP.EMI
+  `0x801E2394` (the confirm's sounds replaced by the store to `0x801AE318`
+  and a jump to the cancel path `0x801E2410`); GAME.EMI `Field_ModeTailKinds`
+  slot 0 (`0x801C84BC`) pointed at `0x801AE340` (the request); tail 4's
+  state-1 call made `0x801AE984` (the block at `0x80010000` saved to
+  `0x801D8000`, a file outside the disc's directory loaded over it) then
+  `0x801CA650` (the standing descriptor's `+0x34` pointed at the copy's
+  table); state 3's made `0x801AE39C` then `0x801CA6C8` (both put back). The
+  14 hidden files were measured: each is the home area's own text block of
+  the patched disc byte for byte, then whole copies of that area's choice
+  handlers and table, entry for entry ([`camp-masters.md`](camp-masters.md)
+  2). The PC has every area's code and `.data` in its image, so the home
+  area's own handlers serve; only the text moves. Departures from the hack:
+  the leave pose is skipped from the camp (the hack writes an unrelated
+  object's state; the owner to confirm); the text is the player's language's
+  and layers', not the hack's English copy; the standing descriptor is not
+  written - the one reader of `+0x34` reads the home's; the dialogue-button
+  test follows the text; the statics are cleared at a game's start.
+- **Also in the PSX version?** No: the release shows the entry only. The
+  romhack's patched US disc has it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`; the 14 hidden files compared with the home areas' blocks and
+  tables (`camp-masters.md` 2); every handler the 17 masters' messages raise
+  read in our source (`camp-masters.md` 3). Off, the touched functions'
+  fuzz rows compare as before (no static of ours is set). **Not played:**
+  nobody has talked to a master from the list with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=CampMasters` keeps it off.
+- **Switch:** CampMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
 - **State:** active

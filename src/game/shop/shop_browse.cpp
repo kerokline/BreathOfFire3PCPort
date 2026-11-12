@@ -7,6 +7,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_s.h"
 #include "game/field_s_callees.h"
+#include "game/field/field_idle.h"   // DIV-0223: g_master_pending
 #include "game/lang_layout.h"
 #include "game/menu_frame.h"
 #include "game/move_script_bytes.h"
@@ -17,6 +18,7 @@
 #include "game/scenario_harness.h"
 #include "game/shop/shop_browse_callees.h"
 #include "game/yes_no_layout.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -178,9 +180,34 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
     if (kept != cursor) SH_CALL(Sound_PlayEffect)(0x100);
     if (BRest2c(Win(1, 8)) != 0) return;
     const unsigned pressed = Input_Pressed;
+    // The cancel's sounds and stores: the list closes (ShopBrowse_End then
+    // ShopMode 1, the field).
+    const auto close = [] {
+        SH_CALL(Sound_PlayEffect)(0x106);
+        SH_CALL(Sound_PlayEffect)(0x102);
+        const auto state = static_cast<unsigned char>(FieldS_State + 1);
+        BRest2c(Win(21, 0)) = 0;
+        BRest2c(Win(0, 3)) = 1;
+        BRest2c(Win(1, 3)) = 1;
+        BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0xA;
+        FieldS_State = state;
+        FieldS_Step = 0;
+    };
     if (Field_ConfirmButtons & pressed) {
-        if (BRest2c(Win(1, 0xD)) == 0xFF) {
+        const unsigned char entry = BRest2c(Win(1, 0xD));
+        if (entry == 0xFF) {
             SH_CALL(Sound_PlayEffect)(0x107);
+            return;
+        }
+        // DIV-0223 CampMasters. The Definitive Edition romhack (evidence: the
+        // patched US disc, SHOP.EMI 0x801E2394, this function's twin
+        // 0x801E2150): the confirm's two sounds replaced by a store of the
+        // entry + 1 to its byte 0x801AE318 and a jump into the cancel path
+        // 0x801E2410 - the master is talked to on the field (FieldIdle_Tick),
+        // and no detail page opens.
+        if (bof3::BehaviourOn(bof3::behaviours::Id::CampMasters)) {
+            field_idle::g_master_pending = static_cast<std::uint8_t>(entry + 1);
+            close();
             return;
         }
         SH_CALL(Sound_PlayEffect)(0x103);
@@ -194,15 +221,7 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
         return;
     }
     if ((Field_CancelButtons & pressed) == 0) return;
-    SH_CALL(Sound_PlayEffect)(0x106);
-    SH_CALL(Sound_PlayEffect)(0x102);
-    const auto state = static_cast<unsigned char>(FieldS_State + 1);
-    BRest2c(Win(21, 0)) = 0;
-    BRest2c(Win(0, 3)) = 1;
-    BRest2c(Win(1, 3)) = 1;
-    BRest2c(::bof3::Img(rest_2c::at::kTimer.v)) = 0xA;
-    FieldS_State = state;
-    FieldS_Step = 0;
+    close();
 }
 
 // original 0x5835F0, choose step 1 (the entry's detail, ShopBrowse_OpenDetail's

@@ -4,6 +4,7 @@
 
 #include "launcher/suites.h"
 #include "common/home.h"
+#include "hook/code_names.h"   // the behaviours block: the release's behaviours (docs/mods.md 11)
 
 #include <algorithm>
 #include <cstdio>
@@ -194,6 +195,8 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             cfg.psp = value;
         } else if (key == "off") {  // BOF3X_OFF: kept as written, the game refuses a name it does not read
             cfg.off = value;
+        } else if (key == "on") {  // BOF3X_ON: kept as written, the game refuses a name that is no behaviour
+            cfg.on = value;
         } else if (key == "mods_off") {  // the Mods tab's unticked boxes: ids, kept as written
             cfg.mods_off = value;
         } else if (key == "preset") {  // the presets: a name of kPresets, else the default
@@ -367,6 +370,10 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# docs/launcher-settings.md). * turns off all code names. -name keeps that change on. Empty: none.\r\n";
     out += "# If a name is not a code name, the game stops and shows a message\r\n";
     out += "off=" + cfg.off + "\r\n";
+    out += "# the behaviours to turn on: names, comma-separated (BOF3X_ON, docs/mods.md 11). A mod that is on\r\n";
+    out += "# adds the behaviours it needs. A name that off= also gives stays off. Empty: only the mods' behaviours.\r\n";
+    out += "# If a name is not a behaviour of this release, the game stops and shows a message\r\n";
+    out += "on=" + cfg.on + "\r\n";
     out += "# the installed mods to keep off: their ids, comma-separated (the check boxes on the Mods tab,\r\n";
     out += "# docs/mods.md). A table-edit or disc-patch mod is on unless it is named here. Empty: none off\r\n";
     out += "mods_off=" + cfg.mods_off + "\r\n";
@@ -475,6 +482,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // installed (kOptDefault, DIV-0080's walls), opt=none none.
     // The row above the text (docs/mods.md 5): ruby= is one more layer, after
     // the ini's, when it is built for the language played.
+    std::vector<ModAsk> asks;   // the mods whose layers are offered, with the behaviours they need
+    std::string handed;         // the BOF3X_OPT the game is given (empty when the environment had one)
     if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
         char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
         const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
@@ -504,7 +513,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         // after every other layer and in the Mods tab's order, so that the
         // later mod wins a cell two of them set. opt=none is no layer at all,
         // a mod's tables too.
-        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted, language, cfg.mods_off);
+        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted, language, cfg.mods_off, &asks);
         if (!wanted.empty()) {
             std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
             if (hosted) {
@@ -523,6 +532,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
                                  "take %s (an exe part: .data ranges only bof3x.exe lays); left out of BOF3X_OPT "
                                  "for this run\n", names.c_str());
             }
+            handed = playable;
             if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
         }
     }
@@ -548,6 +558,26 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // BOF3X_OFF wins, as for the others; empty sends nothing.
     if (GetEnvironmentVariableW(L"BOF3X_OFF", nullptr, 0) == 0 && !cfg.off.empty())
         SetEnvironmentVariableA("BOF3X_OFF", cfg.off.c_str());
+
+    // DIV-0157 as amended 2026-11-12 (docs/mods.md 11): the behaviours on -
+    // the ini's on=, then the needs of each mod whose layers the game is
+    // handed (both or neither), less what BOF3X_OFF turns off (off= wins: the
+    // mod is said not to be complete). Each one a mod turns on is a line that
+    // names the mod. An environment's BOF3X_ON wins, as for the others.
+    if (GetEnvironmentVariableW(L"BOF3X_ON", nullptr, 0) == 0) {
+        std::string off_now = cfg.off;   // what the game reads: the environment's, when it has one
+        if (const DWORD n = GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0); n > 0) {
+            off_now.assign(n, '\0');
+            off_now.resize(GetEnvironmentVariableA("BOF3X_OFF", off_now.data(), n));
+        }
+        std::vector<std::string> said;
+        const std::string on = ConfigModOn(asks, handed, cfg.on, off_now, said);
+        for (const std::string& line : said) std::fprintf(stderr, "bof3x-launcher: %s\n", line.c_str());
+        if (!on.empty()) SetEnvironmentVariableA("BOF3X_ON", on.c_str());
+    } else if (!asks.empty()) {
+        std::fprintf(stderr, "bof3x-launcher: BOF3X_ON is set in the environment, so the behaviours the mods need are "
+                     "not added to it\n");
+    }
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.
@@ -1076,12 +1106,13 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
         const std::string key = Trim(line.substr(0, eq)), value = Trim(line.substr(eq + 1));
         ModInfo& m = out.back();
         size_t at = 0;
-        if (key == "requires" && !value.empty() && value[0] == '[') {
+        if ((key == "requires" || key == "needs") && !value.empty() && value[0] == '[') {
+            std::vector<std::string>& list = key == "requires" ? m.required : m.needs;
             at = 1;
             while (at < value.size()) {
                 while (at < value.size() && (value[at] == ' ' || value[at] == ',')) ++at;
                 if (at >= value.size() || value[at] != '"') break;
-                m.required.push_back(TomlString(value, at));
+                list.push_back(TomlString(value, at));
             }
             continue;
         }
@@ -1117,8 +1148,60 @@ std::string ConfigListSet(const std::string& list, const std::string& name, bool
     return out;
 }
 
+std::vector<std::string> ConfigBehavioursKnown() {
+    std::vector<std::string> out;
+    for (int i = 0; i < bof3::behaviours::kCount; ++i) out.emplace_back(bof3::behaviours::kNames[i]);
+    return out;
+}
+
+std::vector<std::string> ConfigBehavioursMissing(const std::vector<std::string>& needs,
+                                                 const std::vector<std::string>& known) {
+    std::vector<std::string> out;
+    for (const std::string& n : needs)
+        if (std::find(known.begin(), known.end(), n) == known.end()) out.push_back(n);
+    return out;
+}
+
+bool ConfigListTurnsOff(const std::string& list, const std::string& name) {
+    bool listed = false;
+    for (size_t at = 0; at <= list.size();) {
+        const size_t end = std::min(list.find_first_of(", ", at), list.size());
+        const std::string item = list.substr(at, end - at);
+        at = end + 1;
+        if (item == "-" + name) return false;   // an exclusion wins wherever it stands
+        if (item == "*" || item == name) listed = true;
+    }
+    return listed;
+}
+
+std::string ConfigModOn(const std::vector<ModAsk>& asks, const std::string& playable, const std::string& on,
+                        const std::string& off, std::vector<std::string>& said) {
+    std::string out = on;
+    for (const ModAsk& a : asks) {
+        bool handed = !a.layers.empty();
+        for (const std::string& layer : a.layers) handed = handed && ConfigListHas(playable, layer);
+        if (!handed) continue;   // its layers did not reach the game: nor do its behaviours
+        std::string cut;
+        for (const std::string& n : a.needs) {
+            if (ConfigListTurnsOff(off, n)) {
+                cut += (cut.empty() ? "" : ", ") + n;
+                continue;
+            }
+            said.push_back("the mod " + a.id + " (" + a.name + ") turns on the behaviour " + n);
+            if (!ConfigListHas(out, n)) out += (out.empty() ? "" : ",") + n;
+        }
+        if (!cut.empty())
+            said.push_back("the mod " + a.id + " (" + a.name + ") is not complete: off= turns off " + cut +
+                           ", which it needs. Its data is on");
+    }
+    return out;
+}
+
 std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted,
-                            const std::string& language, const std::string& mods_off) {
+                            const std::string& language, const std::string& mods_off, std::vector<ModAsk>* asks,
+                            const std::vector<std::string>* known) {
+    const std::vector<std::string> release = known ? std::vector<std::string>() : ConfigBehavioursKnown();
+    const std::vector<std::string>& have = known ? *known : release;
     std::string out = wanted;
     size_t count = 0;
     for (size_t at = 0; !out.empty() && at <= out.size(); ++count) {
@@ -1129,6 +1212,14 @@ std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache,
         const bool patch = m.kind == "disc-patch";
         if (m.kind != "table-edit" && !patch) continue;
         if (ConfigListHas(mods_off, m.id)) continue;   // the player's box is not ticked
+        // a behaviour this release does not have: the mod is never handed over, not even its data
+        if (const std::vector<std::string> lack = ConfigBehavioursMissing(m.needs, have); !lack.empty()) {
+            std::string names;
+            for (const std::string& n : lack) names += (names.empty() ? "" : ", ") + n;
+            std::fprintf(stderr, "bof3x-launcher: the mod %s needs behaviours that this release does not have (%s); "
+                         "left off\n", m.id.c_str(), names.c_str());
+            continue;
+        }
         const std::string first = "mod-" + m.id;
         std::vector<std::string> layers;
         if (patch) {
@@ -1168,6 +1259,7 @@ std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache,
             out += (out.empty() ? "" : ",") + layer;
             ++count;
         }
+        if (asks) asks->push_back({m.id, m.name, layers, m.needs});
     }
     return out;
 }
@@ -1422,7 +1514,7 @@ std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, co
 const char* IniVariable(std::string_view key) {
     constexpr std::pair<std::string_view, const char*> kFeeds[] = {
         {"language", "BOF3X_LANG"},       {"opt", "BOF3X_OPT"},       {"ruby", "BOF3X_OPT"},
-        {"ruby_key", "BOF3X_RUBY_KEY"},   {"psp", "BOF3X_PSP"},       {"off", "BOF3X_OFF"},
+        {"ruby_key", "BOF3X_RUBY_KEY"},   {"psp", "BOF3X_PSP"},       {"off", "BOF3X_OFF"}, {"on", "BOF3X_ON"},
         {"cache", "BOF3X_CACHE"},         {"music", "BOF3X_MUSIC"},   {"filter", "BOF3X_FILTER"},
         {"background", "BOF3X_BACKGROUND"}, {"screen", "BOF3X_PRESENT"}, {"text_speed", "BOF3X_TEXT_SPEED"},
         {"unlearned_blue", "BOF3X_UNLEARNED_BLUE"}, {"snap", "BOF3X_SNAP"}, {"wide", "BOF3X_WIDE"},

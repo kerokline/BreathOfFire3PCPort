@@ -566,7 +566,73 @@ times its width); the next battle gave the levels and the bar was right
 again. That is the mod's `exp_table` cells read by the game. A save from
 before a mod that changes the EXP table can show this once.
 
-## 6. Acceptance
+## 6a. The behaviours round's foundation, as run (2026-11-12)
+
+On `romhack/behaviours` from `main` `c14b805c` (worktree
+`D:\bof3x-runs\de1112\wt_f`, scratch `D:\bof3x-runs\de1112\f`). The
+mechanism by which a mod turns on engine behaviours, and two fixes to the
+builder. [`mods.md`](mods.md) 11 is the contract. **No game was started**: a
+state-hash proof chain was running on the machine.
+
+**What was built.**
+
+- **The engine** (`src/hook/behaviour.h`, `behaviour.cpp`): `bof3::BehaviourOn(
+  bof3::behaviours::Id::<Name>)`, `BOF3X_ON` read first in `InjectAll`, a
+  `Fatal` on a name that is no behaviour and on an ask before the read, a
+  log line a behaviour on, `BOF3X_OFF` winning; the parser's self-test on
+  names of its own. `detour.cpp`: `BOF3X_OFF` takes a behaviour name.
+- **The generated names**: `tools/ledger_switches.py` class `behaviour`, the
+  `bof3::behaviours` block of `src/hook/code_names.h` (empty: no behaviour is
+  built yet), a check that `BOF3X_ON` and `on=` are read; `tools/ledger_check.py`:
+  every behaviour the `Switch:` of exactly one `Default: off` entry, `ini:on=`
+  and `env:BOF3X_ON=` refused as `Switch:` names, and a self-test with a
+  behaviour of its own in a copy of the inventory.
+- **Mods** (`tools/mods.py`): `needs` in `[mod]` for `disc-patch` and
+  `table-edit`, `skip` in `[disc-patch]`, both checked and kept in
+  `mods.toml`; `behaviours` and `missing` in the JSON, the release's list
+  read from the shipped `src/hook/code_names.h` (`build_reuse.SHIPPED_DATA`).
+- **The launcher** (`config.cpp`, `sources_dialog.cpp`): `on=`; a mod that
+  misses a behaviour left off and greyed with the names; `BOF3X_ON` from
+  `on=` and the needs of the mods whose layers are handed over; `off=` wins,
+  said on stderr; the Mods status line names the behaviours a mod turns on.
+- **The zero-record rule** (`disc_patch_build.write_image_part`,
+  `tables.py out_of_bounds`, `tables.toml` `range`): D415. The first bounds are
+  `shop_records`' `level` 0..11 and `category` 0..4, cited to
+  `shop_mode.cpp:112`, `shop_trade.cpp:127-129` and `:296-309`. `skip`:
+  `parse_skip`.
+- **Files outside the directory** (`disc_patch_build.owned_sectors`,
+  `outside_files`, `outside_sections`; the census's `where = outside` rows; the
+  report's `outside_files`, `outside_bytes`, `outside_sectors`). Not carried.
+  The reading said the original holds zeros at those LBAs; measured, 3 of the
+  67 sectors hold the original's bytes of another file there (the patched disc
+  was rebuilt), so the test is "not the original's sector at that LBA", not
+  "zero on the original".
+- **Two defects of `main` found on the way and fixed:** `disc_patch_census.py`
+  stopped with a `NameError` at its first changed EMI (85f9bda4 moved
+  `emi_sections` to the builder and left no import); `tools/launcher_host`
+  did not build since the OS seam (C++17, and no `bof3x_os` library).
+
+**Checked.**
+
+| What | Result |
+|---|---|
+| `disc_patch_build.py selftest` | 61 checks, 0 failures (43 before): carried, refused and skipped zero records, a stocked record carried whatever its value, a later copy of a repeated field, `skip`'s refusals, the report's new sentence, an outside EMI over other bytes of the original, a non-EMI sector, one past the original's end, a sector the original has the same not counted, one file's sections read back |
+| `mods.py selftest` | 0 failures: 11 new zips (`needs` and `skip` accepted, and their refusals; `needs` on a table-edit mod accepted, on a reading-row mod refused), the header's behaviours block read, `missing` in order, `needs` and `skip` kept in `mods.toml` |
+| `config_tests` (`tools/launcher_host`, clang++ 22) | 3,692 checks, 14 failures, all of `main`: the presets' reference rows lack DIV-0214 and DIV-0215 (`presets_*.tsv`). The new ones pass: needs read; a missing behaviour leaves the mod off; `BOF3X_ON` holds two mods' needs in order, once each; `on=` first; a mod off, under another language, or with a layer cut gives none; `off=` against a need, `*`, `-name`; `on=` read, written, sent to both hosts; an environment's `BOF3X_ON` wins |
+| `ledger_check.py` (215 entries, 0 errors; the behaviours self-test's 5 cases), `ledger_switches.py --check`, `ledger_registry.py --check`, `tables.py check` (125 fields), `gen_symbols.py`, the self-tests of `type1.py`, `vcdiff.py`, `table_edit_build.py`, `loc_build.py`, `make_mod.py`; `importer.py check`, `exe_own.py check`, `exe_scan.py --accepted`, `data_diff.py check`, `data_census.py --check` and `--strict`, `reloc_census.py`, `reloc_bare.py`, `width_census.py`, `compile_shaders.py`, `gen_resample.py`, `tu_renames.py`, `tu_census.py --strict`, `retire_shells.py --strict`, `os_census.py --check` (after `analysis/os_census.tsv` was regenerated for the launcher's new sites) and `--boundary` | each exit 0 |
+| The engine's parser self-test | **built, not run**: it needs a game start (`BOF3X_SELFTEST_ONLY`) |
+| `cmake --build` for `i686` and `x86_64` | both build |
+| The real patch, offline, on a copy of the US disc-only scratch install (`de1112\f\home`, 7 table files) | before: `shop_records` 33 cells, 149 bytes; after: 0, and the layer has no `shop_records.bin`. Every other table's cells and the `dat\` chunks the same files; `report.toml` `zero_record_bytes = 149`, `zero_records = 10`, `outside_files = 15`, `outside_bytes = 137216` (67 sectors), `outside_sectors = 0` |
+| `disc_patch_census.py` on the real track | 15 outside EMIs, 67 sectors, LBAs `0x2DEE3`..`0x2DF25`: 14 at `0x80010000`, one at `0x80016000` |
+
+**Not run with the game (owed when the machine is free):** the exe host's
+self-test with `BOF3X_SELFTEST_ONLY=1` (the parser's cases run; `behaviours:
+0 of 0 on`); a start with `BOF3X_ON=NoSuchName` (the `Fatal` sentence); a start
+with `BOF3X_OFF` naming a behaviour (none exists yet, so this waits for the
+first one); `dialog_test.py` with a mod that has `needs` (the greyed row and
+the status line); the state-hash routes with the rebuilt mod layer off and on
+(the layer lost only the `shop_records` cells, which no shop of the original
+reads).
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
   synthetic.
@@ -581,6 +647,241 @@ before a mod that changes the EXP table can show this once.
   the census row is the reference, not model memory).
 - The owner plays it. Which changes to look for is the owner's to say from
   the hack's readme.
+
+## 6b. The behaviours, as built
+
+**DoubleHitSwords (DIV-0216)**, on `romhack/b1-swords` (worktree
+`D:\bof3x-runs\de1112\wt_b1`). The two hooks of BATTLE section 3 were read
+from the patched listing itself, not only from the reading, and agree with
+it: in `BattleAction_EnterKind` a member's kind-1 command with weapon 6, 9 or
+0x18 becomes kind 4 with action id 0x77; in `BattleAction_AbilityCheck` the
+cost of ability 0x77 for such a member is 0, stored where both cost paths
+meet. The weapon byte the hack reads is the one Capcom's own battle code
+reads (`PartyMember::weapon`). Ours: one test (`DoubleHitSword`) and two
+guarded sites in `src/game/battle/battle_action.cpp`; off, both functions
+are unchanged. The hack has no dragon-form or status test, so automatic,
+confused, auto-battle and counter attacks by a member with one of the swords
+convert too; mirrored, and written in the entry. `tools/ledger_check.py`'s
+behaviours self-test now leaves the build's own behaviours out of its
+inventory (with the first real one in, every fixture case read it as "no
+ledger entry"). No game was started. Owed: the hosted `battle_actions`
+shadow with the behaviour off (it must still pass); a fight under
+`BOF3X_ON=DoubleHitSwords` with the mod's data and one of the three swords
+(the attack runs as ability 0x77, costs no AP, and - unverified, the data's
+or the animation's - hits twice); the same fight off, as before.
+**`AllyAnywhere` (DIV-0217, branch `romhack/b2-field`).** Four sites, each
+behind the behaviour, each the original's path when it is off:
+`Tactics_Top` (`field_ability_2.cpp`, the refused member change sets two
+flags, plays `0x104` and closes Tactics by the cancel's stores, now one
+helper `TacticsClose`), `FieldMenu_TopBarInput` (`field_menu.cpp`, the
+cancel test passes once on the first flag), `Menu_DrawButtonRow`
+(`menu.cpp`, verb `0x12` not greyed while `Game_Mode` is 3, the field
+menu's mode - the hack changed only START / STATUS's copy, and set 7 is the
+only one of the nine sets with verb `0x12`, read from `Menu_ButtonSets`),
+and the field's idle frame: `FieldIdle_Tick` (`field_7.cpp`, declared in
+`field_idle.h`), which `Field_ModeTailRun` calls when no tail is armed - the
+hook point of the hack's slot-0 chain, documented case by case in the hack's
+order so that `CampMasters` and `TownWarp` add their cases there. The Ally
+case raises `Field_Request` 6, the value our `Party_Join` raises for a full
+party (the PSX request byte takes the same 6 from both). Verified against the
+patched listings: the readings agree with each other and with the disc on
+every point; the one thing they left open (the PC's request number) is 6 on
+both. The flags are statics of ours: not saved, cleared in `GameMode_Start`,
+in the quicksave as participant `BEHAVIOURS` (version 1), outside the state
+hash. Found on the way: `ledger_check.py`'s behaviours self-test failed as
+soon as one real behaviour existed (its inventory kept the release's
+behaviours beside the test's); it now holds the test's alone.
+
+**`SmokeSkill` (DIV-0218, branch `romhack/b2-field`).** Two sites behind
+the behaviour: `FieldAbility_NoEffect` (`field_ability.cpp`, handler 7,
+ability `0x50`'s alone: the counter to 128, answer 1) and the head of
+`Field_EncounterDue` (`field_4.cpp`: counter not 0 - lower it, step count 0,
+`0x10C` at 0, answer 0). Verified against the patched listings: the
+readings agree, and the disc settles the details - the counter counts
+calls, the call that takes it to 0 is still "no encounter", and the
+original's bit-5 zone-counter clear is skipped while it runs. The binary has
+two calls of the function (`0x52DD97` in `Field_LeaderWalk`, the world map,
+whose yes is the "(!)" marker; `0x52E8E7` in `Field_LeaderStepLands`),
+both once a step. So the hack's code holds the world map's "(!)" off too:
+the readme's "(!)" exception has no code behind it, unless it means a fight
+a script starts, which never asks the function - the owner's to settle in
+play. The counter joins the `BEHAVIOURS` record (version 2), is cleared in
+`GameMode_Start`, and is outside the state hash. Off, Smoke from the menu
+still answers 4: `0x107`, no AP taken.
+
+Each behaviour is a guarded change of ours, off by default (`mods.md` 11.6),
+with its own ledger entry and commit. Each was read again from the patched
+and the original listings before it was coded; where this differs from the
+reading (`D:\bof3x-runs\de1112\reading`), it says so.
+
+**`EasierMasters` (DIV-0219; branch `romhack/b3-small`).** Two sites:
+`Area68_ChoiceAskCount` (`src/game/area/area_68.cpp`), the weapons count's
+threshold 15 -> 10 (AREA068 `0x801F38E8`, the compare's immediate; the
+count is a byte, `Inventory_CountUsed` returns `unsigned char`, as the
+PSX's `andi 0xff`); and `Area91_State0CheckItem57`
+(`src/game/area/area_91.cpp`), the item `0x57` count skipped and the "held"
+path taken when the party list's first byte is 6 or 3 (AREA091
+`0x801F2DFC`). The reading's "always passes" holds, and why was measured: the
+call that replaces the count is US `0x8015C088`, `ScriptFlags_Set40`, which
+returns a non-zero pointer in `v0` (`v0 = 1` is set in the call's delay slot
+and overwritten), so the branch is always taken; the path's own call then
+runs it again, two ORs of the same bits. The other first bytes' path is
+unchanged on the disc and in ours. The masters' names are the readme's;
+which area is whose is the reader's inference (DIV-0219, unconfirmed).
+
+**`VillageCountPlural` (DIV-0220).** `ListHeading`
+(`src/game/core/title.cpp`), the one heading both lists draw: under a
+written group 14 the slot is 1 (the plural) for every count. The reading
+holds: in COMMU05 section 7 both lists lost their count-of-one test, and
+the one word each passes equals that list's original plural (strings
+compared, not printed: `D:\bof3x-runs\de1112\b3\cmpstr.py`); the singulars
+are gone from the section. The PC already draws one Chinese glyph whatever
+the count, so the change is only visible under a Western layer, which
+writes the five words (an `en-US` start logs `5 of 5 village words`). No
+data change would do it instead: the mod's layer is built from the hybrid
+disc, whose COMMU05 is the original's.
+
+**`ShortSkillLockout` (DIV-0221).** `CountDown`, which `Game_ClockTick`
+(`src/game/core/transition.cpp`) calls for both countdowns: the frames
+byte's reload 0x1D -> 3 (GAME section 0, `0x80198DD4` and `0x80198E90`, one
+in each countdown's inlined copy), so a countdown second is 4 frames, not
+30. The reading holds. The counters are `ModeFlow_CountdownA` and
+`Rest3c_Byte660`, set to 5 hours by `Celerity_End` and
+`Effect_DoubleDamage` and read by `Skill_CanUse` for abilities `0x3E` and
+`0x15`: the name fits and is kept. Not the readme's faster faerie village:
+`src/game/community/` times the village by `Game_BattleCount` and names
+neither countdown. `Game_ClockTick`'s `// original` marker, lost in the
+source-layout move (6cddd782 deleted it with the shell it was left in), is
+back above the function.
+
+**`DemoSkipButtons` (DIV-0222).** `Title_StateDemo`
+(`src/game/core/title.cpp`): the mask `0x800` becomes `0x8F0`, Start or any
+face button (GAME section 1, `0x801D0F54`, `0x9FF` -> `0x8F0`). The US
+release's `0x9FF` adds Select and the four shoulder buttons; the PC tests
+Start alone. `Input_Pressed` carries the PlayStation's bits on the PC, and
+these are buttons rather than Config lines, so the mask does not go through
+`Sigma` (the Start test does not either).
+
+**Owed with the game** (none was started: a proof chain was running): a
+start with `BOF3X_ON=EasierMasters,VillageCountPlural,ShortSkillLockout,DemoSkipButtons`
+(four `behaviour ON` lines, `behaviours: 4 of 4 on`); the fuzz rows of the
+five functions' groups (`area_w1f_fuzz.cpp`, `area_w2c_fuzz.cpp`,
+`rest_4e_fuzz.cpp`, `mode_flow_fuzz.cpp`, `title_states.cpp`) with the four
+off (0 mismatches expected) and on (mismatches in
+the guarded functions only); the state-hash routes off (equal to the
+baseline); and in play, each on: area 68's choice with 10 to 14 weapons held,
+area 91's state 0 without the tiara, a village list at a count of one under
+`en-US`, a lockout of ability `0x15` or `0x3E` ending in about 40 minutes of
+play clock, and the demo ended by a face button.
+
+**`CampMasters` (DIV-0223; branch `romhack/b4-masters`).** The design and
+its measurements are [`camp-masters.md`](camp-masters.md). The reading holds
+on every point it makes, re-read from the patched listings (SHOP
+`0x801E2394`, GAME `0x801AE340`, `0x801AE39C`, `0x801AE984`): the list's
+confirm stores the entry + 1 and takes the cancel path; the idle hook arms
+tail 4 with the entry and lets the chain go on; states 1 and 3 save and land,
+then put back, the `0x80010000` block and the standing descriptor's `+0x34`.
+Measured beyond it: the 14 hidden files' text sections equal the home areas'
+blocks for all 17 entries, and their tables are **whole** copies of the home
+tables entry for entry (not trimmed); master id = list entry, which our own
+home-area triggers confirm (they arm tail 4 with the same numbers). The PC's
+swap is the text block alone - the kind-0 chunk of tag 0 of the home area's
+DAT through `LoadDatFile`'s precedence (language, optional layers, the
+reading row's side chunk; `DatLoad_TextBlock*`, `dat_load.cpp`), the
+covered bytes saved and put back - because every area's handlers are in the
+image: `CommitChoice` and DIV-0140's `InButtonArea` read the home area while
+its text is in place. The five handlers each master's messages raise touch
+only the message word, the talk's bytes and global state (zenny, inventory,
+story bytes): 14 masters work as they are; masters 3, 5 and 9 have a leave
+pose that writes `Sprite_Objects[byte 0x90384B]`, a script variable that
+names the master's sprite only in its own area - skipped during a camp talk
+(the hack, which leaves SISYOU alone, writes another object there). Sites:
+`ShopBrowse_Choose` (`shop_browse.cpp`), `Field_ModeTailRun` (the kind read
+once, the original's single jump), `FieldIdle_Tick`, `FieldTail_LoadBank`
+states 1 and 3 and the swaps (`field_7.cpp`, `field_idle.h`),
+`MasterScreen_State6Leave` (`master_quit.cpp`), `CommitChoice`
+(`msg_box.cpp`), `InButtonArea` (`text_draw.cpp`). The statics and the saved
+bytes join `BEHAVIOURS` (version 3), are cleared in `GameMode_Start`, and a
+record taken in a camp talk is refused with the behaviour off. **Owed with
+the game:** the fuzz rows of `field_e2_fuzz.cpp` (`FieldTail_LoadBank`),
+`field_modes_fuzz.cpp` (`Field_ModeTailRun`), `rest_2c_fuzz.cpp`
+(`ShopBrowse_Choose`), `rest_2d_fuzz.cpp` (`MasterScreen_State6Leave`),
+`item_use_fuzz.cpp` (the two commits) off (0 mismatches) and on (the
+confirm of `ShopBrowse_Choose` alone); the state-hash routes off; in play
+under `BOF3X_ON=CampMasters` on an `en-US` install with a save that has met
+several masters: each of a plain master (0, home area 3), area 37's (11..14),
+master 3, 5 or 9 (the leave pose) and master 10 or 16 (an item taken) talked
+to from the list in another area - the home's lines, the choices answered,
+the skills or the apprentice changed, the field back with the standing
+area's own dialogue and choices (talk to an NPC after); a furigana layer on
+(the standing area's row back after); a quick-save and quick-load inside a
+talk; and the same list off (the detail page, as before).
+
+## 6c. The behaviours' proof with the game, as run (2026-11-12)
+
+At `romhack/behaviours` `63e9277a`, on a hands-off machine: one game at a
+time, no build or other heavy job beside a run. Scratch root
+`D:\bof3x-runs\de1112\proof` (scripts `build.sh`, `prep.sh`, `st.sh`,
+`fuzz_on.sh`, `chain.sh`, `mod.sh`, `live.sh`, the last four run in that
+order by `all.sh`; copies of `il1112`'s and `dp1111\run_c.sh`'s method).
+Both widths were built before the first run; the baseline is `main`
+`c14b805c`'s build at `D:\bof3x-runs\il1112\wt\build` (rebuilt: no work to
+do). Ini-less launcher copies `Lmain`, `Lnew`, `Lnew64`; a PC game folder of
+our own (`g`; `DAT`, `BGM`, `SND` junctioned, read only); the branch's
+`exe_tables.py` writes the same `base\exe` as `main`'s (`caches\pc_new`
+against `pc_main`: only the date line differs). 01:50 to 03:53.
+
+| Check | Result | Output |
+|---|---|---|
+| 1. The exe host's self-test, behaviours off | exit 0 at both widths, no `Fatal`, no `MISMATCHES` above 0. 10,376 log lines against `main`'s 10,373: the three more are `behaviours: 0 of 8 on`, `behaviours self-test: 21 checks passed` and the `BEHAVIOURS` quicksave participant (every other line the same, numbers folded) | `st\exe32_main.log`, `st\exe32_new.log`, `st\exe64_new.log` |
+| 1. The hosted shadow suite, `BOF3X_SHADOW='*'`, 32-bit in the folder's `BOF3.exe` | exit 0 in 927 s; **916 `MISMATCHES` lines, none above 0**. The reference is `STATUS.md`'s 916 (the Linux round at `main`'s tip); `main`'s suite was not run again | `st\hosted_new.log` |
+| 2. `BOF3X_ON=NoSuchName` | exit 3, the `Fatal` naming `"NoSuchName"` and the release's 8 | `st\on_nosuch.log` |
+| 2. `BOF3X_ON=` the eight (self-test only) | exit 0 at both widths: eight `behaviour ON` lines, `behaviours: 8 of 8 on` | `st\on_all8.log`, `st\on_all8_64.log` |
+| 2. `BOF3X_ON=SmokeSkill BOF3X_OFF=SmokeSkill` | exit 0; `behaviour OFF SmokeSkill ... off wins`, `0 of 8 on` | `st\on_off_smoke.log` |
+| 2. The parser's self-test | `behaviours self-test: 21 checks passed` in every start above | as above |
+| 3. The state hash, behaviours off, ten routes (`bof3x.exe` 32-bit, `BOF3X_OPT=none BOF3X_LAYERING=0`; `main` twice, the branch once) | **identical on every compared tick of all ten** (combat 2,561, shop 3,137, caughFish 3,841, field_menu 1,409, menu_screens 1,729, dragonTransform 4,289, cutsceneAndNue 7,361, masterAndManillo 5,505, worldMapAndAreaTransition 2,113, whelpBoss 13,185); every run `recipe done`, no `Fatal`; the branch's logs say `0 of 8 on`. No recheck was needed | `chain.log`, `sh\check_<route>.txt` |
+| 4. The hosted fuzz, the eight on | a suite stops at the first group that mismatches, so: the 19 groups that hold a guarded function, each alone, then `'*'` less those 19. **The rest: exit 0, 876 `MISMATCHES` lines, none above 0.** The 19: below | `fuzz_on\status.txt`, `fuzz_on\A_<group>.log`, `fuzz_on\B1.log` |
+| 5. The mod rebuilt by the branch's builder, `needs` naming the eight (on a copy of `dp1111\home`) | `mods.py add` replaced it (`behaviours` the eight, none missing), `build` exit 0 in 91 s. `report.toml`: `zero_record_bytes = 149`, `zero_records = 10`, `outside_files = 15`, `outside_bytes = 137216`, `outside_sectors = 0`. Cells against the pre-fix layer: `shop_records` 33 cells, 149 bytes before, **0 after**, and no `shop_records.bin`; the other six tables' cells and bytes the same (1,176 cells, 2,259 bytes); the `dat\` files the same bytes | `mod\status.txt`, `mod\cells.txt`, `mod\build.log` |
+| 5. The exe host's self-test started by the branch's launcher, no `BOF3X_OPT` or `BOF3X_ON` in the environment (`language=en-US`) | exit 0: both layers taken (optional layers 2 and 3), `6 tables, 1176 cells, 2259 bytes`, `38 ranges, 64 bytes`; the launcher's eight `the mod definitive (Definitive Edition) turns on the behaviour <Name>` lines, `BOF3X_ON` the eight, **`behaviours: 8 of 8 on`**. `mods_off=definitive`: no mod layer, `0 of 8 on`, the mapped `.data` hash 5d's with no layer | `mod\on.log`, `mod\on.out`, `mod\off.log` |
+| 5. `dialog_test.py` | **not run**: it finds the launcher's windows by title (`FindWindowW(None, ...)`), not by the process it starts | - |
+| 6. Live, the mod on through the launcher's hand-over, the US disc-only copy, `--no-front` | `combat`: `recipe done at recipe frame 2620`, 100 s; `menu_screens` (a start, a save loaded, each top-bar screen): `recipe done at recipe frame 1770`, 75 s. Both: layers 2 and 3 taken, `8 of 8 on`, no `Fatal`, no crash. A smoke test only: the routes were recorded without the mod. No attract run to the title alone was made | `live\status.txt`, `live\combat.log`, `live\menu_screens.log` |
+
+**The fuzz with the behaviours on, group by group.** Mismatches, each in a
+function a behaviour changes, so expected: `area_w1f`
+`Area68_ChoiceAskCount` (122 rounds, EasierMasters), `area_w2c`
+`Area91_State0CheckItem57` (1,618, EasierMasters), `title_states`
+`Title_StateDemo` (214 of 34,000, DemoSkipButtons), `mode_flow`
+`Game_ClockTick` (287, ShortSkillLockout), `rest_2d` `FieldAbility_NoEffect`
+(6,000, SmokeSkill), `rest_2f` `Tactics_Top` (618, AllyAnywhere), `rest_2c`
+`ShopBrowse_Choose` (629, CampMasters). No other function of these groups
+mismatched. 0 mismatches in `battle_actions`, `event_ops`, `event_leader`,
+`field_e2`, `field_modes`, `menu_lists`, `menu_windows`, `menu_draw_helpers`,
+`rest_2g`, `rest_4f`, `rest_4e`, `item_use`: for CampMasters'
+`FieldTail_LoadBank`, `Field_ModeTailRun`, `MasterScreen_State6Leave` and
+the two commits, and AllyAnywhere's `FieldMenu_TopBarInput`, the guarded
+paths read statics of ours that a self-test leaves clear; for
+VillageCountPlural's `ListHeading`, the plural path is under a written group
+14, and the PC folder has no Western layer; for AllyAnywhere's
+`Menu_DrawButtonRow` (verb `0x12` under `Game_Mode` 3), why no row reaches
+it was not traced. No unexpected group mismatched (B1 exit 0). D396 does not
+apply: no switch was off.
+
+**Findings.**
+
+- **The `battle_actions` fuzz does not reach DoubleHitSwords** (0
+  mismatches with it on). `DoubleHitSword` reads the party record's
+  `weapon` (`Party(actor)`); the fuzz varies the party and enemy objects
+  (`ObjTrio_addr`), the actor byte and the kind, not the records, so no row
+  has weapon 6, 9 or `0x18`. The behaviour's only proof is still the fight in
+  play. A gap of the harness, not a failure.
+- **The `event_ops` fuzz never runs, on `main` too.** `event_ops::SelfTest`
+  (`src/game/field/event_ops_fuzz.cpp`) has no caller at the branch's tip or
+  at `c14b805c` (`git grep`), so `BOF3X_SHADOW=event_ops` runs nothing, and
+  `Field_EncounterDue` (SmokeSkill's second site) has no fuzz. `main`'s gap;
+  not fixed here.
+
+Still owed: `dialog_test.py` with a mod that has `needs` (once it finds its
+window by process), and every check in play that 6b lists.
 
 ## 7. Owner calls (answered 2026-11-11, after group M)
 

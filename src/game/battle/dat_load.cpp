@@ -528,6 +528,78 @@ bool DatLoad_ReadingRowHolds(const unsigned char* p) {
     return false;
 }
 
+// --- DIV-0223 CampMasters: another area's text block (dat_load.h) -------------
+
+namespace {
+
+// The chunks of a text block: tag 0, kind 0 (the block), 19 (DIV-0203's
+// corrected block) and 18 (the reading row's side chunk).
+bool TextBlockChunk(const ChunkHeader& h) { return h.tag == 0 && (h.kind == 0 || h.kind == 19 || h.kind == 18); }
+
+std::uint32_t g_text_block_bytes;
+
+void MeasureTextBlock(void*, const ChunkHeader& h, std::uint8_t*) {
+    if (!TextBlockChunk(h) || h.kind == 18 || h.size <= 0) return;
+    if (static_cast<std::uint32_t>(h.size) > g_text_block_bytes) g_text_block_bytes = static_cast<std::uint32_t>(h.size);
+}
+
+void LandTextBlock(void* ctx, const ChunkHeader& h, std::uint8_t* payload) {
+    if (TextBlockChunk(h)) TakeChunk(ctx, h, payload);
+}
+
+// The standing area's tag-0 side chunk while another area's text is in place.
+ReadingRowSide g_text_side_aside = {0, 0, nullptr, 0, 0, 0, nullptr, 0, 0};
+bool g_text_side_held;
+
+// LoadDatFile(file_index) with its chunks handed to `fn`; the handler put back
+// after (the walk is synchronous: File_LoadDone is a constant 1 on the PC).
+void WalkTextBlock(int file_index, dat_cache::ChunkFn fn) {
+    const dat_cache::ChunkFn was = dat_load::g_take;
+    dat_load::g_take = fn;
+    LoadDatFile(file_index);
+    dat_load::g_take = was;
+}
+
+}  // namespace
+
+std::uint32_t DatLoad_TextBlockBytes(int file_index) {
+    g_text_block_bytes = 0;
+    WalkTextBlock(file_index, MeasureTextBlock);
+    return g_text_block_bytes;
+}
+
+void DatLoad_TextBlockLand(int file_index) {
+    if (g_text_side_held) bof3::Fatal("DIV-0223: a second text block over the arena before the first was put back");
+    // The standing area's side chunk out of the key's reach, so that the
+    // landing kind 0 retires nothing of it (ReadingRowDrop).
+    ReadingRowSide& s = g_reading_row[0];
+    g_text_side_aside = s;
+    g_text_side_held = true;
+    s.data = nullptr;
+    s.size = s.n = s.table_hash = 0;
+    s.retired = nullptr;
+    s.retired_size = s.retired_n = 0;
+    WalkTextBlock(file_index, LandTextBlock);
+}
+
+void DatLoad_TextBlockPutSideBack() {
+    if (!g_text_side_held) return;
+    ReadingRowSide& s = g_reading_row[0];
+    // The landed file's side chunk (if any) becomes the retired copy, freed
+    // at the next retirement as any retired one; the set-aside chunk's own
+    // retired copy, unread since the swap, is freed now.
+    unsigned char* const landed = s.data;
+    const std::uint32_t landed_size = s.size, landed_n = s.n;
+    std::free(s.retired);
+    std::free(g_text_side_aside.retired);
+    s = g_text_side_aside;
+    s.retired = landed;
+    s.retired_size = landed_size;
+    s.retired_n = landed_n;
+    g_text_side_aside = {0, 0, nullptr, 0, 0, 0, nullptr, 0, 0};
+    g_text_side_held = false;
+}
+
 namespace {
 
 // BOF3X_OPT into g_opt, refusing - loudly, at start-up - what the walk could

@@ -144,6 +144,13 @@ struct Config {
     // refuses a name it does not read (detour.cpp InjectReport). Not a
     // hosted-only switch: both hosts read it.
     std::string off;
+    // DIV-0157 as amended 2026-11-12 (docs/mods.md 11): BOF3X_ON's list, the
+    // behaviours to turn on - changes of ours that are off unless asked (the
+    // `behaviours` block of src/hook/code_names.h) - in off='s list syntax.
+    // The launcher adds the needs of every mod it hands over after these
+    // (ConfigModOn). Empty (the default): only the mods' needs. Kept as
+    // written; the game refuses a name that is not a behaviour of this release.
+    std::string on;
     // DIV-0157 as amended 2026-11-11 (docs/disc-patch-round.md 4): the ids of
     // the installed mods the player turned off on the Mods tab (the check box
     // at the left of a row), comma-separated. A mod of a kind that is on or
@@ -431,7 +438,35 @@ bool ConfigCheckEnvironmentLanguage(std::string& error);
 struct ModInfo {
     std::string id, name, version, kind, base;
     std::vector<std::string> required;   // mod.toml's requires
+    std::vector<std::string> needs;      // mod.toml's needs: the behaviours it turns on (docs/mods.md 11)
 };
+
+// The behaviours this release has: src/hook/code_names.h's `behaviours` block,
+// the list the game is built with (docs/mods.md 11).
+std::vector<std::string> ConfigBehavioursKnown();
+// The names of `needs` that `known` does not hold, in `needs`' order.
+std::vector<std::string> ConfigBehavioursMissing(const std::vector<std::string>& needs,
+                                                 const std::vector<std::string>& known);
+
+// A mod whose layers ConfigModLayers added, and the behaviours it needs.
+struct ModAsk {
+    std::string id, name;
+    std::vector<std::string> layers, needs;
+};
+
+// DIV-0157 as amended 2026-11-12 (docs/mods.md 11): BOF3X_ON for the game.
+// `on` (the ini's on=, kept as written) first, then the needs of every mod of
+// `asks` whose layers are all in `playable` (the BOF3X_OPT the game is handed:
+// a mod's behaviours go with its layers, both or neither), in `asks`' order,
+// each name once. A need `off` turns off (BOF3X_OFF's syntax: a name, `*`,
+// `-name`) is left out - off= wins - and `said` gets the sentence that the mod
+// is not complete. Every behaviour a mod turns on gets a line in `said` that
+// names the mod (the Mods tab's status line says the same).
+std::string ConfigModOn(const std::vector<ModAsk>& asks, const std::string& playable, const std::string& on,
+                        const std::string& off, std::vector<std::string>& said);
+// Whether `list` (BOF3X_OFF's syntax) turns `name` off: named, or `*` with no
+// `-name` (an exclusion wins wherever it stands; detour.cpp NameListed).
+bool ConfigListTurnsOff(const std::string& list, const std::string& name);
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 
@@ -450,8 +485,12 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 // mod whose layers the cache does not hold (not built) is left off with a
 // line; so is one whose layers would pass the game's 16. A layer `wanted`
 // names already is not added twice.
+// A mod that needs a behaviour `known` (null: ConfigBehavioursKnown) lacks is
+// left off with a line that names it (docs/mods.md 11): never handed over.
+// `asks`, when given, gets each mod whose layers were added, with its needs.
 std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted,
-                            const std::string& language = std::string(), const std::string& mods_off = std::string());
+                            const std::string& language = std::string(), const std::string& mods_off = std::string(),
+                            std::vector<ModAsk>* asks = nullptr, const std::vector<std::string>* known = nullptr);
 // `list` (names, comma-separated, spaces around a name allowed) names `name`.
 bool ConfigListHas(const std::string& list, const std::string& name);
 // `list` with `name` added at its end (on = false: taken out wherever it is).

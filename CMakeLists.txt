@@ -162,6 +162,7 @@ set(_dll_sources
   src/common/cache_manifest.cpp
   src/hook/bind.cpp
   src/hook/detour.cpp
+  src/hook/behaviour.cpp
   src/hook/exe_image.cpp
   src/hook/exe_own.cpp
   src/hook/calltrace.cpp
