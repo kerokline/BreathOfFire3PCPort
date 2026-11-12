@@ -12,6 +12,7 @@
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/field/field_4_callees.h"
+#include "game/field/field_idle.h"
 #include "game/field_e1_callees.h"
 #include "game/field_event.h"
 #include "game/field_event_callees.h"
@@ -22,6 +23,7 @@
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1788,7 +1790,21 @@ extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_a
 // back - and 0x535C50 (group V2's) for every member at its 0x7E06E0 position.
 // As the original has it: the member count is read again after each call,
 // and the answer is the last call's al.
+//
+// DIV-0218 SmokeSkill. The Definitive Edition romhack (evidence: the patched
+// US disc, GAME.EMI section 0, this function's twin 0x801B3EB0 entered by a
+// jump to the new 0x801AE2C8): before anything else, with Smoke's counter
+// (field_idle.h) not 0, the counter goes down by one, Field_StepCount is set
+// to 0, sound 0x10C plays when the counter reaches 0, and the answer is 0 -
+// no encounter. One call a check: both callers (Field_LeaderWalk's world-map
+// step, Field_LeaderStepLands' step elsewhere) ask once a step.
 extern "C" unsigned char __cdecl Field_EncounterDue(void) {
+    if (bof3::BehaviourOn(bof3::behaviours::Id::SmokeSkill) && field_idle::g_smoke_steps != 0) {
+        field_idle::g_smoke_steps = static_cast<std::uint16_t>(field_idle::g_smoke_steps - 1);
+        Field_StepCount = 0;
+        if (field_idle::g_smoke_steps == 0) SH_CALL(Sound_PlayEffect)(0x10C);
+        return 0;
+    }
     if (Byte(::bof3::Img(kFlagsLo)) & 0x20) event_ops::SetWord(event_ops::At(::bof3::Img(ObjTrio_addr) + 0x134), 0);
     const unsigned char* const zone = event_ops::g.zone_at(ObjTrio[0].x_whole, ObjTrio[0].z_whole);
     if (zone[4] == 0) {

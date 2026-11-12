@@ -669,6 +669,45 @@ shadow with the behaviour off (it must still pass); a fight under
 `BOF3X_ON=DoubleHitSwords` with the mod's data and one of the three swords
 (the attack runs as ability 0x77, costs no AP, and - unverified, the data's
 or the animation's - hits twice); the same fight off, as before.
+**`AllyAnywhere` (DIV-0217, branch `romhack/b2-field`).** Four sites, each
+behind the behaviour, each the original's path when it is off:
+`Tactics_Top` (`field_ability_2.cpp`, the refused member change sets two
+flags, plays `0x104` and closes Tactics by the cancel's stores, now one
+helper `TacticsClose`), `FieldMenu_TopBarInput` (`field_menu.cpp`, the
+cancel test passes once on the first flag), `Menu_DrawButtonRow`
+(`menu.cpp`, verb `0x12` not greyed while `Game_Mode` is 3, the field
+menu's mode - the hack changed only START / STATUS's copy, and set 7 is the
+only one of the nine sets with verb `0x12`, read from `Menu_ButtonSets`),
+and the field's idle frame: `FieldIdle_Tick` (`field_7.cpp`, declared in
+`field_idle.h`), which `Field_ModeTailRun` calls when no tail is armed - the
+hook point of the hack's slot-0 chain, documented case by case in the hack's
+order so that `CampMasters` and `TownWarp` add their cases there. The Ally
+case raises `Field_Request` 6, the value our `Party_Join` raises for a full
+party (the PSX request byte takes the same 6 from both). Verified against the
+patched listings: the readings agree with each other and with the disc on
+every point; the one thing they left open (the PC's request number) is 6 on
+both. The flags are statics of ours: not saved, cleared in `GameMode_Start`,
+in the quicksave as participant `BEHAVIOURS` (version 1), outside the state
+hash. Found on the way: `ledger_check.py`'s behaviours self-test failed as
+soon as one real behaviour existed (its inventory kept the release's
+behaviours beside the test's); it now holds the test's alone.
+
+**`SmokeSkill` (DIV-0218, branch `romhack/b2-field`).** Two sites behind
+the behaviour: `FieldAbility_NoEffect` (`field_ability.cpp`, handler 7,
+ability `0x50`'s alone: the counter to 128, answer 1) and the head of
+`Field_EncounterDue` (`field_4.cpp`: counter not 0 - lower it, step count 0,
+`0x10C` at 0, answer 0). Verified against the patched listings: the
+readings agree, and the disc settles the details - the counter counts
+calls, the call that takes it to 0 is still "no encounter", and the
+original's bit-5 zone-counter clear is skipped while it runs. The binary has
+two calls of the function (`0x52DD97` in `Field_LeaderWalk`, the world map,
+whose yes is the "(!)" marker; `0x52E8E7` in `Field_LeaderStepLands`),
+both once a step. So the hack's code holds the world map's "(!)" off too:
+the readme's "(!)" exception has no code behind it, unless it means a fight
+a script starts, which never asks the function - the owner's to settle in
+play. The counter joins the `BEHAVIOURS` record (version 2), is cleared in
+`GameMode_Start`, and is outside the state hash. Off, Smoke from the menu
+still answers 4: `0x107`, no AP taken.
 
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
