@@ -22,6 +22,7 @@
 #include "game/gfx_clut.h"
 #include "game/cheats.h"
 #include "game/psp_code.h"
+#include "game/solo/solo.h"
 #include "input/button_tests.h"
 #include "input/sigma.h"
 #include "game/gfx_flush.h"
@@ -992,6 +993,7 @@ namespace bof3 {
 void InjectAll() {
     Behaviour_Read();           // before anything can ask: BOF3X_ON, the mod behaviours (docs/mods.md 11; an ask
                                 // before it is a Fatal, behaviour.h), and its parser's self-test
+    solo::Solo_Read();          // DIV-0228: BOF3X_SOLO, after Behaviour_Read (it asks SoloCharacter), and its self-test
     rdata::Verify();            // first: the engine's copies of .rdata's constants against BOF3.exe's, before any fuzz reads one
     ExeOwn_CheckAtStart();      // the engine's own .data bytes (exe_own.h) against BOF3.exe's, while .data is still the PC's
     DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
