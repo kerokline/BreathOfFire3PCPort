@@ -106,6 +106,7 @@ rule ([`README.md`](README.md)) here too.
 | I59 | Two battle repairs from the review of Red Herring's notes: Escape's enemy agility (it reads the wrong objects, and on the PC leftovers from earlier fights) and the skills' turn priority (the learn difficulty removes it) | game behaviour / battle | HIGH | open 2026-11-08 (the owner): put off, nothing built |
 | I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | run 2026-11-09 on `source-layout/stage-c`, before stage D, at the owner's word; the written-in self-tests, the mover and I48 left |
 | I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
+| I65 | The title menu's third row as a custom menu of quality-of-life toggles, reachable from inside the game too | menu / uplift | not assessed | open 2026-11-12 (the owner, answering the New Game round's question on the row); nothing designed |
 
 ---
 
@@ -1558,6 +1559,10 @@ the sibling has. Two pieces, in the owner's order:
 
 ### Outcome
 _(2026-10-05) open; researched, deferred to the localisation rework._
+_(2026-11-12) staged as a round at the owner's word:_ [`new-game-round.md`](new-game-round.md) -
+both pieces, the options screen back in the New Game sequence with them, the grid from the chosen
+language's disc (the Chinese skips the name screen), names of five, on by default with switches.
+Nothing built.
 
 ## I35 — The music host suite on the owner's machine
 
@@ -2604,3 +2609,13 @@ _(2026-11-10) open; nothing built._
 
 ### Outcome
 _(2026-11-11) open; nothing built._
+
+## I65 — The title menu's third row as a custom menu of quality-of-life toggles
+
+**Ask (2026-11-12, the owner, answering the New Game round's question A2):** "My intention is to later change the start screen config menu into a custom menu with QoL toggles accessible from within the game. For now though, it can stay a copy of the regular config screen."
+**Kind:** menu / uplift. **Feasibility:** not assessed.   **Gated on:** the New Game round ([`new-game-round.md`](new-game-round.md)), which puts the regular options screen back in the New Game sequence and so frees the title's third row (the port's own, DIV-0014) for another use.
+
+Nothing is designed: which toggles, whether they are the launcher's switches or a set of their own, and where "inside the game" the menu opens are the owner's to say.
+
+### Outcome
+_(2026-11-12) open; nothing built._
