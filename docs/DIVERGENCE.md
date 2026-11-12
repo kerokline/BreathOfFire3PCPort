@@ -12037,6 +12037,31 @@ designed in rather than bolted on.
   with the box ticked and none with it not ticked (disc-patch-round.md 5d).
   **No route run and not played by the owner.** Languages: a `disc-patch`
   mod is for `en-US` text (the US disc is the one disc its builder knows).
+- **Amended 2026-11-12 (the behaviours round's foundation;
+  [`mods.md`](mods.md) 11, [`disc-patch-round.md`](disc-patch-round.md) 6a):**
+  a `disc-patch` or `table-edit` mod may name **the behaviours it needs from
+  the engine**, `needs = ["<Name>", ...]` in `[mod]`. A behaviour is a change
+  of ours under its own ledger entry, `Switch: <Name>`, `Default: off`;
+  the game turns it on only when `BOF3X_ON` names it (`src/hook/behaviour.cpp`,
+  read by both hosts first in `InjectAll`; a name that is no behaviour of the
+  release stops the game, each one on is logged, one `BOF3X_OFF` also names
+  stays off). The launcher composes `BOF3X_ON` from the ini's new `on=` and
+  the needs of every mod whose layers it hands over - both or neither - and
+  writes on stderr which mod turned on which behaviour; `off=` wins over a
+  need, and the launcher says the mod is not complete. A mod that needs a
+  behaviour this release does not have (`mods.py list`'s `missing`, from the
+  same generated `src/hook/code_names.h` the game is built with) is greyed on
+  the Mods list with the names and is never handed over; the selected mod's
+  status line names the behaviours it turns on. The build of a `disc-patch`
+  mod also leaves out what is not the mod's to carry, counted in
+  `report.toml`: bytes the patch writes into a table's records that the
+  original leaves all zero when the filled record is outside the table's
+  field bounds (`tables.toml` `range`; D415), the records `mod.toml`'s new
+  `skip` names, and the files the patched disc holds outside its directory.
+  Verification: `mods.py`, `disc_patch_build.py` self-tests; `config_tests`;
+  `ledger_check.py` and `ledger_switches.py --check`; the engine's parser
+  self-test is built and **not run** (no game was started this day); the real
+  patch built offline. No behaviour exists yet, so no mod can be handed one.
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50

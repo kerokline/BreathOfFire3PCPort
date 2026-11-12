@@ -566,7 +566,73 @@ times its width); the next battle gave the levels and the bar was right
 again. That is the mod's `exp_table` cells read by the game. A save from
 before a mod that changes the EXP table can show this once.
 
-## 6. Acceptance
+## 6a. The behaviours round's foundation, as run (2026-11-12)
+
+On `romhack/behaviours` from `main` `c14b805c` (worktree
+`D:\bof3x-runs\de1112\wt_f`, scratch `D:\bof3x-runs\de1112\f`). The
+mechanism by which a mod turns on engine behaviours, and two fixes to the
+builder. [`mods.md`](mods.md) 11 is the contract. **No game was started**: a
+state-hash proof chain was running on the machine.
+
+**What was built.**
+
+- **The engine** (`src/hook/behaviour.h`, `behaviour.cpp`): `bof3::BehaviourOn(
+  bof3::behaviours::Id::<Name>)`, `BOF3X_ON` read first in `InjectAll`, a
+  `Fatal` on a name that is no behaviour and on an ask before the read, a
+  log line a behaviour on, `BOF3X_OFF` winning; the parser's self-test on
+  names of its own. `detour.cpp`: `BOF3X_OFF` takes a behaviour name.
+- **The generated names**: `tools/ledger_switches.py` class `behaviour`, the
+  `bof3::behaviours` block of `src/hook/code_names.h` (empty: no behaviour is
+  built yet), a check that `BOF3X_ON` and `on=` are read; `tools/ledger_check.py`:
+  every behaviour the `Switch:` of exactly one `Default: off` entry, `ini:on=`
+  and `env:BOF3X_ON=` refused as `Switch:` names, and a self-test with a
+  behaviour of its own in a copy of the inventory.
+- **Mods** (`tools/mods.py`): `needs` in `[mod]` for `disc-patch` and
+  `table-edit`, `skip` in `[disc-patch]`, both checked and kept in
+  `mods.toml`; `behaviours` and `missing` in the JSON, the release's list
+  read from the shipped `src/hook/code_names.h` (`build_reuse.SHIPPED_DATA`).
+- **The launcher** (`config.cpp`, `sources_dialog.cpp`): `on=`; a mod that
+  misses a behaviour left off and greyed with the names; `BOF3X_ON` from
+  `on=` and the needs of the mods whose layers are handed over; `off=` wins,
+  said on stderr; the Mods status line names the behaviours a mod turns on.
+- **The zero-record rule** (`disc_patch_build.write_image_part`,
+  `tables.py out_of_bounds`, `tables.toml` `range`): D415. The first bounds are
+  `shop_records`' `level` 0..11 and `category` 0..4, cited to
+  `shop_mode.cpp:112`, `shop_trade.cpp:127-129` and `:296-309`. `skip`:
+  `parse_skip`.
+- **Files outside the directory** (`disc_patch_build.owned_sectors`,
+  `outside_files`, `outside_sections`; the census's `where = outside` rows; the
+  report's `outside_files`, `outside_bytes`, `outside_sectors`). Not carried.
+  The reading said the original holds zeros at those LBAs; measured, 3 of the
+  67 sectors hold the original's bytes of another file there (the patched disc
+  was rebuilt), so the test is "not the original's sector at that LBA", not
+  "zero on the original".
+- **Two defects of `main` found on the way and fixed:** `disc_patch_census.py`
+  stopped with a `NameError` at its first changed EMI (85f9bda4 moved
+  `emi_sections` to the builder and left no import); `tools/launcher_host`
+  did not build since the OS seam (C++17, and no `bof3x_os` library).
+
+**Checked.**
+
+| What | Result |
+|---|---|
+| `disc_patch_build.py selftest` | 61 checks, 0 failures (43 before): carried, refused and skipped zero records, a stocked record carried whatever its value, a later copy of a repeated field, `skip`'s refusals, the report's new sentence, an outside EMI over other bytes of the original, a non-EMI sector, one past the original's end, a sector the original has the same not counted, one file's sections read back |
+| `mods.py selftest` | 0 failures: 11 new zips (`needs` and `skip` accepted, and their refusals; `needs` on a table-edit mod accepted, on a reading-row mod refused), the header's behaviours block read, `missing` in order, `needs` and `skip` kept in `mods.toml` |
+| `config_tests` (`tools/launcher_host`, clang++ 22) | 3,692 checks, 14 failures, all of `main`: the presets' reference rows lack DIV-0214 and DIV-0215 (`presets_*.tsv`). The new ones pass: needs read; a missing behaviour leaves the mod off; `BOF3X_ON` holds two mods' needs in order, once each; `on=` first; a mod off, under another language, or with a layer cut gives none; `off=` against a need, `*`, `-name`; `on=` read, written, sent to both hosts; an environment's `BOF3X_ON` wins |
+| `ledger_check.py` (215 entries, 0 errors; the behaviours self-test's 5 cases), `ledger_switches.py --check`, `ledger_registry.py --check`, `tables.py check` (125 fields), `gen_symbols.py`, the self-tests of `type1.py`, `vcdiff.py`, `table_edit_build.py`, `loc_build.py`, `make_mod.py`; `importer.py check`, `exe_own.py check`, `exe_scan.py --accepted`, `data_diff.py check`, `data_census.py --check` and `--strict`, `reloc_census.py`, `reloc_bare.py`, `width_census.py`, `compile_shaders.py`, `gen_resample.py`, `tu_renames.py`, `tu_census.py --strict`, `retire_shells.py --strict`, `os_census.py --check` (after `analysis/os_census.tsv` was regenerated for the launcher's new sites) and `--boundary` | each exit 0 |
+| The engine's parser self-test | **built, not run**: it needs a game start (`BOF3X_SELFTEST_ONLY`) |
+| `cmake --build` for `i686` and `x86_64` | both build |
+| The real patch, offline, on a copy of the US disc-only scratch install (`de1112\f\home`, 7 table files) | before: `shop_records` 33 cells, 149 bytes; after: 0, and the layer has no `shop_records.bin`. Every other table's cells and the `dat\` chunks the same files; `report.toml` `zero_record_bytes = 149`, `zero_records = 10`, `outside_files = 15`, `outside_bytes = 137216` (67 sectors), `outside_sectors = 0` |
+| `disc_patch_census.py` on the real track | 15 outside EMIs, 67 sectors, LBAs `0x2DEE3`..`0x2DF25`: 14 at `0x80010000`, one at `0x80016000` |
+
+**Not run with the game (owed when the machine is free):** the exe host's
+self-test with `BOF3X_SELFTEST_ONLY=1` (the parser's cases run; `behaviours:
+0 of 0 on`); a start with `BOF3X_ON=NoSuchName` (the `Fatal` sentence); a start
+with `BOF3X_OFF` naming a behaviour (none exists yet, so this waits for the
+first one); `dialog_test.py` with a mod that has `needs` (the greyed row and
+the status line); the state-hash routes with the rebuilt mod layer off and on
+(the layer lost only the `shop_records` cells, which no shop of the original
+reads).
 
 - Self-tests hold no game data: `vcdiff.py` makes the patch, the EMIs are
   synthetic.

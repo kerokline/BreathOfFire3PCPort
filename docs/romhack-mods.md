@@ -104,6 +104,37 @@ functions of `COMMU05` (the faerie village); the item-trade list of areas 30 /
 The data names are the nearest `symbols.toml` symbol at or before the address,
 so a name with a large offset is a table after the one named, not that table.
 
+**Corrected 2026-11-12, by a reading of every changed function and data run**
+(the measurement: the scratch summaries `D:\bof3x-runs\de1112\reading\battle_summary.md`,
+`game_summary.md`, `menu_summary.md` and `data_summary.md`; repo-safe counts and
+names, no game bytes). Of the 189 code rows, 73 are relinks - a jump or an
+address the author's tool moved because bytes before it moved, most of them
+the other overlays pointing into BATTLE 15, which grew by 8 bytes - and 10 are
+padding. What is left is ten behaviours a PC change of ours must reimplement,
+each with its own name for its own ledger entry (the round after this one):
+`DoubleHitSwords`, `AllyAnywhere`, `SmokeSkill`, `LevelSkillCatchUp`,
+`EasierMasters`, `VillageCountPlural`, `ShortSkillLockout`,
+`DemoSkipButtons`, `CampMasters`, `TownWarp`.
+
+The hack's new code sits in six functions that nothing on the US disc calls
+(five in `GAME.EMI`, one in `START.EMI`): the author reused dead code as space.
+The census names those runs by the dead functions, so "large code edits" there
+are new code, not changes to what the names say. Two functions the census
+counted as changed (`Menu_DrawBox`, `Menu_DrawIcon8`) are unchanged: an artefact
+of its alignment.
+
+Two things the census could not see. **The patched track holds 15 EMIs that
+its directory does not list**: 67 sectors right after the last file, 14 copies
+of masters' area text blocks (for masters at the camp) and one section that
+loads at `0x80016000` (the town warp's menu, text and table). The hack reaches
+them by aiming one file-table entry at their LBA for one load. The census and
+the builder walk the directory, so they now look for such sectors too
+(`disc_patch_build.outside_files`, [`mods.md`](mods.md) 11.5). And **the shop
+records 40..49 hold the hack's code and tables, not stock**: the original
+leaves them zero, the build had laid 33 cells (149 bytes) of them into the PC's
+table, and none of the shop stock change of the readme is in records 0..39
+(not found in any group's code either). D415; the build now leaves them out.
+
 ## 3. What the importer does with the patched disc today
 
 `importer.py build --source <patched> --lang en-US`, with the patched path
@@ -181,6 +212,10 @@ Built 2026-11-10 (mods.md 2 and 5):
 Not built:
 
 - Where a mod turns behaviours on, the Settings page says which mod asked.
+  **Built 2026-11-12 in a smaller form** ([`mods.md`](mods.md) 11.4): the
+  selected mod's status line on the Mods tab names the behaviours it turns
+  on, and the launcher writes one stderr line a behaviour naming the mod. A
+  line on the Settings page itself is not built.
 - A repackaged mod attached to a release is named in the release notes with
   its author, and the permission is recorded in `docs/THIRD_PARTY.md` (who,
   when, the condition).
@@ -207,7 +242,9 @@ Launcher text follows ASD-STE100.
    of seven table files and 64 loose bytes. The image layer with the translated map**: `GAME.EMI` and BATTLE 15's
    tables (the 240 data runs). I58's second step plus item 2 of section 4.
 6. **The behaviours**, one DIV each, from the census. The open-ended part;
-   each is also a toggle a player without the hack can use.
+   each is also a toggle a player without the hack can use. **The mechanism
+   built 2026-11-12** (`needs`, `BOF3X_ON`, `on=`: [`mods.md`](mods.md) 11,
+   [`disc-patch-round.md`](disc-patch-round.md) 6a); no behaviour yet.
 
 Steps 1 to 4 make "a romhack as a mod package" true for data hacks. A hack
 like this one is whole only after 6.
