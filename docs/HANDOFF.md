@@ -41,8 +41,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
-   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): ten built, eight proven with the game, none
-     played. **Next:** the owner's play of each (6b and 6c list what to look for; `DoubleHitSwords` and `SmokeSkill`'s encounter
+   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): ten built, eight proven with the game, **all ten
+     played by the owner on 2026-11-12** (`main` `db9619da` from `game\`, the mod on: "all mod fields and behaviors appear to be
+     working as intended"; [`owner-review.md`](owner-review.md); D416, a row-above layer against some masters, parked). **Next:** the two's proof (6b and 6c list what each does; `DoubleHitSwords` and `SmokeSkill`'s encounter
      side have no automated cover, 6c); `LevelSkillCatchUp` and `TownWarp` (DIV-0224, DIV-0225, [`town-warp.md`](town-warp.md)) are built and have NOT run with
      the game - the self-tests, the ten routes with the behaviours off and the fuzz are owed on a quiet, hands-off machine
      (6c's method; a run with `TownWarp` on and no mod layer stops at the title by design, so a proof names the mod's layers
@@ -52,14 +53,14 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
    - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
-   - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner's look at a
-     `table-edit` mod's number in the game is what is left. **Trap paid:** a state-hash chain run while build agents
+   - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner saw the
+     disc-patch mod's changed names and descriptions in play on 2026-11-12; a `table-edit` mod added by hand on the Mods tab is what is left. **Trap paid:** a state-hash chain run while build agents
      compiled gave five false differences; a proof run wants the machine quiet as well as hands-off.
    - **IDEAS I58's next step:** the save editor's entrance list and party table on an install with no `BOF3.exe`
      ("In flight", the save editor's list), then EMI patch mods.
    - **Merged on 2026-11-11:** the PSX media round (PR #228) and the Linux groundwork (PR #229); the owner says the
-     state-hash runs ran for both. Not recorded here: the jingles heard in a scene (an inn's `OYASUMI`) and the
-     owner's play of the PSX logo movie on Windows.
+     state-hash runs ran for both. The jingles and the PSX logo movie, picture and sound, were heard and
+     seen right by the owner on 2026-11-12 ([`owner-review.md`](owner-review.md)).
 0. **The beta's reports.** `v0.1.0-beta.1` is published (2026-11-08, the tag at `44fd3204`;
    [`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
    the notes). PR #211 (the readiness docs) and PR #212 (Capcom's logo alone, DIV-0202 amended, `CapcomMovieOnly`)
@@ -75,9 +76,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    owner's decision (not reproduced at several places, in long and short plays, bosses and ordinary fights; the
    harness attempt in `D:\bof3x-runs\i190`, window 21 as an enemy gauge): each new report of it adds its `CRASH`
    lines, install and language to the issue, and the first reproducible one reopens the reading. **Owed the
-   owner after the cut** (owner-review): D406's listen (a quick-load during a battle voice, both widths);
-   DIV-0203's German on a rebuilt `de-DE` layer; the item sort in a long game's bag and the word on a type order
-   (DIV-0189); the owner-review sweep of what the two clears cover (section 4 item 7: the proposal sheet is
+   owner after the cut** (owner-review; DIV-0203's German, DIV-0189's sort, the ending scenes, DIV-0208's heal and the
+   learn cheat were seen right on 2026-11-12): D406's listen is done too - a quick-load in the middle of a voice brings
+   the voice back with the song (the 32-bit build; [`known-defects.md`](known-defects.md) D406: the route's take at frame 900 is in
+   the line's quiet tail, so a listen wants the take at 888);
+   the owner-review sweep of what the two clears cover (section 4 item 7: the proposal sheet is
    [`owner-review-sweep-1108.md`](owner-review-sweep-1108.md), 40 strikes / 82 keeps / 29 questions; the owner
    answers its section 2 and says which strikes stand, then the file changes). Traps paid on the cut: a release note never claims more than STATUS; the
    `latest` pre-release is never GitHub's latest; test the upgrade with the draft's signed zip, not a local build

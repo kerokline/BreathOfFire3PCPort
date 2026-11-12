@@ -491,7 +491,7 @@ the bit confirms).
 
 **Verification.** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build, `main` `2da78ec2` merged in). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0226 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` every function is at 0 mismatches, `Battle_MemberCoinFlip` among them. `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberRollByAction` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled`. `ledger_check.py`, `ledger_registry.py --check` and `ledger_switches.py --check` pass; `dialog_test.py` all ok. **Not played:** nobody has learned a skill with the switch on.
 
-Owed: the owner's play - a member that examines an enemy learns the skill at
-the enemy's first use of it; and the owner's eye on Page 2 of the Cheats
+**Played by the owner, 2026-11-12** (`main` `db9619da`): "The always-learn
+cheat appears to be working as intended". Not said: the owner's eye on Page 2 of the Cheats
 sub-tab, which has a third group now ("Enemy skills", with no sentence under
 its box: the page has no room for one).

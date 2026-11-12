@@ -946,7 +946,12 @@ apply: no switch was off.
   not fixed here.
 
 Still owed: `dialog_test.py` with a mod that has `needs` (once it finds its
-window by process), and every check in play that 6b lists.
+window by process). The checks in play: the owner played `main` `db9619da`
+with the mod and its ten behaviours on, 2026-11-12 - "all mod fields and
+behaviors appear to be working as intended" ([`owner-review.md`](owner-review.md);
+which scene showed each is not recorded; D416 parked). `LevelSkillCatchUp`
+and `TownWarp` still have no proof with the game of the kind this section
+holds for the eight.
 
 ## 7. Owner calls (answered 2026-11-11, after group M)
 

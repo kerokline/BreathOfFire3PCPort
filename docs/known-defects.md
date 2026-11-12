@@ -10825,6 +10825,38 @@ on the pages two runs of one build differ on (`0x7DE000`, `0x7C7000`, the
 overlay count on `0x6BC000`), the first at tick 507, before the take. Not
 Capcom's: the original has no quick-load.
 
+**Heard again, 2026-11-12 (the owner, `main` `db9619da` from `game\`, the
+32-bit build): the song is right; the voice, below.** "quickloading in
+combat now plays the background sound correctly, but the 'mid voice effects'
+no longer play - it only plays the full voice sound if you quicksave before
+it." Which voice, and whether the load was in the same session, were not
+said; the session's `bof3x.log` held no quicksave line by the time it was
+read (a later start had replaced it).
+
+**Settled the same day: the voice does resume; the take in play was at the
+end of a line** (root `C:\Users\kerok\bof3x-runs\d406b`,
+`BOF3X_MUSIC_LOG=1`, the same build; the owner listened to the replays as
+they ran). `quick_combat` saves at frame 900, 13,230 frames (0.6 s) into
+Rei's Pilfer line, and the line's wave - 42,337 frames, 1.92 s, read out of
+the quicksave file - is loud for its first 0.6 s only (RMS by tenth of a
+second: 9,919, 2,835, 3,537, 2,975, 3,905, 2,035, 805, 14, then 0 to its
+end). The restore says `voice stream playing again at its position` and
+`sound_sdl` first mixes the buffer from frame 13,230 in the song's device
+pass, on the PC install (`runs\tip_combat`), with the owner's cache, layers
+and ini (`runs\own_combat`) and in a fresh process (`quick_combat_cross`,
+`runs\own_cross`) - and nothing is heard, since nothing is left: "his voice
+effect didn't resume with it, only the combat song" (the owner), who then
+said to "try just a few frames earlier". With F6 at frame 888
+(`quick_combat_888.txt` in the root, a hand edit of the route: the voice's
+frame 4,410, 0.2 s in) the restore mixes the voice from frame 4,410 and the
+owner, loading it several times: "I definitely could hear it there". So a
+quick-load in the middle of a voice brings the rest of the voice back with
+the song; a take in a line's quiet tail brings back the tail. Nothing to
+fix. The route's own take at 900 cannot show a resumed voice to the ear; a
+listen wants the 888 form. (`BOF3X_WAV_DIR` could not measure it: the dump
+is its own model of the buffers and stops with a `FATAL` at the stream's
+`SetCurrentPosition`.)
+
 ## D407 — The 64-bit build's Capcom logo movie shows no picture: Windows has no 64-bit Cinepak decompressor (the platform's; seen 2026-11-07; fixed by DIV-0205, confirmed by the owner's eye the same day)
 
 **Reported:** the owner's first play of the 64-bit build (the x64 round's
@@ -11021,3 +11053,20 @@ mod's to fill unless every field of the patched record is inside its `range`;
 `shop_records` has the first ranges. The real patch built again offline: 0
 `shop_records` cells (33 before), every other table's cells the same,
 `report.toml` `zero_record_bytes = 149`, `zero_records = 10`. Not played.
+
+## D416 — A row-above-the-text mod and the romhack's `CampMasters` do not sit well together for some masters (ours; seen by the owner 2026-11-12; parked)
+
+**Seen:** the owner, 2026-11-12, `main` `db9619da` from `game\` with the
+Definitive Edition mod on (its ten behaviours, `CampMasters` DIV-0223 among
+them): "The row above text mod doesn't play nicely with all of the masters it
+seems, but thats ok for now - we can revisit if someone asks." What was seen
+(a missing row, a wrong one, the box's layout), which masters, and which
+row-above layer was on were not said.
+
+**Not read.** Nothing was traced or reproduced. A guess, marked as one: the
+master's talk reached from the master list plays a page from another area's
+bank (`FieldTail_LoadBank`, [`camp-masters.md`](camp-masters.md)), and the
+reading-row layer is laid a container at a time, so the row for that page may
+not be the loaded one.
+
+**Parked** at the owner's word: revisit if a player asks.

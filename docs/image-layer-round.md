@@ -609,9 +609,11 @@ same 2 failures as `main`.
 
 **Not done.**
 
-- **Acceptance 5, the owner's look.** Nobody has seen a changed number in the
-  game, or added a table mod on the Mods tab by hand: the tab's rows for this
-  kind were not looked at in the window.
+- **Acceptance 5, the owner's look.** The owner saw the disc-patch mod's
+  changed item names and descriptions in play on 2026-11-12 ("The table edits
+  look right", [`owner-review.md`](owner-review.md)). Nobody has added a
+  `table-edit` mod on the Mods tab by hand: the tab's rows for this kind were
+  not looked at in the window.
 - A PC-built install was not used for the end-to-end run (the layer's cells
   lay the same way there; 5b's `psp-tables` run shows a layer over it).
 - Names other than Latin ones show as escapes in the CSV's title column.
