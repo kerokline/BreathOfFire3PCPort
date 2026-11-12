@@ -51,6 +51,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
      `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
+   - **The New Game round** (item 18): staged 2026-11-12, group M to launch.
    - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
    - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner saw the
@@ -467,8 +468,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    D257 (the PAL banks) was answered and fixed there (DIV-0194). Left to the owner: D256's framing, a look at a
    PSP-EU title capture ([`owner-review.md`](owner-review.md), the PSP-only round's "Still open").
 
-18. **The staged localisation PR**: IDEAS I34, the name entry back
-   ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first). The empty save
+18. **The New Game round is staged** (2026-11-12, [`new-game-round.md`](new-game-round.md), branch
+   `new-game/staging`; IDEAS I34): the name entry at New Game and in the faerie village's renamer, and the options
+   screen back in the New Game sequence. The owner's five answers are in its section 2; **next: launch group M**
+   (read-only, section 3), then the owner reads 3a before stages A and B. Four calls still open there, none blocks
+   stage A. The research is [`name-entry-restoration.md`](name-entry-restoration.md). The empty save
    slot it was to carry is done by item 14's round (DIV-0193 `SaveSlotBlank`, the owner's "blank it everywhere").
 
 19. **The reading-row round is merged** (PR #106; [`reading-row-round.md`](reading-row-round.md), status and "as
