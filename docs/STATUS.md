@@ -18,6 +18,7 @@ movie's repair and the PSP's sound and movie still take the player's ffmpeg.
 
 **Merged since the beta, 2026-11-09..11, one line each (none of it released):**
 
+- **Branch `fix/save-slot-exp-bar` (2026-11-12, not merged):** the save slot's EXP bar drawn over its frame and held to its 57-unit track (DIV-0227 `SaveSlotExpBar`, the owner's request); captures and three fuzz groups, the owner confirmed it in their own game the same day.
 - **PR #213:** the World Map Heal fix (DIV-0208 `FieldHealParty`, D408), renames and doc fixes from the review of Red Herring's notes; D409, IDEAS I59.
 - **PRs #214 and #217:** the source-layout round's stages B0 to D with the cleanup round (IDEAS I60); PR #217 fixed the `IsEnabled`-before-bind regression that `main` held from PR #214 (the paragraph on the 64-bit round below has the record).
 - **PR #218:** the save editor's reference ([`save-editor-spec.md`](save-editor-spec.md), [`save-block.md`](save-block.md), [`story-flags.md`](story-flags.md)); DIV-0133 amended, DIV-0209, DIV-0210.

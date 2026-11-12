@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 218;
+inline constexpr std::size_t kSwitchCount = 219;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -291,9 +291,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "LevelSkillCatchUp", 0, 17},   // DIV-0224
     {SwitchForm::Name, "TownWarp", 0, 8},   // DIV-0225
     {SwitchForm::Ini, "ini:cheat.learn=0", 4, 11},   // DIV-0226
+    {SwitchForm::Name, "SaveSlotExpBar", 0, 14},   // DIV-0227
 };
 
-inline constexpr std::size_t kEntryCount = 226;
+inline constexpr std::size_t kEntryCount = 227;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -747,6 +748,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 216, 1, false, Player::Yes, 0, kLangAny},
     {226, "An examining member always learns the enemy's skill: a Cheats switch",
      Tier::Extension, State::Active, 0, 217, 1, false, Player::Yes, 0, kLangAny},
+    {227, "The save slot's EXP bar shows over its frame and stops at its track's end",
+     Tier::Intent, State::Active, 0, 218, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

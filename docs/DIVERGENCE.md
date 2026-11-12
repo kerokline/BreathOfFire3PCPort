@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 226 entries, DIV-0001..0226, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 227 entries, DIV-0001..0227, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16579,6 +16579,67 @@ designed in rather than bolted on.
 - **Switch:** ini:cheat.learn=0
 - **Default:** off - the box starts off
 - **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### The save slot's EXP bar shows over its frame and stops at its track's end
+
+- **ID:** DIV-0227
+- **Date:** 2026-11-12
+- **Subsystem:** the save and load slots (`Menu_DrawSaveSlot` `0x576960`)
+  and the experience bar (`Menu_DrawExpBar` `0x574530`), both ours in
+  `src/game/menu/menu.cpp`
+- **Tier:** Intent - the slot's frame has the bar's track under the name,
+  and the bar is drawn there; it does not show.
+- **Original behaviour:** `Menu_DrawSaveSlot` calls `Menu_DrawExpBar(x +
+  0x14, y + 0x12, 0, level, exp)` (the summary's `+8` and `+0x10`, record
+  0's) and then draws the frame pieces `0x663584`, whose track under the
+  name covers the line. `Menu_DrawMemberStatus` `0x573560` draws its pieces
+  first and the bar after, and its bar shows. `Menu_DrawExpBar`'s line ends
+  at `x + 57 (exp - need) / (next - need)`, 32-bit unsigned, with no bound:
+  EXP at or past the next level's draws a line longer than the 57-unit
+  track, and EXP below the level's own wraps to a very long one. In the save
+  slot the part of the line past the track is what shows - a red line over
+  the portraits and, with enough EXP, past the box's right edge (the owner's
+  capture of 2026-11-12, slots 7 to 9).
+- **New behaviour:** `Menu_DrawSaveSlot` draws the bar last, after the
+  frame pieces and the mark piece `0x3D`, so it shows on its track.
+  `Menu_DrawExpBar`'s length is 0 when EXP is at or below the level's own
+  and 57 when it is at or past the next level's, in every caller (the save
+  slots and the member status); between the two it is Capcom's arithmetic.
+  One log line at start, `DIV-0227    the save slot's EXP bar over its
+  frame, the bar held to its track: on`.
+- **Rationale:** the owner's request, 2026-11-12: "move the xp quad above
+  the rest so it shows xp to next level, and also cap the quad at 100% of
+  level".
+- **Also in the PSX version?** Not settled. The sibling's Ghidra output for
+  the slot's paired function (`0x801DDC6C`, a hypothesis pairing; the US
+  `SHOP.EMI`) ends after the name and was not read further; the bar's twin
+  `0x801DA18C` was not compared for a bound.
+- **Verification:** 2026-11-12, the 32-bit build, a scratch copy of the
+  owner's install with the three saves of the capture in slots 0 to 2
+  (`C:\Users\kerok\bof3x-runs\xpbar1112`, no mod, the game's own EXP
+  table). `tools/recipes/load_list.txt`, en-US, point filter, at 4:3, 16:9
+  and 21:9: with the switch on the three bars show on their tracks (90, 2
+  and 30 of 114 capture pixels: within their levels under that table); with
+  `BOF3X_OFF=SaveSlotExpBar` no bar shows, the log's `patch   OFF
+  SaveSlotExpBar`. Headless, `BOF3X_SELFTEST_ONLY=1` with `BOF3X_SHADOW` =
+  `menu_windows`, `field_o`, `map_field_objects`: 0 mismatches each (the
+  switch arms in `MenuFromFieldO_Inject`, after the fuzzes that compare
+  Capcom's line and order). `ledger_check.py`, `ledger_registry.py --check`
+  and `ledger_switches.py --check` pass. **Not seen:** the bound itself. The
+  owner's long lines are read as saves made before the *Definitive Edition*
+  mod (DIV-0212) shown under the mod's EXP table - an inference: the same
+  saves are within their levels in the scratch run, which has no mod, and
+  the mod's table was not read. **The owner, 2026-11-12, in their own game
+  (the mod on):** "I can confirm it works".
+- **Reversible?** `BOF3X_OFF=SaveSlotExpBar` (ini `off=`), or hosted
+  `BOF3X_ORIGINAL=SaveSlotExpBar`: the bar under the frame and unbounded, as
+  before.
+- **Switch:** SaveSlotExpBar
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SaveSlotExpBar (ini off=)
 - **Toward:** none
 - **Languages:** any
 - **State:** active
