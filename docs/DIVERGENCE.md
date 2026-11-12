@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 222 entries, DIV-0001..0222, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 223 entries, DIV-0001..0223, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16261,5 +16261,92 @@ designed in rather than bolted on.
 - **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - no release has this mask; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can let the player talk to a master from the master list, wherever the party stands
+
+- **ID:** DIV-0223
+- **Date:** 2026-11-12
+- **Subsystem:** the master list and the master's talk - `ShopBrowse_Choose`
+  `0x5833E0` (`src/game/shop/shop_browse.cpp`), `Field_ModeTailRun`
+  `0x56D920` and `FieldIdle_Tick` (ours), `FieldTail_LoadBank` `0x56D930`
+  (`src/game/field/field_7.cpp`, `field_idle.h`), `MasterScreen_State6Leave`
+  `0x5876F0` (`src/game/menu/master_quit.cpp`), the choice commit's table
+  (`CommitChoice`, `src/game/text/msg_box.cpp`), the dialogue-button area test
+  (`InButtonArea`, `src/game/text/text_draw.cpp`), the text-block walk
+  (`DatLoad_TextBlock*`, `src/game/battle/dat_load.cpp`), `GameMode_Start`;
+  the behaviour `CampMasters` ([`mods.md`](mods.md) 11);
+  [`camp-masters.md`](camp-masters.md), [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** the master list shows, for a chosen master, the
+  master's entry (the detail page, sounds `0x103` and `0x102`). A master's
+  talk (tail kind 4, `FieldTail_LoadBank`, the `MasterTalk_*` machine) runs
+  only when the master's own area arms it, standing beside the master: it
+  reads that area's text block (`MessagePools`) and its choice table (the
+  area descriptor's `+0x34`).
+- **New behaviour:** with `CampMasters` on, a confirm on a listed master
+  stores the master (a static of ours) and closes the list as a cancel does
+  (`0x106`, `0x102`, the list's close, the field); an empty row still plays
+  `0x107`. The next field frame with no tail armed clears it, marks the talk
+  as a camp talk, calls `ScriptFlags_Set40` and arms tail kind 4 at state 0
+  with the master as its argument; the chain of the idle frame goes on, as
+  the hack's does. `Field_ModeTailRun` reads the tail kind once (the
+  original's single `jmp [table + 4 * kind]`), so the tail runs from the next
+  frame, as on the PlayStation. In the tail's state 1, before the talk
+  starts, the master's home area's text block (list entries 0..16: areas 3,
+  61, 55, 68, 50, 59, 113, 74, 116, 98, 41, 37, 37, 37, 37, 143, 91) - the
+  kind-0 chunk of tag 0 of `DAT\AREA<home>.DAT` through the language and
+  optional layers, with the reading row's side chunk and a corrected block
+  of tag 0, nothing else of the file - lands over the arena after the bytes
+  it covers are saved, and the choice commit and the dialogue-button test
+  read the home area's descriptor and number. In state 3, before the bank
+  reload, the bytes and the standing area's reading-row side chunk are put
+  back and the talk's flags cleared. The talk's leave pose (masters 3, 5 and
+  9 give `Sprite_Objects[byte 0x90384B]` a state byte) is skipped during a
+  camp talk: the master's sprite is in its own area, and from the camp the
+  byte names another object or none (ours aborts past the 30 records). The
+  talk ends on the field. The statics are not in the save, are cleared at
+  every game's start, and are in the quicksave participant `BEHAVIOURS`
+  (version 3, with the saved bytes); a record taken inside a camp talk is
+  refused when the behaviour is off. Off, every site runs the original's
+  path.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme: masters "can also now be accessed from the master
+  tab in the camp menu". The hack's code, on the patched US disc: SHOP.EMI
+  `0x801E2394` (the confirm's sounds replaced by the store to `0x801AE318`
+  and a jump to the cancel path `0x801E2410`); GAME.EMI `Field_ModeTailKinds`
+  slot 0 (`0x801C84BC`) pointed at `0x801AE340` (the request); tail 4's
+  state-1 call made `0x801AE984` (the block at `0x80010000` saved to
+  `0x801D8000`, a file outside the disc's directory loaded over it) then
+  `0x801CA650` (the standing descriptor's `+0x34` pointed at the copy's
+  table); state 3's made `0x801AE39C` then `0x801CA6C8` (both put back). The
+  14 hidden files were measured: each is the home area's own text block of
+  the patched disc byte for byte, then whole copies of that area's choice
+  handlers and table, entry for entry ([`camp-masters.md`](camp-masters.md)
+  2). The PC has every area's code and `.data` in its image, so the home
+  area's own handlers serve; only the text moves. Departures from the hack:
+  the leave pose is skipped from the camp (the hack writes an unrelated
+  object's state; the owner to confirm); the text is the player's language's
+  and layers', not the hack's English copy; the standing descriptor is not
+  written - the one reader of `+0x34` reads the home's; the dialogue-button
+  test follows the text; the statics are cleared at a game's start.
+- **Also in the PSX version?** No: the release shows the entry only. The
+  romhack's patched US disc has it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`; the 14 hidden files compared with the home areas' blocks and
+  tables (`camp-masters.md` 2); every handler the 17 masters' messages raise
+  read in our source (`camp-masters.md` 3). Off, the touched functions'
+  fuzz rows compare as before (no static of ours is set). **Not played:**
+  nobody has talked to a master from the list with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=CampMasters` keeps it off.
+- **Switch:** CampMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
 - **State:** active

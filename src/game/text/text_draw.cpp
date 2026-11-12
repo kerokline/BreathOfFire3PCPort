@@ -7,6 +7,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/button_text.h"
+#include "game/field/field_idle.h"   // DIV-0223: TextArea
 #include "game/lang_layout.h"
 #include "game/msgbox.h"
 #include "game/text_advance.h"
@@ -62,8 +63,10 @@ bool InPool(const std::uint8_t* p) {
     return a >= ::bof3::Img(kPool) && a < ::bof3::Img(kPool) + kPoolRoom;   // a text pointer: a place
 }
 
+// DIV-0223: the area of the text block in the arena - a master's home area
+// during its talk from the master list (field_idle.h TextArea).
 bool InButtonArea() {
-    const unsigned short area = Game_AreaNumber;
+    const unsigned short area = field_idle::TextArea(Game_AreaNumber);
     for (unsigned short a : kButtonAreas)
         if (a == area) return true;
     return false;

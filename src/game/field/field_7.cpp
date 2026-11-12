@@ -12,6 +12,7 @@
 #include "game/area_cell_hook_callees.h"
 #include "game/area_harness.h"
 #include "game/cheats.h"
+#include "game/dat_load.h"   // DIV-0223: DatLoad_TextBlock*
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/field/field_7_callees.h"
@@ -356,9 +357,13 @@ extern "C" void __cdecl Scenario_SubInit(void) {
 // Ours: with no tail armed (kind 0), FieldIdle_Tick first - the place the
 // Definitive Edition romhack hooked by pointing the US table's slot 0 (GAME.EMI
 // 0x801C84BC, the PC's 0x662CE8 slot 0) at its own chain. Off, it does nothing.
+// The kind is read once, as the original's single jump reads it: a tail the
+// idle frame arms (DIV-0223) runs from the next frame, as the hack's does,
+// whose chain is slot 0's entry itself.
 extern "C" void __cdecl Field_ModeTailRun(void) {
-    if (AreaW0a_TailKind == 0) FieldIdle_Tick();
-    Entry(::bof3::Img(Field_ModeTailKinds_addr), AreaW0a_TailKind)();
+    const signed char kind = AreaW0a_TailKind;
+    if (kind == 0) FieldIdle_Tick();
+    Entry(::bof3::Img(Field_ModeTailKinds_addr), kind)();
 }
 
 // --- the field's idle frame: the mod behaviours (docs/mods.md 11) ------------
@@ -368,11 +373,101 @@ namespace field_idle {
 std::uint8_t g_ally_close_menu = 0;
 std::uint8_t g_ally_pending = 0;
 std::uint16_t g_smoke_steps = 0;
+std::uint8_t g_master_pending = 0;
+std::uint8_t g_master_active = 0;
+std::uint8_t g_master_swapped = 0;
+std::uint8_t g_master_home = 0;
+
+}  // namespace field_idle
+
+namespace {
+
+// DIV-0223 CampMasters (docs/camp-masters.md): each master's home area by
+// list entry (= the master, AreaW0c_TailSub), as the hack's GAME.EMI table
+// 0x801AE31C picks its hidden files and as the release's own talks arm tail
+// 4 in those areas (area 3's trigger 22 with 0, areas 61 and 55 with 1 and 2,
+// ... area 91 with 0x10; camp-masters.md 1).
+constexpr unsigned char kMasterHome[17] = {3, 61, 55, 68, 50, 59, 113, 74, 116, 98, 41, 37, 37, 37, 37, 143, 91};
+
+// The text room at MessagePools: the most a text block covers
+// (tools/loc_build.py TEXT_ROOM; text_draw.cpp kPoolRoom).
+constexpr std::uint32_t kTextRoom = 0x8000;
+
+// The arena's bytes the home area's text block covers, as they were before
+// it landed, and how many.
+unsigned char g_master_saved[kTextRoom];
+std::uint32_t g_master_saved_bytes = 0;
+
+unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
+
+}  // namespace
+
+namespace field_idle {
 
 void ClearAtStart() {
     g_ally_close_menu = 0;
     g_ally_pending = 0;
     g_smoke_steps = 0;
+    // DIV-0223: a game starts with its area's own text (Area_Enter loads it);
+    // a side chunk still set aside is put back for its hash test to drop.
+    if (g_master_swapped) DatLoad_TextBlockPutSideBack();
+    g_master_pending = 0;
+    g_master_active = 0;
+    g_master_swapped = 0;
+    g_master_home = 0;
+    g_master_saved_bytes = 0;
+}
+
+unsigned short TextArea(unsigned short standing) {
+    if (g_master_swapped != 0 && bof3::BehaviourOn(bof3::behaviours::Id::CampMasters)) return g_master_home;
+    return standing;
+}
+
+bool CampTalk() { return g_master_active != 0 && bof3::BehaviourOn(bof3::behaviours::Id::CampMasters); }
+
+// State 1, after the CLUT row and before MasterTalk_Reset - where the hack's
+// 0x801AE984 and 0x801CA650 run (the state's call of the SISYOU overlay's
+// init made a call of them, which ends in it). A camp talk: the bytes the home
+// area's text block covers saved, the block landed (DatLoad_TextBlockLand);
+// from here CommitChoice and InButtonArea read the home area (TextArea). Once
+// per talk: the state runs once, and a second landing would save the home's
+// own text as the standing area's.
+void CampMastersSwapIn() {
+    if (g_master_active == 0 || g_master_swapped != 0) return;
+    const unsigned entry = g_master_active - 1u;
+    if (entry >= sizeof kMasterHome)
+        bof3::Fatal("DIV-0223 CampMasters: master %u has no home area (list entries 0..16)", entry);
+    const unsigned home = kMasterHome[entry];
+    if (!Area_Descriptors[home]) bof3::Fatal("DIV-0223 CampMasters: area %u (master %u's) has no descriptor", home, entry);
+    const int file = static_cast<int>(home + 3);   // Area_Enter's file of an area
+    const std::uint32_t bytes = DatLoad_TextBlockBytes(file);
+    if (bytes == 0)
+        bof3::Fatal("DIV-0223 CampMasters: DAT file 0x%X (area %u, master %u's) has no text block (kind 0, tag 0)",
+                    static_cast<unsigned>(file), home, entry);
+    if (bytes > kTextRoom)
+        bof3::Fatal("DIV-0223 CampMasters: area %u's text block is 0x%X bytes; the text room is 0x%X", home,
+                    static_cast<unsigned>(bytes), static_cast<unsigned>(kTextRoom));
+    std::memcpy(g_master_saved, TextArena(), bytes);
+    g_master_saved_bytes = bytes;
+    DatLoad_TextBlockLand(file);
+    g_master_home = static_cast<std::uint8_t>(home);
+    g_master_swapped = 1;
+    bof3::Log("DIV-0223    CampMasters: master %u talks in area %u with area %u's text (0x%X bytes)", entry,
+              static_cast<unsigned>(Game_AreaNumber), home, static_cast<unsigned>(bytes));
+}
+
+// State 3, after the party set's store and before Snd_LoadBankFile - where the
+// hack's 0x801AE39C and 0x801CA6C8 run. A camp talk ends: the saved bytes put
+// back, the standing area's reading-row side chunk with them, the flags 0.
+void CampMastersSwapOut() {
+    if (g_master_active == 0) return;
+    g_master_active = 0;
+    if (g_master_swapped == 0) return;
+    std::memcpy(TextArena(), g_master_saved, g_master_saved_bytes);
+    DatLoad_TextBlockPutSideBack();
+    g_master_swapped = 0;
+    g_master_home = 0;
+    g_master_saved_bytes = 0;
 }
 
 }  // namespace field_idle
@@ -382,13 +477,19 @@ namespace {
 // The quicksave participant "BEHAVIOURS" (docs/quicksave.md 5): the statics
 // above, a byte copy each. A behaviour that adds a static adds it here and
 // raises the version.
-constexpr std::uint32_t kBehavioursVersion = 2;   // 2: DIV-0218's counter
+constexpr std::uint32_t kBehavioursVersion = 3;   // 2: DIV-0218's counter; 3: DIV-0223's talk and its saved bytes
 
 void BehavioursSave(bof3::SnapshotWriter& w) {
     w.Put(kBehavioursVersion);
     w.Put(field_idle::g_ally_close_menu);
     w.Put(field_idle::g_ally_pending);
     w.Put(field_idle::g_smoke_steps);
+    w.Put(field_idle::g_master_pending);
+    w.Put(field_idle::g_master_active);
+    w.Put(field_idle::g_master_swapped);
+    w.Put(field_idle::g_master_home);
+    w.Put(g_master_saved_bytes);
+    w.Put(g_master_saved, g_master_saved_bytes);
 }
 
 void BehavioursRestore(bof3::SnapshotReader& r) {
@@ -396,6 +497,23 @@ void BehavioursRestore(bof3::SnapshotReader& r) {
     field_idle::g_ally_close_menu = r.Get<std::uint8_t>();
     field_idle::g_ally_pending = r.Get<std::uint8_t>();
     field_idle::g_smoke_steps = r.Get<std::uint16_t>();
+    const auto pending = r.Get<std::uint8_t>();
+    const auto active = r.Get<std::uint8_t>();
+    const auto swapped = r.Get<std::uint8_t>();
+    const auto home = r.Get<std::uint8_t>();
+    const auto bytes = r.Get<std::uint32_t>();
+    if (bytes > kTextRoom) bof3::Fatal("snapshot: BEHAVIOURS' record holds 0x%X text bytes; the room is 0x%X", static_cast<unsigned>(bytes), static_cast<unsigned>(kTextRoom));
+    if ((pending | active | swapped) != 0 && !bof3::BehaviourOn(bof3::behaviours::Id::CampMasters))
+        bof3::Fatal("snapshot: taken during a master's talk from the master list (DIV-0223), and CampMasters is off");
+    // A talk that held the home's text now and none in the record: the side
+    // chunk set aside goes back (its hash test decides whether it is drawn).
+    if (field_idle::g_master_swapped != 0 && swapped == 0) DatLoad_TextBlockPutSideBack();
+    field_idle::g_master_pending = pending;
+    field_idle::g_master_active = active;
+    field_idle::g_master_swapped = swapped;
+    field_idle::g_master_home = home;
+    g_master_saved_bytes = bytes;
+    r.Get(g_master_saved, bytes);
 }
 
 }  // namespace
@@ -407,6 +525,20 @@ void BehavioursRestore(bof3::SnapshotReader& r) {
 // its place in that order, behind its own BehaviourOn. A case that raises a
 // request ends the chain for the frame, as the hack's does.
 void FieldIdle_Tick() {
+    // DIV-0223 CampMasters (PSX 0x801AE340): the master the list chose. The
+    // request cleared, the talk marked a camp talk (the same value),
+    // ScriptFlags_Set40, tail kind 4 at state 0 with the master as its
+    // argument - the stores of the release's own arming (area 37's triggers)
+    // and the state, as the hack's. The chain goes on: the hack's jumps on.
+    if (bof3::BehaviourOn(bof3::behaviours::Id::CampMasters) && field_idle::g_master_pending != 0) {
+        const std::uint8_t chosen = field_idle::g_master_pending;
+        field_idle::g_master_pending = 0;
+        field_idle::g_master_active = chosen;
+        SH_CALL(ScriptFlags_Set40)();
+        AreaW0a_TailKind = 4;
+        AreaW0c_TailState = 0;
+        AreaW0c_TailSub = static_cast<unsigned char>(chosen - 1);
+    }
     // DIV-0217 AllyAnywhere (PSX 0x801B5860): the member change the camp menu
     // let through off the world map. With the flag set and no request
     // pending, the flag is cleared and Field_Request 6 raised - the request
@@ -437,6 +569,9 @@ extern "C" void __cdecl FieldTail_LoadBank(void) {
     case 1:
         if (SH_CALL(File_LoadDone)() == 0) return;
         SH_CALL(Gfx_ClutStripCopyRow)(2);
+        // DIV-0223 CampMasters: a talk from the master list - the home area's
+        // text block in place before the talk starts (field_idle.h).
+        if (bof3::BehaviourOn(bof3::behaviours::Id::CampMasters)) field_idle::CampMastersSwapIn();
         SH_AT(void (__cdecl*)(), field_e2::at::kLoadWait.v)();
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
@@ -446,6 +581,9 @@ extern "C" void __cdecl FieldTail_LoadBank(void) {
     case 3: {
         const auto set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
         AreaW0b_PartySet = set;
+        // DIV-0223 CampMasters: the talk is over - the standing area's text
+        // block put back before the bank reload (field_idle.h).
+        if (bof3::BehaviourOn(bof3::behaviours::Id::CampMasters)) field_idle::CampMastersSwapOut();
         SH_CALL(Snd_LoadBankFile)((set & 0x7Fu) + 0x2C2u);
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;

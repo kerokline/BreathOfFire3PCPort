@@ -31,6 +31,24 @@ const unsigned char* DatLoad_ReadingRow(std::uint32_t tag, std::uint32_t half, s
 // memory): the message the box's base points at is annotated.
 bool DatLoad_ReadingRowHolds(const unsigned char* p);
 
+// DIVERGENCE DIV-0223 (CampMasters, docs/camp-masters.md 4): another area's
+// text block over the arena, for a master's talk away from the master's area.
+// The text block is what LoadDatFile(file_index) lands at tag 0: kind 0, a
+// corrected block (kind 19) and the reading row's side chunk (kind 18), through
+// LoadDatFile's whole precedence (the cache, the language layer, the optional
+// layers); every other chunk of the file is skipped.
+//
+// The bytes from MessagePools + 0 its kind-0 and kind-19 chunks would cover
+// (the largest one's size); 0 when the file has none. Nothing lands.
+std::uint32_t DatLoad_TextBlockBytes(int file_index);
+// Lands them, the reading row's tag-0 side chunk set aside first (one at a
+// time: a second call before DatLoad_TextBlockPutSideBack aborts).
+void DatLoad_TextBlockLand(int file_index);
+// The side chunk set aside put back, the landed file's own retired. With none
+// set aside, nothing. A put-back chunk that no longer matches its block is
+// dropped at its first read, as after a quickload (DatLoad_ReadingRow).
+void DatLoad_TextBlockPutSideBack();
+
 namespace dat_load {
 void WalkOverlay(const char* kind, const char* layer, bool cached, const char* name, const char* install);   // defined in dat_load.cpp (source-layout B0: promoted, one definition)
 void DatLog(const char* from, const char* path);   // defined in dat_load.cpp (source-layout B0: promoted, one definition)

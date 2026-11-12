@@ -774,6 +774,49 @@ area 91's state 0 without the tiara, a village list at a count of one under
 `en-US`, a lockout of ability `0x15` or `0x3E` ending in about 40 minutes of
 play clock, and the demo ended by a face button.
 
+**`CampMasters` (DIV-0223; branch `romhack/b4-masters`).** The design and
+its measurements are [`camp-masters.md`](camp-masters.md). The reading holds
+on every point it makes, re-read from the patched listings (SHOP
+`0x801E2394`, GAME `0x801AE340`, `0x801AE39C`, `0x801AE984`): the list's
+confirm stores the entry + 1 and takes the cancel path; the idle hook arms
+tail 4 with the entry and lets the chain go on; states 1 and 3 save and land,
+then put back, the `0x80010000` block and the standing descriptor's `+0x34`.
+Measured beyond it: the 14 hidden files' text sections equal the home areas'
+blocks for all 17 entries, and their tables are **whole** copies of the home
+tables entry for entry (not trimmed); master id = list entry, which our own
+home-area triggers confirm (they arm tail 4 with the same numbers). The PC's
+swap is the text block alone - the kind-0 chunk of tag 0 of the home area's
+DAT through `LoadDatFile`'s precedence (language, optional layers, the
+reading row's side chunk; `DatLoad_TextBlock*`, `dat_load.cpp`), the
+covered bytes saved and put back - because every area's handlers are in the
+image: `CommitChoice` and DIV-0140's `InButtonArea` read the home area while
+its text is in place. The five handlers each master's messages raise touch
+only the message word, the talk's bytes and global state (zenny, inventory,
+story bytes): 14 masters work as they are; masters 3, 5 and 9 have a leave
+pose that writes `Sprite_Objects[byte 0x90384B]`, a script variable that
+names the master's sprite only in its own area - skipped during a camp talk
+(the hack, which leaves SISYOU alone, writes another object there). Sites:
+`ShopBrowse_Choose` (`shop_browse.cpp`), `Field_ModeTailRun` (the kind read
+once, the original's single jump), `FieldIdle_Tick`, `FieldTail_LoadBank`
+states 1 and 3 and the swaps (`field_7.cpp`, `field_idle.h`),
+`MasterScreen_State6Leave` (`master_quit.cpp`), `CommitChoice`
+(`msg_box.cpp`), `InButtonArea` (`text_draw.cpp`). The statics and the saved
+bytes join `BEHAVIOURS` (version 3), are cleared in `GameMode_Start`, and a
+record taken in a camp talk is refused with the behaviour off. **Owed with
+the game:** the fuzz rows of `field_e2_fuzz.cpp` (`FieldTail_LoadBank`),
+`field_modes_fuzz.cpp` (`Field_ModeTailRun`), `rest_2c_fuzz.cpp`
+(`ShopBrowse_Choose`), `rest_2d_fuzz.cpp` (`MasterScreen_State6Leave`),
+`item_use_fuzz.cpp` (the two commits) off (0 mismatches) and on (the
+confirm of `ShopBrowse_Choose` alone); the state-hash routes off; in play
+under `BOF3X_ON=CampMasters` on an `en-US` install with a save that has met
+several masters: each of a plain master (0, home area 3), area 37's (11..14),
+master 3, 5 or 9 (the leave pose) and master 10 or 16 (an item taken) talked
+to from the list in another area - the home's lines, the choices answered,
+the skills or the apprentice changed, the field back with the standing
+area's own dialogue and choices (talk to an NPC after); a furigana layer on
+(the standing area's row back after); a quick-save and quick-load inside a
+talk; and the same list off (the detail page, as before).
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

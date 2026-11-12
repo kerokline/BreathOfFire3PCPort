@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/field/field_idle.h"   // DIV-0223: CampTalk
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -394,10 +395,18 @@ extern "C" void __cdecl MasterGrant_Step2Next(void) {
 // script's sprite (Sprite_Objects by the byte 0x90384B) given the state byte
 // 0x66459C[master] unless that is 0xFF; the screen's state 0 and the mode
 // tail's step on.
+//
+// DIV-0223 CampMasters: a talk from the master list skips the pose. The byte
+// names the master's own sprite only in the master's area (its script sets
+// it); from the list the talk runs elsewhere, where the byte is whatever the
+// standing area left in that script variable - another object, or past the
+// 30 records. The Definitive Edition romhack leaves this state as it is (its
+// SISYOU.EMI is the release's), so on its disc the pose lands on that other
+// object; ours does not (docs/camp-masters.md 3).
 extern "C" void __cdecl MasterScreen_State6Leave(void) {
     if (Field_Request == 2) return;
     const unsigned char pose = BRest2d(::bof3::Img(rest_2d::at::kMasterLeavePose.v) + AreaW0c_TailSub);
-    if (pose != 0xFF) {
+    if (pose != 0xFF && !field_idle::CampTalk()) {
         const U sprite = RecordChecked(::bof3::Img(Sprite_Objects_addr), 0xA4, 30, BRest2d(::bof3::Img(rest_2d::at::kScriptObject.v)), "Sprite_Objects",
                                        "MasterScreen_State6Leave");
         BRest2d(sprite + 1) = pose;

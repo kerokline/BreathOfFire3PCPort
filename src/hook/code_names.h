@@ -124,6 +124,7 @@ namespace bof3::behaviours {
 
 enum class Id : int {
     AllyAnywhere,
+    CampMasters,
     DemoSkipButtons,
     DoubleHitSwords,
     EasierMasters,
@@ -131,9 +132,10 @@ enum class Id : int {
     SmokeSkill,
     VillageCountPlural,
 };
-constexpr int kCount = 7;
+constexpr int kCount = 8;
 constexpr const char* kNames[kCount + 1] = {
     "AllyAnywhere",
+    "CampMasters",
     "DemoSkipButtons",
     "DoubleHitSwords",
     "EasierMasters",
