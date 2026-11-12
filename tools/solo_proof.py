@@ -213,7 +213,8 @@ def cmd_check(a):
         rc, first = check(a.root, route, 'ref', 'refb', side, f'check_{route}_{side}.txt') if ok else (1, '')
         runs = side
         verdict = 'identical' if rc == 0 else 'differs'
-        if rc != 0 and ok and not a.no_repeat:
+        # a stamped on-champ run differs by design (the mark's page): no repeat for it
+        if rc != 0 and ok and not a.no_repeat and not (champ and stamp):
             ok2, facts2 = run_side(a.root, route, side + '2', os.path.join(a.root, 'Lcand'), env, a.minutes)
             runs += ',' + side + '2'
             if ok2:
@@ -236,8 +237,8 @@ def cmd_check(a):
                     verdict += ' (stamped: route does not qualify)'
         if not ok:
             verdict = 'run failed'
-        if rc != 0 or not ok:
-            bad += 1
+        if not ok or (rc != 0 and not (champ and stamp)):
+            bad += 1   # a stamped on-champ route does not qualify: reported in its row, not a failure
         append_result(a.root, {'when': time.strftime('%F %T'), 'route': route, 'variant': a.variant,
                                'verdict': verdict, 'first_difference': first, 'runs': runs,
                                'stamp': stamp[:120], 'notes': '; '.join(notes)})
