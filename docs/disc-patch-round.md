@@ -817,6 +817,72 @@ area's own dialogue and choices (talk to an NPC after); a furigana layer on
 (the standing area's row back after); a quick-save and quick-load inside a
 talk; and the same list off (the detail page, as before).
 
+## 6c. The behaviours' proof with the game, as run (2026-11-12)
+
+At `romhack/behaviours` `63e9277a`, on a hands-off machine: one game at a
+time, no build or other heavy job beside a run. Scratch root
+`D:\bof3x-runs\de1112\proof` (scripts `build.sh`, `prep.sh`, `st.sh`,
+`fuzz_on.sh`, `chain.sh`, `mod.sh`, `live.sh`, the last four run in that
+order by `all.sh`; copies of `il1112`'s and `dp1111\run_c.sh`'s method).
+Both widths were built before the first run; the baseline is `main`
+`c14b805c`'s build at `D:\bof3x-runs\il1112\wt\build` (rebuilt: no work to
+do). Ini-less launcher copies `Lmain`, `Lnew`, `Lnew64`; a PC game folder of
+our own (`g`; `DAT`, `BGM`, `SND` junctioned, read only); the branch's
+`exe_tables.py` writes the same `base\exe` as `main`'s (`caches\pc_new`
+against `pc_main`: only the date line differs). 01:50 to 03:53.
+
+| Check | Result | Output |
+|---|---|---|
+| 1. The exe host's self-test, behaviours off | exit 0 at both widths, no `Fatal`, no `MISMATCHES` above 0. 10,376 log lines against `main`'s 10,373: the three more are `behaviours: 0 of 8 on`, `behaviours self-test: 21 checks passed` and the `BEHAVIOURS` quicksave participant (every other line the same, numbers folded) | `st\exe32_main.log`, `st\exe32_new.log`, `st\exe64_new.log` |
+| 1. The hosted shadow suite, `BOF3X_SHADOW='*'`, 32-bit in the folder's `BOF3.exe` | exit 0 in 927 s; **916 `MISMATCHES` lines, none above 0**. The reference is `STATUS.md`'s 916 (the Linux round at `main`'s tip); `main`'s suite was not run again | `st\hosted_new.log` |
+| 2. `BOF3X_ON=NoSuchName` | exit 3, the `Fatal` naming `"NoSuchName"` and the release's 8 | `st\on_nosuch.log` |
+| 2. `BOF3X_ON=` the eight (self-test only) | exit 0 at both widths: eight `behaviour ON` lines, `behaviours: 8 of 8 on` | `st\on_all8.log`, `st\on_all8_64.log` |
+| 2. `BOF3X_ON=SmokeSkill BOF3X_OFF=SmokeSkill` | exit 0; `behaviour OFF SmokeSkill ... off wins`, `0 of 8 on` | `st\on_off_smoke.log` |
+| 2. The parser's self-test | `behaviours self-test: 21 checks passed` in every start above | as above |
+| 3. The state hash, behaviours off, ten routes (`bof3x.exe` 32-bit, `BOF3X_OPT=none BOF3X_LAYERING=0`; `main` twice, the branch once) | **identical on every compared tick of all ten** (combat 2,561, shop 3,137, caughFish 3,841, field_menu 1,409, menu_screens 1,729, dragonTransform 4,289, cutsceneAndNue 7,361, masterAndManillo 5,505, worldMapAndAreaTransition 2,113, whelpBoss 13,185); every run `recipe done`, no `Fatal`; the branch's logs say `0 of 8 on`. No recheck was needed | `chain.log`, `sh\check_<route>.txt` |
+| 4. The hosted fuzz, the eight on | a suite stops at the first group that mismatches, so: the 19 groups that hold a guarded function, each alone, then `'*'` less those 19. **The rest: exit 0, 876 `MISMATCHES` lines, none above 0.** The 19: below | `fuzz_on\status.txt`, `fuzz_on\A_<group>.log`, `fuzz_on\B1.log` |
+| 5. The mod rebuilt by the branch's builder, `needs` naming the eight (on a copy of `dp1111\home`) | `mods.py add` replaced it (`behaviours` the eight, none missing), `build` exit 0 in 91 s. `report.toml`: `zero_record_bytes = 149`, `zero_records = 10`, `outside_files = 15`, `outside_bytes = 137216`, `outside_sectors = 0`. Cells against the pre-fix layer: `shop_records` 33 cells, 149 bytes before, **0 after**, and no `shop_records.bin`; the other six tables' cells and bytes the same (1,176 cells, 2,259 bytes); the `dat\` files the same bytes | `mod\status.txt`, `mod\cells.txt`, `mod\build.log` |
+| 5. The exe host's self-test started by the branch's launcher, no `BOF3X_OPT` or `BOF3X_ON` in the environment (`language=en-US`) | exit 0: both layers taken (optional layers 2 and 3), `6 tables, 1176 cells, 2259 bytes`, `38 ranges, 64 bytes`; the launcher's eight `the mod definitive (Definitive Edition) turns on the behaviour <Name>` lines, `BOF3X_ON` the eight, **`behaviours: 8 of 8 on`**. `mods_off=definitive`: no mod layer, `0 of 8 on`, the mapped `.data` hash 5d's with no layer | `mod\on.log`, `mod\on.out`, `mod\off.log` |
+| 5. `dialog_test.py` | **not run**: it finds the launcher's windows by title (`FindWindowW(None, ...)`), not by the process it starts | - |
+| 6. Live, the mod on through the launcher's hand-over, the US disc-only copy, `--no-front` | `combat`: `recipe done at recipe frame 2620`, 100 s; `menu_screens` (a start, a save loaded, each top-bar screen): `recipe done at recipe frame 1770`, 75 s. Both: layers 2 and 3 taken, `8 of 8 on`, no `Fatal`, no crash. A smoke test only: the routes were recorded without the mod. No attract run to the title alone was made | `live\status.txt`, `live\combat.log`, `live\menu_screens.log` |
+
+**The fuzz with the behaviours on, group by group.** Mismatches, each in a
+function a behaviour changes, so expected: `area_w1f`
+`Area68_ChoiceAskCount` (122 rounds, EasierMasters), `area_w2c`
+`Area91_State0CheckItem57` (1,618, EasierMasters), `title_states`
+`Title_StateDemo` (214 of 34,000, DemoSkipButtons), `mode_flow`
+`Game_ClockTick` (287, ShortSkillLockout), `rest_2d` `FieldAbility_NoEffect`
+(6,000, SmokeSkill), `rest_2f` `Tactics_Top` (618, AllyAnywhere), `rest_2c`
+`ShopBrowse_Choose` (629, CampMasters). No other function of these groups
+mismatched. 0 mismatches in `battle_actions`, `event_ops`, `event_leader`,
+`field_e2`, `field_modes`, `menu_lists`, `menu_windows`, `menu_draw_helpers`,
+`rest_2g`, `rest_4f`, `rest_4e`, `item_use`: for CampMasters'
+`FieldTail_LoadBank`, `Field_ModeTailRun`, `MasterScreen_State6Leave` and
+the two commits, and AllyAnywhere's `FieldMenu_TopBarInput`, the guarded
+paths read statics of ours that a self-test leaves clear; for
+VillageCountPlural's `ListHeading`, the plural path is under a written group
+14, and the PC folder has no Western layer; for AllyAnywhere's
+`Menu_DrawButtonRow` (verb `0x12` under `Game_Mode` 3), why no row reaches
+it was not traced. No unexpected group mismatched (B1 exit 0). D396 does not
+apply: no switch was off.
+
+**Findings.**
+
+- **The `battle_actions` fuzz does not reach DoubleHitSwords** (0
+  mismatches with it on). `DoubleHitSword` reads the party record's
+  `weapon` (`Party(actor)`); the fuzz varies the party and enemy objects
+  (`ObjTrio_addr`), the actor byte and the kind, not the records, so no row
+  has weapon 6, 9 or `0x18`. The behaviour's only proof is still the fight in
+  play. A gap of the harness, not a failure.
+- **The `event_ops` fuzz never runs, on `main` too.** `event_ops::SelfTest`
+  (`src/game/field/event_ops_fuzz.cpp`) has no caller at the branch's tip or
+  at `c14b805c` (`git grep`), so `BOF3X_SHADOW=event_ops` runs nothing, and
+  `Field_EncounterDue` (SmokeSkill's second site) has no fuzz. `main`'s gap;
+  not fixed here.
+
+Still owed: `dialog_test.py` with a mod that has `needs` (once it finds its
+window by process), and every check in play that 6b lists.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |
