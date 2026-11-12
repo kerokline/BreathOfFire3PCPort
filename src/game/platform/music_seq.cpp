@@ -53,16 +53,6 @@ bool FileExists(const char* path) {
     return bof3::os::IsFile(path);
 }
 
-// lstrcmpiA's equality for ASCII names: the case of a letter does not count.
-bool SameName(const char* a, const char* b) {
-    for (; *a && *b; ++a, ++b) {
-        const char x = *a >= 'A' && *a <= 'Z' ? static_cast<char>(*a + 32) : *a;
-        const char y = *b >= 'A' && *b <= 'Z' ? static_cast<char>(*b + 32) : *b;
-        if (x != y) return false;
-    }
-    return *a == *b;
-}
-
 struct State {
     unsigned char armed = 0;       // BOF3X_MUSIC seq and a cache with base\bgm (or a named layer's bgm)
     char root[kRootMax + 1] = {};  // BOF3X_CACHE, no trailing separator
@@ -186,7 +176,7 @@ void CheckCache(const char* dir) {
         const unsigned track = static_cast<unsigned>(std::strtoul(name, nullptr, 10));
         char expect[16];
         std::snprintf(expect, sizeof expect, "%03u.DAT", track);
-        if (!SameName(expect, name)) return true;  // not a name LoadFile builds
+        if (!bof3::os::SameName(expect, name)) return true;  // not a name LoadFile builds
         char path[kPathMax + 1];
         std::snprintf(path, sizeof path, "%s\\%s", dir, expect);
         ReadWhole(path, &bytes);

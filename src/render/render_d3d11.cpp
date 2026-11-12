@@ -1151,8 +1151,9 @@ bool SaveOnFiber(const wchar_t* path) {
             }
         }
         std::ofstream f(std::filesystem::path(path), std::ios::binary | std::ios::trunc);
-        ok = f.write(reinterpret_cast<const char*>(out), static_cast<std::streamsize>(size)).good();
-        f.close();
+        f.write(reinterpret_cast<const char*>(out), static_cast<std::streamsize>(size));
+        f.close();   // the flush is part of the write: a close that fails is a frame not saved
+        ok = !f.fail();
         if (!ok) bof3::Log("render: SaveFrame: cannot write the file");
         std::free(out);
     }
