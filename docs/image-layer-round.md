@@ -3,8 +3,10 @@
 **Status:** IN PROGRESS (IDEAS I58, its second step; staged 2026-11-11 and
 groups A, B and C built the same day on `image-layer/round`, sections 5a to
 5c - the image proven the same on every build, a PC install on the same
-route (DIV-0212), the `table-edit` mod kind (DIV-0213); the state-hash routes
-and the owner's look still owed; group D not started). Section 1's numbers were measured on `main`
+route (DIV-0212), the `table-edit` mod kind (DIV-0213); group D built in the
+disc-patch round. M3's rest, M5 and M6 run 2026-11-12 (section 2); acceptance
+2, the state-hash routes, and M4, the start-up cost, prepared and not run;
+acceptance 5, the owner's look, the owner's). Section 1's numbers were measured on `main`
 `7a495bd6`. Sections 3 and 9 are the plan as staged; where the build differs,
 section 5a says so.
 
@@ -105,7 +107,7 @@ yet a named table keeps travelling as byte ranges, as today.
 M decides the list of tables that become files in this round. A table that
 fails 1 or 3 stays in the image with its reason written in `tables.toml`.
 
-### M1 to M3 as run (2026-11-11; M4, M5 and M6 not run)
+### M1 to M3 as run (2026-11-11; M3's rest, M5 and M6 run 2026-11-12, M4 prepared, not run)
 
 Read from the seven disc-built images of the exe-gap round's end batch
 (`C:\Users\kerok\bof3x-runs\eg1031\end\c_<build>\base\exe\data.toml`, generated
@@ -148,7 +150,157 @@ image; this round makes the form, not the catalogue.
 
 **M3, in part.** M1 answers the pointer half: no file table has a byte on a
 pointer class (`pointer`, `rebuilt`, `layout`). The item tables' chain and
-readers that index past a count are not checked.
+readers that index past a count: the next subsection.
+
+### M3's remainder, M5 and M6 as run (2026-11-12)
+
+Static reads, no game started. Worktree `image-layer/finish` off `main`
+`c14b805c`; scratch `D:\bof3x-runs\il1112` (scripts `m3_sites.py`,
+`m3_uses.py`, `m5_compare.py`, `m6_rdata.py`; the images `m5\pc` and
+`m5\jp`, written by this branch's `exe_tables.py build` from `BOF3.exe` and
+from the JP disc). The catalogue is the 34 tables of `tables.py check`, 30 of
+them file tables (5e).
+
+**M3a. The item tables' chain is layout, not arithmetic.** From
+`symbols.toml`, each table starts where the one before it ends:
+
+| Table | Starts at | = |
+|---|---|---|
+| `key_items` | `0x657310` | `consumables` + 92 x 22 |
+| `weapons` | `0x657450` | `key_items` + 16 x 20 |
+| `armour` | `0x657D68` | `weapons` + 83 x 28 + 4 (the 4 bytes are no table: class `exe` in the PC-built image, `none` in the JP one) |
+| `accessories` | `0x658450` | `armour` + 68 x 26 |
+| `shop_records` | `0x658930` | `accessories` + 52 x 24: the chain goes one table further than `tables.toml` says |
+
+Each address is the linker's, fixed in `BOF3.exe`; no reader computes one
+table's address from another's length - every site below names its own
+table's address or symbol. The files keep the chain: `exe_tables.py:358`
+takes each table's span from its own symbol and `count * stride`; the engine
+refuses a row whose span is not `count * stride` (`exe_image.cpp:423`), a file
+of another length (`:452`), a layer's table at another place, count or
+stride than the base's (`:944`), and a cell past the count (`:977`). In both
+images the `file` ranges of the six abut exactly as the table above. A table
+that grows stays refused (section 8).
+
+**M3b. Readers that can index past `count`.** Every `src/` site that names a
+catalogued table, by symbol, by an address inside it, or by a header constant
+whose value is inside it (`m3_sites.py`: 695 lines; `m3_uses.py`: 91
+constants, 281 lines), read for the index and what bounds it. Nine file
+tables are bounded at every site found:
+
+| Table | The bound |
+|---|---|
+| `damage_variance` | `Rand & 7` (`battle/battle_3.cpp:1917`) |
+| `hp_damage_variance` | `Rand & 7` (`battle/dragon_cmd.cpp:809`) |
+| `encounter_slot_chance` | `k < 8` (`field/encounter.cpp:284`) |
+| `encounter_areas` | a walk to the table's end (`field/field_6.cpp:754`) |
+| `move_op_lengths` | a byte opcode over 256 records (`field/move_cmd.cpp:114`) |
+| `event_op_lengths` | `byte >> 4` over 16 (`field/event_script.cpp:438`, `540`, `575`, `682`) |
+| `fishing_rule_titles`, `fishing_rule_lines` | `WordOf`'s Fatal past the count (`effect/effect_kind_0f.cpp:355`; `2657`, `2664`) |
+| `char_defaults` | `n < 7`, and the eighth record by its address (`battle/battle.cpp:121`, `135`) |
+
+(`sin_table`, in the image, is bounded too: index at most `0x400` of 1,025,
+`platform/gte.cpp:274`.) **The other 21 file tables have readers whose index
+can pass the count**, each the original's unchecked index kept as a read:
+
+| Table (count) | The index and its width | Sites (`src/game/`) |
+|---|---|---|
+| `consumables` (92), `key_items` (16), `weapons` (83), `armour` (68), `accessories` (52) | the item id's low byte, 0..255 | `menu/char.cpp:771` (`Item_UseFlags`; with id 255 the accessory row reaches `0x659C49`, inside `exp_table`: `game_last_callees.h:25`), `menu/char.cpp:720`..`724`, `core/title.cpp:676`, `magic/identify.cpp:469`, `magic/steal.cpp:279`, `community/commu_sim.cpp:419`, `menu/menu.cpp:766`; one site bounded: `effect/effect_kind_0f.cpp:383` (a Fatal past 52) |
+| `abilities` (228) | the ability id, a u16 or its low byte | `effect/effect.cpp:240`, `effect/effect.cpp:2305`, `battle/battle_obj.cpp:70`, `menu/char.cpp:788`, `1044`, `1090`, `shop/shared_list.cpp:809`; `battle/battle_fx.cpp:797` "unchecked (kept: a read)" |
+| `ability_effect_index` (228) | `ability & 0xFFFF` | `effect/effect.cpp:913` |
+| `exp_table` (693 = 7 x 99) | the roster index's low byte x 99 (the level loop stops at 99) | `field/char.cpp:64`, `menu/menu.cpp:780`, `menu/master_talk.cpp:301` |
+| `shop_records` (50) | a shop byte; and **a write**: `FieldTrigger09` stores into the record an object's dword `+0x1C` names, unchecked - record 50's byte is the 2 bytes after the table, and from 51 it lands in `ItemUse_Handlers` (`0x658DB0`, a pointer table) | `shop/shop_mode.cpp:112`; the write `field/field_trigger_01.cpp:69` |
+| `event_battles` (56) | a byte | `field/field.cpp:41`, `field/field_6.cpp:1566` ("unchecked", `:1556`), `core/transition.cpp:946`, `battle/battle_4.cpp:211` |
+| `steal_rates`, `skill_steal_rates` (8) | the enemy's byte `+0xAA` | `magic/steal.cpp:172`, `magic/skill_steal.cpp:123` ("the row unbounded", `:104`) |
+| `status_resist`, `psi_affinity`, `status_resist_20` (8) | a class byte | `battle/dragon_cmd.cpp:532` (`ClassLookup`), `:745`; `effect/effect.cpp:2292` |
+| `holy_affinity` (8) | the holy byte (`records.h:215`, `296`) | `battle/battle_3.cpp:1926` |
+| `direction_angles` (8) | the direction byte, whole | `field/event_cond.cpp:427` ("past them: what follows in .data", `:416`), `field/field_3.cpp:206` |
+| `direction_steps` (8) | the direction, unmasked at most sites | e.g. `field/field_3.cpp:132`, `field/field_core.cpp:129`, `field/field_4.cpp:73`, `field/field_6.cpp:351`, `effect/effect_kind_34.cpp:1164`; bounded at `field/field_3.cpp:99` (`& 7`) and `area/area_45.cpp:367` (Fatal); the fuzz seeds 16 rows (`field/field_hidden_fuzz.cpp:383`), and past 8 the next bytes are `move_speeds` |
+| `move_speeds` (6) | a byte | `field/field_core.cpp:485` ("the image's six read past, as the original's"), `field/area_map.cpp:3380`, `field/event_cond.cpp:156`, `scenario/scena_06_3.cpp:2168` and more |
+| `sprite_key_adjust` (16) | `key_class * 3 + 0..2`, `key_class` a byte | `field/sprite.cpp:325` |
+| `master_abilities` (17, by its extent) | the master byte `AreaW0c_TailSub` x 6 | `menu/master_quit.cpp:354`, `361` |
+
+**What it means here.** None is a defect of this round: the bytes past a table
+are the next table's or the image's, and with no layer they are the bytes they
+were (acceptance 1). With a layer they can be another layer's cells: a reader
+past the end of one table sees what a layer wrote into the next (a weapon id
+of 83 or more reads into armour; an accessory's flag byte for an id above 116
+is in `exp_table`, which `psp-tables` changes). The indexes come from the
+game's own data; whether any route drives one past a count was not measured
+(a read logged past the end would say). The one write, `FieldTrigger09`, is
+the original's (`0x456B40`, no PSX twin paired) and is reported, not changed.
+
+**M5. A PC-built cache against the JP disc's: 22 of 30 files equal.**
+`m5_compare.py m5\pc\base\exe m5\jp\base\exe`, byte for byte, per file
+(counts only):
+
+| Files | Differ | What, and where `exe-import.md` lists it |
+|---|---|---|
+| 22 (every file but the eight below) | 0 bytes | - |
+| `abilities` 1,148, `consumables` 532, `weapons` 504, `armour` 429, `accessories` 360, `key_items` 100 | 3,073 bytes, every one in a 16-byte name field; 0 cells outside them | the PC's names against blank fields: section 3, `widen` ("blank by design"). The 3,073 is 5a's count; section 3 counts 3,065 `widen` bytes for JP - the 8 between were not traced |
+| `char_defaults` | 53 bytes, every one in a record's 9-byte name: 2 in the first 7 bytes of record 0 (the hole the language layer owns, zero in the JP file), 51 in records 1..7 | section 3: "`Char_DefaultRecords` ... 51 (JP ...) bytes - their names" |
+| `event_op_lengths` | 1 byte, record 15 | section 4: "the JP disc's unused `EventScript_OpLengths` entry 15" |
+
+So **every difference is one `exe-import.md` already lists by build**, and the
+only number that differs is `event_op_lengths`' entry 15. `fishing_rule_lines`
+is equal to JP (5a's Western differences are not the JP disc's);
+`exe-import.md` predates the three newest tables and the two fishing tables.
+
+**M6. `.rdata` holds no game table.** `tools/pe_read.py` on `BOF3.exe`:
+`.rdata` is `0x5C4000` + `0x15D22` (raw `0x16000`); initialised `.data` is
+`0x5DA000` + `0x9C000`. Every catalogued table with a PC symbol is in `.data`
+(`songs` has none). What is named in `.rdata` (`m6_rdata.py`):
+
+| Class | Count | Names |
+|---|---|---|
+| import-address-table slots | 14 | `Imp_DirectDrawEnumerateA`, `Imp_DirectSoundCreate`, `Imp_GetTickCount`, `Imp_ExitProcess`, `Imp_TerminateProcess`, `Imp_PostQuitMessage`, the `PsxRest_Import*` four, `Sound_ImportCreateEvent`, `Sound_ImportCloseHandle`, `Sound_ImportMsgWait`, `Shell_ImportGetDriveType` |
+| float literals | 12 | `AreaMapBD_NarrowYBound`, `AreaMapBD_WideYBound`, `Rest2b_ModelOffsetY`, `Rest2b_ModelOffsetX`, `Sound_FullVolume`, the `D3d_*` four, `DisplayEnv_Inverse255`, `Sound_VolumeScale`, `Sound_InverseFullVolume` |
+| double literals | 3 | `Glyph_InverseTexels`, `MoveCmds_InversePi`, `MoveCmds_Scale` |
+| an SDK GUID | 1 | `DInput_KeyboardGuid` |
+| the SDK's keyboard format | 1 | `DInput_KeyboardFormat` |
+
+31 `symbols.toml` entries, all `[[data]]`. `exe_tables.py xref` (`m6_xref`)
+gives the same 31 and 38 raw addresses in `src/`: the other literals, the
+other three GUIDs, and `0x5C8000` / `0x5D0000`, which are field coordinates,
+not reads - [`exe-import-engine.md`](exe-import-engine.md) section 2's list.
+What the exe host puts in `.rdata` (`rdata::Map`,
+`src/game/platform/rdata_consts.cpp:128`): the 44 constants of
+`rdata_consts.h` (37 floats, 3 doubles, 4 GUIDs) and `c_dfDIKeyboard`'s
+header at `0x5C4948`; the rest zero. All of it is the compiler's, the
+loader's or the SDK's. Expected none; none.
+
+**M4 and acceptance 2: prepared, not run** (the owner was at the machine; a
+route needs it hands-off). In `D:\bof3x-runs\il1112`:
+
+- `base` (a detached worktree of `ad7ed59e`, the merge before PR 224) and
+  `wt` (this branch) built, i686; their four files in the ini-less copies
+  `Lbase` and `Ltip`; the game folder `g` (`BOF3.exe`, `BOF3.CFG` and the
+  movies copied from `bof3\`, `DAT`, `BGM`, `SND` junctioned to it);
+  `prep_pc.sh`.
+- Four caches, two forms: `caches\pc_base` (the PC-built image whole, and
+  `psp-tables` as `place.toml` + `place.bin`, both by the baseline's own
+  tools) and `caches\pc_tip` (the image as 30 table files, and `psp-tables`
+  as `tables.toml` + one file a table, by this branch's); the two images hash
+  alike, `b9f91e23...`, `BOF3.exe`'s `.data`. The layer's two forms need the
+  two caches: the tip refuses the old form and the baseline cannot read the
+  new one. `build_psp_tables.py` calls each side's `psp_layers.build_exe`.
+  On the tip, `pc_tip` takes the PC install through DIV-0212's route (the
+  launcher names the cache's image, the engine compares it with the file).
+- `us_base` / `us_tip` and `gdisc_base` / `gdisc_tip`: a disc-only US cache
+  and install per side, each by its own importer (`prep_disc.sh`); both
+  manifests record the same image hash, `494beb3a...` (the tip's install
+  carries the logo movie as the disc's `.STR`, PR 228's, the baseline's as an
+  `.AVI`).
+- `chain_il.sh <routes>`: per route, the baseline twice (the references; the
+  `orig4` pairs are stale) and the tip once, `BOF3X_OPT=none
+  BOF3X_LAYERING=0`, then `statehash.py check`. `chain_il_psp.sh <routes>`:
+  the same with `BOF3X_OPT=psp-tables`. The ten routes are pr226fix's.
+  Not yet known: whether the baseline's launcher takes a cache holding only
+  `base\exe` and `opt\` (the tip's did, 5b).
+- `startup_cost.sh`: five self-test-only starts each of base and tip, on `g`
+  and on the disc-only installs, timed by the wall clock to `bof3x.log`'s
+  `.data as mapped`, `inject:` and `self-test only: done` lines (the log has
+  no timestamps).
 
 ## 3. The files
 
@@ -363,7 +515,8 @@ union`); not this round's.
   language layer was rebuilt.
 - **M3's rest, M4 and M6**: readers that index past a count, the start-up
   cost (the self-test runs took as long as before to the eye; not timed), and
-  `.rdata`.
+  `.rdata`. M3's rest and M6 ran 2026-11-12, M4 was prepared (section 2,
+  "M3's remainder, M5 and M6 as run").
 - Nobody has played it.
 
 ## 5b. One route for every install kind (2026-11-11, DIV-0212)
