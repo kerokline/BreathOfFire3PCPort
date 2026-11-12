@@ -89,7 +89,8 @@ is live without a known use. The meaning of a few read bytes is still thin
 | `+0xF10` | 300 | Faerie names, 60 of 5 bytes | E |
 | `+0x103C` | 4 | UNTOUCHED | E |
 | `+0x1040` | 1 | **Ours, not Capcom's:** the mountain-passes bits of DIV-0191 (1 in 9 saves) | E |
-| `+0x1041` | 111 | UNTOUCHED | E |
+| `+0x1041` | 107 | UNTOUCHED | E |
+| `+0x10AC` | 4 | **The Definitive Edition mod's, not Capcom's:** the town warp's visited towns of DIV-0225, bits 0..30 a town each, bit 31 "forgotten" ([`town-warp.md`](town-warp.md) 5); written only with `TownWarp` on | E |
 
 ## 3. A character record
 

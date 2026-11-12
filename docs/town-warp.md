@@ -110,9 +110,17 @@ longest page fits the buffer).
 
 `report.toml` `[carried]` gains `town_warp_towns` (the count; 0 when not
 carried), and the warp's file leaves `[not_carried]`'s `outside_files` /
-`outside_bytes`. The Mods tab says `a town warp of N places`. A mod whose
-`needs` names `TownWarp` and whose patched disc has no such file this reader
-recognises does not build.
+`outside_bytes`. The Mods tab says `a town warp to N towns`. Only a mod
+whose `needs` names `TownWarp` carries it; such a mod whose patched disc has
+no such file this reader recognises does not build.
+
+**As built on the real patch, offline (2026-11-12, a copy of the proof's
+scratch install, `D:\bof3x-runs\de1112\b6\home`):** `mods.py build` exit 0
+in 107 s; `mod-definitive\dat\FIRST.DAT` holds kind 21 tag 0 (178 bytes),
+`mod-definitive-en-US\dat\FIRST.DAT` gains kind 21 tag 1 (178 bytes);
+`report.toml` `town_warp_towns = 11`, `outside_files` 15 -> 14,
+`outside_bytes` 137,216 -> 133,120, `text_chunks` 345 -> 346; the Mods tab's
+line ends `a town warp to 11 towns`.
 
 ## 5. What is saved
 

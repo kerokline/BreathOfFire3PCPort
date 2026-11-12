@@ -166,8 +166,18 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
     else if (b == 0x50) index = 7;
     else index = b == 0xA8 ? 9 : 0;
     using Effect = unsigned (__cdecl*)(unsigned, unsigned, unsigned);
-    const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
-    const auto answer = static_cast<unsigned char>(handler(caster, target, battle));
+    unsigned char answer;
+    if (index == 0 && b == 0x6F && bof3::BehaviourOn(bof3::behaviours::Id::TownWarp)) {
+        // DIV-0225 TownWarp. The Definitive Edition romhack (evidence: the
+        // patched US disc, START.EMI 8's handler table 0x801ED224 slot 0 made
+        // GAME.EMI's 0x8019C304; its dispatcher 0x801E7D20 passes the ability
+        // in s0) answers ability 0x6F there: on the world map, "asked" and 1,
+        // so the AP cost is taken; else 3, handler 0's own answer.
+        answer = field_idle::TownWarpUse();
+    } else {
+        const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))));
+        answer = static_cast<unsigned char>(handler(caster, target, battle));
+    }
     if (answer == 1 || answer == 5) {
         const unsigned char again = SH_CALL(Skill_ApCost)(caster, ability, 0);
         const U checked = working ? RecordChecked(::bof3::Img(rest_2d::at::kWorking.v), rest_2d::at::kObjStride, 3, c, "the working records", "FieldAbility_Use")

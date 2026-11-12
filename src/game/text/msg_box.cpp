@@ -62,7 +62,16 @@ namespace {
 // master's home area's text block, the home area's table (field_idle.h
 // TextArea) - the hack points the standing descriptor's +0x34 at a copy of it;
 // this is the one reader of +0x34.
+//
+// DIV-0225 TownWarp: while the box is the town-warp menu's, its answer
+// (field_idle.h) - the hack points the standing descriptor's +0x34 at a
+// two-entry table of its answer for the menu's life; ours writes no
+// descriptor.
 void CommitChoice() {
+    if (field_idle::TownWarpChoice()) {
+        field_idle::TownWarpAnswer();
+        return;
+    }
     const unsigned id = ItemUse_ChoiceId;
     if (id < 0x80) {
         const unsigned char* const desc = Area_Descriptors[field_idle::TextArea(Game_AreaNumber)];

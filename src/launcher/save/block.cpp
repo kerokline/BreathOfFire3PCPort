@@ -335,6 +335,9 @@ void StoryFields(std::vector<Field>& f) {
     f.push_back(Num("Desert walk: count", 0x67E, 1, 'A'));
     f.push_back(Num("Desert walk: reserve", 0x67F, 1, 'A'));
     f.push_back(Bit("Mountain passes open", 0x1040, 0, 'A', "From this project, not from the original game (DIV-0191)."));
+    f.push_back(Typed("Town warp: towns visited", Type::kHex, 0x10AC, 4, 'A',
+                      "From the Definitive Edition mod, not from the original game (DIV-0225). Bits 0 to 30 are the "
+                      "towns. Bit 31 is set when the game forgets the towns."));
 }
 
 void CounterFields(std::vector<Field>& f) {
@@ -368,7 +371,7 @@ void OtherFields(std::vector<Field>& f) {
     constexpr Range untouched[] = {{0x00A, 6},  {0x010, 2},  {0x018, 2},  {0x01A, 6},  {0x026, 1},  {0x038, 56},
                                    {0x072, 2},  {0x074, 4},  {0x07F, 17}, {0x670, 8},  {0x752, 2},  {0xC15, 5},
                                    {0xC73, 1},  {0xC7A, 2},  {0xC84, 28}, {0xCAB, 1},  {0xCB5, 1},  {0xCBA, 2},
-                                   {0xCCE, 2},  {0xCEF, 1},  {0x103C, 4}, {0x1041, 111}};
+                                   {0xCCE, 2},  {0xCEF, 1},  {0x103C, 4}, {0x1041, 107}};
     for (const Range& r : untouched) {
         char label[40];
         std::snprintf(label, sizeof label, "Bytes +0x%03X (%u)", static_cast<unsigned>(r.at), static_cast<unsigned>(r.size));
