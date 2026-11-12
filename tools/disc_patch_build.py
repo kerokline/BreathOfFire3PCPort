@@ -27,7 +27,10 @@ its build step, run by `mods.py build` and by setup on the player's machine:
      are the mod's: a byte in a table that is a file becomes a cell of
      `mod-<id>`'s exe/tables.toml, any other a raw range of its exe/place.toml
      where the install's image lets a layer write there;
-  6. both layers into <cache>/opt/, and their manifest rows returned.
+  6. both layers into <cache>/opt/, and their manifest rows returned;
+  7. for a mod whose `needs` names TownWarp (DIV-0225, docs/town-warp.md 4),
+     the town warp's table and text, read from its file outside the disc's
+     directory, as kind 21 of each layer's FIRST.DAT.
 
 Nothing about a section's format is learned here: the importer's transforms
 and loc_build.py do the reading. The patched disc is never handed to either
