@@ -435,7 +435,7 @@ void FfmpegNote(HWND dlg, const Config& cfg) {
     else if (const DWORD n = SearchPathW(nullptr, L"ffmpeg.exe", nullptr, MAX_PATH, found, nullptr); n > 0 && n < MAX_PATH)
         note = L"ffmpeg: " + std::wstring(found, n) + L" (on PATH)";
     else
-        note = L"ffmpeg was not found. Only PSP disc music needs it. Without ffmpeg, the install has no PSP music.";
+        note = L"ffmpeg was not found. Only the logo movie of a PC install and the sound and movie of a PSP disc need it. Without ffmpeg, the install lacks them.";
     SetDlgItemTextW(dlg, IDC_SO_FFNOTE, note.c_str());
 }
 

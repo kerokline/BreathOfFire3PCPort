@@ -324,7 +324,7 @@ void TestManifest() {
     Check(a.snd_jingles_build.empty(), "no [snd_jingles]");
     // DIV-0129's jingles, read by the Jukebox's PlayStation streams
     const bof3x::CacheManifest j = bof3x::ManifestParse(
-        "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-mp3\"\n");
+        "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-clip\"\n");
     Check(j.snd_jingles_build == "psx-us" && j.snd_build.empty() && j.sources == std::vector<std::string>{"psx-us"},
           "[snd_jingles] build: the jingles' build, not [snd]'s, not a source", j.snd_jingles_build);
     Check(j.snd_jingles_dir.empty(), "[snd_jingles] with no dir (before DIV-0150): empty, base/snd");

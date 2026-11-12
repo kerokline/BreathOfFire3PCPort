@@ -1,21 +1,25 @@
-# The disc's logo movie, converted at import
+# The disc's logo movie
 
 **Status:** MEASURED (2026-10-12, the disc-only round's group FM,
-[`disc-only-round.md`](disc-only-round.md); all five PSX discs read, the
-conversion run from the US disc and opened through Video for Windows and MCI
-in a 32-bit process; not played in the game, not heard)
+[`disc-only-round.md`](disc-only-round.md); all five PSX discs read).
+**Since 2026-11-11 (DIV-0214, [`psx-media-round.md`](psx-media-round.md)) no
+conversion is made:** the importer copies the stream's raw sectors to
+`base/fmv/CAPCOM30.STR` and the engine decodes it (`src/media/str_movie`).
+Sections 3 and 4 below are the ffmpeg conversion this replaced; section 1's
+measurements stand.
 
-The port plays two AVIs through MCI (`Fmv_Play` `0x59E360`,
-`src/game/fmv_play.cpp`; DIV-0001, DIV-0035, DIV-0042): `CAPCOM.AVI`, then
-`LOGOS.AVI`. A disc-only install has neither. A PlayStation disc carries the
-first as an MDEC stream; the owner decided on 2026-10-12 that the player's
-ffmpeg converts it at import into the AVI the engine already plays, with no
-decoder in the engine. `importer.py build` now does that from any PSX disc.
-`LOGOS.AVI` (the porting house's logos) has no disc counterpart and is not
-this doc's (the owner's question, `disc-only-round.md` section 2); since
-2026-11-02 a game folder built from the PC install leaves it out too, and
-since 2026-11-08 the game skips it even where the file is present, so every
-source starts the same way (DIV-0202, `off=CapcomMovieOnly` plays it).
+The port plays two movies (`Fmv_Play` `0x59E360`; DIV-0001, DIV-0035,
+DIV-0042, DIV-0205): `CAPCOM.AVI`, then `LOGOS.AVI`. A disc-only install has
+neither. A PlayStation disc carries the first as an MDEC stream,
+`LOGO/CAPCOM30.STR`; `importer.py build` copies it unchanged from any PSX
+disc, `install` puts it in the game directory, and `Fmv_Play`, finding no
+`CAPCOM.AVI`, plays `CAPCOM30.STR` through our own STR, MDEC and XA decoders.
+No ffmpeg is used. `LOGOS.AVI` (the porting house's logos) has no disc
+counterpart and is not this doc's (the owner's question,
+`disc-only-round.md` section 2); since 2026-11-02 a game folder built from
+the PC install leaves it out too, and since 2026-11-08 the game skips it
+even where the file is present, so every source starts the same way
+(DIV-0202, `off=CapcomMovieOnly` plays it).
 
 ## 1. The movie on the discs
 

@@ -231,7 +231,7 @@ source lists the file that lookup lands on with that source's version in play:
 | Source | File | When it is there |
 |---|---|---|
 | PC port | the game folder's `SND\NAME.DAT` | a PC install |
-| PlayStation disc | the cache's `base\snd\NAME.DAT`, or `base\psx-jingles\NAME.DAT` beside a PC install (the manifest's `[snd_jingles] dir`) | the manifest's `[snd_jingles]` names a PSX build: any cache built from a PSX disc with ffmpeg (DIV-0129; beside a PC install since 2026-10-21, DIV-0150) |
+| PlayStation disc | the cache's `base\snd\NAME.DAT`, or `base\psx-jingles\NAME.DAT` beside a PC install (the manifest's `[snd_jingles] dir`) | the manifest's `[snd_jingles]` names a PSX build: any cache built from a PSX disc (DIV-0129; beside a PC install since 2026-10-21, DIV-0150); since 2026-11-11 the files are XA clips, decoded by `src/media/xa_clip` (DIV-0215), and no ffmpeg is needed. An older cache's MP3s still play |
 | PSP disc | the cache's `opt\psp-snd\snd\NAME.DAT` (DIV-0110), or `base\snd\NAME.DAT` when `[snd] build` is a PSP build (a PSP-only cache, DIV-0106) | the manifest lists the layer (`ManifestOffersLayer`); the layer's name is the audio suite's `snd` member |
 
 All three are MP3s in the PC's form, so all play through the PC's decoder (`Mp3Stream`, no loop).

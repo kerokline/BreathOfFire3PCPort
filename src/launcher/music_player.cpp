@@ -29,9 +29,10 @@
 // (DIV-0129, DIV-0150: base\snd\ on a cache built with no PC install among
 // its sources, base\psx-jingles\ beside one; the manifest's [snd_jingles]
 // dir says which), the psp-snd layer's opt\psp-snd\snd\ (DIV-0110) or a PSP-only
-// cache's base\snd\ (DIV-0106). All are MP3s in the PC's form, played once
-// through the same decoder. A stream a source lacks is listed greyed, with its
-// reason (the Config screen's rule).
+// cache's base\snd\ (DIV-0106). All are MP3s in the PC's form, except the
+// PlayStation disc's, which are XA clips (media/xa_clip.h, DIV-0215); each is
+// played once through its own decoder. A stream a source lacks is listed
+// greyed, with its reason (the Config screen's rule).
 #include "launcher/music_player.h"
 
 #include <windows.h>
@@ -49,6 +50,7 @@
 #include "audio/seq.h"
 #include "audio/song.h"
 #include "game/music_loops.h"
+#include "media/xa_clip.h"
 #include "launcher/config.h"
 #include "launcher/resource.h"
 #include "launcher/suites.h"
@@ -119,6 +121,21 @@ class Mp3Stream : public Stream {
 public:
     Mp3Stream(const std::wstring& path, unsigned track, bool loops) : loops_(loops) {
         const std::vector<std::uint8_t> file = ReadWhole(path);
+        if (media::IsXaClip(file.data(), file.size())) {
+            // DIVERGENCE DIV-0215: a disc jingle kept as an XA clip is decoded
+            // and resampled by media::XaClip, the engine's own reader.
+            media::XaClip clip;
+            char why[160];
+            if (!clip.Open(file.data(), file.size(), why, sizeof why))
+                Fatal(path + L" is not a valid XA clip: " + std::wstring(why, why + std::strlen(why)));
+            const std::uint64_t total = clip.TotalFrames();
+            pcm_.resize(static_cast<std::size_t>(total) * 2);
+            if (clip.Read(pcm_.data(), static_cast<std::size_t>(total)) != total)
+                Fatal(path + L" is an XA clip that decodes short");
+            frames_ = static_cast<std::uint32_t>(total);
+            if (frames_ == 0) Fatal(path + L" decodes to no samples");
+            return;
+        }
         mp3dec_t dec;
         mp3dec_init(&dec);
         std::vector<mp3d_sample_t> frame(MINIMP3_MAX_SAMPLES_PER_FRAME);
@@ -564,8 +581,7 @@ void ListStreams(State& s) {
                 e.path = root + L"\\" + jingle_dir + L"\\" + file;
                 e.where = jingle_dir + L"\\" + file + L", from S_XA00.STR";
                 if (!psx_jingles)
-                    e.why = L"The cache has no disc streams. It is from an older release, or it was built without "
-                            L"ffmpeg. Build the install again.";
+                    e.why = L"The cache has no disc streams. It is from an older release. Build the install again.";
                 else if (!Exists(e.path))
                     e.why = L"The cache's " + jingle_dir + L"\\ has no " + file + L".";
             } else if (psp_base) {

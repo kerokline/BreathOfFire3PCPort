@@ -1,15 +1,17 @@
-// bof3x-fmvdump: decodes an AVI with the game's own decoders (movie.h) and
-// writes every frame raw, for tools/fmv_compare.py to hold against a
-// reference decode by ffmpeg (DIV-0205's verification).
+// bof3x-fmvdump: decodes an AVI, or a PlayStation STR (DIV-0214), with the
+// game's own decoders (movie.h) and writes every frame raw, for
+// tools/fmv_compare.py to hold against a reference decode by ffmpeg
+// (DIV-0205's verification).
 //
-//   bof3x-fmvdump IN.avi OUT.rgb [--raw OUT.raw] [--pcm OUT.pcm]
+//   bof3x-fmvdump IN.avi|IN.STR OUT.rgb [--raw OUT.raw] [--pcm OUT.pcm]
 //
 // OUT.rgb: every frame as width x height x 3 bytes R, G, B, rows top-down
 // (ffmpeg's -pix_fmt rgb24). --raw: the Video 1 frames in the stream's own
 // depth, 16-bit little-endian words a pixel (rgb555le, or the palette
-// index in the low byte). --pcm: the audio stream's bytes as they are. The
-// stream's description goes to stdout. Exit 0, 1 on an open failure, 2 on a
-// decode fault (the frames before it are written).
+// index in the low byte; AVI alone). --pcm: the audio stream's bytes as they
+// are (an STR's: its decoded 16-bit little-endian PCM). The stream's
+// description goes to stdout. Exit 0, 1 on an open failure, 2 on a decode
+// fault (the frames before it are written).
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -47,15 +49,22 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "%s: %s\n", argv[1], why);
         return 1;
     }
-    const video::AviFile& f = movie.File();
-    std::printf("codec %s handler %s compression %.4s %u x %u %u bits, %u/%u fps, %u frames (strh says %u), idx1 %u, "
-                "audio %s\n",
-                movie.Codec(), f.video.handler, f.video.compression, f.video.width, f.video.height, f.video.bits,
-                f.video.rate, f.video.scale, movie.FrameCount(), f.video.length, f.idx1_entries,
-                movie.HasPcm() ? "pcm" : "none");
-    if (movie.HasPcm())
-        std::printf("audio tag %u, %u channels, %u Hz, %u bits, %u chunks, %u bytes\n", f.audio.format_tag,
-                    f.audio.channels, f.audio.rate, f.audio.bits, f.audio_chunks, movie.AudioBytes());
+    if (const video::AviFile* f = movie.Avi()) {
+        std::printf("codec %s handler %s compression %.4s %u x %u %u bits, %u/%u fps, %u frames (strh says %u), idx1 %u, "
+                    "audio %s\n",
+                    movie.Codec(), f->video.handler, f->video.compression, f->video.width, f->video.height,
+                    f->video.bits, f->video.rate, f->video.scale, movie.FrameCount(), f->video.length, f->idx1_entries,
+                    movie.HasPcm() ? "pcm" : "none");
+        if (movie.HasPcm())
+            std::printf("audio tag %u, %u channels, %u Hz, %u bits, %u chunks, %u bytes\n", f->audio.format_tag,
+                        f->audio.channels, f->audio.rate, f->audio.bits, f->audio_chunks, movie.AudioBytes());
+    } else {
+        std::printf("codec %s %u x %u, %.4f s a frame, %u frames, audio %s\n", movie.Codec(), movie.Width(),
+                    movie.Height(), movie.FrameSeconds(), movie.FrameCount(), movie.HasPcm() ? "pcm" : "none");
+        if (movie.HasPcm())
+            std::printf("audio %u channels, %u Hz, %u bits, %u bytes\n", movie.AudioChannels(), movie.AudioRate(),
+                        movie.AudioBits(), movie.AudioBytes());
+    }
     FILE* out = std::fopen(argv[2], "wb");
     FILE* raw = raw_path ? std::fopen(raw_path, "wb") : nullptr;
     if (!out) {

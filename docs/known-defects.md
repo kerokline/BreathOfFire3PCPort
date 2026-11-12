@@ -10960,3 +10960,37 @@ without reaching it. A set-up with the PSP Europe image stopped earlier, for
 want of ffmpeg, so whether a PSP source's set-up reaches numpy was not seen.
 
 **Status:** open; bounded by a PSP set-up run with ffmpeg present.
+
+## D414 — Under Proton, Vulkan fails at start when the NVIDIA kernel driver refuses new GPU channels (the machine's)
+
+**Seen:** 2026-11-11, twice, by frost (raulcorreia7) on his Linux machine: CachyOS, KDE on Wayland, an RTX 5090
+(driver 615.78.08), Proton Experimental (prefix 11.0-100, umu-launcher
+1.4.3), a disc-only install from the US disc, release zips built on Linux.
+
+- First, `main` `8d2d987d`'s zips of both widths stopped on frame 1 with
+  our `FATAL: render: Present failed, HRESULT 0x80004005`. DXVK's log said
+  `Presenter: Failed to create Vulkan swapchain:
+  VK_ERROR_INITIALIZATION_FAILED`. `BOF3X_SWAP=flip`,
+  `DXVK_CONFIG=dxgi.syncInterval=1` and `PROTON_ENABLE_WAYLAND=1` changed
+  nothing. A GPU inference job was running. With it stopped, the same zips
+  drew on both widths, with nothing added to the prefix.
+- Then, about an hour later with the GPU idle (1.4 GB in use, no compute
+  process), the 32-bit zip stopped at start with
+  `FATAL: render: D3D11CreateDeviceAndSwapChain failed, HRESULT
+  0x80004005`. Once it stopped on Wine's assertion exception `0x80000101`
+  at the same point instead. DXVK's log said `Failed to create Vulkan
+  device: VK_ERROR_INITIALIZATION_FAILED`.
+
+**Established:** the failure is below Proton and below the game. Native
+`vulkaninfo --summary` fails the same way at the same time (`vkCreateDevice
+failed with ERROR_INITIALIZATION_FAILED`). The kernel log has the cause:
+`NVRM: ... GspRmAlloc failed ... NV_ERR_STATE_IN_USE` from
+`_kchannelSendChannelAllocRpc` (`kernel_channel.c`), 184 times since
+20:52, while the driver's GPU firmware refused new channels. No process of
+the game held the device. A Vulkan program that starts while the driver is
+in that state gets no device.
+
+**Status:** the machine's, not ours. A reboot is expected to clear the
+driver state; not yet verified.
+For a `Present failed` or `D3D11CreateDeviceAndSwapChain failed` report on
+Linux, first ask for `vulkaninfo --summary` and `journalctl -k | grep NVRM`.

@@ -956,9 +956,7 @@ def run_setup(a, h, log, progress, total):
     if not ffmpeg:
         lost = []
         if psp and not any(r["kind"] in ("psx",) + PC_KINDS for r in rows):
-            lost.append("the PSP's sound effects and voices")
-        if psp or any(r["kind"] == "psx" for r in rows):
-            lost.append("the disc's logo movie")
+            lost.append("the PSP's sound effects, voices and logo movie")
         if pc:
             lost.append("the PC logo movie's repair (DIV-0001)")
         if lost:

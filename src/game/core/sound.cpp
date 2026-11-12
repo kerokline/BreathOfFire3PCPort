@@ -465,6 +465,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
         bof3::RunSpeed_StreamStarted();
         return;
     }
+    mp3dec::RefuseClipUnlessOurs(data, static_cast<std::uint32_t>(size), path);  // DIV-0215: a clip needs our decoder
     sound_in::JingleStarts();  // DIV-0177: the song heard, before the stop below and the jingle's start
     if (static_cast<std::uint32_t>(Music_FadeCount) != 0) {
         Music_FadeCount = 0;

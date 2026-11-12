@@ -202,8 +202,8 @@ no game data: you supply your own copy of the game.
 Everything the setup writes stays in this folder: sources.toml, cache\\ and
 game\\. Your own files are only read, never changed.
 
-ffmpeg (optional, recommended): the opening logo movie from a disc, the PSP's
-sound effects and the PC logo movie's repair need ffmpeg. Get a Windows build
+ffmpeg (optional): a PlayStation disc needs none. Only a PC install's logo
+movie repair and the PSP's sound effects and logo movie need ffmpeg. Get a Windows build
 from https://ffmpeg.org/download.html#build-windows and either put it on your
 PATH or locate ffmpeg.exe in the launcher. Then run setup again.
 

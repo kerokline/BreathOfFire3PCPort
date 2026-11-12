@@ -23,6 +23,19 @@
 // is what frees Crt_malloc and Crt_free to be rebound (docs/crt-rest.md
 // section 2.6).
 //
+// DIVERGENCE DIV-0215: Open of a file that begins with the XA clip magic
+// (media/xa_clip.h: a PlayStation disc's jingle as the importer keeps it)
+// plays it through media::XaClip, not minimp3: Decode hands out frames of
+// 1,152 stereo samples at 44,100 Hz (every one whole: the last is filled out
+// with silence, so a looping stream's rewind meets whole frames as an MP3's
+// does), stores their bytes where an MP3 frame's are stored, and returns the
+// end of the stream when none is left; Seek(0) rewinds. Capcom's decoder
+// cannot read a clip, so under BOF3X_MP3=original a clip is a Fatal
+// (RefuseClipUnlessOurs, called by Sound_LoadStream, the one place a kind-0
+// file is loaded), never a wrong decode. Music_OpenDecoder has no such guard:
+// it must not read its file's bytes, since the sound fuzz hands it pointers
+// that are not files.
+//
 // Armed after every module's self-test (BOF3X_MP3: unset or minimp3 for ours,
 // original for Capcom's as the A/B); until then the callee table holds
 // Capcom's, which the sound fuzz compares against.
@@ -44,7 +57,16 @@ int __stdcall Destroy(void* decoder);
 // The frames of an MP3 file in memory by a walk of its MPEG-1 layer III
 // headers, nothing decoded (the self-test's independent count): the music's
 // resume folds a looping track's position by it (docs/mp3-decoder.md 6).
+// For an XA clip: ceil(its output samples / 1152), the frames Decode hands out.
 std::uint32_t CountFrames(const void* file, std::uint32_t size);
+
+// True when the file begins with the XA clip magic.
+bool IsClip(const void* file, std::uint32_t size);
+
+// Fatal when the file is an XA clip and Capcom's decoder is the one in use
+// (BOF3X_MP3=original, or before Arm): `what` names the file for the message.
+// Reads the file's first bytes, so only for a caller that holds a real file.
+void RefuseClipUnlessOurs(const void* file, std::uint32_t size, const char* what);
 
 // True once Arm has put ours into the callee table (BOF3X_MP3 not `original`).
 bool Active();

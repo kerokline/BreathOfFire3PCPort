@@ -66,6 +66,10 @@
 #                           (docs/source-layout-round.md 7a)
 #   tools/bgm/host         the SPU model's and the sequencer's unit tests
 #                           (spu_tests, seq_tests) on synthetic samples and songs
+#   tools/gen_resample.py   --check: src/media/resample_table.h is what the generator
+#                           makes today (no game data)
+#   tools/media_host        the media decoders' unit tests (media_tests) on synthetic
+#                           streams
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
 #                           synthetic corpus, with its negative controls
 name: Checks
@@ -154,6 +158,9 @@ jobs:
       - name: The compiled shaders are made from today's shader sources (no game data)
         run: python tools/compile_shaders.py --check
 
+      - name: The resampler's table is made from today's generator (no game data)
+        run: python tools/gen_resample.py --check
+
       - name: The source-layout round's rename record - every rename done in its file (no game data)
         run: python tools/tu_renames.py --check
 
@@ -182,6 +189,23 @@ jobs:
 
       - name: seq_tests
         run: '"$RUNNER_TEMP/bgm-host/seq_tests"'
+
+  media-host:
+    # src/media (the STR and XA decoders, the resampler, the XA clip reader)
+    # built with the system compiler and tested on synthetic streams - no game
+    # data (docs/psx-media-round.md, tools/media_host/CMakeLists.txt).
+    name: Media host suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S tools/media_host -B "$RUNNER_TEMP/media-host"
+          cmake --build "$RUNNER_TEMP/media-host" -j 4
+
+      - name: media_tests
+        run: '"$RUNNER_TEMP/media-host/media_tests"'
 
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
