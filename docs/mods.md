@@ -315,3 +315,47 @@ value = 3
 - **Not yet:** a row's name beside its number on the Mods tab; a switch to
   turn one mod off without removing it; a romhack's edits converted to rows
   (the round's group D).
+
+## 10. A third kind: `disc-patch` (2026-11-11)
+
+The disc-patch round's group A ([`disc-patch-round.md`](disc-patch-round.md) 2
+and 5a). A romhack as its author released it: the `.xdelta` of a disc's data
+track, untouched. `tools/disc_patch_build.py` builds it into two layers
+(5b there): `mod-<id>`, what no language owns, and `mod-<id>-<tag>`, its
+edits to the text of its disc's language. The first also holds the numbers
+the hack changed in the tables the PC keeps in its `.data` (3b there), as
+cells of the table files. The launcher hands both to the game when the
+language played is that disc's (5d there), and the build's `report.toml` says
+what of the patch the mod does not have.
+
+**On and off.** A `disc-patch` or `table-edit` mod has a check box at the left
+of its row on the Mods tab. It is ticked when the mod is added. Not ticked,
+the mod stays installed and built and its layers are not handed to the game
+(`mods_off=<id>` in `bof3x.ini`). A reading-row mod has no box: Settings'
+*Row above the text* chooses it.
+
+```toml
+# mod.toml
+[mod]
+id = "example"            # the layers are mod-<id> and mod-<id>-<tag>: 13 characters at most for en-US
+name = "..."
+version = "1.0"
+author = "..."            # required for this kind
+kind = "disc-patch"
+requires = ["en-US"]      # the language of the disc's text
+
+[disc-patch]
+build = "psx-us"          # the disc the patch was made against
+patch = "example.xdelta"  # the author's file, at the zip's root
+patch_sha256 = "..."      # of that file
+result_sha256 = "..."     # of the data track the patch makes
+```
+
+- The zip holds `mod.toml` and the patch. The patch is checked when the zip is
+  added: its hash, that `tools/vcdiff.py` reads it, and what it writes (800 MiB
+  at most).
+- States: `needs` (the language is not held), `needs-disc` (the language is
+  held and the source list has no disc of `build`), `not-built`, `built`.
+- The author's patch is not committed to this repository: it holds a few
+  bytes of the game ([`romhack-mods.md`](romhack-mods.md) 8, M3).
+

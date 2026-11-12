@@ -263,20 +263,21 @@ void Pause(bool on) {
 
 // The PCM stream, when the file has one, as an SDL3 audio stream of its own
 // (DIV-0201's library; the game's sound output does not exist yet, the
-// movies play before Display_Setup and Game_Init). The whole stream is put
-// in before the play starts - 7 s of 22 kHz stereo - and the device plays it
-// at its own pace. Null, with a log line, when the device cannot be opened:
-// the picture plays without it.
+// movies play before Display_Setup and Game_Init). The stream takes the
+// movie's own rate - 22 kHz for the AVI, 37,800 Hz for CAPCOM30.STR
+// (DIV-0214) - and SDL3's audio stream resamples it to the device. The whole
+// stream is put in before the play starts - 7 s of stereo - and the device
+// plays it at its own pace. Null, with a log line, when the device cannot be
+// opened: the picture plays without it.
 SDL_AudioStream* OpenAudio(video::Movie& movie, const char* filename) {
     if (!movie.HasPcm()) return nullptr;
-    const video::AudioStream& a = movie.File().audio;
     if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
         bof3::Log("fmv: %s: SDL_InitSubSystem(AUDIO) failed: %s - the picture plays without its sound", filename,
                   SDL_GetError());
         return nullptr;
     }
-    const SDL_AudioSpec want = {a.bits == 8 ? SDL_AUDIO_U8 : SDL_AUDIO_S16LE, static_cast<int>(a.channels),
-                                static_cast<int>(a.rate)};
+    const SDL_AudioSpec want = {movie.AudioBits() == 8 ? SDL_AUDIO_U8 : SDL_AUDIO_S16LE,
+                                static_cast<int>(movie.AudioChannels()), static_cast<int>(movie.AudioRate())};
     SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &want, nullptr, nullptr);
     if (!stream) {
         bof3::Log("fmv: %s: SDL_OpenAudioDeviceStream failed: %s - the picture plays without its sound", filename,
@@ -1019,21 +1020,37 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 
     // The open: the name as given, then under the CD root - the original's
     // two MCI opens, "%s" then "%s%s" with File_CdRoot (0x66B674, 0x66B654).
+    //
+    // DIVERGENCE DIV-0214: for CAPCOM.AVI, when neither open succeeds, the
+    // same two opens of CAPCOM30.STR, the PlayStation disc's own logo movie
+    // (a disc-only install has no AVI); a CAPCOM.AVI that is there still wins.
+    const char* const requested = filename;
+    const char* const names[2] = {filename, _stricmp(filename, "CAPCOM.AVI") == 0 ? "CAPCOM30.STR" : nullptr};
     char path[0x104];
     char why[256];
+    char why_str[256] = "";
     std::size_t size = 0;
-    std::snprintf(path, sizeof path, "%s", filename);
-    std::uint8_t* data = ReadWhole(path, &size, why, sizeof why);
-    if (!data) {
-        char root_why[128];
-        std::snprintf(path, sizeof path, "%s%s", File_CdRoot(), filename);
-        data = ReadWhole(path, &size, root_why, sizeof root_why);
+    std::uint8_t* data = nullptr;
+    for (int n = 0; n < 2 && names[n] && !data; ++n) {
+        char* const w = n == 0 ? why : why_str;
+        const std::size_t wn = n == 0 ? sizeof why : sizeof why_str;
+        std::snprintf(path, sizeof path, "%s", names[n]);
+        data = ReadWhole(path, &size, w, wn);
         if (!data) {
-            std::snprintf(why + std::strlen(why), sizeof why - std::strlen(why), "; under the root %s", root_why);
-            LogNotOpened(filename, why);
-            return;
+            char root_why[128];
+            std::snprintf(path, sizeof path, "%s%s", File_CdRoot(), names[n]);
+            data = ReadWhole(path, &size, root_why, sizeof root_why);
+            if (!data) std::snprintf(w + std::strlen(w), wn - std::strlen(w), "; under the root %s", root_why);
         }
+        if (data) filename = names[n];
     }
+    if (!data) {
+        if (names[1]) std::snprintf(why + std::strlen(why), sizeof why - std::strlen(why), "; %s: %s", names[1], why_str);
+        LogNotOpened(requested, why);
+        return;
+    }
+    if (filename != requested)
+        bof3::Log("DIV-0214    %s is not there; %s plays in its place, the PlayStation disc's own movie", requested, filename);
     video::Movie movie;
     if (!movie.Open(data, size, why, sizeof why)) {
         LogNotOpened(filename, why);
@@ -1058,19 +1075,19 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     bof3::Log("DIV-0035    %s into the window at %ld,%ld %ld x %ld of %ld x %ld", filename, playing.dest.left,
               playing.dest.top, playing.dest.right, playing.dest.bottom, client.right - client.left,
               client.bottom - client.top);
-    const video::AviFile& f = movie.File();
     const double frame_s = movie.FrameSeconds();
     const U frames = movie.FrameCount();
-    double audio_s = 0;
-    if (movie.HasPcm()) audio_s = static_cast<double>(movie.AudioBytes()) / (f.audio.rate * f.audio.channels * (f.audio.bits / 8));
+    const double audio_s = movie.AudioSeconds();
     const double video_s = frames * frame_s;
     const double end_s = audio_s > video_s ? audio_s : video_s;
-    bof3::Log("DIV-0205    %s: %s %u x %u, %u frames at %u/%u a second (%.2f s)%s", filename, movie.Codec(),
-              movie.Width(), movie.Height(), frames, f.video.rate, f.video.scale, video_s,
+    // The log lines carry the ledger entry of the movie that ran: DIV-0205 for an AVI, DIV-0214 for an STR.
+    const bool str = std::strcmp(movie.Container(), "STR") == 0;
+    bof3::Log("%s    %s: %s %u x %u, %u frames at %.3f a second (%.2f s)%s", str ? "DIV-0214" : "DIV-0205", filename,
+              movie.Codec(), movie.Width(), movie.Height(), frames, 1.0 / frame_s, video_s,
               movie.HasPcm() ? "" : ", no audio stream");
     if (movie.HasPcm())
-        bof3::Log("DIV-0205    %s: PCM %u Hz, %u channel(s), %u bits, %.2f s", filename, f.audio.rate, f.audio.channels,
-                  f.audio.bits, audio_s);
+        bof3::Log("%s    %s: PCM %u Hz, %u channel(s), %u bits, %.2f s", str ? "DIV-0214" : "DIV-0205", filename,
+                  movie.AudioRate(), movie.AudioChannels(), movie.AudioBits(), audio_s);
     playing.audio = OpenAudio(movie, filename);
     g_playing = &playing;
 
@@ -1137,7 +1154,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
         MsgWaitForMultipleObjects(0, nullptr, FALSE, wait, QS_ALLINPUT);
     }
     // The stop and close: the audio stream and the subclass.
-    bof3::Log("DIV-0205    %s: %s after %.2f s, %u of %u frames shown%s", filename,
+    bof3::Log("%s    %s: %s after %.2f s, %u of %u frames shown%s", str ? "DIV-0214" : "DIV-0205", filename,
               shown >= frames ? "ended" : "skipped",
               static_cast<double>(Now() - t0 - playing.paused_ticks) / static_cast<double>(freq), shown, frames,
               faulted ? ", a decode fault held the picture" : "");

@@ -347,6 +347,12 @@ check stand in for it until then.
    at 0.92..0.99 in 2 s windows, their offset growing by 3.5e-5 - the PC's
    own resampling drift (section 4) - so ours keep the disc's timing. Each is
    1 to 3 MP3 frames longer than the PC's (the encoder's padding).
+   **Since 2026-11-11 (DIV-0215, [`psx-media-round.md`](psx-media-round.md))
+   no encoder:** `xa.jingles` writes each clip's XA sound groups undecoded
+   (an XA clip file, plan section 2.2), and the engine's MP3 seam and the
+   Jukebox decode them by `src/media/xa_clip` (our XA ADPCM decoder, then
+   a 7/6 polyphase resampler to 44,100 Hz). No ffmpeg is used; the MP3
+   comparison above was of the encoder this replaced.
 
 ## 7. The engine change `base/snd/` needs (made 2026-10-10, DIV-0089)
 

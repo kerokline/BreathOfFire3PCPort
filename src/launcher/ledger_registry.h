@@ -282,7 +282,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Ini, "ini:opt=", 4, 3},   // DIV-0213
 };
 
-inline constexpr std::size_t kEntryCount = 213;
+inline constexpr std::size_t kEntryCount = 215;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -710,6 +710,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 205, 1, true, Player::Yes, kTowardPsx, kLangAny},
     {213, "A mod can change the numbers of the game's tables",
      Tier::Extension, State::Active, 0, 206, 1, false, Player::Yes, 0, kLangAny},
+    {214, "The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC",
+     Tier::Sensible, State::Active, 0, 207, 0, true, Player::Never, 0, kLangAny},
+    {215, "The 11 PSX jingles are kept as XA clips and decoded and resampled by our code",
+     Tier::Sensible, State::Active, 0, 207, 0, true, Player::Never, 0, kLangAny},
 };
 
 // The switches of one entry.

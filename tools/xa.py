@@ -338,13 +338,33 @@ def mp3(ffmpeg, pcm, rate):
     return body, None
 
 
-def jingles(disc_path, out, ffmpeg, recipe=None):
+CLIP_MAGIC = b"BOF3XA\0\1"
+
+
+def clip_file(raws):
+    """One clip's XA sectors as the importer's clip file (docs/psx-media-round.md
+    2.2): the magic, the rate, channels and bits from the first sector's coding
+    byte, the group count, and the clip's sound groups undecoded, 18 a sector
+    (the sector's 24-byte tail, reserved bytes and EDC, dropped). Eight-bit and mixed-layout clips are
+    refused (ValueError), as `decode` refuses them."""
+    if not raws:
+        raise ValueError("no sectors")
+    coding = raws[0][19]
+    if coding & 0x10:
+        raise ValueError("coding 0x%02X: eight-bit samples are not supported" % coding)
+    if any(r[19] != coding for r in raws):
+        raise ValueError("more than one coding in one clip")
+    rate = 18900 if coding & 4 else RATE
+    groups = b"".join(r[24:24 + GROUPS * GROUP] for r in raws)
+    return (CLIP_MAGIC + struct.pack("<IHHII", rate, 2 if coding & 1 else 1, 4, GROUPS * len(raws), 0) + groups)
+
+
+def jingles(disc_path, out, recipe=None):
     """D255 / DIV-0129's other half: the 11 kind-0 jingles (`OYASUMI` ..
     `KARA`), which the PC holds as MP3s of `S_XA00.STR`'s stereo clips
-    (docs/sound-import.md 4), made from a PSX disc the same way - each recipe
-    row's clip decoded from a fresh history at 37.8 kHz, then resampled and
-    encoded by the player's ffmpeg in the PC's form (`mp3`). Not the PC's
-    bytes (another encoder), so each file's own hash. Returns
+    (docs/sound-import.md 4), written from a PSX disc as XA clip files
+    (`clip_file`; the engine and the launcher decode them, no ffmpeg). Not the
+    PC's bytes, so each file's own hash. Returns
     ({name: sha256 of what was written}, [why a jingle was not written])."""
     with open(recipe or RECIPE, "rb") as fh:
         rec = tomllib.load(fh)
@@ -355,14 +375,10 @@ def jingles(disc_path, out, ffmpeg, recipe=None):
         if r["kind"] != 0:
             continue
         _, _, chans, _ = cl[r["stream"]]
-        left, right = decode(chans[r["channel"]][r["start"]:r["start"] + r["sectors"]])
-        pcm = array.array("h", (0,)) * (2 * len(left))
-        pcm[0::2], pcm[1::2] = array.array("h", left), array.array("h", right)
-        if sys.byteorder != "little":
-            pcm.byteswap()
-        body, why = mp3(ffmpeg, pcm.tobytes(), RATE)
-        if body is None:
-            skipped.append("%s: %s" % (r["name"], why))
+        try:
+            body = clip_file(chans[r["channel"]][r["start"]:r["start"] + r["sectors"]])
+        except ValueError as e:
+            skipped.append("%s: %s" % (r["name"], e))
             continue
         with open(os.path.join(out, r["name"] + ".DAT"), "wb") as fh:
             fh.write(body)

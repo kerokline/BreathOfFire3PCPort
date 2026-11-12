@@ -3,7 +3,7 @@
 # PC's: its key, `hole` (the PC's non-zero, the image's zero or missing) or `differ`, and where
 # the image's bytes came from. Keys, verdicts and provenance only - no value (CLAUDE.md rule 1).
 # Every row is listed in recipes/data-known.toml; `data_diff.py check` holds that in CI.
-# views: 860af2bcc8fb016ad04bc8914304bb0ffe7fb7535639846a5628952720e24994
+# views: 165b4b3428b03ccbe82418de6a28cf34aa167e463957747fec1956825a147139
 # image: psp-eu 8c57b097c176f7bb9069dd8bf96110d579791ab88568208c02bad1debd718819
 # image: psp-jp a921c7cd9b9e69a5c5f26532330671bdbd411317435559f6fac8d7d1ed0c0823
 # image: psx-de b8d0505f6827e940cfdce377e27128ba7d6cfe5fa6ba8143a5c8c466db62bc8b
@@ -33,6 +33,7 @@
 # compared: psp-eu hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psp-eu key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psp-eu key_items 32 runtime 0 hole 0 differ 0
+# compared: psp-eu master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psp-eu move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psp-eu move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psp-eu music_set 87 runtime 0 hole 0 differ 0
@@ -67,6 +68,7 @@
 # compared: psp-jp hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psp-jp key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psp-jp key_items 32 runtime 0 hole 0 differ 0
+# compared: psp-jp master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psp-jp move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psp-jp move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psp-jp music_set 87 runtime 0 hole 0 differ 0
@@ -101,6 +103,7 @@
 # compared: psx-de hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psx-de key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psx-de key_items 32 runtime 0 hole 0 differ 0
+# compared: psx-de master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psx-de move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psx-de move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psx-de music_set 87 runtime 0 hole 0 differ 0
@@ -135,6 +138,7 @@
 # compared: psx-eu-en hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psx-eu-en key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psx-eu-en key_items 32 runtime 0 hole 0 differ 0
+# compared: psx-eu-en master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psx-eu-en move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psx-eu-en move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psx-eu-en music_set 87 runtime 0 hole 0 differ 0
@@ -169,6 +173,7 @@
 # compared: psx-fr hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psx-fr key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psx-fr key_items 32 runtime 0 hole 0 differ 0
+# compared: psx-fr master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psx-fr move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psx-fr move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psx-fr music_set 87 runtime 0 hole 0 differ 0
@@ -203,6 +208,7 @@
 # compared: psx-jp hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psx-jp key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psx-jp key_items 32 runtime 0 hole 0 differ 0
+# compared: psx-jp master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psx-jp move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psx-jp move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psx-jp music_set 87 runtime 0 hole 0 differ 0
@@ -237,6 +243,7 @@
 # compared: psx-us hp_damage_variance 8 runtime 0 hole 0 differ 0
 # compared: psx-us key_defaults 0 runtime 64 hole 0 differ 0
 # compared: psx-us key_items 32 runtime 0 hole 0 differ 0
+# compared: psx-us master_abilities 204 runtime 0 hole 0 differ 0
 # compared: psx-us move_op_lengths 256 runtime 0 hole 0 differ 0
 # compared: psx-us move_speeds 6 runtime 0 hole 0 differ 0
 # compared: psx-us music_set 87 runtime 0 hole 0 differ 0
@@ -259,14 +266,6 @@ psx-us	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0021/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
-psx-eu-en	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
@@ -284,6 +283,14 @@ psx-de	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
 psx-de	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
 psx-de	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
 psx-de	fishing_rule_lines	fishing_rule_lines/0026/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0021/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
+psx-eu-en	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
 psp-jp	consumables	consumables/0087/field_use	differ	widen
 psp-jp	exp_table	exp_table/0629/exp	differ	table
 psp-jp	exp_table	exp_table/0629/gain_1	differ	table

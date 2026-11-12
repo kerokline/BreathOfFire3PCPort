@@ -435,7 +435,7 @@ void FfmpegNote(HWND dlg, const Config& cfg) {
     else if (const DWORD n = SearchPathW(nullptr, L"ffmpeg.exe", nullptr, MAX_PATH, found, nullptr); n > 0 && n < MAX_PATH)
         note = L"ffmpeg: " + std::wstring(found, n) + L" (on PATH)";
     else
-        note = L"ffmpeg was not found. Only PSP disc music needs it. Without ffmpeg, the install has no PSP music.";
+        note = L"ffmpeg was not found. Only the logo movie of a PC install and the sound and movie of a PSP disc need it. Without ffmpeg, the install lacks them.";
     SetDlgItemTextW(dlg, IDC_SO_FFNOTE, note.c_str());
 }
 
@@ -763,15 +763,24 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 //
 // tools/mods.py beside the importer, on the same Python, one child at a time.
 // `list --json` gives one flat object a mod: id, name, version, kind,
-// requires, base, layer, state (built, not-built, needs, problem), needs,
-// problem, author, url, credit. A mod the install cannot play is greyed in the list with its reason
+// requires, base, layer, state (built, not-built, needs, needs-disc, problem),
+// needs, problem, author, url, credit, and for a disc-patch mod language (its
+// text's), carries and lacks (two sentences from its build's report.toml).
+// A mod the install cannot play is greyed in the list with its reason
 // (the owner's rule, 2026-10-10): a language it needs and the install lacks,
-// a layer not built, or a base that is not the language chosen in Settings.
+// a disc it needs, a layer not built, or a base or a text that is not the
+// language chosen in Settings.
+// A mod that is on or off as a whole (table-edit, disc-patch) has a check box
+// at the left of its row (the owner's call, 2026-11-11): ticked unless the
+// ini's mods_off= names it. A click on the box or Space changes it.
 
 struct ModRow {
     std::string id, name, version, kind, base, state, needs, problem;
     std::string author, url, credit;   // who made it (docs/mods.md 2): shown, never opened or run
+    std::string language, carries, lacks;
 };
+
+bool ModOnOff(const ModRow& r) { return r.kind == "disc-patch" || r.kind == "table-edit"; }
 
 struct ModsState {
     Runtime rt;
@@ -783,6 +792,8 @@ struct ModsState {
     std::string build_next; // the id an add just installed: built next
     std::string added_kind; // its kind: a reading-row mod turns Extras' toggle on (kMsgModsReadingRowAdded)
     std::string language;   // Settings' choice (kMsgModsLanguage); empty for the Chinese
+    std::string off;        // the ini's mods_off= (kMsgModsOff), as the boxes have changed it
+    std::string told;       // the mod whose report the log showed last (ModsCredit)
     std::vector<ModRow> rows;
 };
 
@@ -814,6 +825,11 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     if (r.state == "built") {
         if (r.kind == "reading-row" && r.base != s.language) {
             state = L"built; only with " + Widen(r.base) + L" text";
+        } else if (r.kind == "disc-patch" && r.language != s.language) {
+            state = L"built; only with " + Widen(r.language) + L" text";
+        } else if (ModOnOff(r)) {
+            state = bof3x::ConfigListHas(s.off, r.id) ? L"built: off" : L"built: on";
+            greyed = false;
         } else {
             state = L"built: select it in Settings";
             greyed = false;
@@ -822,6 +838,8 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
         state = L"not built: Data, Sources, Build the install";
     } else if (r.state == "needs") {
         state = L"needs " + Widen(r.needs) + L" text: add that disc on Data, Sources";
+    } else if (r.state == "needs-disc") {
+        state = L"needs the disc " + Widen(r.needs) + L": add it on Data, Sources";
     } else {
         state = L"problem: " + Widen(r.problem.empty() ? std::string("unreadable") : r.problem);
     }
@@ -843,6 +861,59 @@ void ModsCredit(HWND page, const ModsState& s) {
     ModStatus(page, text);
 }
 
+// What the selected mod's build has and does not have (a disc-patch mod's
+// report.toml, as mods.py reads it): into the log, once for each selection.
+void ModsReport(HWND page, ModsState& s) {
+    const LRESULT i = SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0);
+    if (i == LB_ERR || static_cast<size_t>(i) >= s.rows.size()) return;
+    const ModRow& r = s.rows[static_cast<size_t>(i)];
+    if (r.id == s.told || r.state != "built" || (r.carries.empty() && r.lacks.empty())) return;
+    s.told = r.id;
+    if (!r.carries.empty()) ModLog(page, Widen(r.name) + L": " + Widen(r.carries));
+    if (!r.lacks.empty()) ModLog(page, Widen(r.name) + L": " + Widen(r.lacks));
+}
+
+// The box of row `i` changed by the player: the row must have one and not be
+// greyed. The window is told the new mods_off= (kMsgModsOffChanged).
+void ModsToggle(HWND page, ModsState& s, size_t i) {
+    if (i >= s.rows.size()) return;
+    const ModRow& r = s.rows[i];
+    bool greyed = false;
+    ModRowText(s, r, greyed);
+    if (!ModOnOff(r) || greyed) return;
+    const bool now_off = !bof3x::ConfigListHas(s.off, r.id);
+    s.off = bof3x::ConfigListSet(s.off, r.id, now_off);
+    SendMessageW(GetParent(page), bof3x::kMsgModsOffChanged, 0, reinterpret_cast<LPARAM>(&s.off));
+    HWND list = GetDlgItem(page, IDC_MOD_LIST);
+    SendMessageW(list, LB_SETITEMDATA, i, bof3x::kModRowBox | (now_off ? 0 : bof3x::kModRowTicked));
+    // the row's text holds its state: put again, the selection kept
+    const LRESULT sel = SendMessageW(list, LB_GETCURSEL, 0, 0);
+    const std::wstring text = ModRowText(s, r, greyed);
+    SendMessageW(list, LB_DELETESTRING, i, 0);
+    SendMessageW(list, LB_INSERTSTRING, i, reinterpret_cast<LPARAM>(text.c_str()));
+    SendMessageW(list, LB_SETITEMDATA, i, bof3x::kModRowBox | (now_off ? 0 : bof3x::kModRowTicked));
+    if (sel != LB_ERR) SendMessageW(list, LB_SETCURSEL, static_cast<WPARAM>(sel), 0);
+}
+
+// The list's own procedure, under the page's: a click on a row's box and
+// Space change the box (kMsgModsToggle), then the list does what it does.
+constexpr wchar_t kModListProc[] = L"bof3x.modlist.proc";
+LRESULT CALLBACK ModListProc(HWND list, UINT msg, WPARAM wp, LPARAM lp) {
+    const WNDPROC old = reinterpret_cast<WNDPROC>(GetPropW(list, kModListProc));
+    if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
+        const LRESULT hit = SendMessageW(list, LB_ITEMFROMPOINT, 0, lp);
+        const int box = static_cast<int>(SendMessageW(list, LB_GETITEMHEIGHT, 0, 0)) + 2;
+        if (HIWORD(hit) == 0 && static_cast<short>(LOWORD(lp)) < box)
+            PostMessageW(GetParent(list), bof3x::kMsgModsToggle, LOWORD(hit), 0);
+    } else if (msg == WM_KEYDOWN && wp == VK_SPACE) {
+        const LRESULT sel = SendMessageW(list, LB_GETCURSEL, 0, 0);
+        if (sel != LB_ERR) PostMessageW(GetParent(list), bof3x::kMsgModsToggle, static_cast<WPARAM>(sel), 0);
+    } else if (msg == WM_NCDESTROY) {
+        RemovePropW(list, kModListProc);
+    }
+    return old ? CallWindowProcW(old, list, msg, wp, lp) : DefWindowProcW(list, msg, wp, lp);
+}
+
 void ModsRender(HWND page, const ModsState& s) {
     HWND list = GetDlgItem(page, IDC_MOD_LIST);
     const LRESULT sel = SendMessageW(list, LB_GETCURSEL, 0, 0);
@@ -851,7 +922,9 @@ void ModsRender(HWND page, const ModsState& s) {
         bool greyed = false;
         const std::wstring text = ModRowText(s, r, greyed);
         const LRESULT i = SendMessageW(list, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text.c_str()));
-        SendMessageW(list, LB_SETITEMDATA, static_cast<WPARAM>(i), greyed ? 1 : 0);
+        const LPARAM data = (greyed ? bof3x::kModRowGreyed : 0) | (ModOnOff(r) ? bof3x::kModRowBox : 0) |
+                            (ModOnOff(r) && !bof3x::ConfigListHas(s.off, r.id) ? bof3x::kModRowTicked : 0);
+        SendMessageW(list, LB_SETITEMDATA, static_cast<WPARAM>(i), data);
     }
     if (sel != LB_ERR && static_cast<size_t>(sel) < s.rows.size()) SendMessageW(list, LB_SETCURSEL, sel, 0);
     ModsGreyed(page, s);
@@ -927,7 +1000,8 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
         s.rows.push_back({JsonString(line, "id"), JsonString(line, "name"), JsonString(line, "version"),
                           JsonString(line, "kind"), JsonString(line, "base"), JsonString(line, "state"),
                           JsonString(line, "needs"), JsonString(line, "problem"), JsonString(line, "author"),
-                          JsonString(line, "url"), JsonString(line, "credit")});
+                          JsonString(line, "url"), JsonString(line, "credit"), JsonString(line, "language"),
+                          JsonString(line, "carries"), JsonString(line, "lacks")});
         return;
     }
     if (job == kModAdd && IsJsonObject(line)) {
@@ -944,6 +1018,15 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
                                  L" text. This install does not have it. Add a disc in that language on Data, Sources. "
                                  L"Then the mod builds.");
                 s.build_next.clear();
+            } else if (JsonString(line, "state") == "needs-disc") {
+                ModLog(page, L"It needs the disc " + Widen(JsonString(line, "needs")) +
+                                 L". This install does not have it. Add that disc on Data, Sources. Then the mod builds.");
+                s.build_next.clear();
+            }
+            // a mod added is on: an id the list of mods to keep off still has (the mod was there before) goes out
+            if (bof3x::ConfigListHas(s.off, s.build_next.empty() ? JsonString(line, "id") : s.build_next)) {
+                s.off = bof3x::ConfigListSet(s.off, JsonString(line, "id"), false);
+                SendMessageW(GetParent(page), bof3x::kMsgModsOffChanged, 0, reinterpret_cast<LPARAM>(&s.off));
             }
         } else {
             ModLog(page, L"Not added: " + Widen(JsonString(line, "problem")));
@@ -988,7 +1071,10 @@ void ModsOnDone(HWND page, ModsState& s, Job job, DWORD code) {
         }
         break;
     case kModBuild:
-        ModStatus(page, code == 0   ? L"The mod is ready. Select it in Settings, Row above the text."
+        s.told.clear();   // its report is new
+        ModStatus(page, code == 0 && s.added_kind != "reading-row"
+                            ? L"The mod is ready. It is on."
+                        : code == 0 ? L"The mod is ready. Select it in Settings, Row above the text."
                         : code == 2 ? L"No install is built yet. The mod builds with the install (Data, Sources)."
                                     : L"The mod is installed but not built. See the log below.");
         break;
@@ -1012,11 +1098,20 @@ void ModsDraw(const DRAWITEMSTRUCT& d) {
     SendMessageW(d.hwndItem, LB_GETTEXT, d.itemID, reinterpret_cast<LPARAM>(text.data()));
     text.resize(static_cast<size_t>(n));
     SetBkMode(d.hDC, TRANSPARENT);
-    SetTextColor(d.hDC, GetSysColor(d.itemData ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+    const bool greyed = (d.itemData & bof3x::kModRowGreyed) != 0;
+    SetTextColor(d.hDC, GetSysColor(greyed ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+    // the check box column, at the left of every row; a box only for a mod that is on or off as a whole
+    const int side = d.rcItem.bottom - d.rcItem.top;
+    if (d.itemData & bof3x::kModRowBox) {
+        RECT box = {d.rcItem.left + 2, d.rcItem.top + 1, d.rcItem.left + side, d.rcItem.bottom - 1};
+        DrawFrameControl(d.hDC, &box, DFC_BUTTON,
+                         DFCS_BUTTONCHECK | ((d.itemData & bof3x::kModRowTicked) ? DFCS_CHECKED : 0) |
+                             (greyed ? DFCS_INACTIVE : 0));
+    }
     // the columns: name, author, version, state - at fixed shares of the list's width
-    const int w = d.rcItem.right - d.rcItem.left;
+    const int w = d.rcItem.right - d.rcItem.left - side - 4;
     INT tabs[3] = {w * 30 / 100, w * 50 / 100, w * 58 / 100};
-    const int x = d.rcItem.left + 2;
+    const int x = d.rcItem.left + side + 4;
     TabbedTextOutW(d.hDC, x, d.rcItem.top + 1, text.c_str(), static_cast<int>(text.size()), 3, tabs, x);
     if ((d.itemState & ODS_FOCUS) && !(d.itemState & ODS_NOFOCUSRECT)) DrawFocusRect(d.hDC, &d.rcItem);
 }
@@ -1039,6 +1134,10 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
             ModLog(page, s->rt.error);
         }
         ModsGreyed(page, *s);
+        if (HWND list = GetDlgItem(page, IDC_MOD_LIST)) {
+            SetPropW(list, kModListProc, reinterpret_cast<HANDLE>(GetWindowLongPtrW(list, GWLP_WNDPROC)));
+            SetWindowLongPtrW(list, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ModListProc));
+        }
         return FALSE;   // the window decides the focus
     }
     case WM_SHOWWINDOW: {
@@ -1060,6 +1159,15 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
             s->language = *reinterpret_cast<const std::string*>(lp);
             ModsRender(page, *s);
         }
+        return TRUE;
+    case bof3x::kMsgModsOff:
+        if (ModsState* s = GetMods(page)) {
+            s->off = *reinterpret_cast<const std::string*>(lp);
+            ModsRender(page, *s);
+        }
+        return TRUE;
+    case bof3x::kMsgModsToggle:
+        if (ModsState* s = GetMods(page)) ModsToggle(page, *s, static_cast<size_t>(wp));
         return TRUE;
     case WM_MEASUREITEM: {
         // sent before WM_INITDIALOG: the dialog's font gives the row height
@@ -1098,6 +1206,7 @@ INT_PTR CALLBACK ModsProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
             if (s && HIWORD(wp) == LBN_SELCHANGE) {
                 ModsGreyed(page, *s);
                 ModsCredit(page, *s);
+                ModsReport(page, *s);
             }
             return TRUE;
         case IDOK:

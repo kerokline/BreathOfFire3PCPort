@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 213 entries, DIV-0001..0213, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 215 entries, DIV-0001..0215, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -12011,6 +12011,32 @@ designed in rather than bolted on.
   `BOF3X_OPT` when that layer is built, else plays without one and says so on
   stderr. The **furigana zip** (`make_mod.py furigana`, from
   `data/furigana/`) is attached to releases by `release.yml`.
+- **Amended 2026-11-11 (the disc-patch round, issue 216;
+  [`disc-patch-round.md`](disc-patch-round.md)):** a third kind,
+  `disc-patch` - a romhack as its author released it, the `.xdelta` of a
+  disc's data track, with `author` required. `mods.py add` checks the patch's
+  hash and that it is VCDIFF; a mod whose disc is not in the source list is
+  listed as `needs-disc`. `tools/disc_patch_build.py` applies the patch to a
+  scratch copy of the player's own disc and builds two layers from what
+  differs: `mod-<id>` (enemy tables, pictures, and the overlays' table
+  numbers as cells of the table files, DIV-0111 and DIV-0213's forms) and
+  `mod-<id>-<tag>` (the text of the disc's language). The overlays' program
+  changes, a changed sound bank and the boot program are **not carried**;
+  the build counts them into `<home>\mods\<id>\report.toml` and the Mods
+  tab says so. The launcher hands both layers to the game after every other
+  layer, in the Mods tab's order, when the language played is `<tag>`; under
+  another language the mod is left off whole. **A check box at the left of
+  the row** (the owner's call, 2026-11-11) turns a `disc-patch` or
+  `table-edit` mod off: `mods_off=<id>,<id>` in `bof3x.ini`, empty by
+  default, so a mod is on when it is added. What a romhack changes in play is
+  its author's and is no entry of this ledger. Verification: the self-tests
+  of `disc_patch_build.py`, `mods.py` and `vcdiff.py`; `config_tests`
+  (`ConfigModLayers`, `ConfigModHosted`, `mods_off=`); `dialog_test.py` 89
+  checks; on a US disc-only install the real patch built and the exe host's
+  self-test, started by the launcher with no `BOF3X_OPT`, took both layers
+  with the box ticked and none with it not ticked (disc-patch-round.md 5d).
+  **No route run and not played by the owner.** Languages: a `disc-patch`
+  mod is for `en-US` text (the US disc is the one disc its builder knows).
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50
@@ -15186,7 +15212,9 @@ designed in rather than bolted on.
   read (`LogNotOpened`: a disc-only install's missing AVIs) are as before.
   The renderer (`src/render`) is not used: it does not exist when the movies
   play, and MCI's own draw was GDI's too. The log says `DIV-0205 NAME:
-  CODEC W x H, N frames at R/S a second (T s)` and the PCM stream's shape.
+  CODEC W x H, N frames at R a second (T s)` and the PCM stream's shape (R
+  was `dwRate / dwScale` as a fraction until DIV-0214 gave `Movie` a
+  container-neutral frame time; it is now one decimal number).
   The whole file in memory (4.6 MB and 3.9 MB; the disc's 7.5 MB) for the
   length of the movie, freed after.
 - **Rationale:** D407 - the 64-bit build (the x64 round, PR #207) showed no
@@ -15574,6 +15602,25 @@ designed in rather than bolted on.
 - **Rationale:** a table is then one file of the install on every install
   kind, and a layer or a mod lays over the same thing everywhere. The exe is
   a source the importer reads, as a disc is.
+- **Amended 2026-11-11 (the disc-patch round's call 6,
+  [`disc-patch-round.md`](disc-patch-round.md) 5e): a table file with
+  holes.** A catalogued table that says `holes` in `tables.toml` is still one
+  file of `count * stride` bytes, but the bytes of it that another owner has
+  on a build stay the image's: `tools/exe_tables.py` cuts out only its runs
+  of a disc's or the exe's bytes, one `file` range each, and the engine lays
+  each range's own part of the file (`LayBaseTable`). The first table of the
+  kind is `char_defaults` (`Char_DefaultRecords`, the records a new game
+  starts each character with): the first record's name is the language
+  layer's on every disc, and three more records' names are unplaced on the
+  European PSP disc. On a PC-built image the table has no hole. **What the
+  game reads does not change**: every image as mapped hashes as before, on
+  the seven discs and from `BOF3.exe`. Two more tables became files the plain
+  way (`ability_effect_index`, `master_abilities`). Verification: the
+  engine's table-files self-test (a table with a hole laid in two ranges, a
+  range that starts before its table refused); `exe_tables.py build` and
+  `verify` for the seven discs and `BOF3.exe`, each image hash the one
+  recorded before; the exe host's self-test on a US disc-only install (30
+  table files) and on a PC game folder.
 - **Also in the PSX version?** No: the PlayStation loads its tables from the
   disc's files, which is the shape this moves toward.
 - **Verification:** the exe host's self-test on a PC game folder with a cache
@@ -15633,11 +15680,154 @@ designed in rather than bolted on.
   exe host's line `layer mod-...: 1 tables, 1 cells` with the bytes that
   differ (the round doc, 5c). **Not played:** nobody has looked at the
   changed number in the game.
+- **Amended 2026-11-11 (the disc-patch round):** the check box at the left of
+  the mod's row on the Mods tab turns it off without a remove
+  (`mods_off=<id>` in `bof3x.ini`; DIV-0157 as amended). A mod is still on
+  when it is built.
 - **Reversible?** Remove the mod on the Mods tab; or `opt=none`, which gives
   the game no layer at all.
 - **Switch:** ini:opt=
 - **Default:** off
 - **Player:** yes - no mod is added by default; a mod is removed on the Mods tab, and `opt=none` leaves every mod's tables off
 - **Toward:** none - no release has mods
+- **Languages:** any
+- **State:** active
+
+### The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC
+
+- **ID:** DIV-0214
+- **Date:** 2026-11-11
+- **Subsystem:** platform / video - `Fmv_Play` (ours since DIV-0035,
+  `src/game/battle/battle_menu_win.cpp`), `video::Movie`
+  (`src/video/movie.cpp`), `src/media/str_movie.cpp` and `xa_adpcm.cpp`;
+  `tools/importer.py` (`fmv_build`, `fmv_install`);
+  [`psx-media-round.md`](psx-media-round.md) 2.1
+- **Tier:** Sensible - the same picture and sound, one fewer program the
+  player has to find; a PSX-disc install needs nothing the release does not
+  carry.
+- **Original behaviour:** the PC port plays `CAPCOM.AVI` (Indeo 5, which
+  Windows no longer has: DIV-0001). A disc-only install had no such file;
+  DIV-0099's import converted the disc's `LOGO/CAPCOM30.STR` with the player's
+  ffmpeg (`psxstr` and `mdec` decoders, Cinepak encoder) to a `CAPCOM.AVI`, or
+  wrote no movie when the player had no ffmpeg.
+- **New behaviour:** the importer copies the disc's 1,155 raw sectors of
+  `CAPCOM30.STR` unchanged to `base/fmv/CAPCOM30.STR` and `install` lays the
+  file in the game folder. `Fmv_Play` opens the name it is given as before (the
+  game folder, then the CD root); when that name is `CAPCOM.AVI` (any case) and
+  neither open succeeds, it opens `CAPCOM30.STR` the same two ways. A
+  `CAPCOM.AVI` that is there still plays first. `video::Movie` reads the STR by
+  its bytes: BS v2 pictures from the Form 1 sectors, decoded by our own MDEC
+  (Huffman, dequantisation, inverse DCT, YCbCr to RGB), 320 x 240 shown doubled
+  to 640 x 480 by pixel repetition - the AVI's size, so DIV-0035's rectangle is
+  unchanged - at 30 a second (150 x frames / sectors); and the XA ADPCM audio
+  (stereo, 37,800 Hz, 143 sectors, 1,153,152 bytes of 16-bit PCM, 7.63 s)
+  decoded whole at open and put into the SDL3 audio stream at its own rate,
+  which resamples. The log says `DIV-0214    NAME: PlayStation STR (MDEC) 640
+  x 480, 231 frames at 30.000 a second (7.70 s)` and the PCM stream's shape.
+  The picture differs from ffmpeg's by the IDCT: M1's comparison of every
+  frame of the US disc's stream against ffmpeg's `psxstr` + `mdec` decode of
+  the same file gives PSNR 53.87 dB mean and 44.65 dB lowest (not bit-exact: two
+  inverse DCTs; psx-spx's reference one is ours). The audio is sample-exact to
+  `tools/xa.py`'s decode.
+- **Rationale:** frost (raulcorreia7) proposed it and built it
+  (`psx-media-round.md`); the owner accepted it by PR 225 (2026-11-11). A
+  PSX-disc install should not need ffmpeg for its logo, on Windows, under
+  Proton, or on a later native build. The decoders are written from the public
+  descriptions of the formats and frost's own MIT crates, his bof3-player
+  (rule 5; `THIRD_PARTY.md` section 5).
+- **Also in the PSX version?** Yes - the PlayStation shows this movie, through
+  its MDEC; the picture is that stream's own. The PC port's `CAPCOM.AVI` is the
+  same movie re-encoded in 2001.
+- **Verification:** `bof3x-fmvdump` of the US disc's `CAPCOM30.STR` (under
+  Wine, both widths): 231 frames, 640 x 480, 37,800 Hz stereo, 1,153,152 PCM
+  bytes, and the frames and the PCM of the i686 and x86-64 builds identical;
+  `tools/media_host` tests (237,969 checks, 0 failed). **Not played:** nobody
+  has watched the movie in the game with this change.
+- **Reversible?** Not as a switch. The ffmpeg conversion is gone from the
+  importer, so a player cannot choose that path now; a `CAPCOM.AVI` placed in
+  the game folder (by hand, or an older import's) still wins and plays as
+  DIV-0205 describes. `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player, which
+  cannot open an STR.
+- **Switch:** none - the decode is the only path to this file
+- **Default:** on
+- **Player:** never - one-way: the old path (ffmpeg's AVI at import) was removed, not kept beside
+- **Toward:** none - the picture was the PlayStation's stream before too; only its decoder changed
+- **Languages:** any
+- **State:** active
+
+### The 11 PSX jingles are kept as XA clips and decoded and resampled by our code
+
+- **ID:** DIV-0215
+- **Date:** 2026-11-11
+- **Subsystem:** audio - the MP3 seam (`src/audio/mp3.cpp`, DIV-0091:
+  `Mp3_Open`, `Mp3_Start`, `Mp3_Decode`, `Mp3_Seek`, `CountFrames`),
+  `Sound_LoadStream` `0x587910` kind 0 (the guard against Capcom's decoder),
+  `src/media/xa_clip.cpp`,
+  `xa_adpcm.cpp`, `resample.cpp`; the launcher's Jukebox
+  (`src/launcher/music_player.cpp`); `tools/xa.py` `jingles`;
+  [`psx-media-round.md`](psx-media-round.md) 2.2
+- **Tier:** Sensible - the same sound from the same data, one fewer program
+  the player has to find.
+- **Original behaviour:** the PC's 11 kind-0 streams (`SND\NAME.DAT`) are MP3s
+  of the disc's `S_XA00.STR` clips. DIV-0129's import made them from a PSX
+  disc: each clip decoded by `xa.decode`, resampled to 44.1 kHz and encoded to
+  128 kbit/s MP3 by the player's ffmpeg and libmp3lame; without ffmpeg there
+  were none (and DIV-0129's wait ended at once, without the jingle).
+- **New behaviour:** the importer writes each jingle, where it wrote the MP3, as
+  an XA clip (`BOF3XA` magic, the clip's own sound groups undecoded), and
+  needs no ffmpeg. A clip is larger than its MP3: 128 bytes for 112 stereo
+  samples at 37,800 Hz is about 43 KB a second, so `PURE.DAT` is 11,623,704
+  bytes (its 128 kbit/s MP3 about 4.3 MB), `KARA.DAT` 11,639,832, and the 11
+  clips 25,256,712 bytes in all (measured, the US disc). `media::XaClip`
+  decodes a clip from a fresh ADPCM history and resamples it to 44,100 Hz
+  stereo (7/6 from 37,800 Hz; polyphase, fixed point, a generated table, so both
+  widths give the same samples). The MP3 seam's `Open` takes a file in memory
+  that begins with the magic as a clip: `Decode` hands out frames of 1,152
+  stereo samples, every one whole - the clip's last frame is filled out with
+  silence (at most 1,151 samples, 26 ms), as an MP3's last frame is whole -
+  stores their byte count where an MP3 frame's is stored, and returns the end
+  of the stream when none is left; `Seek(0)` rewinds; `CountFrames` returns
+  ceil(frames / 1,152), so DIV-0081's loop fold and DIV-0092's resume work as
+  before. The filling is what keeps a clip safe to loop: `Music_Decode` relies
+  on whole 4,608-byte frames after a rewind, and a short frame there would run
+  past its buffer. No kind-0 stream loops today (`Sound_LoadStream` starts them
+  with loops 0); of the two ways to make the overrun impossible, filling the
+  frame was chosen over a `Fatal` on a looping clip, since it leaves the seam
+  with one frame size and no case of its own. Every other reader of a
+  kind-0 file's bytes was traced: `Music_Start`, `Music_Decode` and
+  `music_loops` (a stream has no loop row), `ResumeSkip` and `FoldMp3`
+  (through `CountFrames` and the same decode), `WalkFrames` and the
+  `BOF3X_MP3_COMPARE` corpus (MP3s only; clips are counted and left out),
+  the self-test (a synthetic clip is added), and the Jukebox, which decodes a
+  clip through `media::XaClip` where it decodes an MP3 by minimp3. Capcom's
+  decoder cannot read a clip: with `BOF3X_MP3=original` a clip is a `Fatal`
+  naming the file and the reason, never a wrong decode. The guard is in
+  `Sound_LoadStream`, the one place a kind-0 file is loaded.
+  `Music_OpenDecoder` has none: a guard there read its file's first bytes, and
+  the sound fuzz (`sound_fuzz.cpp`, `kOpenDecoder`) hands it pointers that are
+  not files, which stopped the hosted suite with an access violation (PR 225's
+  review, 2026-11-11). A cache an older import made keeps its MP3s, which play
+  as before.
+- **Rationale:** frost (raulcorreia7) proposed it and built it
+  (`psx-media-round.md`); the owner accepted it by PR 225 (2026-11-11). The
+  reasons are DIV-0214's.
+- **Also in the PSX version?** Yes - the PlayStation plays these XA clips from
+  the disc; the sound is the clip's own ADPCM, resampled for the port's
+  44.1 kHz stream as DIV-0129 did.
+- **Verification:** `tools/media_host` tests (237,969 checks, 0 failed),
+  including the clip reader's chunking: reads of 1,152 frames, all full but the
+  last, ceil(total / 1,152) of them, the same again after a rewind. M1 held
+  every jingle's 37.8 kHz PCM sample-exact to `tools/xa.py`. The engine's
+  `BOF3X_SHADOW=sound` self-test now also runs a clip through the seam: every
+  frame whole, the clip's samples and then zeros, as many frames as
+  `CountFrames` says, the replay after `Seek(0)` identical over all of them.
+  **Not played:** nobody has heard a jingle in the game with this change.
+- **Reversible?** Not as a switch. The MP3 encoding is gone from the importer's
+  jingle path (`xa.mp3` stays for the PSP's `tools/at3.py`). A PC install's own
+  MP3s still play where DIV-0150's `BOF3X_MUSIC=pc` asks for them.
+- **Switch:** none - the clip is the only form the importer writes
+- **Default:** on
+- **Player:** never - one-way: the old path (the player's ffmpeg and libmp3lame at import) was removed, not kept beside
+- **Toward:** none - the sound was the disc's clip before too; only its decoder changed
 - **Languages:** any
 - **State:** active

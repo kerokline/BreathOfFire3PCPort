@@ -324,7 +324,7 @@ void TestManifest() {
     Check(a.snd_jingles_build.empty(), "no [snd_jingles]");
     // DIV-0129's jingles, read by the Jukebox's PlayStation streams
     const bof3x::CacheManifest j = bof3x::ManifestParse(
-        "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-mp3\"\n");
+        "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-clip\"\n");
     Check(j.snd_jingles_build == "psx-us" && j.snd_build.empty() && j.sources == std::vector<std::string>{"psx-us"},
           "[snd_jingles] build: the jingles' build, not [snd]'s, not a source", j.snd_jingles_build);
     Check(j.snd_jingles_dir.empty(), "[snd_jingles] with no dir (before DIV-0150): empty, base/snd");
@@ -705,6 +705,62 @@ void TestHostedOpt() {
         Check(bof3x::ConfigModLayers(th, tc, "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15") ==
                   "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,mod-b-mod",
               "ConfigModLayers: the sixteenth layer is the last one added");
+        // DIV-0157 as amended 2026-11-11: the Mods tab's boxes (mods_off=)
+        Check(bof3x::ConfigModLayers(th, tc, "area4-walls", "", "b-mod") == "area4-walls,mod-a-mod",
+              "ConfigModLayers: a mod mods_off= names is left off");
+        Check(bof3x::ConfigModLayers(th, tc, "", "", " a-mod , b-mod,nobody").empty(),
+              "ConfigModLayers: both off, spaces and an id no mod has allowed");
+        Check(bof3x::ConfigListHas("a, b ,c", "b") && !bof3x::ConfigListHas("a,bb", "b") && !bof3x::ConfigListHas("", "b"),
+              "ConfigListHas: a whole name, spaces around it allowed");
+        Check(bof3x::ConfigListSet("a, b", "c", true) == "a,b,c" && bof3x::ConfigListSet("a,b,c", "b", false) == "a,c" &&
+                  bof3x::ConfigListSet("b", "b", false).empty() && bof3x::ConfigListSet("a,b", "a", true) == "b,a",
+              "ConfigListSet: a name added at the end once, or taken out");
+    }
+    {
+        // DIV-0157 as amended 2026-11-11 (docs/disc-patch-round.md 4): a disc-patch mod's two layers,
+        // both or neither, under its text's language alone
+        const std::wstring ph = Temp(L"bof3x_dp_home");
+        MakeDirs(ph);
+        WriteAll(ph + L"\\mods.toml",
+                 "[[mod]]\nid = \"hack\"\nname = \"H\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n\n"
+                 "[[mod]]\nid = \"t-mod\"\nname = \"T\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n\n"
+                 "[[mod]]\nid = \"textonly\"\nname = \"X\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n\n"
+                 "[[mod]]\nid = \"notbuilt\"\nname = \"N\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n\n"
+                 "[[mod]]\nid = \"nolang\"\nname = \"L\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = []\n");
+        const std::wstring pc = FakeCache(L"bof3x_dp_cache",
+                                          {{"mod-hack", L"dat"}, {"mod-hack", L"exe"}, {"mod-hack-en-US", L"dat"},
+                                           {"mod-t-mod", L"exe"}, {"mod-textonly-en-US", L"dat"}, {"mod-nolang", L"dat"}},
+                                          nullptr);
+        Check(bof3x::ConfigModLayers(ph, pc, "area4-walls", "en-US") ==
+                  "area4-walls,mod-hack,mod-hack-en-US,mod-t-mod,mod-textonly-en-US",
+              "ConfigModLayers: a disc-patch mod's two layers, its text after its tables, in mods.toml's order",
+              bof3x::ConfigModLayers(ph, pc, "area4-walls", "en-US"));
+        Check(bof3x::ConfigModLayers(ph, pc, "", "ja-JP") == "mod-t-mod" && bof3x::ConfigModLayers(ph, pc, "", "") == "mod-t-mod",
+              "ConfigModLayers: under another language (or the Chinese) a disc-patch mod is left off whole");
+        Check(bof3x::ConfigModLayers(ph, pc, "", "en-US", "hack,textonly") == "mod-t-mod",
+              "ConfigModLayers: a disc-patch mod mods_off= names is left off whole");
+        Check(bof3x::ConfigModLayers(ph, pc, "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15", "en-US") ==
+                  "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15,mod-t-mod",
+              "ConfigModLayers: two layers that would pass 16 are both left off; the next mod's one still fits");
+        std::vector<std::string> gone = {"mod-hack", "psp-tables"};
+        Check(bof3x::ConfigModHosted("area4-walls,mod-hack-en-US,mod-textonly-en-US,psp-tables-x", gone) ==
+                  "area4-walls,mod-textonly-en-US,psp-tables-x" &&
+                  gone == std::vector<std::string>{"mod-hack", "psp-tables", "mod-hack-en-US"},
+              "ConfigModHosted: the text layer of a mod whose tables the hosted build cannot take goes with them");
+
+        // the ini's mods_off= and the whole hand-over
+        const std::wstring game = Temp(L"bof3x_rf_game");
+        MakeDirs(game + L"\\DAT");
+        const std::wstring ini = Temp(L"bof3x_config_tests_modsoff.ini");
+        WriteAll(ini, "[bof3x]\r\nmods_off=hack, t-mod\r\n");
+        bof3x::Config c1, c2, none;
+        std::string err;
+        Check(bof3x::ConfigLoad(ini, c1, err) && c1.mods_off == "hack, t-mod", "mods_off= kept as written", c1.mods_off);
+        Check(bof3x::ConfigSave(ini, c1) && ReadAll(ini).find("\r\nmods_off=hack, t-mod\r\n") != std::string::npos &&
+                  bof3x::ConfigLoad(ini, c2, err) && c2.mods_off == c1.mods_off,
+              "mods_off= written as read, and read again");
+        Check(bof3x::ConfigSave(ini, none) && ReadAll(ini).find("\r\nmods_off=\r\n") != std::string::npos,
+              "the default writes an empty mods_off=");
     }
     // a layer no recipe names, whose cache tree has an exe part: the DLL's test
     const std::wstring mod = FakeCache(L"bof3x_rf_cache_mod", {{"mod-x", L"exe"}, {"mod-y", L"dat"}}, nullptr);

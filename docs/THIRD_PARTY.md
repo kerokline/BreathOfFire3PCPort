@@ -1,6 +1,6 @@
 # Third-party code carried in this repository
 
-**Status:** CURRENT (2026-10-10)
+**Status:** CURRENT (2026-11-11)
 
 `CLAUDE.md` rule 5 keeps this list short: nothing copyleft, nothing whose
 terms we could not grant on at a handoff ([`LICENSING.md`](LICENSING.md)
@@ -234,3 +234,39 @@ this repository: the Python is this project's own, and what it shares with the
 source is the format - the bit order, the field widths, and the 21-entry
 starting order of the code-length list (`DJW_CLEN_MTF`). Listed here so the
 origin of that format knowledge is on record; no notice is owed for it.
+
+## 5. bof3-player's psx-formats and psx-machine (the PSX movie and XA decoders, DIV-0214, DIV-0215)
+
+`src/media` (the STR movie, the XA ADPCM decoder, the XA clip reader;
+[`psx-media-round.md`](psx-media-round.md)) ports two parts of
+[bof3-player](https://github.com/raulcorreia7/bof3-player) at `da74b60`
+(2026-11-09), the work of frost (raulcorreia7), who also made the port, from
+Rust to C++: the MDEC's dequantisation, inverse DCT and
+colour conversion (`psx-machine/src/mdec.rs`) and the XA ADPCM sound-group
+decode (`psx-formats/src/xa.rs`, `adpcm.rs`). The STR frame assembly, the BS
+v2 bitstream reader and the resampler are this project's own, from psx-spx.
+bof3-player is MIT; its notice, from its `LICENSE`:
+
+```
+MIT License
+
+Copyright (c) 2026 Raúl Correia and BOF3 contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

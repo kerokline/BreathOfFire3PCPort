@@ -752,9 +752,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     if (!bof3::orig::Disc_Probe(StrWinMain(::bof3::Img(kStrCapcomAvi.v)), StrWinMain(::bof3::Img(kStrBof3Exe.v)))) {
         // DIVERGENCE DIV-0100: the probe's local test is CAPCOM.AVI in the
         // game directory; a disc-only install (.data from a disc-built cache,
-        // docs/disc-only-install.md) has the movie only when the importer
-        // could convert it. Such an install is local whatever the probe says:
-        // the root left empty, as the probe's local branch leaves it. With a
+        // docs/disc-only-install.md) has no CAPCOM.AVI: its movie is the
+        // disc's CAPCOM30.STR, which Fmv_Play falls back to (DIV-0214) and
+        // this probe does not look for, so the probe fails for it. Such an
+        // install is local whatever the probe says: the root left empty, as
+        // the probe's local branch leaves it. With a
         // BOF3.exe beside the game the install is the PC's and the original
         // probe decides (DIV-0100's "Reversible?"; review item 2).
         if (!bof3::ExeImage_DiscMapped() || bof3::ExeFile_Present()) {

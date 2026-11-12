@@ -194,6 +194,8 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             cfg.psp = value;
         } else if (key == "off") {  // BOF3X_OFF: kept as written, the game refuses a name it does not read
             cfg.off = value;
+        } else if (key == "mods_off") {  // the Mods tab's unticked boxes: ids, kept as written
+            cfg.mods_off = value;
         } else if (key == "preset") {  // the presets: a name of kPresets, else the default
             if (const PresetInfo* p = PresetNamed(value)) {
                 cfg.preset = p->id;
@@ -365,6 +367,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# docs/launcher-settings.md). * turns off all code names. -name keeps that change on. Empty: none.\r\n";
     out += "# If a name is not a code name, the game stops and shows a message\r\n";
     out += "off=" + cfg.off + "\r\n";
+    out += "# the installed mods to keep off: their ids, comma-separated (the check boxes on the Mods tab,\r\n";
+    out += "# docs/mods.md). A table-edit or disc-patch mod is on unless it is named here. Empty: none off\r\n";
+    out += "mods_off=" + cfg.mods_off + "\r\n";
     out += "# the preset (docs/launcher-settings.md): recommended (the default, this project's changes) | shipped\r\n";
     out += "# (the PC version as it was released) | repaired (only the repairs of defects) | playstation (as the\r\n";
     out += "# PlayStation version). It turns off changes when the game starts. It does not change this file\r\n";
@@ -499,7 +504,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         // after every other layer and in the Mods tab's order, so that the
         // later mod wins a cell two of them set. opt=none is no layer at all,
         // a mod's tables too.
-        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted);
+        if (cfg.opt != "none") wanted = ConfigModLayers(HomeDir(), cache, wanted, language, cfg.mods_off);
         if (!wanted.empty()) {
             std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
             if (hosted) {
@@ -510,6 +515,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
                 // shadow test and A/B run on an ini that chose that suite.
                 std::vector<std::string> dropped;
                 playable = ConfigOptHosted(playable, cache, dropped);
+                playable = ConfigModHosted(playable, dropped);   // a disc-patch mod's text goes with its tables
                 std::string names;
                 for (const std::string& d : dropped) names += (names.empty() ? "" : ", ") + d;
                 if (!dropped.empty())
@@ -1090,7 +1096,29 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home) {
     return out;
 }
 
-std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted) {
+bool ConfigListHas(const std::string& list, const std::string& name) {
+    for (size_t at = 0; at <= list.size();) {
+        const size_t end = std::min(list.find(',', at), list.size());
+        if (Trim(list.substr(at, end - at)) == name) return true;
+        at = end + 1;
+    }
+    return false;
+}
+
+std::string ConfigListSet(const std::string& list, const std::string& name, bool on) {
+    std::string out;
+    for (size_t at = 0; at <= list.size();) {
+        const size_t end = std::min(list.find(',', at), list.size());
+        const std::string item = Trim(list.substr(at, end - at));
+        if (!item.empty() && item != name) out += (out.empty() ? "" : ",") + item;
+        at = end + 1;
+    }
+    if (on && !name.empty()) out += (out.empty() ? "" : ",") + name;
+    return out;
+}
+
+std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted,
+                            const std::string& language, const std::string& mods_off) {
     std::string out = wanted;
     size_t count = 0;
     for (size_t at = 0; !out.empty() && at <= out.size(); ++count) {
@@ -1098,21 +1126,69 @@ std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache,
         at = end + 1;
     }
     for (const ModInfo& m : ConfigModsInstalled(home)) {
-        if (m.kind != "table-edit") continue;
-        const std::string layer = "mod-" + m.id;
-        if (("," + out + ",").find("," + layer + ",") != std::string::npos) continue;   // opt= names it already
-        if (!CacheHasLayerPart(cache, layer.c_str(), L"exe")) {
-            std::fprintf(stderr, "bof3x-launcher: the mod %s is in the list but its tables are not built (layer %s); "
-                         "left off. Build it on the Mods tab.\n", m.id.c_str(), layer.c_str());
+        const bool patch = m.kind == "disc-patch";
+        if (m.kind != "table-edit" && !patch) continue;
+        if (ConfigListHas(mods_off, m.id)) continue;   // the player's box is not ticked
+        const std::string first = "mod-" + m.id;
+        std::vector<std::string> layers;
+        if (patch) {
+            // its text is one language's, the disc's the patch was made for
+            const std::string tag = m.required.size() == 1 && IsTag(m.required[0]) ? m.required[0] : std::string();
+            if (tag.empty()) {
+                std::fprintf(stderr, "bof3x-launcher: the mod %s does not name the one language of its text; left "
+                             "off\n", m.id.c_str());
+                continue;
+            }
+            if (language != tag) {
+                std::fprintf(stderr, "bof3x-launcher: the mod %s is for %s text, not the language played (%s); left "
+                             "off\n", m.id.c_str(), tag.c_str(), language.empty() ? kLanguageOriginal : language.c_str());
+                continue;
+            }
+            const std::string second = first + "-" + tag;
+            if (CacheHasLayerPart(cache, first.c_str(), L"dat") || CacheHasLayerPart(cache, first.c_str(), L"exe"))
+                layers.push_back(first);
+            if (CacheHasLayerPart(cache, second.c_str(), L"dat")) layers.push_back(second);
+        } else if (CacheHasLayerPart(cache, first.c_str(), L"exe")) {
+            layers.push_back(first);
+        }
+        if (layers.empty()) {
+            std::fprintf(stderr, "bof3x-launcher: the mod %s is in the list but it is not built (layer %s); "
+                         "left off. Build it on the Mods tab.\n", m.id.c_str(), first.c_str());
             continue;
         }
-        if (count >= 16) {   // dat_load.cpp kOptMax
-            std::fprintf(stderr, "bof3x-launcher: 16 layers are named already, the most the game takes; the mod %s "
-                         "is left off\n", m.id.c_str());
+        std::vector<std::string> add;
+        for (const std::string& layer : layers)
+            if (!ConfigListHas(out, layer)) add.push_back(layer);   // opt= names it already: once is enough
+        if (count + add.size() > 16) {   // dat_load.cpp kOptMax; a mod's layers go together
+            std::fprintf(stderr, "bof3x-launcher: the game takes 16 layers at most and %d are named already; the "
+                         "mod %s is left off\n", static_cast<int>(count), m.id.c_str());
+            continue;
+        }
+        for (const std::string& layer : add) {
+            out += (out.empty() ? "" : ",") + layer;
+            ++count;
+        }
+    }
+    return out;
+}
+
+std::string ConfigModHosted(const std::string& list, std::vector<std::string>& dropped) {
+    std::string out;
+    const std::vector<std::string> first = dropped;
+    for (size_t at = 0; at <= list.size();) {
+        const size_t end = std::min(list.find(',', at), list.size());
+        const std::string layer = list.substr(at, end - at);
+        at = end + 1;
+        if (layer.empty()) continue;
+        bool orphan = false;
+        for (const std::string& d : first)
+            orphan = orphan || (d.compare(0, 4, "mod-") == 0 && layer.size() > d.size() + 1 &&
+                                layer.compare(0, d.size() + 1, d + "-") == 0 && IsTag(layer.substr(d.size() + 1)));
+        if (orphan) {
+            dropped.push_back(layer);
             continue;
         }
         out += (out.empty() ? "" : ",") + layer;
-        ++count;
     }
     return out;
 }
