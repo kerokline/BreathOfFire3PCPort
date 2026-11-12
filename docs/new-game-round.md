@@ -776,7 +776,7 @@ disjoint inside a stage.
 - The ledger: one entry each for the name entry at New Game, the options
   step at New Game, and the renamer's grid; DIV-0075 and DIV-0020 amended;
   `ledger_check.py`, `ledger_registry.py --check`. Numbers are taken at the
-  build (the next free today is DIV-0228).
+  build (the ledger's last entry today is DIV-0227).
 - `save-interchange.md` 2 and 2a, `USER_CHECKS.md` 4, the research's status,
   `button-tests.md`'s name-entry lines, STATUS, HANDOFF, `owner-review.md`.
 - The state-hash routes with the switches off (identical to the pairs
