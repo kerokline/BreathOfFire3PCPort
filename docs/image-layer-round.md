@@ -5,8 +5,9 @@ groups A, B and C built the same day on `image-layer/round`, sections 5a to
 5c - the image proven the same on every build, a PC install on the same
 route (DIV-0212), the `table-edit` mod kind (DIV-0213); group D built in the
 disc-patch round. M3's rest, M5 and M6 run 2026-11-12 (section 2); acceptance
-2, the state-hash routes, and M4, the start-up cost, prepared and not run;
-acceptance 5, the owner's look, the owner's). Section 1's numbers were measured on `main`
+2, the state-hash routes, and M4, the start-up cost, run the night of
+2026-11-11 (section 6a): all ten routes identical with no layer and with
+`psp-tables`; acceptance 5, the owner's look, the owner's). Section 1's numbers were measured on `main`
 `7a495bd6`. Sections 3 and 9 are the plan as staged; where the build differs,
 section 5a says so.
 
@@ -107,7 +108,7 @@ yet a named table keeps travelling as byte ranges, as today.
 M decides the list of tables that become files in this round. A table that
 fails 1 or 3 stays in the image with its reason written in `tables.toml`.
 
-### M1 to M3 as run (2026-11-11; M3's rest, M5 and M6 run 2026-11-12, M4 prepared, not run)
+### M1 to M3 as run (2026-11-11; M3's rest, M5 and M6 run 2026-11-12; M4 run, section 6a)
 
 Read from the seven disc-built images of the exe-gap round's end batch
 (`C:\Users\kerok\bof3x-runs\eg1031\end\c_<build>\base\exe\data.toml`, generated
@@ -269,7 +270,7 @@ What the exe host puts in `.rdata` (`rdata::Map`,
 header at `0x5C4948`; the rest zero. All of it is the compiler's, the
 loader's or the SDK's. Expected none; none.
 
-**M4 and acceptance 2: prepared, not run** (the owner was at the machine; a
+**M4 and acceptance 2: prepared here, run in section 6a** (the owner was at the machine; a
 route needs it hands-off). In `D:\bof3x-runs\il1112`:
 
 - `base` (a detached worktree of `ad7ed59e`, the merge before PR 224) and
@@ -639,6 +640,80 @@ same 2 failures as `main`.
    built, seen in the game; removed, and the number is the original again.
    `tables.py dump` on the running install's files agrees both times.
 6. The start-up cost from M4, measured again, and stated.
+
+## 6a. Acceptance 2 and M4 as run (2026-11-11 night)
+
+Run from `D:\bof3x-runs\il1112` with the builds, launcher copies, game folder
+and caches section 2 prepared: the baseline is `ad7ed59e` (the merge before
+PR 224), the tip `origin/main` `c14b805c` (PRs 224, 227, 228, 229). Every run
+is `bof3x.exe`, 32-bit, the PC install, `BOF3X_LAYERING=0`; per route the
+baseline twice (the references, the `orig4` pairs being stale) and the tip
+once, then `tools/statehash.py check`. Scripts `chain_il.sh`,
+`chain_il_psp.sh`, `recheck.sh`, `quiet.sh`; hashes and checks in `sh_il`,
+`sh_ilpsp`, `sh_ilq`, `sh_ilpspq`; logs `chain_il*.log`, `recheck.log`.
+
+**Acceptance 2: all ten routes identical on every compared tick, with no
+layer and with `psp-tables` on both sides** (the baseline's layer in the old
+form, the tip's in the new one, each from its own cache).
+
+| Route | Ticks | No layer | `psp-tables` |
+|---|---|---|---|
+| combat | 2561 | identical | identical on the quiet run |
+| shop | 3137 | identical | cleared by the recheck |
+| caughFish | 3841 | identical | identical |
+| field_menu | 1409 | identical | identical |
+| menu_screens | 1729 | identical | identical |
+| dragonTransform | 4289 | identical | identical |
+| cutsceneAndNue | 7361 | identical on the quiet run | identical |
+| masterAndManillo | 5505 | cleared by the recheck | identical |
+| worldMapAndAreaTransition | 2113 | identical | cleared by the recheck |
+| whelpBoss | 13121 / 13185 | identical | identical |
+
+Fifteen of the twenty checks were identical at the first run. The other five
+are settled so:
+
+- **The recheck** (`recheck.sh`: the tip run a second time, then `check` with
+  the tip's two runs as the references and the baseline as the new side)
+  cleared masterAndManillo (no layer), shop and worldMapAndAreaTransition
+  (`psp-tables`): on every page that had differed, the tip's own two runs
+  disagree.
+- **cutsceneAndNue (no layer) and combat (`psp-tables`) still differed after
+  it** - combat with each side's two runs equal and the sides apart, on the
+  sound page `0x7DE000`, VRAM-shadow pages, the Direct3D pages `0x7C9000` /
+  `0x7CA000` and `0x937000`, and with 64 more ticks on the runs that differed
+  (2625 for 2561, 7425 for 7361). **Run whole again with nothing else using
+  the machine** (`quiet.sh`: baseline twice, tip once) **both are identical on
+  every tick, the references disagreeing on no page.**
+
+**What the five were.** The first chain ran while three build agents compiled
+on the same machine. The runs that differed are the ones made under that
+load, and the same routes are identical on a quiet machine, so the
+differences follow the load, not the build. Which mechanism adds the 64 ticks
+under load was not traced. **Trap, paid here:** a state-hash proof run needs
+the machine quiet as well as hands-off; two runs of one side made under the
+same load can agree with each other and still differ from a quiet run, so
+"each side's runs agree and the sides differ" is not by itself a difference
+of the builds.
+
+The tip holds PRs 227 to 229 beside PR 224, so the result covers those too.
+
+**M4 and acceptance 6, the start-up cost.** `startup_cost.sh`: self-test-only
+starts of the exe host, a warm-up and five each, wall clock from launch to
+the log's lines (the log has no timestamps). Medians, seconds from launch to
+the end of the start:
+
+| Install | Baseline | Tip | Added |
+|---|---|---|---|
+| PC | 0.243 | 0.265 | 0.022 |
+| US disc-only | 0.307 | 0.351 | 0.044 |
+
+The tip's `.data as mapped` line comes at 0.066 s (PC) and 0.082 s (disc-only);
+the baseline has no such line. The added time is an upper bound on the table
+files' share, since the tip's other three PRs are in it. Output
+`startup_cost.out`, `startup_cost.tsv`.
+
+**Still the owner's:** acceptance 5, one `table-edit` mod's number seen in the
+game and gone when the mod is removed.
 
 ## 7. The owner's calls (answered 2026-11-11)
 
