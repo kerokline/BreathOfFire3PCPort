@@ -295,6 +295,137 @@ is offered and one, New Game alone, when not. PC `0x6BDF8E`
 byte. The PC's two-row layout is the PlayStation's one-row layout plus the
 third row.
 
+### M2. The grid, the labels and the legend in every build
+
+*Group M-B: capstone MIPS over the seven held discs
+(`D:\bof3x-runs\discs`, through `loc_build.open_disc`), `tools/pe_xref.py`,
+our source, and `tools/dat.py` over the built layers in `game\cache\loc\`
+(read only). Scripts and outputs in `C:\Users\kerok\bof3x-runs\ng1112\m-b`
+(`grid.py`, `page3.py`, `west2.py`, `funcs.py`, `labels.py`, `legend.py`,
+`psp.py`, `hashes.py`, `m3.py`, `m3b.py`, `m4.py`, `flagscan.py`,
+`draw_sites.txt`, and the read-off listings). The hashes below are in
+`hashes.out` (checked).*
+
+The seven builds are `psx-jp`, `psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`,
+`psp-jp` and `psp-eu`. No build is Spanish; no disc holds a Chinese grid.
+
+**The research's shape is the Japan build's only.** Every build carries a
+three-page, 288-byte block, equal in `START`, `COMMU02` and `COMMU02B` in
+every build. The Western builds use **one page, page 2**, of another shape:
+their open step and both entry-ins write the constant 2 to the page cell and
+nothing else writes it.
+
+| Build | `START.EMI` grid (VA) | `COMMU02.EMI` grid (VA) | Pages in use | md5 of the 288 bytes |
+|---|---|---|---|---|
+| psx-jp, psp-jp | `0x801ECD2C` | `0x801DACA4` | 0, 1, 2 | `81ef2ad0...` |
+| psx-us, psx-eu-en | `0x801ECDBC` | `0x801DAAAC` | 2 | `822152b5...` |
+| psx-fr | `0x801ECC1C` | `0x801DAA08` | 2 | `40b6c696...` |
+| psx-de | `0x801ECC74` | `0x801DA9C8` | 2 | `5f9b0163...` |
+| psp-eu | its EMIs are the Japan build's; `BOOT.BIN` holds the PSX US grid (image `0x2EC7A8`, `0x2EF1C9`) | | not read (its code is Allegrex) | `822152b5...` |
+
+| Page | Builds | Specials (columns 10..11) | Glyph cells | Empty cells |
+|---|---|---|---|---|
+| 0, 1 | JP | codes 1..5, rows 3..7 | 86 each | none |
+| 2 | JP | codes 1..5, rows 3..7 | 42 | 44 |
+| 2 | US, EU, PSP-EU | **codes 1..4, rows 3..6** | 68 | 20: row 2 cols 6..9; row 5 cols 6..9; row 7 whole |
+| 2 | FR | codes 1..4, rows 3..6 | 82 | 6: row 2 col 9; row 5 cols 7..9; row 7 cols 10..11 |
+| 2 | DE | codes 1..4, rows 3..6 | 75 | 13: row 2 col 9; row 7 whole |
+
+The Western pages 0 and 1 have the Japan pattern and nothing reads them: **a
+shape search for the Japan pattern alone finds the wrong pages in the West.**
+
+**The Western input step is another routine** (US `START`
+`0x801E4744..0x801E4E8C` read to the last instruction; the four Western
+copies share one normalised code hash, `funcs.py`):
+
+| | Japan | West |
+|---|---|---|
+| Page change, clamps | Triangle and code 3; page-2 clamps | **none** |
+| Confirm bit | `0x20` | **`0x40`** |
+| Code 3 | page | **quit** |
+| Code 4 | quit | **finish** |
+| Code 5 | finish | does not exist |
+| Name cursor + 1 | `0x80`, or repeated `0xA` | `0x20`, or repeated `0xA` |
+| Name cursor - 1 | repeated `0x5` | `0x80`, or repeated `0x5` |
+| Backspace | `0x40` | `0x10` |
+| Left / Right from a special | column 9 / 0 | the same, **with no skip over an empty cell** |
+
+**A reachable empty cell in the West (from the code, not run).** Left from
+the row-5 special sets column 9, which is empty on the US / EU and French
+pages; a confirm there writes byte 0 into the name. Hypothesis: a defect of
+Capcom's Western releases. The PlayStation itself decides (M10's capture
+session can try it).
+
+**The labels.** Japan: `0x1C` bytes, 7 slots of 4 (code 3's label by page).
+US / EU: `0x14` bytes, 4 slots of 5. French, German: `0x1C` bytes, 4 slots of
+7. `START`'s and `COMMU02`'s blocks differ in every build, in the finish
+code's slot (and the quit code's in German).
+
+**The legend.** An 8-pointer table in every build; which entries are drawn
+differs (Japan: 0..3, 4 + page, 7 as leaders; US / EU: 0..3 or 0..4, 7 as
+leaders, and in `START` four more 8 x 8 tiles; French, German: 0..4, no
+leaders). The box is `0x78` wide in `START`, `0x4D` in `COMMU02`. The six
+button tiles are the same in every build, in another order. **The PSP
+builds' legends were not found** in either `BOOT.BIN`.
+
+### M3. Grid bytes against the layer's bytes
+
+| Build | Distinct cells in use | Same byte in the layer | Another single byte | Two-byte code | No glyph | Default-name bytes off the grid |
+|---|---|---|---|---|---|---|
+| US, EU, PSP-EU | 68 | 62 | 5 | 1 | 0 | 0 |
+| FR | 82 | 62 | 5 | 15 | 0 | 0 |
+| DE | 75 | 62 | 5 | 8 | 0 | 0 |
+| JP | 204 | 0 | 1 | 203 | 0 | 0 |
+
+- **A cell's byte is the layer's byte for letters and digits only.** The
+  draw and the commit go through the layer's encoding (`loc_build`'s
+  `encode_char` / `ja_encode`). The encoding is injective over every grid, so
+  a stored name decodes back to its cells exactly.
+- **`0xFF` is a glyph cell in every build (the space)** as well as the
+  routine's blank marker: a typed space is a blank, and only trailing ones
+  are cut.
+- **Field room, Latin:** a five-cell name is 5 + k bytes for k two-byte
+  cells, and the record's field is 8 and a NUL: k <= 3. A French or German
+  name with four or five two-byte cells does not fit. The faerie slot's 5
+  bytes hold a five-cell name only when every cell is a single byte.
+- **`ja-JP`:** five cells are 10 bytes. They fit 8 only through one pair code
+  for the last two cells (DIV-0057), and pair codes come from a table fixed
+  when the layer is built: 227 pairs in the owner's layer, 525 glyph slots
+  left, 41,209 possible last pairs. **So most five-cell names cannot be
+  stored as the layer is built today.** A four-cell name is 8 bytes with no
+  pair. A faerie slot holds at most two cells without pairs; a five-cell name
+  cannot be stored there at all.
+- The reverse (stored name to cells) is exact given the same pair table.
+
+### M4. The messages
+
+`0xBA`, `0xBB` (system pool, `FIRST.DAT`) and `0xF4`, `0xF5`, `0xF7` (areas
+175..185) are present and non-empty in the PC's pools and in every built
+layer (`en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`), each the layer's own.
+**Nothing needs carrying in the chunk.** The word that picks `0xBA` or
+`0xBB` is the frame counter; its PC twin is `Frame_Counter` `0x937F94`,
+paired through `Menu_DrawMemberStatus` `0x573560`, which tests bit `0x20` of
+it where its PlayStation twin tests bit `0x20` of `0x80143E6C` (this settles
+M-A's hypothesis). The save block's delta does not apply to that word.
+
+### M5. Every draw of a character's name
+
+Eleven fixed-cap draws (the status, equip, reserve, party, shared-list,
+renamer, save-slot and two battle windows; the list with file and line is in
+`draw_sites.txt`) and seven fixed-length copies. **No cap is below five
+characters.** What cuts is bytes:
+
+- The renamer's entry-ins copy the stored name's first 5 bytes into the edit
+  buffer (`src/game/community/commu_name.cpp:700-708`, checked; `:961-967`),
+  and the slot commit writes 5.
+- Both commits copy 8 bytes to the text insert record with no NUL after
+  them.
+- `BattleWin_DrawPartyStatus` `0x442FA0` and `BattleWin_DrawTargetMember`
+  `0x443F60` draw through `Text_DrawSmall`, which does not expand pair codes:
+  a `ja-JP` name with a pair would show the pair's placeholder there. From
+  the source, not run; it would already apply to the one default name that
+  has a pair.
+
 ### M6. The pad bits
 
 **The PlayStation game does not remap the pad (verified):** held, previous
@@ -516,6 +647,36 @@ clears the caller's `BOF3X_*` and passes each install's own.
   PlayStation's picture; member 0 = record 0; `Frame_Counter` as the
   alternation's twin; the sounds by ear.
 
+### What M-B's results change
+
+- **The chunk (GD) carries, per build:** the pages in use; each page's 96
+  cells as the disc's codes with each cell's encoding in the layer; the
+  special-code map; the label block with its slot layout, **one per copy**;
+  the legend's strings per copy and which entries are drawn; the box width;
+  the button-tile order. One grid (the copies are equal). No message.
+- **GD locates the grid by the drawer's reference and the open step's page
+  constant,** or by both patterns, never by the Japan pattern alone.
+- **`psp-eu`:** the grid and labels are in `BOOT.BIN`; the legend was not
+  found and the input step not read. GD reads them or refuses the build, and
+  a refused build skips the name screen as the Chinese does.
+- **NG is one body over a parameter set:** the code map, the pages, the bits
+  for confirm, backspace and the cursor moves, the finish sound, and the
+  clamp written as "up to the first cell that is not empty" (equal to the
+  Japan constants on its page 2).
+- **The contract of section 5 is wrong where it says a Latin layer's bytes go
+  in as they are.** The commit encodes each cell; an entry that would pass
+  the field's bytes is refused at the keypress (sound `0x107`, as the limit
+  codes play).
+- **CR:** the entry-ins decode the stored name to cells; the slot path holds
+  5 bytes; the commits write the NUL.
+- **The two battle windows** want the pair expansion the enemy windows have,
+  for `ja-JP`.
+- **M6's table is the Japan build's.** The Western bits are M2's table.
+- **Not established by M-B:** the PSP builds' own code; the Western
+  `COMMU02` input step instruction by instruction (its hash equals across
+  the four); whether the empty cell is reached in play; which disc the
+  owner's `en-150` layer was built from.
+
 ### What M-C's results change
 
 - **RT moves to stage B**, after TF and CR have put the three names in
@@ -535,6 +696,50 @@ clears the caller's `BOF3X_*` and passes each install's own.
   code name be committed before its ledger entry (stage B before C); the US
   build's addresses for `Game_Mode` / `Game_Step`; a title quicksave in a
   run.
+
+## 3b. After group M: the plan as amended, and the calls it raises
+
+Sections 4 to 9 below are as staged. Where 3a differs, 3a and this section
+hold.
+
+**The plan's changes:**
+
+- Stage A is **GD** and **NG**, with RT's two small edits
+  (`battle_commands.txt`'s `seek`, the twelve `# save` headers). **RT's
+  switch-off line and new routes move to stage B.**
+- NG is one body with a parameter set per build family (Japan, West), fed
+  by the chunk.
+- TF builds the name screen as sub-steps of step 2 and reuses the Config
+  screen's step-4 path untouched.
+- A reference capture session in Mednafen (M10) is owed before stage C, on
+  a hands-off machine; it also tries the West's empty cell.
+
+**New calls for the owner** (5 and 6 before NG and CR build the commit; 7
+and 8 can wait for stage B):
+
+5. **`ja-JP` names of five.** As the layer is built, a five-cell name fits
+   the PC's 8-byte field only if its last two cells already have a pair
+   code. Choices: (a) `ja-JP` enters up to **four** cells in this round, and
+   five is a later piece of work on the encoding; (b) five cells where a
+   pair exists, refused otherwise (a player cannot tell which); (c) pair
+   codes made at run time and carried in the save (a new save field and a
+   DIV-0057 amendment). Proposed: (a).
+6. **The faerie slot names under `ja-JP`.** Five bytes hold two cells. The
+   renamer's slot path cannot offer the Japan grid in the PC's save form.
+   Proposed: under `ja-JP` the member path gets the grid (rule 5's cap) and
+   the slot path keeps DIV-0075's end, said in the ledger.
+7. **The West's reachable empty cell.** Keep it as the Western releases have
+   it, or skip empty cells there as the Japan build does. Proposed: skip
+   (ours, ledgered), once the capture session shows what the PlayStation
+   does.
+8. **`psp-eu` installs.** Read the PSP's own code for its legend and input
+   step in this round, or skip the name screen on that install for now.
+   Proposed: skip for now, ledgered as a gap.
+
+Call 4 of section 2 is answered by the discs: the French and German grids
+carry their own extra cells, and every default name's bytes are on its
+build's grid. What is left of it is the byte limit (a name with four or
+five two-byte cells), handled by the refusal above.
 
 ## 4. The groups
 
