@@ -1715,12 +1715,12 @@ site	src/game/battle/dragon_cmd.cpp	1299	long	ul	live	unsigned long	-	extern " "
 site	src/game/battle/dragon_cmd.cpp	1386	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
 site	src/game/battle/dragon_cmd.cpp	1386	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
 site	src/game/battle/dragon_cmd.cpp	2014	narrow_call	image_local	live	s	Addr	task_rec->owner = Addr(s);
-site	src/game/battle/dragon_cmd.cpp	2620	narrow_call	image_local	live	Party(who)	Address	popup->owner = Address(Party(who));
-site	src/game/battle/dragon_cmd.cpp	2623	narrow_call	image_local	live	Enemy(who - 3u)	Address	popup->owner = Address(Enemy(who - 3u));
-site	src/game/battle/dragon_cmd.cpp	2664	narrow_call	image_local	live	PartyBattleE6(who)	Addr	task_rec->owner = Addr(PartyBattleE6(who));
-site	src/game/battle/dragon_cmd.cpp	2667	narrow_call	image_local	live	EnemyBattleE6(who - 3)	Addr	task_rec->owner = Addr(EnemyBattleE6(who - 3));
-site	src/game/battle/dragon_cmd.cpp	2891	narrow_call	image_local	live	s	Address	popup->owner = Address(s);
-site	src/game/battle/dragon_cmd.cpp	3045	low32	object_ours	live	&battle_e5::g_store_ask_word	Low32	bof3::PatchBytes(" ", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
+site	src/game/battle/dragon_cmd.cpp	2624	narrow_call	image_local	live	Party(who)	Address	popup->owner = Address(Party(who));
+site	src/game/battle/dragon_cmd.cpp	2627	narrow_call	image_local	live	Enemy(who - 3u)	Address	popup->owner = Address(Enemy(who - 3u));
+site	src/game/battle/dragon_cmd.cpp	2668	narrow_call	image_local	live	PartyBattleE6(who)	Addr	task_rec->owner = Addr(PartyBattleE6(who));
+site	src/game/battle/dragon_cmd.cpp	2671	narrow_call	image_local	live	EnemyBattleE6(who - 3)	Addr	task_rec->owner = Addr(EnemyBattleE6(who - 3));
+site	src/game/battle/dragon_cmd.cpp	2895	narrow_call	image_local	live	s	Address	popup->owner = Address(s);
+site	src/game/battle/dragon_cmd.cpp	3049	low32	object_ours	live	&battle_e5::g_store_ask_word	Low32	bof3::PatchBytes(" ", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	39	narrow	helper_def	fuzz	p	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	39	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	41	narrow_call	image_local	fuzz	p	Address	void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
@@ -2732,10 +2732,10 @@ site	src/game/core/area_data_reload.cpp	42	uintptr	-	live	std::uintptr_t	-	std::
 site	src/game/core/area_data_reload.cpp	42	widen	param	live	at	std::uint8_t*	std::uint8_t* Mem(std::uint32_t at) { return reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(at)); }
 site	src/game/core/area_data_reload.cpp	118	low32	object_ours	live	&g_on	Low32	bof3::PatchBytes(" ", Low32(&g_on), &was, &is, 1);
 site	src/game/core/area_data_reload.cpp	120	fmt_place	word	live	g_models[0].records - (::bof3::ImageBase() - ::bof3::image::kBase)	%08X	"%u models, %u record bytes from 0x%08X",
-site	src/game/core/cheats.cpp	91	long	l	live	long	-	constexpr long kMultiplierMax = 10;
-site	src/game/core/cheats.cpp	101	long	l	live	long	-	const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
-site	src/game/core/cheats.cpp	131	long	ul	live	unsigned long	-	if (g_exp != 1 || g_zenny != 1) bof3::Log(" ", (unsigned long)g_exp, (unsigned long)g_zenny);
-site	src/game/core/cheats.cpp	131	long	ul	live	unsigned long	-	if (g_exp != 1 || g_zenny != 1) bof3::Log(" ", (unsigned long)g_exp, (unsigned long)g_zenny);
+site	src/game/core/cheats.cpp	105	long	l	live	long	-	constexpr long kMultiplierMax = 10;
+site	src/game/core/cheats.cpp	115	long	l	live	long	-	const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+site	src/game/core/cheats.cpp	145	long	ul	live	unsigned long	-	if (g_exp != 1 || g_zenny != 1) bof3::Log(" ", (unsigned long)g_exp, (unsigned long)g_zenny);
+site	src/game/core/cheats.cpp	145	long	ul	live	unsigned long	-	if (g_exp != 1 || g_zenny != 1) bof3::Log(" ", (unsigned long)g_exp, (unsigned long)g_zenny);
 site	src/game/core/config_text.cpp	123	uintptr	-	live	std::uintptr_t	-	return std::memcmp(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), want, n) == 0;
 site	src/game/core/config_text.cpp	123	widen	param	live	va	const void*	return std::memcmp(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(va)), want, n) == 0;
 site	src/game/core/config_text.cpp	269	widen	img_place	live	::bof3::Img(kRecordBase.v) + i * kRecordStride	std::uint8_t*	auto* rec = reinterpret_cast<std::uint8_t*>(
@@ -6477,11 +6477,11 @@ site	src/game/field/field_ability_2.cpp	1445	narrow_call	image	live	FieldEquip_M
 site	src/game/field/field_ability_2.cpp	1971	narrow_call	image	live	FieldEquip_SlotCategories	AddrOf	const UC category = BRest2e(AddrOf(FieldEquip_SlotCategories) + i);
 site	src/game/field/field_ability_2.cpp	1974	narrow_call	image	live	FieldEquip_SlotCategories	AddrOf	const UC again = BRest2e(AddrOf(FieldEquip_SlotCategories) + i);
 site	src/game/field/field_ability_2.cpp	2028	narrow_call	image	live	FieldAbility_States	AddrOf	[[clang::musttail]] return reinterpret_cast<Handler>(Entry(AddrOf(FieldAbility_States), 10, FieldS_State, " "))();
-site	src/game/field/field_ability_2.cpp	2048	narrow_call	image	live	FieldAbility_TopHelp	AddrOf	const U help = WRest2e(static_cast<U>(static_cast<int>(AddrOf(FieldAbility_TopHelp)) + 4 * c));
-site	src/game/field/field_ability_2.cpp	2391	narrow_call	image	live	FieldAbility_ArrangeSteps	AddrOf	Entry(AddrOf(FieldAbility_ArrangeSteps), 3, FieldS_Step, " "))();
-site	src/game/field/field_ability_2.cpp	2456	narrow_call	image	live	FieldAbility_ArrangeRows	AddrOf	const U rows = AddrOf(FieldAbility_ArrangeRows) + 6 * which;
-site	src/game/field/field_ability_2.cpp	2591	narrow_call	image	live	FieldAbility_ViewSteps	AddrOf	Entry(AddrOf(FieldAbility_ViewSteps), 5, FieldS_Step, " "))();
-site	src/game/field/field_ability_2.cpp	3557	low32	object_ours	live	&rest_2e::g_sort_by_id	Low32	bof3::PatchBytes(" ", Low32(&rest_2e::g_sort_by_id), &was, &is, 1);
+site	src/game/field/field_ability_2.cpp	2100	narrow_call	image	live	FieldAbility_TopHelp	AddrOf	const U help = WRest2e(static_cast<U>(static_cast<int>(AddrOf(FieldAbility_TopHelp)) + 4 * c));
+site	src/game/field/field_ability_2.cpp	2446	narrow_call	image	live	FieldAbility_ArrangeSteps	AddrOf	Entry(AddrOf(FieldAbility_ArrangeSteps), 3, FieldS_Step, " "))();
+site	src/game/field/field_ability_2.cpp	2511	narrow_call	image	live	FieldAbility_ArrangeRows	AddrOf	const U rows = AddrOf(FieldAbility_ArrangeRows) + 6 * which;
+site	src/game/field/field_ability_2.cpp	2646	narrow_call	image	live	FieldAbility_ViewSteps	AddrOf	Entry(AddrOf(FieldAbility_ViewSteps), 5, FieldS_Step, " "))();
+site	src/game/field/field_ability_2.cpp	3612	low32	object_ours	live	&rest_2e::g_sort_by_id	Low32	bof3::PatchBytes(" ", Low32(&rest_2e::g_sort_by_id), &was, &is, 1);
 site	src/game/field/field_blocked.cpp	32	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
 site	src/game/field/field_blocked.cpp	121	narrow_call	image_local	live	p	Address	return Address(p);
 site	src/game/field/field_blocked.cpp	161	long	l	live	long	-	std::uint32_t __cdecl StubObjectAt(long x, long y, unsigned m) { Record(2, x, y, m); Disturb(); return IndexResult(); }
@@ -10414,11 +10414,12 @@ site	src/game/menu/menu.cpp	160	widen	other	live	DwordMapFieldObjects(AtMapField
 site	src/game/menu/menu.cpp	174	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
 site	src/game/menu/menu.cpp	241	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned member, unsigned highlight) {
 site	src/game/menu/menu.cpp	590	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut,
-site	src/game/menu/menu.cpp	659	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
-site	src/game/menu/menu.cpp	806	narrow_call	image_local	live	window	Addr	menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
-site	src/game/menu/menu.cpp	924	narrow_call	image_local	live	whole	Addr	menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(whole));
-site	src/game/menu/menu.cpp	1515	low32	object_ours	live	&field_o::g_wheel_name_centre	Low32	Low32(&field_o::g_wheel_name_centre),
-site	src/game/menu/menu.cpp	1523	low32	object_ours	live	&field_o::g_empty_slot_blank	Low32	bof3::PatchBytes(" ", Low32(&field_o::g_empty_slot_blank),
+site	src/game/menu/menu.cpp	672	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
+site	src/game/menu/menu.cpp	819	narrow_call	image_local	live	window	Addr	menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(window));
+site	src/game/menu/menu.cpp	937	narrow_call	image_local	live	whole	Addr	menu_windows::g.draw_mode(Next(), 0, 1, 0xF, Addr(whole));
+site	src/game/menu/menu.cpp	1536	low32	object_ours	live	&field_o::g_wheel_name_centre	Low32	Low32(&field_o::g_wheel_name_centre),
+site	src/game/menu/menu.cpp	1544	low32	object_ours	live	&field_o::g_empty_slot_blank	Low32	bof3::PatchBytes(" ", Low32(&field_o::g_empty_slot_blank),
+site	src/game/menu/menu.cpp	1552	low32	object_ours	live	&field_o::g_exp_bar_fixed	Low32	bof3::PatchBytes(" ", Low32(&field_o::g_exp_bar_fixed),
 site	src/game/menu/menu_2.cpp	58	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
 site	src/game/menu/menu_2.cpp	85	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %2" : "=a"(q) : "a"(num), "r"(den) : "edx", "cc");
 site	src/game/menu/menu_2.cpp	161	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
@@ -14081,9 +14082,9 @@ site	src/input/sigma.cpp	195	widen	img_place	live	::bof3::Img(kBootDefaults.v)	c
 site	src/input/sigma.cpp	526	low32	object_ours	live	&g_sigma_on	Low32	bof3::PatchBytes(" ", Low32(&g_sigma_on), &was, &is, 1);
 site	src/input/sigma.cpp	527	low32	object_ours	live	&g_by_source	Low32	bof3::PatchBytes(" ", Low32(&g_by_source), &was,
 site	src/launcher/config.cpp	280	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
-site	src/launcher/config_dialog.cpp	1171	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
-site	src/launcher/config_dialog.cpp	1629	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-site	src/launcher/config_dialog.cpp	1633	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
+site	src/launcher/config_dialog.cpp	1173	ptr_overlay	unread	live	lp	Capture	auto* c = reinterpret_cast<Capture*>(lp);
+site	src/launcher/config_dialog.cpp	1631	ptr_overlay	unread	live	GetWindowLongPtrW(dlg, GWLP_USERDATA)	DialogState	auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+site	src/launcher/config_dialog.cpp	1635	ptr_overlay	unread	live	lp	DialogState	state = reinterpret_cast<DialogState*>(lp);
 site	src/launcher/launcher.cpp	160	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	160	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	162	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
@@ -19857,7 +19858,7 @@ file	src/game/menu/master_talk_2.cpp	live	uintptr	-	1
 file	src/game/menu/master_talk_2.cpp	live	widen	other	1
 file	src/game/menu/menu.cpp	live	long	ul	3
 file	src/game/menu/menu.cpp	live	low32	helper_def	1
-file	src/game/menu/menu.cpp	live	low32	object_ours	2
+file	src/game/menu/menu.cpp	live	low32	object_ours	3
 file	src/game/menu/menu.cpp	live	narrow_call	image_local	2
 file	src/game/menu/menu.cpp	live	uintptr	-	2
 file	src/game/menu/menu.cpp	live	widen	other	1
@@ -20904,8 +20905,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16198
-#count sites_live	11980
+#count sites	16199
+#count sites_live	11981
 #count sites_fuzz	4218
 #count fuzz_files	250
 #count narrow	356
@@ -21142,8 +21143,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	724
-#count low32_live	716
+#count low32	725
+#count low32_live	717
 #count low32_live_files	467
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -21162,8 +21163,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	139
 #count low32_image_local_live	139
 #count low32_image_local_live_files	90
-#count low32_object_ours	88
-#count low32_object_ours_live	88
+#count low32_object_ours	89
+#count low32_object_ours_live	89
 #count low32_object_ours_live_files	63
 #count low32_pool	18
 #count low32_pool_live	18
@@ -21242,8 +21243,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
-#count img_place_Img	15999
+#count img_place_Img	16001
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14929
+#count img_place_Img_live	14931
 #count img_place_VaOf	105
 #count img_place_VaOf_live	105

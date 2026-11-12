@@ -1466,6 +1466,9 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
     Sprintf(::bof3::Img(field_o::at::kFmtSlot), slot & 0xFF);
     SH_CALL(Text_DrawFont8)(x + 9, y + 5, 0, Buf());
     unsigned flags = 0;
+    const auto exp_bar = [&] {   // one site: Capcom's place, or last under DIV-0227
+        SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
+    };
     if (summary != nullptr) {
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xF, 0);
         SH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -1484,16 +1487,14 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x25, 0, Buf());
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x24, 0, Text(::bof3::Img(field_o::at::kColon)));
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(field_o::at::kColon)));
-        if (!field_o::g_exp_bar_fixed)
-            SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
+        if (!field_o::g_exp_bar_fixed) exp_bar();
         flags = summary[0x14] ? 2 : 0;
     } else if (!field_o::g_empty_slot_blank) {
         SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(field_o::at::kEmptySlot)));
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kSlotPieces)), static_cast<int>(flags));
     if (summary != nullptr && summary[0x14] != 0) SH_CALL(Menu_DrawPiece)(x + 0x32, y + 0x16, 0x3D, 0);
-    if (summary != nullptr && field_o::g_exp_bar_fixed)   // DIV-0227: the bar last, over the pieces
-        SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
+    if (summary != nullptr && field_o::g_exp_bar_fixed) exp_bar();   // DIV-0227: the bar last, over the pieces
 }
 
 void Menu_Inject() {
