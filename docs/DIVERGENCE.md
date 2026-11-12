@@ -15912,3 +15912,57 @@ designed in rather than bolted on.
 - **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
 - **State:** active
+
+### A mod can make the village lists' word after a count always plural
+
+- **ID:** DIV-0221
+- **Date:** 2026-11-12
+- **Subsystem:** the faerie village's ranked lists - `ListHeading` (ours,
+  `src/game/core/title.cpp`), the heading `CommuRank_DrawListA` `0x460730`
+  and `CommuRank_DrawListB` `0x460920` draw; DIV-0064 group 14; the
+  behaviour `VillageCountPlural` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's text choice, shown only when a mod
+  asks for it
+- **Original behaviour:** the PC draws one Chinese glyph after the count.
+  Under a language whose layer has written DIV-0064's group 14 (the village's
+  five words, from the player's PlayStation disc), ours draws the group's
+  slot 2, the singular, for a count of 1 and slot 1, the plural, for any other
+  count - as the US release does (COMMU05 section 7: both lists test the
+  count against 1 and pick one of two words).
+- **New behaviour:** with `VillageCountPlural` on, slot 1, the plural, for
+  every count. Nothing else of the heading changes, and with group 14 not
+  written (the port's own text) the glyph is drawn as before. This is the
+  Definitive Edition romhack's change (TheGreatBen, used with permission),
+  read from its patched US disc: COMMU05 section 7, `0x801D1048` and
+  `0x801D129C`, the count-of-one test removed from both lists, each now
+  passing one word. Measured by comparing strings without printing them
+  (scratch `D:\bof3x-runs\de1112\b3\cmpstr.py`): the word each patched list
+  passes equals the original's plural of that list, and the two singular
+  strings are gone from the patched section. The plural is there under a
+  Western layer: group 14 is written only with all five slots filled
+  (`loc_build.py`, the village words), and an `en-US` start logs `DIV-0064:
+  5 of 5 village words` (`D:\bof3x-runs\amm1103\m1.log`). The mod's own
+  layer is built from the hybrid disc (disc-patch-round.md, the build's
+  hybrid-disc step), whose COMMU05 is the original's, so its group 14 keeps both words; the code
+  change is what makes the plural constant.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** No - the US release picks the singular for
+  one (its COMMU05, read for this entry); only the romhack does not.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the slot chosen is the same expression as
+  before, and the behaviour is asked only for a count of 1, so
+  `rest_4e_fuzz.cpp`'s rows for the two lists compare as before. **Not
+  played:** nobody has looked at a list with one faerie with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=VillageCountPlural` keeps it off.
+- **Switch:** VillageCountPlural
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active

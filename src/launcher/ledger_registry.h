@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 208;
+inline constexpr std::size_t kSwitchCount = 209;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -281,9 +281,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Env, "env:BOF3X_EXEFILE=1", 4, 13},   // DIV-0212
     {SwitchForm::Ini, "ini:opt=", 4, 3},   // DIV-0213
     {SwitchForm::Name, "EasierMasters", 0, 13},   // DIV-0220
+    {SwitchForm::Name, "VillageCountPlural", 0, 18},   // DIV-0221
 };
 
-inline constexpr std::size_t kEntryCount = 216;
+inline constexpr std::size_t kEntryCount = 217;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -717,6 +718,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 207, 0, true, Player::Never, 0, kLangAny},
     {220, "A mod can make two masters' tests easier: ten weapons, and no item at area 91",
      Tier::Extension, State::Active, 0, 207, 1, false, Player::Yes, 0, kLangAny},
+    {221, "A mod can make the village lists' word after a count always plural",
+     Tier::Extension, State::Active, 0, 208, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

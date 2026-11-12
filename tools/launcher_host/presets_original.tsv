@@ -217,6 +217,7 @@ original	as-shipped	already-off	DIV-0213	ini:opt=	A mod can change the numbers o
 original	as-shipped	never	DIV-0214	none	The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC	Player never: Forced or one-way
 original	as-shipped	never	DIV-0215	none	The 11 PSX jingles are kept as XA clips and decoded and resampled by our code	Player never: Forced or one-way
 original	as-shipped	already-off	DIV-0220	EasierMasters	A mod can make two masters' tests easier: ten weapons, and no item at area 91	Default off: already off
+original	as-shipped	already-off	DIV-0221	VillageCountPlural	A mod can make the village lists' word after a count always plural	Default off: already off
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -356,6 +357,7 @@ original	repaired	already-off	DIV-0213	ini:opt=	A mod can change the numbers of 
 original	repaired	never	DIV-0214	none	The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC	Player never: Forced or one-way
 original	repaired	never	DIV-0215	none	The 11 PSX jingles are kept as XA clips and decoded and resampled by our code	Player never: Forced or one-way
 original	repaired	already-off	DIV-0220	EasierMasters	A mod can make two masters' tests easier: ten weapons, and no item at area 91	Default off: already off
+original	repaired	already-off	DIV-0221	VillageCountPlural	A mod can make the village lists' word after a count always plural	Default off: already off
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 original	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

@@ -670,6 +670,18 @@ runs it again, two ORs of the same bits. The other first bytes' path is
 unchanged on the disc and in ours. The masters' names are the readme's;
 which area is whose is the reader's inference (DIV-0220, unconfirmed).
 
+**`VillageCountPlural` (DIV-0221).** `ListHeading`
+(`src/game/core/title.cpp`), the one heading both lists draw: under a
+written group 14 the slot is 1 (the plural) for every count. The reading
+holds: in COMMU05 section 7 both lists lost their count-of-one test, and
+the one word each passes equals that list's original plural (strings
+compared, not printed: `D:\bof3x-runs\de1112\b3\cmpstr.py`); the singulars
+are gone from the section. The PC already draws one Chinese glyph whatever
+the count, so the change is only visible under a Western layer, which
+writes the five words (an `en-US` start logs `5 of 5 village words`). No
+data change would do it instead: the mod's layer is built from the hybrid
+disc, whose COMMU05 is the original's.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

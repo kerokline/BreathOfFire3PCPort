@@ -43,6 +43,7 @@
 #include "game/title_states.h"
 #include "game/wide_rand.h"
 #include "game/widescreen.h"
+#include "hook/behaviour.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -368,8 +369,13 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
         if (past > cx) cx = past;
     }
     SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(::bof3::Img(kTextBuffer.v)));
+    // DIV-0221 VillageCountPlural (off by default): the plural (slot 1) for
+    // every count, a count of one too - the Definitive Edition romhack's
+    // change; evidence: its patched US disc, COMMU05 section 7 at PSX
+    // 0x801D1048 and 0x801D129C (both lists' count-of-one test removed).
     if (words)
-        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, BRest4e(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
+        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF,
+                             Labels_Slot(14, BRest4e(count) == 1 && !bof3::BehaviourOn(bof3::behaviours::Id::VillageCountPlural) ? 2 : 1));   // a letter's gap after the count, as the US screen has
     else
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
 }
