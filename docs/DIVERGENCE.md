@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 227 entries, DIV-0001..0227, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 229 entries, DIV-0001..0229, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16641,5 +16641,118 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SaveSlotExpBar (ini off=)
 - **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### A solo-character mode: one chosen champion fights every battle alone
+
+- **ID:** DIV-0228
+- **Date:** 2026-11-12
+- **Subsystem:** the solo-character mode's core, `src/game/solo/solo.{h,cpp}`
+  (ours); the stamp's one call in `Area_Enter` `0x594E60`
+  (`src/game/menu/item_trade.cpp`); `BOF3X_SOLO` read in `InjectAll`
+  after `Behaviour_Read`; the save block's `+0x1041` (`Solo_ChampionMark`,
+  `0x904A21`, ours); the behaviour `SoloCharacter` ([`mods.md`](mods.md)
+  11); [`solo-character-round.md`](solo-character-round.md) (the design,
+  IDEAS I56, issue #223), [`solo-character-reads.md`](solo-character-reads.md)
+- **Tier:** Extension - a challenge mode the player asks for
+- **Original behaviour:** every battle is fought by the party the field
+  holds, up to three members (`Field_PartyLoad(1)` from the second list
+  `0x904065`, solo-character-reads.md M4). The save block's `+0x1041` is never
+  addressed: `tools/pe_xref.py --range 0x904A1D:0x904A90` over `BOF3.exe`
+  finds no operand there, [`save-block.md`](save-block.md) lists `+0x1041..`
+  as untouched, and the byte reads 0 in the owner's 25 saves (chapters 0 to
+  15; symbols.toml `Solo_ChampionMark`).
+- **New behaviour:** **built so far (group SC): the switch, the save's mark
+  and the decision module only.** The combat half (the champion alone in
+  every battle, group CB), the field half (the map team of the hero and one
+  walker, the L swap, the fold after a script, group FS), the members
+  screens' mark (group MS) and the level-1 start (group LV) are **not built
+  yet**: with the switch on, battles, the field and the menus are still the
+  original's. What is built: `BOF3X_SOLO` (the launcher's champion: `ryu`,
+  `nina`, `garr`, `rei`, `momo`, `peco`, character records 0, 1, 2, 4, 5,
+  6; records 3 and 7 never) is read once at start - unset or empty is no
+  launcher champion (one log line), any other value stops the game with a
+  sentence naming it. With `SoloCharacter` on, each `Area_Enter`, after its
+  chapter step, stamps the champion into the save block's `+0x1041` (0 no
+  solo run, else the record + 1) when the live chapter `Cond_ByteFA` is
+  neither 0 (the intro) nor 16 (the attract demo's), the byte is 0 and
+  `BOF3X_SOLO` names a champion; once set, the save's champion holds and a
+  different `BOF3X_SOLO` is logged, not applied. A byte that is not 0 or a
+  champion's record + 1 stops the game with a sentence. The questions the
+  later groups ask are side-effect free: `Solo_Active` (the switch on, the
+  chapter neither 0 nor 16, a champion in the mark), `Solo_ChampionRecord`,
+  `Solo_ChampionId` (the record's id byte `+9`, live), `Solo_ChampionJoined`
+  (`+0xB` bit 0), `Solo_ChampionFights` (active and, with
+  `SoloChampionIfPresent` on, joined: DIV-0229), `Solo_MustStay` (`+0xB` bit
+  1, as the game has it). With the switch off nothing reads or writes the
+  byte, and `Area_Enter`'s call returns at its first test.
+- **Rationale:** the owner's request (issue #223, IDEAS I56, 2026-11-03):
+  solo challenges are fun, and knocking your own friends out at the start of
+  every fight is not. The owner's answers of 2026-11-12 (round doc 6 and 6a):
+  the champion is chosen in the launcher; "champion always" is the mode's
+  rule; the mode stands down in chapter 0, the intro; six champions, the
+  main cast; the run's champion is a byte of ours at the save's tail, "like
+  the one map flag we added" (DIV-0191's `+0x1040`). The stamp-once rule is
+  the round doc's proposal on the owner's "maybe". Chapter 16 is a technical
+  stand-down, not an owner's call: the attract demo is a recorded scene, and
+  it returns to the title without `Boot_Task`, so a mark stamped there would
+  reach the next New Game (`TitleFlow_NewGame` does not zero the block).
+- **The save byte:** a save made in the mode holds its champion at
+  `+0x1041`; loaded with the switch off the byte is inert (nothing reads it)
+  and the game is the original's; loaded with it on, the save's champion
+  holds whatever the launcher names. A save made without the mode, loaded
+  with it, is stamped at the first area entry past chapter 0. A memory-card
+  conversion carries the byte; no PlayStation code reads it.
+- **Also in the PSX version?** No: no release has it.
+- **Verification:** 2026-11-12, group SC: the 32-bit build; headless
+  self-tests (see the round's report); `ledger_check.py`,
+  `ledger_switches.py --check`. **Not played, and not playable yet:** the
+  mode changes nothing in play until groups CB and FS are built.
+- **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
+  `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
+  it.
+- **Switch:** SoloCharacter
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it
+- **Languages:** any
+- **State:** active
+
+### The solo champion fights only while the story has them in the party
+
+- **ID:** DIV-0229
+- **Date:** 2026-11-12
+- **Subsystem:** the solo-character mode's core, `src/game/solo/solo.cpp`
+  (`Solo_ChampionFights`); the behaviour `SoloChampionIfPresent`
+  ([`mods.md`](mods.md) 11); [`solo-character-round.md`](solo-character-round.md)
+  6 and 6a
+- **Tier:** Extension - a variant of DIV-0228's challenge
+- **Original behaviour:** no solo mode (DIV-0228). The game marks a
+  character "joined" by `CharacterRecords +0xB` bit 0, which story scripts
+  set at a join and clear when they take a character away
+  (solo-character-reads.md M6).
+- **New behaviour:** **built so far (group SC): the switch and its answer
+  only.** With `SoloCharacter` and `SoloChampionIfPresent` both on,
+  `Solo_ChampionFights` answers yes only while the champion's record has
+  bit 0 set; with `SoloChampionIfPresent` off ("champion always", the
+  mode's rule) it answers yes whenever the mode is active, from chapter 1
+  on, before the champion's first join too (an open call of the owner's,
+  one constant in `solo.cpp`). Nothing asks the answer yet: the combat half
+  that would use it (group CB) is **not built**. On with `SoloCharacter`
+  off, it does nothing (one log line).
+- **Rationale:** the owner's first answer (2026-11-12, round doc 6 item 1):
+  "Lets start it as 'champion if present', but maybe leave an optional
+  flag for 'champion always mode'"; their second answers (6a item 2) made
+  "champion always" the rule and this the option.
+- **Also in the PSX version?** No: no release has it.
+- **Verification:** 2026-11-12, group SC: the decision table's self-test
+  (both switches, joined and not). **Not played.**
+- **Reversible?** Yes - off unless `on=` names it; `BOF3X_OFF=SoloChampionIfPresent`
+  keeps it off.
+- **Switch:** SoloChampionIfPresent
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it
 - **Languages:** any
 - **State:** active
