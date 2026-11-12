@@ -41,10 +41,12 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
-   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): eight built and proven with the game, none
+   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): ten built, eight proven with the game, none
      played. **Next:** the owner's play of each (6b and 6c list what to look for; `DoubleHitSwords` and `SmokeSkill`'s encounter
-     side have no automated cover, 6c); the owner's word on `TownWarp` and `LevelSkillCatchUp` (they would be the next two ledger
-     entries; the reading is `D:\bof3x-runs\de1112\reading\game_summary.md` and `menu_summary.md`), on the leave pose
+     side have no automated cover, 6c); `LevelSkillCatchUp` and `TownWarp` (DIV-0224, DIV-0225, [`town-warp.md`](town-warp.md)) are built and have NOT run with
+     the game - the self-tests, the ten routes with the behaviours off and the fuzz are owed on a quiet, hands-off machine
+     (6c's method; a run with `TownWarp` on and no mod layer stops at the title by design, so a proof names the mod's layers
+     or leaves `TownWarp` out). The mod's `mod.toml` must name all ten in `needs`. The owner's word is owed on the leave pose
      skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
      `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
