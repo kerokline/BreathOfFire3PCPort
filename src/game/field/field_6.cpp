@@ -36,6 +36,7 @@
 #include "game/scena_sx2_callees.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo_field.h"  // DIV-0228: the solo-character mode's field half
 #include "game/sprite_clut.h"
 #include "game/sprite_find.h"
 #include "game/text_advance.h"
@@ -2173,7 +2174,10 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     *joined = static_cast<unsigned char>(*joined | 1);
     const unsigned char n = Field_MemberCount;
     if (n >= 3) {
-        Field_Request = 6;
+        // DIV-0228 SoloCharacter: in the mode the member joins the reserve
+        // (the bit is set above) and the choose-who-leaves screen is not
+        // asked for (solo_field.h). Off: the original's request.
+        if (!solo::SoloField_JoinSkipsScreen()) Field_Request = 6;
         return 1;
     }
     Cond_Flags[0xd2 + n] = member;
