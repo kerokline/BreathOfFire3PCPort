@@ -16632,7 +16632,8 @@ designed in rather than bolted on.
   owner's long lines are read as saves made before the *Definitive Edition*
   mod (DIV-0212) shown under the mod's EXP table - an inference: the same
   saves are within their levels in the scratch run, which has no mod, and
-  the mod's table was not read. The owner's look in their own game is owed.
+  the mod's table was not read. **The owner, 2026-11-12, in their own game
+  (the mod on):** "I can confirm it works".
 - **Reversible?** `BOF3X_OFF=SaveSlotExpBar` (ini `off=`), or hosted
   `BOF3X_ORIGINAL=SaveSlotExpBar`: the bar under the frame and unbounded, as
   before.
