@@ -176,6 +176,188 @@ Three read-only agents, 2026-11-12. No game or emulator run. Each part says
 what it read; the orchestrating session spot-checked the citations marked
 (checked).
 
+### M1. The PlayStation's New Game path, whole
+
+*Group M-A: capstone over the sibling's captures (`START.EMI` `b8cc1561`,
+`COMMU02.EMI` `5434a7fa`, `GAME.EMI` `9d00fd19`), the boot executable and
+`bof3/BOF3.exe`; scripts and listings in
+`C:\Users\kerok\bof3x-runs\ng1112\m-a` (`psxd.py`, `pcd.py`,
+`diff_input.py`, `bankscan.py`, `bankhash.py`). "Verified" is read in both
+bodies. The PC side's cursor claims were checked against our source and
+`tools/pe_xref.py 0x6bdf85`.*
+
+**The two task tables (verified).** The PlayStation's title task
+`0x80197F78` dispatches on `Game_Mode` `0x80143B90` (PC `0x66C7E8`) through
+three modes: 0 loads the title's file, 1 is `0x801E3CEC` (= PC
+`TitleFlow_Step`), **2 is `0x801E1520`, the options screen**. The PC's
+`TitleTask_Modes` `0x667294` has two entries and no mode 2. `0x801E3CEC`
+jumps through `0x801ED078` by `Game_Step` `0x80143B92` (PC `0x66C7EA`): the
+research's "mode word" is `Game_Step`.
+
+**The 33-pointer run at `0x801ED078`** is 5 top-level steps, 7 menu
+sub-steps (`0x801ED08C`), 4 New Game sub-steps (`0x801ED0A8`) and 17 load
+sub-steps (`0x801ED0B8`), all on the sub-step byte `0x801ED7E0` (PC
+`SaveMenu_FlowState` `0x6BDF86`). The PC keeps the 7 menu sub-steps and an
+8-entry load table, and has no New Game sub-table.
+
+| Step | PSX extent | What it does | PC |
+|---|---|---|---|
+| 0 | `0x801E3D28..0x801E3E87` | Begin: the actor (M9), the cursor, the row levels, `Game_Step` + 1 | `TitleFlow_Begin` `0x587DC0`, the same stores; the cursor and `0x6BDF8E` from `Save_ListFiles` |
+| 1 | `0x801E3E88..0x801E3EC3` | the menu, sub-steps m0..m6 | `TitleFlow_Menu` `0x587EA0` |
+| m2 | `0x801E3F80..0x801E40EB` | the card's status sets `0x801ED7EC` ("a load is offered") and the cursor | `TitleMenu_FrameUp` |
+| m5 | `0x801E4280..0x801E442F` | choose: `0x5000` flips the cursor, only when a load is offered; confirm or `0x800`: `Transition_Start(0)`, sound `0x105` | `TitleMenu_Choose` `0x587FA0` |
+| m6 | `0x801E4430..0x801E448F` | wait for the fade; `Game_Step` 2 if the cursor is not 0, else 3 | `TitleMenu_Leave` `0x5880A0`: cursor + 2 |
+| 2 | `0x801E4490..0x801E44D3` | New Game: sub-steps n0..n3, then `Field_DrawFrame` after each | `TitleFlow_NewGame` `0x5880E0`, no sub-steps |
+| n0 | `0x801E44D4..0x801E454F` | open: `NewGame_InitCharacters`; name cursor, row and column 0 (**not** the page, **not** the buffer); `Draw_PassFlags` 1; the draw-all; `Transition_Start(1)` | - |
+| n1 | `0x801E4550..0x801E459B` | the draw-all until the fade ends | - |
+| n2 | `0x801E459C..0x801E4E0B` | the input step | - |
+| n3 | `0x801E4E0C..0x801E4E53` | the draw-all while the fade runs; then sub-step 0, `Game_Step` 4 | - |
+| 3 | `0x801E4E54..0x801E4E8F` | load, 17 sub-steps; ends at `Game_Step` 4, or back to 1 | `TitleFlow_Load` `0x588130`, 8 sub-steps |
+| 4 | `0x801E6228..0x801E6307` | EnterGame: growth rolled for 8 characters; **cursor not 0: `Game_Mode` + 1** (to the options); cursor 0: the field task | `TitleFlow_EnterGame` `0x588800`: **cursor 2: `Game_Step` 1**; else the growth loop and the field task |
+| mode 2 | `0x801E1520` | the options at New Game | `ConfigScreen_Run` `0x460CB0`, as `Game_Step` 4 |
+
+(On the PlayStation the cursor is 1 on New Game and 0 on the load row; the
+research's `0x801E4430` is the menu's last sub-step, not a name-screen
+step.)
+
+**The options screen at New Game (verified).** The PlayStation's mode-2
+machine and the PC's `ConfigScreen_States` `0x6536C0` have the same five
+states and three open sub-steps, and **every PlayStation test of "mode is 2"
+is a PC test of "`Game_Step` is 4", branch for branch**: the top bar's silent
+confirm (PSX `0x801E191C`, PC `0x460F3F`), its `0x800`-only leave with the
+cancel word not tested (PSX `0x801E1A28`, PC `0x461016`), and the closing
+(PSX `0x801E22E4`, PC `0x461620`). They part after the closing's fade:
+
+- The PlayStation counts 30 frames, then clears a byte, sets the area number
+  `0xFFFF`, calls `Scenario_Start(0)`, clears 20 words and starts the field
+  task.
+- The PC sets `Game_Step` 5. That tail (the byte `0x9039F2`, the area
+  number, `Scenario_Start(0)`, the 20 `Cond_Flags` words) is in the PC's
+  `TitleFlow_NewGame`.
+
+**Section 1's hypothesis: confirmed, with two corrections.** (a) On the
+PlayStation the options come *after* EnterGame's growth roll, and the
+options' own closing starts the scenario; the port moved that tail into
+`TitleFlow_NewGame` and pointed the options' end at EnterGame. (b) The
+cursor-2 test is the port's retarget of EnterGame's other branch, which on
+the PlayStation is "New Game: on to the options".
+
+**The PC's test already tells New Game's options from the third row.**
+`SaveMenu_Cursor` `0x6BDF85` is 0 at New Game and 2 on the third row; its
+writers are `TitleFlow_Begin` and `TitleMenu_Choose` only (12 references,
+none in the Config screen; checked). New Game, the name screen, the Config
+screen at step 4, step 5: the game starts, with no new test, as long as no
+new step writes `0x6BDF85`.
+
+**Special code 4 in START (verified).** Sound `0x103`, sub-step 0,
+`Game_Step` 1, no fade: back to the title menu from its first sub-step. The
+buffer and the page are left as they were; nothing in START resets them, so
+they hold until the overlay is loaded again. `NewGame_InitCharacters` runs
+again at the next open.
+
+**The name panel `0x801E6308..0x801E6417`** (x, y), called with (`0x20`,
+`0x2B`): `Menu_DrawBox(x+3, y+3, 0x7D, 0x2F, 0, window colour)`; a `0x28` x
+`0x30` portrait SPRT, entry 0 of a 4-byte image table (the shape of PC
+`CommuMember_DrawPortrait` `0x45EEB0`); `Text_DrawAt(x+0x3B, y+0x19, colour,
+5, buffer)`, the colour always 0 in effect; the underline at (x + `0x3B` +
+12 * name cursor, y + `0x25`, `0xC`) through PC `Menu_DrawGreyHLine`
+`0x57CEF0`; `Menu_DrawPieces(x, y, list, 0)`. It is the PC's
+`CommuMember_DrawPanel` `0x45EE10` with a box height of `0x2F` (the PC's is
+`0x2D`), portrait entry 0 and the underline.
+
+**The draw-all `0x801E6F80`** is as research 4.6 has it, with one call the
+research left out, first: the backdrop (= PC `Menu_DrawBackdrop` `0x575690`
+with `Config_Background`). The title box is PC `Menu_DrawTitleBox`
+`0x574AB0` at y `0x12`. The word that picks message `0xBA` or `0xBB` is the
+main loop's frame counter: the two alternate every 64 frames. Its PC twin
+`Frame_Counter` `0x937F94` is a hypothesis.
+
+**START's input step against COMMU02's** (both read whole, 351 operations
+against 378). The moves, the page-2 clamps, codes 1, 2, 3 and 5, triangle,
+square / R, L and the backspace's cursor rule are identical. The
+differences, all of them:
+
+1. START draws first (research 4.6).
+2. **Code 4.** COMMU02: sub-step + 1, returns 0, no sound. START: sound
+   `0x103`, sub-step 0, `Game_Step` 1.
+3. START writes 0 to buffer byte 5 on every glyph entry and every backspace.
+4. **The finish.** Sound `0x104` against `0x105`. COMMU02 turns the trailing
+   `0xFF`s into 0, **an all-blank name included** (five 0 bytes; its caller
+   tests byte 0), which corrects research 4.4. START on an all-blank name
+   copies record 0's five name bytes into the buffer, else the same rule;
+   then writes record 0, `Transition_Start(0)`, sub-step + 1.
+5. COMMU02 returns the answer; START's step returns nothing.
+
+**The title rows (verified).** The PlayStation draws two images when a load
+is offered and one, New Game alone, when not. PC `0x6BDF8E`
+(`SaveMenu_AnySave`) has one writer, `Save_ListFiles() != 0` in
+`TitleFlow_Begin`, and is the twin of the PlayStation's "a load is offered"
+byte. The PC's two-row layout is the PlayStation's one-row layout plus the
+third row.
+
+### M6. The pad bits
+
+**The PlayStation game does not remap the pad (verified):** held, previous
+and pressed words straight from the Psy-Q `PadRead`; the PC's `Input_Latch`
+`0x4FC6A0` builds its three words by the same formula. `Input_AutoRepeat`
+returns the held word after a 12-frame wait and then every 3 frames; the PC
+returns a dword whose low half is the held word.
+
+| Bit | Test | Psy-Q layout | PC keys, pad | The button round's role (Japan) |
+|---|---|---|---|---|
+| `0x1000` `0x4000` `0x8000` `0x2000` | repeated, mask `0xF00F`: the hand | Up Down Left Right | arrows; d-pad | d-pad, passed through |
+| `0x20` | pressed: the cell | Circle | V, Space; east | confirm |
+| `0x10` | pressed: next page | Triangle | Z; north | Menu |
+| `0x80` | pressed: name cursor + 1 | Square | C; west | Move |
+| `0xA` | repeated: name cursor + 1 | R1, R2 | S, W; RB, RT | View (R1) |
+| `0x5` | repeated: name cursor - 1 | L1, L2 | A, Q; LB, LT | Change (L1) |
+| `0x40` | pressed: backspace | Cross | X, Esc; south | cancel |
+| `0x800` | pressed: finish | Start | Enter; start | none |
+
+- **Every face test is a constant**; none reads the Config words. Under
+  DIV-0139's rule each face and shoulder test goes through `Sigma`, as
+  [`button-tests.md`](button-tests.md) 2.3 deferred to this round.
+- The physical identity of each bit rests on the Psy-Q layout; only Down and
+  the confirm bit are corroborated by the sibling's live Mednafen notes.
+- The Western discs' copies drop one triangle test and change the face tests
+  ([`button-roles-by-release.md`](button-roles-by-release.md) 3); not read
+  by M-A.
+
+### M7. The sounds
+
+The routine plays `0x100` (moves), `0x101` (the name cursor), `0x103` (a
+glyph, codes 1 and 2, the page, START's code 4), `0x104` / `0x105` (the
+finish, COMMU02 / START), `0x106` (backspace), `0x107` (codes 1 and 2 at the
+limit). All are bank 1, cues 0..7. **61 PC data files carry the same bank-1
+payload** (hashed whole), among them `START`, `FIRST` and every `COMMU*`
+file, with cues 0..7 present. `0x107` is the one id the PC title does not
+play already. From the shipped PC data; not listened to, and not checked on
+a disc-built or PSP-only install.
+
+### M9. The twins, and the actor
+
+| PSX | PC | How |
+|---|---|---|
+| `0x8014EB68` | `Transition_Start` `0x495040` | `symbols.toml`; by position in the title's confirm |
+| `0x80143C40` | `Transition_Busy` `0x66C810` | `symbols.toml` |
+| `0x801D15F4` | `NewGame_InitCharacters` `0x437820` | read whole |
+| `0x8014B948` | `Field_DrawFrame` `0x592F00` | `symbols.toml` |
+| `0x8014D5AC` | `Sprite_SetAnimation` `0x5891F0` | `symbols.toml` |
+| `0x8014D3D4` | `Sprite_QueueOverlay` `0x5890E0` | `symbols.toml` |
+| `0x8014D86C` | `Sprite_ScriptTick` `0x5893A0` | read |
+| `0x8014832A` | `Draw_PassFlags` `0x7E0918` | by position in `GameMode_Start` |
+| `0x1F800044` | `Sprite_Current` `0x937F88` | both Begins store the actor there |
+| `0x8015E908` | `Sound_PlayEffect` `0x587740` | by position |
+| `0x8014B848` | `Task_Restart` `0x5A9976` | both EnterGames |
+
+**The actor is `ObjTrio` record 0** (PC `0x802D40`), set up by Begin as
+party member 0's field sprite in slot 0 (`Field_MemberSprite(0, 0)`), with
+the same stores on both sides. Every 10 frames the draw-all steps its facing
+through 0..7 and sets animation 8..15; every frame it queues and ticks it;
+step 2 draws it with `Field_DrawFrame`. **On the PC `TitleFlow_Begin` still
+sets it up and nothing draws it**: a remnant of the cut screen. That member
+0 is character record 0 is a hypothesis.
+
 ### M8. What starts at New Game in the harness
 
 *Group M-C: source, recipes and tools read; scripts in
@@ -291,6 +473,48 @@ clears the caller's `BOF3X_*` and passes each install's own.
   `--card` (it would copy the Japan card over the US one), and each title
   capture is read before the confirm, since a cursor on LOAD GAME opens the
   load list.
+
+### What M-A's results change
+
+- **TF needs no new test in `TitleFlow_EnterGame`,** and must not write
+  `0x6BDF85`.
+- **The name screen is sub-steps of step 2, as on the PlayStation,** on
+  `SaveMenu_FlowState` `0x6BDF86`: open (its own `InitCharacters`), fade in,
+  input, fade out; then the rest of `TitleFlow_NewGame` without a second
+  `InitCharacters` (it would overwrite the entered name), then `Game_Step`
+  4, then 5. The step's identity is then in Capcom's span, waitable by a
+  recipe (`0x66C7EA` == 2 and `0x6BDF86`), and M-C's "a `Game_Step` value of
+  its own" is not needed. The quicksave switch check still is: with the
+  switch off, step 2 at a sub-step other than 0 runs the port's
+  `TitleFlow_NewGame` whole.
+- **Code 4 goes back to the title menu** (sound `0x103`, `Game_Step` 1,
+  sub-step 0, no fade), before `Scenario_Start(0)` has run.
+- **The order differs from the PlayStation's in one place, by the port's
+  layout:** growth is rolled after the options here and before them there,
+  and the PlayStation waits 30 frames after the options' fade. Whether
+  either matters (the random number sequence, the first frame of the
+  opening) is TF's to measure; a call for the owner only if it shows.
+- **The screen's draw:** `Field_DrawFrame` after each sub-step,
+  `Draw_PassFlags` 1 at the open, the draw-all starting with the backdrop
+  and queueing and ticking `Sprite_Current`, which `TitleFlow_Begin` has set
+  up already. The name panel is new code of section M1's shape.
+- **NG takes both copies' differences as parameters:** the code-4 result,
+  the finish sound, the all-blank rule (five 0 bytes for the renamer, the
+  default name for New Game), buffer byte 5 cleared. The New Game buffer and
+  page are reset where the PlayStation reloads START (the title task's
+  start).
+- **NG and BT:** every face and shoulder test through `Sigma`; the low half
+  of `Input_AutoRepeat`'s result.
+- **No sound-bank work.**
+- **Corrections owed elsewhere** (stage C): the research's 4.4 (the
+  all-blank finish) and 4.6 (`0x801E4430`, the "mode word", the open's
+  resets); `symbols.toml`'s `PartyWorkingRecords` pair is `0x10` off one of
+  the two Begins' stores (`0x802D40` against `0x802D50`), to be read before
+  anyone changes it (rule 3).
+- **Not established by M-A:** the buttons beyond the Psy-Q layout; the
+  Western builds' input step; whether the PC's portrait table entry 0 is the
+  PlayStation's picture; member 0 = record 0; `Frame_Counter` as the
+  alternation's twin; the sounds by ear.
 
 ### What M-C's results change
 
