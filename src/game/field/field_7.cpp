@@ -15,6 +15,7 @@
 #include "game/event_ops_callees.h"
 #include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/field/field_7_callees.h"
+#include "game/field/field_idle.h"
 #include "game/field_e2.h"
 #include "game/field_e2_callees.h"
 #include "game/field_modes_callees.h"
@@ -30,8 +31,10 @@
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"
 #include "game/title_states.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/snapshot.h"
 
 namespace {
 
@@ -349,7 +352,70 @@ extern "C" void __cdecl Scenario_SubInit(void) {
 
 // original 0x56D920: a tail jump through 0x662CE8 on the s8 at 0x9039F3 (PSX
 // 0x801A8CB4 on 0x801448E7); entry 0 is a bare ret. Unchecked.
-extern "C" void __cdecl Field_ModeTailRun(void) { Entry(::bof3::Img(Field_ModeTailKinds_addr), AreaW0a_TailKind)(); }
+//
+// Ours: with no tail armed (kind 0), FieldIdle_Tick first - the place the
+// Definitive Edition romhack hooked by pointing the US table's slot 0 (GAME.EMI
+// 0x801C84BC, the PC's 0x662CE8 slot 0) at its own chain. Off, it does nothing.
+extern "C" void __cdecl Field_ModeTailRun(void) {
+    if (AreaW0a_TailKind == 0) FieldIdle_Tick();
+    Entry(::bof3::Img(Field_ModeTailKinds_addr), AreaW0a_TailKind)();
+}
+
+// --- the field's idle frame: the mod behaviours (docs/mods.md 11) ------------
+
+namespace field_idle {
+
+std::uint8_t g_ally_close_menu = 0;
+std::uint8_t g_ally_pending = 0;
+
+void ClearAtStart() {
+    g_ally_close_menu = 0;
+    g_ally_pending = 0;
+}
+
+}  // namespace field_idle
+
+namespace {
+
+// The quicksave participant "BEHAVIOURS" (docs/quicksave.md 5): the statics
+// above, a byte copy each. A behaviour that adds a static adds it here and
+// raises the version.
+constexpr std::uint32_t kBehavioursVersion = 1;
+
+void BehavioursSave(bof3::SnapshotWriter& w) {
+    w.Put(kBehavioursVersion);
+    w.Put(field_idle::g_ally_close_menu);
+    w.Put(field_idle::g_ally_pending);
+}
+
+void BehavioursRestore(bof3::SnapshotReader& r) {
+    if (r.Get<std::uint32_t>() != kBehavioursVersion) bof3::Fatal("snapshot: BEHAVIOURS' record is another version");
+    field_idle::g_ally_close_menu = r.Get<std::uint8_t>();
+    field_idle::g_ally_pending = r.Get<std::uint8_t>();
+}
+
+}  // namespace
+
+// The hack's slot-0 chain, case by case in its order (evidence: the patched US
+// disc, GAME.EMI section 0): 0x801AE340 (CampMasters' pending master), then
+// 0x801BB81C (TownWarp's town list), then 0x801B5860 (AllyAnywhere), then
+// 0x8019C244 (TownWarp's world-map step). A later behaviour adds its case at
+// its place in that order, behind its own BehaviourOn. A case that raises a
+// request ends the chain for the frame, as the hack's does.
+void FieldIdle_Tick() {
+    // DIV-0217 AllyAnywhere (PSX 0x801B5860): the member change the camp menu
+    // let through off the world map. With the flag set and no request
+    // pending, the flag is cleared and Field_Request 6 raised - the request
+    // Party_Join raises for a fourth member, the party swap (GameMode_Field
+    // case 6, ShopMode 6 PartyForm_Dispatch). The PSX writes its request byte
+    // 0x80143BB0 the same 6 Party_Join's twin writes there. A request pending:
+    // the flag waits for a later frame.
+    if (bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere) && field_idle::g_ally_pending != 0 && Field_Request == 0) {
+        field_idle::g_ally_pending = 0;
+        Field_Request = 6;
+        return;
+    }
+}
 
 // original 0x56D930 (slot 4): 0 - Field_ScriptFlags2 |= 7, LoadDatFile(0x31C),
 // the state up; 1 - once File_LoadDone, Gfx_ClutStripCopyRow(2), 0x585A00,
@@ -769,6 +835,7 @@ void Field7_Inject() {
     BOF3_INJECT(Area_ReturnGate);
     BOF3_INJECT(Area_ArriveHook);
     BOF3_INJECT(Area_CellHook);
+    bof3::Snapshot_Register("BEHAVIOURS", &BehavioursSave, &BehavioursRestore);   // field_idle.h
 }
 
 void Field7FromFieldE2_Inject() {

@@ -11,6 +11,7 @@
 #include "game/cheats.h"
 #include "game/core/transition_callees.h"
 #include "game/draw_pool.h"
+#include "game/field/field_idle.h"
 #include "game/labels.h"
 #include "game/map_rim.h"
 #include "game/mode_flow.h"
@@ -571,6 +572,9 @@ std::uint32_t g_area_track_fallback = 0;  // DIV-0092; 1 through PatchBytes("Are
 // current area made 0xFFFF (none) before Field_ChangeArea, so that the area
 // is always "changed"; the clock read as four bytes after the change.
 extern "C" void __cdecl GameMode_Start(void) {
+    // The mod behaviours' statics of ours (field_idle.h): none outlives the
+    // game it was set in. Zero already unless a behaviour is on.
+    field_idle::ClearAtStart();
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     mode_flow::g.party_load(0);

@@ -15856,3 +15856,68 @@ designed in rather than bolted on.
 - **Toward:** none - the sound was the disc's clip before too; only its decoder changed
 - **Languages:** any
 - **State:** active
+
+### A member change refused off the world map opens the party swap instead (a mod's)
+
+- **ID:** DIV-0217
+- **Date:** 2026-11-12
+- **Subsystem:** the camp menu - `Tactics_Top` `0x58F170`
+  (`src/game/field/field_ability_2.cpp`), `FieldMenu_TopBarInput` `0x589B70`
+  (`src/game/field/field_menu.cpp`), `Menu_DrawButtonRow` `0x574890`
+  (`src/game/menu/menu.cpp`), `Field_ModeTailRun` `0x56D920` and the field's
+  idle frame `FieldIdle_Tick` (ours, `src/game/field/field_7.cpp`,
+  `field_idle.h`), `GameMode_Start` `0x495840`
+  (`src/game/core/transition.cpp`); the Definitive Edition romhack's "Ally"
+  ([`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b)
+- **Tier:** Extension - a rule of play: where the party may be changed
+- **Original behaviour:** in the camp menu's Tactics screen the member change
+  needs bit 0 of `Field_InputFlags` (the world map). Without it the choice
+  plays sound `0x107` and does nothing, and its button (verb `0x12`, set 7)
+  is drawn greyed.
+- **New behaviour:** with the behaviour on, the refused member change sets
+  two flags of ours, plays `0x104` and closes Tactics by the cancel's stores
+  without the cancel's two sounds; the top bar, seeing the first flag, clears
+  it and closes the menu as a cancel does; the next field frame with no tail
+  armed and `Field_Request` 0 clears the second flag and raises
+  `Field_Request` 6 - the request `Party_Join` raises when a fourth member
+  joins, the party swap screen (`GameMode_Field` case 6, ShopMode 6
+  `PartyForm_Dispatch`); a request already pending makes it wait a frame. The
+  button is no longer greyed when the menu (`Game_Mode` 3) draws it: the hack
+  changed only the START / STATUS overlay's copy of the row function, and the
+  PC's one function serves four overlays; verb `0x12` is in set 7 only
+  (Tactics), read from `Menu_ButtonSets`' nine sets. The flags are statics of
+  ours: not in the save, cleared at the start of every started or loaded game
+  (`GameMode_Start`), and taken and put back by the quicksave (participant
+  `BEHAVIOURS`); the state hash does not see them (statics of our module).
+  Off, every one of these sites runs the original's path.
+- **Rationale:** the romhack's feature, integrated as a mod with its author's
+  permission; the mod turns it on by its `needs` (docs/mods.md 11). The
+  hack's code, on the patched US disc: `Tactics_Top`'s twin `0x801D98BC`
+  (the refusal's call at `0x801D99F8` made a jump to new code at
+  `0x801E3600`, which sets the bytes `0x801AE3E6` and `0x801AE3E7`, plays
+  `0x104` and joins the cancel at `0x801D9A88`), the top bar's twin
+  `0x801D1B60` (`0x801D1D10` to `0x801E3620`, which forces the cancel
+  test), the row's copy `0x801DDC74` (the grey store `0x801DDD80` a nop), and
+  GAME.EMI's slot-0 tail chain (`Field_ModeTailKinds` slot 0 `0x801C84BC`
+  pointed at `0x801AE340`; the Ally case `0x801B5860` writes 6 into the
+  request byte `0x80143BB0`, as US `Party_Join` does). The hack's bytes
+  live in GAME.EMI space it freed, so they are RAM only. The one
+  departure: on the PSX they survive a load from the menu; ours are cleared
+  at a game's start, so a load never opens a swap the previous game asked
+  for. An unreferenced payload at `0x801E3644` (record 0's must-stay bit,
+  then the members screen) is not reached on the disc and not built.
+- **Also in the PSX version?** No: the release refuses, as the PC does. The
+  romhack's patched US disc has it.
+- **Verification:** builds at both widths; `ledger_switches.py --check`,
+  `ledger_check.py`. Not yet run with the game: under `BOF3X_ON=AllyAnywhere`,
+  in a town, the camp menu's Tactics member button drawn white, the choice
+  closing the menu and opening the party swap, the party changed and the
+  field back; on the world map the original's members screen; off, the button
+  greyed and `0x107`; a quick-load between the choice and the swap.
+- **Reversible?** Off unless a mod's `needs` or the player's `on=` names it.
+- **Switch:** AllyAnywhere
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - a romhack's change; no release has it
+- **Languages:** any
+- **State:** active

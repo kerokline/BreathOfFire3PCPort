@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/field/field_idle.h"
 #include "game/lang_layout.h"
 #include "game/menu_lists.h"
 #include "game/menu_lists_callees.h"
@@ -17,6 +18,7 @@
 #include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -259,7 +261,17 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
         if (static_cast<signed char>(c) > 6) MenuLists_Cursor = 0;
     }
     const unsigned in = Input_Pressed;
-    if ((Field_CancelButtons & in) != 0) {
+    bool cancel = (Field_CancelButtons & in) != 0;
+    // DIV-0217 AllyAnywhere. The Definitive Edition romhack (evidence: the
+    // patched US disc, START.EMI 8 = STATUS.EMI 0, this function's twin
+    // 0x801D1B60, the cancel test's 0x801D1D10 turned into a jump to
+    // 0x801E3620): with Tactics_Top's "close the menu" flag set, the flag is
+    // cleared and the test passes as if cancel were pressed.
+    if (bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere) && field_idle::g_ally_close_menu != 0) {
+        field_idle::g_ally_close_menu = 0;
+        cancel = true;
+    }
+    if (cancel) {
         g.reconcile();
         const unsigned char step = FieldS_State;
         Game_Step = Game_Step + 1;
