@@ -4646,6 +4646,9 @@ src/game/battle/battle_action.cpp	BattleAction_BeginStep	global	B	battle_actions
 src/game/battle/battle_action.cpp	BattleAction_BeginStep	global	SetMemberBlock	battle_actions::at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle/battle_action.cpp	BattleAction_BeginStep	global	SetEnemyBlock	battle_actions::at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/battle/battle_action.cpp	BattleAction_EnterKind	global	B	battle_actions::at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
+src/game/battle/battle_action.cpp	BattleAction_EnterKind	global	B	battle_actions::at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
+src/game/battle/battle_action.cpp	BattleAction_EnterKind	global	SetB	battle_actions::at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
+src/game/battle/battle_action.cpp	BattleAction_EnterKind	global	PtrAt	battle_actions::at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle/battle_action.cpp	BattleAction_KindStep	global	B	battle_actions::at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle/battle_action.cpp	BattleAction_KindStep	global	B	battle_actions::at::kActor	1	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle/battle_action.cpp	BattleAction_KindStep	global	SetB	battle_actions::at::kPhase	0	0x904aa0	-	no-entry	at::kPhase 0x904aa0 -	b0
@@ -4671,6 +4674,8 @@ src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	At	battle_acti
 src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	At	battle_actions::at::kAbilityRecords	1	0x65c4c8	-	untyped-entry	at::kAbilityRecords 0x65c4c8 Ability_Records	b0
 src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	At	battle_actions::at::kAbility	4	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
 src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	B	battle_actions::at::kAbility	0	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
+src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	At	battle_actions::at::kAbility	5	0x904b80	-	no-entry	at::kAbility 0x904b80 -	b0
+src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	B	battle_actions::at::kActor	3	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	SetB	battle_actions::at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle/battle_action.cpp	BattleAction_AbilityStep	global	B	battle_actions::at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle/battle_action.cpp	BattleAction_AbilityCommit	global	B	battle_actions::at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0

@@ -26,6 +26,7 @@
 #include "game/sound.h"
 #include "game/sound_st.h"
 #include "game/widescreen.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -96,6 +97,15 @@ using Handler = void (__cdecl*)();
 
 Handler StepBattleActions(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(L(table + (index & 0xFF) * 4))));
+}
+
+// DIV-0216 (DoubleHitSwords): the Definitive Edition hack's one test, shared by
+// its two hooks - the actor is a member (below 3) whose weapon byte (+0x92) is
+// 6, 9 or 0x18. No dragon-form or status test: the hack has none.
+bool DoubleHitSword(unsigned actor) {
+    if (actor >= 3) return false;
+    const unsigned w = rv::As<records::PartyMember>(Party(actor))->weapon;
+    return w == 6 || w == 9 || w == 0x18;
 }
 
 using HookFn = void (__cdecl*)(int);
@@ -924,9 +934,21 @@ extern "C" void __cdecl Battle_BeginAction(void) {
 // original 0x42F4C0 (PSX 0x801D2FB8): step 0's second part. In an event
 // battle (0x904AAA) the hook 0x904B6C is called with 1 first; then the step
 // becomes 1 and 0x904AA2 the command kind 0x904B35, read after the hook.
+//
+// DIVERGENCE DIV-0216 (behaviour DoubleHitSwords, off unless a mod or on=
+// asks): the Definitive Edition hack's hook here - a member's plain attack
+// (kind 1) with one of three swords becomes kind 4, ability 0x77, the id
+// written into the member's action record. Evidence: the patched US disc,
+// BATTLE section 3, the jump at 0x801D2FE8 into 0x801D8090.
 extern "C" void __cdecl BattleAction_EnterKind(void) {
     if (EventBattle_Id != 0) EventHook(1);
-    const unsigned kind = B(::bof3::Img(battle_actions::at::kActor.v) + battle_actions::at::kBKind);
+    unsigned kind = B(::bof3::Img(battle_actions::at::kActor.v) + battle_actions::at::kBKind);
+    if (bof3::BehaviourOn(bof3::behaviours::Id::DoubleHitSwords) && kind == 1 &&
+        DoubleHitSword(B(::bof3::Img(battle_actions::at::kActor.v)))) {
+        kind = 4;
+        SetB(::bof3::Img(battle_actions::at::kActor.v) + battle_actions::at::kBKind, 4);
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(battle_actions::at::kActor.v) + battle_actions::at::kBAction))->action_id, 0x77);
+    }
     BattleActions_Step = 1;
     BattleE4_Step2 = kind;
 }
@@ -1063,6 +1085,14 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     } else {
         cost = BattleActions_ApCost;
     }
+    // DIV-0216 (DoubleHitSwords): the hack's second hook - ability 0x77 by a
+    // member holding one of the three swords costs 0; the id and the actor are
+    // read afresh, as the hack does. Evidence: the patched US disc, BATTLE
+    // section 3, the jump at 0x801D3560 into 0x801D8108.
+    if (bof3::BehaviourOn(bof3::behaviours::Id::DoubleHitSwords) &&
+        battle_actions::Word(battle_actions::At(::bof3::Img(battle_actions::at::kAbility.v))) == 0x77 &&
+        DoubleHitSword(B(::bof3::Img(battle_actions::at::kActor.v))))
+        cost = 0;
     BattleE3_Cost = cost;
     if (cost > (s.ap & 0xFFFF)) {
         SystemBanner(0x36);

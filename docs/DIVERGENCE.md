@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 215 entries, DIV-0001..0215, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 216 entries, DIV-0001..0216, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15854,5 +15854,74 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** never - one-way: the old path (the player's ffmpeg and libmp3lame at import) was removed, not kept beside
 - **Toward:** none - the sound was the disc's clip before too; only its decoder changed
+- **Languages:** any
+- **State:** active
+
+### Three swords hit twice: the Definitive Edition's attack hook, as a mod behaviour
+
+- **ID:** DIV-0216
+- **Date:** 2026-11-12
+- **Subsystem:** battle actions - `BattleAction_EnterKind` `0x42F4C0` and
+  `BattleAction_AbilityCheck` `0x42F680` (ours, with the test
+  `DoubleHitSword`, in `src/game/battle/battle_action.cpp`); the romhack
+  mod of [`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - a romhack's rule change, carried for its mod
+- **Original behaviour:** a member's plain attack (command kind 1) runs as an
+  attack whatever the weapon. Ability 0x77 costs its record's AP
+  (`Skill_ApCost`) for anyone.
+- **New behaviour:** with the behaviour on, both hooks of TheGreatBen's
+  Definitive Edition (used with permission), mirrored as the patched US disc
+  has them. The shared test: the actor byte `0x904B34` is below 3 and that
+  member's weapon byte (`PartyMember::weapon`, +0x92) is 6, 9 or 0x18.
+  (1) In `BattleAction_EnterKind`, after the event-battle hook and before the
+  step stores: when the command kind `0x904B35` is 1 and the test holds, the
+  kind byte becomes 4, the acting block's action record (the pointer at
+  `0x904B40`) gets action id 0x77, and 4 goes to `0x904AA2`: the attack runs
+  the ability steps as ability 0x77. (2) In `BattleAction_AbilityCheck`, where
+  the cost is stored (`0x904B88`, after both the `Skill_ApCost` path and the
+  0x97 path): when the id word `0x904B80` is 0x77 and the test holds, the cost
+  is 0. The status test before it and the AP test after it are unchanged. Off,
+  both functions are today's, step for step.
+  **The open points, settled from the listings and our source.** (a) Dragon
+  forms: the hack's test reads only the kind, the actor byte and the weapon
+  byte - no form or status test - and nothing in our battle code writes
+  `PartyMember::weapon` (only a scenario script does), so a member in a
+  dragon form whose command kind is 1 is converted too. Mirrored, the hack's
+  own behaviour. Whether a dragon's attack reaches `EnterKind` as kind 1 is not
+  read; unverified until played. (b) Automatic attacks: every kind-1 action of
+  a member passes `EnterKind`, so the conversion also takes a confused or
+  automatic member's attack (`Battle_MemberAutoTarget` `0x453FA0` and
+  `Battle_MemberAutoFixed` `0x454290` set the kind to 1), auto-battle's
+  (`AutoBattle_FillCommands` `0x446720` gives +0x125 = 1), and a member's
+  counter-attack (`0x430010` swaps the blocks and sets the kind to 1; the
+  record written is then the one at the swapped block's +0xC). Mirrored. The
+  ability path's target checks (`Battle_ActionSuitsTarget`) are not the
+  attack's. Also the hack's: a member who uses ability 0x77 itself while
+  holding one of the swords pays nothing. (c) Where the second hit comes from
+  is in none of this code: it is data the mod carries (ability 0x77's effect
+  cell, `ability_effect_index`, becomes slot 39) or the row-0 animation's
+  script. Unverified until played.
+- **Rationale:** the romhack mod's code change (issue 216, the disc-patch
+  round): a mod's data rides on layers, its code changes become behaviours
+  of ours, off unless the mod's `needs` asks ([`mods.md`](mods.md) 11).
+- **Also in the PSX version?** No - Capcom's releases have neither hook. The
+  evidence is the patched US disc's BATTLE section 3: `0x801D2FE8` jumps to a
+  payload at `0x801D8090` (EnterKind, PSX `0x801D2FC0`) and `0x801D3560` to
+  one at `0x801D8108` (AbilityCheck, PSX `0x801D3304`), both in the unreached
+  body of the twin of `BattleWin_DrawSmallBox` `0x443740`, which ours keeps.
+  The PSX weapon byte (`0x80145F12 + 0x140 * member`) is the one Capcom's own
+  battle code reads there, our `PartyMember::weapon` (the weapon-0x4A test at
+  PSX `0x801DBF58` is ours at `battle_3.cpp`'s `pr->weapon == 'J'`).
+- **Verification:** builds at both widths; off by default, so the hosted
+  `battle_actions` fuzz (`kEnterKind`, `kAbilityCheck`) compares today's logic.
+  **Not played:** a fight with one of the three swords under
+  `BOF3X_ON=DoubleHitSwords` (and the mod) is owed: the attack shows as ability
+  0x77, costs no AP, and hits twice.
+- **Reversible?** Off unless asked: `BOF3X_ON=DoubleHitSwords` (the ini's
+  `on=`, or the mod's `needs`) turns it on; `BOF3X_OFF=DoubleHitSwords` wins.
+- **Switch:** DoubleHitSwords
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is a romhack's
 - **Languages:** any
 - **State:** active

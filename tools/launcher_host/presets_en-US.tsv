@@ -214,6 +214,9 @@ en-US	as-shipped	off	DIV-0210	GiftChestRow	The two gift chests opened in chapter
 en-US	as-shipped	never	DIV-0211	none	The launcher has a save editor	Player never: Forced or one-way
 en-US	as-shipped	off	DIV-0212	env:BOF3X_EXEFILE=1	A PC install reads .data from the cache's image and its table files	Player yes
 en-US	as-shipped	already-off	DIV-0213	ini:opt=	A mod can change the numbers of the game's tables	Default off: already off
+en-US	as-shipped	never	DIV-0214	none	The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0215	none	The 11 PSX jingles are kept as XA clips and decoded and resampled by our code	Player never: Forced or one-way
+en-US	as-shipped	already-off	DIV-0216	DoubleHitSwords	Three swords hit twice: the Definitive Edition's attack hook, as a mod behaviour	Default off: already off
 en-US	repaired	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
@@ -350,6 +353,9 @@ en-US	repaired	cannot	DIV-0205	Fmv_Play	The FMVs decoded by our own AVI, Cinepak
 en-US	repaired	never	DIV-0211	none	The launcher has a save editor	Player never: Forced or one-way
 en-US	repaired	off	DIV-0212	env:BOF3X_EXEFILE=1	A PC install reads .data from the cache's image and its table files	Player yes
 en-US	repaired	already-off	DIV-0213	ini:opt=	A mod can change the numbers of the game's tables	Default off: already off
+en-US	repaired	never	DIV-0214	none	The PSX logo movie plays from the disc's own CAPCOM30.STR, decoded by our MDEC	Player never: Forced or one-way
+en-US	repaired	never	DIV-0215	none	The 11 PSX jingles are kept as XA clips and decoded and resampled by our code	Player never: Forced or one-way
+en-US	repaired	already-off	DIV-0216	DoubleHitSwords	Three swords hit twice: the Definitive Edition's attack hook, as a mod behaviour	Default off: already off
 en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 en-US	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
