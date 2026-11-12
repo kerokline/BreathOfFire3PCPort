@@ -51,7 +51,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
      `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
-   - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
+   - **Issue #223, the solo character challenge** (IDEAS I56): **staged as a round** on 2026-11-12 ([`solo-character-round.md`](solo-character-round.md)), the owner's four answers in its section 6, not launched. **Next:** group M (read-only, one agent), then SC and LA; the open calls (EXP, what a save made in the mode holds) wait on M2 and M9.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
    - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner saw the
      disc-patch mod's changed names and descriptions in play on 2026-11-12; a `table-edit` mod added by hand on the Mods tab is what is left. **Trap paid:** a state-hash chain run while build agents
