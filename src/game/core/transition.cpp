@@ -31,6 +31,7 @@
 #include "game/sound_rest.h"
 #include "game/widescreen.h"
 #include "game/window_task.h"
+#include "hook/behaviour.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -146,13 +147,18 @@ void SwingIn() {
 // note here said never). The hour-0 branch below needs all zero before the
 // decrement, which the first test returns on: only a byte of 0x80 or more
 // reaches it (the PSX's 0x80199D9C is the same).
+//
+// DIV-0221 ShortSkillLockout (off by default): the frames byte reloads with 3,
+// not 0x1D, so a countdown second is 4 frames, not 30 - the Definitive Edition
+// romhack's change, made to both countdowns; evidence: its patched US disc,
+// GAME section 0 at PSX 0x80198DD4 and 0x80198E90 (the reload's immediate).
 void CountDown(std::uint32_t address) {
     unsigned char* const t = mode_flow::At(address);
     const unsigned char hours = t[0];
     if (hours == 0 && t[1] == 0 && t[2] == 0 && t[3] == 0) return;
     t[3] = static_cast<unsigned char>(t[3] - 1);
     if (static_cast<signed char>(t[3]) >= 0) return;
-    t[3] = 0x1D;
+    t[3] = bof3::BehaviourOn(bof3::behaviours::Id::ShortSkillLockout) ? 3 : 0x1D;
     t[2] = static_cast<unsigned char>(t[2] - 1);
     if (static_cast<signed char>(t[2]) >= 0) return;
     t[2] = 0x3B;
@@ -1328,6 +1334,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(
     }
 }
 
+// original 0x496870 (PSX 0x80199CAC): the play clock and two countdowns, once a frame from
+// Field_Task (PSX 0x80199CAC, gap pairing - the same code; US 0x80198CAC). Unless
+// Field_Request is 9: the clock's frames count to 30, seconds and minutes to
+// 60, hours to 99, and at 99:59:59 it stops; then each countdown ticks
+// (CountDown, above).
+//
+// As the original has it: the stop is hours == 0x63 && minutes == 0x3B &&
+// seconds == minutes, exactly (hours above 99 keep counting); the rollover
+// tests are unsigned (>= 30, >= 60); at 99 hours a rollover of the minutes
+// holds the clock at 99:59:59 rather than counting the hour.
 extern "C" void __cdecl Game_ClockTick(void) {
     if (Field_Request == 9) return;
     unsigned char* const c = mode_flow::At(::bof3::Img(mode_flow::at::kClock));

@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 210;
+inline constexpr std::size_t kSwitchCount = 214;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -283,9 +283,13 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "DoubleHitSwords", 0, 15},   // DIV-0216
     {SwitchForm::Name, "AllyAnywhere", 0, 12},   // DIV-0217
     {SwitchForm::Name, "SmokeSkill", 0, 10},   // DIV-0218
+    {SwitchForm::Name, "EasierMasters", 0, 13},   // DIV-0219
+    {SwitchForm::Name, "VillageCountPlural", 0, 18},   // DIV-0220
+    {SwitchForm::Name, "ShortSkillLockout", 0, 17},   // DIV-0221
+    {SwitchForm::Name, "DemoSkipButtons", 0, 15},   // DIV-0222
 };
 
-inline constexpr std::size_t kEntryCount = 218;
+inline constexpr std::size_t kEntryCount = 222;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -723,6 +727,14 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 208, 1, false, Player::Yes, 0, kLangAny},
     {218, "Smoke used in the field holds off encounters for 128 checks (a mod's)",
      Tier::Extension, State::Active, 0, 209, 1, false, Player::Yes, 0, kLangAny},
+    {219, "A mod can make two masters' tests easier: ten weapons, and no item at area 91",
+     Tier::Extension, State::Active, 0, 210, 1, false, Player::Yes, 0, kLangAny},
+    {220, "A mod can make the village lists' word after a count always plural",
+     Tier::Extension, State::Active, 0, 211, 1, false, Player::Yes, 0, kLangAny},
+    {221, "A mod can shorten the two five-hour skill lockouts to 40 minutes",
+     Tier::Extension, State::Active, 0, 212, 1, false, Player::Yes, 0, kLangAny},
+    {222, "A mod can let the four face buttons end the title demo, as well as Start",
+     Tier::Extension, State::Active, 0, 213, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

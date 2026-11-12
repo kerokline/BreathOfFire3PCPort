@@ -709,6 +709,71 @@ play. The counter joins the `BEHAVIOURS` record (version 2), is cleared in
 `GameMode_Start`, and is outside the state hash. Off, Smoke from the menu
 still answers 4: `0x107`, no AP taken.
 
+Each behaviour is a guarded change of ours, off by default (`mods.md` 11.6),
+with its own ledger entry and commit. Each was read again from the patched
+and the original listings before it was coded; where this differs from the
+reading (`D:\bof3x-runs\de1112\reading`), it says so.
+
+**`EasierMasters` (DIV-0219; branch `romhack/b3-small`).** Two sites:
+`Area68_ChoiceAskCount` (`src/game/area/area_68.cpp`), the weapons count's
+threshold 15 -> 10 (AREA068 `0x801F38E8`, the compare's immediate; the
+count is a byte, `Inventory_CountUsed` returns `unsigned char`, as the
+PSX's `andi 0xff`); and `Area91_State0CheckItem57`
+(`src/game/area/area_91.cpp`), the item `0x57` count skipped and the "held"
+path taken when the party list's first byte is 6 or 3 (AREA091
+`0x801F2DFC`). The reading's "always passes" holds, and why was measured: the
+call that replaces the count is US `0x8015C088`, `ScriptFlags_Set40`, which
+returns a non-zero pointer in `v0` (`v0 = 1` is set in the call's delay slot
+and overwritten), so the branch is always taken; the path's own call then
+runs it again, two ORs of the same bits. The other first bytes' path is
+unchanged on the disc and in ours. The masters' names are the readme's;
+which area is whose is the reader's inference (DIV-0219, unconfirmed).
+
+**`VillageCountPlural` (DIV-0220).** `ListHeading`
+(`src/game/core/title.cpp`), the one heading both lists draw: under a
+written group 14 the slot is 1 (the plural) for every count. The reading
+holds: in COMMU05 section 7 both lists lost their count-of-one test, and
+the one word each passes equals that list's original plural (strings
+compared, not printed: `D:\bof3x-runs\de1112\b3\cmpstr.py`); the singulars
+are gone from the section. The PC already draws one Chinese glyph whatever
+the count, so the change is only visible under a Western layer, which
+writes the five words (an `en-US` start logs `5 of 5 village words`). No
+data change would do it instead: the mod's layer is built from the hybrid
+disc, whose COMMU05 is the original's.
+
+**`ShortSkillLockout` (DIV-0221).** `CountDown`, which `Game_ClockTick`
+(`src/game/core/transition.cpp`) calls for both countdowns: the frames
+byte's reload 0x1D -> 3 (GAME section 0, `0x80198DD4` and `0x80198E90`, one
+in each countdown's inlined copy), so a countdown second is 4 frames, not
+30. The reading holds. The counters are `ModeFlow_CountdownA` and
+`Rest3c_Byte660`, set to 5 hours by `Celerity_End` and
+`Effect_DoubleDamage` and read by `Skill_CanUse` for abilities `0x3E` and
+`0x15`: the name fits and is kept. Not the readme's faster faerie village:
+`src/game/community/` times the village by `Game_BattleCount` and names
+neither countdown. `Game_ClockTick`'s `// original` marker, lost in the
+source-layout move (6cddd782 deleted it with the shell it was left in), is
+back above the function.
+
+**`DemoSkipButtons` (DIV-0222).** `Title_StateDemo`
+(`src/game/core/title.cpp`): the mask `0x800` becomes `0x8F0`, Start or any
+face button (GAME section 1, `0x801D0F54`, `0x9FF` -> `0x8F0`). The US
+release's `0x9FF` adds Select and the four shoulder buttons; the PC tests
+Start alone. `Input_Pressed` carries the PlayStation's bits on the PC, and
+these are buttons rather than Config lines, so the mask does not go through
+`Sigma` (the Start test does not either).
+
+**Owed with the game** (none was started: a proof chain was running): a
+start with `BOF3X_ON=EasierMasters,VillageCountPlural,ShortSkillLockout,DemoSkipButtons`
+(four `behaviour ON` lines, `behaviours: 4 of 4 on`); the fuzz rows of the
+five functions' groups (`area_w1f_fuzz.cpp`, `area_w2c_fuzz.cpp`,
+`rest_4e_fuzz.cpp`, `mode_flow_fuzz.cpp`, `title_states.cpp`) with the four
+off (0 mismatches expected) and on (mismatches in
+the guarded functions only); the state-hash routes off (equal to the
+baseline); and in play, each on: area 68's choice with 10 to 14 weapons held,
+area 91's state 0 without the tiara, a village list at a count of one under
+`en-US`, a lockout of ability `0x15` or `0x3E` ending in about 40 minutes of
+play clock, and the demo ended by a face button.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

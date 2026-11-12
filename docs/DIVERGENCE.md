@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 218 entries, DIV-0001..0218, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 222 entries, DIV-0001..0222, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16050,5 +16050,216 @@ designed in rather than bolted on.
 - **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - a romhack's change; no release has it
+- **Languages:** any
+- **State:** active
+
+### A mod can make two masters' tests easier: ten weapons, and no item at area 91
+
+- **ID:** DIV-0219
+- **Date:** 2026-11-12
+- **Subsystem:** field areas - `Area68_ChoiceAskCount` `0x40CF50` (ours,
+  `src/game/area/area_68.cpp`) and `Area91_State0CheckItem57` `0x412000`
+  (ours, `src/game/area/area_91.cpp`); the behaviour `EasierMasters`
+  ([`mods.md`](mods.md) 11); [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** (1) area 68's choice handler 2: an answer of 0
+  counts the weapons list (`Inventory_CountUsed(1)`, the non-zero ids of
+  category 1, docs/char-stats.md 212); at 15 or more it sets message `0x82`,
+  else message `0x83` and the answer mark 6 (a non-zero answer: message
+  `0x84` and the mark). (2) area 91's object state 0: when the party list's
+  first byte is 6 or 3, `Inventory_Count(0, 0x57, 0)` (item `0x57`, the Faerie
+  Tiara of [`item-use.md`](item-use.md) 3); none held: `Cond_ByteFE` 1, the
+  active member's `+0x80` bit 0 cleared, sound `0x201`; held:
+  `ScriptFlags_Set40` and the state + 1. Any other first byte: the bit
+  cleared, nothing else.
+- **New behaviour:** with `EasierMasters` on, (1) the threshold is 10, not
+  15; (2) with the first byte 6 or 3 the item is not counted and the "held"
+  path is taken (`ScriptFlags_Set40`, the state + 1). The other paths, the
+  messages and the mark are unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: AREA068 section 13 at PSX `0x801F38E8`, the compare's
+  immediate 15 -> 10; AREA091 section 13 at `0x801F2DFC`, the item count's
+  call replaced by a call of `ScriptFlags_Set40` (US `0x8015C088`, which
+  returns a non-zero pointer, so the branch to the "held" path is always
+  taken; measured on the US boot EXE). The hack therefore calls
+  `ScriptFlags_Set40` twice on that path; it ORs the same two bits, so ours
+  calls it once and leaves the same state. **Unconfirmed:** the readme names
+  this feature for two masters, D'Lonzo (the weapons) and Merryleep (the
+  faerie village); that area 68's handler is D'Lonzo's test and area 91's
+  Merryleep's is the reader's inference from the weapon count and the
+  tiara, for the owner to confirm.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`.
+- **Also in the PSX version?** No - Capcom's PlayStation releases test 15 and
+  the item, as the PC does; only the romhack changes them.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the two functions are the same logic as
+  before, so the hosted fuzz rows (`area_w1f_fuzz.cpp`,
+  `area_w2c_fuzz.cpp`) compare as before. **Not played:** nobody has talked
+  to either master with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=EasierMasters` keeps it off.
+- **Switch:** EasierMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can make the village lists' word after a count always plural
+
+- **ID:** DIV-0220
+- **Date:** 2026-11-12
+- **Subsystem:** the faerie village's ranked lists - `ListHeading` (ours,
+  `src/game/core/title.cpp`), the heading `CommuRank_DrawListA` `0x460730`
+  and `CommuRank_DrawListB` `0x460920` draw; DIV-0064 group 14; the
+  behaviour `VillageCountPlural` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's text choice, shown only when a mod
+  asks for it
+- **Original behaviour:** the PC draws one Chinese glyph after the count.
+  Under a language whose layer has written DIV-0064's group 14 (the village's
+  five words, from the player's PlayStation disc), ours draws the group's
+  slot 2, the singular, for a count of 1 and slot 1, the plural, for any other
+  count - as the US release does (COMMU05 section 7: both lists test the
+  count against 1 and pick one of two words).
+- **New behaviour:** with `VillageCountPlural` on, slot 1, the plural, for
+  every count. Nothing else of the heading changes, and with group 14 not
+  written (the port's own text) the glyph is drawn as before. This is the
+  Definitive Edition romhack's change (TheGreatBen, used with permission),
+  read from its patched US disc: COMMU05 section 7, `0x801D1048` and
+  `0x801D129C`, the count-of-one test removed from both lists, each now
+  passing one word. Measured by comparing strings without printing them
+  (scratch `D:\bof3x-runs\de1112\b3\cmpstr.py`): the word each patched list
+  passes equals the original's plural of that list, and the two singular
+  strings are gone from the patched section. The plural is there under a
+  Western layer: group 14 is written only with all five slots filled
+  (`loc_build.py`, the village words), and an `en-US` start logs `DIV-0064:
+  5 of 5 village words` (`D:\bof3x-runs\amm1103\m1.log`). The mod's own
+  layer is built from the hybrid disc (disc-patch-round.md, the build's
+  hybrid-disc step), whose COMMU05 is the original's, so its group 14 keeps both words; the code
+  change is what makes the plural constant.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** No - the US release picks the singular for
+  one (its COMMU05, read for this entry); only the romhack does not.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the slot chosen is the same expression as
+  before, and the behaviour is asked only for a count of 1, so
+  `rest_4e_fuzz.cpp`'s rows for the two lists compare as before. **Not
+  played:** nobody has looked at a list with one faerie with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=VillageCountPlural` keeps it off.
+- **Switch:** VillageCountPlural
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can shorten the two five-hour skill lockouts to 40 minutes
+
+- **ID:** DIV-0221
+- **Date:** 2026-11-12
+- **Subsystem:** the play clock - `CountDown`, called by `Game_ClockTick`
+  `0x496870` (ours, `src/game/core/transition.cpp`) for the two countdowns
+  `ModeFlow_CountdownA` `0x90465C` and `Rest3c_Byte660` `0x904660`; their
+  reader `Skill_CanUse` (`src/game/menu/menu_2.cpp`); the behaviour
+  `ShortSkillLockout` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's balance choice, played only when a
+  mod asks for it
+- **Original behaviour:** each countdown is four bytes, hours, minutes,
+  seconds, frames, ticked down once a frame by `Game_ClockTick` (frames
+  29..0, a reload of 0x1D, so a countdown second is 30 frames, as the play
+  clock's). Two writers start them at 5 hours: `Celerity_End` `0x4B2040`
+  (`ModeFlow_CountdownA`) and `Effect_DoubleDamage` `0x44D180` (effect slot
+  62, `Rest3c_Byte660`). `Skill_CanUse` refuses ability `0x3E` in battle
+  while `ModeFlow_CountdownA` is not all zero, and ability `0x15` while
+  `Rest3c_Byte660` is not. In `src/` (the fuzz files aside) nothing else
+  names either countdown (the save block's copies aside); `symbols.toml` records four absolute
+  operands for each address in `BOF3.exe`.
+- **New behaviour:** with `ShortSkillLockout` on, the frames byte reloads
+  with 3, not 0x1D, in both countdowns: a countdown second is 4 frames, 7.5
+  times faster, so five hours of countdown last 72,000 ticks, 40 minutes on
+  the play clock (which counts 30 ticks a second). A countdown already
+  running when the behaviour is turned on finishes its current second at the
+  old length. The play clock is unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: GAME section 0, `Game_ClockTick` at US `0x80198CAC` (JP
+  `0x80199CAC`), the reload's immediate at `0x80198DD4` and at `0x80198E90`, 0x1D -> 3.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it. It is not the readme's faster
+  faerie village: the village's simulation (`src/game/community/`) times
+  itself by `Game_BattleCount` and reads neither countdown.
+- **Also in the PSX version?** No - Capcom's PlayStation releases reload 0x1D,
+  as the PC does; only the romhack changes it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the reload is 0x1D as before, so
+  `mode_flow_fuzz.cpp`'s `Game_ClockTick` row compares as before. **Not
+  played:** nobody has timed a lockout with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=ShortSkillLockout` keeps it off. The countdowns are in the save
+  block, so a save made with it on holds a countdown that runs at 30 frames a
+  second again once it is off.
+- **Switch:** ShortSkillLockout
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can let the four face buttons end the title demo, as well as Start
+
+- **ID:** DIV-0222
+- **Date:** 2026-11-12
+- **Subsystem:** the title - `Title_StateDemo` `0x462370` (ours,
+  `src/game/core/title.cpp`), the title's state 5; the behaviour
+  `DemoSkipButtons` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** while the attract demo runs, with the load done and
+  no transition busy, a press of Start (`Input_Pressed` bit `0x800`) ends it:
+  `MoveScript_Var7` 1, transition 4, the music faded out, the state + 1. No
+  other button does. The US PlayStation release tests the mask `0x9FF` at the
+  same point (US `Title_StateDemo` `0x801D0F00`): Start, Select, the four face
+  buttons and the four shoulder buttons. The PC tests Start alone.
+- **New behaviour:** with `DemoSkipButtons` on, the mask is `0x8F0`: Start
+  or any of the four face buttons (triangle `0x10`, circle `0x20`, cross
+  `0x40`, square `0x80`; the bits of [`button-sigma.md`](button-sigma.md) 2)
+  ends the demo; Select and the shoulder buttons do not. The test reads
+  `Input_Pressed` as before. The PC's pad word carries the PlayStation's
+  bits (the keyboard map `Key_TableDefault` and the pad send them), and the
+  bits here are buttons, not Config lines, so the mask is not passed through
+  `Sigma`, as the Start test is not. This is the Definitive Edition romhack's
+  change (TheGreatBen, used with permission), read from its patched US disc:
+  GAME section 1 at PSX `0x801D0F54`, the mask's immediate `0x9FF` ->
+  `0x8F0`.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** Partly - the US release ends the demo on more
+  buttons than this (`0x9FF`); the mask `0x8F0` is the romhack's.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the mask is `0x800` as before, so
+  `title_states.cpp`'s `Title_StateDemo` row compares as before. **Not
+  played:** nobody has ended the demo with a face button with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=DemoSkipButtons` keeps it off.
+- **Switch:** DemoSkipButtons
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has this mask; it is the romhack's
 - **Languages:** any
 - **State:** active

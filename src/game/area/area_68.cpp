@@ -11,6 +11,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -134,13 +135,18 @@ extern "C" void __cdecl Area68_ChoiceMessageB(void) {
 // original 0x40CF50 (Area68_Choices[2]): answer not 0: message 0x84 and the
 // mark 6; 0: Inventory_CountUsed(1) at 0xF or more message 0x82, else 0x83 and
 // the mark.
+//
+// DIV-0219 EasierMasters (off by default): the threshold is 0xA, not 0xF -
+// the Definitive Edition romhack's change; evidence: its patched US disc,
+// AREA068 section 13 at PSX 0x801F38E8 (the compare's immediate).
 extern "C" void __cdecl Area68_ChoiceAskCount(void) {
     if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) != 0) {
         SetMessage(0x84);
         B(::bof3::Img(AreaW0c_AnswerMark_addr)) = 6;
         return;
     }
-    if (AH_CALL(Inventory_CountUsed)(1) >= 0xF) {
+    const unsigned threshold = bof3::BehaviourOn(bof3::behaviours::Id::EasierMasters) ? 0xA : 0xF;
+    if (AH_CALL(Inventory_CountUsed)(1) >= threshold) {
         SetMessage(0x82);
         return;
     }
