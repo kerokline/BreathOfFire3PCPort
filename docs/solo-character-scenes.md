@@ -345,7 +345,16 @@ settles it.
 
 ## 7. The hosted fuzz
 
-See the hand-back for the run's result on this branch's tip.
+Mode off throughout (no `BOF3X_ON`): each guard returns at its behaviour
+test, so the fuzz compares the original paths.
+
+- `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` on the first build (every guard
+  but 3.2's): exit 0.
+- On the tip, with 3.2: `BOF3X_SHADOW=scena_calls,scena_sc1,scena_sc2,
+  scena_sc6,scena_sc7,scena_sc9a,scena_sc9b,scena_sc12,scena_sc13,scena_sx,
+  scena_sx2,field_event,boss_se,solo_scenes`: exit 0, 28 groups at 0
+  mismatches (`scena_calls` 294,000 rounds, `scena_sc6` 288,000, `scena_sx`
+  54,000, `boss_se`'s sets); and the exe host's self-test: exit 0.
 
 ## 8. What the owner would record or play
 
