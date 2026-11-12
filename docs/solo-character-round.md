@@ -4,7 +4,9 @@
 launched. The design is IDEAS I56's (the owner, 2026-11-03), issue #223; the
 owner's four answers of 2026-11-12 are in section 6. **Group M is run**
 (2026-11-12, [`solo-character-reads.md`](solo-character-reads.md)): section 0a
-corrects the shape, and where it and a later section differ, 0a holds.)
+corrects the shape, and where it and a later section differ, 0a holds. The
+owner's second round of answers, the same day, is section 6a; **where 6a and
+an earlier section differ, 6a holds.**)
 
 The owner (2026-11-03): a "solo character" mode for solo challenges. One
 chosen character, the **champion**, fights every battle alone. On the map the
@@ -379,13 +381,86 @@ Open (none blocks stage A but open 5, which SC's `Solo_MustStay` needs):
 4. **The champion marked on the members screen**, and the launcher page's
    text: captures and drafts at stage B's hand-back.
 
-5. **Which "must stay" marks count** (0a item 7). Recommended: record 0's
+5. *(Closed by 6a item 1: every mark counts.)* **Which "must stay" marks count** (0a item 7). Recommended: record 0's
    permanent mark does not count in the mode, so the walker can be anyone
    alone; a mark a scene sets on any record (chapters 6 and 8 today) does,
    for as long as the scene holds it.
-6. **Who can be a champion.** Recommended: records 0 to 6 by the launcher's
+6. *(Closed by 6a item 7: the six main cast.)* **Who can be a champion.** Recommended: records 0 to 6 by the launcher's
    own labels, record 7 never (0a item 6); a champion whose record the story
    has not reached yet is simply "not present".
+
+## 6a. The owner's second answers (2026-11-12, after group M), and what they change
+
+The owner's words, then what the round does with them.
+
+1. **The hero's mark stays.** "Ryu (hero / first record) is necessary for
+   lots of scenes to progress, so I think we should leave him as necessary in
+   all his scenes and walking groups." The "must stay" mark counts as the
+   game has it, record 0's permanent one included (open 5 is closed, against
+   the recommendation). **The map team is record 0's character and at most
+   one other** (plus any member a scene marks): the L swap changes who leads
+   as the original does, and brings the next joined character out in the
+   other place. The reserve holds four, not five; MS's overflow from the
+   fifth reserve member is then out of the mode's reach, and MS shrinks to
+   the champion's mark on the two screens unless a scene's forced party
+   shows otherwise.
+2. **"Champion always" is the preferred way.** "Several scenes would
+   otherwise leave you with a low-level ryu or garr fighting a boss while
+   your champion is away." It is the mode's rule, built first by CB, not
+   last; "champion if present" becomes the second switch
+   (`SoloChampionIfPresent`, off by default). CB's report on a fight from a
+   record whose joined bit is clear is therefore a gate, not a footnote.
+3. **Not during the intro.** "Chapter 0 I mean for the intro, not
+   interrupting the whelp fights": the mode stands down while the chapter
+   byte is 0, both halves. `Solo_Active()` tests it.
+4. **Level 1.** "In solo mode, all characters should probably start at level
+   1, but most party members start higher, right?" Measured (the default
+   records at `0x64B390 + 0xA4 k`, byte `+0xA`, read from `bof3/BOF3.exe`
+   2026-11-12): records 0, 3 and 6 start at level 1, records 1 and 4 at 5,
+   record 5 at 10, record 2 at 13. Whether a script sets a level at a join
+   is not read. With "champion always" only the champion fights, so the rule
+   the round builds is **the champion starts at level 1**; how a record is
+   taken down to level 1 (what `Char_LevelUp` adds per level, and whether
+   that can be undone or level-1 stats must be a table of ours) is M10,
+   and group LV builds it. Until M10 is read this is not designed.
+5. **EXP only to the champion.** Agreed; nothing to build (0a item 3).
+6. **Saves in the regular shape,** with a mark of ours for the run: "maybe a
+   flag and a member id for 'who is the champion' can be added at the tail
+   like the one map flag we added". That flag is DIV-0191's
+   `MountainPasses_Bits`, our byte at save block `+0x1040` (`0x904A20`). SC
+   takes a byte beside it on the same evidence (no symbol, no operand in
+   `pc_xref.json`, zero in the owner's saves, inside the span saved whole):
+   0 for no solo run, else the champion's record plus one. The launcher's
+   champion is written there the first time the mode is active on a save
+   that has none; from then on the save's champion holds and the launcher's
+   choice does not change it. With the behaviour off the byte is left as it
+   is and the game plays as the original. *(The stamp-once rule is this
+   doc's proposal on the owner's "maybe".)* The save editor's spec gets the
+   byte.
+7. **Six champions.** "Only the 6 main cast should be allowed to be
+   champion - Teepo and whelp are both temporary." Records 0, 1, 2, 4, 5
+   and 6. The temporary two are records 3 and 7 by M6's table (the fourth
+   and the eighth, not the seventh and eighth).
+
+What this opens:
+
+- **A champion the story has not introduced yet.** Every record exists from
+  New Game, so "champion always" can mean from chapter 1 on, before the
+  first join. Recommended: yes, since a late-joining champion would otherwise
+  not fight for much of the game. The owner's word; CB's gate above covers
+  the same ground technically.
+- **The party set with three on the map** (M1): in rows 7 to 18 every pair
+  of ids sits in a row with record 0's id 7, so the set can always hold the
+  hero, the walker and the champion. In rows 0 to 6 four such triples have no
+  row (id 4 with any of 1, 2, 5, 6 beside id 0); there the battle's set is a
+  load at the battle's start, CB's second bullet.
+
+Groups as changed: **M10** (one agent, read-only: `Char_LevelUp`, the growth
+data's shape, every place a script writes a record's level or stats at a
+join); **SC** adds the chapter test, the save byte and the six-record list;
+**CB** builds "always" first; **FS** builds the two-member map team;
+**MS** shrinks; **LV** (stage B, after M10) the level-1 start; **LA** lists
+six champions and the second switch under its new name.
 
 ## 7. Not in this round
 
