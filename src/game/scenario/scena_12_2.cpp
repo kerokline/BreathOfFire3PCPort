@@ -9,6 +9,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -1116,7 +1117,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
     auto* const member2 = &ObjTrio[2];
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
+        if (solo::Scene_SlotPose(2, rv::Bytes(&ObjTrio[2])[0x137]) == 3) break;   // DIV-0228: an empty slot is settled
         SH_CALL(Party_DropIn)(0);
         SetStep(1);
         break;

@@ -37,6 +37,7 @@
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
 #include "game/solo/solo_field.h"  // DIV-0228: the solo-character mode's field half
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards (Party_Join, Party_Remove)
 #include "game/sprite_clut.h"
 #include "game/sprite_find.h"
 #include "game/text_advance.h"
@@ -2169,6 +2170,11 @@ extern "C" void __cdecl Party_HealJoined(void) {
 extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
     const auto member = static_cast<unsigned char>(member_arg);
     field_event::g.join_reset();
+    // DIV-0228 SoloCharacter: a byte that is not a character id - 0xFF from a
+    // walker slot the fold emptied, saved by a scene's party save and joined
+    // by its restore - joins nothing (solo_scenes.h). Off, or an id: the
+    // original's join.
+    if (solo::Scene_JoinNoId(member)) return 0;
     const unsigned char* const actor_of = Character_IndexById + member;
     unsigned char* const joined = Actor(*actor_of) + 0xB;
     *joined = static_cast<unsigned char>(*joined | 1);
@@ -2220,6 +2226,12 @@ extern "C" void __cdecl Party_JoinReset(void) {
 extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     SH_CALL(Party_JoinReset)();
     const auto id = static_cast<unsigned char>(id_arg);
+    // DIV-0228 SoloCharacter: an id in neither list below the count - a slot
+    // the fold emptied, read by a scene's party helper written for three -
+    // removes nothing (solo_scenes.h). The original goes on with the count as
+    // the slot and takes the last walker off. Off, or a walking id: the
+    // original's removal.
+    if (solo::Scene_RemoveNotWalking(id)) return;
     unsigned char* const first = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     unsigned char* const second = move_script::At(::bof3::Img(Cond_Flags_addr) + 0xd5);
     const int count = Field_MemberCount;
@@ -3260,6 +3272,7 @@ extern "C" void __cdecl Sprite_ApplyVelocity(void) {
 }
 
 void Field6_Inject() {
+    solo::SoloScenes_Inject();  // DIV-0228: the scene guards' self-test under BOF3X_SELFTEST_ONLY
     BOF3_INJECT(Field_CellAroundLarge);
     BOF3_INJECT(Field_CellAroundSide);
     BOF3_INJECT(Field_LeaderTalkTo);

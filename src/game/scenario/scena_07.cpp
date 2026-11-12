@@ -13,6 +13,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -51,7 +52,12 @@ extern "C" void __cdecl Scena07_Party012(void) {
 
 // original 0x519E10 (0xD bytes; 7 B[0]): the third field member leaves (its
 // +0x89, 0x803061).
-extern "C" void __cdecl Scena07_LeaveThird(void) { Leave(MemberId(2)); }
+//
+// DIV-0228 SoloCharacter: with fewer than three walkers there is no third
+// member - the record there is off and its +0x89 stale, possibly a walking
+// member's id after a compaction - so 0xFF, whom Party_Remove does not find
+// (solo_scenes.h). Off: the byte as the original reads it.
+extern "C" void __cdecl Scena07_LeaveThird(void) { Leave(solo::Scene_MemberId(2, MemberId(2))); }
 
 // original 0x519E20 (0x78 bytes; 7 B[1]): member 2 leaves; then the records of
 // Character_IndexById[1], [5], [6] and [2] lose +0xB bit 0, each index read

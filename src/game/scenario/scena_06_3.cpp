@@ -11,6 +11,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -321,11 +322,17 @@ void Request7(unsigned char v, bool pass, unsigned char step) {
 // (ascending, unsigned; an exchange sort of the whole 0x14C-byte records),
 // the second party list's Field_MemberCount bytes copied to 0x939A10, that
 // list reset to (0, 0xFF, 0xFF), the old count to 0x939A02, the count 1.
+//
+// DIV-0228 SoloCharacter: with fewer than three walkers (the fold's team) only
+// the walking records are sorted - the original sorts all three because three
+// walked, and an off record's stale +0x89 would sort it into a walker's place
+// (solo_scenes.h). Off, or three walkers: all three, as the original.
 void SortParty() {
     unsigned char* const trio = &rv::Bytes(ObjTrio)[0];
-    for (unsigned i = 1; i <= 2; ++i) {
+    const unsigned live = solo::Scene_Active() && Field_MemberCount < 3 ? Field_MemberCount : 3;
+    for (unsigned i = 1; i < live; ++i) {
         unsigned char* const a = trio + scena_sc6::at::kObjStride * (i - 1);
-        for (unsigned j = i; j < 3; ++j) {
+        for (unsigned j = i; j < live; ++j) {
             unsigned char* const b = trio + scena_sc6::at::kObjStride * j;
             if (a[0x89] > b[0x89]) {
                 unsigned char tmp[scena_sc6::at::kObjStride];

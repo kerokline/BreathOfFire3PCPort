@@ -11,6 +11,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -1565,7 +1566,7 @@ extern "C" void __cdecl Scena02_Scene10(void) {
         SetRun(0);
         return;
     case 0xF:
-        if (rv::Bytes(&ObjTrio[1])[0x137] == 7) return;
+        if (solo::Scene_SlotPose(1, rv::Bytes(&ObjTrio[1])[0x137]) == 7) return;   // DIV-0228: an empty slot is settled
         DropIn(2);
         SetStep(0x10);
         return;

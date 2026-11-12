@@ -13,6 +13,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -120,7 +121,9 @@ extern "C" void __cdecl ScenaCall_Party72Saved(void) {
     unsigned char k = 8;
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char b = saved[i];
-        if (b != 7 && b != 2) k = b;
+        // DIV-0228 SoloCharacter: a 0xFF a folded save left is no member
+        // (solo_scenes.h); off, the original's test.
+        if (b != 7 && b != 2 && !solo::Scene_SavedNone(b)) k = b;
         saved[i] = 0;
     }
     Set(7, 2, k);

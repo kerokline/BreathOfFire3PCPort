@@ -15,6 +15,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -2062,12 +2063,21 @@ extern "C" void __cdecl Scena01_Scene11(void) {
     case 0x16:
         StreamWait(0x17);
         return;
-    case 0x17:
-        if (Field_MemberCount != 3) return;
+    case 0x17: {
+        // DIV-0228 SoloCharacter: this path waits for three members and has
+        // only a three-member entry (0x85); nothing in the scene changes the
+        // count, so with the fold's two it would wait for ever behind the
+        // inn's fade. In the mode two walkers go on with the entry this
+        // scene's own step 5 takes for the same place with fewer than three
+        // (0x84). Off, or another count: the original's wait.
+        const unsigned count = Field_MemberCount;
+        const bool two = count == 2 && solo::Scene_Active();
+        if (count != 3 && !two) return;
         SetStep(0x18);
-        ChangeArea(5, 0x510000, 0x80000, 0x85);
+        ChangeArea(5, 0x510000, 0x80000, two ? 0x84 : 0x85);
         SH_CALL(Music_Play)(7, 8);
         return;
+    }
     case 0x18:
         if (Counter(0) != 1) return;
         Counter(1) = 0;
