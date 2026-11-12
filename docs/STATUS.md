@@ -11,7 +11,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 **A PlayStation disc needs no ffmpeg, 2026-11-11 (DIV-0214, DIV-0215; branch `psx-media/own-decoders`,
 [`psx-media-round.md`](psx-media-round.md)).** The importer copies the logo movie's sectors
 (`CAPCOM30.STR`) and keeps the 11 jingles as XA clips; the engine and the Jukebox decode both with our
-own STR / MDEC / XA decoders (`src/media`, from psx-spx and the owner's MIT bof3-player). Proven
+own STR / MDEC / XA decoders (`src/media`, from psx-spx and frost's (raulcorreia7) MIT bof3-player). Proven
 against ffmpeg's decode and `tools/xa.py`, both widths, and under Proton on a Linux machine with a GPU,
 where `main` also draws with nothing added to the prefix ([`linux-round.md`](linux-round.md) 2c). The PC
 movie's repair and the PSP's sound and movie still take the player's ffmpeg.

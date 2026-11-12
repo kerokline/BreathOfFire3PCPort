@@ -246,11 +246,11 @@ above are the check made). **No ledger entry:** nothing a player on Windows
 sees changes - the same compiler's output for the same source, made at build
 time. If the owner reads it as a divergence it takes the next number.
 
-## 2c. The second pass, on a Linux machine with a GPU (2026-11-11)
+## 2c. The second pass, on frost's Linux machine with a GPU (2026-11-11)
 
 **Where.** CachyOS, KDE on Wayland, an RTX 5090, Proton Experimental
 (prefix 11.0-100) through umu-launcher 1.4.3; `main` `8d2d987d`'s two
-release zips, built on this machine by `tools/make_release.py` with the
+release zips, built on that machine by `tools/make_release.py` with the
 pinned llvm-mingw 20260616 (both widths build on Linux unchanged). Commands
 run through a `.bat` under Proton's `cmd`, since umu does not pass a
 console's output through.
@@ -259,7 +259,7 @@ console's output through.
 |---|---|
 | 3 The install | **Passes, 32-bit zip:** `identify --json` and `sources add` name the US disc; `setup --json-progress` builds a disc-only install in 62 s; no logo movie for want of ffmpeg (the PSX media round, [`psx-media-round.md`](psx-media-round.md), removes that need). `verify`'s one problem is `opt/area4-walls`, known on a US-only cache (HANDOFF) |
 | 4 Draws | **Passes, both widths**, with nothing added to the prefix (no native `d3dcompiler_47`, no `PROTON_USE_WOW64`, no override). Runs fail at start while the NVIDIA kernel driver refuses new GPU channels; native `vulkaninfo` fails too (D414, [`known-defects.md`](known-defects.md)) |
-| 6 Sound | **Passes:** the music, by the owner's ear; the game's stream reaches the default PipeWire sink at 100% |
+| 6 Sound | **Passes:** the music, by frost's (raulcorreia7) ear; the game's stream reaches the default PipeWire sink at 100% |
 | 8 Movies | **Plays** from `CAPCOM30.STR` with the PSX media round's branch (DIV-0214); typing in another window can land in the game's window, which takes the focus, and skips it |
 
 Rows 5, 7 and 9 to 12 are not yet run here.

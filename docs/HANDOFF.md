@@ -35,7 +35,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 00. **The PSX media round's PR** (`psx-media/own-decoders`, [`psx-media-round.md`](psx-media-round.md)
    section 5): owed before merge - the jingles heard in a scene (an inn's `OYASUMI`), the owner's
    play of the movie on Windows, the ten state-hash routes. Next on Linux: tier 1's rows 5, 7 and 9 to 12
-   on this machine ([`linux-round.md`](linux-round.md) 2c).
+   on frost's Linux machine ([`linux-round.md`](linux-round.md) 2c).
 0. **The beta's first reports.** `v0.1.0-beta.1` is being cut from `main` `67c3259b`
    ([`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
    the notes; [`STATUS.md`](STATUS.md) says what it holds and what the two clears established). **Still the

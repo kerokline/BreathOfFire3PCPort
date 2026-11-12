@@ -3,8 +3,9 @@
 // Form 2 audio sectors.
 //
 // Sources: psx-spx ("CDROM File Video STR Streaming and BS Picture
-// Compression", "MDEC") for the bitstream and the decoder, the owner's
-// psx-machine crate (MIT, player/psx-machine/src/mdec.rs) for the MDEC
+// Compression", "MDEC") for the bitstream and the decoder, the psx-machine
+// crate of frost's (raulcorreia7) bof3-player (MIT, psx-machine/src/mdec.rs;
+// docs/THIRD_PARTY.md section 5) for the MDEC
 // dequantisation and inverse DCT, whose steps are ported here, and the bof3
 // wiki's formats/str.md for CAPCOM30's chunk header.
 //

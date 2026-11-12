@@ -1,6 +1,7 @@
 // CD-ROM XA ADPCM, four bits a sample (psx-spx, "CDROM XA Audio ADPCM
 // Compression"; the same decode as tools/xa.py's `decode`, which the importer
-// holds the port's clips to, and the owner's psx-formats crate, MIT).
+// holds the port's clips to, and the psx-formats crate of frost's
+// (raulcorreia7) bof3-player, MIT: docs/THIRD_PARTY.md section 5).
 //
 // A sound group is 128 bytes: 16 parameter bytes, then 28 four-byte words.
 // Units 0..7 take their parameter from bytes 4..11 (the other eight are

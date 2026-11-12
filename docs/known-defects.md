@@ -10963,7 +10963,7 @@ want of ffmpeg, so whether a PSP source's set-up reaches numpy was not seen.
 
 ## D414 — Under Proton, Vulkan fails at start when the NVIDIA kernel driver refuses new GPU channels (the machine's)
 
-**Seen:** 2026-11-11, twice, on CachyOS, KDE on Wayland, an RTX 5090
+**Seen:** 2026-11-11, twice, by frost (raulcorreia7) on his Linux machine: CachyOS, KDE on Wayland, an RTX 5090
 (driver 615.78.08), Proton Experimental (prefix 11.0-100, umu-launcher
 1.4.3), a disc-only install from the US disc, release zips built on Linux.
 
