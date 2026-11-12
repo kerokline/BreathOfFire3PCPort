@@ -471,8 +471,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 18. **The New Game round is staged** (2026-11-12, [`new-game-round.md`](new-game-round.md), branch
    `new-game/staging`; IDEAS I34): the name entry at New Game and in the faerie village's renamer, and the options
    screen back in the New Game sequence. The owner's five answers are in its section 2; **group M is run** (section 3a; the
-   branch has its own worktree, `C:\Users\kerok\bof3x-runs\ng1112\wt`). **Next: the owner's calls 5 and 6 of its
-   section 3b** (`ja-JP` names of five, the faerie slot names), then stage A (GD, NG). A Mednafen capture session is
+   branch has its own worktree, `C:\Users\kerok\bof3x-runs\ng1112\wt`). The owner answered calls 5 to 7 of its section 3b that day (`ja-JP` up to 4 kana, the faerie
+   slot path as DIV-0075 has it under `ja-JP`, no landing on an empty cell). **Next: stage A (GD, NG)** at the owner's word. A Mednafen capture session is
    owed before stage C (3a M10; hands-off). The research is [`name-entry-restoration.md`](name-entry-restoration.md). The empty save
    slot it was to carry is done by item 14's round (DIV-0193 `SaveSlotBlank`, the owner's "blank it everywhere").
 

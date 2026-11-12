@@ -715,27 +715,34 @@ hold.
 - A reference capture session in Mednafen (M10) is owed before stage C, on
   a hands-off machine; it also tries the West's empty cell.
 
-**New calls for the owner** (5 and 6 before NG and CR build the commit; 7
-and 8 can wait for stage B):
+**The calls group M raised, and the owner's answers (2026-11-12, by chat,
+with a side-by-side picture of the Japan and US name screens running in the
+sibling's recompiled builds; the picture is game-derived and is not in the
+repository):**
 
-5. **`ja-JP` names of five.** As the layer is built, a five-cell name fits
-   the PC's 8-byte field only if its last two cells already have a pair
-   code. Choices: (a) `ja-JP` enters up to **four** cells in this round, and
-   five is a later piece of work on the encoding; (b) five cells where a
-   pair exists, refused otherwise (a player cannot tell which); (c) pair
-   codes made at run time and carried in the save (a new save field and a
-   DIV-0057 amendment). Proposed: (a).
-6. **The faerie slot names under `ja-JP`.** Five bytes hold two cells. The
-   renamer's slot path cannot offer the Japan grid in the PC's save form.
-   Proposed: under `ja-JP` the member path gets the grid (rule 5's cap) and
-   the slot path keeps DIV-0075's end, said in the ledger.
-7. **The West's reachable empty cell.** Keep it as the Western releases have
-   it, or skip empty cells there as the Japan build does. Proposed: skip
-   (ours, ledgered), once the capture session shows what the PlayStation
-   does.
-8. **`psp-eu` installs.** Read the PSP's own code for its legend and input
-   step in this round, or skip the name screen on that install for now.
-   Proposed: skip for now, ledgered as a gap.
+| # | Call | Answer |
+|---|---|---|
+| 5 | `ja-JP` names of five: the PC's 8-byte field holds five kana only through a pair code the layer may not have | **"For now", up to 4 kana** for the character's name. Five is later work on the encoding. |
+| 6 | The faerie slot names under `ja-JP` (5 bytes hold two kana) | **As proposed:** the member path gets the grid with call 5's cap; the slot path keeps DIV-0075's end under `ja-JP`, said in the ledger. |
+| 7 | The West's reachable empty cell (M2, read from the code, not run) | **The owner: it is not possible to move back onto an empty cell on the real screen.** So ours never lands on one (the skip the Japan build has), and M2's reading of the Western step is refuted by observation at that point: NG reads the Western step's Left / Right from a special again before it writes that branch, and says what the first reading missed. No ledger line for a defect that is not there. |
+| 8 | `psp-eu` installs (the legend not found, the code not read) | Not answered. Proposed as before: the name screen is skipped on that install for now, ledgered as a gap. Does not block stage A. |
+
+**What the owner's picture adds** (the owner's observation, for NG, BT and
+the stage C comparison; nothing here is decoded from a disc):
+
+- The Western screen draws its grid in the narrow 8 x 12 letters, so the
+  grid does not fill its box as the Japan one does. The box, the frame and
+  the cell pitch look the same on both.
+- Both screens show the title box, the name panel with a portrait and the
+  name, the legend with the button pictures and a small animated figure at
+  its right, and the grid box with the special cells' labels in two colours.
+- The Western legend's rows follow the Western bits of M2 (confirm, delete,
+  next, back, and the finish on Start), in another order from Japan's.
+- The Western page as seen agrees with M2's shape: seven rows in use, the
+  eighth empty, four labels in rows 3 to 6.
+
+The Mednafen capture session of M10 is still wanted for the pixel
+comparison of stage C, but it no longer has to settle call 7.
 
 Call 4 of section 2 is answered by the discs: the French and German grids
 carry their own extra cells, and every default name's bytes are on its
