@@ -28,6 +28,7 @@
 #include "game/rest_3g.h"
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo_battle.h"
 #include "game/sound_rest.h"
 #include "game/widescreen.h"
 #include "game/window_task.h"
@@ -581,6 +582,9 @@ extern "C" void __cdecl GameMode_Start(void) {
     // The mod behaviours' statics of ours (field_idle.h): none outlives the
     // game it was set in. Zero already unless a behaviour is on.
     field_idle::ClearAtStart();
+    // DIV-0228: a battle of one that never came back to the field (a loss
+    // restarts the boot task, so this game is a new one) leaves nothing saved.
+    solo::SoloBattle_Drop();
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     mode_flow::g.party_load(0);
@@ -906,6 +910,12 @@ extern "C" void __cdecl GameMode5_Turn(void) {
         move_script::SetWord(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh)), move_script::Word(move_script::At(::bof3::Img(mode_rest::at::kKind2XHigh))) + dx);
         MoveScript_FAWord = static_cast<unsigned short>(static_cast<U>(I(base - elevation) >> 4));
     }
+    // DIV-0228 SoloCharacter: the champion fights alone - the second list, the
+    // count, the formation and the party set saved, and the set changed to a
+    // row holding the champion when it lacks one, before the select below
+    // loads the battle's graphics (the party itself is written at step 3).
+    // Nothing with the behaviour off.
+    solo::SoloBattle_Arm(flags);
     if (!(flags & 0x10)) {
         const unsigned set = AreaW0b_PartySet & 0x7Fu;
         SH_CALL(PartySet_Select)(set, (formation & 2) ? 2u : 1u);
@@ -939,6 +949,9 @@ namespace mode_rest { std::uint8_t g_event_keeps_music = 0; }
 // Music_Play(track, 0xA); Window_ResetAll; Game_Step up; 0x904AE9 0, the word
 // 0x904AA8 0, the bytes 0x904AA0..A4 0.
 extern "C" void __cdecl GameMode5_Load(void) {
+    // DIV-0228 SoloCharacter: the champion alone in the second list, the count
+    // 1 and the formation 0, for the members built below (armed at step 1).
+    solo::SoloBattle_WriteParty();
     SH_CALL(Field_PartyLoad)(1);
     SH_CALL(Encounter_PartyAtPlaces)();
     BattleFrames();
@@ -1002,7 +1015,21 @@ extern "C" void __cdecl GameMode5_Script(void) {
 // original 0x496130 (GameMode5_Steps[6]; PSX 0x80198EFC): Party_PlaceAtSlots,
 // Party_ScriptTicks, the two frames, Game_Step up.
 extern "C" void __cdecl GameMode5_Place(void) {
-    SH_CALL(Party_PlaceAtSlots)();
+    // DIV-0228 SoloCharacter: a battle of one puts the party back first, after
+    // every way out's own restore (Boss25_Exit's at exit step 4.1). When the
+    // walker leading the first list has no record among the restored count
+    // (the champion took ObjTrio's first), Party_PlaceAtSlots looks for the
+    // champion's id instead for that one call: the champion stood at the first
+    // battle spot, where a three-member battle's leader stands. Nothing with
+    // the behaviour off (no battle was armed).
+    if (solo::SoloBattle_Restore()) {
+        const unsigned char leader = Cond_Flags[0xd2];
+        Cond_Flags[0xd2] = solo::SoloBattle_PlaceLeaderId();
+        SH_CALL(Party_PlaceAtSlots)();
+        Cond_Flags[0xd2] = leader;
+    } else {
+        SH_CALL(Party_PlaceAtSlots)();
+    }
     SH_CALL(Party_ScriptTicks)();
     BattleFrames();
     StepUp();
@@ -1577,6 +1604,7 @@ void TransitionFromModeRest_Inject() {
     BOF3_INJECT(GameMode5_Place);
     BOF3_INJECT(GameMode5_Leave);
     BOF3_INJECT(GameMode6_Run);
+    solo::SoloBattle_Inject();   // DIV-0228: the battle of one's quicksave participant and self-test
 }
 
 void TransitionFromModeStates_Inject() {
