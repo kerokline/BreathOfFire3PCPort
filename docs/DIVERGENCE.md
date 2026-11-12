@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 223 entries, DIV-0001..0223, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 224 entries, DIV-0001..0224, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16345,6 +16345,78 @@ designed in rather than bolted on.
 - **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
   `BOF3X_OFF=CampMasters` keeps it off.
 - **Switch:** CampMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### Select on the abilities menu gives the party the level skills they are past (a mod's)
+
+- **ID:** DIV-0224
+- **Date:** 2026-11-12
+- **Subsystem:** the camp menu's abilities screen - `FieldAbility_TopMenu`
+  `0x58D820` (`FieldAbility_States[2]`, `src/game/field/field_ability_2.cpp`),
+  with `AbilityList_ForType` `0x591EC0` (`src/game/menu/char.cpp`), the level
+  rows of `Char_ExpTable` that `Char_LevelUp` `0x498DE0` reads
+  (`src/game/field/char.cpp`); the behaviour `LevelSkillCatchUp`
+  ([`mods.md`](mods.md) 11); [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** the abilities screen's four-entry top turns its
+  cursor (sound `0x101`), then tests confirm and cancel. Select does nothing
+  there. A character learns a level row's two skills (row bytes `+6`, `+7`)
+  only in `Char_LevelUp`, for the rows of the levels gained
+  (`AbilityList_Add`: the first 0 slot of the type's list, no test for an id
+  already held). A row whose skills change after a character has passed its
+  level is never applied to that character.
+- **New behaviour:** with `LevelSkillCatchUp` on, every frame of the top,
+  after the cursor and before the confirm test, a press of Select
+  (`Input_Pressed` bit `0x100`) walks records 0..6 of `CharacterRecords`
+  and, for each, its level rows 0..level - 1 of `Char_ExpTable` (the
+  character's 99 rows of 8 bytes), and each row's two ability bytes: an id of
+  0 is skipped; an id whose ability type (`Ability_Records` byte `+0x11` & 3,
+  the byte `AbilityList_ForType` reads) is 3 is skipped; an id already in its
+  type's ten-slot list (`AbilityList_ForType(record, id, 0)`) is left; else
+  the first 0 slot takes it, and none free leaves it out. Then sound `0x10C`
+  if any id was filed, else `0x104`, and the top goes on to its confirm and
+  cancel tests with the same frame's press (a confirm in the same frame is
+  still taken). Nothing is redrawn or shown by the behaviour itself; the lists
+  are the saved records', so the next screen that draws them shows the new
+  skills. Odd, and mirrored: record 7 is never walked; records 0..6 are
+  walked whether or not the character has joined (`+0xB` bit 0 is not read);
+  row 0, which `Char_LevelUp` never applies (it applies the rows from the old
+  level up), is walked too; type-3 ids are never filed, though level-up files
+  them. Off, the function is the original's. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: START.EMI section 8 = STATUS.EMI section 0 (the same
+  bytes), the twin `0x801D7314`, its `0x801D7444` made a jump to new code at
+  `0x801E33E8` (the space of a function no US overlay calls) which reloads
+  the press, tests `0x100`, calls the walk at `0x801E342C` (its leaf at
+  `0x801E34E4`), calls the sound with `0x10C` or `0x104` by the count, and
+  jumps back to the confirm test at `0x801D744C`. The walk's record base, level
+  byte and list offsets are the US `AbilityList_ForType`'s own (boot EXE
+  `0x80166BF0`'s type byte read, the lists at the record's `+0x60` as on
+  the PC), so the PC's `AbilityList_ForType` serves.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it; it serves the mod's level-row
+  data edits (the new level skills), which a save past those levels would
+  otherwise never get.
+- **Also in the PSX version?** No - the release's top ignores Select, as the
+  PC's does; only the romhack adds it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the function runs the same statements as
+  before (the behaviour is asked before the press is read and is false), so
+  `rest_2e_fuzz.cpp`'s `FieldAbility_TopMenu` row compares as before; on,
+  a Select press also calls `AbilityList_ForType`, which that row's call
+  list does not name. **Not played:** nobody has pressed Select on the
+  abilities screen with the behaviour on.
+- **Reversible?** Partly - it is off unless a mod's `needs` or `on=` names
+  it; `BOF3X_OFF=LevelSkillCatchUp` keeps it off. The skills it files are in
+  the saved records, so a save made after a press keeps them with it off.
+- **Switch:** LevelSkillCatchUp
 - **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - no release has it; it is the romhack's
