@@ -1,9 +1,11 @@
 // The process: environment, own path, last error, thread and process numbers.
 //
-// std::getenv is not enough on Windows: it returns the ANSI code page, so a
-// UTF-8 path in BOF3X_* arrives wrong, and 113 call sites rely on
-// GetEnvironmentVariable's size contract. GetEnv keeps that contract on both
-// systems; GetEnvW is for the wide paths the launcher and common/ code hold.
+// GetEnv keeps GetEnvironmentVariableA's size contract, which 113 call sites
+// rely on and std::getenv does not have. Its value is in the engine's narrow
+// encoding (os/file.h): the ANSI code page on Windows, as before the seam, and
+// the bytes of the environment on POSIX - so a path in BOF3X_* goes to Path
+// and to the game's own file calls unchanged. GetEnvW is for the wide paths
+// the launcher and common/ code hold.
 // LastError, ThreadId and ProcessId have no standard spelling: std::thread::id
 // does not print as a number, and the log lines and DIV messages cite one.
 // Part of the operating-system seam (docs/linux-round.md, LB1): what the C++20
@@ -24,7 +26,9 @@ std::uint32_t GetEnvW(const wchar_t* name, wchar_t* buf, std::uint32_t cap);
 
 // The running program's path, and the path of the module (the DLL, the shared
 // object) that holds the address `inside`, with its load address if `base` is
-// given. False if the path is not known.
+// given. False if the path is not known. These two are UTF-8 on both systems
+// (os/text.h's ToWide takes them back to a wide path); on Windows that is not
+// the narrow encoding, so they are not names for Path or the game's file calls.
 bool ExecutablePath(std::string* utf8);
 bool ModulePath(const void* inside, std::string* utf8, std::uintptr_t* base = nullptr);
 

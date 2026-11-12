@@ -281,9 +281,11 @@ void WriteFake(const std::string& path, unsigned char mark) {
 
 void ListsSelfTest() {
     std::error_code ec;
-    const std::u8string tmp8 = std::filesystem::temp_directory_path(ec).u8string();
-    if (ec || tmp8.empty()) Fail("temp_directory_path");
-    const std::string tmp = std::string(tmp8.begin(), tmp8.end()) + static_cast<char>(std::filesystem::path::preferred_separator);
+    // In the narrow encoding (os/file.h), as GetTempPathA gave it: these names go to fopen and to the game's lists.
+    const std::string tmp_dir = bof3::os::Narrow(std::filesystem::temp_directory_path(ec));
+    if (ec || tmp_dir.empty()) Fail("temp_directory_path");
+    const char sep = static_cast<char>(std::filesystem::path::preferred_separator);
+    const std::string tmp = tmp_dir.back() == sep ? tmp_dir : tmp_dir + sep;
     char dir_a[bof3::os::kMaxPath], dir_b[bof3::os::kMaxPath];
     std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));
     std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp.c_str(), static_cast<unsigned long>(bof3::os::ProcessId()));

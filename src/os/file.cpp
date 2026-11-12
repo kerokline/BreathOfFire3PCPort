@@ -1,8 +1,9 @@
-// bof3::os files (os/file.h): portable, over std::filesystem.
+// bof3::os files (os/file.h): the directory walk, portable, over
+// std::filesystem. Path and Narrow - the narrow encoding - are each backend's
+// (win32/file.cpp, posix/file.cpp).
 #include "os/file.h"
 
 #include <algorithm>
-#include <cstring>
 #include <system_error>
 #include <vector>
 
@@ -10,13 +11,19 @@ namespace bof3::os {
 
 namespace {
 
-char Upper(char c) { return c >= 'a' && c <= 'z' ? static_cast<char>(c - 32) : c; }
+// The system's own character (wchar_t on Windows, char on POSIX): the walk
+// matches and orders names as the system holds them, so a multi-byte narrow
+// name is never compared byte by byte.
+using Char = std::filesystem::path::value_type;
+using Native = std::filesystem::path::string_type;
+
+Char Upper(Char c) { return c >= 'a' && c <= 'z' ? static_cast<Char>(c - 32) : c; }
 
 // FindFirstFile's matching: ASCII case does not count, '?' is one character,
 // '*' any run, and "*.*" every name.
-bool Match(const char* pat, const char* name) {
-    if (std::strcmp(pat, "*.*") == 0) pat = "*";
-    const char *star = nullptr, *resume = nullptr;
+bool Match(const Char* pat, const Char* name) {
+    if (pat[0] == '*' && pat[1] == '.' && pat[2] == '*' && pat[3] == 0) pat += 2;
+    const Char *star = nullptr, *resume = nullptr;
     while (*name) {
         if (*pat == '*') {
             star = pat++;
@@ -35,56 +42,77 @@ bool Match(const char* pat, const char* name) {
     return *pat == 0;
 }
 
-std::string UpperAll(std::string s) {
-    for (char& c : s) c = Upper(c);
+Native UpperAll(Native s) {
+    for (Char& c : s) c = Upper(c);
     return s;
 }
 
-std::string Utf8(const std::filesystem::path& p) {
-    const std::u8string u = p.u8string();
-    return std::string(u.begin(), u.end());
+// The directory of `pattern` and its matching leaves, in order. Throws what the
+// library throws (out of memory); WalkDirectory answers that as "nothing there".
+struct Listing {
+    std::filesystem::path dir;
+    std::vector<Native> names;
+};
+Listing List(const char* pattern) {
+    const Native full = Path(pattern).native();
+    const std::size_t cut = full.find_last_of(Native{Char('/'), Char('\\')});
+    Listing out;
+    out.dir = cut == Native::npos ? std::filesystem::path(Native{Char('.')})
+              : cut == 0          ? std::filesystem::path(full.substr(0, 1))
+                                  : std::filesystem::path(full.substr(0, cut));
+    const Native leaf = cut == Native::npos ? full : full.substr(cut + 1);
+    std::error_code ec;
+    std::filesystem::directory_iterator it(out.dir, ec), end;
+    if (ec) return out;
+    for (; it != end; it.increment(ec)) {
+        if (ec) break;
+        const Native n = it->path().filename().native();
+        if (n == Native{Char('.')} || n == Native{Char('.'), Char('.')}) continue;
+        if (Match(leaf.c_str(), n.c_str())) out.names.push_back(n);
+    }
+    // NTFS lists a folder in upper-cased order; callers that take the first
+    // match must see the same one on every system.
+    std::sort(out.names.begin(), out.names.end(), [](const Native& a, const Native& b) {
+        const Native la = UpperAll(a), lb = UpperAll(b);
+        return la != lb ? la < lb : a < b;
+    });
+    return out;
+}
+
+// One entry: its narrow name, and its kind and size asked of the system now -
+// only for an entry that is handed, so a caller that stops at the first pays
+// for one.
+bool Describe(const Listing& l, const Native& n, DirEntry* e) {
+    try {
+        const std::filesystem::path leaf(n);
+        const std::filesystem::path p = l.dir / leaf;
+        e->name = Narrow(leaf);
+        std::error_code ec;
+        e->is_directory = std::filesystem::is_directory(p, ec);
+        e->size = 0;
+        if (!e->is_directory) {
+            const std::uintmax_t sz = std::filesystem::file_size(p, ec);
+            e->size = ec ? 0 : static_cast<std::uint64_t>(sz);
+        }
+        return true;
+    } catch (...) {
+        return false;
+    }
 }
 
 }  // namespace
 
-std::filesystem::path Path(const char* utf8) {
-    std::string s(utf8 ? utf8 : "");
-    if (std::filesystem::path::preferred_separator == '/') std::replace(s.begin(), s.end(), '\\', '/');
-    return std::filesystem::path(std::u8string(s.begin(), s.end()));
-}
-
 std::size_t WalkDirectory(const char* pattern, const std::function<bool(const DirEntry&)>& each) {
-    const std::string full = Utf8(Path(pattern));
-    const std::size_t cut = full.find_last_of("/\\");
-    const std::string dir = cut == std::string::npos ? "." : cut == 0 ? "/" : full.substr(0, cut);
-    const std::string leaf = cut == std::string::npos ? full : full.substr(cut + 1);
-    std::error_code ec;
-    std::filesystem::directory_iterator it(Path(dir.c_str()), ec), end;
-    if (ec) return 0;
-    std::vector<std::string> names;
-    for (; it != end; it.increment(ec)) {
-        if (ec) break;
-        const std::string n = Utf8(it->path().filename());
-        if (n == "." || n == "..") continue;
-        if (Match(leaf.c_str(), n.c_str())) names.push_back(n);
+    Listing l;
+    try {
+        l = List(pattern);
+    } catch (...) {
+        return 0;
     }
-    // NTFS lists a folder in upper-cased order; callers that take the first
-    // match must see the same one on every system.
-    std::sort(names.begin(), names.end(), [](const std::string& a, const std::string& b) {
-        const std::string la = UpperAll(a), lb = UpperAll(b);
-        return la != lb ? la < lb : a < b;
-    });
     std::size_t handed = 0;
-    for (const std::string& n : names) {
+    for (const Native& n : l.names) {
         DirEntry e;
-        e.name = n;
-        const std::filesystem::path p = Path(dir.c_str()) / std::filesystem::path(std::u8string(n.begin(), n.end()));
-        std::error_code sec;
-        e.is_directory = std::filesystem::is_directory(p, sec);
-        if (!e.is_directory) {
-            const std::uintmax_t sz = std::filesystem::file_size(p, sec);
-            e.size = sec ? 0 : static_cast<std::uint64_t>(sz);
-        }
+        if (!Describe(l, n, &e)) break;
         ++handed;
         if (!each(e)) break;
     }

@@ -11,9 +11,9 @@ namespace {
 
 constexpr std::uint32_t kMaxPath = 260;   // the limit this folder's paths were always read under
 
-bool IsDirectory(const std::wstring& path) { return bof3::os::IsDirectory(bof3::os::ToUtf8(path.c_str()).c_str()); }
+bool IsDirectory(const std::wstring& path) { return bof3::os::IsDirectory(path.c_str()); }
 
-bool IsFile(const std::wstring& path) { return bof3::os::IsFile(bof3::os::ToUtf8(path.c_str()).c_str()); }
+bool IsFile(const std::wstring& path) { return bof3::os::IsFile(path.c_str()); }
 
 }  // namespace
 
