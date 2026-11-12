@@ -16,6 +16,7 @@
 #include "game/rest_2c.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo_screens.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -109,6 +110,221 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 
 }  // namespace
 
+// The solo-character mode's PartyForm (group MS; src/game/solo/
+// solo_screens.h, docs/solo-character-screens.md). While a PartyForm built
+// with solo_screens::Wide() is open (g_party_form.wide, latched by
+// PartyForm_Setup), Choose, the reserve half of Swap and Draw run these
+// instead of the original's bodies: the reserve is solo_screens::
+// g_party_form, every joined member not in the party, of which the screen
+// shows three rows from g_party_form.top and scrolls; 0x6BC894.. holds the
+// rows shown and the count 0x6BC897 their number, so PartyForm_DrawReserve
+// and PartyForm_DrawSliding run unchanged. In the reserve column the
+// cursor's row (0x929F09) and the pick's (0x929F0D) are rows of the whole
+// list; in the party column they are the original's.
+namespace {
+
+namespace ss = solo_screens;
+
+// The rows shown into 0x6BC894.. and their number into 0x6BC897.
+void WideWindow() {
+    ss::Window(ss::g_party_form, At(::bof3::Img(field_s::at::kReserve)));
+    FieldS_ReserveCount = static_cast<unsigned char>(ss::Shown(ss::g_party_form));
+}
+
+// PartyForm_Draw's cell for column `col` and a row (a whole-list row in
+// column 1): 0x664078 + 6 (col + 2 shown row), or 0 when the row is not shown.
+U WideCell(int col, int row) {
+    const int shown = col == 0 ? row : ss::ShownRow(ss::g_party_form, row);
+    if (shown < 0 || shown >= static_cast<int>(ss::kRows)) return 0;
+    return ::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (col + 2 * shown));
+}
+
+// A box at a cell as PartyForm_Draw draws its two (0x7E x 0x30 when the
+// cell's flag is set, else 0x80 x 0x34).
+void WideBox(U cell, int blink, int sides) {
+    const bool wide = B(cell + 4) != 0;
+    SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34,
+                                blink, sides);
+}
+
+// PartyForm_Setup with the long reserve: the reserve filled into
+// g_party_form, the rows shown into 0x6BC894.. and their number into
+// 0x6BC897; the flag pairs from 0x6BC88C for the party and the rows shown
+// (the original writes the reserve's two apart for every member, over its
+// own list and count from the fourth on, docs/field_s.md 10 L1, L2); then
+// the original's tail.
+void PartyFormSetupWide() {
+    const U n = PartyCount();
+    ss::Fill(ss::g_party_form, At(::bof3::Img(field_s::at::kPartyList)), n);
+    ss::g_party_form.wide = true;
+    FieldS_ReserveCount = 0;
+    WideWindow();
+    const unsigned shown = ss::Shown(ss::g_party_form);
+    for (U k = 0; k < 3; ++k) B(::bof3::Img(field_s::at::kReserveFlags) + 2 * k) = k < n ? 1 : 0;
+    for (U k = 0; k < 3; ++k) B(::bof3::Img(field_s::at::kReserveFlags) + 1 + 2 * k) = k < shown ? 1 : 0;
+    const auto step = static_cast<unsigned char>(FieldS_Step + 1);
+    FieldS_Column = 0;
+    BattleE1_ModeByte9 = 0;
+    ShopStates_Clear0A = 0x7F;
+    FieldS_PickRow = 0x7F;
+    FieldS_PartyFormResult = 0xFF;
+    B(::bof3::Img(field_s::at::kTimer)) = 3;
+    FieldS_Step = step;
+    bof3::Log("solo members screen (PartyForm): %u in the party, %u in reserve, %u shown", static_cast<unsigned>(n),
+              static_cast<unsigned>(ss::g_party_form.count), shown);
+    SH_CALL(Transition_Start)(2);
+}
+
+// PartyForm_Choose with the long reserve: the original's body, the reserve
+// column's rows read through g_party_form.
+void PartyFormChooseWide() {
+    SH_CALL(PartyForm_Draw)();
+    if (FieldS_PartyFormResult == 0xFF) {
+        SH_CALL(Text_DrawAt)(0x1A, 0x14, 0, 0xFF, Message(0x60));
+    } else {
+        SH_CALL(TextRecord_Set)(0, 8, Rec(RecordOf(FieldS_PartyFormResult)));
+        SH_CALL(Text_DrawAt)(0x1A, 0x14, 0, 0xFF, Message(0x61));
+    }
+    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
+    const int count = static_cast<int>(PartyCount());
+    const int old_column = static_cast<unsigned char>(FieldS_Column);
+    int column = old_column;
+    const int row0 = BattleE1_ModeByte9;
+    int row = row0;
+    if ((repeat & 0xA000) != 0 && ss::g_party_form.count != 0) {
+        // The row shown is kept across the switch, as the original keeps the row.
+        row = column == 0 ? ss::Whole(ss::g_party_form, row) : ss::ShownRow(ss::g_party_form, row);
+        column ^= 1;
+        FieldS_Column = static_cast<signed char>(column);
+    }
+    if (column == 0) {
+        if (row > count - 1) row = count - 1;
+    } else {
+        row = ss::Hold(ss::g_party_form, row);
+    }
+    if (repeat & 0x1000) {
+        if (column == 0) row = row - 1 < 0 ? count - 1 : row - 1;
+        else row = ss::Move(ss::g_party_form, row, -1);
+    } else if (repeat & 0x4000) {
+        if (column == 0) row = row + 1 > count - 1 ? 0 : row + 1;
+        else row = ss::Move(ss::g_party_form, row, +1);
+    }
+    BattleE1_ModeByte9 = static_cast<signed char>(row);
+    WideWindow();
+    if (old_column != column || row0 != row) Sound(0x100);
+    const U pressed = Pressed();
+    if (Confirmed(pressed)) {
+        if (static_cast<unsigned char>(ShopStates_Clear0A) == 0x7F) {
+            Sound(0x103);
+            ShopStates_Clear0A = static_cast<signed char>(FieldS_Column);
+            FieldS_PickRow = static_cast<signed char>(BattleE1_ModeByte9);
+            return;
+        }
+        const unsigned char result = SH_CALL(PartyForm_Swap)();
+        FieldS_PartyFormResult = result;
+        Sound(result == 0xFF ? 0x103 : 0x107);
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
+        return;
+    }
+    if (!Cancelled(pressed)) return;
+    Sound(0x106);
+    if (static_cast<unsigned char>(ShopStates_Clear0A) != 0x7F) {
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
+        return;
+    }
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
+    FieldS_Step = 0;
+    FieldS_State = state;
+    SH_CALL(Transition_Start)(2);
+}
+
+// PartyForm_Swap's reserve cases with the long reserve (two party rows stay
+// the original's). Two reserve rows: the two ids exchanged. Across: the
+// party's id and the reserve's, refused by +0xB bit 1 as the original (the
+// party's asked first); else sound 0x103, the party's id becomes the
+// reserve's in both party lists, and the reserve's the party's over the
+// whole reserve.
+unsigned char PartyFormSwapWide() {
+    ss::Reserve& r = ss::g_party_form;
+    const int column = static_cast<unsigned char>(FieldS_Column);
+    const int row = BattleE1_ModeByte9, held = FieldS_PickRow;
+    auto whole = [&](int w) -> unsigned char& {
+        if (w < 0 || w >= r.count)
+            bof3::Fatal("solo members screen (PartyForm): reserve row %d of %u", w, static_cast<unsigned>(r.count));
+        return r.ids[w];
+    };
+    if (column == static_cast<unsigned char>(ShopStates_Clear0A)) {
+        unsigned char& x = whole(row);
+        unsigned char& y = whole(held);
+        const unsigned char t = x;
+        x = y;
+        y = t;
+        WideWindow();
+        return 0xFF;
+    }
+    const unsigned char party = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<std::uint32_t>(column == 0 ? row : held));
+    const unsigned char other = whole(column == 0 ? held : row);
+    if (Rec(RecordOf(party))[0xB] & 2) return party;
+    if (Rec(RecordOf(other))[0xB] & 2) return other;
+    Sound(0x103);
+    if (PartyCount() != 0) {
+        unsigned char k = 0;
+        do {
+            if (B(::bof3::Img(field_s::at::kPartyList) + k) == party) B(::bof3::Img(field_s::at::kPartyList) + k) = other;
+            if (B(::bof3::Img(field_s::at::kPartyList2) + k) == party) B(::bof3::Img(field_s::at::kPartyList2) + k) = other;
+            ++k;
+        } while (k < PartyCount());
+    }
+    for (unsigned i = 0; i < r.count; ++i)
+        if (r.ids[i] == other) r.ids[i] = party;
+    WideWindow();
+    return 0xFF;
+}
+
+// PartyForm_Draw with the long reserve: the original's body, the pick's and
+// the cursor's boxes at the rows shown (a pick scrolled out of sight is held,
+// unmarked), and the champion's hand - Menu_DrawHand at the champion's cell
+// plus the hand's offset, after the two cursor boxes (the mode only:
+// IsChampion is false while it is not active).
+void PartyFormDrawWide() {
+    SH_CALL(Menu_DrawBackdrop)(Config_Background);
+    const U n = PartyCount();
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
+    for (U k = 0; k < n; ++k) {
+        const U record = RecordOf(B(::bof3::Img(field_s::at::kPartyList) + k));
+        const int y = static_cast<int>(54 * k) + 0x3E;
+        SH_CALL(Menu_DrawMemberStatus)(0x11, y, record, (Rec(record)[0xB] >> 1) & 1);
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(field_s::at::kFmtMember)), k + 1);
+        DrawFont8(0x1A, y + 5, (Rec(record)[0xB] & 2) ? 7 : 0);
+    }
+    SH_CALL(PartyForm_DrawReserve)(0x96, 0x3B);
+    const unsigned char pick = static_cast<unsigned char>(ShopStates_Clear0A);
+    if (pick != 0x7F) {
+        const U cell = WideCell(static_cast<signed char>(pick), FieldS_PickRow);
+        if (cell != 0) WideBox(cell, 0, 6);
+    }
+    const U cell = WideCell(FieldS_Column, BattleE1_ModeByte9);
+    if (cell == 0)
+        bof3::Fatal("solo members screen (PartyForm): the cursor's row %d in column %d is not shown (top %u of %u)",
+                    static_cast<int>(BattleE1_ModeByte9), static_cast<int>(FieldS_Column),
+                    static_cast<unsigned>(ss::g_party_form.top), static_cast<unsigned>(ss::g_party_form.count));
+    WideBox(cell, 1, 6);
+    U at = 0;
+    for (U k = 0; k < n && k < ss::kRows && at == 0; ++k)
+        if (ss::IsChampion(B(::bof3::Img(field_s::at::kPartyList) + k))) at = WideCell(0, static_cast<int>(k));
+    const unsigned shown = ss::Shown(ss::g_party_form);
+    for (unsigned s = 0; s < shown && at == 0; ++s) {
+        const int whole = ss::Whole(ss::g_party_form, static_cast<int>(s));
+        if (ss::IsChampion(ss::g_party_form.ids[whole])) at = WideCell(1, whole);
+    }
+    if (at != 0)
+        SH_CALL(Menu_DrawHand)(static_cast<int>(W(at)) + ss::kChampionHandDx, static_cast<int>(W(at + 2)) + ss::kChampionHandDy, 0);
+}
+
+}  // namespace
+
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)
 
 // original 0x580A40, ShopMode_States[6]: `jmp [PartyForm_States + 4 * 0x929F01]`.
@@ -136,6 +352,8 @@ extern "C" void __cdecl PartyForm_OpenStep(void) {
 // reserve's own bytes 0x6BC895 / 0x6BC897 from its fifth entry on (docs/
 // field_s.md section 7, L1); a clearing loop after it never runs.
 extern "C" void __cdecl PartyForm_Setup(void) {
+    if (solo_screens::Wide()) return PartyFormSetupWide();   // the solo-character mode (MS)
+    solo_screens::g_party_form.wide = false;
     const U n = PartyCount();
     unsigned char count = 0;
     FieldS_ReserveCount = 0;
@@ -218,6 +436,7 @@ extern "C" void __cdecl PartyForm_SlideIn(void) {
 // 0x107, the picks 0x7F. Cancel: sound 0x106; a pick is dropped, or with none
 // the state up one, step 0, Transition_Start(2).
 extern "C" void __cdecl PartyForm_Choose(void) {
+    if (solo_screens::g_party_form.wide) return PartyFormChooseWide();   // the solo-character mode (MS)
     SH_CALL(PartyForm_Draw)();
     if (FieldS_PartyFormResult == 0xFF) {
         SH_CALL(Text_DrawAt)(0x1A, 0x14, 0, 0xFF, Message(0x60));
@@ -547,6 +766,9 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
 // holding the reserve's gets the party's.
 extern "C" unsigned char __cdecl PartyForm_Swap(void) {
     const unsigned char column = static_cast<unsigned char>(FieldS_Column);
+    // The solo-character mode (MS): a reserve row is in it.
+    if (solo_screens::g_party_form.wide && !(column == 0 && static_cast<unsigned char>(ShopStates_Clear0A) == 0))
+        return PartyFormSwapWide();
     if (column == static_cast<unsigned char>(ShopStates_Clear0A)) {
         const U list = column == 0 ? (::bof3::Img(Cond_Flags_addr) + 0xd2) : ::bof3::Img(field_s::at::kReserve);
         SwapBytes(list + static_cast<std::uint32_t>(BattleE1_ModeByte9), list + static_cast<std::uint32_t>(FieldS_PickRow));
@@ -585,6 +807,7 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
 // 6 (column + 2 row), s8 each: (x, y) words and a flag (0x7E x 0x30 when set,
 // else 0x80 x 0x34), not blinking - and the cursor's, blinking.
 extern "C" void __cdecl PartyForm_Draw(void) {
+    if (solo_screens::g_party_form.wide) return PartyFormDrawWide();   // the solo-character mode (MS)
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U n = PartyCount();
     SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
