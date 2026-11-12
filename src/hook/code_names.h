@@ -124,10 +124,12 @@ namespace bof3::behaviours {
 
 enum class Id : int {
     AllyAnywhere,
+    SmokeSkill,
 };
-constexpr int kCount = 1;
+constexpr int kCount = 2;
 constexpr const char* kNames[kCount + 1] = {
     "AllyAnywhere",
+    "SmokeSkill",
     nullptr,
 };
 

@@ -15921,3 +15921,65 @@ designed in rather than bolted on.
 - **Toward:** none - a romhack's change; no release has it
 - **Languages:** any
 - **State:** active
+
+### Smoke used in the field holds off encounters for 128 checks (a mod's)
+
+- **ID:** DIV-0218
+- **Date:** 2026-11-12
+- **Subsystem:** field abilities and encounters - `FieldAbility_NoEffect`
+  `0x58A340` (`FieldAbility_Effects[7]`, `src/game/field/field_ability.cpp`),
+  `Field_EncounterDue` `0x530030` (`src/game/field/field_4.cpp`), the counter
+  of ours in `src/game/field/field_idle.h` / `field_7.cpp`, `GameMode_Start`
+  `0x495840`; the Definitive Edition romhack's Smoke
+  ([`romhack-mods.md`](romhack-mods.md), [`disc-patch-round.md`](disc-patch-round.md) 6b)
+- **Tier:** Extension - a skill given an effect it did not have
+- **Original behaviour:** ability `0x50` used from the field menu reaches
+  handler 7, which answers 4: nothing happens, no AP is taken, the menu plays
+  `0x107`. `Field_EncounterDue` is asked once a step by its two callers
+  (`Field_LeaderWalk` on the world map, where a yes raises the "(!)" marker,
+  and `Field_LeaderStepLands` elsewhere, where it starts the battle; the two
+  calls in the binary, at `0x52DD97` and `0x52E8E7`, measured).
+- **New behaviour:** with the behaviour on, handler 7 sets a 16-bit counter
+  of ours to 128 (again to 128 if it is running) and answers 1, so
+  `FieldAbility_Use` takes the cost and the menu plays its "used" sound
+  (`0x109` on the no-target path, `field_ability_2.cpp`). While the
+  counter is not 0, `Field_EncounterDue` does nothing of its own: it lowers
+  the counter by one, sets `Field_StepCount` to 0, plays `0x10C` when the
+  counter reaches 0, and answers 0. So 128 checks - one a step, in an area with
+  encounters or without, on the world map or off it - give no encounter, and
+  the step count starts from 0 after them. The world map's "(!)" marker comes
+  from the same function, so it is held off too; a marker already up is not
+  taken down (its steps do not ask the function). A fight that a
+  script starts does not pass this function and is not affected. The counter
+  is not in the save, is cleared at the start of every started or loaded game
+  (`GameMode_Start`), and is taken and put back by the quicksave (participant
+  `BEHAVIOURS`, version 2); the state hash does not see it. Off, both
+  functions run the original's path. That Ryu learns `0x50` at level 12, its
+  name and its cost are the mod's table data, not this entry's.
+- **Rationale:** the romhack's feature, integrated as a mod with its author's
+  permission; the mod turns it on by its `needs` (docs/mods.md 11). The
+  hack's code, on the patched US disc: handler 7's twin `0x801E7C70` (START.EMI
+  8 = STATUS.EMI 0) made a jump to new code at GAME.EMI `0x801AE2B4`, which
+  stores 128 in the halfword `0x801AE2B0` and answers 1; `Field_EncounterDue`'s
+  twin `0x801B3EB0` entered by a jump to `0x801AE2C8`, which, with the
+  halfword not 0, lowers it, clears the step count `0x80143F22`, calls the
+  sound with `0x10C` when it reaches 0, and answers 0, and else runs the
+  displaced first load and the original's rest. The one departure: on the PSX
+  the halfword survives a load from the menu; ours is cleared at a game's
+  start. The readme's "(!)" exception is not in the code: no path of the
+  hack's tests the world map or the marker.
+- **Also in the PSX version?** No: the release's Smoke has no field effect,
+  as the PC's. The romhack's patched US disc has it.
+- **Verification:** builds at both widths; `ledger_switches.py --check`,
+  `ledger_check.py`. Not yet run with the game: under `BOF3X_ON=SmokeSkill`,
+  Smoke used from the field menu with enough AP (the AP taken, `0x109`), then
+  128 steps in an encounter area with no battle and `0x10C` at the end, then
+  battles again; on the world map no "(!)" for 128 steps; off, `0x107` and no
+  AP taken; a quick-load in the middle of the count keeps the count left.
+- **Reversible?** Off unless a mod's `needs` or the player's `on=` names it.
+- **Switch:** SmokeSkill
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - a romhack's change; no release has it
+- **Languages:** any
+- **State:** active

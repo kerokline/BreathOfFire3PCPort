@@ -1,5 +1,5 @@
 // The field's idle frame and the mod behaviours' statics of ours that live
-// beside it (docs/mods.md section 11; DIVERGENCE DIV-0217).
+// beside it (docs/mods.md section 11; DIVERGENCE DIV-0217, DIV-0218).
 //
 // The Definitive Edition romhack put its per-frame field code in slot 0 of
 // Field_ModeTailKinds - the slot that runs when no tail is armed, a bare ret
@@ -23,6 +23,10 @@ namespace field_idle {
 // Field_Request 6, the full-party swap.
 extern std::uint8_t g_ally_close_menu;
 extern std::uint8_t g_ally_pending;
+
+// DIV-0218 SmokeSkill: the hack's halfword - the encounter checks left that
+// answer "none" (Field_EncounterDue); the field use of Smoke sets it to 128.
+extern std::uint16_t g_smoke_steps;
 
 // Every static above to zero: GameMode_Start, the start of every game.
 void ClearAtStart();

@@ -367,10 +367,12 @@ namespace field_idle {
 
 std::uint8_t g_ally_close_menu = 0;
 std::uint8_t g_ally_pending = 0;
+std::uint16_t g_smoke_steps = 0;
 
 void ClearAtStart() {
     g_ally_close_menu = 0;
     g_ally_pending = 0;
+    g_smoke_steps = 0;
 }
 
 }  // namespace field_idle
@@ -380,18 +382,20 @@ namespace {
 // The quicksave participant "BEHAVIOURS" (docs/quicksave.md 5): the statics
 // above, a byte copy each. A behaviour that adds a static adds it here and
 // raises the version.
-constexpr std::uint32_t kBehavioursVersion = 1;
+constexpr std::uint32_t kBehavioursVersion = 2;   // 2: DIV-0218's counter
 
 void BehavioursSave(bof3::SnapshotWriter& w) {
     w.Put(kBehavioursVersion);
     w.Put(field_idle::g_ally_close_menu);
     w.Put(field_idle::g_ally_pending);
+    w.Put(field_idle::g_smoke_steps);
 }
 
 void BehavioursRestore(bof3::SnapshotReader& r) {
     if (r.Get<std::uint32_t>() != kBehavioursVersion) bof3::Fatal("snapshot: BEHAVIOURS' record is another version");
     field_idle::g_ally_close_menu = r.Get<std::uint8_t>();
     field_idle::g_ally_pending = r.Get<std::uint8_t>();
+    field_idle::g_smoke_steps = r.Get<std::uint16_t>();
 }
 
 }  // namespace

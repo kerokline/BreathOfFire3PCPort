@@ -673,6 +673,23 @@ hash. Found on the way: `ledger_check.py`'s behaviours self-test failed as
 soon as one real behaviour existed (its inventory kept the release's
 behaviours beside the test's); it now holds the test's alone.
 
+**`SmokeSkill` (DIV-0218, branch `romhack/b2-field`).** Two sites behind
+the behaviour: `FieldAbility_NoEffect` (`field_ability.cpp`, handler 7,
+ability `0x50`'s alone: the counter to 128, answer 1) and the head of
+`Field_EncounterDue` (`field_4.cpp`: counter not 0 - lower it, step count 0,
+`0x10C` at 0, answer 0). Verified against the patched listings: the
+readings agree, and the disc settles the details - the counter counts
+calls, the call that takes it to 0 is still "no encounter", and the
+original's bit-5 zone-counter clear is skipped while it runs. The binary has
+two calls of the function (`0x52DD97` in `Field_LeaderWalk`, the world map,
+whose yes is the "(!)" marker; `0x52E8E7` in `Field_LeaderStepLands`),
+both once a step. So the hack's code holds the world map's "(!)" off too:
+the readme's "(!)" exception has no code behind it, unless it means a fight
+a script starts, which never asks the function - the owner's to settle in
+play. The counter joins the `BEHAVIOURS` record (version 2), is cleared in
+`GameMode_Start`, and is outside the state hash. Off, Smoke from the menu
+still answers 4: `0x107`, no AP taken.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |
