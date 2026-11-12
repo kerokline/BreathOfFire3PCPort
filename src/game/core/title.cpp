@@ -1854,12 +1854,20 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
 //
 // As the original has it: the state set to 0 returns without the badge; the
 // pad is read as the dword at Input_Pressed and only bit 0x800 tested.
+//
+// DIV-0223 DemoSkipButtons (off by default): Start or any of the four face
+// buttons (0x8F0: Start 0x800, square 0x80, cross 0x40, circle 0x20, triangle
+// 0x10) ends the demo - the Definitive Edition romhack's change; evidence:
+// its patched US disc, GAME section 1 at PSX 0x801D0F54 (the mask's
+// immediate). The buttons are the pad's, not Config lines, so no Sigma, as
+// the Start test has none.
 extern "C" void __cdecl Title_StateDemo(void) {
     if (TaskZeroState() == 0) {
         Title_State = 0;
         return;
     }
-    if (title_states::gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & 0x800) != 0) {
+    const unsigned skip = bof3::BehaviourOn(bof3::behaviours::Id::DemoSkipButtons) ? 0x8F0u : 0x800u;
+    if (title_states::gTitleStates.load_done() != 0 && Transition_Busy == 0 && (Input_Pressed & skip) != 0) {
         MoveScript_Var7 = 1;
         title_states::gTitleStates.transition(4);
         title_states::gTitleStates.music_fade_stop(8);

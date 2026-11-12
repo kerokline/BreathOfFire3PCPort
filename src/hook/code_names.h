@@ -123,12 +123,14 @@ constexpr const char* kNames[kCount] = {
 namespace bof3::behaviours {
 
 enum class Id : int {
+    DemoSkipButtons,
     EasierMasters,
     ShortSkillLockout,
     VillageCountPlural,
 };
-constexpr int kCount = 3;
+constexpr int kCount = 4;
 constexpr const char* kNames[kCount + 1] = {
+    "DemoSkipButtons",
     "EasierMasters",
     "ShortSkillLockout",
     "VillageCountPlural",

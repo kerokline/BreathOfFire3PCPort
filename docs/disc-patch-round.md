@@ -695,6 +695,26 @@ neither countdown. `Game_ClockTick`'s `// original` marker, lost in the
 source-layout move (6cddd782 deleted it with the shell it was left in), is
 back above the function.
 
+**`DemoSkipButtons` (DIV-0223).** `Title_StateDemo`
+(`src/game/core/title.cpp`): the mask `0x800` becomes `0x8F0`, Start or any
+face button (GAME section 1, `0x801D0F54`, `0x9FF` -> `0x8F0`). The US
+release's `0x9FF` adds Select and the four shoulder buttons; the PC tests
+Start alone. `Input_Pressed` carries the PlayStation's bits on the PC, and
+these are buttons rather than Config lines, so the mask does not go through
+`Sigma` (the Start test does not either).
+
+**Owed with the game** (none was started: a proof chain was running): a
+start with `BOF3X_ON=EasierMasters,VillageCountPlural,ShortSkillLockout,DemoSkipButtons`
+(four `behaviour ON` lines, `behaviours: 4 of 4 on`); the fuzz rows of the
+five functions' groups (`area_w1f_fuzz.cpp`, `area_w2c_fuzz.cpp`,
+`rest_4e_fuzz.cpp`, `mode_flow_fuzz.cpp`, `title_states.cpp`) with the four
+off (0 mismatches expected) and on (mismatches in
+the guarded functions only); the state-hash routes off (equal to the
+baseline); and in play, each on: area 68's choice with 10 to 14 weapons held,
+area 91's state 0 without the tiara, a village list at a count of one under
+`en-US`, a lockout of ability `0x15` or `0x3E` ending in about 40 minutes of
+play clock, and the demo ended by a face button.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

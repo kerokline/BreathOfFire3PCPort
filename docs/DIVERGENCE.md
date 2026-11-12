@@ -16020,3 +16020,50 @@ designed in rather than bolted on.
 - **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
 - **State:** active
+
+### A mod can let the four face buttons end the title demo, as well as Start
+
+- **ID:** DIV-0223
+- **Date:** 2026-11-12
+- **Subsystem:** the title - `Title_StateDemo` `0x462370` (ours,
+  `src/game/core/title.cpp`), the title's state 5; the behaviour
+  `DemoSkipButtons` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** while the attract demo runs, with the load done and
+  no transition busy, a press of Start (`Input_Pressed` bit `0x800`) ends it:
+  `MoveScript_Var7` 1, transition 4, the music faded out, the state + 1. No
+  other button does. The US PlayStation release tests the mask `0x9FF` at the
+  same point (US `Title_StateDemo` `0x801D0F00`): Start, Select, the four face
+  buttons and the four shoulder buttons. The PC tests Start alone.
+- **New behaviour:** with `DemoSkipButtons` on, the mask is `0x8F0`: Start
+  or any of the four face buttons (triangle `0x10`, circle `0x20`, cross
+  `0x40`, square `0x80`; the bits of [`button-sigma.md`](button-sigma.md) 2)
+  ends the demo; Select and the shoulder buttons do not. The test reads
+  `Input_Pressed` as before. The PC's pad word carries the PlayStation's
+  bits (the keyboard map `Key_TableDefault` and the pad send them), and the
+  bits here are buttons, not Config lines, so the mask is not passed through
+  `Sigma`, as the Start test is not. This is the Definitive Edition romhack's
+  change (TheGreatBen, used with permission), read from its patched US disc:
+  GAME section 1 at PSX `0x801D0F54`, the mask's immediate `0x9FF` ->
+  `0x8F0`.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it.
+- **Also in the PSX version?** Partly - the US release ends the demo on more
+  buttons than this (`0x9FF`); the mask `0x8F0` is the romhack's.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the mask is `0x800` as before, so
+  `title_states.cpp`'s `Title_StateDemo` row compares as before. **Not
+  played:** nobody has ended the demo with a face button with the behaviour
+  on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=DemoSkipButtons` keeps it off.
+- **Switch:** DemoSkipButtons
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has this mask; it is the romhack's
+- **Languages:** any
+- **State:** active
