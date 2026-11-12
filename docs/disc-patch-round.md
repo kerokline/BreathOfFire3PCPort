@@ -648,6 +648,28 @@ reads).
 - The owner plays it. Which changes to look for is the owner's to say from
   the hack's readme.
 
+## 6b. The behaviours, as built
+
+**DoubleHitSwords (DIV-0216)**, on `romhack/b1-swords` (worktree
+`D:\bof3x-runs\de1112\wt_b1`). The two hooks of BATTLE section 3 were read
+from the patched listing itself, not only from the reading, and agree with
+it: in `BattleAction_EnterKind` a member's kind-1 command with weapon 6, 9 or
+0x18 becomes kind 4 with action id 0x77; in `BattleAction_AbilityCheck` the
+cost of ability 0x77 for such a member is 0, stored where both cost paths
+meet. The weapon byte the hack reads is the one Capcom's own battle code
+reads (`PartyMember::weapon`). Ours: one test (`DoubleHitSword`) and two
+guarded sites in `src/game/battle/battle_action.cpp`; off, both functions
+are unchanged. The hack has no dragon-form or status test, so automatic,
+confused, auto-battle and counter attacks by a member with one of the swords
+convert too; mirrored, and written in the entry. `tools/ledger_check.py`'s
+behaviours self-test now leaves the build's own behaviours out of its
+inventory (with the first real one in, every fixture case read it as "no
+ledger entry"). No game was started. Owed: the hosted `battle_actions`
+shadow with the behaviour off (it must still pass); a fight under
+`BOF3X_ON=DoubleHitSwords` with the mod's data and one of the three swords
+(the attack runs as ability 0x77, costs no AP, and - unverified, the data's
+or the animation's - hits twice); the same fight off, as before.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |
