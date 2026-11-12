@@ -109,25 +109,38 @@ scene's third (a marked member) the rotation is the original's three-way one
 and the unmarked member is the one replaced when it leaves the lead. With no
 one in reserve the swap is the original's exactly.
 
-**Built on `Field_SwapExchange`'s reload** (`0x52EE70`): before
-`ObjTrio_SwapFields`, the plan is read (who leads, who comes out); after them,
-the record that now holds the old leader's id gets the newcomer's id in
-`+0x89`, and the second list's byte for the old leader becomes the
-newcomer's. The exchange's own loop then does the rest for every member in
-state 3, exactly as for a plain swap: `Field_MemberSprite(+0x89, slot)`
-(sprite bank and palette from the loaded set), the actor record copied to
-`+0x80` from `Character_IndexById[+0x89]`, `+0x148`, and the first list's
-byte. If the old leader did not reach state 3 (no spot found in
-`Field_SwapGather`, so no exchange), nothing is brought out.
+**Built on `Field_SwapExchange`'s reload steps, at the press.** In
+`Field_LeaderSwapTest`, once the swap is allowed and a bring-out is due:
 
-**The party set before the swap starts.** In `Field_LeaderSwapTest`, once the
-swap is allowed and a bring-out is due: when the loaded set does not hold the
-team after the swap, a row that holds it - and the champion too where a row
-allows - is loaded by `PartySet_Load(a, b, c, 0)`, the same call
-`PartyForm_Reload` makes, then every walker's sprite is set again
-(`Field_MemberSprite`, `Sprite_SetAnimation`), as `PartyForm_Reload` does
-after its load, because a new row moves the ids' columns. Then the swap
-animation starts as the original's.
+1. the party set: when the loaded set does not hold the team after the swap
+   (the hero, the newcomer, any marked member), a row that holds it - and the
+   champion too where a row allows - is loaded by `PartySet_Load(a, b, c, 0)`,
+   the call `PartyForm_Reload` makes;
+2. the leader who is leaving the lead is made the newcomer in place, with the
+   steps the exchange takes for each member it moves (`0x52EE70`): `+0x89`,
+   `Field_MemberSprite(id, slot)` (sprite bank and palette from the loaded
+   set), the record's `0xA4` bytes to `+0x80`, `+0x148`, the first list's
+   byte; and the second list's byte that held the old id;
+3. after a load, every walker's sprite is set again (`Field_MemberSprite`,
+   `Sprite_SetAnimation`), as `PartyForm_Reload` does after its load, because
+   a new row moves the ids' columns;
+4. the swap then runs as the original's: the newcomer spins off the lead and
+   the hero takes it.
+
+**Why at the press and not inside the exchange** (the first build did it
+inside the exchange, after `ObjTrio_SwapFields`): the leaving member still
+walks through `Field_SwapGather` and `Field_SwapSpinOut` with its sprite, so
+the set would have to hold the hero, the leaving member and the newcomer at
+once, and a walker whose id the set lacks gets column 3 from
+`Field_MemberSprite`, the bank table's fourth dword, as its bank. **Measured
+2026-11-12** on the `dolphinBoss` route probe: the first bring-out loaded a
+set without the leaving member, set every walker's sprite again, and
+`Sprite_LoadPalette` read `0x01C22FA2` and crashed (`0xC0000005` at
+`bof3x.dll+0x10D623`, the crash dump in the run root). Replacing the member
+first needs a set for the team after the swap only - two ids and the
+champion - which the rows hold far more often than three walkers' worth.
+The cost is visible: the newcomer appears on the lead as the button is
+pressed, then the original swap animation plays.
 
 **A row is never assumed.** `PartySet_Find` (`0x5368F0`) narrows on the
 lowest id's column-0 rows first and can miss a row that holds the ids; on a
@@ -138,13 +151,22 @@ load is made only for ids it finds. (By hand on the 19 rows of round doc M1:
 the same shape on a table of its own.) No row: the swap is the original's
 and a line is logged.
 
+**A bring-out does not need a load when the set already holds the
+newcomer**; then step 1 and 3 are skipped and step 2 alone runs.
+
 ## 4. The cost of a set load mid-walk (measured)
 
 `LoadSet` reads `Frame_Counter` (`0x937F94`, WinMain's frame count) and the
 performance counter around `PartySet_Load`:
 
-- `geist` save, the fold's champion load, set `87 -> 88` for ids `07 02 05`:
-  **0 frames**, 4,417 us on the first run and 483 us on the second.
+| Run | Load | Frames | Time |
+|---|---|--:|--:|
+| `geist` save, fold's champion load | set `87 -> 88`, ids `07 02 05` | 0 | 4,417 us; 483 us on a second run |
+| `dolphinBoss` route, fold's champion load | `81 -> 82`, ids `00 01 06` | 0 | 515 us; 402, 408 us on reruns |
+| `dolphinBoss` probe, swap bring-out 1 | `82 -> 84`, ids `02 00 06` | 0 | 626 us |
+| bring-out 2 | `84 -> 86`, ids `05 00 06` | 0 | 2,156 us |
+| bring-out 3 | none (set `86` held id 6) | - | - |
+| bring-out 4 | `86 -> 82`, ids `01 00 06` | 0 | 552 us |
 
 `PartySet_Load` asks `File_LoadDone` before its first `Task_Sleep`, and on
 this port the two `LoadDatFile` calls are done by then, so no frame is spent
@@ -241,6 +263,48 @@ of `src/game`, 2026-11-12), not run:
 ## 9. Runs (2026-11-12, root `D:\bof3x-runs\solo1112\FS\root`)
 
 Headless, `--no-front`, an ini-less launcher copy, a game copy with
-`--slot0-shared`; probe recipes of FS's own in `root\recipes` (not recorded
-routes; listed as such). Results are in the hand-back; the log lines quoted
-there are from `root\L\bof3x.log` of each run.
+`--slot0-shared`, `BOF3X_ON=SoloCharacter` and `BOF3X_SOLO=<name>`. The
+probe recipes are FS's own (`root\recipes`), not recorded routes:
+`fs_swap*.txt` load a save the way `field_view.txt` does and press L1;
+`fs_dolphin_swap.txt` is `tools/recipes/dolphinBoss.txt`'s first 3,061
+frames, eight L1 presses 90 frames apart, then the route's next 1,800
+frames. No shot lines were added inside recorded input.
+
+- **Self-test** (`BOF3X_SELFTEST_ONLY=1`, exe host): `solo field self-test:
+  60 checks passed`, beside `solo self-test: 48 checks passed`.
+- **The fold with three walkers**, `dolphinBoss` save (chapter 7), champion
+  Peco: `fold (the mode enters): first 00 01 06 second 00 01 06 count 3 set 82
+  -> first 00 01 FF second 00 01 FF count 2 set 82; to the reserve: 06`. Also
+  on `combat` (chapter 1, `00 04 03 -> 00 04`, the world map) and `geist`
+  (chapter 10, `07 02 04 -> 07 02`, then the champion's set `87 -> 88`).
+- **The game's lone walk left alone**: the camp after the `dolphinBoss`
+  load, `no fold, a list holds an id past the member count ...: first 00 01
+  FF second 00 01 FF count 1`; the `fairyVillage` save (`07 08 05`, one
+  walker) in the first build, which loaded a set there before the check
+  existed - the reason for it.
+- **A scripted scene that builds a party and returns control**: on the
+  `dolphinBoss` route a house scene joins Momo (`first 00 01 05 count 3`);
+  at control's return `fold (the party changed): ... -> first 00 01 FF ...;
+  to the reserve: 05`, then `party set 81 -> 82 for ids 00 01 06 (the
+  walkers and the champion)`. The route went on through the world map to
+  the next area.
+- **The L swap through every joined character**: eight presses, every
+  other one a bring-out: `brings id 02 out in place of id 01`, `05 ... 02`,
+  `06 ... 05`, `01 ... 06` - Nina, Garr, Momo, Peco and back, the four
+  joined characters beside Ryu (records 0, 1, 2, 5, 6 joined in that save).
+  The captures show each one's own sprite.
+- **A door after it**: the route's next 1,800 frames, unchanged input,
+  walked into the next area and its scene and finished (`recipe done at
+  recipe frame 6080`).
+- **The first build's crash** (section 3) on the same probe, before the
+  bring-out moved to the press.
+- **Mode off**, the same probe without `BOF3X_ON` (`BOF3X_SOLO=peco` set):
+  no line of the field half in the log, `solo: BOF3X_SOLO=peco is set and
+  SoloCharacter is off: nothing reads it`, the recipe done. Not a state-hash
+  proof (the coordinator's).
+
+**Desync.** The `dolphinBoss` route with the mode on ran on past the house
+scene and timed out at eight minutes with `BOF3X_SHOT_EVERY=90` slowing it;
+whether its later input still lands is not checked frame by frame. Routes
+recorded with a party of three cannot be expected to hold once the team is
+two; the owner's recordings are the way to a solo route (hand-back).

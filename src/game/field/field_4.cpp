@@ -1143,10 +1143,6 @@ extern "C" void __cdecl Field_SwapSpinOut(void) {
 // As the original has it: the fallback's answer is not read - the spot is
 // what 0x903858 held, found or not.
 extern "C" void __cdecl Field_SwapExchange(void) {
-    // DIV-0228 SoloCharacter: the bring-out, planned on the lead before the
-    // exchange and applied after it, so that the reload below builds the
-    // character brought out (solo_field.h). Off: kNoPlan, nothing.
-    const unsigned solo_plan = solo::SoloField_ExchangePlan();
     const unsigned char saved = Field_State[0x138];
     if (Member(1)[1] == 3) {
         event_leader::g.swap_fields(0, 1, 1);
@@ -1154,7 +1150,6 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     } else if (Field_MemberCount == 3 && Member(2)[1] == 3) {
         event_leader::g.swap_fields(0, 2, 1);
     }
-    solo::SoloField_ExchangeApply(solo_plan);
     for (unsigned i = 0; static_cast<int>(i) < static_cast<int>(Field_MemberCount); ++i) {
         unsigned char* const m = Member(i);
         if (m[1] != 3) continue;
@@ -1884,8 +1879,9 @@ extern "C" unsigned char __cdecl Field_LeaderSwapTest(void) {
     if ((Byte(::bof3::Img(kFlags2Lo)) | Byte(::bof3::Img(kFlagsLo))) & 0x10) return 0;
     if (!(Input_Pressed & event_ops::Word(event_ops::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f008)))) return 0;
     if (!event_ops::g.can_swap()) return 0;
-    // DIV-0228 SoloCharacter: the party set for the swap's bring-out
-    // (solo_field.h). Off, or the mode standing down: nothing.
+    // DIV-0228 SoloCharacter: the swap's bring-out - the party set, and the
+    // leaving leader made the next joined character (solo_field.h). Off, or
+    // the mode standing down: nothing.
     solo::SoloField_SwapStart();
     Sprite_Current[1] = 3;
     Sprite_Current[2] = 0;

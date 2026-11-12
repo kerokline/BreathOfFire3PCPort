@@ -16,10 +16,10 @@
 //     Party_ReloadPalettes, as Capcom's scenes take a member out
 //     (Scena02_Leave43). It never adds a member.
 //   - the L swap rotates the lead as the original does; when the member who
-//     led is not marked and someone joined is in reserve, that member is
-//     replaced, in Field_SwapExchange's own reload, by the next joined
-//     character in record order (the "bring out"), and the party set is
-//     loaded first when it does not hold them.
+//     leads is not marked and someone joined is in reserve, that member is
+//     replaced at the press, with Field_SwapExchange's reload steps, by the
+//     next joined character in record order (the "bring out"), the party set
+//     loaded first when it does not hold them; the original swap then runs.
 //   - a join with three on the map does not open the choose-who-leaves
 //     screen (Field_Request 6): the member has joined (the game set the bit)
 //     and is in reserve.
@@ -41,18 +41,12 @@ void SoloField_Stand();
 
 // Field_LeaderSwapTest (0x5302C0) once the swap is allowed, before the
 // leader's state 3: with a bring-out due, the party set made to hold the map
-// team after it (and the champion where a row allows), loaded and waited out
-// as PartySet_Load waits, every walker's sprite set again from the new set.
+// team after it (and the champion where a row allows) and loaded as
+// PartySet_Load loads it; then the leader who is leaving the lead made the
+// next character in place, with Field_SwapExchange's reload steps, and every
+// walker's sprite set again from the new set. The swap that follows is the
+// original's.
 void SoloField_SwapStart();
-
-// Field_SwapExchange (0x52EE70): the plan, read before ObjTrio_SwapFields
-// (the member who leads now), and its application after them (that member's
-// +0x89 becomes the next character's id where it now stands, and the second
-// list's byte with it), so that the exchange's own reload builds the sprite,
-// the actor record, +0x148 and the first list's byte. kNoPlan: nothing.
-constexpr unsigned kNoPlan = 0xFFFFu;
-unsigned SoloField_ExchangePlan();
-void SoloField_ExchangeApply(unsigned plan);
 
 // Party_Join (0x533EF0) with three on the map: true when the mode skips
 // Field_Request 6 (the choose-who-leaves screen); the caller then answers 1,

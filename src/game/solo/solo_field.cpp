@@ -237,13 +237,6 @@ unsigned char FindRow(const unsigned char* table, unsigned char current, unsigne
     return 0xFF;
 }
 
-bool RowHolds(const unsigned char* table, unsigned row, unsigned char id) {
-    if (row >= kSetRows) return false;
-    for (unsigned k = 0; k < 3; ++k)
-        if (table[row * 3u + k] == id) return true;
-    return false;
-}
-
 // The ids a set must hold: the members (count of them), and the champion's id
 // as well when it is not among them and there is room. `out` gets three
 // bytes, 0xFF-filled.
@@ -346,18 +339,24 @@ int ChampionIdOrNone() {
 // does after its PartySet_Load (Field_MemberSprite by its +0x89 and slot,
 // Sprite_SetAnimation by its facing): a new row moves the ids' columns.
 void ResetWalkerSprites() {
+    unsigned char* const sc = Sprite_Current;
+    unsigned char* const fs = Field_State;
     for (unsigned i = 0; i < Field_MemberCount && i < 3; ++i) {
         unsigned char* const w = Walker(i);
         Sprite_Current = w;
         SH_CALL(Field_MemberSprite)(w[0x89], i);
         SH_CALL(Sprite_SetAnimation)(rv::As<records::PartyMember>(w)->direction);
     }
+    Sprite_Current = sc;
+    Field_State = fs;
 }
 
 // The party set for `ids` loaded as PartyForm_Reload loads one
-// (PartySet_Load mode 0: both files, each waited out a frame at a time), the
-// walkers' sprites set again, and the frames it took logged. Sprite_Current
-// and Field_State are put back.
+// (PartySet_Load mode 0: both files, each waited out a frame at a time), and
+// the frames and time it took logged. The walkers' sprites still point at
+// the old set's columns: the caller sets them again (ResetWalkerSprites) once
+// every walker's id is one the new set holds. Sprite_Current and Field_State
+// are put back.
 void LoadSet(const unsigned char ids[3], const char* why) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const fs = Field_State;
@@ -368,11 +367,35 @@ void LoadSet(const unsigned char ids[3], const char* why) {
     const std::uint64_t t1 = bof3::os::Counter();
     const unsigned frames = Frame_Counter - start;
     const unsigned micro = static_cast<unsigned>((t1 - t0) * 1000000u / bof3::os::CounterFrequency());
-    ResetWalkerSprites();
     Sprite_Current = sc;
     Field_State = fs;
     bof3::Log("DIV-0228 solo field: party set %02X -> %02X for ids %02X %02X %02X (%s): the load took %u frame(s), %u us",
               before, static_cast<unsigned>(AreaW0b_PartySet), ids[0], ids[1], ids[2], why, frames, micro);
+}
+
+// Walker `slot` made character `id` (record `record`) in place, with the
+// steps Field_SwapExchange's reload takes for each member it moves
+// (0x52EE70; field_4.cpp): +0x89, Field_MemberSprite(id, slot) - the sprite
+// bank and palette from the loaded set -, the record's 0xA4 bytes to +0x80,
+// +0x148 the record; then the first list's byte for the slot, and the second
+// list's byte that held the old id.
+void ReplaceWalker(unsigned slot, unsigned char id, int record) {
+    unsigned char* const sc = Sprite_Current;
+    unsigned char* const fs = Field_State;
+    unsigned char* const w = Walker(slot);
+    const unsigned char old = w[0x89];
+    w[0x89] = id;
+    Sprite_Current = w;
+    Field_State = w;
+    SH_CALL(Field_MemberSprite)(id, slot);
+    std::memcpy(w + 0x80, &CharacterRecords[record], sizeof CharacterRecords[record]);
+    w[0x148] = static_cast<unsigned char>(record);
+    First()[slot] = id;
+    unsigned char* const second = Second();
+    for (unsigned k = 0; k < Field_MemberCount && k < 3; ++k)
+        if (second[k] == old) second[k] = id;
+    Sprite_Current = sc;
+    Field_State = fs;
 }
 
 }  // namespace
@@ -421,7 +444,10 @@ void SoloField_Stand() {
     unsigned char ids[3];
     const unsigned row = ChooseRow(SetTable(), AreaW0b_PartySet, First(), Field_MemberCount, ChampionIdOrNone(),
                                    &with_champion, ids);
-    if (row < kSetRows && with_champion) LoadSet(ids, "the walkers and the champion");
+    if (row < kSetRows && with_champion) {
+        LoadSet(ids, "the walkers and the champion");
+        ResetWalkerSprites();
+    }
     g_signature = ReadSignature();
 }
 
@@ -437,38 +463,21 @@ void SoloField_SwapStart() {
                   ids[0], ids[1], ids[2]);
         return;
     }
-    if (row == kSetRows) return;
-    LoadSet(ids, with_champion ? "the swap's bring-out, with the champion" : "the swap's bring-out");
-}
-
-unsigned SoloField_ExchangePlan() {
-    if (!ModeOn() || !Solo_Active()) return kNoPlan;
-    const Bring b = DecideBring(ReadParty(), Character_IndexById);
-    if (!b.due) return kNoPlan;
-    if (!RowHolds(SetTable(), AreaW0b_PartySet & 0x7Fu, b.to_id)) {
-        bof3::Log("DIV-0228 solo field: the loaded set %02X does not hold id %02X: the swap brings no one out",
-                  static_cast<unsigned>(AreaW0b_PartySet), b.to_id);
-        return kNoPlan;
+    if (row < kSetRows) LoadSet(ids, with_champion ? "the swap's bring-out, with the champion" : "the swap's bring-out");
+    // The leader who is leaving the lead becomes the next character now, so
+    // that every walker's id is one the loaded set holds before any sprite is
+    // drawn or set again (a walker left with an id the set lacks gets the
+    // bank table's fourth entry and crashed Sprite_LoadPalette, measured
+    // 2026-11-12); the swap that follows is then the original's.
+    ReplaceWalker(0, b.to_id, b.to_record);
+    if (row < kSetRows) ResetWalkerSprites();
+    {
+        unsigned char* const sc = Sprite_Current;
+        Sprite_Current = Walker(0);
+        SH_CALL(Sprite_SetAnimation)(rv::As<records::PartyMember>(Walker(0))->direction);
+        Sprite_Current = sc;
     }
-    return (static_cast<unsigned>(b.from_id) << 8) | b.to_id;
-}
-
-void SoloField_ExchangeApply(unsigned plan) {
-    if (plan == kNoPlan) return;
-    const auto from = static_cast<unsigned char>(plan >> 8);
-    const auto to = static_cast<unsigned char>(plan);
-    unsigned j = 1;
-    while (j < Field_MemberCount && Walker(j)[0x89] != from) ++j;
-    if (j >= Field_MemberCount || Walker(j)[1] != 3) {
-        bof3::Log("DIV-0228 solo field: the exchange left id %02X on the lead or did not gather it: no one brought out",
-                  from);
-        return;
-    }
-    Walker(j)[0x89] = to;
-    unsigned char* const second = Second();
-    for (unsigned k = 0; k < Field_MemberCount; ++k)
-        if (second[k] == from) second[k] = to;
-    bof3::Log("DIV-0228 solo field: the swap brings id %02X out in place of id %02X (walker %u)", to, from, j);
+    bof3::Log("DIV-0228 solo field: the swap brings id %02X out in place of id %02X", b.to_id, b.from_id);
 }
 
 bool SoloField_JoinSkipsScreen() {
