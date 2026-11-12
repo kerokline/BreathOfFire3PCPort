@@ -90267,6 +90267,14 @@ count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group FS): jumped through by SharedList_Sort by its arguments byte, unchecked: 0x5857F0, 0x585840, 0x5858C0 (SharedList_SortMenu passes rows 1 and 2). docs/field_s.md."
 
+[[data]]
+pc = 0x6642A4
+name = "Master_AbilityGrants"
+ctype = "unsigned char"
+count = 0xCC
+status = "evidence"
+evidence = "named 2026-11-11 from MasterGrant_Step1Member's reading (0x5873C0, round fourteen group R2D, docs/rest_2d.md): the master's six (level, ability) byte pairs at 0x6642A4 + 12 * master, the first with level <= the levels gained under the master granted. 17 masters by the extent: 0xCC bytes to 0x664370, the masters' six growth bytes that 0x586EB0 copies to a record's +0x89..+0x8E. The master number is not bounded by the reader."
+
 # ---------------------------------------------------------------------------
 # Round 12 group FE2: the field engine rest (event script, leader hop helpers,
 # the mode-11 object, field tail kinds, three map-cell draws, AreaMap_ClearCell,

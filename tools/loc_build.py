@@ -344,10 +344,16 @@ class PspDisc:
         return (self.text_end, len(self.boot()))
 
 
+# What opens a disc image. tools/disc_patch_build.py puts its hybrid disc here
+# (the original disc with a romhack's text sections, docs/disc-patch-round.md
+# 3 step 4): an object with psx_disc.Disc's `files`, `read` and `find`.
+disc_opener = psx_disc.Disc
+
+
 def open_disc(path):
     """A disc image for the converters: a PlayStation disc as it is, a PSP disc
     through PspDisc."""
-    disc = psx_disc.Disc(path)
+    disc = disc_opener(path)
     if "SYSTEM.CNF" not in disc.files and "UMD_DATA.BIN" in disc.files:
         return PspDisc(disc)
     return disc
@@ -1329,6 +1335,25 @@ def dat_dir(game):
 # with recipes/pc-zh.toml naming the containers and the chunks the PC's
 # loc/zh-CN layer holds - which a disc-only cache has no bytes of.
 
+# Bytes laid over the image the converters read, {PC address: byte}; empty but
+# in tools/disc_patch_build.py's run, which puts a romhack's table numbers
+# here so that a table found by its numbers is found on the hack's disc too
+# (docs/disc-patch-round.md 3b).
+image_overlay = {}
+
+
+def overlaid(va, raw):
+    """`raw`, the image's bytes from `va`, with image_overlay's laid in."""
+    if not image_overlay:
+        return raw
+    out = bytearray(raw)
+    for i in range(len(out)):
+        b = image_overlay.get(va + i)
+        if b is not None:
+            out[i] = b
+    return bytes(out)
+
+
 class PcInstall:
     """The PC install: DAT/ and BOF3.exe. Overlays go beside the originals as <tag>.<NAME>.DAT."""
     disc_only = False
@@ -1351,7 +1376,7 @@ class PcInstall:
         for i in range(nsec):
             vsz, rva, rsz, raw = struct.unpack_from("<IIII", exe, pe + 24 + optsz + i * 40 + 8)
             if image_base + rva <= va < image_base + rva + rsz:
-                return exe[raw + va - image_base - rva:][:size]
+                return overlaid(va, exe[raw + va - image_base - rva:][:size])
         raise SystemExit("0x%X is not in BOF3.exe" % va)
 
     def carried(self, va, size):
@@ -1415,7 +1440,7 @@ class DiscCache:
     def exe(self, va, size):
         if not (self.va <= va and va + size <= self.va + len(self.image)):
             raise SystemExit("0x%X: not in the cache's .data image (base/exe/data.bin)" % va)
-        return self.image[va - self.va:va - self.va + size]
+        return overlaid(va, self.image[va - self.va:va - self.va + size])
 
     def carried(self, va, size):
         at = va

@@ -433,12 +433,16 @@ bool ParseTableRows(const std::string& text, std::vector<TableRow>* out, std::st
 }
 
 // `body`, the file of `row`, laid at the image's `file` range `r` (`img` holds
-// va's byte at img[0]). False with `why`, laying nothing, unless the row is
-// the range's, the file the row's, and data.bin zero there.
+// va's byte at img[0]). False with `why`, laying nothing, unless the range is
+// inside the row's table, the file the row's, and data.bin zero there.
+// DIV-0212 as amended 2026-11-11: a table with holes (tables.toml `holes`)
+// has one `file` range for each run of it the file owns; the bytes between
+// are another range's (a name the language layer writes) and are not laid,
+// so only the range's own part of the file goes down.
 bool LayBaseTable(const TableRow& row, const std::vector<unsigned char>& body, const Range& r, unsigned char* img,
                   std::uint32_t va, std::string* why) {
     char msg[256];
-    if (row.lo != r.lo || row.hi != r.hi) {
+    if (r.lo < row.lo || r.hi > row.hi || r.hi <= r.lo) {
         std::snprintf(msg, sizeof msg, "tables.toml has %s at 0x%X..0x%X, data.toml's file range is 0x%X..0x%X",
                       row.key.c_str(), (unsigned)row.lo, (unsigned)row.hi, (unsigned)r.lo, (unsigned)r.hi);
         *why = msg;
@@ -462,7 +466,7 @@ bool LayBaseTable(const TableRow& row, const std::vector<unsigned char>& body, c
             *why = msg;
             return false;
         }
-    std::memcpy(img + (r.lo - va), body.data(), body.size());
+    std::memcpy(img + (r.lo - va), body.data() + (r.lo - row.lo), r.hi - r.lo);
     return true;
 }
 
@@ -495,7 +499,7 @@ std::vector<TableRow> ComposeBase(const std::string& exe_dir, const Image& im, s
         FILE* f = OpenUtf8(path);
         if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s, a table of this install's game data. Rebuild the cache "
                       "(tools/importer.py build).", path.c_str());
-        std::vector<unsigned char> body(r.hi - r.lo + 1);
+        std::vector<unsigned char> body(row->hi - row->lo + 1);   // the whole table, one byte more to see a long file
         body.resize(std::fread(body.data(), 1, body.size(), f));
         std::fclose(f);
         if (!LayBaseTable(*row, body, r, bin.data(), im.va, &why))
@@ -1199,6 +1203,17 @@ void ExeImage_OptSelfTest() {
         check(base_refused(rows[0], shorter, file_range, 0), "a short base table file refused");
         check(base_refused(rows[0], body, Range{0x1014, 0x1024, "file", "tab"}, 0), "a base table whose range is not its row's refused");
         check(base_refused(rows[0], body, file_range, 7), "a base table over bytes data.bin does not leave zero refused");
+        // a table with a hole: two file ranges of the one table, the bytes between them another range's
+        std::vector<unsigned char> d(kSize, 0);
+        d[0x14] = 0x77;   // the hole 0x1014..0x1016, as the image has it
+        d[0x15] = 0x78;
+        std::string w;
+        bool holes = LayBaseTable(rows[0], body, Range{0x1010, 0x1014, "file", "tab"}, d.data(), kVa, &w) &&
+                     LayBaseTable(rows[0], body, Range{0x1016, 0x1020, "file", "tab"}, d.data(), kVa, &w);
+        for (std::uint32_t i = 0; i < 16 && holes; ++i)
+            holes = d[0x10 + i] == (i == 4 ? 0x77 : i == 5 ? 0x78 : body[i]);
+        check(holes, "a table with a hole: each file range lays its own part of the file, the hole left as the image has it");
+        check(base_refused(rows[0], body, Range{0x100C, 0x1014, "file", "tab"}, 0), "a file range that starts before its table refused");
     }
     // Two layers. A changes record 1 whole and byte +2 of record 3; B changes
     // bytes +1..+2 of record 1 (two bytes A wrote, with other values) and

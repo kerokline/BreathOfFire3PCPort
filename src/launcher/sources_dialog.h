@@ -64,5 +64,19 @@ constexpr UINT kMsgModsLanguage = WM_APP + 21;
 // succeeded: the window turns Mods, Extras' toggle on (ruby_ui=1) and shows
 // Settings' Row above the text box (the owner's call, 2026-10-22).
 constexpr UINT kMsgModsReadingRowAdded = WM_APP + 22;
+// The check box at the left of a mod's row (docs/disc-patch-round.md 4; the
+// owner's call, 2026-11-11): a table-edit or disc-patch mod is on or off.
+// Sent by the window to the Mods page with the ini's mods_off= (lParam: a
+// const std::string*, the ids that are off), once, when the window opens.
+constexpr UINT kMsgModsOff = WM_APP + 23;
+// Sent by the Mods page to its parent when a box changed (a click, Space, an
+// add): lParam is a const std::string* holding the new mods_off= value. The
+// window keeps it in its Config and saves it on any way out.
+constexpr UINT kMsgModsOffChanged = WM_APP + 24;
+// Sent to the Mods page to change the box of the row wParam (the list's own
+// procedure sends it for a click on the box and for Space; a test may).
+constexpr UINT kMsgModsToggle = WM_APP + 25;
+// A row's item data in the Mods list: greyed, has a check box, the box ticked.
+constexpr LPARAM kModRowGreyed = 1, kModRowBox = 2, kModRowTicked = 4;
 
 }  // namespace bof3x

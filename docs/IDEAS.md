@@ -2591,3 +2591,15 @@ _(2026-11-10) open; staged, nothing built or run on Linux._
 
 ### Outcome
 _(2026-11-10) open; nothing built._
+
+## I64 — A sequencer truer to the PlayStation's
+
+**Ask (2026-11-11, the owner, in the disc-patch round's call 5):** frost had a good idea, a more true-to-PSX sequencer; write it down as an idea for later.
+**Kind:** audio / platform. **Feasibility:** not assessed.   **Gated on:** frost's own description of the idea, which is not in this repository; nothing here says what "truer" covers until it is read.
+
+**Why it came up.** A romhack's patched disc can change a sound bank ([`romhack-mods.md`](romhack-mods.md) 8, M4: area 154's sample body, seven sectors). The PC keeps a bank as WAV built from the disc's samples, so a changed bank is a rebuilt bank, and what plays it is the port's own path. The disc-patch round does not carry a changed bank; it counts it in the mod's report. A sequencer that reads the disc's bank and sequence as the PlayStation did would take such a change as data.
+
+**First concrete step:** read frost's notes on it (his repositories are public: the workspace `raulcorreia7/bof3`), and write here what it changes against `src/audio/`'s sequencer.
+
+### Outcome
+_(2026-11-11) open; nothing built._

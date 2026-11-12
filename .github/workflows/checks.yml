@@ -21,6 +21,7 @@
 #                           unmarked, every claimed field cites its reader
 #   tools/type1.py selftest the type-1 decompressor on synthetic input
 #   tools/vcdiff.py selftest the VCDIFF / xdelta reader on patches it makes itself
+#   tools/disc_patch_build.py selftest  the disc-patch mod builder on synthetic EMIs
 #   tools/importer.py check the importer's recipes against fixtures/ (with
 #                           seq.py's round trip and fixtures/bgm.tsv's shape)
 #                           and exe_tables.py check
@@ -116,6 +117,9 @@ jobs:
 
       - name: The table-edit mod builder's self-test (no game data)
         run: python tools/table_edit_build.py selftest
+
+      - name: The disc-patch mod builder's self-test (no game data)
+        run: python tools/disc_patch_build.py selftest
 
       - name: The language converters' self-test (no game data)
         run: python tools/loc_build.py selftest

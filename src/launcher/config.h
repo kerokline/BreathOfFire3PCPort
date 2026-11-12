@@ -144,6 +144,12 @@ struct Config {
     // refuses a name it does not read (detour.cpp InjectReport). Not a
     // hosted-only switch: both hosts read it.
     std::string off;
+    // DIV-0157 as amended 2026-11-11 (docs/disc-patch-round.md 4): the ids of
+    // the installed mods the player turned off on the Mods tab (the check box
+    // at the left of a row), comma-separated. A mod of a kind that is on or
+    // off as a whole (disc-patch, table-edit) is on unless it is named here;
+    // an id no installed mod has is kept and does nothing. Empty: none off.
+    std::string mods_off;
     // The preset (preset=recommended|shipped|repaired|playstation; the
     // Configure page's Preset box): applied at launch on top of every other
     // key, which it does not rewrite (ConfigPresetPlan / ConfigPresetApply).
@@ -429,14 +435,32 @@ struct ModInfo {
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 
-// DIVERGENCE DIV-0213 (docs/image-layer-round.md 4): `wanted`, the layers the
-// game is about to be given, with the layer mod-<id> of every table-edit mod
+// DIVERGENCE DIV-0213 (docs/image-layer-round.md 4) and DIV-0157 as amended
+// 2026-11-11 (docs/disc-patch-round.md 4): `wanted`, the layers the game is
+// about to be given, with the layers of every table-edit and disc-patch mod
 // <home>\mods.toml lists added at its end, in that file's order - the Mods
-// tab's - so that the later mod wins a cell two mods set. A mod whose layer the
-// cache does not hold with its tables (not built) is left off with a line; so
-// is one past the game's 16 layers. A layer `wanted` names already is not
-// added twice.
-std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted);
+// tab's - so that the later mod wins a cell or a chunk two mods set.
+//  - table-edit: the layer mod-<id>.
+//  - disc-patch: mod-<id> (for any text) then mod-<id>-<tag> (its text), <tag>
+//    the mod's one required language. Both or neither: the first alone would
+//    leave enemy names blank (disc-patch-round.md 3a). Left off, with a line,
+//    when `language` (what the game is given as BOF3X_LANG; empty for the
+//    port's Chinese) is not <tag>.
+// A mod `mods_off` names (ids, comma-separated) is left off without a line. A
+// mod whose layers the cache does not hold (not built) is left off with a
+// line; so is one whose layers would pass the game's 16. A layer `wanted`
+// names already is not added twice.
+std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache, const std::string& wanted,
+                            const std::string& language = std::string(), const std::string& mods_off = std::string());
+// `list` (names, comma-separated, spaces around a name allowed) names `name`.
+bool ConfigListHas(const std::string& list, const std::string& name);
+// `list` with `name` added at its end (on = false: taken out wherever it is).
+std::string ConfigListSet(const std::string& list, const std::string& name, bool on);
+// For the hosted build: `list` less the text layer mod-<id>-<tag> of every
+// disc-patch mod whose first layer mod-<id> is in `dropped` (ConfigOptHosted
+// took it out for its exe part) - both or neither, as ConfigModLayers. The
+// text layers taken out are added to `dropped`.
+std::string ConfigModHosted(const std::string& list, std::vector<std::string>& dropped);
 
 // The start's rule for an ini without a ruby_ui= line (written before the
 // toggle existed): the toggle comes up on when <home>\mods.toml lists a

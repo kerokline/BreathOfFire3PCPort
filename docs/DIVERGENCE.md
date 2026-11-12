@@ -12011,6 +12011,32 @@ designed in rather than bolted on.
   `BOF3X_OPT` when that layer is built, else plays without one and says so on
   stderr. The **furigana zip** (`make_mod.py furigana`, from
   `data/furigana/`) is attached to releases by `release.yml`.
+- **Amended 2026-11-11 (the disc-patch round, issue 216;
+  [`disc-patch-round.md`](disc-patch-round.md)):** a third kind,
+  `disc-patch` - a romhack as its author released it, the `.xdelta` of a
+  disc's data track, with `author` required. `mods.py add` checks the patch's
+  hash and that it is VCDIFF; a mod whose disc is not in the source list is
+  listed as `needs-disc`. `tools/disc_patch_build.py` applies the patch to a
+  scratch copy of the player's own disc and builds two layers from what
+  differs: `mod-<id>` (enemy tables, pictures, and the overlays' table
+  numbers as cells of the table files, DIV-0111 and DIV-0213's forms) and
+  `mod-<id>-<tag>` (the text of the disc's language). The overlays' program
+  changes, a changed sound bank and the boot program are **not carried**;
+  the build counts them into `<home>\mods\<id>\report.toml` and the Mods
+  tab says so. The launcher hands both layers to the game after every other
+  layer, in the Mods tab's order, when the language played is `<tag>`; under
+  another language the mod is left off whole. **A check box at the left of
+  the row** (the owner's call, 2026-11-11) turns a `disc-patch` or
+  `table-edit` mod off: `mods_off=<id>,<id>` in `bof3x.ini`, empty by
+  default, so a mod is on when it is added. What a romhack changes in play is
+  its author's and is no entry of this ledger. Verification: the self-tests
+  of `disc_patch_build.py`, `mods.py` and `vcdiff.py`; `config_tests`
+  (`ConfigModLayers`, `ConfigModHosted`, `mods_off=`); `dialog_test.py` 89
+  checks; on a US disc-only install the real patch built and the exe host's
+  self-test, started by the launcher with no `BOF3X_OPT`, took both layers
+  with the box ticked and none with it not ticked (disc-patch-round.md 5d).
+  **No route run and not played by the owner.** Languages: a `disc-patch`
+  mod is for `en-US` text (the US disc is the one disc its builder knows).
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50
@@ -15574,6 +15600,25 @@ designed in rather than bolted on.
 - **Rationale:** a table is then one file of the install on every install
   kind, and a layer or a mod lays over the same thing everywhere. The exe is
   a source the importer reads, as a disc is.
+- **Amended 2026-11-11 (the disc-patch round's call 6,
+  [`disc-patch-round.md`](disc-patch-round.md) 5e): a table file with
+  holes.** A catalogued table that says `holes` in `tables.toml` is still one
+  file of `count * stride` bytes, but the bytes of it that another owner has
+  on a build stay the image's: `tools/exe_tables.py` cuts out only its runs
+  of a disc's or the exe's bytes, one `file` range each, and the engine lays
+  each range's own part of the file (`LayBaseTable`). The first table of the
+  kind is `char_defaults` (`Char_DefaultRecords`, the records a new game
+  starts each character with): the first record's name is the language
+  layer's on every disc, and three more records' names are unplaced on the
+  European PSP disc. On a PC-built image the table has no hole. **What the
+  game reads does not change**: every image as mapped hashes as before, on
+  the seven discs and from `BOF3.exe`. Two more tables became files the plain
+  way (`ability_effect_index`, `master_abilities`). Verification: the
+  engine's table-files self-test (a table with a hole laid in two ranges, a
+  range that starts before its table refused); `exe_tables.py build` and
+  `verify` for the seven discs and `BOF3.exe`, each image hash the one
+  recorded before; the exe host's self-test on a US disc-only install (30
+  table files) and on a PC game folder.
 - **Also in the PSX version?** No: the PlayStation loads its tables from the
   disc's files, which is the shape this moves toward.
 - **Verification:** the exe host's self-test on a PC game folder with a cache
@@ -15633,6 +15678,10 @@ designed in rather than bolted on.
   exe host's line `layer mod-...: 1 tables, 1 cells` with the bytes that
   differ (the round doc, 5c). **Not played:** nobody has looked at the
   changed number in the game.
+- **Amended 2026-11-11 (the disc-patch round):** the check box at the left of
+  the mod's row on the Mods tab turns it off without a remove
+  (`mods_off=<id>` in `bof3x.ini`; DIV-0157 as amended). A mod is still on
+  when it is built.
 - **Reversible?** Remove the mod on the Mods tab; or `opt=none`, which gives
   the game no layer at all.
 - **Switch:** ini:opt=
