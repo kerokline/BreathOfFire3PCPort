@@ -109,7 +109,9 @@ def main():
     a = ap.parse_args()
     text = render()
     if a.check:
-        have = open(OUT, "rb").read().decode("utf-8") if os.path.exists(OUT) else None
+        # A Windows checkout with core.autocrlf=true has the header with CRLF
+        # line ends; the table is the same, so compare with them as LF.
+        have = open(OUT, "rb").read().decode("utf-8").replace("\r\n", "\n") if os.path.exists(OUT) else None
         if have != text:
             sys.exit("%s is not what tools/gen_resample.py makes; run it without --check" % OUT)
         print("%s is current" % OUT)

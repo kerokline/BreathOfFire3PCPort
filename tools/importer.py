@@ -2600,7 +2600,13 @@ def fmv_avi_header(body):
 def fmv_verify(cache):
     """verify's movie row: present (the file the manifest recorded: the PSX
     disc's STR sectors, or the PSP's AVI of the form psp_fmv writes) or absent
-    and why. Absent is not a problem: a cache with no PSX disc has no movie."""
+    and why. Absent is not a problem: a cache with no PSX disc has no movie.
+    A cache a release before 2026-11-11 built from a PSX disc has the older
+    row - `file = base/fmv/CAPCOM.AVI`, the AVI the player's ffmpeg made, with
+    an `ffmpeg` key - and `verify` can meet it before a set-up rebuilds it
+    (run by hand, or by a tool, on a cache `stale` reports): that row is
+    checked as the PSP's AVI is, not as STR sectors. The engine still plays
+    that file first (DIV-0214)."""
     with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
         row = tomllib.load(fh).get("fmv")
     stray = [n for n in (FMV_NAME, FMV_STR_NAME) if os.path.isfile(os.path.join(cache, FMV_DIR, n))]
@@ -2611,6 +2617,8 @@ def fmv_verify(cache):
         return 1 if stray else 0
     errs, msg = [], ""
     psp = row["build"].startswith("psp-")
+    # an AVI by ffmpeg: the PSP's, or the older PSX row (the docstring)
+    avi = psp or ("ffmpeg" in row and row.get("file", "").upper().endswith(".AVI"))
     if psp:         # the PSP case (tools/psp_fmv.py)
         import psp_fmv
         if row["source_sha256"] != psp_fmv.SOURCE_SHA256:
@@ -2625,7 +2633,7 @@ def fmv_verify(cache):
             body = fh.read()
         if sha(body) != row["sha256"]:
             errs.append("%s: not the file the manifest recorded" % row["file"])
-        if psp:
+        if avi:
             hdr = fmv_avi_header(body)
             if hdr is None or hdr[:2] != (640, 480) or hdr[3] != "cvid":
                 errs.append("%s: not a 640 x 480 Cinepak AVI (%s)" % (row["file"], hdr))
@@ -2641,6 +2649,55 @@ def fmv_verify(cache):
     print("  base/fmv/: %s from %s (%s); %s" % (os.path.basename(row["file"]), row["build"],
                                                row.get("ffmpeg", "raw sectors"), "; ".join(errs) if errs else msg))
     return 1 if errs else 0
+
+
+def fmv_check():
+    """CI (importer.py check): fmv_verify's row forms on synthetic caches, no
+    game data. The older PSX row (an AVI by ffmpeg) passes with a 640 x 480
+    Cinepak AVI and fails with a file that is not one; the STR row fails with
+    sectors that are not the measured stream's; no row passes; a `skipped` row
+    passes, and fails beside a movie file the manifest does not name."""
+    import io
+    import tempfile
+    avih = b"avih" + struct.pack("<I", 56) + struct.pack("<14I", 33333, 0, 0, 0, 231, 0, 2, 0, 640, 480, 0, 0, 0, 0)
+    strh = b"strh" + struct.pack("<I", 56) + b"vids" + b"cvid" + bytes(48)
+    avi = b"RIFF" + struct.pack("<I", 4 + len(avih) + len(strh)) + b"AVI " + avih + strh
+    psx = "psx-us"
+    cases = [   # (name, the [fmv] row or None, {file name: bytes}, verify's result)
+        ("an older ffmpeg AVI row", dict(build=psx, source=FMV_STR, source_sha256=FMV_SOURCE_SHA256,
+                                         file="base/fmv/" + FMV_NAME, sha256=sha(avi), ffmpeg="ffmpeg 7.1"),
+         {FMV_NAME: avi}, 0),
+        ("an older row whose file is not an AVI", dict(build=psx, source=FMV_STR, source_sha256=FMV_SOURCE_SHA256,
+                                                       file="base/fmv/" + FMV_NAME, sha256=sha(b"not an AVI"),
+                                                       ffmpeg="ffmpeg 7.1"),
+         {FMV_NAME: b"not an AVI"}, 1),
+        ("an STR row whose sectors are not the stream", dict(build=psx, source=FMV_STR,
+                                                             source_sha256=FMV_SOURCE_SHA256,
+                                                             file="base/fmv/" + FMV_STR_NAME,
+                                                             sha256=sha(bytes(2 * FMV_SECTOR))),
+         {FMV_STR_NAME: bytes(2 * FMV_SECTOR)}, 1),
+        ("an STR row without its file", dict(build=psx, source=FMV_STR, source_sha256=FMV_SOURCE_SHA256,
+                                             file="base/fmv/" + FMV_STR_NAME, sha256=sha(b"")), {}, 1),
+        ("no row", None, {}, 0),
+        ("a skipped row", dict(build=psx, source=FMV_STR, skipped="a cooked image"), {}, 0),
+        ("a skipped row beside a movie", dict(build=psx, source=FMV_STR, skipped="a cooked image"), {FMV_NAME: avi}, 1),
+    ]
+    errs = []
+    for name, row, files, want in cases:
+        with tempfile.TemporaryDirectory() as cache:
+            os.makedirs(os.path.join(cache, FMV_DIR))
+            with open(os.path.join(cache, "manifest.toml"), "w", newline="\n", encoding="utf-8") as fh:
+                fh.write("version = 1\n")
+                if row is not None:
+                    fh.write("[fmv]\n" + "".join("%s = %s\n" % (k, toml_str(v)) for k, v in row.items()))
+            for f, body in files.items():
+                with open(os.path.join(cache, FMV_DIR, f), "wb") as fh:
+                    fh.write(body)
+            with contextlib.redirect_stdout(io.StringIO()) as said:
+                got = fmv_verify(cache)
+            if got != want:
+                errs.append("%s: verify gave %d, not %d (%s)" % (name, got, want, said.getvalue().strip()))
+    return errs
 
 
 def fmv_install(cache, game):
@@ -2734,6 +2791,7 @@ def cmd_check(a):
     serrs += ["dial page: " + e for e in dial_check()]   # DIV-0135's repaint, on synthetic pages
     import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
     serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
+    serrs += ["fmv verify: " + e for e in fmv_check()]   # the [fmv] row's forms, the older ffmpeg AVI row among them
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
     import suites                                      # the launcher's suites against opt.toml and fixtures.toml
@@ -2748,7 +2806,8 @@ def cmd_check(a):
              len(oerrs)))
     print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
           "bgm-psp.tsv, recipes/psp.snd.toml, "
-          "recipes/psp-standins.toml, a synthetic PSMF, the dial page's repaint, %d error(s)" % len(serrs))
+          "recipes/psp-standins.toml, a synthetic PSMF, the [fmv] row's forms, the dial page's repaint, "
+          "%d error(s)" % len(serrs))
     print("cache_walk / suites / build_reuse check: the engine's cache walk against install on a synthetic cache, "
           "the suites, the memos every measured step empties, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
