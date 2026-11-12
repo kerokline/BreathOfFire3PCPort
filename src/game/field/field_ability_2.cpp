@@ -2041,7 +2041,59 @@ extern "C" void __cdecl FieldAbility_Open(void) {
     FieldS_State = state;
 }
 
+namespace {
+
+// DIV-0224 LevelSkillCatchUp: one id of a level row filed in record member's
+// list, as the hack's leaf routine does it (US 0x801E34E4): an id of 0, or of
+// type 3 (the ability's type byte & 3, the byte AbilityList_ForType reads),
+// is skipped; an id already in the list is left; else the first 0 slot of the
+// ten takes it. Not AbilityList_Add: that one files duplicates and type 3.
+bool CatchUpSkill(unsigned member, unsigned char id) {
+    if (id == 0) return false;
+    const unsigned type = move_script::At(::bof3::Img(bof3::addr::Ability_Records) + id * 24u)[0x11] & 3u;
+    if (type == 3) return false;
+    unsigned char* const list = SH_CALL(AbilityList_ForType)(member, id, 0);
+    unsigned char* free_slot = nullptr;
+    for (unsigned i = 0; i < 10; ++i) {
+        if (list[i] == id) return false;
+        if (list[i] == 0 && free_slot == nullptr) free_slot = list + i;
+    }
+    if (free_slot == nullptr) return false;
+    *free_slot = id;
+    return true;
+}
+
+// DIV-0224 LevelSkillCatchUp: records 0..6 of CharacterRecords (not 7, joined
+// or not), each one's level rows 0..level - 1 of Char_ExpTable (99 rows of 8
+// a record, the rows Char_LevelUp reads, and row 0, which it never applies),
+// the two ability bytes +6 and +7 of each row through CatchUpSkill (US
+// 0x801E342C); the count filed.
+unsigned CatchUpLevelSkills() {
+    const unsigned char* const table = move_script::At(::bof3::Img(bof3::addr::Char_ExpTable));
+    unsigned added = 0;
+    for (unsigned member = 0; member < 7; ++member) {
+        const unsigned level = CharacterRecords[member].level;
+        const unsigned char* const rows = table + member * 99u * 8u;
+        for (unsigned row = 0; row < level; ++row) {
+            if (CatchUpSkill(member, rows[row * 8 + 6])) ++added;
+            if (CatchUpSkill(member, rows[row * 8 + 7])) ++added;
+        }
+    }
+    return added;
+}
+
+}  // namespace
+
 // original 0x58D820: FieldAbility_States[2] - the four-entry menu.
+//
+// DIV-0224 LevelSkillCatchUp (off by default): every frame, after the cursor
+// and before the confirm test, Select (Input_Pressed bit 0x100, a pad button,
+// not a Config line, so no Sigma) files the level rows' skills each character
+// is past (CatchUpLevelSkills) and plays 0x10C if any was filed, else 0x104;
+// the menu then goes on to its confirm and cancel tests as before. The
+// Definitive Edition romhack's change; evidence: its patched US disc, START.EMI
+// 8 = STATUS.EMI 0, this function's twin 0x801D7314, 0x801D7444 made a jump to
+// new code at 0x801E33E8 that joins 0x801D744C.
 extern "C" void __cdecl FieldAbility_TopMenu(void) {
     Backdrop();
     const int c = static_cast<signed char>(Rest2e_AbilityCursor);
@@ -2061,6 +2113,9 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     if (was != cl) {
         Sound(0x101);
         cl = Rest2e_AbilityCursor;
+    }
+    if (bof3::BehaviourOn(bof3::behaviours::Id::LevelSkillCatchUp) && (static_cast<std::uint32_t>(Input_Pressed) & 0x100u) != 0) {
+        Sound(CatchUpLevelSkills() != 0 ? 0x10C : 0x104);
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
