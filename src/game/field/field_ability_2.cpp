@@ -22,6 +22,7 @@
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo.h"
 #include "game/solo/solo_screens.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
@@ -3184,34 +3185,61 @@ void WideWindow() {
     BRest2f(Rec(12, 0xA)) = static_cast<unsigned char>(ss::Shown(ss::g_tactics));
 }
 
-// The champion's mark: window record 21 - Tactics_Open's pointing hand
-// (handler 6, kind 0xE, MenuWin_Hand), closed in the members step and set
-// afresh by Tactics_Top every frame there - open at the champion's place
-// plus the hand's offset, in the party column or on a reserve row shown;
-// closed when the champion is not on the screen. A window record, so it is
-// drawn with the windows, over the panels (a box drawn from this step is
-// drawn before them and hidden: measured 2026-11-12). The mode only:
-// IsChampion is false while it is not active.
-void WideChampionHand(unsigned char count) {
-    U at = 0;
-    for (unsigned k = 0; k < count && k < ss::kRows && at == 0; ++k)
-        if (ss::IsChampion(BRest2f(::bof3::Img(kParty.v) + k))) at = WidePlace(0, static_cast<int>(k));
+// The champion's mark (solo_screens::kChampionMark). Its place: the
+// champion's cursor place in the party column or on a reserve row shown, 0
+// when the champion is not on the screen.
+U WideChampionPlace(unsigned char count) {
+    for (unsigned k = 0; k < count && k < ss::kRows; ++k)
+        if (ss::IsChampion(BRest2f(::bof3::Img(kParty.v) + k))) return WidePlace(0, static_cast<int>(k));
     const unsigned shown = ss::Shown(ss::g_tactics);
-    for (unsigned s = 0; s < shown && at == 0; ++s) {
+    for (unsigned s = 0; s < shown; ++s) {
         const int whole = ss::Whole(ss::g_tactics, static_cast<int>(s));
-        if (ss::IsChampion(ss::g_tactics.ids[whole])) at = WidePlace(1, whole);
+        if (ss::IsChampion(ss::g_tactics.ids[whole])) return WidePlace(1, whole);
     }
-    if (at == 0) {
-        BRest2f(Rec(21, 0)) = 0;
+    return 0;
+}
+
+// kHand: window record 21 - Tactics_Open's pointing hand (handler 6, kind
+// 0xE, MenuWin_Hand), closed in the members step and set afresh by
+// Tactics_Top every frame there - open at the place plus the hand's offset,
+// closed when the champion is not shown. kCleared: record 21 closed, and the
+// cleared slot's look (solo_screens::DrawCleared) on the champion's panel, in
+// front (InFront): the panels are window records drawn after this step, so a
+// draw of this step's own in slot 1 lies under them (measured 2026-11-12).
+// The panel's origin: the party panel's is its place (MenuList_DrawMemberPanel
+// draws Menu_DrawMemberStatus at the record's x, y, the places' x, y); a
+// reserve row's box is at its place, three left of and above a member
+// panel's box. The cursor (record 19) and the pick (record 20) are drawn in
+// front again over the champion's panel, as the game draws them over every
+// panel. The mode only: IsChampion is false while it is not active.
+void WideChampionMark(unsigned char count) {
+    const U at = WideChampionPlace(count);
+    if (ss::kChampionMark == ss::ChampionMark::kHand && at != 0) {
+        BRest2f(Rec(21, 0)) = 1;
+        SetWRest2f(Rec(21, 4), (WRest2f(at) + static_cast<U>(ss::kChampionHandDx)) & 0xFFFF);
+        SetWRest2f(Rec(21, 6), (WRest2f(at + 2) + static_cast<U>(ss::kChampionHandDy)) & 0xFFFF);
         return;
     }
-    BRest2f(Rec(21, 0)) = 1;
-    SetWRest2f(Rec(21, 4), (WRest2f(at) + static_cast<U>(ss::kChampionHandDx)) & 0xFFFF);
-    SetWRest2f(Rec(21, 6), (WRest2f(at + 2) + static_cast<U>(ss::kChampionHandDy)) & 0xFFFF);
+    BRest2f(Rec(21, 0)) = 0;
+    if (at == 0) return;
+    const bool reserve = at != WidePlace(0, 0) && at != WidePlace(0, 1) && at != WidePlace(0, 2);
+    const int x = static_cast<short>(WRest2f(at)) - (reserve ? 3 : 0);
+    const int y = static_cast<short>(WRest2f(at + 2)) - (reserve ? 3 : 0);
+    ss::InFront([&] {
+        ss::DrawCleared(x, y, static_cast<unsigned>(solo::Solo_ChampionRecord()), reserve);
+        for (unsigned n = 19; n <= 20; ++n) {
+            if (BRest2f(Rec(n, 0)) == 0) continue;
+            if (WRest2f(Rec(n, 4)) != WRest2f(at) || WRest2f(Rec(n, 6)) != WRest2f(at + 2)) continue;
+            const U pair = ::bof3::Img(MenuList_CursorBoxSizes_addr) + 4u * BRest2f(Rec(n, 0xA));
+            SH_CALL(Menu_DrawCursorBox)(static_cast<short>(WRest2f(Rec(n, 4))), static_cast<short>(WRest2f(Rec(n, 6))),
+                                        static_cast<int>(WRest2f(pair)), static_cast<int>(WRest2f(pair + 2)),
+                                        BRest2f(Rec(n, 0xB)), 6);
+        }
+    });
 }
 
 // TacticsMembers_Pick with the long reserve: the original's body, the reserve
-// column's rows read through g_tactics, and the champion's hand.
+// column's rows read through g_tactics, and the champion's mark.
 void TacticsMembersPickWide() {
     Backdrop();
     {
@@ -3248,7 +3276,7 @@ void TacticsMembersPickWide() {
             SetWRest2f(Rec(11, 0x10), 0x61);
         }
     }
-    WideChampionHand(PartyCountRest2f());
+    WideChampionMark(PartyCountRest2f());
     const U keys = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const unsigned char count = PartyCountRest2f();
     const int old_col = static_cast<unsigned char>(FieldS_Column);
@@ -3304,7 +3332,7 @@ void TacticsMembersPickWide() {
     FieldS_Step = static_cast<unsigned char>(sub + 1);
     BRest2f(Rec(19, 0)) = 0;
     BRest2f(Rec(20, 0)) = 0;
-    BRest2f(Rec(21, 0)) = 0;   // the champion's hand, with the two cursors
+    BRest2f(Rec(21, 0)) = 0;   // the champion's hand (kHand), with the two cursors
 }
 
 // TacticsMembers_Swap's reserve cases with the long reserve (two party rows

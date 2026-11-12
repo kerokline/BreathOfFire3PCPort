@@ -24,6 +24,8 @@
 // game's reserve count byte holds the number of rows shown, and the cursor's
 // and the pick's row bytes hold the row in the whole list.
 
+#include "bof3/symbols.gen.h"
+
 namespace solo_screens {
 
 // Whether a members screen opened now takes the long-reserve path. Today: the
@@ -38,13 +40,49 @@ bool Wide();
 // (Character_IndexById) the champion's. False whenever the mode is not active.
 bool IsChampion(unsigned char id);
 
-// The champion's mark: the game's pointing hand (Menu_DrawHand, the hand the
-// Tactics top and every menu's choices use), at the champion's cursor place
-// (x, y) plus this offset. Menu_DrawHand puts the hand's tip at x, so this
-// is the hand inside the panel's top-left corner pointing at the name. The
-// owner tunes it by eye (docs/solo-character-screens.md 6).
+// How the champion's panel is marked (docs/solo-character-screens.md 6):
+// kCleared, the look the load list gives a cleared save (Menu_DrawSaveSlot
+// 0x576960 with summary +0x14 set: its frame pieces drawn with flags 2, the
+// gold CLUT (0x80, 0x1E2) of Menu_DrawPiece, and the piece 0x3D "CLEAR");
+// or kHand, the game's pointing hand, kept for the owner to compare.
+enum class ChampionMark { kCleared, kHand };
+constexpr ChampionMark kChampionMark = ChampionMark::kCleared;
+
+// With kCleared: whether the piece 0x3D (the cleared slot's "CLEAR" emblem)
+// is drawn too, as the slot draws it, or only the frame's gold palette. Off:
+// on a member panel it covers the top of the HP line (solo_screens.cpp).
+constexpr bool kChampionClearEmblem = false;
+
+// With kHand: the hand's tip (Menu_DrawHand puts it at x) at the champion's
+// cursor place plus this offset - inside the panel's top-left corner,
+// pointing at the name.
 constexpr int kChampionHandDx = 0x12;
 constexpr int kChampionHandDy = 0;
+
+// The cleared look on the champion's panel, drawn as a member status panel
+// (Menu_DrawMemberStatus(x, y, record), its box at x + 3, y + 3): the frame
+// that panel draws, Menu_MemberPieces 0x6632C8, again with flags 2 (the
+// cleared slot's palette), then its EXP bar again (the panel's last draw,
+// which the pieces would cover), and with kChampionClearEmblem the piece
+// 0x3D. `whole`: the panel itself first - for a reserve row, which is a box
+// and tiles with no piece frame, so the frame cannot be laid over it (its
+// opaque name box and label pieces cover the row's level and HP: captured
+// 2026-11-12); the champion's row is shown as a member panel instead. The
+// mode only: callers ask IsChampion first, and draw it through InFront.
+void DrawCleared(int x, int y, unsigned record, bool whole);
+
+// `draw` with the menus' ordering-table slot 1 pointed at slot 0, which the
+// GPU draws after slot 1 (measured: docs/solo-character-screens.md 6), so what
+// it commits shows over everything the menus draw this frame, window records
+// included; both slots' tails put back after (the save and restore the
+// field's draw passes make of Gfx_OtPointers, draw_pass.cpp).
+template <typename Draw> void InFront(Draw draw) {
+    const auto saved = Gfx_OtPointers[1];
+    Gfx_OtPointers[1] = Gfx_OtPointers[0];
+    draw();
+    Gfx_OtPointers[0] = Gfx_OtPointers[1];
+    Gfx_OtPointers[1] = saved;
+}
 
 constexpr unsigned kMaxReserve = 8;  // CharacterRecords' eight records
 constexpr unsigned kRows = 3;        // the rows a screen shows

@@ -16,6 +16,7 @@
 #include "game/rest_2c.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo.h"
 #include "game/solo/solo_screens.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
@@ -285,9 +286,12 @@ unsigned char PartyFormSwapWide() {
 
 // PartyForm_Draw with the long reserve: the original's body, the pick's and
 // the cursor's boxes at the rows shown (a pick scrolled out of sight is held,
-// unmarked), and the champion's hand - Menu_DrawHand at the champion's cell
-// plus the hand's offset, after the two cursor boxes (the mode only:
-// IsChampion is false while it is not active).
+// unmarked), and the champion's mark after them (solo_screens::kChampionMark):
+// kCleared, the cleared slot's look (DrawCleared) on the champion's panel and
+// the two boxes again over it when they are on it, in front (InFront), as on
+// Tactics; kHand, Menu_DrawHand at the cell plus the hand's offset. A reserve
+// row's box is at its cell, three left of and above a member panel's box. The
+// mode only: IsChampion is false while it is not active.
 void PartyFormDrawWide() {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
     const U n = PartyCount();
@@ -319,8 +323,19 @@ void PartyFormDrawWide() {
         const int whole = ss::Whole(ss::g_party_form, static_cast<int>(s));
         if (ss::IsChampion(ss::g_party_form.ids[whole])) at = WideCell(1, whole);
     }
-    if (at != 0)
+    if (at == 0) return;
+    if (ss::kChampionMark == ss::ChampionMark::kHand) {
         SH_CALL(Menu_DrawHand)(static_cast<int>(W(at)) + ss::kChampionHandDx, static_cast<int>(W(at + 2)) + ss::kChampionHandDy, 0);
+        return;
+    }
+    const bool reserve = at != WideCell(0, 0) && at != WideCell(0, 1) && at != WideCell(0, 2);
+    const int x = static_cast<short>(W(at)) - (reserve ? 3 : 0);
+    const int y = static_cast<short>(W(at + 2)) - (reserve ? 3 : 0);
+    ss::InFront([&] {
+        ss::DrawCleared(x, y, static_cast<unsigned>(solo::Solo_ChampionRecord()), reserve);
+        if (pick != 0x7F && WideCell(static_cast<signed char>(pick), FieldS_PickRow) == at) WideBox(at, 0, 6);
+        if (cell == at) WideBox(at, 1, 6);
+    });
 }
 
 }  // namespace

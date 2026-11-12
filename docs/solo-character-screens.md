@@ -21,7 +21,8 @@ reserve, and the chapter 14 desert, where the hero walks alone with five
 joined, leaves five. What was built: both screens use a reserve list of ours
 (room for all eight records) shown three rows at a time with scrolling, only
 while `solo::Solo_Active()` (one line, `solo_screens::Wide()`, makes it
-unconditional); and the game's pointing hand marks the champion's row on both.
+unconditional); and the champion's panel carries the look the load list gives
+a cleared save, the gold frame (section 5a), on both.
 Nothing else: the swap rules the original has already keep the mode's map
 team in shape (section 4).
 
@@ -141,21 +142,81 @@ The original does exactly this; the mode adds nothing here.
 - **PartyForm** (`party_form.cpp`): the same, through `PartyForm_Setup`
   (latch), `_Choose`, `_Swap` and `_Draw`; `_DrawReserve` and
   `_DrawSliding` untouched.
-- **The champion's mark**: the game's pointing hand (`Menu_DrawHand`, the
-  hand of the Tactics top and every menu's choices), its tip at the
-  champion's cursor place plus (0x12, 0): inside the panel's top-left
-  corner, pointing at the name. On Tactics it is window record 21 - the
-  hand `Tactics_Open` sets up (handler 6, kind 0xE), closed in the members
-  step and set afresh by `Tactics_Top` every frame there - opened by
-  `TacticsMembersPickWide` and closed with the two cursors on the way out;
-  on PartyForm `PartyFormDrawWide` calls `Menu_DrawHand` after its boxes.
-  Only while `Solo_Active()`. A first try, a steady green
-  `Menu_DrawCursorBox` drawn from the Tactics step, was hidden: the step
-  runs before `Field_RunTaskRecords` draws the panels over it (captured
-  2026-11-12), so on Tactics a mark must be a window record.
+- **The champion's mark**: first the game's pointing hand (kept behind
+  `solo_screens::kChampionMark = kHand` for comparison); since the owner's
+  question of 2026-11-12, the cleared save's look (section 5a). Only while
+  `Solo_Active()`.
 
 With the mode off every edited function takes the original's body: the
 first statement of each asks the latch or `Wide()`, both false.
+
+## 5a. The champion in the cleared save's look (the owner, 2026-11-12)
+
+The owner, on the hand: "What about the 'cleared' look of a post-endgame
+save? Can we highlight the character like that?"
+
+**What the cleared look is, by the code.** The save summary's byte `+0x14`
+(block `+0xCB4`, event flag 146; `docs/save-editor-spec.md`) is read by one
+drawer, `Menu_DrawSaveSlot` `0x576960` (`src/game/menu/menu.cpp:1464-1498`;
+`records.h` `SaveSummary::marked`). With it set, two things differ from an
+ordinary slot and nothing else:
+
+1. The slot's frame pieces (`0x663584`, 72 records: the border, the name
+   box, the LV and TIME labels) go to `Menu_DrawPieces` with **flags 2**
+   instead of 0 (`menu.cpp:1491`, `:1495`). `Menu_DrawPiece`
+   (`src/game/menu/menu_2.cpp:495-516`) passes flags bit 1 to its CLUT: (0x80,
+   0x1E2) in place of (0xB0, 0x1E1). Same pieces, same places, another
+   palette: the frame turns gold.
+2. Piece **0x3D** is drawn at (x + 0x32, y + 0x16) with flags 0
+   (`menu.cpp:1496`): rectangle (u 0xC8, v 0x30, 27 x 13) of `0x663B94`, the
+   "CLEAR" emblem, right of the level (x + 0x1F, y + 0x18).
+
+No other reader was found: in the source `summary[0x14]` appears only at
+`menu.cpp:1491` and `:1496`, and `pe_xref.py` finds one absolute reference to
+the live byte `0x904694` (a store in `Save_BuildBlock` `0x5806F0`) and none to
+`0x905BD4` (slot 0's copy); the title and status screens were not found to
+read it. The reference capture, the owner's cleared save copied into
+MS's own game folder as slot 1 beside `adult_ryu` in slot 0:
+`D:\bof3x-runs\solo1112\MS\shots\cleared_ref\load_list.png`.
+
+**Carried to the members screens.** The party column's panel is
+`Menu_DrawMemberStatus` `0x573560` (`menu.cpp:241-293`), which ends with its
+own frame pieces `Menu_MemberPieces` `0x6632C8` (46 pieces, flags 0) and then
+its EXP bar. So on the champion's panel: those pieces again with flags 2 - the
+cleared slot's palette, exactly as the slot gets it - and the EXP bar again
+over them (the panel's last draw). That is the cleared treatment, faithful.
+What does not carry:
+
+- **The reserve rows have no piece frame.** `MenuList_ReserveWinDraw`
+  (Tactics) and `PartyForm_DrawReserve` draw a `Menu_DrawBox` box and
+  `Menu_DrawTile16` tags in a fixed CLUT (0x7800), so there is no frame to
+  recolour. Laying the member frame over a reserve row was tried and
+  captured: its opaque name box and label pieces cover the row's level and HP
+  (the boxes coincide - both 0x7D x 0x30 - but the contents are laid out
+  differently). Built instead, the closest honest version: **the champion's
+  reserve row is drawn as a member status panel** (`Menu_DrawMemberStatus`
+  at the box less (3, 3), the panel's own geometry) with the gold frame. One
+  side effect named: that call sets or clears the record's `+0x10` bit 13 (HP
+  below a quarter) from its HP, as it does for every member it draws; for a
+  reserve champion the original's screen would not make that write.
+- **The "CLEAR" emblem is off** (`kChampionClearEmblem`, one constant). On
+  the slot it sits in free space right of a two-digit level; the member
+  panel's level is "%3d" at x + 0x16 with the HP line 8 below, so the 13-high
+  emblem at the slot's distance (x + 0x2F, y + 0x15) covers the top of the HP
+  line, and its word says "cleared", not "champion".
+- **Draw order.** On Tactics the panels are window records drawn by
+  `Field_RunTaskRecords` after the members step runs, so anything the step
+  draws in slot 1 lies under them (the green box of the first try).
+  `solo_screens::InFront` points slot 1's ordering-table tail at slot 0's for
+  the draws and puts both back (the save and restore the field's draw passes
+  make of `Gfx_OtPointers`); slot 0 is drawn after slot 1, measured by the
+  captures (the gold frame shows over the panels). The cursor and the pick
+  boxes are drawn again in front when they sit on the champion, so the cursor
+  stays visible over the gold frame. PartyForm draws its panels itself, the
+  same helper used for one path.
+
+The hand stays one constant away: `solo_screens::kChampionMark =
+ChampionMark::kHand` (`src/game/solo/solo_screens.h`).
 
 ## 6. Checks and captures
 
@@ -209,6 +270,8 @@ of two.
 | `on_members_nina` | the same six | five in reserve shown three at a time: `08 02 04` -> `02 04 05` (row 3) -> `04 05 06` (row 4), wrap to row 0; the hand on Nina while her row is shown |
 | `on_members_ryu` | the same six | the hand on the party panel (it covers the member-number badge) |
 | `on_pf_nina` | `pf_party`, `pf_row0`, `pf_row3`, `pf_row4`, `pf_back` | PartyForm: the same scroll, the hand on Nina |
+| `cleared_mark/tactics_nina`, `cleared_mark/partyform_nina` | as above | the cleared look: Nina's reserve row as a member panel in the gold frame, while shown |
+| `cleared_mark/tactics_ryu`, `cleared_mark/partyform_ryu` | as above | the cleared look on the party panel (the hero's own frame recoloured) |
 | `on_swap_nina` | `sw_start`, `sw_picked`, `sw_swapped`, `sw_refused` | a map team of two (Ryu, Nina), four in reserve: Nina swapped with Peco on reserve row 3 (scrolled) - both lists `07 06 FF`, the reserve `02 04 05 08`; then Ryu picked against a reserve row: refused (`0x6BDFD7` = 7, his id; lists unchanged) |
 
 ## 7. Not done, and open
@@ -217,11 +280,9 @@ of two.
 - No scroll indicator: nothing on screen says a fourth row exists below
   until the cursor reaches it. The game draws no arrows on these screens;
   an indicator would be new layout (the owner's call).
-- The hand's place is a proposal for the owner's eye; on the party panel it
-  covers the "1" badge. The alternative offered: a steady box in another
-  colour round the champion's panel (`Menu_DrawCursorBox` sides 2, green),
-  which PartyForm can draw as built but Tactics only from a draw after
-  `Field_RunTaskRecords` (a file of another group's).
+- The cleared look is the owner's to judge by eye; the hand
+  (`kChampionMark = kHand`) and the emblem (`kChampionClearEmblem`) are one
+  constant each. The `on_*` captures in the table above are the hand's.
 - Both defects stay as the original has them with the mode off (round doc 6
   open 2's recommendation). The mode-off reach: no measured save holds four
   outside a team of three, and in the one place the original holds five
