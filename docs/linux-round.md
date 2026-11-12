@@ -474,9 +474,9 @@ only what it cannot do.
 |---|---|---|
 | Memory at a fixed address: reserve, commit, protect, release, query, flush | `os/memory.h` | The standard library cannot place pages. |
 | Clocks | `os/clock.h` | `game_clock.cpp` (DIV-0022, DIV-0047) keeps `GetTickCount64`'s 15.6 ms step, `GetTickCount`'s wrap and QPC's frequency; `steady_clock` changes all three. |
-| Environment, own path, last error, thread and process numbers | `os/env.h` | `std::getenv` returns the ANSI code page on Windows, and 113 sites rely on `GetEnvironmentVariable`'s size contract. |
-| UTF-8 path, the game's `DAT\AREA*.DAT` walk, case-insensitive name compare | `os/file.h` | Portable code over `std::filesystem`, no backend. |
-| UTF-8 and `wchar_t` | `os/text.h` | Inline over `std::filesystem::path`. |
+| Environment, own path, last error, thread and process numbers | `os/env.h` | 113 sites rely on `GetEnvironmentVariableA`'s size contract, which `std::getenv` does not have. The value is a narrow name (below). |
+| A narrow name as a path and back, the game's `DAT\AREA*.DAT` walk, case-insensitive name compare | `os/file.h` | The walk is portable code over `std::filesystem`; `Path` and `Narrow`, the narrow encoding, are each backend's. |
+| UTF-8 and `wchar_t` | `os/text.h` | Inline over `std::filesystem::path`. Not for a narrow name on Windows. |
 | The fatal message box | `os/dialog.h` | `MessageBoxA` on Windows (DIV-0039 is unchanged); stderr and SDL3 on POSIX. |
 | SHA-256 | `common/sha256.h` | Our own routine replaces BCrypt; nothing per system. |
 
@@ -484,6 +484,52 @@ Dropped because the standard library covers them: files (`std::ifstream`,
 `std::ofstream`, `std::filesystem`), threads, mutexes and events (`std::thread`,
 `std::mutex`; no engine call site used them), the heap (`std::malloc`,
 `std::calloc`, `std::free`).
+
+**The narrow encoding (review of PR 226, 2026-11-11).** A `char` name in the
+engine - one the game builds, one `GetEnv` returns, one handed to the game's
+own `Crt_fopen` - is in the system's narrow file-name encoding: the ANSI code
+page on Windows (what every one of these sites read through the A calls before
+the seam), UTF-8 on POSIX. `os::Path` and `os::Narrow` are the two
+conversions, in `src/os/win32/file.cpp` (`MultiByteToWideChar` and back, the
+code page the A file calls use) and `src/os/posix/file.cpp` (the bytes as they
+are). As first written `Path` read every narrow name as UTF-8 on both systems.
+That holds under our own `bof3x.exe`, whose manifest makes the process's
+code page UTF-8 (`code page: GetACP() = 65001` in its log), and fails under
+the hosted `BOF3.exe`, which gets the machine's: measured on Windows at both
+widths with the ANSI code page 1252, `BOF3X_CACHE` under a folder with `é` in
+its name left `GetFileAttributesA` finding it and `os::IsDirectory` throwing
+`std::runtime_error: locale not supported`, uncaught - hosted, the game ended
+before `dat_cache::Configure`'s first line (exit code `0xC0000409`, a log of
+14 lines), where the build with the fix logs `DIV-0089    the cache ...
+checked: 488 of the manifest's 742 containers held whole` and runs the
+self-tests to their end; the same with the game folder itself under such a
+name. Now `Path`,
+`Narrow`, `IsFile`, `IsDirectory` and `WalkDirectory` do not throw (a name
+that does not convert is a name that is not there), the walk matches and
+orders names as the system holds them and hands each back in the narrow
+encoding, and `ExecutablePath` / `ModulePath` / `ToUtf8` / `ToWide` are marked
+as the UTF-8 pair they are, never to meet a narrow name. `tools/os_host`'s
+`TestNarrowNames` makes a folder and file under a name outside ASCII by the
+system's own wide call and reaches them by `IsDirectory`, `IsFile`, a stream
+through `Path`, the walk, a walked name printed into a path for `fopen`, and
+`GetEnv`; CI job `os-host-windows` runs the suite against the Win32 backend at
+both widths. **For LB8 and the later units:** a name that comes from a wide or
+UTF-8 source (the launcher's settings, a module's path) and is to be opened by
+narrow code crosses through `Narrow`, not `ToUtf8`; on Windows a path the code
+page cannot hold does not open by its narrow name, exactly as before the seam
+(the launcher hands the engine its paths through the environment, read by the
+A call). Lifting that limit means wide or UTF-8 names end to end, the game's
+C runtime included, and is its own unit.
+
+**The walk's cost.** `WalkDirectory` lists and orders the whole folder before
+it hands the first entry, because "the first match" must be the same on both
+systems. Three callers only ask "is there one" (`dat_cache.cpp`
+`LayerDirHasDat`, `dat_load.cpp` at the BGM-layer and installed-layer tests),
+all at start-up. What was cheap is done: an entry's kind and size are now
+asked only when the entry is handed, so those callers pay the listing and one
+entry instead of a `stat` of every match. An "any match" call that stops at the
+first name read from the folder would skip the listing's sort too; left for a
+unit that finds it on a profile.
 
 **Windows-only, by design:** the launcher, `write_watch`, `gapwatch`, `calltrace`
 (harness-only watchers), the PE exe host (`exe_host.cpp`, `exe_icon.cpp`,
@@ -554,6 +600,12 @@ does not rewrite it. Three stand-ins, cheapest first:
 
 ## 6. For the owner
 
+"The owner" in this document is Kevin (kerokline), as everywhere in this
+repository. The **Decided** marks below are frost's (raulcorreia7, who runs
+this round on his fork), made in his sessions on 2026-11-11 so the work could
+proceed; they stand as the round's working answers, and each is still the
+owner's to confirm or change at the merge of the unit that depends on it.
+
 1. **The second renderer's API.** Proposed: SDL3's GPU API, since SDL3 is
    already built in and it reaches Vulkan on Linux and Direct3D 12 or Vulkan
    on Windows from one backend. The alternative is OpenGL 3.3, which is
@@ -574,7 +626,7 @@ does not rewrite it. Three stand-ins, cheapest first:
    (5), thread id (5), last error (3), `GetClientRect` (2), the render fiber
    (5) and one file write - the OS seam LB1 and LB6 already plan.
    `D3DCompile` has no native implementation, so `BOF3X_PIXEL_OFFSET` would
-   refuse there. **Decided (the owner, 2026-11-11): DXVK-native for the
+   refuse there. **Decided (frost, raulcorreia7, 2026-11-11): DXVK-native for the
    Linux build; Windows keeps Microsoft's Direct3D 11, with no DXVK switch**
    - on Windows DXVK would add a Vulkan 1.3 requirement and DLLs to ship for
    no gain a player sees; the native build and Proton already give a Vulkan

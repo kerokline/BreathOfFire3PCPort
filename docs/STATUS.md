@@ -28,6 +28,25 @@ issue #190** (the dragon gene window; not reproduced in many tries; left open by
 for the movies) and 3 (the alpha.5 upgrade path), then commits the notes on `main`, tags and publishes. Alpha.6's
 draft was deleted on 2026-11-08; the beta readiness work is PR #211, held open through the checks.
 
+**The Linux native round's groundwork, PR #226 (frost, raulcorreia7; reviewed 2026-11-11, not merged).**
+[`linux-round.md`](linux-round.md) is the round's record; this is only where it stands. The PR holds stage LA
+(the OS census, the low-memory and calling-convention probes, the DXVK-native probe) and unit LB1, the
+operating-system seam: the engine's OS services behind `src/os` (`bof3::os`, a Win32 and a POSIX backend), about
+362 call sites converted, `windows.h` gone from about 105 files, and the gates `tools/os_census.py --check` and
+`--boundary`. Nothing of it is a behaviour change on Windows by intent, and it carries no ledger entry. **The
+review on Windows found one blocker, fixed in the review's commits on top of the PR's:** the seam read every narrow name as
+UTF-8, so a cache or game folder under a name outside ASCII ended the game at start-up where the A calls had
+found it; a narrow name is now the ANSI code page on Windows and UTF-8 on POSIX, converted in the backends, and
+nothing in the seam's file calls throws (`linux-round.md`, "The narrow encoding"). Also fixed: `SaveFrame`'s
+result taken before the close, a second copy of `SameName`. **Proven at the review tip:** both presets build;
+the hosted suite with `BOF3X_SHADOW='*'` exits 0 with 916 `MISMATCHES` lines, none above 0 (the PC install, 32-bit, 31,866 log lines); hosted in `BOF3.exe` with `BOF3X_CACHE`, and then the game folder, under a name with `é` the self-tests run to their end where the PR's head ended with `0xC0000409`; `os_census --check` (3788 sites), `--boundary`, `width_census --check` and `ledger_check` pass; `tools/os_host`'s `os_tests` passes against the Win32 backend at both widths and against the POSIX one,
+and CI now runs it on a Windows runner too (job `os-host-windows`). **State hash, A/B against `main` `8d2d987d`** (two runs of `main` as the references, the `orig4` pairs being stale; `bof3x.exe`, 32-bit, `BOF3X_OPT=none BOF3X_LAYERING=0`): combat, shop, caughFish, field_menu, menu_screens and dragonTransform are identical on every compared tick (2561, 3137, 3841, 1409, 1729 and 4289); the other four routes were not finished when this was written. **Owed before the merge:** PR #225
+(the PSX media decoders) merges first, then this branch is brought up to `main` (it will conflict in
+`.github/workflows/checks.yml`, `CMakeLists.txt`'s link lines and `src/audio/mp3.cpp`) and the gates run again
+at that tip; the rest of the ten state-hash routes against references recorded at `main`; a play on Windows
+by the owner. The **Decided** marks in `linux-round.md` section 6 are frost's working answers, the owner's to
+confirm at each unit's merge.
+
 **The ending scenes, 2026-11-07 evening** (merged as PR #209 the same night, `main` `67c3259b`): the owner's
 four reports off their `myriaFightAndEnding` route - the *Fin* disc's rim short of the 21:9 corners, the bands'
 one-frame flash before the desert's fade, and Garr and Rei blinking in Myria's chamber where Nina and Momo

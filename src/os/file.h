@@ -7,9 +7,11 @@
 // THE NARROW ENCODING. A `char` name in the engine - one the game builds, one
 // GetEnv returns, one handed to the game's own Crt_fopen - is in the system's
 // narrow file-name encoding: on Windows the code page the A file calls use (the
-// ANSI code page; a Chinese, Japanese or Western one, per machine), on POSIX
-// the bytes the kernel takes (UTF-8 by convention). It is NOT UTF-8 on
-// Windows. Path and Narrow are the only two conversions, each backend's own
+// process's ANSI code page), on POSIX the bytes the kernel takes (UTF-8 by
+// convention). On Windows that depends on the host: bof3x.exe's manifest asks
+// for UTF-8 (exe_host.cpp logs GetACP), the player's own BOF3.exe gets the
+// machine's page - a Chinese, Japanese or Western one - so code here must not
+// take a narrow name for UTF-8. Path and Narrow are the only two conversions, each backend's own
 // (win32/file.cpp, posix/file.cpp), so a name that came from GetEnv or from
 // WalkDirectory can be printed into a longer name and opened by either this
 // seam or the game's C runtime. os/text.h's ToUtf8 / ToWide are a different
