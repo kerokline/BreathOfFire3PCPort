@@ -1,11 +1,11 @@
 # The solo-character mode's field half (group FS)
 
-**Status:** IN PROGRESS (built 2026-11-12 on `solo/fs`; the self-test and the
-mode-on probes of section 7 run that day; the owner has not played it. The
-round doc is [`solo-character-round.md`](solo-character-round.md): sections
-0a items 7 to 9, 3, 4 "FS", 6a item 1 and 6c govern. The ledger entry is
-DIV-0228 `SoloCharacter`; this half's text for it is drafted in the
-hand-back, not numbered here.)
+**Status:** SUPERSEDED (2026-11-12, the owner, round doc 6e: the map party
+stays the game's own three, so this half was built, merged and taken out of
+`solo/round` the same day. The code is on branch `solo/fs`, tip `01ca8f40`.
+The measurements here stand: the party-set load cost, `PartySet_Find`'s
+missed row, the scenes that test the party. Round doc:
+[`solo-character-round.md`](solo-character-round.md).)
 
 Code: `src/game/solo/solo_field.{h,cpp}`; hooks in
 `src/game/field/field_4.cpp` (`Field_LeaderStand`, `Field_LeaderSwapTest`,

@@ -44,7 +44,6 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -100,14 +99,6 @@ extern "C" void __cdecl scena_calls_SaveAndLeave(std::uint32_t ecx) {
         saved[i] = id;
         if (i < sizeof local) local[i] = id;
     }
-    // DIV-0228 SoloCharacter: with fewer than three walkers (the fold's team),
-    // the saved bytes past the count are 0xFF, not an earlier save's, and the
-    // local's bytes past it - the caller's ecx - name no one (solo_scenes.h).
-    // Off: the original's bytes.
-    if (solo::Scene_Active()) {
-        solo::Scene_PadSaved(saved, n);
-        for (unsigned i = n; i < 3; ++i) local[i] = 0xFF;
-    }
     for (unsigned i = 0; i < 3; ++i)
         if (local[i] != 7) Leave(local[i]);
     Palettes();
@@ -134,11 +125,6 @@ extern "C" void __cdecl scena_calls_LeaveAllParty7(std::uint32_t ecx) {
         const unsigned char id = MemberId(i);
         if (i < sizeof local) local[i] = id;
     }
-    // DIV-0228 SoloCharacter: the local's bytes past the count (the caller's
-    // ecx) name no one with the fold's team (solo_scenes.h). Off: as the
-    // original.
-    if (solo::Scene_Active())
-        for (unsigned i = n; i < 3; ++i) local[i] = 0xFF;
     for (unsigned i = 0; i < 3; ++i) Leave(local[i]);
     Set(7, 4, 2);
     Field_MemberCount = 0;

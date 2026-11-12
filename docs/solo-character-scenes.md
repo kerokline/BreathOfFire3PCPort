@@ -1,15 +1,12 @@
 # The solo-character mode's scene audit (group SA)
 
-**Status:** IN PROGRESS (2026-11-12, branch `solo/sa` off the round branch's
-`fd017aa3`). Every site below was found by `grep` of `src/game/` and read;
-none was reached in a run. The guards of section 3 are built, self-tested
-headless and argued from the code; the owner has not played them. Section 4's
-class is open: it needs the owner's call. The round doc is
-[`solo-character-round.md`](solo-character-round.md) (sections 0a, 3, 6a,
-6c); the fold this audits is [`solo-character-field.md`](solo-character-field.md)
-(its section 8 was the starting list). The ledger entry is DIV-0228
-`SoloCharacter`; this group's text for it is drafted in the hand-back, not
-numbered here.
+**Status:** SUPERSEDED (2026-11-12, the owner, round doc 6e: the map party
+stays the game's own three, so no scene meets a folded team and the guards of
+section 3 were taken out of `solo/round` the same day. The code is on branch
+`solo/sa`, tip `62e58e8b`. The audit stands as the reason for 6e and as the
+list of what any later map fold must answer, section 4's `Party_DropIn` class
+first. Every site was read, none reached in a run. Round doc:
+[`solo-character-round.md`](solo-character-round.md).)
 
 Code: `src/game/solo/solo_scenes.{h,cpp}` (the guards and their self-test),
 and the call sites named in section 3.

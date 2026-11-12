@@ -15,7 +15,6 @@
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -215,10 +214,7 @@ extern "C" void __cdecl Boss25_Exit(void) {
     B(::bof3::Img(at::kFlags.v)) |= 2;
     BH_CALL(Transition_Start)(4);
     const unsigned n = BossSe_PartyCopyCount;
-    // DIV-0228 SoloCharacter: the count chapter 6's SortParty saved (0x939A02)
-    // goes back, not 3, when it saved fewer than three walkers (the fold's
-    // team); with three the two are the same (solo_scenes.h). Off: 3.
-    Field_MemberCount = solo::Scene_Active() && n < 3 ? static_cast<unsigned char>(n) : 3;
+    Field_MemberCount = 3;
     if (n != 0) std::memcpy(At(::bof3::Img(Cond_Flags_addr) + 0xd5), At(::bof3::Img(at::kPartyCopyFrom.v)), n);
 }
 

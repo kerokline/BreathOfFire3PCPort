@@ -603,6 +603,33 @@ game's own party fights that battle and the champion starts dead as the
 original has it. IDEAS I66 holds the other ways. Which fight it is has not
 been measured; the name is the owner's recollection.
 
+## 6e. The owner's fifth answer (2026-11-12 evening): three walkers, as the game has them
+
+The scene audit ([`solo-character-scenes.md`](solo-character-scenes.md)) found
+that a map team of two breaks the scenes that place the party: `Party_DropIn`
+kind 0 / `0x80` misses when fewer members walk than an entry names, nobody is
+placed, and the scene waits on counters the members' scripts set (one case
+read, chapter 12's first entry to area `0x86`; about 453 placement entries
+miss with two walkers, by a scan of the tables). Asked which way to go, the
+owner: "lets by default have 3 walkers like the normal game. we're already
+subbing in the single character, so 3 walkers shouldn't be different, right?"
+
+**Where 6e and an earlier section differ, 6e holds.** The mode is the combat
+half, the save's mark and the level-1 start. The map party, the L swap, the
+joins and both members screens are the game's own. Taken out of `solo/round`
+the same day, kept on their branches: the field half (`solo/fs`, the fold, the
+L swap's bring-out, the join without the choose-who-leaves screen), the scene
+guards (`solo/sa`) and the members screens' scrolling reserve (`solo/ms` at
+`9b60b48d`). Kept: the champion's mark on the members screens.
+
+It is not different for the combat half: it reads and writes the second list,
+the count, the formation and the party set, never the walkers
+([`solo-character-combat.md`](solo-character-combat.md); run A there is a
+champion alone with three walkers back on the field after). 6a item 1 (the
+hero plus one other) and sections 0, 3 and 4's FS, MS and fold text are
+history. "By default" is read as leaving room for a map fold as a later
+option, not as a switch built now; nothing of it is built.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).

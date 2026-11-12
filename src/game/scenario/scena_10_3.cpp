@@ -11,7 +11,6 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -745,10 +744,6 @@ bool Run7Body() {
         // call; nothing bounds it)
         const unsigned n = Field_MemberCount;
         for (unsigned m = 0; m < n; ++m) B(::bof3::Img(scena_sc9b::at::kTally) + m) = MemberByte(m, scena_sc9b::at::kMemberKind);
-        // DIV-0228 SoloCharacter: with the fold's team the saved bytes past the
-        // count are 0xFF, which Scena10_RestoreSaved then joins as no one,
-        // not an earlier save's ids (solo_scenes.h). Off: as the original.
-        solo::Scene_PadSaved(&B(::bof3::Img(scena_sc9b::at::kTally)), n);
         SetStep(2);
         return true;
     }

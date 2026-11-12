@@ -10,7 +10,6 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
-#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -1242,10 +1241,8 @@ SC13_EXPORT void __cdecl Scena13_Run8(void) {
     switch (Step()) {
     case 0:
         // ObjTrio records 1 and 2 + 0x137 (0x802FC3, 0x80310F) both 0
-        // DIV-0228 SoloCharacter: a walker slot the fold emptied reads as
-        // settled (solo_scenes.h); off, the bytes as the original reads them.
-        if (solo::Scene_SlotPose(1, rv::Bytes(&ObjTrio[1])[0x137]) != 0) return;
-        if (solo::Scene_SlotPose(2, rv::Bytes(&ObjTrio[2])[0x137]) != 0) return;
+        if (rv::Bytes(&ObjTrio[1])[0x137] != 0) return;
+        if (rv::Bytes(&ObjTrio[2])[0x137] != 0) return;
         DropIn(0xA);
         Set(0x1D);
         StopRun();

@@ -14,7 +14,6 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -1149,7 +1148,7 @@ SC9A_EXPORT void __cdecl Scena09_Run6(void) {
 SC9A_EXPORT void __cdecl Scena09_Run7(void) {
     switch (Step()) {
     case 0:
-        if (solo::Scene_SlotPose(2, rv::Bytes(&ObjTrio[2])[0x137]) == 2) break;   // DIV-0228: an empty slot is settled
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 2) break;
         DropIn(0);
         SetStep(1);
         break;
@@ -1304,7 +1303,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
 SC9A_EXPORT void __cdecl Scena09_Run9(void) {
     switch (Step()) {
     case 0:
-        if (solo::Scene_SlotPose(2, rv::Bytes(&ObjTrio[2])[0x137]) == 3) break;   // DIV-0228: an empty slot is settled
+        if (rv::Bytes(&ObjTrio[2])[0x137] == 3) break;
         ScriptOrByte(8);
         DropIn(5);
         Kind2(1);
@@ -1506,7 +1505,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetAndEnd(0x36);
         break;
     case 0x46:
-        if (solo::Scene_SlotPose(1, rv::Bytes(&ObjTrio[1])[0x137]) == 3) break;   // DIV-0228: an empty slot is settled
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Msg(0x87);
         SetRequest(2);
         SetStep(0x47);
@@ -1607,7 +1606,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         EndRun();
         break;
     case 0x6E:
-        if (solo::Scene_SlotPose(1, rv::Bytes(&ObjTrio[1])[0x137]) == 3) break;   // DIV-0228: an empty slot is settled
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         Say(0x9C);
         SetStep(0x6F);
         break;
@@ -1635,7 +1634,7 @@ SC9A_EXPORT void __cdecl Scena09_Run15(void) {
         SetRun(0);
         break;
     case 0x78:
-        if (solo::Scene_SlotPose(1, rv::Bytes(&ObjTrio[1])[0x137]) == 3) break;   // DIV-0228: an empty slot is settled
+        if (rv::Bytes(&ObjTrio[1])[0x137] == 3) break;
         SetCounter(2, 0);
         SetStep(0x79);
         DropIn(2);
