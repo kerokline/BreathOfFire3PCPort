@@ -2,7 +2,9 @@
 
 **Status:** STAGED (2026-11-12, from `main` `01a67500`; nothing built, nothing
 launched. The design is IDEAS I56's (the owner, 2026-11-03), issue #223; the
-owner's four answers of 2026-11-12 are in section 6; M1 is run, section 2.)
+owner's four answers of 2026-11-12 are in section 6. **Group M is run**
+(2026-11-12, [`solo-character-reads.md`](solo-character-reads.md)): section 0a
+corrects the shape, and where it and a later section differ, 0a holds.)
 
 The owner (2026-11-03): a "solo character" mode for solo challenges. One
 chosen character, the **champion**, fights every battle alone. On the map the
@@ -30,6 +32,68 @@ What it is not: the dragon takeover reused (IDEAS I56, "Two shortcuts
 considered and set aside"), or the second party list used as the combat team.
 The takeover is the pattern and the checklist of what a restore rebuilds, not
 the mechanism.
+
+## 0a. Corrected by group M (2026-11-12)
+
+> [`solo-character-reads.md`](solo-character-reads.md) has the evidence; the
+> coordinator read `transition.cpp`'s mode 5 steps, `scena_06_3.cpp`'s
+> `SortParty`, `boss_25.cpp`'s `Boss25_Exit`, `Field_LeaderStand` and the
+> `BEHAVIOURS` participant against it.
+>
+> 1. **The second list is the combat team after all.** The battle's member
+>    records are built in mode 5's step 3, `GameMode5_Load`, by
+>    `Field_PartyLoad(1)` **from the second list `0x904065`**; step 4,
+>    `GameMode5_Script`, only counts that list; the battle graphics load in
+>    step 1, `GameMode5_Turn` (`PartySet_Select`). So the combat half is: the
+>    second list set to the champion and `Field_MemberCount` to 1 before
+>    step 3, the party set holding the champion before step 1, the formation
+>    byte `0x904060` to 0 while one member fights. **No ObjTrio backup**: after
+>    the battle, step 7's `Field_PartyLoad(0)` rebuilds the walkers from the
+>    first list and `CharacterRecords`. IDEAS I56 set this shortcut aside on a
+>    premise that is false (that a member not walking has no record to fight
+>    with).
+> 2. **Capcom does this itself.** Chapter 6's `SortParty` leaves the first
+>    list alone, saves the second list, sets it and the count to one member,
+>    and `Boss25_Exit` puts them back at exit step 4.1. That is the pattern,
+>    and the one conflict: a restore of ours must put back only bytes that
+>    still hold what we wrote (inferred from the order, not run).
+> 3. **Nothing to write back.** The champion is the battle's member with its
+>    own record index, so the game credits EXP (`BattleResult_AddExp`), levels
+>    (`Char_LevelUp`), HP, AP and status (`Battle_WriteBackMember`) itself. A
+>    reserve member's record is never touched by a battle, EXP included.
+> 4. **One restore point.** Every way out that returns to the field passes
+>    `GameMode5_Place` (`0x496130`) on entry. A plain loss restarts the boot
+>    task and never returns: the saved bytes are dropped at `GameMode_Start`.
+> 5. **The saved bytes live outside the snapshot's span** (our globals are not
+>    in `.data` / `.bss` of the image), so they are a snapshot participant on
+>    the `BEHAVIOURS` pattern (`field_7.cpp`).
+> 6. **The champion is a record, not an id**, and "joined" is
+>    `CharacterRecords +0xB` bit 0, which story scripts clear when they take a
+>    character away. Records 0 and 1 are reached by several ids
+>    (`Character_IndexById`); which id each holds from chapter 8 on is not
+>    settled by reading (a peek of the two id bytes on a late save settles
+>    it, SC's first step). Record 7 is reused (the whelp, a chapter 6 guest,
+>    the battle extra's guest) and is not offered as a champion.
+> 7. **"Must stay" as bit 1 is not what the owner's answer meant to buy**:
+>    record 0 carries the mark from New Game and nothing clears it, so the
+>    rule as written puts record 0's character beside every walker for the
+>    whole game. The other marks are two short scenes (chapters 6 and 8).
+>    Section 6, open 5.
+> 8. **The fold has a frame**: `Field_LeaderStand` (`0x52DA70`) after its
+>    first three returns, comparing a signature (both lists, the count, the
+>    eight records' `+0xB` bits 0 and 1) rather than hooking some fifteen
+>    writers. The risk it leaves: a scene that tests the party it finds
+>    (`Party_DropIn` kind 0 / `0x80`, script condition 15) sees the folded
+>    team. RT's routes and the boss sweep are where that shows.
+> 9. **There are two members screens.** `PartyForm` (`party_form.cpp`, opened
+>    by `Field_Request 6`) has the same reserve-flag overlap from the fifth
+>    reserve member as the Tactics screen. With a map team of one, a join is
+>    never refused, so the original's choose-who-leaves screen would not open
+>    where it does today (an inference).
+> 10. **A save holds ids, not walkers**: the eight records whole, both lists,
+>     the party set, the formation. Writing a save in the game's own shape
+>     (section 6, open 2, way b) is the lists and the set byte filled before
+>     `Save_BuildBlock` and put back after.
 
 ## 1. What is already known
 
@@ -101,7 +165,7 @@ row after the nineteenth is `00 00 00`, not a row):
 Which character each id is, and which ids belong to which part of the story,
 is not asserted here (M6).
 
-### M2 to M9, to run
+### M2 to M9 (run 2026-11-12: [`solo-character-reads.md`](solo-character-reads.md); section 0a is the summary)
 
 | | Question | Why the round needs it |
 |---|---|---|
@@ -122,8 +186,7 @@ premise here is a correction box at the top of the section it corrects, as
 ## 3. The rules of the mode (the owner's answers applied)
 
 - **Champion present** means the champion has joined and the story has not
-  taken them away: the champion is in a party list or the reserve (M6 gives
-  the exact test).
+  taken them away: the champion's record has `+0xB` bit 0 set (M6).
 - **Champion present: the champion fights alone**, whatever the map team is,
   a script-forced party included.
 - **Champion not present: the mode stands down whole.** The party is the
@@ -140,7 +203,8 @@ premise here is a correction box at the top of the section it corrects, as
   from while they are away; otherwise it is reported, not stubbed (rule 4).
 - **Must-stay members walk too.** A member the game marks "must stay" stays
   on the map team beside the walker while the mark is set; they fight only if
-  they are the champion.
+  they are the champion. *Which* marks count is section 6, open 5: record 0's
+  is permanent (0a item 7).
 - **The champion is chosen in the launcher** for now. The New Game screen
   waits for I34's rebuild of that sequence (section 8).
 
@@ -182,30 +246,30 @@ Agents number nothing in the ledger or `known-defects.md`.
 ### Stage B (after SC merges; four groups in parallel)
 
 **CB, the combat half** (`src/game/solo/solo_battle.cpp`, new;
-`src/game/core/transition.cpp`; the battle-end sites M3 names).
-- *Before the battle loads*: when `Solo_Active()` and the champion is not
-  already the only member, save the three ObjTrio records, both lists, the
-  member count and the party set byte to the buffer (M5 says where it lives);
-  build the champion into record 0 as `Field_PartyLoad` does; lists and count
-  to one member. Not `0x939AE0`, not `0x904B8F`, not round flag bit 15: those
-  are the dragon takeover's and a champion who takes a form uses them.
-- *The party set*: none loaded when the current set holds the champion
-  (FS keeps it so, M1). If it does not (a script's set), the load the game's
-  own path makes, waited out as `PartySet_Load` waits.
-- *After the battle has fully ended*, on every way out of M3, after
-  `BattleFx_RestoreParty`: the champion's results to `CharacterRecords`
-  (M2's fields), then the map team's records, lists, count and set back, and
-  what `BattleFx_RestoreParty` and its slot-17 tasks rebuild for a member
-  (windows, palette, tint, the spot on the ground) rebuilt for the map team.
-- A game over or a load from inside a battle must not leave the buffer
-  "armed": the buffer is cleared wherever the game's own state is replaced.
-- `SoloChampionAlways`, last, on the terms of section 3.
+`src/game/core/transition.cpp`). Section 0a items 1 to 5 are its design.
+- *Before step 1 of mode 5*: when `Solo_Active()` and the second list is not
+  already the champion alone, save the second list, `Field_MemberCount`, the
+  formation byte and the party set byte; write the champion alone into the
+  second list, the count 1, the formation 0. The first list is left alone, as
+  `SortParty` leaves it. Not `0x939AE0`, `0x904B8F` or round flag bit 15 (the
+  dragon takeover's), and not `0x939A02` / `0x939A10` (chapter 6's).
+- *The party set*: none loaded when the current set holds the champion (FS
+  keeps it so, M1). If it does not (a script's set), the load the game's own
+  path makes, waited out as `PartySet_Load` waits.
+- *On entry to `GameMode5_Place`*: each saved byte put back **only where the
+  live byte still holds what CB wrote** (`Boss25_Exit` and any other exit
+  hook that restored its own party wins). Dropped at `GameMode_Start`.
+- No write-back and no ObjTrio copy (0a items 1 and 3).
+- The saved bytes are a snapshot participant (0a item 5).
+- `SoloChampionAlways`, last, on the terms of section 3: with the joined bit
+  clear the record is whatever the story left; CB reports what a fight from
+  it does before it is offered.
 - Checks that mean done: with the behaviour off, the battle routes' state
   hashes equal the reference; with it on, a recorded battle route won by the
   champion alone with a different walker, the walker back on the field after
-  it with the pre-battle records (a peek of the three records before and
-  after, equal but for nothing); a flee; a game over; a dragon form taken and
-  reverted by a champion; a quicksave and quick-load mid-battle (M5).
+  it and the lists as before; a flee; a game over; a dragon form taken and
+  reverted by a champion; chapter 6's own one-member fight (set-up 25) with
+  the mode on; a quicksave and quick-load mid-battle.
 
 **FS, the field half** (`src/game/solo/solo_field.cpp`, new;
 `src/game/field/field_4.cpp`, `field_6.cpp`).
@@ -222,14 +286,22 @@ Agents number nothing in the ledger or `known-defects.md`.
   both lists kept holding the same members as every original writer keeps
   them.
 - *Must-stay members* follow as members 1 and 2 do today.
+- *The fold's frame and test* are 0a item 8. `PartyForm_Reload`'s "lone"
+  path (`party_form.cpp`) is the game's own one-walker field, a reference.
+- *A join with a map team of one* (0a item 9): the new member goes to the
+  reserve with the joined bit set; the choose-who-leaves screen is not
+  opened in the mode. FS says in its report what the original's screen did
+  there that the mode now skips.
 - *Entering and leaving the mode* mid-game (the champion joins, returns, or
   is taken away): the same fold, or the game's own party left alone.
 - Checks: off, the field routes' state hashes equal; on, a route that swaps
   through every joined character and enters a door, a scripted scene that
   builds a party and returns control, an area that wants a given leader.
 
-**MS, the members screen** (`src/game/field/field_ability_2.cpp` and the
-screen's files in [`rest_2f.md`](rest_2f.md); no other group's files).
+**MS, the members screens** (`src/game/field/field_ability_2.cpp` and the
+Tactics screen's files in [`rest_2f.md`](rest_2f.md); `PartyForm` in
+`src/game/field/party_form.cpp`, which has the same overlap, 0a item 9; no
+other group's files).
 - Five reserve rows. The two latent defects of `rest_2f.md` 7 (items 2 and 3:
   the reserve flags `0x6BDFCD + 2j` landing on the reserve list from the
   fifth member; rows past 2 reading their places past `0x6674C8`'s six
@@ -286,12 +358,13 @@ Answered 2026-11-12 (by the question box, the owner's words in quotes):
 4. **A "must stay" member:** they walk too, beside the walker, and fight only
    if they are the champion.
 
-Open (none blocks M or stage A):
+Open (none blocks stage A but open 5, which SC's `Solo_MustStay` needs):
 
 1. **EXP** (held over by the owner on 2026-11-03 until the combat half is
    settled). As built by this design the champion takes the whole total, as a
-   party does today when the other two are out; whether the reserve should
-   get any follows M2's read of what the original gives a reserve member.
+   party does today when the other two are out. M2: the original gives a
+   member who is not in the battle no EXP, so the reserve gets none unless
+   the mode adds it. Recommended: as the original, none.
 2. **A save made in the mode.** It holds one walker and up to five in
    reserve, which the original members screen mishandles (the two latent
    defects) when the mode is then turned off, and which a save converted to a
@@ -299,12 +372,20 @@ Open (none blocks M or stage A):
    screen's fixes are unconditional and the save holds the party as it is;
    (b) the save block is written with the game's own shape (the map team
    filled to three from the reserve, in the block only) and folded back on
-   load in the mode. Recommended: (b) if M9 shows the block holds ids and not
-   records, else (a). The owner's word after M9.
+   load in the mode. M9: the block holds ids, so (b) is cheap (0a item 10).
+   Recommended: (b), and MS's fixes for the mode only.
 3. **The mode standing down whole** when the champion is not present
    (section 3; this doc's reading of answer 2).
 4. **The champion marked on the members screen**, and the launcher page's
    text: captures and drafts at stage B's hand-back.
+
+5. **Which "must stay" marks count** (0a item 7). Recommended: record 0's
+   permanent mark does not count in the mode, so the walker can be anyone
+   alone; a mark a scene sets on any record (chapters 6 and 8 today) does,
+   for as long as the scene holds it.
+6. **Who can be a champion.** Recommended: records 0 to 6 by the launcher's
+   own labels, record 7 never (0a item 6); a champion whose record the story
+   has not reached yet is simply "not present".
 
 ## 7. Not in this round
 
@@ -332,7 +413,9 @@ next step; only the hand-back report means merge.
 
 ## 9. Where things are
 
-- This doc and IDEAS I56 on `docs/solo-character-round` (2026-11-12).
+- This doc, group M's reads and IDEAS I56 on `docs/solo-character-round`
+  (2026-11-12). M's worktree `D:\bof3x-runs\solo1112\M\wt` (branch
+  `solo/m-reads`, merged here) and its scratch scripts beside it.
 - The round branch, when launched: `solo/round`, off `main` after this doc
   merges.
 - Scratch: `D:\bof3x-runs\solo1112` (nothing there yet).
