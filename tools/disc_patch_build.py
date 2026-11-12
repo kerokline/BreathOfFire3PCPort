@@ -417,14 +417,60 @@ def image_changes(orig, patched, build_id):
     return changes, {"pointer": before - len(changes), "length": length, "counts": hybrid.counts}, hybrid
 
 
-def write_image_part(cache, root, layer, changes, where):
+def parse_skip(value, cat=None):
+    """A disc-patch mod's `skip` (docs/mods.md 11): what of a table the build
+    must not carry, which no rule of the build can see. In mod.toml a list of
+    inline tables, {table = "<a tables.toml key>", records = [first, last]};
+    out, [[key, first, last]] (the form <home>/mods.toml keeps, which a JSON
+    list writes as TOML). Bad, naming the entry, for a table the catalogue
+    does not have or that is no table file, or records outside the table."""
+    if cat is None:
+        import tables
+        cat, _, _ = tables.load()
+    by_key = {t["key"]: t for t in cat["table"]}
+    if not isinstance(value, list) or len(value) > 64:
+        raise Bad("skip must be a list of at most 64 entries, each {table = \"...\", records = [first, last]}")
+    out = []
+    for n, e in enumerate(value, 1):
+        where = "skip entry %d" % n
+        if isinstance(e, list) and len(e) == 3:            # the home's own form, read back
+            e = {"table": e[0], "records": e[1:]}
+        if not isinstance(e, dict) or set(e) != {"table", "records"}:
+            raise Bad("%s must have exactly two keys, table and records" % where)
+        key, rg = e["table"], e["records"]
+        if not isinstance(key, str) or key not in by_key:
+            raise Bad("%s: table %s is not a table of the catalogue (tables.py list names them)" % (where, json.dumps(key)))
+        t = by_key[key]
+        if "symbol" not in t or "in_image" in t:
+            raise Bad("%s: table %s is not a table file of the PC's data, so no cell of it is carried" % (where, key))
+        if not (isinstance(rg, list) and len(rg) == 2 and all(isinstance(v, int) and not isinstance(v, bool) for v in rg)
+                and 0 <= rg[0] <= rg[1] < t["count"]):
+            raise Bad("%s: records must be [first, last] inside %s (0 to %d)" % (where, key, t["count"] - 1))
+        out.append([key, rg[0], rg[1]])
+    return out
+
+
+def write_image_part(cache, root, layer, changes, where, skip=(), cat=None):
     """The mod's image part into root/<layer>/exe/: a byte in a table that is
     a file as a cell of tables.toml (the install's whole table file with the
     mod's bytes, docs/image-layer-round.md 3.2), any other as a raw range of
     place.toml where the install's image is of a class a layer may write.
     ([(file name, sha256)], {"cells", "tables", "raw", "kept": bytes the
-    install's image keeps as the PC's own})."""
+    install's image keeps as the PC's own, "zero_bytes" / "zero_records":
+    bytes not carried because they fill a record the install leaves all zero
+    and the filled record is outside the table's field bounds, "skipped":
+    bytes of the records `skip` names ([[key, first, last]], parse_skip)}).
+
+    The zero-record rule (docs/mods.md 11; D415): a record the original
+    leaves entirely zero is not the mod's to fill unless every field of the
+    patched record is inside its `range` (tables.toml; tables.out_of_bounds).
+    A hack that keeps code or its own tables in a table's empty records is
+    the case it sees; a field with no range takes any value."""
     import tomllib
+    import tables
+    if cat is None:
+        cat, _, _ = tables.load()
+    by_cat = {t["key"]: t for t in cat["table"]}
     exe = os.path.join(cache, "base", "exe")
     try:
         with open(os.path.join(exe, "data.toml"), "rb") as f:
@@ -455,6 +501,31 @@ def write_image_part(cache, root, layer, changes, where):
             raw.append(pc)
         else:
             kept += 1
+    # the records a mod does not fill: `skip`'s, then the zero-record rule
+    zero_bytes, zero_records, skipped = 0, 0, 0
+    by_row = {r[0]: r for r in rows}
+    for key in list(bodies):
+        stride = by_row[key][4]
+        with open(os.path.join(exe, "tables", key + ".bin"), "rb") as f:
+            orig = f.read()
+        for rec in sorted({off // stride for off in cells[key]}):
+            lo, hi = rec * stride, (rec + 1) * stride
+            mine = [off for off in cells[key] if lo <= off < hi]
+            skipped_here = any(k == key and a <= rec <= b for k, a, b in skip)
+            zero_fill = not any(orig[lo:hi]) and key in by_cat and \
+                tables.out_of_bounds(by_cat[key], bytes(bodies[key][lo:hi])) is not None
+            if not (skipped_here or zero_fill):
+                continue
+            for off in mine:
+                bodies[key][off] = orig[off]
+                cells[key].discard(off)
+            if skipped_here:
+                skipped += len(mine)
+            else:
+                zero_bytes += len(mine)
+                zero_records += 1
+        if not cells[key]:
+            del bodies[key]
     d = os.path.join(root, layer, "exe")
     os.makedirs(d)
     wrote, ncells = [], 0
@@ -511,7 +582,8 @@ def write_image_part(cache, root, layer, changes, where):
         os.rmdir(d)
         if not os.listdir(os.path.join(root, layer)):
             os.rmdir(os.path.join(root, layer))
-    return wrote, {"cells": ncells, "tables": len(bodies), "raw": len(raw), "kept": kept}
+    return wrote, {"cells": ncells, "tables": len(bodies), "raw": len(raw), "kept": kept,
+                   "zero_bytes": zero_bytes, "zero_records": zero_records, "skipped": skipped}
 
 
 # ---------------------------------------------------------------- the two discs, section by section
@@ -539,6 +611,122 @@ def changed_sections(orig, patched):
                           "carry" % (key, i))
             out[(key, i)] = (kind, dest, da, db)
     return out
+
+
+# ---------------------------------------------------------------- files the directory does not list
+
+SECTOR = 2048
+
+
+def disc_sectors(disc):
+    """How many sectors the image holds (a raw track 2352 bytes a sector, a cooked one 2048)."""
+    return os.path.getsize(disc.f.name) // (2352 if disc.raw else SECTOR)
+
+
+def owned_sectors(disc):
+    """Every sector the disc's ISO 9660 tree accounts for, as a set of LBAs:
+    the system area and the volume descriptors (LBA 0 to the set terminator),
+    the path tables, every directory's extent and every file's."""
+    owned = set(range(16))
+    lba = 16
+    while True:
+        s = disc.sector(lba)
+        owned.add(lba)
+        if s[1:6] != b"CD001" or s[0] == 255 or lba > 64:
+            break
+        lba += 1
+    pvd = disc.sector(16)
+    size, = struct.unpack_from("<I", pvd, 132)
+    n = max(1, -(-size // SECTOR))
+    for at, fmt in ((140, "<I"), (144, "<I"), (148, ">I"), (152, ">I")):
+        t, = struct.unpack_from(fmt, pvd, at)
+        if t:
+            owned.update(range(t, t + n))
+
+    def walk(lba, size, depth):
+        if depth > 32:
+            raise Bad("the disc's directory tree is deeper than 32 folders")
+        owned.update(range(lba, lba + max(1, -(-size // SECTOR))))
+        d, pos = disc.extent(lba, size), 0
+        while pos < len(d):
+            n = d[pos]
+            if n == 0:
+                pos = (pos // SECTOR + 1) * SECTOR
+                continue
+            e_lba, e_size = struct.unpack_from("<I", d, pos + 2)[0], struct.unpack_from("<I", d, pos + 10)[0]
+            flags, nlen = d[pos + 25], d[pos + 32]
+            name = d[pos + 33:pos + 33 + nlen]
+            pos += n
+            if name in (b"\x00", b"\x01"):
+                continue
+            if flags & 2:
+                walk(e_lba, e_size, depth + 1)
+            else:
+                owned.update(range(e_lba, e_lba + max(1, -(-e_size // SECTOR))))
+    root = pvd[156:190]
+    walk(struct.unpack_from("<I", root, 2)[0], struct.unpack_from("<I", root, 10)[0], 0)
+    return owned
+
+
+def outside_files(orig, patched):
+    """The files of the patched disc that its directory does not list
+    (docs/mods.md 11): sectors that are not zero, belong to no directory
+    entry of the patched disc, and are not the original's sector at that LBA
+    (absent there, or other bytes: a rebuilt disc lays the original's files
+    elsewhere, so on the Definitive Edition 3 of the 67 such sectors hold the
+    original's bytes of another file, not zeros) - read as EMIs where they are
+    one. A sector the original has the same is the mastering tool's, not the
+    patch's. [{"lba", "sectors", "sections": [(index, type, load address,
+    size)] or None for sectors that are not an EMI}], in LBA order. Read
+    only; nothing here is carried into a layer."""
+    owned, total, o_total = owned_sectors(patched), disc_sectors(patched), disc_sectors(orig)
+
+    def free(lba):
+        """Outside the directory, and not the original's sector at that LBA."""
+        return lba < total and lba not in owned and (lba >= o_total or orig.sector(lba) != patched.sector(lba))
+
+    out, lba = [], 0
+    while lba < total:
+        if lba in owned:
+            lba += 1
+            continue
+        s = patched.sector(lba)
+        if not any(s) or not free(lba):
+            lba += 1
+            continue
+        if s[8:16] == b"MATH_TBL":
+            count, = struct.unpack_from("<I", s, 0)
+            if 0 < count <= 126:
+                sizes = [struct.unpack_from("<I", s, 0x10 + 16 * i)[0] for i in range(count)]
+                n = 1 + sum(-(-z // SECTOR) for z in sizes)
+                if all(free(lba + k) for k in range(n)):
+                    blob = patched.extent(lba, n * SECTOR)
+                    secs = [(i, kind, dest, len(b)) for i, kind, dest, b in emi_sections(blob)]
+                    out.append({"lba": lba, "sectors": n, "sections": secs})
+                    lba += n
+                    continue
+        if out and out[-1]["sections"] is None and out[-1]["lba"] + out[-1]["sectors"] == lba:
+            out[-1]["sectors"] += 1
+        else:
+            out.append({"lba": lba, "sectors": 1, "sections": None})
+        lba += 1
+    return out
+
+
+def outside_sections(disc, lba):
+    """One file outside the disc's directory, read as an EMI from its first
+    sector `lba` (an outside_files() row's): [(index, type, load address,
+    bytes)], as emi_sections gives them. For the code that carries such a file
+    later (docs/mods.md 11: the camp's masters and the town warp of the
+    Definitive Edition read their text from files like these). Bad when the
+    sector is not an EMI's header. The bytes are game data: never committed."""
+    head = disc.sector(lba)
+    if head[8:16] != b"MATH_TBL":
+        raise Bad("the sector at LBA 0x%X is not the start of an EMI" % lba)
+    count, = struct.unpack_from("<I", head, 0)
+    sizes = [struct.unpack_from("<I", head, 0x10 + 16 * i)[0] for i in range(count)]
+    n = 1 + sum(-(-z // SECTOR) for z in sizes)
+    return emi_sections(disc.extent(lba, n * SECTOR))
 
 
 def collect_base(files, build, changed, transforms, sources_of):
@@ -882,6 +1070,9 @@ def build(home, cache, mod_folder, row, tag, where, say):
         boot = 0
         if orig.boot and orig.boot in patched.disc.files:
             boot = len(edits(orig.disc.read(orig.boot), patched.disc.read(orig.boot)))
+        say("Looking for files the patched disc's directory does not list")
+        outside = outside_files(orig.disc, patched.disc)
+        out_emis = [x for x in outside if x["sections"] is not None]
 
         mode = loc_mode(cache, tag, build_id)
         say("Building the %s text with the patch's text (the text builder, about two minutes)" % tag)
@@ -898,7 +1089,7 @@ def build(home, cache, mod_folder, row, tag, where, say):
         out = {}
         if base:
             out[first] = write_layer(staged, first, {n: [(k, t, 0, b) for k, t, b in c] for n, c in base.items()}, where)
-        wrote, placed = write_image_part(cache, staged, first, image, where) if image else ([], None)
+        wrote, placed = write_image_part(cache, staged, first, image, where, parse_skip(row.get("skip") or [])) if image else ([], None)
         if wrote:
             out[first] = out.get(first, []) + [("exe/" + n, i, where, h) for i, (n, h) in enumerate(wrote)]
         if text:
@@ -922,6 +1113,15 @@ def build(home, cache, mod_folder, row, tag, where, say):
             if placed["kept"]:
                 say("  not carried: %d bytes of the overlays' numbers outside the tables that are files; this install's "
                     "image keeps them as the PC's own" % placed["kept"])
+            if placed["zero_bytes"]:
+                say("  not carried: %d bytes in %d records that the original leaves empty, outside the table's field "
+                    "bounds (the patch keeps code or tables of its own there)" % (placed["zero_bytes"], placed["zero_records"]))
+            if placed["skipped"]:
+                say("  not carried: %d bytes of the records mod.toml's skip names" % placed["skipped"])
+        if outside:
+            say("  not carried: %d files outside the disc's directory (%d bytes), and %d other sectors there"
+                % (len(out_emis), sum(x["sectors"] for x in out_emis) * SECTOR,
+                   sum(x["sectors"] for x in outside if x["sections"] is None)))
         if notes["length"]:
             say("  not carried: %d places where the patch changes a table's length" % len(notes["length"]))
             for rel, i, addr, old, new, pc in notes["length"]:
@@ -956,6 +1156,11 @@ def build(home, cache, mod_folder, row, tag, where, say):
             "sound_sections": len(sound), "boot_places": boot, "other_sections": len(other),
             "table_bytes": placed["kept"] if placed else 0, "pointer_bytes": notes["pointer"],
             "length_changes": len(notes["length"]),
+            "zero_record_bytes": placed["zero_bytes"] if placed else 0,
+            "zero_records": placed["zero_records"] if placed else 0,
+            "skipped_bytes": placed["skipped"] if placed else 0,
+            "outside_files": len(out_emis), "outside_bytes": sum(x["sectors"] for x in out_emis) * SECTOR,
+            "outside_sectors": sum(x["sectors"] for x in outside if x["sections"] is None),
         })
         return out
     finally:
@@ -1022,6 +1227,15 @@ def read_report(mod_folder):
             lack.append(count(num(n, "length_changes"), "change") + " to the length of a table")
         if num(n, "other_sections"):
             lack.append(count(num(n, "other_sections"), "other section"))
+        if num(n, "zero_record_bytes"):
+            lack.append("%s that the patch writes into %s of a table (they are not table numbers)"
+                        % (count(num(n, "zero_record_bytes"), "byte"), count(num(n, "zero_records"), "empty record")))
+        if num(n, "skipped_bytes"):
+            lack.append(count(num(n, "skipped_bytes"), "byte") + " of table records that the mod skips")
+        if num(n, "outside_files"):
+            lack.append(count(num(n, "outside_files"), "file") + " that the disc's directory does not list")
+        if num(n, "outside_sectors"):
+            lack.append(count(num(n, "outside_sectors"), "other sector") + " that the disc's directory does not list")
     except (OSError, KeyError, ValueError, AttributeError, tomllib.TOMLDecodeError):
         return None, None
     return ("This build of the mod has these changes: %s." % ", ".join(has) if has else None,
@@ -1053,6 +1267,46 @@ class _Disc:
 
     def find(self, basename):
         return [k for k in self._b if k.rsplit("/", 1)[-1] == basename.upper()]
+
+
+def _iso(path, files, extra, total):
+    """A cooked (2048-byte sector) ISO 9660 image of this test's own: the
+    volume descriptor at 16, the set terminator at 17, a path table at 18, the
+    root directory at 19 and `files` ({name: bytes}) from 20; `extra` ({lba:
+    bytes}) laid where no directory entry names it; `total` sectors in all."""
+    sec = [bytearray(SECTOR) for _ in range(total)]
+
+    def rec(lba, size, flags, name):
+        r = bytearray(33 + len(name) + (1 - len(name) % 2))
+        r[0] = len(r)
+        struct.pack_into("<I", r, 2, lba)
+        struct.pack_into(">I", r, 6, lba)
+        struct.pack_into("<I", r, 10, size)
+        struct.pack_into(">I", r, 14, size)
+        r[25], r[32] = flags, len(name)
+        r[33:33 + len(name)] = name
+        return bytes(r)
+
+    root = rec(19, SECTOR, 2, b"\x00") + rec(19, SECTOR, 2, b"\x01")
+    lba = 20
+    for name, body in files.items():
+        root += rec(lba, len(body), 0, name.encode() + b";1")
+        for k in range(-(-len(body) // SECTOR)):
+            sec[lba + k][:] = body[k * SECTOR:(k + 1) * SECTOR].ljust(SECTOR, b"\0")
+        lba += -(-len(body) // SECTOR)
+    sec[19][:len(root)] = root
+    sec[16][0:6] = b"\x01CD001"
+    struct.pack_into("<I", sec[16], 132, 10)
+    struct.pack_into("<I", sec[16], 140, 18)
+    struct.pack_into(">I", sec[16], 148, 18)
+    sec[16][156:190] = rec(19, SECTOR, 2, b"\x00")
+    sec[17][0:6] = b"\xffCD001"
+    sec[18][0:10] = b"\x01\x00\x13\x00\x00\x00\x01\x00\x00\x00"
+    for at, body in extra.items():
+        for k in range(-(-len(body) // SECTOR)):
+            sec[at + k][:] = body[k * SECTOR:(k + 1) * SECTOR].ljust(SECTOR, b"\0")
+    with open(path, "wb") as f:
+        f.write(b"".join(sec))
 
 
 class _Build:
@@ -1209,12 +1463,74 @@ def selftest():
         expect(pt["kind"] == "raw" and pt["ranges"] == [[0x600010, 0x600012, "mod"], [0x600020, 0x600021, "mod"]]
                and pt["bytes"] == 3 and blob == b"\x10\x11\x20" and pt["sha256"] == sha(blob),
                "image part: the other bytes as raw ranges, in order")
-        expect(placed == {"cells": 4, "tables": 1, "raw": 3, "kept": 1} and [w[0] for w in wrote] ==
+        expect(placed == {"cells": 4, "tables": 1, "raw": 3, "kept": 1, "zero_bytes": 0, "zero_records": 0,
+                          "skipped": 0} and [w[0] for w in wrote] ==
                ["things.bin", "tables.toml", "place.bin", "place.toml"],
                "image part: a byte on a class that must equal the PC's is kept and counted")
         wrote, placed = write_image_part(ic, os.path.join(root, "iout2"), "mod-x", {0x600130: 1}, "w")
         expect(wrote == [] and placed["kept"] == 1 and not os.path.exists(os.path.join(root, "iout2", "mod-x")),
                "image part: nothing a layer may write leaves no folder")
+
+        # the zero-record rule and skip (docs/mods.md 11; D415): a catalogue of this test's own.
+        # "things": 5 records of 8 bytes, +0 a count 0..3, +1 four kinds 0..2 two bytes apart, +2 free.
+        tcat = {"table": [{"key": "things", "symbol": "Things", "count": 5, "stride": 8, "field": [
+            {"at": 0, "type": "u8", "name": "count", "range": [0, 3], "status": "evidence"},
+            {"at": 1, "type": "u8", "repeat": [3, 2], "name": "kind", "range": [0, 2], "status": "evidence"},
+            {"at": 2, "type": "u8", "repeat": [3, 2], "name": "id", "status": "evidence"}]}]}
+        with open(os.path.join(ic, "base", "exe", "tables", "things.bin"), "wb") as f:
+            f.write(bytes(8) + bytes([2, 1, 9, 0, 0, 0, 0, 0]) + bytes(24))       # record 1 stocked, the rest empty
+        with open(os.path.join(ic, "base", "exe", "tables", "tables.toml"), "w") as f:
+            f.write('build = "test"\ntables = [\n  ["things", 0x600100, 0x600128, 5, 8, "%s", "test"],\n]\n'
+                    % sha(bytes(8) + bytes([2, 1, 9, 0, 0, 0, 0, 0]) + bytes(24)))
+
+        def part(out, ch, skip=()):
+            wrote, placed = write_image_part(ic, os.path.join(root, out), "mod-x", ch, "w", skip, tcat)
+            p = os.path.join(root, out, "mod-x", "exe", "tables.toml")
+            cells = []
+            if os.path.isfile(p):
+                with open(p, "rb") as f:
+                    cells = tomllib.load(f)["cells"]
+            return cells, placed
+
+        # record 0 filled as a list would be (count 1, kind 2, id 7): inside the bounds, carried
+        cells, placed = part("z1", {0x600100: 1, 0x600101: 2, 0x600102: 7})
+        expect(cells == [["things", 0, 0, 3]] and placed["zero_bytes"] == 0,
+               "zero records: an empty record filled inside every field's range is carried")
+        # record 2 filled with what no reader takes (a count of 0x27, a kind of 0x24): refused, counted
+        cells, placed = part("z2", {0x600110: 0x27, 0x600111: 0x24, 0x600112: 0x10, 0x600101: 1})
+        expect(cells == [["things", 0, 1, 1]] and placed["zero_bytes"] == 3 and placed["zero_records"] == 1,
+               "zero records: an empty record filled outside a field's range is not carried, and counted")
+        # a stocked record (1) changed out of bounds is the mod's: the rule is for empty records only
+        cells, placed = part("z3", {0x600109: 7})
+        expect(cells == [["things", 1, 1, 1]] and placed["zero_bytes"] == 0,
+               "zero records: a record the original stocks is carried whatever its value")
+        # one byte out of range in a later copy of a repeated field
+        cells, placed = part("z4", {0x600118: 1, 0x60011D: 3})
+        expect(cells == [] and placed["zero_bytes"] == 2 and placed["zero_records"] == 1,
+               "zero records: the third copy of a repeated field out of range refuses the record")
+        # skip: what the rule cannot see (an in-bounds fill of records 2..3), named in mod.toml
+        cells, placed = part("z5", {0x600110: 1, 0x600118: 1, 0x600120: 1}, [["things", 2, 3]])
+        expect(cells == [["things", 4, 0, 1]] and placed["skipped"] == 2 and placed["zero_bytes"] == 0,
+               "skip: the records it names are not carried, and counted; the record after them is")
+        cells, placed = part("z6", {0x600110: 0x27}, ())
+        p = os.path.join(root, "z6", "mod-x")
+        expect(cells == [] and not os.path.exists(p) and placed["tables"] == 0,
+               "zero records: a table left with no cell writes no table file")
+        refused(lambda: parse_skip([{"table": "hats", "records": [0, 1]}], tcat), "not a table of the catalogue",
+                "skip: a table the catalogue does not have")
+        refused(lambda: parse_skip([{"table": "things", "records": [3, 5]}], tcat), "inside things (0 to 4)",
+                "skip: records past the table")
+        refused(lambda: parse_skip([{"table": "things", "records": [3, 2]}], tcat), "[first, last]",
+                "skip: first after last")
+        refused(lambda: parse_skip([{"table": "things", "records": [1, 2], "why": "x"}], tcat), "exactly two keys",
+                "skip: a key an entry does not have")
+        refused(lambda: parse_skip({"table": "things"}, tcat), "must be a list", "skip: not a list")
+        expect(parse_skip([{"table": "things", "records": [1, 2]}, ["things", 4, 4]], tcat) == [["things", 1, 2], ["things", 4, 4]],
+               "skip: the mod.toml form and the home's own form, both read")
+        with open(os.path.join(ic, "base", "exe", "tables", "things.bin"), "wb") as f:
+            f.write(zeros)
+        with open(os.path.join(ic, "base", "exe", "tables", "tables.toml"), "w") as f:
+            f.write('build = "test"\ntables = [\n  ["things", 0x600100, 0x600128, 5, 8, "%s", "test"],\n]\n' % sha(zeros))
         with open(os.path.join(ic, "base", "exe", "tables", "things.bin"), "wb") as f:
             f.write(bytes(39) + b"\1")
         refused(lambda: write_image_part(ic, os.path.join(root, "iout3"), "mod-x", ch, "w"), "is not the one its tables.toml",
@@ -1295,9 +1611,46 @@ def selftest():
         write_report(rd, "w", {"enemy_tables": 1}, {})
         expect(read_report(rd) == ("This build of the mod has these changes: 1 enemy table.", None),
                "report: nothing left out, no second sentence")
+        write_report(rd, "w", {"enemy_tables": 1},
+                     {"zero_record_bytes": 149, "zero_records": 10, "skipped_bytes": 2, "outside_files": 15,
+                      "outside_bytes": 67 * SECTOR, "outside_sectors": 1})
+        expect(read_report(rd)[1] ==
+               "It does not have these changes of the patch: 149 bytes that the patch writes into 10 empty records of "
+               "a table (they are not table numbers), 2 bytes of table records that the mod "
+               "skips, 15 files that the disc's directory does not list, 1 other sector that the disc's directory does "
+               "not list.", "report: the empty records, the skip and the files outside the directory, as a sentence")
         with open(os.path.join(rd, REPORT), "w") as f:
             f.write('[carried]\nenemy_tables = "many"\n[not_carried]\n')
         expect(read_report(rd) == (None, None), "report: a file this tool did not write says nothing")
+
+        # files outside the directory: two images of this test's own
+        import psx_disc
+        listed = _emi([(0, 0x80010000, b"L" * 3000)])                     # 3 sectors at 20..22
+        hidden = _emi([(0, 0x80010000, b"H" * 100), (0, 0x80016000, b"W" * 2100)])   # 1 + 1 + 2 sectors
+        op, pp = os.path.join(root, "o.iso"), os.path.join(root, "p.iso")
+        _iso(op, {"A.EMI": listed}, {33: b"left by the mastering tool", 28: b"another file of the original's"}, 40)
+        _iso(pp, {"A.EMI": listed}, {26: hidden, 33: b"left by the mastering tool", 35: b"not an EMI",
+                                    41: _emi([(0, 0x80010000, b"Z" * 10)])}, 43)
+        od, pd = psx_disc.Disc(op), psx_disc.Disc(pp)
+        try:
+            own = owned_sectors(pd)
+            expect({16, 17, 18, 19, 20, 21, 22} <= own and 26 not in own and 23 not in own,
+                   "outside: the directory's sectors - descriptors, path table, root, the file - are owned")
+            got = outside_files(od, pd)
+            expect([(x["lba"], x["sectors"], x["sections"]) for x in got] == [
+                (26, 4, [(0, 0, 0x80010000, 100), (1, 0, 0x80016000, 2100)]),
+                (35, 1, None),
+                (41, 2, [(0, 0, 0x80010000, 10)])],
+                "outside: an EMI no entry lists (one of its sectors over other bytes of the original's), a sector "
+                "that is no EMI, one past the original's end; a sector the original has the same is not counted")
+            secs = outside_sections(pd, 26)
+            expect([(s[2], s[3]) for s in secs] == [(0x80010000, b"H" * 100), (0x80016000, b"W" * 2100)],
+                   "outside: one file's sections read back by its first sector")
+            refused(lambda: outside_sections(pd, 35), "not the start of an EMI", "outside: a sector that is no EMI")
+            expect(outside_files(od, od) == [], "outside: the original against itself has none")
+        finally:
+            od.f.close()
+            pd.f.close()
     finally:
         shutil.rmtree(root, ignore_errors=True)
     print("disc_patch_build selftest: %d failure(s)" % len(fails))
