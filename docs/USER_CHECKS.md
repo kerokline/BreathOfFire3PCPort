@@ -20,10 +20,12 @@ Launch for all of these: `build/bof3x-launcher.exe --game bof3`; log in
 *Why:* the fix is read and self-tested, but nobody has seen it in play. The bug
 is D408: the leader is missed when the leader is not Ryu, and Ryu is healed twice.
 
-- [ ] Put someone other than Ryu in front, go to the world map, take some damage
+- [x] Put someone other than Ryu in front, go to the world map, take some damage
       on all three members, and cast a whole-party heal from the menu.
+      **The owner, 2026-11-12: "The world map heal worked too"** (`main`
+      `db9619da`).
 - [ ] Expect all three to gain HP. With `BOF3X_OFF=FieldHealParty` the leader
-      gains nothing, and Ryu gains twice.
+      gains nothing, and Ryu gains twice. (The switch off was not reported.)
 - Result goes to: [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0208.
 
 ### 1. Save and load through the fully-ours file layer

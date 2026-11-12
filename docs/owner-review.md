@@ -13,6 +13,36 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-12, struck at the owner's word
+
+The owner played `main` `db9619da` (PR #234) from `game\` with the Definitive Edition mod built and its ten
+behaviours on (the 32-bit build; a PC-based install, `en-US`), and answered in chat the same day. The words
+in quotes are the owner's.
+
+- ~~**The romhack's ten behaviours**~~ (DIV-0216..0225, PRs #232 and #233): "all mod fields and behaviors
+  appear to be working as intended". Which scene showed each behaviour is not recorded. `LevelSkillCatchUp`
+  and `TownWarp` were played before their hands-off proof ran; the proof is still owed (HANDOFF item 00).
+  One thing seen: "The row above text mod doesn't play nicely with all of the masters it seems, but thats ok
+  for now - we can revisit if someone asks" - recorded as D416, parked; what was seen is not described.
+- ~~**The always-learn cheat**~~ (PR #234, [`cheats.md`](cheats.md)): "appears to be working as intended".
+- ~~**The whole-party heal on the world map**~~ (DIV-0208, [`USER_CHECKS.md`](USER_CHECKS.md)): "worked".
+- ~~**The mod's changed data in the game**~~: "The table edits look right (item names changed, descriptions
+  changed)". That is the disc-patch mod's layers seen in play. A `table-edit` mod added by hand on the Mods
+  tab ([`image-layer-round.md`](image-layer-round.md) acceptance 5's second half) is not named by it.
+- ~~**The PSX logo movie and the jingles**~~ (DIV-0214, DIV-0215, PR #228): "the psx movie played and looked
+  good. The jingles sound right to me, as does the psx logo sound."
+- ~~**DIV-0203's German**~~: "looks right".
+- ~~**The consumables sorted by id**~~ (DIV-0189): "looks right to me". The hand-written type order was a
+  question for a next step; it was not asked for.
+- ~~**The ending scenes**~~ (the section of 2026-11-07 evening below): "Fin looks good".
+
+- ~~**D406's listen**~~: first "quickloading in combat now plays the background sound correctly, but the 'mid
+  voice effects' no longer play - it only plays the full voice sound if you quicksave before it"; then, on a
+  replay whose quicksave is 0.2 s into Rei's line, loaded several times: "I definitely could hear it there".
+  The first take was in the line's quiet tail (the line is loud for 0.6 s of its 1.92 s);
+  [`known-defects.md`](known-defects.md) D406 has the measure. The 32-bit build only; the 64-bit build's
+  listen after the fix was not made.
+
 ## 2026-11-11, struck at the owner's word
 
 The owner, in chat: "I signed off on the sound layer, and have used the save editor both as a converter and to
