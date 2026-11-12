@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's two checks struck at the owner's word) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,21 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-11-11, struck at the owner's word
+
+The owner, in chat: "I signed off on the sound layer, and have used the save editor both as a converter and to
+play an edited save".
+
+- ~~**The sound-layer round's listens**~~ (PR #122, DIV-0169..0175; the section of 2026-10-23 evening below):
+  signed off. The built behaviour stands, `StopCuts` (D347) and `SoundLevelGate` among it.
+- ~~**An edited save loaded and played in the game**~~ (the save editor, DIV-0211): done. Which fields were
+  edited is not recorded.
+- ~~**The save editor used as a converter**~~ (PR #222): done.
+
+**Still open from the same two:** a PC-made card loaded by a PlayStation build (Mednafen or the sibling's
+psxrecomp) - say if the conversion you made was read there, and it is struck too; D350 and D344, the sound-layer
+round's two decisions, below.
 
 ## 2026-11-07 evening, the ending scenes (`fix/ending-scenes-1107`)
 
@@ -100,11 +115,11 @@ Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc 
   2026-11-07 night).** The well's start recording (`BOF3X_RECORD`) is still wanted for the harness, not for the
   release.
 
-## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
+## 2026-10-23 evening, the sound-layer round (merged as PR #122; signed off 2026-11-11, two decisions open)
 
 The PlayStation's positional sound, pause and cuts back in the port's DirectSound layer
 ([`sound-layer-round.md`](sound-layer-round.md); DIV-0169..0175, each `BOF3X_ORIGINAL=<switch>` for the PC's
-behaviour). Nothing of it has been heard. **To listen for**, each from a `game\` build of the branch:
+behaviour). **Signed off by the owner on 2026-11-11**; the list is kept for what each entry sounds like:
 
 - **The inn's night** (DIV-0169, `InnNightPause`; any inn, the starting town's on `shop.txt`): the town's
   song stops dead as the screen starts to fade, the jingle plays, and the song comes back *where it

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-08: the beta `v0.1.0-beta.1` is being cut from `main` `67c3259b` - the notes written, the tag after the owner's upgrade check, item 0; `main` holds PRs #207 (the 64-bit round's stage D with the FMV decoders) and #209 (the ending scenes); the source-layout round's stages B0 and B are in `main` (PR #214) and stage C is done on `source-layout/stage-c` (2026-11-09: the shells retired, the files of ours moved whole, both gates 0 differ), stage D's ten-route proof next, item 14b; D406's listen owed)
+**Status:** IN PROGRESS (2026-11-11 evening: `main` is `c14b805c`, the PR #229 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224, #227, #228 and #229 ([`STATUS.md`](STATUS.md) has a line each); the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `67c3259b`** (PR #209, 2026-11-07 night; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170, stayed a draft and was deleted on 2026-11-08, its tag kept; **`v0.1.0-beta.1` is being cut from this commit**, item 0): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `c14b805c`** (PR #229, 2026-11-11 evening). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round (PR #224, DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215) and the Linux native groundwork (PR #229) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -23,8 +23,7 @@ issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, 
 last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
 faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **One PR is open** (2026-11-08), the beta-readiness docs PR to
-come, which carries the beta's notes, the README line, the bug-report template and this rewrite (item 0) - opened as PR #211 on 2026-11-08.
+unpushed is merged; the open work is below. **No PR is open** (2026-11-11 evening).
 Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -32,19 +31,27 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-00. **The PSX media round's PR** (`psx-media/own-decoders`, [`psx-media-round.md`](psx-media-round.md)
-   section 5): owed before merge - the jingles heard in a scene (an inn's `OYASUMI`), the owner's
-   play of the movie on Windows, the ten state-hash routes. Next on Linux: tier 1's rows 5, 7 and 9 to 12
-   on frost's Linux machine ([`linux-round.md`](linux-round.md) 2c).
-0. **The beta's first reports.** `v0.1.0-beta.1` is being cut from `main` `67c3259b`
-   ([`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
-   the notes; [`STATUS.md`](STATUS.md) says what it holds and what the two clears established). **Still the
-   owner's before the tag** (beta-readiness section 4): item 3, the alpha.5 upgrade
-   path over a copy of a real alpha.5 folder (the launcher names the stale pieces and offers the rebuild; a
-   disc-built image built by an older release is refused until rebuilt, DIV-0101's strict mode; the saves load;
-   the Jukebox's names show). Then the routine ([`releases/README.md`](releases/README.md)): commit the notes on
-   `main` signed off, tag `v0.1.0-beta.1`, read the draft, publish (`v0.1.0-alpha.6`'s draft deleted on 2026-11-08, its tag
-   kept). The beta readiness work is **PR #211**, open and held through the owner's checks. **When a player files a report:** the
+00. **Next, 2026-11-11 evening** (the order is the owner's; these are the candidates):
+   - **`v0.1.0-beta.2`.** Everything merged since `44fd3204` is unreleased. The routine is
+     [`releases/README.md`](releases/README.md). To settle first: whether a `disc-patch` mod ships as playable (the
+     disc-patch round's group D, the release, is held by the owner's call 1 and nobody has played a romhack mod,
+     [`disc-patch-round.md`](disc-patch-round.md)); the `orig4` state-hash pairs are stale and want recording again at
+     the tip (item 14b).
+   - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
+     someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
+     second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
+     and 9 to 12 are still to run on frost's Linux machine (2c).
+   - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
+   - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
+   - **IDEAS I58's next step:** the save editor's entrance list and party table on an install with no `BOF3.exe`
+     ("In flight", the save editor's list), then EMI patch mods.
+   - **Merged on 2026-11-11:** the PSX media round (PR #228) and the Linux groundwork (PR #229); the owner says the
+     state-hash runs ran for both. Not recorded here: the jingles heard in a scene (an inn's `OYASUMI`) and the
+     owner's play of the PSX logo movie on Windows.
+0. **The beta's reports.** `v0.1.0-beta.1` is published (2026-11-08, the tag at `44fd3204`;
+   [`beta-readiness.md`](beta-readiness.md), the checklist; [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
+   the notes). PR #211 (the readiness docs) and PR #212 (Capcom's logo alone, DIV-0202 amended, `CapcomMovieOnly`)
+   are merged. **When a player files a report:** the
    template `.github/ISSUE_TEMPLATE/bug-report.md` asks for the release's name (the launcher shows no version:
    the zip's name, or the exe's Properties > Details > Product version, stamped by `src/version.rc`), the Sources
    page's list and the language, the preset, what was done and seen, and the `CRASH n:` block from `bof3x.log`;
@@ -227,8 +234,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `main` by patch, `d2089fde`) and `test/alpha4-fasttext` (a test build) are gone.
 
 9. **The sound-layer round** (PR #122; [`sound-layer-round.md`](sound-layer-round.md) sections 4..6, DIV-0169..0175)
-   and **fix wave 1023** (PR #117, DIV-0161..0168). **Nothing heard**: the listens and the two calls (D350, D344)
-   are at the top of [`owner-review.md`](owner-review.md); D340 (`caughFish` never draws the panel's marker) is held
+   and **fix wave 1023** (PR #117, DIV-0161..0168). **Signed off by the owner (2026-11-11): the listens are closed.** The two calls (D350, D344)
+   stay in [`owner-review.md`](owner-review.md) until answered by name; D340 (`caughFish` never draws the panel's marker) is held
    with its measurement. The gate's runs and diffs: `C:\Users\kerok\bof3x-runs\sl1023\merge\`. The second twin-diff step's
    private notes: `D:/bof3x-runs/frost/records_audit/REPORT.md` and `region_census/REPORT.md` (**the PC already
    carries two US fixes**, so "the PC follows the JP" is not to be assumed per function).
@@ -279,6 +286,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `0x801DA068` (the function before the twin). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **2026-11-11** (owner-review's section of that date): the sound-layer round signed off; the save editor used as a
+     converter and an edited save played. Still open there: a PC-made card loaded by a PlayStation build, D350 and D344.
    - **2026-11-07** (owner-review's two sections of that date): the ending scenes approved in play; the 64-bit
      build heard right, D406's listen after its fix owed; DIV-0203's German on a rebuilt `de-DE` layer.
    - **2026-10-28..31** (owner-review's section of that name): the exe-gap round's listens and DIV-0195's boxes
@@ -365,7 +374,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **After this round:** IDEAS I53 (the wide image, one struct at a time, gated by the hash) and I5's
    translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
-14b. **The source-layout round: stages A, B0 and B in `main` (PRs #207, #214); stage C and the cleanup round (I60) done on `source-layout/stage-c`, unpushed**
+14b. **The source-layout round is merged: stages A, B0 and B as PRs #207 and #214, stage C, the cleanup round (I60) and stage D's proof as PR #217 (2026-11-10)**
    (off `main` `1a817eba`, 2026-11-09; root `C:\Users\kerok\bof3x-runs\slc1109`: worktree `wt`, scripts and logs
    `scratch`, the launcher copy `c_L`, the baseline `base3`, the agents' worktrees `k1`..`k4` and reports
    `reports`; [`source-layout-round.md`](source-layout-round.md) section 5, "Stage C as run" and "The cleanup
@@ -379,7 +388,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    pure shells retired, 119 files of ours stay. Both gates **0 differ** against base3 (1,881 exception rows);
    the hosted shadow suite, the exe host and the moved image exit 0, the 963 self-test lines the same as stage
    B's (`scratch\i60_st`); the censuses regenerated, no count higher; every CI check passes locally.
-   **`main` is wrong until this merges:** stage B left `IsEnabled` checks running before the bind they test -
+   **A regression of stage B's, on `main` from PR #214 until PR #217 merged:** stage B left `IsEnabled` checks running before the bind they test -
    the reading row is never armed (silent), and `BOF3X_TEXT_SPEED=1`, `BOF3X_UNLEARNED_BLUE=1`,
    `BOF3X_ENEMY_INFO=1`, `BOF3X_NO_FAIL=1` each stop the game at start. Repaired on this branch, and
    `InjectReport` now stops the game for any `IsEnabled` asked before its `Inject`.
@@ -389,7 +398,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    routes, the rest only on pages that differ between two runs of one build (`0x6C3000`'s heap pointers on
    caughFish / masterAndManillo / worldMapAndAreaTransition, the sound page `0x7DE000` on combat, whelpBoss's
    VRAM window on `main`'s run); dragonTransform's moved run differed once on 28 pages and was identical on
-   the second pair. **Pick up here: the PR**, at the owner's word (the branch is unpushed), then the owner's
+   the second pair. **Merged as PR #217.** Owed: the owner's
    eye on the reading row, which no route covers. **The `orig4` pairs are stale against `main`** (both builds
    fail them alike): record them again at the merged tip before they gate anything. **Left of I60:** the self-tests written in a
    file of ours (to fuzz files, with I61), five files whose arming runs before their self-test, the six
@@ -635,13 +644,11 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **The Linux native round, PR #229 (frost's PR #226 plus the review's commits, branch `linux/native-review`;
-  2026-11-11, open, `main` `ed444dec` merged in).** State and what was proven: [`STATUS.md`](STATUS.md), "The
-  Linux native round's groundwork"; the record is [`linux-round.md`](linux-round.md) (LB1 as run, the narrow
-  encoding, the walk's cost). **Next:** the owner's play on Windows, then the merge at the owner's word; PR #226
-  is closed by whoever merges #229. If `main` moves first, merge it in again and regenerate
-  `analysis/os_census.tsv` (the census counts the launcher's sites too, so any launcher change on `main` turns
-  the `os-host` job red on the merge ref until then). The state-hash A/B's scripts and runs are in
+- **The Linux native round's groundwork is merged as PR #229 (2026-11-11 evening; frost's PR #226 plus the review's
+  commits).** State and what was proven: [`STATUS.md`](STATUS.md), "The Linux native round's groundwork"; the record
+  is [`linux-round.md`](linux-round.md) (LB1 as run, the narrow encoding, the walk's cost). A launcher change on
+  `main` wants `analysis/os_census.tsv` regenerated (the census counts the launcher's sites too, or the `os-host`
+  job turns red). The state-hash A/B's scripts and runs are in
   `D:\bof3x-runs\pr226fix` (`chain.sh <routes>`, `chain.log`; `Lbase` and `Ltip` are launcher copies of the
   two builds). **The rule the later units must keep** (LB8 above all): a `char` name in the engine is the
   system's narrow encoding - the process's ANSI code page on Windows - and crosses to and from a path only
@@ -649,7 +656,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   UTF-8 and never meet one. A new narrow-name call site gets a case in `tools/os_host/os_tests.cpp`
   `TestNarrowNames` if it does anything the existing ones do not.
 
-- **The save editor (2026-11-10, branch `launcher/save-editor`, DIV-0211, [`save-editor.md`](save-editor.md)).**
+- **The save editor (merged as PRs #221 and #222, 2026-11-10..11; DIV-0211, [`save-editor.md`](save-editor.md)).**
   The Mods tab's Save Editor... button and its dialog, for PC save files: every field from one table
   (`src/launcher/save/block.cpp`), the advanced fields, checks and backups on save, names from
   `data/save-names.tsv` beside the launcher, one Position field with the area's entrances read from
@@ -657,7 +664,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   (`tools/launcher_host/save_tests.cpp`; fixtures are the player's saves, never committed). The owner has
   the build in `game\` and has opened it on the real saves.
 
-  **Memory cards and conversion (2026-11-11, branch `launcher/save-editor-cards`,
+  **Memory cards and conversion (2026-11-11, PR #222,
   [`save-editor.md`](save-editor.md) 7):** the file box opens a raw card file and lists its saves; "Write to"
   takes a card save, a new save on the card or a new card file, and a save that changes kind is converted
   (`src/launcher/save/card.cpp`), with the names the game gave written as the other release's
@@ -674,8 +681,9 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   files.
 
   **Owed before it is called done:**
-  - **An edited save loaded and played in the game.** Nobody has. Start small: zenny, an item, a weapon;
-    then a party change (the party row `+0x74C`), an area and entrance change, a gene and a master.
+  - ~~An edited save loaded and played in the game~~ - **done by the owner (said 2026-11-11), who also used the
+    editor as a converter.** Which fields were edited is not recorded; the PlayStation-emulator load above stays owed
+    until the owner says a PlayStation build read a PC-made card.
   - **`tools/launcher_host/dialog_test.py` was not run** against the new button on the Mods row: it finds the
     launcher by its window title and presses Play, and the owner's launcher was open. Run it with no other
     launcher open, or change it to find its own process's window first (the scratch driver of this session
@@ -707,9 +715,6 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
      EXP past the level (needs the install's EXP curve); the button words are read-only; a save with a bad
      checksum opens for editing after one question, not read-only.
   7. `tools/recipe_saves/README.md` says `ammoniteBoss.DAT` is in area 134; the save holds 137.
-- **The beta's docs branch (2026-11-08):** `docs/beta-readiness-1107` in the main checkout - the checklist, the
-  notes `docs/releases/v0.1.0-beta.1.md`, the README's status line, `.github/ISSUE_TEMPLATE/bug-report.md` and
-  this rewrite; the PR to come, then the tag from `main` (item 0).
 - **Merged, still to remove (2026-11-08; `git cherry` before deleting any, Traps):** the 64-bit round's branches
   `x64/stage-d`, `x64/d-ci`, `x64/d-music` with the worktrees `C:\Users\kerok\bof3x-runs\x641107\wt_ci`, `wt_music`
   (the root's launcher copies, game copy and proof - `proof\`: the run scripts' `.out`, the hashes under `sh\`,
@@ -1081,6 +1086,6 @@ _One line each, with a pointer. Add when something costs more than an hour._
   play checks and open calls. The owner has played a PSX-only install (the reports of 2026-10-16); nobody has
   played a PSP-only one.
 - **frost (raulcorreia7):** the Linux round's next units (L2 on, [`linux-round.md`](linux-round.md) 6) on his
-  fork; the review's commits sit on top of his four on `linux/native-review` (PR #229), so he takes that branch before he continues. The Linux side of
+  fork; PR #229 is merged (2026-11-11), so he continues from `main`. The Linux side of
   the seam (the POSIX backend under his native build) is his to run; here it is only `os_tests` in WSL and CI.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).
