@@ -1,6 +1,6 @@
 # The solo-character round: a champion who fights alone
 
-**Status:** STAGED (2026-11-12, from `main` `01a67500`; nothing built, nothing
+**Status:** IN PROGRESS (stage A built 2026-11-12, section 4a; staged 2026-11-12, from `main` `01a67500`; nothing built, nothing
 launched. The design is IDEAS I56's (the owner, 2026-11-03), issue #223; the
 owner's four answers of 2026-11-12 are in section 6. **Group M is run**
 (2026-11-12, [`solo-character-reads.md`](solo-character-reads.md)): section 0a
@@ -244,6 +244,57 @@ Agents number nothing in the ledger or `known-defects.md`.
   language, not strings read from the game.
 - `tools/ledger_registry.py` and the presets regenerate after the
   coordinator numbers the entry; LA leaves a note of what to run.
+
+### 4a. Stage A as run (2026-11-12, branch `solo/round`)
+
+Merged in the order the docs, SC (`solo/sc`), LA (`solo/la`), no conflicts;
+the switch table and the presets regenerated after.
+
+- **SC.** `src/game/solo/solo.{h,cpp}`; DIV-0228 `SoloCharacter` and
+  DIV-0229 `SoloChampionIfPresent`, both `Default: off`, each saying that only
+  the switch, the mark and the decision module are built. `Solo_Read` after
+  `Behaviour_Read`; `Solo_Active`, `Solo_ChampionRecord`, `Solo_ChampionId`
+  (the record's `+9`, read live), `Solo_ChampionJoined`,
+  `Solo_ChampionFights`, `Solo_MustStay`, `Solo_Stamp`, `Solo_SelfTest`, all
+  through one `Decide()`.
+  - **The mark** is `Solo_ChampionMark` `0x904A21`, save block `+0x1041`,
+    beside `MountainPasses_Bits`: no reference in the original exe over
+    `0x904A1D..0x904A90` (`pe_xref.py --range`), no symbol, zero in the 25
+    slot files read, inside the block saved and loaded whole.
+  - **The stamp** runs in `Area_Enter` (`src/game/menu/item_trade.cpp`) after
+    its chapter step. The save's champion holds whatever the launcher then
+    says, "None" included; a differing launcher choice is one log line.
+  - **Chapter 16 stands the mode down as chapter 0 does** (SC's addition):
+    it is the attract demo, and `TitleFlow_NewGame` does not zero the block,
+    so a stamp made in the demo would carry into the next New Game.
+  - **A `BOF3X_SOLO` value that names no champion is a Fatal with the
+    behaviour on or off** (SC's choice; the owner may want it only when on).
+  - **`kChampionFightsBeforeFirstJoin = true`**, one constant; false needs a
+    "has joined once" mark the game does not keep, and a `static_assert`
+    refuses the build until one exists.
+  - **M6's open id is measured:** in the owner's saves record 0 holds id 7
+    and record 1 id 8 in chapters 8 to 15, ids 0 and 1 in chapters 0 to 6,
+    record 0 id 9 in two chapter-1 saves. The writer of 7 and 8 is not found.
+  - No snapshot participant: the mark is in the image span.
+- **LA.** A fourth Game Options sub-tab, "Solo character" (`IDD_PAGE_SOLO`):
+  the mode's box, the champion list (None and the six), the option's box, a
+  line that says why a control is grey. The two boxes edit `on=` itself
+  (`ConfigBehaviourEdit`), so the ini has one place for behaviours;
+  `solo.champion=` is kept as written and handed over as `BOF3X_SOLO` only
+  while `SoloCharacter` is on as the game will read it.
+  [`launcher-settings.md`](launcher-settings.md) 2a has the keys.
+- **Checks on the merged branch** (`D:\bof3x-runs\solo1112\round\wt`):
+  the i686 build exit 0; `ledger_check.py` 0 errors at 229 entries;
+  `ledger_switches.py --check` and `ledger_registry.py --check` pass;
+  `config_tests.exe` 3983 checks, the 2 failures `main` has on this machine
+  and no other.
+- **Owed:** the in-game self-test (`solo self-test: 48 checks passed`; not
+  run, the owner's game was running; a clean copy is at
+  `D:\bof3x-runs\solo1112\SC\root\L`); the 64-bit build; the state-hash
+  proof with the behaviours off; `dialog_test.py` and the owner's look at the
+  page (its fit at 640 x 480 is arithmetic); the owner's word on the page's
+  text; `+0x1041` named in the save editor's spec and
+  `src/launcher/save/block.cpp`'s untouched list.
 
 ### Stage B (after SC merges; four groups in parallel)
 
