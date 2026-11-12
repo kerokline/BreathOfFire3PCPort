@@ -3,8 +3,9 @@
 // The solo-character mode's state and decisions (docs/solo-character-round.md;
 // DIVERGENCE DIV-0228 SoloCharacter, DIV-0229 SoloChampionIfPresent). Group
 // SC's module: the switch, the save's mark and the questions the combat,
-// field, screen and level-1 halves ask. It changes no gameplay by itself:
-// its one write is the mark (Solo_Stamp), and only with SoloCharacter on.
+// field, screen and level-1 halves ask. Its writes, only with SoloCharacter
+// on: the mark (Solo_Stamp, Solo_StampNewGame) and, at New Game, the
+// champion's level-1 start (solo_level.h).
 //
 // The champion is a character record, not an id (solo-character-reads.md M6):
 // one of records 0, 1, 2, 4, 5, 6. Records 3 and 7 are never champions (the
@@ -64,7 +65,7 @@ bool Solo_ChampionFights();
 // records; another index is a Fatal. Asks nothing of the mode.
 bool Solo_MustStay(int record);
 
-// The mark's one writer. With SoloCharacter on, the chapter not 0 or 16, the
+// The mark's first writer (Solo_StampNewGame below is the second). With SoloCharacter on, the chapter not 0 or 16, the
 // mark 0 and BOF3X_SOLO naming a champion: the mark becomes that record + 1,
 // once. A mark already set holds (a line is logged, once per mark, when
 // BOF3X_SOLO names another). Called from Area_Enter (src/game/menu/
@@ -72,8 +73,21 @@ bool Solo_MustStay(int record);
 // an area before it can fight, and the chapter is final for the entry there.
 void Solo_Stamp();
 
-// The decision table's self-test, on inputs of its own (no game state). A
-// Fatal on a case that does not hold.
+// The mark's second writer, at New Game only (the owner, round doc 6c item
+// 1). Called from TitleFlow_NewGame 0x5880E0 (src/game/core/sound.cpp) right
+// after NewGame_InitCharacters 0x437820, before Scenario_Start(0). With
+// SoloCharacter off: nothing, the mark not read or written. With it on: the
+// mark becomes BOF3X_SOLO's record + 1, or 0 when BOF3X_SOLO names none
+// (New Game does not zero the save block, so an old run's champion would
+// otherwise carry into the new game), whatever it held; with a champion,
+// Solo_LevelReset (solo_level.h) then takes that record to level 1. The
+// chapter is not asked: Solo_Active() still stands the mode down through
+// chapter 0, and Solo_Stamp at the first area entry finds the mark set.
+void Solo_StampNewGame();
+
+// The decision table's self-test, on inputs of its own (no game state), and
+// the level-1 start's round trip (Solo_LevelSelfTest, solo_level.h). A Fatal
+// on a case that does not hold.
 void Solo_SelfTest();
 
 }  // namespace solo

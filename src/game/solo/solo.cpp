@@ -6,6 +6,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/records.h"
+#include "game/solo/solo_level.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/host.h"
@@ -247,6 +248,22 @@ void Solo_Stamp() {
     }
 }
 
+void Solo_StampNewGame() {
+    if (!bof3::BehaviourOn(bof3::behaviours::Id::SoloCharacter)) return;
+    if (!g_read) bof3::Fatal("solo: Solo_StampNewGame before Solo_Read (InjectAll, after Behaviour_Read)");
+    const unsigned old = Solo_ChampionMark;
+    if (g_env_record < 0) {
+        Solo_ChampionMark = 0;
+        bof3::Log("DIV-0228 SoloCharacter: New Game with no launcher champion: the save mark (was %u) is 0, no solo run",
+                  old);
+        return;
+    }
+    Solo_ChampionMark = static_cast<unsigned char>(g_env_record + 1);
+    bof3::Log("DIV-0228 SoloCharacter: New Game stamps the champion %s (record %d) into the save mark: %u (was %u)",
+              ChampionName(g_env_record), g_env_record, static_cast<unsigned>(Solo_ChampionMark), old);
+    Solo_LevelReset(g_env_record, true);
+}
+
 void Solo_SelfTest() {
     int checks = 0;
     // BOF3X_SOLO's names.
@@ -344,6 +361,8 @@ void Solo_SelfTest() {
         if (ChapterAllows(ch) != (ch != 0 && ch != 16)) bof3::Fatal("solo self-test: chapter %d", ch);
     }
     ++checks;
+    // The level-1 start's round trip (solo_level.cpp).
+    checks += Solo_LevelSelfTest();
     bof3::Log("solo self-test: %d checks passed", checks);
 }
 
