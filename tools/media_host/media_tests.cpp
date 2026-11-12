@@ -309,9 +309,10 @@ void TestClip() {
     for (std::size_t k = 0; k < 1046; ++k) doubled = doubled && m[2 * k] == m[2 * k + 1];
     CHECK(doubled);
 
-    // the MP3 seam's frames (src/audio/mp3.cpp, DIV-0215): reads of 1,152
-    // frames, every one full but the last, ceil(TotalFrames / 1152) of them,
-    // then 0; after Rewind the same again
+    // the MP3 seam's reads (src/audio/mp3.cpp, DIV-0215): reads of 1,152
+    // frames, every one full but the last (which the seam fills out with
+    // silence to a whole frame), ceil(TotalFrames / 1152) of them, then 0;
+    // after Rewind the same again
     const Bytes long_clip = MakeClip(37800, 2, 40);   // 40 x 112 = 4480 a side -> 5227 frames
     CHECK(c.Open(long_clip.data(), long_clip.size(), why, sizeof(why)));
     for (int pass = 0; pass < 2; ++pass) {

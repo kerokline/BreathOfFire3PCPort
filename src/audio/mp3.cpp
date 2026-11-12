@@ -144,7 +144,7 @@ int __stdcall Open(void* decoder, const char* name, int mode) {
     if (media::IsXaClip(d->data, d->size)) {
         // DIVERGENCE DIV-0215: a jingle the importer kept as an XA clip is
         // decoded and resampled by media::XaClip, handed out in the frames of
-        // an MP3 (kFrameBytes; the last one short).
+        // an MP3 (kFrameBytes; the last one filled out with silence).
         d->clip = new media::XaClip;
         char why[160];
         if (!d->clip->Open(d->data, d->size, why, sizeof why))
@@ -236,13 +236,18 @@ namespace {
 int __stdcall DecodeFrame(void* decoder, void* out) {
     Decoder* d = D(decoder);
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Decode before Mp3_Start");
-    if (d->clip) {   // DIV-0215: up to 1,152 stereo frames of the clip; none left is the end of the stream
+    if (d->clip) {   // DIV-0215: 1,152 stereo frames of the clip; none left is the end of the stream
         const std::size_t frames = d->clip->Read(static_cast<std::int16_t*>(out), kFrameBytes / 4);
         if (frames == 0) {
             FrameOf(d)->bytes = kEosBytes;
             return sound::kEndOfStream;
         }
-        FrameOf(d)->bytes = static_cast<std::uint32_t>(frames) * 4;
+        // Every frame is whole, as every MP3 frame is: the clip's last one is
+        // filled out with silence. Music_Decode's looping path relies on whole
+        // frames after a rewind (its buffer is a whole number of them), so a
+        // short frame would let a looping clip run past the buffer.
+        std::memset(static_cast<unsigned char*>(out) + frames * 4, 0, kFrameBytes - frames * 4);
+        FrameOf(d)->bytes = kFrameBytes;
         return 0;
     }
     for (;;) {
@@ -482,7 +487,7 @@ void RefuseClipUnlessOurs(const void* file, std::uint32_t size, const char* what
 }
 
 std::uint32_t CountFrames(const void* file, std::uint32_t size) {
-    if (IsClip(file, size)) {   // DIV-0215: the clip's frames of 1,152 samples, the last one short
+    if (IsClip(file, size)) {   // DIV-0215: the clip's frames of 1,152 samples, the last one filled out with silence
         media::XaClip clip;
         char why[160];
         if (!clip.Open(static_cast<const std::uint8_t*>(file), size, why, sizeof why))
@@ -666,28 +671,34 @@ void SelfTest() {
               path, ours.frames, ours.frame_bytes, ours.eos_bytes, ours.replay_frames);
 
     // DIV-0215: an XA clip (silent groups: a header and 200 zero groups, 37,800
-    // Hz stereo) through the same seam: 1,152-sample frames, the last one
-    // short, as many as CountFrames says, the end of the stream stored, the
-    // replay after Seek(0) the same length.
+    // Hz stereo) through the same seam: 1,152-sample frames, every one whole
+    // (the last filled out with silence), as many as CountFrames says, the
+    // clip's own samples and then zeros, the end of the stream stored, the
+    // replay after Seek(0) identical over every frame.
     std::vector<std::uint8_t> clip(24 + 128 * 200, 0);
     static const std::uint8_t kHead[24] = {'B', 'O', 'F', '3', 'X', 'A', 0, 1, 0xA8, 0x93, 0, 0, 2, 0, 4, 0, 200, 0, 0, 0, 0, 0, 0, 0};
     std::memcpy(clip.data(), kHead, sizeof kHead);
     const std::uint32_t expect = CountFrames(clip.data(), static_cast<std::uint32_t>(clip.size()));
     Run c;
-    DecodeAll(Ours(), clip.data(), static_cast<std::uint32_t>(clip.size()), expect - 1, &c);   // the last frame is short: the replay stops before it
+    DecodeAll(Ours(), clip.data(), static_cast<std::uint32_t>(clip.size()), expect, &c);
     const std::uint32_t samples = static_cast<std::uint32_t>(c.pcm.size() / 2);
     media::XaClip probe;
     char why[160];
     if (!probe.Open(clip.data(), clip.size(), why, sizeof why)) bof3::Fatal("DIV-0215 self-test: the clip does not open: %s", why);
-    if (!c.opened || c.frames != expect || c.frames != (samples + 1151) / 1152 || samples != probe.TotalFrames() ||
-        c.frame_bytes != kFrameBytes || c.eos_bytes != kEosBytes || !c.replay_identical || c.replay_frames != c.frames - 1)
-        bof3::Fatal("DIV-0215 self-test: an XA clip - %u frames decoded against %u counted, %u samples of %u, %u bytes a "
-                    "frame, %u stored at the end, the replay %s over %u frames",
-                    c.frames, expect, samples, static_cast<std::uint32_t>(probe.TotalFrames()), c.frame_bytes,
-                    c.eos_bytes, c.replay_identical ? "identical" : "DIFFERENT", c.replay_frames);
-    bof3::Log("shadow      DIV-0215 self-test: an XA clip of %u samples - %u frames of 1,152 (the last short), as many as "
-              "CountFrames says; the replay after Seek(0) identical",
-              samples, c.frames);
+    const std::uint32_t total = static_cast<std::uint32_t>(probe.TotalFrames());
+    bool tail_silent = samples >= total;
+    for (std::size_t i = 2 * static_cast<std::size_t>(total); tail_silent && i < c.pcm.size(); ++i) tail_silent = c.pcm[i] == 0;
+    if (!c.opened || c.frames != expect || c.frames != (total + 1151) / 1152 || samples != c.frames * 1152 || !tail_silent ||
+        c.frame_bytes != kFrameBytes || !c.uniform || c.eos_bytes != kEosBytes || !c.replay_identical ||
+        c.replay_frames != c.frames)
+        bof3::Fatal("DIV-0215 self-test: an XA clip - %u frames decoded against %u counted, %u samples for the clip's %u "
+                    "(the tail %s), %u bytes a frame (%s), %u stored at the end, the replay %s over %u frames",
+                    c.frames, expect, samples, total, tail_silent ? "silent" : "NOT silent", c.frame_bytes,
+                    c.uniform ? "every one" : "NOT every one", c.eos_bytes, c.replay_identical ? "identical" : "DIFFERENT",
+                    c.replay_frames);
+    bof3::Log("shadow      DIV-0215 self-test: an XA clip of %u samples - %u whole frames of 1,152 (the last filled out "
+              "with silence), as many as CountFrames says; the replay after Seek(0) identical",
+              total, c.frames);
 }
 
 }  // namespace mp3dec

@@ -15680,10 +15680,12 @@ designed in rather than bolted on.
   the same file gives PSNR 53.87 dB mean and 44.65 dB lowest (not bit-exact: two
   inverse DCTs; psx-spx's reference one is ours). The audio is sample-exact to
   `tools/xa.py`'s decode.
-- **Rationale:** the owner, 2026-11-11 (`psx-media-round.md`): a PSX-disc
-  install should not need ffmpeg for its logo, on Windows, under Proton, or on
-  a later native build. The decoders are written from the public descriptions
-  of the formats and the owner's own MIT crates (rule 5; `THIRD_PARTY.md`).
+- **Rationale:** frost (raulcorreia7) proposed it and built it
+  (`psx-media-round.md`); the owner accepted it by PR 225 (2026-11-11). A
+  PSX-disc install should not need ffmpeg for its logo, on Windows, under
+  Proton, or on a later native build. The decoders are written from the public
+  descriptions of the formats and frost's own MIT crates, his bof3-player
+  (rule 5; `THIRD_PARTY.md` section 5).
 - **Also in the PSX version?** Yes - the PlayStation shows this movie, through
   its MDEC; the picture is that stream's own. The PC port's `CAPCOM.AVI` is the
   same movie re-encoded in 2001.
@@ -15710,8 +15712,8 @@ designed in rather than bolted on.
 - **Date:** 2026-11-11
 - **Subsystem:** audio - the MP3 seam (`src/audio/mp3.cpp`, DIV-0091:
   `Mp3_Open`, `Mp3_Start`, `Mp3_Decode`, `Mp3_Seek`, `CountFrames`),
-  `Sound_LoadStream` `0x587910` kind 0 and `Music_OpenDecoder` `0x5A6D60`
-  (the guard against Capcom's decoder), `src/media/xa_clip.cpp`,
+  `Sound_LoadStream` `0x587910` kind 0 (the guard against Capcom's decoder),
+  `src/media/xa_clip.cpp`,
   `xa_adpcm.cpp`, `resample.cpp`; the launcher's Jukebox
   (`src/launcher/music_player.cpp`); `tools/xa.py` `jingles`;
   [`psx-media-round.md`](psx-media-round.md) 2.2
@@ -15723,16 +15725,26 @@ designed in rather than bolted on.
   128 kbit/s MP3 by the player's ffmpeg and libmp3lame; without ffmpeg there
   were none (and DIV-0129's wait ended at once, without the jingle).
 - **New behaviour:** the importer writes each jingle, where it wrote the MP3, as
-  an XA clip (`BOF3XA` magic, the clip's own sound groups undecoded; 2.6 MB
-  for `PURE`, against 4.3 MB for its MP3), and needs no ffmpeg. `media::XaClip`
+  an XA clip (`BOF3XA` magic, the clip's own sound groups undecoded), and
+  needs no ffmpeg. A clip is larger than its MP3: 128 bytes for 112 stereo
+  samples at 37,800 Hz is about 43 KB a second, so `PURE.DAT` is 11,623,704
+  bytes (its 128 kbit/s MP3 about 4.3 MB), `KARA.DAT` 11,639,832, and the 11
+  clips 25,256,712 bytes in all (measured, the US disc). `media::XaClip`
   decodes a clip from a fresh ADPCM history and resamples it to 44,100 Hz
   stereo (7/6 from 37,800 Hz; polyphase, fixed point, a generated table, so both
   widths give the same samples). The MP3 seam's `Open` takes a file in memory
   that begins with the magic as a clip: `Decode` hands out frames of 1,152
-  stereo samples (the last one short), stores their byte count where an MP3
-  frame's is stored, and returns the end of the stream when none is left;
-  `Seek(0)` rewinds; `CountFrames` returns ceil(frames / 1,152), so DIV-0081's
-  loop fold and DIV-0092's resume work as before. Every other reader of a
+  stereo samples, every one whole - the clip's last frame is filled out with
+  silence (at most 1,151 samples, 26 ms), as an MP3's last frame is whole -
+  stores their byte count where an MP3 frame's is stored, and returns the end
+  of the stream when none is left; `Seek(0)` rewinds; `CountFrames` returns
+  ceil(frames / 1,152), so DIV-0081's loop fold and DIV-0092's resume work as
+  before. The filling is what keeps a clip safe to loop: `Music_Decode` relies
+  on whole 4,608-byte frames after a rewind, and a short frame there would run
+  past its buffer. No kind-0 stream loops today (`Sound_LoadStream` starts them
+  with loops 0); of the two ways to make the overrun impossible, filling the
+  frame was chosen over a `Fatal` on a looping clip, since it leaves the seam
+  with one frame size and no case of its own. Every other reader of a
   kind-0 file's bytes was traced: `Music_Start`, `Music_Decode` and
   `music_loops` (a stream has no loop row), `ResumeSkip` and `FoldMp3`
   (through `CountFrames` and the same decode), `WalkFrames` and the
@@ -15740,18 +15752,26 @@ designed in rather than bolted on.
   the self-test (a synthetic clip is added), and the Jukebox, which decodes a
   clip through `media::XaClip` where it decodes an MP3 by minimp3. Capcom's
   decoder cannot read a clip: with `BOF3X_MP3=original` a clip is a `Fatal`
-  naming the file and the reason (`Sound_LoadStream`; `Music_OpenDecoder` as a
-  backstop), never a wrong decode. A cache an older import made keeps its MP3s,
-  which play as before.
-- **Rationale:** the owner, 2026-11-11 (`psx-media-round.md`), as DIV-0214.
+  naming the file and the reason, never a wrong decode. The guard is in
+  `Sound_LoadStream`, the one place a kind-0 file is loaded.
+  `Music_OpenDecoder` has none: a guard there read its file's first bytes, and
+  the sound fuzz (`sound_fuzz.cpp`, `kOpenDecoder`) hands it pointers that are
+  not files, which stopped the hosted suite with an access violation (PR 225's
+  review, 2026-11-11). A cache an older import made keeps its MP3s, which play
+  as before.
+- **Rationale:** frost (raulcorreia7) proposed it and built it
+  (`psx-media-round.md`); the owner accepted it by PR 225 (2026-11-11). The
+  reasons are DIV-0214's.
 - **Also in the PSX version?** Yes - the PlayStation plays these XA clips from
   the disc; the sound is the clip's own ADPCM, resampled for the port's
   44.1 kHz stream as DIV-0129 did.
 - **Verification:** `tools/media_host` tests (237,969 checks, 0 failed),
-  including the seam's frame chunking: reads of 1,152 frames, all full but the
+  including the clip reader's chunking: reads of 1,152 frames, all full but the
   last, ceil(total / 1,152) of them, the same again after a rewind. M1 held
   every jingle's 37.8 kHz PCM sample-exact to `tools/xa.py`. The engine's
-  `BOF3X_SHADOW=sound` self-test now also runs a clip through the seam.
+  `BOF3X_SHADOW=sound` self-test now also runs a clip through the seam: every
+  frame whole, the clip's samples and then zeros, as many frames as
+  `CountFrames` says, the replay after `Seek(0)` identical over all of them.
   **Not played:** nobody has heard a jingle in the game with this change.
 - **Reversible?** Not as a switch. The MP3 encoding is gone from the importer's
   jingle path (`xa.mp3` stays for the PSP's `tools/at3.py`). A PC install's own

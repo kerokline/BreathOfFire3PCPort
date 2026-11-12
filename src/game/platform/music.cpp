@@ -478,7 +478,6 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
 // As the original has it: a decoder that is made but does not open or start
 // is not destroyed.
 extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
-    mp3dec::RefuseClipUnlessOurs(file, size, "a music file in memory");  // DIV-0215: backstop; Sound_LoadStream names the file
     void* decoder = nullptr;
     if (sound::g.mp3_create(&decoder) != 0) return nullptr;
     unsigned char io[0x2C];

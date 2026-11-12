@@ -26,8 +26,10 @@ piece (ATRAC3plus, H.264). They keep the player's ffmpeg.
 
 Every source is public: psx-spx ("CDROM File Video STR Streaming and BS
 Picture Compression", "MDEC", "CDROM XA Audio ADPCM Compression"), and the
-owner's own MIT crates in `~/projects/bof3` (`player/psx-machine/src/mdec.rs`,
-`player/psx-formats/src/xa.rs`, `adpcm.rs`; the stream's layout in
+MIT crates of frost (raulcorreia7), who ran this round, in his
+[bof3-player](https://github.com/raulcorreia7/bof3-player)
+(`player/psx-machine/src/mdec.rs`, `player/psx-formats/src/xa.rs`, `adpcm.rs`
+in his bof3 workspace; the stream's layout in its
 `wiki/src/content/docs/formats/str.md`). Code ported from those crates keeps
 their MIT notice ([`THIRD_PARTY.md`](THIRD_PARTY.md)). No ffmpeg code is read
 for this round; ffmpeg's output is the oracle only.
@@ -92,7 +94,9 @@ polyphase, fixed-point, the coefficients a generated header, so both widths
 give the same samples), a mono clip doubled to both channels. The MP3 seam's
 `Open` takes a file in memory whose first bytes are the magic as a clip, and
 `Decode` hands out 1,152-sample frames of it, as minimp3's frames are, the
-last one short; `Seek(0)` rewinds; `CountFrames` counts the clip's frames the
+last one filled out with silence to a whole frame (PR 225's review: a short
+frame could run past `Music_Decode`'s buffer if a clip ever looped);
+`Seek(0)` rewinds; `CountFrames` counts the clip's frames the
 same way, so DIV-0081's loop fold and the music resume work unchanged. The
 launcher's Jukebox reads the same files through `xa_clip`.
 
@@ -101,7 +105,11 @@ launcher's Jukebox reads the same files through `xa_clip`.
 `[fmv]` for a PSX disc: `build`, `source`, `source_sha256` (as today),
 `file = "base/fmv/CAPCOM30.STR"`, `sha256`; no `ffmpeg`, no `args`. `verify`
 checks the file is the recorded one and that its sectors hash to
-`FMV_SOURCE_SHA256`. The PSP's row is unchanged.
+`FMV_SOURCE_SHA256`. The PSP's row is unchanged. A cache an older release
+built from a PSX disc has the older row (`file = "base/fmv/CAPCOM.AVI"` with
+an `ffmpeg` key); `verify` can meet it before a set-up rebuilds it, and
+checks it as it did then (a 640 x 480 Cinepak AVI, the recorded hash), not
+as STR sectors (`importer.py check` holds the row forms on synthetic caches).
 
 `[snd_jingles]` keeps its fields; each jingle's hash is the clip file's.
 No ffmpeg is looked for on a PSX-only import.
@@ -114,15 +122,18 @@ One branch, one commit for each unit, signed off (CLAUDE.md rule 7).
 |---|---|---|
 | M1 | `src/media`: `xa_adpcm`, `resample` (+ `tools/gen_resample.py`), `xa_clip`, `str_movie`; `tools/media_host` with their tests | Host tests pass on Linux and with the i686 / x86_64 cross builds. On the US disc (scratch, never committed): every frame against ffmpeg's `psxstr` + `mdec` decode of the same file, PSNR stated (not bit-exact: two IDCTs); the movie's PCM and every jingle's 37.8 kHz PCM sample-exact against `tools/xa.py`'s decode |
 | M2 | The importer and the launcher's text: `fmv_build` / `fmv_verify` / `fmv_install` copy the STR; `xa.jingles` writes clips; ffmpeg no longer looked for on a PSX-only import; `importer.py check` and the self-tests | A `setup` from the US disc with no ffmpeg on the `PATH` writes both, `verify` passes |
-| M3 | The engine: `Movie` opens an STR, `Fmv_Play` falls back to `CAPCOM30.STR` and takes the movie's audio form, the MP3 seam and the Jukebox read a clip | Both widths build; the movie plays with sound and the jingles play in the game (Proton on this machine, the owner's eye and ear on Windows) |
+| M3 | The engine: `Movie` opens an STR, `Fmv_Play` falls back to `CAPCOM30.STR` and takes the movie's audio form, the MP3 seam and the Jukebox read a clip | Both widths build; the movie plays with sound and the jingles play in the game (Proton on frost's Linux machine, the owner's eye and ear on Windows) |
 | M4 | The ledger (two entries), `fmv-import.md`, `sound-import.md`, `THIRD_PARTY.md`, STATUS, HANDOFF | `ledger_check.py`, `ledger_registry.py --check` |
 
 ## 4. Not verified when staged
 
 - That ffmpeg's `mdec` decode is close enough to be an oracle (expected:
   PSNR above 40 dB if the bitstream is read right).
-- The size of the clip files (about 2.6 MB for `PURE` against 4.3 MB for
-  its MP3, by arithmetic).
+- The size of the clip files. The staging guess (about 2.6 MB for `PURE`
+  against 4.3 MB for its MP3) was wrong; measured from the US disc at PR
+  225's review: `PURE.DAT` 11,623,704 bytes, `KARA.DAT` 11,639,832, the 11
+  clips 25,256,712 bytes in all (128 bytes for 112 stereo samples at 37,800
+  Hz is about 43 KB a second, against an MP3's 16 KB).
 
 ## 5. As run (2026-11-11)
 
@@ -139,13 +150,23 @@ One branch, one commit for each unit, signed off (CLAUDE.md rule 7).
   `bof3x-fmvdump` gives 231 frames at 640 x 480 and 37,800 Hz stereo, the
   i686 and x86_64 outputs byte-identical. Every no-game-data gate of
   `checks.yml` passes.
-- **Under Proton Experimental on a Linux machine** (the release zip built
-  from this branch, an RTX 5090): the importer's bundled Python sets the
+- **Under Proton Experimental on frost's Linux machine** (the release zip
+  built from this branch, an RTX 5090): the importer's bundled Python sets the
   install up from the US disc with no ffmpeg in the prefix and prints no
   ffmpeg warning; the game logs `DIV-0214 CAPCOM.AVI is not there;
   CAPCOM30.STR plays in its place`, 231 frames at 30 a second, PCM 37,800
-  Hz stereo, and goes on to the title; the owner heard the sound. The
+  Hz stereo, and goes on to the title; frost heard the sound. The
   jingles' in-game play (an inn, a fanfare) was not reached in these runs.
+
+- **The review on Windows** (PR 225, 2026-11-11, run for the owner): both widths
+  build; a set-up from the US disc with no ffmpeg works; `bof3x-fmvdump` of
+  the real STR gives 231 frames, the two widths identical. Its changes: the
+  clip guard in `Music_OpenDecoder` removed (it read the bytes of the sound
+  fuzz's random pointers and stopped the hosted suite with an access
+  violation; `Sound_LoadStream`'s guard stays), the clip's last frame filled
+  out with silence (section 2.2), the clip sizes measured (section 4),
+  `gen_resample.py --check` on a CRLF checkout, and `verify` on an older
+  cache's `[fmv]` row (section 2.3).
 
 **Not verified:** the jingles heard in a scene; the ten state-hash routes
 (the change is the movie before the loop and the music seam's clip path;
