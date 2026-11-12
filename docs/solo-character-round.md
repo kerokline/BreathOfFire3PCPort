@@ -1,6 +1,6 @@
 # The solo-character round: a champion who fights alone
 
-**Status:** STAGED (2026-11-12, from `main` `01a67500`; nothing built, nothing
+**Status:** IN PROGRESS (stage A built 2026-11-12, section 4a; staged 2026-11-12, from `main` `01a67500`; nothing built, nothing
 launched. The design is IDEAS I56's (the owner, 2026-11-03), issue #223; the
 owner's four answers of 2026-11-12 are in section 6. **Group M is run**
 (2026-11-12, [`solo-character-reads.md`](solo-character-reads.md)): section 0a
@@ -244,6 +244,57 @@ Agents number nothing in the ledger or `known-defects.md`.
   language, not strings read from the game.
 - `tools/ledger_registry.py` and the presets regenerate after the
   coordinator numbers the entry; LA leaves a note of what to run.
+
+### 4a. Stage A as run (2026-11-12, branch `solo/round`)
+
+Merged in the order the docs, SC (`solo/sc`), LA (`solo/la`), no conflicts;
+the switch table and the presets regenerated after.
+
+- **SC.** `src/game/solo/solo.{h,cpp}`; two ledger entries on that branch (the two after DIV-0227 there; not in `main`'s ledger until the code merges), `SoloCharacter` and
+  `SoloChampionIfPresent`, both `Default: off`, each saying that only
+  the switch, the mark and the decision module are built. `Solo_Read` after
+  `Behaviour_Read`; `Solo_Active`, `Solo_ChampionRecord`, `Solo_ChampionId`
+  (the record's `+9`, read live), `Solo_ChampionJoined`,
+  `Solo_ChampionFights`, `Solo_MustStay`, `Solo_Stamp`, `Solo_SelfTest`, all
+  through one `Decide()`.
+  - **The mark** is `Solo_ChampionMark` `0x904A21`, save block `+0x1041`,
+    beside `MountainPasses_Bits`: no reference in the original exe over
+    `0x904A1D..0x904A90` (`pe_xref.py --range`), no symbol, zero in the 25
+    slot files read, inside the block saved and loaded whole.
+  - **The stamp** runs in `Area_Enter` (`src/game/menu/item_trade.cpp`) after
+    its chapter step. The save's champion holds whatever the launcher then
+    says, "None" included; a differing launcher choice is one log line.
+  - **Chapter 16 stands the mode down as chapter 0 does** (SC's addition):
+    it is the attract demo, and `TitleFlow_NewGame` does not zero the block,
+    so a stamp made in the demo would carry into the next New Game.
+  - **A `BOF3X_SOLO` value that names no champion is a Fatal with the
+    behaviour on or off** (SC's choice; the owner may want it only when on).
+  - **`kChampionFightsBeforeFirstJoin = true`**, one constant; false needs a
+    "has joined once" mark the game does not keep, and a `static_assert`
+    refuses the build until one exists.
+  - **M6's open id is measured:** in the owner's saves record 0 holds id 7
+    and record 1 id 8 in chapters 8 to 15, ids 0 and 1 in chapters 0 to 6,
+    record 0 id 9 in two chapter-1 saves. The writer of 7 and 8 is not found.
+  - No snapshot participant: the mark is in the image span.
+- **LA.** A fourth Game Options sub-tab, "Solo character" (`IDD_PAGE_SOLO`):
+  the mode's box, the champion list (None and the six), the option's box, a
+  line that says why a control is grey. The two boxes edit `on=` itself
+  (`ConfigBehaviourEdit`), so the ini has one place for behaviours;
+  `solo.champion=` is kept as written and handed over as `BOF3X_SOLO` only
+  while `SoloCharacter` is on as the game will read it.
+  [`launcher-settings.md`](launcher-settings.md) 2a has the keys.
+- **Checks on the merged branch** (`D:\bof3x-runs\solo1112\round\wt`):
+  the i686 build exit 0; `ledger_check.py` 0 errors at 229 entries;
+  `ledger_switches.py --check` and `ledger_registry.py --check` pass;
+  `config_tests.exe` 3983 checks, the 2 failures `main` has on this machine
+  and no other.
+- **Owed:** the in-game self-test (`solo self-test: 48 checks passed`; not
+  run, the owner's game was running; a clean copy is at
+  `D:\bof3x-runs\solo1112\SC\root\L`); the 64-bit build; the state-hash
+  proof with the behaviours off; `dialog_test.py` and the owner's look at the
+  page (its fit at 640 x 480 is arithmetic); the owner's word on the page's
+  text; `+0x1041` named in the save editor's spec and
+  `src/launcher/save/block.cpp`'s untouched list.
 
 ### Stage B (after SC merges; four groups in parallel)
 
@@ -507,6 +558,40 @@ For the owner:
 3. **Chapter 8's gift to record 4** (the 10,000 EXP and the fixed
    equipment): left as the game has it, or held back for a champion?
    Recommended: left as it is for now, noted in the entry.
+
+## 6c. The owner's third answers (2026-11-12 evening); where 6c and an earlier section differ, 6c holds
+
+1. **The level-1 reset happens at New Game only.** "Only reset a characters
+   level during the newgame creation, not afterwords." So the champion is
+   written at New Game, not only at the first area past the intro: with the
+   mode on and a champion chosen in the launcher, New Game writes the mark
+   and LV takes that record to level 1 there (the record is the default by
+   construction, so 6b's guard is a check, not a branch). A save from before
+   the mode is stamped at its first area entry as SC built it, and its
+   champion keeps their level. The mode still stands down through chapter 0.
+   This changes SC's stamp (a second site at New Game, which overwrites
+   whatever the block held: New Game does not zero it) and is LV's to build.
+2. **Willpower is left as the default record has it.** The owner: "if
+   nothing raises it, nothing should lower it." (New Game sets it once from
+   the starting level, `(level << 4) / divisor + add`,
+   `src/game/battle/battle.cpp:113-127`, and a level-up never touches it; LV
+   does not touch it either. 6b's step 4 is dropped.)
+3. **Record 1 starts at level 5**, the owner confirms (the default record's
+   `+0xA`, read 2026-11-12).
+4. **Record 4 keeps chapter 8's boost.** "Rei can keep his personal boost."
+5. **The champion fights before the story introduces them.** Yes; SC's
+   constant stays true.
+6. **The page's text is the owner's**, applied literally on `solo/round`:
+   the mode box "Solo Character Run - Chosen character fights all battles
+   alone"; under it "Rule does not start until after reaching Cedar Woods.";
+   the note "Character choice is written on a new game or first save. After
+   that, a change here does not alter it."; the option "The chosen character
+   only fights when they are in the party." with "If they are not, the party
+   fights." under it. The list's label is "Character:" to match. (The owner's
+   own text; CLAUDE.md's STE rule is for text this project drafts.)
+
+Still open: whether a `BOF3X_SOLO` value that names no
+champion stops the game with the mode off (4a).
 
 ## 7. Not in this round
 
