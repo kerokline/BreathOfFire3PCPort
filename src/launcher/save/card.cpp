@@ -262,6 +262,9 @@ bool PcToPsx(const Block& pc, std::uint8_t* psx, std::string& why) {
     return true;
 }
 
+// DIV-0225's visited towns (+0x10AC..+0x10AF) are not cleared: the Definitive
+// Edition romhack keeps the same word at the same offset on the PlayStation, and
+// the release never reads it (docs/town-warp.md 5).
 void ClearPcOnly(Block& block) {
     block[0x1040] = 0;
     block[0x7C] = block[0x7D] = 0;

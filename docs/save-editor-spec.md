@@ -276,7 +276,8 @@ UNTOUCHED there means no code in our source reaches the bytes.
 | `+0xF10` | 300 | Faerie names, 60 x 5, by record | E | READ [E](save-block/range-e-tail.md) |
 | `+0x103C` | 4 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
 | `+0x1040` | 1 | **This project's own, not Capcom's:** the mountain-passes bits of DIV-0191, bit 0 only. The original ignores it | A | READ [E](save-block/range-e-tail.md); MEASURED 0 or 1, 1 in 9 saves |
-| `+0x1041` | 111 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
+| `+0x1041` | 107 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
+| `+0x10AC` | 4 | **The Definitive Edition mod's, not Capcom's:** the town warp's visited towns of DIV-0225 (bits 0..30 the towns, bit 31 "forgotten"). The original ignores it; a card conversion keeps it, since the hack's PlayStation game reads it the same | A | READ [`town-warp.md`](town-warp.md) 1 and 5 |
 
 **Coverage:** of the 4,272 bytes, 3,810 have a writer or a reader in our source
 and 462 have none (READ, [`save-block.md`](save-block.md) section 1). Those 462

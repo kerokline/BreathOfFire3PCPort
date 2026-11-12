@@ -25,6 +25,7 @@
 #include "game/config_text.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/field/field_idle.h"   // DIV-0225: TownWarpFirstLoaded
 #include "game/fishing_text.h"
 #include "game/labels.h"
 #include "game/language_tags.h"
@@ -2938,11 +2939,12 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 19, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 21, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
 //     DIV-0038, DIV-0064, DIV-0069, DIV-0148, kind 18 the reading row's,
-//     docs/reading-row.md 3, taken only from an optional layer, and kind 19
-//     DIV-0203's corrected text block);
+//     docs/reading-row.md 3, taken only from an optional layer, kind 19
+//     DIV-0203's corrected text block, and kind 21 DIV-0225's town warp,
+//     taken only with TownWarp on; kind 20 is read by the launcher alone);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -2985,7 +2987,12 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
     }
     // DIV-0147: the quick menu's text is the title's load menu's, kept from
     // the title's pool (a battle's pool has other messages at its ids).
-    if (_stricmp(name, "FIRST.DAT") == 0) bof3::QuickMenu_TitlePoolLoaded();
+    if (_stricmp(name, "FIRST.DAT") == 0) {
+        bof3::QuickMenu_TitlePoolLoaded();
+        // DIV-0225: TownWarp on needs the mod's kind-21 chunks, which FIRST.DAT's
+        // layers carry; without them the game stops here, at the title.
+        field_idle::TownWarpFirstLoaded();
+    }
 }
 
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)

@@ -1,6 +1,6 @@
 // The field's idle frame and the mod behaviours' statics of ours that live
 // beside it (docs/mods.md section 11; DIVERGENCE DIV-0217, DIV-0218,
-// DIV-0223).
+// DIV-0223, DIV-0225).
 //
 // The Definitive Edition romhack put its per-frame field code in slot 0 of
 // Field_ModeTailKinds - the slot that runs when no tail is armed, a bare ret
@@ -40,8 +40,42 @@ extern std::uint8_t g_master_active;
 extern std::uint8_t g_master_swapped;
 extern std::uint8_t g_master_home;
 
+// DIV-0225 TownWarp (docs/town-warp.md): the hack's bytes. `warp_asked`: the
+// field use of ability 0x6F on the world map, until the next idle world-map
+// frame with no request opens the menu (0x801AE3E4). `warp_open`: the menu
+// is up, from its first page to the frame after its last (0x801AE3E5).
+// `warp_page` (towns skipped, 4 a page), `warp_rebuild` ("more" chosen),
+// `warp_chosen` (town + 1): the hidden file's 0x80016F00..02. `warp_choice`:
+// the box is the menu's, so CommitChoice answers through TownWarpAnswer -
+// where the hack points the standing descriptor's +0x34 at its handler.
+extern std::uint8_t g_warp_asked;
+extern std::uint8_t g_warp_open;
+extern std::uint8_t g_warp_page;
+extern std::uint8_t g_warp_rebuild;
+extern std::uint8_t g_warp_chosen;
+extern std::uint8_t g_warp_choice;
+
 // Every static above to zero: GameMode_Start, the start of every game.
 void ClearAtStart();
+
+// DIV-0225: a kind-21 chunk (dat_load.cpp TakeChunk): tag 0 the mod's table,
+// tag 1 its text (docs/town-warp.md 4). Passed over unless TownWarp is on;
+// on, checked (a Fatal on a payload of another shape) and kept.
+void TownWarpTake(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
+
+// DIV-0225: after FIRST.DAT's walk (LoadDatFile): TownWarp on and the mod's
+// table or text not taken is a Fatal that names the missing chunk.
+void TownWarpFirstLoaded();
+
+// DIV-0225: FieldAbility_Use's answer for ability 0x6F in handler 0's place
+// (the hack's 0x8019C304): on the world map with Field_InputFlags bit 5
+// clear, "asked" and 1; else 3, the original handler's.
+unsigned char TownWarpUse();
+
+// DIV-0225: the message box is the warp menu's (CommitChoice's test), and
+// the menu's answer (the hack's 0x800162C8).
+bool TownWarpChoice();
+void TownWarpAnswer();
 
 // DIV-0223: the area whose text block and choice table are in force - a camp
 // master's home area while its talk holds them, else `standing`
