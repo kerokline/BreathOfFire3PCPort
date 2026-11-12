@@ -19,7 +19,6 @@
 // as before.
 #include "game/menu_verbs.h"
 
-#include <windows.h>
 
 #include <cstring>
 

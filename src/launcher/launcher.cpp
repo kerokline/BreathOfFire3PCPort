@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): the launcher is a Windows program (section 5).
 // bof3x-launcher: the settings, then the game - our own bof3x.exe by default,
 // or the player's own BOF3.exe with bof3x.dll injected (--host bof3).
 //

@@ -24,7 +24,6 @@
 // matches (Area_ZoneAt would loop), a palette destination outside the 256
 // bytes at 0x80D380, and 0x536A60's own loop (it never returns; its
 // stand-in does).
-#include <windows.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,6 +36,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace field_event {
 namespace {
@@ -500,7 +500,7 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
         bof3::Fatal("field_event: %s has no [eax*4 + 0x%X] at +0x%X", c.name, (unsigned)original, (unsigned)at);
     disp = Address(table);
     std::memcpy(code + at + 3, &disp, sizeof disp);
-    FlushInstructionCache(GetCurrentProcess(), copy, c.size);
+    bof3::os::FlushCode(copy, c.size);
 }
 
 // --- the state compared -------------------------------------------------------------
@@ -786,7 +786,7 @@ void SelfTest() {
     AimTable(theirs[kLeaderControl], kClones[kLeaderControl], 0xB, 0x14, Field_LeaderControlSteps_addr, g_control_states);
     AimTable(theirs[kPendingJump], kClones[kPendingJump], 0x10, 0x24, Field_PendingJumps_addr, g_pending_jumps);
     move_script::Relocate(theirs[kSetSelect], 0x536AC0, 0x94, {0x31, 0x84, 4});
-    FlushInstructionCache(GetCurrentProcess(), theirs[kSetSelect], 0x94);
+    bof3::os::FlushCode(theirs[kSetSelect], 0x94);
 
     // A zone with a base and one without, from the exe's own table.
     g_zone_with_base = g_zone_without_base = 0x100;

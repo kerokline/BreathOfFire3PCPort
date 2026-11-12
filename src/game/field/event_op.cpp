@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/event_ops_callees.h"

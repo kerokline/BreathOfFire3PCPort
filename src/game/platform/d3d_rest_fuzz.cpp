@@ -20,7 +20,6 @@
 // a quarter of the time, a byte of what the caller reads after the call: so
 // every read and store is ordered against every call, and an order changed
 // shows.
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>

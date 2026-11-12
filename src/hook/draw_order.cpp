@@ -1,7 +1,7 @@
 // BOF3X_DRAWORDER - see draw_order.h and docs/sprite-draw-order.md section 18.
+#include <cstdint>
 #include "hook/draw_order.h"
 
-#include <windows.h>
 
 #include <cstdio>
 #include <cstring>
@@ -10,6 +10,7 @@
 #include "game/draw_pool.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace draw_order {
 
@@ -201,7 +202,7 @@ void Describe(std::uint32_t p, char* out, std::size_t n) {
 
 void Start() {
     char text[128];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_DRAWORDER", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_DRAWORDER", text, sizeof text);
     if (n == 0 || n >= sizeof text) return;
     unsigned f0, f1;
     float x0, y0, x1, y1;
@@ -212,7 +213,7 @@ void Start() {
     g_y0 = y0 < y1 ? y0 : y1; g_y1 = y0 < y1 ? y1 : y0;
     g_on = true;
     bof3::Log("draworder   on: frames %u..%u (%s), rectangle (%g, %g)-(%g, %g)", f0, f1,
-              bof3::InputScript_Frame() || GetEnvironmentVariableA("BOF3X_INPUT", nullptr, 0) ? "recipe frames" : "Frame_Counter",
+              bof3::InputScript_Frame() || bof3::os::GetEnv("BOF3X_INPUT", nullptr, 0) ? "recipe frames" : "Frame_Counter",
               g_x0, g_y0, g_x1, g_y1);
 }
 

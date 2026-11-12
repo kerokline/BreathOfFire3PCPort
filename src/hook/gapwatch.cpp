@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): a harness-only watcher over VirtualProtect and guard pages.
 // The gap watch (gapwatch.h; docs/install-gap-reads.md).
 #include "hook/gapwatch.h"
 

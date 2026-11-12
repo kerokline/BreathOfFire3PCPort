@@ -1,11 +1,11 @@
 // The frame-buffer grab's GPU-free half (fb_grab.h; DIV-0125).
 #include "render/fb_grab.h"
 
-#include <windows.h>
 
 #include <cstdint>
 
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace render {
 namespace fb_grab {
@@ -14,7 +14,7 @@ bool Enabled() {
     static int state = -1;
     if (state < 0) {
         char text[8];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_FBGRAB", text, sizeof text);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_FBGRAB", text, sizeof text);
         if (n == 0) state = 1;
         else if (n == 1 && text[0] == '1') state = 1;
         else if (n == 1 && text[0] == '0') state = 0;

@@ -305,7 +305,7 @@ that with a ratchet as the typed-data round held its census.
   loads at a moved base, which the relocatable-image round already runs);
   `mmap_min_addr` on the common distributions and the Deck; the task stacks
   below 4 GB.
-- **LA3, the asm and the calling convention.** Which of the 174 asm blocks
+- **LA3, the asm and the calling convention.** Which of the 328 asm statements
   name a Win64 register rule (the stack switch saves `rbx`, `rbp`, `rsi`,
   `rdi`, `r12`..`r15` and `xmm6`..`xmm15`; System V's callee-saved set is
   different and has no callee-saved `xmm`). Two roads, settled by a build:
@@ -324,6 +324,139 @@ that with a ratchet as the typed-data round held its census.
   Linux place (XDG).
 
 **Gate:** documents and a tool; the Windows objects unchanged.
+
+### Stage LA as run (2026-11-11)
+
+Read-only: no file under `src/` changed. The tools are `tools/os_census.py`
+(output `analysis/os_census.tsv`, checked by `python tools/os_census.py
+--check`), and under `tools/linux_probe/`: `lowmem_probe.cpp`,
+`msabi_probe.cpp`, `asm_by_abi.py`, `linux_check.py`. Machine: CachyOS,
+kernel 7.3.1-1-cachyos, clang 23.1.4.
+
+**LA1, the census.** `python tools/os_census.py --counts` gives 4,598 sites in
+140 files: 1,643 calls, 1,456 constants, 1,325 types, 174 includes. By class:
+
+| Class | Sites | Class | Sites |
+|---|---:|---|---:|
+| launcher | 1,811 | thread | 79 |
+| harness-only | 696 | input | 49 |
+| type_only | 502 | crt | 43 |
+| file | 340 | fault | 39 |
+| process | 298 | clock | 28 |
+| graphics | 227 | hash | 19 |
+| window | 162 | dialog | 17 |
+| memory | 144 | fiber | 12 |
+| umbrella (the `windows.h` row) | 130 | sound | 2 |
+
+The launcher and the harness files are 2,507 of the sites; the other 2,091
+are what a native build must provide or remove. A site's class follows the
+file first (harness-only by name, launcher by folder), then the type rule, then
+the API group. The calls, by the area that makes them, are in the TSV
+(`--list CLASS`, `--files PREFIX`). The ones outside the launcher and the
+harness files: `game/platform` 146, `hook` 304 (a Windows-only layer), `render`
+52, `game` other 104, `audio` 34, `common` 25.
+
+**The 65 files.** `python tools/os_census.py --outside src/game/platform`:
+65 files outside `platform` include `windows.h`, so the doc's figure holds.
+Of them 17 are fuzz, harness or census files (hosted i686 only). The other 48:
+
+- 24 take nothing from it (empty-stub compile below).
+- 16 take `GetEnvironmentVariableA/W` and `DWORD` only: the `BOF3X_` switches.
+- 1 takes `_stricmp` only (`dragon_cmd.cpp`).
+- 7 take services: `battle_menu_win.cpp` (the FMV player: GDI, a message loop,
+  the clock, heap, a thread wait, files), `dat_load.cpp` (file walk, module
+  path), `crt_rest.cpp` (environment, `_findfirst32`, `_filelength`,
+  `_fileno`, `_stricmp`), `draw_pool.cpp` (`VirtualQuery`/`VirtualAlloc`),
+  `faerie_ring.cpp` (`CreateFile`/`ReadFile`), `kind2_object.cpp`
+  (`FlushInstructionCache`), `quick_menu.cpp` (temp dir, process id, `VK_F5`).
+
+Check by a second method: `python tools/linux_probe/linux_check.py stub FILE...`
+compiles each of the 65 `-fsyntax-only` on `x86_64-linux-gnu` with empty
+`windows.h`, `dinput.h`, `io.h`, `malloc.h`. 25 files compile with no error
+besides the layout asserts below (24 "nothing" files plus `field_2.cpp`,
+whose `io.h` include is dead); the others fail on exactly the names above. The
+`#include <windows.h>` count by `grep -rE '#\s*include\s*<windows.h>' src | wc -l`
+is 132, against 130 include rows in the census; the two are not accounted for.
+
+A finding for stage LB: every file fails 2,938 `static_assert`s of the generated
+`symbols.gen.h` on Linux, because the layout asserts count `long` as 4 bytes
+and LP64 makes it 8. (`linux_check.py stub` counts them apart.)
+
+**LA2, low memory.** `lowmem_probe.cpp` (built `-no-pie -Wl,-Ttext-segment=0x10000000`,
+run with the image base as argument):
+
+- `mmap_min_addr` 65,536; `randomize_va_space` 2; `overcommit_memory` 0
+  (`/proc/sys/vm/*`). This machine only.
+- Linked at 0x10000000, the image maps at `0x400000` and at `0xA00000` with
+  `MAP_FIXED_NOREPLACE`; write and read of 1,423 pages pass; a `jmp rel32`
+  stub placed in the ELF reaches it (+264,241,723 bytes) and returns.
+- Linked at the default (`-no-pie`, base `0x400000`): mapping `0x400000` fails
+  with EEXIST, as the ELF is there. A small ELF with the image at `0xA00000`
+  works; the real engine's size is not known, and must fit in
+  `0x400000`..`0xA00000`.
+- A PIE ELF (base `0x55...`): the image maps, but the `rel32` stub cannot reach
+  the ELF (distance 9.4e13). PIE needs the 64-bit-thunk mode, or a low link.
+- Task stacks below 4 GB: fixed at `0x60000` (1 MB, Windows' place), `MAP_32BIT`
+  and a hint at `0x20000000` all work, each with a stack switch that saves a
+  32-bit word. A 1 GB reserve at `0x40000000` works (it takes `MAP_32BIT`'s
+  room, so the order of the reservations is a design item).
+- The heap: glibc's default puts 0 of 48 blocks of 64 MB below 4 GB.
+  `mallopt(M_MMAP_THRESHOLD)` is capped at 32 MB and does not help.
+  `M_MMAP_MAX` 0 forces the `brk` heap and puts 47 or 48 of 48 below 4 GB; a
+  block fails when it meets a stack mapping. A hard guarantee needs our own
+  arena at the `Crt_malloc` chokepoint.
+- The moved base `0xA00000` gives `0xA00000`..`0xF8F000`, which does not meet
+  Capcom's range. The ordering tables' 24-bit links keep the image under 16 MB,
+  so the base can move inside `0x10000`..`0xA70000`.
+
+Design the probes support: a non-PIE ELF linked at a high address
+(`-Ttext-segment`), the data image mapped by `MAP_FIXED_NOREPLACE` at
+`0x400000` or the moved base, the stacks and the heap in an arena we reserve
+below 4 GB before `main`.
+
+**LA3, the asm.** `python tools/linux_probe/asm_by_abi.py`: 328 `asm`
+statements in all (`tools/width_census.py` counts 322 blocks and 6 label
+aliases; the 174 earlier in this doc is stale). Of them: fuzz (common) 127,
+live common 153, live i686 24, live x86-64 24. The 24 live x86-64 blocks, read
+by hand: 10 depend on the Win64 rule and 14 do not (the script's text rule says
+11; `Task_Exit` is a false hit, `rcx` is a scratch there).
+
+Depend on it:
+
+- `src/audio/mp3.cpp:205` `Decode` (`rcx`/`rdx`, `subq $32`; the callee
+  `DecodeFrame` must be `ms_abi`)
+- `src/game/battle/battle_3.cpp:2182` `Battle_StatusTint` (`testb $0x80,%cl`)
+- `src/game/field/event_cond.cpp:860` `ScriptFlags_Clear40` (`movl %eax,%ecx`)
+- `src/game/field/field_6.cpp:2292` `Scenario_CallA` and `:2333`
+  `Scenario_CallB` (`rcx`, and `rdx`/`r8`/`r9` forwarded by tail jumps)
+- `src/game/platform/magic_080.cpp:1031` `Cfg_Load` (`leaq 0x20(%rsp),%rcx`,
+  frame `$0x68`, callee `Shell_CfgLoadFrame`)
+- `src/game/task_switch_x86_64.h`: `Task_RunAll` (:119, pushes the Win64 set,
+  a superset, harmless under System V), `Task_SetStackBase` (:167, `rcx` and 40
+  bytes of home space for `StackWatch_AtSetStackBase`), `Task_Sleep` (:214,
+  argument in `cx`), `Task_Restart` (:233, argument in `rcx`).
+
+The other 14 are `Task_BackToScheduler`, `Task_Exit`, the `jmp` forwarders
+(`Sound_StopMusic`, `Sound_ResumeAll`, `Sound_MusicPlaying`, `LoadMenu_Error`,
+`Music_Halt`, `Music_IsPlaying`, `SndStream_IsPlaying`,
+`ScenaCall_SaveAndLeave`, `Scena15_LeaveAllParty7`), the two in `image_base.h`
+and `stackwatch.cpp:303`. A forwarder passes `ecx` on unchanged, so it works
+when caller and body share one ABI.
+
+**ms_abi verdict.** One asm text can serve both: `linux_check.py asm` compiles
+11 files on `x86_64-linux-gnu` as they are and with
+`-D__cdecl=__attribute__((ms_abi))`; the 19 naked functions in them (the six
+in `task.cpp` and the rest of the list above that fall in those files) come out
+byte-identical. `msabi_probe.cpp` runs the `mp3`, `Battle_StatusTint` and
+`Cfg_Load` texts against a callee of each ABI: they are right with an `ms_abi`
+callee (`Cfg_Load`'s frame is wrong with a System V one). The `mp3` text is
+unchanged; only the compiler's own prologue differs (it saves `rsi`, `rdi`,
+`xmm6`..`xmm15`). A sample of 24 files (every 30th non-fuzz `src/game` `.cpp`)
+adds no error with `-D__cdecl=ms_abi`. Road: map `__cdecl` to `ms_abi` on the
+Linux target. `__stdcall` must stay System V: DXVK-native's headers define it
+(and `WINAPI`, `STDMETHODCALLTYPE`) as empty, so the calls into DXVK and SDL
+keep their ABI. The second road (a System V variant of the stack-switch
+blocks) is not needed.
 
 ### Stage LB - make the source portable, on Windows
 
@@ -344,6 +477,99 @@ the next.
 **Gate:** the Windows builds play as before; `BOF3X_OFF` switches for
 anything a player could tell apart (the second backend, the SDL window),
 each with a ledger entry if it is one.
+
+### LB1 as run: the operating-system seam (`src/os`)
+
+`src/os` is a subsystem: one header per service in `bof3::os`, a backend per
+system in `src/os/win32` and `src/os/posix` (CMake picks the folder), built as
+the static library `bof3x_os`. `os/os.h` only includes the others. No
+platform `#if` appears outside the backends; inside them the only one beyond
+the folder choice is the `BOF3X_OS_SDL` switch of the POSIX message box. The C++ standard stays C++20, and
+where the standard library covers a service the engine uses it; `bof3::os` holds
+only what it cannot do.
+
+| Service | Where | Why |
+|---|---|---|
+| Memory at a fixed address: reserve, commit, protect, release, query, flush | `os/memory.h` | The standard library cannot place pages. |
+| Clocks | `os/clock.h` | `game_clock.cpp` (DIV-0022, DIV-0047) keeps `GetTickCount64`'s 15.6 ms step, `GetTickCount`'s wrap and QPC's frequency; `steady_clock` changes all three. |
+| Environment, own path, last error, thread and process numbers | `os/env.h` | 113 sites rely on `GetEnvironmentVariableA`'s size contract, which `std::getenv` does not have. The value is a narrow name (below). |
+| A narrow name as a path and back, the game's `DAT\AREA*.DAT` walk, case-insensitive name compare | `os/file.h` | The walk is portable code over `std::filesystem`; `Path` and `Narrow`, the narrow encoding, are each backend's. |
+| UTF-8 and `wchar_t` | `os/text.h` | Inline over `std::filesystem::path`. Not for a narrow name on Windows. |
+| The fatal message box | `os/dialog.h` | `MessageBoxA` on Windows (DIV-0039 is unchanged); stderr and SDL3 on POSIX. |
+| SHA-256 | `common/sha256.h` | Our own routine replaces BCrypt; nothing per system. |
+
+Dropped because the standard library covers them: files (`std::ifstream`,
+`std::ofstream`, `std::filesystem`), threads, mutexes and events (`std::thread`,
+`std::mutex`; no engine call site used them), the heap (`std::malloc`,
+`std::calloc`, `std::free`).
+
+**The narrow encoding (review of PR 226, 2026-11-11).** A `char` name in the
+engine - one the game builds, one `GetEnv` returns, one handed to the game's
+own `Crt_fopen` - is in the system's narrow file-name encoding: the ANSI code
+page on Windows (what every one of these sites read through the A calls before
+the seam), UTF-8 on POSIX. `os::Path` and `os::Narrow` are the two
+conversions, in `src/os/win32/file.cpp` (`MultiByteToWideChar` and back, the
+code page the A file calls use) and `src/os/posix/file.cpp` (the bytes as they
+are). As first written `Path` read every narrow name as UTF-8 on both systems.
+That holds under our own `bof3x.exe`, whose manifest makes the process's
+code page UTF-8 (`code page: GetACP() = 65001` in its log), and fails under
+the hosted `BOF3.exe`, which gets the machine's: measured on Windows at both
+widths with the ANSI code page 1252, `BOF3X_CACHE` under a folder with `é` in
+its name left `GetFileAttributesA` finding it and `os::IsDirectory` throwing
+`std::runtime_error: locale not supported`, uncaught - hosted, the game ended
+before `dat_cache::Configure`'s first line (exit code `0xC0000409`, a log of
+14 lines), where the build with the fix logs `DIV-0089    the cache ...
+checked: 488 of the manifest's 742 containers held whole` and runs the
+self-tests to their end; the same with the game folder itself under such a
+name. Now `Path`,
+`Narrow`, `IsFile`, `IsDirectory` and `WalkDirectory` do not throw (a name
+that does not convert is a name that is not there), the walk matches and
+orders names as the system holds them and hands each back in the narrow
+encoding, and `ExecutablePath` / `ModulePath` / `ToUtf8` / `ToWide` are marked
+as the UTF-8 pair they are, never to meet a narrow name. `tools/os_host`'s
+`TestNarrowNames` makes a folder and file under a name outside ASCII by the
+system's own wide call and reaches them by `IsDirectory`, `IsFile`, a stream
+through `Path`, the walk, a walked name printed into a path for `fopen`, and
+`GetEnv`; CI job `os-host-windows` runs the suite against the Win32 backend at
+both widths. **For LB8 and the later units:** a name that comes from a wide or
+UTF-8 source (the launcher's settings, a module's path) and is to be opened by
+narrow code crosses through `Narrow`, not `ToUtf8`; on Windows a path the code
+page cannot hold does not open by its narrow name, exactly as before the seam
+(the launcher hands the engine its paths through the environment, read by the
+A call). Lifting that limit means wide or UTF-8 names end to end, the game's
+C runtime included, and is its own unit.
+
+**The walk's cost.** `WalkDirectory` lists and orders the whole folder before
+it hands the first entry, because "the first match" must be the same on both
+systems. Three callers only ask "is there one" (`dat_cache.cpp`
+`LayerDirHasDat`, `dat_load.cpp` at the BGM-layer and installed-layer tests),
+all at start-up. What was cheap is done: an entry's kind and size are now
+asked only when the entry is handed, so those callers pay the listing and one
+entry instead of a `stat` of every match. An "any match" call that stops at the
+first name read from the folder would skip the listing's sort too; left for a
+unit that finds it on a profile.
+
+**Windows-only, by design:** the launcher, `write_watch`, `gapwatch`, `calltrace`
+(harness-only watchers), the PE exe host (`exe_host.cpp`, `exe_icon.cpp`,
+`dllmain.cpp`, and the PE-header readers `host.cpp`, `detour.cpp`,
+`exe_image.cpp`), and `MiniDumpWriteDump` in `crash.cpp`. They need the PE
+format or a Windows API with no portable form.
+
+**The gate.** `python tools/os_census.py --boundary` (CI job `os-host`) fails
+when a live file outside `src/os` and `src/launcher` includes `<windows.h>` or
+calls a Win32 name that `bof3::os` replaces. `BOUNDARY_WAITING` in that file
+lists the files that still do, each with the unit that removes them (`W`,
+`L2`, `L3`). The list may only shrink; an entry that no longer breaks the rule
+fails the gate.
+
+**For L2 and L3:** the window (`window.h`), input (`input.h`), fibers
+(`context.h`) and the fault catcher (`fault.h`) belong in this same subsystem,
+one header each with a backend in `win32/` and `posix/`.
+
+**Not done in L1:** `log.cpp` and `snapshot.cpp` still call the system directly
+(the log writer thread, files and fibers); they are listed under L3 because the
+log flush runs on the crash path and the snapshot owns the fibers. The LP64
+`static_assert` failures LA found are not L1's.
 
 ### Stage LC - link and run on Linux
 
@@ -392,24 +618,58 @@ does not rewrite it. Three stand-ins, cheapest first:
 
 ## 6. For the owner
 
+"The owner" in this document is Kevin (kerokline), as everywhere in this
+repository. The **Decided** marks below are frost's (raulcorreia7, who runs
+this round on his fork), made in his sessions on 2026-11-11 so the work could
+proceed; they stand as the round's working answers, and each is still the
+owner's to confirm or change at the merge of the unit that depends on it.
+
 1. **The second renderer's API.** Proposed: SDL3's GPU API, since SDL3 is
    already built in and it reaches Vulkan on Linux and Direct3D 12 or Vulkan
    on Windows from one backend. The alternative is OpenGL 3.3, which is
    simpler and reaches older hardware. Either needs the shaders in a second
    form; how is LA4's finding.
+   **Measured 2026-11-11 (`tools/linux_probe/dxvk_probe.cpp`): a third road,
+   DXVK-native** - DXVK v3.1.1 built as Linux libraries (`meson
+   -Dnative_sdl3=enabled`; zlib licence, permissive), Direct3D 11 on Vulkan
+   with an SDL3 window as the swap chain's `HWND`. The probe, a native x86-64
+   ELF, makes the device and swap chain as `InitOnFiber` does, creates the
+   present shaders from `shaders_compiled.h` (Windows' compiler's DXBC,
+   unchanged), draws a 320 x 240 picture doubled to 640 x 480 and reads it
+   back: 0 of 307,200 pixels differ; 19,557 presents a second on an RTX 5090.
+   It keeps `render_d3d11.cpp` and the shaders as they are, so no second
+   backend and no second shader form. `render_d3d11.cpp` against DXVK's
+   headers (`clang++ -fsyntax-only`): every Direct3D 11 and DXGI name
+   resolves; what does not is Win32 alone - the heap (11 sites), environment
+   (5), thread id (5), last error (3), `GetClientRect` (2), the render fiber
+   (5) and one file write - the OS seam LB1 and LB6 already plan.
+   `D3DCompile` has no native implementation, so `BOF3X_PIXEL_OFFSET` would
+   refuse there. **Decided (frost, raulcorreia7, 2026-11-11): DXVK-native for the
+   Linux build; Windows keeps Microsoft's Direct3D 11, with no DXVK switch**
+   - on Windows DXVK would add a Vulkan 1.3 requirement and DLLs to ship for
+   no gain a player sees; the native build and Proton already give a Vulkan
+   comparison when one is wanted. `render_d3d11.cpp` stays the one renderer
+   source.
 2. **Whether Direct3D 11 stays on Windows** once the second backend passes.
    Proposed: yes, as the default there for a release, with the new backend a
    switch; then the owner's call.
-3. **The importer on Linux.** The system's Python with a requirements file
-   (proposed, for a first native release), or wait for I40.
-4. **DirectInput.** Retire it for SDL3 on both systems (proposed, one input
-   path to test), or keep it as a Windows-only path.
-5. **The release's form.** A plain tarball (proposed for the first), an
-   AppImage, or a Flatpak. The Deck is served by any of them as a non-Steam
-   game.
-6. **The order.** Proposed: tier 1 now; tier 2 after the renderer's
-   remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2),
-   because LB5 writes against whatever that round leaves.
+3. **The importer on Linux.** **Decided (2026-11-11): the system's Python
+   with a requirements file** for the first native release; I40 later. The
+   importer already runs on Linux's own Python (the PSX media round's M2
+   set-up ran on this machine's).
+4. **DirectInput.** **Decided: retired for SDL3 on both systems** - one
+   input path to test. A ledger entry where a player could tell.
+5. **The release's form.** **Decided: a plain tarball first** - the ELF,
+   DXVK-native's `libdxvk_d3d11.so` and `libdxvk_dxgi.so`, a start script that
+   runs the importer's `setup` and the game. The Deck takes it as a non-Steam
+   game. No native launcher yet (section 5, stand-in 2).
+6. **The order.** **Decided: the minimum native path now**, in gated units on
+   one branch, each proven on Windows before the next (section 4's method):
+   L1 the OS seam; L2 the window, keyboard and pad on SDL3 and the movie
+   drawn by the renderer; L3 the fibers and the crash reporter's catcher; L4
+   the ELF link (the low-memory image from LA2, `ms_abi` where LA3 says,
+   DXVK-native fetched pinned like llvm-mingw); L5 the proof (routes against
+   the Windows 64-bit build), the CI job and the tarball.
 
 ## 7. Not verified
 
@@ -420,22 +680,26 @@ does not rewrite it. Three stand-ins, cheapest first:
   should; it was not seen.
 - That the 32-bit build runs without `PROTON_USE_WOW64=1` where 32-bit
   graphics drivers are installed.
-- `mmap_min_addr` read 65,536 in this machine's WSL2 (`/proc/sys/vm/mmap_min_addr`,
-  2026-11-10). Not read on the other distributions players use or on
-  SteamOS; that an ELF of ours can keep `0x400000`..`0x98F000` free or
-  occupy it as the PE does.
-- What the 65 game files outside `platform` use from `windows.h`. The one
-  file sampled (`src/game/field/area_map.cpp`) showed only the project's own
-  accessors; that is one file.
+- `mmap_min_addr` read 65,536 on this machine (section 4, LA2, `/proc/sys/vm/mmap_min_addr`;
+  an earlier read in WSL2 gave the same). Not read on the other
+  distributions players use or on SteamOS. Answered here: an ELF linked high
+  can leave `0x400000`..`0x98F000` free (or the base can move to `0xA00000`);
+  not known: that the real engine's ELF fits below `0xA00000`.
+- What the 65 game files outside `platform` use from `windows.h`: answered in
+  section 4 (24 nothing, 16 environment switches, 1 `_stricmp`, 7 services,
+  17 harness files). Not accounted for: 132 `#include <windows.h>` lines by
+  `grep`, 130 include rows in the census.
 - Which side of the renderer's interface `src/game/platform/d3d.cpp` is on.
-- Whether a switch exists that forces a crash for the checklist's row 11
-  (a search of `src` for `CRASHTEST` found none; the reporter's doc was not
-  read for another name).
+- A crash switch for the checklist's row 11: `BOF3X_CRASH_TEST=<seconds>`, named in
+  the header comment of `src/hook/crash.cpp`; a search for `CRASHTEST` had
+  missed it. Not run.
 - That SDL3's GPU API covers what `render_d3d11.cpp` does (the present pass,
   the readbacks, the texture page uploads). LA4 reads it against SDL's
   documentation before call 1 is made.
-- The count of asm blocks that depend on the Win64 register rule; LA3
-  measures it.
+- The Win64 asm count is 10 of 24 live x86-64 blocks (section 4, LA3). Not run:
+  a full task switch under `ms_abi` on Linux; the whole tree under
+  `ms_abi` (24 files and the 11 asm files were compiled); a call across the
+  SDL or DXVK boundary; the probes on a kernel other than 7.3.1.
 
 ## 8. Not in these tiers
 

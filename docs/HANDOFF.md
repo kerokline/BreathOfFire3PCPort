@@ -635,6 +635,20 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **The Linux native round, PR #229 (frost's PR #226 plus the review's commits, branch `linux/native-review`;
+  2026-11-11, open, `main` `ed444dec` merged in).** State and what was proven: [`STATUS.md`](STATUS.md), "The
+  Linux native round's groundwork"; the record is [`linux-round.md`](linux-round.md) (LB1 as run, the narrow
+  encoding, the walk's cost). **Next:** the owner's play on Windows, then the merge at the owner's word; PR #226
+  is closed by whoever merges #229. If `main` moves first, merge it in again and regenerate
+  `analysis/os_census.tsv` (the census counts the launcher's sites too, so any launcher change on `main` turns
+  the `os-host` job red on the merge ref until then). The state-hash A/B's scripts and runs are in
+  `D:\bof3x-runs\pr226fix` (`chain.sh <routes>`, `chain.log`; `Lbase` and `Ltip` are launcher copies of the
+  two builds). **The rule the later units must keep** (LB8 above all): a `char` name in the engine is the
+  system's narrow encoding - the process's ANSI code page on Windows - and crosses to and from a path only
+  through `os::Path` and `os::Narrow`; `os::ToUtf8` / `os::ToWide`, `ExecutablePath` and `ModulePath` are
+  UTF-8 and never meet one. A new narrow-name call site gets a case in `tools/os_host/os_tests.cpp`
+  `TestNarrowNames` if it does anything the existing ones do not.
+
 - **The save editor (2026-11-10, branch `launcher/save-editor`, DIV-0211, [`save-editor.md`](save-editor.md)).**
   The Mods tab's Save Editor... button and its dialog, for PC save files: every field from one table
   (`src/launcher/save/block.cpp`), the advanced fields, checks and backups on save, names from
@@ -1066,4 +1080,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
 - **The owner:** [`owner-review.md`](owner-review.md) - its sections from the newest (item 13), then the older eye, ear and
   play checks and open calls. The owner has played a PSX-only install (the reports of 2026-10-16); nobody has
   played a PSP-only one.
+- **frost (raulcorreia7):** the Linux round's next units (L2 on, [`linux-round.md`](linux-round.md) 6) on his
+  fork; the review's commits sit on top of his four on `linux/native-review` (PR #229), so he takes that branch before he continues. The Linux side of
+  the seam (the POSIX backend under his native build) is his to run; here it is only `os_tests` in WSL and CI.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).

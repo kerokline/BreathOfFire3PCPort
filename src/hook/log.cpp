@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "hook/statehash.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -185,7 +186,7 @@ void Fatal(const char* fmt, ...) {
     Write("\r\n", 2);
     LogFlush();
     StateHash_Flush();   // TerminateProcess below flushes no stdio buffer
-    if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) == 0)
+    if (bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) == 0)
         MessageBoxA(nullptr, buf, "bof3x", MB_OK | MB_ICONERROR | MB_TASKMODAL);
     TerminateProcess(GetCurrentProcess(), 3);
     for (;;) {

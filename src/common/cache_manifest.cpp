@@ -1,10 +1,14 @@
 #include "common/cache_manifest.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <fstream>
+#include <cstdint>
 
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#include "os/os.h"
 
 namespace bof3x {
 namespace {
@@ -150,14 +154,11 @@ CacheManifest ManifestParse(const std::string& text) {
 
 CacheManifest ManifestRead(const std::wstring& cache) {
     if (cache.empty()) return CacheManifest();
-    HANDLE f = CreateFileW((cache + L"\\manifest.toml").c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return CacheManifest();
+    std::ifstream f(std::filesystem::path(cache) / L"manifest.toml", std::ios::binary);
+    if (!f) return CacheManifest();
     std::string text;
     std::vector<char> buf(65536);   // not on the stack: the DLL reads it on a game thread's
-    DWORD got = 0;
-    while (ReadFile(f, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr) && got > 0) text.append(buf.data(), got);
-    CloseHandle(f);
+    while (f.read(buf.data(), static_cast<std::streamsize>(buf.size())) || f.gcount() > 0) text.append(buf.data(), static_cast<std::size_t>(f.gcount()));
     return ManifestParse(text);
 }
 

@@ -7,7 +7,6 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-#include <windows.h>
 
 // The two things WinMain's loop does to VRAM on a RENDERED frame, before the
 // draw (docs/call-trace.md section 6): game logic only queues and marks.

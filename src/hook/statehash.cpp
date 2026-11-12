@@ -15,6 +15,7 @@
 #include "hook/exe_layout.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // The file (little-endian, read by tools/statehash.py):
 //
@@ -436,8 +437,8 @@ void CheckImageBase(const char* what, unsigned long long b) {
 // they do not; a byte of data changed is seen through the fold; and with no
 // fold a page hashes as its raw bytes (BOF3SH3's hash, bit for bit).
 void SelfTest() {
-    auto* mem = static_cast<unsigned char*>(VirtualAlloc(nullptr, 4 * kPage, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    if (!mem) Fatal("statehash self-test: VirtualAlloc of the scratch pages failed");
+    auto* mem = static_cast<unsigned char*>(os::MemAlloc(nullptr, 4 * kPage, os::Prot::ReadWrite));
+    if (!mem) Fatal("statehash self-test: MemAlloc of the scratch pages failed");
     unsigned char* const at0 = mem;               // the image at 0x400000
     unsigned char* const atf = mem + kPage;       // the image at F
     unsigned char* const scratch = mem + 2 * kPage;
@@ -621,7 +622,7 @@ void SelfTest() {
               "numbers, %lu .pool pointers among them; %lu .pool pointers and %lu .pool links)", (unsigned long)pointers,
               (unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
               (unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
-    VirtualFree(mem, 0, MEM_RELEASE);
+    os::MemRelease(mem, 4 * kPage);
     Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) and %lu .pool pointers moved by "
         "0x%08lX, %lu data words in the moved range and %lu image-shaped numbers unmoved, hashes the same folding "
         "0x%08lX (extent 0x%lX); differs without the fold and with a byte changed; with no fold hashes as its raw "
@@ -693,10 +694,10 @@ void StateHash_SetImageBase(unsigned long base) {
 }
 
 void StateHash_BeforeInjects(void* dll_module) {
-    if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) SelfTest();
-    if (GetEnvironmentVariableA("BOF3X_STATEHASH", nullptr, 0) == 0) return;
+    if (bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) SelfTest();
+    if (bof3::os::GetEnv("BOF3X_STATEHASH", nullptr, 0) == 0) return;
     char raw[8];
-    const DWORD rn = GetEnvironmentVariableA("BOF3X_STATEHASH_RAW", raw, sizeof raw);
+    const DWORD rn = bof3::os::GetEnv("BOF3X_STATEHASH_RAW", raw, sizeof raw);
     if (rn >= sizeof raw || (rn > 0 && std::strcmp(raw, "0") != 0 && std::strcmp(raw, "1") != 0))
         Fatal("BOF3X_STATEHASH_RAW: wants 1 (hash our pointers raw, as BOF3SH2 did) or 0");
     g_normalise = !(rn > 0 && raw[0] == '1');
@@ -705,7 +706,7 @@ void StateHash_BeforeInjects(void* dll_module) {
     // moved, and BOF3X_STATEHASH_FOLD - on a run at 0x400000, the moved run's
     // base, so both sides fold the same range.
     char fold[24];
-    const DWORD fn = GetEnvironmentVariableA("BOF3X_STATEHASH_FOLD", fold, sizeof fold);
+    const DWORD fn = bof3::os::GetEnv("BOF3X_STATEHASH_FOLD", fold, sizeof fold);
     if (fn >= sizeof fold) Fatal("BOF3X_STATEHASH_FOLD: wants an address, as 0x70000000");
     if (fn > 0) {
         char* end = nullptr;
@@ -792,18 +793,18 @@ void StateHash_AfterInjects() {
 
 bool StateHash_Start() {
     char path[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_STATEHASH", path, sizeof path);
+    const DWORD n = bof3::os::GetEnv("BOF3X_STATEHASH", path, sizeof path);
     if (n == 0) return false;
     if (n >= sizeof path) Fatal("BOF3X_STATEHASH: the path is %lu characters, over MAX_PATH", (unsigned long)n);
     g_path = path;
     if (!g_census) Fatal("BOF3X_STATEHASH: the pointer slots were not recorded before the injects (DllMain)");
     char skip[MAX_PATH];
-    const DWORD sn = GetEnvironmentVariableA("BOF3X_STATEHASH_SKIP", skip, sizeof skip);
+    const DWORD sn = bof3::os::GetEnv("BOF3X_STATEHASH_SKIP", skip, sizeof skip);
     if (sn >= sizeof skip) Fatal("BOF3X_STATEHASH_SKIP: the path is over MAX_PATH");
     if (sn > 0) LoadSkips(skip);
     if (g_page_skips.empty()) g_page_skips.assign(kPages, {});
     char dump[256];
-    const DWORD dn = GetEnvironmentVariableA("BOF3X_STATEHASH_DUMP", dump, sizeof dump);
+    const DWORD dn = bof3::os::GetEnv("BOF3X_STATEHASH_DUMP", dump, sizeof dump);
     if (dn >= sizeof dump) Fatal("BOF3X_STATEHASH_DUMP: the list is over %u characters", (unsigned)sizeof dump);
     if (dn > 0) {
         for (char* p = dump; *p;) {

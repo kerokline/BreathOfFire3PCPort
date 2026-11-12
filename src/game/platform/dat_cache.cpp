@@ -3,7 +3,9 @@
 // and no game data - the self-test builds its own manifests and containers.
 #include "game/dat_cache.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <fstream>
+#include <system_error>
 
 
 #include <cstdarg>
@@ -18,6 +20,7 @@
 #include "common/cache_manifest.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace dat_cache {
 namespace {
@@ -34,7 +37,7 @@ constexpr char kTargetDir[] = "loc\\zh-CN";
 // \opt\ + a 23-character layer (dat_load.cpp kOptName - 1) + \dat\ + a
 // 12-character name (Dat_FileNames' longest, read 2026-10-08; the recipe's
 // 742 agree, 2026-10-10). Longer names are checked as each path is built.
-constexpr std::size_t kPathMax = MAX_PATH - 1;
+constexpr std::size_t kPathMax = bof3::os::kMaxPath - 1;
 constexpr std::size_t kLongestTail = sizeof "\\opt\\" - 1 + 23 + sizeof "\\dat\\" - 1 + 12;
 constexpr std::size_t kRootMax = kPathMax - kLongestTail;
 // More chunks than any shipped container holds (16, recipes/pc-zh.toml).
@@ -50,48 +53,36 @@ struct Container {
 using Index = std::map<std::string, Container>;
 
 bool FileExists(const char* path) {
-    const DWORD a = GetFileAttributesA(path);
-    return a != INVALID_FILE_ATTRIBUTES && !(a & FILE_ATTRIBUTE_DIRECTORY);
+    return bof3::os::IsFile(path);
 }
 
 bool LayerDirHasDat(const char* dir) {
-    char pattern[MAX_PATH + 8];
+    char pattern[bof3::os::kMaxPath + 8];
     if (std::snprintf(pattern, sizeof pattern, "%s\\*.DAT", dir) >= static_cast<int>(sizeof pattern)) return false;
-    WIN32_FIND_DATAA fd;
-    const HANDLE h = FindFirstFileA(pattern, &fd);
-    if (h == INVALID_HANDLE_VALUE) return false;
-    FindClose(h);
-    return true;
+    return bof3::os::WalkDirectory(pattern, [](const bof3::os::DirEntry&) { return false; }) != 0;
 }
 
 // The start-up check's reader: the headers only, by seeking (the banks make
 // base\dat some 300 MB; reading it whole would cost seconds).
 int CountByWin32(const char* path, std::int8_t* kinds, int cap) {
-    const HANDLE h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h == INVALID_HANDLE_VALUE) return -1;
-    LARGE_INTEGER size;
-    if (!GetFileSizeEx(h, &size)) {
-        CloseHandle(h);
-        return -1;
-    }
+    std::ifstream h(bof3::os::Path(path), std::ios::binary);
+    if (!h) return -1;
+    h.seekg(0, std::ios::end);
+    const long long size = static_cast<long long>(h.tellg());
+    if (!h || size < 0) return -1;
     long long off = 0;
     int n = 0;
-    while (off < size.QuadPart) {
+    while (off < size) {
         Chunk c;
-        LARGE_INTEGER at;
-        at.QuadPart = off;
-        DWORD got = 0;
-        if (n == cap || off + static_cast<long long>(sizeof c) > size.QuadPart ||
-            !SetFilePointerEx(h, at, nullptr, FILE_BEGIN) || !ReadFile(h, &c, sizeof c, &got, nullptr) ||
-            got != sizeof c || c.size < 0) {
-            CloseHandle(h);
+        h.clear();
+        h.seekg(off);
+        if (n == cap || off + static_cast<long long>(sizeof c) > size ||
+            !h.read(reinterpret_cast<char*>(&c), sizeof c) || c.size < 0)
             return -1;
-        }
         kinds[n++] = c.kind;
         off += static_cast<long long>(sizeof c) + c.size;
     }
-    CloseHandle(h);
-    return off == size.QuadPart ? n : -1;
+    return off == size ? n : -1;
 }
 
 void __cdecl CrtFree(void* p) { Crt_free(p); }
@@ -386,11 +377,11 @@ void Configure() {
     g_c = State{};
     g_c.io = DefaultIo();
     char mode[4];
-    const DWORD m = GetEnvironmentVariableA("BOF3X_CACHE_DATA", mode, sizeof mode);
+    const std::uint32_t m = bof3::os::GetEnv("BOF3X_CACHE_DATA", mode, sizeof mode);
     if (m >= sizeof mode || (m != 0 && std::strcmp(mode, "0") != 0 && std::strcmp(mode, "1") != 0))
         bof3::Fatal("DIV-0089: BOF3X_CACHE_DATA must be 0 or 1");
-    char root[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
+    char root[bof3::os::kMaxPath];
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_CACHE", root, sizeof root);
     if (n >= sizeof root) bof3::Fatal("DIV-0089: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
     if (n == 0) return;  // no cache: the install's files, as the original's
     std::size_t len = n;
@@ -402,23 +393,20 @@ void Configure() {
         // music seam's own refusals (music_seq.cpp Arm).
         g_c.music_root = root;
         const std::string manifest = g_c.music_root + "\\manifest.toml";
-        const HANDLE f = CreateFileA(manifest.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                     FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (f != INVALID_HANDLE_VALUE) {
+        std::ifstream f(bof3::os::Path(manifest.c_str()), std::ios::binary);
+        if (f) {
             std::string text;
             std::vector<char> buf(65536);
-            DWORD got = 0;
-            while (ReadFile(f, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr) && got > 0)
-                text.append(buf.data(), got);
-            CloseHandle(f);
+            while (f.read(buf.data(), static_cast<std::streamsize>(buf.size())) || f.gcount() > 0)
+                text.append(buf.data(), static_cast<std::size_t>(f.gcount()));
             SetListing(text);
         }
         bof3::Log("DIV-0089    BOF3X_CACHE_DATA=0: DAT\\ and SND\\ from the install (the cache for the music only: "
                   "base\\bgm and a named layer's bgm\\)");
         return;
     }
-    const DWORD a = GetFileAttributesA(root);
-    if (a == INVALID_FILE_ATTRIBUTES || !(a & FILE_ATTRIBUTE_DIRECTORY))
+    std::error_code dir_ec;
+    if (!std::filesystem::is_directory(bof3::os::Path(root), dir_ec))
         bof3::Fatal("DIV-0089: BOF3X_CACHE=%s is not a directory", root);
     if (len > kRootMax)
         bof3::Fatal("DIV-0089: BOF3X_CACHE=%s is %u characters; its longest path (an optional layer's file) must stay "
@@ -429,23 +417,21 @@ void Configure() {
 
     char path[kPathMax + 1];
     Join(path, sizeof path, g_c.root, "manifest.toml", "", "");
-    const HANDLE h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h == INVALID_HANDLE_VALUE) {
+    std::ifstream h(bof3::os::Path(path), std::ios::binary);
+    if (!h) {
         bof3::Log("DIV-0089    %s has no manifest.toml: every DAT\\ container from the install; its loc\\, opt\\ "
                   "layers and base\\snd read", g_c.root);
         return;
     }
-    LARGE_INTEGER size;
-    constexpr LONGLONG kManifestMax = 64ll << 20;  // far above a whole build's (some 600 KB)
-    if (!GetFileSizeEx(h, &size) || size.QuadPart <= 0 || size.QuadPart > kManifestMax) {
-        CloseHandle(h);
-        bof3::Fatal("DIV-0089: %s has %lld bytes", path, static_cast<long long>(size.QuadPart));
-    }
-    std::vector<char> text(static_cast<std::size_t>(size.QuadPart) + 1, 0);
-    DWORD got = 0;
-    const BOOL ok = ReadFile(h, text.data(), static_cast<DWORD>(size.QuadPart), &got, nullptr);
-    CloseHandle(h);
-    if (!ok || got != size.QuadPart) bof3::Fatal("DIV-0089: %s: read %lu of %lld bytes", path, got, size.QuadPart);
+    h.seekg(0, std::ios::end);
+    const long long size = static_cast<long long>(h.tellg());
+    constexpr long long kManifestMax = 64ll << 20;  // far above a whole build's (some 600 KB)
+    if (!h || size <= 0 || size > kManifestMax) bof3::Fatal("DIV-0089: %s has %lld bytes", path, size);
+    h.seekg(0);
+    std::vector<char> text(static_cast<std::size_t>(size) + 1, 0);
+    h.read(text.data(), static_cast<std::streamsize>(size));
+    const long long got = static_cast<long long>(h.gcount());
+    if (got != size) bof3::Fatal("DIV-0089: %s: read %lld of %lld bytes", path, got, size);
     if (std::strlen(text.data()) != got) bof3::Fatal("DIV-0089: %s holds a NUL byte", path);
     SetListing(text.data());
     char error[512];
@@ -626,15 +612,14 @@ Open g_topen[4];
 
 const TestFile* Find(const char* path) {
     for (const TestFile& f : *g_tfiles)
-        if (lstrcmpiA(f.path.c_str(), path) == 0) return &f;
+        if (bof3::os::SameName(f.path.c_str(), path)) return &f;
     return nullptr;
 }
 bool TExists(const char* path) { return Find(path) != nullptr; }
 bool TLayerDir(const char* dir) {
     const std::size_t n = std::strlen(dir);
     for (const TestFile& f : *g_tfiles)
-        if (f.path.size() > n + 1 && CompareStringA(LOCALE_INVARIANT, NORM_IGNORECASE, f.path.c_str(), static_cast<int>(n),
-                                                    dir, static_cast<int>(n)) == CSTR_EQUAL &&
+        if (f.path.size() > n + 1 && bof3::os::SameNameN(f.path.c_str(), dir, n) &&
             f.path[n] == '\\')
             return true;
     return false;
@@ -896,7 +881,7 @@ void SelfTest() {
     TestSetArmed(true);
 
     // 3. The paths and the layers.
-    char path[MAX_PATH];
+    char path[bof3::os::kMaxPath];
     const bool snd = SoundPath("abc", path, sizeof path) && Path("base\\snd\\abc.DAT") == path &&
                      !SoundPath("XYZ", path, sizeof path);
     LayerPath(path, sizeof path, "opt", "psp-art", "AREA067.DAT");

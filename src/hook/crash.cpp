@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): it catches faults through SEH and writes a dump with MiniDumpWriteDump.
 #include "hook/crash.h"
 
 #include <windows.h>

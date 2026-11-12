@@ -3,7 +3,6 @@
 // See pillarbox.h.
 #include "game/pillarbox.h"
 
-#include <windows.h>
 
 #include <cstdint>
 
@@ -11,6 +10,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace pillarbox {
 namespace {
@@ -270,7 +270,7 @@ void Cover() {
 void Inject() {
     if (bof3::WantsShadow("pillarbox")) SelfTest();
     char text[8];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PILLARBOX", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_PILLARBOX", text, sizeof text);
     if (n != 0 && !(n == 1 && (text[0] == '0' || text[0] == '1')))
         bof3::Fatal("BOF3X_PILLARBOX=%s: 0 or 1", n < sizeof text ? text : "...");
     g_on = !(n == 1 && text[0] == '0');

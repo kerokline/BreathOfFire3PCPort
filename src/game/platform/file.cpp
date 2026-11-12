@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
@@ -14,6 +13,7 @@
 #include "hook/host.h"
 #include "hook/log.h"
 #include "input/bindings.h"
+#include "os/os.h"
 
 using namespace shell;
 
@@ -95,17 +95,17 @@ extern "C" int __cdecl File_Open(const char* path, int, int) {
     void* stream = Crt_fopen(path, "rb");
     if (!stream) {
         char prefixed[0x50];
-        if (lstrlenA(File_CdRoot()) + lstrlenA(path) < static_cast<int>(sizeof prefixed)) {  // DIV-0087
+        if (std::strlen(File_CdRoot()) + std::strlen(path) < sizeof prefixed) {  // DIV-0087
             Crt_sprintf(prefixed, "%s%s", File_CdRoot(), path);
             stream = Crt_fopen(prefixed, "rb");
         }
         if (!stream) {
-            bof3::Log("open  t=%lu  FAILED  %s", GetTickCount(), path);
+            bof3::Log("open  t=%lu  FAILED  %s", static_cast<unsigned long>(bof3::os::TickMs32()), path);
             return -1;
         }
     }
     File_Slots[slot] = stream;
-    bof3::Log("open  t=%lu  slot %d  %s", GetTickCount(), slot, path);
+    bof3::Log("open  t=%lu  slot %d  %s", static_cast<unsigned long>(bof3::os::TickMs32()), slot, path);
     return slot;
 }
 
@@ -125,7 +125,7 @@ extern "C" int __cdecl File_OpenWrite(const char* path) {
 
     void* stream = Crt_fopen(path, "wb");
     if (!stream) {  // DIV-0003
-        bof3::Log("openw t=%lu  FAILED  %s", GetTickCount(), path);
+        bof3::Log("openw t=%lu  FAILED  %s", static_cast<unsigned long>(bof3::os::TickMs32()), path);
         return -1;
     }
     File_Slots[slot] = stream;

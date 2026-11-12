@@ -1,6 +1,5 @@
 #include "game/draw_pool.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -13,6 +12,7 @@
 #include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace draw_pool {
 unsigned char* g_items = nullptr;   // the original's until DrawPool_Grow (draw_pool.h)
@@ -205,10 +205,12 @@ void DrawPool_Reserve() {
     // The launcher's block, stamped, at one of the candidates (launcher.cpp).
     for (std::uint32_t at : kCandidates) {
         if (items) break;
-        MEMORY_BASIC_INFORMATION mbi;
+        bof3::os::MemInfo mbi;
         auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(at));
-        if (VirtualQuery(p, &mbi, sizeof mbi) == 0) continue;
-        if (mbi.State != MEM_COMMIT || mbi.Type != MEM_PRIVATE || mbi.BaseAddress != p || mbi.RegionSize < kBytes) continue;
+        if (!bof3::os::MemQuery(p, &mbi)) continue;
+        if (mbi.state != bof3::os::MemState::Committed || !mbi.is_private || mbi.base != reinterpret_cast<std::uintptr_t>(p) ||
+            mbi.size < kBytes)
+            continue;
         if (std::memcmp(p, kStamp, sizeof kStamp) != 0) continue;
         items = p;
         break;
@@ -216,15 +218,15 @@ void DrawPool_Reserve() {
     // Started without the launcher: the first free region of the size below
     // 16 MB, if the address space still has one.
     for (std::uint32_t at = 0x10000; at + kBytes <= 0x1000000 && !items;) {
-        MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(at)), &mbi, sizeof mbi) == 0) break;
-        const auto region = Low32(mbi.BaseAddress);
-        const std::uint32_t end = region + static_cast<std::uint32_t>(mbi.RegionSize);
-        if (mbi.State == MEM_FREE && end - at >= kBytes) {
+        bof3::os::MemInfo mbi;
+        if (!bof3::os::MemQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(at)), &mbi)) break;
+        const auto region = Low32(reinterpret_cast<const void*>(mbi.base));
+        const std::uint32_t end = region + static_cast<std::uint32_t>(mbi.size);
+        if (mbi.state == bof3::os::MemState::Free && end - at >= kBytes) {
             const std::uint32_t want = (at + 0xFFFF) & ~0xFFFFu;   // allocation granularity
             if (want + kBytes <= end)
-                items = static_cast<unsigned char*>(VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(want)), kBytes,
-                                                                 MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
+                items = static_cast<unsigned char*>(bof3::os::MemAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(want)), kBytes,
+                                                                       bof3::os::Prot::ReadWrite));
         }
         at = end;
     }

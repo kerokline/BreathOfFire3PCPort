@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/config_text.h"

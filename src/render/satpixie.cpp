@@ -17,7 +17,6 @@
 // bright - the owner saw exactly that on the title's mural.
 #include "render/satpixie.h"
 
-#include <windows.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -26,6 +25,7 @@
 #include "common/sha256.h"
 #include "hook/log.h"
 #include "render/shaders_compiled.h"
+#include "os/os.h"
 
 namespace render {
 namespace {
@@ -258,7 +258,7 @@ ID3D11PixelShader* Pixel(ID3D11Device* device, const char* entry, const unsigned
 // and values outside the preset's range are Fatal.
 void ReadKnobs() {
     char text[1024];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_SATPIXIE", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_SATPIXIE", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) bof3::Fatal("BOF3X_SATPIXIE: longer than %u bytes", static_cast<unsigned>(sizeof text));
     for (char* item = std::strtok(text, ","); item; item = std::strtok(nullptr, ",")) {

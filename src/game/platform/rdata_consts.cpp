@@ -2,7 +2,6 @@
 #include "game/rdata_consts.h"
 
 #define DIRECTINPUT_VERSION 0x0700
-#include <windows.h>
 #include <dinput.h>
 
 #include <cstring>

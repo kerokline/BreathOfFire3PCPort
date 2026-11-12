@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw.h"

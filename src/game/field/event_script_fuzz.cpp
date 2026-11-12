@@ -16,7 +16,6 @@
 // Sprite_Current, the op's own byte). Scripts are generated so that each loop
 // ends: a body of the bytes the function under test does not hang on, then a
 // tail of its terminator.
-#include <windows.h>
 
 #include <array>
 #include <cstdint>
@@ -29,6 +28,7 @@
 #include "game/event_script_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace event_script {
 namespace {
@@ -412,7 +412,7 @@ void MakeClones() {
             PatchDword(code, c.disp, c.base + c.table, c.base + c.table + moved, "jump table operand", c);
         }
         if (c.cond) PatchDword(code, c.cond, Address(EventScript_Conditions), Address(kStubs.conditions), "condition table operand", c);
-        FlushInstructionCache(GetCurrentProcess(), copy, c.size);
+        bof3::os::FlushCode(copy, c.size);
         g_theirs[k] = copy;
     }
 }

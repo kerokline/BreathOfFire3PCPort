@@ -1,6 +1,5 @@
 #include "hook/bind.h"
 
-#include <windows.h>
 
 #include <algorithm>
 #include <iterator>
@@ -11,6 +10,7 @@
 #include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -107,10 +107,10 @@ unsigned g_refused = 0;   // top bytes tried that the process could not reserve
 // when something else holds part of it.
 void* Reserve(std::uint32_t top) {
     const std::uint32_t lo = (top | kSpanLo) & ~0xFFFFu;
-    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)),
-                                  (top | kSpanHi) + kThunkBytes - lo, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    const std::size_t bytes = (top | kSpanHi) + kThunkBytes - lo;
+    void* const at = os::MemAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)), bytes, os::Prot::ReadWrite);
     if (at == reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo))) return at;
-    if (at) VirtualFree(at, 0, MEM_RELEASE);
+    if (at) os::MemRelease(at, bytes);
     ++g_refused;
     return nullptr;
 }
@@ -136,7 +136,7 @@ void BuildTable() {
     if (!at)
         Fatal("bind: cannot reserve the table of code places (0x%X bytes at (top << 24) | 0x%X) under any top byte "
               "0x20..0x7F, error %lu: the address space is full",
-              (unsigned)kSpan, (unsigned)kSpanLo, GetLastError());
+              (unsigned)kSpan, (unsigned)kSpanLo, static_cast<unsigned long>(bof3::os::LastError()));
     auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
     std::memset(t, 0xCC, kSpan);
     for (unsigned i = 0; i <= kRows; ++i) {
@@ -168,10 +168,9 @@ void BuildTable() {
         e[0] = 0xE9;
         std::memcpy(e + 1, &rel, 4);
     }
-    DWORD old = 0;
-    if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF) + kThunkBytes, PAGE_EXECUTE_READ, &old))
-        Fatal("bind: VirtualProtect of the table of code places failed, error %lu", GetLastError());
-    FlushInstructionCache(GetCurrentProcess(), t, kSpan);
+    if (!os::MemProtect(at, kSpan + (kSpanLo & 0xFFFF) + kThunkBytes, os::Prot::ReadExec))
+        Fatal("bind: MemProtect of the table of code places failed, error %lu", (unsigned long)os::LastError());
+    os::FlushCode(t, kSpan);
     g_table = top;
 }
 
@@ -311,9 +310,8 @@ std::uint32_t Bind_ImportThunk(unsigned index, const void* target) {
     if (index >= kThunks) Fatal("bind: import thunk %u, past the thunk page's %u", index, kThunks);
     const std::uint32_t place = (g_table | kSpanHi) + index * kThunkStride;
     auto* const e = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(place));
-    DWORD old = 0;
-    if (!VirtualProtect(e, kThunkStride, PAGE_READWRITE, &old))
-        Fatal("bind: VirtualProtect(thunk %u, read-write) failed, error %lu", index, GetLastError());
+    if (!os::MemProtect(e, kThunkStride, os::Prot::ReadWrite))
+        Fatal("bind: MemProtect(thunk %u, read-write) failed, error %lu", index, (unsigned long)os::LastError());
     // FF 25 00000000: jmp [rip + 0], the 8-byte target right after it -
     // measured to reach GetTickCount at 0x7FFA... through a 32-bit word
     // (docs/x64-build-design.md 4). int3 fills the stride's last two bytes.
@@ -322,9 +320,9 @@ std::uint32_t Bind_ImportThunk(unsigned index, const void* target) {
     const std::uint64_t t = reinterpret_cast<std::uintptr_t>(target);
     std::memcpy(e + 6, &t, sizeof t);
     std::memset(e + 14, 0xCC, kThunkStride - 14);
-    if (!VirtualProtect(e, kThunkStride, PAGE_EXECUTE_READ, &old))
-        Fatal("bind: VirtualProtect(thunk %u, execute) failed, error %lu", index, GetLastError());
-    FlushInstructionCache(GetCurrentProcess(), e, kThunkStride);
+    if (!os::MemProtect(e, kThunkStride, os::Prot::ReadExec))
+        Fatal("bind: MemProtect(thunk %u, execute) failed, error %lu", index, (unsigned long)os::LastError());
+    os::FlushCode(e, kThunkStride);
     return place;
 }
 #endif
@@ -414,7 +412,7 @@ void Bind_Report() {
             words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
             (unsigned)first_pages[2], (unsigned)first_pages[3]);
     }
-    if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) Bind_SelfTest();
+    if (bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) Bind_SelfTest();
 }
 
 void Bind_SelfTest() {

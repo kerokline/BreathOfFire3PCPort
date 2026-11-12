@@ -7,7 +7,6 @@
 #include <cstring>
 #include <type_traits>
 #include <utility>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
@@ -44,6 +43,7 @@
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace {
 
@@ -181,7 +181,7 @@ static bool EffectLogOn() {
     static int on = -1;
     if (on < 0) {
         char v[8];
-        on = GetEnvironmentVariableA("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
+        on = bof3::os::GetEnv("BOF3X_EFFECTLOG", v, sizeof v) != 0 && v[0] == '1';
     }
     return on == 1;
 }

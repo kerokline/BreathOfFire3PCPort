@@ -37,6 +37,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "os/os.h"
 
 namespace msgbox {
 
@@ -771,7 +772,7 @@ void MsgBox_ArmAfterBinds() {
     // The study key: BOF3X_RUBY_KEY = f1..f12 (any case; default f4) or none.
     {
         char key[16] = "f4";
-        const DWORD n = GetEnvironmentVariableA("BOF3X_RUBY_KEY", key, sizeof key);
+        const DWORD n = bof3::os::GetEnv("BOF3X_RUBY_KEY", key, sizeof key);
         if (n >= sizeof key) bof3::Fatal("BOF3X_RUBY_KEY is %lu characters: f1..f12 or none", n);
         for (char* c = key; *c; ++c)
             if (*c >= 'A' && *c <= 'Z') *c = static_cast<char>(*c - 'A' + 'a');
@@ -790,7 +791,7 @@ void MsgBox_ArmAfterBinds() {
     // default) or 1. Its home is the printer, so it needs the printer ours.
     {
         char v[8] = "0";
-        const DWORD n = GetEnvironmentVariableA("BOF3X_TEXT_SPEED", v, sizeof v);
+        const DWORD n = bof3::os::GetEnv("BOF3X_TEXT_SPEED", v, sizeof v);
         if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
             bof3::Fatal("BOF3X_TEXT_SPEED is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
         msgbox::g_text_faster = v[0] == '1';

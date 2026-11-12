@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle/battle_action_callees.h"
@@ -30,6 +29,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "os/os.h"
 
 namespace {
 
@@ -2253,7 +2253,7 @@ void BattleActionFromBattleActions_Inject() {
     // and after the injects, so that IsEnabled sees the check ours.
     {
         char v[8] = "0";
-        const DWORD n = GetEnvironmentVariableA("BOF3X_UNLEARNED_BLUE", v, sizeof v);
+        const std::uint32_t n = bof3::os::GetEnv("BOF3X_UNLEARNED_BLUE", v, sizeof v);
         if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
             bof3::Fatal("BOF3X_UNLEARNED_BLUE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
         battle_actions::g_unlearned_blue = v[0] == '1';

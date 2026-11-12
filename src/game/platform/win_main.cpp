@@ -80,6 +80,7 @@
 #include "hook/log.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace {
 
@@ -166,7 +167,7 @@ LONG CALLBACK TracedUnhandled(EXCEPTION_POINTERS* info) {
     bof3::Log("exittrace   exception 0x%08lX at 0x%s, esp 0x%s, eflags 0x%08lX, thread %lu, passed on by every handler",
               code, bof3::CtxHex(bof3::CtxIp(*info->ContextRecord)).text,
               bof3::CtxHex(bof3::CtxSp(*info->ContextRecord)).text,
-              static_cast<unsigned long>(info->ContextRecord->EFlags), GetCurrentThreadId());
+              static_cast<unsigned long>(info->ContextRecord->EFlags), static_cast<unsigned long>(bof3::os::ThreadId()));
     LogStack("the exception", reinterpret_cast<const void*>(bof3::CtxSp(*info->ContextRecord)));
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -196,17 +197,17 @@ void PatchImport(U slot, F& real, F ours) {
     std::uint32_t word;   // the slot is a 32-bit word on every width (a thunk's place on x86-64)
     std::memcpy(&word, at, 4);
     real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
-    DWORD old = 0;
-    if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
+    bof3::os::ProtSave old;
+    if (!bof3::os::MemProtect(at, 4, bof3::os::Prot::ReadWrite, &old)) bof3::Fatal("exittrace: MemProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
     word = Low32(reinterpret_cast<const void*>(ours));
     std::memcpy(at, &word, 4);
-    VirtualProtect(at, 4, old, &old);
+    bof3::os::MemRestore(at, 4, old);
 }
 
 }  // namespace
 
 void WinMain_Inject() {
-    if (GetEnvironmentVariableA("BOF3X_EXITTRACE", nullptr, 0) > 0) {
+    if (bof3::os::GetEnv("BOF3X_EXITTRACE", nullptr, 0) > 0) {
         PatchImport(::bof3::Img(Imp_ExitProcess_addr), g_real_exit, &TracedExitProcess);
         PatchImport(::bof3::Img(Imp_TerminateProcess_addr), g_real_terminate, &TracedTerminateProcess);
         PatchImport(::bof3::Img(Imp_PostQuitMessage_addr), g_real_post_quit, &TracedPostQuitMessage);

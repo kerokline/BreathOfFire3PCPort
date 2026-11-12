@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/band_census.h"
@@ -23,6 +22,7 @@
 #include "game/sprite_screen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 using namespace battle_sprites;
 
@@ -246,7 +246,7 @@ static bool PoseLogOn() {
     static int on = -1;
     if (on < 0) {
         char v[8];
-        on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1';
+        on = bof3::os::GetEnv("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1';
     }
     return on == 1;
 }

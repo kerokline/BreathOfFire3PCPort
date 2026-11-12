@@ -25,7 +25,6 @@
 // the pixel formats, the DirectDraw globals and Font_GlyphData), and the
 // return. The fakes and the stand-ins disturb memory now and then after a call
 // so every read the builders make is ordered against every call.
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -36,6 +35,7 @@
 #include "game/tex_cells_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace tex_cells {
 namespace {
@@ -889,12 +889,12 @@ void SelfTest() {
     Capture(g_saved);
     g_rand = 0x5A32B0u;
     for (U i = 0; i < kVramBytes; i += 4) PutLong(Gfx_VramShadow_addr + i, Next());
-    g_source = static_cast<unsigned char*>(VirtualAlloc(nullptr, kSourceBytes + 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    g_dst[0] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    g_dst[1] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    g_glyphs = static_cast<unsigned char*>(VirtualAlloc(nullptr, 2 * kGlyphs * kGlyphBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+    g_source = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kSourceBytes + 0x1000, bof3::os::Prot::ReadWrite));
+    g_dst[0] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
+    g_dst[1] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
+    g_glyphs = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, 2 * kGlyphs * kGlyphBytes, bof3::os::Prot::ReadWrite));
     if (!g_source || !g_dst[0] || !g_dst[1] || !g_glyphs)
-        bof3::Fatal("tex_cells: VirtualAlloc failed, error %lu", GetLastError());
+        bof3::Fatal("tex_cells: MemAlloc failed, error %lu", (unsigned long)bof3::os::LastError());
     for (U i = 0; i < kSourceBytes; i += 4) PutLong(Addr(g_source + i), Next());
     for (U i = 0; i < 2 * kGlyphs * kGlyphBytes; i += 4) PutLong(Addr(g_glyphs + i), Next());
 
@@ -925,10 +925,10 @@ void SelfTest() {
     }
     Restore(g_saved);
     std::memcpy(At(Gfx_VramShadow_addr), g_vram_saved, kVramBytes);
-    VirtualFree(g_source, 0, MEM_RELEASE);
-    VirtualFree(g_dst[0], 0, MEM_RELEASE);
-    VirtualFree(g_dst[1], 0, MEM_RELEASE);
-    VirtualFree(g_glyphs, 0, MEM_RELEASE);
+    bof3::os::MemRelease(g_source, kSourceBytes + 0x1000);
+    bof3::os::MemRelease(g_dst[0], kDstBytes);
+    bof3::os::MemRelease(g_dst[1], kDstBytes);
+    bof3::os::MemRelease(g_glyphs, 2 * kGlyphs * kGlyphBytes);
 
     bof3::Log("shadow      tex_cells self-test: unpackers %u rounds (Font_UnpackGlyph %u, Cell_Unpack4 %u, Cell_Unpack8 %u, "
               "Cell_Unpack4Flip %u, Cell_Unpack8Flip %u; at 4 bytes a texel %u glyph, %u cell), D3d_FitTextureSize %u (%u "

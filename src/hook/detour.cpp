@@ -11,6 +11,7 @@
 #include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace bof3 {
 namespace {
@@ -46,7 +47,7 @@ bool NameListed(const char* list, const char* name) {
 
 bool WantsOriginal(const char* name) {
     char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
-    DWORD n = GetEnvironmentVariableA("BOF3X_ORIGINAL", list, sizeof list);
+    DWORD n = bof3::os::GetEnv("BOF3X_ORIGINAL", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_ORIGINAL is longer than %u bytes", (unsigned)sizeof list);
     return NameListed(list, name);
@@ -61,7 +62,7 @@ const char* OffList() {
     static char list[8192];
     static bool read = false;
     if (!read) {
-        DWORD n = GetEnvironmentVariableA("BOF3X_OFF", list, sizeof list);
+        DWORD n = bof3::os::GetEnv("BOF3X_OFF", list, sizeof list);
         if (n >= sizeof list) Fatal("BOF3X_OFF is longer than %u bytes", (unsigned)sizeof list - 1);
         if (n == 0) list[0] = '\0';
         read = true;
@@ -149,15 +150,14 @@ void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
           "(docs/x64-build-round.md 2)",
           name, (void*)at, (const void*)to);
 #else
-    DWORD old = 0;
-    if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
-        Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
+    os::ProtSave old;
+    if (!os::MemProtect(at, kJmpLen, os::Prot::ReadWriteExec, &old))
+        Fatal("%s: MemProtect(%p) failed, error %lu", name, (void*)at, (unsigned long)os::LastError());
     std::int32_t rel = static_cast<std::int32_t>(to - (at + kJmpLen));
     at[0] = 0xE9;
     std::memcpy(at + 1, &rel, sizeof rel);
-    DWORD ignored = 0;
-    VirtualProtect(at, kJmpLen, old, &ignored);
-    FlushInstructionCache(GetCurrentProcess(), at, kJmpLen);
+    os::MemRestore(at, kJmpLen, old);
+    bof3::os::FlushCode(at, kJmpLen);
 #endif
 }
 
@@ -253,14 +253,13 @@ bool RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
             (unsigned)site, (unsigned)expected, ours);
         return true;
     }
-    DWORD old = 0;
-    if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
-        Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
+    os::ProtSave old;
+    if (!os::MemProtect(at, kJmpLen, os::Prot::ReadWriteExec, &old))
+        Fatal("%s: MemProtect(%p) failed, error %lu", name, (void*)at, (unsigned long)os::LastError());
     rel = static_cast<std::int32_t>(static_cast<std::uint8_t*>(ours) - (at + kJmpLen));
     std::memcpy(at + 1, &rel, sizeof rel);
-    DWORD ignored = 0;
-    VirtualProtect(at, kJmpLen, old, &ignored);
-    FlushInstructionCache(GetCurrentProcess(), at, kJmpLen);
+    os::MemRestore(at, kJmpLen, old);
+    bof3::os::FlushCode(at, kJmpLen);
     Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p", name, (unsigned)site, (unsigned)expected, ours);
     return true;
 }
@@ -296,13 +295,12 @@ bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
             (unsigned)address);
         return true;
     }
-    DWORD old = 0;
-    if (!VirtualProtect(at, count, PAGE_EXECUTE_READWRITE, &old))
-        Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
+    os::ProtSave old;
+    if (!os::MemProtect(at, count, os::Prot::ReadWriteExec, &old))
+        Fatal("%s: MemProtect(%p) failed, error %lu", name, (void*)at, (unsigned long)os::LastError());
     std::memcpy(at, replacement, count);
-    DWORD ignored = 0;
-    VirtualProtect(at, count, old, &ignored);
-    FlushInstructionCache(GetCurrentProcess(), at, count);
+    os::MemRestore(at, count, old);
+    bof3::os::FlushCode(at, count);
     Log("patch   ON   %-24s %u bytes at 0x%08X", name, (unsigned)count, (unsigned)address);
     return true;
 }
@@ -334,8 +332,8 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     for (int i = 0; i < n_calls; ++i) entry_call_named = entry_call_named || calls[i].offset == 0;
     if (((orig[0] == 0xE9 || orig[0] == 0xE8) && !entry_call_named) || orig[0] == 0xCC)
         Fatal("%s: entry 0x%08X is already patched (%02X), cannot clone", name, (unsigned)original, orig[0]);
-    void* copy = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    if (!copy) Fatal("%s: VirtualAlloc(%u) failed, error %lu", name, (unsigned)size, GetLastError());
+    void* copy = os::MemAlloc(nullptr, size, os::Prot::ReadWriteExec);
+    if (!copy) Fatal("%s: MemAlloc(%u) failed, error %lu", name, (unsigned)size, (unsigned long)os::LastError());
     std::memcpy(copy, orig, size);
     for (int i = 0; i < n_calls; ++i) {
         const std::uint32_t at = calls[i].offset;
@@ -370,7 +368,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
         rel = static_cast<std::int32_t>(target - (static_cast<std::uint8_t*>(copy) + at + kJmpLen));
         std::memcpy(static_cast<std::uint8_t*>(copy) + at + 1, &rel, sizeof rel);
     }
-    FlushInstructionCache(GetCurrentProcess(), copy, size);
+    bof3::os::FlushCode(copy, size);
     Log("shadow      %-24s original 0x%08X cloned to %p, %u bytes", name, (unsigned)original, copy, (unsigned)size);
     return copy;
 #endif
@@ -379,7 +377,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 #if !defined(__x86_64__)   // x86-64: a constant false in detour.h (no shadow fuzz in the 64-bit build)
 bool WantsShadow(const char* name) {
     char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
-    DWORD n = GetEnvironmentVariableA("BOF3X_SHADOW", list, sizeof list);
+    DWORD n = bof3::os::GetEnv("BOF3X_SHADOW", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_SHADOW is longer than %u bytes", (unsigned)sizeof list);
     return NameListed(list, name);

@@ -32,6 +32,7 @@
 #include "hook/log.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace {
 
@@ -94,7 +95,7 @@ unsigned DefaultWindowedScale() {
 
 unsigned DisplaySetup_WindowedScale() {
     char text[32];
-    if (GetEnvironmentVariableA("BOF3X_SCALE", text, sizeof text) == 0) return DefaultWindowedScale();
+    if (bof3::os::GetEnv("BOF3X_SCALE", text, sizeof text) == 0) return DefaultWindowedScale();
     U k = 0;
     for (const char* p = text; *p >= '0' && *p <= '9'; ++p) k = k * 10 + static_cast<U>(*p - '0');
     if (k < 1 || k > kMaxScale) bof3::Fatal("BOF3X_SCALE=%s: an integer 1..%u", text, kMaxScale);
@@ -109,7 +110,7 @@ bool DisplaySetup_Snap() {
     static int snap = -1;
     if (snap < 0) {
         char text[8];
-        snap = !(GetEnvironmentVariableA("BOF3X_SNAP", text, sizeof text) > 0 && text[0] == '0');
+        snap = !(bof3::os::GetEnv("BOF3X_SNAP", text, sizeof text) > 0 && text[0] == '0');
     }
     return snap != 0;
 }

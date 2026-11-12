@@ -9,7 +9,9 @@
 // culling, no lighting: the ordering table already ordered everything.
 #include "render/render_d3d11.h"
 
-#include <windows.h>
+#include <filesystem>
+#include <fstream>
+#include <cstdlib>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <dxgi.h>
@@ -22,6 +24,7 @@
 #include "render/fb_grab.h"
 #include "render/satpixie.h"
 #include "render/shaders_compiled.h"
+#include "os/os.h"
 
 namespace render {
 namespace {
@@ -131,7 +134,7 @@ void Check(HRESULT hr, const char* what) {
 // screen=crt to satpixie itself).
 Look LookWanted() {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PRESENT", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PRESENT", text, sizeof text);
     if (n == 0) return Look::kClean;
     if (n < sizeof text && std::strcmp(text, "clean") == 0) return Look::kClean;
     if (n < sizeof text && std::strcmp(text, "satpixie") == 0) return Look::kSatpixie;
@@ -310,7 +313,7 @@ bool g_compile_at_start;
 
 void ReadPixelOffset() {
     char text[24];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PIXEL_OFFSET", text, sizeof text);
+    const DWORD n = bof3::os::GetEnv("BOF3X_PIXEL_OFFSET", text, sizeof text);
     if (n == 0) return;
     if (n >= sizeof text) bof3::Fatal("BOF3X_PIXEL_OFFSET: too long");
     for (const char* p = text; *p; ++p)
@@ -474,15 +477,15 @@ U Channel(U raw, U mask, U shift, U bits) {
 const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool keyed, U key) {
     const U bytes = s->width * s->height * 4;
     if (bytes > g_scratch_bytes) {
-        if (g_scratch) HeapFree(GetProcessHeap(), 0, g_scratch);
-        g_scratch = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), 0, bytes));
+        if (g_scratch) std::free(g_scratch);
+        g_scratch = static_cast<unsigned char*>(std::malloc(bytes));
         if (!g_scratch) bof3::Fatal("render: out of memory converting a %u x %u texture", s->width, s->height);
         g_scratch_bytes = bytes;
     }
     g_scratch_has_stp = s->pf_amask != 0 && StpTexels();
     if (g_scratch_has_stp && bytes / 4 > g_scratch_stp_bytes) {
-        if (g_scratch_stp) HeapFree(GetProcessHeap(), 0, g_scratch_stp);
-        g_scratch_stp = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), 0, bytes / 4));
+        if (g_scratch_stp) std::free(g_scratch_stp);
+        g_scratch_stp = static_cast<unsigned char*>(std::malloc(bytes / 4));
         if (!g_scratch_stp) bof3::Fatal("render: out of memory converting a %u x %u texture", s->width, s->height);
         g_scratch_stp_bytes = bytes / 4;
     }
@@ -527,12 +530,12 @@ GpuTexture* GpuOf(Surface* s) {
         Release(g->stp);
         Release(g->srv);
         Release(g->texture);
-        HeapFree(GetProcessHeap(), 0, g);
+        std::free(g);
         g = nullptr;
         s->gpu = nullptr;
     }
     if (!g) {
-        g = static_cast<GpuTexture*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GpuTexture)));
+        g = static_cast<GpuTexture*>(std::calloc(1, sizeof(GpuTexture)));
         if (!g) bof3::Fatal("render: out of memory for a texture");
         D3D11_TEXTURE2D_DESC d = {};
         d.Width = s->width;
@@ -808,7 +811,7 @@ void Show() {
     // ResizeBuffers as E_INVALIDARG). Nothing to show.
     RECT client = {};
     if (!GetClientRect(static_cast<HWND>(g_opt.hwnd), &client)) {
-        bof3::Log("render: GetClientRect failed, error %lu - window gone, nothing shown", GetLastError());
+        bof3::Log("render: GetClientRect failed, error %u - window gone, nothing shown", bof3::os::LastError());
         return;
     }
     const U cw = static_cast<U>(client.right - client.left), ch = static_cast<U>(client.bottom - client.top);
@@ -879,7 +882,7 @@ void InitOnFiber(const Options& options) {
     // (two buffers), s SEQUENTIAL, anything else or unset DISCARD (one buffer,
     // docs/render-backend.md section 3).
     char swap[16] = "discard";
-    GetEnvironmentVariableA("BOF3X_SWAP", swap, sizeof swap);
+    bof3::os::GetEnv("BOF3X_SWAP", swap, sizeof swap);
     const bool flip = swap[0] == 'f', sequential = swap[0] == 's';
     sd.BufferCount = flip ? 2 : 1;
     sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -892,8 +895,8 @@ void InitOnFiber(const Options& options) {
     const D3D_FEATURE_LEVEL levels[] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0};
     D3D_FEATURE_LEVEL got;
     UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-    if (GetEnvironmentVariableA("BOF3X_D3D_DEBUG", nullptr, 0) > 0) flags |= D3D11_CREATE_DEVICE_DEBUG;
-    g_stp_view = GetEnvironmentVariableA("BOF3X_STPVIEW", nullptr, 0) > 0;   // diagnostic (DIV-0160's plane)
+    if (bof3::os::GetEnv("BOF3X_D3D_DEBUG", nullptr, 0) > 0) flags |= D3D11_CREATE_DEVICE_DEBUG;
+    g_stp_view = bof3::os::GetEnv("BOF3X_STPVIEW", nullptr, 0) > 0;   // diagnostic (DIV-0160's plane)
     HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, levels, 3,
                                                D3D11_SDK_VERSION, &sd, &g_swap, &g_device, &got, &g_ctx);
     if (FAILED(hr) && (flags & D3D11_CREATE_DEVICE_DEBUG)) {
@@ -1048,7 +1051,7 @@ void RunOnFiber(Job job) {
         if (!g_game_fiber) g_game_fiber = GetCurrentFiber();   // already a fiber
         // 256 KB committed, 1 MB reserved.
         g_render_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &RenderFiber, nullptr);
-        if (!g_render_fiber) bof3::Fatal("render: CreateFiberEx failed, error %lu", GetLastError());
+        if (!g_render_fiber) bof3::Fatal("render: CreateFiberEx failed, error %u", bof3::os::LastError());
     }
     g_job = job;
     SwitchToFiber(g_render_fiber);
@@ -1057,7 +1060,7 @@ void RunOnFiber(Job job) {
 }  // namespace
 
 void PresentFrame(Frame& frame) {
-    if (GetCurrentThreadId() != g_main_thread) bof3::Fatal("render: the present on thread %lu, not the game's", GetCurrentThreadId());
+    if (bof3::os::ThreadId() != g_main_thread) bof3::Fatal("render: the present on thread %u, not the game's", bof3::os::ThreadId());
     g_job_frame = &frame;
     RunOnFiber(Job::kPresent);
 }
@@ -1095,7 +1098,7 @@ void PresentOnFiber(Frame& frame) {
 // --- public ----------------------------------------------------------------------------------
 
 void InitD3d11(const Options& options) {
-    g_main_thread = GetCurrentThreadId();
+    g_main_thread = bof3::os::ThreadId();
     g_job_options = &options;
     RunOnFiber(Job::kInit);
     SetPresentHook(&PresentFrame);
@@ -1129,7 +1132,7 @@ bool SaveOnFiber(const wchar_t* path) {
     // to 4 bytes; 2835 pixels a metre is 72 DPI.
     const U w = d.Width, h = d.Height, row = (w * 3 + 3) & ~3u;
     const U size = 54 + row * h;
-    auto* out = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size));
+    auto* out = static_cast<unsigned char*>(std::calloc(1, size));
     bool ok = out != nullptr;
     if (ok) {
         unsigned char* p = out;
@@ -1147,12 +1150,12 @@ bool SaveOnFiber(const wchar_t* path) {
                 dst[x * 3 + 2] = src[x * 4 + 2];
             }
         }
-        HANDLE f = CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-        DWORD wrote = 0;
-        ok = f != INVALID_HANDLE_VALUE && WriteFile(f, out, size, &wrote, nullptr) && wrote == size;
-        if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
-        if (!ok) bof3::Log("render: SaveFrame: cannot write the file, error %lu", GetLastError());
-        HeapFree(GetProcessHeap(), 0, out);
+        std::ofstream f(std::filesystem::path(path), std::ios::binary | std::ios::trunc);
+        f.write(reinterpret_cast<const char*>(out), static_cast<std::streamsize>(size));
+        f.close();   // the flush is part of the write: a close that fails is a frame not saved
+        ok = !f.fail();
+        if (!ok) bof3::Log("render: SaveFrame: cannot write the file");
+        std::free(out);
     }
     g_ctx->Unmap(staging, 0);
     staging->Release();
@@ -1162,7 +1165,7 @@ bool SaveOnFiber(const wchar_t* path) {
 
 bool SaveFrame(const wchar_t* path) {
     if (!g_render_fiber || !g_device) return false;
-    if (GetCurrentThreadId() != g_main_thread) bof3::Fatal("render: SaveFrame on thread %lu, not the game's", GetCurrentThreadId());
+    if (bof3::os::ThreadId() != g_main_thread) bof3::Fatal("render: SaveFrame on thread %u, not the game's", bof3::os::ThreadId());
     g_job_path = path;
     g_job_ok = false;
     RunOnFiber(Job::kSave);
@@ -1180,7 +1183,7 @@ void SweepReleased() {
             Release(g->stp);
             Release(g->srv);
             Release(g->texture);
-            HeapFree(GetProcessHeap(), 0, g);
+            std::free(g);
             s->gpu = nullptr;
         }
     }

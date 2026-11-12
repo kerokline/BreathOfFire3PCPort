@@ -26,7 +26,6 @@
 
 #include "game/d3d_lines.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>

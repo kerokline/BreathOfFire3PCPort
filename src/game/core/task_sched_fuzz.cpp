@@ -24,7 +24,6 @@
 // from g_side, so no side's address lands on a task stack; the two C++ ones
 // of ours leave different dead bytes below esp than the copy, so the thunks
 // scrub 0x100 bytes below their esp after the call.
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -33,6 +32,7 @@
 #include "game/task_sched_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 // --- what the thunks read, and what they call back into -------------------
 // C linkage so the asm can name them.
@@ -228,7 +228,7 @@ constexpr std::uint32_t kGlobals = kRecords;              // the records and the
 constexpr std::uint32_t kGlobalBytes = 0x66C85C - kRecords;
 constexpr std::uint32_t kArenaBytes = kTasks * kStackSize + 0x1000;
 
-std::uint32_t g_arena;   // VirtualAlloc'd: kTasks stacks and 0x1000 above them
+std::uint32_t g_arena;   // MemAlloc'd: kTasks stacks and 0x1000 above them
 
 std::uint32_t Record(std::uint32_t k) { return kRecords + k * kRecordSize; }
 std::uint32_t Top(std::uint32_t k) { return static_cast<std::uint32_t>(Task_StackTop) - k * kStackSize; }
@@ -442,8 +442,8 @@ void SelfTest() {
         reinterpret_cast<void*>(&Task_Sleep),   reinterpret_cast<void*>(&Task_Restart),
         reinterpret_cast<void*>(&Task_Exit),    reinterpret_cast<void*>(&Task_ClearPrivate),
     };
-    void* arena = VirtualAlloc(nullptr, kArenaBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (!arena) bof3::Fatal("task_sched: VirtualAlloc(%u) failed, error %lu", (unsigned)kArenaBytes, GetLastError());
+    void* arena = bof3::os::MemAlloc(nullptr, kArenaBytes, bof3::os::Prot::ReadWrite);
+    if (!arena) bof3::Fatal("task_sched: MemAlloc(%u) failed, error %lu", (unsigned)kArenaBytes, (unsigned long)bof3::os::LastError());
     g_arena = Address(arena);
     std::memcpy(g_saved.globals, At(kGlobals), kGlobalBytes);
 
@@ -497,7 +497,7 @@ void SelfTest() {
         }
     }
     std::memcpy(At(kGlobals), g_saved.globals, kGlobalBytes);
-    VirtualFree(arena, 0, MEM_RELEASE);
+    bof3::os::MemRelease(arena, kArenaBytes);
 
     bof3::Log("shadow      task_sched self-test: %u rounds, %u events, %u MISMATCHES; the records, the scheduler's "
               "three words, the four stacks and every task entry's registers compared",

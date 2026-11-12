@@ -4,7 +4,6 @@
 #include <bit>
 #include <cstdint>
 #include <cstring>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_e1_callees.h"

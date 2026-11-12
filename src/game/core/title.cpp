@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <cstring>
 #include <utility>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/area_data_reload.h"
@@ -49,6 +48,7 @@
 #include "hook/draw_order.h"
 #include "hook/log.h"
 #include "input/sigma.h"
+#include "os/os.h"
 
 // rest_4f.cpp's own `DrawText` alias (a draw call's type) met <windows.h>'s DrawText macro here,
 // which config_text's and gfx_flush's functions bring: rest_4f never included it (source-layout B3).
@@ -1618,7 +1618,7 @@ extern "C" void __cdecl Gfx_FlushUploadQueue(void) {
         std::memcpy(&kind, record + 4, 4);
         {   // BOF3X_POSELOG=1: every upload (the facing investigation, issue #142's side thread)
             static int on = -1;
-            if (on < 0) { char v[8]; on = GetEnvironmentVariableA("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
+            if (on < 0) { char v[8]; on = bof3::os::GetEnv("BOF3X_POSELOG", v, sizeof v) != 0 && v[0] == '1'; }
             if (on == 1)
                 bof3::Log("poselog     frame %lu upload %u/%u at %d,%d size %dx%d kind %lu record %08lX", static_cast<unsigned long>(Frame_Counter),
                           static_cast<unsigned>(i), static_cast<unsigned>(Gfx_UploadQueueCount), rect[0], rect[1], rect[2], rect[3],

@@ -28,7 +28,6 @@
 // computes the same way.
 #include "game/battle_win_states.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>

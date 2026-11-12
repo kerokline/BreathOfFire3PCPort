@@ -207,6 +207,93 @@ jobs:
       - name: media_tests
         run: '"$RUNNER_TEMP/media-host/media_tests"'
 
+  os-host:
+    # The operating-system seam's POSIX backend (src/os/posix, docs/linux-round.md
+    # LB1) built with the system compiler and run on the runner itself: memory at
+    # fixed addresses, the directory walk, clocks, the environment - synthetic
+    # data only. Also the boundary gate: nothing outside src/os, src/launcher and
+    # the harness files reaches the system past the seam.
+    name: OS seam host suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S tools/os_host -B "$RUNNER_TEMP/os-host"
+          cmake --build "$RUNNER_TEMP/os-host" -j 4
+
+      - name: os_tests
+        run: '"$RUNNER_TEMP/os-host/os_tests"'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Boundary gate
+        run: |
+          python tools/os_census.py --check
+          python tools/os_census.py --boundary
+
+  os-host-windows:
+    # The same suite against the Win32 backend (src/os/win32), built with the
+    # toolchain the game is built with (llvm-mingw, build.yml's release) at
+    # both widths and run on a Windows runner. It is the only place the narrow
+    # file-name encoding is exercised as Windows has it: a `char` name is in
+    # the ANSI code page there, not UTF-8 (src/os/file.h), and a folder under
+    # a name outside ASCII must be found, walked and opened. Synthetic data
+    # only.
+    name: OS seam host suite (Windows)
+    runs-on: windows-2022
+    env:
+      # build.yml's pair; change them together.
+      LLVM_MINGW_TAG: "20260616"
+      LLVM_MINGW_CRT: ucrt
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache llvm-mingw
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/llvm-mingw
+          key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-windows-x86_64
+
+      - name: Fetch llvm-mingw ${{ env.LLVM_MINGW_TAG }}
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          zip="llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-x86_64.zip"
+          gh release download "$LLVM_MINGW_TAG" -R mstorsjo/llvm-mingw -p "$zip"
+          sha256sum "$zip"
+          7z x -y "$zip" > /dev/null
+          mv "llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-x86_64" llvm-mingw
+          rm "$zip"
+
+      - name: Build (x86_64 and i686)
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/llvm-mingw/bin:$PATH"
+          for arch in x86_64 i686; do
+            "$arch-w64-mingw32-clang++" --version | head -1
+            cmake -S tools/os_host -B "$RUNNER_TEMP/os-host-$arch" -G "MinGW Makefiles" \
+              -DCMAKE_MAKE_PROGRAM=mingw32-make -DCMAKE_CXX_COMPILER="$arch-w64-mingw32-clang++" \
+              -DCMAKE_EXE_LINKER_FLAGS=-static
+            cmake --build "$RUNNER_TEMP/os-host-$arch" -j 4
+          done
+
+      - name: os_tests (x86_64)
+        run: '"$RUNNER_TEMP/os-host-x86_64/os_tests.exe"'
+
+      - name: os_tests (i686)
+        run: '"$RUNNER_TEMP/os-host-i686/os_tests.exe"'
+
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
     # synthetic corpus, fuzz it against the original bytes in Unicorn, and

@@ -1,3 +1,4 @@
+// Windows-only by design (docs/linux-round.md, LB1): it reads the icon resource out of the PE image.
 // DIV-0095: the game window's icon, generated from the game's own data on the
 // player's machine (docs/exe-icon.md; exe_icon.h says when and from what).
 // The file's icon is ours, from the build (data/icon/bof3x.ico); since

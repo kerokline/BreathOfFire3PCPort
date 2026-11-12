@@ -9,7 +9,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <windows.h>
 #include <cstring>
 #include <utility>
 

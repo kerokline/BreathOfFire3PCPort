@@ -36,6 +36,33 @@ issue #190** (the dragon gene window; not reproduced in many tries; left open by
 for the movies) and 3 (the alpha.5 upgrade path), then commits the notes on `main`, tags and publishes. Alpha.6's
 draft was deleted on 2026-11-08; the beta readiness work is PR #211, held open through the checks.
 
+**The Linux native round's groundwork, PR #229 (frost's PR #226 with the Windows review's commits on top;
+2026-11-11, open, not merged).** [`linux-round.md`](linux-round.md) is the round's record; this is only where it
+stands. The PR holds stage LA (the OS census, the low-memory and calling-convention probes, the DXVK-native
+probe) and unit LB1, the operating-system seam: the engine's OS services behind `src/os` (`bof3::os`, a Win32
+and a POSIX backend), about 362 call sites converted, `windows.h` gone from about 105 files, and the gates
+`tools/os_census.py --check` and `--boundary`. Nothing of it is a behaviour change on Windows by intent, and it
+carries no ledger entry. **The review on Windows found one blocker, fixed in its commits:** the seam read every
+narrow name as UTF-8, so hosted in `BOF3.exe` a cache or game folder under a name outside ASCII ended the game
+at start-up where the A calls had found it; a narrow name is now the ANSI code page on Windows and UTF-8 on
+POSIX, converted in the backends, and nothing in the seam's file calls throws (`linux-round.md`, "The narrow
+encoding"). Also fixed: `SaveFrame`'s result taken before the close, a second copy of `SameName`. **The branch
+holds `main` `ed444dec`** (PRs #227 and #228 merged in, `0fcdd7f5`). **Proven at that tip:** both presets build;
+the hosted suite with `BOF3X_SHADOW='*'` exits 0 with 916 `MISMATCHES` lines, none above 0 (32-bit, the PC
+install with the game folder itself under a name with `é`); `os_census --check` (3869 sites), `--boundary`,
+`width_census --check`, `ledger_check` and the other no-game-data gates pass; `tools/os_host`'s `os_tests`
+passes against the Win32 backend at both widths and against the POSIX one, in CI too (jobs `os-host`,
+`os-host-windows`). **Proven before the merge of `main`, at `86cb727d`:** hosted in `BOF3.exe` with
+`BOF3X_CACHE` under a name with `é` the self-tests run to their end where PR #226's head ended with
+`0xC0000409`; and **the state hash, A/B against `main` `8d2d987d`** (two runs of `main` as the references, the
+`orig4` pairs being stale; `bof3x.exe`, 32-bit, `BOF3X_OPT=none BOF3X_LAYERING=0`): all ten routes identical on
+every compared tick (combat 2561, shop 3137, caughFish 3841, field_menu 1409, menu_screens 1729,
+dragonTransform 4289, cutsceneAndNue 7361, masterAndManillo 5505, worldMapAndAreaTransition 2113, whelpBoss
+13185). **Owed before the merge:** a play on Windows by the owner. Not run: the routes at the merged tip, the
+64-bit hosted suite and routes, a route hosted in `BOF3.exe`, a machine with a double-byte code page. The
+**Decided** marks in `linux-round.md` section 6 are frost's working answers, the owner's to confirm at each
+unit's merge.
+
 **The ending scenes, 2026-11-07 evening** (merged as PR #209 the same night, `main` `67c3259b`): the owner's
 four reports off their `myriaFightAndEnding` route - the *Fin* disc's rim short of the 21:9 corners, the bands'
 one-frame flash before the desert's fade, and Garr and Rei blinking in Myria's chamber where Nina and Momo

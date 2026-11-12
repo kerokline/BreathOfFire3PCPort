@@ -148,6 +148,9 @@ FetchContent_MakeAvailable(SDL3)
 # stage B4's #if. The i686 list is the whole list, in this order.
 # src/game's part of the list, generated from the tree (tools/game_sources.py):
 include(cmake/game_sources.cmake)
+# The operating-system seam (src/os/os.h): one header per service, one backend
+# folder per system. Nothing outside it names a system.
+add_subdirectory(src/os)
 set(_dll_sources
   src/hook/dllmain.cpp
   src/hook/host.cpp
@@ -191,7 +194,7 @@ set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # dinput and dxguid: the SDK's c_dfDIKeyboard and its GUID_Key, static data
 # (src/game/rdata_consts.cpp); no import of dinput.dll, which pad_read.cpp
 # loads itself.
-target_link_libraries(bof3x PRIVATE bof3x_media d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static)
+target_link_libraries(bof3x PRIVATE bof3x_media d3d11 dxgi d3dcompiler_47 uuid winmm ole32 windowscodecs dinput dxguid SDL3::SDL3-static bof3x_os)
 # A fixed load address (the owner, 2026-10-19; docs/quicksave.md 4a): a
 # quicksave's task stacks hold return addresses into this DLL and the span
 # holds pointers into it, so a quick-load is good only where the DLL sat at
@@ -296,7 +299,7 @@ add_library(bof3x_launcher_parts OBJECT
 # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
 # player's BOF3.exe, not copied (docs/exe-table-audit.md).
 target_include_directories(bof3x_launcher_parts PRIVATE src third_party "${_gen_dir}")
-target_link_libraries(bof3x_launcher_parts PRIVATE SDL3::SDL3-static)
+target_link_libraries(bof3x_launcher_parts PRIVATE SDL3::SDL3-static bof3x_os)
 add_dependencies(bof3x_launcher_parts bof3x_symbols bof3x_suites)
 function(bof3x_add_launcher target output hosted)
   add_executable(${target} src/launcher/launcher.cpp src/launcher/launcher.rc $<TARGET_OBJECTS:bof3x_launcher_parts>)
@@ -309,7 +312,7 @@ function(bof3x_add_launcher target output hosted)
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-  target_link_libraries(${target} PRIVATE bof3x_media bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
+  target_link_libraries(${target} PRIVATE bof3x_media comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static bof3x_os)
   # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
   # (launcher.cpp) writes to the terminal it was started from.
   target_link_options(${target} PRIVATE -municode -mwindows)

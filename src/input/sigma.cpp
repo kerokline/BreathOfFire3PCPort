@@ -1,6 +1,5 @@
 #include "input/sigma.h"
 
-#include <windows.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -14,6 +13,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/bindings.h"
+#include "os/os.h"
 
 // docs/button-sigma.md. The pure half (ReleaseMap, DefaultWords,
 // ReleaseOfSources, Build, Apply) holds no game data: the buttons are named by
@@ -137,7 +137,7 @@ std::uint16_t MapMask(std::uint16_t mask, bool inverse) {
 // launcher shares; no cache or no manifest: a PC install, Japan.
 Release ReadInstallRelease(std::string& how) {
     wchar_t root[1024];
-    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, 1024);
+    const std::uint32_t n = bof3::os::GetEnvW(L"BOF3X_CACHE", root, 1024);
     if (n == 0 || n >= 1024) {
         how = "no cache named: the PC's own data";
         return Release::kJapan;

@@ -22,7 +22,6 @@
 // memory now and then after a call - the render flags, the key, the staging
 // surface pointer, the entry's surface, mode byte and CLUT row generation - so
 // every read the builders make is ordered against every call.
-#include <windows.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -33,6 +32,7 @@
 #include "game/tex_page_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace tex_page {
 namespace {
@@ -322,7 +322,7 @@ const U kPitches[] = {0, 512, 513, 514, 640, 1024, 1030, 1280, 2048, 4000, 256, 
 // --- the converters -------------------------------------------------------------------------
 
 constexpr U kSourceBytes = 272 * 0x800;   // 256 rows read from up to 7 rows and 6 bytes in, and a margin
-unsigned char* g_source;       // VirtualAlloc'd: 256 rows of 0x800
+unsigned char* g_source;       // MemAlloc'd: 256 rows of 0x800
 unsigned char* g_dst[2];       // the two passes' destinations
 constexpr U kDstBytes = 0x110000;
 
@@ -606,10 +606,10 @@ void SelfTest() {
     Capture(g_saved);
     g_rand = 0x5A0080u;
     for (U i = 0; i < kVramBytes; i += 4) PutLong(Gfx_VramShadow_addr + i, Next());
-    g_source = static_cast<unsigned char*>(VirtualAlloc(nullptr, kSourceBytes + 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    g_dst[0] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    g_dst[1] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-    if (!g_source || !g_dst[0] || !g_dst[1]) bof3::Fatal("tex_page: VirtualAlloc failed, error %lu", GetLastError());
+    g_source = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kSourceBytes + 0x1000, bof3::os::Prot::ReadWrite));
+    g_dst[0] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
+    g_dst[1] = static_cast<unsigned char*>(bof3::os::MemAlloc(nullptr, kDstBytes, bof3::os::Prot::ReadWrite));
+    if (!g_source || !g_dst[0] || !g_dst[1]) bof3::Fatal("tex_page: MemAlloc failed, error %lu", (unsigned long)bof3::os::LastError());
     for (U i = 0; i < kSourceBytes; i += 4) {
         const U v = Next();
         std::memcpy(g_source + i, &v, 4);
@@ -637,9 +637,9 @@ void SelfTest() {
     }
     Restore(g_saved);
     std::memcpy(At(Gfx_VramShadow_addr), g_vram_saved, kVramBytes);
-    VirtualFree(g_source, 0, MEM_RELEASE);
-    VirtualFree(g_dst[0], 0, MEM_RELEASE);
-    VirtualFree(g_dst[1], 0, MEM_RELEASE);
+    bof3::os::MemRelease(g_source, kSourceBytes + 0x1000);
+    bof3::os::MemRelease(g_dst[0], kDstBytes);
+    bof3::os::MemRelease(g_dst[1], kDstBytes);
 
     bof3::Log("shadow      tex_page self-test: Tex_Convert4 %u rounds (%u at 4 bytes a texel), Tex_Convert8 %u (%u), "
               "Tex_Convert16 %u (%u); Dd_InitSurfaceDesc %u, Dd_CreatePlainSurface and Dd_CreateTextureSurface %u "

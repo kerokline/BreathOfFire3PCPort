@@ -3,7 +3,6 @@
 // on the snapshot core's own stack, between two logic frames.
 #include "render/gfx_snapshot.h"
 
-#include <windows.h>
 
 #include <cstdint>
 #include <cstring>
@@ -20,6 +19,7 @@
 #include "hook/log.h"
 #include "hook/snapshot.h"
 #include "render/render_shim.h"
+#include "os/os.h"
 
 namespace {
 
@@ -444,7 +444,7 @@ void GfxSnapshot_Inject() {
         if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
     }
     if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal("gfx_snapshot: D3d_ShadeModeCache moved");
-    if (bof3::IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("gfx_snapshot"))
+    if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("gfx_snapshot"))
         SelfTest();
     bof3::Snapshot_Register("GFX", &Save, &Restore, &Before);
 }

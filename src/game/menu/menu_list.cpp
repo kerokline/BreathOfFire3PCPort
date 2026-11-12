@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <cstring>
 #include <dinput.h>
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_e7.h"

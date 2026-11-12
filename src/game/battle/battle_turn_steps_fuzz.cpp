@@ -24,7 +24,6 @@
 #include <initializer_list>
 #include <cstring>
 
-#include <windows.h>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_turn_steps_callees.h"
@@ -34,6 +33,7 @@
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace battle_turn_steps {
 namespace {
@@ -612,22 +612,22 @@ void SelfTest() {
     // A page for task slot 0xFF's owner, where it lies: at start-up 0x940000.. is
     // reserved but not committed, so the page is committed for the run and
     // decommitted after (a free range would be reserved and released).
-    MEMORY_BASIC_INFORMATION ff_info = {};
-    bool ff_query = VirtualQuery(reinterpret_cast<void*>(0x9423FC), &ff_info, sizeof ff_info) == sizeof ff_info;
-    const DWORD ff_was = ff_query ? ff_info.State : 0;
+    bof3::os::MemInfo ff_info;
+    bool ff_query = bof3::os::MemQuery(reinterpret_cast<void*>(0x9423FC), &ff_info);
+    const bof3::os::MemState ff_was = ff_query ? ff_info.state : bof3::os::MemState::Committed;
     void* ff_page = nullptr;
-    if (ff_was == MEM_RESERVE)
-        ff_page = VirtualAlloc(reinterpret_cast<void*>(0x942000), 0x1000, MEM_COMMIT, PAGE_READWRITE);
-    else if (ff_was == MEM_FREE)
-        ff_page = VirtualAlloc(reinterpret_cast<void*>(0x942000), 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    ff_query = VirtualQuery(reinterpret_cast<void*>(0x9423FC), &ff_info, sizeof ff_info) == sizeof ff_info;
-    const bool ff_writable = ff_query && ff_info.State == MEM_COMMIT &&
-                             (ff_info.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0;
+    if (ff_query && ff_was == bof3::os::MemState::Reserved)
+        ff_page = bof3::os::MemCommit(reinterpret_cast<void*>(0x942000), 0x1000, bof3::os::Prot::ReadWrite);
+    else if (ff_query && ff_was == bof3::os::MemState::Free)
+        ff_page = bof3::os::MemAlloc(reinterpret_cast<void*>(0x942000), 0x1000, bof3::os::Prot::ReadWrite);
+    ff_query = bof3::os::MemQuery(reinterpret_cast<void*>(0x9423FC), &ff_info);
+    const bool ff_writable = ff_query && ff_info.state == bof3::os::MemState::Committed && ff_info.writable;
     g_slot_ff = ff_writable;
+    // The state's old numbers (MEM_COMMIT 0x1000, MEM_RESERVE 0x2000, MEM_FREE 0x10000) stay in the line.
     bof3::Log("shadow      battle_turn_steps: 0x9423FC (task slot 0xFF's owner) was state 0x%lX, is %s, base %p",
-              static_cast<unsigned long>(ff_was),
+              !ff_query ? 0UL : ff_was == bof3::os::MemState::Committed ? 0x1000UL : ff_was == bof3::os::MemState::Reserved ? 0x2000UL : 0x10000UL,
               ff_page ? "a page committed for the run" : ff_writable ? "already committed and writable" : "not writable",
-              ff_query ? ff_info.AllocationBase : nullptr);
+              ff_query ? reinterpret_cast<void*>(ff_info.alloc_base) : nullptr);
 
     void* clones[kCount];
     for (unsigned k = 0; k < kCount; ++k) {
@@ -748,8 +748,8 @@ void SelfTest() {
         for (unsigned s = 0; s < kTables[t].entries; ++s)
             SetLong(At(kTables[t].at + 4 * s), static_cast<std::int32_t>(saved_tables[t][s]));
     if (ff_page) {
-        if (ff_was == MEM_RESERVE) VirtualFree(ff_page, 0x1000, MEM_DECOMMIT);
-        else VirtualFree(ff_page, 0, MEM_RELEASE);
+        if (ff_was == bof3::os::MemState::Reserved) bof3::os::MemDecommit(ff_page, 0x1000);
+        else bof3::os::MemRelease(ff_page, 0x1000);
     }
 
     bof3::Log("shadow      battle_turn_steps self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

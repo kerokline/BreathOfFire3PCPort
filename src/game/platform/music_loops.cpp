@@ -1,11 +1,12 @@
 // The measured music loops (music_loops.h). The table is generated from
 // analysis/bgm/loops.json by tools/bgm/gen_loop_table.py: sample positions we
 // measured in the PC's MP3s, not bytes of Capcom's.
+#include <cstdint>
 #include "game/music_loops.h"
 
-#include <windows.h>
 
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace music_loops {
 
@@ -32,7 +33,7 @@ const Row* Find(int track, std::uint32_t bytes) {
 
 void Arm() {
     char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_MUSIC_LOOPS", text, sizeof text);
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_MUSIC_LOOPS", text, sizeof text);
     if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_MUSIC_LOOPS must be 0 or 1");
     if (n == 1 && text[0] == '0') {
         bof3::Log("music_loops off (BOF3X_MUSIC_LOOPS=0): every looping track rewinds to its file's start");
