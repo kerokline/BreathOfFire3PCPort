@@ -841,6 +841,47 @@ Giant Growth level or Ryu's level 12 (Smoke): Select on the abilities top
 character's list after, a second press plays `0x104`; a full list left as
 it was; the same press off does nothing.
 
+**`TownWarp` (DIV-0225; branch `romhack/b6-warp`).** Not in the readme. The
+design and its measurements are [`town-warp.md`](town-warp.md). The reading
+holds, re-read from the patched listings (START `0x801E7D20` and its table
+slot 0, GAME `0x8019C244..0x8019C334`, `0x801B57F8`, `0x801BB81C`, the
+hidden file at `0x80016000` whole), with one correction: the message
+pointers are `0x801490AC`/`B0` and the message word `0x801490A8`. Its open
+items settled: the two bytes stored after the warp are the ones the
+release's world-map walk stores on a town cell (`0x80143F1E` =
+`ModeFlow_AreaTransition` 0, `0x80143F1D` = `Area_EnterTransition` `0xC`),
+the scratchpad byte is `Area_LinkAt`'s (`SharedScratch.b_01`), and ability
+`0x6F` is taught by one level step of the mod's carried `exp_table`. Sites:
+`FieldAbility_Use` (`field_ability.cpp`, ability `0x6F` in handler 0's
+place), `FieldIdle_Tick` (`field_7.cpp`: the forgetting after CampMasters,
+the recording and the menu after AllyAnywhere), `CommitChoice`
+(`msg_box.cpp`, the menu's answer), `TakeChunk` kind 21 (`dat_load.cpp`),
+`LoadDatFile`'s `FIRST.DAT` tail (`dragon_cmd.cpp`). The visited word rides
+in the save at `+0x10AC` (`TownWarp_Visited`; the save editor lists it, a
+card conversion keeps it). The text and table come from the player's build
+(kind 21 of `FIRST.DAT`, [`mods.md`](mods.md) 11.7); with the behaviour on
+and either missing the game stops at the title. The menu's statics join
+`BEHAVIOURS` (version 4). The real patch was read offline by the builder's
+reader (11 towns; [`town-warp.md`](town-warp.md) 2). **Owed with the game:**
+the exe host's self-test with `BOF3X_ON=TownWarp` and no mod (the `Fatal` at
+`FIRST.DAT` naming tag 0) and with the rebuilt mod (`DIV-0225 TownWarp: the
+mod's table and text taken, 11 towns`); `BOF3X_ON='*'` runs without the mod
+now stop there too, so the proof's fuzz-on run takes `-TownWarp` or the
+mod's layers; the fuzz rows of `rest_2d_fuzz.cpp` (`FieldAbility_Use`),
+`field_modes_fuzz.cpp` (`Field_ModeTailRun`), `item_use_fuzz.cpp` (the two
+commits) off (0 mismatches) and on with the mod's layers (`FieldAbility_Use`
+alone, at ability `0x6F`); the state-hash routes off; in play under the mod
+on an `en-US` install with a save past the level step that teaches `0x6F`:
+the ability refused off the world map (the "not here" answer, no AP taken);
+used on the world map, the menu after closing the field menu; the list
+showing only towns entered since (a save made before the behaviour lists
+none until a town is entered), "more" with five or more, "cancel" giving the
+field back; a town chosen arriving at its entrance facing as the hack's
+table says, the music and the arrival as a walk in; a story point where the
+party set reaches 7 forgetting the list once; a quick-save and quick-load
+with the menu up; the same save with the behaviour off (no menu; the
+ability "not here").
+
 ## 6c. The behaviours' proof with the game, as run (2026-11-12)
 
 At `romhack/behaviours` `63e9277a`, on a hands-off machine: one game at a

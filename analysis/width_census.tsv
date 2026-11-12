@@ -1673,54 +1673,54 @@ site	src/game/battle/counter_mark.cpp	66	low32	helper_def	live	p	Low32	std::uint
 site	src/game/battle/counter_mark.cpp	110	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<magic_harness::Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * phase)))))();
 site	src/game/battle/counter_mark.cpp	110	widen	word_read	live	static_cast<std::uint32_t>(Long(Mem(table + 4 * phase)))	magic_harness::Handler [fn]	reinterpret_cast<magic_harness::Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * phase)))))();
 site	src/game/battle/counter_mark.cpp	148	narrow_call	image_local	live	self	Key	tchild->owner = static_cast<std::int32_t>(Key(self));
-site	src/game/battle/dat_load.cpp	57	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	std::uint8_t*	std::uint8_t* Arena() { return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)); }
-site	src/game/battle/dat_load.cpp	183	uintptr	-	live	std::uintptr_t	-	auto at = reinterpret_cast<std::uintptr_t>(dat_load::g_datlog_caller);
-site	src/game/battle/dat_load.cpp	184	uintptr	-	live	std::uintptr_t	-	std::uintptr_t off = at;
-site	src/game/battle/dat_load.cpp	185	uintptr	-	live	std::uintptr_t	-	std::uintptr_t m = 0;
-site	src/game/battle/dat_load.cpp	191	fmt_place	pointer	live	static_cast<unsigned>(at)	%08X	bof3::Log("datlog f%u area %u mode %u file 0x%03X %s %s caller 0x%08X (%s+0x%X)",
-site	src/game/battle/dat_load.cpp	616	long	ul	live	unsigned long	-	if (n >= sizeof list) bof3::Fatal(" ", static_cast<unsigned long>(n), (unsigned)sizeof list - 1);
-site	src/game/battle/dat_load.cpp	910	low32	object_ours	live	&g_desert_directions	Low32	bof3::PatchBytes(" ", Low32(&g_desert_directions), &was, &is, 1);
+site	src/game/battle/dat_load.cpp	58	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	std::uint8_t*	std::uint8_t* Arena() { return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)); }
+site	src/game/battle/dat_load.cpp	184	uintptr	-	live	std::uintptr_t	-	auto at = reinterpret_cast<std::uintptr_t>(dat_load::g_datlog_caller);
+site	src/game/battle/dat_load.cpp	185	uintptr	-	live	std::uintptr_t	-	std::uintptr_t off = at;
+site	src/game/battle/dat_load.cpp	186	uintptr	-	live	std::uintptr_t	-	std::uintptr_t m = 0;
+site	src/game/battle/dat_load.cpp	192	fmt_place	pointer	live	static_cast<unsigned>(at)	%08X	bof3::Log("datlog f%u area %u mode %u file 0x%03X %s %s caller 0x%08X (%s+0x%X)",
+site	src/game/battle/dat_load.cpp	621	long	ul	live	unsigned long	-	if (n >= sizeof list) bof3::Fatal(" ", static_cast<unsigned long>(n), (unsigned)sizeof list - 1);
+site	src/game/battle/dat_load.cpp	915	low32	object_ours	live	&g_desert_directions	Low32	bof3::PatchBytes(" ", Low32(&g_desert_directions), &was, &is, 1);
 site	src/game/battle/dragon_breath_beam.cpp	89	low32	image_local	live	p	Low32	SetLong(at, static_cast<std::int32_t>(Low32(p)));
-site	src/game/battle/dragon_cmd.cpp	114	low32	image_local	live	p	Low32	U Key(const unsigned char* p) { return Low32(p); }
-site	src/game/battle/dragon_cmd.cpp	118	uintptr	-	live	std::uintptr_t	-	Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index))); }
-site	src/game/battle/dragon_cmd.cpp	118	widen	word_read	live	L(table + 4 * index)	Entry [fn]	Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index))); }
-site	src/game/battle/dragon_cmd.cpp	265	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
-site	src/game/battle/dragon_cmd.cpp	346	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(LBattleE6(move_script::At(table + 4 * state))))();
-site	src/game/battle/dragon_cmd.cpp	388	low32	helper_def	live	p	Low32	std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
-site	src/game/battle/dragon_cmd.cpp	565	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	565	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	567	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
-site	src/game/battle/dragon_cmd.cpp	596	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	596	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	626	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	626	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	670	uintptr	-	live	std::uintptr_t	-	template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	670	widen	param	live	address	F [fn]	template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle/dragon_cmd.cpp	871	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	871	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	877	long	ul	live	unsigned long	-	using Part = unsigned long (__cdecl*)(unsigned long);
-site	src/game/battle/dragon_cmd.cpp	877	long	ul	live	unsigned long	-	using Part = unsigned long (__cdecl*)(unsigned long);
-site	src/game/battle/dragon_cmd.cpp	878	uintptr	-	live	std::uintptr_t	-	const auto entry = reinterpret_cast<Part>(static_cast<std::uintptr_t>(DragonCmd_Parts[part]));
-site	src/game/battle/dragon_cmd.cpp	878	widen	param	live	DragonCmd_Parts[part]	Part [fn]	const auto entry = reinterpret_cast<Part>(static_cast<std::uintptr_t>(DragonCmd_Parts[part]));
-site	src/game/battle/dragon_cmd.cpp	883	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	883	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	942	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	942	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1028	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1028	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1126	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1126	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1298	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1298	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1385	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	1385	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
-site	src/game/battle/dragon_cmd.cpp	2013	narrow_call	image_local	live	s	Addr	task_rec->owner = Addr(s);
-site	src/game/battle/dragon_cmd.cpp	2619	narrow_call	image_local	live	Party(who)	Address	popup->owner = Address(Party(who));
-site	src/game/battle/dragon_cmd.cpp	2622	narrow_call	image_local	live	Enemy(who - 3u)	Address	popup->owner = Address(Enemy(who - 3u));
-site	src/game/battle/dragon_cmd.cpp	2663	narrow_call	image_local	live	PartyBattleE6(who)	Addr	task_rec->owner = Addr(PartyBattleE6(who));
-site	src/game/battle/dragon_cmd.cpp	2666	narrow_call	image_local	live	EnemyBattleE6(who - 3)	Addr	task_rec->owner = Addr(EnemyBattleE6(who - 3));
-site	src/game/battle/dragon_cmd.cpp	2890	narrow_call	image_local	live	s	Address	popup->owner = Address(s);
-site	src/game/battle/dragon_cmd.cpp	3038	low32	object_ours	live	&battle_e5::g_store_ask_word	Low32	bof3::PatchBytes(" ", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
+site	src/game/battle/dragon_cmd.cpp	115	low32	image_local	live	p	Low32	U Key(const unsigned char* p) { return Low32(p); }
+site	src/game/battle/dragon_cmd.cpp	119	uintptr	-	live	std::uintptr_t	-	Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index))); }
+site	src/game/battle/dragon_cmd.cpp	119	widen	word_read	live	L(table + 4 * index)	Entry [fn]	Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index))); }
+site	src/game/battle/dragon_cmd.cpp	266	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
+site	src/game/battle/dragon_cmd.cpp	347	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(LBattleE6(move_script::At(table + 4 * state))))();
+site	src/game/battle/dragon_cmd.cpp	389	low32	helper_def	live	p	Low32	std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
+site	src/game/battle/dragon_cmd.cpp	566	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	566	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	568	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
+site	src/game/battle/dragon_cmd.cpp	597	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	597	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	627	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	627	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	671	uintptr	-	live	std::uintptr_t	-	template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	671	widen	param	live	address	F [fn]	template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle/dragon_cmd.cpp	872	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	872	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	878	long	ul	live	unsigned long	-	using Part = unsigned long (__cdecl*)(unsigned long);
+site	src/game/battle/dragon_cmd.cpp	878	long	ul	live	unsigned long	-	using Part = unsigned long (__cdecl*)(unsigned long);
+site	src/game/battle/dragon_cmd.cpp	879	uintptr	-	live	std::uintptr_t	-	const auto entry = reinterpret_cast<Part>(static_cast<std::uintptr_t>(DragonCmd_Parts[part]));
+site	src/game/battle/dragon_cmd.cpp	879	widen	param	live	DragonCmd_Parts[part]	Part [fn]	const auto entry = reinterpret_cast<Part>(static_cast<std::uintptr_t>(DragonCmd_Parts[part]));
+site	src/game/battle/dragon_cmd.cpp	884	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	884	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	943	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	943	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1029	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1029	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1127	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1127	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1299	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1299	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1386	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	1386	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
+site	src/game/battle/dragon_cmd.cpp	2014	narrow_call	image_local	live	s	Addr	task_rec->owner = Addr(s);
+site	src/game/battle/dragon_cmd.cpp	2620	narrow_call	image_local	live	Party(who)	Address	popup->owner = Address(Party(who));
+site	src/game/battle/dragon_cmd.cpp	2623	narrow_call	image_local	live	Enemy(who - 3u)	Address	popup->owner = Address(Enemy(who - 3u));
+site	src/game/battle/dragon_cmd.cpp	2664	narrow_call	image_local	live	PartyBattleE6(who)	Addr	task_rec->owner = Addr(PartyBattleE6(who));
+site	src/game/battle/dragon_cmd.cpp	2667	narrow_call	image_local	live	EnemyBattleE6(who - 3)	Addr	task_rec->owner = Addr(EnemyBattleE6(who - 3));
+site	src/game/battle/dragon_cmd.cpp	2891	narrow_call	image_local	live	s	Address	popup->owner = Address(s);
+site	src/game/battle/dragon_cmd.cpp	3045	low32	object_ours	live	&battle_e5::g_store_ask_word	Low32	bof3::PatchBytes(" ", Low32(&battle_e5::g_store_ask_word), &was, &is, 1);
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	39	narrow	helper_def	fuzz	p	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	39	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/battle/enemy_ai_ops_fuzz.cpp	41	narrow_call	image_local	fuzz	p	Address	void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
@@ -6426,35 +6426,38 @@ site	src/game/field/field_6.cpp	3200	long	l	live	long	-	const long ground = SH_C
 site	src/game/field/field_6.cpp	3214	long	l	live	long	-	const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
 site	src/game/field/field_6.cpp	3214	long	l	live	long	-	const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
 site	src/game/field/field_6.cpp	3214	long	l	live	long	-	const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
-site	src/game/field/field_7.cpp	153	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	153	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
-site	src/game/field/field_7.cpp	173	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
-site	src/game/field/field_7.cpp	242	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
-site	src/game/field/field_7.cpp	254	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
-site	src/game/field/field_7.cpp	254	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
-site	src/game/field/field_7.cpp	257	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	257	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
-site	src/game/field/field_7.cpp	265	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
-site	src/game/field/field_7.cpp	265	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
-site	src/game/field/field_7.cpp	268	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	268	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
-site	src/game/field/field_7.cpp	286	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
-site	src/game/field/field_7.cpp	401	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
-site	src/game/field/field_7.cpp	773	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	773	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
-site	src/game/field/field_7.cpp	878	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
-site	src/game/field/field_7.cpp	891	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
-site	src/game/field/field_7.cpp	891	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
-site	src/game/field/field_7.cpp	912	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
-site	src/game/field/field_7.cpp	912	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
-site	src/game/field/field_7.cpp	929	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
-site	src/game/field/field_7.cpp	929	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
-site	src/game/field/field_7.cpp	949	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	949	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-site	src/game/field/field_7.cpp	987	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
-site	src/game/field/field_ability.cpp	169	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
-site	src/game/field/field_ability.cpp	169	widen	word_read	live	static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
-site	src/game/field/field_ability.cpp	195	low32	object_ours	live	&rest_2d::g_field_heal_party	Low32	bof3::PatchBytes(" ", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
+site	src/game/field/field_7.cpp	154	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	154	widen	word_read	live	static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>(index))))	VoidFn [fn]	return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(field_modes::Long(field_modes::At(table + 4u * static_cast<std::uint32_t>
+site	src/game/field/field_7.cpp	174	low32	image	live	Cond_Flags	Low32	const std::uint32_t kCondFlags = Low32(Cond_Flags);
+site	src/game/field/field_7.cpp	243	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*)>(static_cast<std::uintptr_t>(entry))(object);
+site	src/game/field/field_7.cpp	255	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
+site	src/game/field/field_7.cpp	255	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
+site	src/game/field/field_7.cpp	258	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	258	widen	param	live	record->step	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
+site	src/game/field/field_7.cpp	266	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
+site	src/game/field/field_7.cpp	266	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
+site	src/game/field/field_7.cpp	269	uintptr	-	live	std::uintptr_t	-	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	269	widen	param	live	record->arrive	Hook [fn]	int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
+site	src/game/field/field_7.cpp	287	uintptr	-	live	std::uintptr_t	-	const unsigned char answer = reinterpret_cast<unsigned char (__cdecl*)(unsigned, unsigned)>(static_cast<std::uintptr_t>(entry))(x, z);
+site	src/game/field/field_7.cpp	538	low32	image_local	live	out	Low32	Msgbox_Base = Low32(out);
+site	src/game/field/field_7.cpp	539	low32	image_local	live	out	Low32	MenuWindows_ListText = Low32(out);
+site	src/game/field/field_7.cpp	555	fmt_place	word	live	static_cast<unsigned>(TownWarp_Visited)	%08X	bof3::Log("DIV-0225 TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
+site	src/game/field/field_7.cpp	677	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	unsigned char*	unsigned char* TextArena() { return reinterpret_cast<unsigned char*>(::bof3::Img(bof3::addr::MessagePools)); }
+site	src/game/field/field_7.cpp	1134	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1134	widen	other	live	CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAtFieldE2(::bof3::Img(WorldMap_FieldHooks_addr), index, " ")))();
+site	src/game/field/field_7.cpp	1239	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, move_script::At(::bof3::Img(Cond_Flags_addr) + 0xa
+site	src/game/field/field_7.cpp	1252	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
+site	src/game/field/field_7.cpp	1252	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
+site	src/game/field/field_7.cpp	1273	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
+site	src/game/field/field_7.cpp	1273	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
+site	src/game/field/field_7.cpp	1290	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
+site	src/game/field/field_7.cpp	1290	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
+site	src/game/field/field_7.cpp	1310	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1310	widen	word_read	live	static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 	area_harness::Hook	const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
+site	src/game/field/field_7.cpp	1348	low32	object_ours	live	&field_e2::g_name_nul	Low32	bof3::PatchBytes(" ", Low32(&field_e2::g_name_nul), &was, &is, 1);
+site	src/game/field/field_ability.cpp	178	uintptr	-	live	std::uintptr_t	-	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
+site	src/game/field/field_ability.cpp	178	widen	word_read	live	static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index)))	Effect [fn]	const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(::bof3::Img(FieldAbility_Effects_addr) + 4 * index
+site	src/game/field/field_ability.cpp	205	low32	object_ours	live	&rest_2d::g_field_heal_party	Low32	bof3::PatchBytes(" ", Low32(&rest_2d::g_field_heal_party), &was, &is, 1);
 site	src/game/field/field_ability_2.cpp	94	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
 site	src/game/field/field_ability_2.cpp	94	widen	word_read	live	static_cast<U>(Long(move_script::At(table + 4 * index)))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(move_script::At(table + 4 * index)))))();
 site	src/game/field/field_ability_2.cpp	136	low32	helper_def	live	p	Low32	U AddrOf(const void* p) { return Low32(p); }
@@ -13017,22 +13020,22 @@ site	src/game/text/labels.cpp	524	uintptr	-	live	std::uintptr_t	-	return reinter
 site	src/game/text/labels.cpp	524	widen	img_place	live	::bof3::Img(t.slots[i].va)	const unsigned char*	return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(t.slots[i].va)));
 site	src/game/text/labels.cpp	535	uintptr	-	live	std::uintptr_t	-	: reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(t.slots[i].va)));
 site	src/game/text/labels.cpp	535	widen	img_place	live	::bof3::Img(t.slots[i].va)	const unsigned char*	: reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(t.slots[i].va)));
-site	src/game/text/msg_box.cpp	69	uintptr	-	live	std::uintptr_t	-	const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
-site	src/game/text/msg_box.cpp	69	widen	word_read	live	move_script::Long(desc + 0x34)	const ::bof3::CodeSlot<Choice>*	const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
-site	src/game/text/msg_box.cpp	103	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
-site	src/game/text/msg_box.cpp	114	low32	helper_def	live	p	Low32	std::uint32_t Address(const void* p) { return Low32(p); }
-site	src/game/text/msg_box.cpp	158	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/text/msg_box.cpp	158	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/text/msg_box.cpp	231	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kChoiceCommit))), MsgBox_ChoiceReopen,
-site	src/game/text/msg_box.cpp	234	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kMenuCommit))), MsgBox_MenuDone,
-site	src/game/text/msg_box.cpp	237	uintptr	-	live	std::uintptr_t	-	{reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))), MsgBox_EffectShake,
-site	src/game/text/msg_box.cpp	251	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(int, int)>(static_cast<std::uintptr_t>(::bof3::Code(kPageArrow))),
-site	src/game/text/msg_box.cpp	252	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<unsigned (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kAutoRepeat))),
-site	src/game/text/msg_box.cpp	294	narrow_call	image_local	live	text	Addr	Msgbox_Base = Addr(text);
-site	src/game/text/msg_box.cpp	295	narrow_call	image_local	live	text	Addr	MenuWindows_ListText = Addr(text);
-site	src/game/text/msg_box.cpp	1424	narrow_call	func_ours	live	__builtin_return_address(0)	Address	const std::uint32_t resume = Address(__builtin_return_address(0));
-site	src/game/text/msg_box.cpp	1426	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
-site	src/game/text/msg_box.cpp	1426	widen	param	live	resume	mode_states::Handler [fn]	reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
+site	src/game/text/msg_box.cpp	78	uintptr	-	live	std::uintptr_t	-	const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
+site	src/game/text/msg_box.cpp	78	widen	word_read	live	move_script::Long(desc + 0x34)	const ::bof3::CodeSlot<Choice>*	const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
+site	src/game/text/msg_box.cpp	112	low32	helper_def	live	p	Low32	std::uint32_t Addr(const void* p) { return Low32(p); }
+site	src/game/text/msg_box.cpp	123	low32	helper_def	live	p	Low32	std::uint32_t Address(const void* p) { return Low32(p); }
+site	src/game/text/msg_box.cpp	167	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/text/msg_box.cpp	167	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/text/msg_box.cpp	240	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kChoiceCommit))), MsgBox_ChoiceReopen,
+site	src/game/text/msg_box.cpp	243	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kMenuCommit))), MsgBox_MenuDone,
+site	src/game/text/msg_box.cpp	246	uintptr	-	live	std::uintptr_t	-	{reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))), MsgBox_EffectShake,
+site	src/game/text/msg_box.cpp	260	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(int, int)>(static_cast<std::uintptr_t>(::bof3::Code(kPageArrow))),
+site	src/game/text/msg_box.cpp	261	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<unsigned (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kAutoRepeat))),
+site	src/game/text/msg_box.cpp	303	narrow_call	image_local	live	text	Addr	Msgbox_Base = Addr(text);
+site	src/game/text/msg_box.cpp	304	narrow_call	image_local	live	text	Addr	MenuWindows_ListText = Addr(text);
+site	src/game/text/msg_box.cpp	1433	narrow_call	func_ours	live	__builtin_return_address(0)	Address	const std::uint32_t resume = Address(__builtin_return_address(0));
+site	src/game/text/msg_box.cpp	1435	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
+site	src/game/text/msg_box.cpp	1435	widen	param	live	resume	mode_states::Handler [fn]	reinterpret_cast<mode_states::Handler>(static_cast<std::uintptr_t>(resume))();
 site	src/game/text/msg_pool.cpp	22	widen	img_place	live	::bof3::Img(bof3::addr::MessagePools)	std::uint8_t*	return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)) + kPoolTag;
 site	src/game/text/msg_pool.cpp	67	fmt_place	word	live	id	%08X	bof3::Log("shadow Msg_SystemPtr self-test MISMATCH id %08X: %d / %d / %d", id,
 site	src/game/text/msg_pool.cpp	86	fmt_place	pointer	live	(void*)pool	%p	bof3::Log("DIV-0007: system pool relocated out of the arena, to %p", (void*)pool);
@@ -16124,76 +16127,77 @@ site	symbols.toml	134222	long	ctype:unsigned long	live	unsigned long	-	ctype = "
 site	symbols.toml	134229	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	134236	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	134243	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134257	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134313	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134335	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134342	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134349	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134356	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134363	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134370	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134377	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134615	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134258	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134265	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134321	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134343	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134350	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134357	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134364	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134371	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134378	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134385	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	134623	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134630	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134636	ptr_member	image	live	MagicS23_ActorSprite	void *	0x904b3c
-site	symbols.toml	134644	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134651	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134658	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134664	ptr_member	image	live	BattleE3_HitSprite	void *	0x904b5c
-site	symbols.toml	134672	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134840	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134847	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134875	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134889	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134925	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134631	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134638	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134644	ptr_member	image	live	MagicS23_ActorSprite	void *	0x904b3c
+site	symbols.toml	134652	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134659	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134666	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134672	ptr_member	image	live	BattleE3_HitSprite	void *	0x904b5c
+site	symbols.toml	134680	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134848	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134855	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134883	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134897	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	134933	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	134940	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135101	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135115	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135158	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135221	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135228	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135242	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135249	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135277	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135284	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135333	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135340	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135354	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135402	ptr_member	image	live	BattleE3_CurrentEnemy	records::BattleEnemy *	0x939ad8
-site	symbols.toml	135410	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135416	ptr_member	image	live	BattleE4_MenuActor	records::PartyMember *	0x939ec4
-site	symbols.toml	135452	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135487	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135493	ptr_member	image	live	BattleFlow_TaskCurrent	records::BattleTask *	0x93b8c4
-site	symbols.toml	135501	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135516	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135532	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135550	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135681	ptr_member	windows_function	live	Imp_DirectDrawEnumerateA	void *	0x5c4000
-site	symbols.toml	135689	ptr_member	windows_function	live	Imp_DirectSoundCreate	void *	0x5c4014
-site	symbols.toml	135697	ptr_member	windows_function	live	Imp_ExitProcess	void *	0x5c40b8
-site	symbols.toml	135705	ptr_member	windows_function	live	Imp_TerminateProcess	void *	0x5c4114
-site	symbols.toml	135713	ptr_member	windows_function	live	Imp_PostQuitMessage	void *	0x5c4158
-site	symbols.toml	135842	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134941	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	134948	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135109	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135123	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135166	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135229	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135236	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135250	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135257	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135285	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135292	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135341	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135348	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135362	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135410	ptr_member	image	live	BattleE3_CurrentEnemy	records::BattleEnemy *	0x939ad8
+site	symbols.toml	135418	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135424	ptr_member	image	live	BattleE4_MenuActor	records::PartyMember *	0x939ec4
+site	symbols.toml	135460	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135495	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135501	ptr_member	image	live	BattleFlow_TaskCurrent	records::BattleTask *	0x93b8c4
+site	symbols.toml	135509	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135524	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135540	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135558	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135689	ptr_member	windows_function	live	Imp_DirectDrawEnumerateA	void *	0x5c4000
+site	symbols.toml	135697	ptr_member	windows_function	live	Imp_DirectSoundCreate	void *	0x5c4014
+site	symbols.toml	135705	ptr_member	windows_function	live	Imp_ExitProcess	void *	0x5c40b8
+site	symbols.toml	135713	ptr_member	windows_function	live	Imp_TerminateProcess	void *	0x5c4114
+site	symbols.toml	135721	ptr_member	windows_function	live	Imp_PostQuitMessage	void *	0x5c4158
 site	symbols.toml	135850	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	135858	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	135866	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	135874	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	135883	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	136067	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135882	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	135891	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136075	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136083	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136091	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136099	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	136155	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	136172	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
-site	symbols.toml	136222	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	136107	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	136163	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	136180	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136230	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136238	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136246	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	136254	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
+site	symbols.toml	136262	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 #rec	file	standing	class	detail	n
 file	src/audio/mp3.cpp	live	asm	stack	2
 file	src/audio/mp3.cpp	live	fmt_place	pointer	1
@@ -18593,8 +18597,10 @@ file	src/game/field/field_6.cpp	live	uintptr	-	6
 file	src/game/field/field_6.cpp	live	widen	img_place	1
 file	src/game/field/field_6.cpp	live	widen	param	4
 file	src/game/field/field_6.cpp	live	width_if	asm_pair	2
+file	src/game/field/field_7.cpp	live	fmt_place	word	1
 file	src/game/field/field_7.cpp	live	long	l	10
 file	src/game/field/field_7.cpp	live	low32	image	1
+file	src/game/field/field_7.cpp	live	low32	image_local	2
 file	src/game/field/field_7.cpp	live	low32	object_ours	1
 file	src/game/field/field_7.cpp	live	uintptr	-	8
 file	src/game/field/field_7.cpp	live	widen	img_place	1
@@ -20887,7 +20893,7 @@ file	src/render/render_shim.cpp	live	ptr_overlay	unread	14
 file	src/render/satpixie.cpp	live	long	ul	1
 file	src/video/fmv_dump.cpp	live	long	l	1
 file	symbols.toml	live	long	ctype:long	42
-file	symbols.toml	live	long	ctype:unsigned long	1745
+file	symbols.toml	live	long	ctype:unsigned long	1746
 file	symbols.toml	live	long	ctype:unsigned long *	1
 file	symbols.toml	live	ptr_member	code_table	26
 file	symbols.toml	live	ptr_member	heap	3
@@ -20898,8 +20904,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16194
-#count sites_live	11976
+#count sites	16198
+#count sites_live	11980
 #count sites_fuzz	4218
 #count fuzz_files	250
 #count narrow	356
@@ -20986,16 +20992,16 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	7435
-#count long_live	6687
+#count long	7436
+#count long_live	6688
 #count long_live_files	504
 #count long_fuzz	748
 #count long_fuzz_files	79
 #count long_ctype:long	42
 #count long_ctype:long_live	42
 #count long_ctype:long_live_files	1
-#count long_ctype:unsigned long	1745
-#count long_ctype:unsigned long_live	1745
+#count long_ctype:unsigned long	1746
+#count long_ctype:unsigned long_live	1746
 #count long_ctype:unsigned long_live_files	1
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
@@ -21082,9 +21088,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	1868
 #count uintptr_-_live	1202
 #count uintptr_-_live_files	503
-#count fmt_place	471
-#count fmt_place_live	401
-#count fmt_place_live_files	60
+#count fmt_place	472
+#count fmt_place_live	402
+#count fmt_place_live_files	61
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	24
@@ -21093,9 +21099,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	110
 #count fmt_place_pointer_live	95
 #count fmt_place_pointer_live_files	30
-#count fmt_place_word	337
-#count fmt_place_word_live	289
-#count fmt_place_word_live_files	48
+#count fmt_place_word	338
+#count fmt_place_word_live	290
+#count fmt_place_word_live_files	49
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1
@@ -21136,8 +21142,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	722
-#count low32_live	714
+#count low32	724
+#count low32_live	716
 #count low32_live_files	467
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -21153,9 +21159,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image	28
 #count low32_image_live	28
 #count low32_image_live_files	26
-#count low32_image_local	137
-#count low32_image_local_live	137
-#count low32_image_local_live_files	89
+#count low32_image_local	139
+#count low32_image_local_live	139
+#count low32_image_local_live_files	90
 #count low32_object_ours	88
 #count low32_object_ours_live	88
 #count low32_object_ours_live_files	63
@@ -21221,7 +21227,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_src	5647
 #count long_src_game	5116
 #count long_src_game_ul	1428
-#count long_ctype	1788
+#count long_ctype	1789
 #count callconv_CALLBACK	20
 #count callconv_CALLBACK_fuzz	1
 #count callconv_CALLBACK_live	19
@@ -21236,8 +21242,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	625
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	619
-#count img_place_Img	15998
+#count img_place_Img	15999
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	14928
+#count img_place_Img_live	14929
 #count img_place_VaOf	105
 #count img_place_VaOf_live	105

@@ -131,9 +131,10 @@ enum class Id : int {
     LevelSkillCatchUp,
     ShortSkillLockout,
     SmokeSkill,
+    TownWarp,
     VillageCountPlural,
 };
-constexpr int kCount = 9;
+constexpr int kCount = 10;
 constexpr const char* kNames[kCount + 1] = {
     "AllyAnywhere",
     "CampMasters",
@@ -143,6 +144,7 @@ constexpr const char* kNames[kCount + 1] = {
     "LevelSkillCatchUp",
     "ShortSkillLockout",
     "SmokeSkill",
+    "TownWarp",
     "VillageCountPlural",
     nullptr,
 };

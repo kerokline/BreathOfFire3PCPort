@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 224 entries, DIV-0001..0224, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 225 entries, DIV-0001..0225, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16421,4 +16421,105 @@ designed in rather than bolted on.
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
+- **State:** active
+
+### A mod can give the party a warp to a visited town from the world map
+
+- **ID:** DIV-0225
+- **Date:** 2026-11-12
+- **Subsystem:** the field's idle frame and the field abilities -
+  `FieldAbility_Use` `0x58A3C0` (`src/game/field/field_ability.cpp`),
+  `FieldIdle_Tick` (ours, `src/game/field/field_7.cpp`, `field_idle.h`), the
+  choice commit (`CommitChoice`, `src/game/text/msg_box.cpp`), the chunk
+  walk (`TakeChunk` kind 21, `src/game/battle/dat_load.cpp`; `LoadDatFile`'s
+  `FIRST.DAT` tail, `src/game/battle/dragon_cmd.cpp`), the save block's
+  `+0x10AC` (`TownWarp_Visited`), `tools/disc_patch_build.py`, the save
+  editor's field table (`src/launcher/save/block.cpp`); the behaviour
+  `TownWarp` ([`mods.md`](mods.md) 11); [`town-warp.md`](town-warp.md),
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** ability `0x6F` has no field use: `FieldAbility_Use`
+  gives it handler 0, which answers 3 ("not here"), and no level step of the
+  release teaches it. The party goes from the world map into a town only by
+  walking onto the town's cell. The save block's last four bytes are never
+  addressed.
+- **New behaviour:** with `TownWarp` on, ability `0x6F` used from the field
+  menu on the world map with `Field_InputFlags` bit 5 clear answers 1 (the
+  menu's "used", the AP cost taken) and asks for the warp; anywhere else it
+  answers 3 as before. The next field frame with no tail armed on the world
+  map and no request pending opens the warp: `ScriptFlags_Set40`, a message
+  whose question and choice list are the mod's (the visited towns, 4 a page,
+  "more" when a fifth is visited, "cancel" always), opened as a script
+  message is. "More" shows the next page; "cancel" closes it with
+  `ScriptFlags_Clear40`; a town closes it, `ScriptFlags_Clear40`, and enters
+  the town as a walk from the world map does - the link's high bits 0,
+  `Field_ChangeArea` with the town's row (area, x, z, flags) from the mod's
+  table, `ModeFlow_AreaTransition` 0 and `Area_EnterTransition` `0xC`. The
+  visited towns are a 32-bit word at save block `+0x10AC` (PC `0x904A8C`):
+  each idle field frame off the world map sets bit `i` when the standing area
+  is town `i` of the mod's list; each idle field frame, when the party set
+  (`+0x74C`) is not `0xFF`, its low seven bits are at least 7 and not 12, and
+  bit 31 is clear, the word becomes bit 31 alone - every town forgotten,
+  once. The case order of the idle frame is the hack's: CampMasters,
+  TownWarp's forgetting, AllyAnywhere, TownWarp's recording or menu. The
+  question, labels, names and table are not in this repository: the mod's
+  build reads them from the patched disc on the player's machine into kind
+  21 of `FIRST.DAT` (tag 0 the table in `mod-<id>`, tag 1 the text, in the
+  PC's encoding, in `mod-<id>-<tag>`); the engine takes them only with the
+  behaviour on, checks their shape, and stops with a `Fatal` after
+  `FIRST.DAT`'s walk (at the title) when either is missing. The menu's state
+  is statics of ours: not in the save, cleared at every game's start, in the
+  quicksave participant `BEHAVIOURS` (version 4, with the page the box
+  reads); a record taken with the menu asked or open is refused when the
+  behaviour is off. Off, every site runs the original's path and the word is
+  never touched.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it. The hack's code, on the patched
+  US disc: START.EMI 8's field-ability handler table `0x801ED224` slot 0
+  made GAME `0x8019C304` (ability `0x6F` and the world-map test); GAME
+  `Field_ModeTailKinds` slot 0's chain reaching `0x801BB81C` (the
+  forgetting) and `0x8019C244` / `0x8019C2A8` (the recording; the open,
+  through `0x801B57F8`, which loads a file outside the disc's directory at
+  `0x80016000` by pointing MTEST's file entry at its LBA); that file's
+  `+0` (the menu, `MsgBox_Reset`, `Field_Request` 2, the standing
+  descriptor's `+0x34` pointed at its answer `0x800162C8`) and `+8` (the
+  menu's frame, `Field_ChangeArea` US `0x8019FA28`, then `0x80143F1E` 0 and
+  `0x80143F1D` `0x0C`, the bytes the release's world-map walk stores on a
+  town cell, GAME `0x801B1600..08`, whose PC twins `Field_LeaderStepLands`
+  stores the same). The mod's carried `exp_table` teaches `0x6F` at one
+  level step. Departures from the hack: no game data is written for the
+  answer (the hack writes the standing descriptor's `+0x34`; ours answers in
+  `CommitChoice`, the one reader, while the menu holds the box); the data
+  comes from the mod's layers at the title, not from a file loaded at the
+  use; the statics are cleared at a game's start (the hack's RAM bytes
+  survive a load from the menu).
+- **The save byte:** the visited word rides in the save at the hack's
+  offset (the owner's decision). A save made with the behaviour on and
+  loaded without it: the word is inert (nothing reads it), and with the
+  behaviour on again the list is as it was. A save made without it, loaded
+  with it: the word is 0 (a new game zeroes the block), so no town is listed
+  until one is entered. A memory-card conversion keeps the word both ways:
+  on the PlayStation it is the hack's own word with the same meaning, and
+  the release never reads it. The save editor shows it as an advanced field.
+- **Also in the PSX version?** No: no release has it. The romhack's patched
+  US disc has it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`; `disc_patch_build.py selftest` (synthetic code and text: the
+  parts read through the code's own loads, both payloads, the refusals);
+  the reader run on the real patched track offline (11 towns, the areas of
+  [`town-warp.md`](town-warp.md) 2); every point of the chain read from the
+  patched listings ([`town-warp.md`](town-warp.md) 1, 3). Off, the touched
+  functions' fuzz rows compare as before (ability `0x6F` takes handler 0, no
+  static of ours is set). **Not played:** nobody has warped with the
+  behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=TownWarp` keeps it off. The word stays in saves made with it.
+- **Switch:** TownWarp
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any - the menu's text is the mod's language layer's, which the launcher hands over under that language alone
 - **State:** active

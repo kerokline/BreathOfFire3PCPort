@@ -453,6 +453,8 @@ mod's `missing`.
 | `outside_files`, `outside_bytes` | EMIs the patched disc holds in sectors its directory does not list (and where the original does not hold the same bytes) | `N files that the disc's directory does not list` |
 | `outside_sectors` | such sectors that are no EMI | `N other sectors that the disc's directory does not list` |
 
+A build that carries a behaviour's data says so in `[carried]`: `town_warp_towns` (11.7).
+
 **The zero-record rule.** A record the original leaves entirely zero is not
 the mod's to fill unless every field of the patched record is inside its
 `range` (`tables.toml` `[[table.field]] range = [lo, hi]`, a reader's bound,
@@ -466,7 +468,7 @@ original stocks is the mod's whatever its values. The rule is
 patched)` lists them (LBA, sectors, sections), `outside_sections(disc, lba)`
 reads one file's sections for the code that carries such a file later, and
 `disc_patch_census.py` gives each section a row with `where = outside`. None is
-carried into a layer.
+carried into a layer as it is; the town warp's file gives its data to kind 21 (11.7).
 
 ### 11.6 Building a behaviour: what its engineer adds
 
@@ -488,3 +490,19 @@ Nothing in the launcher or in `mods.py` changes: both read the generated
 header. Prove it with a route under `BOF3X_ON=<Name>`, and the mod with its
 `needs` naming it.
 
+
+### 11.7 A behaviour's data from the mod: kind 21 (2026-11-12, DIV-0225)
+
+A behaviour may need data that is the hack author's and so cannot be in this
+repository: the town warp's question, labels, place names and destination
+table (`TownWarp`, [`town-warp.md`](town-warp.md)). The builder reads such
+data from the patched disc on the player's machine and carries it in a chunk
+kind of ours that the engine passes over unless the behaviour is on - the
+pattern of `loc_build.py`'s kind 20, which only the launcher reads.
+
+| | |
+|---|---|
+| The chunk | kind **21** in `FIRST.DAT` (the title's file, walked through every layer): tag 0 the table in `opt\mod-<id>\dat\`, tag 1 the text in `opt\mod-<id>-<tag>\dat\`, in the PC's encoding of the disc's language (`loc_build.convert_run`, in the text builder's child while its language is set up). The payloads are [`town-warp.md`](town-warp.md) 4's |
+| The build | `disc_patch_build.town_warp_parts` reads the file outside the directory with one section at `0x80016000` and the patched GAME section 0, each address from the instruction that loads it (opcode and registers checked at fixed offsets), and refuses any other shape. Only a mod whose `needs` names `TownWarp` carries it; such a mod with no such file does not build |
+| The engine | `TakeChunk` kind 21: nothing with `TownWarp` off; on, each payload checked and kept (a `Fatal` on another shape). After `FIRST.DAT`'s walk, `TownWarp` on with either tag missing is a `Fatal` that names it |
+| `report.toml` | `[carried]` `town_warp_towns` (0 when not carried); the warp's file leaves `[not_carried]` `outside_files` / `outside_bytes`. The Mods tab's `has` part: `a town warp to N towns` |

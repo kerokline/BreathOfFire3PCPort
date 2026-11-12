@@ -134252,6 +134252,14 @@ status = "evidence"
 evidence = "ours, 2026-10-30 (DIV-0191): byte +0x1040 of the live save block 0x9039E0. Capcom's code never addresses it: analysis/pc_xref.json has no reference into 0x904A1D..0x904A8F, the US 42-hour save's last non-zero byte is block +0x103C (docs/save-interchange.md section 2a) and the live bytes read zero on the owner's chapter-10 game; the block's 0x10B0 bytes are zeroed by task 0's first body (docs/mode-flow.md) and the whole 0x12B0 block is what Save_BuildBlock writes and a load copies back, so the byte persists through save and load. Bit 0: the party has crossed Mt. Levett (area 70) once; written and read only by MountainPasses_AfterPlacement (src/game/event_script.cpp) under the switch MountainPasses."
 
 [[data]]
+pc = 0x904A8C
+name = "TownWarp_Visited"
+psx = 0x80145984
+ctype = "unsigned long"
+status = "evidence"
+evidence = "the Definitive Edition romhack's, mirrored by ours (DIV-0225, docs/town-warp.md 1 and 5): the last dword of the live save block 0x9039E0 (+0x10AC; PSX block 0x801448D8 + 0x10AC). Capcom's code never addresses it: on the original US disc no EMI section or the boot program has a lui/offset pair to 0x80145984 (2026-11-12, de1112/b6/scan.py, scratch), the patched disc's are the hack's two GAME routines alone (0x8019C244 sets a town's bit, 0x801BB81C sets bit 31 alone), docs/save-block.md lists +0x1041.. as UNTOUCHED, and analysis/pc_xref.json has no reference into 0x904A1D..0x904A8F (MountainPasses_Bits' evidence). Written and read only under the switch TownWarp (src/game/field/field_7.cpp): bits 0..30 the towns visited, bit 31 the towns forgotten once."
+
+[[data]]
 pc = 0x90414C
 name = "AreaW4d_ReturnZ"
 ctype = "unsigned long"

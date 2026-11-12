@@ -15399,6 +15399,7 @@ src/game/field/field_7.cpp	Field_ModeTail	record	SetWord	s + 6	0	-	-	platform	ho
 src/game/field/field_7.cpp	Field_ModeTail	record	SetWord	s + 8	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
 src/game/field/field_7.cpp	Field_ModeTail	global	At	Cond_Flags_addr + 0xa0 + i	0	0x903f90	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/field/field_7.cpp	Field_ModeTail	global	At	Scenario_SubInitTable_addr + i	0	0x662cd8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Scenario_SubInitTable_addr - -)	c4-tc
+src/game/field/field_7.cpp	SetMessageWord	global	At	kWarpMessageWord	0	0x7dee48	-	no-entry	kWarpMessageWord 0x7dee48 - (the box's message word; no symbol names it, as the areas' at::kMessage)	div0225
 src/game/field/field_7.cpp	FieldTail_LoadBank	global	BFieldE2	field_e2::at::kScriptFlags2	0	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/field/field_7.cpp	FieldTail_LoadBank	global	BFieldE2	field_e2::at::kScriptFlags2	1	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/field/field_7.cpp	FieldTail_DropInMove	global	BFieldE2	field_e2::at::kDropInTable	0	0x662de8	-	no-entry	at::kDropInTable 0x662de8 -	b0
