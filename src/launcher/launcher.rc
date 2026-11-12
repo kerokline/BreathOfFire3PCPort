@@ -295,6 +295,32 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14
 END
 
+// The solo-character round (docs/solo-character-round.md 4 and 6a): Game
+// Options' fourth sub-tab. The mode and its option are behaviours in on= (the
+// boxes edit that line, ConfigBehaviourEdit); the champion is solo.champion=.
+// The champion and the option are grey while the mode is off; every control
+// shows, greyed or not, and the last line says why one is grey.
+IDD_PAGE_SOLO DIALOGEX 0, 0, 290, 160
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Solo character", -1, 0, 0, 286, 158
+    AUTOCHECKBOX    "&Solo character: one character, the champion, fights all battles alone",
+                    IDC_SOLO_MODE, 7, 12, 274, 10
+    LTEXT           "Only the champion fights in battles. The rule does not start until the introduction of the game is complete.",
+                    IDC_SOLO_MODENOTE, 19, 24, 262, 18
+    LTEXT           "&Champion:", IDC_SOLO_CHAMPLABEL, 19, 47, 50, 9
+    COMBOBOX        IDC_SOLO_CHAMPION, 71, 45, 110, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "When the rule starts on a save for the first time, the game writes the champion into that save. After that, the save keeps that champion. A change here does not change it. None: you do not select a champion here.",
+                    IDC_SOLO_CHAMPNOTE, 19, 63, 262, 27
+    AUTOCHECKBOX    "The champion fights only &when the champion is in the party",
+                    IDC_SOLO_IFPRESENT, 19, 94, 262, 10
+    LTEXT           "Off: the champion fights all battles, also when the story takes the champion away from the party. On: when the champion is not in the party, the usual party of the game fights.",
+                    IDC_SOLO_IFNOTE, 31, 106, 250, 27
+    LTEXT           "", IDC_SOLO_WHY, 7, 137, 274, 18
+END
+
 // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the
 // PlayStation's version of a set of differences or the PSP's, on Game
 // Options' first two sub-pages. Suite i's ids are 1040 + 10 i plus: 0 the label, 1 the

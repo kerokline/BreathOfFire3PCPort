@@ -626,7 +626,7 @@ std::string Env(const char* name) {
 
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
-                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE"})
+                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE", "BOF3X_SOLO"})
         SetEnvironmentVariableA(v, nullptr);
 }
 
@@ -915,6 +915,140 @@ void TestOff() {
     SetEnvironmentVariableA("BOF3X_ON", "SelfTestGamma");
     bof3x::ConfigApplyEnvironment(game, on, false);
     Check(Env("BOF3X_ON") == "SelfTestGamma", "an environment's BOF3X_ON wins over on=", Env("BOF3X_ON"));
+    ClearEnv();
+}
+
+// The solo-character round (docs/solo-character-round.md 4): solo.champion=
+// kept as written and written back, BOF3X_SOLO only while SoloCharacter is on
+// as the game reads BOF3X_ON and BOF3X_OFF, the two boxes' edits of on=, and
+// what the page greys. The release's behaviours are passed in as a list of
+// this test's own, so the checks do not wait on the generated header.
+void TestSolo() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    MakeDirs(game + L"\\DAT");
+    const std::wstring a = Temp(L"bof3x_config_tests_solo_a.ini"), b = Temp(L"bof3x_config_tests_solo_b.ini");
+    WriteAll(a, "[bof3x]\r\non=SoloCharacter, SoloChampionIfPresent\r\nsolo.champion= nina \r\n");
+    bof3x::Config c1;
+    std::string err;
+    Check(bof3x::ConfigLoad(a, c1, err) && err.empty() && c1.solo_champion == "nina",
+          "solo.champion= read, trimmed as a line is", c1.solo_champion);
+    Check(bof3x::ConfigSave(b, c1), "solo: save");
+    const std::string first = ReadAll(b);
+    Check(first.find("\r\nsolo.champion=nina\r\n") != std::string::npos, "the solo.champion= line written");
+    bof3x::Config c2;
+    Check(bof3x::ConfigLoad(b, c2, err) && c2.solo_champion == "nina" && c2.on == c1.on, "solo.champion= read again");
+    Check(bof3x::ConfigSave(b, c2) && ReadAll(b) == first, "solo: a second save is byte-identical");
+    bof3x::Config none;
+    Check(bof3x::ConfigSave(b, none) && ReadAll(b).find("\r\nsolo.champion=\r\n") != std::string::npos,
+          "the default writes an empty solo.champion=");
+    WriteAll(a, "[bof3x]\r\nsolo.champion=Teepo\r\n");
+    bof3x::Config bad;
+    Check(bof3x::ConfigLoad(a, bad, err) && err.empty() && bad.solo_champion == "Teepo",
+          "a solo.champion= that is no champion kept as written (the game refuses it), no launcher error",
+          bad.solo_champion);
+    Check(bof3x::ConfigSave(b, bad) && ReadAll(b).find("\r\nsolo.champion=Teepo\r\n") != std::string::npos,
+          "  and written back as read");
+
+    Check(bof3x::ConfigSoloChampionIndex("ryu") == 0 && bof3x::ConfigSoloChampionIndex("peco") == 5 &&
+              bof3x::ConfigSoloChampionIndex("Ryu") == -1 &&
+              bof3x::ConfigSoloChampionIndex("") == -1 && std::size(bof3x::kSoloChampions) == 6,
+          "the six champions, lower case ids; another case, an empty id: none");
+
+    // the game's rule for a behaviour (behaviour.cpp Behaviour_Read)
+    Check(bof3x::ConfigBehaviourOn("SoloCharacter", "", "SoloCharacter") &&
+              bof3x::ConfigBehaviourOn("a SoloCharacter", "", "SoloCharacter") &&
+              bof3x::ConfigBehaviourOn("*", "Game_Clock", "SoloCharacter") &&
+              !bof3x::ConfigBehaviourOn("*,-SoloCharacter", "", "SoloCharacter") &&
+              !bof3x::ConfigBehaviourOn("SoloCharacter", "SoloCharacter", "SoloCharacter") &&
+              !bof3x::ConfigBehaviourOn("SoloCharacter", "*", "SoloCharacter") &&
+              !bof3x::ConfigBehaviourOn("SoloCharacterX", "", "SoloCharacter") &&
+              !bof3x::ConfigBehaviourOn("", "", "SoloCharacter"),
+          "ConfigBehaviourOn: on= names it or *, no -name; off= wins (a name or *)");
+
+    // the boxes' edits of on=
+    struct Edit {
+        const char* on;
+        bool want;
+        const char* out;
+        const char* what;
+    };
+    const Edit edits[] = {
+        {"", false, "", "an empty on=, the box off: nothing written"},
+        {"", true, "SoloCharacter", "an empty on=, the box ticked: the name"},
+        {"A, B", true, "A,B,SoloCharacter", "ticked over a list: added at the end, the list joined by commas"},
+        {"A, SoloCharacter ,B", true, "A, SoloCharacter ,B", "already on: byte for byte"},
+        {"A, SoloCharacter ,B", false, "A,B", "unticked: the name taken out"},
+        {"SoloCharacter", false, "", "unticked, the only name: empty"},
+        {"*", true, "*", "on= * turns it on already: byte for byte"},
+        {"*", false, "*,-SoloCharacter", "unticked under *: -name added"},
+        {"*,-SoloCharacter", true, "*", "ticked under * and -name: the -name taken out"},
+        {"-SoloCharacter,SoloCharacter", true, "SoloCharacter", "ticked over a name and its -name: the name alone"},
+        {"SoloCharacterX", true, "SoloCharacterX,SoloCharacter", "a longer name is another name"},
+    };
+    for (const Edit& e : edits) {
+        const std::string got = bof3x::ConfigBehaviourEdit(e.on, "SoloCharacter", e.want);
+        Check(got == e.out, (std::string("ConfigBehaviourEdit: ") + e.what).c_str(), got);
+        Check(bof3x::ConfigListTurnsOff(got, "SoloCharacter") == e.want, "  the result says what the box says", got);
+    }
+
+    // what the page greys
+    const std::vector<std::string> both = {"SelfTestAlpha", "SoloCharacter", "SoloChampionIfPresent"};
+    const std::vector<std::string> neither = {"SelfTestAlpha"};
+    bof3x::Config page;
+    page.on = "SoloChampionIfPresent";
+    bof3x::SoloState s = bof3x::ConfigSoloState(page, false, &both);
+    Check(!s.mode && s.if_present && s.mode_enabled && !s.choices_enabled && !s.if_present_enabled && !s.why.empty(),
+          "the mode off: its box can change; the champion and the option grey, with the reason");
+    s = bof3x::ConfigSoloState(page, true, &both);
+    Check(s.mode_enabled && s.choices_enabled && s.if_present_enabled && s.why.empty(),
+          "the mode's box ticked: every control can change, no reason shown");
+    s = bof3x::ConfigSoloState(page, true, &neither);
+    Check(!s.mode_enabled && !s.choices_enabled && !s.if_present_enabled && !s.why.empty(),
+          "a release without the behaviours: every control grey, the reason said");
+    page.off = "*";
+    s = bof3x::ConfigSoloState(page, true, &both);
+    Check(!s.mode_enabled && !s.choices_enabled && !s.why.empty(), "off= turns SoloCharacter off (*): every control grey");
+    page.off = "SoloChampionIfPresent";
+    s = bof3x::ConfigSoloState(page, true, &both);
+    Check(s.mode_enabled && s.choices_enabled && !s.if_present_enabled && !s.why.empty(),
+          "off= turns the option off: that box alone grey, the reason said");
+
+    // the hand-over: BOF3X_SOLO only while the mode is on as the game reads it
+    struct Hand {
+        const char *on, *off, *env_on, *champion, *want;
+        const char* what;
+    };
+    const Hand hands[] = {
+        {"SoloCharacter", "", nullptr, "garr", "garr", "the mode on, a champion: BOF3X_SOLO"},
+        {"SoloCharacter,SoloChampionIfPresent", "", nullptr, "rei", "rei", "  the option beside it changes nothing here"},
+        {"", "", nullptr, "garr", nullptr, "the mode off: no BOF3X_SOLO"},
+        {"SoloCharacter", "", nullptr, "", nullptr, "no champion: no BOF3X_SOLO"},
+        {"SoloCharacter", "SoloCharacter", nullptr, "garr", nullptr, "off= turns the mode off: no BOF3X_SOLO"},
+        {"SoloCharacter", "*", nullptr, "garr", nullptr, "off=*: no BOF3X_SOLO"},
+        {"", "", "SoloCharacter", "momo", "momo", "an environment's BOF3X_ON turns it on: BOF3X_SOLO"},
+        {"SoloCharacter", "", "SelfTestAlpha", "momo", nullptr, "an environment's BOF3X_ON without it: no BOF3X_SOLO"},
+        {"SoloCharacter", "", nullptr, "Teepo", "Teepo", "a value that is no champion goes as written (the game refuses it)"},
+    };
+    for (const Hand& h : hands) {
+        for (bool hosted : {false, true}) {
+            ClearEnv();
+            if (h.env_on) SetEnvironmentVariableA("BOF3X_ON", h.env_on);
+            bof3x::Config cfg;
+            cfg.on = h.on;
+            cfg.off = h.off;
+            cfg.solo_champion = h.champion;
+            bof3x::ConfigApplyEnvironment(game, cfg, hosted);
+            const bool set = GetEnvironmentVariableA("BOF3X_SOLO", nullptr, 0) > 0;
+            Check(h.want ? set && Env("BOF3X_SOLO") == h.want : !set, h.what, Env("BOF3X_SOLO"));
+        }
+    }
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_SOLO", "peco");
+    bof3x::Config cfg;
+    cfg.on = "SoloCharacter";
+    cfg.solo_champion = "ryu";
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_SOLO") == "peco", "an environment's BOF3X_SOLO wins over solo.champion=", Env("BOF3X_SOLO"));
     ClearEnv();
 }
 
@@ -1675,6 +1809,8 @@ int main() {
     TestRoundTrip();
     std::printf("off= (BOF3X_OFF, the player's switch)\n");
     TestOff();
+    std::printf("solo.champion= and the solo character page (BOF3X_SOLO, on=)\n");
+    TestSolo();
     std::printf("scale= (D395)\n");
     TestScale();
     std::printf("the presets against tools/ledger_registry.py presets\n");

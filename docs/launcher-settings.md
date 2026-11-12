@@ -116,7 +116,9 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   is the old Controls dialog's grid, inline, as "Directions and buttons" and
   "Shoulders, Start and Select"; Music the song source; Game Options the
   three suites ([`launcher-suites.md`](launcher-suites.md)) as "Graphics and
-  audio" and "Data", and the old Cheats dialog as "Cheats"; Data the cache
+  audio" and "Data", and the old Cheats dialog as "Cheats" (since
+  2026-11-12 a fourth sub-tab, "Solo character", `IDD_PAGE_SOLO`: section 3's
+  row); Data the cache
   folder and Sources.... **Mods** lists the player's mods - each a `.zip`
   of data files, added with Add zip..., checked, unpacked and built by
   `tools/mods.py` as the Sources page runs the importer, greyed with the
@@ -235,6 +237,7 @@ close box after the same change left the ini byte for byte.
 | Row above the text (2026-10-22, Settings, under Language): None, each built reading-row mod whose base is the language played (Japanese (Furigana)), each other held language - every entry listed, greyed by source where it cannot be played | `ruby=<mod id or tag>` in the ini; at start the layer `ruby-<ruby>-<language played>` appended to `BOF3X_OPT` when it is built (said on stderr and left off otherwise; not added when `BOF3X_OPT` is set in the environment) | ours - DIV-0155, DIV-0156, DIV-0157; [`mods.md`](mods.md) 5 |
 | The mods to keep off (2026-11-11, Mods: the check box at the left of a `table-edit` or `disc-patch` mod's row; the owner's call) | `mods_off=` in the ini: the mods' ids, comma-separated, **empty by default** (every built mod of those kinds is on), kept as written; an id no installed mod has does nothing. Not handed to the game: the launcher leaves the mod's layers out of `BOF3X_OPT` | ours - the disc-patch round's group C ([`disc-patch-round.md`](disc-patch-round.md) 4, 5d); DIV-0157 as amended |
 | Show Row above the text on Settings (2026-10-22, Mods, Extras; the owner's call): whether Settings shows the Row above the text box and its label - display only | `ruby_ui=0` or `1` in the ini, **`0` by default**, always written; any other value dropped to the default (as `snap=`). Turned on by an add of a reading-row mod on Mods; an ini without the line comes up on at start when a reading-row mod is installed. Not handed to the game: `ruby=` goes over whichever it is | ours - the owner's call 2026-10-22 ([`owner-review.md`](owner-review.md)); [`mods.md`](mods.md) 5 |
+| Solo character (2026-11-12, Game Options, Solo character; the solo-character round, [`solo-character-round.md`](solo-character-round.md) 4 and 6a): a box for the mode, the champion's box (None, Ryu, Nina, Garr, Rei, Momo, Peco - the launcher's own labels), a box for the option "only when the champion is in the party" | The two boxes are **behaviours in `on=`**: the mode's box stands for `SoloCharacter`, the option's for `SoloChampionIfPresent` (`ConfigBehaviourEdit`: a box that says what `on=` says leaves the line byte for byte; ticked, the name is added at the end; unticked, it is taken out, or `-name` is added when a `*` still turns it on). The champion is **`solo.champion=`**: `ryu`, `nina`, `garr`, `rei`, `momo`, `peco` or empty (none, the default), always written; kept as written, as `on=` is, so a value that is no champion reaches the game, which stops and names it; the box then shows that value as its eighth entry and writes it back unless moved. Handed over as `BOF3X_SOLO` only while `SoloCharacter` is on as the game reads it - in the `BOF3X_ON` and not turned off by the `BOF3X_OFF` it is given (`ConfigBehaviourOn`, `behaviour.cpp`'s rule) - else a stderr line and no variable; an environment's `BOF3X_SOLO` wins. The champion and the option are grey while the mode's box is not ticked; every control is grey when the release lacks either behaviour (`ConfigBehavioursKnown`) or `off=` turns `SoloCharacter` off; the option alone when `off=` turns it off; a line under them says why (`ConfigSoloState`) | ours - the solo-character round's entries (numbered at its merge); the game stamps the champion into a save once (round doc 6a item 6) |
 | The study key (2026-10-22; the ini only, no control): the key that hides and shows the row above the text in play | `ruby_key=` in the ini - `f1`..`f12` (any case, written lower case, as `src/hook/input_script.cpp` names them) or `none` (no key); **`f4` by default**, a value the DLL would refuse dropped to it; always handed over as `BOF3X_RUBY_KEY` unless the environment sets it | ours - DIV-0155; [`reading-row.md`](reading-row.md) 3.5 |
 
 The game process inherits the launcher's environment, so the first two needed
@@ -570,7 +573,9 @@ show_launcher=1            # 0 starts the game straight away
 ```
 
 Since 2026-10-28 the file also has `off=` (section 3.2) and
-`preset=recommended` (section 3.3) after `psp=`.
+`preset=recommended` (section 3.3) after `psp=`; since 2026-11-12 `on=`
+(the behaviours, [`mods.md`](mods.md) 11) and `solo.champion=` (the solo
+character's champion, section 3) after `off=`.
 
 (The five-key example this replaced was the 2026-09-20 file.)
 

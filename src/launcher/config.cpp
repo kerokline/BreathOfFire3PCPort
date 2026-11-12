@@ -144,6 +144,15 @@ std::string Trim(const std::string& s) {
     return s.substr(b, e - b + 1);
 }
 
+// An environment variable's value, empty when it is not set.
+std::string EnvValue(const char* name) {
+    const DWORD n = GetEnvironmentVariableA(name, nullptr, 0);
+    if (n == 0) return std::string();
+    std::string v(n, '\0');
+    v.resize(GetEnvironmentVariableA(name, v.data(), n));
+    return v;
+}
+
 }  // namespace
 
 namespace {
@@ -197,6 +206,8 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
             cfg.off = value;
         } else if (key == "on") {  // BOF3X_ON: kept as written, the game refuses a name that is no behaviour
             cfg.on = value;
+        } else if (key == "solo.champion") {  // BOF3X_SOLO: kept as written, the game refuses a value that is no champion
+            cfg.solo_champion = value;
         } else if (key == "mods_off") {  // the Mods tab's unticked boxes: ids, kept as written
             cfg.mods_off = value;
         } else if (key == "preset") {  // the presets: a name of kPresets, else the default
@@ -377,6 +388,10 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# adds the behaviours it needs. A name that off= also gives stays off. Empty: only the mods' behaviours.\r\n";
     out += "# If a name is not a behaviour of this release, the game stops and shows a message\r\n";
     out += "on=" + cfg.on + "\r\n";
+    out += "# the solo character's champion (Game Options, Solo character; docs/solo-character-round.md):\r\n";
+    out += "# ryu | nina | garr | rei | momo | peco, or empty for none. The game gets it (BOF3X_SOLO) only\r\n";
+    out += "# while on= turns on SoloCharacter. A save keeps the champion that the game wrote into it first\r\n";
+    out += "solo.champion=" + cfg.solo_champion + "\r\n";
     out += "# the installed mods to keep off: their ids, comma-separated (the check boxes on the Mods tab,\r\n";
     out += "# docs/mods.md). A table-edit or disc-patch mod is on unless it is named here. Empty: none off\r\n";
     out += "mods_off=" + cfg.mods_off + "\r\n";
@@ -582,6 +597,19 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     } else if (!asks.empty()) {
         std::fprintf(stderr, "bof3x-launcher: BOF3X_ON is set in the environment, so the behaviours the mods need are "
                      "not added to it\n");
+    }
+
+    // The solo-character round (docs/solo-character-round.md 4): the champion,
+    // only while SoloCharacter is on as the game will read it - the BOF3X_ON
+    // and BOF3X_OFF it is given, set above or by the environment - so that
+    // BOF3X_SOLO is unset when the mode is off or no champion is chosen. The
+    // value as the ini has it: the game checks it. An environment's wins.
+    if (GetEnvironmentVariableW(L"BOF3X_SOLO", nullptr, 0) == 0 && !cfg.solo_champion.empty()) {
+        if (ConfigBehaviourOn(EnvValue("BOF3X_ON"), EnvValue("BOF3X_OFF"), kSoloBehaviour))
+            SetEnvironmentVariableA("BOF3X_SOLO", cfg.solo_champion.c_str());
+        else
+            std::fprintf(stderr, "bof3x-launcher: bof3x.ini's solo.champion=%s is not given to the game: the behaviour "
+                         "%s is off\n", cfg.solo_champion.c_str(), kSoloBehaviour);
     }
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
@@ -1181,6 +1209,54 @@ bool ConfigListTurnsOff(const std::string& list, const std::string& name) {
     return listed;
 }
 
+bool ConfigBehaviourOn(const std::string& on, const std::string& off, const std::string& name) {
+    return ConfigListTurnsOff(on, name) && !ConfigListTurnsOff(off, name);
+}
+
+std::string ConfigBehaviourEdit(const std::string& on, const std::string& name, bool want) {
+    if (name.empty() || ConfigListTurnsOff(on, name) == want) return on;
+    std::string out;
+    for (size_t at = 0; at <= on.size();) {   // the game's separators: ',' and ' ' (behaviour.cpp NextToken)
+        const size_t end = std::min(on.find_first_of(", ", at), on.size());
+        const std::string item = on.substr(at, end - at);
+        at = end + 1;
+        if (item.empty() || item == name || item == "-" + name) continue;
+        out += (out.empty() ? "" : ",") + item;
+    }
+    const bool now = ConfigListTurnsOff(out, name);   // a `*` turns it on
+    if (want && !now) out += (out.empty() ? "" : ",") + name;
+    else if (!want && now) out += ",-" + name;
+    return out;
+}
+
+int ConfigSoloChampionIndex(const std::string& id) {
+    for (size_t i = 0; i < std::size(kSoloChampions); ++i)
+        if (id == kSoloChampions[i].id) return static_cast<int>(i);
+    return -1;
+}
+
+SoloState ConfigSoloState(const Config& cfg, bool mode_ticked, const std::vector<std::string>* known) {
+    SoloState s;
+    s.mode = ConfigListTurnsOff(cfg.on, kSoloBehaviour);
+    s.if_present = ConfigListTurnsOff(cfg.on, kSoloIfPresentBehaviour);
+    const std::vector<std::string> release = known ? std::vector<std::string>() : ConfigBehavioursKnown();
+    const std::vector<std::string>& have = known ? *known : release;
+    if (!ConfigBehavioursMissing({kSoloBehaviour, kSoloIfPresentBehaviour}, have).empty()) {
+        s.why = L"This version of the game does not have the solo character rule.";
+    } else if (ConfigListTurnsOff(cfg.off, kSoloBehaviour)) {
+        s.why = L"off= in bof3x.ini turns off SoloCharacter. The rule stays off.";
+    } else {
+        s.mode_enabled = true;
+        s.choices_enabled = mode_ticked;
+        s.if_present_enabled = mode_ticked && !ConfigListTurnsOff(cfg.off, kSoloIfPresentBehaviour);
+        if (!mode_ticked)
+            s.why = L"Grey: turn on the solo character rule to change these settings.";
+        else if (!s.if_present_enabled)
+            s.why = L"off= in bof3x.ini turns off SoloChampionIfPresent. That setting stays off.";
+    }
+    return s;
+}
+
 std::string ConfigModOn(const std::vector<ModAsk>& asks, const std::string& playable, const std::string& on,
                         const std::string& off, std::vector<std::string>& said) {
     std::string out = on;
@@ -1528,7 +1604,7 @@ const char* IniVariable(std::string_view key) {
         {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
         {"cheat.steal", "BOF3X_STEAL"},   {"cheat.enemy_info", "BOF3X_ENEMY_INFO"},
         {"cheat.no_fail", "BOF3X_NO_FAIL"}, {"cheat.learn", "BOF3X_LEARN"},
-        {"desert_faerie", "BOF3X_DESERT_FAERIE"}};
+        {"desert_faerie", "BOF3X_DESERT_FAERIE"}, {"solo.champion", "BOF3X_SOLO"}};
     for (const auto& [k, v] : kFeeds)
         if (key == k) return v;
     return nullptr;
