@@ -635,20 +635,19 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **The Linux native round, PR #226 (frost's branch `linux/native` on his fork; reviewed and fixed 2026-11-11,
-  open).** State and what is owed: [`STATUS.md`](STATUS.md), "The Linux native round's groundwork"; the record is
-  [`linux-round.md`](linux-round.md) (LB1 as run, the narrow encoding, the walk's cost). **Next, in order:**
-  (1) after PR #225 merges, merge `main` into the branch - conflicts are expected in
-  `.github/workflows/checks.yml` (both add jobs), `CMakeLists.txt` (the link lines) and `src/audio/mp3.cpp` -
-  then both presets, `os_census.py --check` (regenerate `analysis/os_census.tsv`: PR #225's files are new to
-  it) and `--boundary`, `width_census.py --check`, and the hosted suite with `BOF3X_SHADOW='*'`; (2) the
-  state-hash routes not yet run, as an A/B against two runs of `main` (the `orig4` pairs are stale, item 15):
-  the chain is `D:\bof3x-runs\pr226fix\chain.sh <routes>` (it wants `Lbase` and `Ltip`, launcher copies of
-  the two builds); (3) the owner's play on Windows. **The rule the later units must keep** (LB8 above all): a
-  `char` name in the engine is the system's narrow encoding - the ANSI code page on Windows - and crosses to
-  and from a path only through `os::Path` and `os::Narrow`; `os::ToUtf8` / `os::ToWide`, `ExecutablePath` and
-  `ModulePath` are UTF-8 and never meet one. A new narrow-name call site gets a case in
-  `tools/os_host/os_tests.cpp` `TestNarrowNames` if it does anything the existing ones do not.
+- **The Linux native round, PR #229 (frost's PR #226 plus the review's commits, branch `linux/native-review`;
+  2026-11-11, open, `main` `ed444dec` merged in).** State and what was proven: [`STATUS.md`](STATUS.md), "The
+  Linux native round's groundwork"; the record is [`linux-round.md`](linux-round.md) (LB1 as run, the narrow
+  encoding, the walk's cost). **Next:** the owner's play on Windows, then the merge at the owner's word; PR #226
+  is closed by whoever merges #229. If `main` moves first, merge it in again and regenerate
+  `analysis/os_census.tsv` (the census counts the launcher's sites too, so any launcher change on `main` turns
+  the `os-host` job red on the merge ref until then). The state-hash A/B's scripts and runs are in
+  `D:\bof3x-runs\pr226fix` (`chain.sh <routes>`, `chain.log`; `Lbase` and `Ltip` are launcher copies of the
+  two builds). **The rule the later units must keep** (LB8 above all): a `char` name in the engine is the
+  system's narrow encoding - the process's ANSI code page on Windows - and crosses to and from a path only
+  through `os::Path` and `os::Narrow`; `os::ToUtf8` / `os::ToWide`, `ExecutablePath` and `ModulePath` are
+  UTF-8 and never meet one. A new narrow-name call site gets a case in `tools/os_host/os_tests.cpp`
+  `TestNarrowNames` if it does anything the existing ones do not.
 
 - **The save editor (2026-11-10, branch `launcher/save-editor`, DIV-0211, [`save-editor.md`](save-editor.md)).**
   The Mods tab's Save Editor... button and its dialog, for PC save files: every field from one table
@@ -1082,6 +1081,6 @@ _One line each, with a pointer. Add when something costs more than an hour._
   play checks and open calls. The owner has played a PSX-only install (the reports of 2026-10-16); nobody has
   played a PSP-only one.
 - **frost (raulcorreia7):** the Linux round's next units (L2 on, [`linux-round.md`](linux-round.md) 6) on his
-  fork; the review's commits sit on top of his four (PR #226's thread says where), so he takes them before he continues. The Linux side of
+  fork; the review's commits sit on top of his four on `linux/native-review` (PR #229), so he takes that branch before he continues. The Linux side of
   the seam (the POSIX backend under his native build) is his to run; here it is only `os_tests` in WSL and CI.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).
