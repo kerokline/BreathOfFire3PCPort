@@ -1,9 +1,10 @@
 # The New Game round: the name entry and the options screen back in the New Game sequence
 
-**Status:** STAGED (2026-11-12, on `new-game/staging` off `main` `01a67500`;
-IDEAS I34; nothing built, no agent launched, no game run. Section 1 is what
-earlier notes measured plus one reading of our own source made today; section
-3 is what nobody has measured, and runs first.)
+**Status:** STAGED, group M run (2026-11-12, on `new-game/staging` off `main`
+`01a67500`; IDEAS I34; nothing built, no game run. Section 3a is what the
+three read-only agents of group M measured, section 3b what that changes and
+the four new calls for the owner. Sections 4 to 9 are as first staged and
+are amended by 3b.)
 
 The owner (2026-11-12): stage a round for the character naming screen and the
 options menu at New Game. On the PlayStation, New Game asks for the hero's
