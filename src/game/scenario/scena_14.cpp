@@ -13,6 +13,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/solo/solo_scenes.h"  // DIV-0228: the scene guards
 
 namespace {
 
@@ -77,9 +78,14 @@ extern "C" void __cdecl Scena14_Party756(void) {
 // (0xA, 0xFF, 0xFF) and member 0xA alone; 0x533E00.
 extern "C" void __cdecl Scena14_SaveLeaveAllPartyA(void) {
     unsigned char ids[3];
+    // DIV-0228 SoloCharacter: a walker slot past the count is no member
+    // (0xFF), and with no member neither 7 nor 4 the saved byte is 0xFF
+    // rather than an earlier save's (solo_scenes.h). Off: the original.
+    const bool solo_scene = solo::Scene_Active();
+    if (solo_scene) At(::bof3::Img(at::kSaved))[0] = 0xFF;
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char id = MemberId(i);
-        if (id != 7 && id != 4) At(::bof3::Img(at::kSaved))[0] = id;
+        const unsigned char id = solo::Scene_MemberId(i, MemberId(i));
+        if (id != 7 && id != 4 && !(solo_scene && id == 0xFF)) At(::bof3::Img(at::kSaved))[0] = id;
         ids[i] = id;
     }
     for (unsigned char id : ids) Leave(id);
@@ -145,7 +151,9 @@ extern "C" void __cdecl Scena14_Party74First(void) {
 // too), the set (7, 8, 4) and member 7; 0x533E00.
 extern "C" void __cdecl Scena14_SaveLeaveAllParty7(void) {
     unsigned char* const saved = At(::bof3::Img(at::kSaved));
-    for (unsigned i = 0; i < 3; ++i) saved[i] = MemberId(i);
+    // DIV-0228 SoloCharacter: a walker slot past the count saves 0xFF, not the
+    // off record's stale +0x89 (solo_scenes.h). Off: the original.
+    for (unsigned i = 0; i < 3; ++i) saved[i] = solo::Scene_MemberId(i, MemberId(i));
     for (unsigned i = 0; i < 3; ++i) Leave(saved[i]);
     Set(7, 8, 4);
     Field_MemberCount = 0;
@@ -182,7 +190,9 @@ extern "C" void __cdecl Scena14_Party74Other(void) {
     unsigned i = 0;
     for (;;) {
         k = saved[i];
-        if (k != 7 && k != 4) break;
+        // DIV-0228 SoloCharacter: a 0xFF a folded save left is passed over as
+        // 7 and 4 are (solo_scenes.h); off, the original's test.
+        if (k != 7 && k != 4 && !solo::Scene_SavedNone(k)) break;
         if (++i >= 3) break;
     }
     Set(7, 4, k);
