@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 224 entries, DIV-0001..0224, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 226 entries, DIV-0001..0226, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16351,39 +16351,220 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 
-### An examining member always learns the enemy's skill: a Cheats switch
+### Select on the abilities menu gives the party the level skills they are past (a mod's)
 
 - **ID:** DIV-0224
 - **Date:** 2026-11-12
+- **Subsystem:** the camp menu's abilities screen - `FieldAbility_TopMenu`
+  `0x58D820` (`FieldAbility_States[2]`, `src/game/field/field_ability_2.cpp`),
+  with `AbilityList_ForType` `0x591EC0` (`src/game/menu/char.cpp`), the level
+  rows of `Char_ExpTable` that `Char_LevelUp` `0x498DE0` reads
+  (`src/game/field/char.cpp`); the behaviour `LevelSkillCatchUp`
+  ([`mods.md`](mods.md) 11); [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** the abilities screen's four-entry top turns its
+  cursor (sound `0x101`), then tests confirm and cancel. Select does nothing
+  there. A character learns a level row's two skills (row bytes `+6`, `+7`)
+  only in `Char_LevelUp`, for the rows of the levels gained
+  (`AbilityList_Add`: the first 0 slot of the type's list, no test for an id
+  already held). A row whose skills change after a character has passed its
+  level is never applied to that character.
+- **New behaviour:** with `LevelSkillCatchUp` on, every frame of the top,
+  after the cursor and before the confirm test, a press of Select
+  (`Input_Pressed` bit `0x100`) walks records 0..6 of `CharacterRecords`
+  and, for each, its level rows 0..level - 1 of `Char_ExpTable` (the
+  character's 99 rows of 8 bytes), and each row's two ability bytes: an id of
+  0 is skipped; an id whose ability type (`Ability_Records` byte `+0x11` & 3,
+  the byte `AbilityList_ForType` reads) is 3 is skipped; an id already in its
+  type's ten-slot list (`AbilityList_ForType(record, id, 0)`) is left; else
+  the first 0 slot takes it, and none free leaves it out. Then sound `0x10C`
+  if any id was filed, else `0x104`, and the top goes on to its confirm and
+  cancel tests with the same frame's press (a confirm in the same frame is
+  still taken). Nothing is redrawn or shown by the behaviour itself; the lists
+  are the saved records', so the next screen that draws them shows the new
+  skills. Odd, and mirrored: record 7 is never walked; records 0..6 are
+  walked whether or not the character has joined (`+0xB` bit 0 is not read);
+  row 0, which `Char_LevelUp` never applies (it applies the rows from the old
+  level up), is walked too; type-3 ids are never filed, though level-up files
+  them. Off, the function is the original's. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: START.EMI section 8 = STATUS.EMI section 0 (the same
+  bytes), the twin `0x801D7314`, its `0x801D7444` made a jump to new code at
+  `0x801E33E8` (the space of a function no US overlay calls) which reloads
+  the press, tests `0x100`, calls the walk at `0x801E342C` (its leaf at
+  `0x801E34E4`), calls the sound with `0x10C` or `0x104` by the count, and
+  jumps back to the confirm test at `0x801D744C`. The walk's record base, level
+  byte and list offsets are the US `AbilityList_ForType`'s own (boot EXE
+  `0x80166BF0`'s type byte read, the lists at the record's `+0x60` as on
+  the PC), so the PC's `AbilityList_ForType` serves.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it; it serves the mod's level-row
+  data edits (the new level skills), which a save past those levels would
+  otherwise never get.
+- **Also in the PSX version?** No - the release's top ignores Select, as the
+  PC's does; only the romhack adds it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the function runs the same statements as
+  before (the behaviour is asked before the press is read and is false), so
+  `rest_2e_fuzz.cpp`'s `FieldAbility_TopMenu` row compares as before; on,
+  a Select press also calls `AbilityList_ForType`, which that row's call
+  list does not name. **Not played:** nobody has pressed Select on the
+  abilities screen with the behaviour on.
+- **Reversible?** Partly - it is off unless a mod's `needs` or `on=` names
+  it; `BOF3X_OFF=LevelSkillCatchUp` keeps it off. The skills it files are in
+  the saved records, so a save made after a press keeps them with it off.
+- **Switch:** LevelSkillCatchUp
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active
+
+### A mod can give the party a warp to a visited town from the world map
+
+- **ID:** DIV-0225
+- **Date:** 2026-11-12
+- **Subsystem:** the field's idle frame and the field abilities -
+  `FieldAbility_Use` `0x58A3C0` (`src/game/field/field_ability.cpp`),
+  `FieldIdle_Tick` (ours, `src/game/field/field_7.cpp`, `field_idle.h`), the
+  choice commit (`CommitChoice`, `src/game/text/msg_box.cpp`), the chunk
+  walk (`TakeChunk` kind 21, `src/game/battle/dat_load.cpp`; `LoadDatFile`'s
+  `FIRST.DAT` tail, `src/game/battle/dragon_cmd.cpp`), the save block's
+  `+0x10AC` (`TownWarp_Visited`), `tools/disc_patch_build.py`, the save
+  editor's field table (`src/launcher/save/block.cpp`); the behaviour
+  `TownWarp` ([`mods.md`](mods.md) 11); [`town-warp.md`](town-warp.md),
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's choice, played only when a mod asks
+  for it
+- **Original behaviour:** ability `0x6F` has no field use: `FieldAbility_Use`
+  gives it handler 0, which answers 3 ("not here"), and no level step of the
+  release teaches it. The party goes from the world map into a town only by
+  walking onto the town's cell. The save block's last four bytes are never
+  addressed.
+- **New behaviour:** with `TownWarp` on, ability `0x6F` used from the field
+  menu on the world map with `Field_InputFlags` bit 5 clear answers 1 (the
+  menu's "used", the AP cost taken) and asks for the warp; anywhere else it
+  answers 3 as before. The next field frame with no tail armed on the world
+  map and no request pending opens the warp: `ScriptFlags_Set40`, a message
+  whose question and choice list are the mod's (the visited towns, 4 a page,
+  "more" when a fifth is visited, "cancel" always), opened as a script
+  message is. "More" shows the next page; "cancel" closes it with
+  `ScriptFlags_Clear40`; a town closes it, `ScriptFlags_Clear40`, and enters
+  the town as a walk from the world map does - the link's high bits 0,
+  `Field_ChangeArea` with the town's row (area, x, z, flags) from the mod's
+  table, `ModeFlow_AreaTransition` 0 and `Area_EnterTransition` `0xC`. The
+  visited towns are a 32-bit word at save block `+0x10AC` (PC `0x904A8C`):
+  each idle field frame off the world map sets bit `i` when the standing area
+  is town `i` of the mod's list; each idle field frame, when the party set
+  (`+0x74C`) is not `0xFF`, its low seven bits are at least 7 and not 12, and
+  bit 31 is clear, the word becomes bit 31 alone - every town forgotten,
+  once. The case order of the idle frame is the hack's: CampMasters,
+  TownWarp's forgetting, AllyAnywhere, TownWarp's recording or menu. The
+  question, labels, names and table are not in this repository: the mod's
+  build reads them from the patched disc on the player's machine into kind
+  21 of `FIRST.DAT` (tag 0 the table in `mod-<id>`, tag 1 the text, in the
+  PC's encoding, in `mod-<id>-<tag>`); the engine takes them only with the
+  behaviour on, checks their shape, and stops with a `Fatal` after
+  `FIRST.DAT`'s walk (at the title) when either is missing. The menu's state
+  is statics of ours: not in the save, cleared at every game's start, in the
+  quicksave participant `BEHAVIOURS` (version 4, with the page the box
+  reads); a record taken with the menu asked or open is refused when the
+  behaviour is off. Off, every site runs the original's path and the word is
+  never touched.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it. The hack's code, on the patched
+  US disc: START.EMI 8's field-ability handler table `0x801ED224` slot 0
+  made GAME `0x8019C304` (ability `0x6F` and the world-map test); GAME
+  `Field_ModeTailKinds` slot 0's chain reaching `0x801BB81C` (the
+  forgetting) and `0x8019C244` / `0x8019C2A8` (the recording; the open,
+  through `0x801B57F8`, which loads a file outside the disc's directory at
+  `0x80016000` by pointing MTEST's file entry at its LBA); that file's
+  `+0` (the menu, `MsgBox_Reset`, `Field_Request` 2, the standing
+  descriptor's `+0x34` pointed at its answer `0x800162C8`) and `+8` (the
+  menu's frame, `Field_ChangeArea` US `0x8019FA28`, then `0x80143F1E` 0 and
+  `0x80143F1D` `0x0C`, the bytes the release's world-map walk stores on a
+  town cell, GAME `0x801B1600..08`, whose PC twins `Field_LeaderStepLands`
+  stores the same). The mod's carried `exp_table` teaches `0x6F` at one
+  level step. Departures from the hack: no game data is written for the
+  answer (the hack writes the standing descriptor's `+0x34`; ours answers in
+  `CommitChoice`, the one reader, while the menu holds the box); the data
+  comes from the mod's layers at the title, not from a file loaded at the
+  use; the statics are cleared at a game's start (the hack's RAM bytes
+  survive a load from the menu).
+- **The save byte:** the visited word rides in the save at the hack's
+  offset (the owner's decision). A save made with the behaviour on and
+  loaded without it: the word is inert (nothing reads it), and with the
+  behaviour on again the list is as it was. A save made without it, loaded
+  with it: the word is 0 (a new game zeroes the block), so no town is listed
+  until one is entered. A memory-card conversion keeps the word both ways:
+  on the PlayStation it is the hack's own word with the same meaning, and
+  the release never reads it. The save editor shows it as an advanced field.
+- **Also in the PSX version?** No: no release has it. The romhack's patched
+  US disc has it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`; `disc_patch_build.py selftest` (synthetic code and text: the
+  parts read through the code's own loads, both payloads, the refusals);
+  the reader run on the real patched track offline (11 towns, the areas of
+  [`town-warp.md`](town-warp.md) 2); every point of the chain read from the
+  patched listings ([`town-warp.md`](town-warp.md) 1, 3). Off, the touched
+  functions' fuzz rows compare as before (ability `0x6F` takes handler 0, no
+  static of ours is set). **Not played:** nobody has warped with the
+  behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=TownWarp` keeps it off. The word stays in saves made with it.
+- **Switch:** TownWarp
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any - the menu's text is the mod's language layer's, which the launcher hands over under that language alone
+- **State:** active
+
+### An examining member always learns the enemy's skill: a Cheats switch
+
+- **ID:** DIV-0226
+- **Date:** 2026-11-12
 - **Subsystem:** battle, the learning of an enemy's skill -
-  `Battle_MemberRollByAction` `0x453910` and `Battle_MemberCoinFlip`
-  `0x453A10` (ours, `src/game/battle/dragon_cmd.cpp`), the two tests of
-  `Battle_PickFlag8Member` `0x4537A0`; the switch in
+  `Battle_MemberRollByAction` `0x453910` (ours,
+  `src/game/battle/dragon_cmd.cpp`), the test `Battle_PickFlag8Member`
+  `0x4537A0` asks for a skill that can be learned; the switch in
   `src/game/core/cheats.cpp`; the launcher's Cheats sub-tab, Page 2;
   [`cheats.md`](cheats.md) section 8.
 - **Tier:** Extension
 - **Original behaviour:** when an enemy acts, `Battle_PickFlag8Member` asks
-  each party member one of two tests - `Battle_MemberRollByAction` when bit 9
-  of the action record's u16 `+4` is set, else `Battle_MemberCoinFlip`. Both
-  refuse a member that is out, that does not watch (its `+0x130` bit 0), that
-  watches another actor (its `+0x124`) or whose list has no room
-  (`Battle_MemberListFull`); the first also refuses a skill the party knows
-  (`Battle_ActionBitSet`, the set `0x904088`). Then each rolls: the first
-  passes when `Rand` leaves no remainder by the odds of the skill's class
-  (the high nibble of the skill row's byte `0x65C4D9 + 0x18 id` into
-  `0x64F0FC`, or `0x64F104` for the character of index 6), the second on an
-  even `Rand`. One member that passes gets flag bit 3 and state 0xA, and
-  `Battle_SettleFlag8` files the skill in its list.
+  each party member one of two tests, by bit `0x200` of the action record's
+  u16 `+4` (`0x65C4DC + 0x18 id`) - the bit `BattleAction_AbilityNotice` and
+  `Battle_SettleFlag8` read as "can be learned". Set, the test is
+  `Battle_MemberRollByAction`: it refuses a member that is out, that does
+  not watch (its `+0x130` bit 0), that watches another actor (its `+0x124`),
+  a skill the party knows (`Battle_ActionBitSet`, the set `0x904088`) and a
+  member whose list has no room (`Battle_MemberListFull`), then passes when
+  `Rand` leaves no remainder by the odds of the skill's class (the high
+  nibble of the skill row's byte `0x65C4D9 + 0x18 id` into `0x64F0FC`, or
+  `0x64F104` for the character of index 6). Clear, the test is
+  `Battle_MemberCoinFlip` `0x453A10`, an even `Rand` after the same
+  refusals but the known-skill one. One member that passes gets flag bit 3
+  and state 0xA; `BattleAction_AbilityNotice` then shows system message
+  `0x24` for a skill that can be learned, which `Battle_SettleFlag8` files in
+  the member's list, and `0x23` for one that cannot.
 - **New behaviour:** with `BOF3X_LEARN=1` (`cheat.learn=1`, the box "Examine
-  always learns the skill that the enemy uses") both tests answer 1 after
-  their refusals, whatever `Rand` gave. `Rand` is still called once in each,
-  and the first still reads its odds (and still aborts on odds of 0), so the
-  random stream stands where it would have. Every refusal holds: a skill
-  that cannot be learned, one the party knows, a full list and a member that
-  does not watch the actor are as before, and with more than one member
-  watching `Battle_PickFlag8Member` still draws one. Off (the default),
-  nothing changes. The module stops the game at start when the switch is on
-  and either function is left as Capcom's (`BOF3X_ORIGINAL`).
+  always learns the skill that the enemy uses") `Battle_MemberRollByAction`
+  answers 1 after its refusals, whatever `Rand` gave. `Rand` is still called
+  once and the odds are still read (and odds of 0 still abort), so the
+  random stream stands where it would have. Every refusal holds: a skill the
+  party knows, a full list and a member that does not watch the actor are as
+  before, and with more than one member watching `Battle_PickFlag8Member`
+  still draws one. `Battle_MemberCoinFlip` is not touched: a skill that
+  cannot be learned gives its "cannot be learned" notice as often as before
+  (the owner's reading of the coin flip, 2026-11-12, confirmed by the bit;
+  the first build of this entry made it always pass, which only made that
+  notice certain). Off (the default), nothing changes. The module stops the
+  game at start when the switch is on and `Battle_MemberRollByAction` is
+  left as Capcom's (`BOF3X_ORIGINAL`).
 - **Rationale:** the owner's request, 2026-11-12: the "100% learn chance" of
   TheGreatBen's *Definitive Edition* romhack (issue 216) as a switch of our
   own on the Cheats page, for any install. The hack's readme lists it
@@ -16391,8 +16572,8 @@ designed in rather than bolted on.
   round's reading found no changed function for it, so it is data there
   (`disc-patch-round.md`). This switch is code of ours and needs no mod.
 - **Also in the PSX version?** No. The roll's twin is `0x800A7544` (not
-  read), the coin flip's `0x800A76E0`.
-- **Verification:** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0224 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` it differs in `Battle_MemberCoinFlip` alone, 175 of 3,000 rounds, result 0 / 1, log 3 / 3; 31 other functions at 0, `Battle_PickFlag8Member` among them (its tests are stand-ins there). `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberCoinFlip` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction and Battle_MemberCoinFlip ours, and one is disabled`. `ledger_check.py` and `ledger_switches.py --check` pass. **Not played:** nobody has learned a skill with the switch on, and the launcher's page has not been looked at.
+  read).
+- **Verification:** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build, `main` `2da78ec2` merged in). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0226 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` every function is at 0 mismatches, `Battle_MemberCoinFlip` among them. `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberRollByAction` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled`. `ledger_check.py`, `ledger_registry.py --check` and `ledger_switches.py --check` pass; `dialog_test.py` all ok. **Not played:** nobody has learned a skill with the switch on.
 - **Reversible?** Yes: the box off, `BOF3X_LEARN` unset. A skill learned
   with it on stays in the save.
 - **Switch:** ini:cheat.learn=0

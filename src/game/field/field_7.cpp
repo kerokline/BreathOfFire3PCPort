@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <type_traits>
+#include <utility>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
@@ -377,6 +378,281 @@ std::uint8_t g_master_pending = 0;
 std::uint8_t g_master_active = 0;
 std::uint8_t g_master_swapped = 0;
 std::uint8_t g_master_home = 0;
+std::uint8_t g_warp_asked = 0;
+std::uint8_t g_warp_open = 0;
+std::uint8_t g_warp_page = 0;
+std::uint8_t g_warp_rebuild = 0;
+std::uint8_t g_warp_chosen = 0;
+std::uint8_t g_warp_choice = 0;
+
+}  // namespace field_idle
+
+namespace {
+
+// --- DIV-0225 TownWarp: the mod's data and the menu (docs/town-warp.md) ------
+
+// The visited word: save block +0x10AC (PSX 0x80145984), the hack's offset.
+// TownWarp_Visited (symbols.toml); bits 0..30 the towns, bit 31 "forgotten".
+constexpr std::uint32_t kWarpForgotten = 0x80000000u;
+constexpr unsigned kWarpMaxTowns = 31;
+constexpr unsigned kWarpPage = 4;            // names a page (the hack's sltiu 4; "more" adds 4)
+constexpr unsigned kWarpEntries = kWarpPage + 2;   // the names, "more", "cancel"
+constexpr unsigned char kWarpMore = 0xFE, kWarpCancel = 0xFF;   // the hack's entry ids
+constexpr unsigned kAreaCount = 200;         // Area_Descriptors' pointers (camp-masters.md 2)
+constexpr unsigned char kChoiceCode = 0x14;  // the message's choice control (msg_box.cpp MsgBox_StatePrint)
+constexpr std::uint32_t kWarpTextRoom = 0x800;     // the text chunk kept whole
+constexpr std::uint32_t kWarpMessageRoom = 0x400;  // a page built
+// The box's message word (PSX 0x801490A8): 0 as a script message opens it,
+// 0xFFFF "no message follows" from a choice handler (item_use_callees.h kMessage).
+constexpr ::bof3::image::Va kWarpMessageWord{0x7DEE48};
+
+struct WarpRow {
+    std::uint16_t town, area, flags;
+    std::int32_t x, z;
+};
+
+WarpRow g_warp_rows[kWarpMaxTowns];
+unsigned g_warp_towns = 0;                   // the table's n; 0 until tag 0 is taken
+unsigned char g_warp_text[kWarpTextRoom];    // tag 1's payload, whole
+std::uint32_t g_warp_text_bytes = 0;         // 0 until tag 1 is taken
+unsigned g_warp_text_towns = 0;
+const unsigned char* g_warp_header = nullptr;   // the question, ending in its choice control
+std::uint32_t g_warp_header_bytes = 0;
+const unsigned char* g_warp_label[2] = {};      // "more", "cancel", with their NUL
+std::uint32_t g_warp_label_bytes[2] = {};
+const unsigned char* g_warp_name[kWarpMaxTowns] = {};
+std::uint32_t g_warp_name_bytes[kWarpMaxTowns] = {};
+
+// The page as built (the hack's buffer 0x80017000 and its entry ids
+// 0x80016F10): the box reads the bytes from Msgbox_Base, so they are saved
+// with the quicksave.
+unsigned char g_warp_message[kWarpMessageRoom];
+std::uint32_t g_warp_message_bytes = 0;
+unsigned char g_warp_ids[kWarpEntries];
+std::uint8_t g_warp_count = 0;
+
+std::uint16_t U16(const std::uint8_t* p) { return static_cast<std::uint16_t>(p[0] | (p[1] << 8)); }
+
+std::int32_t S32(const std::uint8_t* p) {
+    return static_cast<std::int32_t>(static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
+                                     (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24));
+}
+
+void WarpTakeTable(const std::uint8_t* p, std::uint32_t size) {
+    if (size < 2 || p[0] != 1)
+        bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 0 is not version 1 (%u bytes)", static_cast<unsigned>(size));
+    const unsigned n = p[1];
+    if (n < 1 || n > kWarpMaxTowns || size != 2 + 16u * n)
+        bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 0 holds %u towns in %u bytes (1..%u towns, 16 bytes each)", n,
+                    static_cast<unsigned>(size), kWarpMaxTowns);
+    for (unsigned i = 0; i < n; ++i) {
+        const std::uint8_t* r = p + 2 + 16 * i;
+        WarpRow row{U16(r), U16(r + 2), U16(r + 4), S32(r + 8), S32(r + 12)};
+        if (U16(r + 6) != 0 || row.area >= kAreaCount || row.town >= kAreaCount)
+            bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 0 row %u is not a town and an area below %u", i, kAreaCount);
+        g_warp_rows[i] = row;
+    }
+    g_warp_towns = n;
+}
+
+void WarpTakeText(const std::uint8_t* p, std::uint32_t size) {
+    if (size < 2 || size > kWarpTextRoom || p[0] != 1)
+        bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 1 is not version 1 within 0x%X bytes (0x%X bytes)",
+                    static_cast<unsigned>(kWarpTextRoom), static_cast<unsigned>(size));
+    const unsigned n = p[1];
+    if (n < 1 || n > kWarpMaxTowns) bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 1 names %u towns", n);
+    std::memcpy(g_warp_text, p, size);
+    std::uint32_t at = 2;
+    for (unsigned s = 0; s < n + 3; ++s) {
+        if (at + 2 > size) bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 1 ends inside string %u", s);
+        const std::uint32_t len = U16(g_warp_text + at);
+        const unsigned char* str = g_warp_text + at + 2;
+        if (at + 2 + len > size) bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 1 string %u runs past the chunk", s);
+        if (s == 0) {
+            // The question: text, then its 4-byte choice control with no
+            // entry yet; no NUL (the hack copies it as a C string).
+            if (len < 5 || str[len - 4] != kChoiceCode || (str[len - 1] & 0x0F) != 0 || std::memchr(str, 0, len))
+                bof3::Fatal("DIV-0225 TownWarp: the question (kind 21 tag 1) does not end in an empty choice control");
+            g_warp_header = str;
+            g_warp_header_bytes = len;
+        } else {
+            if (len < 2 || str[len - 1] != 0 || std::memchr(str, 0, len - 1))
+                bof3::Fatal("DIV-0225 TownWarp: string %u of kind 21 tag 1 is not one string with its NUL", s);
+            if (s <= 2) {
+                g_warp_label[s - 1] = str;
+                g_warp_label_bytes[s - 1] = len;
+            } else {
+                g_warp_name[s - 3] = str;
+                g_warp_name_bytes[s - 3] = len;
+            }
+        }
+        at += 2 + len;
+    }
+    if (at != size) bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag 1 has 0x%X bytes past its strings", static_cast<unsigned>(size - at));
+    g_warp_text_towns = n;
+    g_warp_text_bytes = size;
+}
+
+void SetMessageWord(unsigned v) { move_script::SetWord(move_script::At(::bof3::Img(kWarpMessageWord.v)), v); }
+
+// The hidden file's page build (0x80016074): the question, then the visited
+// towns after the `page` first, 4 at most; a fifth adds "more" and stops;
+// "cancel" always; the control's last byte the entry count | 0x10 (the list
+// form). The box is opened on it as a script message is: both pointers, the
+// message word 0, MsgBox_Reset, Field_Request 2. The hack also points the
+// standing descriptor's +0x34 at its answer (skipped for a null descriptor);
+// ours marks the box the menu's (TownWarpChoice).
+void WarpBuildPage() {
+    unsigned char* const out = g_warp_message;
+    std::memcpy(out, g_warp_header, g_warp_header_bytes);
+    std::uint32_t used = g_warp_header_bytes;
+    const auto put = [&](const unsigned char* s, std::uint32_t n) {
+        if (used + n > kWarpMessageRoom)
+            bof3::Fatal("DIV-0225 TownWarp: a page of 0x%X bytes; the room is 0x%X", static_cast<unsigned>(used + n),
+                        static_cast<unsigned>(kWarpMessageRoom));
+        std::memcpy(out + used, s, n);
+        used += n;
+    };
+    const std::uint32_t visited = TownWarp_Visited;
+    unsigned skip = field_idle::g_warp_page, k = 0;
+    for (unsigned i = 0; i < g_warp_towns; ++i) {
+        if (((visited >> i) & 1u) == 0) continue;
+        if (skip != 0) {
+            --skip;
+            continue;
+        }
+        if (k >= kWarpPage) {
+            g_warp_ids[k++] = kWarpMore;
+            put(g_warp_label[0], g_warp_label_bytes[0]);
+            break;
+        }
+        g_warp_ids[k++] = static_cast<unsigned char>(i);
+        put(g_warp_name[i], g_warp_name_bytes[i]);
+    }
+    g_warp_ids[k++] = kWarpCancel;
+    put(g_warp_label[1], g_warp_label_bytes[1]);
+    out[g_warp_header_bytes - 1] = static_cast<unsigned char>(k | 0x10);
+    g_warp_count = static_cast<std::uint8_t>(k);
+    g_warp_message_bytes = used;
+    field_idle::g_warp_choice = 1;
+    Msgbox_Base = Low32(out);
+    MenuWindows_ListText = Low32(out);
+    SetMessageWord(0);
+    SH_CALL(MsgBox_Reset)();
+    Field_Request = 2;
+}
+
+// The hidden file's +0 (0x8001602C): page, rebuild and chosen 0,
+// ScriptFlags_Set40, the first page, the menu open.
+void WarpOpen() {
+    field_idle::g_warp_page = 0;
+    field_idle::g_warp_rebuild = 0;
+    field_idle::g_warp_chosen = 0;
+    field_idle::g_warp_choice = 0;
+    SH_CALL(ScriptFlags_Set40)();
+    WarpBuildPage();
+    field_idle::g_warp_open = 1;
+    bof3::Log("DIV-0225    TownWarp: the menu opens in area %u (visited 0x%08X)", static_cast<unsigned>(Game_AreaNumber),
+              static_cast<unsigned>(TownWarp_Visited));
+}
+
+// The hidden file's +8 (0x800161E0), each idle world-map frame while the
+// menu is open: nothing while the box is up; then the box no longer the
+// menu's; "more" builds the next page; else the menu closes,
+// ScriptFlags_Clear40, and a chosen town is entered as the world map's walk
+// enters one (field_4.cpp Field_LeaderStepLands on a 0xAF cell): the link's
+// high bits 0 (SharedScratch +1, Area_LinkAt's; PSX scratchpad 0x1F800001),
+// Field_ChangeArea with the town's row, then ModeFlow_AreaTransition 0 and
+// Area_EnterTransition 0xC (PSX 0x80143F1E, 0x80143F1D).
+void WarpStep() {
+    if (Field_Request == 2) return;
+    field_idle::g_warp_choice = 0;
+    if (field_idle::g_warp_rebuild != 0) {
+        field_idle::g_warp_rebuild = 0;
+        WarpBuildPage();
+        return;
+    }
+    field_idle::g_warp_open = 0;
+    SH_CALL(ScriptFlags_Clear40)();
+    if (field_idle::g_warp_chosen == 0) return;
+    const unsigned town = field_idle::g_warp_chosen - 1u;
+    field_idle::g_warp_chosen = 0;
+    if (town >= g_warp_towns) bof3::Fatal("DIV-0225 TownWarp: town %u chosen of %u", town, g_warp_towns);
+    const WarpRow& row = g_warp_rows[town];
+    SharedScratch.b_01 = 0;
+    SH_CALL(Field_ChangeArea)(row.area, row.x, row.z, row.flags);
+    ModeFlow_AreaTransition = 0;
+    Area_EnterTransition = 0xC;
+    bof3::Log("DIV-0225    TownWarp: town %u, area %u at (%#x, %#x), flags %u", town, static_cast<unsigned>(row.area),
+              static_cast<unsigned>(row.x), static_cast<unsigned>(row.z), static_cast<unsigned>(row.flags));
+}
+
+void WarpNeedsData() {
+    if (g_warp_towns == 0 || g_warp_text_bytes == 0)
+        bof3::Fatal("DIV-0225 TownWarp is on, and the mod's town-warp data was not taken (FIRST.DAT kind 21; "
+                    "docs/town-warp.md 4)");
+}
+
+}  // namespace
+
+namespace field_idle {
+
+void TownWarpTake(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    if (!bof3::BehaviourOn(bof3::behaviours::Id::TownWarp)) return;   // passed over, as any kind we do not use
+    if (tag == 0) WarpTakeTable(payload, size);
+    else if (tag == 1) WarpTakeText(payload, size);
+    else bof3::Fatal("DIV-0225 TownWarp: FIRST.DAT kind 21 tag %u; this build knows tags 0 and 1", static_cast<unsigned>(tag));
+}
+
+void TownWarpFirstLoaded() {
+    if (!bof3::BehaviourOn(bof3::behaviours::Id::TownWarp)) return;
+    if (g_warp_towns == 0)
+        bof3::Fatal("DIV-0225 TownWarp is on, and FIRST.DAT has no town-warp table (kind 21 tag 0, the mod's layer "
+                    "mod-<id>): build the mod again with this release, with TownWarp in its needs (docs/town-warp.md 4)");
+    if (g_warp_text_bytes == 0)
+        bof3::Fatal("DIV-0225 TownWarp is on, and FIRST.DAT has no town-warp text (kind 21 tag 1, the mod's language "
+                    "layer mod-<id>-<tag>): build the mod again with this release, and play it in its disc's language "
+                    "(docs/town-warp.md 4)");
+    if (g_warp_text_towns != g_warp_towns)
+        bof3::Fatal("DIV-0225 TownWarp: the mod's table names %u towns and its text %u", g_warp_towns, g_warp_text_towns);
+    // The longest page: the question, the four longest names, both labels.
+    std::uint32_t longest[kWarpPage] = {};
+    for (unsigned i = 0; i < g_warp_towns; ++i) {
+        std::uint32_t b = g_warp_name_bytes[i];
+        for (unsigned j = 0; j < kWarpPage; ++j)
+            if (b > longest[j]) std::swap(b, longest[j]);
+    }
+    std::uint32_t page = g_warp_header_bytes + g_warp_label_bytes[0] + g_warp_label_bytes[1];
+    for (const std::uint32_t b : longest) page += b;
+    if (page > kWarpMessageRoom)
+        bof3::Fatal("DIV-0225 TownWarp: the mod's longest page is 0x%X bytes; the room is 0x%X", static_cast<unsigned>(page),
+                    static_cast<unsigned>(kWarpMessageRoom));
+    bof3::Log("DIV-0225    TownWarp: the mod's table and text taken, %u towns", g_warp_towns);
+}
+
+unsigned char TownWarpUse() {
+    if ((Field_InputFlags & 0x21) != 1) return 3;
+    g_warp_asked = 1;
+    return 1;
+}
+
+bool TownWarpChoice() { return g_warp_choice != 0 && bof3::BehaviourOn(bof3::behaviours::Id::TownWarp); }
+
+void TownWarpAnswer() {
+    const auto k = static_cast<signed char>(AreaW0c_ChoiceAnswer);
+    if (k >= 0) {
+        if (static_cast<unsigned>(k) >= g_warp_count)
+            bof3::Fatal("DIV-0225 TownWarp: answer %d of a menu of %u entries", k, static_cast<unsigned>(g_warp_count));
+        const unsigned char e = g_warp_ids[k];
+        if (e == kWarpMore) {
+            g_warp_page = static_cast<std::uint8_t>(g_warp_page + kWarpPage);
+            g_warp_rebuild = 1;
+        } else if (e != kWarpCancel) {
+            g_warp_chosen = static_cast<std::uint8_t>(e + 1);
+        }
+    }
+    SetMessageWord(0xFFFF);
+}
 
 }  // namespace field_idle
 
@@ -416,6 +692,15 @@ void ClearAtStart() {
     g_master_swapped = 0;
     g_master_home = 0;
     g_master_saved_bytes = 0;
+    // DIV-0225: the menu's state; the mod's data stays (it is the title's).
+    g_warp_asked = 0;
+    g_warp_open = 0;
+    g_warp_page = 0;
+    g_warp_rebuild = 0;
+    g_warp_chosen = 0;
+    g_warp_choice = 0;
+    g_warp_count = 0;
+    g_warp_message_bytes = 0;
 }
 
 unsigned short TextArea(unsigned short standing) {
@@ -477,7 +762,7 @@ namespace {
 // The quicksave participant "BEHAVIOURS" (docs/quicksave.md 5): the statics
 // above, a byte copy each. A behaviour that adds a static adds it here and
 // raises the version.
-constexpr std::uint32_t kBehavioursVersion = 3;   // 2: DIV-0218's counter; 3: DIV-0223's talk and its saved bytes
+constexpr std::uint32_t kBehavioursVersion = 4;   // 2: DIV-0218's counter; 3: DIV-0223's talk and its saved bytes; 4: DIV-0225's menu and its page
 
 void BehavioursSave(bof3::SnapshotWriter& w) {
     w.Put(kBehavioursVersion);
@@ -490,6 +775,16 @@ void BehavioursSave(bof3::SnapshotWriter& w) {
     w.Put(field_idle::g_master_home);
     w.Put(g_master_saved_bytes);
     w.Put(g_master_saved, g_master_saved_bytes);
+    w.Put(field_idle::g_warp_asked);
+    w.Put(field_idle::g_warp_open);
+    w.Put(field_idle::g_warp_page);
+    w.Put(field_idle::g_warp_rebuild);
+    w.Put(field_idle::g_warp_chosen);
+    w.Put(field_idle::g_warp_choice);
+    w.Put(g_warp_count);
+    w.Put(g_warp_ids, sizeof g_warp_ids);
+    w.Put(g_warp_message_bytes);
+    w.Put(g_warp_message, g_warp_message_bytes);
 }
 
 void BehavioursRestore(bof3::SnapshotReader& r) {
@@ -514,6 +809,33 @@ void BehavioursRestore(bof3::SnapshotReader& r) {
     field_idle::g_master_home = home;
     g_master_saved_bytes = bytes;
     r.Get(g_master_saved, bytes);
+    // DIV-0225: the menu's state and the page the box reads (Msgbox_Base
+    // points into it while the menu is up).
+    const auto asked = r.Get<std::uint8_t>();
+    const auto open = r.Get<std::uint8_t>();
+    const auto page = r.Get<std::uint8_t>();
+    const auto rebuild = r.Get<std::uint8_t>();
+    const auto chosen = r.Get<std::uint8_t>();
+    const auto choice = r.Get<std::uint8_t>();
+    const auto count = r.Get<std::uint8_t>();
+    unsigned char ids[kWarpEntries];
+    r.Get(ids, sizeof ids);
+    const auto message = r.Get<std::uint32_t>();
+    if (message > kWarpMessageRoom || count > kWarpEntries)
+        bof3::Fatal("snapshot: BEHAVIOURS' record holds a town-warp page of 0x%X bytes and %u entries", static_cast<unsigned>(message),
+                    static_cast<unsigned>(count));
+    if ((asked | open | rebuild | chosen | choice) != 0 && !bof3::BehaviourOn(bof3::behaviours::Id::TownWarp))
+        bof3::Fatal("snapshot: taken while the town warp was asked for or open (DIV-0225), and TownWarp is off");
+    field_idle::g_warp_asked = asked;
+    field_idle::g_warp_open = open;
+    field_idle::g_warp_page = page;
+    field_idle::g_warp_rebuild = rebuild;
+    field_idle::g_warp_chosen = chosen;
+    field_idle::g_warp_choice = choice;
+    g_warp_count = count;
+    std::memcpy(g_warp_ids, ids, sizeof ids);
+    g_warp_message_bytes = message;
+    r.Get(g_warp_message, message);
 }
 
 }  // namespace
@@ -539,6 +861,17 @@ void FieldIdle_Tick() {
         AreaW0c_TailState = 0;
         AreaW0c_TailSub = static_cast<unsigned char>(chosen - 1);
     }
+    // DIV-0225 TownWarp (PSX 0x801BB81C): the towns forgotten, once - when the
+    // party set (save block +0x74C) is not 0xFF and its low seven bits are at
+    // least 7 and not 12, and the word's bit 31 is clear, the word becomes
+    // bit 31 alone. The hack's story lock; the chain goes on.
+    const bool warp = bof3::BehaviourOn(bof3::behaviours::Id::TownWarp);
+    if (warp) {
+        WarpNeedsData();
+        const unsigned char set = AreaW0b_PartySet;
+        if (set != 0xFF && (set & 0x7F) != 0xC && (set & 0x7F) >= 7 && (TownWarp_Visited & kWarpForgotten) == 0)
+            TownWarp_Visited = kWarpForgotten;
+    }
     // DIV-0217 AllyAnywhere (PSX 0x801B5860): the member change the camp menu
     // let through off the world map. With the flag set and no request
     // pending, the flag is cleared and Field_Request 6 raised - the request
@@ -551,6 +884,34 @@ void FieldIdle_Tick() {
         Field_Request = 6;
         return;
     }
+    if (!warp) return;
+    // DIV-0225 TownWarp (PSX 0x8019C244, 0x8019C2A8). Off the world map
+    // (Field_InputFlags bit 0 clear): the first town whose area is the
+    // standing one gets its visited bit. On the world map: the open menu's
+    // frame; else a use of the ability waiting - dropped when bit 5 is set
+    // (or bit 0 clear), kept while a request is pending, else the menu opens.
+    const unsigned char flags = Field_InputFlags;
+    if ((flags & 1) == 0) {
+        for (unsigned i = 0; i < g_warp_towns; ++i) {
+            if (Game_AreaNumber == g_warp_rows[i].town) {
+                TownWarp_Visited = TownWarp_Visited | (1u << i);
+                break;
+            }
+        }
+        return;
+    }
+    if (field_idle::g_warp_open != 0) {
+        WarpStep();
+        return;
+    }
+    if (field_idle::g_warp_asked == 0) return;
+    if ((flags & 0x21) != 1) {
+        field_idle::g_warp_asked = 0;
+        return;
+    }
+    if (Field_Request != 0) return;
+    field_idle::g_warp_asked = 0;
+    WarpOpen();
 }
 
 // original 0x56D930 (slot 4): 0 - Field_ScriptFlags2 |= 7, LoadDatFile(0x31C),

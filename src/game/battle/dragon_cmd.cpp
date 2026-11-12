@@ -25,6 +25,7 @@
 #include "game/config_text.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/field/field_idle.h"   // DIV-0225: TownWarpFirstLoaded
 #include "game/fishing_text.h"
 #include "game/labels.h"
 #include "game/language_tags.h"
@@ -2481,7 +2482,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
 // by 0x904B40's word +2; 0x64F104 when the member's character index
 // (Character_IndexById 0x66972C by its +0x89) is 6, else 0x64F0FC). The original divides by the
 // odds unchecked: ours aborts on 0.
-// DIVERGENCE DIV-0224 (src/game/core/cheats.cpp): under BOF3X_LEARN=1 the
+// DIVERGENCE DIV-0226 (src/game/core/cheats.cpp): under BOF3X_LEARN=1 the
 // answer is 1 whatever the roll; Rand is called and the odds are read as
 // before.
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
@@ -2501,23 +2502,20 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
         bof3::Fatal("Battle_MemberRollByAction: the odds for action 0x%X (nibble %u of 0x%X) are 0 - the original divides by "
                     "them (docs/battle_e6.md section 7)",
                     id, nibble, (unsigned)table);
-    if (Cheats_LearnAlways()) return 1;   // DIV-0224
+    if (Cheats_LearnAlways()) return 1;   // DIV-0226
     return (static_cast<unsigned>(roll % static_cast<int>(odds)) & 0xFF) == 0 ? 1 : 0;
 }
 
 // original 0x453A10 (0x800A76E0; PSX 0x800A76E0): 0 if member `i` is out, lacks flag bit 0,
 // its byte +0x124 is not the acting actor, or 0x453AC0 says so; else a coin
 // flip, 1 on an even Rand (the signed remainder's low byte tested).
-// DIVERGENCE DIV-0224: under BOF3X_LEARN=1 the answer is 1 whatever the flip.
 extern "C" unsigned char __cdecl Battle_MemberCoinFlip(unsigned i) {
     if (battle_sprites::g.actor_out(i)) return 0;
     unsigned char* const p = Party(i & 0xFFu);
     if (!(p[0x130] & 1)) return 0;
     if (p[0x124] != battle_sprites::At(::bof3::Img(battle_sprites::at::kActor.v))[0]) return 0;
     if (battle_sprites::g.slots_full(i)) return 0;
-    const int flip = battle_sprites::g.rand();
-    if (Cheats_LearnAlways()) return 1;   // DIV-0224
-    return flip % 2 == 0 ? 1 : 0;
+    return battle_sprites::g.rand() % 2 == 0 ? 1 : 0;
 }
 
 // original 0x453A90 (PSX 0x800A77B4): bit (action & 31) of the dword 0x904088 + 4 (action >> 5)
@@ -2945,11 +2943,12 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 19, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 21, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
 //     DIV-0038, DIV-0064, DIV-0069, DIV-0148, kind 18 the reading row's,
-//     docs/reading-row.md 3, taken only from an optional layer, and kind 19
-//     DIV-0203's corrected text block);
+//     docs/reading-row.md 3, taken only from an optional layer, kind 19
+//     DIV-0203's corrected text block, and kind 21 DIV-0225's town warp,
+//     taken only with TownWarp on; kind 20 is read by the launcher alone);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -2992,7 +2991,12 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
     }
     // DIV-0147: the quick menu's text is the title's load menu's, kept from
     // the title's pool (a battle's pool has other messages at its ids).
-    if (_stricmp(name, "FIRST.DAT") == 0) bof3::QuickMenu_TitlePoolLoaded();
+    if (_stricmp(name, "FIRST.DAT") == 0) {
+        bof3::QuickMenu_TitlePoolLoaded();
+        // DIV-0225: TownWarp on needs the mod's kind-21 chunks, which FIRST.DAT's
+        // layers carry; without them the game stops here, at the title.
+        field_idle::TownWarpFirstLoaded();
+    }
 }
 
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)
@@ -3146,11 +3150,11 @@ void DragonCmd_Inject() {
     BOF3_INJECT(Battle_PickFlag8Member);
     BOF3_INJECT(Battle_MemberRollByAction);
     BOF3_INJECT(Battle_MemberCoinFlip);
-    // DIV-0224 answers in these two; Capcom's bodies would roll as before and
-    // the cheat would be silently off. After the bind: IsEnabled answers "not
-    // ours" for a function no Inject has named yet.
-    if (Cheats_LearnAlways() && (!bof3::IsEnabled(bof3::addr::Battle_MemberRollByAction) || !bof3::IsEnabled(bof3::addr::Battle_MemberCoinFlip)))
-        bof3::Fatal("BOF3X_LEARN=1 needs Battle_MemberRollByAction and Battle_MemberCoinFlip ours, and one is disabled");
+    // DIV-0226 answers in Battle_MemberRollByAction; Capcom's body would roll
+    // as before and the cheat would be silently off. After the bind: IsEnabled
+    // answers "not ours" for a function no Inject has named yet.
+    if (Cheats_LearnAlways() && !bof3::IsEnabled(bof3::addr::Battle_MemberRollByAction))
+        bof3::Fatal("BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled");
     BOF3_INJECT(Battle_ActionBitSet);
     BOF3_INJECT(Battle_MemberListFull);
     BOF3_INJECT(Battle_SettleFlag8);

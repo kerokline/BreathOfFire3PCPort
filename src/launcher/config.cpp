@@ -414,7 +414,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046);\r\n";
     out += "# enemy_info 1 shows every enemy's HP gauge and Identify stats, bosses too (DIV-0187);\r\n";
     out += "# no_fail 1: every minigame ends in a win, and a minigame with a score gives its best prize (DIV-0188);\r\n";
-    out += "# learn 1: a member that watches an enemy always learns the skill the enemy uses (DIV-0224)\r\n";
+    out += "# learn 1: a member that watches an enemy always learns the skill the enemy uses (DIV-0226)\r\n";
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
     out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";

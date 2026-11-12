@@ -27,7 +27,10 @@ its build step, run by `mods.py build` and by setup on the player's machine:
      are the mod's: a byte in a table that is a file becomes a cell of
      `mod-<id>`'s exe/tables.toml, any other a raw range of its exe/place.toml
      where the install's image lets a layer write there;
-  6. both layers into <cache>/opt/, and their manifest rows returned.
+  6. both layers into <cache>/opt/, and their manifest rows returned;
+  7. for a mod whose `needs` names TownWarp (DIV-0225, docs/town-warp.md 4),
+     the town warp's table and text, read from its file outside the disc's
+     directory, as kind 21 of each layer's FIRST.DAT.
 
 Nothing about a section's format is learned here: the importer's transforms
 and loc_build.py do the reading. The patched disc is never handed to either
@@ -729,6 +732,181 @@ def outside_sections(disc, lba):
     return emi_sections(disc.extent(lba, n * SECTOR))
 
 
+# ---------------------------------------------------------------- TownWarp's data (DIV-0225)
+#
+# docs/town-warp.md 4. The Definitive Edition romhack keeps its town warp's
+# question, labels, place names and destination table in a file outside the
+# disc's directory whose one section loads at 0x80016000, and the towns' area
+# ids in the patched GAME.EMI section 0. Behaviour TownWarp (ours) needs them
+# from the player's own build, never from this repository: kind 21 of the
+# mod's FIRST.DAT, tag 0 the table (the first layer), tag 1 the text (the
+# language's layer). The reader is bound to that hack's code: each address is
+# taken from the instruction that loads it, at a fixed offset, with the
+# instruction's opcode and registers checked, and the town count from both
+# loops' bounds; anything else is refused. Numbers only here; the bytes read
+# are the hack author's and stay in the player's cache.
+
+WARP_DEST = 0x80016000              # the warp file's section (its +0 opens the menu, +8 is its frame)
+WARP_KIND = 21                      # the chunk kind (src/game/battle/dat_load.cpp TakeChunk)
+WARP_TABLE_TAG, WARP_TEXT_TAG = 0, 1
+WARP_VERSION = 1
+WARP_ROW = 16                       # a table row as carried: town area, destination area, flags, 0, x, z
+WARP_MAX_TOWNS = 31                 # the visited word's bits 0..30 (bit 31 marks "forgotten")
+WARP_NAME = "TownWarp"              # the behaviour that reads it (mods.md 11)
+GAME_TOWNS = 0x8019C244             # GAME section 0: the visited-town recorder
+CHOICE_CODE = 0x14                  # the message's choice control (tools/loc_build.py CHOICE)
+_A0, _T3, _T4, _T5, _T6, _T7, _A1, _A2, _A3 = 4, 11, 12, 13, 14, 15, 5, 6, 7
+_LUI, _ADDIU, _SLTIU, _LW, _LHU = 0x0F, 0x09, 0x0B, 0x23, 0x25
+# (offset in the warp section, opcode, rt, rs) of each load the reader takes a
+# number from; a `lui` is checked by its rt alone.
+WARP_LOADS = {
+    "header": ((0x8C, _LUI, _A0, 0), (0x94, _ADDIU, _A0, _A0)),     # the question
+    "names": ((0x100, _LUI, _A0, 0), (0x108, _LW, _A0, _A0)),       # the names' pointer table
+    "more": ((0x130, _LUI, _A0, 0), (0x138, _ADDIU, _A0, _A0)),
+    "cancel": ((0x150, _LUI, _A0, 0), (0x158, _ADDIU, _A0, _A0)),
+    "rows": ((0x27C, _LUI, _T3, 0), (0x284, _ADDIU, _T3, _T3)),     # the destination table
+}
+WARP_COUNT = (0xB0, _SLTIU, _T5, _T3)                               # the page loop's bound
+WARP_FIELDS = ((0x288, _LHU, _A0, 0), (0x28C, _LHU, _A3, 2), (0x290, _LW, _A1, 4), (0x294, _LW, _A2, 8))
+WARP_STRIDE = ((0x270, 1), (0x278, 2))                              # sll by 1, add, sll by 2: 12 a row
+GAME_LOADS = ((0x14, _LUI, _T4, 0), (0x18, _ADDIU, _T4, _T4))       # from GAME_TOWNS: the towns' area ids
+GAME_COUNT = (0x34, _SLTIU, _T7, _T5)
+
+
+def _word(data, base, at):
+    if not base <= at <= base + len(data) - 4:
+        raise Bad("the town warp's code does not reach 0x%08X" % at)
+    return struct.unpack_from("<I", data, at - base)[0]
+
+
+def _insn(data, base, at, op, rt, rs):
+    """The immediate of the I-type instruction at `at`, after its opcode and
+    registers are checked (a `lui`'s rs is not)."""
+    w = _word(data, base, at)
+    if w >> 26 != op or (w >> 16) & 31 != rt or (op != _LUI and (w >> 21) & 31 != rs):
+        raise Bad("the town warp's code at 0x%08X is not the shape this release reads" % at)
+    imm = w & 0xFFFF
+    return imm if op in (_LUI, _SLTIU) else imm - 0x10000 if imm & 0x8000 else imm
+
+
+def _address(data, base, pair):
+    (o1, op1, rt1, rs1), (o2, op2, rt2, rs2) = pair
+    return ((_insn(data, base, base + o1, op1, rt1, rs1) << 16) + _insn(data, base, base + o2, op2, rt2, rs2)) & 0xFFFFFFFF
+
+
+def _cstr(data, base, at, what):
+    if not base <= at < base + len(data):
+        raise Bad("the town warp's %s at 0x%08X is outside its file" % (what, at))
+    end = data.find(b"\0", at - base)
+    if end < 0:
+        raise Bad("the town warp's %s at 0x%08X has no end" % (what, at))
+    return data[at - base:end]
+
+
+def town_warp_parts(warp_sections, game_section):
+    """The town warp's parts as the hack keeps them: {"towns": [area id] *
+    n, "rows": [(area, flags, x, z)] * n, "header", "more", "cancel": the
+    disc's text bytes, "names": [bytes] * n}. `warp_sections`: the outside
+    file's [(index, type, load address, bytes)]; `game_section`: (load
+    address, bytes) of the patched GAME.EMI section 0. Bad when either is not
+    the shape of the Definitive Edition's code."""
+    secs = [s for s in warp_sections if s[2] == WARP_DEST]
+    if len(warp_sections) != 1 or len(secs) != 1:
+        raise Bad("the town warp's file is not one section at 0x%08X" % WARP_DEST)
+    data = secs[0][3]
+    base = WARP_DEST
+    n = _insn(data, base, base + WARP_COUNT[0], *WARP_COUNT[1:])
+    g_base, g_data = game_section
+    if _insn(g_data, g_base, GAME_TOWNS + GAME_COUNT[0], *GAME_COUNT[1:]) != n:
+        raise Bad("the town warp's two town counts differ")
+    if not 1 <= n <= WARP_MAX_TOWNS:
+        raise Bad("the town warp names %d towns; the visited word holds %d" % (n, WARP_MAX_TOWNS))
+    for at, op, rt, off in WARP_FIELDS:
+        if _insn(data, base, base + at, op, rt, _T3) != off:
+            raise Bad("the town warp's table row is not the shape this release reads")
+    for at, sa in WARP_STRIDE:
+        w = _word(data, base, base + at)
+        if w >> 26 != 0 or w & 0x3F != 0 or (w >> 6) & 31 != sa:
+            raise Bad("the town warp's table stride is not the one this release reads")
+    towns_at = ((_insn(g_data, g_base, GAME_TOWNS + GAME_LOADS[0][0], *GAME_LOADS[0][1:]) << 16)
+                + _insn(g_data, g_base, GAME_TOWNS + GAME_LOADS[1][0], *GAME_LOADS[1][1:])) & 0xFFFFFFFF
+    if not g_base <= towns_at <= g_base + len(g_data) - 2 * n:
+        raise Bad("the town warp's town list is outside GAME's section")
+    towns = list(struct.unpack_from("<%dH" % n, g_data, towns_at - g_base))
+    rows_at = _address(data, base, WARP_LOADS["rows"])
+    if not base <= rows_at <= base + len(data) - 12 * n:
+        raise Bad("the town warp's table is outside its file")
+    rows = [struct.unpack_from("<HHii", data, rows_at - base + 12 * i) for i in range(n)]
+    names_at = _address(data, base, WARP_LOADS["names"])
+    if not base <= names_at <= base + len(data) - 4 * n:
+        raise Bad("the town warp's name list is outside its file")
+    names = [_cstr(data, base, p, "name %d" % i)
+             for i, p in enumerate(struct.unpack_from("<%dI" % n, data, names_at - base))]
+    out = {"towns": towns, "rows": rows, "names": names}
+    for key in ("header", "more", "cancel"):
+        out[key] = _cstr(data, base, _address(data, base, WARP_LOADS[key]), key)
+    head = out["header"]
+    if len(head) < 5 or head[-4] != CHOICE_CODE or head[-1] & 0xF:
+        raise Bad("the town warp's question does not end in an empty choice list")
+    for key, raw in [("more", out["more"]), ("cancel", out["cancel"])] + [("name %d" % i, s) for i, s in enumerate(names)]:
+        if not raw or any(b <= 0x16 for b in raw):
+            raise Bad("the town warp's %s is empty or holds a control code" % key)
+    return out
+
+
+def town_warp_table(parts):
+    """Kind 21 tag 0's payload: the version, n, then n rows of WARP_ROW bytes."""
+    out = bytearray([WARP_VERSION, len(parts["towns"])])
+    for town, (area, flags, x, z) in zip(parts["towns"], parts["rows"]):
+        out += struct.pack("<HHHHii", town, area, flags, 0, x, z)
+    return bytes(out)
+
+
+def town_warp_text(parts, convert):
+    """Kind 21 tag 1's payload: the version, n, then the question, "more",
+    "cancel" and the n names, each a u16 length and its bytes in the PC's
+    encoding. `convert(raw, nul_only)` is tools/loc_build.py's convert_run
+    as (bytes or None, the index it stopped at): the question converts up to
+    its choice control (no NUL), the others to and with their NUL. Bad for a
+    string with a code the language does not have."""
+    out = bytearray([WARP_VERSION, len(parts["names"])])
+    strings = [("question", parts["header"], False), ("more", parts["more"], True),
+               ("cancel", parts["cancel"], True)] + [("name %d" % i, s, True) for i, s in enumerate(parts["names"])]
+    for what, raw, nul_only in strings:
+        got, stop = convert(raw + b"\0", nul_only)
+        if got is None:
+            raise Bad("the town warp's %s holds a code the %s text does not have" % (what, "disc's"))
+        if not nul_only and (stop != len(raw) or len(got) < 4 or got[-4] != CHOICE_CODE):
+            raise Bad("the town warp's question did not convert to text and its choice control")
+        if nul_only and (not got.endswith(b"\0") or b"\0" in got[:-1]):
+            raise Bad("the town warp's %s did not convert to one string" % what)
+        out += struct.pack("<H", len(got)) + got
+    return bytes(out)
+
+
+WARP_TEXT_FILE = "_townwarp"         # the child's text payload, beside the names containers
+
+
+def game_section0(disc):
+    """(load address, bytes) of GAME.EMI's section 0 on `disc`."""
+    found = disc.find("GAME.EMI")
+    if len(found) != 1:
+        raise Bad("the patched disc holds %d GAME.EMI files" % len(found))
+    secs = [(dest, b) for i, _, dest, b in emi_sections(disc.read(found[0])) if i == 0]
+    if not secs:
+        raise Bad("the patched GAME.EMI has no section 0")
+    return secs[0]
+
+
+def town_warp_file(outside):
+    """The outside_files() row of the town warp's file (one section at
+    WARP_DEST), or None."""
+    hits = [x for x in outside if x["sections"] and any(s[2] == WARP_DEST for s in x["sections"])]
+    if len(hits) > 1:
+        raise Bad("the patched disc holds %d files with a section at 0x%08X" % (len(hits), WARP_DEST))
+    return hits[0] if hits else None
+
+
 def collect_base(files, build, changed, transforms, sources_of):
     """The first layer's chunks: {DAT name: [(kind, tag, payload)]} in the
     recipe's slot order, and the set of (EMI key, section) they came from.
@@ -885,17 +1063,18 @@ def _unlink_dir(dst):
         shutil.rmtree(dst, ignore_errors=True)
 
 
-def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say):
+def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say, warp_lba=None):
     """loc_build.py on the hybrid disc, the way the install's layer was built:
     the folder of its containers, and the folder of the names containers for
-    `enemy_names` (DAT names). A child process: loc_build.py keeps a disc's
-    state in its module."""
+    `enemy_names` (DAT names) - with, when `warp_lba` names the town warp's
+    file (DIV-0225), its text payload as the file WARP_TEXT_FILE there. A
+    child process: loc_build.py keeps a disc's state in its module."""
     import importer
     names_dir = os.path.join(work, "names")
     os.makedirs(names_dir)
     jobs = os.path.join(work, "names.json")
     with open(jobs, "w") as f:
-        json.dump(sorted(enemy_names), f)
+        json.dump({"enemy": sorted(enemy_names), "warp": warp_lba}, f)
     cmd = [sys.executable, os.path.abspath(__file__), "_loc", orig_path, patched_path, jobs, names_dir, build_id,
            "all", "--disc", orig_path, "--lang", tag]
     view = None
@@ -972,7 +1151,8 @@ def cmd_loc(argv):
     if rc:
         return rc
     with open(jobs) as f:
-        wanted = json.load(f)
+        job = json.load(f)
+    wanted = job["enemy"]
     for name in wanted:
         found = patched.find(name[:-4] + ".EMI")
         if not found:
@@ -994,6 +1174,18 @@ def cmd_loc(argv):
         with open(os.path.join(names_dir, name), "wb") as f:
             f.write(container([(kind, tag, 0, body) for kind, tag, body in chunks]))
     print("disc_patch_build: names for %d enemy tables" % len(wanted))
+    if job.get("warp") is not None:
+        # DIV-0225: the town warp's text in the PC's encoding, by the converter
+        # the language's text went through, while it is still set up.
+        try:
+            parts = town_warp_parts(outside_sections(patched, job["warp"]), game_section0(patched))
+            payload = town_warp_text(parts, lambda raw, nul_only: loc_build.convert_run(raw, 0, nul_only))
+        except Bad as e:
+            print("disc_patch_build: %s" % e)
+            return 1
+        with open(os.path.join(names_dir, WARP_TEXT_FILE), "wb") as f:
+            f.write(payload)
+        print("disc_patch_build: the town warp's text, %d places" % len(parts["names"]))
     return 0
 
 
@@ -1073,22 +1265,39 @@ def build(home, cache, mod_folder, row, tag, where, say):
         say("Looking for files the patched disc's directory does not list")
         outside = outside_files(orig.disc, patched.disc)
         out_emis = [x for x in outside if x["sections"] is not None]
+        # DIV-0225: the town warp's data, carried when the mod needs TownWarp
+        # (docs/town-warp.md 4); its file then leaves the "not carried" count.
+        warp, warp_file = None, None
+        if WARP_NAME in (row.get("needs") or []):
+            warp_file = town_warp_file(outside)
+            if warp_file is None:
+                raise Bad("the mod needs %s, and the patched disc holds no town-warp file (one section at 0x%08X, "
+                          "outside the disc's directory)" % (WARP_NAME, WARP_DEST))
+            say("Reading the town warp's table")
+            warp = town_warp_parts(outside_sections(patched.disc, warp_file["lba"]), game_section0(patched.disc))
+            out_emis = [x for x in out_emis if x is not warp_file]
 
         mode = loc_mode(cache, tag, build_id)
         say("Building the %s text with the patch's text (the text builder, about two minutes)" % tag)
         orig.disc.f.close()
         patched.disc.f.close()
-        new_loc, names_dir = run_loc(mode, tag, build_id, disc_path, patched_path, cache, rows, work, enemy, say)
+        new_loc, names_dir = run_loc(mode, tag, build_id, disc_path, patched_path, cache, rows, work, enemy, say,
+                                     warp_file["lba"] if warp else None)
         text = diff_layer(os.path.join(cache, "loc", tag, "dat"), new_loc)
         for name in enemy:
             with open(os.path.join(names_dir, name), "rb") as f:
                 text.setdefault(name, []).extend(read_chunks(f.read(), name))
+        first_files = {n: [(k, t, 0, b) for k, t, b in c] for n, c in base.items()}
+        if warp:
+            with open(os.path.join(names_dir, WARP_TEXT_FILE), "rb") as f:
+                text.setdefault("FIRST.DAT", []).append((WARP_KIND, WARP_TEXT_TAG, 0, f.read()))
+            first_files.setdefault("FIRST.DAT", []).append((WARP_KIND, WARP_TABLE_TAG, 0, town_warp_table(warp)))
 
         first, second = layer_names(row, tag)
         staged = os.path.join(work, "layers")
         out = {}
-        if base:
-            out[first] = write_layer(staged, first, {n: [(k, t, 0, b) for k, t, b in c] for n, c in base.items()}, where)
+        if first_files:
+            out[first] = write_layer(staged, first, first_files, where)
         wrote, placed = write_image_part(cache, staged, first, image, where, parse_skip(row.get("skip") or [])) if image else ([], None)
         if wrote:
             out[first] = out.get(first, []) + [("exe/" + n, i, where, h) for i, (n, h) in enumerate(wrote)]
@@ -1118,7 +1327,10 @@ def build(home, cache, mod_folder, row, tag, where, say):
                     "bounds (the patch keeps code or tables of its own there)" % (placed["zero_bytes"], placed["zero_records"]))
             if placed["skipped"]:
                 say("  not carried: %d bytes of the records mod.toml's skip names" % placed["skipped"])
-        if outside:
+        if warp:
+            say("  %s: the town warp's table of %d places (FIRST.DAT kind %d); %s: its text"
+                % (first, len(warp["towns"]), WARP_KIND, second))
+        if out_emis or any(x["sections"] is None for x in outside):
             say("  not carried: %d files outside the disc's directory (%d bytes), and %d other sectors there"
                 % (len(out_emis), sum(x["sectors"] for x in out_emis) * SECTOR,
                    sum(x["sectors"] for x in outside if x["sections"] is None)))
@@ -1151,6 +1363,7 @@ def build(home, cache, mod_folder, row, tag, where, say):
             "text_chunks": len(out[second]), "text_sections": len(text_secs),
             "table_bytes": placed["cells"] if placed else 0, "tables": placed["tables"] if placed else 0,
             "other_table_bytes": placed["raw"] if placed else 0,
+            "town_warp_towns": len(warp["towns"]) if warp else 0,
         }, {
             "program_sections": len(overlays), "program_files": len({k for k, _ in overlays}),
             "sound_sections": len(sound), "boot_places": boot, "other_sections": len(other),
@@ -1212,6 +1425,8 @@ def read_report(mod_folder):
             has.append(count(num(c, "text_sections"), "text section"))
         if num(c, "table_bytes") + num(c, "other_table_bytes"):
             has.append(count(num(c, "table_bytes") + num(c, "other_table_bytes"), "byte") + " of table numbers")
+        if num(c, "town_warp_towns"):
+            has.append("a town warp to " + count(num(c, "town_warp_towns"), "town"))
         lack = []
         if num(n, "program_sections"):
             lack.append("the program changes in " + count(num(n, "program_sections"), "section"))
@@ -1648,9 +1863,94 @@ def selftest():
                    "outside: one file's sections read back by its first sector")
             refused(lambda: outside_sections(pd, 35), "not the start of an EMI", "outside: a sector that is no EMI")
             expect(outside_files(od, od) == [], "outside: the original against itself has none")
+            expect(town_warp_file(got) is got[0] and town_warp_file(got[1:]) is None,
+                   "town warp: the outside file with a section at 0x80016000, or none")
         finally:
             od.f.close()
             pd.f.close()
+
+        # DIV-0225: the town warp's parts from code and text of this test's own
+        import loc_build
+
+        def ins(op, rs, rt, imm):
+            return struct.pack("<I", (op << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF))
+
+        def place(buf, base, at, word):
+            buf[at - base:at - base + 4] = word
+
+        def load_pair(buf, base, anchor, pair, addr):
+            (o1, _, rt1, _), (o2, op2, rt2, rs2) = pair
+            lo = addr & 0xFFFF
+            place(buf, base, anchor + o1, ins(_LUI, 0, rt1, ((addr >> 16) + (1 if lo & 0x8000 else 0)) & 0xFFFF))
+            place(buf, base, anchor + o2, ins(op2, rs2, rt2, lo))
+
+        def warp_fixture(n=3, header=b"Go\xffwhere\x14\x02\x01\x10", names=(b"Aa", b"Bb", b"Cc"), game_n=None):
+            w, d = bytearray(0x480), WARP_DEST
+            load_pair(w, d, d, WARP_LOADS["header"], d + 0x300)
+            load_pair(w, d, d, WARP_LOADS["more"], d + 0x320)
+            load_pair(w, d, d, WARP_LOADS["cancel"], d + 0x330)
+            load_pair(w, d, d, WARP_LOADS["names"], d + 0x380)
+            load_pair(w, d, d, WARP_LOADS["rows"], d + 0x3A0)
+            place(w, d, d + WARP_COUNT[0], ins(_SLTIU, _T3, _T5, n))
+            for at, op, rt, off in WARP_FIELDS:
+                place(w, d, d + at, ins(op, _T3, rt, off))
+            for at, sa in WARP_STRIDE:
+                place(w, d, d + at, struct.pack("<I", (10 << 11) | (sa << 6)))
+            w[0x300:0x300 + len(header) + 1] = header + b"\0"
+            w[0x320:0x325] = b"Next\0"
+            w[0x330:0x335] = b"Back\0"
+            at = 0x340
+            for i, nm in enumerate(names):
+                struct.pack_into("<I", w, 0x380 + 4 * i, d + at)
+                w[at:at + len(nm) + 1] = nm + b"\0"
+                at += len(nm) + 1
+            for i in range(len(names)):
+                struct.pack_into("<HHii", w, 0x3A0 + 12 * i, 10 + i, 2 * i + 1, 0x10000 * (i + 1), -0x8000 * i)
+            g_base = 0x8019C000
+            g = bytearray(0x400)
+            load_pair(g, g_base, GAME_TOWNS, GAME_LOADS, 0x8019C300)   # a low half >= 0x8000: lui takes one more
+            place(g, g_base, GAME_TOWNS + GAME_COUNT[0], ins(_SLTIU, _T5, _T7, n if game_n is None else game_n))
+            for i in range(len(names)):
+                struct.pack_into("<H", g, 0x300 + 2 * i, 20 + i)
+            return [(0, 0, d, bytes(w))], (g_base, bytes(g))
+
+        ws, gs = warp_fixture()
+        parts = town_warp_parts(ws, gs)
+        expect(parts["towns"] == [20, 21, 22] and parts["rows"] == [(10, 1, 0x10000, 0), (11, 3, 0x20000, -0x8000),
+                                                                    (12, 5, 0x30000, -0x10000)]
+               and parts["names"] == [b"Aa", b"Bb", b"Cc"] and parts["more"] == b"Next" and parts["cancel"] == b"Back"
+               and parts["header"] == b"Go\xffwhere\x14\x02\x01\x10",
+               "town warp: towns, rows, names, labels and question read through the code's own loads")
+        table = town_warp_table(parts)
+        expect(table[:2] == bytes([1, 3]) and len(table) == 2 + 3 * WARP_ROW
+               and struct.unpack_from("<HHHHii", table, 2 + WARP_ROW) == (21, 11, 3, 0, 0x20000, -0x8000),
+               "town warp: kind 21 tag 0, the version, n and 16-byte rows")
+        text = town_warp_text(parts, lambda raw, nul_only: loc_build.convert_run(raw, 0, nul_only))
+        strings, pos = [], 2
+        while pos < len(text):
+            k, = struct.unpack_from("<H", text, pos)
+            strings.append(text[pos + 2:pos + 2 + k])
+            pos += 2 + k
+        expect(text[:2] == bytes([1, 3]) and strings == [b"Go where\x14\x02\x01\x10",b"Next\0", b"Back\0", b"Aa\0",
+                                                          b"Bb\0", b"Cc\0"],
+               "town warp: kind 21 tag 1, the question with its control and no NUL, then NUL-ended strings")
+        refused(lambda: town_warp_text(parts, lambda raw, nul_only: (None, 0)), "a code the",
+                "town warp: a string the language cannot convert")
+        refused(lambda: town_warp_parts(*warp_fixture(game_n=4)), "two town counts differ",
+                "town warp: the page loop and the recorder disagree on the count")
+        refused(lambda: town_warp_parts(*warp_fixture(header=b"Go where")), "empty choice list",
+                "town warp: a question with no choice control")
+        refused(lambda: town_warp_parts(*warp_fixture(names=(b"Aa", b"B\x01", b"Cc"))), "control code",
+                "town warp: a name with a control code")
+        bent = bytearray(ws[0][3])
+        bent[WARP_LOADS["rows"][1][0] + 2] ^= 0x20                     # another register
+        refused(lambda: town_warp_parts([(0, 0, WARP_DEST, bytes(bent))], gs), "not the shape",
+                "town warp: code of another shape")
+        refused(lambda: town_warp_parts(ws + [(1, 0, 0x80010000, b"x")], gs), "not one section",
+                "town warp: a file of more than one section")
+        write_report(rd, "w", {"enemy_tables": 1, "town_warp_towns": 11}, {})
+        expect(read_report(rd)[0] == "This build of the mod has these changes: 1 enemy table, a town warp to 11 towns.",
+               "report: the town warp's places, as words")
     finally:
         shutil.rmtree(root, ignore_errors=True)
     print("disc_patch_build selftest: %d failure(s)" % len(fails))

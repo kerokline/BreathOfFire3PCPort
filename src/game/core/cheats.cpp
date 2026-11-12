@@ -73,14 +73,18 @@
 // function is ours when the switch is on (AreaW1f_Inject): Capcom's body
 // would judge as before and the cheat would be silently half off.
 //
-// DIV-0224: BOF3X_LEARN=1. A party member that watches an enemy (Examine:
-// the member's +0x130 bit 0, its +0x124 the enemy) learns the enemy's skill
-// when Battle_PickFlag8Member's test passes: Battle_MemberRollByAction
-// (0x453910), 1 in the odds of the skill's class (0x64F0FC / 0x64F104), or
-// Battle_MemberCoinFlip (0x453A10), 1 in 2. With the cheat on, both answer 1
-// once their other tests pass - the member in the fight and watching the
-// actor, the skill not known yet, room in the member's list. Rand is still
-// called once, as before, so the random stream is where it would have been.
+// DIV-0226: BOF3X_LEARN=1. A party member that watches an enemy (Examine:
+// the member's +0x130 bit 0, its +0x124 the enemy) is picked by
+// Battle_PickFlag8Member when a test passes. For a skill that can be learned
+// (the action record's u16 +4 bit 0x200) the test is
+// Battle_MemberRollByAction (0x453910), 1 in the odds of the skill's class
+// (0x64F0FC / 0x64F104); with the cheat on it answers 1 once its other tests
+// pass - the member in the fight and watching the actor, the skill not known
+// yet, room in the member's list. Rand is still called once, as before, so
+// the random stream is where it would have been. For a skill that cannot be
+// learned the test is Battle_MemberCoinFlip (0x453A10), whose pick ends in
+// the "cannot be learned" message (system message 0x23): the cheat leaves
+// it alone.
 //
 // Every harness run leaves these unset: with the variables unset nothing
 // here changes a byte or a number, and the battle_flow fuzz compares ours
@@ -147,7 +151,7 @@ void Cheats_Inject() {
     if (g_no_fail) bof3::Log("DIV-0188    the minigames cannot be failed (BOF3X_NO_FAIL)");
 
     g_learn = Flag("BOF3X_LEARN");
-    if (g_learn) bof3::Log("DIV-0224    a member that watches an enemy always learns its skill (BOF3X_LEARN)");
+    if (g_learn) bof3::Log("DIV-0226    a member that watches an enemy always learns its skill (BOF3X_LEARN)");
 
     bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
     bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);

@@ -271,7 +271,7 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 114, 52, 14
 END
 
-// DIV-0187 / DIV-0188 / DIV-0224: the Cheats sub-tab's Page 2. The third
+// DIV-0187 / DIV-0188 / DIV-0226: the Cheats sub-tab's Page 2. The third
 // group has no sentence under its box: the page has no room for one, and the
 // box's label says what it does.
 IDD_PAGE_GAME2 DIALOGEX 0, 0, 290, 130

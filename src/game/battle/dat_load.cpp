@@ -9,6 +9,7 @@
 #include "game/char_names.h"
 #include "game/dat_cache.h"
 #include "game/config_text.h"
+#include "game/field/field_idle.h"   // DIV-0225: TownWarpTake
 #include "game/fishing_text.h"
 #include "game/labels.h"
 #include "game/language_tags.h"
@@ -491,6 +492,10 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
         break;
     case 20:  // the disc's save names (tools/loc_build.py save_names_chunk): the launcher's save editor
               // reads them, the game does not. Ours (DIV-0211).
+        break;
+    case 21:  // the town warp's table (tag 0) and text (tag 1) from a disc-patch mod
+              // (tools/disc_patch_build.py; docs/town-warp.md 4): taken only with TownWarp on. Ours (DIV-0225).
+        field_idle::TownWarpTake(h.tag, payload, static_cast<std::uint32_t>(h.size));
         break;
     default:
         break;

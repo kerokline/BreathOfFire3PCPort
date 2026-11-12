@@ -128,19 +128,23 @@ enum class Id : int {
     DemoSkipButtons,
     DoubleHitSwords,
     EasierMasters,
+    LevelSkillCatchUp,
     ShortSkillLockout,
     SmokeSkill,
+    TownWarp,
     VillageCountPlural,
 };
-constexpr int kCount = 8;
+constexpr int kCount = 10;
 constexpr const char* kNames[kCount + 1] = {
     "AllyAnywhere",
     "CampMasters",
     "DemoSkipButtons",
     "DoubleHitSwords",
     "EasierMasters",
+    "LevelSkillCatchUp",
     "ShortSkillLockout",
     "SmokeSkill",
+    "TownWarp",
     "VillageCountPlural",
     nullptr,
 };

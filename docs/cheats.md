@@ -22,7 +22,7 @@ since 2026-10-29 a fourth of our own, every enemy's HP gauge and stats shown
 | Steal always succeeds | `cheat.steal=` 0 / 1 | `BOF3X_STEAL=1` when on | off | two `PatchBytes` of one immediate each, `src/game/cheats.cpp` |
 | Every enemy's HP bar and stats shown | `cheat.enemy_info=` 0 / 1 | `BOF3X_ENEMY_INFO=1` when on | off | our `Battle_SetupEnemy` `0x494320` and `Battle_PlaceBossActor` `0x494570` write the enemy's byte `+0x8F` (§6) |
 | The minigames cannot be failed | `cheat.no_fail=` 0 / 1 | `BOF3X_NO_FAIL=1` when on | off | one guarded branch in each minigame's own judging step (§7) |
-| An examining member always learns the enemy's skill | `cheat.learn=` 0 / 1 | `BOF3X_LEARN=1` when on | off | our `Battle_MemberRollByAction` `0x453910` and `Battle_MemberCoinFlip` `0x453A10` answer 1 after their refusals (§8) |
+| An examining member always learns the enemy's skill | `cheat.learn=` 0 / 1 | `BOF3X_LEARN=1` when on | off | our `Battle_MemberRollByAction` `0x453910` answers 1 after its refusals (§8) |
 
 Unset, nothing here changes a byte or a number: every harness and oracle
 run leaves the variables unset, and the `battle_flow` fuzz compares ours
@@ -463,8 +463,7 @@ with a score gives its best prize." The table above is the list.
 Next under the switch: the crane (area 135), the antenna dial, the ram
 (area 121) and the dock's parts menu (area 128), as recordings reach them.
 
-
-## 8. An examining member always learns the enemy's skill (DIV-0224, 2026-11-12)
+## 8. An examining member always learns the enemy's skill (DIV-0226, 2026-11-12)
 
 The owner's request: the "100% learn chance" of the *Definitive Edition*
 romhack as a switch of ours. `BOF3X_LEARN=1` (`cheat.learn=1`, the "Examine
@@ -473,23 +472,24 @@ Page 2), read by `Cheats_Inject` into `Cheats_LearnAlways()` (0 or 1, unset
 is off, anything else a `Fatal`).
 
 **The roll.** When an enemy acts, `Battle_PickFlag8Member` `0x4537A0` asks
-each party member one of two tests, by bit 9 of the action record's u16
-`+4`:
+each party member one of two tests, by bit `0x200` of the action record's
+u16 `+4` (`0x65C4DC + 0x18 id`), the "can be learned" bit:
 
-| Test | Address | Refuses | Then passes on |
-|---|---|---|---|
-| `Battle_MemberRollByAction` | `0x453910` | member out; not watching (`+0x130` bit 0); watching another actor (`+0x124`); the party knows the skill (`Battle_ActionBitSet`, set `0x904088`); the member's list full (`Battle_MemberListFull`) | `Rand % odds == 0`, the odds a byte of `0x64F0FC` (`0x64F104` for character index 6) by the high nibble of the skill row's `0x65C4D9 + 0x18 id` |
-| `Battle_MemberCoinFlip` | `0x453A10` | member out; not watching; watching another actor; list full | an even `Rand` |
+| Skill | Test | Refuses | Then passes on | The notice after (`BattleAction_AbilityNotice`) |
+|---|---|---|---|---|
+| can be learned | `Battle_MemberRollByAction` `0x453910` | member out; not watching (`+0x130` bit 0); watching another actor (`+0x124`); the party knows the skill (`Battle_ActionBitSet`, set `0x904088`); the member's list full (`Battle_MemberListFull`) | `Rand % odds == 0`, the odds a byte of `0x64F0FC` (`0x64F104` for character index 6) by the high nibble of the skill row's `0x65C4D9 + 0x18 id` | system message `0x24`, and `Battle_SettleFlag8` files the skill |
+| cannot | `Battle_MemberCoinFlip` `0x453A10` | member out; not watching; watching another actor; list full | an even `Rand` | system message `0x23`, nothing learned |
 
-Both are ours (`src/game/battle/dragon_cmd.cpp`). With the switch on, each
-answers 1 where it would have rolled. `Rand` is still called and the odds
-are still read, so a run with the switch on draws the same random numbers as
-one with it off up to the first skill learned. Every refusal holds: the
-switch does not make a skill learnable, teach a skill twice or overfill a
-list. Which enemy actions take the coin flip was not measured; both tests
-are covered so that the box means what its label says.
+With the switch on, `Battle_MemberRollByAction` (ours,
+`src/game/battle/dragon_cmd.cpp`) answers 1 where it would have rolled.
+`Rand` is still called and the odds are still read, so a run with the switch
+on draws the same random numbers as one with it off up to the first skill
+learned. Every refusal holds: the switch does not teach a skill twice or
+overfill a list. The coin flip is left alone - it decides only whether the
+"cannot be learned" notice shows (the owner's reading, 2026-11-12, which
+the bit confirms).
 
-**Verification.** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0224 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` it differs in `Battle_MemberCoinFlip` alone, 175 of 3,000 rounds, result 0 / 1, log 3 / 3; 31 other functions at 0, `Battle_PickFlag8Member` among them (its tests are stand-ins there). `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberCoinFlip` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction and Battle_MemberCoinFlip ours, and one is disabled`. `ledger_check.py` and `ledger_switches.py --check` pass. **Not played:** nobody has learned a skill with the switch on, and the launcher's page has not been looked at.
+**Verification.** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build, `main` `2da78ec2` merged in). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0226 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` every function is at 0 mismatches, `Battle_MemberCoinFlip` among them. `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberRollByAction` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled`. `ledger_check.py`, `ledger_registry.py --check` and `ledger_switches.py --check` pass; `dialog_test.py` all ok. **Not played:** nobody has learned a skill with the switch on.
 
 Owed: the owner's play - a member that examines an enemy learns the skill at
 the enemy's first use of it; and the owner's eye on Page 2 of the Cheats
