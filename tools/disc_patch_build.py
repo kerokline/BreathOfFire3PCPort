@@ -209,11 +209,17 @@ def moved_by(runs):
     return out
 
 
-def relocation(da, db, a0, a1, b0, b1, shifts):
+def relocation(da, db, a0, a1, b0, b1, shifts, data=False):
     """When a same-length run inside one word is only an address that follows
     moved bytes - a jump target, a 16-bit offset or a pointer word that differs
     by one of `shifts` - that distance; else None. The edit is the patch tool's
-    relinking, not a change the author made by hand."""
+    relinking, not a change the author made by hand.
+
+    `data`: the word lies in bytes the PC's image takes as a table. A table
+    holds no instruction, so only a whole pointer word counts there, and both
+    words must be addresses (0x80......): a number the author changed by an
+    amount that happens to equal a distance bytes moved is his edit (D417: the
+    Definitive Edition 1.4 moves bytes by 220 and lowers one EXP step by 220)."""
     if not shifts or a1 - a0 != b1 - b0 or a1 - a0 > 4 or (a0 & ~3) != ((a1 - 1) & ~3) or (a0 & 3) != (b0 & 3):
         return None
     if (a0 & ~3) + 4 > len(da) or (b0 & ~3) + 4 > len(db):
@@ -222,6 +228,8 @@ def relocation(da, db, a0, a1, b0, b1, shifts):
     w1, = struct.unpack_from("<I", db, b0 & ~3)
     d32 = (w1 - w0) & 0xFFFFFFFF
     d32 -= (d32 & 0x80000000) << 1
+    if data:
+        return d32 if d32 in shifts and (w0 >> 24) == 0x80 and (w1 >> 24) == 0x80 else None
     if d32 in shifts:                                   # a pointer word, or an immediate with no carry
         return d32
     if (w0 >> 26) == (w1 >> 26) and (w0 >> 26) in (2, 3):   # j, jal: a word index
@@ -255,7 +263,8 @@ def unmoved_section(da, db, fixed=()):
     - An edit of the same length is taken, where it is now.
     - A word that differs only by a distance bytes moved (`relocation`) is the
       patch tool's relinking and stays the original's: the PC's pointers are
-      its own.
+      its own. Inside a `fixed` table only a pointer word can be that; a
+      number there is the author's, whatever it differs by.
     - A run that changes length opens a stretch that ends where the running
       shift is what it was. If the stretch lies inside one `fixed` table, or
       nothing in the section was relinked by a distance inside the stretch,
@@ -268,17 +277,21 @@ def unmoved_section(da, db, fixed=()):
     runs = edits(da, db)
     shifts = moved_by(runs)
     relinked = collections.Counter()
+
+    def table(p, q):
+        return any(f0 <= p and q <= f1 for f0, f1 in fixed)
+
     for a0, a1, b0, b1 in runs:
         if a1 - a0 == b1 - b0:
             for p, q, bp in _words(a0, a1, b0):
-                r = relocation(da, db, p, q, bp, bp + q - p, shifts)
+                r = relocation(da, db, p, q, bp, bp + q - p, shifts, table(p, q))
                 if r is not None:
                     relinked[r] += 1
     u, unplaced, n = bytearray(da), [], collections.Counter()
 
     def put(a0, a1, b0):
         for p, q, bp in _words(a0, a1, b0):
-            if relocation(da, db, p, q, bp, bp + q - p, shifts) is None:
+            if relocation(da, db, p, q, bp, bp + q - p, shifts, table(p, q)) is None:
                 u[p:q] = db[bp:bp + q - p]
             else:
                 n["relinked"] += 1
@@ -1636,6 +1649,20 @@ def selftest():
     u, unplaced, n = unmoved_section(da, both, fixed=[(0, 64)])
     expect(not unplaced and u[:64] == both[:64] and n["rewritten in place"] == 1,
            "unmoved: inside a table the PC holds at its own address it is a rewrite in place")
+    # D417: a number in a table that the author changed by the distance bytes moved (8) is his edit.
+    num = da.index(table) + 20                         # a word of the filler after the table, not an address
+    w, = struct.unpack_from("<I", da, num)
+    lowered = bytearray(both)
+    lowered[num:num + 4] = word((w - 8) & 0xFFFFFFFF)
+    u, unplaced, n = unmoved_section(da, bytes(lowered), fixed=[(0, 64), (num, num + 4)])
+    expect(u[num:num + 4] == word((w - 8) & 0xFFFFFFFF) and n["relinked"] == 1,
+           "unmoved: a number in a table lowered by the distance bytes moved is taken; the pointer outside it is still relinked")
+    u, unplaced, n = unmoved_section(da, bytes(lowered), fixed=[(0, 64)])
+    expect(u[num:num + 4] == da[num:num + 4] and n["relinked"] == 2,
+           "unmoved: the same word outside every table is still read as a relinked address")
+    u, unplaced, n = unmoved_section(da, both, fixed=[(0, 68)])
+    expect(u[64:68] == da[64:68] and n["relinked"] == 1,
+           "unmoved: a pointer word inside a table is still a relinked address")
     o2 = _Disc({"BIN/W/AREA001.EMI": _emi([(0, 0x80010000, text), (0, 0x80100000, da)])})
     n2 = _Disc({"BIN/W/AREA001.EMI": _emi([(0, 0x80010000, text2), (0, 0x80100000, bytes(db))])})
     um = UnmovedDisc(o2, n2)

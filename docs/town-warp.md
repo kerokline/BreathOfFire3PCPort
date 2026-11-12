@@ -1,8 +1,10 @@
 # TownWarp: a warp to a visited town from the world map
 
 **Status:** IN PROGRESS - design verified against the patched US disc and our
-source 2026-11-12; code on `romhack/b6-warp`; not played (no game was
-started: the owner was using the machine).
+source 2026-11-12; played by the owner under the hack's version 1.0 the same
+day ([`owner-review.md`](owner-review.md)). **Sections 1 to 6 describe version
+1.0 of the hack; version 1.4 changes four rules, and section 7 has them. The
+code is 1.4's since `romhack/definitive-1.4`; 1.4's rules are not played.**
 
 The Definitive Edition romhack (TheGreatBen, used with permission; issue 216,
 [`romhack-mods.md`](romhack-mods.md)) adds a field ability that, used on the
@@ -155,3 +157,32 @@ line ends `a town warp to 11 towns`.
   written, and a null descriptor (where the hack skips the swap and a choice
   would read through it) is no case.
 - The text is the mod's text layer's, converted to the PC's encoding.
+
+## 7. The hack's version 1.4 (2026-11-12)
+
+The author's 1.4 was applied to the same US track and compared with the 1.0
+track file by file and section by section (scratch `D:\bof3x-runs\de14`:
+`tools\cmp_10_14.py`, `tools\dis3.py`, which print code and stay there).
+2,734 bytes of the track differ. For the warp:
+
+| | Version 1.0 (sections 1 to 6) | Version 1.4 | Ours |
+|---|---|---|---|
+| Who learns it | the mod's `exp_table` record 112 names ability `0x6F` | that cell is the release's again; GAME `0x801BB81C` is a jump to new code in the boot program, `0x80156228`: while the word's bit 31 is clear, the forty bytes at `0x80144C54` are searched for `0x40`; found, the word becomes `0x80000000` and the ten bytes at `0x80144A72` take `0x6F` in the first empty one, unless one holds `0x6F`; then `0x801BB85C`, the chain as before | `FieldIdle_Tick`: record 4's `abilities` (all four lists) and record 1's `abilities[1]` |
+| The two addresses | - | the hack's record base is `0x80144968` (its level catch-up loads it, START `0x801E3450`), lists at `+0x5C + 10 * type`: `0x80144C54` is record 4's four lists, `0x80144A72` record 1's type-1 list | `CharRecord::abilities` at `+0x60`, the lists `AbilityList_ForType` `0x591EC0` addresses |
+| Recording | every idle field frame off the world map | the same loop, and the bit is set only when the word's bit 31 is set (`0x8019C294`) | the same test |
+| Forgetting | the party set at least 7 and not 12, bit 31 clear: the word becomes bit 31 alone | that code (`0x801BB824..`) is not reached; the word is cleared once, when the warp is learned | the party-set test removed |
+| Arrival | `0x80143F1E` = 0 and `0x80143F1D` = `0x0C` after `Field_ChangeArea` | `0x80143F1E` = 0 alone (the hidden file is 8 bytes shorter) | `Area_EnterTransition` is not stored |
+| The town list | GAME `0x801CA6EC` | `0x801CA6F0`, the same 11 areas | the builder reads the address from the instruction; no change |
+| The hidden file | LBA `0x2DF24`, `0x485` bytes | the same LBA, `0x47D` bytes; the table and the text are the same bytes | the built kind-21 chunks are the same bytes as 1.0's |
+
+Bit 31 of the word is "the warp is learned" from 1.4 on. The readme's new
+line says Nina learns Warp at level 14 and that the list resets over the
+time skip; the code teaches it by the test above, not by a level. Which
+character and ability records 4 and `0x40` are was not looked up (the
+owner's or the author's to say).
+
+**A save played under 1.0's rules:** the towns it recorded stay listed; no
+new town is recorded while bit 31 is clear; the moment above clears the list
+once. A save whose bit 31 the 1.0 forgetting set records towns at once and
+is not taught `0x6F` by the new code; a member who learned it at 1.0's level
+step keeps it.

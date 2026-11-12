@@ -953,6 +953,54 @@ which scene showed each is not recorded; D416 parked). `LevelSkillCatchUp`
 and `TownWarp` still have no proof with the game of the kind this section
 holds for the eight.
 
+## 6d. The hack's version 1.4, as run (2026-11-12)
+
+The author put out version 1.4 (archive of 990,508 bytes; the readme gains
+one line, the Warp's). On `romhack/definitive-1.4` from `main` `e0b47b5d`
+(worktree and scratch `D:\bof3x-runs\de14`). The owner: "Yes, move to 1.4" -
+1.0's rules are no longer built (its package was never released).
+
+**Measured.** The 1.4 patch applies to the same US track (53 windows, all
+checksums pass). 2,734 bytes of the patched track differ from 1.0's; no file
+moved or changed size. What they are (`tools\cmp_10_14.py`, then the code
+read side by side, `tools\dis3.py`):
+
+| Where | What | For us |
+|---|---|---|
+| GAME.EMI 0 `0x8019C28C`, `0x801BB81C`, `0x801BB858`; the boot program, 156 bytes of new code at `0x80156228`; the hidden file at LBA `0x2DF24` (8 bytes shorter) | the town warp: how it is learned, when a town is recorded, the forgetting, the arrival ([`town-warp.md`](town-warp.md) 7) | `TownWarp` changed, DIV-0225 amended |
+| START.EMI 8 = STATUS.EMI 0 `0x801D99F8`, 91 bytes of new code at `0x801E3700` | Ally: five areas keep the release's refusal | `AllyAnywhere` changed, DIV-0217 amended |
+| GAME.EMI 0: the town list 4 bytes on (`0x801CA6F0`); `exp_table` record 112's ability byte the release's again | data | the builder's reader follows the instruction; one cell fewer |
+| START.EMI 8 `0x801EB5C0`: two bytes of character 1's starting record | data | carried (a raw range on an install built before the table was a file) |
+| Ten areas' sections at `0x800E4000` (areas 22, 23, 27, 28, 56, 63, 76, 117, 118, 119) | enemy tables | carried: 58 enemy tables (51 in 1.0) |
+
+The other eight behaviours' code is the same bytes in both versions.
+
+**Changed.** `Tactics_Top` (`AllyRefusedArea`), `FieldIdle_Tick` and
+`WarpStep` (`field_7.cpp`), `CharRecord::abilities` (`records.h`: the tail's
+first forty bytes named), the save editor's line for the visited word, and
+the builder's relinking test (D417). The package: `version = "1.4"`, the
+patch's sha256 `2e59b581...e37702d4`, the patched track's
+`cb9c08f5...e61ea3d`; the ten `needs` as before
+(`D:\bof3x-runs\de14\zip\definitive-1.4.zip`, never in the repository).
+
+**Checked.**
+
+| Check | Result |
+|---|---|
+| `disc_patch_build.py selftest`, `mods.py selftest` | 0 failures (three new cases for D417) |
+| The 25 other check commands of `checks.yml` | each exit 0 |
+| `cmake --build` for `i686` and `x86_64` | both build |
+| The 1.4 mod built on a copy of the US disc-only scratch install (`home14b`) | exit 0. `mod-definitive`: 59 chunks in 58 files, 2,264 bytes of 6 tables, 65 bytes of other tables, the town warp's 11 places; `mod-definitive-en-US`: 383 chunks in 169 files. `report.toml`: `length_changes = 0`, `zero_record_bytes = 149`, `boot_places = 6` |
+| The 1.0 mod built by the same builder (`home10b`) | exit 0; 2,265 table bytes (D417's four cells more than before); the two versions' kind-21 chunks in `FIRST.DAT` are the same bytes |
+| The exe host's self-test started by the branch's launcher, no `BOF3X_OPT` or `BOF3X_ON` in the environment (`st.sh`) | exit 0, no `Fatal`, no `MISMATCHES` above 0: both layers taken, `6 tables, 1180 cells, 2264 bytes`, `39 ranges, 65 bytes`, `behaviours: 10 of 10 on`. `mods_off=definitive`: no mod layer, `0 of 10 on` |
+| Live, the 1.4 mod on through the launcher's hand-over, the same install, `--no-front` (`live3.sh`; a smoke test, the routes were recorded without the mod) | `combat`: `recipe done at recipe frame 2620`, 100 s; `menu_screens`: `recipe done at recipe frame 1770`, 75 s. Both: layers 2 and 3 taken, `10 of 10 on`, `DIV-0225 TownWarp: the mod's table and text taken, 11 towns`, no `Fatal`, no crash. In `menu_screens`' save the new rule ran: `the warp learned (record 4 holds ability 0x40); record 1 takes it` |
+
+**Not done.** Nobody has played 1.4's rules: the warp used after it is learned,
+a town recorded after and none before, a warp's arrival without the
+`Area_EnterTransition` store, and Ally refused in one of the five areas. The
+ten state-hash routes were not run (the
+touched functions' paths with the behaviours off are unchanged, by reading).
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

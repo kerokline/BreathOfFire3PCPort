@@ -30,6 +30,13 @@ Examine always learns.
 | Source it names | `Breath of Fire III (USA) (Track 1).bin`, 442,938,048 bytes: the first 442,938,048 bytes of the held single-file `psx-us` image (fixtures.toml) |
 | Result | 442,938,048 bytes, sha256 `830f07f8...d1a8ca3d`; all 53 window checksums pass |
 
+**Version 1.4 (2026-11-12).** The author's update: archive
+`Breath of Fire 3 Definitive Edition 1.4.xdelta.7z`, 990,508 bytes; patch
+1,353,907 bytes, sha256 `2e59b581...e37702d4`; the same source track; result
+sha256 `cb9c08f5...e61ea3d`. This build follows 1.4 from that day; the
+numbers of this note below are 1.0's, and what 1.4 changes is in
+[`disc-patch-round.md`](disc-patch-round.md) 6d.
+
 **The xdelta format is read in pure Python**, by `tools/vcdiff.py` (`info`,
 `apply`, `selftest`): the VCDIFF window and default code table from the RFC,
 and xdelta3's DJW Huffman stage written from a reading of `xdelta3-djw.h`

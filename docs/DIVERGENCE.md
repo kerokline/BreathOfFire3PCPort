@@ -15975,6 +15975,21 @@ designed in rather than bolted on.
   at a game's start, so a load never opens a swap the previous game asked
   for. An unreferenced payload at `0x801E3644` (record 0's must-stay bit,
   then the members screen) is not reached on the disc and not built.
+- **Amended 2026-11-12 (the hack's version 1.4):** five areas keep the
+  release's refusal. With the behaviour on, in area `0xAF`, `0x53`, `0x55`,
+  `0x8F` or `0x90` (`Game_AreaNumber`) the member change plays `0x107` and
+  does nothing, as with the behaviour off; everywhere else off the world map
+  it is as above. The button is still drawn white there (the hack did not
+  change the row's copy for it). Evidence: the 1.4 patched US disc, START.EMI
+  8 = STATUS.EMI 0 - the jump at `0x801D99F8` now goes to new code at
+  `0x801E3700`, which compares the halfword `0x80143F00` with the five
+  numbers in that order; a match calls the sound routine with `0x107` and
+  jumps to `0x801D9A00`, the release's way out; no match jumps to
+  `0x801E3600`, the code of 1.0. Ours: `AllyRefusedArea`
+  (`field_ability_2.cpp`). Version 1.0's rule (no area test) is no longer
+  built: the 1.0 package was never released, and one behaviour name holds one
+  rule (the owner, 2026-11-12: "Yes, move to 1.4"). What the five areas are
+  in the story is the author's to say; the readme does not name them.
 - **Also in the PSX version?** No: the release refuses, as the PC does. The
   romhack's patched US disc has it.
 - **Verification:** builds at both widths; `ledger_switches.py --check`,
@@ -16504,6 +16519,49 @@ designed in rather than bolted on.
   until one is entered. A memory-card conversion keeps the word both ways:
   on the PlayStation it is the hack's own word with the same meaning, and
   the release never reads it. The save editor shows it as an advanced field.
+- **Amended 2026-11-12 (the hack's version 1.4):** three rules of the entry
+  above are replaced; the rest stands. Evidence: the 1.4 patched US disc
+  against the 1.0 one ([`town-warp.md`](town-warp.md) 7).
+  1. **How the warp is learned.** No level step teaches ability `0x6F` any
+     more (the mod's `exp_table` record 112 no longer names it). Each idle
+     field frame, while the word's bit 31 is clear: when any of the forty
+     bytes of character record 4's four ability lists is ability `0x40`, the
+     word becomes bit 31 alone and record 1's type-1 list takes `0x6F` in its
+     first empty slot - nothing stored when a slot holds `0x6F` already or
+     none is empty. GAME `0x801BB81C` is now a jump to new code in the boot
+     program, `0x80156228`, which returns to `0x801BB85C`. Ours:
+     `FieldIdle_Tick`, through `CharRecord::abilities` (`records.h`, the
+     lists `AbilityList_ForType` addresses; the PSX's `0x80144C54` and
+     `0x80144A72` are the hack's record base `0x80144968` + 4 * `0xA4` +
+     `0x5C` and + `0xA4` + `0x66`).
+  2. **When a town is recorded.** Only while bit 31 is set (GAME
+     `0x8019C294`, a `bgez` on the word). Before the moment of rule 1 no town
+     is recorded.
+  3. **The forgetting.** The party-set rule (at least 7 and not 12) is gone:
+     the code at `0x801BB824` is no longer reached. The word is cleared once,
+     at the moment of rule 1, and never after.
+  4. **The arrival.** The warp no longer stores `Area_EnterTransition`
+     `0xC` after `Field_ChangeArea` (the hidden file lost its two
+     instructions at 1.0's `0x800162B0`); `ModeFlow_AreaTransition` 0 is
+     still stored.
+  Bit 31 now means "the warp is learned" (the save editor's line says so). A
+  save played under 1.0's rules: its recorded towns stay listed, no new town
+  is recorded while bit 31 is clear, and the moment of rule 1 clears the
+  list once; a 1.0 save whose bit 31 is already set (the old forgetting)
+  records towns at once and is never given `0x6F` by rule 1 - a member who
+  learned it by 1.0's level step keeps it. The mod's builder reads the town
+  list 4 bytes on (`0x801CA6F0`) through the instruction that loads it, with
+  no change. Version 1.0's rules are no longer built (the owner, 2026-11-12:
+  "Yes, move to 1.4"). Which character and which ability records 4 and
+  `0x40` are is the author's to say; the readme says only that Nina learns
+  Warp, and still says "at level 14", which 1.4's code does not do.
+  Verification: both checks of the entry; the exe host's self-test started by
+  the launcher with the 1.4 mod built (`D:\bof3x-runs\de14\st`): exit 0, both
+  layers taken, `behaviours: 10 of 10 on`; two recorded routes run with the
+  mod on (`live3`, a smoke test): the town warp's table and text taken, no
+  `Fatal`, and in one route's save the log line `the warp learned (record 4
+  holds ability 0x40); record 1 takes it`. **Not played:** nobody has warped
+  under these rules.
 - **Also in the PSX version?** No: no release has it. The romhack's patched
   US disc has it.
 - **Verification:** both builds; `ledger_check.py`, `ledger_switches.py

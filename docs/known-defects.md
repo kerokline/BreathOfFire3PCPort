@@ -11070,3 +11070,33 @@ reading-row layer is laid a container at a time, so the row for that page may
 not be the loaded one.
 
 **Parked** at the owner's word: revisit if a player asks.
+
+## D417 — A disc-patch mod's build drops a number the author changed by the distance his bytes moved (ours, the mod builder; fixed 2026-11-12)
+
+**Seen:** 2026-11-12, building the Definitive Edition's version 1.4 beside
+1.0 (`D:\bof3x-runs\de14`, `home10` and `home14`): the 1.4 layer lacked the
+`exp_table` cell of record 308 (2 bytes) that the 1.0 layer has, though the
+two patched discs hold the same bytes there, and the build reported five
+"length changes" in GAME.EMI section 0 that 1.0 did not have.
+
+**Established:** `unmoved_section` (`tools/disc_patch_build.py`) leaves a
+word alone when it differs from the original's by a distance bytes moved in
+that section (`relocation`): the patch tool's relinking. Version 1.4 moves
+its town list 4 bytes, so its stretch in the empty shop records is 220 bytes
+(216 in 1.0), and the hack lowers record 308's EXP step from 449 to 229 - by
+220. The number was read as a relinked address and left the original's; and
+with "something relinked by 220" the stretch stopped being a rewrite in
+place, hence the five lines. The same rule had been dropping four more
+`exp_table` cells (records 4, 23, 29 and 301, 6 bytes) in **both** versions:
+numbers that differ by another of the section's distances. So the 1.0 mod
+the owner played on 2026-11-12 lacked those four.
+
+**Status:** fixed on `romhack/definitive-1.4`: inside bytes the PC's image
+takes as a table, only a whole pointer word (both words `0x80......`) can be
+a relinked address; a number there is the author's whatever it differs by.
+Outside the tables the rule is as it was. The self-test has the three shapes
+(a number in a table, the same word outside every table, a pointer in a
+table). Rebuilt offline: 1.0 gains the four cells (2,265 table bytes; 2,259
+before), 1.4 the four and record 308 (2,264; 2,256), no length change is
+reported, the ten empty shop records are counted again (149 bytes), and the
+`dat\` files are the same bytes as before the fix. Not played.
