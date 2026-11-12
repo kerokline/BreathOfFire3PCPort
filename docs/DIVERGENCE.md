@@ -16705,10 +16705,18 @@ designed in rather than bolted on.
   with it, is stamped at the first area entry past chapter 0. A memory-card
   conversion carries the byte; no PlayStation code reads it.
 - **Also in the PSX version?** No: no release has it.
-- **Verification:** 2026-11-12, group SC: the 32-bit build; headless
-  self-tests (see the round's report); `ledger_check.py`,
-  `ledger_switches.py --check`. **Not played, and not playable yet:** the
-  mode changes nothing in play until groups CB and FS are built.
+- **Verification:** 2026-11-12, group SC: the 32-bit build;
+  `ledger_check.py`, `ledger_switches.py --check`, `ledger_registry.py
+  --check`, `gen_symbols.py` and the CI's census checks pass. `solo.cpp`
+  compiled alone against stand-in headers (scratch, outside the tree): its
+  self-test's 48 checks pass, and the live path stamps once, keeps a mark
+  that differs from `BOF3X_SOLO` (one log line for two entries), stands
+  down in chapter 0, stops on `BOF3X_SOLO=teepo` and on a mark of 4, and
+  with the switch off leaves a mark of 4 unread. **Owed:** the in-game
+  headless self-test (`BOF3X_SELFTEST_ONLY=1`, `BOF3X_SHADOW='*'`), not run
+  because another session's launcher was running on the machine. **Not
+  played, and not playable yet:** the mode changes nothing in play until
+  groups CB and FS are built.
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
   `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
   it.
