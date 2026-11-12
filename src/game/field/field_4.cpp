@@ -22,6 +22,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo_field.h"  // DIV-0228: the solo-character mode's field half
 #include "game/widescreen.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
@@ -456,6 +457,9 @@ extern "C" void __cdecl Field_LeaderStand(void) {
     if (Field_ScriptFlags & 0x100) return;
     if (Field_ScriptFlags2 & 0x40) return;
     if (Field_Request == 5) return;
+    // DIV-0228 SoloCharacter: the fold, at the first frame control is back
+    // with the player (solo_field.h). Off, or the mode standing down: nothing.
+    solo::SoloField_Stand();
     if (field_event::g.test_535120(1)) return;
     if (field_event::g.test_535240(1)) return;
     if (field_event::g.test_5301f0()) {
@@ -1139,6 +1143,10 @@ extern "C" void __cdecl Field_SwapSpinOut(void) {
 // As the original has it: the fallback's answer is not read - the spot is
 // what 0x903858 held, found or not.
 extern "C" void __cdecl Field_SwapExchange(void) {
+    // DIV-0228 SoloCharacter: the bring-out, planned on the lead before the
+    // exchange and applied after it, so that the reload below builds the
+    // character brought out (solo_field.h). Off: kNoPlan, nothing.
+    const unsigned solo_plan = solo::SoloField_ExchangePlan();
     const unsigned char saved = Field_State[0x138];
     if (Member(1)[1] == 3) {
         event_leader::g.swap_fields(0, 1, 1);
@@ -1146,6 +1154,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     } else if (Field_MemberCount == 3 && Member(2)[1] == 3) {
         event_leader::g.swap_fields(0, 2, 1);
     }
+    solo::SoloField_ExchangeApply(solo_plan);
     for (unsigned i = 0; static_cast<int>(i) < static_cast<int>(Field_MemberCount); ++i) {
         unsigned char* const m = Member(i);
         if (m[1] != 3) continue;
@@ -1875,6 +1884,9 @@ extern "C" unsigned char __cdecl Field_LeaderSwapTest(void) {
     if ((Byte(::bof3::Img(kFlags2Lo)) | Byte(::bof3::Img(kFlagsLo))) & 0x10) return 0;
     if (!(Input_Pressed & event_ops::Word(event_ops::At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f008)))) return 0;
     if (!event_ops::g.can_swap()) return 0;
+    // DIV-0228 SoloCharacter: the party set for the swap's bring-out
+    // (solo_field.h). Off, or the mode standing down: nothing.
+    solo::SoloField_SwapStart();
     Sprite_Current[1] = 3;
     Sprite_Current[2] = 0;
     Sprite_Current[3] = 0;
@@ -2162,6 +2174,7 @@ extern "C" unsigned char __cdecl Field_LeaderTalkTest(void) {
 }
 
 void Field4_Inject() {
+    solo::SoloField_Inject();  // DIV-0228: the field half's self-test under BOF3X_SELFTEST_ONLY
     BOF3_INJECT(Field_LeaderFrame);
     BOF3_INJECT(Field_LeaderStart);
     BOF3_INJECT(Field_LeaderControl);
