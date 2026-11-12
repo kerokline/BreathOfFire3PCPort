@@ -43,6 +43,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      and 9 to 12 are still to run on frost's Linux machine (2c).
    - **Issue #223, the solo character challenge** (IDEAS I56): designed, its "Questions for the owner" unanswered.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
+   - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner's look at a
+     `table-edit` mod's number in the game is what is left. **Trap paid:** a state-hash chain run while build agents
+     compiled gave five false differences; a proof run wants the machine quiet as well as hands-off.
    - **IDEAS I58's next step:** the save editor's entrance list and party table on an install with no `BOF3.exe`
      ("In flight", the save editor's list), then EMI patch mods.
    - **Merged on 2026-11-11:** the PSX media round (PR #228) and the Linux groundwork (PR #229); the owner says the
