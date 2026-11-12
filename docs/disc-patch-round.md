@@ -648,6 +648,28 @@ reads).
 - The owner plays it. Which changes to look for is the owner's to say from
   the hack's readme.
 
+## 6b. The behaviours, as built
+
+Each behaviour is a guarded change of ours, off by default (`mods.md` 11.6),
+with its own ledger entry and commit. Each was read again from the patched
+and the original listings before it was coded; where this differs from the
+reading (`D:\bof3x-runs\de1112\reading`), it says so.
+
+**`EasierMasters` (DIV-0220; branch `romhack/b3-small`).** Two sites:
+`Area68_ChoiceAskCount` (`src/game/area/area_68.cpp`), the weapons count's
+threshold 15 -> 10 (AREA068 `0x801F38E8`, the compare's immediate; the
+count is a byte, `Inventory_CountUsed` returns `unsigned char`, as the
+PSX's `andi 0xff`); and `Area91_State0CheckItem57`
+(`src/game/area/area_91.cpp`), the item `0x57` count skipped and the "held"
+path taken when the party list's first byte is 6 or 3 (AREA091
+`0x801F2DFC`). The reading's "always passes" holds, and why was measured: the
+call that replaces the count is US `0x8015C088`, `ScriptFlags_Set40`, which
+returns a non-zero pointer in `v0` (`v0 = 1` is set in the call's delay slot
+and overwritten), so the branch is always taken; the path's own call then
+runs it again, two ORs of the same bits. The other first bytes' path is
+unchanged on the disc and in ours. The masters' names are the readme's;
+which area is whose is the reader's inference (DIV-0220, unconfirmed).
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

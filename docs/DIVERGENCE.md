@@ -15856,3 +15856,59 @@ designed in rather than bolted on.
 - **Toward:** none - the sound was the disc's clip before too; only its decoder changed
 - **Languages:** any
 - **State:** active
+
+### A mod can make two masters' tests easier: ten weapons, and no item at area 91
+
+- **ID:** DIV-0220
+- **Date:** 2026-11-12
+- **Subsystem:** field areas - `Area68_ChoiceAskCount` `0x40CF50` (ours,
+  `src/game/area/area_68.cpp`) and `Area91_State0CheckItem57` `0x412000`
+  (ours, `src/game/area/area_91.cpp`); the behaviour `EasierMasters`
+  ([`mods.md`](mods.md) 11); [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's design, played only when a mod asks
+  for it
+- **Original behaviour:** (1) area 68's choice handler 2: an answer of 0
+  counts the weapons list (`Inventory_CountUsed(1)`, the non-zero ids of
+  category 1, docs/char-stats.md 212); at 15 or more it sets message `0x82`,
+  else message `0x83` and the answer mark 6 (a non-zero answer: message
+  `0x84` and the mark). (2) area 91's object state 0: when the party list's
+  first byte is 6 or 3, `Inventory_Count(0, 0x57, 0)` (item `0x57`, the Faerie
+  Tiara of [`item-use.md`](item-use.md) 3); none held: `Cond_ByteFE` 1, the
+  active member's `+0x80` bit 0 cleared, sound `0x201`; held:
+  `ScriptFlags_Set40` and the state + 1. Any other first byte: the bit
+  cleared, nothing else.
+- **New behaviour:** with `EasierMasters` on, (1) the threshold is 10, not
+  15; (2) with the first byte 6 or 3 the item is not counted and the "held"
+  path is taken (`ScriptFlags_Set40`, the state + 1). The other paths, the
+  messages and the mark are unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: AREA068 section 13 at PSX `0x801F38E8`, the compare's
+  immediate 15 -> 10; AREA091 section 13 at `0x801F2DFC`, the item count's
+  call replaced by a call of `ScriptFlags_Set40` (US `0x8015C088`, which
+  returns a non-zero pointer, so the branch to the "held" path is always
+  taken; measured on the US boot EXE). The hack therefore calls
+  `ScriptFlags_Set40` twice on that path; it ORs the same two bits, so ours
+  calls it once and leaves the same state. **Unconfirmed:** the readme names
+  this feature for two masters, D'Lonzo (the weapons) and Merryleep (the
+  faerie village); that area 68's handler is D'Lonzo's test and area 91's
+  Merryleep's is the reader's inference from the weapon count and the
+  tiara, for the owner to confirm.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`.
+- **Also in the PSX version?** No - Capcom's PlayStation releases test 15 and
+  the item, as the PC does; only the romhack changes them.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the two functions are the same logic as
+  before, so the hosted fuzz rows (`area_w1f_fuzz.cpp`,
+  `area_w2c_fuzz.cpp`) compare as before. **Not played:** nobody has talked
+  to either master with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=EasierMasters` keeps it off.
+- **Switch:** EasierMasters
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active

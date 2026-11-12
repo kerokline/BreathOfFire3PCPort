@@ -10,6 +10,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -131,13 +132,20 @@ extern "C" void __cdecl Area91_ObjectRun(void) {
 // a word 0: Cond_ByteFE = 1, the member's bit cleared (the member read before
 // that store), Sound_PlayEffect(0x201); not 0: ScriptFlags_Set40 and
 // Sprite_Current +4 (the state) + 1.
+//
+// DIV-0220 EasierMasters (off by default): with the first byte 6 or 3 the
+// item is not counted and the "held" path is taken - the Definitive Edition
+// romhack's change; evidence: its patched US disc, AREA091 section 13 at PSX
+// 0x801F2DFC (the count's call replaced by ScriptFlags_Set40, whose non-zero
+// return takes the branch; the path's own ScriptFlags_Set40 then ORs the same
+// bits again, so one call here leaves the same state).
 extern "C" void __cdecl Area91_State0CheckItem57(void) {
     const unsigned char list = B(::bof3::Img(Cond_Flags_addr) + 0xd2);
     if (list != 6 && list != 3) {
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         return;
     }
-    if (AH_CALL(Inventory_Count)(0, 0x57, 0) == 0) {
+    if (!bof3::BehaviourOn(bof3::behaviours::Id::EasierMasters) && AH_CALL(Inventory_Count)(0, 0x57, 0) == 0) {
         unsigned char* const member = Field_ActiveMember;
         Cond_ByteFE = 1;
         member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);

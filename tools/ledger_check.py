@@ -247,6 +247,10 @@ def selftest_behaviours(r, fielded, defined, inv):
     its Switch: line changed to it."""
     import copy
     fake = copy.deepcopy(inv)
+    # The test's behaviour alone: the real ones have their entries in the
+    # ledger, not in the cases' chunks, so each would read as unentered here.
+    for k in [k for k in fake.names if fake.cls(k) == 'behaviour']:
+        del fake.names[k]
     fake.add('SelfTestBehaviour', 'behaviour', 'BehaviourOn', 'tools/ledger_check.py (self-test)')
     have = {did: (where, chunk) for did, where, chunk in fielded if did in FIXTURE_IDS}
     if 'DIV-0176' not in have:
