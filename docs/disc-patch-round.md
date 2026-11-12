@@ -682,6 +682,19 @@ writes the five words (an `en-US` start logs `5 of 5 village words`). No
 data change would do it instead: the mod's layer is built from the hybrid
 disc, whose COMMU05 is the original's.
 
+**`ShortSkillLockout` (DIV-0222).** `CountDown`, which `Game_ClockTick`
+(`src/game/core/transition.cpp`) calls for both countdowns: the frames
+byte's reload 0x1D -> 3 (GAME section 0, `0x80198DD4` and `0x80198E90`, one
+in each countdown's inlined copy), so a countdown second is 4 frames, not
+30. The reading holds. The counters are `ModeFlow_CountdownA` and
+`Rest3c_Byte660`, set to 5 hours by `Celerity_End` and
+`Effect_DoubleDamage` and read by `Skill_CanUse` for abilities `0x3E` and
+`0x15`: the name fits and is kept. Not the readme's faster faerie village:
+`src/game/community/` times the village by `Game_BattleCount` and names
+neither countdown. `Game_ClockTick`'s `// original` marker, lost in the
+source-layout move (6cddd782 deleted it with the shell it was left in), is
+back above the function.
+
 ## 7. Owner calls (answered 2026-11-11, after group M)
 
 | Call | The owner | So |

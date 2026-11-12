@@ -15966,3 +15966,57 @@ designed in rather than bolted on.
 - **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any
 - **State:** active
+
+### A mod can shorten the two five-hour skill lockouts to 40 minutes
+
+- **ID:** DIV-0222
+- **Date:** 2026-11-12
+- **Subsystem:** the play clock - `CountDown`, called by `Game_ClockTick`
+  `0x496870` (ours, `src/game/core/transition.cpp`) for the two countdowns
+  `ModeFlow_CountdownA` `0x90465C` and `Rest3c_Byte660` `0x904660`; their
+  reader `Skill_CanUse` (`src/game/menu/menu_2.cpp`); the behaviour
+  `ShortSkillLockout` ([`mods.md`](mods.md) 11);
+  [`disc-patch-round.md`](disc-patch-round.md) 6b
+- **Tier:** Extension - another person's balance choice, played only when a
+  mod asks for it
+- **Original behaviour:** each countdown is four bytes, hours, minutes,
+  seconds, frames, ticked down once a frame by `Game_ClockTick` (frames
+  29..0, a reload of 0x1D, so a countdown second is 30 frames, as the play
+  clock's). Two writers start them at 5 hours: `Celerity_End` `0x4B2040`
+  (`ModeFlow_CountdownA`) and `Effect_DoubleDamage` `0x44D180` (effect slot
+  62, `Rest3c_Byte660`). `Skill_CanUse` refuses ability `0x3E` in battle
+  while `ModeFlow_CountdownA` is not all zero, and ability `0x15` while
+  `Rest3c_Byte660` is not. In `src/` (the fuzz files aside) nothing else
+  names either countdown (the save block's copies aside); `symbols.toml` records four absolute
+  operands for each address in `BOF3.exe`.
+- **New behaviour:** with `ShortSkillLockout` on, the frames byte reloads
+  with 3, not 0x1D, in both countdowns: a countdown second is 4 frames, 7.5
+  times faster, so five hours of countdown last 72,000 ticks, 40 minutes on
+  the play clock (which counts 30 ticks a second). A countdown already
+  running when the behaviour is turned on finishes its current second at the
+  old length. The play clock is unchanged. This is the Definitive Edition
+  romhack's change (TheGreatBen, used with permission), read from its
+  patched US disc: GAME section 0, `Game_ClockTick` at US `0x80198CAC` (JP
+  `0x80199CAC`), the reload's immediate at `0x80198DD4` and at `0x80198E90`, 0x1D -> 3.
+- **Rationale:** the owner's romhack integration (issue 216,
+  [`romhack-mods.md`](romhack-mods.md)): each code change of the hack is a
+  behaviour of ours, off by default, which the mod turns on through
+  `BOF3X_ON`. The readme does not name it. It is not the readme's faster
+  faerie village: the village's simulation (`src/game/community/`) times
+  itself by `Game_BattleCount` and reads neither countdown.
+- **Also in the PSX version?** No - Capcom's PlayStation releases reload 0x1D,
+  as the PC does; only the romhack changes it.
+- **Verification:** both builds; `ledger_check.py`, `ledger_switches.py
+  --check`. With the behaviour off the reload is 0x1D as before, so
+  `mode_flow_fuzz.cpp`'s `Game_ClockTick` row compares as before. **Not
+  played:** nobody has timed a lockout with the behaviour on.
+- **Reversible?** Yes - it is off unless a mod's `needs` or `on=` names it;
+  `BOF3X_OFF=ShortSkillLockout` keeps it off. The countdowns are in the save
+  block, so a save made with it on holds a countdown that runs at 30 frames a
+  second again once it is off.
+- **Switch:** ShortSkillLockout
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it; it is the romhack's
+- **Languages:** any
+- **State:** active

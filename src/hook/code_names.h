@@ -124,11 +124,13 @@ namespace bof3::behaviours {
 
 enum class Id : int {
     EasierMasters,
+    ShortSkillLockout,
     VillageCountPlural,
 };
-constexpr int kCount = 2;
+constexpr int kCount = 3;
 constexpr const char* kNames[kCount + 1] = {
     "EasierMasters",
+    "ShortSkillLockout",
     "VillageCountPlural",
     nullptr,
 };
