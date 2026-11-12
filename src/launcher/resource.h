@@ -93,6 +93,7 @@
 #define IDC_CH_DEFAULTS 1221
 #define IDC_CH_INFO     1222  // Every enemy's HP gauge and stats shown: cheat.enemy_info= (DIV-0187); Cheats' Page 2
 #define IDC_CH_NOFAIL   1223  // The minigames cannot be failed: cheat.no_fail= (DIV-0188); Cheats' Page 2
+#define IDC_CH_LEARN    1225  // An enemy's skill always learned: cheat.learn= (DIV-0224); Cheats' Page 2
 #define IDC_CH_DEFAULTS2 1224 // Page 2's Defaults: every cheat back to its default, both pages
 
 // The Controls page (DIV-0050, docs/controls.md section 4.2): fourteen rows,

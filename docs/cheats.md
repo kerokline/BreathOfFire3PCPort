@@ -1,9 +1,10 @@
-# Cheats — EXP and zenny multipliers, a steal that always lands, and every enemy's information shown
+# Cheats — EXP and zenny multipliers, a steal that always lands, every enemy's information shown, and a skill always learned
 
 **Status:** BUILT + CONFIRMED IN GAME (2026-09-24, the recorded combat route,
 watched by the owner). 2026-10-03: the cap 10 and the two boss hooks (§2a,
 §2b) built and checked headless; the live run in §5 is owed. 2026-10-29: the
 enemy-information switch (§6) built and checked headless; not yet played.
+2026-11-12: the learn switch (§8) built and checked headless; not yet played.
 
 The archival sibling ships three cheats as mods: EXP and zenny multiplier
 sliders (its `docs/EXP_BOOST.md`) and a "steal always succeeds" patch (its
@@ -20,6 +21,8 @@ since 2026-10-29 a fourth of our own, every enemy's HP gauge and stats shown
 | Zenny won, times | `cheat.zenny=` 0..10 | `BOF3X_ZENNY=n` when not 1 | 1 | our `Battle_EnemyDefeated` only (§2a: no other writer) |
 | Steal always succeeds | `cheat.steal=` 0 / 1 | `BOF3X_STEAL=1` when on | off | two `PatchBytes` of one immediate each, `src/game/cheats.cpp` |
 | Every enemy's HP bar and stats shown | `cheat.enemy_info=` 0 / 1 | `BOF3X_ENEMY_INFO=1` when on | off | our `Battle_SetupEnemy` `0x494320` and `Battle_PlaceBossActor` `0x494570` write the enemy's byte `+0x8F` (§6) |
+| The minigames cannot be failed | `cheat.no_fail=` 0 / 1 | `BOF3X_NO_FAIL=1` when on | off | one guarded branch in each minigame's own judging step (§7) |
+| An examining member always learns the enemy's skill | `cheat.learn=` 0 / 1 | `BOF3X_LEARN=1` when on | off | our `Battle_MemberRollByAction` `0x453910` and `Battle_MemberCoinFlip` `0x453A10` answer 1 after their refusals (§8) |
 
 Unset, nothing here changes a byte or a number: every harness and oracle
 run leaves the variables unset, and the `battle_flow` fuzz compares ours
@@ -460,3 +463,35 @@ with a score gives its best prize." The table above is the list.
 Next under the switch: the crane (area 135), the antenna dial, the ram
 (area 121) and the dock's parts menu (area 128), as recordings reach them.
 
+
+## 8. An examining member always learns the enemy's skill (DIV-0224, 2026-11-12)
+
+The owner's request: the "100% learn chance" of the *Definitive Edition*
+romhack as a switch of ours. `BOF3X_LEARN=1` (`cheat.learn=1`, the "Examine
+always learns the skill that the enemy uses" box on the Cheats sub-tab's
+Page 2), read by `Cheats_Inject` into `Cheats_LearnAlways()` (0 or 1, unset
+is off, anything else a `Fatal`).
+
+**The roll.** When an enemy acts, `Battle_PickFlag8Member` `0x4537A0` asks
+each party member one of two tests, by bit 9 of the action record's u16
+`+4`:
+
+| Test | Address | Refuses | Then passes on |
+|---|---|---|---|
+| `Battle_MemberRollByAction` | `0x453910` | member out; not watching (`+0x130` bit 0); watching another actor (`+0x124`); the party knows the skill (`Battle_ActionBitSet`, set `0x904088`); the member's list full (`Battle_MemberListFull`) | `Rand % odds == 0`, the odds a byte of `0x64F0FC` (`0x64F104` for character index 6) by the high nibble of the skill row's `0x65C4D9 + 0x18 id` |
+| `Battle_MemberCoinFlip` | `0x453A10` | member out; not watching; watching another actor; list full | an even `Rand` |
+
+Both are ours (`src/game/battle/dragon_cmd.cpp`). With the switch on, each
+answers 1 where it would have rolled. `Rand` is still called and the odds
+are still read, so a run with the switch on draws the same random numbers as
+one with it off up to the first skill learned. Every refusal holds: the
+switch does not make a skill learnable, teach a skill twice or overfill a
+list. Which enemy actions take the coin flip was not measured; both tests
+are covered so that the box means what its label says.
+
+**Verification.** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0224 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` it differs in `Battle_MemberCoinFlip` alone, 175 of 3,000 rounds, result 0 / 1, log 3 / 3; 31 other functions at 0, `Battle_PickFlag8Member` among them (its tests are stand-ins there). `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberCoinFlip` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction and Battle_MemberCoinFlip ours, and one is disabled`. `ledger_check.py` and `ledger_switches.py --check` pass. **Not played:** nobody has learned a skill with the switch on, and the launcher's page has not been looked at.
+
+Owed: the owner's play - a member that examines an enemy learns the skill at
+the enemy's first use of it; and the owner's eye on Page 2 of the Cheats
+sub-tab, which has a third group now ("Enemy skills", with no sentence under
+its box: the page has no room for one).

@@ -2481,6 +2481,9 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
 // by 0x904B40's word +2; 0x64F104 when the member's character index
 // (Character_IndexById 0x66972C by its +0x89) is 6, else 0x64F0FC). The original divides by the
 // odds unchecked: ours aborts on 0.
+// DIVERGENCE DIV-0224 (src/game/core/cheats.cpp): under BOF3X_LEARN=1 the
+// answer is 1 whatever the roll; Rand is called and the odds are read as
+// before.
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (BH_CALL(Battle_ActorIsOut)(member) != 0) return 0;
     unsigned char* const r = PartyBattleE6(member);
@@ -2498,19 +2501,23 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
         bof3::Fatal("Battle_MemberRollByAction: the odds for action 0x%X (nibble %u of 0x%X) are 0 - the original divides by "
                     "them (docs/battle_e6.md section 7)",
                     id, nibble, (unsigned)table);
+    if (Cheats_LearnAlways()) return 1;   // DIV-0224
     return (static_cast<unsigned>(roll % static_cast<int>(odds)) & 0xFF) == 0 ? 1 : 0;
 }
 
 // original 0x453A10 (0x800A76E0; PSX 0x800A76E0): 0 if member `i` is out, lacks flag bit 0,
 // its byte +0x124 is not the acting actor, or 0x453AC0 says so; else a coin
 // flip, 1 on an even Rand (the signed remainder's low byte tested).
+// DIVERGENCE DIV-0224: under BOF3X_LEARN=1 the answer is 1 whatever the flip.
 extern "C" unsigned char __cdecl Battle_MemberCoinFlip(unsigned i) {
     if (battle_sprites::g.actor_out(i)) return 0;
     unsigned char* const p = Party(i & 0xFFu);
     if (!(p[0x130] & 1)) return 0;
     if (p[0x124] != battle_sprites::At(::bof3::Img(battle_sprites::at::kActor.v))[0]) return 0;
     if (battle_sprites::g.slots_full(i)) return 0;
-    return battle_sprites::g.rand() % 2 == 0 ? 1 : 0;
+    const int flip = battle_sprites::g.rand();
+    if (Cheats_LearnAlways()) return 1;   // DIV-0224
+    return flip % 2 == 0 ? 1 : 0;
 }
 
 // original 0x453A90 (PSX 0x800A77B4): bit (action & 31) of the dword 0x904088 + 4 (action >> 5)
@@ -3139,6 +3146,11 @@ void DragonCmd_Inject() {
     BOF3_INJECT(Battle_PickFlag8Member);
     BOF3_INJECT(Battle_MemberRollByAction);
     BOF3_INJECT(Battle_MemberCoinFlip);
+    // DIV-0224 answers in these two; Capcom's bodies would roll as before and
+    // the cheat would be silently off. After the bind: IsEnabled answers "not
+    // ours" for a function no Inject has named yet.
+    if (Cheats_LearnAlways() && (!bof3::IsEnabled(bof3::addr::Battle_MemberRollByAction) || !bof3::IsEnabled(bof3::addr::Battle_MemberCoinFlip)))
+        bof3::Fatal("BOF3X_LEARN=1 needs Battle_MemberRollByAction and Battle_MemberCoinFlip ours, and one is disabled");
     BOF3_INJECT(Battle_ActionBitSet);
     BOF3_INJECT(Battle_MemberListFull);
     BOF3_INJECT(Battle_SettleFlag8);

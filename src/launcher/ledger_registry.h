@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 215;
+inline constexpr std::size_t kSwitchCount = 216;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -288,9 +288,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "ShortSkillLockout", 0, 17},   // DIV-0221
     {SwitchForm::Name, "DemoSkipButtons", 0, 15},   // DIV-0222
     {SwitchForm::Name, "CampMasters", 0, 11},   // DIV-0223
+    {SwitchForm::Ini, "ini:cheat.learn=0", 4, 11},   // DIV-0224
 };
 
-inline constexpr std::size_t kEntryCount = 223;
+inline constexpr std::size_t kEntryCount = 224;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -738,6 +739,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 213, 1, false, Player::Yes, 0, kLangAny},
     {223, "A mod can let the player talk to a master from the master list, wherever the party stands",
      Tier::Extension, State::Active, 0, 214, 1, false, Player::Yes, 0, kLangAny},
+    {224, "An examining member always learns the enemy's skill: a Cheats switch",
+     Tier::Extension, State::Active, 0, 215, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

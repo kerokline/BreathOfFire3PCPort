@@ -1633,17 +1633,17 @@ switch	BarrierRing_Lift	detour	costly		src/game/magic/barrier_ring.cpp:277	BOF3_
 switch	BarrierRing_Rise	detour	costly		src/game/magic/barrier_ring.cpp:276	BOF3_INJECT
 switch	BarrierRing_Settle	detour	costly		src/game/magic/barrier_ring.cpp:279	BOF3_INJECT
 switch	BarrierRing_Task	detour	costly		src/game/magic/barrier_ring.cpp:274	BOF3_INJECT
-switch	Battle_ActionBitSet	detour	costly		src/game/battle/dragon_cmd.cpp:3142	BOF3_INJECT
+switch	Battle_ActionBitSet	detour	costly		src/game/battle/dragon_cmd.cpp:3154	BOF3_INJECT
 switch	Battle_ActionPhase	detour	costly		src/game/battle/battle_action.cpp:2321	BOF3_INJECT
-switch	Battle_ActionSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3135	BOF3_INJECT
+switch	Battle_ActionSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3142	BOF3_INJECT
 switch	Battle_ActorCanAct	detour	costly		src/game/battle/battle_3.cpp:2464	BOF3_INJECT
 switch	Battle_ActorCanCommand	detour	costly		src/game/battle/battle_3.cpp:2463	BOF3_INJECT
 switch	Battle_ActorIsOut	detour	costly		src/game/battle/battle_3.cpp:2460	BOF3_INJECT
 switch	Battle_ActorSkipped	detour	costly		src/game/battle/battle_action.cpp:2367	BOF3_INJECT
 switch	Battle_ActorStanding	detour	costly		src/game/battle/battle_3.cpp:2455	BOF3_INJECT
-switch	Battle_AnyFlagF0	detour	costly		src/game/battle/dragon_cmd.cpp:3134	BOF3_INJECT
+switch	Battle_AnyFlagF0	detour	costly		src/game/battle/dragon_cmd.cpp:3141	BOF3_INJECT
 switch	Battle_ApplyDamage	detour	costly		src/game/battle/battle_3.cpp:2465	BOF3_INJECT
-switch	Battle_AutoTargetCheck	detour	costly		src/game/battle/dragon_cmd.cpp:3129	BOF3_INJECT
+switch	Battle_AutoTargetCheck	detour	costly		src/game/battle/dragon_cmd.cpp:3136	BOF3_INJECT
 switch	Battle_BackupFlagged	detour	costly		src/game/battle/battle_fx.cpp:1550	BOF3_INJECT
 switch	Battle_BaseDamage	detour	costly		src/game/battle/battle_3.cpp:2469	BOF3_INJECT
 switch	Battle_BeginAction	detour	costly		src/game/battle/battle_action.cpp:2323	BOF3_INJECT
@@ -1675,22 +1675,22 @@ switch	Battle_InitActorContexts	detour	costly		src/game/battle/battle_3.cpp:2490
 switch	Battle_InitBossEncounter	detour	costly		src/game/battle/battle_4.cpp:414	BOF3_INJECT
 switch	Battle_InitEncounterKind	detour	costly		src/game/battle/battle_4.cpp:413	BOF3_INJECT
 switch	Battle_InitEnemies	detour	costly		src/game/battle/battle_4.cpp:415	BOF3_INJECT
-switch	Battle_ItemSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3136	BOF3_INJECT
+switch	Battle_ItemSuitsTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3143	BOF3_INJECT
 switch	Battle_LacksAccessory	detour	costly		src/game/effect/effect.cpp:2614	BOF3_INJECT
 switch	Battle_LacksArmour	detour	costly		src/game/effect/effect.cpp:2615	BOF3_INJECT
 switch	Battle_LevelClass	detour	costly		src/game/battle/battle_3.cpp:2458	BOF3_INJECT
 switch	Battle_LoadSoundByKey	detour	costly		src/game/battle/battle_3.cpp:2496	BOF3_INJECT
 switch	Battle_MarkFasterSide	detour	costly		src/game/battle/battle_3.cpp:2454	BOF3_INJECT
-switch	Battle_MemberActionIs0E	detour	costly		src/game/battle/dragon_cmd.cpp:3150	BOF3_INJECT
-switch	Battle_MemberAutoFixed	detour	costly		src/game/battle/dragon_cmd.cpp:3151	BOF3_INJECT
-switch	Battle_MemberAutoTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3148	BOF3_INJECT
-switch	Battle_MemberCoinFlip	detour	costly		src/game/battle/dragon_cmd.cpp:3141	BOF3_INJECT
-switch	Battle_MemberListFull	detour	costly		src/game/battle/dragon_cmd.cpp:3143	BOF3_INJECT
+switch	Battle_MemberActionIs0E	detour	costly		src/game/battle/dragon_cmd.cpp:3162	BOF3_INJECT
+switch	Battle_MemberAutoFixed	detour	costly		src/game/battle/dragon_cmd.cpp:3163	BOF3_INJECT
+switch	Battle_MemberAutoTarget	detour	costly		src/game/battle/dragon_cmd.cpp:3160	BOF3_INJECT
+switch	Battle_MemberCoinFlip	detour	costly		src/game/battle/dragon_cmd.cpp:3148	BOF3_INJECT
+switch	Battle_MemberListFull	detour	costly		src/game/battle/dragon_cmd.cpp:3155	BOF3_INJECT
 switch	Battle_MemberLowestHp	detour	costly		src/game/battle/enemy_op.cpp:1630	BOF3_INJECT
 switch	Battle_MemberNameToText	detour	costly		src/game/battle/battle_banner.cpp:348	BOF3_INJECT
-switch	Battle_MemberOutAction	detour	costly		src/game/battle/dragon_cmd.cpp:3149	BOF3_INJECT
+switch	Battle_MemberOutAction	detour	costly		src/game/battle/dragon_cmd.cpp:3161	BOF3_INJECT
 switch	Battle_MemberReactRoll	detour	costly		src/game/battle/battle_3.cpp:2479	BOF3_INJECT
-switch	Battle_MemberRollByAction	detour	costly		src/game/battle/dragon_cmd.cpp:3140	BOF3_INJECT
+switch	Battle_MemberRollByAction	detour	costly		src/game/battle/dragon_cmd.cpp:3147	BOF3_INJECT
 switch	Battle_OpenEnemyNames	detour	costly		src/game/battle/battle_5.cpp:212	BOF3_INJECT
 switch	Battle_OpeningMessage	detour	costly		src/game/battle/battle_banner.cpp:351	BOF3_INJECT
 switch	Battle_OpenMsgWindow	detour	costly		src/game/battle/battle_3.cpp:2437	BOF3_INJECT
@@ -1699,50 +1699,50 @@ switch	Battle_PartyDefenceMean	detour	costly		src/game/battle/battle_3.cpp:2470	
 switch	Battle_PartyOutpaces	detour	costly		src/game/battle/battle_3.cpp:2456	BOF3_INJECT
 switch	Battle_PhaseDispatch	detour	costly		src/game/battle/battle_intro.cpp:391	BOF3_INJECT
 switch	Battle_PickEnemyTarget	detour	costly		src/game/battle/battle_3.cpp:2487	BOF3_INJECT
-switch	Battle_PickFlag8Member	detour	costly		src/game/battle/dragon_cmd.cpp:3139	BOF3_INJECT
+switch	Battle_PickFlag8Member	detour	costly		src/game/battle/dragon_cmd.cpp:3146	BOF3_INJECT
 switch	Battle_PlaceBossActor	detour	costly		src/game/battle/battle_4.cpp:436	BOF3_INJECT
 switch	Battle_PlaceBossActors	detour	costly		src/game/battle/battle_4.cpp:435	BOF3_INJECT
 switch	Battle_PlayActorCue	detour	costly		src/game/battle/battle_3.cpp:2485	BOF3_INJECT
-switch	Battle_PlayHitSound	detour	costly		src/game/battle/dragon_cmd.cpp:3153	BOF3_INJECT
+switch	Battle_PlayHitSound	detour	costly		src/game/battle/dragon_cmd.cpp:3165	BOF3_INJECT
 switch	Battle_PrevTarget	detour	costly		src/game/battle/battle_3.cpp:2462	BOF3_INJECT
 switch	Battle_PsiStatusDeathAffinity	detour	costly		src/game/effect/effect.cpp:2611	BOF3_INJECT
 switch	Battle_PulseStep	detour	costly		src/game/battle/battle_3.cpp:2484	BOF3_INJECT
 switch	Battle_RandomEnemy	detour	costly		src/game/battle/enemy_op.cpp:1626	BOF3_INJECT
-switch	Battle_RandomLiveEnemy	detour	costly		src/game/battle/dragon_cmd.cpp:3131	BOF3_INJECT
-switch	Battle_RandomLiveMember	detour	costly		src/game/battle/dragon_cmd.cpp:3130	BOF3_INJECT
+switch	Battle_RandomLiveEnemy	detour	costly		src/game/battle/dragon_cmd.cpp:3138	BOF3_INJECT
+switch	Battle_RandomLiveMember	detour	costly		src/game/battle/dragon_cmd.cpp:3137	BOF3_INJECT
 switch	Battle_RandomMember	detour	costly		src/game/battle/enemy_op.cpp:1631	BOF3_INJECT
-switch	Battle_RandomOtherMember	detour	costly		src/game/battle/dragon_cmd.cpp:3152	BOF3_INJECT
-switch	Battle_RecalcMemberStats	detour	costly		src/game/battle/dragon_cmd.cpp:3138	BOF3_INJECT
-switch	Battle_RecalcStats	detour	costly		src/game/battle/dragon_cmd.cpp:3137	BOF3_INJECT
+switch	Battle_RandomOtherMember	detour	costly		src/game/battle/dragon_cmd.cpp:3164	BOF3_INJECT
+switch	Battle_RecalcMemberStats	detour	costly		src/game/battle/dragon_cmd.cpp:3145	BOF3_INJECT
+switch	Battle_RecalcStats	detour	costly		src/game/battle/dragon_cmd.cpp:3144	BOF3_INJECT
 switch	Battle_ReloadPartyRecords	detour	costly		src/game/battle/battle_3.cpp:2473	BOF3_INJECT
 switch	Battle_RemoveFromTurnOrder	detour	costly		src/game/battle/battle_3.cpp:2474	BOF3_INJECT
 switch	Battle_ReturnItem	detour	costly		src/game/battle/battle_3.cpp:2492	BOF3_INJECT
 switch	Battle_ReturnQueuedItem	detour	costly		src/game/battle/battle_3.cpp:2497	BOF3_INJECT
 switch	Battle_ReturnTrue	detour	costly		src/game/battle/battle_item_cmd.cpp:2536	BOF3_INJECT
 switch	Battle_RollDrops	detour	costly		src/game/battle/enemy_op.cpp:1686	BOF3_INJECT
-switch	Battle_RollPendingFlag	detour	costly		src/game/battle/dragon_cmd.cpp:3128	BOF3_INJECT
+switch	Battle_RollPendingFlag	detour	costly		src/game/battle/dragon_cmd.cpp:3135	BOF3_INJECT
 switch	Battle_RoundStart	detour	costly		src/game/battle/battle_action.cpp:2307	BOF3_INJECT
 switch	Battle_ScaleDamage	detour	costly		src/game/battle/battle_3.cpp:2471	BOF3_INJECT
 switch	Battle_SetActorBit	detour	costly		src/game/battle/battle_3.cpp:2501	BOF3_INJECT
-switch	Battle_SetApPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3147	BOF3_INJECT
-switch	Battle_SetDamagePopup	detour	costly		src/game/battle/dragon_cmd.cpp:3146	BOF3_INJECT
+switch	Battle_SetApPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3159	BOF3_INJECT
+switch	Battle_SetDamagePopup	detour	costly		src/game/battle/dragon_cmd.cpp:3158	BOF3_INJECT
 switch	Battle_SetEnemyKindFlag	detour	costly		src/game/battle/battle_5.cpp:214	BOF3_INJECT
 switch	Battle_SetEnemyOffset	detour	costly		src/game/battle/battle_5.cpp:215	BOF3_INJECT
-switch	Battle_SetHitPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3154	BOF3_INJECT
+switch	Battle_SetHitPopup	detour	costly		src/game/battle/dragon_cmd.cpp:3166	BOF3_INJECT
 switch	Battle_SetHpChange	detour	costly		src/game/battle/battle_3.cpp:2472	BOF3_INJECT
-switch	Battle_SetTargetFlag40	detour	costly		src/game/battle/dragon_cmd.cpp:3133	BOF3_INJECT
-switch	Battle_SetTargetFlags	detour	costly		src/game/battle/dragon_cmd.cpp:3132	BOF3_INJECT
-switch	Battle_SettleFlag8	detour	costly		src/game/battle/dragon_cmd.cpp:3144	BOF3_INJECT
+switch	Battle_SetTargetFlag40	detour	costly		src/game/battle/dragon_cmd.cpp:3140	BOF3_INJECT
+switch	Battle_SetTargetFlags	detour	costly		src/game/battle/dragon_cmd.cpp:3139	BOF3_INJECT
+switch	Battle_SettleFlag8	detour	costly		src/game/battle/dragon_cmd.cpp:3156	BOF3_INJECT
 switch	Battle_SetupEnemy	detour	costly		src/game/battle/battle_4.cpp:416	BOF3_INJECT
 switch	Battle_SpawnActorCopies	detour	costly		src/game/battle/battle_3.cpp:2503	BOF3_INJECT
 switch	Battle_StartAbilityMagic	detour	costly		src/game/battle/battle_2.cpp:78	BOF3_INJECT
 switch	Battle_StartItemMagic	detour	costly		src/game/battle/battle.cpp:155	BOF3_INJECT
 switch	Battle_StatusResisted	detour	costly		src/game/effect/effect.cpp:2618	BOF3_INJECT
-switch	Battle_StatusResisted20	detour	costly		src/game/battle/dragon_cmd.cpp:3046	BOF3_INJECT
-switch	Battle_StatusResisted80	detour	costly		src/game/battle/dragon_cmd.cpp:3048	BOF3_INJECT
-switch	Battle_StatusResistedMask	detour	costly		src/game/battle/dragon_cmd.cpp:3045	BOF3_INJECT
-switch	Battle_StatusResistRate	detour	costly		src/game/battle/dragon_cmd.cpp:3044	BOF3_INJECT
-switch	Battle_StatusResistRate20	detour	costly		src/game/battle/dragon_cmd.cpp:3047	BOF3_INJECT
+switch	Battle_StatusResisted20	detour	costly		src/game/battle/dragon_cmd.cpp:3053	BOF3_INJECT
+switch	Battle_StatusResisted80	detour	costly		src/game/battle/dragon_cmd.cpp:3055	BOF3_INJECT
+switch	Battle_StatusResistedMask	detour	costly		src/game/battle/dragon_cmd.cpp:3052	BOF3_INJECT
+switch	Battle_StatusResistRate	detour	costly		src/game/battle/dragon_cmd.cpp:3051	BOF3_INJECT
+switch	Battle_StatusResistRate20	detour	costly		src/game/battle/dragon_cmd.cpp:3054	BOF3_INJECT
 switch	Battle_StatusTint	detour	costly		src/game/battle/battle_3.cpp:2488	BOF3_INJECT
 switch	Battle_TickCounters	detour	costly		src/game/battle/battle_action.cpp:2355	BOF3_INJECT
 switch	Battle_TurnVector18	detour	costly		src/game/battle/battle_3.cpp:2478	BOF3_INJECT
@@ -1876,7 +1876,7 @@ switch	BattleExtra_TallyCount	detour	costly		src/game/battle/battle_extra.cpp:66
 switch	BattleExtra_TallyDispatch	detour	costly		src/game/battle/battle_extra.cpp:658	BOF3_INJECT
 switch	BattleExtra_TallyOpen	detour	costly		src/game/battle/battle_extra.cpp:661	BOF3_INJECT
 switch	BattleExtra_TallyOpenDispatch	detour	costly		src/game/battle/battle_extra.cpp:659	BOF3_INJECT
-switch	BattleForm_ApplyStats	detour	costly		src/game/battle/dragon_cmd.cpp:3055	BOF3_INJECT
+switch	BattleForm_ApplyStats	detour	costly		src/game/battle/dragon_cmd.cpp:3062	BOF3_INJECT
 switch	BattleFx_ActorWatch	detour	costly		src/game/battle/battle_fx.cpp:1533	BOF3_INJECT
 switch	BattleFx_ActorWatchTest	detour	costly		src/game/battle/battle_fx.cpp:1534	BOF3_INJECT
 switch	BattleFx_Brighten	detour	costly		src/game/magic/celerity_spark.cpp:725	BOF3_INJECT
@@ -1930,21 +1930,21 @@ switch	BattleFxAnim_Dispatch	detour	costly		src/game/battle/battle_fx.cpp:1529	B
 switch	BattleFxAnim_Linger	detour	costly		src/game/battle/battle_fx.cpp:1532	BOF3_INJECT
 switch	BattleFxAnim_Run	detour	costly		src/game/battle/battle_fx.cpp:1531	BOF3_INJECT
 switch	BattleFxAnim_Start	detour	costly		src/game/battle/battle_fx.cpp:1530	BOF3_INJECT
-switch	BattleFxDash_Advance	detour	costly		src/game/battle/dragon_cmd.cpp:3119	BOF3_INJECT
-switch	BattleFxDash_Arc	detour	costly		src/game/battle/dragon_cmd.cpp:3121	BOF3_INJECT
-switch	BattleFxDash_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3115	BOF3_INJECT
-switch	BattleFxDash_Land	detour	costly		src/game/battle/dragon_cmd.cpp:3122	BOF3_INJECT
-switch	BattleFxDash_Return	detour	costly		src/game/battle/dragon_cmd.cpp:3120	BOF3_INJECT
-switch	BattleFxDash_Rise	detour	costly		src/game/battle/dragon_cmd.cpp:3118	BOF3_INJECT
-switch	BattleFxDash_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3116	BOF3_INJECT
-switch	BattleFxDash_WaitPose	detour	costly		src/game/battle/dragon_cmd.cpp:3117	BOF3_INJECT
+switch	BattleFxDash_Advance	detour	costly		src/game/battle/dragon_cmd.cpp:3126	BOF3_INJECT
+switch	BattleFxDash_Arc	detour	costly		src/game/battle/dragon_cmd.cpp:3128	BOF3_INJECT
+switch	BattleFxDash_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3122	BOF3_INJECT
+switch	BattleFxDash_Land	detour	costly		src/game/battle/dragon_cmd.cpp:3129	BOF3_INJECT
+switch	BattleFxDash_Return	detour	costly		src/game/battle/dragon_cmd.cpp:3127	BOF3_INJECT
+switch	BattleFxDash_Rise	detour	costly		src/game/battle/dragon_cmd.cpp:3125	BOF3_INJECT
+switch	BattleFxDash_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3123	BOF3_INJECT
+switch	BattleFxDash_WaitPose	detour	costly		src/game/battle/dragon_cmd.cpp:3124	BOF3_INJECT
 switch	BattleFxFlash_Banner	detour	costly		src/game/battle/battle_fx.cpp:1519	BOF3_INJECT
 switch	BattleFxFlash_Dispatch	detour	costly		src/game/battle/battle_fx.cpp:1518	BOF3_INJECT
 switch	BattleFxFlash_Fall	detour	costly		src/game/battle/battle_fx.cpp:1521	BOF3_INJECT
 switch	BattleFxFlash_Rise	detour	costly		src/game/battle/battle_fx.cpp:1520	BOF3_INJECT
-switch	BattleFxPose_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3123	BOF3_INJECT
-switch	BattleFxPose_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3124	BOF3_INJECT
-switch	BattleFxPose_WaitOwner	detour	costly		src/game/battle/dragon_cmd.cpp:3125	BOF3_INJECT
+switch	BattleFxPose_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3130	BOF3_INJECT
+switch	BattleFxPose_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3131	BOF3_INJECT
+switch	BattleFxPose_WaitOwner	detour	costly		src/game/battle/dragon_cmd.cpp:3132	BOF3_INJECT
 switch	BattleFxReform_Begin	detour	costly		src/game/battle/battle_fx.cpp:1542	BOF3_INJECT
 switch	BattleFxReform_Dispatch	detour	costly		src/game/battle/battle_fx.cpp:1541	BOF3_INJECT
 switch	BattleFxReform_Grow	detour	costly		src/game/battle/battle_fx.cpp:1546	BOF3_INJECT
@@ -1957,8 +1957,8 @@ switch	BattleFxRestore_LoadDat	detour	costly		src/game/battle/battle_fx.cpp:1549
 switch	BattleFxTint_Brighten	detour	costly		src/game/battle/battle_fx.cpp:1527	BOF3_INJECT
 switch	BattleFxTint_Dispatch	detour	costly		src/game/battle/battle_fx.cpp:1525	BOF3_INJECT
 switch	BattleFxTint_Hold	detour	costly		src/game/battle/battle_fx.cpp:1528	BOF3_INJECT
-switch	BattleFxTrail_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3126	BOF3_INJECT
-switch	BattleFxTrail_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3127	BOF3_INJECT
+switch	BattleFxTrail_Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3133	BOF3_INJECT
+switch	BattleFxTrail_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3134	BOF3_INJECT
 switch	BattleHold_Dispatch	detour	costly		src/game/battle/battle_action.cpp:2310	BOF3_INJECT
 switch	BattleHold_Regrow	detour	costly		src/game/battle/battle_action.cpp:2313	BOF3_INJECT
 switch	BattleHold_ShowAll	detour	costly		src/game/battle/battle_action.cpp:2312	BOF3_INJECT
@@ -2985,7 +2985,7 @@ switch	CharmMote_PushMatrix	detour	costly		src/game/magic/charm_mote.cpp:436	BOF
 switch	CharmMote_Run	detour	costly		src/game/magic/charm_mote.cpp:432	BOF3_INJECT
 switch	CharmMote_Task	detour	costly		src/game/magic/charm_mote.cpp:431	BOF3_INJECT
 switch	CharmMote_ToOwner	detour	costly		src/game/magic/charm_mote.cpp:434	BOF3_INJECT
-switch	Cheat_StealAlways	code	yes		src/game/core/cheats.cpp:144 src/game/core/cheats.cpp:145	PatchBytes
+switch	Cheat_StealAlways	code	yes		src/game/core/cheats.cpp:157 src/game/core/cheats.cpp:158	PatchBytes
 switch	Chill_SpawnMarks	detour	costly		src/game/magic/chill_ray.cpp:617	BOF3_INJECT
 switch	Chill_Start	detour	costly		src/game/magic/chill_ray.cpp:615	BOF3_INJECT
 switch	Chill_Task	detour	costly		src/game/magic/chill_ray.cpp:614	BOF3_INJECT
@@ -3506,62 +3506,62 @@ switch	DragonBreathBeam_Hold	detour	costly		src/game/battle/dragon_breath_beam.c
 switch	DragonBreathBeam_Run	detour	costly		src/game/battle/dragon_breath_beam.cpp:591	BOF3_INJECT
 switch	DragonBreathBeam_Task	detour	costly		src/game/battle/dragon_breath_beam.cpp:590	BOF3_INJECT
 switch	DragonBreathBeam_Widen	detour	costly		src/game/battle/dragon_breath_beam.cpp:593	BOF3_INJECT
-switch	DragonCmd_Commit	detour	costly		src/game/battle/dragon_cmd.cpp:3081	BOF3_INJECT
-switch	DragonCmd_GenesClose	detour	costly		src/game/battle/dragon_cmd.cpp:3080	BOF3_INJECT
-switch	DragonCmd_GenesConfirm	detour	costly		src/game/battle/dragon_cmd.cpp:3079	BOF3_INJECT
-switch	DragonCmd_GenesDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3076	BOF3_INJECT
-switch	DragonCmd_GenesOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3077	BOF3_INJECT
-switch	DragonCmd_GenesPick	detour	costly		src/game/battle/dragon_cmd.cpp:3078	BOF3_INJECT
-switch	DragonCmd_LoadDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3057	BOF3_INJECT
-switch	DragonCmd_LoadStart	detour	costly		src/game/battle/dragon_cmd.cpp:3058	BOF3_INJECT
-switch	DragonCmd_LoadWait	detour	costly		src/game/battle/dragon_cmd.cpp:3059	BOF3_INJECT
-switch	DragonCmd_MenuCancel	detour	costly		src/game/battle/dragon_cmd.cpp:3065	BOF3_INJECT
-switch	DragonCmd_MenuCancelLoad	detour	costly		src/game/battle/dragon_cmd.cpp:3066	BOF3_INJECT
-switch	DragonCmd_MenuClose	detour	costly		src/game/battle/dragon_cmd.cpp:3064	BOF3_INJECT
-switch	DragonCmd_MenuDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3061	BOF3_INJECT
-switch	DragonCmd_MenuInput	detour	costly		src/game/battle/dragon_cmd.cpp:3062	BOF3_INJECT
-switch	DragonCmd_MenuPick	detour	costly		src/game/battle/dragon_cmd.cpp:3063	BOF3_INJECT
-switch	DragonCmd_Open	detour	costly		src/game/battle/dragon_cmd.cpp:3060	BOF3_INJECT
-switch	DragonCmd_PartDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3056	BOF3_INJECT
-switch	DragonCmd_Slot2Affordable	detour	costly		src/game/battle/dragon_cmd.cpp:3086	BOF3_INJECT
-switch	DragonCmd_SlotAffordable	detour	costly		src/game/battle/dragon_cmd.cpp:3071	BOF3_INJECT
-switch	DragonCmd_Slots2Back	detour	costly		src/game/battle/dragon_cmd.cpp:3088	BOF3_INJECT
-switch	DragonCmd_Slots2Cancel	detour	costly		src/game/battle/dragon_cmd.cpp:3087	BOF3_INJECT
-switch	DragonCmd_Slots2Close	detour	costly		src/game/battle/dragon_cmd.cpp:3090	BOF3_INJECT
-switch	DragonCmd_Slots2CloseMenu	detour	costly		src/game/battle/dragon_cmd.cpp:3083	BOF3_INJECT
-switch	DragonCmd_Slots2Confirm	detour	costly		src/game/battle/dragon_cmd.cpp:3089	BOF3_INJECT
-switch	DragonCmd_Slots2Cursor	detour	costly		src/game/battle/dragon_cmd.cpp:3085	BOF3_INJECT
-switch	DragonCmd_Slots2Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3082	BOF3_INJECT
-switch	DragonCmd_Slots2Open	detour	costly		src/game/battle/dragon_cmd.cpp:3084	BOF3_INJECT
-switch	DragonCmd_SlotsBack	detour	costly		src/game/battle/dragon_cmd.cpp:3073	BOF3_INJECT
-switch	DragonCmd_SlotsCancel	detour	costly		src/game/battle/dragon_cmd.cpp:3072	BOF3_INJECT
-switch	DragonCmd_SlotsClose	detour	costly		src/game/battle/dragon_cmd.cpp:3075	BOF3_INJECT
-switch	DragonCmd_SlotsCloseMenu	detour	costly		src/game/battle/dragon_cmd.cpp:3068	BOF3_INJECT
-switch	DragonCmd_SlotsConfirm	detour	costly		src/game/battle/dragon_cmd.cpp:3074	BOF3_INJECT
-switch	DragonCmd_SlotsCursor	detour	costly		src/game/battle/dragon_cmd.cpp:3070	BOF3_INJECT
-switch	DragonCmd_SlotsDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3067	BOF3_INJECT
-switch	DragonCmd_SlotsOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3069	BOF3_INJECT
-switch	DragonCmd_StoreAsk	detour	costly		src/game/battle/dragon_cmd.cpp:3095	BOF3_INJECT
-switch	DragonCmd_StoreCopy	detour	costly		src/game/battle/dragon_cmd.cpp:3096	BOF3_INJECT
-switch	DragonCmd_StoreCursor	detour	costly		src/game/battle/dragon_cmd.cpp:3094	BOF3_INJECT
-switch	DragonCmd_StoreDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3091	BOF3_INJECT
-switch	DragonCmd_StoreOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3092	BOF3_INJECT
-switch	DragonCmd_StoreSource	detour	costly		src/game/battle/dragon_cmd.cpp:3097	BOF3_INJECT
-switch	DragonCmd_StoreWait	detour	costly		src/game/battle/dragon_cmd.cpp:3093	BOF3_INJECT
-switch	DragonForm_AddAbilityRow	detour	costly		src/game/battle/dragon_cmd.cpp:3107	BOF3_INJECT
-switch	DragonForm_ApplyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3108	BOF3_INJECT
-switch	DragonForm_FindRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3100	BOF3_INJECT
-switch	DragonForm_Mix	detour	costly		src/game/battle/dragon_cmd.cpp:3103	BOF3_INJECT
-switch	DragonForm_MixAbilities	detour	costly		src/game/battle/dragon_cmd.cpp:3106	BOF3_INJECT
-switch	DragonForm_PartyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3109	BOF3_INJECT
-switch	DragonForm_RecipeSlotHeld	detour	costly		src/game/battle/dragon_cmd.cpp:3101	BOF3_INJECT
-switch	DragonForm_SetMixBytes	detour	costly		src/game/battle/dragon_cmd.cpp:3105	BOF3_INJECT
-switch	DragonForm_StatShift	detour	costly		src/game/battle/dragon_cmd.cpp:3104	BOF3_INJECT
-switch	DragonForm_Transform	detour	costly		src/game/battle/dragon_cmd.cpp:3099	BOF3_INJECT
-switch	DragonForm_TryPartyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3102	BOF3_INJECT
-switch	DragonGenes_Held	detour	costly		src/game/battle/dragon_cmd.cpp:3110	BOF3_INJECT
-switch	DragonGenes_SumCost	detour	costly		src/game/battle/dragon_cmd.cpp:3111	BOF3_INJECT
-switch	DragonHistory_Leave	detour	costly		src/game/battle/dragon_cmd.cpp:3098	BOF3_INJECT
+switch	DragonCmd_Commit	detour	costly		src/game/battle/dragon_cmd.cpp:3088	BOF3_INJECT
+switch	DragonCmd_GenesClose	detour	costly		src/game/battle/dragon_cmd.cpp:3087	BOF3_INJECT
+switch	DragonCmd_GenesConfirm	detour	costly		src/game/battle/dragon_cmd.cpp:3086	BOF3_INJECT
+switch	DragonCmd_GenesDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3083	BOF3_INJECT
+switch	DragonCmd_GenesOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3084	BOF3_INJECT
+switch	DragonCmd_GenesPick	detour	costly		src/game/battle/dragon_cmd.cpp:3085	BOF3_INJECT
+switch	DragonCmd_LoadDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3064	BOF3_INJECT
+switch	DragonCmd_LoadStart	detour	costly		src/game/battle/dragon_cmd.cpp:3065	BOF3_INJECT
+switch	DragonCmd_LoadWait	detour	costly		src/game/battle/dragon_cmd.cpp:3066	BOF3_INJECT
+switch	DragonCmd_MenuCancel	detour	costly		src/game/battle/dragon_cmd.cpp:3072	BOF3_INJECT
+switch	DragonCmd_MenuCancelLoad	detour	costly		src/game/battle/dragon_cmd.cpp:3073	BOF3_INJECT
+switch	DragonCmd_MenuClose	detour	costly		src/game/battle/dragon_cmd.cpp:3071	BOF3_INJECT
+switch	DragonCmd_MenuDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3068	BOF3_INJECT
+switch	DragonCmd_MenuInput	detour	costly		src/game/battle/dragon_cmd.cpp:3069	BOF3_INJECT
+switch	DragonCmd_MenuPick	detour	costly		src/game/battle/dragon_cmd.cpp:3070	BOF3_INJECT
+switch	DragonCmd_Open	detour	costly		src/game/battle/dragon_cmd.cpp:3067	BOF3_INJECT
+switch	DragonCmd_PartDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3063	BOF3_INJECT
+switch	DragonCmd_Slot2Affordable	detour	costly		src/game/battle/dragon_cmd.cpp:3093	BOF3_INJECT
+switch	DragonCmd_SlotAffordable	detour	costly		src/game/battle/dragon_cmd.cpp:3078	BOF3_INJECT
+switch	DragonCmd_Slots2Back	detour	costly		src/game/battle/dragon_cmd.cpp:3095	BOF3_INJECT
+switch	DragonCmd_Slots2Cancel	detour	costly		src/game/battle/dragon_cmd.cpp:3094	BOF3_INJECT
+switch	DragonCmd_Slots2Close	detour	costly		src/game/battle/dragon_cmd.cpp:3097	BOF3_INJECT
+switch	DragonCmd_Slots2CloseMenu	detour	costly		src/game/battle/dragon_cmd.cpp:3090	BOF3_INJECT
+switch	DragonCmd_Slots2Confirm	detour	costly		src/game/battle/dragon_cmd.cpp:3096	BOF3_INJECT
+switch	DragonCmd_Slots2Cursor	detour	costly		src/game/battle/dragon_cmd.cpp:3092	BOF3_INJECT
+switch	DragonCmd_Slots2Dispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3089	BOF3_INJECT
+switch	DragonCmd_Slots2Open	detour	costly		src/game/battle/dragon_cmd.cpp:3091	BOF3_INJECT
+switch	DragonCmd_SlotsBack	detour	costly		src/game/battle/dragon_cmd.cpp:3080	BOF3_INJECT
+switch	DragonCmd_SlotsCancel	detour	costly		src/game/battle/dragon_cmd.cpp:3079	BOF3_INJECT
+switch	DragonCmd_SlotsClose	detour	costly		src/game/battle/dragon_cmd.cpp:3082	BOF3_INJECT
+switch	DragonCmd_SlotsCloseMenu	detour	costly		src/game/battle/dragon_cmd.cpp:3075	BOF3_INJECT
+switch	DragonCmd_SlotsConfirm	detour	costly		src/game/battle/dragon_cmd.cpp:3081	BOF3_INJECT
+switch	DragonCmd_SlotsCursor	detour	costly		src/game/battle/dragon_cmd.cpp:3077	BOF3_INJECT
+switch	DragonCmd_SlotsDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3074	BOF3_INJECT
+switch	DragonCmd_SlotsOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3076	BOF3_INJECT
+switch	DragonCmd_StoreAsk	detour	costly		src/game/battle/dragon_cmd.cpp:3102	BOF3_INJECT
+switch	DragonCmd_StoreCopy	detour	costly		src/game/battle/dragon_cmd.cpp:3103	BOF3_INJECT
+switch	DragonCmd_StoreCursor	detour	costly		src/game/battle/dragon_cmd.cpp:3101	BOF3_INJECT
+switch	DragonCmd_StoreDispatch	detour	costly		src/game/battle/dragon_cmd.cpp:3098	BOF3_INJECT
+switch	DragonCmd_StoreOpen	detour	costly		src/game/battle/dragon_cmd.cpp:3099	BOF3_INJECT
+switch	DragonCmd_StoreSource	detour	costly		src/game/battle/dragon_cmd.cpp:3104	BOF3_INJECT
+switch	DragonCmd_StoreWait	detour	costly		src/game/battle/dragon_cmd.cpp:3100	BOF3_INJECT
+switch	DragonForm_AddAbilityRow	detour	costly		src/game/battle/dragon_cmd.cpp:3114	BOF3_INJECT
+switch	DragonForm_ApplyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3115	BOF3_INJECT
+switch	DragonForm_FindRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3107	BOF3_INJECT
+switch	DragonForm_Mix	detour	costly		src/game/battle/dragon_cmd.cpp:3110	BOF3_INJECT
+switch	DragonForm_MixAbilities	detour	costly		src/game/battle/dragon_cmd.cpp:3113	BOF3_INJECT
+switch	DragonForm_PartyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3116	BOF3_INJECT
+switch	DragonForm_RecipeSlotHeld	detour	costly		src/game/battle/dragon_cmd.cpp:3108	BOF3_INJECT
+switch	DragonForm_SetMixBytes	detour	costly		src/game/battle/dragon_cmd.cpp:3112	BOF3_INJECT
+switch	DragonForm_StatShift	detour	costly		src/game/battle/dragon_cmd.cpp:3111	BOF3_INJECT
+switch	DragonForm_Transform	detour	costly		src/game/battle/dragon_cmd.cpp:3106	BOF3_INJECT
+switch	DragonForm_TryPartyRecipe	detour	costly		src/game/battle/dragon_cmd.cpp:3109	BOF3_INJECT
+switch	DragonGenes_Held	detour	costly		src/game/battle/dragon_cmd.cpp:3117	BOF3_INJECT
+switch	DragonGenes_SumCost	detour	costly		src/game/battle/dragon_cmd.cpp:3118	BOF3_INJECT
+switch	DragonHistory_Leave	detour	costly		src/game/battle/dragon_cmd.cpp:3105	BOF3_INJECT
 switch	Drain_Start	detour	costly		src/game/magic/drain_orb_a.cpp:508	BOF3_INJECT
 switch	Drain_Task	detour	costly		src/game/magic/drain_orb_a.cpp:507	BOF3_INJECT
 switch	DrainOrb_Dispatch	detour	costly		src/game/magic/drain_orb_a.cpp:509	BOF3_INJECT
@@ -3686,7 +3686,7 @@ switch	Effect_Heal80	detour	costly		src/game/effect/effect.cpp:2558	BOF3_INJECT
 switch	Effect_HealAmount	detour	costly		src/game/effect/effect.cpp:2612	BOF3_INJECT
 switch	Effect_HealAndCureBFC	detour	costly		src/game/effect/effect.cpp:2580	BOF3_INJECT
 switch	Effect_HoldFlag1C	detour	costly		src/game/effect/effect_kind_06.cpp:604	BOF3_INJECT
-switch	Effect_HpBasedDamage	detour	costly		src/game/battle/dragon_cmd.cpp:3054	BOF3_INJECT
+switch	Effect_HpBasedDamage	detour	costly		src/game/battle/dragon_cmd.cpp:3061	BOF3_INJECT
 switch	Effect_Inflict40Heal20Ap4	detour	costly		src/game/effect/effect.cpp:2556	BOF3_INJECT
 switch	Effect_Inflict800Unguarded	detour	costly		src/game/effect/effect.cpp:2569	BOF3_INJECT
 switch	Effect_InflictStatus20	detour	costly		src/game/effect/effect.cpp:2551	BOF3_INJECT
@@ -3694,7 +3694,7 @@ switch	Effect_InflictStatus4	detour	costly		src/game/effect/effect.cpp:2547	BOF3
 switch	Effect_InflictStatus8	detour	costly		src/game/effect/effect.cpp:2549	BOF3_INJECT
 switch	Effect_InflictStatus80	detour	costly		src/game/effect/effect.cpp:2550	BOF3_INJECT
 switch	Effect_MultiHit	detour	costly		src/game/effect/effect.cpp:2582	BOF3_INJECT
-switch	Effect_NoHitReaction	detour	costly		src/game/battle/dragon_cmd.cpp:3049	BOF3_INJECT
+switch	Effect_NoHitReaction	detour	costly		src/game/battle/dragon_cmd.cpp:3056	BOF3_INJECT
 switch	Effect_QuarterAttack	detour	costly		src/game/effect/effect.cpp:2518	BOF3_INJECT
 switch	Effect_QuarterDamage	detour	costly		src/game/effect/effect.cpp:2543	BOF3_INJECT
 switch	Effect_RaiseStat4By10	detour	costly		src/game/effect/effect.cpp:2577	BOF3_INJECT
@@ -3705,10 +3705,10 @@ switch	Effect_ResetFirstSeven	detour	costly		src/game/field/leader_panel.cpp:350
 switch	Effect_RestoreAp10	detour	costly		src/game/effect/effect.cpp:2581	BOF3_INJECT
 switch	Effect_RestoreAp40	detour	costly		src/game/effect/effect.cpp:2561	BOF3_INJECT
 switch	Effect_RestoreAp5	detour	costly		src/game/effect/effect.cpp:2560	BOF3_INJECT
-switch	Effect_RollInflict	detour	costly		src/game/battle/dragon_cmd.cpp:3053	BOF3_INJECT
-switch	Effect_RollInflictQuiet	detour	costly		src/game/battle/dragon_cmd.cpp:3052	BOF3_INJECT
-switch	Effect_RollStatStep	detour	costly		src/game/battle/dragon_cmd.cpp:3051	BOF3_INJECT
-switch	Effect_RollStatStepQuiet	detour	costly		src/game/battle/dragon_cmd.cpp:3050	BOF3_INJECT
+switch	Effect_RollInflict	detour	costly		src/game/battle/dragon_cmd.cpp:3060	BOF3_INJECT
+switch	Effect_RollInflictQuiet	detour	costly		src/game/battle/dragon_cmd.cpp:3059	BOF3_INJECT
+switch	Effect_RollStatStep	detour	costly		src/game/battle/dragon_cmd.cpp:3058	BOF3_INJECT
+switch	Effect_RollStatStepQuiet	detour	costly		src/game/battle/dragon_cmd.cpp:3057	BOF3_INJECT
 switch	Effect_RunObjects	detour	costly		src/game/effect/effect_gte.cpp:235	BOF3_INJECT
 switch	Effect_SkillDamage	detour	costly		src/game/effect/effect.cpp:2609	BOF3_INJECT
 switch	Effect_SkillDamageLessDef	detour	costly		src/game/effect/effect.cpp:2583	BOF3_INJECT
@@ -6285,7 +6285,7 @@ switch	FieldTrigger11	detour	costly		src/game/field/field_trigger_01.cpp:134	BOF
 switch	FieldTrigger61	detour	costly		src/game/field/field_trigger_01.cpp:133	BOF3_INJECT
 switch	File_CdRoot	detour	costly		src/game/platform/file.cpp:170	BOF3_INJECT
 switch	File_Close	detour	costly		src/game/platform/file.cpp:177	BOF3_INJECT
-switch	File_LoadDone	detour	costly		src/game/battle/dragon_cmd.cpp:3157	BOF3_INJECT
+switch	File_LoadDone	detour	costly		src/game/battle/dragon_cmd.cpp:3169	BOF3_INJECT
 switch	File_Open	detour	costly		src/game/platform/file.cpp:171	BOF3_INJECT
 switch	File_OpenWrite	detour	costly		src/game/platform/file.cpp:172	BOF3_INJECT
 switch	File_Read	detour	costly		src/game/platform/file.cpp:173	BOF3_INJECT
@@ -6388,7 +6388,7 @@ switch	ForetellOrb_End	detour	costly		src/game/magic/foretell.cpp:477	BOF3_INJEC
 switch	ForetellOrb_Run	detour	costly		src/game/magic/foretell.cpp:473	BOF3_INJECT
 switch	ForetellOrb_Spin	detour	costly		src/game/magic/foretell.cpp:475	BOF3_INJECT
 switch	ForetellOrb_Start	detour	costly		src/game/magic/foretell.cpp:474	BOF3_INJECT
-switch	Formation_ApplyStatMods	detour	costly		src/game/battle/dragon_cmd.cpp:3145	BOF3_INJECT
+switch	Formation_ApplyStatMods	detour	costly		src/game/battle/dragon_cmd.cpp:3157	BOF3_INJECT
 switch	FormationNameCentre	code	yes		src/game/menu/menu.cpp:1514	PatchBytes
 switch	Frost_Start	detour	costly		src/game/magic/frost_ring.cpp:378	BOF3_INJECT
 switch	Frost_Task	detour	costly		src/game/magic/frost_ring.cpp:377	BOF3_INJECT
@@ -7187,7 +7187,7 @@ switch	LinkedObjectD_Roll	detour	costly		src/game/scenario/linked_object.cpp:426
 switch	LinkedObjectD_Run	detour	costly		src/game/scenario/linked_object.cpp:425	BOF3_INJECT
 switch	LinkedObjectD_ShowAmount	detour	costly		src/game/scenario/linked_object.cpp:427	BOF3_INJECT
 switch	LinkedObjectD_WaitMessage	detour	costly		src/game/scenario/linked_object.cpp:428	BOF3_INJECT
-switch	LoadDatFile	detour	costly		src/game/battle/dragon_cmd.cpp:3155	BOF3_INJECT
+switch	LoadDatFile	detour	costly		src/game/battle/dragon_cmd.cpp:3167	BOF3_INJECT
 switch	LoadMenu_Apply	detour	costly		src/game/core/sound.cpp:1456	BOF3_INJECT
 switch	LoadMenu_Choose	detour	costly		src/game/core/sound.cpp:1451	BOF3_INJECT
 switch	LoadMenu_Confirm	detour	costly		src/game/core/sound.cpp:1452	BOF3_INJECT
@@ -8468,9 +8468,9 @@ switch	Rest_LoadJingle	detour	costly		src/game/shop/field_save.cpp:1080	BOF3_INJ
 switch	Rest_PlaceParty	detour	costly		src/game/shop/field_save.cpp:1079	BOF3_INJECT
 switch	Rest_Restore	detour	costly		src/game/shop/field_save.cpp:1082	BOF3_INJECT
 switch	Rest_WaitJingle	detour	costly		src/game/shop/field_save.cpp:1081	BOF3_INJECT
-switch	RestoreForm_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3113	BOF3_INJECT
-switch	RestoreForm_Task	detour	costly		src/game/battle/dragon_cmd.cpp:3112	BOF3_INJECT
-switch	RestoreForm_Wait	detour	costly		src/game/battle/dragon_cmd.cpp:3114	BOF3_INJECT
+switch	RestoreForm_Start	detour	costly		src/game/battle/dragon_cmd.cpp:3120	BOF3_INJECT
+switch	RestoreForm_Task	detour	costly		src/game/battle/dragon_cmd.cpp:3119	BOF3_INJECT
+switch	RestoreForm_Wait	detour	costly		src/game/battle/dragon_cmd.cpp:3121	BOF3_INJECT
 switch	Revive_Fade	detour	costly		src/game/magic/revive.cpp:495	BOF3_INJECT
 switch	Revive_IsStrong	detour	costly		src/game/magic/revive.cpp:496	BOF3_INJECT
 switch	Revive_Start	detour	costly		src/game/magic/revive.cpp:492	BOF3_INJECT
@@ -9529,7 +9529,7 @@ switch	SnapWave_Swing	detour	costly		src/game/magic/snap_wave.cpp:644	BOF3_INJEC
 switch	SnapWave_Task	detour	costly		src/game/magic/snap_wave.cpp:640	BOF3_INJECT
 switch	Snd_Init	detour	costly		src/game/platform/d3d.cpp:3980	BOF3_INJECT
 switch	Snd_LoadBank	detour	costly		src/game/core/sound.cpp:1436	BOF3_INJECT
-switch	Snd_LoadBankFile	detour	costly		src/game/battle/dragon_cmd.cpp:3156	BOF3_INJECT
+switch	Snd_LoadBankFile	detour	costly		src/game/battle/dragon_cmd.cpp:3168	BOF3_INJECT
 switch	SndBuf_CreateFromWave	detour	costly		src/game/platform/music.cpp:811	BOF3_INJECT
 switch	SndBuf_FromWave	detour	costly		src/game/platform/music.cpp:810	BOF3_INJECT
 switch	SndBuf_Play	detour	costly		src/game/platform/music.cpp:814	BOF3_INJECT
@@ -9708,7 +9708,7 @@ switch	StealClone_Finish	detour	costly		src/game/magic/steal.cpp:295	BOF3_INJECT
 switch	StealClone_Run	detour	costly		src/game/magic/steal.cpp:294	BOF3_INJECT
 switch	StealClone_Task	detour	costly		src/game/magic/steal.cpp:293	BOF3_INJECT
 switch	StopCuts	code	yes		src/game/platform/sound_st.cpp:52	PatchBytes
-switch	StoreAskWord	code	yes		src/game/battle/dragon_cmd.cpp:3038	PatchBytes
+switch	StoreAskWord	code	yes		src/game/battle/dragon_cmd.cpp:3045	PatchBytes
 switch	StpBlend	code	yes		src/game/text/tex.cpp:291	PatchBytes
 switch	StpTexels	code	yes		src/game/text/tex.cpp:286	PatchBytes
 switch	Str_CopyN	detour	costly		src/game/text/text.cpp:492	BOF3_INJECT
@@ -10208,7 +10208,7 @@ switch	env:BOF3X_AR3B_GROUP	env	yes		src/game/area/area_w3b_fuzz.cpp:859	read in
 switch	env:BOF3X_AR3G_GROUP	env	yes		src/game/area/area_w3g_fuzz.cpp:82	read in src/
 switch	env:BOF3X_AR4A_AREA	env	yes		src/game/area/area_w4a_fuzz.cpp:688	read in src/
 switch	env:BOF3X_AREA4_WALLS	env	yes		src/game/battle/dat_load.cpp:673	read in src/
-switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:606 src/game/platform/magic_080.cpp:732 src/launcher/config.cpp:605 src/launcher/config.cpp:1519	read in src/, set by the launcher
+switch	env:BOF3X_BACKGROUND	launcher	yes		src/launcher/config.cpp:611 src/game/platform/magic_080.cpp:732 src/launcher/config.cpp:610 src/launcher/config.cpp:1526	read in src/, set by the launcher
 switch	env:BOF3X_BANDLOG	env	yes		src/game/field/band_census.cpp:661	read in src/
 switch	env:BOF3X_BANDLOG_PARK	env	yes		src/game/field/band_census.cpp:664	read in src/
 switch	env:BOF3X_BANDLOG_SPAN	env	yes		src/game/field/band_census.cpp:665	read in src/
@@ -10233,8 +10233,8 @@ switch	env:BOF3X_BSI_RUN	env	yes		src/game/boss/boss_si_fuzz.cpp:152	read in src
 switch	env:BOF3X_BSJ_RUN	env	yes		src/game/boss/boss_sj_fuzz.cpp:323	read in src/
 switch	env:BOF3X_BW_TRACE	env	yes		src/game/battle/battle_windows_fuzz.cpp:746	read in src/
 switch	env:BOF3X_BWS_TRACE	env	yes		src/game/menu/battle_win_states_fuzz.cpp:534	read in src/
-switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:588 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:384 src/game/platform/music_seq.cpp:443 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1024 src/input/sigma.cpp:140 src/launcher/config.cpp:586 src/launcher/config.cpp:590 src/launcher/config.cpp:730 src/launcher/config.cpp:1518 src/launcher/config_dialog.cpp:248 src/launcher/launcher.cpp:539 src/launcher/music_player.cpp:417	read in src/, set by the launcher
-switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:380 src/hook/exe_image.cpp:1021 src/launcher/config.cpp:723 src/launcher/config.cpp:1503 src/launcher/config_dialog.cpp:266	read in src/
+switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:593 src/game/core/psp_code.cpp:38 src/game/platform/dat_cache.cpp:384 src/game/platform/music_seq.cpp:443 src/game/text/shoulder_glyphs.cpp:417 src/hook/exe_image.cpp:1024 src/input/sigma.cpp:140 src/launcher/config.cpp:591 src/launcher/config.cpp:595 src/launcher/config.cpp:737 src/launcher/config.cpp:1525 src/launcher/config_dialog.cpp:248 src/launcher/launcher.cpp:539 src/launcher/music_player.cpp:417	read in src/, set by the launcher
+switch	env:BOF3X_CACHE_DATA	env	yes		src/game/platform/dat_cache.cpp:380 src/hook/exe_image.cpp:1021 src/launcher/config.cpp:730 src/launcher/config.cpp:1510 src/launcher/config_dialog.cpp:266	read in src/
 switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:102 src/launcher/launcher.cpp:68 src/game/crt_rest.cpp:455 src/hook/calltrace.cpp:318 src/hook/input_script.cpp:1204	read in src/, refused by bof3x.exe
 switch	env:BOF3X_CALLTRACE_DETAIL	env	yes		src/hook/calltrace.cpp:390	read in src/
 switch	env:BOF3X_CALLTRACE_MODE	env	yes		src/hook/calltrace.cpp:382	read in src/
@@ -10244,7 +10244,7 @@ switch	env:BOF3X_CALLTRACE_STOP	env	yes		src/hook/calltrace.cpp:387	read in src/
 switch	env:BOF3X_CRASH_TEST	env	yes		src/hook/crash.cpp:349	read in src/
 switch	env:BOF3X_D3D_DEBUG	env	yes		src/render/render_d3d11.cpp:898	read in src/
 switch	env:BOF3X_DATLOG	env	yes		src/game/battle/dat_load.cpp:905	read in src/
-switch	env:BOF3X_DESERT_FAERIE	launcher	yes		src/launcher/config.cpp:624 src/game/field/event_script_ours.cpp:153 src/launcher/config.cpp:623 src/launcher/config.cpp:1523	read in src/, set by the launcher
+switch	env:BOF3X_DESERT_FAERIE	launcher	yes		src/launcher/config.cpp:629 src/game/field/event_script_ours.cpp:153 src/launcher/config.cpp:628 src/launcher/config.cpp:1531	read in src/, set by the launcher
 switch	env:BOF3X_DRAWLOG_RGB	env	yes		src/render/render_shim.cpp:840	read in src/
 switch	env:BOF3X_DRAWORDER	env	yes		src/hook/draw_order.cpp:205	read in src/
 switch	env:BOF3X_E1A_ONLY	env	yes		src/game/effect/effect_1a_fuzz.cpp:504	read in src/
@@ -10294,19 +10294,19 @@ switch	env:BOF3X_EFFECTLOG	env	yes		src/game/effect/effect_gte.cpp:96 src/game/f
 switch	env:BOF3X_EGT_ONLY	env	yes		src/game/effect/effect_gte_fuzz.cpp:346	read in src/
 switch	env:BOF3X_EH_CONTROL	env	yes		src/game/boss_harness_eh.cpp:178	read in src/
 switch	env:BOF3X_EKH_CONTROL	env	yes		src/game/scenario_harness_ekh.cpp:171	read in src/
-switch	env:BOF3X_ENEMY_INFO	launcher	yes		src/launcher/config.cpp:645 src/game/core/cheats.cpp:133 src/launcher/config.cpp:644 src/launcher/config.cpp:1522	read in src/, set by the launcher
+switch	env:BOF3X_ENEMY_INFO	launcher	yes		src/launcher/config.cpp:650 src/game/core/cheats.cpp:143 src/launcher/config.cpp:649 src/launcher/config.cpp:1529	read in src/, set by the launcher
 switch	env:BOF3X_EVENT_OPS_ONLY	env	yes		src/game/field/event_ops_fuzz.cpp:1237	read in src/
-switch	env:BOF3X_EXEFILE	env	yes		src/launcher/config.cpp:1508 src/launcher/launcher.cpp:651	read in src/
+switch	env:BOF3X_EXEFILE	env	yes		src/launcher/config.cpp:1515 src/launcher/launcher.cpp:651	read in src/
 switch	env:BOF3X_EXEIMAGE	env	yes		src/hook/exe_host.cpp:283 src/hook/exe_image.cpp:119 src/launcher/launcher.cpp:500 src/launcher/launcher.cpp:540 src/launcher/launcher.cpp:609 src/launcher/launcher.cpp:612 src/launcher/launcher.cpp:650 src/launcher/launcher.cpp:656	read in src/
-switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:211 src/launcher/config.cpp:1505	read in src/
+switch	env:BOF3X_EXEIMAGE_STRICT	env	yes		src/hook/exe_image.cpp:211 src/launcher/config.cpp:1512	read in src/
 switch	env:BOF3X_EXITTRACE	env	yes		src/game/platform/win_main.cpp:210	read in src/
-switch	env:BOF3X_EXP	launcher	yes		src/launcher/config.cpp:639 src/game/core/cheats.cpp:129 src/launcher/config.cpp:638 src/launcher/config.cpp:1521	read in src/, set by the launcher
+switch	env:BOF3X_EXP	launcher	yes		src/launcher/config.cpp:644 src/game/core/cheats.cpp:139 src/launcher/config.cpp:643 src/launcher/config.cpp:1528	read in src/, set by the launcher
 switch	env:BOF3X_FBGRAB	env	yes		src/render/fb_grab.cpp:17	read in src/
 switch	env:BOF3X_FC2_ONLY	env	yes		src/game/effect/field_c2_fuzz.cpp:424	read in src/
 switch	env:BOF3X_FE2_ONLY	env	yes		src/game/field/field_e2_fuzz.cpp:876	read in src/
 switch	env:BOF3X_FE2_ROUNDS	env	yes		src/game/field/field_e2_fuzz.cpp:883	read in src/
 switch	env:BOF3X_FFMPEG	env	yes		src/launcher/sources_dialog.cpp:453 src/launcher/sources_dialog.cpp:492	read in src/
-switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:603 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4031 src/hook/input_script.cpp:1169 src/launcher/config.cpp:601 src/launcher/config.cpp:1518	read in src/, set by the launcher
+switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:608 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4031 src/hook/input_script.cpp:1169 src/launcher/config.cpp:606 src/launcher/config.cpp:1525	read in src/, set by the launcher
 switch	env:BOF3X_FO_ONLY	env	yes		src/game/field/field_o_fuzz.cpp:530	read in src/
 switch	env:BOF3X_FO_ROUNDS	env	yes		src/game/field/field_o_fuzz.cpp:547	read in src/
 switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:740	read in src/
@@ -10324,8 +10324,8 @@ switch	env:BOF3X_ICON_REF	env	yes		src/hook/exe_icon.cpp:640	read in src/
 switch	env:BOF3X_ICON_VRAM	env	yes		src/hook/exe_host.cpp:656 src/hook/exe_icon.cpp:638	read in src/
 switch	env:BOF3X_IMAGEBASE	env	yes		src/hook/host.cpp:105 src/launcher/launcher.cpp:397	read in src/
 switch	env:BOF3X_INPUT	env	yes		src/game/crt_rest.cpp:453 src/hook/dllmain.cpp:50 src/hook/draw_order.cpp:216 src/hook/exe_host.cpp:639 src/hook/gapwatch.cpp:803 src/hook/input_script.cpp:1302 src/hook/wav_dump.cpp:635	read in src/
-switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:657 src/game/platform/d_input.cpp:121 src/launcher/config.cpp:654	read in src/, set by the launcher
-switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:471 src/game/battle/dat_load.cpp:864 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1168 src/launcher/config.cpp:467 src/launcher/config.cpp:489 src/launcher/config.cpp:1026 src/launcher/config.cpp:1401 src/launcher/config.cpp:1516 src/launcher/config.cpp:1662	read in src/, set by the launcher
+switch	env:BOF3X_KEYS	launcher	yes		src/launcher/config.cpp:664 src/game/platform/d_input.cpp:121 src/launcher/config.cpp:661	read in src/, set by the launcher
+switch	env:BOF3X_LANG	launcher	yes		src/launcher/config.cpp:476 src/game/battle/dat_load.cpp:864 src/game/text/lang_layout.cpp:10 src/game/text/lang_layout.cpp:21 src/game/text/lang_layout.cpp:28 src/hook/input_script.cpp:1168 src/launcher/config.cpp:472 src/launcher/config.cpp:494 src/launcher/config.cpp:1033 src/launcher/config.cpp:1408 src/launcher/config.cpp:1523 src/launcher/config.cpp:1670	read in src/, set by the launcher
 switch	env:BOF3X_LAUNCHER	env	yes		src/hook/exe_host.cpp:587 src/launcher/launcher.cpp:672	read in src/
 switch	env:BOF3X_LAYERING	env	yes		src/game/field/layering.cpp:612	read in src/
 switch	env:BOF3X_LAYERING_AHEAD	env	yes		src/game/field/layering.cpp:614	read in src/
@@ -10333,30 +10333,31 @@ switch	env:BOF3X_LAYERING_LOG	env	yes		src/game/field/layering.cpp:616	read in s
 switch	env:BOF3X_LAYERING_RECORDS	env	yes		src/game/field/layering.cpp:617	read in src/
 switch	env:BOF3X_LAYERING_RISE	env	yes		src/game/field/layering.cpp:615	read in src/
 switch	env:BOF3X_LAYERING_SPRITEBOX	env	yes		src/game/field/layering.cpp:618	read in src/
+switch	env:BOF3X_LEARN	launcher	yes		src/launcher/config.cpp:654 src/game/core/cheats.cpp:149 src/launcher/config.cpp:653 src/launcher/config.cpp:1530	read in src/, set by the launcher
 switch	env:BOF3X_LINES	env	yes		src/game/platform/d3d_lines.cpp:117	read in src/
 switch	env:BOF3X_MP3	env	yes		src/audio/mp3.cpp:607 src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	read in src/
 switch	env:BOF3X_MP3=original	hosted-only	costly		src/hook/exe_host.cpp:92 src/launcher/launcher.cpp:71	refused by bof3x.exe
 switch	env:BOF3X_MP3_COMPARE	hosted-only	costly		src/hook/exe_host.cpp:99 src/launcher/launcher.cpp:68 src/audio/mp3.cpp:632	read in src/, refused by bof3x.exe
 switch	env:BOF3X_MP3_DUMP	env	yes		src/audio/mp3.cpp:510	read in src/
 switch	env:BOF3X_MP3_DUMP_FILES	env	yes		src/audio/mp3.cpp:511	read in src/
-switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:597 src/game/platform/music_seq.cpp:433 src/launcher/config.cpp:594 src/launcher/config.cpp:1518	read in src/, set by the launcher
+switch	env:BOF3X_MUSIC	launcher	yes		src/launcher/config.cpp:602 src/game/platform/music_seq.cpp:433 src/launcher/config.cpp:599 src/launcher/config.cpp:1525	read in src/, set by the launcher
 switch	env:BOF3X_MUSIC_LOG	env	yes		src/audio/sound_sdl.cpp:230 src/game/platform/sound_ours.cpp:76	read in src/
 switch	env:BOF3X_MUSIC_LOOPS	env	yes		src/game/platform/music_loops.cpp:36	read in src/
 switch	env:BOF3X_MW_TRACE	env	yes		src/game/menu/menu_windows_fuzz.cpp:985	read in src/
-switch	env:BOF3X_NO_FAIL	launcher	yes		src/launcher/config.cpp:647 src/game/core/cheats.cpp:136 src/launcher/config.cpp:646 src/launcher/config.cpp:1523	read in src/, set by the launcher
-switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:560 src/hook/behaviour.cpp:102 src/hook/detour.cpp:66 src/hook/detour.cpp:122 src/launcher/config.cpp:559 src/launcher/config.cpp:569 src/launcher/config.cpp:571 src/launcher/config.cpp:1517	read in src/, set by the launcher
-switch	env:BOF3X_ON	launcher	yes		src/launcher/config.cpp:576 src/hook/behaviour.cpp:99 src/launcher/config.cpp:567 src/launcher/config.cpp:1517	read in src/, set by the launcher
-switch	env:BOF3X_OPT	launcher	yes		src/launcher/config.cpp:536 src/game/battle/dat_load.cpp:615 src/hook/exe_image.cpp:1018 src/launcher/config.cpp:487 src/launcher/config.cpp:596 src/launcher/config.cpp:1516	read in src/, set by the launcher
+switch	env:BOF3X_NO_FAIL	launcher	yes		src/launcher/config.cpp:652 src/game/core/cheats.cpp:146 src/launcher/config.cpp:651 src/launcher/config.cpp:1530	read in src/, set by the launcher
+switch	env:BOF3X_OFF	launcher	yes		src/launcher/config.cpp:565 src/hook/behaviour.cpp:102 src/hook/detour.cpp:66 src/hook/detour.cpp:122 src/launcher/config.cpp:564 src/launcher/config.cpp:574 src/launcher/config.cpp:576 src/launcher/config.cpp:1524	read in src/, set by the launcher
+switch	env:BOF3X_ON	launcher	yes		src/launcher/config.cpp:581 src/hook/behaviour.cpp:99 src/launcher/config.cpp:572 src/launcher/config.cpp:1524	read in src/, set by the launcher
+switch	env:BOF3X_OPT	launcher	yes		src/launcher/config.cpp:541 src/game/battle/dat_load.cpp:615 src/hook/exe_image.cpp:1018 src/launcher/config.cpp:492 src/launcher/config.cpp:601 src/launcher/config.cpp:1523	read in src/, set by the launcher
 switch	env:BOF3X_ORIGINAL	hosted-only	costly		src/hook/exe_host.cpp:85 src/launcher/launcher.cpp:68 src/hook/detour.cpp:51 src/hook/detour.cpp:122 src/hook/detour.cpp:438	read in src/, refused by bof3x.exe
-switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:666 src/game/platform/d_input.cpp:95 src/game/platform/pad_read.cpp:99 src/launcher/config.cpp:663	read in src/, set by the launcher
+switch	env:BOF3X_PAD	launcher	yes		src/launcher/config.cpp:673 src/game/platform/d_input.cpp:95 src/game/platform/pad_read.cpp:99 src/launcher/config.cpp:670	read in src/, set by the launcher
 switch	env:BOF3X_PAD_LAYOUT	env	yes		src/game/platform/d_input.cpp:78 src/game/platform/pad_read.cpp:82	read in src/
 switch	env:BOF3X_PILLARBOX	env	yes		src/game/platform/pillarbox.cpp:273	read in src/
 switch	env:BOF3X_PIXEL_OFFSET	env	yes		src/render/render_d3d11.cpp:316	read in src/
 switch	env:BOF3X_PM_ONLY	env	yes		src/game/core/mode_rest_fuzz.cpp:272	read in src/
 switch	env:BOF3X_POSELOG	env	yes		src/game/core/title.cpp:1627 src/game/field/sprite.cpp:249 src/game/platform/d3d_draw.cpp:115	read in src/
-switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:609 src/launcher/config.cpp:608 src/launcher/config.cpp:1519 src/render/render_d3d11.cpp:137	read in src/, set by the launcher
-switch	env:BOF3X_PRESET	env	yes		src/game/battle/dat_load.cpp:875 src/launcher/config.cpp:1622 src/launcher/config.cpp:1673	read in src/
-switch	env:BOF3X_PSP	launcher	yes		src/launcher/config.cpp:554 src/game/core/psp_code.cpp:52 src/game/core/psp_code.cpp:148 src/launcher/config.cpp:553 src/launcher/config.cpp:1517	read in src/, set by the launcher
+switch	env:BOF3X_PRESENT	launcher	yes		src/launcher/config.cpp:614 src/launcher/config.cpp:613 src/launcher/config.cpp:1526 src/render/render_d3d11.cpp:137	read in src/, set by the launcher
+switch	env:BOF3X_PRESET	env	yes		src/game/battle/dat_load.cpp:875 src/launcher/config.cpp:1630 src/launcher/config.cpp:1681	read in src/
+switch	env:BOF3X_PSP	launcher	yes		src/launcher/config.cpp:559 src/game/core/psp_code.cpp:52 src/game/core/psp_code.cpp:148 src/launcher/config.cpp:558 src/launcher/config.cpp:1524	read in src/, set by the launcher
 switch	env:BOF3X_PYTHON	env	yes		src/launcher/sources_dialog.cpp:81	read in src/
 switch	env:BOF3X_R0A_ONLY	env	yes		src/game/field/rest_0a_fuzz.cpp:325	read in src/
 switch	env:BOF3X_R1A_ONLY	env	yes		src/game/field/rest_1a_fuzz.cpp:534	read in src/
@@ -10391,9 +10392,9 @@ switch	env:BOF3X_R4E_ONLY	env	yes		src/game/community/rest_4e_fuzz.cpp:472	read 
 switch	env:BOF3X_R4F_ONLY	env	yes		src/game/effect/rest_4f_fuzz.cpp:632	read in src/
 switch	env:BOF3X_R4F_ROUNDS	env	yes		src/game/effect/rest_4f_fuzz.cpp:644	read in src/
 switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:454 src/hook/input_script.cpp:1301	read in src/
-switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:549 src/game/text/msgbox.cpp:775 src/launcher/config.cpp:548 src/launcher/config.cpp:1517	read in src/, set by the launcher
-switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:614 src/launcher/config.cpp:611 src/render/satpixie.cpp:261	read in src/, set by the launcher
-switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:635 src/game/platform/display_setup.cpp:98 src/launcher/config.cpp:633 src/launcher/config.cpp:1521	read in src/, set by the launcher
+switch	env:BOF3X_RUBY_KEY	launcher	yes		src/launcher/config.cpp:554 src/game/text/msgbox.cpp:775 src/launcher/config.cpp:553 src/launcher/config.cpp:1524	read in src/, set by the launcher
+switch	env:BOF3X_SATPIXIE	launcher	yes		src/launcher/config.cpp:619 src/launcher/config.cpp:616 src/render/satpixie.cpp:261	read in src/, set by the launcher
+switch	env:BOF3X_SCALE	launcher	yes		src/launcher/config.cpp:640 src/game/platform/display_setup.cpp:98 src/launcher/config.cpp:638 src/launcher/config.cpp:1528	read in src/, set by the launcher
 switch	env:BOF3X_SELFTEST_ONLY	env	yes		src/audio/sound_sdl.cpp:1238 src/game/menu/quick_menu.cpp:535 src/game/platform/sound_ours.cpp:1287 src/hook/behaviour.cpp:127 src/hook/bind.cpp:415 src/hook/dllmain.cpp:51 src/hook/dllmain.cpp:64 src/hook/exe_host.cpp:639 src/hook/exe_host.cpp:650 src/hook/exe_image.cpp:587 src/hook/log.cpp:189 src/hook/snapshot.cpp:1184 src/hook/statehash.cpp:697 src/launcher/launcher.cpp:63 src/render/gfx_snapshot.cpp:447	read in src/
 switch	env:BOF3X_SHADOW	hosted-only	costly		src/hook/exe_host.cpp:88 src/launcher/launcher.cpp:68 src/hook/detour.cpp:381	read in src/, refused by bof3x.exe
 switch	env:BOF3X_SHOT_DIR	env	yes		src/hook/input_script.cpp:1327	read in src/
@@ -10402,7 +10403,7 @@ switch	env:BOF3X_SHOT_WAIT	env	yes		src/hook/input_script.cpp:1343	read in src/
 switch	env:BOF3X_SIDE_DUP	env	yes		src/game/field/map_layers.cpp:128	read in src/
 switch	env:BOF3X_SIDE_ZERO	env	yes		src/game/field/map_layers.cpp:74	read in src/
 switch	env:BOF3X_SL_CONTROL	env	yes		src/game/platform/widescreen.cpp:233	read in src/
-switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:627 src/game/platform/display_setup.cpp:113 src/launcher/config.cpp:626 src/launcher/config.cpp:1520	read in src/, set by the launcher
+switch	env:BOF3X_SNAP	launcher	yes		src/launcher/config.cpp:632 src/game/platform/display_setup.cpp:113 src/launcher/config.cpp:631 src/launcher/config.cpp:1527	read in src/, set by the launcher
 switch	env:BOF3X_SPEED	env	yes		src/game/platform/magic_080.cpp:741 src/hook/wav_dump.cpp:661	read in src/
 switch	env:BOF3X_STACKWATCH	env	yes		src/hook/stackwatch.cpp:280 src/hook/stackwatch.cpp:282	read in src/
 switch	env:BOF3X_STALLWATCH	env	yes		src/hook/stallwatch.cpp:205	read in src/
@@ -10411,20 +10412,20 @@ switch	env:BOF3X_STATEHASH_DUMP	env	yes		src/hook/statehash.cpp:807	read in src/
 switch	env:BOF3X_STATEHASH_FOLD	env	yes		src/hook/statehash.cpp:709 src/hook/statehash.cpp:715	read in src/
 switch	env:BOF3X_STATEHASH_RAW	env	yes		src/hook/statehash.cpp:700	read in src/
 switch	env:BOF3X_STATEHASH_SKIP	env	yes		src/hook/statehash.cpp:802	read in src/
-switch	env:BOF3X_STEAL	launcher	yes		src/launcher/config.cpp:643 src/game/core/cheats.cpp:141 src/launcher/config.cpp:642 src/launcher/config.cpp:1522	read in src/, set by the launcher
+switch	env:BOF3X_STEAL	launcher	yes		src/launcher/config.cpp:648 src/game/core/cheats.cpp:154 src/launcher/config.cpp:647 src/launcher/config.cpp:1529	read in src/, set by the launcher
 switch	env:BOF3X_STPCENSUS	env	yes		src/hook/stp_census.cpp:128	read in src/
 switch	env:BOF3X_STPVIEW	env	yes		src/render/render_d3d11.cpp:899	read in src/
 switch	env:BOF3X_SWAP	env	yes		src/render/render_d3d11.cpp:885	read in src/
 switch	env:BOF3X_TEXPAGELOG	env	yes		src/game/platform/d3d.cpp:2589	read in src/
-switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:618 src/game/text/msgbox.cpp:794 src/launcher/config.cpp:617 src/launcher/config.cpp:1519	read in src/, set by the launcher
+switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:623 src/game/text/msgbox.cpp:794 src/launcher/config.cpp:622 src/launcher/config.cpp:1526	read in src/, set by the launcher
 switch	env:BOF3X_TEXTLOG	env	yes		src/game/text/text_draw.cpp:261	read in src/
 switch	env:BOF3X_TICK_BASE	env	yes		src/game/platform/game_clock.cpp:78	read in src/
 switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:3987	read in src/
-switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:621 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:620 src/launcher/config.cpp:1520	read in src/, set by the launcher
+switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:626 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:625 src/launcher/config.cpp:1527	read in src/, set by the launcher
 switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:959	read in src/
 switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:623	read in src/
 switch	env:BOF3X_WAV_LABEL	env	yes		src/hook/wav_dump.cpp:630	read in src/
-switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:630 src/game/platform/widescreen.cpp:348 src/launcher/config.cpp:629 src/launcher/config.cpp:1520	read in src/, set by the launcher
+switch	env:BOF3X_WIDE	launcher	yes		src/launcher/config.cpp:635 src/game/platform/widescreen.cpp:348 src/launcher/config.cpp:634 src/launcher/config.cpp:1527	read in src/, set by the launcher
 switch	env:BOF3X_WIDE_HIDE	env	yes		src/game/field/wide_staging.cpp:1113	read in src/
 switch	env:BOF3X_WIDE_INSET	env	yes		src/game/platform/widescreen.cpp:446	read in src/
 switch	env:BOF3X_WIDE_RING	env	yes		src/game/field/map_rim.cpp:682	read in src/
@@ -10432,11 +10433,12 @@ switch	env:BOF3X_WIDE_STAGING	env	yes		src/game/field/wide_staging.cpp:1112	read
 switch	env:BOF3X_WIDE_STAGING_LOG	env	yes		src/game/field/wide_staging.cpp:1102	read in src/
 switch	env:BOF3X_WIDE_TERRAIN	env	yes		src/game/platform/widescreen.cpp:431	read in src/
 switch	env:BOF3X_WRITEWATCH	env	yes		src/hook/write_watch.cpp:190	read in src/
-switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:641 src/game/core/cheats.cpp:130 src/launcher/config.cpp:640 src/launcher/config.cpp:1521	read in src/, set by the launcher
+switch	env:BOF3X_ZENNY	launcher	yes		src/launcher/config.cpp:646 src/game/core/cheats.cpp:140 src/launcher/config.cpp:645 src/launcher/config.cpp:1528	read in src/, set by the launcher
 switch	ini:background	launcher	yes		src/launcher/config.cpp:229	ini key -> BOF3X_BACKGROUND
 switch	ini:cache	launcher	yes		src/launcher/config.cpp:210	ini key -> BOF3X_CACHE
 switch	ini:cheat.enemy_info	launcher	yes		src/launcher/config.cpp:290	ini key -> BOF3X_ENEMY_INFO
 switch	ini:cheat.exp	launcher	yes		src/launcher/config.cpp:278	ini key -> BOF3X_EXP,BOF3X_ZENNY
+switch	ini:cheat.learn	launcher	yes		src/launcher/config.cpp:296	ini key -> BOF3X_LEARN
 switch	ini:cheat.no_fail	launcher	yes		src/launcher/config.cpp:293	ini key -> BOF3X_NO_FAIL
 switch	ini:cheat.steal	launcher	yes		src/launcher/config.cpp:287	ini key -> BOF3X_STEAL
 switch	ini:cheat.zenny	launcher	yes		src/launcher/config.cpp:278	ini key -> BOF3X_EXP,BOF3X_ZENNY
@@ -10444,14 +10446,14 @@ switch	ini:desert_faerie	launcher	yes		src/launcher/config.cpp:268	ini key -> BO
 switch	ini:display	launcher	yes		src/launcher/config.cpp:220	ini key
 switch	ini:ffmpeg	launcher	yes		src/launcher/config.cpp:212	ini key
 switch	ini:filter	launcher	yes		src/launcher/config.cpp:217	ini key -> BOF3X_FILTER
-switch	ini:key.	launcher	yes		src/launcher/config.cpp:296	ini key -> BOF3X_KEYS
+switch	ini:key.	launcher	yes		src/launcher/config.cpp:299	ini key -> BOF3X_KEYS
 switch	ini:language	launcher	yes		src/launcher/config.cpp:168	ini key -> BOF3X_LANG
 switch	ini:mods_off	launcher	yes		src/launcher/config.cpp:200	ini key -> BOF3X_OPT
 switch	ini:music	launcher	yes		src/launcher/config.cpp:214	ini key -> BOF3X_MUSIC
 switch	ini:off	launcher	yes		src/launcher/config.cpp:196	ini key -> BOF3X_OFF,BOF3X_ON
 switch	ini:on	launcher	yes		src/launcher/config.cpp:198	ini key -> BOF3X_ON
 switch	ini:opt	launcher	yes		src/launcher/config.cpp:189	ini key -> BOF3X_MUSIC,BOF3X_OPT
-switch	ini:pad.	launcher	yes		src/launcher/config.cpp:300	ini key -> BOF3X_PAD
+switch	ini:pad.	launcher	yes		src/launcher/config.cpp:303	ini key -> BOF3X_PAD
 switch	ini:preset	launcher	yes		src/launcher/config.cpp:202	ini key
 switch	ini:psp	launcher	yes		src/launcher/config.cpp:194	ini key -> BOF3X_PSP
 switch	ini:renderer	launcher	yes		src/launcher/config.cpp:223	ini key
@@ -10459,7 +10461,7 @@ switch	ini:ruby	launcher	yes		src/launcher/config.cpp:176	ini key -> BOF3X_OPT
 switch	ini:ruby_key	launcher	yes		src/launcher/config.cpp:179	ini key -> BOF3X_RUBY_KEY
 switch	ini:ruby_ui	launcher	yes		src/launcher/config.cpp:183	ini key
 switch	ini:satpixie.	launcher	yes		src/launcher/config.cpp:237	ini key -> BOF3X_SATPIXIE
-switch	ini:scale	launcher	yes		src/launcher/config.cpp:304	ini key -> BOF3X_SCALE
+switch	ini:scale	launcher	yes		src/launcher/config.cpp:307	ini key -> BOF3X_SCALE
 switch	ini:screen	launcher	yes		src/launcher/config.cpp:232	ini key -> BOF3X_PRESENT,BOF3X_SATPIXIE
 switch	ini:show_launcher	launcher	yes		src/launcher/config.cpp:226	ini key
 switch	ini:snap	launcher	yes		src/launcher/config.cpp:271	ini key -> BOF3X_SNAP
@@ -10690,3 +10692,4 @@ entry	DIV-0220	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
 entry	DIV-0221	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
 entry	DIV-0222	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
 entry	DIV-0223	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
+entry	DIV-0224	launcher	yes	env:BOF3X_LEARN		tier Extension; kind launcher
