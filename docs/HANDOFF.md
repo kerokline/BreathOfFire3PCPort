@@ -287,7 +287,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **2026-11-11** (owner-review's section of that date): the sound-layer round signed off; the save editor used as a
-     converter and an edited save played. Still open there: a PC-made card loaded by a PlayStation build, D350 and D344.
+     converter, an edited save played, a PC-made card read in Mednafen. Still open there: D350 and D344.
    - **2026-11-07** (owner-review's two sections of that date): the ending scenes approved in play; the 64-bit
      build heard right, D406's listen after its fix owed; DIV-0203's German on a rebuilt `de-DE` layer.
    - **2026-10-28..31** (owner-review's section of that name): the exe-gap round's listens and DIV-0195's boxes
@@ -673,17 +673,14 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   card save is offered for the languages installed. **A layer built before 2026-11-11 has no chunk: build the
   languages again**, the owner's `game\` included; whether the launcher's stale check offers that rebuild by
   itself for this change was not run). `save_tests.cpp --layers`: 1,557 checks, 0 failures, 113 PC saves and 46 saves of 45 real cards; the window driven by `tools/launcher_host/save_editor_drive.py` (33 checks; it finds its
-  windows by the process it started). **Owed:** a save from the PC game loaded on a PlayStation emulator
-  (Mednafen or the sibling's psxrecomp): the card is checked for structure only, and the button words and
-  the PC's option bytes have never been read by a PlayStation build. Then the owner's eye on the two file
-  boxes. Not built: EU, FR and DE card names for a new save (a save of those releases opens and is
+  windows by the process it started). **A PC-made card was read in Mednafen (the owner, 2026-11-11)**; the sibling's psxrecomp has not read one. Owed: the
+  owner's eye on the two file boxes. Not built: EU, FR and DE card names for a new save (a save of those releases opens and is
   replaced), a name codec per release (a name the player wrote is written as it is),  DexDrive `.gme` and single-save
   files.
 
   **Owed before it is called done:**
   - ~~An edited save loaded and played in the game~~ - **done by the owner (said 2026-11-11), who also used the
-    editor as a converter.** Which fields were edited is not recorded; the PlayStation-emulator load above stays owed
-    until the owner says a PlayStation build read a PC-made card.
+    editor as a converter.** Which fields were edited is not recorded.
   - **`tools/launcher_host/dialog_test.py` was not run** against the new button on the Mods row: it finds the
     launcher by its window title and presses Play, and the owner's launcher was open. Run it with no other
     launcher open, or change it to find its own process's window first (the scratch driver of this session

@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's two checks struck at the owner's word) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's three checks struck at the owner's word) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -23,10 +23,10 @@ play an edited save".
 - ~~**An edited save loaded and played in the game**~~ (the save editor, DIV-0211): done. Which fields were
   edited is not recorded.
 - ~~**The save editor used as a converter**~~ (PR #222): done.
+- ~~**A PC-made card loaded by a PlayStation build**~~: "pc made card was read in mednafen" (the owner, the
+  same evening). psxrecomp was not named.
 
-**Still open from the same two:** a PC-made card loaded by a PlayStation build (Mednafen or the sibling's
-psxrecomp) - say if the conversion you made was read there, and it is struck too; D350 and D344, the sound-layer
-round's two decisions, below.
+**Still open from the same two:** D350 and D344, the sound-layer round's two decisions, below.
 
 ## 2026-11-07 evening, the ending scenes (`fix/ending-scenes-1107`)
 
