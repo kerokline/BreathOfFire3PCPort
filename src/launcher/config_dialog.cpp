@@ -1002,6 +1002,7 @@ void CheatsPopulate(HWND dlg, HWND dlg2, const Config::Cheats& ch) {
     CheckDlgButton(dlg, IDC_CH_STEAL, ch.steal ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(dlg2, IDC_CH_INFO, ch.enemy_info ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(dlg2, IDC_CH_NOFAIL, ch.no_fail ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dlg2, IDC_CH_LEARN, ch.learn ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void CheatsReadBack(HWND dlg, HWND dlg2, Config::Cheats& ch) {
@@ -1012,6 +1013,7 @@ void CheatsReadBack(HWND dlg, HWND dlg2, Config::Cheats& ch) {
     ch.steal = IsDlgButtonChecked(dlg, IDC_CH_STEAL) == BST_CHECKED;
     ch.enemy_info = IsDlgButtonChecked(dlg2, IDC_CH_INFO) == BST_CHECKED;
     ch.no_fail = IsDlgButtonChecked(dlg2, IDC_CH_NOFAIL) == BST_CHECKED;
+    ch.learn = IsDlgButtonChecked(dlg2, IDC_CH_LEARN) == BST_CHECKED;
 }
 
 // A slider on the page moved: show its value. False when it is not one of these.
@@ -1774,6 +1776,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_CH_STEAL:
         case IDC_CH_INFO:
         case IDC_CH_NOFAIL:
+        case IDC_CH_LEARN:
             if (HIWORD(wp) == BN_CLICKED) state->cheats_touched = true;
             return TRUE;
         case IDC_CH_DEFAULTS:

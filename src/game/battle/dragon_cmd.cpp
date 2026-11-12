@@ -2482,6 +2482,9 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
 // by 0x904B40's word +2; 0x64F104 when the member's character index
 // (Character_IndexById 0x66972C by its +0x89) is 6, else 0x64F0FC). The original divides by the
 // odds unchecked: ours aborts on 0.
+// DIVERGENCE DIV-0226 (src/game/core/cheats.cpp): under BOF3X_LEARN=1 the
+// answer is 1 whatever the roll; Rand is called and the odds are read as
+// before.
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (BH_CALL(Battle_ActorIsOut)(member) != 0) return 0;
     unsigned char* const r = PartyBattleE6(member);
@@ -2499,6 +2502,7 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
         bof3::Fatal("Battle_MemberRollByAction: the odds for action 0x%X (nibble %u of 0x%X) are 0 - the original divides by "
                     "them (docs/battle_e6.md section 7)",
                     id, nibble, (unsigned)table);
+    if (Cheats_LearnAlways()) return 1;   // DIV-0226
     return (static_cast<unsigned>(roll % static_cast<int>(odds)) & 0xFF) == 0 ? 1 : 0;
 }
 
@@ -3146,6 +3150,11 @@ void DragonCmd_Inject() {
     BOF3_INJECT(Battle_PickFlag8Member);
     BOF3_INJECT(Battle_MemberRollByAction);
     BOF3_INJECT(Battle_MemberCoinFlip);
+    // DIV-0226 answers in Battle_MemberRollByAction; Capcom's body would roll
+    // as before and the cheat would be silently off. After the bind: IsEnabled
+    // answers "not ours" for a function no Inject has named yet.
+    if (Cheats_LearnAlways() && !bof3::IsEnabled(bof3::addr::Battle_MemberRollByAction))
+        bof3::Fatal("BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled");
     BOF3_INJECT(Battle_ActionBitSet);
     BOF3_INJECT(Battle_MemberListFull);
     BOF3_INJECT(Battle_SettleFlag8);

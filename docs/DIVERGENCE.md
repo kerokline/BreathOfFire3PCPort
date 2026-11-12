@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 225 entries, DIV-0001..0225, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 226 entries, DIV-0001..0226, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16522,4 +16522,63 @@ designed in rather than bolted on.
 - **Player:** yes - BOF3X_ON, on=
 - **Toward:** none - no release has it; it is the romhack's
 - **Languages:** any - the menu's text is the mod's language layer's, which the launcher hands over under that language alone
+- **State:** active
+
+### An examining member always learns the enemy's skill: a Cheats switch
+
+- **ID:** DIV-0226
+- **Date:** 2026-11-12
+- **Subsystem:** battle, the learning of an enemy's skill -
+  `Battle_MemberRollByAction` `0x453910` (ours,
+  `src/game/battle/dragon_cmd.cpp`), the test `Battle_PickFlag8Member`
+  `0x4537A0` asks for a skill that can be learned; the switch in
+  `src/game/core/cheats.cpp`; the launcher's Cheats sub-tab, Page 2;
+  [`cheats.md`](cheats.md) section 8.
+- **Tier:** Extension
+- **Original behaviour:** when an enemy acts, `Battle_PickFlag8Member` asks
+  each party member one of two tests, by bit `0x200` of the action record's
+  u16 `+4` (`0x65C4DC + 0x18 id`) - the bit `BattleAction_AbilityNotice` and
+  `Battle_SettleFlag8` read as "can be learned". Set, the test is
+  `Battle_MemberRollByAction`: it refuses a member that is out, that does
+  not watch (its `+0x130` bit 0), that watches another actor (its `+0x124`),
+  a skill the party knows (`Battle_ActionBitSet`, the set `0x904088`) and a
+  member whose list has no room (`Battle_MemberListFull`), then passes when
+  `Rand` leaves no remainder by the odds of the skill's class (the high
+  nibble of the skill row's byte `0x65C4D9 + 0x18 id` into `0x64F0FC`, or
+  `0x64F104` for the character of index 6). Clear, the test is
+  `Battle_MemberCoinFlip` `0x453A10`, an even `Rand` after the same
+  refusals but the known-skill one. One member that passes gets flag bit 3
+  and state 0xA; `BattleAction_AbilityNotice` then shows system message
+  `0x24` for a skill that can be learned, which `Battle_SettleFlag8` files in
+  the member's list, and `0x23` for one that cannot.
+- **New behaviour:** with `BOF3X_LEARN=1` (`cheat.learn=1`, the box "Examine
+  always learns the skill that the enemy uses") `Battle_MemberRollByAction`
+  answers 1 after its refusals, whatever `Rand` gave. `Rand` is still called
+  once and the odds are still read (and odds of 0 still abort), so the
+  random stream stands where it would have. Every refusal holds: a skill the
+  party knows, a full list and a member that does not watch the actor are as
+  before, and with more than one member watching `Battle_PickFlag8Member`
+  still draws one. `Battle_MemberCoinFlip` is not touched: a skill that
+  cannot be learned gives its "cannot be learned" notice as often as before
+  (the owner's reading of the coin flip, 2026-11-12, confirmed by the bit;
+  the first build of this entry made it always pass, which only made that
+  notice certain). Off (the default), nothing changes. The module stops the
+  game at start when the switch is on and `Battle_MemberRollByAction` is
+  left as Capcom's (`BOF3X_ORIGINAL`).
+- **Rationale:** the owner's request, 2026-11-12: the "100% learn chance" of
+  TheGreatBen's *Definitive Edition* romhack (issue 216) as a switch of our
+  own on the Cheats page, for any install. The hack's readme lists it
+  ("Examine always learning"); how the hack does it was not read - the
+  round's reading found no changed function for it, so it is data there
+  (`disc-patch-round.md`). This switch is code of ours and needs no mod.
+- **Also in the PSX version?** No. The roll's twin is `0x800A7544` (not
+  read).
+- **Verification:** 2026-11-12, headless (`BOF3X_SELFTEST_ONLY=1`, a clean copy of the four launcher files under `C:\Users\kerok\bof3x-runs\la1112`, the 32-bit build, `main` `2da78ec2` merged in). Unset, `BOF3X_SHADOW='*'` exits 0 with every fuzz group at 0 mismatches. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_e6` the log line `DIV-0226 a member that watches an enemy always learns its skill` and the fuzz differs in `Battle_MemberRollByAction` alone, 330 of 6,000 rounds (the rounds that reach the roll and lose it), the stand-ins' log 6 / 6 calls each time and no state byte different - the answer alone; the group's other functions at 0. With `BOF3X_LEARN=1 BOF3X_SHADOW=battle_sprites` every function is at 0 mismatches, `Battle_MemberCoinFlip` among them. `BOF3X_LEARN=2` is `FATAL: BOF3X_LEARN must be 0 or 1`; `BOF3X_LEARN=1 BOF3X_ORIGINAL=Battle_MemberRollByAction` is `FATAL: BOF3X_LEARN=1 needs Battle_MemberRollByAction ours, and it is disabled`. `ledger_check.py`, `ledger_registry.py --check` and `ledger_switches.py --check` pass; `dialog_test.py` all ok. **Not played:** nobody has learned a skill with the switch on.
+- **Reversible?** Yes: the box off, `BOF3X_LEARN` unset. A skill learned
+  with it on stays in the save.
+- **Switch:** ini:cheat.learn=0
+- **Default:** off - the box starts off
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
 - **State:** active

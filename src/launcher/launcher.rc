@@ -271,7 +271,9 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 114, 52, 14
 END
 
-// DIV-0187 / DIV-0188: the Cheats sub-tab's Page 2.
+// DIV-0187 / DIV-0188 / DIV-0226: the Cheats sub-tab's Page 2. The third
+// group has no sentence under its box: the page has no room for one, and the
+// box's label says what it does.
 IDD_PAGE_GAME2 DIALOGEX 0, 0, 290, 130
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
@@ -282,10 +284,13 @@ BEGIN
     LTEXT           "The HP bar and the Identify stats show for every enemy, bosses too, before you defeat that kind.",
                     -1, 19, 24, 260, 18
 
-    GROUPBOX        "Minigames", -1, 0, 46, 286, 42
-    AUTOCHECKBOX    "You cannot &fail a minigame", IDC_CH_NOFAIL, 7, 58, 270, 10
+    GROUPBOX        "Minigames", -1, 0, 44, 286, 42
+    AUTOCHECKBOX    "You cannot &fail a minigame", IDC_CH_NOFAIL, 7, 56, 270, 10
     LTEXT           "Every minigame ends in a win. A minigame with a score gives its best prize.",
-                    -1, 19, 70, 260, 18
+                    -1, 19, 68, 260, 18
+
+    GROUPBOX        "Enemy skills", -1, 0, 88, 286, 24
+    AUTOCHECKBOX    "E&xamine always learns the skill that the enemy uses", IDC_CH_LEARN, 7, 99, 270, 10
 
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14
 END

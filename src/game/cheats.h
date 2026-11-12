@@ -1,6 +1,7 @@
 // Cheats (docs/cheats.md): the EXP and zenny multipliers, DIV-0045, the
 // steal roll that always passes, DIV-0046, every enemy's information
-// shown, DIV-0187, and the minigames that cannot be failed, DIV-0188. Each
+// shown, DIV-0187, the minigames that cannot be failed, DIV-0188, and the
+// skill that is always learned, DIV-0226. Each
 // is a launcher setting carried by an environment variable, off when the
 // variable is unset.
 #pragma once
@@ -8,9 +9,17 @@
 #include <cstdint>
 
 // Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL / BOF3X_ENEMY_INFO /
-// BOF3X_NO_FAIL and patches the two steal rolls when asked. Called once from
+// BOF3X_NO_FAIL / BOF3X_LEARN and patches the two steal rolls when asked. Called once from
 // InjectAll.
 void Cheats_Inject();
+
+// DIV-0226: true under BOF3X_LEARN=1. Battle_MemberRollByAction
+// (src/game/battle/dragon_cmd.cpp) then answers 1 whenever its other tests
+// pass, whatever Rand gives: a member that watches an enemy learns the skill
+// the enemy uses, if the skill can be learned, the party does not know it
+// and the member's list has room. The coin flip for a skill that cannot be
+// learned (Battle_MemberCoinFlip) is not touched. False when unset.
+bool Cheats_LearnAlways();
 
 // DIV-0188: true under BOF3X_NO_FAIL=1. A minigame's own code then skips
 // the step that judges the player's attempt a failure, one site at a time

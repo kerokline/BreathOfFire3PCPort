@@ -227,12 +227,14 @@ struct Config {
     // (docs/cheats.md). The multipliers, 0..10, go out as BOF3X_EXP /
     // BOF3X_ZENNY when not 1; the steal switch as BOF3X_STEAL=1 when on; the
     // enemy-information switch as BOF3X_ENEMY_INFO=1 when on; the no-fail
-    // switch (DIV-0188, the minigames) as BOF3X_NO_FAIL=1 when on.
+    // switch (DIV-0188, the minigames) as BOF3X_NO_FAIL=1 when on; the learn
+    // switch (DIV-0226, an enemy's skill always learned) as BOF3X_LEARN=1.
     struct Cheats {
         int exp = 1, zenny = 1;
         bool steal = false;
         bool enemy_info = false;
         bool no_fail = false;
+        bool learn = false;
     } cheats;
     // The physical bindings (docs/controls.md section 4.2, DIV-0050): the
     // keyboard's (scancode -> PlayStation bits) table, which replaces the
