@@ -462,6 +462,52 @@ join); **SC** adds the chapter test, the save byte and the six-record list;
 **MS** shrinks; **LV** (stage B, after M10) the level-1 start; **LA** lists
 six champions and the second switch under its new name.
 
+## 6b. M10 as run (2026-11-12): the level-1 start, group LV's design
+
+[`solo-character-level1.md`](solo-character-level1.md) has the evidence; the
+coordinator read `Char_LevelUp` (`src/game/field/char.cpp`) against it.
+
+- **A level-up is a pure function of the record and one table.** No random
+  call; the inputs are the record's EXP, level and six bias bytes (a
+  master's) and `Char_ExpTable`'s row for the record and level. Each gain is
+  added to a base word; the level-up skills of a row are filed in the
+  record's lists.
+- **So a record still in its New Game state can be taken back to level 1 by
+  subtraction**, with no table of ours: the default base values minus the
+  rows' gains for the levels it starts above 1. For the four records that
+  start higher (1, 2, 4, 5) the results are all non-negative; the default
+  records carry no master and no bias, their EXP sits in their level's
+  window, and their lists hold exactly the rows' skills, so they read as
+  built from this table. Not valid for a record that has had a master or a
+  stat item: the record keeps no history.
+- **LV's steps, at the moment SC stamps the champion byte**, for records 1,
+  2, 4 and 5, guarded on the record still equalling its default (level, EXP,
+  no master, no bias; else left alone and logged): level 1, EXP 0; the base
+  words to the derived values; one copy of each row skill of the removed
+  levels taken out of its list (the game does not check for a skill already
+  held, so leaving them would file them twice on the way back up); then
+  `Char_RecalcStats` and HP and AP to their new maximums.
+- **What undoes it:** nothing but the game's own growth. One to know:
+  chapter 8's `Scena08_SetUpRecord4` gives record 4 a fixed 10,000 EXP and
+  levels it, and replaces its weapon and three armour pieces with fixed
+  items (the old ones are lost, by inference).
+- **Not run:** that levelling the rewritten record back up reproduces the
+  default exactly (it follows from the code; LV's self-test is that round
+  trip), and what a skill filed twice does.
+
+For the owner:
+
+1. **A save stamped late in the game.** The subtraction has no rule for a
+   record that has grown. Recommended: the champion keeps their level; the
+   level-1 start applies only where the record is still the default (a run
+   started from New Game, or stamped before the champion has fought).
+2. **Willpower** is set from the level once, at New Game, and a level-up
+   never changes it. Recommended: recomputed for level 1 by the same formula
+   (it lowers it; record 1's becomes 0).
+3. **Chapter 8's gift to record 4** (the 10,000 EXP and the fixed
+   equipment): left as the game has it, or held back for a champion?
+   Recommended: left as it is for now, noted in the entry.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
