@@ -606,6 +606,16 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
 // need and next Char_ExpForLevel of level and level + 1 (a byte). All 32-bit
 // unsigned, as the original has it: the product wraps and the division is
 // unsigned. With next equal to need the line has no length. x and y 16-bit.
+// DIVERGENCE DIV-0227 (the owner, 2026-11-12): Capcom's length has no upper
+// bound - EXP at or past the next level's draws a line longer than the
+// 57-unit track (seen over the save slots' portraits and off the box), and
+// EXP below the level's own wraps to a huge one. With the switch on the
+// length is 0 at or below `need` and 57 at or past `next`. 0 until
+// MenuFromFieldO_Inject patches it to 1, after the fuzzes that compare
+// Capcom's line, under the name SaveSlotExpBar.
+
+namespace field_o { unsigned char g_exp_bar_fixed = 0; }
+
 extern "C" void __cdecl Menu_DrawExpBar(int x, int y, unsigned member, unsigned level, unsigned exp) {
     unsigned char* const p = Next();
     menu_windows::g.set_line_f2(p);
@@ -618,7 +628,10 @@ extern "C" void __cdecl Menu_DrawExpBar(int x, int y, unsigned member, unsigned 
     const auto next = static_cast<std::uint32_t>(
         menu_windows::g.exp_for_level(member, (level & ~0xFFu) | ((level + 1) & 0xFFu)));
     const std::uint32_t span = next - need;
-    if (span != 0) {
+    if (span != 0 && field_o::g_exp_bar_fixed) {   // DIV-0227
+        const std::uint32_t length = exp <= need ? 0u : exp >= next ? 57u : 57u * (exp - need) / span;
+        Put(p + 0x14, static_cast<float>(static_cast<double>(length + static_cast<std::uint32_t>(xs))));
+    } else if (span != 0) {
         const std::uint32_t end = (57u * exp - 57u * need) / span + static_cast<std::uint32_t>(xs);
         Put(p + 0x14, static_cast<float>(static_cast<double>(end)));   // fild qword of (0, end)
     } else {
@@ -1441,6 +1454,10 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
 // disc-built image already did (0x669CCC is a gap there, zero). 0 until
 // FieldO_Inject patches it to 1, after the fuzz, under the name SaveSlotBlank
 // (BOF3X_ORIGINAL=SaveSlotBlank, or BOF3X_OFF, draws the port's string).
+// DIVERGENCE DIV-0227 (the owner, 2026-11-12): Capcom draws the EXP bar
+// before the frame pieces, whose track then covers it (in the member status
+// 0x573560 the bar comes after the pieces and shows). With SaveSlotExpBar on
+// the bar is drawn last, over the pieces, as the member status has it.
 
 namespace field_o { unsigned char g_empty_slot_blank = 0; }
 
@@ -1467,13 +1484,16 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x25, 0, Buf());
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x24, 0, Text(::bof3::Img(field_o::at::kColon)));
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(field_o::at::kColon)));
-        SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
+        if (!field_o::g_exp_bar_fixed)
+            SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
         flags = summary[0x14] ? 2 : 0;
     } else if (!field_o::g_empty_slot_blank) {
         SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(field_o::at::kEmptySlot)));
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(field_o::at::kSlotPieces)), static_cast<int>(flags));
     if (summary != nullptr && summary[0x14] != 0) SH_CALL(Menu_DrawPiece)(x + 0x32, y + 0x16, 0x3D, 0);
+    if (summary != nullptr && field_o::g_exp_bar_fixed)   // DIV-0227: the bar last, over the pieces
+        SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
 }
 
 void Menu_Inject() {
@@ -1523,5 +1543,13 @@ void MenuFromFieldO_Inject() {
         bof3::PatchBytes("SaveSlotBlank", Low32(&field_o::g_empty_slot_blank),
                          &was, &is, 1);
         bof3::Log("SaveSlotBlank  an empty save slot draws %s", field_o::g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
+    }
+    // DIV-0227 (the owner, 2026-11-12): the save slot's EXP bar over its
+    // frame, and the bar's length held to its track.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SaveSlotExpBar", Low32(&field_o::g_exp_bar_fixed),
+                         &was, &is, 1);
+        bof3::Log("DIV-0227    the save slot's EXP bar over its frame, the bar held to its track: %s", field_o::g_exp_bar_fixed ? "on" : "off");
     }
 }
