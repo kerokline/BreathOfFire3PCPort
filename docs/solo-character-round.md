@@ -593,6 +593,16 @@ For the owner:
 Still open: whether a `BOF3X_SOLO` value that names no
 champion stops the game with the mode off (4a).
 
+## 6d. The owner's fourth answer (2026-11-12, on the combat half's hand-back)
+
+**A champion at 0 HP when a battle starts** (chapter 8's `Scena08_Scene11`
+leaves record 4 so; group CB's stand-down rule): "I think the Mikba fight is
+the 0hp Rei fight. For that one, yeah, let's let Rei start dead, and make an
+idea to maybe handle it differently." The stand-down stays as built: the
+game's own party fights that battle and the champion starts dead as the
+original has it. IDEAS I66 holds the other ways. Which fight it is has not
+been measured; the name is the owner's recollection.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
