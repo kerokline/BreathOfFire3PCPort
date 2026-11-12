@@ -170,6 +170,148 @@ group list.
     page for the US and Japan builds, kept in the round's root (game-derived,
     never committed), for the layout comparison of stage C.
 
+## 3a. What group M measured
+
+Three read-only agents, 2026-11-12. No game or emulator run. Each part says
+what it read; the orchestrating session spot-checked the citations marked
+(checked).
+
+### M8. What starts at New Game in the harness
+
+*Group M-C: source, recipes and tools read; scripts in
+`C:\Users\kerok\bof3x-runs\ng1112\m-c` (`recipe_starts.py`, its output
+`recipe_starts.txt`).*
+
+**How the title chooses a row** (our source):
+
+- `TitleFlow_Begin` puts "any save listed" into both the three-row byte
+  `0x6BDF8E` and the title cursor `0x6BDF85`: the cursor starts on LOAD GAME
+  (1) when slot files exist, on NEW GAME (0) when none do
+  (`src/game/core/sound.cpp:814-819`, checked). So `0x6BDF8E` is "a save
+  exists", which answers [`USER_CHECKS.md`](USER_CHECKS.md) 6's question from
+  the source.
+- `TitleMenu_Choose`: with saves, up and down move over 0..2 and wrap;
+  without, either toggles 0 and 2 (`sound.cpp:896-909`). `TitleMenu_Leave`
+  sets `Game_Step` to the cursor + 2; `TitleFlow_EnterGame` returns to the
+  menu when the cursor is 2, else starts the game, after a load too
+  (`sound.cpp:1205-1221`).
+- **Every route that confirms on the title with no slot file present starts a
+  New Game**, whatever it meant to do. The `# save` swap
+  (`tools/input_run.py:216-223`) is what puts the cursor on LOAD GAME.
+- The attract demo never runs the title flow.
+
+**Which language a run gets:** `--lang`, else the launcher's `bof3x.ini`,
+else the original Chinese. The gates use ini-less launcher copies
+(`tools/abc_run.py:282-284` refuses one with an ini, checked); `abc_run`
+clears the caller's `BOF3X_*` and passes each install's own.
+
+| Route or test | How it starts | Affected | Remedy |
+|---|---|---|---|
+| `battle_commands.txt` | **New Game**: `press up` from LOAD GAME, confirm (lines 9-13, checked); no `# save` header | **Yes**, where the layer has the chunk | `seek up 0x6BDF85 u8 == 0 max 3` in place of `press up`; the switches off in a gate |
+| `config_screen.txt`, `config_controller.txt` | The title's third row; leave through EnterGame's cursor-2 branch | Only if TF changes that branch or the Config screen's closing | None; they are the check that the third row is unchanged |
+| 104 recipes with a `# save` header | Load slot 0 | No | - |
+| 12 recorded routes with no header (`bridgeWalk`, `deisCave`, `fairyVillage`, `gaistFullRoute`, `garrAbility`, `identify`, `liftScene`, `maekyssGorge`, `ninaWalkBehindBlock`, `overheatAndDeepSea`, `tarmanLogic`, `vaccinationAndFireScene`) | Load, given `--save NAME` | No when given `--save`; without it and with no slot file they press New Game, wrong today already | Add the `# save NAME` header |
+| `load_list.txt`, `title_timeline.txt`, `attract_cycle.txt`, the six `quick_*_cross.txt` | The load list, no input, or a quick-load at frame 0 | No | - |
+| The ten state-hash routes (`caughFish`, `combat`, `cutsceneAndNue`, `dragonTransform`, `field_menu`, `masterAndManillo`, `menu_screens`, `shop`, `whelpBoss`, `worldMapAndAreaTransition`) | All load their save, under the original Chinese | No | None; no new pairs are needed for this round |
+| The self-tests | The game never starts | **Through the shadow fuzz**, which compares ours with Capcom's for `TitleFlow_Step`, `TitleMenu_Leave`, `TitleFlow_NewGame`, `TitleFlow_EnterGame` (`src/game/core/save_menu_fuzz.cpp:547-568`) and the Config screen's `0x460CB0`, `0x461620` (`src/game/effect/rest_4f_fuzz.cpp:162,171`) | TF leaves those bodies Capcom's with the switches off, and the fuzz pins the switches off |
+| Spell sweep, boss sweep, every-door sweep | Saves, or crafted saves | No | - |
+| CI | Never runs the game | Through the ledger checks only (`ledger_switches.py --check`, `ledger_registry.py --check`) | Stage C |
+| Launcher tests | No game flow | `presets_en-US.tsv` / `presets_original.tsv` are generated from the ledger | Regenerate at stage C |
+
+**Where a harness-wide "these three switches off" goes.**
+
+- An environment `BOF3X_OFF` **replaces** the ini's `off=` and the preset's
+  names whole; it does not merge (`src/launcher/config.cpp:561-565`, `:1625`).
+- `BOF3X_OFF` with a name that is not a code name is a Fatal at start
+  (`src/hook/detour.cpp:467-469`, checked); a known name that is not active in
+  the start is only logged. **So the line cannot land before the three names
+  are in `src/hook/code_names.h`.**
+- Every runner launches through `tools/input_run.py`. **Proposed place:** its
+  `main()`, after the `--env` loop (`input_run.py:210-212`, checked): merge
+  the three names into `env['BOF3X_OFF']`, keeping any a caller passed,
+  unless a new flag asks for the screens. Cost: a hand run under the play ini
+  then loses the ini's own `off=` (empty today); the flag can read and merge
+  it.
+
+### M8b. How a recipe sees the title flow
+
+- `until`, `peek`, `seek` and `watch` take any mapped address
+  ([`input-script.md`](input-script.md)). The words: `Game_Mode` `0x66C7E8`
+  u16, `Game_Step` `0x66C7EA` u16, the title menu's state `0x6BDF86` u8 and
+  cursor `0x6BDF85` s8. No recipe waits on `Game_Step` today.
+- **For the name screen to be waitable, it wants a `Game_Step` value of its
+  own**, or a word in Capcom's span. A static of ours is not a stable recipe
+  address.
+- `tools/recipe_shots.py` takes recorded recipes only (`wait`, `hold`,
+  one-frame `shot`, zero-frame `key`, `quit`; `tools/recipe_shots.py:31-44`,
+  checked). Shots on the new screens come from an owner's recording put
+  through it, or from `shot` lines in a hand-written route, not both in one
+  file.
+
+### Quicksave
+
+- **Nothing refuses a quicksave by game state today.** A take on the title
+  menu or the title's Config screen is taken and a load there is restored;
+  the title's state is all in Capcom's `.data` / `.bss`, which the snapshot
+  copies. From the source, not from a run: no title take was ever measured.
+- **What a title step with statics of ours needs:**
+  1. Its cells are outside the span: carry them in a snapshot participant
+     (`Snapshot_Register`, `src/hook/snapshot.h:95-96`), or refuse F6 while
+     the step is active and say so on the overlay.
+  2. `tools/quicksave_census.py check` fails on a new mutable static with no
+     rule: `name_grid.cpp`'s cells need rows.
+  3. **The switch is not in the build id.** A take on the name step, loaded
+     with the switch off, restores a `Game_Step` the dispatcher does not
+     have. Through Capcom's table, entry 6 of `0x6671F4` is the first word of
+     the title menu's state table: no crash, a wrong state. The participant's
+     check refuses a record whose switch state differs from the live one.
+  4. The cells are reset at the step's entry, so nothing reads stale ones.
+- PSX `0x80143B92`, the word special code 4 writes, is `Game_Step`'s twin
+  (`symbols.toml:4725-4728`).
+
+### M10. The Mednafen reference
+
+- **Section 3's item 10 was wrong about what exists.** The sibling's
+  savestate row 7 is the recompiled runtime's `.pst`, Japan only, and it is
+  stale (`tools/scene.py preflight`: a codegen hash of another version).
+  Mednafen cannot read it. No Mednafen state of either build is on the name
+  screen (the Japan states read at `Game_Mode` / `Game_Step` are in play or
+  on the logo).
+- **One capture exists:** the Japan build's first grid page,
+  `../BreathOfFire3Recomp/mednafen/snaps/Breath of Fire III (Japan)-0013.png`
+  to `-0016.png` (2026-09-05). No second or third page, nothing of the US
+  build.
+- **The reference is a cold boot in Mednafen** for each build, driven by the
+  sibling's `tools/mednafen_ctl.py`, which types into the foreground window:
+  the machine hands-off for the whole capture. The discs, the BIOSes and a
+  card with saves for each build are on disk. The command list, with output
+  under `C:\Users\kerok\bof3x-runs\ng1112\ref\<jp|us>`, is in
+  `C:\Users\kerok\bof3x-runs\ng1112\m-c\REPORT.md` (written from the
+  sibling's docs, not run). Two cautions in it: the US launch takes no
+  `--card` (it would copy the Japan card over the US one), and each title
+  capture is read before the confirm, since a cursor on LOAD GAME opens the
+  load list.
+
+### What M-C's results change
+
+- **RT moves to stage B**, after TF and CR have put the three names in
+  `code_names.h`; its stage-A "done when" could not be met. What it can do
+  in stage A: `battle_commands.txt`'s `seek`, and the twelve `# save`
+  headers.
+- **TF:** a `Game_Step` value of its own for the name screen (and for New
+  Game's options step, so a load never enters it), dispatched by our
+  `TitleFlow_Step`, not past the end of Capcom's table; the fuzz rows pinned
+  with the switches off; the quicksave rule decided (participant or refusal)
+  with the switch check.
+- **NG:** census rows for its statics; a fuzz that does not depend on
+  whether a layer is loaded.
+- **Stage C:** regenerate the launcher's two preset TSVs, `code_names.h` and
+  the registry. No new state-hash pairs for the ten routes.
+- **Not established by M-C:** whether `ledger_switches.py --check` lets a
+  code name be committed before its ledger entry (stage B before C); the US
+  build's addresses for `Game_Mode` / `Game_Step`; a title quicksave in a
+  run.
+
 ## 4. The groups
 
 Worker agents on Opus, each in its own worktree reset onto `new-game/round`,
