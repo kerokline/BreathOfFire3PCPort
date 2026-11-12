@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/behaviour.h"
 #include "hook/bind.h"
 #include "hook/code_bytes.h"
 #include "hook/code_names.h"
@@ -460,6 +461,10 @@ void InjectReport() {
                 Log("BOF3X_OFF: %.*s is not active in this start (its change is off with these settings: "
                     "the language, the wide mode, the filter or a cheat), so it has nothing to turn off",
                     (int)n, q);
+            else if (!asked && n > 0 && KnownBehaviour(q, n))
+                // a mod behaviour (behaviour.h, docs/mods.md 11): off unless BOF3X_ON asks, and BOF3X_OFF
+                // keeps it off even then - Behaviour_Read said which
+                Log("BOF3X_OFF: %.*s is a behaviour, so it stays off in this start", (int)n, q);
             else if (!asked)
                 Fatal("BOF3X_OFF names \"%.*s\", which is not a code name. "
                       "Use a code name from the ledger's Switch: lines (python tools/ledger_switches.py).",

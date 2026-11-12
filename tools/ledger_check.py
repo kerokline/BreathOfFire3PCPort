@@ -202,7 +202,78 @@ def check_divergence(r, inv):
                     f'the ledger has {len(ids)} to {last}')
     check_switch_fields(r, fielded, set(seen), inv)
     selftest_fields(r, fielded, set(seen), inv)
+    check_behaviours(r, fielded, inv)
+    selftest_behaviours(r, fielded, set(seen), inv)
     return set(seen)
+
+
+# --- the mod behaviours --------------------------------------------------------
+
+def check_behaviours(r, fielded, inv):
+    """Every behaviour src/ asks for (class `behaviour`: BehaviourOn(behaviours::Id::<Name>),
+    docs/mods.md 11) is the `Switch:` of exactly one entry, and that entry's
+    `Default:` is off - a behaviour is off unless BOF3X_ON asks for it. (The
+    other way round - a `Switch:` naming a behaviour src/ does not ask for - is
+    switch_token's "nothing in src/ reads the name".)"""
+    behaviours = sorted(k for k in inv.names if inv.cls(k) == 'behaviour')
+    named = {b: [] for b in behaviours}
+    for did, where, chunk in fielded:
+        sw = field_lines(chunk, 'Switch')
+        if not sw:
+            continue
+        toks = [t.strip().strip('`') for t in sw[0].split(',')]
+        for t in toks:
+            if t in named:
+                named[t].append((did, where, chunk))
+    for b in behaviours:
+        src_at = inv.names[b]['where'][0]
+        if not named[b]:
+            r.error(f'{src_at}: the behaviour {b} has no ledger entry: an entry with "Switch: {b}" and '
+                    '"Default: off" (docs/mods.md 11)')
+        elif len(named[b]) > 1:
+            r.error(f'the behaviour {b} is the Switch of {len(named[b])} entries '
+                    f'({", ".join(d for d, _, _ in named[b])}); one entry a behaviour')
+        for did, where, chunk in named[b]:
+            dflt = field_lines(chunk, 'Default')
+            if dflt and dflt[0] != 'off':
+                r.error(f'{where}: {did} is switched by the behaviour {b}, which is off unless a mod or on= asks: '
+                        'its Default is off')
+    r.note(f'{len(behaviours)} behaviours, each the Switch of one entry with Default off')
+
+
+def selftest_behaviours(r, fielded, defined, inv):
+    """check_behaviours on an inventory with a behaviour of the test's own
+    (SelfTestBehaviour, which no entry and no code has) and on DIV-0176 with
+    its Switch: line changed to it."""
+    import copy
+    fake = copy.deepcopy(inv)
+    fake.add('SelfTestBehaviour', 'behaviour', 'BehaviourOn', 'tools/ledger_check.py (self-test)')
+    have = {did: (where, chunk) for did, where, chunk in fielded if did in FIXTURE_IDS}
+    if 'DIV-0176' not in have:
+        r.error('self-test: DIV-0176, the worked example, is not in the ledger')
+        return
+    where, chunk = have['DIV-0176']
+    cases = [
+        ([], 'has no ledger entry'),
+        ([fixture_chunk(chunk, {'Switch': 'SelfTestBehaviour', 'Default': 'off'})], None),
+        ([fixture_chunk(chunk, {'Switch': 'SelfTestBehaviour', 'Default': 'on'})], 'its Default is off'),
+        ([fixture_chunk(chunk, {'Switch': 'SelfTestBehaviour', 'Default': 'off'})] * 2, 'the Switch of 2 entries'),
+    ]
+    for chunks, want in cases:
+        t = Report()
+        check_behaviours(t, [('DIV-0176', f'self-test {where}', c) for c in chunks], fake)
+        if chunks:
+            check_switch_fields(t, [('DIV-0176', f'self-test {where}', chunks[0])], defined, fake, whole=False)
+        if want is None and t.errors:
+            r.error(f'self-test: a behaviour switched by one Default-off entry should pass, gave: {t.errors[0]}')
+        elif want is not None and not any(want in e for e in t.errors):
+            r.error(f'self-test: behaviours should give "{want}", gave ' + (repr(t.errors[0]) if t.errors else 'no error'))
+    t = Report()
+    check_switch_fields(t, [('DIV-0176', 'self-test', fixture_chunk(chunk, {'Switch': 'ini:on=SunderLoop'}))],
+                        defined, inv, whole=False)
+    if not any("the player's switch itself" in e for e in t.errors):
+        r.error('self-test: Switch: ini:on= should be refused as the player\'s switch itself')
+    r.note(f'behaviours self-test: {len(cases) + 1} cases on DIV-0176')
 
 
 # --- the switch fields -------------------------------------------------------
@@ -227,7 +298,7 @@ def switch_token(inv, tok):
     m = re.fullmatch(r'ini:([a-z_]+(?:\.[a-z_0-9]+)?)=(\S*)', tok)
     if m:
         key = m.group(1)
-        if key == ledger_switches.PLAYER_INI:
+        if key in (ledger_switches.PLAYER_INI, ledger_switches.PLAYER_ON_INI):
             return None, None, f"ini:{key}= is the player's switch itself; `Switch:` names what it takes"
         if key not in inv.ini_keys and key.split('.')[0] + '.' not in inv.ini_keys:
             return None, None, f'ini key {key!r} is not one the launcher reads (src/launcher/config.cpp ConfigLoad)'
@@ -235,7 +306,7 @@ def switch_token(inv, tok):
     m = re.fullmatch(r'env:(BOF3X_[A-Z0-9_]+)=(\S*)', tok)
     if m:
         name, value = m.groups()
-        if name == ledger_switches.PLAYER_SWITCH:
+        if name in (ledger_switches.PLAYER_SWITCH, ledger_switches.PLAYER_ON_SWITCH):
             return None, None, f"{name} is the player's switch itself; `Switch:` names what it takes"
         if name in ledger_switches.TOOLING_ENV:
             return None, None, (f'{name} is tooling, not a switch: a BOF3X_ORIGINAL name is written bare '

@@ -626,7 +626,7 @@ std::string Env(const char* name) {
 
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
-                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_SCALE"})
+                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_ON", "BOF3X_SCALE"})
         SetEnvironmentVariableA(v, nullptr);
 }
 
@@ -762,6 +762,94 @@ void TestHostedOpt() {
         Check(bof3x::ConfigSave(ini, none) && ReadAll(ini).find("\r\nmods_off=\r\n") != std::string::npos,
               "the default writes an empty mods_off=");
     }
+    {
+        // DIV-0157 as amended 2026-11-12 (docs/mods.md 11): a mod's needs go into BOF3X_ON with its layers,
+        // both or neither; a behaviour the release lacks keeps the mod off. The names are this test's own.
+        const std::vector<std::string> known = {"SelfTestAlpha", "SelfTestBeta"};
+        const std::wstring nh = Temp(L"bof3x_needs_home");
+        MakeDirs(nh);
+        WriteAll(nh + L"\\mods.toml",
+                 "[[mod]]\nid = \"hack\"\nname = \"H\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n"
+                 "needs = [\"SelfTestBeta\", \"SelfTestAlpha\"]\nskip = [[\"shop_records\", 40, 49]]\n\n"
+                 "[[mod]]\nid = \"t-mod\"\nname = \"T\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n"
+                 "needs = [\"SelfTestAlpha\"]\n\n"
+                 "[[mod]]\nid = \"miss\"\nname = \"M\"\nversion = \"1.0\"\nkind = \"disc-patch\"\nrequires = [\"en-US\"]\n"
+                 "needs = [\"SelfTestAlpha\", \"SelfTestGamma\"]\n\n"
+                 "[[mod]]\nid = \"plain\"\nname = \"P\"\nversion = \"1.0\"\nkind = \"table-edit\"\nrequires = []\n");
+        const std::wstring nc = FakeCache(L"bof3x_needs_cache",
+                                          {{"mod-hack", L"dat"}, {"mod-hack-en-US", L"dat"}, {"mod-t-mod", L"exe"},
+                                           {"mod-miss", L"dat"}, {"mod-miss-en-US", L"dat"}, {"mod-plain", L"exe"}},
+                                          nullptr);
+        const std::vector<bof3x::ModInfo> installed = bof3x::ConfigModsInstalled(nh);
+        Check(installed.size() == 4 && installed[0].needs == std::vector<std::string>{"SelfTestBeta", "SelfTestAlpha"} &&
+                  installed[3].needs.empty() && installed[0].required == std::vector<std::string>{"en-US"},
+              "ConfigModsInstalled: needs read in mods.toml's order, beside requires; a skip line passed over");
+        std::vector<bof3x::ModAsk> asks;
+        const std::string layers = bof3x::ConfigModLayers(nh, nc, "area4-walls", "en-US", "", &asks, &known);
+        Check(layers == "area4-walls,mod-hack,mod-hack-en-US,mod-t-mod,mod-plain",
+              "ConfigModLayers: a mod that needs a behaviour the release lacks is left off, layers and all", layers);
+        Check(asks.size() == 3 && asks[0].id == "hack" && asks[0].layers == std::vector<std::string>{"mod-hack", "mod-hack-en-US"} &&
+                  asks[1].id == "t-mod" && asks[2].id == "plain" && asks[2].needs.empty(),
+              "ConfigModLayers: each mod handed over, its layers and its needs");
+        std::vector<std::string> said;
+        std::string on = bof3x::ConfigModOn(asks, layers, "", "", said);
+        Check(on == "SelfTestBeta,SelfTestAlpha", "ConfigModOn: two mods' needs in order, each name once", on);
+        Check(said.size() == 3 && said[0] == "the mod hack (H) turns on the behaviour SelfTestBeta" &&
+                  said[2] == "the mod t-mod (T) turns on the behaviour SelfTestAlpha",
+              "ConfigModOn: a line for each behaviour, naming the mod that asked", said.empty() ? "" : said[0]);
+        said.clear();
+        on = bof3x::ConfigModOn(asks, layers, "SelfTestGamma, SelfTestAlpha", "", said);
+        Check(on == "SelfTestGamma, SelfTestAlpha,SelfTestBeta", "ConfigModOn: on= first, as written; a need it names already not twice", on);
+        asks.clear();
+        bof3x::ConfigModLayers(nh, nc, "", "en-US", "hack", &asks, &known);
+        said.clear();
+        on = bof3x::ConfigModOn(asks, "mod-t-mod,mod-plain", "", "", said);
+        Check(on == "SelfTestAlpha", "ConfigModOn: a mod mods_off= names gives no behaviour", on);
+        asks.clear();
+        bof3x::ConfigModLayers(nh, nc, "", "ja-JP", "", &asks, &known);
+        said.clear();
+        on = bof3x::ConfigModOn(asks, bof3x::ConfigModLayers(nh, nc, "", "ja-JP", "", nullptr, &known), "", "", said);
+        Check(on == "SelfTestAlpha", "ConfigModOn: a disc-patch mod left off under another language gives none", on);
+        asks.clear();
+        const std::string all = bof3x::ConfigModLayers(nh, nc, "", "en-US", "", &asks, &known);
+        said.clear();
+        on = bof3x::ConfigModOn(asks, "mod-hack,mod-t-mod,mod-plain", "", "", said);
+        Check(on == "SelfTestAlpha", "ConfigModOn: a mod whose layers did not all reach BOF3X_OPT gives none (the hosted pair)", on);
+        said.clear();
+        on = bof3x::ConfigModOn(asks, all, "", "SunderLoop,SelfTestBeta", said);
+        Check(on == "SelfTestAlpha" &&
+                  std::find(said.begin(), said.end(), "the mod hack (H) is not complete: off= turns off SelfTestBeta, which "
+                                                      "it needs. Its data is on") != said.end(),
+              "ConfigModOn: off= wins over a need, and the mod is said not to be complete", on);
+        said.clear();
+        Check(bof3x::ConfigModOn(asks, all, "", "*", said).empty() && bof3x::ConfigModOn(asks, all, "", "*,-SelfTestAlpha", said) ==
+                  "SelfTestAlpha",
+              "ConfigModOn: off=* turns every need off; -name keeps one");
+        Check(bof3x::ConfigListTurnsOff("a, b", "b") && bof3x::ConfigListTurnsOff("*", "b") && !bof3x::ConfigListTurnsOff("*,-b", "b") &&
+                  !bof3x::ConfigListTurnsOff("-b,*", "b") && !bof3x::ConfigListTurnsOff("bb", "b") && !bof3x::ConfigListTurnsOff("", "b"),
+              "ConfigListTurnsOff: BOF3X_OFF's syntax - a name, *, and -name winning wherever it stands");
+        Check(bof3x::ConfigBehavioursMissing({"SelfTestBeta", "SelfTestGamma", "Zed"}, known) ==
+                  std::vector<std::string>{"SelfTestGamma", "Zed"},
+              "ConfigBehavioursMissing: what the release lacks, in the mod's order");
+        // this release's own list: the generated header's behaviours (none built yet, so every mod that needs one is off)
+        const std::vector<std::string> release = bof3x::ConfigBehavioursKnown();
+        Check(std::find(release.begin(), release.end(), "SelfTestAlpha") == release.end(),
+              "ConfigBehavioursKnown: no test name in the release's list");
+        if (release.empty())
+            Check(bof3x::ConfigModLayers(nh, nc, "", "en-US") == "mod-plain",
+                  "ConfigModLayers: with this release's list (no behaviour yet), only the mod that needs none goes");
+        // on= kept as written and written back
+        const std::wstring ini = Temp(L"bof3x_config_tests_on.ini");
+        WriteAll(ini, "[bof3x]\r\non=SelfTestBeta, SelfTestAlpha\r\n");
+        bof3x::Config c1, c2, none;
+        std::string err;
+        Check(bof3x::ConfigLoad(ini, c1, err) && c1.on == "SelfTestBeta, SelfTestAlpha", "on= kept as written", c1.on);
+        Check(bof3x::ConfigSave(ini, c1) && ReadAll(ini).find("\r\non=SelfTestBeta, SelfTestAlpha\r\n") != std::string::npos &&
+                  bof3x::ConfigLoad(ini, c2, err) && c2.on == c1.on,
+              "on= written as read, and read again");
+        Check(bof3x::ConfigSave(ini, none) && ReadAll(ini).find("\r\non=\r\n") != std::string::npos,
+              "the default writes an empty on=");
+    }
     // a layer no recipe names, whose cache tree has an exe part: the DLL's test
     const std::wstring mod = FakeCache(L"bof3x_rf_cache_mod", {{"mod-x", L"exe"}, {"mod-y", L"dat"}}, nullptr);
     dropped.clear();
@@ -812,6 +900,21 @@ void TestOff() {
     ClearEnv();
     bof3x::ConfigApplyEnvironment(game, none, false);
     Check(GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0) == 0, "an empty off= sends no BOF3X_OFF");
+    Check(GetEnvironmentVariableA("BOF3X_ON", nullptr, 0) == 0, "an empty on= (and no mod) sends no BOF3X_ON");
+    // its other half (docs/mods.md 11): on= as BOF3X_ON, as written; the game checks the names
+    bof3x::Config on;
+    on.on = "SelfTestAlpha,-SelfTestBeta";
+    for (bool hosted : {false, true}) {
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, on, hosted);
+        Check(Env("BOF3X_ON") == "SelfTestAlpha,-SelfTestBeta", hosted ? "on= sent as BOF3X_ON to the hosted build"
+                                                                       : "on= sent as BOF3X_ON to bof3x.exe",
+              Env("BOF3X_ON"));
+    }
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_ON", "SelfTestGamma");
+    bof3x::ConfigApplyEnvironment(game, on, false);
+    Check(Env("BOF3X_ON") == "SelfTestGamma", "an environment's BOF3X_ON wins over on=", Env("BOF3X_ON"));
     ClearEnv();
 }
 

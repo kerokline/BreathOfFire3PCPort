@@ -113,3 +113,20 @@ constexpr const char* kNames[kCount] = {
 };
 
 }  // namespace bof3::code_names
+
+// Every behaviour: the enumerator of a bof3::BehaviourOn(behaviours::Id::<Name>) in
+// src/ (class `behaviour`), sorted. A change of ours that is off unless BOF3X_ON
+// turns it on (src/hook/behaviour.h, docs/mods.md 11); its ledger entry has
+// `Switch: <Name>` and `Default: off`. The launcher (a mod's needs) and tools/mods.py
+// (`missing`) read this block as the release's behaviours. kNames ends in a null so
+// that it is an array when no behaviour is built yet.
+namespace bof3::behaviours {
+
+enum class Id : int {
+};
+constexpr int kCount = 0;
+constexpr const char* kNames[kCount + 1] = {
+    nullptr,
+};
+
+}  // namespace bof3::behaviours

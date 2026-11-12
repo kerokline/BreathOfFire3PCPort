@@ -7,7 +7,9 @@
     python tools/ledger_switches.py --out F   # write the TSV somewhere else
 
 src/hook/code_names.h is generated here: every name of class `code`, sorted,
-as a constexpr array. src/hook/detour.cpp reads it to tell a known code name
+as a constexpr array, and every name of class `behaviour`, sorted, as the enum
+bof3::behaviours::Id and its names (the launcher and tools/mods.py read the
+same block as the release's behaviours). src/hook/detour.cpp reads it to tell a known code name
 that this start did not ask for (logged: not active) from a name that is no
 code name at all (BOF3X_OFF refuses it).
 
@@ -36,6 +38,11 @@ The names, each with every file and line that reads it, and one class:
                start-up (src/hook/exe_host.cpp RefuseHostedSwitches) and the
                launcher hands to the hosted build (src/launcher/launcher.cpp
                HostedOnlyAsked); the two lists must agree
+  behaviour    the enumerator of a bof3::BehaviourOn(behaviours::Id::<Name>)
+               (src/hook/behaviour.h; docs/mods.md 11): a change of ours that is
+               off unless BOF3X_ON (ini on=, and a mod's needs) turns it on; its
+               ledger entry has `Switch: <Name>` and `Default: off`
+               (tools/ledger_check.py checks both ways)
 
 What each class gives an entry switched by it (the `Player:` field,
 docs/DIVERGENCE.md "Entry format"): launcher, env and code `yes`, detour and
@@ -62,6 +69,9 @@ CODE_NAMES_H = os.path.join('src', 'hook', 'code_names.h')
 # `Switch:` names, BOF3X_ORIGINAL's list syntax, and its ini key.
 PLAYER_SWITCH = 'BOF3X_OFF'
 PLAYER_INI = 'off'
+# Its other half for the behaviours (docs/mods.md 11): what turns one on.
+PLAYER_ON_SWITCH = 'BOF3X_ON'
+PLAYER_ON_INI = 'on'
 
 # Environment names that are tooling, not a switch of any entry: a
 # `Reversible?` line that mentions one is not switched by it. A name ending in
@@ -75,10 +85,11 @@ LONG_PROSE = 600
 
 # What each class gives an entry, best first. `code` gave `cheap` until stage D
 # (2026-10-28) made BOF3X_OFF read by src/; `cheap` is retired.
-PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'yes', 'detour': 'costly', 'hosted-only': 'costly'}
+PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'yes', 'behaviour': 'yes', 'detour': 'costly',
+             'hosted-only': 'costly'}
 PLAYER_RANK = {'yes': 0, 'costly': 2, 'never': 3}
 
-CLASSES = ('code', 'detour', 'instrument', 'launcher', 'env', 'hosted-only')
+CLASSES = ('code', 'behaviour', 'detour', 'instrument', 'launcher', 'env', 'hosted-only')
 
 
 def read(rel):
@@ -194,7 +205,7 @@ class Inventory:
         e = self.names.get(key)
         if not e:
             return None
-        for c in ('hosted-only', 'launcher', 'code', 'env', 'detour', 'instrument'):
+        for c in ('hosted-only', 'launcher', 'code', 'behaviour', 'env', 'detour', 'instrument'):
             if c in e['classes']:
                 return c
         return None
@@ -262,6 +273,29 @@ def scan_code_names(inv):
             inv.problems.append(f'{where}: {wname} passes its name to {api}, but no call of {wname} in {rel} '
                                 'gives it a literal')
     return texts
+
+
+BEHAVIOUR_CALL = re.compile(r'(?<![\w.>])(?:(?:::)?bof3::)?BehaviourOn\s*\(')
+BEHAVIOUR_ARG = re.compile(r'(?:(?:::)?bof3::)?behaviours::Id::(\w+)')
+
+
+def scan_behaviours(inv, texts):
+    """Every BehaviourOn(behaviours::Id::<Name>): the behaviours src/ asks for."""
+    for rel, text in texts.items():
+        for m in BEHAVIOUR_CALL.finditer(text):
+            args, _ = call_args(text, m.end() - 1)
+            if not args or len(args) != 1:
+                continue
+            a = args[0]
+            where = f'{rel}:{line_of(text, m.start())}'
+            hit = BEHAVIOUR_ARG.fullmatch(a)
+            if hit:
+                inv.add(hit.group(1), 'behaviour', 'BehaviourOn', where)
+            elif re.fullmatch(r'(?:(?:::)?bof3::)?behaviours::Id\s+\w+', a):
+                continue   # the declaration, the definition
+            else:
+                inv.problems.append(f'{where}: BehaviourOn({a[:40]}) - a behaviour is asked by its enumerator, '
+                                    'behaviours::Id::<Name>, so that tools/ledger_switches.py can read it')
 
 
 def scan_hosted_only(inv, texts):
@@ -375,6 +409,7 @@ def scan_env(inv, texts):
 def inventory():
     inv = Inventory()
     texts = scan_code_names(inv)
+    scan_behaviours(inv, texts)
     scan_hosted_only(inv, texts)
     scan_launcher(inv, texts)
     scan_env(inv, texts)
@@ -384,6 +419,10 @@ def inventory():
         inv.problems.append(f'src/ no longer reads {PLAYER_SWITCH}, or the launcher its ini key {PLAYER_INI}=: '
                             "a code name is then no player's switch, and the ledger's Player: yes for "
                             'one is false')
+    inv.on_switch_built = PLAYER_ON_SWITCH in inv.env_names and PLAYER_ON_INI in inv.ini_keys
+    if not inv.on_switch_built:
+        inv.problems.append(f'src/ no longer reads {PLAYER_ON_SWITCH}, or the launcher its ini key {PLAYER_ON_INI}=: '
+                            'a behaviour is then nothing a mod or a player can turn on (docs/mods.md 11)')
     if not any(inv.cls(k) == 'code' for k in inv.names):
         inv.problems.append('no PatchBytes or RetargetCall name found - the tool no longer reads src/')
     if not any(inv.cls(k) == 'detour' for k in inv.names):
@@ -563,6 +602,23 @@ def code_names_header(inv):
          'constexpr const char* kNames[kCount] = {']
     L += [f'    "{n}",' for n in names]
     L += ['};', '', '}  // namespace bof3::code_names', '']
+    beh = sorted((k for k in inv.names if inv.cls(k) == 'behaviour'), key=lambda s: s.encode())
+    L += [
+          '// Every behaviour: the enumerator of a bof3::BehaviourOn(behaviours::Id::<Name>) in',
+          '// src/ (class `behaviour`), sorted. A change of ours that is off unless BOF3X_ON',
+          '// turns it on (src/hook/behaviour.h, docs/mods.md 11); its ledger entry has',
+          "// `Switch: <Name>` and `Default: off`. The launcher (a mod's needs) and tools/mods.py",
+          "// (`missing`) read this block as the release's behaviours. kNames ends in a null so",
+          '// that it is an array when no behaviour is built yet.',
+          'namespace bof3::behaviours {',
+          '',
+          'enum class Id : int {']
+    L += [f'    {n},' for n in beh]
+    L += ['};',
+          f'constexpr int kCount = {len(beh)};',
+          'constexpr const char* kNames[kCount + 1] = {']
+    L += [f'    "{n}",' for n in beh]
+    L += ['    nullptr,', '};', '', '}  // namespace bof3::behaviours', '']
     return '\n'.join(L)
 
 
@@ -607,7 +663,8 @@ def main():
     for line in counts(inv, rows):
         print(line)
     print(f'wrote {os.path.relpath(os.path.abspath(a.out), ROOT)}')
-    print(f'wrote {CODE_NAMES_H} ({header.count(chr(10) + "    ")} names)')
+    print(f'wrote {CODE_NAMES_H} ({sum(1 for k in inv.names if inv.cls(k) == "code")} code names, '
+          f'{sum(1 for k in inv.names if inv.cls(k) == "behaviour")} behaviours)')
     return 1 if inv.problems else 0
 
 
