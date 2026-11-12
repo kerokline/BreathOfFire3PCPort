@@ -817,6 +817,30 @@ area's own dialogue and choices (talk to an NPC after); a furigana layer on
 (the standing area's row back after); a quick-save and quick-load inside a
 talk; and the same list off (the detail page, as before).
 
+**`LevelSkillCatchUp` (DIV-0224; branch `romhack/b5-catchup`).** One site:
+`FieldAbility_TopMenu` (`src/game/field/field_ability_2.cpp`), after the
+cursor and before the confirm test, Select (`Input_Pressed` `0x100`) files
+the level rows' skills (helpers `CatchUpLevelSkills`, `CatchUpSkill`) and
+plays `0x10C` if any was filed, else `0x104`. Re-read from the patched
+listings (START 8 `0x801D7314`, its jump at `0x801D7444`; the code at
+`0x801E33E8`, `0x801E342C`, `0x801E34E4`), the reading holds on the button,
+the records 0..6, the rows 0..level - 1, the two row bytes, the type-3 skip,
+the duplicate test, the first free slot and the two sounds, and on the menu
+going on to its confirm test in the same frame. One correction: the hack's
+record base is 4 bytes past `CharacterRecords`, so its "+6" level and
+"+0x5C" lists are the PC's `level` (`+0xA`) and lists (`+0x60`); measured
+against the US `AbilityList_ForType` (boot EXE, the type byte read at
+`0x80166BF0`), which uses the same base, type byte and lists - so ours calls
+the PC's `AbilityList_ForType` for the list. Not in the reading: row 0, which
+`Char_LevelUp` never applies, is walked too. Nothing is drawn by the
+behaviour. **Owed with the game:** `rest_2e_fuzz.cpp`'s `FieldAbility_TopMenu`
+row off (0 mismatches); the state-hash routes off; in play under
+`BOF3X_ON=LevelSkillCatchUp` with the mod's data and a save past Garr's
+Giant Growth level or Ryu's level 12 (Smoke): Select on the abilities top
+(right Shift, or the pad's Back) plays `0x10C` once and the skill is in the
+character's list after, a second press plays `0x104`; a full list left as
+it was; the same press off does nothing.
+
 ## 6c. The behaviours' proof with the game, as run (2026-11-12)
 
 At `romhack/behaviours` `63e9277a`, on a hands-off machine: one game at a
