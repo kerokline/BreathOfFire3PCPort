@@ -306,17 +306,17 @@ EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Solo character", -1, 0, 0, 286, 158
-    AUTOCHECKBOX    "&Solo character: one character, the champion, fights all battles alone",
+    AUTOCHECKBOX    "&Solo Character Run - Chosen character fights all battles alone",
                     IDC_SOLO_MODE, 7, 12, 274, 10
-    LTEXT           "Only the champion fights in battles. The rule does not start until the introduction of the game is complete.",
+    LTEXT           "Rule does not start until after reaching Cedar Woods.",
                     IDC_SOLO_MODENOTE, 19, 24, 262, 18
-    LTEXT           "&Champion:", IDC_SOLO_CHAMPLABEL, 19, 47, 50, 9
+    LTEXT           "&Character:", IDC_SOLO_CHAMPLABEL, 19, 47, 50, 9
     COMBOBOX        IDC_SOLO_CHAMPION, 71, 45, 110, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "When the rule starts on a save for the first time, the game writes the champion into that save. After that, the save keeps that champion. A change here does not change it. None: you do not select a champion here.",
+    LTEXT           "Character choice is written on a new game or first save. After that, a change here does not alter it.",
                     IDC_SOLO_CHAMPNOTE, 19, 63, 262, 27
-    AUTOCHECKBOX    "The champion fights only &when the champion is in the party",
+    AUTOCHECKBOX    "The chosen character only fights &when they are in the party.",
                     IDC_SOLO_IFPRESENT, 19, 94, 262, 10
-    LTEXT           "Off: the champion fights all battles, also when the story takes the champion away from the party. On: when the champion is not in the party, the usual party of the game fights.",
+    LTEXT           "If they are not, the party fights.",
                     IDC_SOLO_IFNOTE, 31, 106, 250, 27
     LTEXT           "", IDC_SOLO_WHY, 7, 137, 274, 18
 END
