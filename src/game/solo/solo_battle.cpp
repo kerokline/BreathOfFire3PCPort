@@ -72,6 +72,28 @@ struct Save {
 Save g_save{};
 unsigned char g_place_leader = kNone;   // SoloBattle_Restore's answer's id
 
+// What goes back at step 7 (SoloBattle_RestoreAtStep7), held from step 6.
+// Until step 7's Field_PartyLoad(0) rebuilds the walkers, ObjTrio's second
+// and third records are the walkers' records from before the battle -
+// Field_PartyLoad(1) only cleared their flags - whose sprite pointers hold
+// offsets into the set file loaded before the battle. With the count back at
+// 3, Party_ScriptTicks and the members' draw tick and draw them (the draw
+// tests bit 0x40, not bit 0), and when the battle's end has loaded another
+// row's file there, they read garbage frames and upload records
+// (docs/solo-character-combat.md 9). So after Party_PlaceAtSlots has placed
+// them, the count is held at 1 - the champion, the one record the battle
+// built - and the count and the set go back together right before
+// Field_PartyLoad(0).
+struct StepSeven {
+    std::uint8_t pending;
+    std::uint8_t count_back;  // the count is held at 1 until step 7
+    std::uint8_t count;       // the count to put back
+    std::uint8_t set_back;    // the set goes back at step 7
+    std::uint8_t reload;      // its row differs: the row's field file is loaded again
+    std::uint8_t set;         // the byte to write
+};
+StepSeven g_set_back{};
+
 // --- the logic, on bytes alone (the live hooks and the self-test) ----------
 
 // Whether `row` (0..18) of `rows` holds `id`.
@@ -202,7 +224,7 @@ void LogRecord(const char* when, int record) {
 
 // --- the quicksave participant ----------------------------------------------
 
-constexpr std::uint32_t kSnapVersion = 1;
+constexpr std::uint32_t kSnapVersion = 2;   // 2: the count and the set put back at step 7 (g_set_back)
 
 void PutBytes(bof3::SnapshotWriter& w, const Bytes& b) { w.Put(&b, sizeof b); }
 Bytes GetBytes(bof3::SnapshotReader& r) {
@@ -219,6 +241,7 @@ void SnapSave(bof3::SnapshotWriter& w) {
     w.Put(g_save.battle);
     PutBytes(w, g_save.saved);
     PutBytes(w, g_save.written);
+    w.Put(g_set_back);
 }
 
 bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
@@ -230,7 +253,9 @@ bool SnapCheck(bof3::SnapshotReader& r, std::string& why, std::string& detail) {
     return true;
 }
 
-// The record back into a Save (SnapRestore's and the self-test's).
+// The record back into a Save (SnapRestore's and the self-test's); its
+// set-back goes to g_snap_set_back.
+StepSeven g_snap_set_back{};
 Save ReadRecord(bof3::SnapshotReader& r) {
     if (r.Get<std::uint32_t>() != kSnapVersion) bof3::Fatal("snapshot: SOLOCB's record is another version");
     Save s{};
@@ -240,6 +265,14 @@ Save ReadRecord(bof3::SnapshotReader& r) {
     s.battle = r.Get<std::uint32_t>();
     s.saved = GetBytes(r);
     s.written = GetBytes(r);
+    g_snap_set_back = r.Get<StepSeven>();
+    {
+        const StepSeven& b = g_snap_set_back;
+        if (b.pending > 1 || b.count_back > 1 || b.set_back > 1 || b.reload > 1 || b.pending != (b.count_back | b.set_back) ||
+            (b.reload && !b.set_back) || (b.count_back && (b.count < 2 || b.count > 3)))
+            bof3::Fatal("snapshot: SOLOCB's record holds a step-7 record of pending %u, count %u / %u, set %u / %u / %02X",
+                        b.pending, b.count_back, b.count, b.set_back, b.reload, b.set);
+    }
     if (s.armed > 1 || s.set_written > 1 || s.party_written > 1 || (!s.armed && (s.set_written || s.party_written)))
         bof3::Fatal("snapshot: SOLOCB's record holds armed %u, set %u, party %u", s.armed, s.set_written, s.party_written);
     return s;
@@ -254,12 +287,16 @@ void SnapRestore(bof3::SnapshotReader& r) {
         bof3::Log("DIV-0228 SoloCharacter is off and this quicksave was taken in a battle of one: the party goes back "
                   "after the battle as the mode would have put it");
     g_save = s;
+    g_set_back = g_snap_set_back;
 }
 
 }  // namespace
 
 void SoloBattle_Arm(unsigned char event_flags) {
     if (!Solo_ChampionFights()) return;
+    if (g_set_back.pending)
+        bof3::Fatal("DIV-0228 SoloCharacter: battle %u starts with the last battle's party still waiting for step 7",
+                    static_cast<unsigned>(Game_BattleCount));
     if (g_save.armed)
         bof3::Fatal("DIV-0228 SoloCharacter: battle %u starts while battle %u's party is still saved: a way out of mode 5 "
                     "that neither reaches GameMode5_Place nor restarts through GameMode_Start",
@@ -363,23 +400,35 @@ bool SoloBattle_Restore() {
     const Bytes live = ReadLive();
     const Restored r = Restore(g_save, live);
     WriteParty(r.bytes);
-    if (r.restored & 0x20) {
-        if (r.reload) {
-            // Undo the battle's end: its mode-0 select loaded this row's field
-            // file; the field's own row is loaded the same way and waited for.
-            PartySet_Select(r.bytes.set & 0x7Fu, 0);
-            WaitLoad();
+    if (g_set_back.pending)
+        bof3::Fatal("DIV-0228 SoloCharacter: battle %u's party is still waiting for step 7", static_cast<unsigned>(g_save.battle));
+    {
+        // The count as it now stands - ours put back, or an exit hook's own
+        // (Boss25_Exit's 3) - is held at 1 after Party_PlaceAtSlots whenever
+        // it is above 1: those records were not built for this battle.
+        StepSeven b{};
+        const unsigned count = Field_MemberCount;
+        if (count > 3) bof3::Fatal("DIV-0228 SoloCharacter: battle %u ends with a member count of %u", static_cast<unsigned>(g_save.battle), count);
+        if (count > 1) {
+            b.count_back = 1;
+            b.count = static_cast<std::uint8_t>(count);
         }
-        AreaW0b_PartySet = r.bytes.set;
+        if (r.restored & 0x20) {
+            b.set_back = 1;
+            b.reload = r.reload ? 1 : 0;
+            b.set = r.bytes.set;
+        }
+        b.pending = static_cast<std::uint8_t>(b.count_back | b.set_back);
+        g_set_back = b;
     }
     const unsigned char champion = g_save.written.list2[0];
     g_save = Save{};
     LogRecord("after", Character_IndexById[champion]);
     bof3::Log("DIV-0228 SoloCharacter: battle over, the party put back (restored mask 0x%02X): second list %02X %02X %02X "
-              "count %u formation %u set %02X; first list %02X %02X %02X",
+              "count %u formation %u set %02X%s; first list %02X %02X %02X",
               r.restored, r.bytes.list2[0], r.bytes.list2[1], r.bytes.list2[2], r.bytes.count, r.bytes.formation,
-              static_cast<unsigned>(AreaW0b_PartySet), Cond_Flags[kFirstList], Cond_Flags[kFirstList + 1],
-              Cond_Flags[kFirstList + 2]);
+              static_cast<unsigned>(r.bytes.set), (r.restored & 0x20) ? " (at step 7)" : "", Cond_Flags[kFirstList],
+              Cond_Flags[kFirstList + 1], Cond_Flags[kFirstList + 2]);
     const unsigned char ids[3] = {ObjTrio[0].char_id, ObjTrio[1].char_id, ObjTrio[2].char_id};
     if (LeaderMissed(Field_MemberCount, ids, Cond_Flags[kFirstList], champion)) {
         g_place_leader = champion;
@@ -393,7 +442,41 @@ unsigned char SoloBattle_PlaceLeaderId() {
     return g_place_leader;
 }
 
+void SoloBattle_AfterPlaceAtSlots() {
+    if (!g_set_back.count_back) return;
+    Field_MemberCount = 1;
+}
+
+void SoloBattle_RestoreAtStep7() {
+    if (!g_set_back.pending) return;
+    if (g_set_back.count_back) {
+        if (Field_MemberCount != 1)
+            bof3::Fatal("DIV-0228 SoloCharacter: the member count held at 1 since step 6 is %u at step 7",
+                        static_cast<unsigned>(Field_MemberCount));
+        Field_MemberCount = g_set_back.count;
+    }
+    if (g_set_back.set_back) {
+        if (g_set_back.reload) {
+            // Undo the battle's end: its mode-0 select loaded the battle row's
+            // field file; the field's own row is loaded the same way and waited
+            // for, with no frame drawn between the load and Field_PartyLoad(0).
+            PartySet_Select(g_set_back.set & 0x7Fu, 0);
+            WaitLoad();
+        }
+        AreaW0b_PartySet = g_set_back.set;
+    }
+    bof3::Log("DIV-0228 SoloCharacter: at step 7, before the walkers are rebuilt: count %u%s, set %02X%s",
+              static_cast<unsigned>(Field_MemberCount), g_set_back.count_back ? " (held at 1 since step 6)" : "",
+              static_cast<unsigned>(AreaW0b_PartySet),
+              g_set_back.set_back ? (g_set_back.reload ? " (put back, its field file loaded)" : " (put back)") : "");
+    g_set_back = StepSeven{};
+}
+
 void SoloBattle_Drop() {
+    if (g_set_back.pending) {
+        bof3::Log("DIV-0228 SoloCharacter: a count or set waiting for step 7 dropped at GameMode_Start");
+        g_set_back = StepSeven{};
+    }
     if (!g_save.armed) return;
     bof3::Log("DIV-0228 SoloCharacter: battle %u's saved party dropped at GameMode_Start (the battle did not return to the field)",
               static_cast<unsigned>(g_save.battle));
@@ -482,11 +565,14 @@ void SoloBattle_SelfTest() {
     // The participant's record, round trip on state of its own.
     {
         const Save before = g_save;
+        const StepSeven before_set = g_set_back;
         g_save = s2;
+        g_set_back = StepSeven{1, 1, 3, 1, 1, 0x85};
         std::vector<unsigned char> buf;
         bof3::SnapshotWriter wr(buf);
         SnapSave(wr);
         g_save = Save{};
+        g_set_back = StepSeven{};
         bof3::SnapshotReader probe("SOLOCB", buf.data(), buf.size());
         std::string why, detail;
         check(SnapCheck(probe, why, detail), "SnapCheck accepts its own record");
@@ -494,13 +580,17 @@ void SoloBattle_SelfTest() {
         g_save = ReadRecord(rd);
         check(rd.Left() == 0 && g_save.armed == 1 && g_save.set_written == 1 && g_save.party_written == 1 && g_save.battle == 7 &&
                   std::memcmp(&g_save.saved, &s2.saved, sizeof(Bytes)) == 0 &&
-                  std::memcmp(&g_save.written, &s2.written, sizeof(Bytes)) == 0,
+                  std::memcmp(&g_save.written, &s2.written, sizeof(Bytes)) == 0 && g_snap_set_back.pending == 1 &&
+                  g_snap_set_back.count_back == 1 && g_snap_set_back.count == 3 && g_snap_set_back.set_back == 1 &&
+                  g_snap_set_back.reload == 1 && g_snap_set_back.set == 0x85,
               "the SOLOCB record round trip");
         std::vector<unsigned char> bad(buf);
         bad[0] ^= 0xFF;
         bof3::SnapshotReader bp("SOLOCB", bad.data(), bad.size());
         check(!SnapCheck(bp, why, detail), "SnapCheck refuses another version");
         g_save = before;
+        g_set_back = before_set;
+        g_snap_set_back = StepSeven{};
     }
     bof3::Log("solo battle self-test: %d checks passed", checks);
 }

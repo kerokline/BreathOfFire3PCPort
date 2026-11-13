@@ -13,7 +13,7 @@ faithful replacements of Capcom's). An inference is marked as one.
 
 ## 1. What is built
 
-`src/game/solo/solo_battle.{h,cpp}` (new) and four calls in
+`src/game/solo/solo_battle.{h,cpp}` (new) and six calls in
 `src/game/core/transition.cpp`. Every call is inert with `SoloCharacter` off:
 the first asks `solo::Solo_ChampionFights()`, which with the switch off
 answers no and reads nothing of the game; the others act only on a save the
@@ -24,7 +24,9 @@ first one made.
 | `GameMode_Start` `0x495840`, first | `SoloBattle_Drop` | a save that never reached step 6 (a loss restarts the boot task, M3) is dropped, one log line |
 | `GameMode5_Turn` `0x495EC0` (step 1), after the party has turned and the approach, before the step's `PartySet_Select` | `SoloBattle_Arm(0x904AE5)` | when the champion fights and the second list is not already the champion alone: the second list `0x904065..67`, `Field_MemberCount` `0x929EC0`, the formation `0x904060` and the party set `0x90412C` saved; the set changed to a row holding the champion when the current one does not (section 2) |
 | `GameMode5_Load` `0x495FD0` (step 3), before `Field_PartyLoad(1)` | `SoloBattle_WriteParty` | the second list `(champion's id, 0xFF, 0xFF)`, the count 1, the formation 0 |
-| `GameMode5_Place` `0x496130` (step 6), on entry | `SoloBattle_Restore` | each saved byte back where the live byte still holds what was written; a changed set's field file loaded again; the leader steer below |
+| `GameMode5_Place` `0x496130` (step 6), on entry | `SoloBattle_Restore` | each saved byte but the set back where the live byte still holds what was written; the set decided, not yet written; the leader steer below |
+| `GameMode5_Place`, after `Party_PlaceAtSlots` | `SoloBattle_AfterPlaceAtSlots` | the member count held at 1 till step 7 when it stands above 1 (section 9) |
+| `GameMode5_Leave` `0x496150` (step 7), in its branch, before `Field_PartyLoad(0)` | `SoloBattle_RestoreAtStep7` | the held count back; the set back, its field file loaded again when the row changed (section 9) |
 | `TransitionFromModeRest_Inject` | `SoloBattle_Inject` | the self-test (exe host `BOF3X_SELFTEST_ONLY`, hosted `BOF3X_SHADOW=solo` or `*`) and the quicksave participant `SOLOCB` |
 
 The first list `0x904062` is never written by the mode (as chapter 6's
@@ -88,9 +90,10 @@ when `Field_PartyLoad(1)`'s `Party_ClearAll` turns their records off.
     battle with bit 4 and a set lacking the champion. (The inference that
     such a battle draws from the field file is from the reload, not from a
     file read.)
-  - Restore, when it puts the set back and the row differs, loads the saved
-    row's field file the same way, `PartySet_Select(row, 0)` and the wait,
-    then writes the saved byte whole. The mode-3 file (`row + 0x2D5`) is
+  - When the set goes back and the row differs, the saved row's field file
+    is loaded the same way, `PartySet_Select(row, 0)` and the wait, then the
+    saved byte is written whole - at step 7, right before
+    `Field_PartyLoad(0)` (section 9; first built at step 6, which crashed). The mode-3 file (`row + 0x2D5`) is
     never touched: no battle path loads it, so the field's stays.
 - On the PC `File_LoadDone` answers 1 at once (`LoadMenu_Apply`'s comment,
   `src/game/core/sound.cpp`), so the waits cost no frame there.
@@ -205,3 +208,83 @@ the game's own party**, with one log line. Not run (no route reaches it).
   can set it too, and only one taken in a battle of one).
 - The 64-bit build.
 - The owner's play.
+
+## 9. The crash after a battle whose party set changed (2026-11-13)
+
+**Symptom** (the coordinator's merged-round runs, then reproduced here). On
+the `combat` save with champion Garr (set row 5 changed to row 0 for the
+battle, restore mask `0x3F`), intermittently, a few frames after the line
+"battle over, the party put back": an access violation in `d3d11.dll`
+(`+0x7514F`, reading `0x8842884A`, `eax 88428842`) or `nvwgf2um.dll`, or
+`Present failed, HRESULT 0x887A0005` (DXGI_ERROR_DEVICE_REMOVED). The two
+bof3x.dll frames on the d3d11 crash's stack map (`llvm-nm` of the round's
+dll) into `render::SweepReleased` (`0x10258100`, the loop that releases a
+released surface's GPU objects, `src/render/render_d3d11.cpp`) and the
+render fiber: it released a `GpuTexture` whose bytes read as 16-bit pixel
+words. **Every** Garr run, crashed or not, logs 30 `DIV-0142 capture ... a
+frame of no pieces (anim 5, frame +0xA0FD / +0xDAFF)` lines from about
+eight frames after the restore: two party objects drawn from frame records
+that are not frames. The coordinator's two crash logs carry the same 30.
+
+**Rates before the fix** (`combat_exp`, exe host, `--speed 4`, 8 runs
+each, `scratch/loop.sh`): champion Garr 1 failed (the device removed, 3
+frames after the restore), 7 to their end, **30 garbage frames in all 7**;
+champion Rei (set kept, mask `0x1F`) 1 crashed (`nvwgf2um.dll+0x3A76B5`,
+mode 5 step 7, 11 frames after the restore), 0 garbage frames; mode off 0 of
+8, 0 garbage frames. So it needs the mode, and not only the set change.
+
+**Cause** (read, and measured by a diagnostic build that logged ObjTrio's
+second and third records at steps 1, 3 and 6). From step 6 on, the count was
+back at 3 while ObjTrio's second and third records were still the walkers'
+records from before the battle: `Field_PartyLoad(1)` built only the
+champion and cleared the others' flags (`Party_ClearAll`), and between step
+3 and step 6 nothing else in them changed (the diagnostic: two bytes, the
+flags). `Party_ScriptTicks` (`GameMode5_Place`, and every frame of step 7
+until its branch runs) ticks the count's records, and the members' draw
+(`Party_UpdateScreens` `0x531B60`, `field_6.cpp`) skips only bit 0x40, not a
+cleared bit 0 - so both stale records were ticked and drawn for the frames
+up to `Field_PartyLoad(0)`. Their sprite pointers (`+0x4C` animation data,
+`0x835628` / `0x825D58`, and the script and frame pointers from it) hold
+offsets into the set file loaded before the battle. The battle replaced that
+file and the battle's end loaded the battle row's field file at the same
+place (`BattleEnd_AwaitRestore` / `BattleResult_SplitExp`, `PartySet_Select(set,
+0)`): for Garr that is row 0's, not row 5's, so the offsets land on other
+characters' data - the garbage frames, and through
+`Sprite_SetFrameQueueUpload` garbage upload records for
+`Gfx_FlushUploadQueue`, whose rectangles are not bounded (known defect D4's
+family; Capcom's code kept as it is). **That the heap damage comes through
+those uploads is an inference** from the pixel-word bytes in the freed
+`GpuTexture` and from the garbage frames always preceding the crash; the
+dump was not walked to the writer. The original never meets it: every member
+it ticks after a battle was rebuilt for that battle (`Field_PartyLoad(1)`
+with the full count), and chapter 6's own one-member fight keeps the set, so
+its stale records still match the file (the Rei case: same file, stale but
+valid pointers; why one Rei run in eight crashed is not settled beyond the
+same stale-record window).
+
+A first fix, the set's file reload moved from step 6 to step 7, left all 30
+garbage frames: the reload at step 6 was not the cause.
+
+**Fix.** After `Party_PlaceAtSlots` (which needs the full count only to give
+the walkers' records their x and z at the battle spots), the count is held
+at 1 - only the champion, the one record the battle built, is ticked and
+drawn - and at step 7, in `GameMode5_Leave`'s branch right before
+`Field_PartyLoad(0)`, the count goes back and a changed set goes back with
+its field file loaded (no frame between the load and the rebuild, as
+`PartyForm_Reload` does: `PartySet_Load`, then `Field_PartyLoad(0)`). The
+hold applies whenever the count stands above 1 after the restore, also when
+an exit hook put back its own count (`Boss25_Exit`'s 3): those records were
+not built for this battle either. Both are carried by the quicksave record
+(`SOLOCB` version 2).
+
+**Rates after the fix** (the same loop, the same build settings): champion
+Garr 0 of 9 failed (one probe run plus eight), **0 garbage frames in all
+nine**; champion Rei 0 of 8; `quick_combat` with Garr (the coordinator's
+second crash route, F6 / F7 mid-battle) 0 of 4, 0 garbage frames. The
+walkers come back with their own sprites (`runs/fix_garr_3/f00780.png`).
+Logs: `D:\bof3x-runs\solo1112\CB\root\runs\` (`pre_*`, `fix_*`, `fixq_*`,
+oot
+uns\` (`pre_*`, `fix_*`, `fixq_*`,
+`diag_*`; `loop_summary.txt` one line a run). Eight runs bound a rate of
+about one in eight only loosely; the garbage-frame count, 30 in every
+pre-fix Garr run and 0 after, is the deterministic half of the evidence.

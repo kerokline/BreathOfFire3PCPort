@@ -23,8 +23,10 @@
 //     alone.
 //   - GameMode5_Place (step 6), on entry: each saved byte goes back only
 //     where the live byte still holds what was written (an exit hook that
-//     restored its own party, Boss25_Exit, wins); a party set that was
-//     changed has its field file loaded again.
+//     restored its own party, Boss25_Exit, wins). After Party_PlaceAtSlots
+//     the count is held at 1, and the count and a changed party set go back
+//     at step 7 (GameMode5_Leave), the set's field file loaded again, right
+//     before Field_PartyLoad(0) rebuilds the walkers.
 //   - GameMode_Start: a save never put back (a plain loss restarts the boot
 //     task, solo-character-reads.md M3) is dropped.
 //
@@ -60,6 +62,20 @@ void SoloBattle_WriteParty();
 // then holds the first list's first byte at the champion's id for that one
 // call (SoloBattle_PlaceLeaderId).
 bool SoloBattle_Restore();
+
+// GameMode5_Place, right after Party_PlaceAtSlots: the member count is held
+// at 1 until step 7 when it stands above 1. ObjTrio's second and third
+// records were not built for this battle (the walkers' records from before
+// it, flags cleared, sprite pointers into the set file loaded before it);
+// Party_PlaceAtSlots places them, and nothing ticks or draws them until
+// Field_PartyLoad(0) rebuilds them (docs/solo-character-combat.md 9).
+void SoloBattle_AfterPlaceAtSlots();
+
+// GameMode5_Leave, in its branch, before Field_PartyLoad(0): the held count
+// back, and the party set Restore put back - its byte, and the field's own
+// row's file loaded again when Arm changed the row - so the walkers are
+// rebuilt from a file that matches the byte.
+void SoloBattle_RestoreAtStep7();
 
 // The id SoloBattle_Restore's "true" asks the caller to hold in the first
 // list's first byte for Party_PlaceAtSlots. Only valid right after it.
