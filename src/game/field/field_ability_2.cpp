@@ -28,10 +28,8 @@
 #include "game/yes_no_layout.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
-#include "hook/host.h"
 #include "hook/log.h"
 #include "input/sigma.h"
-#include "os/env.h"
 
 namespace {
 
@@ -3156,45 +3154,27 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
-// The solo-character mode's members step (group MS; src/game/solo/
-// solo_screens.h, docs/solo-character-screens.md). While a Tactics screen
-// built with solo_screens::Wide() is open (g_tactics.wide, latched by
-// TacticsMembers_Build), Pick and the reserve half of Swap run these instead
-// of the original's bodies: the reserve is solo_screens::g_tactics, every
-// joined member not in the party, of which the screen shows three rows from
-// g_tactics.top and scrolls; 0x6BDFD4.. holds the rows shown and record 12's
-// +0xA their number, so the reserve's window (MenuList_ReserveWinDraw) runs
-// unchanged. In the reserve column the cursor's row (0x929F09) and the
-// pick's (0x929F0D) are rows of the whole list; in the party column they are
-// the original's. Everything else is the original's, step for step.
+// The solo-character mode's champion mark on the members step (group MS;
+// src/game/solo/solo_screens.h, docs/solo-character-screens.md 5a). The
+// screen is the original's; while solo::Solo_Active() TacticsMembers_Pick
+// calls this after placing its cursor records.
 namespace {
 
 namespace ss = solo_screens;
 
-// The members screen's place for column `col` and a row (a whole-list row in
-// column 1): kMemberCells[col + 2 * shown row], or 0 when the row is not shown.
-U WidePlace(int col, int row) {
-    const int shown = col == 0 ? row : ss::ShownRow(ss::g_tactics, row);
-    if (shown < 0 || shown >= static_cast<int>(ss::kRows)) return 0;
-    return ::bof3::Img(kMemberCells.v) + 8u * static_cast<U>(col + 2 * shown);
-}
-
-// The rows shown into 0x6BDFD4.. and their number into record 12's +0xA.
-void WideWindow() {
-    ss::Window(ss::g_tactics, move_script::At(::bof3::Img(kReserve.v)));
-    BRest2f(Rec(12, 0xA)) = static_cast<unsigned char>(ss::Shown(ss::g_tactics));
-}
-
-// The champion's mark (solo_screens::kChampionMark). Its place: the
-// champion's cursor place in the party column or on a reserve row shown, 0
-// when the champion is not on the screen.
-U WideChampionPlace(unsigned char count) {
+// The champion's cursor place, kMemberCells[col + 2 row], in the party column
+// (rows below Party_Count(0)) or the reserve's (rows below record 12's +0xA,
+// ids 0x6BDFD4..), each to the three rows the places hold; 0 when the
+// champion is on neither. `reserve` says which column.
+U ChampionPlace(unsigned char count, bool& reserve) {
+    reserve = false;
     for (unsigned k = 0; k < count && k < ss::kRows; ++k)
-        if (ss::IsChampion(BRest2f(::bof3::Img(kParty.v) + k))) return WidePlace(0, static_cast<int>(k));
-    const unsigned shown = ss::Shown(ss::g_tactics);
-    for (unsigned s = 0; s < shown; ++s) {
-        const int whole = ss::Whole(ss::g_tactics, static_cast<int>(s));
-        if (ss::IsChampion(ss::g_tactics.ids[whole])) return WidePlace(1, whole);
+        if (ss::IsChampion(BRest2f(::bof3::Img(kParty.v) + k))) return ::bof3::Img(kMemberCells.v) + 8u * (2 * k);
+    const unsigned n = BRest2f(Rec(12, 0xA));
+    for (unsigned j = 0; j < n && j < ss::kRows; ++j) {
+        if (!ss::IsChampion(BRest2f(::bof3::Img(kReserve.v) + j))) continue;
+        reserve = true;
+        return ::bof3::Img(kMemberCells.v) + 8u * (1 + 2 * j);
     }
     return 0;
 }
@@ -3202,27 +3182,27 @@ U WideChampionPlace(unsigned char count) {
 // kHand: window record 21 - Tactics_Open's pointing hand (handler 6, kind
 // 0xE, MenuWin_Hand), closed in the members step and set afresh by
 // Tactics_Top every frame there - open at the place plus the hand's offset,
-// closed when the champion is not shown. kCleared: record 21 closed, and the
-// cleared slot's look (solo_screens::DrawCleared) on the champion's panel, in
-// front (InFront): the panels are window records drawn after this step, so a
-// draw of this step's own in slot 1 lies under them (measured 2026-11-12).
-// The panel's origin: the party panel's is its place (MenuList_DrawMemberPanel
+// closed when the champion is not shown. kCleared: the cleared slot's look
+// (solo_screens::DrawCleared) on the champion's panel, in front (InFront):
+// the panels are window records drawn by Field_RunTaskRecords after this step,
+// so a draw of this step's own in slot 1 lies under them (measured
+// 2026-11-12). The party panel's origin is its place (MenuList_DrawMemberPanel
 // draws Menu_DrawMemberStatus at the record's x, y, the places' x, y); a
 // reserve row's box is at its place, three left of and above a member
 // panel's box. The cursor (record 19) and the pick (record 20) are drawn in
-// front again over the champion's panel, as the game draws them over every
-// panel. The mode only: IsChampion is false while it is not active.
-void WideChampionMark(unsigned char count) {
-    const U at = WideChampionPlace(count);
-    if (ss::kChampionMark == ss::ChampionMark::kHand && at != 0) {
-        BRest2f(Rec(21, 0)) = 1;
+// front again when they sit on the champion's panel, as the game draws them
+// over every panel.
+void TacticsChampionMark(unsigned char count) {
+    bool reserve = false;
+    const U at = ChampionPlace(count, reserve);
+    if (ss::kChampionMark == ss::ChampionMark::kHand) {
+        BRest2f(Rec(21, 0)) = at != 0 ? 1 : 0;
+        if (at == 0) return;
         SetWRest2f(Rec(21, 4), (WRest2f(at) + static_cast<U>(ss::kChampionHandDx)) & 0xFFFF);
         SetWRest2f(Rec(21, 6), (WRest2f(at + 2) + static_cast<U>(ss::kChampionHandDy)) & 0xFFFF);
         return;
     }
-    BRest2f(Rec(21, 0)) = 0;
     if (at == 0) return;
-    const bool reserve = at != WidePlace(0, 0) && at != WidePlace(0, 1) && at != WidePlace(0, 2);
     const int x = static_cast<short>(WRest2f(at)) - (reserve ? 3 : 0);
     const int y = static_cast<short>(WRest2f(at + 2)) - (reserve ? 3 : 0);
     ss::InFront([&] {
@@ -3236,185 +3216,6 @@ void WideChampionMark(unsigned char count) {
                                         BRest2f(Rec(n, 0xB)), 6);
         }
     });
-}
-
-// TacticsMembers_Pick with the long reserve: the original's body, the reserve
-// column's rows read through g_tactics, and the champion's mark.
-void TacticsMembersPickWide() {
-    Backdrop();
-    {
-        const U e = WidePlace(FieldS_Column, BattleE1_ModeByte9);
-        if (e == 0)
-            bof3::Fatal("solo members screen: the cursor's row %d in column %d is not shown (top %u of %u)",
-                        static_cast<int>(BattleE1_ModeByte9), static_cast<int>(FieldS_Column),
-                        static_cast<unsigned>(ss::g_tactics.top), static_cast<unsigned>(ss::g_tactics.count));
-        BRest2f(Rec(20, 0)) = 0;
-        BRest2f(Rec(19, 0)) = 1;
-        BRest2f(Rec(19, 0xB)) = 1;
-        SetWRest2f(Rec(19, 4), WRest2f(e));
-        BRest2f(Rec(19, 0xA)) = BRest2f(e + 4);
-        SetWRest2f(Rec(19, 6), WRest2f(e + 2));
-        const unsigned char held = static_cast<unsigned char>(FieldS_PickRow);
-        if (held != 0x7F) {
-            // A picked reserve row scrolled out of sight is held, unmarked.
-            const U f = WidePlace(ShopStates_Clear0A, static_cast<signed char>(held));
-            if (f != 0) {
-                BRest2f(Rec(20, 0)) = 1;
-                BRest2f(Rec(20, 0xB)) = 0;
-                SetWRest2f(Rec(20, 4), WRest2f(f));
-                SetWRest2f(Rec(20, 6), WRest2f(f + 2));
-                BRest2f(Rec(20, 0xA)) = BRest2f(f + 4);
-            }
-        }
-    }
-    {
-        const unsigned char refused = Rest2f_Refused;
-        if (refused == 0xFF) {
-            SetWRest2f(Rec(11, 0x10), 0x60);
-        } else {
-            SH_CALL(TextRecord_Set)(0, 8, Character(refused));
-            SetWRest2f(Rec(11, 0x10), 0x61);
-        }
-    }
-    WideChampionMark(PartyCountRest2f());
-    const U keys = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
-    const unsigned char count = PartyCountRest2f();
-    const int old_col = static_cast<unsigned char>(FieldS_Column);
-    int col = old_col;
-    const int old_row = BattleE1_ModeByte9;
-    int row = old_row;
-    if ((keys & 0xA000) && ss::g_tactics.count != 0) {
-        // The row shown is kept across the switch, as the original keeps the row.
-        row = col == 0 ? ss::Whole(ss::g_tactics, row) : ss::ShownRow(ss::g_tactics, row);
-        col ^= 1;
-        FieldS_Column = static_cast<signed char>(col);
-    }
-    if (col == 0) {
-        if (row > static_cast<int>(count) - 1) row = count - 1;
-    } else {
-        row = ss::Hold(ss::g_tactics, row);
-    }
-    if (keys & 0x1000) {
-        if (col == 0) row = row - 1 < 0 ? count - 1 : row - 1;
-        else row = ss::Move(ss::g_tactics, row, -1);
-    } else if (keys & 0x4000) {
-        if (col == 0) row = row + 1 > static_cast<int>(count) - 1 ? 0 : row + 1;
-        else row = ss::Move(ss::g_tactics, row, +1);
-    }
-    BattleE1_ModeByte9 = static_cast<signed char>(row);
-    WideWindow();
-    if (old_col != col || old_row != row) SoundRest2f(0x100);
-    const U pressed = Input_Pressed;
-    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
-        if (static_cast<unsigned char>(ShopStates_Clear0A) == 0x7F) {
-            SoundRest2f(0x103);
-            ShopStates_Clear0A = static_cast<signed char>(FieldS_Column);
-            FieldS_PickRow = static_cast<signed char>(BattleE1_ModeByte9);
-            return;
-        }
-        const unsigned char refused = SH_CALL(TacticsMembers_Swap)();
-        Rest2f_Refused = refused;
-        SoundRest2f(refused == 0xFF ? 0x103 : 0x107);
-        ShopStates_Clear0A = 0x7F;
-        FieldS_PickRow = 0x7F;
-        return;
-    }
-    if (!(static_cast<std::uint32_t>(Field_CancelButtons) & pressed)) return;
-    SoundRest2f(0x106);
-    if (static_cast<unsigned char>(ShopStates_Clear0A) != 0x7F) {
-        ShopStates_Clear0A = 0x7F;
-        FieldS_PickRow = 0x7F;
-        return;
-    }
-    const unsigned char sub = FieldS_Step;
-    BRest2f(::bof3::Img(kTimer.v)) = 5;
-    BRest2f(Rec(12, 3)) = 1;
-    FieldS_Step = static_cast<unsigned char>(sub + 1);
-    BRest2f(Rec(19, 0)) = 0;
-    BRest2f(Rec(20, 0)) = 0;
-    BRest2f(Rec(21, 0)) = 0;   // the champion's hand (kHand), with the two cursors
-}
-
-// TacticsMembers_Swap's reserve cases with the long reserve (two party rows
-// stay the original's). Two reserve rows: the two ids exchanged. Across: the
-// party's member A and the reserve's B, refused by +0xB bit 1 as the original
-// (A asked first: the hero's permanent mark keeps him, a scene's mark keeps
-// its member); else sound 0x103, A becomes B in both party lists, B becomes A
-// in the reserve, A's row's portrait cells cleared - the original's stores,
-// the reserve's over the whole list.
-unsigned char TacticsMembersSwapWide() {
-    ss::Reserve& r = ss::g_tactics;
-    const int col = static_cast<unsigned char>(FieldS_Column);
-    const int row = BattleE1_ModeByte9, held = FieldS_PickRow;
-    auto whole = [&](int w) -> unsigned char& {
-        if (w < 0 || w >= r.count)
-            bof3::Fatal("solo members screen: reserve row %d of %u", w, static_cast<unsigned>(r.count));
-        return r.ids[w];
-    };
-    if (col == static_cast<unsigned char>(ShopStates_Clear0A)) {
-        unsigned char& x = whole(row);
-        unsigned char& y = whole(held);
-        const unsigned char t = x;
-        x = y;
-        y = t;
-        WideWindow();
-        return 0xFF;
-    }
-    const int party_row = col == 0 ? row : held;
-    const unsigned char a = BRest2f(::bof3::Img(kParty.v) + static_cast<U>(party_row));
-    const unsigned char b = whole(col == 0 ? held : row);
-    if (Character(a)[0xB] & 2) return a;
-    if (Character(b)[0xB] & 2) return b;
-    SoundRest2f(0x103);
-    unsigned char i = 0;
-    if (PartyCountRest2f() != 0) {
-        do {
-            if (BRest2f(::bof3::Img(kParty.v) + i) == a) BRest2f(::bof3::Img(kParty.v) + i) = b;
-            if (BRest2f(::bof3::Img(kPartyCopy.v) + i) == a) BRest2f(::bof3::Img(kPartyCopy.v) + i) = b;
-            ++i;
-        } while (i < PartyCountRest2f());
-    }
-    for (unsigned j = 0; j < r.count; ++j)
-        if (r.ids[j] == b) r.ids[j] = a;
-    SetLong(move_script::At(::bof3::Img(kPortrait4.v) + 4u * static_cast<U>(party_row)), 0);
-    SetLong(move_script::At(::bof3::Img(kPortraitA.v) + 6u * static_cast<U>(party_row)), 0);
-    SetWRest2f(::bof3::Img(kPortraitA.v) + 6u * static_cast<U>(party_row) + 4, 0);
-    SetLong(move_script::At(::bof3::Img(kPortraitB.v) + 6u * static_cast<U>(party_row)), 0);
-    SetWRest2f(::bof3::Img(kPortraitB.v) + 6u * static_cast<U>(party_row) + 4, 0);
-    WideWindow();
-    return 0xFF;
-}
-
-// TacticsMembers_Build with the long reserve: the reserve filled into
-// g_tactics, the rows shown into 0x6BDFD4.., record 12 as the original's with
-// +0xA the rows shown, the party's flags as the original's and the reserve's
-// for the rows shown only (the original writes them from 0x6BDFCD two apart
-// for every member, past their three pairs from the fourth on; nothing reads
-// them - pe_xref.py over 0x6BDFCC..0x6BDFD3 finds stores only); the cursor at
-// 0, 0, nothing picked, nobody refused.
-void TacticsMembersBuildWide() {
-    const unsigned char count = PartyCountRest2f();
-    ss::Fill(ss::g_tactics, move_script::At(::bof3::Img(kParty.v)), count);
-    ss::g_tactics.wide = true;
-    BRest2f(Rec(12, 0xA)) = 0;
-    WideWindow();
-    const unsigned n = ss::Shown(ss::g_tactics);
-    BRest2f(Rec(12, 0)) = 1;
-    BRest2f(Rec(12, 1)) = 6;
-    BRest2f(Rec(12, 2)) = 0x13;
-    BRest2f(Rec(12, 3)) = 2;
-    SetWRest2f(Rec(12, 4), 0x140);
-    SetWRest2f(Rec(12, 6), 0x3B);
-    SetLong(move_script::At(Rec(12, 0x20)), static_cast<std::int32_t>(::bof3::Img(kReserve.v)));
-    for (unsigned i = 0; i < 3; ++i) BRest2f(::bof3::Img(kMemberFlags.v) + 2 * i) = i < count ? 1 : 0;
-    for (unsigned j = 0; j < 3; ++j) BRest2f(::bof3::Img(kMemberFlags.v) + 1 + 2 * j) = j < n ? 1 : 0;
-    FieldS_Column = 0;
-    BattleE1_ModeByte9 = 0;
-    ShopStates_Clear0A = 0x7F;
-    FieldS_PickRow = 0x7F;
-    Rest2f_Refused = 0xFF;
-    bof3::Log("solo members screen (Tactics): %u in the party, %u in reserve, %u shown", static_cast<unsigned>(count),
-              static_cast<unsigned>(ss::g_tactics.count), n);
 }
 
 }  // namespace
@@ -3431,7 +3232,6 @@ void TacticsMembersBuildWide() {
 // 0x107 (refused), the pick dropped. Cancel (0x106): a pick dropped; else the
 // sub-step on, the countdown 5, record 12 to state 1, 19 and 20 closed.
 extern "C" void __cdecl TacticsMembers_Pick(void) {
-    if (solo_screens::g_tactics.wide) return TacticsMembersPickWide();   // the solo-character mode (MS)
     Backdrop();
     {
         const U e = ::bof3::Img(kMemberCells.v) + 8u * static_cast<U>(FieldS_Column + 2 * BattleE1_ModeByte9);
@@ -3460,6 +3260,7 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
             SetWRest2f(Rec(11, 0x10), 0x61);
         }
     }
+    if (solo::Solo_Active()) TacticsChampionMark(PartyCountRest2f());   // the solo-character mode (MS)
     const U keys = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const unsigned char count = PartyCountRest2f();
     unsigned char col = static_cast<unsigned char>(FieldS_Column);
@@ -3528,6 +3329,8 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
     FieldS_Step = static_cast<unsigned char>(sub + 1);
     BRest2f(Rec(19, 0)) = 0;
     BRest2f(Rec(20, 0)) = 0;
+    // The solo-character mode (MS): the champion's hand (kHand) closed with the cursors.
+    if (solo::Solo_Active() && ss::kChampionMark == ss::ChampionMark::kHand) BRest2f(Rec(21, 0)) = 0;
 }
 
 // original 0x58FB60: TacticsMembers_Steps[2] - the backdrop; at the
@@ -3663,8 +3466,6 @@ extern "C" void __cdecl TacticsFormation_Build(void) {
 // list, which they overlap from the fourth row on (section 7). The cursor at
 // 0, 0, nothing picked, nobody refused.
 extern "C" void __cdecl TacticsMembers_Build(void) {
-    if (solo_screens::Wide()) return TacticsMembersBuildWide();   // the solo-character mode (MS)
-    solo_screens::g_tactics.wide = false;
     const unsigned char count = PartyCountRest2f();
     unsigned char n = 0;
     BRest2f(Rec(12, 0xA)) = 0;
@@ -3709,9 +3510,6 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
 // that is B becomes A, and A's row's portrait cells cleared.
 extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
     const unsigned char col = static_cast<unsigned char>(FieldS_Column);
-    // The solo-character mode (MS): a reserve row is in it.
-    if (solo_screens::g_tactics.wide && !(col == 0 && static_cast<unsigned char>(ShopStates_Clear0A) == 0))
-        return TacticsMembersSwapWide();
     if (col == static_cast<unsigned char>(ShopStates_Clear0A)) {
         if (col != 0) {
             SwapRest2f(move_script::At(::bof3::Img(kReserve.v) + static_cast<std::uint32_t>(BattleE1_ModeByte9)),
@@ -3792,9 +3590,6 @@ extern "C" void __cdecl FieldMenu_State8Run(void) {
 }
 
 void FieldAbility2_Inject() {
-    // The solo-character members screens' reserve model (group MS), as solo.cpp runs Solo_SelfTest.
-    if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("solo_screens"))
-        solo_screens::SelfTest();
     BOF3_INJECT(FieldMenuItems_ByState);
     BOF3_INJECT(FieldMenuItems_Open);
     BOF3_INJECT(FieldMenuItems_SlideIn);

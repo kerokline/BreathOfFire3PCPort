@@ -1,30 +1,33 @@
 # The solo-character round: the two members screens (group MS)
 
-**Status:** IN PROGRESS (verified 2026-11-12: built and measured on `solo/ms`, from the
-round branch `solo/round` `10646687`; headless self-tests and captures in
-section 6; not played, not merged). Round doc
-[`solo-character-round.md`](solo-character-round.md) 4 "MS", 0a item 9 and
-6a item 1 govern; the code is `src/game/solo/solo_screens.{h,cpp}`, the
-Tactics members step in `src/game/field/field_ability_2.cpp` and `PartyForm`
-in `src/game/field/party_form.cpp`.
+**Status:** IN PROGRESS (verified 2026-11-12: built and measured on `solo/ms`;
+headless self-tests and captures in section 6; not played). Round doc
+[`solo-character-round.md`](solo-character-round.md) 4 "MS" and 0a item 9
+govern; the code is `src/game/solo/solo_screens.{h,cpp}`, the Tactics members
+step in `src/game/field/field_ability_2.cpp` and `PartyForm` in
+`src/game/field/party_form.cpp`.
+
+**Scope changed the same day (the owner, 2026-11-12): "lets by default have 3
+walkers like the normal game."** The map party in the mode is the game's own
+three; only combat changes. So the mode no longer produces four or more in
+reserve, and the long, scrolling reserve list built for both screens (section
+5, commit `9b60b48d`, with the cleared look on top of it at `0d7a20de`) was
+removed: both screens are the original's code in every state, and only the
+champion's mark remains, while `solo::Solo_Active()`. The finding of section 2
+stands as a latent defect of Capcom's, unfixed (section 2a).
 
 ## 1. The answer in one paragraph
 
-**The mode reaches both screens' latent defects, from the fourth reserve
-member on, and in ordinary play.** Each screen keeps its reserve in a list
-of three bytes followed by a byte of its own, and its cursor places hold
-three rows; a fourth member is written over that byte and has no place. In
-the mode the map team is the hero and at most one other (6a item 1; FS's
-rule: every "must stay" member and at most one unmarked), so six joined
-members - every save of the corpus from chapter 9 to 15 - leave four in
-reserve, and the chapter 14 desert, where the hero walks alone with five
-joined, leaves five. What was built: both screens use a reserve list of ours
-(room for all eight records) shown three rows at a time with scrolling, only
-while `solo::Solo_Active()` (one line, `solo_screens::Wide()`, makes it
-unconditional); and the champion's panel carries the look the load list gives
-a cleared save, the gold frame (section 5a), on both.
-Nothing else: the swap rules the original has already keep the mode's map
-team in shape (section 4).
+**Both members screens break from the fourth reserve member on** (Capcom's
+latent defect, section 2): each keeps its reserve in three bytes followed by
+a byte of its own, and its cursor places hold three rows. The original
+reaches it only with four or more joined members outside a team of three,
+which no measured save holds (section 3). With a two-walker map team the
+mode would have reached it from chapter 9 on, so a scrolling reserve was
+built; the owner then kept the game's three walkers, and it was removed.
+What stays: the champion's panel on both screens carries the look the load
+list gives a cleared save, the gold frame (section 5a), only while the mode
+is active. The swap rules are the original's (section 4).
 
 ## 2. What each screen holds, and where a reserve of four breaks it
 
@@ -71,84 +74,68 @@ L2 describe. `rest_2f.md` 7 item 2 dates the overlap "from the fifth
 member", which is right for the flags; the list's own fourth byte is the
 earlier break.
 
-## 3. How large the mode's reserve gets, and when
+## 2a. The latent defect, for numbering (Capcom's; unfixed)
 
-**The joined counts measured.** Every distinct slot file found on this
-machine (54 under the game folders, backups and `bof3x-runs` roots; 67
-recipe saves; read 2026-11-12 with a scratch script over the block at file
-offset 0: records at `+0x90`, `+0xB` bit 0 joined, the lists at
-`+0x682` / `+0x685`): at most **six** records joined at once, always records
-0, 1, 2, 4, 5, 6 (the six main cast), in every save from chapter 9 to 15.
-No save holds seven. With a team of three the original's reserve is then
-three - its three rows.
+**Draft A.** "The members screens hold three reserve rows; a fourth breaks
+both. Tactics' list `0x6BDFD4` has the refused byte `0x6BDFD7` as its
+fourth byte, which `TacticsMembers_Build` sets to 0xFF after the list: the
+fourth row shows record 0 (`Character_IndexById[0xFF]` reads 0 in the image)
+and a swap with it does nothing. PartyForm's fourth byte is its own count
+`0x6BC897`, written after the list: the fourth row shows id 4's record. Both
+cursor tables hold three rows, so row 3's place is off screen, and row 3 is
+drawn past line 240. From the fifth member the reserve flags (never read)
+land on the list (`rest_2f.md` 7 item 2, `field_s.md` 10 L1/L2). Reached
+only with four or more joined outside a team of three: no measured save holds
+that; the chapter 14 desert holds five outside a team of one, and its members
+choice is refused (`Field_InputFlags` 0). Shown live with a poke (section 6,
+`off_members`, `off_swap`). A fix - a reserve of ours shown three rows at a
+time with scrolling - was built and removed (commit `9b60b48d`)."
 
-**In the mode.** FS's map team is every "must stay" member and at most one
-unmarked; the hero's mark is permanent (M7), so with two or more joined the
-team is the hero and one other unless a scene marks a third. So:
+## 3. How large the reserve gets, and when
 
-| Joined | Map team | Reserve | Where measured |
-|---|---|---|---|
-| 6 (records 0, 1, 2, 4, 5, 6) | hero + one | **4** | every save of chapters 9..15 |
-| 6, the hero walking alone | hero | **5** | `adult_ryu` (chapter 14, the first list `07 FF FF`), `desertToManmo`, `desertSummary` and the other chapter 14 desert saves |
-| 7 (six + the whelp) | hero (+ one) | 5 or 6 | read, not measured: chapter 14's `Scena14_SaveLeaveAllPartyA` (`0x51A810`) sends the three walkers away with `Party_Remove`, which keeps their joined bits (`field_6.cpp:2205-2260`), and joins id 0xA (record 7) alone; `Scena14_Out10Party748` clears it again |
-
-Records 3 and 7 (the two guests) join with few others: Teepo (record 3) in
-chapters 1-2 beside records 0 and 4 (`scena_01.cpp:62`, `scena_call_5.cpp`),
-the whelp in chapter 8's opening after `Scena08_PartyBitsToRecord0` has left
-record 0 alone (`scena_08.cpp:46-61`), in chapter 14 as above, and in
-chapter 16 (the attract demo, where the mode stands down).
-
-**So the mode reaches the defect** whenever all six have joined and a
-members screen opens with a reserve of four or more: from chapter 9 on.
-Whether the original itself reaches it in the chapter 14 desert depends on
-whether the members choice is allowed there (`Field_InputFlags` `0x905BA2`
-bit 0; section 6).
-
-## 4. What a swap moves in the mode
+## 4. What a swap moves
 
 Both screens move who walks: the first list (and the second) and the
-reserve. Read against the mode's shape:
+reserve. The mode does not change them:
 
-- **Two party rows** (the original's code, unchanged): only the order of the
-  first list changes, so the lead; both lists keep the same members.
+- **Two party rows**: only the order of the first list, so the lead.
 - **Two reserve rows**: only the reserve's order.
 - **A party row and a reserve row**: refused when either member has `+0xB`
   bit 1 (the party's asked first; the refused member is named on the help
   line), else the party member is replaced by the reserve member in both
-  lists. The hero's mark is permanent, so the hero can never be swapped out;
-  a scene's mark keeps its member the same way; a marked member in reserve
-  cannot come in. So the map team after a swap is again the marked members
-  and at most one unmarked - FS's rule - with the same count and both lists
-  holding the same members. Nothing for FS's fold to repair.
+  lists. Counts never change. Measured with the wide build and a two-walker
+  experiment (section 6, `on_swap_nina`): a swap through a scrolled row
+  replaced Nina in both lists; Ryu, marked, was refused.
 
-The original does exactly this; the mode adds nothing here.
+## 5. What was built, and what was removed
 
-## 5. What was built
+**Built and kept** (this branch's tip):
 
-- `src/game/solo/solo_screens.{h,cpp}`: the switch `Wide()` (the mode
-  active; `return true;` makes the long reserve unconditional), the
-  champion's test `IsChampion(id)`, the reserve model `Reserve` (eight ids,
-  the count, the first row shown) with `Fill`, `Window`, `Shown`, `Whole`,
-  `ShownRow`, `Hold` and `Move` (the original's wrap, the view scrolled to
-  keep the row shown), and its self-test.
-- **Tactics** (`field_ability_2.cpp`): `TacticsMembers_Build` with `Wide()`
-  runs `TacticsMembersBuildWide` and latches `g_tactics.wide`; while it is
-  set `TacticsMembers_Pick` runs `TacticsMembersPickWide` and
-  `TacticsMembers_Swap` runs `TacticsMembersSwapWide` for any swap with a
-  reserve row. `0x6BDFD4`.. holds the rows shown and record 12's `+0xA`
-  their number, so `MenuList_ReserveWinDraw` is untouched; in the reserve
-  column the cursor's and the pick's row bytes hold the row of the whole
-  list; a picked row scrolled out of sight is kept, unmarked.
-- **PartyForm** (`party_form.cpp`): the same, through `PartyForm_Setup`
-  (latch), `_Choose`, `_Swap` and `_Draw`; `_DrawReserve` and
-  `_DrawSliding` untouched.
-- **The champion's mark**: first the game's pointing hand (kept behind
-  `solo_screens::kChampionMark = kHand` for comparison); since the owner's
-  question of 2026-11-12, the cleared save's look (section 5a). Only while
-  `Solo_Active()`.
+- `src/game/solo/solo_screens.{h,cpp}`: `IsChampion(id)` (the mode active
+  and the id's record the champion's), the mark's constants
+  (`kChampionMark`: `kCleared`, or `kHand` - the game's pointing hand, kept
+  for comparison; `kChampionClearEmblem`, off), `DrawCleared` and `InFront`
+  (section 5a).
+- **Tactics** (`field_ability_2.cpp`): `TacticsMembers_Pick` is the
+  original's; while `solo::Solo_Active()` it calls `TacticsChampionMark`
+  after placing its cursor records (and, with `kHand`, closes record 21 with
+  the cursors on the way out).
+- **PartyForm** (`party_form.cpp`): `PartyForm_Draw` is the original's; while
+  `solo::Solo_Active()` it calls `PartyFormChampionMark` after its two boxes.
+- Each finds the champion in the party column (rows below `Party_Count(0)`)
+  or the reserve's (rows below the screen's count, to the three rows the
+  cursor places hold) by `IsChampion`.
 
-With the mode off every edited function takes the original's body: the
-first statement of each asks the latch or `Wide()`, both false.
+With the mode off both screens run the original's code with nothing added:
+the only new statements are the two `if (solo::Solo_Active())` calls.
+
+**Built and removed** (commit `9b60b48d`; the cleared look on top of it at
+`0d7a20de`): a reserve list of ours with room for eight, shown three rows at
+a time with scrolling, on both screens, behind `solo_screens::Wide()`
+(`Solo_Active()`; one line to make it unconditional), with its self-test
+(179 checks). It was measured working (section 6, `on_members_nina`,
+`on_pf_nina`, `on_swap_nina`). Removed when the owner kept the game's three
+walkers: the mode no longer produces four in reserve.
 
 ## 5a. The champion in the cleared save's look (the owner, 2026-11-12)
 
@@ -220,72 +207,72 @@ ChampionMark::kHand` (`src/game/solo/solo_screens.h`).
 
 ## 6. Checks and captures
 
-All 2026-11-12, on the branch's build, from the harness root
-`D:\bof3x-runs\solo1112\MS\root` (a launcher copy with no ini, a game folder
-with DAT / BGM / SND junctioned, the recipe saves copied); captures under
-`D:\bof3x-runs\solo1112\MS\shots` (the game's own frames, outside the tree).
+All 2026-11-12, from the harness root `D:\bof3x-runs\solo1112\MS\root` (a
+launcher copy with no ini, a game folder with DAT / BGM / SND junctioned, the
+recipe saves copied); captures under `D:\bof3x-runs\solo1112\MS\shots` (the
+game's own frames, outside the tree).
+
+**The tip (the mark alone).**
 
 - **Build** (i686, llvm-mingw): exit 0, no warning in the touched files.
   `tools/ledger_check.py`: 229 entries, 0 errors; `tools/ledger_switches.py
   --check`: 0 errors.
-- **Self-tests, headless:** hosted `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`:
-  exit 0, every one of the 916 `MISMATCHES` lines 0, among them `rest_2f
-  self-test: 294000 rounds over 49 functions ... 0 MISMATCHES` and `field_s
-  self-test: 212000 rounds over 53 functions ... 0 MISMATCHES` (the fuzz of
-  both screens' original bodies), `solo self-test: 48 checks passed`,
-  `solo_screens self-test: 179 checks passed`. Exe host: exit 0, the same two
-  solo lines.
-- **Mode off takes the original's path:** every edited function first asks
-  `Wide()` (Build, Setup) or the latch it set (Pick, Swap, Choose, Draw), and
-  `Wide()` is `Solo_Active()`, false with `SoloCharacter` off. Measured: the
-  mode-off runs log no `solo members screen` line (the wide builds log one),
-  and show the original's bytes - the window `08 01 04 FF` with five in
-  reserve (the ids `08 02 04 05 06`: flag 4 on entry 1, the refused byte on
-  entry 3), `02 04 05 FF` with four. The shadow fuzz passing is the same
-  answer for the bodies.
+- **Self-tests, headless**, on this tip's build: hosted `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW='*'` exit 0, every one of the 916 `MISMATCHES` lines 0
+  (`rest_2f` and `field_s`, the fuzz of both screens' bodies, among them),
+  `solo self-test: 132 checks passed`; the exe host exit 0, the same solo
+  line. (The removed reserve model's own self-test went with it.)
+- **Mode off is the original's code:** the only statements added to either
+  screen are `if (solo::Solo_Active()) ...Mark()` (and, with `kHand`, one
+  close of record 21 under the same test). Captured:
+  `cleared_mark\off_tactics` shows the screen unmarked.
 
-**The recipes** (in `D:\bof3x-runs\solo1112\MS\shots\recipes`, not in the
-tree): `members.txt` opens Tactics as `tools/recipes/menu_screens.txt` does,
-from the `adult_ryu` recipe save (chapter 14, the hero alone, six joined), by
-conditions (`until` / `seek`), then the members choice and the reserve column
-walked down. **Each needs a poke, so none is a player's route:** the members
-choice is refused in that area (`Field_InputFlags` `0x905BA2` reads 0), so
-`poke 0x905BA2 u8 1`; `partyform.txt` opens PartyForm by `poke 0x66C7D8 u8 6`
-(`Field_Request`, as `Party_Join` sets it); `swap.txt` also pokes Nina (id 8)
-into both lists' second byte for a map team of two (the field menu had set up
-one party panel, so the second panel is not drawn: the poke's artifact). No
-recorded route opens the members step or PartyForm. For the owner to record
-(`BOF3X_RECORD`): from a save of chapter 9..15 where the members choice is
-allowed, with all six joined, the field menu, Tactics, the members choice,
-the reserve column down to its last row and back; and a scene that opens
-PartyForm (chapter 6's or 8's `Request(6)`) - with the mode on, the map team
-of two.
+**The captures of the tip** - three walkers, from the recipe save `issue190`
+(chapter 11; party Ryu, Nina, Momo; reserve Garr, Rei, Peco), recipes
+`members3.txt` and `partyform3.txt` in `D:\bof3x-runs\solo1112\MS\shots\recipes`.
+**Two caveats.** (1) Each needs a poke, so none is a player's route: the
+members choice is refused in that area (`Field_InputFlags` reads 6, bit 0
+clear: `poke 0x905BA2 u8 1`), and PartyForm is opened by `poke 0x66C7D8 u8 6`
+(`Field_Request`, as `Party_Join` sets it). (2) The branch still holds the
+round's field half (FS's two-walker fold, which the round branch is
+reverting), so the capture binary was built with `solo_field.cpp`'s
+`ModeOn()` answering false - a local edit, not committed, restored before the
+commit - which is what the revert does to the field.
 
-**What the captures show:**
+| Capture (`D:\bof3x-runs\solo1112\MS\shots\cleared_mark\...`) | What |
+|---|---|
+| `tactics_ryu\members_*.png` | the champion is the hero, first in the party (his panel also dimmed by his own "must stay" mark, as the original draws it) |
+| `tactics_nina\members_*.png` | the champion in the party's second row: her panel in the gold frame |
+| `tactics_rei\members_*.png` | the champion in reserve: his row drawn as a member panel in the gold frame |
+| `partyform_ryu`, `partyform_nina`, `partyform_rei` `\pf_*.png` | the same on PartyForm |
+| `off_tactics\members_*.png` | mode off: unmarked |
+| `wide_*` | the removed wide build with the cleared look (adult_ryu, five in reserve, scrolling) |
+| `..\cleared_ref\load_list.png` | the reference: the owner's cleared save (a copy, slot 1) under `adult_ryu` (slot 0) on the load list |
 
-| Run | Shots | What |
-|---|---|---|
-| `off_members` (mode off) | `members_party`, `_row0`, `_row2`, `_row3`, `_row4`, `_wrap` | the original with five in reserve: Nina twice (flag 4 over Garr's id), Ryu as a fourth row hanging off the bottom (id 0xFF, record 0), the cursor off screen on rows 3 and 4 |
-| `off_swap` (mode off) | `sw_picked`, ... | four in reserve: Peco lost, the fourth row Ryu again; a swap with it answers 0xFF and changes nothing |
-| `on_members_nina` | the same six | five in reserve shown three at a time: `08 02 04` -> `02 04 05` (row 3) -> `04 05 06` (row 4), wrap to row 0; the hand on Nina while her row is shown |
-| `on_members_ryu` | the same six | the hand on the party panel (it covers the member-number badge) |
-| `on_pf_nina` | `pf_party`, `pf_row0`, `pf_row3`, `pf_row4`, `pf_back` | PartyForm: the same scroll, the hand on Nina |
-| `cleared_mark/tactics_nina`, `cleared_mark/partyform_nina` | as above | the cleared look: Nina's reserve row as a member panel in the gold frame, while shown |
-| `cleared_mark/tactics_ryu`, `cleared_mark/partyform_ryu` | as above | the cleared look on the party panel (the hero's own frame recoloured) |
-| `on_swap_nina` | `sw_start`, `sw_picked`, `sw_swapped`, `sw_refused` | a map team of two (Ryu, Nina), four in reserve: Nina swapped with Peco on reserve row 3 (scrolled) - both lists `07 06 FF`, the reserve `02 04 05 08`; then Ryu picked against a reserve row: refused (`0x6BDFD7` = 7, his id; lists unchanged) |
+**The removed wide build's runs** (`adult_ryu`, chapter 14, the hero alone,
+six joined; recipes `members.txt`, `partyform.txt`, `swap.txt`; the same
+pokes, and `swap.txt` also Nina into both lists for a map team of two):
+
+| Run (`D:\bof3x-runs\solo1112\MS\shots\...`) | What |
+|---|---|
+| `off_members` (mode off) | the original with five in reserve: the window `08 01 04 FF` for the ids `08 02 04 05 06`; Nina twice (flag 4 over Garr's id), Ryu as a fourth row hanging off the bottom (id 0xFF, record 0), the cursor off screen on rows 3 and 4 |
+| `off_swap` (mode off) | four in reserve, `02 04 05 FF`: Peco lost, the fourth row Ryu; a swap with it answers 0xFF and changes nothing |
+| `on_members_nina`, `on_pf_nina`, `on_members_ryu` | the scrolling reserve (`08 02 04` -> `02 04 05` -> `04 05 06`), with the hand mark |
+| `on_swap_nina` | two walkers, four in reserve: Nina swapped with Peco on scrolled row 3 (both lists `07 06 FF`, reserve `02 04 05 08`); Ryu refused (`0x6BDFD7` = 7) |
+
+No recorded route opens the members step or PartyForm. For the owner to
+record (`BOF3X_RECORD`): from a save where the members choice is allowed, the
+field menu, Tactics, the members choice, both columns; and a scene that opens
+PartyForm (chapter 6's or 8's `Request(6)`).
 
 ## 7. Not done, and open
 
 - Not played; not run on a recorded route (none reaches the screens).
-- No scroll indicator: nothing on screen says a fourth row exists below
-  until the cursor reaches it. The game draws no arrows on these screens;
-  an indicator would be new layout (the owner's call).
 - The cleared look is the owner's to judge by eye; the hand
   (`kChampionMark = kHand`) and the emblem (`kChampionClearEmblem`) are one
-  constant each. The `on_*` captures in the table above are the hand's.
-- Both defects stay as the original has them with the mode off (round doc 6
-  open 2's recommendation). The mode-off reach: no measured save holds four
-  outside a team of three, and in the one place the original holds five
-  (the chapter 14 desert) the members choice is refused. Chapter 14's
-  whelp scene (seven joined, section 3) was not run.
+  constant each.
+- A champion in reserve is shown as a member panel, not as the reserve row
+  it is (section 5a): the reserve rows have no frame to recolour.
+- The latent defect (section 2a) stays as the original has it.
+- Chapter 14's whelp scene (seven joined, section 3) was not run.
 - The 64-bit build was not built here.
