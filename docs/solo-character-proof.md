@@ -172,6 +172,28 @@ first. Output: `<root>\boss\` (the recipes, frames, logs), `<root>\boss_results.
 about a minute and a half a fight at speed 4 (section 6): fifteen fights, the plain side and six
 champions, 105 runs, **about 2 h 30 min**; `--fights` narrows it.
 
+Added 2026-11-12 evening, at the owner's word ("the zombiedragon save, which is a 2 man team/fight"):
+
+- **Fight 32, the D.Zombie**, a route-reached fight: `minecartToZombieDragon.txt` kept to its cut 5230,
+  then `battle 32`, `--after 1200 --after-confirm`, as boss-sweep.md 7.3's row. A table entry with
+  `route=` uses the recorded route (and its own `# save`) in place of the probe; the other fights are
+  unchanged. The route's save has a party of two (first list `2 7`, second `7 2`, count 2).
+- **The route fights an earlier battle** on the way to the cut (battle 372). With `BOF3X_SOLO` set the
+  champion fights it alone and the recorded presses no longer finish it as recorded, so the route reaches
+  the boss out of step. **`--mark-at-cut`** is the way to the boss in step without a new recording (the
+  coordinator's): `BOF3X_ON=SoloCharacter` with **no** `BOF3X_SOLO` through the route (the mark stays 0,
+  the mode is inactive, the route replays as recorded through battle 372), then at the cut the mark
+  `0x904A21` is poked to the champion's record + 1 before `battle 32`; sides `mark_<champion>`. A
+  harness's poke, not a player's path.
+- **Solo sides wait for the cross** with `until` where `spell_sweep.py`'s fight recipe has `seek <confirm>
+  phase == 1`: with one member a confirm pressed as the cross opens enters the command and phase 1 ends
+  two frames later, between the seek's checks, so the seek gave up while the battle ran on (fight 32 with
+  ryu, momo, peco under the seek: "hung", the battle in fact still turning). `--seek-cross` keeps the
+  seek. Plain sides are unchanged.
+- The table gained `joined` (the records with `+0xB` bit 0 at the call), `party_before` (at the call),
+  `party_in_battle` (60 frames into mode 5, after CB's write), `party_after_return`, and the game's own
+  `DIV-0228` arm and restore lines (`solo_battle`, `solo_restore`).
+
 ## 5. Recordings owed by the owner
 
 Recorded on the merged branch (CB, FS, MS, LV in), with the mode on: the launcher's Solo character page
@@ -259,6 +281,45 @@ champion's HP after reads 999: the harness's party pokes, not the game's. Note f
 `ryu` the sample fights and the Chimera change nothing even with CB in - their donor's party is record 0
 alone - so the sweep wants the other champions (`--champions nina garr rei momo peco`) to test a team of
 one built from a record that is not walking.
+
+## 6a. Fight 32 on `solo/round` `c982fc84` (2026-11-12 evening)
+
+The combat half, the mark and the level-1 start on the game's own party; root
+`D:\bof3x-runs\solo1112\RT\root\dz`, speed 4. **In the save at the call, records 0 and 2 have joined
+(ryu, garr); records 1, 4, 5, 6 (nina, rei, momo, peco) have not.** Before every battle: formation 0,
+first list `2 7`, second `7 2`, count 2, set `8B`.
+
+**The boss, reached in step (`--mark-at-cut`)**, every champion:
+
+| Side | In battle (second list, count) | The game's line | Verdict | After the return |
+|---|---|---|---|---|
+| plain | `7 2`, 2 | - | started, ended (win) | first `7 2`, second `7 2`, count 2, set `8B` |
+| mark_ryu | `7`, 1 | battle 373 fought by the champion alone (record 0, id 0x07); set kept | started, ended (win) | the plain run's; `party put back (restored mask 0x1F)` |
+| mark_nina | `8`, 1 | record 1, id 0x08; set row changed, the battle file loaded | started, ended (win) | the plain run's; mask `0x3F` |
+| mark_garr | `2`, 1 | record 2, id 0x02; set kept | started, ended (win) | the plain run's; mask `0x1F` |
+| mark_rei | `4`, 1 | record 4, id 0x04 (level 5, unjoined); set row changed | started, ended (win) | the plain run's; mask `0x3F` |
+| mark_momo | `5`, 1 | record 5, id 0x05; set row changed | started, ended (win) | the plain run's; mask `0x3F` |
+| mark_peco | `6`, 1 | record 6, id 0x06; set row changed | started, ended (win) | the plain run's; mask `0x3F` |
+
+Every restore line reads `second list 07 02 FF count 2 formation 0 set 8B; first list 02 07 FF`, and
+the field after the return (first `7 2`, second `7 2`, count 2, set `8B`) is the plain run's in all six.
+The win is the harness's kill (the HP poke), the champion's HP 999 after it the party poke.
+
+**The route's first fight, battle 372** (sides `solo_<champion>`, `BOF3X_SOLO` set from the start): the
+champion fought it alone in all six (the arm line, second list `07 02 FF` count 2 saved). Five
+returned with `party put back` (ryu, garr mask `0x1F`, set kept; nina, momo, peco mask `0x3F`, the set
+row changed and loaded). **rei (record 4, level 5, unjoined) lost it**: `battle 372's saved party
+dropped at GameMode_Start (the battle did not return to the field)`, the game back at its start, so
+the route never reached the boss (`battle 32 refused: no tagged actor ... area 31`). After battle 372
+the route is out of step, as the owner saw. Of the five that went on, garr and nina won the boss;
+ryu, momo and peco "hung" under `spell_sweep.py`'s seek, which the `until` change above answers (the
+battle was still turning: enemy states and phases changing to the recipe's last frame).
+
+**combatGroup with garr** (`D:\bof3x-runs\solo1112\RT\root\cg`): an earlier run with the now-removed
+map fold ended `game exited rc 1` as the battle loaded. On `c982fc84` it did not recur in four runs:
+the route once (`done` at 622) and three times with 900 more frames after its end (`done` at 1,522),
+each with `battle 4 fought by the champion alone (record 2 ...)`, the battle file loaded (record 2
+unjoined in chapter 1), no Fatal, no CRASH line, the battle still on at the end.
 
 ## 7. Not done here
 
