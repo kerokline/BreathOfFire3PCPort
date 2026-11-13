@@ -2628,6 +2628,8 @@ _(2026-11-12) open; nothing built._
 
 **What is built.** Chapter 8's `Scena08_Scene11` leaves record 4 at 0 HP with status `0x6000` (read by group CB, [`solo-character-combat.md`](solo-character-combat.md)). A champion alone at 0 HP would lose at the battle's first frame, so `SoloBattle_Arm` stands the mode down for that one battle: the game's own party fights, and the champion starts dead as the original has it. Which fight that is has not been measured; the owner thinks it is the Mikba fight.
 
+**What the fight is, from the owner's play of it (2026-11-12, the route `mikbaFight`):** "it prompts to choose characters, then the fight starts with rei dead. I waste a little time with a dragon, then revive Rei just so you can see how rei immediately transforms (he is not under control during the fight unless he dies first). then I finish the fight. It prompts for party again after the fight is over." So a revived champion here would not be the player's to command; any other way of handling the fight has to answer that first.
+
 **What could be different** (nothing chosen): the champion revived to fight alone, at 1 HP or at full; the champion revived by the party's first turn; the fight skipped or won for a solo run. Each changes what the story's scene meant by the 0 HP.
 
 **First concrete step:** a save before that fight with record 4 as champion, to see what the stand-down plays like and confirm which fight it is.
