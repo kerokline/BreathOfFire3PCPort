@@ -175,6 +175,30 @@ constexpr double kFrameMs = 1001.0 / 30.0;     // the original's: double 33.334 
 
 double g_frame_ms = kFrameMs;
 
+// PROTOTYPE (render/interp.h): BOF3X_INTERP_DUMP=<dir> writes the picture
+// just shown, <dir>\<Frame_Counter>_<what>.bmp, for the two passes in every
+// 100 - a frame, the in-between after it, the next frame, its in-between.
+void InterpDump(const wchar_t* what) {
+    static wchar_t dir[200];
+    static int on = -1;
+    if (on < 0) on = GetEnvironmentVariableW(L"BOF3X_INTERP_DUMP", dir, 200) > 0 ? 1 : 0;
+    static bool first = true;
+    if (first) {
+        first = false;
+        bof3::Log("interp      dump %s", on ? "on" : "off");
+    }
+    const unsigned long fc = static_cast<unsigned long>(Frame_Counter);
+    if (!on || fc % 100 > 1) return;
+    wchar_t path[260];
+    swprintf(path, 260, L"%ls\%06lu_%ls.bmp", dir, fc, what);
+    const bool ok = render::SaveFrame(path);
+    static int said;
+    if (said < 4) {
+        ++said;
+        bof3::Log("interp      dump %ls: %s", path, ok ? "saved" : "NOT saved");
+    }
+}
+
 // DIV-0048: F1 toggles double speed - the period halved, so two logic
 // frames run per frame of wall time. Logic counts frames and reads no
 // clock, so what the game computes is the same; when drawing cannot keep
@@ -910,10 +934,13 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 }
                 // A late frame is not drawn - except one a scripted shot is
                 // about to save, so a capture is the same frame at any speed.
+                bool in_between_due = false;   // PROTOTYPE (render/interp.h)
                 if (now < deadline || bof3::InputScript_ShotPending()) {
+                    in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
                     if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
+                    InterpDump(L"real");   // PROTOTYPE
                     Gpu_PutDrawEnv(env + 0x14);
                     Gfx_FlushDirtyStrip();
                     Gfx_FlushUploadQueue();
@@ -937,6 +964,13 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 for (;;) {
                     Sound_Tick();
                     now = Now();
+                    // PROTOTYPE (render/interp.h): half a period after the present, the
+                    // frame just recorded halfway back to the one on screen.
+                    if (in_between_due && !(now < deadline - g_frame_ms / 2)) {
+                        in_between_due = false;
+                        render::PresentInBetween();
+                        InterpDump(L"mid");
+                    }
                     if (!(now < deadline)) break;
                 }
                 if (last_tick - last_fps_tick > 1000) {

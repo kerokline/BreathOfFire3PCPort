@@ -207,6 +207,7 @@ src/game/field/inventory_ops.cpp
 src/game/field/inventory_ops_fuzz.cpp
 src/render/render_shim.cpp
 src/render/fb_grab.cpp
+src/render/interp.cpp
 src/render/render_d3d11.cpp
 src/render/satpixie.cpp
 src/render/gfx_snapshot.cpp
