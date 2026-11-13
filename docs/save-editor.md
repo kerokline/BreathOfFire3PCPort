@@ -347,7 +347,8 @@ place it was opened from. The editor lists what changes and asks first.
   it: each release has its own letters, so it can show incorrectly in the
   other game, and the player can change it before the save.
 - **The button words `+0xCBC` and the options go with the save.**
-- **To a card only:** `+0x1040` (ours, DIV-0191) and the options `+0x7C`,
+- **To a card only:** `+0x1040` (ours, DIV-0191), `+0x1041` (ours, DIV-0228)
+  and the options `+0x7C`,
   `+0x7D`, which no PC screen sets, are cleared (the spec's section 13),
   then the checksum.
 - Everything else is the same bytes: the block is one format.
