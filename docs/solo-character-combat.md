@@ -496,3 +496,77 @@ BossActor_CopyFrom: no field actor carries tag 3` in `ExitAreaFight` - the
 craft skips the steps that place the spectator actors. A save the owner
 records in chapter 5 in area 79 before the series' first bout (before
 "Take your places please!") would prove the win and the rest of the series.
+
+## 13. Fight 34 (Mikba) trials (the owner, round doc 6i; 2026-11-13) - trials only
+
+Not a change of the default: fight 34 still stands down unless the champion
+is record 4, and record 4 at 0 HP still stands down. The trials run behind
+`BOF3X_CB_TRIAL34` (read once in `solo_battle.cpp`, marked TRIAL ONLY, not a
+behaviour, not ledgered; unset = nothing): `A` lifts fight 34's
+`kNeedsRecord 4` rule, `B` revives and heals record 4 at the battle's start
+when it is the champion (HP 1 and bit `0x4000` cleared as `ItemUse_Revive`
+does, then HP to the maximum and bit `0x2000` cleared as a full
+`Char_HealHp` does). Under either letter, `SoloBattle_WriteParty` also sets
+`+0x148` of ObjTrio's records 1 and 2 to `0xFF` for fight 34 (step 7's
+`Field_PartyLoad(0)` rebuilds them).
+
+**Why that last part.** `Boss34_Setup` scans ObjTrio's three records by
+`+0x148` with no flag test, the last match winning. In a battle of one the
+records 1 and 2 are the walkers' stale records (`Field_PartyLoad(1)` only
+clears their flags), and with the owner's party `07 04 08` record 1 is Rei's:
+the first runs picked member 1, an absent member, and the forced turn never
+came (its `+0x91` bit `0x20` test read the stale status `0x60`).
+
+**Runs** (the owner's route `mikbaFight` and save, through RT's sweep with
+`--mark-at-cut`, cut 3545, three played rounds with the sweep's defend
+command and party pokes, then the kill; root `D:\bof3x-runs\solo1112\CB\sweep`,
+wrapper `D:\bof3x-runs\solo1112\CB\scratch\cb_mikba.py`, extra watches of the
+pick byte `0x675F08`, `0x904AAD`, the acting actor / kind `0x904B34`, member
+0's `+0x124..+0x127`, record 4's status and HP). Frames under
+`D:\bof3x-runs\solo1112\CB\sweep\boss\f134_<side>\`.
+
+- **Plain:** pick `00 -> 02` (Rei, member 2); the forced turn at 3816 (the
+  sweep's party pokes revive the downed Rei each round - so plain's own run
+  differs from the owner's play there); win at 4859; record 4 after: level
+  19, EXP 10090, HP 1, status 0; back on the field at 4920.
+- **Trial A, Nina:** `TRIAL A: fight 34's rule lifted: record 1 fights it
+  alone; the pick byte 0x675F08 holds 0 before the set-up`; nothing matches
+  record 4, so the pick keeps its 0 - **the champion** - and at 3792..3794
+  `Boss34_Event` puts her first and forces action 4 skill `0x40` on her
+  (member 0's bytes `00 04 40 00`): **Weretiger** on Nina (`w003797.png`), then
+  `0xC0000005` in `Sprite_LoadPalette`, under `PaletteImage`,
+  `WeretigerCopy_Spawn`, `WeretigerCopy_Run`, `Battle_Frame` (llvm-nm of the
+  build): Rei's form drawn for a member who is not Rei. **Crash, every
+  time the forced turn comes.**
+- **Trial B, Rei:** `TRIAL B: record 4 revived and healed for fight 34: HP 0
+  -> 106, status 0x6000 -> 0x0000`; the pick `0` (Rei); round 0 the
+  player's defend (action 2) taken, then at 3778 the forced turn, action 4
+  skill `0x40` - **Weretiger** (`w003781.png`), Rei in the tiger form from
+  then on (`w004140.png`, `t004692.png`); rounds 1, 2 and the kill round:
+  actor kind 1 and action 1 (attack) each round although the sweep pressed
+  defend - **not the player's to command**, as the owner said; the win at
+  4866 (`battle_end` `02`, `0A`, `2A` as plain); the restore (mask `0x1F`);
+  record 4 after: **level 21, EXP 13090, HP 106, status 0** (plain: level 19,
+  EXP 10090, HP 1); back on the field at 4947 with the party of three
+  (`t004980.png`); the sweep's comparison: ending, party after and the scene
+  after the return the same as plain.
+
+**What would make each sound** (not built):
+
+- **A:** the forced turn must not land on a champion who is not record 4.
+  The smallest sound form: in the mode, `Boss34_Setup` (or our step 3, as
+  the trial does for records 1 and 2) leaves no pick when no member is record
+  4, and `Boss34_Event` / `Boss34_End` / `GiveAbility40` skip the picked
+  member when there is none - which means changes in `boss_mikba.cpp`'s
+  three functions behind the mode's test. With that, record 4 is not in the
+  battle: plain's write-back (record 4 HP 1, status cleared at 4916..4918) does
+  not happen, so record 4 would stay at HP 0 / status `0x6000` on the field
+  unless the restore writes what plain's end leaves (HP 1, status 0); what
+  reads it before the second prompt is not traced. And `GiveAbility40`'s
+  first call gives ability `0x40` to record 4's own list on a win in plain;
+  to keep the story, that call stays.
+- **B:** as run it is sound by these runs - no crash, the scene after as
+  plain - with the stale-record clearing (the pick must be member 0); the
+  differences are record 4's level 21 / EXP 13090 / HP 106 against plain's
+  19 / 10090 / 1 (he fought and won alone, plain's Rei took no EXP), and that
+  the player does not command him after the forced Weretiger turn.
