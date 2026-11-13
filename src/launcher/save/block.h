@@ -52,6 +52,11 @@ struct Names {
         int flags;   // the entry flags byte, or -1 where the table has none
     };
     std::vector<Entrance> entrances;
+
+    // The records-and-finds bits' names, from the install (save/finds.h):
+    // an enemy kind's name; a chest's or a passage's place and what it holds,
+    // by its bit. A bit with no entry shows its number alone.
+    std::map<unsigned, std::string> enemy, chest, passage;
 };
 
 enum class Type {

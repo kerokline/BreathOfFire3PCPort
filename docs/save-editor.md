@@ -183,6 +183,56 @@ Not in the list: the arrivals that a script makes with literal arguments (357
 in our source), which can depend on the story state; and the areas no link
 leads to (battlefields, the ending).
 
+### 4.3 Records and finds: what each bit records (2026-11-13)
+
+Each row of the section shows the bit's number and, where the install names it,
+what the bit records, as the gene rows do:
+
+| Record | Row | The bit is | The name from |
+|---|---|---|---|
+| Enemies defeated, Enemies identified (`+0x688`, `+0x6C8`) | `Enemies defeated 12 - <enemy>` | the enemy kind | each `AREAnnn.DAT`'s enemy table, the language layer's names over it |
+| Skills learned (`+0x6A8`) | `Skills learned 8 - <ability>` | the ability id's low byte | the ability names of section 4 |
+| Chests and field objects (`+0x6EC`) | `Chests and field objects 0 - area024 (100, 21): <find>` | the content object's `+5` | each area's placement script in `BOF3.exe` (op `9x`) |
+| Passage finds (`+0x72C`) | `Passage finds 4 - area003, area008 (79, 49): <find>` | the passage entry's `+4` | each area descriptor's passage list in `BOF3.exe` |
+
+A find's place is the area and the cell (x, z); after it, what the find
+gives: the item's name, or `weapon 12` (its category and number) where the
+install has no item names, or the zenny. One cell and find in several areas
+(a town's chapter versions of one map) is one entry with the areas listed;
+different places of one bit are joined by `; `. A bit with no name keeps its
+number alone. The layouts are in [`story-flags.md`](story-flags.md) "Other
+flag banks"; `src/launcher/save/finds.cpp` reads them, `ExeAreaFinds`
+(`exe_image.cpp`) hands it the exe, and `tools/bank_names.py` is the same
+reader in Python (for a watcher: `bank_names.load(game_dir)`).
+
+Like the other names, these are read at run time and are not in the
+repository. Enemy and item names need a Latin layer (section 4); the places and
+the zenny do not, and come from the exe alone. The enemy table of an area is
+read as the game reads it: the cache's `base\dat` and `loc\zh-CN\dat` (or the
+install's `DAT\`), then `<cache>\loc\<tag>\dat` (or `DAT\<tag>.AREAnnn.DAT`).
+An optional layer (`opt=`, such as `psp-names-*`) is not read: the editor
+names an enemy as the language layer has it.
+
+MEASURED 2026-11-13 on the owner's install (`game\`, English, cache built
+2026-11-12): **175 enemy kinds, 227 abilities, 170 chest bits and 104 passage
+bits named**; each enemy kind carries one name. Under `fr-FR` 165 kinds and
+under `de-DE` 164 are named: the language build keeps the PC's name where the
+disc's does not fit (`convert_enemy_names`), and that name is in Chinese glyph
+codes, which the editor does not show. On the plain PC install (`bof3\`, no
+`bof3x.ini`) the same counts come with `--language en-US`, from the
+`DAT\en-US.*` layers. On 88 PC saves (the 72 of `tools/recipe_saves` and the 16
+slots of `game\game`) every set bit of the five banks has a name: 5,808 enemy,
+2,667 skill, 5,813 chest and 3,738 passage bits, summed over the saves (`python
+tools/bank_names.py --game game --save ...`; `Enemies identified` is clear in
+all of them). The launcher's readers and the
+Python tool give the same text for every bit on `game\` (en-US, fr-FR) and on
+`bof3\` (en-US), compared with a scratch build of the readers.
+
+Sanity checks of the layout (MEASURED): `start.DAT` (area 24) has no chest bit,
+`start_normal.DAT` one, bit 0, named as a find of area 24 - the area
+`start.DAT` stands in; the four enemy bits of `start_normal.DAT` (25, 26, 29,
+30) are four of the five kinds in area 24's table.
+
 ## 5. Tests
 
 `tools/launcher_host/save_tests.cpp`, built by `tools/launcher_host/` or alone
@@ -209,6 +259,7 @@ checks, 0 failures, 113 PC fixtures, 45 cards with 46 saves, 15 empty cards comp
 | Each empty card | `EmptyCard` is that card, byte for byte (the emulator's cards whose blocks are zero) |
 | The name map, no fixture | Default names take the other set's; the player's are kept and reported; a faerie record nobody is in is not touched; the names go back; a layer's chunks (its disc's set and card file name, the names as the PC plays them); the exe's tables |
 | The name map, each built layer | It has its disc's eight and sixty names and its card file name, and the names as the PC plays them |
+| Records and finds, no fixture | The script walk finds op `9x` in both arms of an if and in a switch case, skips a bit of `0xFF`, and stops at a byte that is no op; the two find layouts and the passage entries that are no find; one place in two areas is one entry; an area file's enemy table with a layer's names over it, a name with no letter left out, a second name joined; the five banks' rows with a name and without |
 | The name map, each card save | The eight names become the other release's and fit a card; they come back; a second trip changes nothing (46 of 46 saves hold default names only: US, Japan, Europe, France, Germany) |
 
 **Against `tools/save_convert.py`** (2026-11-11, `--dump` and a scratch
@@ -240,6 +291,11 @@ record that holds nobody yet), so the level field takes 0..99.
   ([`save-interchange.md`](save-interchange.md) section 4), and the editor's
   bytes are that tool's.
 - **No creation, no story points** (stages 5 and 6).
+- **The named Records and finds rows (section 4.3) are not seen in the
+  window.** The readers are checked by the host tests and against
+  `tools/bank_names.py` on the owner's install; nobody has opened the page with
+  them yet. A disc-built install with no `BOF3.exe` has no chest or passage
+  names (the scripts and lists are on the discs too, as the entrances are: I58).
 - **The page is its own dialog**, not a page of the launcher's window (the
   spec's section 13 "Layout"): the owner's call, 2026-11-10.
 - **Equipment does not move the inventory.** The spec's section 13 takes an

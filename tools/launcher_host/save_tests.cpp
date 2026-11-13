@@ -13,11 +13,13 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include "launcher/save/block.h"
 #include "launcher/save/card.h"
+#include "launcher/save/finds.h"
 #include "launcher/save/namemap.h"
 
 namespace fs = std::filesystem;
@@ -557,6 +559,138 @@ int TestCardFixture(const fs::path& path, const fs::path& dump, const std::vecto
     return saves;
 }
 
+
+// The records-and-finds readers (save/finds.h), on bytes of the test's own:
+// the script walk, the two find layouts, the row text, the enemy names, and
+// the bank rows that show them.
+void TestFinds(const fs::path& temp) {
+    using bof3x::save::Find;
+    // A script at 0x1000: an if with an op 9x in each arm, a switch with one in a case, an op 1x between.
+    std::vector<unsigned char> image = {
+        0xF0, 0x02, 0x10,                                                              // IF cond 2 x 10
+        0x90, 0, 0, 0, 0, 10, 0, 20, 3, 5, 0xFF, 0, 0,                                  //   9x bit 3, 200 zenny
+        0xFD,                                                                          // ELSE
+        0x90, 0, 0, 0, 0, 10, 0, 20, 3, 2, 1, 0, 0,                                     //   9x bit 3, weapon 2
+        0xFE,                                                                          // ENDIF
+        0x10, 1, 2, 3,                                                                 // 1x (4 bytes here)
+        0xF4, 0x02, 0xF6, 0x01, 0x90, 0, 0, 0, 0, 7, 0, 8, 9, 4, 0, 0, 0, 0xF8, 0xF5,   // SWITCH { CASE 1: 9x bit 9 }
+        0x90, 0, 0, 0, 0, 1, 0, 1, 0xFF, 0, 0, 0, 0,                                    // 9x with no bit
+        0xFF};
+    const std::uint32_t base = 0x1000;
+    const ImageAt at = [&image](std::uint32_t va, std::uint32_t size) -> const unsigned char* {
+        return va >= base && va + size <= base + image.size() ? image.data() + (va - base) : nullptr;
+    };
+    unsigned char lengths[16];
+    for (unsigned char& n : lengths) n = 4;
+    lengths[9] = 13;
+    std::vector<Find> finds;
+    Expect(ScriptContentFinds(at, base, lengths, 5, finds), "the walk decodes the test script to its FF");
+    Expect(finds.size() == 3, "the walk finds the three 9x ops with a bit, on both arms and in the case (" +
+                                  std::to_string(finds.size()) + ")");
+    if (finds.size() == 3) {
+        Expect(finds[0].bit == 3 && finds[0].x == 10 && finds[0].z == 20 && finds[0].category == 0xFF && finds[0].value == 5,
+               "op 9x: op[8] the bit, op[5] / op[7] the cell, op[0xA] the category, op[9] the id");
+        Expect(finds[2].bit == 9 && finds[2].x == 7 && finds[2].z == 8 && finds[2].category == 0 && finds[2].value == 4,
+               "op 9x in a switch case");
+    }
+    std::vector<unsigned char> bad = {0x90, 0, 0, 0, 0, 1, 0, 2, 6, 1, 0, 0, 0, 0xF2};
+    const ImageAt bad_at = [&bad](std::uint32_t va, std::uint32_t size) -> const unsigned char* {
+        return va >= base && va + size <= base + bad.size() ? bad.data() + (va - base) : nullptr;
+    };
+    std::vector<Find> some;
+    Expect(!ScriptContentFinds(bad_at, base, lengths, 5, some) && some.size() == 1,
+           "a script that does not decode stops the walk, the finds before it kept");
+
+    Find f;
+    const unsigned char none[8] = {4, 5, 0, 1, 0xFF, 3, 0, 0}, message[8] = {4, 5, 0, 1, 0x12, 0x80, 1, 0},
+                        zenny[8] = {4, 5, 0x80, 2, 17, 0x85, 0xFF, 0}, item[8] = {6, 7, 0, 1, 18, 2, 1, 0};
+    Expect(!PassageFind(none, 1, f), "a passage entry with bit 0xFF is no find");
+    Expect(!PassageFind(message, 1, f), "a passage entry that opens a message is no find");
+    Expect(PassageFind(zenny, 1, f) && f.bit == 17 && f.x == 4 && f.z == 5 && f.category == 0xFF && f.value == 0x85,
+           "a zenny passage: +4 the bit, +0 / +1 the cell, +5 the zenny / 40 with bit 7");
+    Expect(PassageFind(item, 1, f) && f.bit == 18 && f.category == 1 && f.value == 2, "an item passage: +6 the category, +5 the id");
+
+    Names names;
+    names.item[1] = {"", "", "Broad Sword"};
+    const std::vector<Find> two = {{5, 3, 10, 20, 0xFF, 5}, {10, 3, 10, 20, 0xFF, 5}, {5, 3, 10, 20, 1, 2}, {5, 4, 1, 2, 2, 9}};
+    const std::map<unsigned, std::string> text = FindTexts(two, names);
+    Expect(text.count(3) && text.at(3) == "area005, area010 (10, 20): 200 zenny; area005 (10, 20): Broad Sword",
+           "one place in several areas is one entry, other places follow after \"; \" (" +
+               (text.count(3) ? text.at(3) : std::string("none")) + ")");
+    Expect(text.count(4) && text.at(4) == "area005 (1, 2): armor 9", "an item with no name shows its category and number");
+
+    // An area file: an image chunk, then the enemy table; a layer with names over records 1 and 2.
+    std::vector<unsigned char> table(0x4A8, 0);
+    const auto record = [&table](unsigned k, const char* name, unsigned kind) {
+        unsigned char* r = table.data() + 0x48 + 0x8C * k;
+        std::memcpy(r, name, std::strlen(name));
+        r[0xC] = static_cast<unsigned char>(kind);
+        r[0x18] = 1;
+    };
+    record(0, "Goblin", 11);
+    record(1, "\x82\x92\x80\x88", 4);   // another script's glyph codes: no letter
+    record(2, "Gonghead", 10);
+    record(3, "Goblin", 11);
+    const auto chunk = [](std::vector<unsigned char>& out, std::uint32_t kind, std::uint32_t tag,
+                          const std::vector<unsigned char>& payload) {
+        const std::uint32_t head[4] = {kind, tag, static_cast<std::uint32_t>(payload.size()), 0};
+        const unsigned char* h = reinterpret_cast<const unsigned char*>(head);
+        out.insert(out.end(), h, h + 16);
+        out.insert(out.end(), payload.begin(), payload.end());
+    };
+    std::vector<unsigned char> file, layer;
+    chunk(file, 1, 0x1A080200, std::vector<unsigned char>(64, 7));
+    chunk(file, 0, 0xC2000, table);
+    chunk(layer, 0, 0xC2000 + 0x48 + 0x8C * 1, {'C', 'u', 'r', 'r', 0, 0, 0, 0, 0, 0, 0, 0});
+    chunk(layer, 0, 0xC2000 + 0x48 + 0x8C * 2, {'G', 'o', 'n', 'g', 'h', 'e', 'a', 'd', '2', 0, 0, 0});
+    std::error_code ec;
+    fs::create_directories(temp, ec);
+    const auto write = [&temp](const char* name, const std::vector<unsigned char>& bytes) {
+        std::ofstream(temp / name, std::ios::binary)
+            .write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        return temp / name;
+    };
+    std::vector<EnemyChunk> chunks;
+    Expect(ReadEnemyChunks(write("AREA001.DAT", file), chunks) && chunks.size() == 1,
+           "the area file's one enemy-table chunk is read, its image chunk skipped");
+    Expect(!ReadEnemyChunks(temp / "AREA002.DAT", chunks), "a file that is not there reads as false");
+    ReadEnemyChunks(write("en-US.AREA001.DAT", layer), chunks);
+    std::map<unsigned, std::string> kinds;
+    AddEnemyNames(chunks, kinds);
+    Expect(kinds.size() == 3 && kinds[11] == "Goblin" && kinds[4] == "Curr" && kinds[10] == "Gonghead2",
+           "enemy names by kind: the layer's names over the table, one name once");
+    std::vector<EnemyChunk> shipped_only;
+    ReadEnemyChunks(temp / "AREA001.DAT", shipped_only);
+    std::map<unsigned, std::string> kinds2;
+    AddEnemyNames(shipped_only, kinds2);
+    Expect(kinds2.count(4) == 0 && kinds2[10] == "Gonghead", "a name with no letter is not shown");
+    AddEnemyNames(chunks, kinds2);
+    Expect(kinds2[10] == "Gonghead; Gonghead2", "a kind with two names shows both (" + kinds2[10] + ")");
+    fs::remove_all(temp, ec);
+
+    // The rows of the five banks.
+    Names rows;
+    rows.enemy[12] = "Goblin";
+    rows.ability = {"", "Flame"};
+    rows.chest[40] = "area004 (34, 56): Vitamin";
+    const int banks = SectionNamed("Records and finds");
+    Expect(banks >= 0, "the Records and finds section is there");
+    if (banks < 0) return;
+    const std::vector<Field> defeated = SectionFields(banks, 0, rows), learned = SectionFields(banks, 1, rows),
+                             identified = SectionFields(banks, 2, rows), chests = SectionFields(banks, 3, rows),
+                             passages = SectionFields(banks, 4, rows);
+    Expect(defeated.size() == 256 && defeated[12].label == "Enemies defeated 12 - Goblin" &&
+               defeated[13].label == "Enemies defeated 13",
+           "an enemy bit shows the kind's name, a bit with no name its number");
+    Expect(identified[12].label == "Enemies identified 12 - Goblin", "the identified bank has the same names");
+    Expect(learned[1].label == "Skills learned 1 - Flame" && learned[0].label == "Skills learned 0",
+           "a skill bit shows the ability's name");
+    Expect(chests[40].label == "Chests and field objects 40 - area004 (34, 56): Vitamin" && chests[40].at == 0x6EC + 5 &&
+               chests[40].size == 0,
+           "a chest bit shows its place, at bit n & 7 of byte n >> 3");
+    Expect(passages[1].label == "Passage finds 1", "a passage bit with no name keeps its number");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -565,6 +699,7 @@ int main(int argc, char** argv) {
     TestFile(fs::temp_directory_path() / "bof3x_save_tests");
     TestCard(fs::temp_directory_path() / "bof3x_save_tests_card");
     TestNames(fs::temp_directory_path() / "bof3x_save_tests_names");
+    TestFinds(fs::temp_directory_path() / "bof3x_save_tests_finds");
     int fixtures = 0, cards = 0, card_saves = 0, empty_same = 0, all_default = 0;
     fs::path dump;
     std::vector<NameSet> sets;

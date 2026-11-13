@@ -879,8 +879,16 @@ std::vector<Field> SectionFields(int section, int record, const Names& names) {
             f.push_back(BankBit("Event flag " + N(i), kEventFlags, i, 'A', i == 146 ? "The game is cleared." : ""));
         break;
     case kSecBanks:
-        if (r < 5)
-            for (unsigned i = 0; i < 256; ++i) f.push_back(BankBit("Bit " + N(i), kBankAt[r], i, 'A'));
+        if (r < 5) {
+            // Each bit by what it records, where the install names it (save/finds.h): the
+            // enemy kind, the ability id, the chest's or the passage's place.
+            std::map<unsigned, std::string> ability;
+            for (unsigned i = 1; i < names.ability.size() && i < 256; ++i)
+                if (!names.ability[i].empty()) ability[i] = names.ability[i];
+            const std::map<unsigned, std::string>* const by[5] = {&names.enemy, &ability, &names.enemy, &names.chest,
+                                                                  &names.passage};
+            for (unsigned i = 0; i < 256; ++i) f.push_back(BankBit(Named(kBankName[r], i, *by[r]), kBankAt[r], i, 'A'));
+        }
         break;
     case kSecCounters:
         CounterFields(f);

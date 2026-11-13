@@ -15637,6 +15637,15 @@ designed in rather than bolted on.
   five discs' layers built with the chunk, `loc_build.py selftest`.
   **Not done:** no save from the PC game has been loaded on a PlayStation
   or an emulator.
+  Amended 2026-11-13: **names for the records and finds.** The rows of
+  "Records and finds" show a name after the bit number: the enemy for the
+  two enemy banks, the skill, and for a chest or a passage find its area,
+  cell and contents. All are read from the player's install when the
+  editor opens (`src/launcher/save/finds.cpp`, `ExeAreaFinds`;
+  `docs/save-editor.md` 4.3); a bit with no name keeps its number.
+  `save_tests` 853 checks, 0 failures with the fixtures; the launcher's
+  readers give the same text as `tools/bank_names.py` on two installs.
+  **Not done:** nobody has opened the window with the named rows.
 - **Reversible?** The player does not open it. Each save it replaces is in
   `save-backups\`.
 - **Switch:** none

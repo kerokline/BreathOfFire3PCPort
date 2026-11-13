@@ -11,6 +11,8 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cwchar>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -19,6 +21,7 @@
 #include "launcher/resource.h"
 #include "launcher/save/block.h"
 #include "launcher/save/card.h"
+#include "launcher/save/finds.h"
 #include "launcher/save/namemap.h"
 #include "launcher/save/names.h"
 
@@ -954,6 +957,36 @@ void SaveEditorRun(HWND owner, const std::wstring& game_dir, const std::wstring&
             std::string name = "from ";
             for (std::size_t i = 0; i < g.from.size(); ++i) name += (i ? ", " : "") + place(g.from[i]);
             s.names.entrances.push_back({g.first->to, name, g.first->x / 65536.0, g.first->z / 65536.0, g.first->flags});
+        }
+    }
+
+    // The records-and-finds bits (save/finds.h): the chests and the passages from the
+    // install's exe, with the item names above; the enemy kinds from each area file's
+    // enemy table, read as the game reads it - the cache's base and loc\zh-CN, or the
+    // install's DAT\, then the language layer's names - and only for a Latin layer,
+    // as the other names.
+    {
+        std::vector<save::Find> chests, passages;
+        if (ExeAreaFinds(s.game_dir + L"\\BOF3.exe", chests, passages, why)) {
+            s.names.chest = save::FindTexts(chests, s.names);
+            s.names.passage = save::FindTexts(passages, s.names);
+        }
+        std::error_code ec;
+        const bool layer_cached = !cache.empty() && std::filesystem::is_directory(cache + L"\\loc\\" + tag, ec);
+        for (unsigned area = 0; latin && area < 200; ++area) {
+            wchar_t name[16];
+            std::swprintf(name, 16, L"AREA%03u.DAT", area);
+            std::vector<save::EnemyChunk> chunks;
+            const std::wstring base = cache.empty() ? std::wstring() : cache + L"\\base\\dat\\" + name;
+            if (!base.empty() && std::filesystem::is_regular_file(base, ec)) {
+                save::ReadEnemyChunks(base, chunks);
+                save::ReadEnemyChunks(cache + L"\\loc\\zh-CN\\dat\\" + name, chunks);
+            } else {
+                save::ReadEnemyChunks(s.game_dir + L"\\DAT\\" + name, chunks);
+            }
+            if (layer_cached) save::ReadEnemyChunks(cache + L"\\loc\\" + tag + L"\\dat\\" + name, chunks);
+            else save::ReadEnemyChunks(s.game_dir + L"\\DAT\\" + tag + L"." + name, chunks);
+            save::AddEnemyNames(chunks, s.names.enemy);
         }
     }
 

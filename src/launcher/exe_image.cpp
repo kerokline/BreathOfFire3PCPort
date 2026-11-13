@@ -65,31 +65,17 @@ bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& key
     return true;
 }
 
-bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::string& why) {
-    links.clear();
-    // The whole file once: some two thousand small reads follow.
-    HANDLE file = CreateFileW(exe.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                              nullptr);
-    if (file == INVALID_HANDLE_VALUE) {
-        why = "cannot open the file";
-        return false;
-    }
-    std::vector<unsigned char> b(GetFileSize(file, nullptr));
-    DWORD got = 0;
-    const bool read = !b.empty() && ReadFile(file, b.data(), static_cast<DWORD>(b.size()), &got, nullptr) && got == b.size();
-    CloseHandle(file);
-    IMAGE_DOS_HEADER dos;
+namespace {
+
+// The whole of an exe file, and its sections, for the readers that make many
+// small reads: `At` gives `size` bytes at a virtual address from a section's
+// initialised part, or null.
+struct WholeImage {
+    std::vector<unsigned char> b;
     IMAGE_NT_HEADERS32 nt;
-    if (!read || b.size() < sizeof dos || (std::memcpy(&dos, b.data(), sizeof dos), dos.e_magic != IMAGE_DOS_SIGNATURE) ||
-        static_cast<std::size_t>(dos.e_lfanew) + sizeof nt > b.size() ||
-        (std::memcpy(&nt, b.data() + dos.e_lfanew, sizeof nt), nt.Signature != IMAGE_NT_SIGNATURE) ||
-        nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
-        why = "not a 32-bit PE";
-        return false;
-    }
-    const std::size_t first = dos.e_lfanew + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) + nt.FileHeader.SizeOfOptionalHeader;
-    // `size` bytes at `va` in a section's initialised part, or null.
-    const auto at = [&](std::uint32_t va, std::uint32_t size) -> const unsigned char* {
+    std::size_t first = 0;   // the section table
+
+    const unsigned char* At(std::uint32_t va, std::uint32_t size) const {
         if (va < nt.OptionalHeader.ImageBase) return nullptr;
         const std::uint32_t rva = va - nt.OptionalHeader.ImageBase;
         for (unsigned i = 0; i < nt.FileHeader.NumberOfSections; ++i) {
@@ -101,7 +87,42 @@ bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::st
             return off + size <= b.size() ? b.data() + off : nullptr;
         }
         return nullptr;
-    };
+    }
+};
+
+bool LoadWholeImage(const std::wstring& exe, WholeImage& img, std::string& why) {
+    HANDLE file = CreateFileW(exe.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if (file == INVALID_HANDLE_VALUE) {
+        why = "cannot open the file";
+        return false;
+    }
+    std::vector<unsigned char>& b = img.b;
+    b.assign(GetFileSize(file, nullptr), 0);
+    DWORD got = 0;
+    const bool read = !b.empty() && ReadFile(file, b.data(), static_cast<DWORD>(b.size()), &got, nullptr) && got == b.size();
+    CloseHandle(file);
+    IMAGE_DOS_HEADER dos;
+    IMAGE_NT_HEADERS32& nt = img.nt;
+    if (!read || b.size() < sizeof dos || (std::memcpy(&dos, b.data(), sizeof dos), dos.e_magic != IMAGE_DOS_SIGNATURE) ||
+        static_cast<std::size_t>(dos.e_lfanew) + sizeof nt > b.size() ||
+        (std::memcpy(&nt, b.data() + dos.e_lfanew, sizeof nt), nt.Signature != IMAGE_NT_SIGNATURE) ||
+        nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+        why = "not a 32-bit PE";
+        return false;
+    }
+    img.first = dos.e_lfanew + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) + nt.FileHeader.SizeOfOptionalHeader;
+    return true;
+}
+
+}  // namespace
+
+bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::string& why) {
+    links.clear();
+    // The whole file once: some two thousand small reads follow.
+    WholeImage img;
+    if (!LoadWholeImage(exe, img, why)) return false;
+    const auto at = [&img](std::uint32_t va, std::uint32_t size) { return img.At(va, size); };
     const auto u16 = [](const unsigned char* p) { return static_cast<std::uint16_t>(p[0] | (p[1] << 8)); };
     const auto u32 = [](const unsigned char* p) {
         return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
@@ -148,6 +169,53 @@ bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::st
                 if (const unsigned char* alt = at(u32(ptr) + 10 * k, 10)) add(u16(alt), u16(alt + 2), u16(alt + 4), alt[8]);
         }
     }
+    return true;
+}
+
+bool ExeAreaFinds(const std::wstring& exe, std::vector<save::Find>& chests, std::vector<save::Find>& passages,
+                  std::string& why) {
+    chests.clear();
+    passages.clear();
+    WholeImage img;
+    if (!LoadWholeImage(exe, img, why)) return false;
+    const save::ImageAt at = [&img](std::uint32_t va, std::uint32_t size) { return img.At(va, size); };
+    const auto u32 = [](const unsigned char* p) {
+        return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
+               (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24);
+    };
+    constexpr unsigned kAreas = Area_Descriptors_count;
+    const unsigned char* table = at(Area_Descriptors_addr, kAreas * 4);
+    const unsigned char* lengths = at(EventScript_OpLengths_addr, EventScript_OpLengths_count);
+    if (!table || !lengths) {
+        why = "Area_Descriptors or EventScript_OpLengths is not in the file";
+        return false;
+    }
+    constexpr std::uint32_t kOp9 = 13;   // EventOp_9x's record
+    for (unsigned a = 0; a < kAreas; ++a) {
+        const unsigned char* d = at(u32(table + 4 * a), 0x34);
+        if (!d) continue;
+        // The placement script (descriptor +0; Area_RunPlacement 0x579740), on every path.
+        save::ScriptContentFinds(at, u32(d), lengths, a, chests);
+        // The passage list (+0x2C, null in some areas: DIV-0197), +0x31 the last index.
+        if (const std::uint32_t list = u32(d + 0x2C))
+            for (unsigned i = 0; i <= d[0x31]; ++i) {
+                save::Find f;
+                if (const unsigned char* e = at(list + 8 * i, 8); e && save::PassageFind(e, a, f)) passages.push_back(f);
+            }
+    }
+    // The 9x records that area code hands EventOp_9x itself: Area42_Init's prizes by
+    // Area42_Rank (docs/area_w1b.md), Area135_SpawnCopy's by 0x9039F5 (docs/area_w3d.md).
+    const struct {
+        unsigned area;
+        std::uint32_t va, count;
+    } tables[2] = {{42, Area42_Placements_addr, Area42_Placements_count / kOp9},
+                   {135, Area135_SpawnOps_addr, Area135_SpawnOps_count / kOp9}};
+    for (const auto& t : tables)
+        for (std::uint32_t i = 0; i < t.count; ++i) {
+            save::Find f;
+            const unsigned char* op = at(t.va + kOp9 * i, kOp9);
+            if (op && op[0] >> 4 == 9 && save::ContentFind(op, t.area, f)) chests.push_back(f);
+        }
     return true;
 }
 
