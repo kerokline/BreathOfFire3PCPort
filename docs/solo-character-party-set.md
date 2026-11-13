@@ -266,6 +266,15 @@ exit 0. Logs: `D:\bof3x-runs\solo1112\PS\root\selftest_exe.log`,
 `tools/ledger_check.py`: 229 entries, 0 errors (6 notes);
 `tools/ledger_switches.py --check`: 0 errors.
 
+**After the review's notes (2026-11-13, `5c4266cd`):** the same Rei run
+again (the 600-press wrapper, the boss root): win, back at 21359 as before;
+Arm logs the plan, the dressing and the join as before; the put-back mask
+`0x35`, count 2, set `80`; 0 "frame of no pieces" lines; the field's last
+frame `f16_mark_rei\t021660.png` against plain's 61 pixels apart, as
+before. The log shows Arm's two file reads and the step's own load of
+`BPLD034`, and no read at the dressing (the held plan, note 5); before, the
+dressing read both files again.
+
 ## 6. Not done
 
 - The owner's play of the fight with Rei.

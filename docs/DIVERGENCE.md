@@ -16814,7 +16814,9 @@ designed in rather than bolted on.
   the docs above). Both builds (32-bit and 64-bit) of the round's tip;
   `ledger_check.py`, `ledger_switches.py --check` pass; the exe-host
   self-test (`solo self-test: 144`, `solo battle self-test: 35 checks`) and
-  the hosted `BOF3X_SHADOW=*` run on group CB's tip. Boss fights under the
+  the hosted `BOF3X_SHADOW=*` run on group CB's tip; after the round's review
+  (group PS, 2026-11-13) `161` and `39` checks at both widths and hosted, 0
+  mismatches. Boss fights under the
   harness, plain and each of the six champions (solo-character-proof.md 6d,
   combat.md 14): fights 2, 8, 12, 13, 16, 23, 24, 29, 31, 34 and 35 end as
   plain does with the same party and scene after the return, no crash and
