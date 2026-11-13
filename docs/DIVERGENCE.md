@@ -12090,6 +12090,28 @@ designed in rather than bolted on.
   one for the other US revision is refused at the build by its undo data
   (`real_bd.log`, `real_bd2.log`). **Not played, and the
   launcher's new text not seen by the owner.**
+- **Amended 2026-11-13 (a US disc's patch over the European English text;
+  [`disc-patch-round.md`](disc-patch-round.md) 11):** a `disc-patch` mod of
+  the US disc was played under `en-US` text alone. Where the install also
+  holds `en-150` text and the disc it came from, the build now makes a third
+  layer, `mod-<id>-en-150`: the patch's lines put into that text slot by
+  slot (the other disc's line where the patch changed nothing, the patch's
+  line where it did - counted and named in the build's log when the
+  European text words that line differently), the names the patch changed
+  record by record, the enemy names and the town warp's text. The launcher
+  hands `mod-<id>` and the text layer of the language played, so the mod
+  goes under either English, and the Mods tab greys it with `built; only
+  with en-US or en-150 text` under another. The US disc is still needed in
+  the source list: the patch is a difference against it. The owner,
+  2026-11-13: "the eu text should mostly match regular eng text ... the
+  patch locations should be easy to flag if they work as is or not".
+  Verification: the Definitive Edition 1.4 on two scratch installs (US +
+  European PSP, US + European PlayStation): the `en-150` layer has the en-US
+  layer's chunk list (383 chunks in 169 files), 124 and 125 of the patch's
+  125 text sections carried (2 and 1 lines worded differently), and a
+  slot-by-slot model over the built chunks holds with 0 problems; the exe
+  host's self-test started by the launcher under `language=en-150` takes
+  both layers with no Fatal. **Not played under `en-150`.**
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50

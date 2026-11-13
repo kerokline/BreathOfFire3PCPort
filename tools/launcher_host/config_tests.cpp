@@ -737,6 +737,23 @@ void TestHostedOpt() {
               bof3x::ConfigModLayers(ph, pc, "area4-walls", "en-US"));
         Check(bof3x::ConfigModLayers(ph, pc, "", "ja-JP") == "mod-t-mod" && bof3x::ConfigModLayers(ph, pc, "", "") == "mod-t-mod",
               "ConfigModLayers: under another language (or the Chinese) a disc-patch mod is left off whole");
+        {
+            // docs/disc-patch-round.md 11: the text carried over to another language is its own layer,
+            // mod-<id>-<that tag>; a mod that has it is played under that language, one that has not is left off
+            const std::wstring pc2 = FakeCache(L"bof3x_dp_cache2",
+                                               {{"mod-hack", L"dat"}, {"mod-hack", L"exe"}, {"mod-hack-en-US", L"dat"},
+                                                {"mod-hack-en-150", L"dat"}, {"mod-t-mod", L"exe"},
+                                                {"mod-textonly-en-US", L"dat"}},
+                                               nullptr);
+            Check(bof3x::ConfigModLayers(ph, pc2, "", "en-150") == "mod-hack,mod-hack-en-150,mod-t-mod",
+                  "ConfigModLayers: a disc-patch mod with a text layer for the language played goes with that layer",
+                  bof3x::ConfigModLayers(ph, pc2, "", "en-150"));
+            Check(bof3x::ConfigModLayers(ph, pc2, "", "en-US") == "mod-hack,mod-hack-en-US,mod-t-mod,mod-textonly-en-US",
+                  "  and under its own language with its own text layer, as before",
+                  bof3x::ConfigModLayers(ph, pc2, "", "en-US"));
+            Check(bof3x::ConfigModLayers(ph, pc, "", "en-150") == "mod-t-mod",
+                  "  without that layer it is left off whole", bof3x::ConfigModLayers(ph, pc, "", "en-150"));
+        }
         Check(bof3x::ConfigModLayers(ph, pc, "", "en-US", "hack,textonly") == "mod-t-mod",
               "ConfigModLayers: a disc-patch mod mods_off= names is left off whole");
         Check(bof3x::ConfigModLayers(ph, pc, "l1,l2,l3,l4,l5,l6,l7,l8,l9,l10,l11,l12,l13,l14,l15", "en-US") ==

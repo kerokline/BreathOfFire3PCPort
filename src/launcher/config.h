@@ -531,7 +531,10 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 //    the mod's one required language. Both or neither: the first alone would
 //    leave enemy names blank (disc-patch-round.md 3a). Left off, with a line,
 //    when `language` (what the game is given as BOF3X_LANG; empty for the
-//    port's Chinese) is not <tag>.
+//    port's Chinese) is not <tag> - unless the cache holds the mod's text
+//    for that language, mod-<id>-<language>, which is then the text layer
+//    handed over (a US patch's lines in the European English text,
+//    disc-patch-round.md 11).
 // A mod `mods_off` names (ids, comma-separated) is left off without a line. A
 // mod whose layers the cache does not hold (not built) is left off with a
 // line; so is one whose layers would pass the game's 16. A layer `wanted`

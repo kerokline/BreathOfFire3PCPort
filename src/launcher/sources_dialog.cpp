@@ -26,6 +26,7 @@
 #include <shellapi.h>
 #include <shlobj.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -787,7 +788,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 // `list --json` gives one flat object a mod: id, name, version, kind,
 // requires, base, layer, state (built, not-built, needs, needs-disc, problem),
 // needs, problem, author, url, credit, and for a disc-patch mod language (its
-// text's), carries and lacks (two sentences from its build's report.toml).
+// text's), languages (every language its text is built for in this install),
+// carries and lacks (two sentences from its build's report.toml).
 // A romhack's patch file is added by itself (docs/mods.md 12): `unverified` is
 // true for a patch the release's list of known mods does not have, and
 // `known_now` names the mod when the list of this release has it after all.
@@ -808,6 +810,9 @@ struct ModRow {
     std::vector<std::string> behaviours, missing;
     bool unverified = false;   // a patch that is not in the release's list of known mods (docs/mods.md 12)
     std::string known_now;     // the mod this release knows that patch as, when it does
+    // a disc-patch mod: every language its text is built for in this install - its disc's own (`language`)
+    // and each text its lines were carried over to (docs/disc-patch-round.md 11)
+    std::vector<std::string> languages;
 };
 
 // What the player is told about such a patch (the owner's words, 2026-11-13).
@@ -865,8 +870,12 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     } else if (r.state == "built") {
         if (r.kind == "reading-row" && r.base != s.language) {
             state = L"built; only with " + Widen(r.base) + L" text";
-        } else if (r.kind == "disc-patch" && r.language != s.language) {
-            state = L"built; only with " + Widen(r.language) + L" text";
+        } else if (r.kind == "disc-patch" && r.language != s.language &&
+                   std::find(r.languages.begin(), r.languages.end(), s.language) == r.languages.end()) {
+            std::string tags = r.language;
+            for (const std::string& t : r.languages)
+                if (t != r.language) tags += " or " + t;
+            state = L"built; only with " + Widen(tags) + L" text";
         } else if (ModOnOff(r)) {
             state = bof3x::ConfigListHas(s.off, r.id) ? L"built: off" : L"built: on";
             greyed = false;
@@ -1063,7 +1072,8 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
                           JsonString(line, "url"), JsonString(line, "credit"), JsonString(line, "language"),
                           JsonString(line, "carries"), JsonString(line, "lacks"),
                           JsonStrings(line, "behaviours"), JsonStrings(line, "missing"),
-                          JsonTrue(line, "unverified"), JsonString(line, "known_now")});
+                          JsonTrue(line, "unverified"), JsonString(line, "known_now"),
+                          JsonStrings(line, "languages")});
         return;
     }
     if (job == kModAdd && IsJsonObject(line)) {
