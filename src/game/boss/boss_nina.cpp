@@ -17,6 +17,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/solo/solo_battle.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -222,6 +223,17 @@ void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_
         MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(boss_sd::at::kEndWin.v);
     } else if (fell & 1) {
+        EndStep(boss_sd::at::kEndOther.v);
+    } else if (solo::SoloBattle_ChampionFightsThis()) {
+        // DIVERGENCE DIV-0228 SoloCharacter (the owner, round doc 6h): the
+        // champion fights every bout of the series, and a bout the champion
+        // loses ends the series as the original ends it when its last member
+        // loses (flags 0x23 and 0x24 set below): the end phase's step 2, the
+        // loss screen, GAME OVER. No other member is called in. Nothing with
+        // the behaviour off (the call answers no and reads nothing).
+        bof3::Log("DIV-0228 SoloCharacter: the champion lost a bout of chapter 5's one-on-one series (event battle 0x%02X): "
+                  "game over, as when the last member loses",
+                  static_cast<unsigned>(EventBattle_Id));
         EndStep(boss_sd::at::kEndOther.v);
     } else {
         const bool f23 = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
