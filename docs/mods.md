@@ -534,7 +534,7 @@ read stops `add` with its sentence.
 |---|---|
 | Its sha256 is in the list | It is the list's mod: `H\mods\<id>\` takes the patch as `<id>-<version>.xdelta` and a `mod.toml` written from the entry, and `mods.toml`'s row is a `disc-patch` row like a zip's. The build, the layers and the behaviours are the same (measured: the layers are the same bytes, 7) |
 | A patch the tools read (VCDIFF or PPF 3.0) that is not in the list | Added as **unverified**: id `patch-<6 hex of its sha256>`, the name from the file's name, version `0`, the one disc the builder knows (`psx-us`), **no author, no behaviour, no result hash**. `mods.toml` keeps `unverified = true`. Its build carries the data and text a `disc-patch` build carries (11.5) and nothing of the patch's program. The builder does not compare what the patch made with a known disc; the patch's own window checksums say it is a patch of that disc, and a patch of another disc fails there with "the patch does not apply to the disc" |
-| Anything else | Refused: `... cannot be applied: it is not a .zip mod and not a patch in a format the tools read (unknown format: ...)`. An archive (`.7z`, `.rar`, `.gz`, `.xz`), and a `.zip` with no `mod.toml` (an author's archive of his patch files), is refused with a sentence that says to unpack it and add the patch file that is in it |
+| Anything else | Refused: `... cannot be applied: it is not a .zip mod and not a patch in a format the tools read (unknown format: ...)`. An archive the tools do not open (`.rar`, `.gz`, `.xz`) is refused with a sentence that says to unpack it and add the patch file that is in it. A `.7z`, and a `.zip` with no `mod.toml`, is an author's archive: 12.2 |
 
 `--json` gains `unverified` (true or false) for every mod, and for an
 unverified one `known_now`: the name and version the list of **this** release
@@ -542,7 +542,7 @@ gives that patch, when a newer release knows it. Added again, it is that mod
 (another id: the player removes the unverified one).
 
 **The launcher** (ASD-STE100): the Mods tab's text and its file dialog name
-`.xdelta` and `.ppf`. An unverified mod's author column reads `not verified`. Its status
+`.xdelta` and `.ppf`, and `.7z` (12.2). An unverified mod's author column reads `not verified`. Its status
 line, and the log when it is added or selected, say: *This patch is not in the
 list of known mods of this release. Its author and its function are not
 verified. The game takes only the data and text changes. It does not take
@@ -612,3 +612,52 @@ left out; here nothing was.
 later mod in the list wins a chunk or a cell both set; which text the player
 then reads in a description both change was not looked at. The author's
 page address is not in the entry (not known here).
+
+### 12.2 The author's archive: `.7z`, and a `.zip` with no `mod.toml` (2026-11-13)
+
+The owner's word: `.7z` is how these patches most often come. The two the
+list has do: the Definitive Edition's download is a `.7z` of the `.xdelta`
+and a readme, and *Better Descriptions* is a `.zip` of two `.ppf` files and a
+readme. So the player adds the file as it was downloaded.
+
+**`mods.py read_archive`**, for a `.7z` and for a `.zip` that has no
+`mod.toml` at its root (a `.zip` that has one is a mod zip, as before). It
+reads the members whose names end `.xdelta` or `.ppf`, in any folder, and
+gives `read_patch`'s answer (12) for one of them:
+
+| The archive holds | What happens |
+|---|---|
+| One patch of the list (other patch files or not) | The list's mod. *Better Descriptions*' archive is this: of its two files, the list has the one for the `psx-us` disc |
+| One patch file, not in the list | An unverified mod; the name is from the patch file's name |
+| Several patch files, none in the list | Refused: `... holds N patch files and none is in the list of known mods: unpack it, then add the one that is for your disc` |
+| Two or more different patches of the list | Refused: the player unpacks it and says which |
+| No patch file | Refused: `... holds no patch file (.xdelta or .ppf): it is not a mod` |
+
+Nothing is unpacked to disk: a member is read into memory, its name is used
+only as text, and what `add` writes under `H\mods\<id>\` is the patch under
+the tool's own name for it and the `mod.toml` it makes, as for a bare patch.
+The readme and every other member are not read. Limits: the archive 16 MiB,
+a patch 8 MiB (as 12), 16 patch files, one 7z folder 64 MiB unpacked.
+
+**The `.7z` reader** is [`tools/sevenzip.py`](../tools/sevenzip.py), pure
+Python on the standard library's `lzma` (the release's Python has it; nothing
+new is shipped). Its docstring has the layout. Read: Copy, LZMA, LZMA2,
+Deflate, BZip2, the Delta filter, the x86 filter on LZMA2, solid and
+non-solid archives, a packed header. Refused by name: an encrypted archive,
+PPMd, BCJ2, Deflate64, any other coder, a cut or multi-volume archive. Each
+CRC the header gives is checked. `sevenzip.py selftest` (in `checks.yml`)
+runs on archives the file makes itself.
+
+**Measured** (scratch `D:\bof3x-runs\kp1113`): archives 7-Zip itself made of
+six files (`tools\z7_real.py`, `z7work\`) read back the same bytes for its
+default, ultra, non-solid, store, LZMA, BZip2, Deflate, unpacked-header,
+BCJ + LZMA2 and Delta + LZMA settings, but for a program member under BCJ2 or
+under a filter on LZMA, BZip2 or Deflate, which is refused by name (7-Zip
+puts those on programs only, and no patch file is one); PPMd, BCJ2 and a
+password are refused by name. `real_7z.log`: the Definitive Edition 1.4's
+`.7z` and *Better Descriptions*' `.zip`, each added as downloaded, are the
+list's mods, and the folder `add` writes is the same bytes as for the patch
+file added by itself.
+
+**Not read:** `.rar`, `.gz`, `.xz` (the sentence says to unpack). A mod zip
+packed as a `.7z` is not a mod zip: a `.7z` is only ever an author's archive.
