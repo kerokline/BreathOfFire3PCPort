@@ -7,6 +7,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/records.h"
 #include "game/solo/solo_level.h"
+#include "game/solo/solo_party_set.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/host.h"
@@ -363,6 +364,8 @@ void Solo_SelfTest() {
     ++checks;
     // The level-1 start's round trip (solo_level.cpp).
     checks += Solo_LevelSelfTest();
+    // The party-set supplement's pure logic (solo_party_set.cpp).
+    checks += Solo_PartySetSelfTest();
     bof3::Log("solo self-test: %d checks passed", checks);
 }
 

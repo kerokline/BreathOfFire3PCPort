@@ -9,6 +9,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/records.h"
 #include "game/solo/solo.h"
+#include "game/solo/solo_party_set.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/host.h"
@@ -445,7 +446,9 @@ void SoloBattle_Arm(unsigned char event_flags) {
         return;
     }
     const unsigned char need = rule && rule->rule == Rule::kNeedsIdInRow ? rule->arg : kNone;
-    const int chosen = ChooseRow(Rows(), live.set, id, need);
+    int chosen = ChooseRow(Rows(), live.set, id, need);
+    if (chosen == kNoRow && need != kNone)   // group PS: the id's section supplied beside the champion's row
+        chosen = PartySetExtra_Arm(need, id, ChooseRow(Rows(), live.set, id, kNone), event_flags);
     if (chosen == kNoRow) {
         if (need == kNone)
             bof3::Fatal("DIV-0228 SoloCharacter: no party-set row holds the champion's id 0x%02X", id);
