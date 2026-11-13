@@ -133,6 +133,13 @@ constexpr FightRule kFightRules[] = {
     {0x19, Rule::kStandDown, 0, "chapter 6's Beyd bout, part one (fight 25: run 8 step 2; SortParty fields record 0 alone, Boss25's hooks script it)"},
     {0x1A, Rule::kStandDown, 0, "chapter 6's Beyd bout, part two (fight 26: run 8 step 0xC; the party of three for 21 turns, Boss26 tallies the blows)"},
     {0x1B, Rule::kStandDown, 0, "chapter 6's Beyd against Zig (fight 27: run 9 step 5; the party watches - a member's turn ends it, Boss27_Event)"},
+    // The owner (round doc 6k): "there are 2 fights that are 'must lose' -
+    // the first balio and sunder fight, and the first garr fight (the chapter
+    // 5 ending fight). We should probably disable the solo character for
+    // those fights, as they're not meant to be won anyway". The fight numbers
+    // are boss-fights.md's rows (area 11 chapter 2; area 80 chapter 5).
+    {0x0D, Rule::kStandDown, 0, "chapter 2's first Balio and Sunder fight (fight 13, area 11): a fight the story has the party lose"},
+    {0x16, Rule::kStandDown, 0, "chapter 5's Garr fight (fight 22, area 80): a fight the story has the party lose"},
     // combat.md 11: set-ups that read the party by id or by slot.
     {0x10, Rule::kNeedsIdInRow, 1, "fight 16 (chapter 3, area 41: Balio, Sunder, Nina): Boss16_Event's code 2 and BossNina_HookHit dress enemy 2 as id 1 by Field_MemberSprite(1, 1), from the loaded party set"},
     {0x22, Rule::kWithRecord, 4, "fight 34 (chapter 8, area 43: Mikba): Boss34_Setup picks the member whose record is 4 and Boss34_Event drives that member"},
@@ -391,7 +398,7 @@ void SoloBattle_Arm(unsigned char event_flags) {
     const FightRule* const rule = RuleFor(EventBattle_Id);
     if (rule && rule->rule == Rule::kStandDown) {
         bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s: fought by the game's own party (the owner, "
-                  "round doc 6g)",
+                  "round doc 6g and 6k)",
                   static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why);
         return;
     }
@@ -666,8 +673,13 @@ void SoloBattle_SelfTest() {
         if (!ok) bof3::Fatal("solo battle self-test: %s", what);
         ++checks;
     };
-    // The stand-downs: the three Beyd fights and nothing else (a random
-    // encounter, 0, and the fights beside them).
+    // The stand-downs: the three Beyd fights and the two fights the story
+    // has the party lose, and nothing else (a random encounter, 0, and the
+    // fights beside them).
+    check(RuleFor(0x0D) && RuleFor(0x0D)->rule == Rule::kStandDown && RuleFor(0x16) &&
+              RuleFor(0x16)->rule == Rule::kStandDown,
+          "the two fights the story has the party lose stand down");
+    check(!RuleFor(0x0C) && !RuleFor(0x0E) && !RuleFor(0x15) && !RuleFor(0x17), "the fights beside 13 and 22 have no rule");
     check(RuleFor(0x19) && RuleFor(0x19)->rule == Rule::kStandDown && RuleFor(0x1A) &&
               RuleFor(0x1A)->rule == Rule::kStandDown && RuleFor(0x1B) && RuleFor(0x1B)->rule == Rule::kStandDown,
           "the Beyd fights stand down");
@@ -690,7 +702,7 @@ void SoloBattle_SelfTest() {
         unsigned with_rule = 0;
         for (unsigned f = 0; f < 0x100; ++f)
             if (RuleFor(static_cast<unsigned char>(f))) ++with_rule;
-        check(with_rule == 5 && !RuleFor(0), "five fights have a rule, a random encounter none");
+        check(with_rule == 7 && !RuleFor(0), "seven fights have a rule, a random encounter none");
     }
     {
         // The game's 19 rows as M1 read them (round doc section 2).

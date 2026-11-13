@@ -723,6 +723,21 @@ What it sets, with the trial's findings (`solo-character-combat.md`):
   test (the audit of 2026-11-13: the only boss file that does). The records the
   battle does not hold must not match.
 
+## 6k. The owner's eleventh answer (2026-11-14): the two fights the story has the party lose
+
+The owner, in their words: "there are 2 fights that are 'must lose' - the
+first balio and sunder fight, and the first garr fight (the chapter 5 ending
+fight). We should probably disable the solo character for those fights, as
+they're not meant to be won anyway".
+
+What it sets: fights 13 (Balio and Sunder, chapter 2, area 11) and 22 (Garr,
+chapter 5, area 80), as `boss-fights.md` numbers them, stand down as the Beyd
+fights do (6g): the game's own party fights them, whoever the champion is.
+Fight 13 was run in the mode before this (a champion alone lost it and the
+story went on, `solo-character-proof.md` 6d); fight 22 has no save that
+reaches it, so its stand-down rests on the rule's self-test and on fight 13's
+run.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).

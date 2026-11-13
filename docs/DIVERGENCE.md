@@ -16770,9 +16770,10 @@ designed in rather than bolted on.
   game gives it to a party of one. A quicksave inside a battle carries the
   swap's state (`SOLOCB`, version 3).
   **Where a fight has its own rule** (each the owner's call, round doc 6d to
-  6j): a champion at 0 HP when a battle starts stands down for that battle
+  6k): a champion at 0 HP when a battle starts stands down for that battle
   and the party fights (6d; IDEAS I66); fights 25, 26 and 27 (the Beyd
-  training fights) are the original's (6g); in fights 18 to 20 (chapter 5's
+  training fights) are the original's (6g), and so are fights 13 and 22, the
+  two the story has the party lose (6k); in fights 18 to 20 (chapter 5's
   one-on-one series) a bout the champion loses is a game over, not the next
   member's turn (6h); fight 16 needs id 1's battle graphics, so with a row
   that lacks id 1 that character's section is read from the player's own

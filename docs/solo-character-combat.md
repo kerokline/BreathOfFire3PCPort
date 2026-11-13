@@ -653,3 +653,28 @@ replay) is not reached by the sweep on any side, plain included.
 
 The machine was shared (the owner may have been using it); every run used
 `--no-front`, and the runs replayed to their ends with no desync sign.
+
+## 15. The two fights the story has the party lose stand down (the owner, round doc 6k, 2026-11-14)
+
+The owner: "there are 2 fights that are 'must lose' - the first balio and
+sunder fight, and the first garr fight (the chapter 5 ending fight). We should
+probably disable the solo character for those fights, as they're not meant to
+be won anyway".
+
+**Built:** two `kStandDown` rows in `kFightRules`, `0x0D` (fight 13, chapter 2,
+area 11) and `0x16` (fight 22, chapter 5, area 80), the numbers of
+`boss-fights.md`'s rows; the same path as the Beyd fights (section 10). The
+self-test checks both rows and that fights 12, 14, 21 and 23 have none (37
+checks).
+
+**Run** (2026-11-14, `tools/solo_boss_sweep.py`, root
+`D:\bof3x-runs\solo1112\round\ml`, `--fights 13 --champions nina garr
+--mark-at-cut`): plain, and the mark set to records 1 and 2. All three end in
+the loss, the battle's party the field's three in each (count 3), the story on
+to area 3 in chapter 2 as plain; each champion run logs the stand-down line
+naming event battle `0x0D`.
+
+**Not run:** fight 22. No save reaches it (`solo-character-proof.md` 6d); its
+stand-down rests on the row, the self-test and fight 13's run of the same
+path. **That fight 22 is a fight the story has the party lose is the owner's
+statement, not read from the code here.**
