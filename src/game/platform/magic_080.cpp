@@ -188,7 +188,15 @@ void InterpDump(const wchar_t* what) {
         bof3::Log("interp      dump %s", on ? "on" : "off");
     }
     const unsigned long fc = static_cast<unsigned long>(Frame_Counter);
-    if (!on || fc % 100 > 1) return;
+    // BOF3X_INTERP_DUMP_EVERY=<n> for a denser sample than every 100.
+    static unsigned long every = 0;
+    if (every == 0) {
+        wchar_t n[16];
+        every = 100;
+        if (GetEnvironmentVariableW(L"BOF3X_INTERP_DUMP_EVERY", n, 16) > 0 && _wtoi(n) > 1)
+            every = static_cast<unsigned long>(_wtoi(n));
+    }
+    if (!on || fc % every > 1) return;
     wchar_t path[260];
     swprintf(path, 260, L"%ls/%06lu_%ls.bmp", dir, fc, what);
     const bool ok = render::SaveFrame(path);

@@ -26,6 +26,7 @@ struct Stats {
     U far_;        // a candidate existed but moved beyond the cap
     U unmatched;   // no candidate
     U followed;    // of the last two, those moved with a matched neighbour
+    U snapped;     // shown where the frame has them: their surface's pairing did not hold together
 };
 
 // BOF3X_INTERP set and not 0.

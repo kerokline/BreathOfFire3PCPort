@@ -1224,7 +1224,13 @@ void PresentInBetween() {
     const U n_commands = g_frame.n_commands, n_vertices = g_frame.n_vertices, n_walks = g_n_walks;
     pillarbox::Cover();
     interp::Stats s = {};
-    interp::g_debug = false;   // set for one frame to log every pair and failure (interp-dbg)
+    // BOF3X_INTERP_DEBUG=<Frame_Counter>: that in-between's every pair and failure (interp-dbg).
+    static long debug_at = -2;
+    if (debug_at == -2) {
+        char v[16] = "";
+        debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atol(v) : -1;
+    }
+    interp::g_debug = debug_at >= 0 && static_cast<long>(Frame_Counter) == debug_at;
     if (interp::Build(g_frame, g_mid_vertices, max_move, &s)) {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;
@@ -1238,11 +1244,12 @@ void PresentInBetween() {
         sum.far_ += s.far_;
         sum.unmatched += s.unmatched;
         sum.followed += s.followed;
+        sum.snapped += s.snapped;
         if (++frames == 150) {
             bof3::Log("interp      150 in-between frames to Frame_Counter %u: %u draws a frame; exact %u, loose %u, too far %u, "
-                      "unmatched %u (followed %u); moved %u",
+                      "unmatched %u (followed %u); moved %u; snapped %u",
                       static_cast<U>(Frame_Counter), sum.draws / frames, sum.exact / frames, sum.loose / frames,
-                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames);
+                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames, sum.snapped / frames);
             sum = {};
             frames = 0;
         }
