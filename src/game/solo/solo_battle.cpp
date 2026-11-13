@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/mode_rest_callees.h"
+#include "game/move_script_bytes.h"
 #include "game/records.h"
 #include "game/solo/solo.h"
 #include "game/solo/solo_party_set.h"
@@ -650,8 +652,7 @@ bool SoloBattle_ChampionFightsThis() {
     if (!Solo_ChampionFights()) return false;
     // 0x904AB0: the battle's member count, Party_Count(1) stored by
     // GameMode5_Script (mode_rest_callees.h kMemberCount).
-    constexpr std::uint32_t kBattleMemberCount = 0x904AB0;
-    const unsigned count = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kBattleMemberCount)));
+    const unsigned count = *move_script::At(::bof3::Img(mode_rest::at::kMemberCount));
     return count == 1 && ObjTrio[0].char_index == static_cast<unsigned>(Solo_ChampionRecord());
 }
 

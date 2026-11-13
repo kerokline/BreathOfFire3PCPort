@@ -1,10 +1,12 @@
 #include "game/solo/solo_level.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 // The level-1 start (solo_level.h). What each address and offset is:
@@ -17,21 +19,21 @@
 //                                 99 r + L the step L -> L + 1 (char.cpp
 //                                 Char_LevelUp, symbols.toml)
 //
-//   record +0x0A level, +0x0C EXP (s32), +0x18 HP, +0x1A AP, +0x1C / +0x2E /
-//   +0x4E willpower (NewGame_InitCharacters' one derived byte, three places),
-//   +0x1F master (0xFF none), +0x20 / +0x22 effective max HP / AP, +0x40..
-//   +0x4A the six base words, +0x60..+0x87 the four ability lists, +0x88 the
-//   master's level, +0x89..+0x8E the six growth-bias bytes (char.cpp; range-b
-//   1 of docs/save-block/range-b-characters.md; M10 section 1).
+//   the record is records.h CharRecord: level +0x0A, exp +0x0C, hp +0x18, ap
+//   +0x1A, master +0x1F (0xFF none), stats (+0x20, the effective block: max HP,
+//   max AP), base (+0x40, the six base words), abilities +0x60..+0x87,
+//   master_level +0x88, bias +0x89..+0x8E. Willpower is one byte
+//   NewGame_InitCharacters derives into three places: +0x1C (CharRecord's
+//   `survive`), +0x2E (stats.byte_0e) and +0x4E (base.byte_0e) (char.cpp;
+//   range-b 1 of docs/save-block/range-b-characters.md; M10 section 1).
 
 namespace solo {
 namespace {
 
 using move_script::At;
-using move_script::Long;
-using move_script::SetLong;
-using move_script::SetWord;
 using move_script::Word;
+using records::CharRecord;
+using records::CharStatBlock;
 
 constexpr unsigned kStride = 0xA4;
 constexpr int kDefaultCount = 7;   // NewGame_InitCharacters copies records 0..6
@@ -41,27 +43,35 @@ constexpr unsigned kRowSize = 8;
 constexpr unsigned kMaxLevel = 99;
 constexpr unsigned kStatCap = 999;  // Char_LevelUp's Grow caps a word at 999
 
-constexpr unsigned kLevel = 0x0A;
-constexpr unsigned kExp = 0x0C;
-constexpr unsigned kHp = 0x18;
-constexpr unsigned kAp = 0x1A;
-constexpr unsigned kWillCurrent = 0x1C;
-constexpr unsigned kMaster = 0x1F;
-constexpr unsigned kMaxHp = 0x20;
-constexpr unsigned kMaxAp = 0x22;
-constexpr unsigned kWillEffective = 0x2E;
-constexpr unsigned kBase = 0x40;  // six words: HP, AP, power, defence, agility, intelligence
-constexpr unsigned kWillBase = 0x4E;
+// Byte offsets the whole-record loops compare by (CheckIsDefault, the
+// self-test's byte compare): the three willpower bytes, current HP and AP,
+// and the effective block's span.
+constexpr unsigned kWillCurrent = offsetof(CharRecord, survive);
+constexpr unsigned kWillEffective = offsetof(CharRecord, stats) + offsetof(CharStatBlock, byte_0e);
+constexpr unsigned kWillBase = offsetof(CharRecord, base) + offsetof(CharStatBlock, byte_0e);
+constexpr unsigned kHpOffset = offsetof(CharRecord, hp);
+constexpr unsigned kStatsFrom = offsetof(CharRecord, stats);
+constexpr unsigned kStatsTo = offsetof(CharRecord, base);
+constexpr unsigned kBiasOffset = offsetof(CharRecord, bias);
 constexpr unsigned kListSize = 10;
-constexpr unsigned kMasterLevel = 0x88;
-constexpr unsigned kBias = 0x89;  // six signed bytes, in the base words' order
+static_assert(sizeof(CharRecord) == kStride, "CharRecord is the record's stride");
+static_assert(kWillCurrent == 0x1C && kWillEffective == 0x2E && kWillBase == 0x4E, "the willpower bytes");
+
+// The six base words in the order the level table's gains and the bias bytes
+// name them: max HP, max AP, power, defence, agility, intelligence.
+constexpr std::uint16_t CharStatBlock::*kBaseWords[6] = {&CharStatBlock::max_hp, &CharStatBlock::max_ap, &CharStatBlock::atk,
+                                                         &CharStatBlock::def,    &CharStatBlock::agi,    &CharStatBlock::intel};
 
 constexpr const char* kStatNames[6] = {"HP", "AP", "power", "defence", "agility", "intelligence"};
 
-unsigned char* Slot(int record) { return At(::bof3::Img(CharacterRecords_addr) + static_cast<unsigned>(record) * kStride); }
-const unsigned char* Default(int record) {
-    return At(::bof3::Img(Char_DefaultRecords_addr) + static_cast<unsigned>(record) * kStride);
+CharRecord& Slot(int record) { return CharacterRecords[record]; }
+// Char_DefaultRecords' records, laid end to end from 0x64B390 (symbols.toml
+// types only the first as bytes; NewGame_InitCharacters copies n = 0..6).
+const CharRecord& Default(int record) {
+    return reinterpret_cast<const CharRecord*>(Char_DefaultRecords)[record];
 }
+unsigned char* Bytes(CharRecord& r) { return reinterpret_cast<unsigned char*>(&r); }
+const unsigned char* Bytes(const CharRecord& r) { return reinterpret_cast<const unsigned char*>(&r); }
 const unsigned char* Row(int record, unsigned level) {
     return At(::bof3::Img(bof3::addr::Char_ExpTable)) + (static_cast<unsigned>(record) * kRowsPerRecord + level) * kRowSize;
 }
@@ -81,21 +91,21 @@ bool IsWillpowerByte(unsigned offset) { return offset == kWillCurrent || offset 
 // The default record's level N and the six level-1 base words, derived; every
 // precondition of the inverse checked (solo_level.h, Solo_LevelReset).
 unsigned Derive(int record, int derived[6], const char* who) {
-    const unsigned char* const d = Default(record);
-    const unsigned n = d[kLevel];
+    const CharRecord& d = Default(record);
+    const unsigned n = d.level;
     if (n < 1 || n > kMaxLevel)
         bof3::Fatal("%s: default record %d's level is %u, not 1..99 (Char_DefaultRecords 0x64B390 as laid)", who, record, n);
-    if (d[kMaster] != 0xFF || d[kMasterLevel] != 0)
+    if (d.master != 0xFF || d.master_level != 0)
         bof3::Fatal("%s: default record %d has a master (+0x1F %u, +0x88 %u): its growth is not the bare "
                     "table's, so the levels cannot be subtracted",
-                    who, record, d[kMaster], d[kMasterLevel]);
+                    who, record, d.master, d.master_level);
     for (unsigned s = 0; s < 6; ++s)
-        if (d[kBias + s] != 0)
+        if (d.bias[s] != 0)
             bof3::Fatal("%s: default record %d has a growth bias %d on %s (+0x%X): the levels cannot be "
                         "subtracted",
-                        who, record, static_cast<signed char>(d[kBias + s]), kStatNames[s], kBias + s);
+                        who, record, d.bias[s], kStatNames[s], kBiasOffset + s);
     for (unsigned s = 0; s < 6; ++s) {
-        const unsigned v = Word(d + kBase + 2 * s);
+        const unsigned v = d.base.*kBaseWords[s];
         if (v >= kStatCap)
             bof3::Fatal("%s: default record %d's base %s is %u: Char_LevelUp caps a word at 999, so what "
                         "it added cannot be told",
@@ -111,15 +121,15 @@ unsigned Derive(int record, int derived[6], const char* who) {
         if (derived[s] < 0)
             bof3::Fatal("%s: record %d's level-1 base %s derives to %d (the default's %u less rows 1..%u of "
                         "Char_ExpTable 0x658F48 as laid): the table does not fit the default record",
-                        who, record, kStatNames[s], derived[s], static_cast<unsigned>(Word(d + kBase + 2 * s)), n - 1);
+                        who, record, kStatNames[s], derived[s], static_cast<unsigned>(d.base.*kBaseWords[s]), n - 1);
     return n;
 }
 
 // The live record against the default, all 0xA4 bytes but the three willpower
 // bytes NewGame_InitCharacters derives.
 void CheckIsDefault(int record) {
-    const unsigned char* const live = Slot(record);
-    const unsigned char* const d = Default(record);
+    const unsigned char* const live = Bytes(Slot(record));
+    const unsigned char* const d = Bytes(Default(record));
     for (unsigned o = 0; o < kStride; ++o) {
         if (IsWillpowerByte(o)) continue;
         if (live[o] != d[o])
@@ -137,7 +147,7 @@ void CheckIsDefault(int record) {
 // on the slot and the type table; it reads no record byte). A Fatal when the
 // list does not hold it.
 void RemoveAbility(unsigned char* rec, int record, unsigned id, unsigned level, const char* who) {
-    const unsigned off = static_cast<unsigned>(::AbilityList_ForType(static_cast<unsigned>(record), id, 0) - Slot(record));
+    const unsigned off = static_cast<unsigned>(::AbilityList_ForType(static_cast<unsigned>(record), id, 0) - Bytes(Slot(record)));
     unsigned char* const list = rec + off;
     for (int i = static_cast<int>(kListSize) - 1; i >= 0; --i) {
         if (list[i] != id) continue;
@@ -165,12 +175,12 @@ void RemoveRowAbilities(unsigned char* rec, int record, unsigned n, const char* 
 constexpr const char* kAtNewGame = "solo level-1 start";
 
 void LogRecord(const char* when, int record) {
-    const unsigned char* const r = Slot(record);
+    const CharRecord& r = Slot(record);
     bof3::Log("DIV-0228 SoloCharacter level-1 start, record %d %s: level %u, EXP %d, base HP %u AP %u power %u defence %u "
               "agility %u intelligence %u, HP %u/%u, AP %u/%u, willpower +0x4E %u +0x1C %u +0x2E %u",
-              record, when, r[kLevel], static_cast<int>(Long(r + kExp)), Word(r + kBase), Word(r + kBase + 2),
-              Word(r + kBase + 4), Word(r + kBase + 6), Word(r + kBase + 8), Word(r + kBase + 10), Word(r + kHp),
-              Word(r + kMaxHp), Word(r + kAp), Word(r + kMaxAp), r[kWillBase], r[kWillCurrent], r[kWillEffective]);
+              record, when, r.level, static_cast<int>(r.exp), r.base.max_hp, r.base.max_ap, r.base.atk, r.base.def,
+              r.base.agi, r.base.intel, r.hp, r.stats.max_hp, r.ap, r.stats.max_ap, r.base.byte_0e, r.survive,
+              r.stats.byte_0e);
 }
 
 }  // namespace
@@ -186,14 +196,14 @@ void Solo_LevelReset(int record, bool log) {
         if (log) bof3::Log("DIV-0228 SoloCharacter level-1 start, record %d: its default is level 1, left as it is", record);
         return;
     }
-    RemoveRowAbilities(Slot(record), record, n, kAtNewGame);
-    unsigned char* const r = Slot(record);
-    r[kLevel] = 1;
-    SetLong(r + kExp, 0);
-    for (unsigned s = 0; s < 6; ++s) SetWord(r + kBase + 2 * s, static_cast<unsigned>(derived[s]));
-    ::Char_RecalcStats(r);
-    SetWord(r + kHp, Word(r + kMaxHp));
-    SetWord(r + kAp, Word(r + kMaxAp));
+    RemoveRowAbilities(Bytes(Slot(record)), record, n, kAtNewGame);
+    CharRecord& r = Slot(record);
+    r.level = 1;
+    r.exp = 0;
+    for (unsigned s = 0; s < 6; ++s) r.base.*kBaseWords[s] = static_cast<std::uint16_t>(derived[s]);
+    ::Char_RecalcStats(Bytes(r));
+    r.hp = r.stats.max_hp;
+    r.ap = r.stats.max_ap;
     if (log) LogRecord("after", record);
 }
 
@@ -207,29 +217,30 @@ void Solo_LevelCheckTables(int record) {
     const unsigned n = Derive(record, derived, kAtLaunch);
     if (n == 1) return;
     unsigned char copy[kStride];
-    std::memcpy(copy, Default(record), kStride);
+    std::memcpy(copy, Bytes(Default(record)), kStride);
     RemoveRowAbilities(copy, record, n, kAtLaunch);
 }
 
 int Solo_LevelSelfTest() {
     int checks = 0;
     unsigned char saved[kSlotCount * kStride];
-    std::memcpy(saved, Slot(0), sizeof saved);
+    std::memcpy(saved, Bytes(Slot(0)), sizeof saved);
     // The New Game state itself: the game's own copy of the default records
     // and their willpower.
     ::NewGame_InitCharacters();
     unsigned char state[kSlotCount * kStride];
-    std::memcpy(state, Slot(0), sizeof state);
+    std::memcpy(state, Bytes(Slot(0)), sizeof state);
+    const CharRecord* const states = reinterpret_cast<const CharRecord*>(state);
     for (int record = 0; record < kDefaultCount; ++record) {
-        unsigned char* const r = Slot(record);
-        const unsigned char* const d = state + static_cast<unsigned>(record) * kStride;
-        std::memcpy(Slot(0), state, sizeof state);
+        CharRecord& r = Slot(record);
+        const CharRecord& d = states[record];
+        std::memcpy(Bytes(Slot(0)), state, sizeof state);
         int derived[6];
         const unsigned n = Derive(record, derived, "solo level self-test");
         // The launch check passes on the tables as laid, and leaves the
         // records it reads as they were (it works on a copy).
         Solo_LevelCheckTables(record);
-        if (std::memcmp(Slot(0), state, sizeof state) != 0)
+        if (std::memcmp(Bytes(Slot(0)), state, sizeof state) != 0)
             bof3::Fatal("solo level self-test: the launch check of record %d changed a record slot", record);
         ++checks;
         for (unsigned s = 0; s < 6; ++s) {
@@ -239,48 +250,49 @@ int Solo_LevelSelfTest() {
         // The EXP lies in the default level's window (Char_LevelUp's own sum).
         std::int32_t below = 0;
         for (unsigned level = 1; level < n; ++level) below += Word(Row(record, level));
-        const std::int32_t exp = Long(d + kExp);
+        const std::int32_t exp = d.exp;
         if (exp < below || (n < kMaxLevel && exp >= below + Word(Row(record, n))))
             bof3::Fatal("solo level self-test: record %d's default EXP %d is not in level %u's window", record, exp, n);
         ++checks;
 
         Solo_LevelReset(record, false);
-        if (r[kLevel] != 1 || Long(r + kExp) != 0)
-            bof3::Fatal("solo level self-test: record %d after the reset is level %u EXP %d", record, r[kLevel],
-                        static_cast<int>(Long(r + kExp)));
+        if (r.level != 1 || r.exp != 0)
+            bof3::Fatal("solo level self-test: record %d after the reset is level %u EXP %d", record, r.level,
+                        static_cast<int>(r.exp));
         for (unsigned s = 0; s < 6; ++s)
-            if (n > 1 && Word(r + kBase + 2 * s) != static_cast<unsigned>(derived[s]))
+            if (n > 1 && r.base.*kBaseWords[s] != static_cast<unsigned>(derived[s]))
                 bof3::Fatal("solo level self-test: record %d's base %s after the reset", record, kStatNames[s]);
-        if (Word(r + kHp) != Word(r + kMaxHp) || Word(r + kAp) != Word(r + kMaxAp))
+        if (r.hp != r.stats.max_hp || r.ap != r.stats.max_ap)
             bof3::Fatal("solo level self-test: record %d's HP / AP are not at their maxima after the reset", record);
-        if (r[kWillBase] != d[kWillBase] || r[kWillCurrent] != d[kWillCurrent] || r[kWillEffective] != d[kWillEffective])
+        if (r.base.byte_0e != d.base.byte_0e || r.survive != d.survive || r.stats.byte_0e != d.stats.byte_0e)
             bof3::Fatal("solo level self-test: record %d's willpower %u/%u/%u after the reset, %u/%u/%u before", record,
-                        r[kWillBase], r[kWillCurrent], r[kWillEffective], d[kWillBase], d[kWillCurrent], d[kWillEffective]);
+                        r.base.byte_0e, r.survive, r.stats.byte_0e, d.base.byte_0e, d.survive, d.stats.byte_0e);
         checks += 4;
 
         // Back up with the game's own level-up, the default's EXP at once.
-        SetLong(r + kExp, exp);
+        r.exp = exp;
         ::Char_LevelUp(static_cast<unsigned>(record));
         // Game_Step 5 (TitleFlow_EnterGame 0x588800) recomputes every record
         // after New Game, so both sides are compared through that recompute:
         // a default-level-1 record, which the reset leaves alone and the
         // level-up does not reach, still holds Capcom's prebuilt effective
         // block here.
-        ::Char_RecalcStats(r);
+        ::Char_RecalcStats(Bytes(r));
         unsigned char back[kStride];
-        std::memcpy(back, r, kStride);
+        std::memcpy(back, Bytes(r), kStride);
+        const CharRecord& back_rec = *reinterpret_cast<const CharRecord*>(back);
         // The default put through the same recompute, in the same slot (the
         // roster bonus applies by slot).
-        std::memcpy(r, d, kStride);
-        ::Char_RecalcStats(r);
+        std::memcpy(Bytes(r), Bytes(d), kStride);
+        ::Char_RecalcStats(Bytes(r));
         unsigned char want[kStride];
-        std::memcpy(want, r, kStride);
+        std::memcpy(want, Bytes(r), kStride);
         for (unsigned o = 0; o < kStride; ++o) {
-            if (o >= kHp && o < kHp + 4) continue;  // current HP and AP: a level-up does not refill them
+            if (o >= kHpOffset && o < kHpOffset + 4) continue;  // current HP and AP: a level-up does not refill them
             if (back[o] != want[o])
                 bof3::Fatal("solo level self-test: record %d, level %u -> 1 -> %u, differs from its default at +0x%02X (%u, "
                             "want %u)",
-                            record, n, back[kLevel], o, back[o], want[o]);
+                            record, n, back_rec.level, o, back[o], want[o]);
         }
         ++checks;
         // What the log line adds: current HP / AP after the climb (still the
@@ -288,14 +300,14 @@ int Solo_LevelSelfTest() {
         // effective block +0x20..+0x3F is from the recompute that
         // TitleFlow_EnterGame 0x588800 runs on every record at Game_Step 5.
         unsigned prebuilt = 0;
-        for (unsigned o = kMaxHp; o < kBase; ++o)
-            if (d[o] != want[o]) ++prebuilt;
+        for (unsigned o = kStatsFrom; o < kStatsTo; ++o)
+            if (Bytes(d)[o] != want[o]) ++prebuilt;
         bof3::Log("solo level self-test: record %d level %u -> 1 -> %u equal to its default (HP %u/%u AP %u/%u after the "
                   "climb); its prebuilt effective block and Char_RecalcStats' differ in %u bytes",
-                  record, n, back[kLevel], Word(back + kHp), Word(back + kMaxHp), Word(back + kAp), Word(back + kMaxAp),
+                  record, n, back_rec.level, back_rec.hp, back_rec.stats.max_hp, back_rec.ap, back_rec.stats.max_ap,
                   prebuilt);
     }
-    std::memcpy(Slot(0), saved, sizeof saved);
+    std::memcpy(Bytes(Slot(0)), saved, sizeof saved);
     return checks;
 }
 

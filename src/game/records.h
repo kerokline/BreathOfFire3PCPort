@@ -622,7 +622,9 @@ struct CharRecord {
     CharStatBlock stats;  // +0x20 the effective block (char-stats.md 2)
     CharStatBlock base;  // +0x40 its base copy, copied over +0x20 first by Char_RecalcStats (char-stats.md 2)
     std::uint8_t abilities[4][10];  // +0x60 the four ten-slot ability lists by type byte & 3: 0 +0x60, 1 +0x6A, 2 +0x74, 3 +0x7E (AbilityList_ForType 0x591EC0; the PSX's are at +0x5C of its record)
-    unsigned char pad_88[0x1C];  // +0x88..+0xA3: not read by the records' readers here (save-interchange.md 2's late three-byte field, given at +0x74 there, is carried verbatim, not understood)
+    std::uint8_t master_level;  // +0x88 the level at apprenticing: MasterJoin_Step5Apply stores +0x0A, MasterQuit_Step5Apply 0, MasterGrant_Step1Member reads +0x0A - +0x88 as a byte (save-block/range-b-characters.md 1; rest_2d.cpp)
+    std::int8_t bias[6];  // +0x89 the growth bias, s8 each, for base max HP, max AP, ATK, DEF, AGI, INT: Char_LevelUp's Grow adds max(0, gain + bias) (save-block/range-b-characters.md 1; scena_sx.cpp Grow; MasterJoin_Step5Apply)
+    unsigned char pad_8F[0x15];  // +0x8F..+0xA3: not read by the records' readers here (save-interchange.md 2's late three-byte field, given at +0x74 there, is carried verbatim, not understood)
 };
 
 // An encounter slot: 0x939F00 + r * 12, eight (battle_sprites_callees.h
@@ -1064,6 +1066,9 @@ static_assert(offsetof(CharRecord, hp_scale) == 0x1E, "CharRecord::hp_scale");
 static_assert(offsetof(CharRecord, master) == 0x1F, "CharRecord::master");
 static_assert(offsetof(CharRecord, stats) == 0x20, "CharRecord::stats");
 static_assert(offsetof(CharRecord, base) == 0x40, "CharRecord::base");
+static_assert(offsetof(CharRecord, abilities) == 0x60, "CharRecord::abilities");
+static_assert(offsetof(CharRecord, master_level) == 0x88, "CharRecord::master_level");
+static_assert(offsetof(CharRecord, bias) == 0x89, "CharRecord::bias");
 static_assert(sizeof(CharRecord) == 0xA4, "CharRecord stride");
 
 static_assert(offsetof(EncounterSlot, active) == 0x0, "EncounterSlot::active");

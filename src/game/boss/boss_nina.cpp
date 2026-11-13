@@ -218,23 +218,27 @@ void EndStep(U step) { BH_WORD(Handler, step)(); }
 // 0x23 the step 0x1C, each with Boss_SetByLeaderId (before the step's store,
 // or after it for set-up 20: `pick_first`) and step 3. Then the four words
 // kept: enemy 1's HP, enemy 2's, enemy 0's +0xA4 and +0xA6.
+// DIVERGENCE DIV-0228 SoloCharacter (the owner, round doc 6h): the champion
+// fights every bout of the series, and a bout the champion loses ends the
+// series as the original ends it when its last member loses (flags 0x23 and
+// 0x24 set below): the end phase's step 2, the loss screen, GAME OVER. No
+// other member is called in. Asked by EndAreaFight only after enemy 2's fall
+// (0x904AAD bit 0), as its own branch was, and before the flags; nothing with
+// the behaviour off (the call answers no and reads nothing).
+bool SoloChampionLostBout() {
+    if (!solo::SoloBattle_ChampionFightsThis()) return false;
+    bof3::Log("DIV-0228 SoloCharacter: the champion lost a bout of chapter 5's one-on-one series (event battle 0x%02X): "
+              "game over, as when the last member loses",
+              static_cast<unsigned>(EventBattle_Id));
+    return true;
+}
+
 void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_first) {
     const unsigned char fell = BossSe_Script;     // read once, before any call
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(boss_sd::at::kEndWin.v);
-    } else if (fell & 1) {
-        EndStep(boss_sd::at::kEndOther.v);
-    } else if (solo::SoloBattle_ChampionFightsThis()) {
-        // DIVERGENCE DIV-0228 SoloCharacter (the owner, round doc 6h): the
-        // champion fights every bout of the series, and a bout the champion
-        // loses ends the series as the original ends it when its last member
-        // loses (flags 0x23 and 0x24 set below): the end phase's step 2, the
-        // loss screen, GAME OVER. No other member is called in. Nothing with
-        // the behaviour off (the call answers no and reads nothing).
-        bof3::Log("DIV-0228 SoloCharacter: the champion lost a bout of chapter 5's one-on-one series (event battle 0x%02X): "
-                  "game over, as when the last member loses",
-                  static_cast<unsigned>(EventBattle_Id));
+    } else if ((fell & 1) || SoloChampionLostBout()) {
         EndStep(boss_sd::at::kEndOther.v);
     } else {
         const bool f23 = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;

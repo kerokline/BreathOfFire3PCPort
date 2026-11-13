@@ -9,6 +9,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/mode_rest_callees.h"
+#include "game/move_script_bytes.h"
 #include "game/solo/solo.h"
 #include "game/solo/solo_battle.h"
 #include "game/solo/solo_rows.h"
@@ -19,15 +21,15 @@
 // constant are docs/solo-character-party-set.md's). What each address is:
 //
 //   kPartySetRows 0x669750 the 19 party-set rows of 3 ids (solo_rows.h)
-//   kSetData     0x813580  MessagePools 0x803580 + 0x10000: where a set file's
+//   LoadedSetData() 0x813580  MessagePools 0x803580 + 0x10000: where a set file's
 //                          one kind-0 chunk (tag 0x10000) lands - three dword
 //                          offsets from itself, one per column, then the
 //                          three character sections (field_event's kBankTable)
-//   kFormation   0x904AAC  the byte whose bit 1 makes GameMode5_Turn's
+//   BattleFileMode() 0x904AAC (mode_rest kFormation) the byte whose bit 1 makes GameMode5_Turn's
 //                          PartySet_Select load mode 2 (BPLU) rather than 1
 //                          (BPLD) (transition.cpp; mode_rest kFormation)
-//   kEventFlags  0x904AE5  bit 4: the step skips its select (the battle draws
-//                          from the field file)
+//   EventBattle_Flags 0x904AE5  bit 4: the step skips its select (the battle
+//                          draws from the field file)
 //
 // PartySet_Select 0x536AC0 loads row + 0xFC (mode 1) or row + 0x10F (mode 2)
 // from Dat_FileNames 0x64F368: BPLD<ids>.DAT / BPLU<ids>.DAT.
@@ -36,9 +38,15 @@ namespace solo {
 namespace {
 
 constexpr std::uint32_t kSetTag = 0x10000;
-constexpr std::uint32_t kSetData = 0x813580;
-constexpr std::uint32_t kFormation = 0x904AAC;
-constexpr std::uint32_t kEventFlags = 0x904AE5;
+// The set data's place: where TakeData lands a set file's kind-0 chunk,
+// MessagePools + its tag (dat_load.cpp Arena(); field_event's kBankTable).
+unsigned char* LoadedSetData() { return move_script::At(::bof3::Img(bof3::addr::MessagePools)) + kSetTag; }
+
+// The battle file's mode, as GameMode5_Turn picks it (transition.cpp): its
+// dword read of mode_rest's kFormation, bit 1 set loads mode 2 (BPLU), else
+// mode 1 (BPLD). The address has mixed widths in Capcom's code (byte and
+// dword reads), so symbols.toml types none; this reads it the step's way.
+int BattleFileMode() { return (move_script::Long(move_script::At(::bof3::Img(mode_rest::at::kFormation))) & 2) ? 2 : 1; }
 constexpr int kBattleFileMode1 = 0xFC;    // PartySet_Select's mode-1 index base (BPLD)
 constexpr int kBattleFileMode2 = 0x10F;   // mode 2's (BPLU)
 // The window of arena offsets from kSetTag a set file's data may fill: the
@@ -46,14 +54,35 @@ constexpr int kBattleFileMode2 = 0x10F;   // mode 2's (BPLU)
 // (measured 2026-11-13 over the 19 rows' PL, BPLD, BPLU files).
 constexpr std::uint32_t kWindow = 0x70000;
 
-unsigned char* Image(std::uint32_t address) {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(address)));
-}
 
-std::uint32_t Dword(const unsigned char* p) {
-    std::uint32_t v;
-    std::memcpy(&v, p, 4);
-    return v;
+// The two headers a party-set file's data holds (docs/solo-character-party-set.md
+// section 1, measured over the 57 files). They are read out of a buffer of
+// ours - a file's bytes as LoadDatFile would land them, or the copy held for
+// the battle - never the game's memory, so each is copied out whole by
+// FileHeader below, not read through a memory accessor.
+//
+// The data's own header: one offset per column of the row, from the data's
+// start, ascending; the first is always 0xC (195 of 195 sections).
+struct SetDataHeader {
+    std::uint32_t column[3];
+};
+static_assert(sizeof(SetDataHeader) == 0xC, "the set data's header");
+// A character section's header: four offsets from the section's start - the
+// image table (Sprite_SetFrameQueueUpload), the palette table
+// (Sprite_LoadPalette's bank + 4), the script words and the 3-byte frame
+// entries (Sprite_SetFrameQueueUpload's +8 and +0xC).
+struct SectionHeader {
+    std::uint32_t images, palettes, words, entries;
+};
+static_assert(sizeof(SectionHeader) == 0x10, "a section's header");
+
+// A header copied out of a file buffer of ours (the caller has checked that
+// sizeof(T) bytes lie inside it).
+template <class T>
+T FileHeader(const unsigned char* at) {
+    T h;
+    std::memcpy(&h, at, sizeof h);
+    return h;
 }
 
 // --- the logic, on bytes alone (the live side and the self-test) ----------
@@ -76,7 +105,8 @@ int ChooseColumn(const unsigned char* ids, unsigned char champion, unsigned char
 // shipped set file, measured). False when it is not that shape.
 bool SectionBounds(const unsigned char* data, std::uint32_t len, int col, std::uint32_t& off, std::uint32_t& end) {
     if (len < 0xC || col < 0 || col > 2) return false;
-    const std::uint32_t o[3] = {Dword(data), Dword(data + 4), Dword(data + 8)};
+    const SetDataHeader h = FileHeader<SetDataHeader>(data);
+    const std::uint32_t* const o = h.column;
     if (o[0] != 0xC || !(o[0] < o[1] && o[1] < o[2] && o[2] < len)) return false;
     off = o[col];
     end = col < 2 ? o[col + 1] : len;
@@ -97,9 +127,8 @@ std::uint32_t UsedLength(const unsigned char* sec, std::uint32_t n) {
 // to the section, so a section is lifted whole.
 bool SelfContained(const unsigned char* sec, std::uint32_t used) {
     if (used < 0x10) return false;
-    for (unsigned k = 0; k < 4; ++k)
-        if (Dword(sec + k * 4) >= used) return false;
-    return true;
+    const SectionHeader h = FileHeader<SectionHeader>(sec);
+    return h.images < used && h.palettes < used && h.words < used && h.entries < used;
 }
 
 // --- reading a file as LoadDatFile would land it ----------------------------
@@ -253,7 +282,8 @@ const Prepared* Prepare(unsigned char champion, unsigned char need, unsigned row
         g_prep.plan = p;
         g_prep.section.assign(g_src.bytes.begin() + p.src_off, g_src.bytes.begin() + p.src_off + p.used);
         std::memcpy(g_prep.header, g_dst.bytes.data(), 0xC);
-        for (int c = 0; c < 3; ++c) std::memcpy(g_prep.heads[c], g_dst.bytes.data() + Dword(g_dst.bytes.data() + c * 4), 0x10);
+        const SetDataHeader dh = FileHeader<SetDataHeader>(g_dst.bytes.data());
+        for (int c = 0; c < 3; ++c) std::memcpy(g_prep.heads[c], g_dst.bytes.data() + dh.column[c], 0x10);
         g_prep.valid = true;
     }
     // The two file windows are not kept past the plan.
@@ -302,7 +332,7 @@ int PartySetExtra_Arm(unsigned char need, unsigned char champion, int base, unsi
     else if (base == kKeep && AreaW0b_PartySet != kNone) row = AreaW0b_PartySet & 0x7Fu;
     else return stand_down("no row for the champion");
     if (row >= kPartySetRowCount) return stand_down("the row is past the table");
-    const int mode = (*Image(kFormation) & 2) ? 2 : 1;
+    const int mode = BattleFileMode();
     std::string why;
     const Prepared* const h = Prepare(champion, need, row, mode, why);
     if (!h) return stand_down(why.c_str());
@@ -322,12 +352,12 @@ bool PartySetExtra_Dress(unsigned member_arg, unsigned slot) {
     const unsigned row = static_cast<unsigned>(at);
     unsigned char* const ids = PartySetRows() + row * 3;
     const unsigned battle = Game_BattleCount;
-    if (*Image(kEventFlags) & 0x10)
+    if (EventBattle_Flags & 0x10)
         bof3::Fatal("DIV-0228 SoloCharacter: battle %u dresses a sprite as id 0x%02X from row %u, which lacks it, in an "
                     "event battle that skipped its select (0x904AE5 bit 4): no plan was made for that",
                     battle, member, row);
     const auto champion = static_cast<unsigned char>(Solo_ChampionId());
-    const int mode = (*Image(kFormation) & 2) ? 2 : 1;
+    const int mode = BattleFileMode();
     std::string why;
     const Prepared* const h = Prepare(champion, member, row, mode, why);
     if (!h)
@@ -337,15 +367,15 @@ bool PartySetExtra_Dress(unsigned member_arg, unsigned slot) {
     const Plan& p = h->plan;
     // The loaded set data must be the row's battle file (what the step's
     // select loaded): its three offsets, and every other column's section header.
-    unsigned char* const live = Image(kSetData);
+    unsigned char* const live = LoadedSetData();
     if (std::memcmp(live, h->header, 0xC) != 0)
-        bof3::Fatal("DIV-0228 SoloCharacter: battle %u: the set data at 0x%X is not %s's (its column offsets differ)",
-                    battle, kSetData, FileName(p.dst_file));
+        bof3::Fatal("DIV-0228 SoloCharacter: battle %u: the set data (MessagePools + 0x10000) is not %s's (its column offsets differ)",
+                    battle, FileName(p.dst_file));
     for (int c = 0; c < 3; ++c) {
-        const std::uint32_t o = Dword(h->header + c * 4);
+        const std::uint32_t o = FileHeader<SetDataHeader>(h->header).column[c];
         if (c != p.column && std::memcmp(live + o, h->heads[c], 0x10) != 0)
-            bof3::Fatal("DIV-0228 SoloCharacter: battle %u: column %d of the set data at 0x%X is not %s's", battle, c,
-                        kSetData, FileName(p.dst_file));
+            bof3::Fatal("DIV-0228 SoloCharacter: battle %u: column %d of the set data (MessagePools + 0x10000) is not %s's", battle, c,
+                        FileName(p.dst_file));
     }
     std::memcpy(live + p.dst_off, h->section.data(), p.used);
     std::memset(live + p.dst_off + p.used, 0, p.dst_end - p.dst_off - p.used);
