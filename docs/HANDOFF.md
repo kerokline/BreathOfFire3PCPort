@@ -60,6 +60,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      measure it, then a `[[patch]]` in the list. **1.4's rules are not played**: the
      owner's play above was 1.0. Owed: the owner's play of the warp's new learning and of Ally in one of the five areas; the
      ten routes with the behaviours off.
+     **Under European English (2026-11-13, `romhack/definitive-en-150`; [`disc-patch-round.md`](disc-patch-round.md) 11):** a
+     patch of the US disc also builds `mod-<id>-en-150` where the install holds `en-150` text (the European disc's or the
+     PSP's) beside the US disc, and the launcher plays the mod under either English. Owed: the owner's play under
+     `en-150`; `dialog_test.py` for the row's new words. The US disc is still needed - a PSP-only install cannot build a
+     US patch, and nothing short of the US track can change that.
    - **The New Game round** (item 18): staged 2026-11-12, group M to launch.
    - **Issue #223, the solo character challenge** (IDEAS I56): **staged as a round** on 2026-11-12 ([`solo-character-round.md`](solo-character-round.md)), the owner's four answers in its section 6, not launched. Group M is run ([`solo-character-reads.md`](solo-character-reads.md); the round doc's 0a is what it corrected). Every design call is answered (its 6, 6a, 6c). **Stage A is built on the local branch `solo/round`, not pushed** (its 4a: the core in `src/game/solo/`, the launcher's "Solo character" page; worktree `D:\bof3x-runs\solo1112\round\wt`); this PR is the docs only. **Owed on stage A:** the in-game self-test, the 64-bit build, the state-hash proof with the behaviours off, `dialog_test.py` and the owner's look at the page. **Next:** stage B at the owner's word (combat, field, the level-1 start at New Game, the members screens, routes and proof).
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.

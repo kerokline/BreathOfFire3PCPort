@@ -128,6 +128,9 @@ KINDS = {
         "optional": {"skip": "skip"},
         "file_ext": {"patch": (".xdelta", ".ppf")},
         "builds": {"psx-us": ("en-US", "PlayStation, USA")},
+        # the other text the patch's lines are carried over to, where the install holds it and its disc
+        # (docs/disc-patch-round.md 11; disc_patch_build.ALSO_TEXT, which the self-test holds this equal to)
+        "also": {"psx-us": ("en-150",)},
         "author": True,
         "builder": "disc_patch_build.py",
     },
@@ -199,11 +202,30 @@ def layer_name(meta):
 def layers_of(meta):
     """Every optional layer a mod's step may build. A disc-patch mod has two
     (docs/disc-patch-round.md 3a): `mod-<id>`, what no language owns, and
-    `mod-<id>-<tag>`, its edits to the text of its disc's language."""
+    `mod-<id>-<tag>`, its edits to the text of its disc's language - and after
+    them one `mod-<id>-<tag>` for each other text its lines are carried over
+    to (docs/disc-patch-round.md 11), where that name fits a layer's."""
     if meta["kind"] == "disc-patch":
         tag = KINDS["disc-patch"]["builds"][meta["build"]][0]
-        return [layer_name(meta), "%s-%s" % (layer_name(meta), tag)]
+        return [layer_name(meta), "%s-%s" % (layer_name(meta), tag)] + \
+            ["%s-%s" % (layer_name(meta), t) for t in also_tags(meta)]
     return [layer_name(meta)]
+
+
+def also_tags(meta):
+    """The other languages a disc-patch mod's text may be built for: KINDS'
+    `also` of its disc, less a tag whose layer name is too long for a layer."""
+    k = KINDS["disc-patch"]
+    return [t for t in k["also"].get(meta.get("build"), ()) if len("%s-%s" % (layer_name(meta), t)) <= LAYER_MAX]
+
+
+def text_languages(h, r, cache=None):
+    """The languages a disc-patch mod's text is built for in this install: its
+    disc's own, then each of also_tags() whose layer is in the cache. What the
+    launcher plays the mod over (config.cpp ConfigModLayers)."""
+    cache = cache or os.path.join(h, "cache")
+    own = KINDS["disc-patch"]["builds"][r["build"]][0]
+    return [own] + [t for t in also_tags(r) if built(cache, "%s-%s" % (layer_name(r), t))]
 
 
 # ---------------------------------------------------------------- the zip
@@ -398,7 +420,7 @@ def check_meta(doc):
                           % (meta["build"], tag, tag))
     meta["files"] = files
     meta["layer"] = layer_name(meta)
-    longest = max(layers_of(meta), key=len)
+    longest = max(layers_of(meta)[:2], key=len)     # its own layers; a carried-over text's is left out when too long
     if len(longest) > LAYER_MAX:
         raise Refused("mod.toml: the layer %s is longer than the %d characters a layer name may have; "
                       "a shorter mod.id fits" % (longest, LAYER_MAX))
@@ -737,6 +759,12 @@ def state_of(h, r, cache=None):
     return "not-built", None, None
 
 
+def _languages(h, r):
+    if r.get("kind") != "disc-patch" or r.get("build") not in KINDS["disc-patch"]["builds"]:
+        return None
+    return text_languages(h, r)
+
+
 def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     o = {"path": path, "ok": ok, "id": r.get("id"), "name": r.get("name"), "version": r.get("version"),
          "kind": r.get("kind"), "requires": r.get("requires"), "base": r.get("base"),
@@ -748,6 +776,7 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     # the engine's behaviours the mod turns on (mod.toml's needs; docs/mods.md 11), and those this release
     # does not have: the launcher greys such a mod and never hands it over
     known = more.pop("known", None)
+    languages = more.pop("languages", None)
     o["behaviours"] = list(r.get("needs") or [])
     # a patch added by itself that the release's list does not have (docs/mods.md 12): the Mods tab says so.
     # `known_now`: the list of this release has it after all (a newer release) - added again, it is that mod
@@ -764,6 +793,8 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     if o["text_layer"]:
         # the language of its text, and what its build has and does not have (the Mods tab's log)
         o["language"] = KINDS["disc-patch"]["builds"][r["build"]][0]
+        # every language its text is built for here (text_languages); the caller that knows the home gives it
+        o["languages"] = languages or [o["language"]]
         if state == "built" and path:
             try:
                 import disc_patch_build
@@ -839,7 +870,8 @@ def cmd_add(a):
     rows = [row if r is old else r for r in rows] if old else rows + [row]
     save_rows(h, rows)
     st, needs, problem = state_of(h, row)
-    _emit(obj(row, path, True, problem, st, needs, replaced=old["version"] if old else None, listed=_known(a)), a.json)
+    _emit(obj(row, path, True, problem, st, needs, replaced=old["version"] if old else None, listed=_known(a),
+              languages=_languages(h, row)), a.json)
     return 0
 
 
@@ -876,7 +908,8 @@ def cmd_list(a):
     rows = load_rows(h)
     for r in rows:
         st, needs, problem = state_of(h, r)
-        _emit(obj(r, mod_dir(h, r["id"]), st != "problem", problem, st, needs, listed=_known(a)), a.json)
+        _emit(obj(r, mod_dir(h, r["id"]), st != "problem", problem, st, needs, listed=_known(a),
+                  languages=_languages(h, r)), a.json)
     if not rows and not a.json:
         print("no mods listed in %s" % mods_file(h))
     return 0
@@ -1570,6 +1603,19 @@ def selftest(keep=None):
     o = json.loads(out.splitlines()[-1])
     expect(o["state"] == "built" and o["language"] == "en-US" and o.get("carries") is None,
            "  its text layer alone in the cache: state built; its text's language named; no report, no sentence")
+    # the text carried over to another language (docs/disc-patch-round.md 11): a third layer, and `languages`
+    expect(o["languages"] == ["en-US"] and layers_of(row) == ["mod-definitive", "mod-definitive-en-US",
+                                                              "mod-definitive-en-150"]
+           and layers_of(dict(row, id="thirteen-char")) == ["mod-thirteen-char", "mod-thirteen-char-en-US"],
+           "  languages: its own alone; the en-150 layer is its third, left out where the name is too long")
+    te = os.path.join(cache, "opt", "mod-definitive-en-150", "dat")
+    os.makedirs(te)
+    with open(os.path.join(te, "AREA000.DAT"), "wb") as f:
+        f.write(b"\0" * 16)
+    _manifest_rows(cache, "mod-definitive-en-150", [("AREA000.DAT", 0, "mod:definitive@1.0:psx-us", "00")])
+    rc, out = run("list", "--home", h, "--json")
+    expect(json.loads(out.splitlines()[-1])["languages"] == ["en-US", "en-150"],
+           "  with the en-150 layer in the cache: languages names both")
     import disc_patch_build
     disc_patch_build.write_report(mod_dir(h, "definitive"), "w", {"enemy_tables": 2, "text_sections": 3},
                                   {"program_sections": 4})

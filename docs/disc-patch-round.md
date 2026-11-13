@@ -185,7 +185,8 @@ The text layer is walked after the first, so its names land on the tables.
 names an id is 13 characters at most for a tag of five (`en-US`), since a layer
 name holds 23.
 
-**Over another language** (not built in this round): the first layer alone
+**Over another language** (not built in this round; built for `en-150` on
+2026-11-13, section 11): the first layer alone
 would blank that language's enemy names, so it needs a names part for that
 language - the install's own name chunks for those areas, copied from
 `loc\<other>\`. Until that exists the launcher offers the mod over its own
@@ -1090,3 +1091,186 @@ over a `table-edit` mod.
 | The US function map | `D:\bof3x-runs\frost\map` (`--twins`) |
 | Experiment wrappers | `D:\bof3x-runs\romhack216\tools\build_as_us2.py` (importer build from the patched disc, the hash gate waived and counted: romhack-mods.md 3) |
 omhack216	oolsuild_as_us2.py` (importer build from the patched disc, the hash gate waived and counted: romhack-mods.md 3) |
+
+## 11. The patch's text over the European English text (2026-11-13)
+
+The owner, 2026-11-13: make the Definitive Edition work on an install played
+with the PSP's or the European disc's English (`en-150`); "the eu text should
+mostly match regular eng text ... so the patch locations should be easy to
+flag if they work as is or not". Branch `romhack/definitive-en-150` from
+`main` `13801868` (worktree and scratch `D:\bof3x-runs\de150`).
+
+**What it is.** A `disc-patch` mod of the US disc now builds a third layer,
+`opt\mod-<id>-en-150\dat\`, when the install holds `en-150` text and the disc
+that text was built from. The launcher hands `mod-<id>` and that layer to the
+game when `en-150` is the language played. 3a's "over another language"
+paragraph is answered for this one language.
+
+**What it still needs: the US disc.** The patch is a difference against the
+US disc's data track; nothing of it can be read without that track, and the
+table numbers, the enemy tables and the patched text all come out of the two
+US discs (3, 3b). So the install's source list holds the US disc and the
+European one (PlayStation or PSP). An install with a PSP disc alone still
+cannot build the mod, and the Mods tab says which disc it needs, as before.
+
+### 11.1 Measured first: the patch's 125 text sections on the two European discs
+
+`D:\bof3x-runs\de150\m\m1.py`, `m6.py`: every section the 1.4 patch changes
+and the PC keeps as text (`KEPT`), against the section of the same file on
+the other disc.
+
+| | European PlayStation disc | European PSP disc |
+|---|---|---|
+| The other disc's section is the US disc's, byte for byte: the patched section is taken whole ("as is") | 62 | 50 |
+| It differs: the patch's lines are put into it, line by line (11.2) | 63 | 74 |
+| Not carried | 0 | 1 |
+| Distinct lines the patch changes where the other disc words the line differently | 1 | 2 |
+
+Where the sections differ, they differ in a few places each (the European
+line breaks, a corrected word, on the PSP a pool with two more slots and
+unused slots that point at the block's end). The 58 enemy tables and the two
+area pages the patch changes are the same bytes on all three discs.
+
+The one section not carried on the PSP disc is `WORLD00/AREA007.EMI` section
+11: the patch writes a first slot offset that lies outside the block, which
+the text builder reads as the block's first message - so it changes nothing
+in the en-US layer either (that layer has no chunk for it).
+
+The lines worded differently: `WORLD01/AREA049.EMI` section 11 slot 147 (both
+discs: the European text breaks the line at other words, and so does the
+patch), and on the PSP slot 133 of the pools' second block (an armour's
+description: the PSP corrects one word of it, the patch writes a new
+description). In both the patch's line is the one a player of the mod wants,
+and it is the one taken.
+
+### 11.2 The rule
+
+A text block is a table of 16-bit offsets, one a slot, and the messages they
+point at; a pool is two such blocks behind a header. `loc_build.convert_block`
+reads a block slot by slot and nothing else of it, so a block made again from
+each slot's message is the same block to the builder. For each slot
+(`disc_patch_build.merge_text_block`):
+
+| The slot's message | Taken |
+|---|---|
+| the patch left it alone | the other disc's |
+| the patch changed it, the other disc has the US disc's bytes | the patch's |
+| the patch changed it, the other disc words it differently | the patch's, counted, and its place written to the build's log |
+| the patch changed it, the other disc has no message there (a slot it does not use) | the other disc's |
+| a slot only the other disc has | the other disc's |
+
+Not carried, each said in the log with its file and section: a side that is
+not a table of offsets inside the block, a patch that changes the slot count,
+another disc with fewer slots, a block where more lines are worded
+differently than are not (more than three: another script, not this one), a
+merged block longer than its offsets reach, a page the other disc paints
+differently. Bytes are compared; no text is decoded here.
+
+The section on the other disc is found by index where the two files' section
+lists are as long, else by its place among the sections of that type and
+address (the PSP's `FIRST.EMI` has one section more).
+
+### 11.3 The build (`disc_patch_build.port_layer`)
+
+After the mod's own two layers are made, for `en-150` (`ALSO_TEXT`):
+
+1. The manifest says which disc the install's `en-150` text came from and how
+   (`loc_source`); no such text, no layer, and nothing said.
+2. `port_text`: the sections of 11.1, merged, as files for the text builder's
+   child.
+3. `loc_build.py` builds `en-150` from **that disc with the merged sections
+   in it** (`PortedDisc`), the way the install's layer was built, with the
+   image as the install has it. (Not the mod's numbers over the image: the
+   European disc's tables hold Capcom's numbers, and the builder finds them
+   by those.)
+4. Every chunk that differs from the install's `loc\en-150\` chunk is the
+   layer's.
+5. **Names.** The names the patch changed in the overlays' tables reach the
+   en-US layer through the un-moved overlays (3b), which the European disc
+   does not have. They are carried at the chunk: a 16-byte record of a
+   kind-5 chunk that the en-US layer changes is the patch's, every other
+   record the `en-150` text's (`port_names`).
+6. The enemy names after each enemy table, and the town warp's text, made by
+   the same converters as for en-US while `en-150` is set up.
+
+A refusal anywhere in this step leaves `en-150` without the mod, with a line;
+the mod's own language is built all the same. The report has a table
+`[also."en-150"]` with the counts, and the Mods tab's first sentence ends
+"its text for en-150 also (N text sections, M not)".
+
+### 11.4 The tools and the launcher
+
+- `tools/mods.py`: `KINDS["disc-patch"]["also"]`, `layers_of` gives the third
+  layer (left out when `mod-<id>-en-150` is longer than a layer's 23
+  characters: an id of 13), `list --json` has `languages` - every language
+  the mod's text is built for in this install. `requires` is still the
+  disc's own language: with the US disc in the list the install holds en-US.
+- `src/launcher/config.cpp` `ConfigModLayers`: the text layer handed over is
+  `mod-<id>-<language played>`; under a language that is not the disc's own,
+  the mod goes only when that layer is in the cache.
+- `src/launcher/sources_dialog.cpp`: a built mod's row is greyed with
+  `built; only with en-US or en-150 text` when the language chosen in
+  Settings is neither; with `en-150` chosen and its layer built the row is
+  `built: on` / `built: off`.
+- No engine file: `mod-<id>-en-150` ends in the tag of the language played,
+  which is the engine's own rule for a layer of one language (`LayerLanguage`).
+
+### 11.5 Checked
+
+| Check | Result |
+|---|---|
+| `disc_patch_build.py selftest` | 105 checks, 0 failures; 30 new (the message walk, the five rows of 11.2 and each refusal, a pool, the twin section, the ported disc, the names, the manifest read, the report's sentence) |
+| `mods.py selftest` | 0 failures |
+| `config_tests` | 3,898 checks; the 3 new ones pass (the layer of the language played handed over, the mod's own language as before, no layer: left off); the same 2 failures as `main` (the presets' count) |
+| The real 1.4 patch, US + European PSP, disc-only (`home_psp`, by `importer.py setup` and again by `mods.py build`) | exit 0. `mod-definitive-en-150`: **383 chunks in 169 files, the same chunk list as `mod-definitive-en-US`**; 50 sections as is, 74 merged, 1 not carried (11.1), 2 lines worded differently, 12 renamed records |
+| The same, US + European PlayStation (`home_eu`) | exit 0. 383 chunks in 169 files; 62 as is, 63 merged, 0 not carried, 1 line worded differently, 12 renamed records |
+| The built layers against a model that does not use `port_text` (`m\check_layer.py`): for every slot of every text chunk of the PC's form, the en-150 layer's message is the en-US layer's where the mod changed the en-US slot and the install's own `en-150` message elsewhere | PSP: 73 chunks differ from the en-US layer's and the model holds in all 73, 3 name chunks hold by record, 307 chunks are the en-US layer's bytes, **0 problems**; 321 slots kept as the PSP's empty ones. PlayStation: 62 and 1, 320 the same bytes, **0 problems** |
+| The exe host's self-test started by this branch's launcher on `home_psp`, no `BOF3X_OPT` or `BOF3X_ON` in the environment (`st.sh`) | `language=en-150`: exit 0, no Fatal; `optional layer 2, DAT\mod-definitive.*`, `layer 3, DAT\mod-definitive-en-150.*`, `9 tables, 1199 cells, 2286 bytes`, `behaviours: 10 of 10 on`; the mapped `.data` hash the one of the `language=en-US` run. `mods_off=definitive`: no mod layer, `0 of 10 on` |
+| The same on a PC-based install: the PC game folder, the US disc, the European PlayStation disc (`home_pc`; the `en-150` text built against the PC's files) | exit 0. `mod-definitive-en-150`: 384 chunks in 170 files, the en-US layer's chunk list there; 62 as is, 63 merged, 1 line worded differently; the model holds in all 62 chunks that differ, **0 problems** |
+
+**Not done.**
+
+- **Nobody has played it.** No route was run and no save loaded under
+  `en-150` with the mod: the starts above are self-tests.
+- `dialog_test.py` was not run (it finds the launcher's windows by title,
+  and the owner was at the machine): the row's new words
+  `only with en-US or en-150 text` are checked by reading, not by a window.
+- The French and German texts are other scripts; nothing is carried to them.
+- A PSP-only install: see "What it still needs" above.
+
+### 11.6 Measured: could the patch be read without the US disc? (2026-11-13)
+
+The owner's question: the data layer is one for every install, so could a map
+carry the patch to another disc. **Not built; measured only**
+(`D:\bof3x-runs\de150\m\m7_trace.py` to `m10_anywhere.py`).
+
+Where a change lands is already the same on every install (table cells, whole
+chunks). What ties the mod to the US disc is reading the patch: an xdelta is
+its author's literal bytes and instructions to copy ranges of the US track.
+`m7_trace.py` follows those instructions for the 353 changed sections and
+records, for each byte, whether it is the patch's own or a copy, and from
+where on the US disc. Then, for the two European discs: does that disc hold
+the copied bytes - in the twin of the section they come from, aligned
+(`disc_patch_build.edits`), or anywhere on the disc.
+
+| What the mod carries | The patch's own bytes | Copies the other disc's twin sections hold | Left over |
+|---|---|---|---|
+| 58 enemy tables (67,280 bytes) | 4.8% | all but 5 bytes of one table | 5 bytes, found elsewhere on both discs |
+| 2 area pages (524,288 bytes) | 38% | all but 1,619 bytes of one page | 3 runs, found elsewhere on both discs |
+| The 284 distinct lines the patch changes | | 258 lines whole on the European PlayStation disc, 246 on the PSP | 9 and 12 distinct runs (63 and 73 bytes); all found elsewhere on the disc but **one run of 28 bytes** on each |
+| The 2,478 image bytes the patch changes (table numbers; 149 of them the zero records the build leaves out) | 2,167 (87%) | 71 on the PlayStation disc, 105 on the PSP (twin section or that disc's image map) | 113 and 79 copied bytes not looked for elsewhere; **127 bytes in runs that change a table's length**, which the builder places by comparing the whole original section with the patched one |
+
+A copy comes from "another section" more often than from the section itself
+(63% of the text sections' bytes): the encoder takes a match wherever it finds
+one, and a pool is in 44 files. So a map of this kind is not our image map; it
+is a list made for one patch and one disc - (US offset, length) to (the other
+disc's offset) - built where both discs are, shipped as numbers, and proved by
+the layers coming out the same bytes as the US-disc build's.
+
+What the numbers say: on these two discs such a list would reach every enemy
+table, both pages and all but the lines that hold one 28-byte run. The table
+numbers are mostly the patch's own bytes; the open part is the 127 bytes in
+length-changing runs and the alignment the builder does today with the whole
+US section in hand (`unmoved_section`), which the patch's own copies would
+have to give instead. No US 1.0 image is in the scratch discs, so that disc
+was not measured. Written down as IDEAS I67.

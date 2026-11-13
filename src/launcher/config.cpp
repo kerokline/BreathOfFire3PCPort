@@ -1237,12 +1237,14 @@ std::string ConfigModLayers(const std::wstring& home, const std::wstring& cache,
                              "off\n", m.id.c_str());
                 continue;
             }
-            if (language != tag) {
+            // its text layer for the language played: its own, or one its lines were carried over to
+            // (docs/disc-patch-round.md 11: mod-<id>-en-150, built where the install holds that text)
+            const std::string second = first + "-" + (language.empty() ? tag : language);
+            if (language != tag && (!IsTag(language) || !CacheHasLayerPart(cache, second.c_str(), L"dat"))) {
                 std::fprintf(stderr, "bof3x-launcher: the mod %s is for %s text, not the language played (%s); left "
                              "off\n", m.id.c_str(), tag.c_str(), language.empty() ? kLanguageOriginal : language.c_str());
                 continue;
             }
-            const std::string second = first + "-" + tag;
             if (CacheHasLayerPart(cache, first.c_str(), L"dat") || CacheHasLayerPart(cache, first.c_str(), L"exe"))
                 layers.push_back(first);
             if (CacheHasLayerPart(cache, second.c_str(), L"dat")) layers.push_back(second);
