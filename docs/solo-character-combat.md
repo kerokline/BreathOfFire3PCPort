@@ -416,3 +416,83 @@ the full route at speed 4 (about 3 minutes a run). A save the owner makes in
 area 41 before walking down the steps (chapter 3, before
 `Scena03_StepArea29` starts fight 16) would cut a run to well under a
 minute.
+
+## 12. Chapter 5's one-on-one series: a champion's lost bout is a game over (the owner, round doc 6h)
+
+The owner: "that fight series is interesting in that it's a series on 1-1
+fights. For that, if a solo character looses, it passes to the next
+character in the team - in this case, we can progress straight to game over
+if that's possible."
+
+**The series, read** (`Scena05_Run16`'s steps in `src/game/scenario/scena_05_2.cpp`,
+run 0x10; set-ups 18..20 in `src/game/boss/boss_nina.cpp`; the call tables
+in [`scena_calls.md`](scena_calls.md)):
+
+- **The party** is Ryu (id 0) and two of Nina / Momo (1, 5) or Nina / Peco
+  (1, 6). Steps 5 / 6 (`PairCode`) turn the second list's first two ids into
+  counter 3 (1..6 for `{0, 1, 5}`, `0xB..0x10` for `{0, 1, 6}`), the order the
+  members fight in.
+- **One on one:** step 0x15's `GateB` runs two call-table B entries by
+  counter 3 - two of `ScenaCall_Leave1` / `_Leave5` / `_Leave6` /
+  `Scena05_Leave0` - so the first member is left alone; step 0x18 calls
+  fight 18 (`0x12`).
+- **The bouts:** fight 18, then (flag `0x1E` set at step 0x1B) fight 19 at
+  step 0x21, then (flag `0x1F`, step 0x23) fight 20 at step 0x27; a rematch
+  after a loss goes through `FlagBattle` (steps 0x38 / 0x42), which picks
+  18, 19 or 20 by flags `0x1E` / `0x1F`.
+- **The end hook** `EndAreaFight` (`Boss18_End` (0x1A, 0x1B), `Boss19_End`
+  (0x1A, 0x23), `Boss20_End` (0x1A, 0x29)): a win (`0x904AE8` bit 1, set by
+  `EventAreaFight` when enemy 0 or 1 falls) hands the chapter its next step
+  and takes the end phase's step 1; enemy 2 fallen (`0x904AAD` bit 0) takes
+  step 2; **otherwise - the member lost -** by the chapter flags: `0x23` and
+  `0x24` both set, step 2; `0x23` alone, the chapter step 0x3A; neither, step
+  0x1C; each of the last two with `Boss_SetByLeaderId` and step 3 (back to
+  the field).
+- **After a first loss** (step 0x1C, then 0x47): flag `0x23` set,
+  `CodeHall(kHall47)` joins the others back (call-table A, `ScenaCall_Join1` /
+  `_Join5` / `_Join6` / `Scena05_Join0`), `CodeExit(kExit34)` leaves the
+  **next** member alone, and step 0x38's `FlagBattle` refights the same bout.
+  **After a second** (step 0x3A, then 0x65): flag `0x24` set, `kHall65` /
+  `kExit3E`, the third member, step 0x42. **After a third** (`0x23` and
+  `0x24` set): the end phase's **step 2** - `BattleEnd_EnterStep2`, the loss
+  screen (solo-character-reads.md M3): the original's own GAME OVER.
+
+**What the mode did there before this change:** the scene leaves one member
+alone, so the champion fought every bout - armed when the scene's member is
+someone else, "already alone" when it is the champion - and a loss took the
+continue path above: the next member called in (who was then replaced by the
+champion again at the next bout), and `Boss_SetByLeaderId` reading member 0's
+id, the champion's (ledger draft H).
+
+**Built** (the owner's rule): `EndAreaFight`, in the "member lost" branch
+only, asks `solo::SoloBattle_ChampionFightsThis()` - the mode asks for the
+champion (`Solo_ChampionFights()`, which reads nothing with the switch off),
+the battle's member count `0x904AB0` is 1 and ObjTrio's first record holds the
+champion's record - and when it says yes takes the end phase's step 2, the
+path the original takes when its last member loses, with one log line. The
+win, the enemy-2 branch and every bout the champion did not fight are the
+original's. Files: `src/game/boss/boss_nina.cpp` (`EndAreaFight`, one branch,
+the `solo_battle.h` include), `src/game/solo/solo_battle.{h,cpp}`
+(`SoloBattle_ChampionFightsThis`). `Boss_SetByLeaderId` is untouched: in the
+mode its one call site (this branch's continue path) is no longer reached
+after a champion's bout.
+
+**Run** (a craft of this group's, `cbs18`: `PreEmitai`'s block at chapter 5
+run 0x10 step 0x15, area 79 flags `0x8E`, party `0, 1, 5` in set row 1,
+counter 3 = 1, flags `0x1E`, `0x1F`, `0x23`, `0x24` clear; recipes
+`D:\bof3x-runs\solo1112\CB\scratch\zz_cb_s18_*.txt`, not in the tree). The
+craft's scene stops at step 0x16 with counter 0 at 0x15 (the area's script
+does not advance it from a load), so the recipe pokes counter 0 to 0x16 and
+0x1B and confirms the messages. Champion Garr: step 0x15's `GateB` left Ryu
+alone; at fight 18 `battle 194 fought by the champion alone (record 2 ...)
+set row changed`; with Garr's HP poked to 1 and Attack confirmed each turn,
+Claw downed him: `DIV-0228 SoloCharacter: the champion lost a bout of
+chapter 5's one-on-one series (event battle 0x12): game over, as when the
+last member loses`, the loss screen, the title (`DIV-0064: 1 of 1 parts
+title`), and at the next game's start `battle 194's saved party dropped at
+GameMode_Start`. **The win is argued from the code only:** the same craft
+with enemy 0's KO bit poked stops, **plain and solo alike**, on `Fatal:
+BossActor_CopyFrom: no field actor carries tag 3` in `ExitAreaFight` - the
+craft skips the steps that place the spectator actors. A save the owner
+records in chapter 5 in area 79 before the series' first bout (before
+"Take your places please!") would prove the win and the rest of the series.

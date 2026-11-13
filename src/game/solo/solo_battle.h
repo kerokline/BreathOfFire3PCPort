@@ -81,6 +81,16 @@ void SoloBattle_RestoreAtStep7();
 // list's first byte for Party_PlaceAtSlots. Only valid right after it.
 unsigned char SoloBattle_PlaceLeaderId();
 
+// Whether the battle under way is fought by the champion alone: the mode
+// asks for it (Solo_ChampionFights(), which reads nothing with SoloCharacter
+// off), the battle's member count 0x904AB0 is 1 and its one member,
+// ObjTrio's first record, holds the champion's record (+0x148) - whether
+// Arm wrote that party or the scene had already left the champion alone.
+// Read from the game's own bytes, so a quick-load mid-battle answers the same.
+// Chapter 5's one-on-one series asks it on a lost bout (boss_nina.cpp,
+// EndAreaFight; docs/solo-character-combat.md 12).
+bool SoloBattle_ChampionFightsThis();
+
 // GameMode_Start, first: a save not put back (a loss) is dropped.
 void SoloBattle_Drop();
 
