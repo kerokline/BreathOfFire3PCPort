@@ -435,6 +435,67 @@ field mode, fight byte, chapter, both lists, the count, the set and records 0, 1
 frame, the second prompt included. So no champion leaves record 4 at 0 HP where plain does not: on this
 build no champion fights fight 34 alone.
 
+### 6d. The final table (2026-11-13)
+
+Every boss row on one build, `solo/round` `a3bcacba` (CB's step-7 restore fix and fight rules in), root
+`D:\bof3x-runs\solo1112\RT\root\bx`, `--mark-at-cut` on the champion sides, the sweep's kill ending each
+fight. Solo sides now wait for the cross with the same seek pressed one frame on, one frame off (a check
+every second frame sees the two frames phase 1 lasts after a command is entered, and the battle's
+messages still get their confirms); a row that does not return says from the phase watches whether the
+battle was still turning at the end. In brackets: what the mode did with the party-set row.
+
+| Fight | plain | ryu | nina | garr | rei | momo | peco |
+|---|---|---|---|---|---|---|---|
+| 2 Nue | escape | escape (kept) | escape (row changed) | escape (row changed) | escape (kept) | escape (row changed) | escape (row changed) |
+| 8 | win | win (kept) | win (row changed) | win (row changed) | win (kept) | win (row changed) | win (row changed) |
+| 12 Amalgam | win | win (kept) | win (row changed) | win (row changed) | win (kept) | win (row changed) | win (row changed) |
+| 13 Balio, Sunder | loss | loss (kept) | loss (row changed) | loss (row changed) | loss (kept) | loss (row changed) | loss (row changed) |
+| 16 Balio, Sunder, Nina | win | win (already alone) | win (kept) | win (kept) | win (**stands down**: no row holds id 4 with id 1) | win (row changed) | win (row changed) |
+| 23 Bullies | win | win (kept) | win (kept) | win (row changed) | win (row changed) | win (row changed) | win (kept) |
+| 24 Stallion | win | win (kept) | win (kept) | win (kept) | win (row changed) | win (row changed) | win (row changed) |
+| 29 Dolphin | win | win (kept) | win (kept) | win (row changed) | win (row changed) | win (kept) | win (row changed) |
+| 35 Gaist | escape | escape (already alone) | escape (row changed) | escape (kept) | escape (kept) | escape (row changed) | not ended, the battle still turning (row changed) |
+| 46 (sample) | win | - | - | not ended, the battle still turning (row changed) | - | - | - |
+
+Every ended row: the same kind of ending as plain, the party after the return as plain's, the scene
+after the return as plain's (fight 13: the loss carries the story on to area 3, as plain's). Restore
+masks `0x1F` (set kept), `0x3F` (row changed), `0x15` / `0x35` on fight 16. **No crash and no `a frame of
+no pieces` line in any of the 68 runs**; the three that hit the driver crash on `59137505` (fight 2 nina,
+fight 8 nina, fight 24 rei), three runs each on this build: 9 of 9 ended, no crash, mask `0x3F` each time.
+
+The two rows that do not end are the harness's way of ending a fight, not a fault of the mode: on fight
+35 the boss's HP climbs back each turn (0x17C to 0x3C9 over 9,000 frames) after peco's kill round and the
+escape the other sides reach never comes; on fight 46 (five enemies, `Air Raid`) garr's attacks swing
+(the frames show them) but no enemy's HP falls after the kill poke over 8,000 frames, where adult Ryu
+(plain) and, in the coordinator's runs, rei and nina win it. Fight 46 garr has to start with
+`BOF3X_SOLO` set (`solo_garr`): its fight starts before the cut, so a mark poked there arms nothing (the
+`mark_garr` row is the game's own party).
+
+**The other fights, for one table:**
+
+| Fight | Build | Result |
+|---|---|---|
+| 7 (chapter 0) | `59137505` | ryu: no arm line, as plain (the stand-down through the intro) |
+| 25 Beyd (craft) | `59137505` | the five champions arm (before CB's Beyd stand-down; not rerun since, as asked) |
+| 31 Angel Tower Garr | `953de965` / `2d745a5f` | all sides win as plain (section 6c) |
+| 32 D.Zombie | `c982fc84` | all six win, party put back as plain (section 6a) |
+| 34 Mikba (owner's route) | `2d745a5f` | every champion stands down; identical to plain (section 6c) |
+| 22 Garr, chapter 5 | - | no craft reaches it |
+
+**Two Garrs, the last question: does record 2's extra EXP survive into chapter 8?** Read from the code,
+not run: `Scena08_Start` (`src/game/scenario/scena_08_2.cpp`) sets the joined bit on all eight records,
+calls `Party_HealJoined` (`0x533E50`), then clears the joined bit on records 1..7; it writes no EXP and no
+level. So with champion garr record 2 carries its 16,259 EXP (plain: 15,859) into chapter 8, and the
+battle's HP write-back is replaced by the heal - in the straight replay record 2's HP goes 152 -> 178 at
+the chapter change (frame 9,428), which is that heal. The route with `BOF3X_SOLO=garr` from the start was
+not run: the owner's battle presses would not line up with a different fighter's turns.
+
+**Argued from the code only** (no run shows it): the chapter-8 heal above; what `Party_DropIn(1)` lists
+on fight 31's area; the Beyd stand-down's effect on fight 25 on the current build; what fight 46 garr's
+attacks do to five flying enemies (the frames show the swings, not why no HP falls); the ending fight 35
+expects when its boss is never reduced; record 4's dragon form and revive inside the Mikba battle (the
+record watches see the save block's records, not the battle's working copies).
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round
