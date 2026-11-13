@@ -190,7 +190,7 @@ void InterpDump(const wchar_t* what) {
     const unsigned long fc = static_cast<unsigned long>(Frame_Counter);
     if (!on || fc % 100 > 1) return;
     wchar_t path[260];
-    swprintf(path, 260, L"%ls\%06lu_%ls.bmp", dir, fc, what);
+    swprintf(path, 260, L"%ls/%06lu_%ls.bmp", dir, fc, what);
     const bool ok = render::SaveFrame(path);
     static int said;
     if (said < 4) {
