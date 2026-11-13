@@ -250,8 +250,8 @@ Agents number nothing in the ledger or `known-defects.md`.
 Merged in the order the docs, SC (`solo/sc`), LA (`solo/la`), no conflicts;
 the switch table and the presets regenerated after.
 
-- **SC.** `src/game/solo/solo.{h,cpp}`; two ledger entries on that branch (the two after DIV-0227 there; not in `main`'s ledger until the code merges), `SoloCharacter` and
-  `SoloChampionIfPresent`, both `Default: off`, each saying that only
+- **SC.** `src/game/solo/solo.{h,cpp}`; DIV-0228 `SoloCharacter` and
+  DIV-0229 `SoloChampionIfPresent`, both `Default: off`, each saying that only
   the switch, the mark and the decision module are built. `Solo_Read` after
   `Behaviour_Read`; `Solo_Active`, `Solo_ChampionRecord`, `Solo_ChampionId`
   (the record's `+9`, read live), `Solo_ChampionJoined`,
@@ -592,6 +592,151 @@ For the owner:
 
 Still open: whether a `BOF3X_SOLO` value that names no
 champion stops the game with the mode off (4a).
+
+## 6d. The owner's fourth answer (2026-11-12, on the combat half's hand-back)
+
+**A champion at 0 HP when a battle starts** (chapter 8's `Scena08_Scene11`
+leaves record 4 so; group CB's stand-down rule): "I think the Mikba fight is
+the 0hp Rei fight. For that one, yeah, let's let Rei start dead, and make an
+idea to maybe handle it differently." The stand-down stays as built: the
+game's own party fights that battle and the champion starts dead as the
+original has it. IDEAS I66 holds the other ways. Which fight it is has not
+been measured; the name is the owner's recollection.
+
+## 6e. The owner's fifth answer (2026-11-12 evening): three walkers, as the game has them
+
+The scene audit ([`solo-character-scenes.md`](solo-character-scenes.md)) found
+that a map team of two breaks the scenes that place the party: `Party_DropIn`
+kind 0 / `0x80` misses when fewer members walk than an entry names, nobody is
+placed, and the scene waits on counters the members' scripts set (one case
+read, chapter 12's first entry to area `0x86`; about 453 placement entries
+miss with two walkers, by a scan of the tables). Asked which way to go, the
+owner: "lets by default have 3 walkers like the normal game. we're already
+subbing in the single character, so 3 walkers shouldn't be different, right?"
+
+**Where 6e and an earlier section differ, 6e holds.** The mode is the combat
+half, the save's mark and the level-1 start. The map party, the L swap, the
+joins and both members screens are the game's own. Taken out of `solo/round`
+the same day, kept on their branches: the field half (`solo/fs`, the fold, the
+L swap's bring-out, the join without the choose-who-leaves screen), the scene
+guards (`solo/sa`) and the members screens' scrolling reserve (`solo/ms` at
+`9b60b48d`). Kept: the champion's mark on the members screens.
+
+It is not different for the combat half: it reads and writes the second list,
+the count, the formation and the party set, never the walkers
+([`solo-character-combat.md`](solo-character-combat.md); run A there is a
+champion alone with three walkers back on the field after). 6a item 1 (the
+hero plus one other) and sections 0, 3 and 4's FS, MS and fold text are
+history. "By default" is read as leaving room for a map fold as a later
+option, not as a switch built now; nothing of it is built.
+
+## 6f. The owner's sixth answer (2026-11-12 night): the game's screens and team swapping stay unchanged
+
+On the captures of the champion's panel in the cleared save's gold frame
+([`solo-character-screens.md`](solo-character-screens.md) 5a): "the border
+doesn't quite work. I think what I'm deciding is that the solo character mode
+will work without the character swapping though, since the way we implemented
+the swapping in works independent of them being in the team. So the ui of the
+game can remain unchanged, and we don't need to change the team swapping
+functionality, we just need to make sure the combat swap works clean enough
+during the couple unusual boss encounters."
+
+**Where 6f and an earlier section differ, 6f holds.** The mode is three
+things: the save's mark (SC), the level-1 start at New Game (LV) and the
+combat swap (CB). Nothing on the field, in the menus or on the members screens
+changes. The champion's mark on the members screens is taken out of
+`solo/round` (kept on `solo/ms`). What is left to do is the combat swap in the
+unusual encounters: chapter 6's one-member fight (set-up 25, `SortParty` /
+`Boss25_Exit`), the fight the story starts with record 4 at 0 HP (6d), an
+event battle with `0x904AE5` bit 4, a dragon form taken by a champion with a
+party of three, a loss, a flee, a quick-load mid-battle, and the crash on the
+field after a battle that changed the party set
+([`solo-character-combat.md`](solo-character-combat.md)).
+
+## 6g. The owner's seventh answer (2026-11-12 night): the two Beyd fights stay the original's
+
+"the beyd fight is a minigame, not a true boss - I would turn off the logic
+for those 2 fights (the beyd fight, and the beyd vs zigg fight)". The mode
+stands down for those two battles: the swap does not arm, as for a champion at
+0 HP (6d). Which battle ids they are is read from the code by group CB
+(`boss-fights.md` has fights 25 and 26 at chapter 6 run 8, area 92, and fight
+27 at run 9 beside them); chapter 6's own one-member party (`SortParty`,
+`Boss25_Exit`, 0a item 2) is then never met by a swap of ours.
+
+## 6h. The owner's eighth answer (2026-11-12 night): the one-on-one series, fights 18 to 20
+
+Group CB's audit found that fights 18 to 20 (chapter 5, area 79; `boss-fights.md`
+has the enemies as Claw, Cawer, Patrio and Dodai), on the path where a loss
+continues, pick the placement after the battle from member 0's id, which in the
+mode is the champion's ([`solo-character-combat.md`](solo-character-combat.md)
+11). The owner: "that fight series is interesting in that it's a series on 1-1
+fights. For that, if a solo character looses, it passes to the next character
+in the team - in this case, we can progress straight to game over if that's
+possible." So in the mode the champion fights each bout, and a bout the
+champion loses is a game over, not the next member's turn. How the series
+works is the owner's description; group CB reads it from the code before
+building.
+
+## 6i. The owner's ninth answers (2026-11-12 night): the stand-down calls
+
+Asked about group CB's four rules ([`solo-character-combat.md`](solo-character-combat.md) 11):
+"For the calls, I agree with 1 as built. 2) and 3) I'd like to improve on - if
+the Mikba fight goes ok with a solo character, let's try to also try reviving
+and healing Rei to see if he can continue the fight solo. Is the reason there's
+no option with Rei in the balio fight because his child graphics are never in
+a scene with Nina? Could we create such a graphic set to let the fight work as
+intended?"
+
+1. **The three Beyd battles (25, 26, 27) stand down.** Agreed as built.
+2. **Fight 16 with record 4 as champion**: not accepted as a stand-down. The
+   reason is M1's table: id 4 is in one early row only, `(0,3,4)`, and id 1 in
+   `(0,1,2)`, `(0,1,5)`, `(0,1,6)`, so no row holds both. Whether a set of ours
+   holding both can be built on the player's machine from their own files (the
+   engine / data split: nothing of the game's is shipped) is group PS's read.
+3. **Fight 34**: not accepted as "the party always fights". Two trials, by
+   group CB on the owner's route `mikbaFight`: a champion other than record 4
+   alone (what `Boss34_Event`'s pick of record 4 does with no such member, and
+   what makes it sound); and record 4 as champion revived and healed at the
+   battle's start, alone. The owner's play of the fight says a revived record 4
+   changes form at once and is not the player's to command; the trial shows
+   what a solo fight of that is.
+4. Fights 18 to 20: 6h.
+
+## 6j. The owner's tenth answer (2026-11-13): the Mikba fight, fight 34
+
+The owner, in their words: "for other champions for that one fight, let's
+leave rei in the team. So the team becomes rei (dead), champion. That's still a
+single character combat, and will let the game logic progress. If a person
+revives rei, it's against the spirit of the challenge, but technically they
+could".
+
+What it sets, with the trial's findings (`solo-character-combat.md`):
+
+- **Champion is record 4:** he fights alone, revived and healed, as the trial
+  ran it to a win (the owner's 6i asked for that trial).
+- **Any other champion:** the battle's party is two, record 4 as the fight has
+  him (0 HP at the start) and the champion. No rule of ours stops the player
+  from reviving him.
+- This replaces the stand-down rule for fight 34 and 6d's reading for this
+  fight. The trial switch `BOF3X_CB_TRIAL34` goes.
+- The fight's set-up scans all three party records for record 4 without a live
+  test (the audit of 2026-11-13: the only boss file that does). The records the
+  battle does not hold must not match.
+
+## 6k. The owner's eleventh answer (2026-11-14): the two fights the story has the party lose
+
+The owner, in their words: "there are 2 fights that are 'must lose' - the
+first balio and sunder fight, and the first garr fight (the chapter 5 ending
+fight). We should probably disable the solo character for those fights, as
+they're not meant to be won anyway".
+
+What it sets: fights 13 (Balio and Sunder, chapter 2, area 11) and 22 (Garr,
+chapter 5, area 80), as `boss-fights.md` numbers them, stand down as the Beyd
+fights do (6g): the game's own party fights them, whoever the champion is.
+Fight 13 was run in the mode before this (a champion alone lost it and the
+story went on, `solo-character-proof.md` 6d); fight 22 has no save that
+reaches it, so its stand-down rests on the rule's self-test and on fight 13's
+run.
 
 ## 7. Not in this round
 

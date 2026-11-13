@@ -278,3 +278,94 @@ editor that writes level or stats is the player's own act.
   holds a champion byte with a default-level champion.
 - CB (or LV): record 4's equipment at chapter 8 when it is the champion.
 - Section 6 gains the two owner's calls above (willpower, late stamp).
+
+## As run: group LV (2026-11-12, branch `solo/lv`)
+
+Built from section 5 as changed by the round doc 6c (the owner's third
+answers): the reset happens at New Game only, the guard is a check, and
+willpower is not touched.
+
+**Where it runs.** `TitleFlow_NewGame` (`0x5880E0`,
+`src/game/core/sound.cpp`) calls `solo::Solo_StampNewGame()` right after
+`NewGame_InitCharacters` and before `Scenario_Start(0)`. With `SoloCharacter`
+off it returns at its first test, reading and writing nothing. With it on it
+writes `Solo_ChampionMark` (`0x904A21`): `BOF3X_SOLO`'s record + 1, or 0 when
+`BOF3X_SOLO` names none (New Game does not zero the block, so a stale mark is
+cleared). With a champion it then calls `Solo_LevelReset`
+(`src/game/solo/solo_level.cpp`). SC's first-area-entry stamp is unchanged;
+at chapter 1's first entry it finds the mark set and writes nothing.
+
+**What the reset does**, for whichever champion record it is given, all from
+the image's own `Char_DefaultRecords` and `Char_ExpTable` at run time (no
+stat value in our source): the whole live record is checked against the
+default record but for the three willpower bytes (a Fatal on any other
+difference); the default's master, master level and six bias bytes must be
+off and each base word below 999 (Fatal otherwise); the six level-1 words
+are the default's less the gains of rows 1..N-1, and a negative one is a
+Fatal; one copy of each non-zero row ability is taken out of its list, rows
+N-1 down to 1 and `+7` before `+6`, the last copy each time, with the rest of
+the list moved up; then level 1, EXP 0, the base words, `Char_RecalcStats`,
+and HP and AP to the new maxima. A record whose default level is 1 (records
+0, 3 and 6 by the run's log, not by this sentence) is left as it is.
+
+**Willpower and the order.** `NewGame_InitCharacters` computes willpower
+inside its own copy loop, so it is already the default level's when the
+reset runs after it. The reset writes none of `+0x4E`, `+0x1C`, `+0x2E`;
+`Char_RecalcStats` copies `+0x4E` over `+0x2E`, which holds the same value.
+The run's log shows the three bytes the same before and after for each
+champion, and 600 frames into the game.
+
+**The round trip** (`Solo_LevelSelfTest`, run from `Solo_SelfTest`): the
+eight record slots are saved, `NewGame_InitCharacters` itself makes the New
+Game state, and for each of records 0..6 the reset runs, the default's EXP is
+written back and the game's own `Char_LevelUp` climbs the record, which then
+gets the recompute `TitleFlow_EnterGame` (`0x588800`) gives every record at
+Game_Step 5. The result equals the default record put through the same
+recompute **byte for byte, ability lists and their order included**, except
+current HP and AP (`+0x18..+0x1B`): a level-up does not refill them, so they
+stay at the level-1 maxima. The slots are restored whole after. All seven
+records pass in both hosts (`solo self-test: 132 checks passed`). So a
+skill is not filed twice on the way back up: the removal leaves exactly the
+room the climb fills.
+
+**Found on the way.** For records 0..5, Capcom's prebuilt effective block
+`+0x20..+0x3F` in the default record differs from what `Char_RecalcStats`
+makes from the same record, in 3 bytes each (record 6: none); for record 0
+one of them is `+0x24`. Game_Step 5 recomputes every record after New Game in
+the original as well, so the recomputed block is what holds in play. Not a
+defect of ours; noted because a test that compares a fresh default record
+with a recomputed one must recompute both.
+
+**What else at New Game reads a level or a stat.** Read to the end of the
+sequence: `NewGame_InitCharacters` (willpower, above); `TitleFlow_NewGame`'s
+other steps (`0x9039F2`, `Game_AreaNumber`, `Scenario_Start(0)`, half of
+`Cond_Flags`, `Transition_Start(0)`) touch no record; `TitleFlow_EnterGame`
+at Game_Step 5 rolls `NewGame_RollGrowth` into `0x903640` and clears it at
+once, and recomputes all eight records from their base blocks, which gives
+the reset record the same block again (HP is cut to the maximum only, and is
+already at it). The field's member records (`0x802D40`) are built by
+`Field_PartyLoad` at the first area load, and a battle's working copies at
+the battle, both from `CharacterRecords` after the reset. EXP to the next
+level is not stored (section 3). Nothing cached from the default is left
+stale; the run's peeks 600 frames after New Game show the reset record as
+the reset left it.
+
+**Chapter 8 and record 1.** Nothing is built for either (6c items 3 and 4).
+`Scena08_SetUpRecord4` adds its 10,000 EXP to whatever record 4 holds and
+calls `Char_LevelUp`, long after New Game; a level-1 record 4 climbs from
+level 1 and gets the removed abilities back once each, as the round trip
+shows for any climb. Record 1's default level 5 is measured in the run's
+log (`before: level 5`).
+
+**Checks** (scratch under `D:\bof3x-runs\solo1112\LV\root`): the i686 build;
+`ledger_check.py` and `ledger_switches.py --check`; the self-test headless in
+the hosted build with `BOF3X_SHADOW='*'` (exit 0) and in the exe host
+(exit 0); a New Game played headless by a peek recipe of the group's own
+(`lv_newgame.txt` in the root, not a route) with `SoloCharacter` on and each
+of garr, nina, rei and momo, with it on and no champion, and with it off.
+Off and on-without-champion give the same peeks: the mark 0 and every
+record at its default level, EXP, maximum HP and willpower.
+
+**Not run:** a stale mark cleared by a New Game (no headless way to set the
+byte before the title; the code writes 0 unconditionally there); the 64-bit
+build; the state-hash off-proof (the coordinator's).

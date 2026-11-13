@@ -295,6 +295,32 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14
 END
 
+// The solo-character round (docs/solo-character-round.md 4 and 6a): Game
+// Options' fourth sub-tab. The mode and its option are behaviours in on= (the
+// boxes edit that line, ConfigBehaviourEdit); the champion is solo.champion=.
+// The champion and the option are grey while the mode is off; every control
+// shows, greyed or not, and the last line says why one is grey.
+IDD_PAGE_SOLO DIALOGEX 0, 0, 290, 160
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Solo character", -1, 0, 0, 286, 158
+    AUTOCHECKBOX    "&Solo Character Run - Chosen character fights all battles alone",
+                    IDC_SOLO_MODE, 7, 12, 274, 10
+    LTEXT           "Rule does not start until after reaching Cedar Woods.",
+                    IDC_SOLO_MODENOTE, 19, 24, 262, 18
+    LTEXT           "&Character:", IDC_SOLO_CHAMPLABEL, 19, 47, 50, 9
+    COMBOBOX        IDC_SOLO_CHAMPION, 71, 45, 110, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Character choice is written on a new game or first save. After that, a change here does not alter it.",
+                    IDC_SOLO_CHAMPNOTE, 19, 63, 262, 27
+    AUTOCHECKBOX    "The chosen character only fights &when they are in the party.",
+                    IDC_SOLO_IFPRESENT, 19, 94, 262, 10
+    LTEXT           "If they are not, the party fights.",
+                    IDC_SOLO_IFNOTE, 31, 106, 250, 27
+    LTEXT           "", IDC_SOLO_WHY, 7, 137, 274, 18
+END
+
 // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the
 // PlayStation's version of a set of differences or the PSP's, on Game
 // Options' first two sub-pages. Suite i's ids are 1040 + 10 i plus: 0 the label, 1 the
@@ -358,12 +384,12 @@ EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Mods", -1, 0, 0, 336, 174
-    LTEXT           "A mod is a .zip file with a mod.toml and data files, or the patch file of a romhack (.xdelta or .ppf). A mod cannot contain programs. The launcher checks each mod, then builds it with your copies of the game.",
+    LTEXT           "A mod is a .zip file with a mod.toml and data files, or the patch file of a romhack (.xdelta or .ppf), which can be in a .zip or .7z archive. A mod cannot contain programs. The launcher checks each mod, then builds it with your copies of the game.",
                     -1, 9, 12, 320, 27
     LISTBOX         IDC_MOD_LIST, 9, 42, 320, 44, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_BORDER | WS_TABSTOP
     PUSHBUTTON      "&Remove", IDC_MOD_REMOVE, 279, 89, 50, 14
 
-    LTEXT           "Add a mod (.zip, .xdelta or .ppf):", -1, 9, 105, 200, 9
+    LTEXT           "Add a mod (.zip, .7z, .xdelta or .ppf):", -1, 9, 105, 200, 9
     EDITTEXT        IDC_MOD_PATH, 9, 115, 210, 13, ES_AUTOHSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Browse...", IDC_MOD_BROWSE, 223, 114, 50, 14
     PUSHBUTTON      "A&dd", IDC_MOD_ADD, 279, 114, 50, 14

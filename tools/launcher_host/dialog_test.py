@@ -187,6 +187,8 @@ IDC_MOD_LIST, IDC_MOD_REMOVE, IDC_MOD_PATH, IDC_MOD_ADD, IDC_MOD_STATUS, IDC_MOD
 # The Mods tab's sub-row (Data, Extras; the owner's call, 2026-10-22) and Extras' toggle, ruby_ui=:
 # the Settings page's Row above the text box and its label hidden unless it is on.
 IDC_SUB0, IDC_RUBYLABEL, IDC_EXTRA_RUBY, IDC_EXTRA_RUBYNOTE = 1032, 1013, 1720, 1721
+# Game Options' Solo character sub-tab (the solo-character round): the mode, the champion, the option.
+IDC_SOLO_MODE, IDC_SOLO_CHAMPION, IDC_SOLO_IFPRESENT = 1740, 1743, 1745
 
 SCR = tempfile.mkdtemp(prefix="bof3x_dialog_")
 L = os.path.join(SCR, "dlg", "launcher")
@@ -672,6 +674,12 @@ def ruby_ui_checks(env, report):
         wait_idle(item)
         got["page2"] = (vis(item, IDC_CH_STEAL_), vis(item, IDC_CH_INFO_))
         shot(dlg, "cheats_page2")
+        # the solo-character round: the fourth sub-tab, no third row over it, its boxes shown
+        u.SendMessageW(item(IDC_SUB0 + 3), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["solo"] = (vis(item, IDC_SOLO_MODE), vis(item, IDC_SOLO_CHAMPION), vis(item, IDC_SOLO_IFPRESENT),
+                       vis(item, IDC_CH_STEAL_), [vis(item, IDC_SHEET0 + k) for k in range(2)])
+        shot(dlg, "solo_character")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         got["back"] = (vis(item, IDC_EXTRA_RUBY), vis(item, IDC_MOD_LIST))   # the tab keeps its sub-page
         got["sheets_hidden"] = [vis(item, IDC_SHEET0 + k) for k in range(2)]
@@ -693,8 +701,9 @@ def ruby_ui_checks(env, report):
            lh[0] < ls and lh[0] == lh[1], "hidden %r (the box's top %r), shown %r" % (lh[0], lh[1], ls))
     report("  the Mods tab comes back on the sub-page it was left on", got.get("back") == (True, False),
            repr(got.get("back")))
-    report("  Game Options' sub-row: Graphics and audio, Data, Cheats; no third row over the first sub-tab",
-           got.get("gamerow") == [("Graphics and audio", True), ("Data", True), ("Cheats", True), ("", False)]
+    report("  Game Options' sub-row: Graphics and audio, Data, Cheats, Solo character; no third row over the first sub-tab",
+           got.get("gamerow") == [("Graphics and audio", True), ("Data", True), ("Cheats", True),
+                                  ("Solo character", True)]
            and got.get("nosheets") == [False, False], "%r %r" % (got.get("gamerow"), got.get("nosheets")))
     report("  the Cheats sub-tab: a third row, Page 1 / Page 2, Page 1 up (Steal shown, the enemy box not)",
            got.get("sheets") == [("Page 1", True), ("Page 2", True)] and got.get("page1") == (True, False),
@@ -702,6 +711,8 @@ def ruby_ui_checks(env, report):
     report("  Page 2 on its button (the enemy box shown, Steal not); the row hidden over Mods",
            got.get("page2") == (False, True) and got.get("sheets_hidden") == [False, False],
            "%r %r" % (got.get("page2"), got.get("sheets_hidden")))
+    report("  Solo character: the mode, champion and option boxes shown, the cheats and the third row not",
+           got.get("solo") == (True, True, True, False, [False, False]), repr(got.get("solo")))
     report("  ruby_ui=1 written; ruby=en-US as read",
            lines(ini).get("ruby_ui") == "1" and lines(ini).get("ruby") == "en-US",
            "%r %r" % (lines(ini).get("ruby_ui"), lines(ini).get("ruby")))

@@ -69,6 +69,7 @@ enum class Type {
 enum class List {
     kNone, kItem0, kItem1, kItem2, kItem3, kKeyItem, kAbility, kMember,
     kMaster, kFormation, kChapter, kArea,   // by the reference names
+    kSoloChampion,   // the solo-character mark's values (DIV-0228): None and the six champions
 };
 
 // The spec's classes (section 7): E a normal field, A advanced, D derived (the

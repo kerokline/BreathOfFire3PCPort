@@ -26,6 +26,7 @@
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
 #include "game/scenario_harness.h"
+#include "game/solo/solo.h"
 #include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "game/window_task.h"
@@ -1007,6 +1008,10 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         }
         mode_flow::g.scenario_start(chapter);
     }
+    // DIV-0228 (switch SoloCharacter, ours): the run's champion mark, stamped
+    // once when the chapter is past the intro and the save has none. Off, it
+    // returns at its first test and reads nothing.
+    solo::Solo_Stamp();
     mode_flow::g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber]))));
     const auto hook = static_cast<std::uint32_t>(mode_flow::Long(Area_Descriptors[Game_AreaNumber] + 0x40));
     if (hook != 0) Fn<mode_flow::Handler>(hook)();

@@ -606,8 +606,8 @@ void Save(HWND dlg, State& s) {
                     L"You can also change the names in Characters before you save.\n";
         }
         text += L"- The button setup goes with the save.\n";
-        if (to_card && (out[0x1040] || out[0x7C] || out[0x7D]))
-            text += L"- The editor clears the values that only the PC game has (Mountain passes open, two options).\n";
+        if (to_card && (out[0x1040] || out[0x1041] || out[0x7C] || out[0x7D]))
+            text += L"- The editor clears the values that only the PC game has (Mountain passes open, Solo champion, two options).\n";
         if (to_card)
             text += L"\nNobody has loaded a save from the PC game in a PlayStation game or an emulator yet. Keep a "
                     L"copy of your memory card.\n";

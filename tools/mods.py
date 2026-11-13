@@ -143,6 +143,11 @@ KNOWN_KEYS = ("id", "name", "version", "author", "url", "credit", "requires", "n
               "patch_sha256", "result_sha256", "skip")
 # The patch formats the tools read: the name the list gives each, its file extension, its reader.
 PATCH_FORMATS = {"xdelta": ".xdelta", "ppf": ".ppf"}
+# An author's archive of his patch files (a .7z, or a .zip with no mod.toml): the file itself, what one of its
+# folders may unpack to, and the patch files it may hold.
+ARCHIVE_MAX = 16 << 20
+ARCHIVE_UNPACK_MAX = 64 << 20
+ARCHIVE_PATCHES_MAX = 16
 # A patch file added by itself: the bound of a mod's zip.
 PATCH_MAX = 8 << 20
 # What the player is told about a patch the list does not have (the owner's words, 2026-11-13).
@@ -590,7 +595,7 @@ def read_patch(path, known=None):
     nothing."""
     if not os.path.isfile(path):
         raise Refused("there is no file at %s" % path)
-    if path.lower().endswith((".7z", ".rar", ".gz", ".xz")):
+    if path.lower().endswith((".rar", ".gz", ".xz")):
         raise Refused("%s is an archive the tools do not open: unpack it, then add the patch file that is in it "
                       "(.xdelta or .ppf)" % os.path.basename(path))
     size = os.path.getsize(path)
@@ -598,21 +603,27 @@ def read_patch(path, known=None):
         raise Refused("the file is %d bytes, over the %d a patch may be" % (size, PATCH_MAX))
     with open(path, "rb") as f:
         patch = f.read(PATCH_MAX + 1)
+    return _patch_mod(patch, os.path.basename(path), load_known() if known is None else known)
+
+
+def _patch_mod(patch, shown, known):
+    """read_patch's answer for a patch's bytes; `shown` is the file's name
+    (its own, or the one an archive gives it)."""
     sha = sha_bytes(patch)
     try:
         fmt, total = patch_format(patch)
     except PatchFormat as e:
         raise Refused("%s cannot be applied: it is not a .zip mod and not a patch in a format the tools read "
-                      "(.xdelta or .ppf; unknown format: %s)" % (os.path.basename(path), e))
+                      "(.xdelta or .ppf; unknown format: %s)" % (shown, e))
     if total > RESULT_MAX:
-        raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (os.path.basename(path), total, RESULT_MAX))
-    meta = (load_known() if known is None else known).get(sha)
+        raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (shown, total, RESULT_MAX))
+    meta = known.get(sha)
     if meta is not None:
         meta = dict(meta)
         return meta, {MOD_TOML: known_toml(meta), meta["patch"]: patch}
     k = KINDS["disc-patch"]
     build = next(iter(k["builds"]))
-    stem = os.path.splitext(os.path.basename(path))[0]
+    stem = os.path.splitext(shown)[0]
     name = "".join(c for c in stem if ord(c) >= 32).strip()[:64] or "patch"
     meta = {"kind": "disc-patch", "id": "patch-" + sha[:6], "name": name, "version": "0", "requires": [k["builds"][build][0]],
             "build": build, "patch": "patch-%s%s" % (sha[:6], PATCH_FORMATS[fmt]), "patch_sha256": sha,
@@ -625,18 +636,103 @@ def read_patch(path, known=None):
     return meta, {MOD_TOML: note.encode("utf-8"), meta["patch"]: patch}
 
 
-def read_any(path, known=None):
-    """A mod zip, or a patch file by itself (anything that is not a .zip). A
-    .zip with no mod.toml is an author's archive of his patch files, not a
-    mod: the sentence says to unpack it."""
-    if path.lower().endswith(".zip"):
+def _archive_members(path):
+    """[(member name, size, read())] for the files of a .7z or a .zip, or
+    Refused. Nothing is written, and no member's name is used as a path."""
+    shown = os.path.basename(path)
+    if path.lower().endswith(".7z"):
+        import sevenzip
+        with open(path, "rb") as f:
+            blob = f.read(ARCHIVE_MAX + 1)
         try:
-            return read_zip(path)
-        except Refused as e:
-            if "no mod.toml" in str(e):
-                raise Refused("%s has no mod.toml, so it is not a mod's zip. When it is the archive of a romhack, unpack "
-                              "it, then add the patch file that is in it (.xdelta or .ppf)" % os.path.basename(path))
-            raise
+            arc = sevenzip.Archive(blob, ARCHIVE_UNPACK_MAX)
+        except sevenzip.ArchiveError as e:
+            raise Refused("%s cannot be opened: %s" % (shown, e))
+
+        def reader(i):
+            def read():
+                try:
+                    return arc.read(i)
+                except sevenzip.ArchiveError as e:
+                    raise Refused("%s cannot be opened: %s" % (shown, e))
+            return read
+        return [(f["name"], f["size"], reader(i)) for i, f in enumerate(arc.files) if not f["dir"]]
+    import zlib
+    try:
+        z = zipfile.ZipFile(path)
+    except (zipfile.BadZipFile, OSError) as e:
+        raise Refused("not a readable .zip (%s)" % e)
+
+    def reader(info):
+        def read():
+            if info.flag_bits & 0x1:
+                raise Refused("%s cannot be opened: it is encrypted" % shown)
+            try:
+                with z.open(info) as f:
+                    return f.read(PATCH_MAX + 1)
+            except (zipfile.BadZipFile, zlib.error, EOFError, OSError, NotImplementedError, RuntimeError) as e:
+                raise Refused("%s: damaged or not readable in the zip (%s)" % (info.filename, e))
+        return read
+    return [(i.filename, i.file_size, reader(i)) for i in z.infolist() if not i.is_dir()]
+
+
+def read_archive(path, known=None):
+    """(meta, {file name: bytes}) for a romhack's archive as its author
+    released it: a .7z, or a .zip with no mod.toml, that holds his patch
+    file. The answer is read_patch's for that file. An archive of several
+    patches (one for each revision of a disc): the one the release's list
+    knows; with none in the list, or more than one, the player unpacks the
+    archive and says which. Reads; writes nothing."""
+    if not os.path.isfile(path):
+        raise Refused("there is no file at %s" % path)
+    shown = os.path.basename(path)
+    size = os.path.getsize(path)
+    if size > ARCHIVE_MAX:
+        raise Refused("%s is %d bytes, over the %d the archive of a patch may be" % (shown, size, ARCHIVE_MAX))
+    members = _archive_members(path)
+    found = [m for m in members if m[0].lower().endswith(tuple(PATCH_FORMATS.values()))]
+    if not found:
+        raise Refused("%s holds no patch file (.xdelta or .ppf)%s: it is not a mod"
+                      % (shown, "" if path.lower().endswith(".7z") else " and no mod.toml"))
+    if len(found) > ARCHIVE_PATCHES_MAX:
+        raise Refused("%s holds %d patch files, over the %d this reads: unpack it, then add the patch file you want"
+                      % (shown, len(found), ARCHIVE_PATCHES_MAX))
+    known = load_known() if known is None else known
+    patches = {}                                                        # sha256 -> (the member's own name, bytes)
+    for name, size, read in found:
+        base = re.split(r"[/\\]", name)[-1]
+        if size > PATCH_MAX:
+            raise Refused("%s in %s is %d bytes, over the %d a patch may be" % (base, shown, size, PATCH_MAX))
+        patch = read()
+        if len(patch) > PATCH_MAX:
+            raise Refused("%s in %s is over the %d bytes a patch may be" % (base, shown, PATCH_MAX))
+        patches.setdefault(sha_bytes(patch), (base, patch))
+    listed = [v for k, v in patches.items() if k in known]
+    if len(listed) == 1 or (not listed and len(patches) == 1):
+        base, patch = listed[0] if listed else next(iter(patches.values()))
+        return _patch_mod(patch, base, known)
+    if listed:
+        raise Refused("%s holds %d patches that are in the list of known mods (%s): unpack it, then add the one you want"
+                      % (shown, len(listed), ", ".join(b for b, _ in listed)))
+    raise Refused("%s holds %d patch files and none is in the list of known mods: unpack it, then add the one that is "
+                  "for your disc" % (shown, len(patches)))
+
+
+def read_any(path, known=None):
+    """A mod zip (a .zip with a mod.toml), a romhack's archive (a .7z, or a
+    .zip with no mod.toml), or a patch file by itself (anything else)."""
+    low = path.lower()
+    if low.endswith(".7z"):
+        return read_archive(path, known)
+    if low.endswith(".zip") and os.path.isfile(path):
+        try:
+            with zipfile.ZipFile(path) as z:
+                is_mod = MOD_TOML in z.namelist()
+        except (zipfile.BadZipFile, OSError):
+            is_mod = True                                               # read_zip says what is wrong with it
+        return read_zip(path) if is_mod else read_archive(path, known)
+    if low.endswith(".zip"):
+        return read_zip(path)
     return read_patch(path, known)
 
 
@@ -1640,7 +1736,7 @@ def selftest(keep=None):
         f.write(entry)
     files = {}
     for name, blob in (("As Released 1.4.xdelta", patch), ("Some Other Hack.xdelta", other), ("notes.xdelta", b"PATCH" * 40),
-                       ("hack.xdelta.7z", b"7z\xbc\xaf\x27\x1c" + b"\0" * 32)):
+                       ("hack.xdelta.rar", b"Rar!\x1a\x07\x01\0" + b"\0" * 32)):
         files[name] = os.path.join(root, name)
         with open(files[name], "wb") as f:
             f.write(blob)
@@ -1659,7 +1755,7 @@ def selftest(keep=None):
            and "author" not in meta and "needs" not in meta and "result_sha256" not in meta and meta["build"] == "psx-us"
            and len(max(layers_of(meta), key=len)) <= LAYER_MAX,
            "a patch the list does not have: unverified, no author, no behaviour, an id from its sha256")
-    for name, want in (("notes.xdelta", "unknown format"), ("hack.xdelta.7z", "unpack it")):
+    for name, want in (("notes.xdelta", "unknown format"), ("hack.xdelta.rar", "unpack it")):
         try:
             read_patch(files[name], kn)
             got = None
@@ -1708,13 +1804,52 @@ def selftest(keep=None):
         got = str(e)
     expect(got is not None and "only 3.0 is read" in got, "a PPF 2.0 patch: refused by its version")
     expect(patch_format(patch)[0] == "xdelta" and patch_format(pp1) == ("ppf", 29), "the format is the file's first bytes")
-    zz = make_zip(os.path.join(root, "authors_archive.zip"), [("Words.ppf", pp1), ("README.txt", b"read me")])
-    try:
-        read_any(zz, kn)
-        got = None
-    except Refused as e:
-        got = str(e)
-    expect(got is not None and "unpack it" in got, "an author's zip with no mod.toml: refused, the sentence says to unpack it")
+    # an author's archive: a .zip with no mod.toml, a .7z
+    import sevenzip
+    readme = ("README.txt", b"read me")
+
+    def archive(name, members):
+        p = os.path.join(root, name)
+        if name.endswith(".7z"):
+            with open(p, "wb") as f:
+                f.write(sevenzip.make_archive(members))
+            return p
+        return make_zip(p, members)
+
+    def refusal(p):
+        try:
+            read_any(p, kn)
+        except Refused as e:
+            return str(e)
+        return None
+
+    for ext in (".zip", ".7z"):
+        meta, data = read_any(archive("two discs" + ext, [("Words/Words (Other).ppf", pp2), ("Words/Words (This Disc).ppf", pp1),
+                                                           readme]), kn)
+        expect(meta["id"] == "descriptions" and data[meta["patch"]] == pp1 and "unverified" not in meta,
+               "an author's %s of two patches, one of the list: the list's mod" % ext)
+        meta, data = read_any(archive("one" + ext, [("docs/Some Hack 2.0.xdelta", other), readme]), kn)
+        expect(meta.get("unverified") is True and meta["name"] == "Some Hack 2.0" and data[meta["patch"]] == other,
+               "an author's %s of one patch the list does not have: unverified, the name from the patch file's" % ext)
+        got = refusal(archive("neither" + ext, [("a.ppf", pp2), ("b.xdelta", other), readme]))
+        expect(got is not None and "none is in the list" in got and "unpack it" in got,
+               "an author's %s of two patches, none of the list: refused, the sentence says to unpack it" % ext)
+        got = refusal(archive("both" + ext, [("a.ppf", pp1), ("b.xdelta", patch), ("copy of a.ppf", pp1)]))
+        expect(got is not None and "holds 2 patches that are in the list" in got,
+               "an author's %s of two patches of the list: refused, the player says which" % ext)
+        got = refusal(archive("none" + ext, [readme]))
+        expect(got is not None and "holds no patch file" in got, "an archive (%s) with no patch file: refused" % ext)
+        got = refusal(archive("garbage" + ext, [("hack.xdelta", b"PATCH" * 40)]))
+        expect(got is not None and "unknown format" in got, "an archive (%s) whose patch file is no patch: unknown format" % ext)
+    bad7 = os.path.join(root, "cut.7z")
+    with open(bad7, "wb") as f:
+        f.write(sevenzip.make_archive([("a.ppf", pp1)])[:-9])
+    got = refusal(bad7)
+    expect(got is not None and "cannot be opened" in got, "a damaged .7z: refused (%s)" % (got or "")[:50])
+    with open(bad7, "wb") as f:
+        f.write(sevenzip.make_archive([("a.ppf", pp1)], "aes"))
+    got = refusal(bad7)
+    expect(got is not None and "encrypted" in got, "an encrypted .7z: refused by name")
     bad = os.path.join(root, "bad_known.toml")
     with open(bad, "w", newline="\n") as f:
         f.write(entry + 'format = "ips"\n')
@@ -1772,7 +1907,8 @@ def main():
     s = ap.add_subparsers(dest="cmd", required=True)
     p = s.add_parser("add", help="check a mod zip or a patch file, unpack it under HOME/mods/<id>/ and list it in "
                                  "HOME/mods.toml")
-    p.add_argument("zip", help="a mod's .zip, or a romhack's patch file as its author released it (.xdelta)")
+    p.add_argument("zip", help="a mod's .zip, or a romhack's patch file as its author released it (.xdelta or "
+                               ".ppf), by itself or in his .zip or .7z archive")
     p.add_argument("--home", required=True)
     p.add_argument("--json", action="store_true")
     p.add_argument("--known", help=argparse.SUPPRESS)   # another list of known patches (the self-test's)

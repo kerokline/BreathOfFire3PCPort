@@ -276,7 +276,8 @@ UNTOUCHED there means no code in our source reaches the bytes.
 | `+0xF10` | 300 | Faerie names, 60 x 5, by record | E | READ [E](save-block/range-e-tail.md) |
 | `+0x103C` | 4 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
 | `+0x1040` | 1 | **This project's own, not Capcom's:** the mountain-passes bits of DIV-0191, bit 0 only. The original ignores it | A | READ [E](save-block/range-e-tail.md); MEASURED 0 or 1, 1 in 9 saves |
-| `+0x1041` | 107 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
+| `+0x1041` | 1 | **This project's own, not Capcom's:** the solo-character champion of DIV-0228: 0 for no solo run, else the champion's character record + 1 (1, 2, 3, 5, 6 or 7). The original ignores it | A | READ [E](save-block/range-e-tail.md) |
+| `+0x1042` | 106 | Untouched | P | UNTOUCHED [E](save-block/range-e-tail.md) |
 | `+0x10AC` | 4 | **The Definitive Edition mod's, not Capcom's:** the town warp's visited towns of DIV-0225 (bits 0..30 the towns, bit 31 "forgotten"). The original ignores it; a card conversion keeps it, since the hack's PlayStation game reads it the same | A | READ [`town-warp.md`](town-warp.md) 1 and 5 |
 
 **Coverage:** of the 4,272 bytes, 3,810 have a writer or a reader in our source
@@ -648,7 +649,8 @@ only a value the game reads with no bound is refused.
   amount: `+0xCD4..+0xCE7`, each faerie record's `+4`, each building's `+4`.
 - An item that is equipped is taken out of the inventory count, and put back when
   it is taken off.
-- On a write to a PlayStation card: `+0x1040` (ours, DIV-0191) is 0, and the
+- On a write to a PlayStation card: `+0x1040` (ours, DIV-0191) and `+0x1041`
+  (ours, DIV-0228) are 0, and the
   options `+0x7C`, `+0x7D`, which no PC screen sets, are 0 unless the source was a
   PlayStation save.
 

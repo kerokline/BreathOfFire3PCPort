@@ -267,6 +267,7 @@ bool PcToPsx(const Block& pc, std::uint8_t* psx, std::string& why) {
 // the release never reads it (docs/town-warp.md 5).
 void ClearPcOnly(Block& block) {
     block[0x1040] = 0;
+    block[0x1041] = 0;  // Solo_ChampionMark, ours (DIV-0228)
     block[0x7C] = block[0x7D] = 0;
     Seal(block);
 }

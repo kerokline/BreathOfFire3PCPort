@@ -159,6 +159,32 @@ void TestText() {
     Expect(FieldSet(b, w[0], "2", latin, why) && b[w[0].at] == 2 && b[w[0].at2] == 3, "a stack keeps its count");
     Expect(!FieldSet(b, w[0], "2 x 100", latin, why), "a count above 99");
     Expect(FieldSet(b, w[0], "0", latin, why) && b[w[0].at] == 0 && b[w[0].at2] == 0, "an empty place");
+
+    // The solo-character mark (DIV-0228): None and the six champions by name,
+    // the mark's own numbers; 4 and 8 are refused; a save that already holds
+    // another value shows it as it is.
+    const Field* solo = nullptr;
+    std::vector<Field> holder;
+    const std::vector<Section>& all = Sections();
+    for (std::size_t sct = 0; sct < all.size() && !solo; ++sct) {
+        holder = SectionFields(static_cast<int>(sct), 0, latin);
+        solo = Find(holder, "Solo champion");
+    }
+    Expect(solo != nullptr, "the Solo champion field");
+    if (solo) {
+        Expect(FieldChoices(b, *solo, latin) ==
+                   std::vector<std::string>{"0 - None", "1 - Ryu", "2 - Nina", "3 - Garr", "5 - Rei", "6 - Momo", "7 - Peco"},
+               "the Solo champion choices");
+        Expect(FieldSet(b, *solo, "Rei", latin, why) && b[0x1041] == 5 && FieldText(b, *solo, latin) == "5 - Rei",
+               "a champion by name");
+        Expect(FieldSet(b, *solo, "7 - Peco", latin, why) && b[0x1041] == 7, "a champion as the list writes it");
+        Expect(FieldSet(b, *solo, "None", latin, why) && b[0x1041] == 0, "no champion");
+        Expect(!FieldSet(b, *solo, "4", latin, why) && b[0x1041] == 0, "4 is refused, the byte kept");
+        Expect(!FieldSet(b, *solo, "8", latin, why) && !FieldSet(b, *solo, "Teepo", latin, why), "other values are refused");
+        b[0x1041] = 4;
+        Expect(FieldText(b, *solo, latin) == "4", "a save that holds 4 shows it as it is");
+        b[0x1041] = 0;
+    }
 }
 
 void TestFixture(const fs::path& path, const Block& b) {
