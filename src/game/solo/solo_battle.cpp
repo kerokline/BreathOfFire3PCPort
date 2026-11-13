@@ -68,7 +68,18 @@ struct Save {
     std::uint32_t battle;   // Game_BattleCount when armed
     Bytes saved;
     Bytes written;
+    // The records past the battle's count whose +0x148 SoloBattle_WriteParty
+    // replaced (a bit per record 0..2) and what they held (docs/solo-character-
+    // combat.md 14): put back at SoloBattle_Restore.
+    std::uint8_t stale_cleared;
+    std::uint8_t stale_index[3];
 };
+
+// The +0x148 a record not in the battle is given for it: no record. The ids'
+// table Character_IndexById (0x66972C, 24 bytes) holds 0..7 (read from the exe,
+// solo-character-reads.md M6), so 0xFF matches none of them, nor the record
+// index any scan compares with.
+constexpr unsigned char kNoRecord = 0xFF;
 
 Save g_save{};
 unsigned char g_place_leader = kNone;   // SoloBattle_Restore's answer's id
@@ -104,8 +115,9 @@ enum class Rule : unsigned char {
     kStandDown,      // the game's own party fights it, whoever the champion is
     kNeedsIdInRow,   // the fight's code draws character id `arg` from the loaded party set: the
                      // battle's row must hold it beside the champion, else the game's own party fights
-    kNeedsRecord,    // the fight's code wants record `arg` among the members: the game's own party
-                     // fights it unless the champion is that record
+    kWithRecord,     // the fight's code wants record `arg` among the members (the owner, round doc
+                     // 6j): another champion fights with that record beside him as the fight leaves
+                     // it (count 2); that record as the champion fights alone, revived and healed
 };
 struct FightRule {
     unsigned char fight;
@@ -123,33 +135,8 @@ constexpr FightRule kFightRules[] = {
     {0x1B, Rule::kStandDown, 0, "chapter 6's Beyd against Zig (fight 27: run 9 step 5; the party watches - a member's turn ends it, Boss27_Event)"},
     // combat.md 11: set-ups that read the party by id or by slot.
     {0x10, Rule::kNeedsIdInRow, 1, "fight 16 (chapter 3, area 41: Balio, Sunder, Nina): Boss16_Event's code 2 and BossNina_HookHit dress enemy 2 as id 1 by Field_MemberSprite(1, 1), from the loaded party set"},
-    {0x22, Rule::kNeedsRecord, 4, "fight 34 (chapter 8, area 43: Mikba): Boss34_Setup picks the member whose record is 4 and Boss34_Event drives that member"},
+    {0x22, Rule::kWithRecord, 4, "fight 34 (chapter 8, area 43: Mikba): Boss34_Setup picks the member whose record is 4 and Boss34_Event drives that member"},
 };
-
-// TRIAL ONLY - not a behaviour, not ledgered, off by default (the owner's
-// fight-34 trials, round doc 6i; docs/solo-character-combat.md 13).
-// BOF3X_CB_TRIAL34, read once: unset or empty - nothing (the default rules
-// above); "A" - fight 34's kNeedsRecord rule lifted, so a champion who is not
-// record 4 fights it alone; "B" - with record 4 the champion, its 0 HP
-// stand-down lifted for fight 34 and the record revived and healed at the
-// battle's start: HP 1 and status bit 0x4000 cleared as ItemUse_Revive does
-// (item_use.cpp), then HP to the effective maximum and bit 0x2000 cleared as
-// a full Char_HealHp does (char.cpp). Anything else is a Fatal.
-char g_trial34 = 0;
-bool g_trial34_read = false;
-char Trial34() {
-    if (g_trial34_read) return g_trial34;
-    g_trial34_read = true;
-    char v[8];
-    const std::uint32_t n = bof3::os::GetEnv("BOF3X_CB_TRIAL34", v, sizeof v);
-    if (n == 0 || v[0] == '\0') return g_trial34 = 0;
-    if (n == 1 && (v[0] == 'A' || v[0] == 'B')) {
-        g_trial34 = v[0];
-        bof3::Log("solo battle: TRIAL BOF3X_CB_TRIAL34=%c (fight 34, not a behaviour, not ledgered)", g_trial34);
-        return g_trial34;
-    }
-    bof3::Fatal("BOF3X_CB_TRIAL34 is \"%s\": A, B or unset (a trial switch of group CB's)", n < sizeof v ? v : "(long)");
-}
 
 const FightRule* RuleFor(unsigned char fight) {
     if (fight == 0) return nullptr;
@@ -212,15 +199,16 @@ bool Alone(const Bytes& b, unsigned char id) {
     return b.list2[0] == id && b.list2[1] == kNone && b.list2[2] == kNone && b.count == 1;
 }
 
-// The bytes Arm writes: the champion alone, count 1, formation 0; the set is
-// `row` when Arm changes it (row >= 0), recorded as the step's own select
-// records a mode 1 / 2 load (no bit 7), else the live set.
-Bytes Written(const Bytes& live, unsigned char id, int row) {
+// The bytes Arm writes: the champion alone, count 1 - or with `second`
+// beside him, count 2 (kWithRecord) - formation 0; the set is `row` when Arm
+// changes it (row >= 0), recorded as the step's own select records a mode 1 /
+// 2 load (no bit 7), else the live set.
+Bytes Written(const Bytes& live, unsigned char id, int row, unsigned char second = kNone) {
     Bytes w = live;
     w.list2[0] = id;
-    w.list2[1] = kNone;
+    w.list2[1] = second;
     w.list2[2] = kNone;
-    w.count = 1;
+    w.count = second == kNone ? 1 : 2;
     w.formation = 0;
     if (row >= 0) w.set = static_cast<std::uint8_t>(row);
     return w;
@@ -314,7 +302,7 @@ void LogRecord(const char* when, int record) {
 
 // --- the quicksave participant ----------------------------------------------
 
-constexpr std::uint32_t kSnapVersion = 2;   // 2: the count and the set put back at step 7 (g_set_back)
+constexpr std::uint32_t kSnapVersion = 3;   // 2: the count and the set put back at step 7 (g_set_back); 3: the stale records' +0x148
 
 void PutBytes(bof3::SnapshotWriter& w, const Bytes& b) { w.Put(&b, sizeof b); }
 Bytes GetBytes(bof3::SnapshotReader& r) {
@@ -331,6 +319,8 @@ void SnapSave(bof3::SnapshotWriter& w) {
     w.Put(g_save.battle);
     PutBytes(w, g_save.saved);
     PutBytes(w, g_save.written);
+    w.Put(g_save.stale_cleared);
+    w.Put(g_save.stale_index, sizeof g_save.stale_index);
     w.Put(g_set_back);
 }
 
@@ -355,6 +345,10 @@ Save ReadRecord(bof3::SnapshotReader& r) {
     s.battle = r.Get<std::uint32_t>();
     s.saved = GetBytes(r);
     s.written = GetBytes(r);
+    s.stale_cleared = r.Get<std::uint8_t>();
+    r.Get(s.stale_index, sizeof s.stale_index);
+    if (s.stale_cleared > 7 || (s.stale_cleared && !s.party_written))
+        bof3::Fatal("snapshot: SOLOCB's record holds stale records 0x%X with party %u", s.stale_cleared, s.party_written);
     g_snap_set_back = r.Get<StepSeven>();
     {
         const StepSeven& b = g_snap_set_back;
@@ -407,8 +401,37 @@ void SoloBattle_Arm(unsigned char event_flags) {
         bof3::Fatal("DIV-0228 SoloCharacter: the champion's record %d holds id 0x%02X, which Character_IndexById maps to "
                     "record %u",
                     record, id, static_cast<unsigned>(Character_IndexById[id]));
+    // Fight 34 (kWithRecord, the owner, round doc 6j). The champion that record:
+    // alone, revived and healed at the battle's start - HP 1 and status bit
+    // 0x4000 cleared as ItemUse_Revive does (item_use.cpp), then HP to the
+    // effective maximum and bit 0x2000 cleared as a full Char_HealHp does
+    // (char.cpp) - in place of the 0 HP stand-down below. Another champion:
+    // that record beside him (`second`), as the fight leaves it; nothing of
+    // ours revives it or stops the player from doing so.
+    unsigned char second = kNone;
+    if (rule && rule->rule == Rule::kWithRecord) {
+        if (record == rule->arg) {
+            records::CharRecord& c = CharacterRecords[record];
+            if (c.hp == 0 || (c.status & 0x4000)) {
+                const unsigned hp = c.hp, status = c.status;
+                c.hp = 1;
+                c.status = static_cast<std::uint16_t>(c.status & ~0x4000u);
+                c.hp = c.stats.max_hp;
+                if (static_cast<std::uint16_t>(c.stats.max_hp >> 2) <= c.hp) c.status = static_cast<std::uint16_t>(c.status & ~0x2000u);
+                bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; the champion is that record, revived "
+                          "and healed to fight alone: HP %u -> %u, status 0x%04X -> 0x%04X (the owner, round doc 6j)",
+                          static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, hp,
+                          static_cast<unsigned>(c.hp), status, static_cast<unsigned>(c.status));
+            }
+        } else {
+            second = CharacterRecords[rule->arg].char_id;
+            if (Character_IndexById[second] != rule->arg)
+                bof3::Fatal("DIV-0228 SoloCharacter: record %u holds id 0x%02X, which Character_IndexById maps to record %u",
+                            static_cast<unsigned>(rule->arg), second, static_cast<unsigned>(Character_IndexById[second]));
+        }
+    }
     const Bytes live = ReadLive();
-    if (Alone(live, id)) {
+    if (second == kNone && Alone(live, id)) {
         bof3::Log("DIV-0228 SoloCharacter: battle %u already has the champion (id 0x%02X) alone; nothing to change",
                   static_cast<unsigned>(Game_BattleCount), id);
         return;
@@ -419,35 +442,17 @@ void SoloBattle_Arm(unsigned char event_flags) {
     // member at 1 (BattleEnd_Finish), but a scene can leave a record at 0:
     // chapter 8's Scena08_Scene11 gives the record of id 4 HP 0 and status
     // 0x6000 (docs/save-block/range-b-characters.md 4).
-    if (EventBattle_Id == 0x22 && record == 4 && Trial34() == 'B' && CharacterRecords[record].hp == 0) {
-        records::CharRecord& c = CharacterRecords[record];
-        const unsigned hp = c.hp, status = c.status;
-        c.hp = 1;                                                     // ItemUse_Revive: HP 1,
-        c.status = static_cast<std::uint16_t>(c.status & ~0x4000u);   // Char_ClearStatus(0x4000)
-        c.hp = c.stats.max_hp;                                        // Char_HealHp(full): HP to the maximum,
-        if (static_cast<std::uint16_t>(c.stats.max_hp >> 2) <= c.hp) c.status = static_cast<std::uint16_t>(c.status & ~0x2000u);   // and 0x2000 cleared
-        bof3::Log("solo battle: TRIAL B: record 4 revived and healed for fight 34: HP %u -> %u, status 0x%04X -> 0x%04X",
-                  hp, static_cast<unsigned>(c.hp), status, static_cast<unsigned>(c.status));
-    }
     if (CharacterRecords[record].hp == 0) {
         bof3::Log("DIV-0228 SoloCharacter: the champion's record %d has 0 HP; battle %u is fought by the game's own party",
                   record, static_cast<unsigned>(Game_BattleCount));
         return;
     }
-    if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg && rule->fight == 0x22 && Trial34() == 'A') {
-        bof3::Log("solo battle: TRIAL A: fight 34's rule lifted: record %d fights it alone; the pick byte 0x675F08 holds %u "
-                  "before the set-up",
-                  record, static_cast<unsigned>(*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(0x675F08)))));
-    } else if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg) {
-        bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; the champion is record %d, not %u: fought by "
-                  "the game's own party",
-                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, record,
-                  static_cast<unsigned>(rule->arg));
-        return;
-    }
-    const unsigned char need = rule && rule->rule == Rule::kNeedsIdInRow ? rule->arg : kNone;
+    // The row: kNeedsIdInRow's id beside the champion, or kWithRecord's second
+    // member's (both must be in the battle's row: Field_MemberSprite takes each
+    // member's column in it, section 3).
+    const unsigned char need = rule && rule->rule == Rule::kNeedsIdInRow ? rule->arg : second;
     int chosen = ChooseRow(Rows(), live.set, id, need);
-    if (chosen == kNoRow && need != kNone)   // group PS: the id's section supplied beside the champion's row
+    if (chosen == kNoRow && need != kNone && second == kNone)   // group PS: the id's section supplied beside the champion's row
         chosen = PartySetExtra_Arm(need, id, ChooseRow(Rows(), live.set, id, kNone), event_flags);
     if (chosen == kNoRow) {
         if (need == kNone)
@@ -463,7 +468,7 @@ void SoloBattle_Arm(unsigned char event_flags) {
     s.set_written = row >= 0 ? 1 : 0;
     s.battle = Game_BattleCount;
     s.saved = live;
-    s.written = Written(live, id, row);
+    s.written = Written(live, id, row, second);
     if (row >= 0) {
         if (event_flags & 0x10) {
             // The step skips its select for this event battle, so the battle
@@ -482,10 +487,16 @@ void SoloBattle_Arm(unsigned char event_flags) {
         }
     }
     g_save = s;
-    bof3::Log("DIV-0228 SoloCharacter: battle %u fought by the champion alone (record %d, id 0x%02X): second list "
+    if (second != kNone)
+        bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s: the champion fights with record %u (id 0x%02X) "
+                  "beside him as the fight leaves it, count 2 (the owner, round doc 6j)",
+                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why,
+                  static_cast<unsigned>(rule->arg), second);
+    bof3::Log("DIV-0228 SoloCharacter: battle %u fought by the champion%s (record %d, id 0x%02X): second list "
               "%02X %02X %02X count %u formation %u set %02X saved (the party is written at step 3), first list "
               "%02X %02X %02X; set %s",
-              static_cast<unsigned>(s.battle), record, id, live.list2[0], live.list2[1], live.list2[2], live.count,
+              static_cast<unsigned>(s.battle), second == kNone ? " alone" : " with the fight's record beside him", record, id,
+              live.list2[0], live.list2[1], live.list2[2], live.count,
               live.formation, live.set, Cond_Flags[kFirstList], Cond_Flags[kFirstList + 1], Cond_Flags[kFirstList + 2],
               row >= 0 ? ((event_flags & 0x10) ? "row changed, its field file loaded" : "row changed, the step loads its battle file")
                        : "kept (it holds the champion)");
@@ -510,14 +521,26 @@ void SoloBattle_WriteParty() {
                     static_cast<unsigned>(g_save.battle), live.list2[0], live.list2[1], live.list2[2], live.count,
                     live.formation, g_save.saved.list2[0], g_save.saved.list2[1], g_save.saved.list2[2],
                     g_save.saved.count, g_save.saved.formation);
+    // Field_PartyLoad(1) skips Party_ClearAll when Field_Request is 6 (a
+    // member joining), which would leave the records past the count on.
+    // Mode 5 enters on request 3 (GameMode_Field) and no step before this one
+    // writes the request, so 6 here is a path this module does not know.
+    if (Field_Request == 6)
+        bof3::Fatal("DIV-0228 SoloCharacter: battle %u's members are built with Field_Request 6 (Party_ClearAll skipped)",
+                    static_cast<unsigned>(g_save.battle));
     WriteParty(g_save.written);
     g_save.party_written = 1;
-    if (EventBattle_Id == 0x22 && Trial34() != 0) {
-        // TRIAL ONLY (BOF3X_CB_TRIAL34): Boss34_Setup scans ObjTrio's three records by +0x148 with no flag
-        // test, the last match winning, so the walkers' stale records (Field_PartyLoad(1) only clears their
-        // flags) answer it. Their +0x148 is set to 0xFF for the battle; step 7's Field_PartyLoad(0) rebuilds it.
-        for (int m = 1; m < 3; ++m) ObjTrio[m].char_index = 0xFF;
-        bof3::Log("solo battle: TRIAL: ObjTrio records 1 and 2 hold no record for fight 34's set-up");
+    // The records past the battle's count are the walkers' stale records
+    // (Field_PartyLoad(1) only clears their flags). Boss34_Setup scans all
+    // three by +0x148 with no live test, the last match winning (the audit
+    // of 2026-11-13: the one set-up that does), so each gets kNoRecord there
+    // for the battle and its own value back at SoloBattle_Restore. +0x89 is
+    // left: Party_PlaceAtSlots' leader search and LeaderMissed read the ids.
+    g_save.stale_cleared = 0;
+    for (unsigned m = g_save.written.count; m < 3; ++m) {
+        g_save.stale_index[m] = ObjTrio[m].char_index;
+        ObjTrio[m].char_index = kNoRecord;
+        g_save.stale_cleared = static_cast<std::uint8_t>(g_save.stale_cleared | (1u << m));
     }
 }
 
@@ -530,6 +553,12 @@ bool SoloBattle_Restore() {
     if (Game_BattleCount != g_save.battle)
         bof3::Fatal("DIV-0228 SoloCharacter: GameMode5_Place of battle %u holds battle %u's saved party",
                     static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(g_save.battle));
+    // The stale records' +0x148 back, where it still holds kNoRecord (the
+    // battle builds only records below its count). Step 7's Field_PartyLoad(0)
+    // rebuilds +0x148 of the field's members; a record past the field's count
+    // keeps what it held before the battle, as without the mode.
+    for (unsigned m = 0; m < 3; ++m)
+        if ((g_save.stale_cleared & (1u << m)) && ObjTrio[m].char_index == kNoRecord) ObjTrio[m].char_index = g_save.stale_index[m];
     const Bytes live = ReadLive();
     const Restored r = Restore(g_save, live);
     WriteParty(r.bytes);
@@ -643,7 +672,20 @@ void SoloBattle_SelfTest() {
               RuleFor(0x1A)->rule == Rule::kStandDown && RuleFor(0x1B) && RuleFor(0x1B)->rule == Rule::kStandDown,
           "the Beyd fights stand down");
     check(RuleFor(0x10) && RuleFor(0x10)->rule == Rule::kNeedsIdInRow && RuleFor(0x10)->arg == 1, "fight 16 wants id 1");
-    check(RuleFor(0x22) && RuleFor(0x22)->rule == Rule::kNeedsRecord && RuleFor(0x22)->arg == 4, "fight 34 wants record 4");
+    check(RuleFor(0x22) && RuleFor(0x22)->rule == Rule::kWithRecord && RuleFor(0x22)->arg == 4, "fight 34 wants record 4");
+    {
+        // Fight 34 with another champion: (champion, record 4's id), count 2.
+        const Bytes f{{7, 8, 2}, 3, 2, 0x8A};
+        const Bytes w34 = Written(f, 8, 15, 4);
+        check(w34.list2[0] == 8 && w34.list2[1] == 4 && w34.list2[2] == kNone && w34.count == 2 && w34.formation == 0 &&
+                  w34.set == 15,
+              "Written with a second member");
+        const Save s34{1, 1, 1, 9, f, w34, 4, {0, 0, 0x22}};
+        Bytes back = w34;
+        back.set = 0x8F;
+        const Restored r34 = Restore(s34, back);
+        check(std::memcmp(&r34.bytes, &f, sizeof f) == 0 && r34.restored == 0x3F && r34.reload, "Restore after a battle of two");
+    }
     {
         unsigned with_rule = 0;
         for (unsigned f = 0; f < 0x100; ++f)
@@ -696,14 +738,14 @@ void SoloBattle_SelfTest() {
 
     // Restore after an untouched battle: every byte back; the battle's own
     // selects left the set's bit 7 different, and the row still counts.
-    Save s{1, 0, 1, 7, field, w};
+    Save s{1, 0, 1, 7, field, w, 0, {}};
     Bytes live = w;
     live.set = 0x80;   // the battle's end select (mode 0) set bit 7 again
     Restored r = Restore(s, live);
     check(std::memcmp(&r.bytes, &field, sizeof field) == 0 && r.restored == 0x1F && !r.reload, "Restore, untouched, set kept");
 
     // Set changed: the row is put back and its field file reloaded.
-    Save s2{1, 1, 1, 7, field, w2};
+    Save s2{1, 1, 1, 7, field, w2, 0, {}};
     Bytes live2 = w2;
     live2.set = 0x82;
     r = Restore(s2, live2);
@@ -711,7 +753,7 @@ void SoloBattle_SelfTest() {
 
     // An exit hook that restored its own party (Boss25_Exit: the count 3 and
     // its list): those bytes are its; ours go back where still ours.
-    Save s3{1, 0, 1, 7, Bytes{{0, kNone, kNone}, 1, 1, 0x80}, Bytes{{4, kNone, kNone}, 1, 0, 0x80}};
+    Save s3{1, 0, 1, 7, Bytes{{0, kNone, kNone}, 1, 1, 0x80}, Bytes{{4, kNone, kNone}, 1, 0, 0x80}, 0, {}};
     Bytes live3{{0, 1, 2}, 3, 0, 0x80};
     r = Restore(s3, live3);
     check(r.bytes.list2[0] == 0 && r.bytes.list2[1] == 1 && r.bytes.list2[2] == 2 && r.bytes.count == 3 &&
@@ -726,7 +768,7 @@ void SoloBattle_SelfTest() {
 
     // Arm's changed set back to the same row it came from (it held the champion
     // after all): restored, nothing to load.
-    Save s5{1, 1, 1, 7, Bytes{{0, 1, 2}, 3, 0, 0x82}, Bytes{{5, kNone, kNone}, 1, 0, 0x02}};
+    Save s5{1, 1, 1, 7, Bytes{{0, 1, 2}, 3, 0, 0x82}, Bytes{{5, kNone, kNone}, 1, 0, 0x02}, 0, {}};
     r = Restore(s5, Bytes{{5, kNone, kNone}, 1, 0, 0x82});
     check(r.bytes.set == 0x82 && (r.restored & 0x20) && !r.reload, "Restore, same row, no load");
 
