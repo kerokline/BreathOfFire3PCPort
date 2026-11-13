@@ -1017,7 +1017,7 @@ void ModsAdd(HWND page, ModsState& s) {
     const size_t b = path.find_first_not_of(L" \t\""), e = path.find_last_not_of(L" \t\"");
     path = b == std::wstring::npos ? std::wstring() : path.substr(b, e - b + 1);
     if (path.empty()) {
-        ModStatus(page, L"Type or select the path of a .zip, .xdelta or .ppf file first.");
+        ModStatus(page, L"Type or select the path of a .zip, .7z, .xdelta or .ppf file first.");
         return;
     }
     if (!IsFile(path)) {
@@ -1036,10 +1036,10 @@ void ModsBrowse(HWND page, ModsState& s) {
     OPENFILENAMEW ofn{};
     ofn.lStructSize = sizeof ofn;
     ofn.hwndOwner = page;
-    ofn.lpstrFilter = L"Mods (*.zip, *.xdelta, *.ppf)\0*.zip;*.xdelta;*.ppf\0All files (*.*)\0*.*\0";
+    ofn.lpstrFilter = L"Mods (*.zip, *.7z, *.xdelta, *.ppf)\0*.zip;*.7z;*.xdelta;*.ppf\0All files (*.*)\0*.*\0";
     ofn.lpstrFile = path;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrTitle = L"Select a mod (a .zip with a mod.toml, or the patch file of a romhack)";
+    ofn.lpstrTitle = L"Select a mod (a .zip with a mod.toml, or the patch file or the archive of a romhack)";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
     if (!GetOpenFileNameW(&ofn)) return;
     SetDlgItemTextW(page, IDC_MOD_PATH, path);

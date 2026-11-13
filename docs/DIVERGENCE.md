@@ -12075,7 +12075,10 @@ designed in rather than bolted on.
   ("unknown format"). Two formats are read: `.xdelta` and PPF 3.0 (`.ppf`,
   `tools/ppf.py`; mods.md 12.1), and the list has two patches: the
   Definitive Edition 1.4 and *Better Descriptions* 1.1.1 by Naro (text and
-  13 bytes of table numbers, no behaviour). The owner, 2026-11-13: "the actual mod file remains
+  13 bytes of table numbers, no behaviour). The patch file can also be in
+  its author's archive, a `.7z` or a `.zip` with no `mod.toml`
+  (`tools/sevenzip.py`; mods.md 12.2): the tool takes the patch file out of
+  it, and the one the list knows when it holds several. The owner, 2026-11-13: "the actual mod file remains
   the mod owners"; a patch not recognized gets a message, not a refusal. The
   project attaches no romhack's patch to a release. Verification: `mods.py
   selftest` (a listed patch, an unlisted one, a file that is no patch, an
