@@ -16854,8 +16854,15 @@ designed in rather than bolted on.
   fights without a crash, and a quicksave and quick-load inside the fight
   goes on to a win. **Argued from the code only:** fight 22 (no save reaches
   it); that record 2 as champion keeps fight 31's extra EXP into chapter 8;
-  the scene after fight 34 past the harness's window. **Owed:** the
-  ten-route off-proof (the switch off against `main`, `tools/solo_proof.py`);
+  the scene after fight 34 past the harness's window. **The off-proof**
+  (2026-11-13, `solo/round` `af09b08a` against `main` `13801868`,
+  `solo-character-proof.md` 6e): the behaviours off, nine of the ten routes
+  identical; `SoloCharacter` on with no champion, all ten identical.
+  `cutsceneAndNue` with the behaviours off differs on page `0x7DE000` alone,
+  from a different tick in each of four runs, with another game on the
+  machine: read as the harness's noise (D420), **not shown identical**; the
+  owner passed the round on that condition. **Owed:** that route's run once
+  D420 is settled;
   installs other than the PC files for fight 16's extra section. **Not
   played by the owner.**
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;

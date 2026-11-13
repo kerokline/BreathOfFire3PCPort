@@ -525,6 +525,10 @@ item 1), not as a difference the round makes: **an inference, the bytes are
 not dumped.** A run of this one route with nothing else running would settle
 it.
 
+**The owner (2026-11-13):** "Lets ledger that as something to follow up on,
+but conditionally pass this PR". The follow-up is D420 (`known-defects.md`):
+the page's bytes named and skipped or fixed, then this route run again.
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round
