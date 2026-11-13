@@ -497,7 +497,9 @@ craft skips the steps that place the spectator actors. A save the owner
 records in chapter 5 in area 79 before the series' first bout (before
 "Take your places please!") would prove the win and the rest of the series.
 
-## 13. Fight 34 (Mikba) trials (the owner, round doc 6i; 2026-11-13) - trials only
+## 13. Fight 34 (Mikba) trials (the owner, round doc 6i; 2026-11-13) - superseded by section 14
+
+> The trial switch below is removed; section 14 is what is built.
 
 Not a change of the default: fight 34 still stands down unless the champion
 is record 4, and record 4 at 0 HP still stands down. The trials run behind
@@ -570,3 +572,84 @@ pick byte `0x675F08`, `0x904AAD`, the acting actor / kind `0x904B34`, member
   differences are record 4's level 21 / EXP 13090 / HP 106 against plain's
   19 / 10090 / 1 (he fought and won alone, plain's Rei took no EXP), and that
   the player does not command him after the forced Weretiger turn.
+
+## 14. Fight 34 (Mikba) as built: the owner's decision (round doc 6j, 2026-11-13)
+
+The owner: "for other champions for that one fight, let's leave rei in the
+team. So the team becomes rei (dead), champion. That's still a single
+character combat, and will let the game logic progress. If a person revives
+rei, it's against the spirit of the challenge, but technically they could".
+
+**Built** (`src/game/solo/solo_battle.cpp`; `boss_mikba.cpp` untouched; the
+trial switch `BOF3X_CB_TRIAL34` and fight 34's stand-down rule removed):
+
+- `kFightRules` row `{0x22, kWithRecord, 4}`.
+- **Champion record 4:** revived and healed at step 1 when at 0 HP or KO
+  (HP 1 and bit `0x4000` cleared as `ItemUse_Revive`, then HP to the
+  effective maximum and bit `0x2000` cleared as a full `Char_HealHp`), then
+  alone as any champion. This replaces 6d's 0 HP stand-down for this fight
+  only; every other fight keeps it.
+- **Any other champion:** the second list `(champion, record 4's id byte, FF)`,
+  count 2, formation 0; record 4 as the fight has him (the scene's HP 0,
+  status `0x6000`), nothing of ours revives him or stops the player from
+  doing so. **Slot order: the champion first.** The fight's code finds record
+  4 by `+0x148` wherever he sits (`Boss34_Setup`, `Boss34_Event` cases 5 and
+  1, `GiveAbility40`'s second call by the pick, the Weretiger tasks by the
+  actor), and its end hook loops the flagged members; slot 0 is what other
+  code treats as the lead (`Party_PlaceAtSlots`' leader search and this
+  module's `LeaderMissed`), so the living champion holds it.
+- **The row** must hold both ids (each member's sprite is its column in the
+  row, section 3): `ChooseRow` with record 4's id as the needed id. In chapter
+  8 every champion id shares a row with id 4 (7: rows 7, 13, 14, 15; 8: 15;
+  2: 7; 5: 13; 6: 14); a champion with none would stand down with a line, not
+  built further (no case reaches it).
+- **The stale records** (0a item 8's family, the audit of 2026-11-13): in
+  `SoloBattle_WriteParty`, for every battle, the records past the battle's
+  count get `+0x148 = 0xFF` (`Character_IndexById` holds 0..7, so 0xFF names
+  no record), their old bytes kept in the save and put back at
+  `SoloBattle_Restore` where the byte still reads `0xFF`. `+0x89` is not
+  touched (`Party_PlaceAtSlots` and `LeaderMissed` read the ids). Step 7's
+  `Field_PartyLoad(0)` rebuilds `+0x148` for the field's members
+  (`field_6.cpp`, `m->char_index = actor` for each `i < Field_MemberCount`);
+  the put-back covers a record past the field's count. `Field_Request == 6`
+  at step 3 (which would skip `Party_ClearAll`) is a Fatal: mode 5 enters on
+  request 3 and no step before 3 writes it (read: `GameMode_Field`,
+  `GameMode5_Turn` / `_ToPlaces` / their callees).
+- The quicksave record `SOLOCB` is version 3 (the stale bytes).
+
+**Runs** (the owner's `mikbaFight` route and save, RT's sweep, `BOF3X_SOLO`
+from the start, `mortal` so the harness does not refill HP, two played rounds
+with the defend command, then the sweep's kill; wrapper
+`D:\bof3x-runs\solo1112\CB\scratch\cb_mikba.py` entry 134; root
+`D:\bof3x-runs\solo1112\CB\sweep`, logs and frames in `boss\f134_<side>`):
+
+| Side | Party in battle | Ended | Turns taken (actor) | Record 4 in battle | After the return vs plain | Garbage frames |
+|---|---|---|---|---|---|---|
+| plain | `7 8 4`, count 3 | win | members and enemies | (the scene's) | - | 0 |
+| ryu | `7 4`, count 2 | win | 00 and enemies only | HP 0, `0x6000` to the end | same (ending, party, scene) | 0 |
+| nina | `8 4`, count 2 | win | 00 and enemies only | the same | same | 0 |
+| garr | `2 4`, count 2 | win | 00 and enemies only | the same | same | 0 |
+| rei | `4`, count 1, revived HP 106 | win | 00 (the forced Weretiger turn at 3778, then the game's own attacks) and enemies | - | same | 0 |
+| momo | `5 4`, count 2 | win | 00 and enemies only | HP 0, `0x6000` to the end | same | 0 |
+| peco | `6 4`, count 2 | win | 00 and enemies only | the same | same | 0 |
+
+For the non-Rei champions record 4 ends the fight as plain's does: HP 1,
+status `0x2000` (`BattleEnd_Finish`'s fallen member), the record's level and
+EXP unchanged; for champion Rei: level 21, EXP 13090, HP 106, status 0. The
+"after the return" comparison covers the sweep's 1500 frames of confirms after
+the return; the route's second party prompt (frame 19128 in RT's straight
+replay) is not reached by the sweep on any side, plain included.
+
+- **Rei revived mid-fight** (Nina, the sweep's every-round HP pokes plus a
+  poke clearing the KO byte, `cb_revive_nina.txt`): Rei back at the fight's
+  start, a commanded defend, then the forced turn - Weretiger - at 3808, then
+  his own attacks each round while Nina takes the player's commands
+  (`cbrev_nina\w004254.png`: Rei as the tiger beside Nina). Win, no crash, 0
+  garbage frames. With the HP poke alone (no KO clear, entry 135) the forced
+  turn fires on the still-downed Rei and nothing breaks either.
+- **Quicksave mid-fight** (Garr, row changed): F6 at 3646, F7 at 3819
+  (`quicksave F7 BISLPS10.DAT restored ... 5 participants`), the fight on to
+  a win, the restore mask `0x3F` with the set's field file loaded at step 7.
+
+The machine was shared (the owner may have been using it); every run used
+`--no-front`, and the runs replayed to their ends with no desync sign.
