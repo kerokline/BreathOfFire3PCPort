@@ -321,6 +321,59 @@ the route once (`done` at 622) and three times with 900 more frames after its en
 each with `battle 4 fought by the champion alone (record 2 ...)`, the battle file loaded (record 2
 unjoined in chapter 1), no Fatal, no CRASH line, the battle still on at the end.
 
+## 6b. The unusual boss encounters (2026-11-12 night)
+
+Build: the `bx`, `cx`, `gx` rows on `solo/round` `59137505` (before the step-7 restore fix `a6000629`);
+the walk-in check on `94a61619`. Roots `D:\bof3x-runs\solo1112\RT\root\{bx,cx,gx,mikba}`. All boss sides
+`--mark-at-cut` (the mode on, no `BOF3X_SOLO`, the mark poked at the cut). Solo sides wait for the cross
+with `until` (section 4). The harness now passes `--slot0-shared` (the root's own game folder; the owner
+was playing from `game\` beside it) and drops a stale `bof3x.log` before each run: rows written between
+21:22 and 21:24 had read the previous run's log while input_run refused the slot swap, and were rerun.
+
+| Fight | Plain | The six champions | Notes |
+|---|---|---|---|
+| 2 Nue | win by the enemy's escape | all six: the same ending, party after and scene after as plain | nina crashed once (nvwgf2um.dll, after `put back` mask `0x3F`, mode 5 step 7): the known driver class; the rerun passed |
+| 7 Worker, Operator (chapter 0) | ended by the set-up's script | ryu: no arm line (`sl_chapter` 0), as plain | the stand-down's evidence |
+| 8 kind 8 | win | all six as plain | nina crashed once, fight 2's class; the rerun passed |
+| 12 Amalgam | win | all six as plain | |
+| 13 Balio, Sunder (the story's loss) | loss | all six: loss, the party after as plain, the story goes on to area 3 as plain's (modes 2 1 2), **no GAME OVER** | the champion alone falls before any cross opens; the harness's wait for the cross then times out after the return (the recipe FAILS there, the game does not) |
+| 16 Balio, Sunder, Nina | win | ryu (already alone), nina, garr as plain; **rei, momo, peco crash, every time** | **finding**, below |
+| 23 Bullies | win | all six as plain | |
+| 24 Stallion | win | all six as plain | rei once `FATAL: render: Present failed, HRESULT 0x887A0005` after `put back` mask `0x3F` (the driver class); the rerun passed |
+| 29 Dolphin | win | all six as plain | |
+| 35 Gaist, Torch | win by an escape | garr as plain; ryu (already alone), nina, rei, momo, peco "hung" | the harness's `until` for the cross: phase 3 waits on presses for 1,800 frames, which plain's seek presses through. Not a game result; owed again |
+| 25 Beyd (set-up 25, craft `bfs25`) | started (fight 0x19, mode 5 at 444) | ryu: `already has the champion alone` (SortParty's list); the other five **arm** | before CB's Beyd stand-down; the kill never sees a step 2 (a minigame), so every side ends "hung" in the harness |
+| 34 (craft `bfs34`) | did not start | did not start | a smoke run of set-up 34 only, NOT the Mikba result: the donor's two-member party, and Scene11's step 7 party prompt (`Request(6)`, field mode 7) never closed by the probe's presses. The walk-in save below replaces it |
+| 22 Garr (craft `bfs22`) | did not start | did not start | the scene stays in a talk (mode 4) for 600 frames: the craft does not reach the call |
+| 31 Garr, Angel Tower (craft `bfs31`) | crashed at the area's load | crashed | `Sprite_LoadPalette` at area 0x55's load (mode 1) on plain too: the craft's state, not the mode's |
+
+**Fight 16 with a champion whose party-set row lacks id 1.** Battle 88: the arm line `set row changed`
+(rows `0x0D` (4, 5, 7) for rei, `0x10` (5, 6, 7) for momo, `0x12` (6, 7, 8) for peco), then `CRASH 0:
+exception 0xC0000005 at bof3x.dll+0x10D613` in mode 5 step 5, reading `0x05D04B62`; the DLL's symbols
+put the pc in `Sprite_LoadPalette`, with `Field_MemberSprite` and `Boss16_Event` on the stack. Read in
+`src/game/boss/boss_nina.cpp`: `Boss16_Event` code 2 calls `Field_MemberSprite(1, 1)` to dress enemy 2 as
+character id 1, and a member sprite comes from the loaded party set's row. Plain's row and the row the
+mode keeps for ryu, nina, garr (row 0, ids 0, 1, 2) hold id 1; the rows CB loads for rei, momo, peco do
+not. Rerun for rei: the same pc. Deterministic: the set-up reads a character by id from the party set.
+
+### The Mikba walk-in save (`tools/solo_walkin.py`)
+
+Fight 34 is started by chapter 8's run 0xB, `Scena08_Scene11` (`scena_08_2.cpp`), which
+`Scena08_ArriveHook` starts on area 0x2B (43) with chapter flag 0x14 set and 0x15 clear, at z 0xF0000 or
+more and x cells 0x1A..0x26. Its step 0 runs `DropIn(0)` and `PartySet_LoadFirst(7, 8, 4)`; step 7
+`Scena08_SetUpRecord4`, the party prompt (`Request(6)`), must-stay on records 0 and 4, record 4's HP 0
+and status `| 0x60`; step 9 `DropIn(2)` and the placement; step 0xA the fight once counter 0 is 0x1A.
+Flag 0x14 is set by run 10 (`Scena08_Scene10`, started by area 0x15's entry with 0x13 set and 0x14
+clear). So the latest point before the game builds the fight's party is area 43 with 0x14 set, before the
+hook's cells. `mikba43`: donor `minecartToZombieDragon`, chapter 8, run 0 (state 2, as the owner's saves
+hold it), area 43 at (0x110000, 0x170000) flags 0x84 (where Scene11 itself puts the party in area 43
+after the fight), chapter flags 0x0..0x3 (the donor's) and 0xF, 0x10, 0x11, 0x13, 0x14 set, 0x15 clear;
+lists `07 08 04` both, party set `0x8F` (row 0x0F, ids 4, 7, 8), records 0, 1, 4 joined (the owner's ask;
+record 2 joined as the donor has it, 3, 5, 6 not), the solo mark 0. Chapter 8's flags 0x4..0xE are the
+donor's (clear): the areas whose entries test them (1, 2, 3, 0xC, 0xD, 0x12, 0x23) may start earlier
+chapter-8 scenes if walked into. Loaded headless (`BOF3X_SOLO=nina`): the field (mode 2) in area 43 with
+three walkers (count 3, lists `07 04 08` after the load's own sort), chapter 8, the stamp line, no Fatal.
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round

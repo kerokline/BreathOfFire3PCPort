@@ -55,10 +55,57 @@ for _f in range(39, 49):
 # Fight 32: a two-member party in the route's save (the owner, 2026-11-12: "a 2 man team/fight").
 FIGHTS[32] = ('D.Zombie', 'minecartToZombieDragon', 5230, 3,
               dict(route='minecartToZombieDragon', after=1200, after_confirm=True))
+# The rest of boss-sweep.md 7.3's routed rows (D:\bof3x-runs' bsw1027 fights.sh) and section 8's fight 35, each
+# staged as its row says; run them with --mark-at-cut (the routes fight earlier battles on the way)
+FIGHTS[2] = ('Nue', 'nue', 4233, 1, dict(route='cutsceneAndNue'))
+FIGHTS[7] = ('Worker, Operator', 'whelp_boss', 711, 2,
+             dict(route='whelpBoss', play=0, kill=False, to_end=True, return_presses=400))
+FIGHTS[8] = ('kind 8', 'bossAndFlash', 1747, 4, dict(route='bossAndFlash', kill_enemies='0,1,2,3'))
+FIGHTS[12] = ('Amalgam', 'ropeAndAmalgam', 300, 1,
+              dict(route='ropeAndAmalgam', field_cut=300, goto=(28, 0x270000, 0x568000, 3),
+                   camera=(0x190000, 0x5B0000), place=(0x1C0000, 0x5B0000), pre_poke=['0x7DF3A0 u8 1']))
+FIGHTS[13] = ('Balio, Sunder', 'balioAndSunder_1', 2259, 2,
+              dict(route='balioAndSunder_1', kill=False, mortal=True, to_end=True, return_presses=500))
+FIGHTS[16] = ('Balio, Sunder, Nina', 'balioAndSunder_2', 17194, 3,
+              dict(route='balioAndSunder_2', kill_enemies='0,1,2', kill_rounds=3, minutes=25))
+FIGHTS[23] = ('Bully 1..3', 'stallion', 1939, 3, dict(route='stallion', kill_enemies='0,1,2'))
+FIGHTS[24] = ('Stallion', 'stallion', 10574, 3, dict(route='stallion', minutes=25))
+FIGHTS[29] = ('Dolphin', 'dolphinBoss', 9955, 1, dict(route='dolphinBoss', minutes=20))
+FIGHTS[35] = ('Gaist, Torch', 'geist', 1468, 3, dict(route='geist', scene=True, after=1200))
+# Crafts of this sweep's own (tools/chapter_jump.py's form, put into its table at `prepare`; chapter_jump.py is
+# not edited): the two one-member cases the round doc names that no save reached (docs/solo-character-proof.md 6b)
+SOLO_CRAFTS = {
+    # chapter 6 run 8 (Scena06_Run08, scena_06_3.cpp): step 0 SortParty (the second list to one member, the count 1),
+    # step 1 PartyPlace(0x190000, 0x410000, 0x19), step 2 Battle(0x19) - fight 25, set-up 25 (Boss25_Exit puts the
+    # list back). The area is boss-fights.md's inferred 92, at Run09Enter's arrival (0x180000, 0x3D0000, 0x89).
+    'bfs25': dict(donor='preBeyd', chapter=6, state=2, run=8, step=0, area=92, flags=0x89, x=0x180000, z=0x3D0000,
+                  why='fight 25: Scena06_Run08 from step 0 (SortParty, PartyPlace, Battle(0x19))'),
+    # chapter 8 run 0xB (Scena08_Scene11, scena_08_2.cpp): step 7 Scena08_SetUpRecord4, the record of id 4 at HP 0,
+    # status | 0x60, must-stay on it and on record 7; step 9 DropIn(2), PlaceParty(0x150000, 0x190000, 0x22);
+    # step 0xA waits counter 0 = 0x1A, then Field_StartEventBattle(0x22) - fight 34 (boss-fights.md: Mikba, area 43)
+    'bfs34': dict(donor='minecartToZombieDragon', chapter=8, state=2, run=0xB, step=7, area=43, flags=1,
+                  x=0x150000, z=0x190000, cset=[0x14], cclr=[0x15], counters=[0x1A, 0, 0, 0],
+                  why='fight 34: Scena08_Scene11 from step 7 (record 4 to HP 0) with counter 0 at 0x1A'),
+    # chapter 5 run 0x12 (scena_05_2.cpp, 0x549A80): step 6 ChangeArea(0x50, 0xC60000, 0xF8000, 0x82); steps 8, 9
+    # wait counter 0 = 1, 7; step 0xA Battle(0x16) at counter 0 = 0xB - fight 22, Garr (boss-fights.md, area 80)
+    'bfs22': dict(donor='PreEmitai', chapter=5, state=2, run=0x12, step=0xA, area=0x50, flags=0x82,
+                  x=0xC60000, z=0xF8000, counters=[0xB, 0, 0, 0],
+                  why='fight 22: chapter 5 run 0x12 at its battle step 0xA with counter 0 at 0xB'),
+    # chapter 7 run 6 (Scena07_Scene6, scena_07_2.cpp; Scena07_Cell0 starts it at step 0xA): step 0x12 at counter
+    # 0 = 0x13 PlaceParty at the leader and Field_StartEventBattle(0x1F) - fight 31, Garr, area 0x55 (85). Flag 8
+    # set so the area's entry does not restart run 6 at step 0; flag 9 clear (set at step 0x14, after the fight)
+    'bfs31': dict(donor='dolphinBoss', chapter=7, state=2, run=6, step=0x12, area=0x55, flags=0x82,
+                  x=0x258000, z=0x410000, cset=[8], cclr=[9], counters=[0x13, 0, 0, 0],
+                  why='fight 31: Scena07_Scene6 at its battle step 0x12 with counter 0 at 0x13'),
+}
+FIGHTS[22] = ('Garr (chapter 5)', 'bfs22', 390, 3, dict(scene=True))
+FIGHTS[31] = ('Garr (Angel Tower)', 'bfs31', 390, 3, dict(scene=True))
+FIGHTS[25] = ('Beyd, Zig (set-up 25)', 'bfs25', 390, 3, dict(scene=True))
+FIGHTS[34] = ('Mikba (record 4 at 0 HP)', 'bfs34', 390, 3, dict(scene=True))
 CRAFTS = sorted({v[1] for v in FIGHTS.values() if v[1].startswith('bf')})
 COLUMNS = ('fight', 'boss', 'side', 'verdict', 'called', 'start', 'win', 'lost', 'back', 'joined', 'party_before',
-           'party_in_battle', 'count_in_battle', 'party_after_return', 'mark', 'solo_battle', 'solo_restore',
-           'champion_before', 'champion_after', 'status', 'notes')
+           'party_in_battle', 'count_in_battle', 'party_after_return', 'ending', 'after', 'vs_plain', 'mark',
+           'solo_battle', 'solo_restore', 'champion_before', 'champion_after', 'status', 'notes')
 
 
 def boss_dir(root):
@@ -85,6 +132,7 @@ def fight_args(root, fight, members):
     boss, save, cut, enemies, extra = FIGHTS[fight]
     extra = dict(extra)
     route = extra.pop('route', None)
+    extra.pop('minutes', None)
     a = types.SimpleNamespace(
         route=os.path.join(H.TOOLS, 'recipes', route + '.txt') if route else probe_for(root, save), cut=cut, goto=(), field_cut=371, settle=150, pre_poke=[], camera=(), place=(),
         fight=fight, scene=False, enemies=enemies, mortal=False, members=members, confirm='circle', ids='',
@@ -158,6 +206,7 @@ def summarise(fight, side, status, lg, champion):
         row['champion_before'] = H.record_text(r0) if r0 else ''
         row['champion_after'] = H.record_text(r1) if r1 else ''
     notes = []
+    how = ''
     if f['fatal'] or f['crash'] or status in ('FATAL', 'game exited'):
         verdict = 'crashed'
         notes.append(f['fatal'] or f['crash'] or status)
@@ -166,7 +215,11 @@ def summarise(fight, side, status, lg, champion):
         if s['facts']['fail']:
             notes.append(s['facts']['fail'])
     elif s['back'] is not None:
-        how = 'win' if s['win'] is not None else 'loss' if s['lost'] is not None else 'by the set-up\'s script'
+        if s['win'] is not None:
+            # the win bit with no frame where the enemies left reached 0: an enemy's Escape or the set-up's end
+            how = 'win, enemies defeated' if s['none_left'] is not None else 'win, no enemy defeated (an escape)'
+        else:
+            how = 'loss' if s['lost'] is not None else "by the set-up's script"
         verdict = f'started, ended ({how})'
     else:
         verdict = 'started, hung (no return to the field)'
@@ -182,6 +235,14 @@ def summarise(fight, side, status, lg, champion):
     row['party_after_return'] = (H.party_text(last) if last else '') + (f' (count {int(cb, 16)}, set {sb})' if cb else '')
     row['party_at_return'] = H.party_text(pb) if pb else ''
     row['verdict'] = verdict
+    row['ending'] = how if s['start'] is not None and s['back'] is not None else ''
+    # after the return: the field modes and areas the run went through to its end (the scene going on)
+    if s['back'] is not None:
+        modes = [H.le(v, 0, 2) for fr, n, o, v in w if n == 'sl_mode' and fr >= s['back']]
+        areas = [H.le(v, 0, 2) for fr, n, o, v in w if n == 'area' and fr >= s['back']]
+        ch = H.at_or_before(w, 'sl_chapter', None)
+        row['after'] = (f'modes {" ".join(str(m) for m in modes) or "-"}; areas {" ".join(str(x) for x in areas) or "-"}; '
+                        f'chapter {int(ch, 16) if ch else "?"}; recipe {f["end"] or status}')
     row['notes'] = '; '.join(n for n in notes if n)[:300]
     return row
 
@@ -205,8 +266,8 @@ def save(root, rows):
                 'tools/solo_boss_sweep.py: the latest run of each fight and side (docs/solo-character-proof.md 4)')
     with open(os.path.join(root, 'boss_results.md'), 'w', encoding='utf-8', newline='\n') as f:
         f.write(H.md_table(('fight', 'boss', 'side', 'verdict', 'start', 'back', 'joined', 'party_before', 'party_in_battle',
-                            'count_in_battle', 'party_after_return', 'mark', 'solo_battle', 'solo_restore',
-                            'champion_before', 'champion_after', 'notes'), order) + '\n')
+                            'count_in_battle', 'party_after_return', 'ending', 'after', 'vs_plain', 'mark',
+                            'solo_battle', 'solo_restore', 'champion_before', 'champion_after', 'notes'), order) + '\n')
 
 
 def cmd_prepare(a):
@@ -214,7 +275,12 @@ def cmd_prepare(a):
     H.prepare_launcher(a.root, 'cand', a.build)
     H.prepare_game(a.root, a.game_src)
     sv, n = H.prepare_saves(a.root, a.saves_src)
-    missing = [c for c in CRAFTS if not os.path.exists(os.path.join(sv, c + '.DAT'))]
+    for name in SOLO_CRAFTS:
+        if not os.path.exists(os.path.join(sv, name + '.DAT')):
+            import chapter_jump  # noqa: E402  (its make(), with this sweep's crafts put into its table)
+            chapter_jump.CRAFTS[name] = SOLO_CRAFTS[name]
+            chapter_jump.make(name, sv, sv)
+    missing = [c for c in CRAFTS if c not in SOLO_CRAFTS and not os.path.exists(os.path.join(sv, c + '.DAT'))]
     if missing:
         r = subprocess.run([sys.executable, os.path.join(H.TOOLS, 'chapter_jump.py'), 'make', '--donors', sv,
                             '--out', sv] + missing, cwd=H.ROOT, capture_output=True, text=True)
@@ -242,13 +308,20 @@ def run_one(a, fight, side, env, champion):
     full.update(env)
     d = boss_dir(a.root)
     rc, status, lg, secs = H.run_recipe(a.root, recipe, os.path.join(d, tag), os.path.join(a.root, 'Lcand'), full,
-                                        os.path.join(d, f'{tag}.runlog'), minutes=a.minutes,
+                                        os.path.join(d, f'{tag}.runlog'), minutes=max(a.minutes, FIGHTS[fight][4].get("minutes", 0)),
                                         extra=['--lang', a.lang])
     S.to_png(os.path.join(d, tag))
     row = summarise(fight, side, status, lg, champion)
     print(f'[{time.strftime("%H:%M:%S")}] fight {fight} {side}: {row["verdict"]} ({secs:.0f} s; '
           f'party {row.get("party_in_battle")}, count {row.get("count_in_battle")}, mark {row.get("mark")})', flush=True)
     return row
+
+
+def compare(row, plain):
+    def one(key, label):
+        return f'{label} ' + ('same' if row.get(key) == plain.get(key) else f'DIFFERS (plain: {plain.get(key)})')
+    return '; '.join([one('ending', 'ending'), one('party_after_return', 'party after'),
+                      one('after', 'after the return')])
 
 
 def cmd_run(a):
@@ -266,7 +339,11 @@ def cmd_run(a):
                 print('STOP seen')
                 save(a.root, rows)
                 return 1
-            rows[(str(fight), side)] = run_one(a, fight, side, env, champ)
+            row = run_one(a, fight, side, env, champ)
+            plain = rows.get((str(fight), 'plain'))
+            if plain and side != 'plain':
+                row['vs_plain'] = compare(row, plain)
+            rows[(str(fight), side)] = row
             save(a.root, rows)
     print(open(os.path.join(a.root, 'boss_results.md'), encoding='utf-8').read())
     return 0
