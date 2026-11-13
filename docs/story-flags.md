@@ -26,12 +26,52 @@ Each has its own bank in the save block:
 
 | Bank | Block | Set by | Flag number from |
 |---|---|---|---|
-| Field object contents (chests, pick-ups) | `+0x6EC`, 32 bytes | `Field_ContentTake` (`field_e1.cpp`), bank `0x9040CC` | The object's byte `+5` in the area data |
-| A second find bank, with a counter at `+0x75C` | `+0x72C`, 32 bytes | `Field_PassageSteps` entry 1, bank `0x90410C` | The passage entry's byte `+4` |
+| Field object contents (chests, pick-ups) | `+0x6EC`, 32 bytes | `Field_ContentTake` (`field_4.cpp`), bank `0x9040CC` | The object's byte `+5`: `op[8]` of the op `9x` that placed it (below) |
+| A second find bank, with a counter at `+0x75C` | `+0x72C`, 32 bytes | `Field_PassageSteps` entry 1, bank `0x90410C` | The passage entry's byte `+4` (below) |
 | Dragon genes | `+0xC70`, 18 bits | `Gene_Bits` `0x904650`, below | The gene's number |
 
 MEASURED: between `start.DAT` and `start_normal.DAT` the one item picked up changed
 exactly one byte at `+0x6EC`, beside its inventory slot.
+
+**Where a find's bit, place and contents come from** (2026-11-13;
+`tools/bank_names.py` and the save editor read them from the install, section
+4.3 of [`save-editor.md`](save-editor.md); no value is in the repository):
+
+- READ (`EventOp_9x` 0x57B530, `event_op.cpp`; `Field_ContentTake` 0x52FBD0,
+  `field_4.cpp`): a **content object is placed by op `9x`** of an event
+  script, 13 bytes. `op[4]` / `op[6]` the half cell and `op[5]` / `op[7]` the
+  whole cell of x and z (the object's `+0x36` / `+0x3A`); `op[8]` its `+5`,
+  the bit; `op[9]:op[0xA]` its dword `+0x18`, so `+0x18` (the category, `0xFF`
+  zenny) is `op[0xA]` and `+0x19` (the item id, or the zenny / 40) is
+  `op[9]`. A bit of `0xFF` is never set. The placement tests the bit itself:
+  set, the object is drawn taken, or with `op[0xC]` bit 0 not placed at all.
+- READ: the ops are in each area's placement script (`Area_Descriptors`
+  0x667590, the descriptor's `+0`; [`event-script.md`](event-script.md)), some
+  under an `F0` / `F1` / `F4` condition, and in two tables that area code
+  hands `EventOp_9x`: `Area42_Placements` 0x5F62E0 (three records, area 42)
+  and `Area135_SpawnOps` 0x62DA50 (four, area 135). MEASURED on the PC's exe
+  by the structural walk of `tools/event_scan.py`: 252 ops `9x` in the
+  placement scripts, all paths counted, with 164 different bits.
+- READ (`Area_PassageAhead` 0x530600, `Field_PassageOpen` 0x52F600,
+  `Field_PassageTake` 0x52F760, `field_4.cpp`): **a passage entry** is 8
+  bytes of the descriptor's `+0x2C` list (null in 105 areas, DIV-0197), `+0x31`
+  the last index: `+0` x, `+1` z, `+2` bit 7 the run goes along z, `+3` the
+  run's length in cells, `+4` the bit (`0xFF` none), `+5` the item id or the
+  zenny / 40, `+6` the category (`0xFF` zenny). An entry whose word `+4` has
+  bit 15 set and whose `+6` is not `0xFF` opens a message (kinds 0, 1) or an
+  area script (kind 2) and is no find.
+- MEASURED (owner's install, 2026-11-13): 170 chest bits and 104 passage bits
+  have a place. A bit is often in several areas at one cell with one find -
+  one map in a town's chapter versions (bit 2 of `+0x6EC` is in areas 5, 10,
+  11 and 12). No bit has two different cells or finds. Every chest and passage
+  bit set in 88 PC saves has a place.
+- READ (`Battle_SetupEnemy` 0x494320, `Battle_CopyEnemyData` 0x4946C0,
+  `battle_4.cpp`; [`enemy_ai_data.md`](enemy_ai_data.md)): the bit of the
+  banks `+0x688` and `+0x6C8` is the **enemy kind, byte `+0xC`** of an enemy
+  data record (`0x8C55C8 + id * 0x8C`, from the area file's kind-0 chunk of
+  tag `0xC2000`), whose name is its first 12 bytes. MEASURED on the owner's
+  install: the kind is global - 175 kinds over the 200 area files, each kind
+  with one name wherever it is.
 
 **Genes are set in five places.** A gene found in the field goes through one generic
 handler, `FieldTail_FlagMessage` (`field_e2.cpp`, original `0x56DE50`), which sets
