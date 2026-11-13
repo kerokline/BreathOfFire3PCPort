@@ -168,9 +168,15 @@ def run_recipe(root, recipe, out, launcher_dir, env, runlog, minutes=40, extra=(
     ini = os.path.join(launcher_dir, 'bof3x.ini')
     if os.path.exists(ini):
         os.remove(ini)
+    stale = os.path.join(launcher_dir, 'bof3x.log')
+    if os.path.exists(stale):
+        os.remove(stale)   # a run that never launches must not be read from the previous run's log
     cmd = [sys.executable, os.path.join(TOOLS, 'input_run.py'), recipe, '--out', out, '--no-front',
            '--game', os.path.join(root, 'g'), '--launcher', launcher, '--slot0-wait', '2400',
-           '--minutes', str(minutes), '--host', host] + list(extra)
+           '--minutes', str(minutes), '--host', host,
+           # the slot files swapped are this root's own game folder's, never a player's: a game the owner plays
+           # beside the harness (from another folder) does not share them (memory: harness beside the live game)
+           '--slot0-shared'] + list(extra)
     full = clean_env()
     full.update(env)
     os.makedirs(out, exist_ok=True)
