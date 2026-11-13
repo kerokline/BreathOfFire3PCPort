@@ -1030,6 +1030,9 @@ extern "C" void __cdecl GameMode5_Place(void) {
     } else {
         SH_CALL(Party_PlaceAtSlots)();
     }
+    // DIV-0228: the walkers' records, placed above, are not ticked or drawn
+    // until step 7 rebuilds them - the count held at 1 till then.
+    solo::SoloBattle_AfterPlaceAtSlots();
     SH_CALL(Party_ScriptTicks)();
     BattleFrames();
     StepUp();
@@ -1050,6 +1053,11 @@ extern "C" void __cdecl GameMode5_Leave(void) {
     bool back = false;
     if (Field_Kind2Hold == 0 && SH_CALL(File_LoadDone)() != 0) {
         Draw_OtSlot = 6;
+        // DIV-0228 SoloCharacter: the member count held at 1 since step 6 and
+        // a party set the battle of one changed go back here, the set's field
+        // file loaded right before the walkers' sprites are rebuilt from it.
+        // Nothing with the behaviour off.
+        solo::SoloBattle_RestoreAtStep7();
         SH_CALL(Field_PartyLoad)(0);
         SH_CALL(Party_PlacesByList)();
         const unsigned char flags = EventBattle_Flags;
