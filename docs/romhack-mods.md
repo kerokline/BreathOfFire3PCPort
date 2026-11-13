@@ -223,9 +223,12 @@ Not built:
   selected mod's status line on the Mods tab names the behaviours it turns
   on, and the launcher writes one stderr line a behaviour naming the mod. A
   line on the Settings page itself is not built.
-- A repackaged mod attached to a release is named in the release notes with
+- ~~A repackaged mod attached to a release is named in the release notes with
   its author, and the permission is recorded in `docs/THIRD_PARTY.md` (who,
-  when, the condition).
+  when, the condition).~~ **Replaced 2026-11-13** (the owner; [`mods.md`](mods.md)
+  12): no romhack's patch is repackaged or attached. The player adds the
+  author's own file; the release's list `data/mods/known.toml` names the
+  versions the project has measured, with the author's name and address.
 
 Launcher text follows ASD-STE100.
 

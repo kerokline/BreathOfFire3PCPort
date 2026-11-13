@@ -788,6 +788,9 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 // requires, base, layer, state (built, not-built, needs, needs-disc, problem),
 // needs, problem, author, url, credit, and for a disc-patch mod language (its
 // text's), carries and lacks (two sentences from its build's report.toml).
+// A romhack's patch file is added by itself (docs/mods.md 12): `unverified` is
+// true for a patch the release's list of known mods does not have, and
+// `known_now` names the mod when the list of this release has it after all.
 // A mod the install cannot play is greyed in the list with its reason
 // (the owner's rule, 2026-10-10): a language it needs and the install lacks,
 // a disc it needs, a layer not built, or a base or a text that is not the
@@ -803,7 +806,14 @@ struct ModRow {
     // the engine's behaviours it turns on (mod.toml's needs) and those this release does not have
     // (docs/mods.md 11): a mod that misses one is greyed and never handed over
     std::vector<std::string> behaviours, missing;
+    bool unverified = false;   // a patch that is not in the release's list of known mods (docs/mods.md 12)
+    std::string known_now;     // the mod this release knows that patch as, when it does
 };
+
+// What the player is told about such a patch (the owner's words, 2026-11-13).
+const wchar_t kModUnverified[] =
+    L"This patch is not in the list of known mods of this release. Its author and its function are not verified. "
+    L"The game takes only the data and text changes. It does not take changes to the program.";
 
 bool ModOnOff(const ModRow& r) { return r.kind == "disc-patch" || r.kind == "table-edit"; }
 
@@ -873,8 +883,8 @@ std::wstring ModRowText(const ModsState& s, const ModRow& r, bool& greyed) {
     } else {
         state = L"problem: " + Widen(r.problem.empty() ? std::string("unreadable") : r.problem);
     }
-    return Widen(r.name) + L"\t" + (r.author.empty() ? std::wstring() : L"by " + Widen(r.author)) + L"\t" +
-           Widen(r.version) + L"\t" + state;
+    const std::wstring by = r.unverified ? L"not verified" : r.author.empty() ? std::wstring() : L"by " + Widen(r.author);
+    return Widen(r.name) + L"\t" + by + L"\t" + Widen(r.version) + L"\t" + state;
 }
 
 // The status line for the selected mod: its name and version, who made it, the
@@ -883,6 +893,10 @@ void ModsCredit(HWND page, const ModsState& s) {
     const LRESULT i = SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0);
     if (i == LB_ERR || static_cast<size_t>(i) >= s.rows.size()) return;
     const ModRow& r = s.rows[static_cast<size_t>(i)];
+    if (r.unverified) {
+        ModStatus(page, Widen(r.name) + L". " + kModUnverified);
+        return;
+    }
     std::wstring text = Widen(r.name) + L" " + Widen(r.version);
     text += r.author.empty() ? L". The mod does not give its author." : L", by " + Widen(r.author) + L".";
     if (!r.credit.empty()) text += L" " + Widen(r.credit);
@@ -905,7 +919,15 @@ void ModsReport(HWND page, ModsState& s) {
     const LRESULT i = SendDlgItemMessageW(page, IDC_MOD_LIST, LB_GETCURSEL, 0, 0);
     if (i == LB_ERR || static_cast<size_t>(i) >= s.rows.size()) return;
     const ModRow& r = s.rows[static_cast<size_t>(i)];
-    if (r.id == s.told || r.state != "built" || (r.carries.empty() && r.lacks.empty())) return;
+    if (r.id == s.told) return;
+    if (r.unverified) {
+        // the status line is one line: the whole sentence goes in the log, once for each selection
+        s.told = r.id;
+        ModLog(page, Widen(r.name) + L": " + kModUnverified);
+        if (!r.known_now.empty())
+            ModLog(page, L"This release knows this patch as " + Widen(r.known_now) + L". Add the file again to get that mod.");
+    }
+    if (r.state != "built" || (r.carries.empty() && r.lacks.empty())) return;
     s.told = r.id;
     if (!r.carries.empty()) ModLog(page, Widen(r.name) + L": " + Widen(r.carries));
     if (!r.lacks.empty()) ModLog(page, Widen(r.name) + L": " + Widen(r.lacks));
@@ -995,7 +1017,7 @@ void ModsAdd(HWND page, ModsState& s) {
     const size_t b = path.find_first_not_of(L" \t\""), e = path.find_last_not_of(L" \t\"");
     path = b == std::wstring::npos ? std::wstring() : path.substr(b, e - b + 1);
     if (path.empty()) {
-        ModStatus(page, L"Type or select the path of a .zip file first.");
+        ModStatus(page, L"Type or select the path of a .zip, .xdelta or .ppf file first.");
         return;
     }
     if (!IsFile(path)) {
@@ -1014,10 +1036,10 @@ void ModsBrowse(HWND page, ModsState& s) {
     OPENFILENAMEW ofn{};
     ofn.lStructSize = sizeof ofn;
     ofn.hwndOwner = page;
-    ofn.lpstrFilter = L"Mods (*.zip)\0*.zip\0All files (*.*)\0*.*\0";
+    ofn.lpstrFilter = L"Mods (*.zip, *.xdelta, *.ppf)\0*.zip;*.xdelta;*.ppf\0All files (*.*)\0*.*\0";
     ofn.lpstrFile = path;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrTitle = L"Select a mod (a .zip with a mod.toml and data files)";
+    ofn.lpstrTitle = L"Select a mod (a .zip with a mod.toml, or the patch file of a romhack)";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
     if (!GetOpenFileNameW(&ofn)) return;
     SetDlgItemTextW(page, IDC_MOD_PATH, path);
@@ -1040,7 +1062,8 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
                           JsonString(line, "needs"), JsonString(line, "problem"), JsonString(line, "author"),
                           JsonString(line, "url"), JsonString(line, "credit"), JsonString(line, "language"),
                           JsonString(line, "carries"), JsonString(line, "lacks"),
-                          JsonStrings(line, "behaviours"), JsonStrings(line, "missing")});
+                          JsonStrings(line, "behaviours"), JsonStrings(line, "missing"),
+                          JsonTrue(line, "unverified"), JsonString(line, "known_now")});
         return;
     }
     if (job == kModAdd && IsJsonObject(line)) {
@@ -1050,6 +1073,7 @@ void ModsOnLine(HWND page, ModsState& s, Job job, const std::wstring& wline) {
             ModLog(page, L"Added: " + Widen(JsonString(line, "name")) + L" " + Widen(JsonString(line, "version")) +
                              (author.empty() ? std::wstring() : L", by " + Widen(author)) +
                              (replaced.empty() ? std::wstring() : L" (replaces " + Widen(replaced) + L")") + L".");
+            if (JsonTrue(line, "unverified")) ModLog(page, kModUnverified);
             s.build_next = JsonString(line, "id");
             s.added_kind = JsonString(line, "kind");
             if (JsonString(line, "state") == "needs") {

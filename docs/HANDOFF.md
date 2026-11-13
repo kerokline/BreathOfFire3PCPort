@@ -53,7 +53,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
      **The hack's version 1.4 (2026-11-12, `romhack/definitive-1.4`; [`disc-patch-round.md`](disc-patch-round.md) 6d):** `TownWarp` and
      `AllyAnywhere` follow 1.4's rules now (DIV-0225 and DIV-0217 amended), the builder keeps a number changed by a moved
-     distance (D417), and the package needs 1.4's two hashes (`D:\bof3x-runs\de14\zip`). **1.4's rules are not played**: the
+     distance (D417), and the package needs 1.4's two hashes (`D:\bof3x-runs\de14\zip`). **From `mods/known-patches`
+     (2026-11-13; [`mods.md`](mods.md) 12) there is no package:** the player adds the author's `.xdelta` by itself and
+     `data/mods/known.toml` gives it its name, author and `needs`; a patch the list does not have is added unverified. Owed
+     there: the owner's look at the Mods tab's new text, and a play of a mod added that way. A new version of a hack =
+     measure it, then a `[[patch]]` in the list. **1.4's rules are not played**: the
      owner's play above was 1.0. Owed: the owner's play of the warp's new learning and of Ally in one of the five areas; the
      ten routes with the behaviours off.
    - **The New Game round** (item 18): staged 2026-11-12, group M to launch.
