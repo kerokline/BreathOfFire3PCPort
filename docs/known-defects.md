@@ -11100,3 +11100,29 @@ table). Rebuilt offline: 1.0 gains the four cells (2,265 table bytes; 2,259
 before), 1.4 the four and record 308 (2,264; 2,256), no length change is
 reported, the ten empty shop records are counted again (149 bytes), and the
 `dat\` files are the same bytes as before the fix. Not played.
+
+## D418 — The members screens hold three reserve rows; a fourth breaks both (Capcom's; latent, unfixed)
+
+**Seen:** 2026-11-12, group MS of the solo-character round, by reading and by
+a live poke ([`solo-character-screens.md`](solo-character-screens.md) 2 and
+2a; that doc's design is superseded, its reading of the original stands).
+
+**Established:** Tactics' reserve list `0x6BDFD4` has the refused byte
+`0x6BDFD7` as its fourth byte, which `TacticsMembers_Build` sets to 0xFF
+after the list: a fourth row shows record 0 (`Character_IndexById[0xFF]`
+reads 0 in the image) and a swap with it does nothing. PartyForm's fourth
+byte is its own count `0x6BC897`, written after the list: the fourth row
+shows id 4's record. Both cursor tables hold three rows, so row 3's place is
+off screen, and row 3 is drawn past line 240. From the fifth member the
+reserve flags (never read) land on the list (`rest_2f.md` 7 item 2,
+`field_s.md` 10 L1/L2).
+
+**Reach:** only with four or more joined members outside a team of three. No
+measured save holds that; the chapter 14 desert holds five outside a team of
+one, and its members choice is refused (`Field_InputFlags` 0). So the
+original's play does not meet it.
+
+**State:** unfixed, as the original has it. A fix (a reserve of ours shown
+three rows at a time with scrolling) was built on `solo/ms` (commit
+`9b60b48d`) and not merged: the mode that would have reached it was reduced
+(round doc 6f).
