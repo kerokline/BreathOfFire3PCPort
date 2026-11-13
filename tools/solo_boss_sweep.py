@@ -71,7 +71,8 @@ FIGHTS[16] = ('Balio, Sunder, Nina', 'balioAndSunder_2', 17194, 3,
 FIGHTS[23] = ('Bully 1..3', 'stallion', 1939, 3, dict(route='stallion', kill_enemies='0,1,2'))
 FIGHTS[24] = ('Stallion', 'stallion', 10574, 3, dict(route='stallion', minutes=25))
 FIGHTS[29] = ('Dolphin', 'dolphinBoss', 9955, 1, dict(route='dolphinBoss', minutes=20))
-FIGHTS[35] = ('Gaist, Torch', 'geist', 1468, 3, dict(route='geist', scene=True, after=1200))
+FIGHTS[35] = ('Gaist, Torch', 'geist', 1468, 3, dict(route='geist', scene=True, after=1200, kill_rounds=3,
+                                                   return_presses=600))
 # Crafts of this sweep's own (tools/chapter_jump.py's form, put into its table at `prepare`; chapter_jump.py is
 # not edited): the two one-member cases the round doc names that no save reached (docs/solo-character-proof.md 6b)
 SOLO_CRAFTS = {
@@ -114,10 +115,14 @@ FIGHTS[131] = ('Garr (Angel Tower), the route after', 'preGarrFight', 4061, 3,
                     tail_align=['until 0x66C7E8 u16 == 1 timeout 600']))
 FIGHTS[25] = ('Beyd, Zig (set-up 25)', 'bfs25', 390, 3, dict(scene=True))
 FIGHTS[34] = ('Mikba (record 4 at 0 HP)', 'bfs34', 390, 3, dict(scene=True))
+# a member alone hits one enemy a round: the sample fights with several enemies want more kill rounds and a
+# longer return window than three members do (fight 46 with garr, 2026-11-13)
+for _f in range(39, 49):
+    FIGHTS[_f][4].update(kill_rounds=3, return_presses=600)
 CRAFTS = sorted({v[1] for v in FIGHTS.values() if v[1].startswith('bf')})
 COLUMNS = ('fight', 'boss', 'side', 'verdict', 'called', 'start', 'win', 'lost', 'back', 'joined', 'party_before',
            'party_in_battle', 'count_in_battle', 'party_after_return', 'ending', 'after', 'vs_plain', 'mark',
-           'solo_battle', 'solo_restore', 'champion_before', 'champion_after', 'status', 'notes')
+           'solo_battle', 'solo_restore', 'champion_before', 'champion_after', 'no_pieces', 'status', 'notes')
 
 
 def boss_dir(root):
@@ -173,11 +178,22 @@ def write_recipe(root, fight, members, tag, wait_cross=False, mark=None):
         sys.exit(f'fight {fight}: {watches} watches, the recipe op allows 64')
     body = S.fight_body(a, None)
     if wait_cross:
-        # A team of one: the cross is one member's, so a confirm pressed by `seek ... == 1` as the cross opens
-        # enters the command and phase 1 is over two frames later, between the seek's checks; the seek then
-        # gives up while the battle runs on (fight 32 with ryu, 2026-11-12). Wait for the cross instead.
+        # A team of one: the cross is one member's, so a confirm pressed by `seek ... == 1` (4 frames held, 8
+        # released) as the cross opens enters the command and phase 1 is over two frames later, between the
+        # seek's checks; the seek gives up while the battle runs on (fight 32 with ryu). An `until` with no
+        # presses stalls where the battle's messages want a confirm in phase 3 (fight 35). So the same seek
+        # with one-frame presses and one-frame gaps: a check every second frame sees the two frames phase 1
+        # lasts even when a press enters the command, and the messages still get their confirms. Six times
+        # the presses keep the seek's window in frames.
         pre = f'seek {a.confirm} 0x{S.PHASE:X} u8 == 1 max '
-        body = [f'until 0x{S.PHASE:X} u8 == 1 timeout 1800' if l.startswith(pre) else l for l in body]
+        out = []
+        for l in body:
+            if l.startswith(pre):
+                k = int(l.split(' max ')[1])
+                out += ['set hold 1', 'set gap 1', f'{pre}{k * 6}', 'set hold 4', 'set gap 8']
+            else:
+                out.append(l)
+        body = out
     tail_from = FIGHTS[fight][4].get('tail_from')
     if tail_from:
         # After the return: the route's own frames from its own return to the field (field mode 5 -> 2 at
@@ -258,6 +274,17 @@ def summarise(fight, side, status, lg, champion):
     last = H.at_or_before(w, 'sl_party', None)
     row['party_after_return'] = (H.party_text(last) if last else '') + (f' (count {int(cb, 16)}, set {sb})' if cb else '')
     row['party_at_return'] = H.party_text(pb) if pb else ''
+    nopieces = 0
+    with open(lg, encoding='utf-8', errors='replace') as fh:
+        for line in fh:
+            if 'frame of no pieces' in line:
+                nopieces += 1
+    row['no_pieces'] = nopieces
+    if s['start'] is not None and s['back'] is None and verdict.startswith('started, hung'):
+        # the phase watches at the end: still turning (a change in the last 120 frames) or stopped
+        ph = [f for f, n, o, v in w if n == 'phase_step' and o]
+        last = max((f for f, n, o, v in w), default=0)
+        verdict += ' - the battle still turning at the end' if ph and last - ph[-1] < 120 else ' - the battle stopped'
     row['verdict'] = verdict
     row['ending'] = how if s['start'] is not None and s['back'] is not None else ''
     # after the return: the field modes and areas the run went through to its end (the scene going on)
