@@ -11114,3 +11114,68 @@ for their tables (`disc_patch_build.build`), not the sections in which a changed
 **Status:** open. The fix is to count a section only when a byte of it that differs was not placed (as a table
 cell, a raw range, or a relinked address left as the PC's). For a hack with real program changes the count is
 right in kind and too high by the sections that hold only table numbers.
+
+## D419 — The members screens hold three reserve rows; a fourth breaks both (Capcom's; latent, unfixed)
+
+**Seen:** 2026-11-12, group MS of the solo-character round, by reading and by
+a live poke ([`solo-character-screens.md`](solo-character-screens.md) 2 and
+2a; that doc's design is superseded, its reading of the original stands).
+
+**Established:** Tactics' reserve list `0x6BDFD4` has the refused byte
+`0x6BDFD7` as its fourth byte, which `TacticsMembers_Build` sets to 0xFF
+after the list: a fourth row shows record 0 (`Character_IndexById[0xFF]`
+reads 0 in the image) and a swap with it does nothing. PartyForm's fourth
+byte is its own count `0x6BC897`, written after the list: the fourth row
+shows id 4's record. Both cursor tables hold three rows, so row 3's place is
+off screen, and row 3 is drawn past line 240. From the fifth member the
+reserve flags (never read) land on the list (`rest_2f.md` 7 item 2,
+`field_s.md` 10 L1/L2).
+
+**Reach:** only with four or more joined members outside a team of three. No
+measured save holds that; the chapter 14 desert holds five outside a team of
+one, and its members choice is refused (`Field_InputFlags` 0). So the
+original's play does not meet it.
+
+**State:** unfixed, as the original has it. A fix (a reserve of ours shown
+three rows at a time with scrolling) was built on `solo/ms` (commit
+`9b60b48d`) and not merged: the mode that would have reached it was reduced
+(round doc 6f).
+
+## D420 — The state hash's page `0x7DE000` differs between two runs of one build when the machine is busy; which bytes is not known (harness; open)
+
+**Seen:** since round fourteen ([`state-hash.md`](state-hash.md) 4 and its
+open item 1; [`ledger-fields-round.md`](ledger-fields-round.md)'s controls;
+[`abc-sweep-1013-us.md`](abc-sweep-1013-us.md)), and on 2026-11-13 in the
+solo-character round's off-proof
+([`solo-character-proof.md`](solo-character-proof.md) 6e): `cutsceneAndNue`
+with the behaviours off differed from the reference pair on this page alone
+in four candidate runs, from a different tick each time (357, 813, 5,335,
+6,189), with another session's game running on the machine. The reference
+pair agreed with itself, and the same build with `SoloCharacter` on and no
+champion was identical on that route.
+
+**Established:** the page holds the port's sound device state
+(`Snd_BufferDesc`, `Snd_WaveFormat`, the music stream's records) beside
+other things. The skip list already leaves out `0x7DE3B4` (40 bytes, the
+stream's handles) and `Music_Finished` `0x7DE3E0` ("set from the stream's own
+timing"). Two runs of one build with one set of settings have differed on
+the page for hundreds of ticks (ledger-fields-round's `dOrigR`).
+
+**Not established:** which bytes still vary. The reading that it is the
+stream's wall-clock timing against the frame tick is an inference from the
+above; no byte dump at a differing tick has been taken. That two games on
+one machine share nothing here is also not measured, only that each run has
+its own launcher, game folder and process.
+
+**Cost:** a proof run beside any load can report this page on a route, and
+the verdict then rests on repeats and on argument (as section 6e does)
+where it should rest on `identical`.
+
+**To do:** dump the page at a differing tick from two runs of one build
+(`cutsceneAndNue` showed it four times in four); name the bytes; skip those
+that are the stream's timing, each with its reason, or make them follow the
+tick. Then run `cutsceneAndNue` with the behaviours off again for the solo
+round's missing `identical`.
+
+**State:** open. The owner (2026-11-13): "Lets ledger that as something to
+follow up on, but conditionally pass this PR".

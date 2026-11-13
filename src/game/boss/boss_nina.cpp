@@ -17,6 +17,8 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/solo/solo_battle.h"
+#include "game/solo/solo_party_set.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -216,12 +218,27 @@ void EndStep(U step) { BH_WORD(Handler, step)(); }
 // 0x23 the step 0x1C, each with Boss_SetByLeaderId (before the step's store,
 // or after it for set-up 20: `pick_first`) and step 3. Then the four words
 // kept: enemy 1's HP, enemy 2's, enemy 0's +0xA4 and +0xA6.
+// DIVERGENCE DIV-0228 SoloCharacter (the owner, round doc 6h): the champion
+// fights every bout of the series, and a bout the champion loses ends the
+// series as the original ends it when its last member loses (flags 0x23 and
+// 0x24 set below): the end phase's step 2, the loss screen, GAME OVER. No
+// other member is called in. Asked by EndAreaFight only after enemy 2's fall
+// (0x904AAD bit 0), as its own branch was, and before the flags; nothing with
+// the behaviour off (the call answers no and reads nothing).
+bool SoloChampionLostBout() {
+    if (!solo::SoloBattle_ChampionFightsThis()) return false;
+    bof3::Log("DIV-0228 SoloCharacter: the champion lost a bout of chapter 5's one-on-one series (event battle 0x%02X): "
+              "game over, as when the last member loses",
+              static_cast<unsigned>(EventBattle_Id));
+    return true;
+}
+
 void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_first) {
     const unsigned char fell = BossSe_Script;     // read once, before any call
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(boss_sd::at::kEndWin.v);
-    } else if (fell & 1) {
+    } else if ((fell & 1) || SoloChampionLostBout()) {
         EndStep(boss_sd::at::kEndOther.v);
     } else {
         const bool f23 = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x23) & 0xFF;
@@ -405,7 +422,8 @@ extern "C" void __cdecl BossNina_HookAct(unsigned) {
 extern "C" void __cdecl BossNina_HookHit(unsigned) {
     NameBanner();
     BossSc_WaitTurns = 0;
-    BH_CALL(Field_MemberSprite)(1, 1);
+    // DIV-0228 SoloCharacter: id 1's section supplied when the row lacks it (solo_party_set.h)
+    if (!solo::PartySetExtra_Dress(1, 1)) BH_CALL(Field_MemberSprite)(1, 1);
     rv::Current<records::BattleEnemy>()->ot_slot = 4;
     rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(0x64CCAC);
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->layout + 4));
@@ -462,7 +480,8 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
         BossSc_WaitTurns = 0;
         Sprite_Current = At(::bof3::Img(Battle_Enemies_addr) + 0x250);
         BattleE3_CurrentEnemy = &Battle_Enemies[2];
-        BH_CALL(Field_MemberSprite)(1, 1);
+        // DIV-0228 SoloCharacter: id 1's section supplied when the row lacks it (solo_party_set.h)
+        if (!solo::PartySetExtra_Dress(1, 1)) BH_CALL(Field_MemberSprite)(1, 1);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(0x64CCAC);
         Sprite_Current[0x29] = 4;
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
@@ -539,7 +558,9 @@ extern "C" void __cdecl Boss16_Exit(void) {
         SetWord(Sprite_Current + 0x58, Battle_Enemies[0].script_pos);
         SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
     }
-    BH_CALL(Scenario_CallA)(1);
+    // DIV-0228 SoloCharacter: the join's sprite set-up given a column when the
+    // battle's row lacks id 1 (solo_party_set.h); otherwise the call alone.
+    solo::PartySetExtra_Around(1, [](unsigned n) { BH_CALL(Scenario_CallA)(n); }, 1);
     ObjTrio[1].flags |= 0x40;
     BossH_LeaderPick = static_cast<unsigned char>(B(::bof3::Img(at::kMoveCounter.v)) != 0x14 ? 7 : 6);
 }

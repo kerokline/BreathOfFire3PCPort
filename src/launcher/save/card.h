@@ -72,7 +72,7 @@ bool PsxToPc(const std::uint8_t* psx, Block& pc, std::string& why);
 bool PcToPsx(const Block& pc, std::uint8_t* psx, std::string& why);
 
 // What a block made by the PC game loses on the way to a card (the spec's
-// section 13): the byte this project added (DIV-0191) and the two options no
+// section 13): the two bytes this project added (DIV-0191, DIV-0228) and the two options no
 // PC screen sets. Then the checksum.
 void ClearPcOnly(Block& block);
 

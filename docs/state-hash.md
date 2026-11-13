@@ -222,7 +222,9 @@ ours run of a route that lists the saves wants it.
 
 1. **The sound page's noise under load** (`0x7DE000`, section 4's third row):
    which bytes. A dump at a differing tick names them; they recur only with
-   the machine busy, so the dump wants the same load or luck.
+   the machine busy, so the dump wants the same load or luck. Now D420
+   (`known-defects.md`), with the solo-character round's four runs of
+   `cutsceneAndNue` as the route to dump.
 2. **The cost per frame** is not measured (3.5 MB hashed).
 3. **Routes other than these two** have no reference yet: the whelp, the
    Nue cutscene, the dragon, the shop and the world map are round thirteen's

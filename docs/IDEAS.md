@@ -107,6 +107,7 @@ rule ([`README.md`](README.md)) here too.
 | I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | run 2026-11-09 on `source-layout/stage-c`, before stage D, at the owner's word; the written-in self-tests, the mover and I48 left |
 | I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
 | I65 | The title menu's third row as a custom menu of quality-of-life toggles, reachable from inside the game too | menu / uplift | not assessed | open 2026-11-12 (the owner, answering the New Game round's question on the row); nothing designed |
+| I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
 
 ---
 
@@ -2619,3 +2620,19 @@ Nothing is designed: which toggles, whether they are the launcher's switches or 
 
 ### Outcome
 _(2026-11-12) open; nothing built._
+
+## I66 — Solo character: a champion whose record is at 0 HP when a battle starts
+
+**Ask (2026-11-12, the owner, on the combat half's hand-back):** "I think the Mikba fight is the 0hp Rei fight. For that one, yeah, let's let Rei start dead, and make an idea to maybe handle it differently."
+**Kind:** gameplay / mode (DIV-0228 `SoloCharacter`). **Feasibility:** not assessed.   **Gated on:** the solo-character round's play ([`solo-character-round.md`](solo-character-round.md) 6d).
+
+**What is built.** Chapter 8's `Scena08_Scene11` leaves record 4 at 0 HP with status `0x6000` (read by group CB, [`solo-character-combat.md`](solo-character-combat.md)). A champion alone at 0 HP would lose at the battle's first frame, so `SoloBattle_Arm` stands the mode down for that one battle: the game's own party fights, and the champion starts dead as the original has it. Which fight that is has not been measured; the owner thinks it is the Mikba fight.
+
+**What the fight is, from the owner's play of it (2026-11-12, the route `mikbaFight`):** "it prompts to choose characters, then the fight starts with rei dead. I waste a little time with a dragon, then revive Rei just so you can see how rei immediately transforms (he is not under control during the fight unless he dies first). then I finish the fight. It prompts for party again after the fight is over." So a revived champion here would not be the player's to command; any other way of handling the fight has to answer that first.
+
+**What could be different** (nothing chosen): the champion revived to fight alone, at 1 HP or at full; the champion revived by the party's first turn; the fight skipped or won for a solo run. Each changes what the story's scene meant by the 0 HP.
+
+**First concrete step:** a save before that fight with record 4 as champion, to see what the stand-down plays like and confirm which fight it is.
+
+### Outcome
+_(2026-11-12) open; the stand-down is what is built._

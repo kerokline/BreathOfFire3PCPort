@@ -19,6 +19,7 @@
 #define IDR_BACKGROUND    120   // docs/images/launcherBackground.png, the title page's picture
 #define IDD_PAGE_PRESET   121   // the Settings tab's second sub-page: the preset (preset=; docs/launcher-settings.md)
 #define IDD_PAGE_GAME2    122   // The Cheats sub-tab's Page 2 (DIV-0187, DIV-0188; the owner's split, 2026-10-30)
+#define IDD_PAGE_SOLO     123   // Game Options: Solo character (on=, solo.champion=; docs/solo-character-round.md)
 #define IDC_CONFIGURE   1020
 #define IDC_BACK        1021
 #define IDC_TAB0        1022    // the six tabs, IDC_TAB0 + page
@@ -170,6 +171,17 @@
 #define IDC_PRESETNOTE   1731
 #define IDC_PRESETLIST   1732
 #define IDC_PRESETGREY   1733
+// Game Options' Solo character sub-page (IDD_PAGE_SOLO; docs/solo-character-round.md 4):
+// the mode (SoloCharacter in on=), the champion (solo.champion=), the option
+// (SoloChampionIfPresent in on=), their sentences, and the line that says why a box is grey.
+#define IDC_SOLO_MODE       1740
+#define IDC_SOLO_MODENOTE   1741
+#define IDC_SOLO_CHAMPLABEL 1742
+#define IDC_SOLO_CHAMPION   1743
+#define IDC_SOLO_CHAMPNOTE  1744
+#define IDC_SOLO_IFPRESENT  1745
+#define IDC_SOLO_IFNOTE     1746
+#define IDC_SOLO_WHY        1747
 // The save editor (docs/save-editor.md; src/launcher/save_dialog.cpp), and its
 // button on the Mods tab's sub-row.
 #define IDC_SAVEEDITOR   1038

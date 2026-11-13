@@ -62,7 +62,8 @@ compared with `Game_BattleCount` `0x904134` = block **`+0x754`**
 | `+0xF10` | `0x9048F0` | 300 | Names, 60 x 5, by record index; no terminator between slots; the release's text encoding | `CommuSim_AddRecord` `rest_4a.cpp:749-751` (trait record `0x653200 + 0x14 r`, bytes `+0..+4`); `CommuName_CommitEntry` `rest_4e.cpp:602-635` (edit buffer `0x675F98`, NUL stored as space) | board card `rest_4b.cpp:1074`; `CommuEntry_DrawPanel` `rest_4e.cpp:212-215`; `CommuDraw_DrawTitle` `rest_4d.cpp:538-541`; `CommuName_SlotEntryIn` `rest_4d.cpp:802-806` (0 read as space); `CommuRank_DrawListC` `rest_4e.cpp:1372-1373`; DIV-0200 `faerie_name.h` | READ | high |
 | `+0x103C` | `0x904A1C` | 4 | No access found | none | none | UNKNOWN | - |
 | `+0x1040` | `0x904A20` | 1 | `MountainPasses_Bits` (**ours**, DIV-0191): bit 0 = the party has crossed Mt. Levett (area 70) once; under the switch `MountainPasses` only | `MountainPasses_AfterPlacement` `event_script.cpp:393-394` | `event_script.cpp:393,399` | READ | high |
-| `+0x1041` | `0x904A21` | 111 | No access found (to `+0x10AF`; `0x904A90` is outside the block: `Rest4b_BusyA`, the spawn count, not saved) | none | none | UNKNOWN | - |
+| `+0x1041` | `0x904A21` | 1 | `Solo_ChampionMark` (**ours**, DIV-0228, added 2026-11-12): 0 = no solo run, else the champion's character record + 1; under the switch `SoloCharacter` only | `Solo_Stamp`, `Solo_StampNewGame` `src/game/solo/solo.cpp` | `src/game/solo/solo.cpp` | READ | high |
+| `+0x1042` | `0x904A22` | 110 | No access found (to `+0x10AF`; `0x904A90` is outside the block: `Rest4b_BusyA`, the spawn count, not saved) | none | none | UNKNOWN | - |
 
 ### 1.1 The 60 records at `+0xCF0` (stride 8; record `i` at `+0xCF0 + 8i`)
 
@@ -169,7 +170,10 @@ Editable with constraints:
   `in al, dx` trap (D401; DIV-0200 fixes it in ours, `faerie_name.h`).
 - `+0xCEF`: write 0 (cleared by every village area's init anyway).
 - `+0x1040`: bit 0 only, meaningful only to our build with `MountainPasses`.
-  The original ignores it. Preserve the rest of the tail.
+  The original ignores it.
+- `+0x1041`: 0, or a champion's record + 1 (1, 2, 3, 5, 6, 7), meaningful only
+  to our build with `SoloCharacter`; any other value is a Fatal there. The
+  original ignores it. Preserve the rest of the tail.
 
 Preserve: `+0xCCE..+0xCCF`, `+0x103C..+0x103F`, `+0x1041..+0x10AF`.
 
