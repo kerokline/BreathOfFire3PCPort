@@ -94,6 +94,32 @@ struct StepSeven {
 };
 StepSeven g_set_back{};
 
+// The fights the mode stands down for: the battle the game is starting is
+// EventBattle_Id 0x904AAA (Field_StartEventBattle's byte, set before mode 5;
+// 0 for a random encounter), which is also the index of the fight's set-up in
+// Boss_SetupTable 0x656954 (Battle_InitBossEncounter). One line a fight.
+struct StandDown {
+    unsigned char id;
+    const char* why;
+};
+constexpr StandDown kStandDowns[] = {
+    // The owner (round doc 6g): "the beyd fight is a minigame, not a true
+    // boss - I would turn off the logic for those 2 fights (the beyd fight,
+    // and the beyd vs zigg fight)". Read in the code (docs/solo-character-
+    // combat.md 10): three Beyd fights, chapter 6, area 92.
+    {0x19, "chapter 6's Beyd bout, part one (fight 25: run 8 step 2; SortParty fields record 0 alone, Boss25's hooks script it)"},
+    {0x1A, "chapter 6's Beyd bout, part two (fight 26: run 8 step 0xC; the party of three for 21 turns, Boss26 tallies the blows)"},
+    {0x1B, "chapter 6's Beyd against Zig (fight 27: run 9 step 5; the party watches - a member's turn ends it, Boss27_Event)"},
+};
+
+// The reason the mode stands down for fight `id`, or nullptr.
+const char* StandDownFor(unsigned char id) {
+    if (id == 0) return nullptr;
+    for (const StandDown& d : kStandDowns)
+        if (d.id == id) return d.why;
+    return nullptr;
+}
+
 // --- the logic, on bytes alone (the live hooks and the self-test) ----------
 
 // Whether `row` (0..18) of `rows` holds `id`.
@@ -301,6 +327,15 @@ void SoloBattle_Arm(unsigned char event_flags) {
         bof3::Fatal("DIV-0228 SoloCharacter: battle %u starts while battle %u's party is still saved: a way out of mode 5 "
                     "that neither reaches GameMode5_Place nor restarts through GameMode_Start",
                     static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(g_save.battle));
+    // The fights that stay the original's (kStandDowns): nothing armed, so
+    // the step-3 write, the step-6 restore and hold and the step-7 restore
+    // (each acts only on what Arm saved) do nothing either.
+    if (const char* why = StandDownFor(EventBattle_Id)) {
+        bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s: fought by the game's own party (the owner, "
+                  "round doc 6g)",
+                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), why);
+        return;
+    }
     const int record = Solo_ChampionRecord();
     const auto id = static_cast<unsigned char>(Solo_ChampionId());
     if (Character_IndexById[id] != record)
@@ -495,6 +530,15 @@ void SoloBattle_SelfTest() {
         if (!ok) bof3::Fatal("solo battle self-test: %s", what);
         ++checks;
     };
+    // The stand-downs: the three Beyd fights and nothing else (a random
+    // encounter, 0, and the fights beside them).
+    check(StandDownFor(0x19) && StandDownFor(0x1A) && StandDownFor(0x1B), "the Beyd fights stand down");
+    {
+        bool others = false;
+        for (unsigned id = 0; id < 0x100; ++id)
+            if (id != 0x19 && id != 0x1A && id != 0x1B && StandDownFor(static_cast<unsigned char>(id))) others = true;
+        check(!others, "no other fight stands down");
+    }
     // A table of our own, shaped as the game's: rows (0,1,2) (0,3,4) (2,5,7) (6,7,8).
     static const unsigned char kRows[] = {0, 1, 2, 0, 3, 4, 2, 5, 7, 6, 7, 8};
     check(RowHolds(kRows, 0, 1) && !RowHolds(kRows, 0, 5) && RowHolds(kRows, 3, 8), "RowHolds");

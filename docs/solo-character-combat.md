@@ -288,3 +288,44 @@ uns\` (`pre_*`, `fix_*`, `fixq_*`,
 `diag_*`; `loop_summary.txt` one line a run). Eight runs bound a rate of
 about one in eight only loosely; the garbage-frame count, 30 in every
 pre-fix Garr run and 0 after, is the deterministic half of the evidence.
+
+## 10. The Beyd fights stay the original's (the owner, round doc 6g)
+
+The owner: "the beyd fight is a minigame, not a true boss - I would turn off
+the logic for those 2 fights (the beyd fight, and the beyd vs zigg fight)".
+**The code has three Beyd fights**, one sequence in chapter 6, area 92.
+`Boss_SetupTable` `0x656954` is indexed by the event-battle byte `0x904AAA`
+(its `symbols.toml` evidence), so fight *n*'s set-up is `Boss<n>_Setup`
+(`src/game/boss/boss_25.cpp`):
+
+| Fight | Started at | Party | What the code makes of it |
+|---|---|---|---|
+| 25 (`0x19`) | `Scena06_Run08` step 2 (`src/game/scenario/scena_06_3.cpp`, `Battle(0x19)`), after step 0's `SortParty` | **record 0 alone**: `SortParty` writes the second list `(0, 0xFF, 0xFF)`, id 0 = record 0 in chapter 6 | `Boss25_Setup` saves member 0's HP / AP and fills them; `Boss25_Event` scripts member 0's actions by turn (an action 4 with skill `0x46`, at last enemy 0's HP 1); `Boss25_End` puts the HP / AP back; `Boss25_Exit` restores the count 3 and the list. Enemy: Beyd (kind 30; `BossBeyd_Death` says message `0x20` in fight `0x19` only) |
+| 26 (`0x1A`) | the same run, step `0xC` (`Battle(0x1A)`) | the three `Boss25_Exit` restored | `BossBeyd_Enter`, in fight `0x1A` only, rebuilds Beyd from tag `0x59` with HP from `0x903F0C..` (the writer not read); `Boss26_Event` sums the blows enemy 0 deals the members and the blows it takes (or counts them while enemy 0's `+0x110` bit 1 is set) and ends the fight at turn `0x15` |
+| 27 (`0x1B`) | `Scena06_Run09` step 5 (`Battle(0x1B)`) | the field's party | Beyd against Zig: `BossBeyd2_HookTarget4` aims Beyd at slot 4 (enemy 1), `BossZig_HookPick` aims Zig at 3 (enemy 0), and enemy 1's animation `0xC` in `Boss27_Event` is Zig's (`BossZig_Idle`); `Boss27_Event` ends the fight when enemy 0 or enemy 1 falls, **or when a party member takes a turn**; `Boss27_End` picks the run's next step (`0xF`, 7 or `0x14`) by which |
+
+So "the Beyd vs Zig fight" is 27, and "the Beyd fight" is the bout of run
+8, which is **two** battles, 25 and 26 (one run, one area, the second
+started three steps after the first). Built: **all three stand down**, one
+line each in `kStandDowns` (`src/game/solo/solo_battle.cpp`) with the
+reason beside it; if the owner meant only one of 25 and 26, removing a line
+is the whole change. That 26 is part of the minigame is this doc's reading
+of the code, not the owner's word.
+
+**Built.** `SoloBattle_Arm` reads `EventBattle_Id` (`0x904AAA`, set by
+`Field_StartEventBattle` before mode 5, 0 for a random encounter, read at
+step 1) and, for a fight in `kStandDowns`, logs one line naming it and arms
+nothing. Every later hook acts only on what Arm saved: `SoloBattle_WriteParty`
+on `g_save.armed`, `SoloBattle_Restore` on `g_save.armed`,
+`SoloBattle_AfterPlaceAtSlots` and `SoloBattle_RestoreAtStep7` on the step-7
+record only `Restore` fills, `SoloBattle_Drop` on either. So chapter 6's own
+one-member party (`SortParty`, `Boss25_Exit`) is never met by a swap of ours.
+
+**Run** (the `combat` save, champion Garr, the fight staged with the input
+script's `battle N any`, `runs/beyd_0x19` .. `beyd_0x1B`): each logs, at
+battle 4, `DIV-0228 SoloCharacter: battle 4 is event battle 0x19, chapter
+6's Beyd bout, part one ...: fought by the game's own party (the owner,
+round doc 6g)` (and the same for `0x1A`, `0x1B`), and no arm line; the
+recipes ran to their end. These are staged, empty fights in area 29, not
+the real scenes: the real fights want a chapter 6 save at area 92 before run
+8 (fight 25), before run 8 step `0xC` (26) and before run 9 step 5 (27).
