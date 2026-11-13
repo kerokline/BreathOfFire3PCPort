@@ -99,7 +99,19 @@ SOLO_CRAFTS = {
                   why='fight 31: Scena07_Scene6 at its battle step 0x12 with counter 0 at 0x13'),
 }
 FIGHTS[22] = ('Garr (chapter 5)', 'bfs22', 390, 3, dict(scene=True))
-FIGHTS[31] = ('Garr (Angel Tower)', 'bfs31', 390, 3, dict(scene=True))
+# fight 31 from the owner's recorded route (2026-11-12): the party's dismissal, the fight called at recipe
+# frame 4064 (the fight byte), the return at 6764, chapter 8 at 9428; cut three frames before the call. The
+# craft bfs31 crashed at the area's load (docs/solo-character-proof.md 6b) and is kept for the record only.
+# After the return, confirms for 7,000 frames carry the scene on toward the chapter change.
+FIGHTS[31] = ('Garr (Angel Tower)', 'preGarrFight', 4061, 3,
+              dict(route='preGarrFight', after=7000, after_confirm=True, minutes=30))
+# the same fight with the route's own presses after the return (its return at recipe frame 6764), to the
+# recording's end: the scene after the fight walked as the owner walked it (131 is this sweep's label)
+FIGHTS[131] = ('Garr (Angel Tower), the route after', 'preGarrFight', 4061, 3,
+               dict(route='preGarrFight', after=0, tail_from=6798, minutes=30, fight=31,
+                    # the return's area reload (field mode 1) comes 34 frames after the return on both sides:
+                    # the tail starts there, on the frame, rather than where the sweep's return seek ends
+                    tail_align=['until 0x66C7E8 u16 == 1 timeout 600']))
 FIGHTS[25] = ('Beyd, Zig (set-up 25)', 'bfs25', 390, 3, dict(scene=True))
 FIGHTS[34] = ('Mikba (record 4 at 0 HP)', 'bfs34', 390, 3, dict(scene=True))
 CRAFTS = sorted({v[1] for v in FIGHTS.values() if v[1].startswith('bf')})
@@ -133,6 +145,8 @@ def fight_args(root, fight, members):
     extra = dict(extra)
     route = extra.pop('route', None)
     extra.pop('minutes', None)
+    extra.pop('tail_from', None)
+    extra.pop('tail_align', None)
     a = types.SimpleNamespace(
         route=os.path.join(H.TOOLS, 'recipes', route + '.txt') if route else probe_for(root, save), cut=cut, goto=(), field_cut=371, settle=150, pre_poke=[], camera=(), place=(),
         fight=fight, scene=False, enemies=enemies, mortal=False, members=members, confirm='circle', ids='',
@@ -164,6 +178,16 @@ def write_recipe(root, fight, members, tag, wait_cross=False, mark=None):
         # gives up while the battle runs on (fight 32 with ryu, 2026-11-12). Wait for the cross instead.
         pre = f'seek {a.confirm} 0x{S.PHASE:X} u8 == 1 max '
         body = [f'until 0x{S.PHASE:X} u8 == 1 timeout 1800' if l.startswith(pre) else l for l in body]
+    tail_from = FIGHTS[fight][4].get('tail_from')
+    if tail_from:
+        # After the return: the route's own frames from its own return to the field (field mode 5 -> 2 at
+        # recipe frame tail_from in the straight replay), aligned on the sweep's return, so the scene after the
+        # fight is played with the owner's presses, walking included, instead of confirms alone
+        _, frames = S.frames_of(a.route)
+        tail = S.emit_frames(frames[tail_from:])
+        k = body.index('watch off')
+        align = FIGHTS[fight][4].get('tail_align', [])
+        body = body[:k] + align + [f'mark the route from its frame {tail_from}'] + tail + body[k:]
     p = os.path.join(boss_dir(root), f'{tag}.txt')
     with open(p, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join([f'# solo_boss_sweep.py: fight {fight} staged as tools/spell_sweep.py --fight stages it, '
@@ -177,7 +201,7 @@ def summarise(fight, side, status, lg, champion):
     if not lg:
         row['verdict'] = 'no log (the launch failed)'
         return row
-    s = S.fight_summary(lg, fight)
+    s = S.fight_summary(lg, FIGHTS[fight][4].get('fight', fight))
     f = H.log_facts(lg)
     w = H.read_watches(lg)
     row.update({k: s[k] for k in ('called', 'start', 'win', 'lost', 'back')})

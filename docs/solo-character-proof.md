@@ -374,6 +374,67 @@ donor's (clear): the areas whose entries test them (1, 2, 3, 0xC, 0xD, 0x12, 0x2
 chapter-8 scenes if walked into. Loaded headless (`BOF3X_SOLO=nina`): the field (mode 2) in area 43 with
 three walkers (count 3, lists `07 04 08` after the load's own sort), chapter 8, the stamp line, no Fatal.
 
+### 6c. The owner's routes: fight 31 (`preGarrFight`) and fight 34 (`mikbaFight`)
+
+**Fight 31, the Angel Tower Garr fight** (root `D:\bof3x-runs\solo1112\RT\root\gf`; the straight replay and
+the `f31_*` rows on `953de965`, the same `src/` as `205f1e12`; the `f131_*` rows on `2d745a5f`). The
+straight replay, mode off, loads slot 0 (chapter 7, areas 83 then 85) and stays in step to its end: the
+dismissal at frames 324..1069 (first list `0 1 2` count 3, then `2 0`, count 2 at 684, then `0` alone,
+count 1 at 1069; record 2's joined bit cleared at 1069), the fight byte 0x1F at 4064 (`boss encounter: id
+31`), the return at 6764, the chapter byte 7 -> 8 at 9428 with area 32 loaded, the party `0A` at 11340
+and `07` at 12002. The recording ends with F9 twice: the pause, then the return to the title (the
+records read 0 at 14415), and the next F9 at the title ends the program, which `input_run.py` reports as
+"FAILED ... the game exited": the owner's quit, not a fault. From the code: chapter 7's
+`Scenario_CallB(1)`, called by run 6's step 0xB before the fight, is `Scena07_Leave2Out1562`
+(`docs/scena_calls.md`): `Party_Remove(2)`, then the joined bit of ids 1, 5, 6 and 2 cleared - the
+dismissal; run 6 itself writes no record. Record 2 keeps EXP 15,859 through the chapter change in the
+plain replay (its HP 152 -> 178 at 9428).
+
+| Side | Arm line | Verdict | After the return |
+|---|---|---|---|
+| plain (the sweep's kill) | - | started, ended (win, enemies defeated) | first and second `0`, count 1, set `80`; the scene's talk, then mode 2 |
+| garr | battle 306 fought by the champion alone (record 2, id 0x02, **joined 0**); set kept (`80`) | the same; record 2 EXP 15,859 -> 16,259, the result window "You gain 400 EXP!", "Garr ... EXP to next level 22" | `put back` mask `0x1F`; the same as plain |
+| ryu | battle 306 already has the champion (id 0x00) alone | the same | as plain |
+| nina | record 1 (joined 0, HP 1 before) | the same | mask `0x1F`; as plain |
+| rei | record 4 (joined 0, level 5) | the same; record 4 level 5 -> 8 | mask `0x3F`; as plain |
+
+**The scene after the fight** (`f131_*`: the route's own presses replayed after the return, aligned on
+the return's area reload, which comes 34 frames after the return on every side): plain, garr and ryu each
+reload area 85, open the talk 84 frames after the return and close it 696..700 frames later, as the
+owner's run does (6,848..7,545). After the talk the owner walks; the replayed walk does not bring the next
+talk (the owner's at 8,022) on any side, plain included, so the chapter change is not reached in the sweep
+- only the straight replay reaches it (9,428). Record 2 on the garr side: EXP counted up 15,859 -> 16,259
+in the result window, HP 999 (the harness's poke), joined 0; in plain record 2 is untouched by the fight.
+So a champion-garr fight leaves record 2 with 400 more EXP than the story gives (plain carries 15,859 into
+chapter 8); its HP is the battle's write-back.
+
+No `a frame of no pieces` line in any fight-31 log. **Pictures** (garr side): the camera frames the
+enemy only, in plain as with every champion - the party member is off screen and shows in the status box
+(`Garr AP 37 HP 999`). The boss Garr is drawn in its own colours (`f31_mark_garr\w004170.png`); the
+champion's critical hit flashes it pale with "Critical" (`t004593.png`); it then kneels in its own colours
+and the result window follows (`t004650.png`). Plain's boss falls flat after a normal hit instead; both
+are the hit's reaction, no garbage or wrong palette on either side.
+
+### Fight 34, the Mikba route (`mikbaFight`)
+
+A constructed state the owner walked through: the save is `mikba43.DAT` edited by the owner - the
+entrance moved to area 43 at (0x238000, 0x20000) and Garr in Rei's place (lists `07 08 02`, set `8A`;
+records 0, 1, 2, 4 joined, record 0 must-stay; read from the file). The scene, its party prompt, the fight
+and the second prompt are the game's own; the chapter flags around them are not a real save's.
+
+Plain, mode off (`2d745a5f`, root `D:\bof3x-runs\solo1112\RT\root\mk`): first field at 255; the party
+prompt (field mode 7) at 2804..2854, after which the lists are `07 08 04` and record 4 is level 19, HP 0,
+status `0x6000`, joined and must-stay (Scene11's step 7); the fight byte 0x22 at 3548 (`boss encounter:
+id 34`), mode 5 from 3549; the return at 14158, where record 4 is HP 1, status `0x2000` (the battle's own
+write-back) and record 0 HP 77, status `0x0080`; the second prompt at 19128, record 4's must-stay cleared
+at 19127; F9 twice at the end (the owner's quit, as above). With `BOF3X_SOLO` set from the start (CB's
+fight rules merged): rei logs `the champion's record 4 has 0 HP; battle 372 is fought by the game's own
+party`; nina, ryu and garr log `battle 372 is event battle 0x22, fight 34 ... the champion is record N,
+not 4: fought by the game's own party`. **All four replay identically to plain**: the 171 changes of the
+field mode, fight byte, chapter, both lists, the count, the set and records 0, 1, 2 and 4, frame for
+frame, the second prompt included. So no champion leaves record 4 at 0 HP where plain does not: on this
+build no champion fights fight 34 alone.
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round
