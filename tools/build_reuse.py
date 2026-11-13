@@ -77,7 +77,7 @@ FORMAT = 1                      # build-keys/<step>.json's shape; another number
 # release's behaviours, the list the game and the launcher are built with
 # (docs/mods.md 11; listed 2026-11-12).
 SHIPPED_DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.toml", "exe_maps",
-                "src/hook/exe_own.cpp", "src/hook/code_names.h", "data/furigana"]
+                "src/hook/exe_own.cpp", "src/hook/code_names.h", "data/furigana", "data/mods"]
 
 # The module-level memos of the setup's tools, emptied at each step's start:
 # (module, global, its empty value). `lint` finds one missing.

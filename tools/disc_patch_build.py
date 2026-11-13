@@ -1245,13 +1245,21 @@ def build(home, cache, mod_folder, row, tag, where, say):
         patched_path = os.path.join(work, "patched.bin")
         say("Applying %s to a scratch copy of the disc (about %d MiB, removed when the build ends)"
             % (row["patch"], os.path.getsize(track) >> 20))
+        import ppf
+        patch_path = os.path.join(mod_folder, row["patch"])
+        with open(patch_path, "rb") as f:
+            reader = ppf if ppf.is_ppf(f.read(3)) else vcdiff     # by the file's first bytes (mods.py patch_format)
         try:
-            size, got = vcdiff.apply_file(os.path.join(mod_folder, row["patch"]), track, patched_path, RESULT_MAX)
-        except vcdiff.PatchError as e:
+            size, got = reader.apply_file(patch_path, track, patched_path, RESULT_MAX)
+        except (vcdiff.PatchError, ppf.PatchError) as e:
             raise Bad("the patch does not apply to the disc %s: %s" % (os.path.basename(disc_path), e))
         except OSError as e:
             raise Bad("the scratch copy could not be written (%s)" % e)
-        if got != row["result_sha256"]:
+        if not row.get("result_sha256"):
+            # a patch the release's list does not have (mods.py read_patch): no disc is known that it must
+            # make. The patch's own window checksums passed, so it is the patch of this disc.
+            say("The patch is not in the list of known mods: what it made is not compared with a known disc")
+        elif got != row["result_sha256"]:
             raise Bad("the patch applied, and what it made is not the disc mod.toml's result_sha256 names; "
                       "nothing is built from it")
         import region_diff
