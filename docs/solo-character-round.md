@@ -663,6 +663,20 @@ stands down for those two battles: the swap does not arm, as for a champion at
 27 at run 9 beside them); chapter 6's own one-member party (`SortParty`,
 `Boss25_Exit`, 0a item 2) is then never met by a swap of ours.
 
+## 6h. The owner's eighth answer (2026-11-12 night): the one-on-one series, fights 18 to 20
+
+Group CB's audit found that fights 18 to 20 (chapter 5, area 79; `boss-fights.md`
+has the enemies as Claw, Cawer, Patrio and Dodai), on the path where a loss
+continues, pick the placement after the battle from member 0's id, which in the
+mode is the champion's ([`solo-character-combat.md`](solo-character-combat.md)
+11). The owner: "that fight series is interesting in that it's a series on 1-1
+fights. For that, if a solo character looses, it passes to the next character
+in the team - in this case, we can progress straight to game over if that's
+possible." So in the mode the champion fights each bout, and a bout the
+champion loses is a game over, not the next member's turn. How the series
+works is the owner's description; group CB reads it from the code before
+building.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
