@@ -471,6 +471,8 @@ escape the other sides reach never comes; on fight 46 (five enemies, `Air Raid`)
 `BOF3X_SOLO` set (`solo_garr`): its fight starts before the cut, so a mark poked there arms nothing (the
 `mark_garr` row is the game's own party).
 
+**The owner on these two rows (2026-11-13), how the fights play, not measured here:** fight 35 - "gaist is healed by his torches so if peco couldn't get through that the fight would go on indefinitely"; fight 46 - "I think that is maybe the chicken fight - air raid cancels a persons moves, so if you got hit too many times by air raid, and you were too slow to move first, it could reasonably cancel your move several turns in a row". Both read as the game's own rules meeting one slow or weak fighter, which fits the watches (the boss's HP climbing back; swings with no HP falling). Fight 46's enemy name is not read from the data.
+
 **The other fights, for one table:**
 
 | Fight | Build | Result |
