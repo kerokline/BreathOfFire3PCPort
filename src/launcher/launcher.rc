@@ -358,12 +358,12 @@ EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Mods", -1, 0, 0, 336, 174
-    LTEXT           "A mod is a .zip file with a mod.toml and data files, or the patch file of a romhack (.xdelta). A mod cannot contain programs. The launcher checks each mod, then builds it with your copies of the game.",
+    LTEXT           "A mod is a .zip file with a mod.toml and data files, or the patch file of a romhack (.xdelta or .ppf). A mod cannot contain programs. The launcher checks each mod, then builds it with your copies of the game.",
                     -1, 9, 12, 320, 27
     LISTBOX         IDC_MOD_LIST, 9, 42, 320, 44, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_BORDER | WS_TABSTOP
     PUSHBUTTON      "&Remove", IDC_MOD_REMOVE, 279, 89, 50, 14
 
-    LTEXT           "Add a mod (.zip or .xdelta):", -1, 9, 105, 200, 9
+    LTEXT           "Add a mod (.zip, .xdelta or .ppf):", -1, 9, 105, 200, 9
     EDITTEXT        IDC_MOD_PATH, 9, 115, 210, 13, ES_AUTOHSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Browse...", IDC_MOD_BROWSE, 223, 114, 50, 14
     PUSHBUTTON      "A&dd", IDC_MOD_ADD, 279, 114, 50, 14

@@ -11100,3 +11100,17 @@ table). Rebuilt offline: 1.0 gains the four cells (2,265 table bytes; 2,259
 before), 1.4 the four and record 308 (2,264; 2,256), no length change is
 reported, the ten empty shop records are counted again (149 bytes), and the
 `dat\` files are the same bytes as before the fix. Not played.
+
+## D418 — A disc-patch mod's report counts every changed overlay section as a program change it lacks (ours, the mod builder; open)
+
+**Seen:** 2026-11-13, building *Better Descriptions* 1.1.1 (`D:\bof3x-runs\kp1113\real_bd.log`): the Mods tab's
+sentence reads "It does not have these changes of the patch: the program changes in 1 section", and the patch
+changes no program (`disc_patch_census.py`: no function edited; the build took that section's 11 edits, 13 bytes,
+all as table numbers).
+
+**Established:** `report.toml`'s `program_sections` is `len(overlays)`, the changed overlay sections that were read
+for their tables (`disc_patch_build.build`), not the sections in which a changed byte was left out.
+
+**Status:** open. The fix is to count a section only when a byte of it that differs was not placed (as a table
+cell, a raw range, or a relinked address left as the PC's). For a hack with real program changes the count is
+right in kind and too high by the sections that hold only table numbers.

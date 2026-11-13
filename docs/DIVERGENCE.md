@@ -12072,14 +12072,20 @@ designed in rather than bolted on.
   result not compared with a known disc - and the Mods tab says that its
   author and its function are not verified and that only its data and text
   changes are taken. A file that is no patch the tools read is refused
-  ("unknown format"). The owner, 2026-11-13: "the actual mod file remains
+  ("unknown format"). Two formats are read: `.xdelta` and PPF 3.0 (`.ppf`,
+  `tools/ppf.py`; mods.md 12.1), and the list has two patches: the
+  Definitive Edition 1.4 and *Better Descriptions* 1.1.1 by Naro (text and
+  13 bytes of table numbers, no behaviour). The owner, 2026-11-13: "the actual mod file remains
   the mod owners"; a patch not recognized gets a message, not a refusal. The
   project attaches no romhack's patch to a release. Verification: `mods.py
   selftest` (a listed patch, an unlisted one, a file that is no patch, an
   archive, four broken lists, `known_now`); the author's 1.4 file added by
   itself on a scratch install builds layers that are the same bytes as the
   zip's build; the 1.0 file, which the list does not have, is added
-  unverified (`D:\bof3x-runs\kp1113\real.log`). **Not played, and the
+  unverified (`D:\bof3x-runs\kp1113\real.log`); `ppf.py selftest`; the
+  Better Descriptions file for this disc builds as the list's mod, and the
+  one for the other US revision is refused at the build by its undo data
+  (`real_bd.log`, `real_bd2.log`). **Not played, and the
   launcher's new text not seen by the owner.**
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this

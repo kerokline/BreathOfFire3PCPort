@@ -126,7 +126,7 @@ KINDS = {
         # skip = [{table = "<a tables.toml key>", records = [first, last]}]: records the build does not carry
         # (docs/mods.md 11; disc_patch_build.parse_skip)
         "optional": {"skip": "skip"},
-        "file_ext": {"patch": ".xdelta"},
+        "file_ext": {"patch": (".xdelta", ".ppf")},
         "builds": {"psx-us": ("en-US", "PlayStation, USA")},
         "author": True,
         "builder": "disc_patch_build.py",
@@ -136,8 +136,10 @@ KINDS = {
 # The patches the project has measured (docs/mods.md 12): shipped beside the
 # tools (build_reuse.SHIPPED_DATA). One [[patch]] a version of a romhack.
 KNOWN_FILE = os.path.join(os.path.dirname(TOOLS), "data", "mods", "known.toml")
-KNOWN_KEYS = ("id", "name", "version", "author", "url", "credit", "requires", "needs", "build", "patch_sha256",
-              "result_sha256", "skip")
+KNOWN_KEYS = ("id", "name", "version", "author", "url", "credit", "requires", "needs", "build", "format",
+              "patch_sha256", "result_sha256", "skip")
+# The patch formats the tools read: the name the list gives each, its file extension, its reader.
+PATCH_FORMATS = {"xdelta": ".xdelta", "ppf": ".ppf"}
 # A patch file added by itself: the bound of a mod's zip.
 PATCH_MAX = 8 << 20
 # What the player is told about a patch the list does not have (the owner's words, 2026-11-13).
@@ -376,7 +378,8 @@ def check_meta(doc):
                 raise Refused("mod.toml: %s %r must be a plain file name at the zip's root" % (where, v))
             want = k.get("file_ext", {}).get(key)
             if want and not v.lower().endswith(want):
-                raise Refused("mod.toml: %s %r must be a %s file" % (where, v, want))
+                raise Refused("mod.toml: %s %r must be a %s file"
+                              % (where, v, want if isinstance(want, str) else " or ".join(want)))
             meta[key] = v
             files.append(v)
     if kind == "reading-row":
@@ -458,18 +461,41 @@ def read_zip(path):
     if meta["kind"] == "disc-patch":
         # the author's file, byte for byte, and a patch this release can read:
         # refused now, not after the player's disc has been copied
-        import vcdiff
         patch = data[meta["patch"]]
         if sha_bytes(patch) != meta["patch_sha256"]:
             raise Refused("%s is not the file mod.toml's patch_sha256 names" % meta["patch"])
         try:
-            vcdiff.header(patch)
-            total = sum(w["target_len"] for w in vcdiff.windows(patch))
-        except vcdiff.PatchError as e:
+            fmt, total = patch_format(patch)
+        except PatchFormat as e:
             raise Refused("%s: %s" % (meta["patch"], e))
+        if not meta["patch"].lower().endswith(PATCH_FORMATS[fmt]):
+            raise Refused("%s is a %s patch: mod.toml must name it as a %s file" % (meta["patch"], fmt, PATCH_FORMATS[fmt]))
         if total > RESULT_MAX:
             raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (meta["patch"], total, RESULT_MAX))
     return meta, data
+
+
+class PatchFormat(Exception):
+    """A file that is not a patch in a format the tools read; the message says what it is not."""
+
+
+def patch_format(patch):
+    """(format, the bytes it writes up to) for a patch's bytes: "xdelta"
+    (VCDIFF, tools/vcdiff.py) or "ppf" (PPF 3.0, tools/ppf.py), by the file's
+    first bytes and not by its name. PatchFormat for anything else."""
+    import ppf
+    import vcdiff
+    if ppf.is_ppf(patch):
+        try:
+            ppf.header(patch)
+            return "ppf", ppf.target_len(patch)
+        except ppf.PatchError as e:
+            raise PatchFormat(str(e))
+    try:
+        vcdiff.header(patch)
+        return "xdelta", sum(w["target_len"] for w in vcdiff.windows(patch))
+    except vcdiff.PatchError as e:
+        raise PatchFormat(str(e))
 
 
 def sha_bytes(b):
@@ -503,7 +529,10 @@ def load_known(path=None):
         mod = {k: row[k] for k in ("id", "name", "version", "author", "url", "credit", "requires", "needs") if k in row}
         mod["kind"] = "disc-patch"
         tab = {k: row[k] for k in ("build", "patch_sha256", "result_sha256", "skip") if k in row}
-        tab["patch"] = "%s-%s.xdelta" % (row.get("id"), row.get("version"))
+        fmt = row.get("format", "xdelta")
+        if fmt not in PATCH_FORMATS:
+            raise Refused("%s: format %s is not one the tools read (%s)" % (where, json.dumps(fmt), ", ".join(PATCH_FORMATS)))
+        tab["patch"] = "%s-%s%s" % (row.get("id"), row.get("version"), PATCH_FORMATS[fmt])
         try:
             meta = check_meta({"mod": mod, "disc-patch": tab})
         except Refused as e:
@@ -537,12 +566,11 @@ def read_patch(path, known=None):
     `unverified`, with no author, no behaviour and no result to check against;
     its id is made from its sha256 and its name from the file's. Reads; writes
     nothing."""
-    import vcdiff
     if not os.path.isfile(path):
         raise Refused("there is no file at %s" % path)
     if path.lower().endswith((".7z", ".rar", ".gz", ".xz")):
-        raise Refused("%s is an archive the tools do not open: unpack it, then add the .xdelta file that is in it"
-                      % os.path.basename(path))
+        raise Refused("%s is an archive the tools do not open: unpack it, then add the patch file that is in it "
+                      "(.xdelta or .ppf)" % os.path.basename(path))
     size = os.path.getsize(path)
     if size > PATCH_MAX:
         raise Refused("the file is %d bytes, over the %d a patch may be" % (size, PATCH_MAX))
@@ -550,11 +578,10 @@ def read_patch(path, known=None):
         patch = f.read(PATCH_MAX + 1)
     sha = sha_bytes(patch)
     try:
-        vcdiff.header(patch)
-        total = sum(w["target_len"] for w in vcdiff.windows(patch))
-    except vcdiff.PatchError as e:
+        fmt, total = patch_format(patch)
+    except PatchFormat as e:
         raise Refused("%s cannot be applied: it is not a .zip mod and not a patch in a format the tools read "
-                      "(unknown format: %s)" % (os.path.basename(path), e))
+                      "(.xdelta or .ppf; unknown format: %s)" % (os.path.basename(path), e))
     if total > RESULT_MAX:
         raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (os.path.basename(path), total, RESULT_MAX))
     meta = (load_known() if known is None else known).get(sha)
@@ -566,7 +593,8 @@ def read_patch(path, known=None):
     stem = os.path.splitext(os.path.basename(path))[0]
     name = "".join(c for c in stem if ord(c) >= 32).strip()[:64] or "patch"
     meta = {"kind": "disc-patch", "id": "patch-" + sha[:6], "name": name, "version": "0", "requires": [k["builds"][build][0]],
-            "build": build, "patch": "patch-%s.xdelta" % sha[:6], "patch_sha256": sha, "unverified": True}
+            "build": build, "patch": "patch-%s%s" % (sha[:6], PATCH_FORMATS[fmt]), "patch_sha256": sha,
+            "unverified": True}
     meta["files"] = [meta["patch"]]
     meta["layer"] = layer_name(meta)
     note = ("# Written by tools/mods.py for a patch that is not in the release's list of known patches.\n"
@@ -576,9 +604,17 @@ def read_patch(path, known=None):
 
 
 def read_any(path, known=None):
-    """A mod zip, or a patch file by itself (anything that is not a .zip)."""
+    """A mod zip, or a patch file by itself (anything that is not a .zip). A
+    .zip with no mod.toml is an author's archive of his patch files, not a
+    mod: the sentence says to unpack it."""
     if path.lower().endswith(".zip"):
-        return read_zip(path)
+        try:
+            return read_zip(path)
+        except Refused as e:
+            if "no mod.toml" in str(e):
+                raise Refused("%s has no mod.toml, so it is not a mod's zip. When it is the archive of a romhack, unpack "
+                              "it, then add the patch file that is in it (.xdelta or .ppf)" % os.path.basename(path))
+            raise
     return read_patch(path, known)
 
 
@@ -716,8 +752,8 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     # a patch added by itself that the release's list does not have (docs/mods.md 12): the Mods tab says so.
     # `known_now`: the list of this release has it after all (a newer release) - added again, it is that mod
     o["unverified"] = bool(r.get("unverified"))
+    listed = more.pop("listed", None)
     if o["unverified"]:
-        listed = more.pop("listed", None)
         try:
             hit = (load_known() if listed is None else listed).get(r.get("patch_sha256"))
         except Refused:
@@ -1400,7 +1436,7 @@ def selftest(keep=None):
              "not a disc a disc-patch mod can be made for (psx-us)"),
             ("dp_no_text", [("mod.toml", dp_toml(requires="[]")), ("hack.xdelta", patch)], "mod.requires must name en-US"),
             ("dp_not_xdelta", [("mod.toml", dp_toml(patch='"hack.toml"')), ("hack.toml", b"a = 1\n")],
-             "must be a .xdelta file"),
+             "must be a .xdelta or .ppf file"),
             ("dp_other_file", [("mod.toml", dp_toml()), ("hack.xdelta", patch + b"\0")],
              "is not the file mod.toml's patch_sha256 names"),
             ("dp_bad_sha", [("mod.toml", dp_toml(result_sha256='"ABC"')), ("hack.xdelta", patch)],
@@ -1602,6 +1638,46 @@ def selftest(keep=None):
         expect(all(m["author"] for m in mine.values()), "this checkout's list reads: %d patch(es), each with its author" % len(mine))
     except Refused as e:
         expect(False, "this checkout's list reads (%s)" % e)
+    import ppf
+    pp1, pp2 = ppf.make_patch([(16, b"a description")], undo=src), ppf.make_patch([(64, b"another")])
+    with open(klist, "a", newline="\n") as f:
+        f.write('\n[[patch]]\nid = "descriptions"\nname = "Better Words"\nversion = "1.1.1"\nauthor = "B. Writer"\n'
+                'requires = ["en-US"]\nbuild = "psx-us"\nformat = "ppf"\npatch_sha256 = "%s"\nresult_sha256 = "%s"\n'
+                % (sha_bytes(pp1), "2" * 64))
+    for name, blob in (("Words (This Disc).ppf", pp1), ("Words (Other).ppf", pp2), ("old.ppf", b"PPF20\x01" + bytes(80))):
+        files[name] = os.path.join(root, name)
+        with open(files[name], "wb") as f:
+            f.write(blob)
+    kn = load_known(klist)
+    meta, data = read_patch(files["Words (This Disc).ppf"], kn)
+    expect(meta["id"] == "descriptions" and meta["patch"] == "descriptions-1.1.1.ppf" and meta["author"] == "B. Writer"
+           and "needs" not in meta and check_meta(tomllib.loads(data[MOD_TOML].decode()))["patch"] == meta["patch"],
+           "a PPF patch of the list: the list's mod, its file kept as .ppf")
+    meta, _ = read_patch(files["Words (Other).ppf"], kn)
+    expect(meta.get("unverified") is True and meta["patch"].endswith(".ppf"), "a PPF patch the list does not have: unverified")
+    try:
+        read_patch(files["old.ppf"], kn)
+        got = None
+    except Refused as e:
+        got = str(e)
+    expect(got is not None and "only 3.0 is read" in got, "a PPF 2.0 patch: refused by its version")
+    expect(patch_format(patch)[0] == "xdelta" and patch_format(pp1) == ("ppf", 29), "the format is the file's first bytes")
+    zz = make_zip(os.path.join(root, "authors_archive.zip"), [("Words.ppf", pp1), ("README.txt", b"read me")])
+    try:
+        read_any(zz, kn)
+        got = None
+    except Refused as e:
+        got = str(e)
+    expect(got is not None and "unpack it" in got, "an author's zip with no mod.toml: refused, the sentence says to unpack it")
+    bad = os.path.join(root, "bad_known.toml")
+    with open(bad, "w", newline="\n") as f:
+        f.write(entry + 'format = "ips"\n')
+    try:
+        load_known(bad)
+        got = None
+    except Refused as e:
+        got = str(e)
+    expect(got is not None and "is not one the tools read" in got, "a list entry of another format: refused")
     h3 = os.path.join(root, "home_patch")
     rc, out = run("add", files["As Released 1.4.xdelta"], "--home", h3, "--json", "--known", klist)
     o = json.loads(out.splitlines()[-1])

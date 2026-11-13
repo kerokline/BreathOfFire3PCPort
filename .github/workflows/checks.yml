@@ -21,6 +21,7 @@
 #                           unmarked, every claimed field cites its reader
 #   tools/type1.py selftest the type-1 decompressor on synthetic input
 #   tools/vcdiff.py selftest the VCDIFF / xdelta reader on patches it makes itself
+#   tools/ppf.py selftest   the PPF 3.0 reader on patches it makes itself
 #   tools/disc_patch_build.py selftest  the disc-patch mod builder on synthetic EMIs
 #   tools/importer.py check the importer's recipes against fixtures/ (with
 #                           seq.py's round trip and fixtures/bgm.tsv's shape)
@@ -118,6 +119,9 @@ jobs:
 
       - name: VCDIFF (xdelta) reader self-test
         run: python tools/vcdiff.py selftest
+
+      - name: PPF reader self-test
+        run: python tools/ppf.py selftest
 
       - name: The table-edit mod builder's self-test (no game data)
         run: python tools/table_edit_build.py selftest

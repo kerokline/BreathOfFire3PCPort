@@ -1245,9 +1245,13 @@ def build(home, cache, mod_folder, row, tag, where, say):
         patched_path = os.path.join(work, "patched.bin")
         say("Applying %s to a scratch copy of the disc (about %d MiB, removed when the build ends)"
             % (row["patch"], os.path.getsize(track) >> 20))
+        import ppf
+        patch_path = os.path.join(mod_folder, row["patch"])
+        with open(patch_path, "rb") as f:
+            reader = ppf if ppf.is_ppf(f.read(3)) else vcdiff     # by the file's first bytes (mods.py patch_format)
         try:
-            size, got = vcdiff.apply_file(os.path.join(mod_folder, row["patch"]), track, patched_path, RESULT_MAX)
-        except vcdiff.PatchError as e:
+            size, got = reader.apply_file(patch_path, track, patched_path, RESULT_MAX)
+        except (vcdiff.PatchError, ppf.PatchError) as e:
             raise Bad("the patch does not apply to the disc %s: %s" % (os.path.basename(disc_path), e))
         except OSError as e:
             raise Bad("the scratch copy could not be written (%s)" % e)

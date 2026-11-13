@@ -13,7 +13,8 @@
 # changes are measured (docs/disc-patch-round.md 6d is how 1.4 was).
 #
 # Keys: id, name, version, author (required), url, credit, requires, needs,
-# build, patch_sha256, result_sha256, skip - as a disc-patch mod's mod.toml.
+# build, patch_sha256, result_sha256, skip - as a disc-patch mod's mod.toml -
+# and format: "xdelta" (the default) or "ppf".
 
 [[patch]]
 id = "definitive"
@@ -26,3 +27,19 @@ needs = ["DoubleHitSwords", "AllyAnywhere", "SmokeSkill", "EasierMasters", "Vill
 build = "psx-us"
 patch_sha256 = "2e59b58137d55a9d08218c311f36cc70816e2e3bdb4312250fd4631de37702d4"
 result_sha256 = "cb9c08f5be6a79a877aed86f97be4903ae5ec1e61d07f1813254b8a93e61ea3d"
+
+# The author's archive holds two patches, one for each revision of the US disc.
+# This is the one for revision 1.1 ("Ginseng Version"), the disc `psx-us` is.
+# The other ("Vodka Shot Version", for revision 1.0) is not listed: the
+# builder has no build of that disc, and that file does not apply to this one.
+# Text and 13 bytes of table numbers; no change to the program, so no `needs`.
+[[patch]]
+id = "descriptions"
+name = "Better Descriptions"
+version = "1.1.1"
+author = "Naro"
+requires = ["en-US"]
+build = "psx-us"
+format = "ppf"
+patch_sha256 = "ed4ce585ad648d19b2db3d7d11d18a7c5385696f223a13da717da2f6278c0248"
+result_sha256 = "ed63dbded9d9f3cad2f8b92109d72ff63ba470c3c4406767fc7e0d57cd3856e8"
