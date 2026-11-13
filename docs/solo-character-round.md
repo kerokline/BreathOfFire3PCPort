@@ -702,6 +702,27 @@ intended?"
    what a solo fight of that is.
 4. Fights 18 to 20: 6h.
 
+## 6j. The owner's tenth answer (2026-11-13): the Mikba fight, fight 34
+
+The owner, in their words: "for other champions for that one fight, let's
+leave rei in the team. So the team becomes rei (dead), champion. That's still a
+single character combat, and will let the game logic progress. If a person
+revives rei, it's against the spirit of the challenge, but technically they
+could".
+
+What it sets, with the trial's findings (`solo-character-combat.md`):
+
+- **Champion is record 4:** he fights alone, revived and healed, as the trial
+  ran it to a win (the owner's 6i asked for that trial).
+- **Any other champion:** the battle's party is two, record 4 as the fight has
+  him (0 HP at the start) and the champion. No rule of ours stops the player
+  from reviving him.
+- This replaces the stand-down rule for fight 34 and 6d's reading for this
+  fight. The trial switch `BOF3X_CB_TRIAL34` goes.
+- The fight's set-up scans all three party records for record 4 without a live
+  test (the audit of 2026-11-13: the only boss file that does). The records the
+  battle does not hold must not match.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
