@@ -1198,6 +1198,7 @@ void ResetFrame() {
 
 void SetPresentHook(PresentFn fn) { g_present = fn; }
 
+namespace interp { extern bool g_debug; }
 // PROTOTYPE (interp.h). The pillarbox bars go on for the in-between picture
 // and come off again: the present adds them itself, after the frame hash.
 namespace {
@@ -1223,6 +1224,7 @@ void PresentInBetween() {
     const U n_commands = g_frame.n_commands, n_vertices = g_frame.n_vertices, n_walks = g_n_walks;
     pillarbox::Cover();
     interp::Stats s = {};
+    interp::g_debug = false;   // set for one frame to log every pair and failure (interp-dbg)
     if (interp::Build(g_frame, g_mid_vertices, max_move, &s)) {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;
@@ -1235,11 +1237,12 @@ void PresentInBetween() {
         sum.moved += s.moved;
         sum.far_ += s.far_;
         sum.unmatched += s.unmatched;
+        sum.followed += s.followed;
         if (++frames == 150) {
             bof3::Log("interp      150 in-between frames to Frame_Counter %u: %u draws a frame; exact %u, loose %u, too far %u, "
-                      "unmatched %u; moved %u",
+                      "unmatched %u (followed %u); moved %u",
                       static_cast<U>(Frame_Counter), sum.draws / frames, sum.exact / frames, sum.loose / frames,
-                      sum.far_ / frames, sum.unmatched / frames, sum.moved / frames);
+                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames);
             sum = {};
             frames = 0;
         }

@@ -25,6 +25,7 @@ struct Stats {
     U moved;       // of the matched, those whose vertices differ
     U far_;        // a candidate existed but moved beyond the cap
     U unmatched;   // no candidate
+    U followed;    // of the last two, those moved with a matched neighbour
 };
 
 // BOF3X_INTERP set and not 0.
