@@ -173,6 +173,8 @@ def load_bank_names(game_dir):
         import bank_names
     except ImportError:
         return {}
+    if game_dir is None and os.path.exists(os.path.join(ROOT, 'game', 'bof3x.ini')):
+        game_dir = os.path.join(ROOT, 'game')       # the play install of this checkout, with its language
     try:
         return bank_names.load(game_dir) or {}
     except Exception as e:  # the watcher still works with numbers
@@ -393,7 +395,8 @@ def main():
     ap.add_argument('--out', help='another folder for the log')
     ap.add_argument('--steps', action='store_true', help='also log each step of a run')
     ap.add_argument('--only', help='groups to watch, comma-separated: ' + ', '.join(GROUPS))
-    ap.add_argument('--game', help="the game folder the names are read from (default: tools/bank_names.py's)")
+    ap.add_argument('--game', help="the install the enemy, skill and find names are read from "
+                                   "(default: <repo>\game if it is there, else tools/bank_names.py's)")
     ap.add_argument('--no-beep', action='store_true', help='no sound on a flag change')
     ap.add_argument('--seconds', type=float, default=0, help='stop after this long (default: until Ctrl+C)')
     ap.add_argument('--width', type=int, default=110, help='the longest "known" text on the console; the log holds all of it')

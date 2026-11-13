@@ -283,6 +283,22 @@ one-line object handlers, wrappers that fix the flag number (`SetAndEnd0`,
 `CellRun8`), `mode_states.cpp`'s chapter 1 functions, `area_w4e.cpp`'s `Row14()`,
 and a few sites given to the wrong function.
 
+### The live watcher
+
+`python tools/story_watch.py --label <name>` runs beside the game and logs each
+change of the chapter, the advance bit, the run, the area, a chapter flag, an
+event flag, a record or find bit, a gene or a master, with the chapter, run,
+step, area and leader cell it happened at. A flag these maps name shows its
+setter; one they do not shows `NOT IN THE MAPS`. A line typed into its console
+is logged as a note for the changes since the last note. The log is
+`analysis/storywatch/<name>.tsv`, not in git. It only reads the game's memory.
+
+MEASURED 2026-11-13 on three recorded routes in a scratch install: the load as
+one row; gene 11 at its pick-up in area 93; chapter 2's flags 29, 30 and 31 at
+the steps [`chapter-02.md`](story-flags/chapter-02.md) gives; enemy kind 48
+marked defeated at the end of `combat`'s fight. A flag set and cleared inside
+one logic frame is not seen.
+
 ## 9. The event flags
 
 The bank at `0x904030` (`Cond_Flags + 0xA0`), save block `+0x650`. Mapped
