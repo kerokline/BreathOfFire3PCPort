@@ -18,6 +18,7 @@ movie's repair and the PSP's sound and movie still take the player's ffmpeg.
 
 **Merged since the beta, 2026-11-09..11, one line each (none of it released):**
 
+- **Branch `solo/round` (2026-11-13, a draft PR, not merged):** the solo-character mode (DIV-0228 `SoloCharacter`, DIV-0229 `SoloChampionIfPresent`; IDEAS I56, issue #223; [`solo-character-round.md`](solo-character-round.md)): the save's champion mark at `+0x1041`, the level-1 start at New Game and the combat swap, with the field, menus and members screens the original's; the launcher's Solo character tab and the save editor's Solo champion field; D418. Both builds and the self-tests in both hosts pass; boss fights run under the harness with each champion. **Owed:** the ten-route off-proof (`tools/solo_proof.py`) and the owner's play.
 - **Branch `fix/save-slot-exp-bar` (2026-11-12, not merged):** the save slot's EXP bar drawn over its frame and held to its 57-unit track (DIV-0227 `SaveSlotExpBar`, the owner's request); captures and three fuzz groups, the owner confirmed it in their own game the same day.
 - **PR #213:** the World Map Heal fix (DIV-0208 `FieldHealParty`, D408), renames and doc fixes from the review of Red Herring's notes; D409, IDEAS I59.
 - **PRs #214 and #217:** the source-layout round's stages B0 to D with the cleanup round (IDEAS I60); PR #217 fixed the `IsEnabled`-before-bind regression that `main` held from PR #214 (the paragraph on the 64-bit round below has the record).
