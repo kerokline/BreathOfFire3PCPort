@@ -630,6 +630,29 @@ hero plus one other) and sections 0, 3 and 4's FS, MS and fold text are
 history. "By default" is read as leaving room for a map fold as a later
 option, not as a switch built now; nothing of it is built.
 
+## 6f. The owner's sixth answer (2026-11-12 night): the game's screens and team swapping stay unchanged
+
+On the captures of the champion's panel in the cleared save's gold frame
+([`solo-character-screens.md`](solo-character-screens.md) 5a): "the border
+doesn't quite work. I think what I'm deciding is that the solo character mode
+will work without the character swapping though, since the way we implemented
+the swapping in works independent of them being in the team. So the ui of the
+game can remain unchanged, and we don't need to change the team swapping
+functionality, we just need to make sure the combat swap works clean enough
+during the couple unusual boss encounters."
+
+**Where 6f and an earlier section differ, 6f holds.** The mode is three
+things: the save's mark (SC), the level-1 start at New Game (LV) and the
+combat swap (CB). Nothing on the field, in the menus or on the members screens
+changes. The champion's mark on the members screens is taken out of
+`solo/round` (kept on `solo/ms`). What is left to do is the combat swap in the
+unusual encounters: chapter 6's one-member fight (set-up 25, `SortParty` /
+`Boss25_Exit`), the fight the story starts with record 4 at 0 HP (6d), an
+event battle with `0x904AE5` bit 4, a dragon form taken by a champion with a
+party of three, a loss, a flee, a quick-load mid-battle, and the crash on the
+field after a battle that changed the party set
+([`solo-character-combat.md`](solo-character-combat.md)).
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).

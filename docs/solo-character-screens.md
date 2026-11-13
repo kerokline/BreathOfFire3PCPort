@@ -1,11 +1,13 @@
 # The solo-character round: the two members screens (group MS)
 
-**Status:** IN PROGRESS (verified 2026-11-12: built and measured on `solo/ms`;
-headless self-tests and captures in section 6; not played). Round doc
-[`solo-character-round.md`](solo-character-round.md) 4 "MS" and 0a item 9
-govern; the code is `src/game/solo/solo_screens.{h,cpp}`, the Tactics members
-step in `src/game/field/field_ability_2.cpp` and `PartyForm` in
-`src/game/field/party_form.cpp`.
+**Status:** SUPERSEDED (2026-11-12, the owner, round doc 6f: the game's
+screens stay unchanged, so the champion's mark and, before it, the scrolling
+reserve were built, merged and taken out of `solo/round` the same day. The
+code is on branch `solo/ms`: the mark at `0bf9b744`, the scrolling reserve at
+`9b60b48d`. What stands: how a cleared save is drawn (section 5a) and the
+original's defect at the fourth reserve member (section 2a, Capcom's,
+unfixed, not numbered). Round doc:
+[`solo-character-round.md`](solo-character-round.md).)
 
 **Scope changed the same day (the owner, 2026-11-12): "lets by default have 3
 walkers like the normal game."** The map party in the mode is the game's own

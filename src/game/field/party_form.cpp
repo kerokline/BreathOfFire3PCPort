@@ -16,8 +16,6 @@
 #include "game/rest_2c.h"
 #include "game/rest_2c_callees.h"
 #include "game/scenario_harness.h"
-#include "game/solo/solo.h"
-#include "game/solo/solo_screens.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -107,52 +105,6 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(table + 4 * index)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-}
-
-}  // namespace
-
-// The solo-character mode's champion mark on PartyForm (group MS; src/game/
-// solo/solo_screens.h, docs/solo-character-screens.md 5a). The screen is the
-// original's; while solo::Solo_Active() PartyForm_Draw calls this after its
-// two boxes. The champion's cell (0x664078 + 6 (col + 2 row)) in the party
-// column (rows below Party_Count(0)) or the reserve's (rows below the count
-// 0x6BC897, ids 0x6BC894..), each to the three rows the cells hold. kCleared:
-// the cleared slot's look on the panel (a reserve row's box is at its cell,
-// three left of and above a member panel's box) and the two boxes again over
-// it when they are on it, in front (InFront), as on Tactics; kHand:
-// Menu_DrawHand at the cell plus the hand's offset.
-namespace {
-
-namespace ss = solo_screens;
-
-void PartyFormChampionMark() {
-    const U n = PartyCount();
-    U at = 0;
-    bool reserve = false;
-    for (U k = 0; k < n && k < ss::kRows && at == 0; ++k)
-        if (ss::IsChampion(B(::bof3::Img(field_s::at::kPartyList) + k))) at = ::bof3::Img(field_s::at::kPickCells) + 6 * (2 * k);
-    for (U j = 0; j < FieldS_ReserveCount && j < ss::kRows && at == 0; ++j) {
-        if (!ss::IsChampion(B(::bof3::Img(field_s::at::kReserve) + j))) continue;
-        reserve = true;
-        at = ::bof3::Img(field_s::at::kPickCells) + 6 * (1 + 2 * j);
-    }
-    if (at == 0) return;
-    if (ss::kChampionMark == ss::ChampionMark::kHand) {
-        SH_CALL(Menu_DrawHand)(static_cast<int>(W(at)) + ss::kChampionHandDx, static_cast<int>(W(at + 2)) + ss::kChampionHandDy, 0);
-        return;
-    }
-    const int x = static_cast<short>(W(at)) - (reserve ? 3 : 0);
-    const int y = static_cast<short>(W(at + 2)) - (reserve ? 3 : 0);
-    auto box = [](U cell, int blink) {
-        const bool wide = B(cell + 4) != 0;
-        SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, blink, 6);
-    };
-    ss::InFront([&] {
-        ss::DrawCleared(x, y, static_cast<unsigned>(solo::Solo_ChampionRecord()), reserve);
-        const unsigned char pick = static_cast<unsigned char>(ShopStates_Clear0A);
-        if (pick != 0x7F && ::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (S8(pick) + 2 * FieldS_PickRow)) == at) box(at, 0);
-        if (::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (FieldS_Column + 2 * BattleE1_ModeByte9)) == at) box(at, 1);
-    });
 }
 
 }  // namespace
@@ -653,7 +605,6 @@ extern "C" void __cdecl PartyForm_Draw(void) {
     const U cell = ::bof3::Img(field_s::at::kPickCells) + static_cast<U>(6 * (FieldS_Column + 2 * BattleE1_ModeByte9));
     const bool wide = B(cell + 4) != 0;
     SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, 1, 6);
-    if (solo::Solo_Active()) PartyFormChampionMark();   // the solo-character mode (MS)
 }
 
 void PartyForm_Inject() {

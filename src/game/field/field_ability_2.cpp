@@ -22,8 +22,6 @@
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
 #include "game/scenario_harness.h"
-#include "game/solo/solo.h"
-#include "game/solo/solo_screens.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
 #include "hook/behaviour.h"
@@ -3154,72 +3152,6 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
-// The solo-character mode's champion mark on the members step (group MS;
-// src/game/solo/solo_screens.h, docs/solo-character-screens.md 5a). The
-// screen is the original's; while solo::Solo_Active() TacticsMembers_Pick
-// calls this after placing its cursor records.
-namespace {
-
-namespace ss = solo_screens;
-
-// The champion's cursor place, kMemberCells[col + 2 row], in the party column
-// (rows below Party_Count(0)) or the reserve's (rows below record 12's +0xA,
-// ids 0x6BDFD4..), each to the three rows the places hold; 0 when the
-// champion is on neither. `reserve` says which column.
-U ChampionPlace(unsigned char count, bool& reserve) {
-    reserve = false;
-    for (unsigned k = 0; k < count && k < ss::kRows; ++k)
-        if (ss::IsChampion(BRest2f(::bof3::Img(kParty.v) + k))) return ::bof3::Img(kMemberCells.v) + 8u * (2 * k);
-    const unsigned n = BRest2f(Rec(12, 0xA));
-    for (unsigned j = 0; j < n && j < ss::kRows; ++j) {
-        if (!ss::IsChampion(BRest2f(::bof3::Img(kReserve.v) + j))) continue;
-        reserve = true;
-        return ::bof3::Img(kMemberCells.v) + 8u * (1 + 2 * j);
-    }
-    return 0;
-}
-
-// kHand: window record 21 - Tactics_Open's pointing hand (handler 6, kind
-// 0xE, MenuWin_Hand), closed in the members step and set afresh by
-// Tactics_Top every frame there - open at the place plus the hand's offset,
-// closed when the champion is not shown. kCleared: the cleared slot's look
-// (solo_screens::DrawCleared) on the champion's panel, in front (InFront):
-// the panels are window records drawn by Field_RunTaskRecords after this step,
-// so a draw of this step's own in slot 1 lies under them (measured
-// 2026-11-12). The party panel's origin is its place (MenuList_DrawMemberPanel
-// draws Menu_DrawMemberStatus at the record's x, y, the places' x, y); a
-// reserve row's box is at its place, three left of and above a member
-// panel's box. The cursor (record 19) and the pick (record 20) are drawn in
-// front again when they sit on the champion's panel, as the game draws them
-// over every panel.
-void TacticsChampionMark(unsigned char count) {
-    bool reserve = false;
-    const U at = ChampionPlace(count, reserve);
-    if (ss::kChampionMark == ss::ChampionMark::kHand) {
-        BRest2f(Rec(21, 0)) = at != 0 ? 1 : 0;
-        if (at == 0) return;
-        SetWRest2f(Rec(21, 4), (WRest2f(at) + static_cast<U>(ss::kChampionHandDx)) & 0xFFFF);
-        SetWRest2f(Rec(21, 6), (WRest2f(at + 2) + static_cast<U>(ss::kChampionHandDy)) & 0xFFFF);
-        return;
-    }
-    if (at == 0) return;
-    const int x = static_cast<short>(WRest2f(at)) - (reserve ? 3 : 0);
-    const int y = static_cast<short>(WRest2f(at + 2)) - (reserve ? 3 : 0);
-    ss::InFront([&] {
-        ss::DrawCleared(x, y, static_cast<unsigned>(solo::Solo_ChampionRecord()), reserve);
-        for (unsigned n = 19; n <= 20; ++n) {
-            if (BRest2f(Rec(n, 0)) == 0) continue;
-            if (WRest2f(Rec(n, 4)) != WRest2f(at) || WRest2f(Rec(n, 6)) != WRest2f(at + 2)) continue;
-            const U pair = ::bof3::Img(MenuList_CursorBoxSizes_addr) + 4u * BRest2f(Rec(n, 0xA));
-            SH_CALL(Menu_DrawCursorBox)(static_cast<short>(WRest2f(Rec(n, 4))), static_cast<short>(WRest2f(Rec(n, 6))),
-                                        static_cast<int>(WRest2f(pair)), static_cast<int>(WRest2f(pair + 2)),
-                                        BRest2f(Rec(n, 0xB)), 6);
-        }
-    });
-}
-
-}  // namespace
-
 // original 0x58F890: TacticsMembers_Steps[1] - the members screen. Record 19
 // (the cursor) at kMemberCells[col + 2 row]; record 20 (the cell picked) there
 // too, or closed; with a member refused (0x6BDFD7) its name to text record 0
@@ -3260,7 +3192,6 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
             SetWRest2f(Rec(11, 0x10), 0x61);
         }
     }
-    if (solo::Solo_Active()) TacticsChampionMark(PartyCountRest2f());   // the solo-character mode (MS)
     const U keys = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const unsigned char count = PartyCountRest2f();
     unsigned char col = static_cast<unsigned char>(FieldS_Column);
@@ -3329,8 +3260,6 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
     FieldS_Step = static_cast<unsigned char>(sub + 1);
     BRest2f(Rec(19, 0)) = 0;
     BRest2f(Rec(20, 0)) = 0;
-    // The solo-character mode (MS): the champion's hand (kHand) closed with the cursors.
-    if (solo::Solo_Active() && ss::kChampionMark == ss::ChampionMark::kHand) BRest2f(Rec(21, 0)) = 0;
 }
 
 // original 0x58FB60: TacticsMembers_Steps[2] - the backdrop; at the
