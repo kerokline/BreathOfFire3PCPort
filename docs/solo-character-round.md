@@ -653,6 +653,16 @@ party of three, a loss, a flee, a quick-load mid-battle, and the crash on the
 field after a battle that changed the party set
 ([`solo-character-combat.md`](solo-character-combat.md)).
 
+## 6g. The owner's seventh answer (2026-11-12 night): the two Beyd fights stay the original's
+
+"the beyd fight is a minigame, not a true boss - I would turn off the logic
+for those 2 fights (the beyd fight, and the beyd vs zigg fight)". The mode
+stands down for those two battles: the swap does not arm, as for a champion at
+0 HP (6d). Which battle ids they are is read from the code by group CB
+(`boss-fights.md` has fights 25 and 26 at chapter 6 run 8, area 92, and fight
+27 at run 9 beside them); chapter 6's own one-member party (`SortParty`,
+`Boss25_Exit`, 0a item 2) is then never met by a swap of ours.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
