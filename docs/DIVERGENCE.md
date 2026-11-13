@@ -12062,6 +12062,25 @@ designed in rather than bolted on.
   `ledger_check.py` and `ledger_switches.py --check`; the engine's parser
   self-test is built and **not run** (no game was started this day); the real
   patch built offline. No behaviour exists yet, so no mod can be handed one.
+- **Amended 2026-11-13 (a romhack's patch added by itself;
+  [`mods.md`](mods.md) 12):** a mod is also the patch file of a romhack as
+  its author released it (`.xdelta`), with no zip around it. The release's
+  list `data/mods/known.toml` names the patches the project has measured by
+  the sha256 of the file: a patch in it is that `disc-patch` mod, with the
+  list's name, author and `needs`. A patch that is not in it and that the
+  tools can read is added as **unverified** - no author, no behaviour, its
+  result not compared with a known disc - and the Mods tab says that its
+  author and its function are not verified and that only its data and text
+  changes are taken. A file that is no patch the tools read is refused
+  ("unknown format"). The owner, 2026-11-13: "the actual mod file remains
+  the mod owners"; a patch not recognized gets a message, not a refusal. The
+  project attaches no romhack's patch to a release. Verification: `mods.py
+  selftest` (a listed patch, an unlisted one, a file that is no patch, an
+  archive, four broken lists, `known_now`); the author's 1.4 file added by
+  itself on a scratch install builds layers that are the same bytes as the
+  zip's build; the 1.0 file, which the list does not have, is added
+  unverified (`D:\bof3x-runs\kp1113\real.log`). **Not played, and the
+  launcher's new text not seen by the owner.**
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50

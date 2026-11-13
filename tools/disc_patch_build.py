@@ -1251,7 +1251,11 @@ def build(home, cache, mod_folder, row, tag, where, say):
             raise Bad("the patch does not apply to the disc %s: %s" % (os.path.basename(disc_path), e))
         except OSError as e:
             raise Bad("the scratch copy could not be written (%s)" % e)
-        if got != row["result_sha256"]:
+        if not row.get("result_sha256"):
+            # a patch the release's list does not have (mods.py read_patch): no disc is known that it must
+            # make. The patch's own window checksums passed, so it is the patch of this disc.
+            say("The patch is not in the list of known mods: what it made is not compared with a known disc")
+        elif got != row["result_sha256"]:
             raise Bad("the patch applied, and what it made is not the disc mod.toml's result_sha256 names; "
                       "nothing is built from it")
         import region_diff

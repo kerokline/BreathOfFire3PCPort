@@ -2,6 +2,7 @@
 """The player's mods: a .zip of data files, checked, unpacked under the home and built into its cache.
 
     python tools/mods.py add ZIP --home H [--json]     check, unpack to H/mods/<id>/, record in H/mods.toml
+    python tools/mods.py add PATCH --home H [--json]   a romhack's patch file as its author released it (.xdelta)
     python tools/mods.py remove ID --home H            the folder, the row and the layer built from it
     python tools/mods.py list --home H [--json]        one flat JSON object a line, in the list's order
     python tools/mods.py build [ID] --home H           build each mod's layer into H/cache (in place)
@@ -30,6 +31,14 @@ The home's `mods.toml` is written only by this tool, in the shape of
 Settings page's box (src/launcher/config.cpp ConfigModsInstalled) and runs this
 tool for the Mods tab (src/launcher/sources_dialog.cpp, the Mods page), as the
 Sources page runs importer.py: `--json` lines, one child at a time.
+
+A romhack's patch is added as the file its author released, with no zip of
+ours around it (docs/mods.md 12): the release's list `data/mods/known.toml`
+names the patches the project has measured, by the sha256 of the file. A patch
+in the list is a disc-patch mod with the list's name, author and behaviours. A
+patch that is not in the list and that the tools can read is added too, as
+`unverified`: no author, no behaviour, only the data and text its build can
+carry. A file the tools cannot read as a patch is refused.
 
 `importer.py setup` (tools/player_sources.py run_setup) calls setup_step() after
 the language layers are built and before the game folder is laid out: each mod's
@@ -123,6 +132,17 @@ KINDS = {
         "builder": "disc_patch_build.py",
     },
 }
+
+# The patches the project has measured (docs/mods.md 12): shipped beside the
+# tools (build_reuse.SHIPPED_DATA). One [[patch]] a version of a romhack.
+KNOWN_FILE = os.path.join(os.path.dirname(TOOLS), "data", "mods", "known.toml")
+KNOWN_KEYS = ("id", "name", "version", "author", "url", "credit", "requires", "needs", "build", "patch_sha256",
+              "result_sha256", "skip")
+# A patch file added by itself: the bound of a mod's zip.
+PATCH_MAX = 8 << 20
+# What the player is told about a patch the list does not have (the owner's words, 2026-11-13).
+UNVERIFIED = ("This patch is not in the list of known mods of this release (data/mods/known.toml). Its author and "
+              "its function are not verified. The game takes only the data and text changes its build can carry.")
 
 # What a disc-patch mod's patch may write: a CD's data track is under 800 MiB.
 RESULT_MAX = 800 << 20
@@ -456,6 +476,112 @@ def sha_bytes(b):
     return hashlib.sha256(b).hexdigest()
 
 
+# ---------------------------------------------------------------- a patch by itself
+
+def load_known(path=None):
+    """The release's known patches: {patch sha256: meta}, each meta as
+    check_meta makes it for a disc-patch mod, with `patch` the file name the
+    home keeps it under. Refused when the list is there and is not valid: a
+    release with a broken list says so and adds nothing by it. A release
+    without the file knows no patch."""
+    path = path or KNOWN_FILE
+    if not os.path.isfile(path):
+        return {}
+    with open(path, "rb") as f:
+        doc = _toml(f.read(), os.path.basename(path))
+    rows = doc.get("patch", [])
+    if set(doc) - {"patch"} or not isinstance(rows, list):
+        raise Refused("%s: only [[patch]] tables belong in it" % os.path.basename(path))
+    out = {}
+    for i, row in enumerate(rows, 1):
+        where = "%s, patch %d" % (os.path.basename(path), i)
+        if not isinstance(row, dict):
+            raise Refused("%s: not a table" % where)
+        extra = sorted(set(row) - set(KNOWN_KEYS))
+        if extra:
+            raise Refused("%s: %s is not a key of the list (%s)" % (where, extra[0], ", ".join(KNOWN_KEYS)))
+        mod = {k: row[k] for k in ("id", "name", "version", "author", "url", "credit", "requires", "needs") if k in row}
+        mod["kind"] = "disc-patch"
+        tab = {k: row[k] for k in ("build", "patch_sha256", "result_sha256", "skip") if k in row}
+        tab["patch"] = "%s-%s.xdelta" % (row.get("id"), row.get("version"))
+        try:
+            meta = check_meta({"mod": mod, "disc-patch": tab})
+        except Refused as e:
+            raise Refused("%s: %s" % (where, str(e).replace("mod.toml: ", "")))
+        if meta["patch_sha256"] in out:
+            raise Refused("%s: the list has that patch_sha256 twice" % where)
+        out[meta["patch_sha256"]] = meta
+    return out
+
+
+def known_toml(meta):
+    """The mod.toml the home keeps beside a patch added by itself: the list's
+    entry in a mod zip's form (a patch the list has), so that the folder is a
+    mod's folder like any other."""
+    q = lambda v: json.dumps(v, ensure_ascii=False)   # noqa: E731
+    lines = ["# Written by tools/mods.py from the release's list of known patches (data/mods/known.toml).", "", "[mod]"]
+    lines += ["%s = %s" % (k, q(meta[k])) for k in ("id", "name", "version", "author", "url", "credit") if k in meta]
+    lines += ['kind = "disc-patch"', "requires = %s" % q(meta["requires"])]
+    if "needs" in meta:
+        lines.append("needs = %s" % q(meta["needs"]))
+    lines += ["", "[disc-patch]"] + ["%s = %s" % (k, q(meta[k])) for k in ("build", "patch", "patch_sha256", "result_sha256")]
+    if "skip" in meta:
+        lines.append("skip = [%s]" % ", ".join("{table = %s, records = [%d, %d]}" % (q(t), a, b) for t, a, b in meta["skip"]))
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def read_patch(path, known=None):
+    """(meta, {file name: bytes}) for a patch file added by itself, or Refused.
+    A patch of the release's list: the list's meta. Another patch the tools
+    can read: a disc-patch mod of the one disc the builder knows, marked
+    `unverified`, with no author, no behaviour and no result to check against;
+    its id is made from its sha256 and its name from the file's. Reads; writes
+    nothing."""
+    import vcdiff
+    if not os.path.isfile(path):
+        raise Refused("there is no file at %s" % path)
+    if path.lower().endswith((".7z", ".rar", ".gz", ".xz")):
+        raise Refused("%s is an archive the tools do not open: unpack it, then add the .xdelta file that is in it"
+                      % os.path.basename(path))
+    size = os.path.getsize(path)
+    if size > PATCH_MAX:
+        raise Refused("the file is %d bytes, over the %d a patch may be" % (size, PATCH_MAX))
+    with open(path, "rb") as f:
+        patch = f.read(PATCH_MAX + 1)
+    sha = sha_bytes(patch)
+    try:
+        vcdiff.header(patch)
+        total = sum(w["target_len"] for w in vcdiff.windows(patch))
+    except vcdiff.PatchError as e:
+        raise Refused("%s cannot be applied: it is not a .zip mod and not a patch in a format the tools read "
+                      "(unknown format: %s)" % (os.path.basename(path), e))
+    if total > RESULT_MAX:
+        raise Refused("%s writes %d bytes, over the %d a disc's data track may be" % (os.path.basename(path), total, RESULT_MAX))
+    meta = (load_known() if known is None else known).get(sha)
+    if meta is not None:
+        meta = dict(meta)
+        return meta, {MOD_TOML: known_toml(meta), meta["patch"]: patch}
+    k = KINDS["disc-patch"]
+    build = next(iter(k["builds"]))
+    stem = os.path.splitext(os.path.basename(path))[0]
+    name = "".join(c for c in stem if ord(c) >= 32).strip()[:64] or "patch"
+    meta = {"kind": "disc-patch", "id": "patch-" + sha[:6], "name": name, "version": "0", "requires": [k["builds"][build][0]],
+            "build": build, "patch": "patch-%s.xdelta" % sha[:6], "patch_sha256": sha, "unverified": True}
+    meta["files"] = [meta["patch"]]
+    meta["layer"] = layer_name(meta)
+    note = ("# Written by tools/mods.py for a patch that is not in the release's list of known patches.\n"
+            "# Its author and its function are not verified.\n"
+            "patch = %s\npatch_sha256 = %s\nbuild = %s\n" % (json.dumps(meta["patch"]), json.dumps(sha), json.dumps(build)))
+    return meta, {MOD_TOML: note.encode("utf-8"), meta["patch"]: patch}
+
+
+def read_any(path, known=None):
+    """A mod zip, or a patch file by itself (anything that is not a .zip)."""
+    if path.lower().endswith(".zip"):
+        return read_zip(path)
+    return read_patch(path, known)
+
+
 def sha_file(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -475,7 +601,8 @@ def mod_dir(h, mid):
 
 
 ROW_KEYS = ("id", "name", "version", "author", "url", "credit", "kind", "requires", "base", "readings", "edits",
-            "needs", "build", "patch", "patch_sha256", "result_sha256", "skip", "files", "zip", "sha256", "added")
+            "needs", "build", "patch", "patch_sha256", "result_sha256", "skip", "unverified", "files", "zip", "sha256",
+            "added")
 
 
 def load_rows(h):
@@ -586,6 +713,16 @@ def obj(r, path=None, ok=True, problem=None, state=None, needs=None, **more):
     # does not have: the launcher greys such a mod and never hands it over
     known = more.pop("known", None)
     o["behaviours"] = list(r.get("needs") or [])
+    # a patch added by itself that the release's list does not have (docs/mods.md 12): the Mods tab says so.
+    # `known_now`: the list of this release has it after all (a newer release) - added again, it is that mod
+    o["unverified"] = bool(r.get("unverified"))
+    if o["unverified"]:
+        listed = more.pop("listed", None)
+        try:
+            hit = (load_known() if listed is None else listed).get(r.get("patch_sha256"))
+        except Refused:
+            hit = None
+        o["known_now"] = "%s %s" % (hit["name"], hit["version"]) if hit else None
     have = set(release_behaviours() if known is None else known)
     o["missing"] = [n for n in o["behaviours"] if n not in have]
     if o["text_layer"]:
@@ -608,6 +745,8 @@ def _emit(o, as_json):
         extra = {"built": "built", "not-built": "not built yet", "needs": "needs %s" % o.get("needs"),
                  "needs-disc": "needs the disc %s" % o.get("needs")}.get(o["state"], "")
         by = ", by %s" % o["author"] if o.get("author") else ""
+        if o.get("unverified"):
+            extra += ("; " if extra else "") + "not in the list of known mods: its author and its function are not verified"
         if o.get("missing"):
             extra += ("; " if extra else "") + "needs behaviours this release does not have: %s" % ", ".join(o["missing"])
         print("%s %s (%s%s, %s)%s" % (o["id"], o["version"], o["name"], by, o["kind"], ": " + extra if extra else ""),
@@ -618,13 +757,18 @@ def _emit(o, as_json):
 
 # ---------------------------------------------------------------- the commands
 
+def _known(a):
+    """The list `--known` names (the self-test's), or None for the release's."""
+    return load_known(a.known) if getattr(a, "known", None) else None
+
+
 def cmd_check(a):
     try:
-        meta, _ = read_zip(a.zip)
+        meta, _ = read_any(a.zip, _known(a))
     except Refused as e:
         _emit(obj({}, a.zip, False, str(e)), a.json)
         return 1
-    _emit(obj(meta, a.zip), a.json)
+    _emit(obj(meta, a.zip, listed=_known(a)), a.json)
     return 0
 
 
@@ -632,7 +776,7 @@ def cmd_add(a):
     h = os.path.abspath(a.home)
     path = os.path.abspath(a.zip)
     try:
-        meta, data = read_zip(path)
+        meta, data = read_any(path, _known(a))
     except Refused as e:
         _emit(obj({}, path, False, str(e)), a.json)
         return 1
@@ -652,14 +796,14 @@ def cmd_add(a):
     os.rename(new, dst)
     row = {k: meta[k] for k in ("id", "name", "version", "kind", "requires")}
     row.update({k: meta[k] for k in CREDIT_KEYS if k in meta})
-    row.update({k: meta[k] for k in KINDS[meta["kind"]]["keys"]})
-    row.update({k: meta[k] for k in ("needs", "skip") if k in meta})
+    row.update({k: meta[k] for k in KINDS[meta["kind"]]["keys"] if k in meta})
+    row.update({k: meta[k] for k in ("needs", "skip", "unverified") if k in meta})
     row.update(files=meta["files"], zip=path, sha256=sha_file(path),
                added=datetime.datetime.now().isoformat(timespec="seconds"))
     rows = [row if r is old else r for r in rows] if old else rows + [row]
     save_rows(h, rows)
     st, needs, problem = state_of(h, row)
-    _emit(obj(row, path, True, problem, st, needs, replaced=old["version"] if old else None), a.json)
+    _emit(obj(row, path, True, problem, st, needs, replaced=old["version"] if old else None, listed=_known(a)), a.json)
     return 0
 
 
@@ -696,7 +840,7 @@ def cmd_list(a):
     rows = load_rows(h)
     for r in rows:
         st, needs, problem = state_of(h, r)
-        _emit(obj(r, mod_dir(h, r["id"]), st != "problem", problem, st, needs), a.json)
+        _emit(obj(r, mod_dir(h, r["id"]), st != "problem", problem, st, needs, listed=_known(a)), a.json)
     if not rows and not a.json:
         print("no mods listed in %s" % mods_file(h))
     return 0
@@ -1403,6 +1547,90 @@ def selftest(keep=None):
         expect(rc == 0 and not os.path.exists(os.path.join(h, "mods", "definitive"))
                and not os.path.exists(os.path.join(cache, "opt", "mod-definitive-en-US")) and "mod-definitive" not in f.read(),
                "remove: the patch gone from the home, both layers and their manifest rows from the cache")
+    # a patch added by itself (docs/mods.md 12): one the list has, one it does not, a file that is no patch
+    other, _ = vcdiff.make_patch(src, [([("copy", 0, 512, 0), ("add", b"another romhack")], len(src), 0, 0, True, 1)])
+    klist = os.path.join(root, "known.toml")
+    entry = ('[[patch]]\nid = "definitive"\nname = "Definitive Edition"\nversion = "1.4"\nauthor = "A. Hacker"\n'
+             'url = "https://example.org/hack"\nrequires = ["en-US"]\nneeds = ["SelfTestAlpha"]\nbuild = "psx-us"\n'
+             'patch_sha256 = "%s"\nresult_sha256 = "%s"\nskip = [{table = "shop_records", records = [40, 49]}]\n'
+             % (sha_bytes(patch), "1" * 64))
+    with open(klist, "w", newline="\n") as f:
+        f.write(entry)
+    files = {}
+    for name, blob in (("As Released 1.4.xdelta", patch), ("Some Other Hack.xdelta", other), ("notes.xdelta", b"PATCH" * 40),
+                       ("hack.xdelta.7z", b"7z\xbc\xaf\x27\x1c" + b"\0" * 32)):
+        files[name] = os.path.join(root, name)
+        with open(files[name], "wb") as f:
+            f.write(blob)
+    kn = load_known(klist)
+    meta, data = read_patch(files["As Released 1.4.xdelta"], kn)
+    expect(meta["id"] == "definitive" and meta["version"] == "1.4" and meta["author"] == "A. Hacker"
+           and meta["needs"] == ["SelfTestAlpha"] and meta["patch"] == "definitive-1.4.xdelta" and "unverified" not in meta
+           and data[meta["patch"]] == patch, "a patch of the list: the list's mod, its author and its needs")
+    again = check_meta(tomllib.loads(data[MOD_TOML].decode()))
+    expect(all(again[k] == meta[k] for k in ("id", "name", "version", "author", "url", "requires", "needs", "build",
+                                              "patch", "patch_sha256", "result_sha256", "skip")),
+           "  the mod.toml written beside it is a mod zip's, and reads back the same")
+    meta, data = read_patch(files["Some Other Hack.xdelta"], kn)
+    uid = "patch-" + sha_bytes(other)[:6]
+    expect(meta["id"] == uid and meta["name"] == "Some Other Hack" and meta.get("unverified") is True
+           and "author" not in meta and "needs" not in meta and "result_sha256" not in meta and meta["build"] == "psx-us"
+           and len(max(layers_of(meta), key=len)) <= LAYER_MAX,
+           "a patch the list does not have: unverified, no author, no behaviour, an id from its sha256")
+    for name, want in (("notes.xdelta", "unknown format"), ("hack.xdelta.7z", "unpack it")):
+        try:
+            read_patch(files[name], kn)
+            got = None
+        except Refused as e:
+            got = str(e)
+        expect(got is not None and want in got, "%s: refused (%s)" % (name, (got or "")[:60]))
+    for text, want in ((entry + entry, "twice"), (entry.replace('author = "A. Hacker"\n', ""), "must name its author"),
+                       (entry + 'kind = "table-edit"\n', "kind is not a key of the list"),
+                       ("[mod]\nid = 1\n", "only [[patch]] tables")):
+        bad = os.path.join(root, "bad_known.toml")
+        with open(bad, "w", newline="\n") as f:
+            f.write(text)
+        try:
+            load_known(bad)
+            got = None
+        except Refused as e:
+            got = str(e)
+        expect(got is not None and want in got, "a broken list: refused (%s)" % (got or "")[-50:])
+    expect(load_known(os.path.join(root, "no_list.toml")) == {}, "a release without the list knows no patch")
+    try:
+        mine = load_known()
+        expect(all(m["author"] for m in mine.values()), "this checkout's list reads: %d patch(es), each with its author" % len(mine))
+    except Refused as e:
+        expect(False, "this checkout's list reads (%s)" % e)
+    h3 = os.path.join(root, "home_patch")
+    rc, out = run("add", files["As Released 1.4.xdelta"], "--home", h3, "--json", "--known", klist)
+    o = json.loads(out.splitlines()[-1])
+    expect(rc == 0 and o["ok"] and o["id"] == "definitive" and o["author"] == "A. Hacker" and o["unverified"] is False
+           and o["behaviours"] == ["SelfTestAlpha"] and os.path.isfile(os.path.join(h3, "mods", "definitive", "definitive-1.4.xdelta")),
+           "add: a patch of the list is the list's mod, its file kept under the list's name")
+    rc, out = run("add", files["Some Other Hack.xdelta"], "--home", h3, "--json", "--known", klist)
+    o = json.loads(out.splitlines()[-1])
+    expect(rc == 0 and o["ok"] and o["id"] == uid and o["unverified"] is True and o["author"] is None
+           and o["behaviours"] == [] and o["known_now"] is None and o["state"] == "needs",
+           "add: a patch the list does not have is added unverified, with no author and no behaviour")
+    with open(mods_file(h3), encoding="utf-8") as f:
+        text3 = f.read()
+    row3 = [r for r in tomllib.loads(text3)["mod"] if r["id"] == uid][0]
+    expect(row3["unverified"] is True and "result_sha256" not in row3 and "author" not in row3
+           and "unverified = true" in text3, "  mods.toml keeps unverified = true, and no result hash")
+    rc, out = run("list", "--home", h3, "--known", klist)
+    expect(rc == 0 and "its author and its function are not verified" in out, "  list: the line says it is not verified")
+    with open(klist, "a", newline="\n") as f:
+        f.write(entry.replace("definitive", "other").replace(sha_bytes(patch), sha_bytes(other)))
+    rc, out = run("list", "--home", h3, "--json", "--known", klist)
+    o = [json.loads(x) for x in out.splitlines() if json.loads(x)["id"] == uid][0]
+    expect(o["unverified"] is True and o["known_now"] == "Definitive Edition 1.4",
+           "  a list that has it after all: known_now names the mod it is")
+    rc, out = run("add", files["notes.xdelta"], "--home", h3, "--json", "--known", klist)
+    o = json.loads(out.splitlines()[-1])
+    expect(rc == 1 and not o["ok"] and "unknown format" in o["problem"], "add: a file that is no patch is refused: unknown format")
+    rc, out = run("remove", uid, "--home", h3)
+    expect(rc == 0 and not os.path.exists(os.path.join(h3, "mods", uid)), "remove: the unverified patch gone from the home")
     if not keep:
         shutil.rmtree(root, ignore_errors=True)
     else:
@@ -1420,22 +1648,26 @@ def _run_self(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = ap.add_subparsers(dest="cmd", required=True)
-    p = s.add_parser("add", help="check a mod zip, unpack it under HOME/mods/<id>/ and list it in HOME/mods.toml")
-    p.add_argument("zip")
+    p = s.add_parser("add", help="check a mod zip or a patch file, unpack it under HOME/mods/<id>/ and list it in "
+                                 "HOME/mods.toml")
+    p.add_argument("zip", help="a mod's .zip, or a romhack's patch file as its author released it (.xdelta)")
     p.add_argument("--home", required=True)
     p.add_argument("--json", action="store_true")
+    p.add_argument("--known", help=argparse.SUPPRESS)   # another list of known patches (the self-test's)
     p = s.add_parser("remove", help="a mod's folder, its row and the layer built from it")
     p.add_argument("id")
     p.add_argument("--home", required=True)
     p = s.add_parser("list")
     p.add_argument("--home", required=True)
     p.add_argument("--json", action="store_true")
+    p.add_argument("--known", help=argparse.SUPPRESS)
     p = s.add_parser("build", help="build the mods' layers into HOME/cache in place (setup does this too)")
     p.add_argument("id", nargs="?")
     p.add_argument("--home", required=True)
     p = s.add_parser("check", help="the checks of add alone")
     p.add_argument("zip")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--known", help=argparse.SUPPRESS)
     p = s.add_parser("selftest")
     p.add_argument("--keep", help="make the zips here and keep them")
     a = ap.parse_args()

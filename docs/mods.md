@@ -506,3 +506,51 @@ pattern of `loc_build.py`'s kind 20, which only the launcher reads.
 | The build | `disc_patch_build.town_warp_parts` reads the file outside the directory with one section at `0x80016000` and the patched GAME section 0, each address from the instruction that loads it (opcode and registers checked at fixed offsets), and refuses any other shape. Only a mod whose `needs` names `TownWarp` carries it; such a mod with no such file does not build |
 | The engine | `TakeChunk` kind 21: nothing with `TownWarp` off; on, each payload checked and kept (a `Fatal` on another shape). After `FIRST.DAT`'s walk, `TownWarp` on with either tag missing is a `Fatal` that names it |
 | `report.toml` | `[carried]` `town_warp_towns` (0 when not carried); the warp's file leaves `[not_carried]` `outside_files` / `outside_bytes`. The Mods tab's `has` part: `a town warp to N towns` |
+
+## 12. A romhack's patch added by itself, and the list of known patches (2026-11-13)
+
+The owner, 2026-11-13: the mod file stays its author's. This project does not
+put a romhack's patch in a zip of its own and does not attach one to a
+release. The player adds the file its author released, and the release holds
+what the project knows about it.
+
+**The list:** [`data/mods/known.toml`](../data/mods/known.toml), shipped
+beside the tools (`build_reuse.SHIPPED_DATA`). One `[[patch]]` a version of a
+romhack, with the keys of a `disc-patch` mod's `mod.toml` (10 and 11.2) and no
+`patch` file name: `id`, `name`, `version`, `author` (required), `url`,
+`credit`, `requires`, `needs`, `build`, `patch_sha256`, `result_sha256`,
+`skip`. It holds hashes, names and behaviour names; no byte of a patch or of
+the game. `mods.py load_known` checks each entry with `check_meta`, so an
+entry is refused for the same reasons a `mod.toml` is; a list that does not
+read stops `add` with its sentence.
+
+**`mods.py add FILE`**, for a file that is not a `.zip` (`read_patch`):
+
+| The file | What happens |
+|---|---|
+| Its sha256 is in the list | It is the list's mod: `H\mods\<id>\` takes the patch as `<id>-<version>.xdelta` and a `mod.toml` written from the entry, and `mods.toml`'s row is a `disc-patch` row like a zip's. The build, the layers and the behaviours are the same (measured: the layers are the same bytes, 7) |
+| A patch the tools read (VCDIFF) that is not in the list | Added as **unverified**: id `patch-<6 hex of its sha256>`, the name from the file's name, version `0`, the one disc the builder knows (`psx-us`), **no author, no behaviour, no result hash**. `mods.toml` keeps `unverified = true`. Its build carries the data and text a `disc-patch` build carries (11.5) and nothing of the patch's program. The builder does not compare what the patch made with a known disc; the patch's own window checksums say it is a patch of that disc, and a patch of another disc fails there with "the patch does not apply to the disc" |
+| Anything else | Refused: `... cannot be applied: it is not a .zip mod and not a patch in a format the tools read (unknown format: ...)`. An archive (`.7z`, `.rar`, `.gz`, `.xz`) is refused with "unpack it, then add the .xdelta file that is in it" |
+
+`--json` gains `unverified` (true or false) for every mod, and for an
+unverified one `known_now`: the name and version the list of **this** release
+gives that patch, when a newer release knows it. Added again, it is that mod
+(another id: the player removes the unverified one).
+
+**The launcher** (ASD-STE100): the Mods tab's text and its file dialog name
+`.xdelta`. An unverified mod's author column reads `not verified`. Its status
+line, and the log when it is added or selected, say: *This patch is not in the
+list of known mods of this release. Its author and its function are not
+verified. The game takes only the data and text changes. It does not take
+changes to the program.* With `known_now`: *This release knows this patch as
+<name>. Add the file again to get that mod.* An unverified mod has the check
+box of its kind and is on when built, as any `disc-patch` mod.
+
+**A new version of a romhack** needs its changes measured (as 1.4's were,
+[`disc-patch-round.md`](disc-patch-round.md) 6d) and a `[[patch]]` in the
+list. Until a release has it, that version is an unverified patch: its data
+and text, without the behaviours. That is not the hack as its author made
+it, and the launcher's sentence says so.
+
+**A zip of a `disc-patch` mod** is still read (10): the kind is the same and
+the self-tests use it. The project makes none for a release.
