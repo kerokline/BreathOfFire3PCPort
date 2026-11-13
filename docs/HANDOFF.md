@@ -51,6 +51,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
      `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
+     **The hack's version 1.4 (2026-11-12, `romhack/definitive-1.4`; [`disc-patch-round.md`](disc-patch-round.md) 6d):** `TownWarp` and
+     `AllyAnywhere` follow 1.4's rules now (DIV-0225 and DIV-0217 amended), the builder keeps a number changed by a moved
+     distance (D417), and the package needs 1.4's two hashes (`D:\bof3x-runs\de14\zip`). **1.4's rules are not played**: the
+     owner's play above was 1.0. Owed: the owner's play of the warp's new learning and of Ally in one of the five areas; the
+     ten routes with the behaviours off.
    - **The New Game round** (item 18): staged 2026-11-12, group M to launch.
    - **Issue #223, the solo character challenge** (IDEAS I56): **staged as a round** on 2026-11-12 ([`solo-character-round.md`](solo-character-round.md)), the owner's four answers in its section 6, not launched. Group M is run ([`solo-character-reads.md`](solo-character-reads.md); the round doc's 0a is what it corrected). Every design call is answered (its 6, 6a, 6c). **Stage A is built on the local branch `solo/round`, not pushed** (its 4a: the core in `src/game/solo/`, the launcher's "Solo character" page; worktree `D:\bof3x-runs\solo1112\round\wt`); this PR is the docs only. **Owed on stage A:** the in-game self-test, the 64-bit build, the state-hash proof with the behaviours off, `dialog_test.py` and the owner's look at the page. **Next:** stage B at the owner's word (combat, field, the level-1 start at New Game, the members screens, routes and proof).
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.

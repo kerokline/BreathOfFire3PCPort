@@ -2897,6 +2897,16 @@ void TacticsClose() {
     FieldS_Step = 0;
     BRest2f(::bof3::Img(kTimer.v)) = 5;
 }
+
+// DIV-0217 AllyAnywhere, the hack's version 1.4 (US 0x801E3700, START.EMI 8 =
+// STATUS.EMI 0): the five areas where the member change stays refused as the
+// release refuses it - Game_AreaNumber (PSX 0x80143F00, a halfword) compared
+// with 0xAF, 0x53, 0x55, 0x8F and 0x90 in that order, each sending the code to
+// the release's sound 0x107 and its way out (0x801D9A00). Version 1.0 had no
+// such test.
+bool AllyRefusedArea(unsigned area) {
+    return area == 0xAF || area == 0x53 || area == 0x55 || area == 0x8F || area == 0x90;
+}
 }  // namespace
 
 extern "C" void __cdecl Tactics_Top(void) {
@@ -2924,15 +2934,17 @@ extern "C" void __cdecl Tactics_Top(void) {
             SH_CALL(TacticsFormation_Build)();
         } else if (Field_InputFlags & 1) {
             SH_CALL(TacticsMembers_Build)();
-        } else if (bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere)) {
+        } else if (bof3::BehaviourOn(bof3::behaviours::Id::AllyAnywhere) && !AllyRefusedArea(Game_AreaNumber)) {
             // DIV-0217 AllyAnywhere. The Definitive Edition romhack (evidence:
             // the patched US disc, START.EMI 8 = STATUS.EMI 0, Tactics_Top's
             // twin 0x801D98BC, the refusal's call at 0x801D99F8 turned into a
-            // jump to 0x801E3600): the refused member change sets its two
+            // jump; version 1.4's goes to 0x801E3700, the area test, then
+            // 0x801E3600): the refused member change sets its two
             // flags (field_idle.h), plays 0x104, and closes Tactics by the
             // cancel branch's stores without the cancel's two sounds. The top
             // bar then closes the menu, and the idle field frame raises the
-            // party swap (FieldIdle_Tick).
+            // party swap (FieldIdle_Tick). In the five areas of
+            // AllyRefusedArea the release's refusal below stands.
             field_idle::g_ally_pending = 1;
             field_idle::g_ally_close_menu = 1;
             SoundRest2f(0x104);

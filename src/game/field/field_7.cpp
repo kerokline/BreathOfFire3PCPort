@@ -392,8 +392,13 @@ namespace {
 // --- DIV-0225 TownWarp: the mod's data and the menu (docs/town-warp.md) ------
 
 // The visited word: save block +0x10AC (PSX 0x80145984), the hack's offset.
-// TownWarp_Visited (symbols.toml); bits 0..30 the towns, bit 31 "forgotten".
-constexpr std::uint32_t kWarpForgotten = 0x80000000u;
+// TownWarp_Visited (symbols.toml); bits 0..30 the towns, bit 31 "the warp is
+// learned" (the hack's version 1.4; in 1.0 it was "forgotten once").
+constexpr std::uint32_t kWarpLearned = 0x80000000u;
+// Version 1.4's teaching (boot 0x80156228): record 4 holding ability 0x40 in
+// any of its four lists is the moment; record 1's type-1 list takes 0x6F.
+constexpr unsigned kWarpSignRecord = 4, kWarpPupilRecord = 1;
+constexpr unsigned char kWarpSignAbility = 0x40, kWarpAbility = 0x6F;
 constexpr unsigned kWarpMaxTowns = 31;
 constexpr unsigned kWarpPage = 4;            // names a page (the hack's sltiu 4; "more" adds 4)
 constexpr unsigned kWarpEntries = kWarpPage + 2;   // the names, "more", "cancel"
@@ -562,8 +567,10 @@ void WarpOpen() {
 // ScriptFlags_Clear40, and a chosen town is entered as the world map's walk
 // enters one (field_4.cpp Field_LeaderStepLands on a 0xAF cell): the link's
 // high bits 0 (SharedScratch +1, Area_LinkAt's; PSX scratchpad 0x1F800001),
-// Field_ChangeArea with the town's row, then ModeFlow_AreaTransition 0 and
-// Area_EnterTransition 0xC (PSX 0x80143F1E, 0x80143F1D).
+// Field_ChangeArea with the town's row, then ModeFlow_AreaTransition 0 (PSX
+// 0x80143F1E). The hack's version 1.0 also stored Area_EnterTransition 0xC
+// (PSX 0x80143F1D), the walk's other store; 1.4 took that store out (the
+// hidden file, 0x800162B0 of 1.0), so ours does not make it.
 void WarpStep() {
     if (Field_Request == 2) return;
     field_idle::g_warp_choice = 0;
@@ -582,7 +589,6 @@ void WarpStep() {
     SharedScratch.b_01 = 0;
     SH_CALL(Field_ChangeArea)(row.area, row.x, row.z, row.flags);
     ModeFlow_AreaTransition = 0;
-    Area_EnterTransition = 0xC;
     bof3::Log("DIV-0225    TownWarp: town %u, area %u at (%#x, %#x), flags %u", town, static_cast<unsigned>(row.area),
               static_cast<unsigned>(row.x), static_cast<unsigned>(row.z), static_cast<unsigned>(row.flags));
 }
@@ -861,16 +867,39 @@ void FieldIdle_Tick() {
         AreaW0c_TailState = 0;
         AreaW0c_TailSub = static_cast<unsigned char>(chosen - 1);
     }
-    // DIV-0225 TownWarp (PSX 0x801BB81C): the towns forgotten, once - when the
-    // party set (save block +0x74C) is not 0xFF and its low seven bits are at
-    // least 7 and not 12, and the word's bit 31 is clear, the word becomes
-    // bit 31 alone. The hack's story lock; the chain goes on.
+    // DIV-0225 TownWarp (PSX 0x801BB81C, in the hack's version 1.4 a jump to
+    // new code in the boot program, 0x80156228): the warp learned, once.
+    // While the word's bit 31 is clear: the forty bytes of record 4's four
+    // ability lists (PSX 0x80144C54) searched for ability 0x40; found, the
+    // word becomes bit 31 alone - every town before that moment forgotten -
+    // and record 1's type-1 list (PSX 0x80144A72, ten bytes) takes 0x6F in
+    // its first empty slot, unless a slot holds 0x6F already or none is
+    // empty. The chain goes on. (Version 1.0 had another rule here: the party
+    // set at 7 or more and not 12 cleared the word, and a level row taught
+    // the ability.)
     const bool warp = bof3::BehaviourOn(bof3::behaviours::Id::TownWarp);
     if (warp) {
         WarpNeedsData();
-        const unsigned char set = AreaW0b_PartySet;
-        if (set != 0xFF && (set & 0x7F) != 0xC && (set & 0x7F) >= 7 && (TownWarp_Visited & kWarpForgotten) == 0)
-            TownWarp_Visited = kWarpForgotten;
+        if ((TownWarp_Visited & kWarpLearned) == 0) {
+            bool sign = false;
+            for (const auto& list : CharacterRecords[kWarpSignRecord].abilities)
+                for (const std::uint8_t id : list)
+                    if (id == kWarpSignAbility) sign = true;
+            if (sign) {
+                TownWarp_Visited = kWarpLearned;
+                std::uint8_t* const list = CharacterRecords[kWarpPupilRecord].abilities[1];
+                std::uint8_t* free_slot = nullptr;
+                bool held = false;
+                for (unsigned i = 0; i < 10 && !held; ++i) {
+                    if (list[i] == kWarpAbility) held = true;
+                    else if (list[i] == 0 && free_slot == nullptr) free_slot = list + i;
+                }
+                if (!held && free_slot != nullptr) *free_slot = kWarpAbility;
+                bof3::Log("DIV-0225    TownWarp: the warp learned (record %u holds ability 0x%02X); record %u %s", kWarpSignRecord,
+                          static_cast<unsigned>(kWarpSignAbility), kWarpPupilRecord,
+                          held ? "had it" : free_slot != nullptr ? "takes it" : "has no empty slot");
+            }
+        }
     }
     // DIV-0217 AllyAnywhere (PSX 0x801B5860): the member change the camp menu
     // let through off the world map. With the flag set and no request
@@ -887,14 +916,15 @@ void FieldIdle_Tick() {
     if (!warp) return;
     // DIV-0225 TownWarp (PSX 0x8019C244, 0x8019C2A8). Off the world map
     // (Field_InputFlags bit 0 clear): the first town whose area is the
-    // standing one gets its visited bit. On the world map: the open menu's
+    // standing one gets its visited bit - in version 1.4 only once the warp
+    // is learned (bit 31 set; 0x8019C294). On the world map: the open menu's
     // frame; else a use of the ability waiting - dropped when bit 5 is set
     // (or bit 0 clear), kept while a request is pending, else the menu opens.
     const unsigned char flags = Field_InputFlags;
     if ((flags & 1) == 0) {
         for (unsigned i = 0; i < g_warp_towns; ++i) {
             if (Game_AreaNumber == g_warp_rows[i].town) {
-                TownWarp_Visited = TownWarp_Visited | (1u << i);
+                if ((TownWarp_Visited & kWarpLearned) != 0) TownWarp_Visited = TownWarp_Visited | (1u << i);
                 break;
             }
         }

@@ -340,7 +340,7 @@ void StoryFields(std::vector<Field>& f) {
                     "3 is Garr, 5 is Rei, 6 is Momo, 7 is Peco. Do not use 4."));
     f.push_back(Typed("Town warp: towns visited", Type::kHex, 0x10AC, 4, 'A',
                       "From the Definitive Edition mod, not from the original game (DIV-0225). Bits 0 to 30 are the "
-                      "towns. Bit 31 is set when the game forgets the towns."));
+                      "towns. Bit 31 is set when the party learns the warp. The game records a town only after that."));
 }
 
 void CounterFields(std::vector<Field>& f) {

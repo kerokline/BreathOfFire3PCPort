@@ -621,7 +621,8 @@ struct CharRecord {
     std::uint8_t master;  // +0x1F the master, 0xFF none (rest_2d.md MasterJoin_Step5Apply / MasterQuit_Step5Apply; Char_ApplyTraits applies its list)
     CharStatBlock stats;  // +0x20 the effective block (char-stats.md 2)
     CharStatBlock base;  // +0x40 its base copy, copied over +0x20 first by Char_RecalcStats (char-stats.md 2)
-    unsigned char pad_60[0x44];  // +0x60..+0xA3: not read by the records' readers here; save-interchange.md 2's late three-byte field is at +0x74 (carried verbatim, not understood)
+    std::uint8_t abilities[4][10];  // +0x60 the four ten-slot ability lists by type byte & 3: 0 +0x60, 1 +0x6A, 2 +0x74, 3 +0x7E (AbilityList_ForType 0x591EC0; the PSX's are at +0x5C of its record)
+    unsigned char pad_88[0x1C];  // +0x88..+0xA3: not read by the records' readers here (save-interchange.md 2's late three-byte field, given at +0x74 there, is carried verbatim, not understood)
 };
 
 // An encounter slot: 0x939F00 + r * 12, eight (battle_sprites_callees.h
