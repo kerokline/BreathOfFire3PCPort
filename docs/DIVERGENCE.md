@@ -16754,7 +16754,11 @@ designed in rather than bolted on.
   **The level-1 start.** At New Game with a champion, that record is taken
   to level 1 by subtraction of what its levels gave (no table of ours;
   willpower untouched; solo-character-level1.md). A loaded save is not
-  changed.
+  changed. With `SoloCharacter` on and a launcher champion, the tables the
+  start reads (the default records, the level table, as any mod layer left
+  them) are checked at launch, and a table that does not fit stops the game
+  there with a sentence naming the record and the cause; New Game keeps the
+  same check.
   **The combat swap.** While the mode is active (the switch on, the chapter
   neither 0 nor 16, a champion in the mark) and the champion fights
   (DIV-0229 decides while not joined), each battle's party is the champion
@@ -16777,8 +16781,9 @@ designed in rather than bolted on.
   one-on-one series) a bout the champion loses is a game over, not the next
   member's turn (6h); fight 16 needs id 1's battle graphics, so with a row
   that lacks id 1 that character's section is read from the player's own
-  party-set files into a free column of the loaded battle data, for the
-  battle and its exit's join only, nothing written to disk
+  party-set files into a free column of the loaded battle data, only in a
+  battle the champion fights alone and for its exit's join, nothing written
+  to disk
   (solo-character-party-set.md), and the mode stands down for that fight
   with a log line when the files do not fit; in fight 34 a champion who is
   not record 4 fights with record 4 beside them as the fight leaves him

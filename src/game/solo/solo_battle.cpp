@@ -10,6 +10,7 @@
 #include "game/records.h"
 #include "game/solo/solo.h"
 #include "game/solo/solo_party_set.h"
+#include "game/solo/solo_rows.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/host.h"
@@ -42,12 +43,11 @@
 namespace solo {
 namespace {
 
-constexpr std::uint32_t kPartySetRows = 0x669750;
-constexpr unsigned kPartySetRowCount = 0x13;
+// kPartySetRows, kPartySetRowCount, kNone, kKeep, kNoRow and RowHolds:
+// solo_rows.h.
 constexpr unsigned kFormation = 0xD0;   // Cond_Flags offsets
 constexpr unsigned kFirstList = 0xD2;
 constexpr unsigned kSecondList = 0xD5;
-constexpr unsigned char kNone = 0xFF;
 
 // The bytes a battle of one changes.
 struct Bytes {
@@ -154,13 +154,6 @@ const FightRule* RuleFor(unsigned char fight) {
 
 // --- the logic, on bytes alone (the live hooks and the self-test) ----------
 
-// Whether `row` (0..18) of `rows` holds `id`.
-bool RowHolds(const unsigned char* rows, unsigned row, unsigned char id) {
-    for (unsigned c = 0; c < 3; ++c)
-        if (rows[row * 3 + c] == id) return true;
-    return false;
-}
-
 // Whether the current set (`set`, 0xFF none) holds `id`, as PartySet_Find
 // asks it first (mode_11.cpp: "the current set 0x90412C if it is not 0xFF and
 // holds every one of them"). A row past the table is a Fatal: Capcom's Find
@@ -179,8 +172,6 @@ bool SetHolds(const unsigned char* rows, unsigned char set, unsigned char id) {
 // the current row's ids, the lowest row on a tie - so a set-up that wants a
 // party id finds it wherever a row allows. kKeep: the current set holds them
 // already; kNoRow: no row does (the caller stands down).
-constexpr int kKeep = -1;
-constexpr int kNoRow = -2;
 int ChooseRow(const unsigned char* rows, unsigned char set, unsigned char id, unsigned char need) {
     if (SetHolds(rows, set, id) && (need == kNone || SetHolds(rows, set, need))) return kKeep;
     int best = kNoRow, best_score = -1;
@@ -269,9 +260,21 @@ bool LeaderMissed(unsigned count, const unsigned char ids[3], unsigned char lead
     return true;
 }
 
+// Fight 34's revive and heal of the champion record, on its HP, status and
+// effective maximum HP (record +0x18, the status word +0x10, +0x20). What the
+// game's two calls would leave: ItemUse_Revive (item_use.cpp) sets HP 1 and
+// clears status 0x4000; a full Char_HealHp (char.cpp, amount 0) sets HP to
+// the effective maximum +0x20 and clears 0x2000 when max >> 2 <= HP, which at
+// HP = max always holds. So: HP = max, 0x6000 cleared. The caller refuses a
+// maximum of 0 first (a revive to 0 HP would be no revive).
+void Revive34(std::uint16_t& hp, std::uint16_t& status, std::uint16_t max_hp) {
+    hp = max_hp;
+    status = static_cast<std::uint16_t>(status & ~0x6000u);
+}
+
 // --- the live side ----------------------------------------------------------
 
-const unsigned char* Rows() { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kPartySetRows))); }
+const unsigned char* Rows() { return PartySetRows(); }
 
 Bytes ReadLive() {
     Bytes b{};
@@ -409,10 +412,8 @@ void SoloBattle_Arm(unsigned char event_flags) {
                     "record %u",
                     record, id, static_cast<unsigned>(Character_IndexById[id]));
     // Fight 34 (kWithRecord, the owner, round doc 6j). The champion that record:
-    // alone, revived and healed at the battle's start - HP 1 and status bit
-    // 0x4000 cleared as ItemUse_Revive does (item_use.cpp), then HP to the
-    // effective maximum and bit 0x2000 cleared as a full Char_HealHp does
-    // (char.cpp) - in place of the 0 HP stand-down below. Another champion:
+    // alone, revived and healed at the battle's start (Revive34) in place of
+    // the 0 HP stand-down below. Another champion:
     // that record beside him (`second`), as the fight leaves it; nothing of
     // ours revives it or stops the player from doing so.
     unsigned char second = kNone;
@@ -421,10 +422,14 @@ void SoloBattle_Arm(unsigned char event_flags) {
             records::CharRecord& c = CharacterRecords[record];
             if (c.hp == 0 || (c.status & 0x4000)) {
                 const unsigned hp = c.hp, status = c.status;
-                c.hp = 1;
-                c.status = static_cast<std::uint16_t>(c.status & ~0x4000u);
-                c.hp = c.stats.max_hp;
-                if (static_cast<std::uint16_t>(c.stats.max_hp >> 2) <= c.hp) c.status = static_cast<std::uint16_t>(c.status & ~0x2000u);
+                if (c.stats.max_hp == 0)
+                    bof3::Fatal("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X; the champion's record %d is to be "
+                                "revived and healed, and its effective maximum HP (+0x20) is 0",
+                                static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), record);
+                std::uint16_t new_hp = c.hp, new_status = c.status;
+                Revive34(new_hp, new_status, c.stats.max_hp);
+                c.hp = new_hp;
+                c.status = new_status;
                 bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; the champion is that record, revived "
                           "and healed to fight alone: HP %u -> %u, status 0x%04X -> 0x%04X (the owner, round doc 6j)",
                           static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, hp,
@@ -662,8 +667,7 @@ void SoloBattle_Drop() {
 }
 
 void SoloBattle_Inject() {
-    if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("solo"))
-        SoloBattle_SelfTest();
+    if (SoloSelfTestWanted()) SoloBattle_SelfTest();
     bof3::Snapshot_Register("SOLOCB", &SnapSave, &SnapRestore, nullptr, &SnapCheck);
 }
 
@@ -692,6 +696,17 @@ void SoloBattle_SelfTest() {
         check(w34.list2[0] == 8 && w34.list2[1] == 4 && w34.list2[2] == kNone && w34.count == 2 && w34.formation == 0 &&
                   w34.set == 15,
               "Written with a second member");
+        {
+            // Fight 34's revive (Revive34): HP to the maximum, 0x4000 and 0x2000
+            // cleared, every other status bit kept.
+            std::uint16_t hp = 0, status = 0x6000 | 0x0081;
+            Revive34(hp, status, 412);
+            check(hp == 412 && status == 0x0081, "fight 34: revived to the maximum, 0x6000 cleared");
+            hp = 3;
+            status = 0x2000;
+            Revive34(hp, status, 50);
+            check(hp == 50 && status == 0, "fight 34: a low record healed, 0x2000 cleared");
+        }
         const Save s34{1, 1, 1, 9, f, w34, 4, {0, 0, 0x22}};
         Bytes back = w34;
         back.set = 0x8F;

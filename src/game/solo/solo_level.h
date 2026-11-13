@@ -39,6 +39,21 @@ namespace solo {
 // not in its list. `log` writes the before and after lines.
 void Solo_LevelReset(int record, bool log);
 
+// Solo_LevelReset's checks of the tables alone, at launch: the default
+// record's level, master, growth bias and base words, the words it derives,
+// and every row ability found in its list - on a copy of the default record,
+// so nothing of the game's is written. The same Fatals as Solo_LevelReset,
+// each sentence saying it was found at launch. Called from Solo_Read when
+// SoloCharacter is on and BOF3X_SOLO names a champion: the tables are final
+// there - the exe host lays the image and every BOF3X_OPT layer's table cells
+// (ExeImage_Source, ExeImage_LayOptTables, a table-edit or disc-patch mod's
+// char_defaults / exp_table edits among them) in CopyData before InjectAll,
+// whose second call is Solo_Read; the hosted build keeps Capcom's .data and
+// refuses table layers; nothing of ours writes either table after that (the
+// language layer's kind 10 writes only the default names, which nothing here
+// reads). Solo_LevelReset keeps its own checks as the backstop at New Game.
+void Solo_LevelCheckTables(int record);
+
 // The round trip, on the default records copied into the record slots and
 // put back after (the slots' bytes are restored whole, so no game state
 // changes): for each champion record, the reset, then the game's own

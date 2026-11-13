@@ -8,6 +8,7 @@
 #include "game/records.h"
 #include "game/solo/solo_level.h"
 #include "game/solo/solo_party_set.h"
+#include "game/solo/solo_rows.h"
 #include "hook/behaviour.h"
 #include "hook/detour.h"
 #include "hook/host.h"
@@ -212,8 +213,12 @@ void Solo_Read() {
         bof3::Log("solo: BOF3X_SOLO=%s is set and SoloCharacter is off: nothing reads it", value);
     if (if_present && !on) bof3::Log("DIV-0229 SoloChampionIfPresent is on and SoloCharacter off: it does nothing");
     else if (if_present) bof3::Log("DIV-0229 SoloChampionIfPresent on: the champion fights only while joined");
-    if (bof3::IsExeHost() ? bof3::os::GetEnv("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("solo"))
-        Solo_SelfTest();
+    // The level-1 start's preconditions on the tables as they are now, before
+    // any New Game can need them (solo_level.h, Solo_LevelCheckTables): a mod
+    // that changes the default records or the level table so that the start
+    // cannot be made stops the game here, with the record and the cause.
+    if (on && g_env_record >= 0) Solo_LevelCheckTables(g_env_record);
+    if (SoloSelfTestWanted()) Solo_SelfTest();
 }
 
 bool Solo_Active() { return LiveAnswer().active; }

@@ -335,9 +335,9 @@ void StoryFields(std::vector<Field>& f) {
     f.push_back(Num("Desert walk: count", 0x67E, 1, 'A'));
     f.push_back(Num("Desert walk: reserve", 0x67F, 1, 'A'));
     f.push_back(Bit("Mountain passes open", 0x1040, 0, 'A', "From this project, not from the original game (DIV-0191)."));
-    f.push_back(Rng("Solo champion", 0x1041, 1, 0, 7, 'A',
-                    "From this project, not from the original game (DIV-0228). 0 is no champion. 1 is Ryu, 2 is Nina, "
-                    "3 is Garr, 5 is Rei, 6 is Momo, 7 is Peco. Do not use 4."));
+    f.push_back(Lst("Solo champion", 0x1041, List::kSoloChampion, 'A',
+                    "From this project, not from the original game (DIV-0228). Select a champion from the list, or "
+                    "None. The game stops in solo mode when this field has a different value."));
     f.push_back(Typed("Town warp: towns visited", Type::kHex, 0x10AC, 4, 'A',
                       "From the Definitive Edition mod, not from the original game (DIV-0225). Bits 0 to 30 are the "
                       "towns. Bit 31 is set when the party learns the warp. The game records a town only after that."));
@@ -499,9 +499,22 @@ std::string MemberName(const Block& b, unsigned id, const Names& names) {
     return name.compare(0, 4, "hex:") == 0 ? std::string() : name;
 }
 
+// The solo-character mark's values (block +0x1041, the game's
+// Solo_ChampionMark; DIV-0228): 0 for no champion, else the champion's
+// record + 1 - records 0, 1, 2, 4, 5, 6. The launcher's own labels for the
+// six champions (config.h kSoloChampions), not text from the game. Any other
+// value makes the game stop in the mode.
+const std::map<unsigned, std::string>& SoloChampionNames() {
+    static const std::map<unsigned, std::string> names = {{0, "None"}, {1, "Ryu"}, {2, "Nina"}, {3, "Garr"},
+                                                          {5, "Rei"},  {6, "Momo"}, {7, "Peco"}};
+    return names;
+}
+
 // The reference names behind a list, or null.
 const std::map<unsigned, std::string>* MapOf(List list, const Names& names) {
     switch (list) {
+    case List::kSoloChampion:
+        return &SoloChampionNames();
     case List::kMaster:
         return &names.master;
     case List::kFormation:
@@ -973,6 +986,10 @@ bool FieldSet(Block& block, const Field& f, const std::string& raw, const Names&
         }
         if (v < f.lo || v > f.hi) {
             why = RangeWhy(f);
+            return false;
+        }
+        if (f.list == List::kSoloChampion && SoloChampionNames().count(static_cast<unsigned>(v)) == 0) {
+            why = "Select a champion from the list, or None.";
             return false;
         }
         Put(block, f.at, f.size, static_cast<std::uint64_t>(v));

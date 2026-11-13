@@ -153,16 +153,24 @@ the game's again before it returns. Why it is sound:
   sprite is drawn exactly as in the plain run (section 5's pixel compare);
 - the copy lands inside the battle file's own slot (`0xF4D1` bytes used of a
   `0x1B000` slot; the slot's tail zeroed), in the arena, so a quicksave
-  carries it and the sprite's pointers stay inside the image span; nothing is
-  allocated and nothing outlives the battle (the battle's end loads the
+  carries it and the sprite's pointers stay inside the image span; nothing of
+  the game's points outside it and nothing in the arena outlives the battle (the battle's end loads the
   field file over it, `BattleResult_SplitExp` / `BattleEnd_AwaitRestore`);
 - texture place and palette follow the slot argument (1), as in the original
   fight, where Ryu is alone in slot 0 - the champion is alone in slot 0 too;
 - the row changes for one synchronous call only, so no way out of the battle
   has anything to undo;
-- the plan is made again from live state at the dressing (the set byte,
-  `0x904AAC`, the champion), so a quick-load between step 1 and the dressing
-  needs no record of ours;
+- the plan is a function of live state (the set byte, `0x904AAC`, the
+  champion) and the player's files: Arm makes it and holds it with the
+  section's bytes for its battle (`Game_BattleCount`), each dressing uses
+  the held one (no file read per hit), and a dressing that finds none for
+  its battle - a quick-load from another process - makes it again from the
+  files once, so a quick-load needs no record of ours (amended 2026-11-13,
+  the round's review, note 5: it read both files at every dressing);
+- the dressing and the join act only in a battle the champion fights alone
+  (`SoloBattle_ChampionFightsThis`, read from the game's bytes) and only when
+  the loaded row lacks id 1 (review note 1: they asked only
+  `Solo_Active()`);
 - before copying, the loaded data must be the row's battle file (its three
   offsets and the other columns' section headers compared with the file
   read): otherwise a Fatal, since the original call would read off the row.
@@ -198,13 +206,14 @@ touched.
   game's `Field_MemberSprite(1, 1)` when it answers false (mode off, or the
   row holds id 1); `Boss16_Exit`'s `Scenario_CallA(1)` runs inside
   `PartySetExtra_Around(1, ...)`, which, only when the loaded row lacks id 1
-  in the mode, lets the free column read 1 for that one synchronous call, so
+  in a battle the champion fights alone, lets the free column read 1 for that one synchronous call, so
   the join's set-up reads a valid section (that column's, of whatever set
   file is loaded) for a record that is hidden and rebuilt.
 
 Off (SoloCharacter off): `Arm` is never asked (`SoloBattle_Arm` returns at
-`Solo_ChampionFights()`), `Dress` answers false at `Solo_Active()`: the game's
-call, untouched.
+`Solo_ChampionFights()`), `Dress` and `Around` find no battle of the mode's
+(`SoloBattle_ChampionFightsThis` asks `Solo_ChampionFights()` first): the
+game's call, untouched.
 
 ## 5. The runs
 

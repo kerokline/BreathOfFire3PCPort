@@ -80,26 +80,26 @@ bool IsWillpowerByte(unsigned offset) { return offset == kWillCurrent || offset 
 
 // The default record's level N and the six level-1 base words, derived; every
 // precondition of the inverse checked (solo_level.h, Solo_LevelReset).
-unsigned Derive(int record, int derived[6]) {
+unsigned Derive(int record, int derived[6], const char* who) {
     const unsigned char* const d = Default(record);
     const unsigned n = d[kLevel];
     if (n < 1 || n > kMaxLevel)
-        bof3::Fatal("solo level-1 start: default record %d's level is %u, not 1..99 (Char_DefaultRecords 0x64B390 as laid)", record, n);
+        bof3::Fatal("%s: default record %d's level is %u, not 1..99 (Char_DefaultRecords 0x64B390 as laid)", who, record, n);
     if (d[kMaster] != 0xFF || d[kMasterLevel] != 0)
-        bof3::Fatal("solo level-1 start: default record %d has a master (+0x1F %u, +0x88 %u): its growth is not the bare "
+        bof3::Fatal("%s: default record %d has a master (+0x1F %u, +0x88 %u): its growth is not the bare "
                     "table's, so the levels cannot be subtracted",
-                    record, d[kMaster], d[kMasterLevel]);
+                    who, record, d[kMaster], d[kMasterLevel]);
     for (unsigned s = 0; s < 6; ++s)
         if (d[kBias + s] != 0)
-            bof3::Fatal("solo level-1 start: default record %d has a growth bias %d on %s (+0x%X): the levels cannot be "
+            bof3::Fatal("%s: default record %d has a growth bias %d on %s (+0x%X): the levels cannot be "
                         "subtracted",
-                        record, static_cast<signed char>(d[kBias + s]), kStatNames[s], kBias + s);
+                        who, record, static_cast<signed char>(d[kBias + s]), kStatNames[s], kBias + s);
     for (unsigned s = 0; s < 6; ++s) {
         const unsigned v = Word(d + kBase + 2 * s);
         if (v >= kStatCap)
-            bof3::Fatal("solo level-1 start: default record %d's base %s is %u: Char_LevelUp caps a word at 999, so what "
+            bof3::Fatal("%s: default record %d's base %s is %u: Char_LevelUp caps a word at 999, so what "
                         "it added cannot be told",
-                        record, kStatNames[s], v);
+                        who, record, kStatNames[s], v);
         derived[s] = static_cast<int>(v);
     }
     for (unsigned level = 1; level < n; ++level) {
@@ -109,9 +109,9 @@ unsigned Derive(int record, int derived[6]) {
     }
     for (unsigned s = 0; s < 6; ++s)
         if (derived[s] < 0)
-            bof3::Fatal("solo level-1 start: record %d's level-1 base %s derives to %d (the default's %u less rows 1..%u of "
+            bof3::Fatal("%s: record %d's level-1 base %s derives to %d (the default's %u less rows 1..%u of "
                         "Char_ExpTable 0x658F48 as laid): the table does not fit the default record",
-                        record, kStatNames[s], derived[s], static_cast<unsigned>(Word(d + kBase + 2 * s)), n - 1);
+                        who, record, kStatNames[s], derived[s], static_cast<unsigned>(Word(d + kBase + 2 * s)), n - 1);
     return n;
 }
 
@@ -130,20 +130,39 @@ void CheckIsDefault(int record) {
     }
 }
 
-// One copy of `id`, the last, out of its list; the entries after it move up
-// one and the last slot becomes 0. A Fatal when the list does not hold it.
-void RemoveAbility(int record, unsigned id, unsigned level) {
-    unsigned char* const list = ::AbilityList_ForType(static_cast<unsigned>(record), id, 0);
+// One copy of `id`, the last, out of its list in the record at `rec` (the
+// live slot at New Game, a copy of the default at the launch check); the
+// entries after it move up one and the last slot becomes 0. The list is the
+// one AbilityList_ForType 0x591EC0 picks by the id's type (pointer arithmetic
+// on the slot and the type table; it reads no record byte). A Fatal when the
+// list does not hold it.
+void RemoveAbility(unsigned char* rec, int record, unsigned id, unsigned level, const char* who) {
+    const unsigned off = static_cast<unsigned>(::AbilityList_ForType(static_cast<unsigned>(record), id, 0) - Slot(record));
+    unsigned char* const list = rec + off;
     for (int i = static_cast<int>(kListSize) - 1; i >= 0; --i) {
         if (list[i] != id) continue;
         for (unsigned j = static_cast<unsigned>(i); j + 1 < kListSize; ++j) list[j] = list[j + 1];
         list[kListSize - 1] = 0;
         return;
     }
-    bof3::Fatal("solo level-1 start: record %d's row %u files ability %u, which its list (record +0x%X) does not hold: "
+    bof3::Fatal("%s: record %d's row %u files ability %u, which its list (record +0x%X) does not hold: "
                 "the default record was not built by this table",
-                record, level, id, static_cast<unsigned>(list - Slot(record)));
+                who, record, level, id, off);
 }
+
+// The abilities of rows N-1 down to 1 out of the record at `rec`, each row's
+// +7 before its +6: the reverse of the order Char_LevelUp files them in, so
+// with each removal taking the last copy, a list built by that filing is
+// unbuilt exactly.
+void RemoveRowAbilities(unsigned char* rec, int record, unsigned n, const char* who) {
+    for (unsigned level = n - 1; level >= 1; --level) {
+        const unsigned char* const row = Row(record, level);
+        if (row[7] != 0) RemoveAbility(rec, record, row[7], level, who);
+        if (row[6] != 0) RemoveAbility(rec, record, row[6], level, who);
+    }
+}
+
+constexpr const char* kAtNewGame = "solo level-1 start";
 
 void LogRecord(const char* when, int record) {
     const unsigned char* const r = Slot(record);
@@ -161,20 +180,13 @@ void Solo_LevelReset(int record, bool log) {
         bof3::Fatal("solo level-1 start: record %d has no default record (0..6)", record);
     CheckIsDefault(record);
     int derived[6];
-    const unsigned n = Derive(record, derived);
+    const unsigned n = Derive(record, derived, kAtNewGame);
     if (log) LogRecord("before", record);
     if (n == 1) {
         if (log) bof3::Log("DIV-0228 SoloCharacter level-1 start, record %d: its default is level 1, left as it is", record);
         return;
     }
-    // The abilities of rows N-1 down to 1, each row's +7 before its +6: the
-    // reverse of the order Char_LevelUp files them in, so with each removal
-    // taking the last copy, a list built by that filing is unbuilt exactly.
-    for (unsigned level = n - 1; level >= 1; --level) {
-        const unsigned char* const row = Row(record, level);
-        if (row[7] != 0) RemoveAbility(record, row[7], level);
-        if (row[6] != 0) RemoveAbility(record, row[6], level);
-    }
+    RemoveRowAbilities(Slot(record), record, n, kAtNewGame);
     unsigned char* const r = Slot(record);
     r[kLevel] = 1;
     SetLong(r + kExp, 0);
@@ -183,6 +195,20 @@ void Solo_LevelReset(int record, bool log) {
     SetWord(r + kHp, Word(r + kMaxHp));
     SetWord(r + kAp, Word(r + kMaxAp));
     if (log) LogRecord("after", record);
+}
+
+void Solo_LevelCheckTables(int record) {
+    constexpr const char* kAtLaunch =
+        "solo level-1 start, checked at launch (SoloCharacter is on and BOF3X_SOLO names this champion, so a New Game "
+        "takes the record to level 1 from the tables as they are now)";
+    if (record < 0 || record >= kDefaultCount)
+        bof3::Fatal("%s: record %d has no default record (0..6)", kAtLaunch, record);
+    int derived[6];
+    const unsigned n = Derive(record, derived, kAtLaunch);
+    if (n == 1) return;
+    unsigned char copy[kStride];
+    std::memcpy(copy, Default(record), kStride);
+    RemoveRowAbilities(copy, record, n, kAtLaunch);
 }
 
 int Solo_LevelSelfTest() {
@@ -199,7 +225,13 @@ int Solo_LevelSelfTest() {
         const unsigned char* const d = state + static_cast<unsigned>(record) * kStride;
         std::memcpy(Slot(0), state, sizeof state);
         int derived[6];
-        const unsigned n = Derive(record, derived);
+        const unsigned n = Derive(record, derived, "solo level self-test");
+        // The launch check passes on the tables as laid, and leaves the
+        // records it reads as they were (it works on a copy).
+        Solo_LevelCheckTables(record);
+        if (std::memcmp(Slot(0), state, sizeof state) != 0)
+            bof3::Fatal("solo level self-test: the launch check of record %d changed a record slot", record);
+        ++checks;
         for (unsigned s = 0; s < 6; ++s) {
             if (derived[s] < 0) bof3::Fatal("solo level self-test: record %d's %s derives negative", record, kStatNames[s]);
             ++checks;
