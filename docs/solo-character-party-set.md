@@ -252,7 +252,7 @@ checks passed`, `solo battle self-test: 33 checks passed`, `participant
 'SOLOCB' registered`, exit 0. Hosted `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`
 from the ini-less launcher copy: the same three lines, 916 `MISMATCH` lines
 all `0 MISMATCHES` (the `boss_sc` groups, `boss_nina.cpp`'s, among them),
-exit 0. Logs: `D:of3x-runs\solo1112\PSoot\selftest_exe.log`,
+exit 0. Logs: `D:\bof3x-runs\solo1112\PS\root\selftest_exe.log`,
 `selftest_hosted.log`.
 `tools/ledger_check.py`: 229 entries, 0 errors (6 notes);
 `tools/ledger_switches.py --check`: 0 errors.
