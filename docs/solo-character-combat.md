@@ -79,7 +79,9 @@ when `Field_PartyLoad(1)`'s `Party_ClearAll` turns their records off.
   current row's mode-0 file (`BattleEnd_AwaitRestore` `0x4315C0`,
   `BattleResult_SplitExp` `0x431940`, both `PartySet_Select(set, 0)`). So:
   - Arm, when the current row lacks the champion, writes the row
-    `PartySet_Find(id, 0xFF, 0xFF)` gives into `0x90412C` (no bit 7, as the
+    `ChooseRow` picks into `0x90412C` (section 11: among the rows holding the
+    champion, the one keeping the most of the current row's ids; first built
+    as `PartySet_Find(id, 0xFF, 0xFF)`'s first match) (no bit 7, as the
     step's mode 1 / 2 select records it); the step's own select then loads
     that row's battle file and step 2 waits for it (`File_LoadDone`).
   - An event battle with `0x904AE5` bit 4 skips that select, and so draws
@@ -312,7 +314,8 @@ reason beside it; if the owner meant only one of 25 and 26, removing a line
 is the whole change. That 26 is part of the minigame is this doc's reading
 of the code, not the owner's word.
 
-**Built.** `SoloBattle_Arm` reads `EventBattle_Id` (`0x904AAA`, set by
+**Built.** (The table is `kFightRules` since section 11; these three are
+its `kStandDown` rows.) `SoloBattle_Arm` reads `EventBattle_Id` (`0x904AAA`, set by
 `Field_StartEventBattle` before mode 5, 0 for a random encounter, read at
 step 1) and, for a fight in `kStandDowns`, logs one line naming it and arms
 nothing. Every later hook acts only on what Arm saved: `SoloBattle_WriteParty`
@@ -329,3 +332,87 @@ round doc 6g)` (and the same for `0x1A`, `0x1B`), and no arm line; the
 recipes ran to their end. These are staged, empty fights in area 29, not
 the real scenes: the real fights want a chapter 6 save at area 92 before run
 8 (fight 25), before run 8 step `0xC` (26) and before run 9 step 5 (27).
+
+**The real scene of fight 25** (2026-11-13, `tools/solo_boss_sweep.py`, RT's
+craft `bfs25` from `preBeyd`, chapter 6 run 8 step 0, area 92; root
+`D:\bof3x-runs\solo1112\CB\sweep`): champions Garr and Rei both log
+`battle 260 is event battle 0x19, chapter 6's Beyd bout, part one ...:
+fought by the game's own party` and arm nothing. Both runs end "started,
+hung (no return to the field)" - as RT's **plain** runs of the same craft
+do (`RT\root\cx\boss_results.md`): the scripted bout waits for inputs the
+harness does not give. Same result as plain.
+
+## 11. Set-ups that read the party by id, by slot or from the set (2026-11-13)
+
+**The defect** (group RT's find, reproduced here): fight 16 crashed every
+time with champion Rei, Momo or Peco - `0xC0000005 at bof3x.dll+0x10D613`,
+mode 5 step 5, in `Sprite_LoadPalette` under `Field_MemberSprite` under
+`Boss16_Event`. `Boss16_Event` code 2 (`src/game/boss/boss_nina.cpp`) and
+`BossNina_HookHit` (kind 17's hook, the same file) call
+`Field_MemberSprite(1, 1)`: they dress enemy 2 as character id 1 from the
+loaded party set, whose column for an id it lacks is 3, off the row
+(section 3). Before the battle the party is record 0 alone in row 0 `(0, 1,
+2)`, which holds id 1; `PartySet_Find(id, 0xFF, 0xFF)`'s first match for 4,
+5, 6 was a row without id 1 (rows `0x0D`, `0x10`, `0x12` in RT's logs).
+
+**The audit** (read; `grep` over `src/game/battle`, `boss`, `magic`,
+`effect` for `Field_MemberSprite`, the set row `0x669750` / `AreaW0b_PartySet`,
+`ObjTrio[1]` / `[2]`, `Member(1)` / `(2)`, the second list, `+0x148` and
+`+0x89` compares, and the boss files' `ObjTrio` uses), each with what the
+mode's battle of one or changed set does to it:
+
+| Where | Fights | What it reads | In the mode |
+|---|---|---|---|
+| `Boss16_Event` code 2, `BossNina_HookHit` | 16 | id 1's sprite from the loaded row | **crash** when the row lacks id 1. Rule `kNeedsIdInRow 1` |
+| `Boss34_Setup` / `Boss34_Event` (`boss_mikba.cpp`) | 34 (Mikba, chapter 8) | the member whose record (`+0x148`) is `Character_IndexById[4]`, record 4; with none the pick byte `0x675F08` keeps an older value and the event hook still puts "the picked member" first in the order and gives it ability `0x40` | a champion other than record 4 is not that member (a stale index into the off records: inference, hang or worse). Rule `kNeedsRecord 4` |
+| `Boss_SetByLeaderId` (`boss_nina.cpp`), from set-ups 18..20's `EndAreaFight` on the third way out | 18, 19, 20 (chapter 5) | ObjTrio's first record's id - the leader in the original, **the champion** in the mode - into `0x92BF18`, which `Party_PlacesByList` hands `Party_DropIn` after the battle | the post-battle placement entry is the champion's (ids 0, 1, 5, 6) or left as it was (2, 4) instead of the leader's. No crash found; **not built**, an owner call |
+| `Boss25_*` (member 0), `Boss26_End` / `Boss27_End` (members by flags) | 25..27 | member 0 / the flagged members | stood down (section 10) |
+| `Boss01` / `04` / `07` (member 0's forced action) | 1, 4, 7 | member 0 | chapter 0: the mode stands down there |
+| `Boss32_End`, `Boss52_End`, `Boss55_End` | 32, 52, 55 | each member with `+0` bit 0 | the champion alone: fine |
+| `Boss16_Exit` | 16 | `ObjTrio[1].flags |= 0x40` after `Scenario_CallA(1)` | a stale record's flag; step 7's `Field_PartyLoad(0)` rebuilds it. Harmless |
+| `Accession_ApplyB` (`magic/accession.cpp`) | any (the acting member's single form) | `Field_MemberSprite(row[0], 0)` - the loaded row's first id | the row is always one holding the champion; `row[0]` is in it, so no crash; with a changed row the form may wear another character (cosmetic, inference; also the original's behaviour in rows whose first id is not the caster's) |
+| `Kaiser` / `BattleFxRestore_LoadDat` | the dragon revert | the set byte (rows 7, `0xD`, `0xE`, `0xF` have files of their own) | follows the row the battle loaded, as the original does |
+| `battle_menu_win.cpp`, `battle_item_cmd.cpp` | any | `0x904065[member slot]` | the second list we wrote, slot 0 the champion: consistent |
+| `battle_loss.cpp` `LossMember(1)` / `(2)`, `Sprite_ReleaseTint(Member(1/2))` | the game over | guarded by the count / a tint release | fine |
+| `effect_kind_54`, `_82`, `_84`, `_ae` | field scenes (member 1's animation, member 2's x) | ObjTrio records 1 and 2 | field-time, the party the game's own (the mode's field half is out of the round) |
+
+**What is built.**
+
+- **The row choice** (`ChooseRow`): when the current row lacks the champion,
+  the row holding the champion that keeps the most of the current row's ids
+  (the lowest row on a tie), in place of `PartySet_Find`'s first match. It
+  writes nothing until chosen (`PartySet_Find` left its ids at
+  `0x903850..`).
+- **`kFightRules`** (one line a fight, the reason beside it), the Beyd
+  fights' table grown three kinds: `kStandDown` (25, 26, 27);
+  `kNeedsIdInRow` - the row must hold the champion and the id, chosen the
+  same way, else the game's own party fights (16, id 1); `kNeedsRecord` -
+  the game's own party fights unless the champion is that record (34,
+  record 4). Each stand-down is one log line naming the fight.
+- **Fight 16 by champion** (chapter 3: ids 0, 1, 2, 4, 5, 6 are records 0,
+  1, 2, 4, 5, 6; rows holding id 1 are 0, 1, 2): Ryu - already alone; Nina,
+  Garr - row 0 kept; Momo - row 1 `(0, 1, 5)`; Peco - row 2 `(0, 1, 6)`;
+  **Rei - no row holds 4 beside 1: stands down.**
+
+**Run, fight 16** (`tools/solo_boss_sweep.py run --fights 16 --champions
+ryu nina garr rei momo peco --mark-at-cut`, the full `balioAndSunder_2`
+route to its cut; root `D:\bof3x-runs\solo1112\CB\sweep`): plain and all
+six "started, ended (win, enemies defeated)", no crash. Ryu: `already has
+the champion (id 0x00) alone`. Nina, Garr: armed, set kept. Momo, Peco:
+`set row changed`, then at step 7 `set 80 (put back, its field file
+loaded)`. Rei: the stand-down line. After the fight the game itself puts
+Nina in the party (`Boss16_Exit`'s `Scenario_CallA(1)`): the restore leaves
+those bytes to it (mask `0x15` / `0x35`, count 2 the game's), as the
+per-byte rule means.
+
+**Fight 34 is argued from the code**: RT's craft `bfs34` (chapter 8, area
+43, "record 4 at 0 HP") does not start the fight, plain or solo, in RT's
+runs and here. The owner would need a save in area 43 just before Mikba.
+
+**A save near fight 16** (the owner's time-saver): the route's own slot-6
+save is written at its end, after the fight (the recipe's save-write check,
+2026-10-03), so it cannot stand before it. The six-champion run above used
+the full route at speed 4 (about 3 minutes a run). A save the owner makes in
+area 41 before walking down the steps (chapter 3, before
+`Scena03_StepArea29` starts fight 16) would cut a run to well under a
+minute.

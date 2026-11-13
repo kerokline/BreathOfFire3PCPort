@@ -94,29 +94,41 @@ struct StepSeven {
 };
 StepSeven g_set_back{};
 
-// The fights the mode stands down for: the battle the game is starting is
-// EventBattle_Id 0x904AAA (Field_StartEventBattle's byte, set before mode 5;
-// 0 for a random encounter), which is also the index of the fight's set-up in
+// The fights with a rule of their own (docs/solo-character-combat.md 10, 11).
+// The battle the game is starting is EventBattle_Id 0x904AAA
+// (Field_StartEventBattle's byte, set before mode 5; 0 for a random
+// encounter), which is also the index of the fight's set-up in
 // Boss_SetupTable 0x656954 (Battle_InitBossEncounter). One line a fight.
-struct StandDown {
-    unsigned char id;
+enum class Rule : unsigned char {
+    kStandDown,      // the game's own party fights it, whoever the champion is
+    kNeedsIdInRow,   // the fight's code draws character id `arg` from the loaded party set: the
+                     // battle's row must hold it beside the champion, else the game's own party fights
+    kNeedsRecord,    // the fight's code wants record `arg` among the members: the game's own party
+                     // fights it unless the champion is that record
+};
+struct FightRule {
+    unsigned char fight;
+    Rule rule;
+    unsigned char arg;
     const char* why;
 };
-constexpr StandDown kStandDowns[] = {
+constexpr FightRule kFightRules[] = {
     // The owner (round doc 6g): "the beyd fight is a minigame, not a true
     // boss - I would turn off the logic for those 2 fights (the beyd fight,
-    // and the beyd vs zigg fight)". Read in the code (docs/solo-character-
-    // combat.md 10): three Beyd fights, chapter 6, area 92.
-    {0x19, "chapter 6's Beyd bout, part one (fight 25: run 8 step 2; SortParty fields record 0 alone, Boss25's hooks script it)"},
-    {0x1A, "chapter 6's Beyd bout, part two (fight 26: run 8 step 0xC; the party of three for 21 turns, Boss26 tallies the blows)"},
-    {0x1B, "chapter 6's Beyd against Zig (fight 27: run 9 step 5; the party watches - a member's turn ends it, Boss27_Event)"},
+    // and the beyd vs zigg fight)". Read in the code (combat.md 10): three
+    // Beyd fights, chapter 6, area 92.
+    {0x19, Rule::kStandDown, 0, "chapter 6's Beyd bout, part one (fight 25: run 8 step 2; SortParty fields record 0 alone, Boss25's hooks script it)"},
+    {0x1A, Rule::kStandDown, 0, "chapter 6's Beyd bout, part two (fight 26: run 8 step 0xC; the party of three for 21 turns, Boss26 tallies the blows)"},
+    {0x1B, Rule::kStandDown, 0, "chapter 6's Beyd against Zig (fight 27: run 9 step 5; the party watches - a member's turn ends it, Boss27_Event)"},
+    // combat.md 11: set-ups that read the party by id or by slot.
+    {0x10, Rule::kNeedsIdInRow, 1, "fight 16 (chapter 3, area 41: Balio, Sunder, Nina): Boss16_Event's code 2 and BossNina_HookHit dress enemy 2 as id 1 by Field_MemberSprite(1, 1), from the loaded party set"},
+    {0x22, Rule::kNeedsRecord, 4, "fight 34 (chapter 8, area 43: Mikba): Boss34_Setup picks the member whose record is 4 and Boss34_Event drives that member"},
 };
 
-// The reason the mode stands down for fight `id`, or nullptr.
-const char* StandDownFor(unsigned char id) {
-    if (id == 0) return nullptr;
-    for (const StandDown& d : kStandDowns)
-        if (d.id == id) return d.why;
+const FightRule* RuleFor(unsigned char fight) {
+    if (fight == 0) return nullptr;
+    for (const FightRule& r : kFightRules)
+        if (r.fight == fight) return &r;
     return nullptr;
 }
 
@@ -140,6 +152,32 @@ bool SetHolds(const unsigned char* rows, unsigned char set, unsigned char id) {
         bof3::Fatal("DIV-0228 SoloCharacter: the party set 0x90412C is 0x%02X, past the %u rows of 0x%X", set,
                     kPartySetRowCount, kPartySetRows);
     return RowHolds(rows, row, id);
+}
+
+// The battle's row when the current one will not do: among the rows holding
+// the champion `id` (and `need`, unless 0xFF), the one that keeps the most of
+// the current row's ids, the lowest row on a tie - so a set-up that wants a
+// party id finds it wherever a row allows. kKeep: the current set holds them
+// already; kNoRow: no row does (the caller stands down).
+constexpr int kKeep = -1;
+constexpr int kNoRow = -2;
+int ChooseRow(const unsigned char* rows, unsigned char set, unsigned char id, unsigned char need) {
+    if (SetHolds(rows, set, id) && (need == kNone || SetHolds(rows, set, need))) return kKeep;
+    int best = kNoRow, best_score = -1;
+    for (unsigned row = 0; row < kPartySetRowCount; ++row) {
+        if (!RowHolds(rows, row, id) || (need != kNone && !RowHolds(rows, row, need))) continue;
+        int score = 0;
+        if (set != kNone)
+            for (unsigned c = 0; c < 3; ++c) {
+                const unsigned char other = rows[(set & 0x7Fu) * 3 + c];
+                if (other != kNone && RowHolds(rows, row, other)) ++score;
+            }
+        if (score > best_score) {
+            best_score = score;
+            best = static_cast<int>(row);
+        }
+    }
+    return best;
 }
 
 // The second list is already the champion alone (Capcom's own one-member
@@ -327,13 +365,14 @@ void SoloBattle_Arm(unsigned char event_flags) {
         bof3::Fatal("DIV-0228 SoloCharacter: battle %u starts while battle %u's party is still saved: a way out of mode 5 "
                     "that neither reaches GameMode5_Place nor restarts through GameMode_Start",
                     static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(g_save.battle));
-    // The fights that stay the original's (kStandDowns): nothing armed, so
-    // the step-3 write, the step-6 restore and hold and the step-7 restore
-    // (each acts only on what Arm saved) do nothing either.
-    if (const char* why = StandDownFor(EventBattle_Id)) {
+    // A stand-down arms nothing, so the step-3 write, the step-6 restore and
+    // hold and the step-7 restore (each acts only on what Arm saved) do
+    // nothing either.
+    const FightRule* const rule = RuleFor(EventBattle_Id);
+    if (rule && rule->rule == Rule::kStandDown) {
         bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s: fought by the game's own party (the owner, "
                   "round doc 6g)",
-                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), why);
+                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why);
         return;
     }
     const int record = Solo_ChampionRecord();
@@ -359,14 +398,24 @@ void SoloBattle_Arm(unsigned char event_flags) {
                   record, static_cast<unsigned>(Game_BattleCount));
         return;
     }
-    int row = -1;
-    if (!SetHolds(Rows(), live.set, id)) {
-        // PartySet_Find with the champion alone: the first row holding the id,
-        // column by column (every id 0..0xA is in some row, M1).
-        row = PartySet_Find(id, kNone, kNone);
-        if (row < 0 || static_cast<unsigned>(row) >= kPartySetRowCount)
-            bof3::Fatal("DIV-0228 SoloCharacter: PartySet_Find gave row %d for id 0x%02X", row, id);
+    if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg) {
+        bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; the champion is record %d, not %u: fought by "
+                  "the game's own party",
+                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, record,
+                  static_cast<unsigned>(rule->arg));
+        return;
     }
+    const unsigned char need = rule && rule->rule == Rule::kNeedsIdInRow ? rule->arg : kNone;
+    const int chosen = ChooseRow(Rows(), live.set, id, need);
+    if (chosen == kNoRow) {
+        if (need == kNone)
+            bof3::Fatal("DIV-0228 SoloCharacter: no party-set row holds the champion's id 0x%02X", id);
+        bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; no party-set row holds the champion's id "
+                  "0x%02X beside id 0x%02X: fought by the game's own party",
+                  static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, id, need);
+        return;
+    }
+    const int row = chosen == kKeep ? -1 : chosen;
     Save s{};
     s.armed = 1;
     s.set_written = row >= 0 ? 1 : 0;
@@ -532,12 +581,39 @@ void SoloBattle_SelfTest() {
     };
     // The stand-downs: the three Beyd fights and nothing else (a random
     // encounter, 0, and the fights beside them).
-    check(StandDownFor(0x19) && StandDownFor(0x1A) && StandDownFor(0x1B), "the Beyd fights stand down");
+    check(RuleFor(0x19) && RuleFor(0x19)->rule == Rule::kStandDown && RuleFor(0x1A) &&
+              RuleFor(0x1A)->rule == Rule::kStandDown && RuleFor(0x1B) && RuleFor(0x1B)->rule == Rule::kStandDown,
+          "the Beyd fights stand down");
+    check(RuleFor(0x10) && RuleFor(0x10)->rule == Rule::kNeedsIdInRow && RuleFor(0x10)->arg == 1, "fight 16 wants id 1");
+    check(RuleFor(0x22) && RuleFor(0x22)->rule == Rule::kNeedsRecord && RuleFor(0x22)->arg == 4, "fight 34 wants record 4");
     {
-        bool others = false;
-        for (unsigned id = 0; id < 0x100; ++id)
-            if (id != 0x19 && id != 0x1A && id != 0x1B && StandDownFor(static_cast<unsigned char>(id))) others = true;
-        check(!others, "no other fight stands down");
+        unsigned with_rule = 0;
+        for (unsigned f = 0; f < 0x100; ++f)
+            if (RuleFor(static_cast<unsigned char>(f))) ++with_rule;
+        check(with_rule == 5 && !RuleFor(0), "five fights have a rule, a random encounter none");
+    }
+    {
+        // The game's 19 rows as M1 read them (round doc section 2).
+        static const unsigned char kGame[] = {0, 1, 2, 0, 1, 5, 0, 1, 6, 0, 2, 5, 0, 2, 6, 0, 3, 4, 0, 5, 6,
+                                              2, 4, 7, 2, 5, 7, 2, 6, 7, 2, 7, 8, 2, 7, 0xA, 3, 4, 9, 4, 5, 7,
+                                              4, 6, 7, 4, 7, 8, 5, 6, 7, 5, 7, 8, 6, 7, 8};
+        // Fight 16 from row 0 (0, 1, 2), needing id 1: Ryu, Nina, Garr keep it;
+        // Momo row 1 (0, 1, 5), Peco row 2 (0, 1, 6); Rei (4) has no row with 1.
+        check(ChooseRow(kGame, 0x80, 0, 1) == kKeep && ChooseRow(kGame, 0x80, 1, 1) == kKeep &&
+                  ChooseRow(kGame, 0x80, 2, 1) == kKeep,
+              "fight 16: row 0 kept for ids 0, 1, 2");
+        check(ChooseRow(kGame, 0x80, 5, 1) == 1 && ChooseRow(kGame, 0x80, 6, 1) == 2, "fight 16: Momo row 1, Peco row 2");
+        check(ChooseRow(kGame, 0x80, 4, 1) == kNoRow, "fight 16: no row for Rei beside id 1");
+        // No need: the most ids of the current row kept. Row 5 (0, 3, 4),
+        // Garr (2): rows with 2 sharing 0 - row 0 first; Momo (5) from row 0:
+        // rows 1 and 3 keep two each, row 1 first.
+        check(ChooseRow(kGame, 0x85, 2, kNone) == 0, "Garr from row 5: row 0");
+        check(ChooseRow(kGame, 0x80, 5, kNone) == 1, "Momo from row 0: row 1");
+        check(ChooseRow(kGame, 0x85, 4, kNone) == kKeep, "Rei in row 5: kept");
+        // Adult rows: Nina (8) from row 15 (4, 7, 8) kept; Momo (5) from row 15:
+        // row 13 (4, 5, 7) and row 17 (5, 7, 8) keep two each, row 13 first.
+        check(ChooseRow(kGame, 0x8F, 8, kNone) == kKeep && ChooseRow(kGame, 0x8F, 5, kNone) == 13, "adult rows");
+        check(ChooseRow(kGame, kNone, 6, kNone) == 2, "no current set: the first row holding the id");
     }
     // A table of our own, shaped as the game's: rows (0,1,2) (0,3,4) (2,5,7) (6,7,8).
     static const unsigned char kRows[] = {0, 1, 2, 0, 3, 4, 2, 5, 7, 6, 7, 8};
