@@ -498,6 +498,33 @@ attacks do to five flying enemies (the frames show the swings, not why no HP fal
 expects when its boss is never reduced; record 4's dragon form and revive inside the Mikba battle (the
 record watches see the save block's records, not the battle's working copies).
 
+## 6e. The off-proof on the round's tip (2026-11-13)
+
+`tools/solo_proof.py all`, root `D:\bof3x-runs\solo1112\round\proof`: the
+candidate `solo/round` `af09b08a`, the base `main` `13801868` (the merge
+base), both i686, the exe host. Another session's game ran on the machine
+throughout (`C:\Users\kerok\bof3x-runs\interp1113`), so the machine was not
+quiet.
+
+| Variant | Result |
+|---|---|
+| The reference pairs | ten routes, each pair disagreeing on 0 pages |
+| `off` | **nine routes identical**; `cutsceneAndNue` differs on the sound page `0x7DE000` alone (below) |
+| `on-none` | **ten routes identical** (`whelpBoss` on its repeat; its first run differed on `0x7DE000` alone from tick 2,087) |
+| `on-champ:ryu` | `whelpBoss` only, as section 2 says: the sound page from tick 1,094 (39 ticks) and the mark's page `0x904000` from tick 3,315, the stamp; the route does not qualify and is not judged |
+
+**`cutsceneAndNue` with the mode off is not shown identical.** Four candidate
+runs (the batch's two, and two more in a second call), each differing from the
+reference pair on `0x7DE000` and from a different tick: 357 (306 ticks), 5,335
+(7 ticks), 813 (379 ticks) and 6,189 (1 tick, with one tick of the VRAM shadow
+`0x7C7000`). The tool's recheck puts the base inside the candidate pair's
+spread both times. No other page differs at any tick, and the same build on
+the same route with `SoloCharacter` on and no champion is identical. That
+reads as the sound page's noise under load (`state-hash.md` 4 and its open
+item 1), not as a difference the round makes: **an inference, the bytes are
+not dumped.** A run of this one route with nothing else running would settle
+it.
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round
