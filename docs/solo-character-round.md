@@ -677,6 +677,31 @@ champion loses is a game over, not the next member's turn. How the series
 works is the owner's description; group CB reads it from the code before
 building.
 
+## 6i. The owner's ninth answers (2026-11-12 night): the stand-down calls
+
+Asked about group CB's four rules ([`solo-character-combat.md`](solo-character-combat.md) 11):
+"For the calls, I agree with 1 as built. 2) and 3) I'd like to improve on - if
+the Mikba fight goes ok with a solo character, let's try to also try reviving
+and healing Rei to see if he can continue the fight solo. Is the reason there's
+no option with Rei in the balio fight because his child graphics are never in
+a scene with Nina? Could we create such a graphic set to let the fight work as
+intended?"
+
+1. **The three Beyd battles (25, 26, 27) stand down.** Agreed as built.
+2. **Fight 16 with record 4 as champion**: not accepted as a stand-down. The
+   reason is M1's table: id 4 is in one early row only, `(0,3,4)`, and id 1 in
+   `(0,1,2)`, `(0,1,5)`, `(0,1,6)`, so no row holds both. Whether a set of ours
+   holding both can be built on the player's machine from their own files (the
+   engine / data split: nothing of the game's is shipped) is group PS's read.
+3. **Fight 34**: not accepted as "the party always fights". Two trials, by
+   group CB on the owner's route `mikbaFight`: a champion other than record 4
+   alone (what `Boss34_Event`'s pick of record 4 does with no such member, and
+   what makes it sound); and record 4 as champion revived and healed at the
+   battle's start, alone. The owner's play of the fight says a revived record 4
+   changes form at once and is not the player's to command; the trial shows
+   what a solo fight of that is.
+4. Fights 18 to 20: 6h.
+
 ## 7. Not in this round
 
 - The champion screen at New Game (I34's sequence).
