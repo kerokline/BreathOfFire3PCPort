@@ -125,6 +125,31 @@ constexpr FightRule kFightRules[] = {
     {0x22, Rule::kNeedsRecord, 4, "fight 34 (chapter 8, area 43: Mikba): Boss34_Setup picks the member whose record is 4 and Boss34_Event drives that member"},
 };
 
+// TRIAL ONLY - not a behaviour, not ledgered, off by default (the owner's
+// fight-34 trials, round doc 6i; docs/solo-character-combat.md 13).
+// BOF3X_CB_TRIAL34, read once: unset or empty - nothing (the default rules
+// above); "A" - fight 34's kNeedsRecord rule lifted, so a champion who is not
+// record 4 fights it alone; "B" - with record 4 the champion, its 0 HP
+// stand-down lifted for fight 34 and the record revived and healed at the
+// battle's start: HP 1 and status bit 0x4000 cleared as ItemUse_Revive does
+// (item_use.cpp), then HP to the effective maximum and bit 0x2000 cleared as
+// a full Char_HealHp does (char.cpp). Anything else is a Fatal.
+char g_trial34 = 0;
+bool g_trial34_read = false;
+char Trial34() {
+    if (g_trial34_read) return g_trial34;
+    g_trial34_read = true;
+    char v[8];
+    const std::uint32_t n = bof3::os::GetEnv("BOF3X_CB_TRIAL34", v, sizeof v);
+    if (n == 0 || v[0] == '\0') return g_trial34 = 0;
+    if (n == 1 && (v[0] == 'A' || v[0] == 'B')) {
+        g_trial34 = v[0];
+        bof3::Log("solo battle: TRIAL BOF3X_CB_TRIAL34=%c (fight 34, not a behaviour, not ledgered)", g_trial34);
+        return g_trial34;
+    }
+    bof3::Fatal("BOF3X_CB_TRIAL34 is \"%s\": A, B or unset (a trial switch of group CB's)", n < sizeof v ? v : "(long)");
+}
+
 const FightRule* RuleFor(unsigned char fight) {
     if (fight == 0) return nullptr;
     for (const FightRule& r : kFightRules)
@@ -393,12 +418,26 @@ void SoloBattle_Arm(unsigned char event_flags) {
     // member at 1 (BattleEnd_Finish), but a scene can leave a record at 0:
     // chapter 8's Scena08_Scene11 gives the record of id 4 HP 0 and status
     // 0x6000 (docs/save-block/range-b-characters.md 4).
+    if (EventBattle_Id == 0x22 && record == 4 && Trial34() == 'B' && CharacterRecords[record].hp == 0) {
+        records::CharRecord& c = CharacterRecords[record];
+        const unsigned hp = c.hp, status = c.status;
+        c.hp = 1;                                                     // ItemUse_Revive: HP 1,
+        c.status = static_cast<std::uint16_t>(c.status & ~0x4000u);   // Char_ClearStatus(0x4000)
+        c.hp = c.stats.max_hp;                                        // Char_HealHp(full): HP to the maximum,
+        if (static_cast<std::uint16_t>(c.stats.max_hp >> 2) <= c.hp) c.status = static_cast<std::uint16_t>(c.status & ~0x2000u);   // and 0x2000 cleared
+        bof3::Log("solo battle: TRIAL B: record 4 revived and healed for fight 34: HP %u -> %u, status 0x%04X -> 0x%04X",
+                  hp, static_cast<unsigned>(c.hp), status, static_cast<unsigned>(c.status));
+    }
     if (CharacterRecords[record].hp == 0) {
         bof3::Log("DIV-0228 SoloCharacter: the champion's record %d has 0 HP; battle %u is fought by the game's own party",
                   record, static_cast<unsigned>(Game_BattleCount));
         return;
     }
-    if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg) {
+    if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg && rule->fight == 0x22 && Trial34() == 'A') {
+        bof3::Log("solo battle: TRIAL A: fight 34's rule lifted: record %d fights it alone; the pick byte 0x675F08 holds %u "
+                  "before the set-up",
+                  record, static_cast<unsigned>(*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(0x675F08)))));
+    } else if (rule && rule->rule == Rule::kNeedsRecord && record != rule->arg) {
         bof3::Log("DIV-0228 SoloCharacter: battle %u is event battle 0x%02X, %s; the champion is record %d, not %u: fought by "
                   "the game's own party",
                   static_cast<unsigned>(Game_BattleCount), static_cast<unsigned>(EventBattle_Id), rule->why, record,
@@ -470,6 +509,13 @@ void SoloBattle_WriteParty() {
                     g_save.saved.count, g_save.saved.formation);
     WriteParty(g_save.written);
     g_save.party_written = 1;
+    if (EventBattle_Id == 0x22 && Trial34() != 0) {
+        // TRIAL ONLY (BOF3X_CB_TRIAL34): Boss34_Setup scans ObjTrio's three records by +0x148 with no flag
+        // test, the last match winning, so the walkers' stale records (Field_PartyLoad(1) only clears their
+        // flags) answer it. Their +0x148 is set to 0xFF for the battle; step 7's Field_PartyLoad(0) rebuilds it.
+        for (int m = 1; m < 3; ++m) ObjTrio[m].char_index = 0xFF;
+        bof3::Log("solo battle: TRIAL: ObjTrio records 1 and 2 hold no record for fight 34's set-up");
+    }
 }
 
 bool SoloBattle_Restore() {
