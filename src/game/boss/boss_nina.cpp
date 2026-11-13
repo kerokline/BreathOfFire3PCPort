@@ -17,6 +17,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/solo/solo_party_set.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -405,7 +406,8 @@ extern "C" void __cdecl BossNina_HookAct(unsigned) {
 extern "C" void __cdecl BossNina_HookHit(unsigned) {
     NameBanner();
     BossSc_WaitTurns = 0;
-    BH_CALL(Field_MemberSprite)(1, 1);
+    // DIV-0228 SoloCharacter: id 1's section supplied when the row lacks it (solo_party_set.h)
+    if (!solo::PartySetExtra_Dress(1, 1)) BH_CALL(Field_MemberSprite)(1, 1);
     rv::Current<records::BattleEnemy>()->ot_slot = 4;
     rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(0x64CCAC);
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->layout + 4));
@@ -462,7 +464,8 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
         BossSc_WaitTurns = 0;
         Sprite_Current = At(::bof3::Img(Battle_Enemies_addr) + 0x250);
         BattleE3_CurrentEnemy = &Battle_Enemies[2];
-        BH_CALL(Field_MemberSprite)(1, 1);
+        // DIV-0228 SoloCharacter: id 1's section supplied when the row lacks it (solo_party_set.h)
+        if (!solo::PartySetExtra_Dress(1, 1)) BH_CALL(Field_MemberSprite)(1, 1);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(0x64CCAC);
         Sprite_Current[0x29] = 4;
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
@@ -539,7 +542,9 @@ extern "C" void __cdecl Boss16_Exit(void) {
         SetWord(Sprite_Current + 0x58, Battle_Enemies[0].script_pos);
         SetWord(Sprite_Current + 0x5A, Battle_Enemies[0].frame_word);
     }
-    BH_CALL(Scenario_CallA)(1);
+    // DIV-0228 SoloCharacter: the join's sprite set-up given a column when the
+    // battle's row lacks id 1 (solo_party_set.h); otherwise the call alone.
+    solo::PartySetExtra_Around(1, [](unsigned n) { BH_CALL(Scenario_CallA)(n); }, 1);
     ObjTrio[1].flags |= 0x40;
     BossH_LeaderPick = static_cast<unsigned char>(B(::bof3::Img(at::kMoveCounter.v)) != 0x14 ? 7 : 6);
 }
