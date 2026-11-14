@@ -31,6 +31,12 @@ pages are named and left out (2026-10-11; --strict refuses anyway; the lists
 are found by their header hash among the committed versions of
 tools/statehash_skip.txt and --skip-list files).
 
+The pages wholly inside Music_Staging (17 from 0x7CD000) are written on the
+sound card's clock - Music_Pump refills the buffer when DirectSound's
+notification has fired, whatever the tick - so diff and check count them on a
+line of their own and never report them (2026-11-14, IDEAS I68). --timing
+compares them as any other page.
+
 A BOF3SH3 file (2026-10-10) hashes our pointers in Capcom's pointer slots by
 what they name; one beside an older or BOF3X_STATEHASH_RAW=1 file is compared
 with a note (docs/state-hash.md section 7).
@@ -203,6 +209,41 @@ def report(per_page, run, total, what):
     for p, (f, l, c) in sorted(per_page.items(), key=lambda kv: (kv[1][0], kv[0])):
         a = run.base + p * run.page
         print(f'0x{a:06X} {f:7d} {l:7d} {c:7d}  {names_in(a, a + run.page)}')
+
+
+# Ranges written on the sound card's clock, not the frame count: Music_Pump
+# (0x5A7230) decodes half a ring into Music_Staging when DirectSound's
+# position notification has fired, from every spin of WinMain's frame wait. A
+# refill lands before a tick's hash in one run and after it in the next, so of
+# three runs the one under test can stand alone at a tick where the two
+# references agree - which `check` would report (IDEAS I68). The buffer is
+# decode scratch, copied to DirectSound at once; the pages wholly inside it
+# hold nothing else. They are counted and named, never compared, unless
+# --timing asks. (ADDRESS, LENGTH, symbol), as at the image's base 0x400000.
+TIMING = ((0x7CC378, 0x12000, 'Music_Staging'),)
+
+
+def timing_pages(run):
+    """{page index: symbol} for the pages wholly inside a TIMING range."""
+    out = {}
+    for at_, ln, name in TIMING:
+        first = -(-(at_ - run.base) // run.page)       # the first page that starts inside
+        stop = (at_ + ln - run.base) // run.page       # the first page that ends outside
+        for pg in range(max(first, 0), min(stop, run.pages)):
+            out[pg] = name
+    return out
+
+
+def report_timing(per_page, total):
+    """The timing pages' line: how many differed and at how many ticks."""
+    if not per_page:
+        return
+    ticks = set()
+    for v in per_page.values():
+        ticks |= v
+    names = ', '.join(sorted({n for _, _, n in TIMING}))
+    print(f"timing pages ({names}: written on the sound card's clock, not compared; --timing compares them): "
+          f'{len(per_page)} pages differ at {len(ticks)} of {total} ticks')
 
 
 SKIP_FILE = 'tools/statehash_skip.txt'
@@ -396,14 +437,19 @@ def cmd_info(a):
 def cmd_diff(a):
     ra, rb = Run(a.a, a.align), Run(a.b, a.align)
     out = same_headers([ra, rb], a.strict, a.skip_list)
-    per, total = {}, 0
+    timing = {} if a.timing else timing_pages(ra)
+    per, late, total = {}, {}, 0
     for k, (sa, sb) in walk([ra, rb], a.lo, a.hi):
         total += 1
         if sa != sb:
             for p in range(ra.pages):
                 if sa[p] != sb[p] and p not in out:
+                    if p in timing:
+                        late.setdefault(p, set()).add(k)
+                        continue
                     v = per.get(p)
                     per[p] = (k, k, 1) if v is None else (v[0], k, v[2] + 1)
+    report_timing(late, total)
     report(per, ra, total, 'diff')
     return 1 if per else 0
 
@@ -411,13 +457,18 @@ def cmd_diff(a):
 def cmd_check(a):
     ref, refb, new = Run(a.ref, a.align), Run(a.refb, a.align), Run(a.new, a.align)
     out = same_headers([ref, refb, new], a.strict, a.skip_list)
-    noise, per, total = {}, {}, 0
+    timing = {} if a.timing else timing_pages(ref)
+    noise, per, late, total = {}, {}, {}, 0
     for k, (sr, sb, sn) in walk([ref, refb, new], a.lo, a.hi):
         total += 1
         if sr == sb == sn:
             continue
         for p in range(ref.pages):
             if p in out:
+                continue
+            if p in timing:
+                if not sr[p] == sb[p] == sn[p]:
+                    late.setdefault(p, set()).add(k)
                 continue
             if sr[p] != sb[p]:
                 v = noise.get(p)
@@ -432,6 +483,7 @@ def cmd_check(a):
         # never compared at all: say which, so a page that wants a skip range is seen
         print('WARNING: pages the references never agree on, so NEW is never compared there: '
               + ', '.join(f'0x{ref.base + p * ref.page:06X}' for p in always))
+    report_timing(late, total)
     if a.noise:
         report(noise, ref, total, 'noise (reference against reference)')
     report(per, ref, total, 'check (new against the reference, where the references agree)')
@@ -647,6 +699,33 @@ def cmd_selftest(a):
         expect('a moved BOF3SH4 run against a BOF3SH5 run folding its base (the extents differ)',
                compared('folding5', 'moved'), 'refused')
         expect('two BOF3SH5 runs folding different ranges', compared('folding5', 'other5'), 'refused')
+
+        # the timing pages: differences inside Music_Staging are counted, not
+        # reported; a difference on any other page still is; --timing compares all
+        def timed(path, staged, other):
+            pages = (0x7DF000 - 0x7CC000) // 0x1000
+            with open(path, 'wb') as f:
+                f.write(b'BOF3SH3\0' + struct.pack('<4I', 0x7CC000, pages, 0x1000, 0) + struct.pack('<2I', 0, 2))
+                f.write(struct.pack('<4I', 0, 1, 0, pages) + b''.join(struct.pack('<2I', i, 1) for i in range(pages)))
+                # tick 1: page 0x7CD000 (inside), page 0x7CC000 (the buffer's first, shared with other data)
+                f.write(struct.pack('<4I', 1, 2, 1, 2) + struct.pack('<4I', 1, staged, 0, other))
+        for name, args in (('t_ref', (5, 6)), ('t_refb', (5, 6)), ('t_late', (9, 6)), ('t_other', (5, 7))):
+            paths[name] = os.path.join(t, name + '.sh')
+            timed(paths[name], *args)
+        expect('the timing pages of a run from 0x7CC000', sorted(timing_pages(Run(paths['t_ref']))), list(range(1, 18)))
+
+        def run_cmd(fn, **kw):
+            a = argparse.Namespace(lo=0, hi=None, align='tick', strict=False, skip_list=[], timing=False, noise=False)
+            for k, v in kw.items():
+                setattr(a, k, v)
+            with contextlib.redirect_stdout(io.StringIO()):
+                return fn(a)
+        r, rb = paths['t_ref'], paths['t_refb']
+        expect('check: NEW alone on a Music_Staging page', run_cmd(cmd_check, ref=r, refb=rb, new=paths['t_late']), 0)
+        expect('check --timing: the same', run_cmd(cmd_check, ref=r, refb=rb, new=paths['t_late'], timing=True), 1)
+        expect("check: NEW alone on the buffer's shared first page", run_cmd(cmd_check, ref=r, refb=rb, new=paths['t_other']), 1)
+        expect('diff: a Music_Staging page', run_cmd(cmd_diff, a=r, b=paths['t_late']), 0)
+        expect('diff --timing: the same', run_cmd(cmd_diff, a=r, b=paths['t_late'], timing=True), 1)
     print('selftest ' + ('passed' if ok else 'FAILED'))
     return 0 if ok else 1
 
@@ -659,6 +738,8 @@ def main():
         p.add_argument('--from', dest='lo', type=int, default=0)
         p.add_argument('--to', dest='hi', type=int, default=None)
         p.add_argument('--align', choices=['tick', 'recipe'], default='tick')
+        p.add_argument('--timing', action='store_true',
+                       help="compare the pages written on the sound card's clock (Music_Staging) as any other page")
         p.add_argument('--strict', action='store_true',
                        help='refuse runs hashed under different skip lists, even when one only adds ranges')
         p.add_argument('--skip-list', action='append', default=[], metavar='FILE',
