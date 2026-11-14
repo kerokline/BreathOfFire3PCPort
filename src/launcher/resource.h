@@ -20,6 +20,7 @@
 #define IDD_PAGE_PRESET   121   // the Settings tab's second sub-page: the preset (preset=; docs/launcher-settings.md)
 #define IDD_PAGE_GAME2    122   // The Cheats sub-tab's Page 2 (DIV-0187, DIV-0188; the owner's split, 2026-10-30)
 #define IDD_PAGE_SOLO     123   // Game Options: Solo character (on=, solo.champion=; docs/solo-character-round.md)
+#define IDD_PAGE_EXTRA2   124   // The Extras sub-tab's Page 2: New Game's screens (off=; docs/new-game-round.md 4c-LT)
 #define IDC_CONFIGURE   1020
 #define IDC_BACK        1021
 #define IDC_TAB0        1022    // the six tabs, IDC_TAB0 + page
@@ -163,6 +164,15 @@
 #define IDC_EXTRA_LEARNNOTE 1725
 #define IDC_EXTRA_FAERIE    1726  // A faerie village entrance on the desert map: desert_faerie= (DIV-0204)
 #define IDC_EXTRA_FAERIENOTE 1727
+// The Extras sub-tab's Page 2 (IDD_PAGE_EXTRA2; docs/new-game-round.md 4c-LT):
+// code names in off=, on by default - the name entry (NewGameNameEntry and
+// CommuNameGrid), New Game's options step (NewGameOptions), and the line that
+// says why a box is grey.
+#define IDC_EXTRA_NAMES      1750
+#define IDC_EXTRA_NAMESNOTE  1751
+#define IDC_EXTRA_OPTIONS    1752
+#define IDC_EXTRA_OPTIONSNOTE 1753
+#define IDC_EXTRA_NEWGAMEWHY 1754
 
 // The preset (launcher/config.h, docs/launcher-settings.md "preset="): its box,
 // its sentence, the list of what it changes, and the line under Settings that

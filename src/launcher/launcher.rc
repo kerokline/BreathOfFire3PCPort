@@ -429,6 +429,29 @@ BEGIN
                     IDC_EXTRA_FAERIENOTE, 19, 144, 312, 18
 END
 
+// The Extras sub-tab's Page 2 (docs/new-game-round.md 4c-LT): New Game's two
+// screens back as on the PlayStation, each a box over code names in off=
+// (BOF3X_OFF), on by default - the name entry (NewGameNameEntry and
+// CommuNameGrid, one box) and the options step (NewGameOptions). A box is
+// grey, with the reason in the last line, when the game or the language's
+// files do not have the screen, or the preset turns it off (ConfigNewGameState).
+IDD_PAGE_EXTRA2 DIALOGEX 0, 0, 340, 164
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "New Game", -1, 0, 0, 336, 162
+    AUTOCHECKBOX    "Show the &name entry screen at New Game and in the faerie village",
+                    IDC_EXTRA_NAMES, 7, 14, 324, 10
+    LTEXT           "You select the letters of a name on a grid, as in the PlayStation version. At New Game, you give a name to the hero. In the faerie village, you can change a name. Off: New Game does not ask for a name, and a name in the faerie village does not change.",
+                    IDC_EXTRA_NAMESNOTE, 19, 27, 312, 32
+    AUTOCHECKBOX    "Show the &options screen at New Game, before the game starts",
+                    IDC_EXTRA_OPTIONS, 7, 63, 324, 10
+    LTEXT           "As in the PlayStation version. You can also change these settings from the title menu. Off: New Game starts the game immediately.",
+                    IDC_EXTRA_OPTIONSNOTE, 19, 76, 312, 18
+    LTEXT           "", IDC_EXTRA_NEWGAMEWHY, 7, 100, 324, 40
+END
+
 // DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).
 IDD_PAGE_DATA DIALOGEX 0, 0, 280, 112
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD

@@ -921,6 +921,102 @@ Two groups are new:
 | **PK** | `tools/loc_build.py`, `tools/importer.py`, their checks; the small-text path only if the kana set needs it | `psp-eu`'s chunk (call 8) and the 8-pixel kana for the `ja-JP` legend (call 9) |
 | **LT** | `src/launcher/`, the switch registry's launcher side | A launcher toggle for the name entry, in the form the launcher's other toggles towards the PlayStation have; its text in ASD-STE100 |
 
+## 4c-LT. Group LT as run
+
+*Group LT, 2026-11-14, on the local branch `new-game/lt` off `new-game/round`
+`2207d9ce`. Launcher side only; TF's and CR's names are not in this tree.*
+
+**How the launcher shows such switches today.** No control is made per
+ledger entry or per registry row. The ledger's switch fields reach the
+launcher only as the generated `src/launcher/ledger_registry.h`, which the
+**presets** read (`ConfigPresetPlan`, Settings, Preset); a code name is
+otherwise turned off by hand in `off=` (`docs/launcher-settings.md` 3.2). The
+boxes the player sees are **hand-written**, one per behaviour, with a label,
+a sentence under it and, where the install decides, a grey with a line that
+says why: Mods, Extras (`desert_faerie=`, DIV-0204, and its neighbours, ini
+keys), Game Options, Solo character (`SoloCharacter` in `on=`, edited by
+`ConfigBehaviourEdit`, grey by `ConfigSoloState`), the suites and the
+Jukebox's chord (`opt=` layers). The restorations towards the PlayStation
+that are code names (`SunderLoop`, `MountainPasses`, ...) have no box; the
+PlayStation preset is their control. So the registry text alone would show
+nothing, and the toggle the owner asked for is a hand-written box.
+
+**What is built.** Extras is on two pages, as the Cheats sub-tab (Page 1 /
+Page 2 on the third row); Page 2 (`IDD_PAGE_EXTRA2`) holds two boxes over
+code names in `off=`:
+
+- **The name entry, one box** for `NewGameNameEntry` and `CommuNameGrid`:
+  one routine, one grid chunk, one rule for when it plays, and to the
+  player one screen (A1). Two boxes would only offer a half that no answer
+  of the owner's asked for; `off=` can still turn either off alone, and the
+  box then shows cleared.
+- **The options step, a second box** for `NewGameOptions`: another screen,
+  with its own switch by call 1, which every language can play. The
+  integrator may drop it if the owner wants only the name entry.
+
+Each box is ticked unless `off=` turns a name off, and is written back only
+once clicked (`ConfigNewGameOffEdit`, `ConfigBehaviourEdit`'s rule), so an
+untouched page writes `off=` byte for byte. It reaches the game as
+`BOF3X_OFF`, as every `off=` does. **Grey, with the reason**
+(`ConfigNewGameState`): a box whose names the release lacks
+(`src/hook/code_names.h` through `ConfigCodeNamesKnown`; the game stops on
+a name it lacks, so the box must not write one) - in this tree both boxes,
+until TF and CR land their code names and `ledger_switches.py` regenerates
+the header; a box the chosen preset turns off (`PresetPlan::off`, which
+holds these names once stage C writes their ledger entries and regenerates
+`ledger_registry.h`); and the name entry when the language played has no
+grid.
+
+**How the launcher knows what a layer holds.** It did not, before: it asks
+only whether a layer's files exist. `ConfigLayerHasNameGrid` now reads the
+chunk headers of the language layer's `FIRST.DAT` (16 bytes each, as
+`dat_cache.cpp` `CountByWin32` walks them) for a kind-22 chunk of tag 0
+(section 5a), in the file the game walks (DIV-0089: the cache's
+`loc\<tag>\dat\FIRST.DAT` when the cache has the layer, else the install's
+`DAT\<tag>.FIRST.DAT`). The original Chinese has no layer; `psp-eu` has a
+layer without the chunk until PK writes one, and then lights up with no
+launcher change. **Not seen by the launcher:** the game's second test, the
+PC's legend frames in the running image (`NameGrid_Why`). An install whose
+image lacks them shows the box enabled and the game skips the screen and
+logs why. To show that too, the launcher would read the two lists out of
+`BOF3.exe` (`ExeImageRead`) against the hashes in `name_grid.cpp`, and would
+need an answer for a disc-built install with no `BOF3.exe`.
+
+**The text** (ASD-STE100; no game text):
+
+- *Name box:* "Show the name entry screen at New Game and in the faerie
+  village". Under it: "You select the letters of a name on a grid, as in
+  the PlayStation version. At New Game, you give a name to the hero. In the
+  faerie village, you can change a name. Off: New Game does not ask for a
+  name, and a name in the faerie village does not change."
+- *Options box:* "Show the options screen at New Game, before the game
+  starts". Under it: "As in the PlayStation version. You can also change
+  these settings from the title menu. Off: New Game starts the game
+  immediately."
+- *The reasons:* "This version of the game does not have the name entry
+  screen." / "... the options screen at New Game."; "The preset (Settings,
+  Preset) turns off the name entry screen when the game starts." (and the
+  options screen's); "The Chinese (PC script) text has no name entry
+  screen. No copy of the game has its letters."; "The files of this
+  install for <language> do not have the name entry screen. The importer
+  adds it only from a copy of the game that has it (Data, Sources)."
+
+**Run.** The main build (`cmake --preset i686 && cmake --build build`)
+with no new warning; the launcher's host tests
+(`tools/launcher_host/config_tests.exe`): 4,021 checks, the 35 new ones
+(`TestNewGame`: the chunk test against made-up containers, install and
+cache; the page's state and greys; eleven edits of `off=`; the ini's
+`off=NewGameNameEntry,CommuNameGrid` and `BOF3X_OFF` for both hosts) pass;
+2 failures, both in `TestPresetPlan` and the same on `2207d9ce` without
+these changes. The page templates measured in hidden dialogs of the
+measuring process: Extras under the third row ends at 475 of the window's
+480 pixels at 100 %, and every text of Page 2 fits its control.
+`ledger_switches.py --check` and `ledger_registry.py --check` pass.
+**Not run:** `tools/launcher_host/dialog_test.py` (it finds the dialog by
+its title, and another session uses the launcher on this machine); its
+expectations are updated for the third row over Extras and Page 2's boxes.
+No capture of the page; the owner has not seen it.
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
