@@ -920,9 +920,20 @@ NUL, whichever is first, and encodes them.
 | 2 leaders | dx | dy | entry | rows | columns | x step | y step | `Text_DrawSmall(x + dx + xs * j, y + dy + ys * i, 0, 1, entry)` for each row i and column j |
 | 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `cy * 64 + cx / 16` |
 | 4 piece | dx | dy | piece id | the rect query's flags | CLUT, low | CLUT, high | 0 | a sprite of the menu piece's rectangle (`Menu_PieceRect`, PSX `0x801B0270`) at (x + dx, y + dy), shade `0x80` |
+| 5 draw mode | dtd | tpage, low | tpage, high | 0 | 0 | 0 | 0 | `Gpu_SetDrawMode(p, 0, dtd, tpage, 0)`, committed: the texture page the tiles and the piece after it use |
 
 Every op's entry is below E; ops 1 and 2 have a count or rows and columns
-of at least 1; op 3's and op 4's CLUT has bits 15 and 14 clear.
+of at least 1; op 3's and op 4's CLUT has bits 15 and 14 clear; op 5's dtd
+is 0 or 1. **Op 5 is the amendment of 2026-11-14 (NG, step 2):** the
+legends set the tiles' texture page in some copies and not in others (US
+`START`'s four row-4 tiles are drawn on the piece's page, its six button
+tiles on another; the French and German legends set no page before their
+tiles), so the page is the disc's, an operation, not a constant of the
+routine. GD writes one op 5 where the disc's legend calls `SetDrawMode`
+after its box, with the tpage word the PlayStation computes (`GetTPage`'s
+word; where the disc picks `0x8F` or `0x2F` by `GetGraphType`, the `0x2F`
+the PC takes, as `WorldMap_DrawFrame` does). `START`'s draw mode before its
+box (dtd 1, tpage `0xF`, every build) is the routine's, not an op.
 
 Reference values (the legends read: Japan `START` `0x801E675C..0x801E6BE8`,
 Japan `COMMU02` `0x801D9810..0x801D9B8C`, US `START` `0x801E6784..0x801E6C68`,
@@ -931,16 +942,19 @@ and `COMMU02` `0x801D97F4..0x801D9A24`, German the French with another x).
 Every text op is colour 0, count `0x10`; every leader op is entry 7, 5 rows,
 3 columns, steps 4 and 8; "the six tiles" are, in this order, four tiles at
 dx `0xE` and dy 6, `0xE`, `0x16`, `0x1E`, CLUT `0x7803`, then (4, 2) at
-(`0xA`, `0x26`) and (5, 2) at (`0x12`, `0x26`), CLUT `0x7800`:
+(`0xA`, `0x26`) and (5, 2) at (`0x12`, `0x26`), CLUT `0x7800`; "the
+piece" is op 5 with dtd 0 and tpage `0x1D` (`GetTPage(0, 0, 0x340, 0x100)`),
+then piece `0x2C` flags 1 at (`0x50`, 5), CLUT `0x784C`; "the button page" is
+op 5 with dtd 0 and tpage `0x2F`:
 
 | Copy | Ops, in order |
 |---|---|
-| Japan `START` | piece `0x2C` flags 1 at (`0x50`, 5), CLUT `0x784C`; text entries 0, 1, 2 at (`0x2A`, 6 + 8i); text entry 3 at (`0x2A`, `0x26`); text entry 4 + page at (`0x2A`, `0x1E`); leaders at (`0x1A`, 6); the six tiles, the four with u `0x1B`, `0x1D`, `0x1E`, `0x1C`, v 0 |
+| Japan `START` | the piece; text entries 0, 1, 2 at (`0x2A`, 6 + 8i); text entry 3 at (`0x2A`, `0x26`); text entry 4 + page at (`0x2A`, `0x1E`); leaders at (`0x1A`, 6); the button page; the six tiles, the four with u `0x1B`, `0x1D`, `0x1E`, `0x1C`, v 0 |
 | Japan `COMMU02` | the same without the piece |
-| US / EU `START` | the piece; text entries 0..3 at (`0x2A`, 6 + 8i); tiles u 0..3, v `0x13` at (`0x2A` + 8k, `0x26`), CLUT `0x7800`; leaders at (`0x1A`, 6); the six tiles, the four with u `0x1D`, `0x1C`, `0x1B`, `0x1E`, v 0 |
-| US / EU `COMMU02` | text entries 0..4 at (`0x2A`, 6 + 8i); leaders at (`0x1A`, 6); the six tiles as US `START`'s |
-| French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders |
-| French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s |
+| US / EU `START` | the piece; text entries 0..3 at (`0x2A`, 6 + 8i); tiles u 0..3, v `0x13` at (`0x2A` + 8k, `0x26`), CLUT `0x7800`; leaders at (`0x1A`, 6); the button page; the six tiles, the four with u `0x1D`, `0x1C`, `0x1B`, `0x1E`, v 0 |
+| US / EU `COMMU02` | text entries 0..4 at (`0x2A`, 6 + 8i); leaders at (`0x1A`, 6); the button page; the six tiles as US `START`'s |
+| French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders, no button page |
+| French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no button page |
 | German | the French, with text dx `0x22` |
 
 GD reads which shape a copy has off its own legend (M2's normalised code
