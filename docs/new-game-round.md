@@ -892,6 +892,35 @@ backlog is on `main` and the check is not in CI.
 | 10 | psp-jp takes the Japan chunk from its EMIs; its own code was not read. | Built so. |
 | 8 | psp-eu: no chunk, the screen skipped. | Still not answered; built as proposed. |
 
+## 4b. Stage B: the owner's word (2026-11-14, by chat) and the groups as launched
+
+**The owner's answers.**
+
+- **Stage B goes ahead.**
+- **Call 8, `psp-eu`.** The owner read "the screen is skipped on `psp-eu`"
+  as the PSP release leaving the naming out, and asked for the name screen
+  there as a change towards the PlayStation, with a toggle in the launcher.
+  **What is measured is narrower** (M2): `psp-eu`'s `BOOT.BIN` holds the
+  US grid and labels; its legend was not found and its code not read. Whether
+  the PSP release shows a name screen is not established by anything in
+  this repository. What the answer changes: `psp-eu` is no longer left
+  without the screen. Group PK tries to give it a chunk (its own legend if
+  found; otherwise it reports what a chunk would have to borrow, and the
+  owner decides), and the name entry gets a launcher toggle (group LT).
+- **Call 9, the `ja-JP` legend's small text.** The owner: the Japanese font
+  has an 8-pixel kana set, and it should already be in the font files. Group
+  PK finds it and moves the `ja-JP` legend's strings to it; the 12-pixel
+  kana at two thirds goes if the set is there.
+
+**The groups.** TF and CR as section 4 has them. RT's switch-off line and
+new routes, and BT, run after TF merges (both need the screen reachable).
+Two groups are new:
+
+| Group | Files | What |
+|---|---|---|
+| **PK** | `tools/loc_build.py`, `tools/importer.py`, their checks; the small-text path only if the kana set needs it | `psp-eu`'s chunk (call 8) and the 8-pixel kana for the `ja-JP` legend (call 9) |
+| **LT** | `src/launcher/`, the switch registry's launcher side | A launcher toggle for the name entry, in the form the launcher's other toggles towards the PlayStation have; its text in ASD-STE100 |
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
