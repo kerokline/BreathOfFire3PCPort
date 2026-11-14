@@ -15,6 +15,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/community/commu.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_4e.h"
 #include "game/rest_4e_callees.h"
@@ -110,7 +111,14 @@ const sh::Clone kClones[] = {
     {G_LEAF(CommuMember_Count, 0x45F000, 0x1D, kCa, 0xFFu)},
     {G_LEAF(CommuMember_Nth, 0x45F020, 0x2C, kCa, 0xFFu)},
     {G_CLONE(CommuMember_DrawFrame, 0x45F050, 0x14D, kCalls45F050, kCa, 0)},
-    {G_CLONE(Commu_DrawTiledFrame, 0x45F1A0, 0x3F7, kCalls45F1A0, kCa, 0)},
+    // Ours puts the five texture windows in the packet pool, Capcom's on its
+    // stack, where the PC's present reads them after the return (commu.cpp,
+    // the New Game round's CR): the row runs ours with the original's
+    // placement - the same body, TiledFrame, every other byte and call
+    // compared, the windows by their 8 bytes as the draw mode's recorder
+    // logs them. The pool placement itself has no original to compare with.
+    {"Commu_DrawTiledFrame", 0x45F1A0, 0x3F7, kCalls45F1A0, SH_N(kCalls45F1A0), nullptr, 0, nullptr, 0,
+     reinterpret_cast<const void*>(&::Commu_DrawTiledFrameStackWindow), 0, false, kCa},
     {G_CLONE(CommuName_CommitMember, 0x45F5A0, 0xB0, kCalls45F5A0, kSt, 0)},
     {G_CLONE(CommuName_CommitEntry, 0x45F650, 0xF7, kCalls45F650, kSt, 0)},
     {G_LEAF(CommuMusic_Dispatch, 0x45F750, 0xE, kSt, 0)},

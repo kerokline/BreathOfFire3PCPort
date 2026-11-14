@@ -1309,13 +1309,16 @@ own game folder, launcher copy and captures). No state-hash chain.*
   handed the encoded name for the draw, and the cells are put back after.
 - **Draws before the first entry-in** use the open's cells (first page, row
   and column 0) while the PC's bytes are off the grid.
-- `src/game/community/commu.cpp`: `CommuFrameWindowInPool` (the defect
-  below; the orchestrator's instruction, from TF's finding).
+- `src/game/community/commu.cpp`: `Commu_DrawTiledFrame` puts each texture
+  window in the packet pool, always (the defect below; the orchestrator's
+  instruction, from TF's finding; first built as a switch,
+  `CommuFrameWindowInPool`, and made unconditional at the owner's word, 2026-11-14,
+  follow-up below).
 - `rest_4d_fuzz.cpp`: `GridTest` (below); `EntryAbandonTest` now runs with
   a "no grid" API, since the grid's byte is set by then.
-- `src/hook/code_names.h`, and one row each in `analysis/ledger_switches.tsv`
-  for the two code names (the TSV otherwise as it was: its line numbers were
-  already stale; stage C regenerates it).
+- `src/hook/code_names.h` and `analysis/ledger_switches.tsv`: regenerated
+  with `tools/ledger_switches.py` on the merged tree (one code name of CR's,
+  `CommuNameGrid`).
 
 **What was run.**
 
@@ -1351,9 +1354,8 @@ own game folder, launcher copy and captures). No state-hash chain.*
 **Not run.** The slot path under `ja-JP` live (DIV-0075's end there is held
 by the harness rows only); a four-kana name; `fr-FR`, `de-DE`, `en-150`; the
 wide modes; the 64-bit exe in play (built only; the runs used the 32-bit exe
-host and the hosted build); a full `'*'` suite after the frame fix; a
-self-test row for `CommuFrameWindowInPool` with the byte on (fuzzed with the
-byte off; seen live with it on).
+host and the hosted build). The pool placement of the frame's windows has no
+original to compare with (follow-up below).
 
 **Owed.** The legend's button pictures do not match the keys that act on
 this install: it shows the PlayStation's (cross OK, triangle Del), and the
@@ -1367,7 +1369,8 @@ stack; the PC's draw mode keeps the pointer and reads it at the present,
 after the function has returned. The renamer's entry steps, its only
 callers, were cut, so it never ran in play; with the grid wired the game
 ended silently on the entry's first frame (no Fatal, no crash report), and
-with the grid switch off too. Fixed under `CommuFrameWindowInPool`.
+with the grid switch off too (the crash reporter left a dump of 0 bytes).
+Fixed unconditionally: a correction of a PC-only defect, no switch.
 
 **The ledger text for stage C.**
 
@@ -1393,18 +1396,35 @@ with the grid switch off too. Fixed under `CommuFrameWindowInPool`.
   and this entry's end does not apply; it holds with the switch off, with
   no grid (the original Chinese; any layer without the chunk) and for a
   faerie slot under the Japan family (call 6).
-- *The tiled frame's windows* (a new entry or a line of the renamer's;
-  switch `CommuFrameWindowInPool`, `PatchBytes`, default on). *Original:*
-  the RECT on the stack, read after the return (the defect above). *New:*
-  each RECT in the packet pool, as `Menu_DrawTitleBox` and TF's
-  `DrawGridFrame` do. *Also in the PSX version?* No: its `SetDrawMode`
-  copies the window into the packet at the call.
+- *The tiled frame's windows* (a new entry or a line of the renamer's; no
+  switch: the owner, 2026-11-14, "go ahead and make it unconditional").
+  *Original:* `Commu_DrawTiledFrame` `0x45F1A0` hands `Gpu_SetDrawMode` a
+  texture-window RECT on its stack, which the PC's present reads after the
+  return (the defect above). *New:* each RECT in the packet pool, as
+  `Menu_DrawTitleBox` and TF's `DrawGridFrame` do. *Also in the PSX
+  version?* No: its `SetDrawMode` copies the window into the packet at the
+  call. *Reversible?* No switch; `BOF3X_ORIGINAL=Commu_DrawTiledFrame` runs
+  Capcom's, with the stack RECT (the defect).
 
-**Open questions for the owner.** The all-blank member default (above): the
-record's default name, or the name the member had? Whether
-`CommuFrameWindowInPool` should be a switch at all: it is a crash fix with
-no working original to go back to, and a switch so that the self-test can
-compare Capcom's function.
+**The owner's answers (2026-11-14, by chat).** (1) An all-blank member name
+takes the default name, as built: no change. (2) The frame fix: "go ahead
+and make it unconditional".
+
+**Follow-up as run (2026-11-14, on the merged tree 3930b821).**
+`CommuFrameWindowInPool` is gone (its `PatchBytes` byte and its code name).
+`Commu_DrawTiledFrame` is one body, `TiledFrame`, taking where a window goes:
+the game's entry passes the pool placement (eight bytes taken at
+`Gfx_PacketNext`, the cursor moved past them), and
+`Commu_DrawTiledFrameStackWindow` passes the original's stack RECT. `rest_4e`'s
+row for `0x45F1A0` now runs the second against Capcom's clone: the same body,
+every other byte, call and argument compared as before, the windows by their
+eight bytes (the draw mode's recorder logs the RECT's bytes, not its address).
+What that row no longer covers is the pool placement itself - the eight bytes
+taken in the pool and the cursor moved past them - which has no original to
+compare with: it is three lines, seen live. No row dropped.
+Ran: `ledger_switches.py` (regenerated) and `--check`, `ledger_registry.py --check`, `ledger_check.py`: pass. Builds `i686` and `x86_64`: clean. The whole `BOF3X_SHADOW='*'` suite headless from the root's ini-less launcher copy: exit 0, 922 lines of `0 MISMATCHES` and none other; `rest_4e`'s 48 functions, 288,000 rounds, 0 mismatches. This is also the full suite owed after the frame fix.
+Live, `en-US`, the member path of the `fairyVillage` save (the same harness poke): the grid's frame drawn, no crash, "Ryu" edited to "llu" and shown by `0xF5`. Not run again: the slot path, the save and load, `ja-JP`.
+
 
 ## 4c-PE. Group PE as run
 
