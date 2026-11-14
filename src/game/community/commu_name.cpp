@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/menu/name_grid.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_4d.h"
 #include "game/rest_4d_callees.h"
@@ -114,15 +115,40 @@ void PanelBox(unsigned char slide) {
 }
 
 // The entry's three draws (BareRet, the box, BareRet), each `per` * the slide
-// (read again before each) further down.
-void EntryDraws(int per) {
+// (read again before each) further down. With the grid (CommuNameGrid), the
+// two BareRet are the PlayStation's: the legend (page, 0xB0 + per * slide,
+// 0x2B) and the grid (page, 0x18, 0x67 + per * slide, column, row), COMMU02's
+// copy.
+void EntryDraws(int per, bool grid = false) {
     const int first = 0xB0 + per * Slide();
-    Dropped(static_cast<std::uint32_t>(Rest4d_EntryB), static_cast<U>(first), 0x2Bu);
+    if (grid) {
+        const name_grid::Cells c = commu_name::GridDrawnCells(commu_name::LiveEntryBytes());
+        commu_name::g_api->legend(name_grid::Copy::kRenamer, c.page, first, 0x2B);
+    } else {
+        Dropped(static_cast<std::uint32_t>(Rest4d_EntryB), static_cast<U>(first), 0x2Bu);
+    }
     EntryBox(0x12, 0x61 + per * Slide(), 0x24, 0x11);
     const unsigned char a = Rest4d_EntryA, c = Rest4d_EntryC;
     const int third = 0x67 + per * Slide();
     const unsigned char b = Rest4d_EntryB;
+    if (grid) {
+        commu_name::g_api->draw(name_grid::Copy::kRenamer, commu_name::GridDrawnCells(commu_name::LiveEntryBytes()), 0x18, third);
+        return;
+    }
     Dropped(static_cast<U>(b), 0x18u, static_cast<U>(third), static_cast<U>(c), static_cast<U>(a));
+}
+
+// A panel that draws the buffer as text (flag 1), drawn while the grid's
+// cells are in the buffer: the layer's bytes of the name in their place for
+// the draw, the cells back after it.
+template <class F> void WithShownName(F draw) {
+    const commu_name::EntryBytes e = commu_name::LiveEntryBytes();
+    unsigned char kept[commu_name::kBufferBytes], shown[commu_name::kBufferBytes];
+    std::memcpy(kept, e.buffer, sizeof kept);
+    commu_name::GridShownName(e, shown);
+    std::memcpy(e.buffer, shown, sizeof shown);
+    draw();
+    std::memcpy(e.buffer, kept, sizeof kept);
 }
 
 // The slot's panel at (x, 0x32) with the cursor's slot.
@@ -153,6 +179,170 @@ U RecordName(unsigned index) {
 }
 
 }  // namespace
+
+// --- the renamer's grid (docs/new-game-round.md, stage B, group CR) -----------------
+//
+// The PlayStation's entry (COMMU02) calls three functions the port cut: the
+// legend and the grid drawn around the frame, and the input step, whose
+// answer the entry's middle step keeps and which moves that step on itself
+// (docs/name-entry-restoration.md sections 3 and 4). Ours are NG's
+// (game/menu/name_grid.h) over the PC's own cells. What differs from the
+// PlayStation's caller is the bytes: its buffer holds the disc's codes, which
+// are its text; the PC's names are the layer's text, so the cells are decoded
+// from the stored name at entry-in and encoded again when the entry is
+// answered, and the panels, which draw the buffer as text, are handed the
+// encoded name while the cells are in it.
+
+namespace commu_name {
+
+unsigned char g_grid = 0;
+
+const GridApi kLiveGridApi{name_grid::NameGrid_Available, name_grid::NameGrid_Family, name_grid::NameGrid_CellCount,
+                           name_grid::NameGrid_FirstPage, name_grid::NameGrid_Draw,   name_grid::NameGrid_DrawLegend,
+                           name_grid::NameGrid_Input,     name_grid::NameGrid_Encode, name_grid::NameGrid_Decode};
+const GridApi* g_api = &kLiveGridApi;
+
+EntryBytes LiveEntryBytes() {
+    return {At(::bof3::Img(rest_4d::at::kName.v)), &Rest4d_EntryColumn, &Rest4d_EntryC, &Rest4d_EntryA, &Rest4d_EntryB,
+            &Rest4d_EntryDone, &Rest4c_Step};
+}
+
+bool GridOn(bool slot) {
+    if (g_grid == 0 || !g_api->available()) return false;
+    return !(slot && g_api->family() == name_grid::Family::kJapan);   // call 6: DIV-0075's end for a slot
+}
+
+namespace {
+
+// The bytes `cells` encode to (the routine's encode into room to spare: five
+// cells are ten bytes at most).
+unsigned EncodedBytes(const unsigned char cells[5]) {
+    unsigned char scratch[32];
+    return g_api->encode(cells, scratch, sizeof scratch);
+}
+
+// The decoded cells of a run of stored units (no one-byte 0x20 in it) appended
+// at `cells[n]`; false when the grid cannot decode it or it passes five cells.
+bool AppendDecoded(const unsigned char* run, unsigned bytes, unsigned char cells[5], unsigned& n) {
+    if (bytes == 0) return true;
+    unsigned char out[5];
+    if (!g_api->decode(run, bytes, out)) return false;
+    unsigned k = 5;
+    while (k > 0 && out[k - 1] == 0xFF) --k;   // the decode's padding (a trailing space inside a run is a blank too)
+    if (n + k > 5) return false;
+    for (unsigned i = 0; i < k; ++i) cells[n++] = out[i];
+    return true;
+}
+
+}  // namespace
+
+void StoredToCells(const unsigned char* stored, unsigned room, unsigned char out[5]) {
+    if (room > kBufferBytes) bof3::Fatal("commu_name: a stored name of %u bytes (the fields are 5 and 8)", room);
+    // The units to the NUL or the field's end: a byte with bit 7 and the one after it, or one byte.
+    unsigned start[kBufferBytes], len[kBufferBytes], units = 0;
+    for (unsigned i = 0; i < room && stored[i] != 0;) {
+        const unsigned n = (stored[i] & 0x80) != 0 && i + 1 < room ? 2u : 1u;
+        start[units] = i;
+        len[units++] = n;
+        i += n;
+    }
+    const auto blank = [&](unsigned u) { return len[u] == 1 && stored[start[u]] == 0x20; };
+    while (units > 0 && blank(units - 1)) --units;   // the PC's padding
+    unsigned char cells[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    unsigned n = 0;
+    bool ok = true;
+    unsigned char run[kBufferBytes];
+    unsigned run_bytes = 0;
+    for (unsigned u = 0; u < units && ok; ++u) {
+        if (blank(u)) {
+            ok = AppendDecoded(run, run_bytes, cells, n) && n < 5;
+            run_bytes = 0;
+            if (ok) cells[n++] = 0xFF;   // the PC's blank byte, the routine's blank
+        } else {
+            for (unsigned b = 0; b < len[u]; ++b) run[run_bytes++] = stored[start[u] + b];
+        }
+    }
+    if (ok) ok = AppendDecoded(run, run_bytes, cells, n);
+    if (!ok) {
+        bof3::Log("commu_name: the stored name is not on the grid (%u bytes); the entry opens blank", room);
+        std::memset(cells, 0xFF, 5);
+    }
+    // The family's cells (call 5: four under the Japan family), then the field's bytes.
+    for (unsigned i = g_api->cell_count(); i < 5; ++i) cells[i] = 0xFF;
+    for (int i = 4; i >= 0 && EncodedBytes(cells) > room; --i) cells[i] = 0xFF;
+    std::memcpy(out, cells, 5);
+}
+
+void GridEntryIn(const EntryBytes& e, const unsigned char* stored, unsigned room) {
+    StoredToCells(stored, room, e.buffer);
+    *e.cursor = 0;
+    *e.column = 0;
+    *e.row = 0;
+    *e.page = static_cast<unsigned char>(g_api->first_page());
+    *e.step = static_cast<unsigned char>(*e.step + 1);
+}
+
+namespace {
+
+name_grid::Cells CellsOf(const EntryBytes& e) {
+    name_grid::Cells c{};
+    std::memcpy(c.buffer, e.buffer, 6);
+    c.cursor = *e.cursor;
+    c.column = *e.column;
+    c.row = *e.row;
+    c.page = *e.page;
+    return c;
+}
+
+}  // namespace
+
+void GridEntryInput(const EntryBytes& e, unsigned room) {
+    name_grid::Cells c = CellsOf(e);
+    const unsigned result = g_api->input(name_grid::Copy::kRenamer, c, room, nullptr);
+    std::memcpy(e.buffer, c.buffer, 5);   // COMMU02's routine leaves buffer byte 5 alone
+    *e.cursor = c.cursor;
+    *e.column = c.column;
+    *e.row = c.row;
+    *e.page = c.page;
+    *e.done = (result & name_grid::kFinished) != 0 ? 1 : 0;
+    if ((result & (name_grid::kFinished | name_grid::kQuit)) != 0) *e.step = static_cast<unsigned char>(*e.step + 1);
+}
+
+unsigned GridEntryAnswered(const EntryBytes& e, unsigned room, const unsigned char* fallback, unsigned fallback_room) {
+    unsigned n = 0;
+    if (e.buffer[0] == 0) {
+        while (n < fallback_room && n < kBufferBytes - 1 && fallback[n] != 0) {
+            e.buffer[n] = fallback[n];
+            ++n;
+        }
+    } else {
+        unsigned char cells[5];
+        std::memcpy(cells, e.buffer, 5);
+        n = g_api->encode(cells, e.buffer, room);
+    }
+    for (unsigned i = n; i < kBufferBytes; ++i) e.buffer[i] = 0;   // the NUL the commits' text record wants
+    return n;
+}
+
+name_grid::Cells GridDrawnCells(const EntryBytes& e) {
+    name_grid::Cells c = CellsOf(e);
+    const unsigned first = g_api->first_page();
+    if (c.page < first || c.page >= name_grid::detail::kMaxPages || c.row >= name_grid::detail::kRows ||
+        c.column >= name_grid::detail::kColumns) {
+        c.page = static_cast<unsigned char>(first);
+        c.row = 0;
+        c.column = 0;
+    }
+    return c;
+}
+
+void GridShownName(const EntryBytes& e, unsigned char out[kBufferBytes]) {
+    unsigned char cells[5];
+    std::memcpy(cells, e.buffer, 5);
+    g_api->encode(cells, out, kBufferBytes);
+}
+
+}  // namespace commu_name
 
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)
 
@@ -692,11 +882,17 @@ extern "C" void __cdecl CommuName_SlotEntryStep(void) {
 // (a 0 byte read as ' ') into 0x675F98, the step's step on, the entry's column
 // and the three bytes 0.
 extern "C" void __cdecl CommuName_SlotEntryIn(void) {
+    const bool grid = commu_name::GridOn(true);
     CursorSlotPanel(0x44, 0);
-    EntryDraws(30);
+    EntryDraws(30, grid);
     const auto slide = static_cast<unsigned char>(Rest4d_Count - 1);
     Rest4d_Count = slide;
     if (slide != 0) return;
+    if (grid) {   // CommuNameGrid: the slot's five bytes decoded to cells, the page the grid's first
+        const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+        commu_name::GridEntryIn(commu_name::LiveEntryBytes(), At(::bof3::Img(at::kSlotNames.v) + 5 * slot), commu_name::kSlotRoom);
+        return;
+    }
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
         if (B(::bof3::Img(at::kSlotNames.v) + 5 * slot + i) == 0) {
@@ -725,7 +921,18 @@ namespace rest_4d { unsigned char g_entry_abandons = 0; }
 // never leaves this step. DIVERGENCE DIV-0075: ours moves it on, as the
 // PlayStation's input does when the entry is abandoned, and step 7.2 takes
 // its unanswered branch (message 0xF7, state 4).
+//
+// CommuNameGrid: the PlayStation's input step in BareRetZero's place (NG's,
+// COMMU02's copy, the slot's 5 bytes), which answers 1 on a finish and moves
+// the step on at a finish or a quit, as the PlayStation's does.
 extern "C" void __cdecl CommuName_SlotEntry(void) {
+    if (commu_name::GridOn(true)) {
+        WithShownName([] { CursorSlotPanel(0x44, 1); });
+        SH_CALL(Menu_DrawGreyHLine)(0x4A + 12 * Rest4d_EntryColumn, 0x42, 0xC, 0);
+        EntryDraws(0, true);
+        commu_name::GridEntryInput(commu_name::LiveEntryBytes(), commu_name::kSlotRoom);
+        return;
+    }
     CursorSlotPanel(0x44, 1);
     SH_CALL(Menu_DrawGreyHLine)(0x4A + 12 * Rest4d_EntryColumn, 0x42, 0xC, 0);
     EntryDraws(0);
@@ -738,7 +945,39 @@ extern "C" void __cdecl CommuName_SlotEntry(void) {
 // slide 4: answered - an empty name takes the slot's default (0x653200, 20 a
 // slot, read in place), message 0xF4, the step's step on; unanswered - message
 // 0xF7, state 4, step 0. Field_Request 2 either way.
+//
+// CommuNameGrid: the panels drawn with the name's bytes in the cells' place;
+// answered, the cells encoded into 0x675F98 (or the default's five bytes) and
+// NUL-filled, so that the commit and its text record take the layer's bytes.
 extern "C" void __cdecl CommuName_SlotEntryOut(void) {
+    if (commu_name::GridOn(true)) {
+        const unsigned char done = Rest4d_EntryDone;
+        Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
+        WithShownName([done] {
+            if (done != 0) {
+                CursorSlotPanel(0x44, 1);
+            } else {
+                const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count));
+                SlotPanel(0x44 - 30 * Slide(), 0x32, slot, 1);
+            }
+        });
+        EntryDraws(30, true);
+        if (Rest4d_Count != 4) return;
+        if (Rest4d_EntryDone != 0) {
+            const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+            commu_name::GridEntryAnswered(commu_name::LiveEntryBytes(), commu_name::kSlotRoom,
+                                          At(::bof3::Img(at::kSlotDefaults.v) + 20 * slot), commu_name::kSlotRoom);
+            SH_CALL(Msg_OpenScript)(0xF4);
+            const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+            Field_Request = 2;
+            Rest4c_Step = step;
+        } else {
+            Say(0xF7);
+            Rest4b_BoardState = 4;
+            Rest4b_BoardStep = 0;
+        }
+        return;
+    }
     const unsigned char done = Rest4d_EntryDone;
     Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
     if (done != 0) {
@@ -953,10 +1192,19 @@ extern "C" void __cdecl CommuName_MemberEntryStep(void) {
 // (0 read as ' ') into 0x675F98, the step's step on, the column and the three
 // bytes 0.
 extern "C" void __cdecl CommuName_MemberEntryIn(void) {
+    const bool grid = commu_name::GridOn(false);
     Rest4d_Count = static_cast<unsigned char>(Rest4d_Count - 1);
     CursorMemberPanel(0x20, 0);
-    EntryDraws(30);
+    EntryDraws(30, grid);
     if (Rest4d_Count != 0) return;
+    if (grid) {   // CommuNameGrid: the record's name (8 bytes to its NUL) decoded to cells
+        const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+        if (record >= at::kRecordNameCount)
+            bof3::Fatal("CommuName_MemberEntryIn: record %u is past the renamer's %u members", record, at::kRecordNameCount);
+        commu_name::GridEntryIn(commu_name::LiveEntryBytes(), At(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * record),
+                                commu_name::kMemberRoom);
+        return;
+    }
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
         if (B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * record + i) == 0) {
@@ -977,7 +1225,16 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
 // original 0x45E2C0, step 7.1: the cursor member's panel (flag 1), the
 // column's grey line at (0x5B + 12 * column, 0x50), the entry's draws,
 // 0x675F96 = BareRetZero; the step's step on as the slot's (DIV-0075).
+// CommuNameGrid: the input step as the slot's, the record's 8 bytes (four
+// cells under the Japan family, call 5).
 extern "C" void __cdecl CommuName_MemberEntry(void) {
+    if (commu_name::GridOn(false)) {
+        WithShownName([] { CursorMemberPanel(0x20, 1); });
+        SH_CALL(Menu_DrawGreyHLine)(0x5B + 12 * Rest4d_EntryColumn, 0x50, 0xC, 0);
+        EntryDraws(0, true);
+        commu_name::GridEntryInput(commu_name::LiveEntryBytes(), commu_name::kMemberRoom);
+        return;
+    }
     CursorMemberPanel(0x20, 1);
     SH_CALL(Menu_DrawGreyHLine)(0x5B + 12 * Rest4d_EntryColumn, 0x50, 0xC, 0);
     EntryDraws(0);
@@ -988,7 +1245,44 @@ extern "C" void __cdecl CommuName_MemberEntry(void) {
 // original 0x45E350, step 7.2: as the slot's, the panel at 0x20 (answered) or
 // 0x20 - 30 * slide, an empty name taking the record's name from
 // CommuName_RecordNames (seven; ours aborts past them, section 5).
+//
+// CommuNameGrid: as the slot's; an all-blank name takes the record's default
+// name from Char_DefaultRecords (0x64B390 + 0xA4 * record, the name New Game
+// gives, the layer's under DIV-0020) to its NUL, at most 8 bytes, where the
+// port's path reads CommuName_RecordNames, the exe's own text, which no layer
+// replaces (docs/exe-chinese-remaining.md: "read only by the renamer the port
+// cut").
 extern "C" void __cdecl CommuName_MemberEntryOut(void) {
+    if (commu_name::GridOn(false)) {
+        const unsigned char done = Rest4d_EntryDone;
+        Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
+        WithShownName([done] {
+            if (done != 0) {
+                CursorMemberPanel(0x20, 1);
+            } else {
+                const U record = NthMember(static_cast<unsigned char>(Rest4c_Count));
+                MemberPanel(0x20 - 30 * Slide(), 0x2B, record, 1);
+            }
+        });
+        EntryDraws(30, true);
+        if (Rest4d_Count != 4) return;
+        if (Rest4d_EntryDone != 0) {
+            const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+            if (record >= at::kRecordNameCount)
+                bof3::Fatal("CommuName_MemberEntryOut: record %u is past the renamer's %u members", record, at::kRecordNameCount);
+            commu_name::GridEntryAnswered(commu_name::LiveEntryBytes(), commu_name::kMemberRoom,
+                                          At(::bof3::Img(Char_DefaultRecords_addr) + at::kRecordStride * record), commu_name::kMemberRoom);
+            SH_CALL(Msg_OpenScript)(0xF4);
+            const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+            Field_Request = 2;
+            Rest4c_Step = step;
+        } else {
+            Say(0xF7);
+            Rest4b_BoardState = 4;
+            Rest4b_BoardStep = 0;
+        }
+        return;
+    }
     const unsigned char done = Rest4d_EntryDone;
     Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
     if (done != 0) {
@@ -1026,11 +1320,23 @@ extern "C" void __cdecl CommuName_MemberEntryAsk(void) {
 
 // original 0x45E520, step 7.4: the slide one more, the cursor member's panel
 // at 0x20 - 30 * slide (flag 1); at 4 R4E's 0x45F5A0.
+//
+// CommuNameGrid: the commit copies eight bytes, so a name of eight (four kana,
+// or five Latin cells with three of two bytes) has no NUL among them; ours
+// writes it after the commit, at the record's +8 and after the text record's
+// eight (Text_Records + 0x28), for message 0xF5 and every later draw.
 extern "C" void __cdecl CommuName_MemberEntryDone(void) {
     Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
     const U record = NthMember(static_cast<unsigned char>(Rest4c_Count));
     MemberPanel(0x20 - 30 * Slide(), 0x2B, record, 1);
-    if (Rest4d_Count == 4) MemberRename();
+    if (Rest4d_Count != 4) return;
+    MemberRename();
+    if (!commu_name::GridOn(false)) return;
+    const unsigned committed = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+    if (committed >= at::kRecordNameCount)
+        bof3::Fatal("CommuName_MemberEntryDone: record %u is past the renamer's %u members", committed, at::kRecordNameCount);
+    B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * committed + commu_name::kMemberRoom) = 0;
+    B(::bof3::Img(at::kTextRecords.v) + 0x20 + commu_name::kMemberRoom) = 0;
 }
 
 // original 0x45E570, state 2 step 8: the slide one more; the title box; the
@@ -1072,7 +1378,19 @@ void CommuName_Inject() {
                          Low32(&rest_4d::g_entry_abandons), &was, &is, 1);
         bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
     }
-    if (bof3::WantsShadow("rest_4d")) rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject
+    // CommuNameGrid (the New Game round's CR; its ledger entry is stage C's):
+    // the entry is the name grid's where a layer has the grid (kind 22),
+    // DIV-0075's end where not. After rest_4d's self-test, which compares
+    // Capcom's entry steps with the byte 0.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        if (bof3::PatchBytes("CommuNameGrid", Low32(&commu_name::g_grid), &was, &is, 1))
+            bof3::Log("CommuNameGrid the community's name entry runs the name grid where the language layer has one");
+    }
+    if (bof3::WantsShadow("rest_4d")) {
+        rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject
+        rest_4d::GridTest();           // CommuNameGrid's rows: no grid, call 6, the grid's paths
+    }
     BOF3_INJECT(CommuDraw_Dispatch);
     BOF3_INJECT(CommuDraw_OpenStep);
     BOF3_INJECT(CommuDraw_FadeOut);

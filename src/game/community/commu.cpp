@@ -513,6 +513,10 @@ extern "C" void __cdecl CommuMember_DrawFrame(int x, int y, unsigned pulse, unsi
     Commit(0x38);
 }
 
+// CommuFrameWindowInPool's byte, set by CommuFromRest4e_Inject after rest_4e's
+// self-test (which compares Capcom's Commu_DrawTiledFrame with the byte 0).
+static unsigned char g_frame_window_in_pool = 0;
+
 // original 0x45F1A0: a frame of `w` x `h` cells of 8 (their low bytes) at (x,
 // y) - five SPRTs of texture page 0x1D, each through its own texture window
 // (a RECT on the original's stack: the top edge (0x70, 0x98), the bottom (0x98,
@@ -525,8 +529,21 @@ extern "C" void __cdecl CommuMember_DrawFrame(int x, int y, unsigned pulse, unsi
 extern "C" void __cdecl Commu_DrawTiledFrame(int x, int y, unsigned w, unsigned h) {
     const int sx = S16(static_cast<U>(x)), sy = S16(static_cast<U>(y));
     const int a = static_cast<int>(w & 0xFF), b = static_cast<int>(h & 0xFF);
-    short window[4];
-    auto mode = [&window](short wx, short wy, short ww, short wh) {
+    short stack_window[4];
+    auto mode = [&stack_window](short wx, short wy, short ww, short wh) {
+        // CommuFrameWindowInPool: the PC's draw mode keeps the window's
+        // pointer and reads it when the frame is presented, after this
+        // function has returned; the RECT on the stack is gone by then (an
+        // access violation in D3d_BuildPageTexture, group TF 2026-11-14).
+        // Ours puts each RECT in the packet pool, as Menu_DrawTitleBox does,
+        // where it lives to the present. Off (and in the self-test): the
+        // original's stack RECT.
+        short* window = stack_window;
+        if (g_frame_window_in_pool) {
+            unsigned char* const pooled = Gfx_PacketNext;
+            window = reinterpret_cast<short*>(pooled);
+            Gfx_PacketNext = Gfx_PacketNext + 8;
+        }
         window[0] = wx;
         window[1] = wy;
         window[2] = ww;
@@ -653,6 +670,11 @@ void CommuFromRest4d_Inject() {
 }
 
 void CommuFromRest4e_Inject() {
+    {   // CommuFrameWindowInPool (the New Game round's CR; the ledger entry is stage C's)
+        static const std::uint8_t was = 0, is = 1;
+        if (bof3::PatchBytes("CommuFrameWindowInPool", Low32(&g_frame_window_in_pool), &was, &is, 1))
+            bof3::Log("CommuFrameWindowInPool the community's tiled frame keeps its texture windows in the packet pool");
+    }
     BOF3_INJECT(CommuEntry_DrawPanel);
     BOF3_INJECT(CommuEntry_DrawPanelFrame);
     BOF3_INJECT(CommuEntry_DrawBar);
