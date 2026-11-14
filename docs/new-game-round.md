@@ -923,7 +923,7 @@ NUL, whichever is first, and encodes them.
 | 5 draw mode | dtd | tpage, low | tpage, high | 0 | 0 | 0 | 0 | `Gpu_SetDrawMode(p, 0, dtd, tpage, 0)`, committed: the texture page the tiles and the piece after it use |
 
 Every op's entry is below E; ops 1 and 2 have a count or rows and columns
-of at least 1; op 3's and op 4's CLUT has bits 15 and 14 clear; op 5's dtd
+of at least 1; op 3's and op 4's CLUT has bit 15 clear (bits 6..14 are its row); op 5's dtd
 is 0 or 1. **Op 5 is the amendment of 2026-11-14 (NG, step 2):** the
 legends set the tiles' texture page in some copies and not in others (US
 `START`'s four row-4 tiles are drawn on the piece's page, its six button
