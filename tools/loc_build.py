@@ -5190,12 +5190,9 @@ GRID_LEGEND_BOX = {"START.EMI": (0x78, 0x2F), "COMMU02.EMI": (0x4D, 0x2F)}
 GRID_ENTRIES = 8
 GRID_GLYPH_MIN = 6                    # a glyph's code is never a special code (1..5)
 GRID_SPACE = 0xFF                     # the space, which is also the routine's blank marker (M3)
-# The bits a legend sprite's CLUT word must leave clear. 5a's op table says
-# bits 15 and 14 (0xC000), but every CLUT in its own reference ops - 0x7803,
-# 0x7800, 0x784C, GetClut(x, 0x1E0 or 0x1E1) = y << 6 | x >> 4 - has bit 14
-# set, so that rule refuses every held disc. A GetClut word's y is 9 bits
-# (6..14), so bit 15 is the one a CLUT never sets: checked here, and asked of
-# NG as an amendment to 5a (2026-11-14, group GD's report).
+# The bits a legend sprite's CLUT word must leave clear: bit 15 (5a, amended
+# 2026-11-14 from "bits 15 and 14", which every held CLUT - GetClut(x, 0x1E0
+# or 0x1E1) = y << 6 | x >> 4 - breaks; bits 6..14 are the row).
 GRID_CLUT_RESERVED = 0x8000
 # The special code k's action, from the input step's family: 1 name cursor + 1,
 # 2 name cursor - 1, 3 next page, 4 quit, 5 finish (5a's code map; Japan's off
@@ -5212,9 +5209,13 @@ GRID_ACTIONS = {0: (1, 2, 3, 4, 5), 1: (1, 2, 4, 5)}
 # The roles: box Menu_DrawBox, text Text_DrawAt, small Text_DrawSmall, clut
 # GetClut, tile the 8 x 8 sprite helper (research 4.2's 0x801D9B8C), piece
 # Menu_PieceRect (PSX 0x801B0270; the sprite the legend then fills in place),
-# commit Packet_Commit (the piece's sprite is read back there), "-" a call
-# whose work is not the chunk's (the draw mode, the graph type, the hand,
-# the frame's Menu_DrawPieces, which is the PC's own list, 5a).
+# commit Packet_Commit (the piece's sprite is read back there), drawmode
+# SetDrawMode (op 5 after the legend's box; the one before it, START's, is the
+# routine's and only checked), tpage GetTPage (its word computed), graph
+# GetGraphType (answered 0, so where the disc picks tpage 0x8F or 0x2F by it
+# the run takes 0x2F, the PC's, as 5a says), "-" a call whose work is not the
+# chunk's (the sprite's setters, the hand, the frame's Menu_DrawPieces, which
+# is the PC's own list, 5a).
 GRID_DRAWERS = {        # (copy, family, shape)
     "b393083d29d4": ("START.EMI", 0, "Japan START"),
     "f8e842d57a32": ("COMMU02.EMI", 0, "Japan COMMU02"),
@@ -5229,8 +5230,9 @@ GRID_INPUTS = {
     "9702393711ee": ("START.EMI", 1, "West START"),
     "99ab62c5ac6d": ("COMMU02.EMI", 1, "West COMMU02"),
 }
-GRID_LEGEND_START = ("-", "-", "commit", "box", "-", "piece", "-", "-", "clut", "small", "tile", "-")
-GRID_LEGEND_COMMU = ("box", "small", "-", "-", "commit", "clut", "tile", "-")
+GRID_LEGEND_START = ("graph", "drawmode", "commit", "box", "tpage", "piece", "-", "-", "clut", "small", "tile", "-")
+GRID_LEGEND_COMMU = ("box", "small", "graph", "drawmode", "commit", "clut", "tile", "-")
+GRID_PRE_BOX_MODE = (1, 0xF)          # START's draw mode before its box (dtd, tpage): the routine's, not an op (5a)
 GRID_LEGENDS = {        # (copy, family, shape, roles)
     "3552c6916fab": ("START.EMI", 0, "Japan START", GRID_LEGEND_START),
     "908d8267d430": ("COMMU02.EMI", 0, "Japan COMMU02", GRID_LEGEND_COMMU),
@@ -5660,7 +5662,8 @@ def grid_page_cell(sections, drawer, copy):
 def grid_read_legend(sections, functions, copy, family, page):
     """The legend of one copy run for `page`: ((w, h) of its box, its calls in
     order - ("small", x, y, colour, count, pointer, the slot it was loaded from),
-    ("tile", x, y, u, v, CLUT, shade), ("piece", x, y, id, flags, CLUT) - and
+    ("tile", x, y, u, v, CLUT, shade), ("piece", x, y, id, flags, CLUT),
+    ("mode", dtd, tpage) for a SetDrawMode after the box - and
     the address of its table of GRID_ENTRIES string pointers)."""
     calls = []
     legend = grid_find(functions, GRID_LEGENDS, copy, "legend")
@@ -5691,6 +5694,24 @@ def grid_read_legend(sections, functions, copy, family, page):
         pending.append((m.arg(0) & 0xFFFF, m.arg(1) & 0xFFFF))
         return RECT
 
+    def drawmode(m):
+        # Gpu_SetDrawMode(p, dfe, dtd, tpage, tw): 5a's op 5 holds dtd and the
+        # tpage word, with dfe and the texture window 0.
+        if m.arg(1) != 0 or m.arg(4) != 0 or m.arg(2) not in (0, 1) or m.arg(3) > 0xFFFF:
+            raise GridRefused("%s: a legend draw mode (%d, %d, 0x%X, %d) op 5 cannot hold"
+                              % (copy, m.arg(1), m.arg(2), m.arg(3), m.arg(4)))
+        if boxes:
+            calls.append(("mode", m.arg(2), m.arg(3)))
+        elif (m.arg(2), m.arg(3)) != GRID_PRE_BOX_MODE:
+            raise GridRefused("%s: the draw mode before the legend's box is (%d, 0x%X), the routine's constant (%d, 0x%X)"
+                              % ((copy, m.arg(2), m.arg(3)) + GRID_PRE_BOX_MODE))
+        return 0
+
+    def tpage(m):
+        # GetTPage(tp, abr, x, y), the PlayStation library's word.
+        tp, abr, x, y = m.arg(0) & 3, m.arg(1) & 3, m.arg(2), m.arg(3)
+        return (tp << 7) | (abr << 5) | ((y & 0x100) >> 4) | ((x & 0x3FF) >> 6) | ((y & 0x200) << 2)
+
     def commit(m):
         if not pending:
             return 0
@@ -5709,7 +5730,8 @@ def grid_read_legend(sections, functions, copy, family, page):
 
     answers = {}
     for t, role in roles.items():
-        answers[t] = {"small": small, "tile": tile, "piece": piece, "commit": commit,
+        answers[t] = {"small": small, "tile": tile, "piece": piece, "commit": commit, "drawmode": drawmode,
+                      "tpage": tpage, "graph": lambda m: 0,
                       "box": lambda m: boxes.append((s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0,
                                                      m.arg(2), m.arg(3), m.arg(4))),
                       "clut": lambda m: ((m.arg(1) & 0x1FF) << 6) | ((m.arg(0) >> 4) & 0x3F),
@@ -5747,7 +5769,7 @@ def run_word(sections, va):
 def grid_legend_ops(calls, table, copy):
     """The legend's calls -> 5a's operations: a text call is op 1, a run of
     one-character draws of one entry laid on rows and columns op 2 (the
-    leaders), a sprite-helper call op 3, a piece op 4."""
+    leaders), a sprite-helper call op 3, a piece op 4, a draw mode op 5."""
     def u8(v, what):
         if not 0 <= v <= 0xFF:
             raise GridRefused("%s: the legend's %s %d does not fit a byte" % (copy, what, v))
@@ -5778,6 +5800,8 @@ def grid_legend_ops(calls, table, copy):
             if c[6] != 0x7F:
                 raise GridRefused("%s: a legend tile at shade 0x%X, 5a's op 3 is 0x7F" % (copy, c[6]))
             ops.append([3, u8(c[1], "x"), u8(c[2], "y"), u8(c[3], "u tile"), u8(c[4], "v tile"), c[5] & 0xFF, c[5] >> 8, 0])
+        elif c[0] == "mode":
+            ops.append([5, c[1], c[2] & 0xFF, c[2] >> 8, 0, 0, 0, 0])
         else:
             ops.append([4, u8(c[1], "x"), u8(c[2], "y"), u8(c[3], "piece"), u8(c[4], "rect flags"), c[5] & 0xFF,
                         c[5] >> 8, 0])
@@ -6143,6 +6167,8 @@ def name_grid_check(payload):
                 lnamed.add(op[3])
             elif kind in (3, 4):
                 bad = (op[5] | op[6] << 8) & GRID_CLUT_RESERVED or op[7]
+            elif kind == 5:
+                bad = op[1] not in (0, 1) or any(op[4:])
             else:
                 bad = True
             if bad:
@@ -7260,9 +7286,9 @@ def name_grid_synthetic(family):
         ops = [(1, 0x2A, 6 + 8 * i, i, 0, 0x10, 0, 0) for i in range(3)]
         if family == 0:
             ops.append((1, 0x2A, 0x1E, 4, 1, 0x10, 0, 0))
-        ops += [(2, 0x1A, 6, 7, 5, 3, 4, 8), (3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0)]
+        ops += [(2, 0x1A, 6, 7, 5, 3, 4, 8), (5, 0, 0x2F, 0, 0, 0, 0, 0), (3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0)]
         if copy == "START.EMI":
-            ops.insert(0, (4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0))
+            ops[0:0] = [(5, 0, 0x1D, 0, 0, 0, 0, 0), (4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0)]
         copies.append({"copy": copy, "count": 4 if family == 0 else 5,
                        "raw_labels": [bytes(word[:1 + i % 3]) for i in range(slots)],
                        "box": GRID_LEGEND_BOX[copy], "raw_entries": [bytes(word[:1 + i % 3]) for i in range(GRID_ENTRIES)],
@@ -7383,7 +7409,9 @@ def name_grid_selfcheck():
                 "another legend box": [(legend, 0x50)],
                 "a CLUT with bit 15": [(first_op + 8 * (n_ops - 1) + 6, 0xF8)],
                 "an unknown op": [(first_op, 9)],
-                "an op naming entry 8": [(first_op + 8 * (n_ops - 2) + 3, GRID_ENTRIES)],
+                "a draw mode's dtd 2": [(first_op + 8 * (n_ops - 2) + 1, 2)],
+                "a draw mode's byte 7 set": [(first_op + 8 * (n_ops - 2) + 7, 1)],
+                "an op naming entry 8": [(first_op + 8 * (n_ops - 3) + 3, GRID_ENTRIES)],
             }
             for what, edits in broken.items():
                 bad = bytearray(payload)
@@ -7417,12 +7445,13 @@ def name_grid_selfcheck():
                 except GridRefused:
                     if not named:
                         errs.append("%s: an unnamed legend entry refused the chunk" % GRID_FAMILIES[family])
-        # The legend's calls folded into ops: a 2 x 3 run of one-character draws is op 2.
+        # The legend's calls folded into ops: a 2 x 3 run of one-character draws is op 2, a draw mode op 5.
         calls = [("small", 0x1A + 4 * (i % 3), 6 + 8 * (i // 3), 0, 1, 0, 0x1000 + 28) for i in range(6)] + \
                 [("small", 0x2A, 6, 0, 0x10, 0, 0x1000), ("tile", 0xE, 6, 0x1B, 0, 0x7803, 0x7F),
-                 ("piece", 0x50, 5, 0x2C, 1, 0x784C)]
+                 ("mode", 0, 0x1D), ("piece", 0x50, 5, 0x2C, 1, 0x784C)]
         if grid_legend_ops(calls, 0x1000, "synthetic") != [[2, 0x1A, 6, 7, 2, 3, 4, 8], [1, 0x2A, 6, 0, 0, 0x10, 0, 0],
-                                                            [3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0], [4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0]]:
+                                                            [3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0], [5, 0, 0x1D, 0, 0, 0, 0, 0],
+                                                            [4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0]]:
             errs.append("grid_legend_ops: the made-up calls fold to %s" % grid_legend_ops(calls, 0x1000, "synthetic"))
     finally:
         donor_ja = saved
