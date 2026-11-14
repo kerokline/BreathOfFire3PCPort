@@ -5146,6 +5146,1060 @@ def build_standins(game, disc, overlays):
     return out, left
 
 
+# ---------------------------------------------------------------- kind 22: the name grid
+#
+# docs/new-game-round.md section 5a is this chunk's layout, byte for byte: the
+# contract with the routine that reads it (src/game/menu/name_grid.cpp, group
+# NG). Section 3a (M2) is what each disc holds. In short: the name-entry
+# routine's data, one grid and two copies of its labels and legend - START.EMI's
+# (New Game) and COMMU02.EMI's (the faerie village's renamer) - read off the
+# disc's own code, never off the build's name:
+#
+#   - each copy's grid drawer, input step and legend are told by a normalised
+#     hash of their code (mips_shape_hash: the instructions with call targets
+#     and every immediate of 0x100 or more masked, so a match is the same code
+#     at other addresses); a copy whose three are not all known gets no chunk;
+#   - the drawer and the legend are then RUN (MipsRun, an R3000 interpreter
+#     over the overlay's sections) with their callees answered by role: what
+#     they draw, where and with which colour, is what they pass. The grid's
+#     address is where the drawer's cell pointers point (and a `lui` of the
+#     drawer names it), the code map and the label slots are what it passes
+#     for the special cells, the legend's operations what the legend passes;
+#   - the pages in use follow the page cell, the byte every call of the
+#     drawer passes as its page: on a Western disc every store to it is one
+#     constant (2) and that is the one page; on a Japan disc the input step
+#     cycles it through the block's three;
+#   - the actions of the special codes are the input step's, by its shape
+#     (5a's table: Japan quit 4 and finish 5, West quit 3 and finish 4).
+#
+# No partial chunk (5a): a part not found, a cell, a label or a named legend
+# entry the layer cannot encode, or a chunk 5a's pass rules (name_grid_check)
+# would refuse at the take, and the build gets none, with the reason in the
+# report. A layer without the chunk is the layer as before.
+KIND_NAME_GRID = 22
+GRID_VERSION = 1
+GRID_ROWS, GRID_COLS = 8, 12
+GRID_PAGE = GRID_ROWS * GRID_COLS
+GRID_BLOCK_PAGES = 3                  # every disc's block: three pages of one-byte cells (M2)
+GRID_HEADER, GRID_ID_ROOM = 0x14, 12
+GRID_FAMILIES = {0: "Japan", 1: "West"}
+GRID_FAMILY_PAGES = {0: (0, 3), 1: (2, 1)}   # (F, P) 5a's header allows a family
+GRID_FAMILY_CODES = {0: 5, 1: 4}
+GRID_COPIES = ("START.EMI", "COMMU02.EMI")
+GRID_LEGEND_BOX = {"START.EMI": (0x78, 0x2F), "COMMU02.EMI": (0x4D, 0x2F)}
+GRID_ENTRIES = 8
+GRID_GLYPH_MIN = 6                    # a glyph's code is never a special code (1..5)
+GRID_SPACE = 0xFF                     # the space, which is also the routine's blank marker (M3)
+# The bits a legend sprite's CLUT word must leave clear. 5a's op table says
+# bits 15 and 14 (0xC000), but every CLUT in its own reference ops - 0x7803,
+# 0x7800, 0x784C, GetClut(x, 0x1E0 or 0x1E1) = y << 6 | x >> 4 - has bit 14
+# set, so that rule refuses every held disc. A GetClut word's y is 9 bits
+# (6..14), so bit 15 is the one a CLUT never sets: checked here, and asked of
+# NG as an amendment to 5a (2026-11-14, group GD's report).
+GRID_CLUT_RESERVED = 0x8000
+# The special code k's action, from the input step's family: 1 name cursor + 1,
+# 2 name cursor - 1, 3 next page, 4 quit, 5 finish (5a's code map; Japan's off
+# M1, the West's off US START 0x801E4744..0x801E4E8C, read whole by M-B).
+GRID_ACTIONS = {0: (1, 2, 3, 4, 5), 1: (1, 2, 4, 5)}
+
+# The shapes held (mips_shape_hash -> what the function is), measured
+# 2026-11-14 over the seven discs against M-B's listings (funcs.out): the
+# drawers and input steps at its addresses, the legends the draw-alls call.
+# A legend's roles name its distinct call targets in their first order in the
+# code; a drawer's are box, text, hand. The German START and COMMU02 legends
+# are the French ones with another text x (5a).
+#
+# The roles: box Menu_DrawBox, text Text_DrawAt, small Text_DrawSmall, clut
+# GetClut, tile the 8 x 8 sprite helper (research 4.2's 0x801D9B8C), piece
+# Menu_PieceRect (PSX 0x801B0270; the sprite the legend then fills in place),
+# commit Packet_Commit (the piece's sprite is read back there), "-" a call
+# whose work is not the chunk's (the draw mode, the graph type, the hand,
+# the frame's Menu_DrawPieces, which is the PC's own list, 5a).
+GRID_DRAWERS = {        # (copy, family, shape)
+    "b393083d29d4": ("START.EMI", 0, "Japan START"),
+    "f8e842d57a32": ("COMMU02.EMI", 0, "Japan COMMU02"),
+    "87c34c0e7de6": ("START.EMI", 1, "US / EU START"),
+    "2320615bce33": ("COMMU02.EMI", 1, "US / EU COMMU02"),
+    "78f9b39ed625": ("START.EMI", 1, "French / German START"),
+    "b954027f3b2e": ("COMMU02.EMI", 1, "French / German COMMU02"),
+}
+GRID_INPUTS = {
+    "2f3f4dd6564b": ("START.EMI", 0, "Japan START"),
+    "ae01a2d62173": ("COMMU02.EMI", 0, "Japan COMMU02"),
+    "9702393711ee": ("START.EMI", 1, "West START"),
+    "99ab62c5ac6d": ("COMMU02.EMI", 1, "West COMMU02"),
+}
+GRID_LEGEND_START = ("-", "-", "commit", "box", "-", "piece", "-", "-", "clut", "small", "tile", "-")
+GRID_LEGEND_COMMU = ("box", "small", "-", "-", "commit", "clut", "tile", "-")
+GRID_LEGENDS = {        # (copy, family, shape, roles)
+    "3552c6916fab": ("START.EMI", 0, "Japan START", GRID_LEGEND_START),
+    "908d8267d430": ("COMMU02.EMI", 0, "Japan COMMU02", GRID_LEGEND_COMMU),
+    "20dfb17ec7be": ("START.EMI", 1, "US / EU START", GRID_LEGEND_START),
+    "fbf192b98f9d": ("COMMU02.EMI", 1, "US / EU COMMU02", GRID_LEGEND_COMMU),
+    "57acedd4059d": ("START.EMI", 1, "French START", GRID_LEGEND_START),
+    "2eca5796817f": ("COMMU02.EMI", 1, "French COMMU02", ("box", "small", "clut", "tile", "-")),
+    "e0bc8e51cd3d": ("START.EMI", 1, "German START", GRID_LEGEND_START),
+    "d498ff006adb": ("COMMU02.EMI", 1, "German COMMU02", ("box", "small", "clut", "tile", "-")),
+}
+GRID_TILE_HELPERS = {"2cbc1d7f3e24"}
+GRID_DRAWER_ROLES = ("box", "text", "-")
+
+
+class MipsError(Exception):
+    pass
+
+
+def mips_shape_hash(words):
+    """A function's code with what moves between builds masked: a `j` / `jal`
+    target, and an immediate whose magnitude is 0x100 or more (addresses,
+    the high halves `lui` loads, large constants). Branch offsets are kept:
+    they are relative. The first 12 hex digits of the md5."""
+    out = []
+    for w in words:
+        op, imm = w >> 26, w & 0xFFFF
+        if op in (0x02, 0x03):
+            w &= 0xFC000000
+        elif op in (0x08, 0x09, 0x0A, 0x0B) or 0x20 <= op <= 0x2E:
+            if abs(imm - 0x10000 if imm & 0x8000 else imm) >= 0x100:
+                w &= 0xFFFF0000
+        elif op in (0x0C, 0x0D, 0x0E, 0x0F) and imm >= 0x100:
+            w &= 0xFFFF0000
+        out.append(w)
+    return hashlib.md5(struct.pack("<%dI" % len(out), *out)).hexdigest()[:12]
+
+
+def mips_functions(sections):
+    """{start: (end, words)} of every function in KSEG0 `sections`: from an
+    `addiu $sp, $sp, -n` to the first `jr $ra` and its delay slot."""
+    out = {}
+    for d, b in kseg0(sections):
+        words = struct.unpack_from("<%dI" % (len(b) // 4), b)
+        for k, w in enumerate(words):
+            if w >> 16 != 0x27BD or not w & 0x8000:
+                continue
+            e = k
+            while e < len(words) and words[e] != 0x03E00008:
+                e += 1
+            if e + 1 < len(words):
+                out[d + 4 * k] = (d + 4 * e + 8, words[k:e + 2])
+    return out
+
+
+def mips_call_targets(start, words):
+    """The distinct `jal` targets of a function, in their first order."""
+    seen = []
+    for k, w in enumerate(words):
+        if w >> 26 == 0x03:
+            t = ((start + 4 * k) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+            if t not in seen:
+                seen.append(t)
+    return seen
+
+
+def s16(v):
+    v &= 0xFFFF
+    return v - 0x10000 if v & 0x8000 else v
+
+
+class MipsRun:
+    """An R3000 interpreter over an overlay's sections (kind 22), for reading
+    what a draw routine passes its callees. Memory is the sections' bytes and
+    a sparse store over them (unwritten bytes outside them read 0); a `jal`
+    is not followed but answered by `calls[target](run)`, whose result is $v0
+    (a target without an answer is an error); `jr $ra` at the top returns.
+    Each register and stack word carries where it was loaded from in the
+    sections (`src`), so a string pointer passed on the stack names its table
+    slot. The bytes `lwl` / `lwr` read from the sections and `swl` / `swr`
+    write are kept (a copy of a block onto the stack)."""
+    SP, RET = 0x7F000000, 0x7FFFFFF0
+
+    def __init__(self, sections, calls, limit=400000):
+        self.secs = kseg0(sections)
+        self.calls, self.limit = calls, limit
+        self.mem, self.wsrc = {}, {}
+        self.copy_read, self.copy_written = set(), set()
+
+    def mapped(self, a):
+        return any(d <= a < d + len(b) for d, b in self.secs)
+
+    def byte(self, a):
+        a &= 0xFFFFFFFF
+        if a in self.mem:
+            return self.mem[a]
+        for d, b in self.secs:
+            if d <= a < d + len(b):
+                return b[a - d]
+        return 0
+
+    def load(self, a, n):
+        return sum(self.byte(a + i) << (8 * i) for i in range(n))
+
+    def store(self, a, v, n):
+        for i in range(n):
+            self.mem[(a + i) & 0xFFFFFFFF] = (v >> (8 * i)) & 0xFF
+
+    def arg(self, k):
+        """The callee's argument k: $a0..$a3, then the caller's stack from +0x10."""
+        return self.r[4 + k] if k < 4 else self.load(self.r[29] + 0x10 + 4 * (k - 4), 4)
+
+    def arg_src(self, k):
+        return self.wsrc.get((self.r[29] + 0x10 + 4 * (k - 4)) & 0xFFFFFFFF)
+
+    def put(self, reg, v, src=None):
+        if reg:
+            self.r[reg], self.rsrc[reg] = v & 0xFFFFFFFF, src
+
+    def run(self, entry, args=(), stack=()):
+        self.r, self.rsrc = [0] * 32, [None] * 32
+        self.hi = self.lo = 0
+        self.r[29], self.r[31] = self.SP, self.RET
+        for k, v in enumerate(args):
+            self.r[4 + k] = v & 0xFFFFFFFF
+        for off, v in stack:
+            self.store(self.SP + off, v, 4)
+        pc, steps = entry, 0
+        while True:
+            steps += 1
+            if steps > self.limit:
+                raise MipsError("no return in %d steps from 0x%08X" % (self.limit, entry))
+            flow = self.step(pc)
+            if flow is None:
+                pc += 4
+                continue
+            if self.step(pc + 4) is not None:
+                raise MipsError("a branch in a delay slot at 0x%08X" % (pc + 4))
+            kind, target = flow
+            if kind == "ret":
+                return self.r[2]
+            if kind == "call":
+                if target not in self.calls:
+                    raise MipsError("a call of 0x%08X at 0x%08X has no answer" % (target, pc))
+                v = self.calls[target](self)
+                self.put(2, v or 0)
+                pc += 8
+            else:
+                pc = target
+
+    def step(self, pc):
+        if not self.mapped(pc):
+            raise MipsError("execution left the sections at 0x%08X" % pc)
+        w = self.load(pc, 4)
+        r, op = self.r, w >> 26
+        rs, rt, rd, sa, fn = (w >> 21) & 31, (w >> 16) & 31, (w >> 11) & 31, (w >> 6) & 31, w & 0x3F
+        imm = w & 0xFFFF
+        simm = imm - 0x10000 if imm & 0x8000 else imm
+        sv = lambda x: x - 0x100000000 if x & 0x80000000 else x
+        if op == 0:
+            a, b = r[rs], r[rt]
+            if fn == 0x00:
+                self.put(rd, b << sa)
+            elif fn == 0x02:
+                self.put(rd, b >> sa)
+            elif fn == 0x03:
+                self.put(rd, sv(b) >> sa)
+            elif fn == 0x04:
+                self.put(rd, b << (a & 31))
+            elif fn == 0x06:
+                self.put(rd, b >> (a & 31))
+            elif fn == 0x07:
+                self.put(rd, sv(b) >> (a & 31))
+            elif fn == 0x08:
+                return ("ret", None) if a == self.RET else ("jump", a)
+            elif fn == 0x10:
+                self.put(rd, self.hi)
+            elif fn == 0x12:
+                self.put(rd, self.lo)
+            elif fn in (0x18, 0x19):
+                p = sv(a) * sv(b) if fn == 0x18 else a * b
+                self.hi, self.lo = (p >> 32) & 0xFFFFFFFF, p & 0xFFFFFFFF
+            elif fn in (0x1A, 0x1B):
+                if b == 0:
+                    raise MipsError("a division by zero at 0x%08X" % pc)
+                x, y = (sv(a), sv(b)) if fn == 0x1A else (a, b)
+                q = abs(x) // abs(y) * (1 if (x < 0) == (y < 0) else -1)
+                self.lo, self.hi = q & 0xFFFFFFFF, (x - q * y) & 0xFFFFFFFF
+            elif fn in (0x20, 0x21):
+                self.put(rd, a + b, self.rsrc[rs] if rt == 0 else self.rsrc[rt] if rs == 0 else None)
+            elif fn in (0x22, 0x23):
+                self.put(rd, a - b)
+            elif fn == 0x24:
+                self.put(rd, a & b)
+            elif fn == 0x25:
+                self.put(rd, a | b, self.rsrc[rs] if rt == 0 else self.rsrc[rt] if rs == 0 else None)
+            elif fn == 0x26:
+                self.put(rd, a ^ b)
+            elif fn == 0x27:
+                self.put(rd, ~(a | b))
+            elif fn == 0x2A:
+                self.put(rd, int(sv(a) < sv(b)))
+            elif fn == 0x2B:
+                self.put(rd, int(a < b))
+            else:
+                raise MipsError("SPECIAL function 0x%02X at 0x%08X" % (fn, pc))
+            return None
+        target = (pc + 4 + (simm << 2)) & 0xFFFFFFFF
+        if op == 0x01:
+            if rt not in (0, 1):
+                raise MipsError("REGIMM 0x%02X at 0x%08X" % (rt, pc))
+            taken = sv(r[rs]) < 0 if rt == 0 else sv(r[rs]) >= 0
+            return ("jump", target) if taken else None
+        if op in (0x02, 0x03):
+            t = ((pc + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+            return ("jump", t) if op == 0x02 else ("call", t)
+        if op in (0x04, 0x05, 0x06, 0x07):
+            a, b = r[rs], r[rt]
+            taken = (a == b, a != b, sv(a) <= 0, sv(a) > 0)[op - 4]
+            return ("jump", target) if taken else None
+        if op in (0x08, 0x09):
+            self.put(rt, r[rs] + simm)
+        elif op == 0x0A:
+            self.put(rt, int(sv(r[rs]) < simm))
+        elif op == 0x0B:
+            self.put(rt, int(r[rs] < (simm & 0xFFFFFFFF)))
+        elif op == 0x0C:
+            self.put(rt, r[rs] & imm)
+        elif op == 0x0D:
+            self.put(rt, r[rs] | imm)
+        elif op == 0x0E:
+            self.put(rt, r[rs] ^ imm)
+        elif op == 0x0F:
+            self.put(rt, imm << 16)
+        elif 0x20 <= op <= 0x2E:
+            a = (r[rs] + simm) & 0xFFFFFFFF
+            al, k = a & ~3, a & 3
+            if op == 0x20:
+                self.put(rt, self.load(a, 1) - (0x100 if self.load(a, 1) & 0x80 else 0))
+            elif op == 0x21:
+                self.put(rt, s16(self.load(a, 2)))
+            elif op == 0x23:
+                self.put(rt, self.load(a, 4), a if self.mapped(a) else self.wsrc.get(a))
+            elif op == 0x24:
+                self.put(rt, self.load(a, 1))
+            elif op == 0x25:
+                self.put(rt, self.load(a, 2))
+            elif op == 0x22:            # lwl: bytes al..a into the top of rt
+                self.copy_read.update(x for x in range(al, a + 1) if self.mapped(x))
+                sh = 8 * (3 - k)
+                self.put(rt, (r[rt] & ((1 << sh) - 1)) | (self.load(al, 4) << sh))
+            elif op == 0x26:            # lwr: bytes a..al+3 into the bottom of rt
+                self.copy_read.update(x for x in range(a, al + 4) if self.mapped(x))
+                sh = 8 * k
+                self.put(rt, (r[rt] & ~(0xFFFFFFFF >> sh)) | (self.load(al, 4) >> sh))
+            elif op == 0x28:
+                self.store(a, r[rt], 1)
+            elif op == 0x29:
+                self.store(a, r[rt], 2)
+            elif op == 0x2B:
+                self.store(a, r[rt], 4)
+                self.wsrc[a] = self.rsrc[rt]
+            elif op == 0x2A:            # swl: rt's top k + 1 bytes to al..a
+                for i in range(k + 1):
+                    self.store(al + i, r[rt] >> (8 * (3 - k + i)), 1)
+                    self.copy_written.add(al + i)
+            elif op == 0x2E:            # swr: rt's bottom 4 - k bytes to a..al+3
+                for i in range(4 - k):
+                    self.store(a + i, r[rt] >> (8 * i), 1)
+                    self.copy_written.add(a + i)
+            else:
+                raise MipsError("opcode 0x%02X at 0x%08X" % (op, pc))
+        else:
+            raise MipsError("opcode 0x%02X at 0x%08X" % (op, pc))
+        return None
+
+
+class GridRefused(Exception):
+    """A build whose name grid cannot be read whole or encoded: no chunk (5a)."""
+
+
+def grid_roles(start, words, roles, what):
+    """{target: role} for a function's calls, its distinct targets in their first order."""
+    targets = mips_call_targets(start, words)
+    if len(targets) != len(roles):
+        raise GridRefused("%s calls %d functions, its shape %d" % (what, len(targets), len(roles)))
+    return dict(zip(targets, roles))
+
+
+GRID_X0, GRID_Y0 = 0x400, 0x800     # the origin a routine is run at; what it draws is read relative to it
+
+
+def grid_find(functions, table, copy, what):
+    """(start, end, words, shape) of the one function of `copy` whose hash `table` holds."""
+    hits = [(a, e, w, table[mips_shape_hash(w)]) for a, (e, w) in sorted(functions.items())
+            if mips_shape_hash(w) in table]
+    hits = [h for h in hits if h[3][0] == copy]
+    if len(hits) != 1:
+        raise GridRefused("%s: %d %ss of a known shape, wanted one" % (copy, len(hits), what))
+    return hits[0]
+
+
+def grid_read_drawer(sections, drawer, page):
+    """What the drawer draws for `page`: [(x, y, colour, count, pointer)] in
+    order (x, y off the origin), the box, and the block it copies onto the stack."""
+    start, end, words, shape = drawer
+    texts, boxes = [], []
+    roles = grid_roles(start, words, GRID_DRAWER_ROLES, "the drawer")
+    answers = {}
+    for t, role in roles.items():
+        if role == "text":
+            answers[t] = lambda m: texts.append((s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0,
+                                                 m.arg(2) & 0xFF, m.arg(3), m.arg(4)))
+        elif role == "box":
+            answers[t] = lambda m: boxes.append((s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0, m.arg(2), m.arg(3)))
+        else:
+            answers[t] = lambda m: 0
+    run = MipsRun(sections, answers)
+    run.run(start, (page, GRID_X0, GRID_Y0, 0), ((0x10, 0),))
+    return texts, boxes, run
+
+
+def grid_contiguous(addresses, what):
+    if not addresses:
+        raise GridRefused("%s: nothing copied" % what)
+    lo, hi = min(addresses), max(addresses) + 1
+    if len(addresses) != hi - lo:
+        raise GridRefused("%s: the copied bytes are not one block" % what)
+    return lo, hi
+
+
+def grid_read_copy_drawer(sections, functions, copy):
+    """The drawer of one copy: its grid address, and for each page the drawer
+    can be passed the special draws [(row, colour, count, slot offset)], the
+    label block's source bytes. Every cell outside the special columns of rows
+    3..7 must be drawn one byte at its place, from the one grid address."""
+    drawer = grid_find(functions, GRID_DRAWERS, copy, "drawer")
+    out, grid, block = {}, None, None
+    for page in range(GRID_BLOCK_PAGES):
+        texts, boxes, run = grid_read_drawer(sections, drawer, page)
+        src = grid_contiguous(run.copy_read, "%s's label block" % copy)
+        dst = grid_contiguous(run.copy_written, "%s's label block on the stack" % copy)
+        if src[1] - src[0] != dst[1] - dst[0]:
+            raise GridRefused("%s: the label block is %d bytes read, %d written" % (copy, src[1] - src[0], dst[1] - dst[0]))
+        glyphs = [t for t in texts if not dst[0] <= t[4] < dst[1]]
+        cells = [(r, c) for r in range(GRID_ROWS) for c in range(GRID_COLS) if not (r >= 3 and c >= 10)]
+        if len(glyphs) != len(cells):
+            raise GridRefused("%s: the drawer draws %d cells on page %d, not %d" % (copy, len(glyphs), page, len(cells)))
+        base = glyphs[0][4] - GRID_PAGE * page
+        for (r, c), (x, y, colour, count, ptr) in zip(cells, glyphs):
+            if ptr != base + GRID_PAGE * page + GRID_COLS * r + c or colour != 0 or count != 1:
+                raise GridRefused("%s: the drawer's cell (%d, %d) of page %d is not one byte of the grid" % (copy, r, c, page))
+        if grid is None:
+            grid = base
+        elif base != grid:
+            raise GridRefused("%s: the drawer's grid moves with the page" % copy)
+        rows = {}
+        for x, y, colour, count, ptr in (t for t in texts if dst[0] <= t[4] < dst[1]):
+            r, left = divmod(y - 6, 14)
+            if left or not 3 <= r < GRID_ROWS or r in rows:
+                raise GridRefused("%s: a special label drawn at y %d" % (copy, y))
+            rows[r] = (colour, count, ptr - dst[0])
+        out[page] = rows
+        if block is None:
+            block = src
+        elif block != src:
+            raise GridRefused("%s: the label block moves with the page" % copy)
+    refs = {v for k, op, v in lui_sites(drawer[2])}
+    if grid not in refs:
+        raise GridRefused("%s: the drawer's cells are not at an address its code names" % copy)
+    return drawer, grid, block, out
+
+
+def grid_page_cell(sections, drawer, copy):
+    """The byte every call of the drawer passes as its page (`lui $a0` then
+    `lbu $a0` before the `jal`), and the values stored to it anywhere in the
+    copy's code (a `lui` and an `sb` within eight words): a constant where an
+    `addiu rt, $zero, k` (or $zero itself) sets the stored register in the
+    eight words before the store with nothing else writing it between, else
+    None. Every word of the sections is read, leaf routines included."""
+    cells, stores = set(), []
+    for d, b in kseg0(sections):
+        words = struct.unpack_from("<%dI" % (len(b) // 4), b)
+        for k, w in enumerate(words):
+            if w >> 26 == 0x03 and ((d + 4 * k) & 0xF0000000) | ((w & 0x3FFFFFF) << 2) == drawer[0]:
+                got = None
+                for j in range(k, max(k - 14, -1), -1):
+                    lw = words[j]
+                    if lw >> 26 == 0x24 and (lw >> 16) & 31 == 4 and (lw >> 21) & 31 == 4:
+                        hi = [words[i] for i in range(j - 1, max(j - 9, -1), -1)
+                              if words[i] >> 26 == 0x0F and (words[i] >> 16) & 31 == 4]
+                        if hi:
+                            got = ((hi[0] & 0xFFFF) << 16) + s16(lw)
+                        break
+                cells.add(got)
+    if len(cells) != 1 or None in cells:
+        raise GridRefused("%s: the drawer's callers do not all pass one page byte" % copy)
+    cell = cells.pop() & 0xFFFFFFFF
+
+    def writes(p, reg):
+        op = p >> 26
+        if op == 0:
+            return (p >> 11) & 31 == reg and p & 0x3F not in (0x08, 0x18, 0x19, 0x1A, 0x1B)
+        if op == 0x03:
+            return reg in MIPS_CALL_CLOBBERS
+        return op in (0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F) + tuple(range(0x20, 0x27)) and (p >> 16) & 31 == reg
+
+    for d, b in kseg0(sections):
+        words = struct.unpack_from("<%dI" % (len(b) // 4), b)
+        for k, w in enumerate(words):
+            op, rs, rt = w >> 26, (w >> 21) & 31, (w >> 16) & 31
+            if op != 0x28:
+                continue
+            hi = next((words[i] for i in range(k - 1, max(k - 9, -1), -1)
+                       if words[i] >> 26 == 0x0F and (words[i] >> 16) & 31 == rs), None)
+            if hi is None or (((hi & 0xFFFF) << 16) + s16(w)) & 0xFFFFFFFF != cell:
+                continue
+            value = 0 if rt == 0 else None
+            for j in range(k - 1, max(k - 9, -1), -1):
+                p = words[j]
+                if writes(p, rt):
+                    value = s16(p) if p >> 26 == 0x09 and (p >> 21) & 31 == 0 else None
+                    break
+            stores.append(value)
+    return cell, stores
+
+
+def grid_read_legend(sections, functions, copy, family, page):
+    """The legend of one copy run for `page`: ((w, h) of its box, its calls in
+    order - ("small", x, y, colour, count, pointer, the slot it was loaded from),
+    ("tile", x, y, u, v, CLUT, shade), ("piece", x, y, id, flags, CLUT) - and
+    the address of its table of GRID_ENTRIES string pointers)."""
+    calls = []
+    legend = grid_find(functions, GRID_LEGENDS, copy, "legend")
+    start, end, words, shape = legend
+    if shape[1] != family:
+        raise GridRefused("%s: the legend is %s's, the input step %s's" % (copy, GRID_FAMILIES[shape[1]], GRID_FAMILIES[family]))
+    roles = grid_roles(start, words, shape[3], "the legend")
+    for t, role in roles.items():
+        if role == "tile" and (t not in functions or mips_shape_hash(functions[t][1]) not in GRID_TILE_HELPERS):
+            raise GridRefused("%s: the legend's sprite helper 0x%08X is not of the known shape" % (copy, t))
+    RECT = 0x7E000000
+    boxes, pending = [], []
+    rect = bytes([0x11, 0x22, 0x33, 0x44])
+
+    def small(m):
+        calls.append(("small", s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0, m.arg(2) & 0xFF, m.arg(3),
+                      m.arg(4), m.arg_src(4)))
+
+    def tile(m):
+        calls.append(("tile", s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0, m.arg(2) & 0xFFFF, m.arg(3) & 0xFFFF,
+                      m.arg(4) & 0xFFFF, m.arg(5) & 0xFFFF))
+
+    def piece(m):
+        m.store(RECT, int.from_bytes(rect, "little"), 4)
+        for a in list(m.mem):
+            if a < 0x10000:
+                del m.mem[a]            # the packet's bytes, read back at the commit
+        pending.append((m.arg(0) & 0xFFFF, m.arg(1) & 0xFFFF))
+        return RECT
+
+    def commit(m):
+        if not pending:
+            return 0
+        pid, flags = pending.pop()
+        # The sprite is built where the packet pointer points: a global the
+        # run has not written, so 0 (MipsRun reads unwritten memory as 0).
+        prims, p = sorted(a for a in m.mem if a < 0x10000), 0
+        if not prims or prims[-1] >= 0x14:
+            raise GridRefused("%s: the legend's piece is committed with no sprite of its own written" % copy)
+        if [m.load(p + 0xC, 1), m.load(p + 0xD, 1), m.load(p + 0x10, 1), m.load(p + 0x12, 1)] != list(rect) \
+                or [m.load(p + 4 + i, 1) for i in range(3)] != [0x80] * 3:
+            raise GridRefused("%s: the legend's piece sprite is not the piece's rectangle at shade 0x80" % copy)
+        calls.append(("piece", s16(m.load(p + 8, 2)) - GRID_X0, s16(m.load(p + 0xA, 2)) - GRID_Y0, pid, flags,
+                      m.load(p + 0xE, 2)))
+        return 0
+
+    answers = {}
+    for t, role in roles.items():
+        answers[t] = {"small": small, "tile": tile, "piece": piece, "commit": commit,
+                      "box": lambda m: boxes.append((s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0,
+                                                     m.arg(2), m.arg(3), m.arg(4))),
+                      "clut": lambda m: ((m.arg(1) & 0x1FF) << 6) | ((m.arg(0) >> 4) & 0x3F),
+                      "-": lambda m: 0}[role]
+    MipsRun(sections, answers).run(start, (page, GRID_X0, GRID_Y0))
+    if len(boxes) != 1 or boxes[0][:2] != (3, 3) or boxes[0][4] != 0:
+        raise GridRefused("%s: the legend's box is not one Menu_DrawBox(x + 3, y + 3, w, h, 0, ..)" % copy)
+    if pending:
+        raise GridRefused("%s: the legend's piece is never committed" % copy)
+    # The table the strings come from: the eight words at an address the
+    # legend's code names, every string pointer passed loaded from inside it.
+    table = None
+    used = [c[6] for c in calls if c[0] == "small"]
+    if None in used:
+        raise GridRefused("%s: a legend string not loaded from a table" % copy)
+    for k, op, t in lui_sites(words):
+        if all(t <= u < t + 4 * GRID_ENTRIES and (u - t) % 4 == 0 for u in used):
+            ptrs = [run_word(sections, t + 4 * i) for i in range(GRID_ENTRIES)]
+            if all(p is not None and any(d <= p < d + len(b) for d, b in kseg0(sections)) for p in ptrs):
+                if table not in (None, t):
+                    raise GridRefused("%s: two tables hold the legend's strings" % copy)
+                table = t
+    if table is None:
+        raise GridRefused("%s: no table of %d string pointers holds the legend's strings" % (copy, GRID_ENTRIES))
+    return boxes[0][2:4], calls, table
+
+
+def run_word(sections, va):
+    for d, b in kseg0(sections):
+        if d <= va and va + 4 <= d + len(b):
+            return struct.unpack_from("<I", b, va - d)[0]
+    return None
+
+
+def grid_legend_ops(calls, table, copy):
+    """The legend's calls -> 5a's operations: a text call is op 1, a run of
+    one-character draws of one entry laid on rows and columns op 2 (the
+    leaders), a sprite-helper call op 3, a piece op 4."""
+    def u8(v, what):
+        if not 0 <= v <= 0xFF:
+            raise GridRefused("%s: the legend's %s %d does not fit a byte" % (copy, what, v))
+        return v
+    ops, k = [], 0
+    while k < len(calls):
+        c = calls[k]
+        if c[0] == "small" and c[4] == 1 and k + 1 < len(calls) and calls[k + 1][0] == "small" \
+                and calls[k + 1][4] == 1 and calls[k + 1][6] == c[6]:
+            run = [c]
+            while k + len(run) < len(calls) and calls[k + len(run)][0] == "small" and calls[k + len(run)][4] == 1 \
+                    and calls[k + len(run)][6] == c[6]:
+                run.append(calls[k + len(run)])
+            cols = next((i for i, x in enumerate(run) if x[2] != c[2]), len(run))
+            rows = len(run) // cols
+            xs = run[1][1] - c[1] if cols > 1 else 0
+            ys = run[cols][2] - c[2] if rows > 1 else 0
+            if rows * cols != len(run) or any(x[1] != c[1] + xs * (i % cols) or x[2] != c[2] + ys * (i // cols)
+                                              or x[3] != 0 for i, x in enumerate(run)):
+                raise GridRefused("%s: one-character legend draws not on rows and columns: 5a has no op for them" % copy)
+            ops.append([2, u8(c[1], "x"), u8(c[2], "y"), (c[6] - table) // 4, u8(rows, "rows"), u8(cols, "columns"),
+                        u8(xs, "x step"), u8(ys, "y step")])
+            k += len(run)
+            continue
+        if c[0] == "small":
+            ops.append([1, u8(c[1], "x"), u8(c[2], "y"), (c[6] - table) // 4, 0, u8(c[4], "count"), c[3], 0])
+        elif c[0] == "tile":
+            if c[6] != 0x7F:
+                raise GridRefused("%s: a legend tile at shade 0x%X, 5a's op 3 is 0x7F" % (copy, c[6]))
+            ops.append([3, u8(c[1], "x"), u8(c[2], "y"), u8(c[3], "u tile"), u8(c[4], "v tile"), c[5] & 0xFF, c[5] >> 8, 0])
+        else:
+            ops.append([4, u8(c[1], "x"), u8(c[2], "y"), u8(c[3], "piece"), u8(c[4], "rect flags"), c[5] & 0xFF,
+                        c[5] >> 8, 0])
+        k += 1
+    return ops
+
+
+def grid_small(raw):
+    """A legend string in the layer's encoding for Text_DrawSmall, as kind 7's
+    strings are: a Latin layer's 8 x 8 cells (small_char), a Japanese layer's
+    ordinary glyph codes (ja_fit / encode_text: the ja-JP layer has no 8 x 8
+    set, and 0x516E70 draws a whole 24 x 24 glyph at two thirds,
+    docs/config-screen.md section 4)."""
+    if donor_ja:
+        return encode_text(raw)
+    enc = [small_char(c) for c in raw]
+    return None if any(e is None for e in enc) else b"".join(enc)
+
+
+def grid_cstr(sections, va, room):
+    for d, b in kseg0(sections):
+        if d <= va < d + len(b):
+            end = b.find(b"\0", va - d, va - d + room)
+            return b[va - d:end] if end >= 0 else b[va - d:va - d + room]
+    raise GridRefused("a string at 0x%08X outside the module" % va)
+
+
+def read_name_grid(disc):
+    """The disc's name grid as a reading (name_grid_payload's input), or GridRefused."""
+    if is_psp(disc) and not donor_ja:
+        raise GridRefused("a PSP disc in English: its EMIs are the Japan build's, its own code is Allegrex "
+                          "and its legend was not found (call 8)")
+    copies, grid_bytes, family, first, pages = [], None, None, None, None
+    code_maps = []
+    for copy in GRID_COPIES:
+        found = disc.find(copy)
+        if not found:
+            raise GridRefused("no %s on the disc" % copy)
+        sections = emi_sections(disc.read(found[0]))
+        functions = mips_functions(sections)
+        inp = grid_find(functions, GRID_INPUTS, copy, "input step")
+        fam = inp[3][1]
+        if family not in (None, fam):
+            raise GridRefused("START's input step is %s's, COMMU02's %s's" % (GRID_FAMILIES[family], GRID_FAMILIES[fam]))
+        family = fam
+        drawer, grid, (src_lo, src_hi), specials = grid_read_copy_drawer(sections, functions, copy)
+        if drawer[3][1] != family:
+            raise GridRefused("%s: the drawer is %s's, the input step %s's" % (copy, GRID_FAMILIES[drawer[3][1]], GRID_FAMILIES[family]))
+        block = bytes(MipsRun(sections, {}).load(grid + i, 1) for i in range(GRID_PAGE * GRID_BLOCK_PAGES))
+        if not all(any(d <= grid + i < d + len(b) for d, b in kseg0(sections)) for i in (0, len(block) - 1)):
+            raise GridRefused("%s: the grid runs out of the module" % copy)
+        if grid_bytes is None:
+            grid_bytes = block
+        elif block != grid_bytes:
+            raise GridRefused("START's grid and COMMU02's differ (M2 found them equal in every build)")
+        cell, stores = grid_page_cell(sections, drawer, copy)
+        if family == 1:
+            consts = set(stores)
+            if not stores or None in consts or len(consts) != 1 or not 0 <= min(consts) < GRID_BLOCK_PAGES:
+                raise GridRefused("%s: the page byte is not one constant page (%d stores)" % (copy, len(stores)))
+            f, p = consts.pop(), 1
+        else:
+            # The input step's page change is computed (a store not of a
+            # constant); a constant store is a reset, to the first page.
+            if None not in stores:
+                raise GridRefused("%s: nothing changes the page byte: no page cycle to read" % copy)
+            if any(v not in (None, 0) for v in stores):
+                raise GridRefused("%s: the page byte is set to page %s" % (copy, [v for v in stores if v]))
+            f, p = 0, GRID_BLOCK_PAGES
+        if (f, p) != GRID_FAMILY_PAGES[family]:
+            raise GridRefused("%s: pages %d..%d, 5a holds %d..%d for %s" % (copy, f, f + p - 1, GRID_FAMILY_PAGES[family][0],
+                              sum(GRID_FAMILY_PAGES[family]) - 1, GRID_FAMILIES[family]))
+        if first not in (None, f):
+            raise GridRefused("START's page and COMMU02's differ")
+        first, pages = f, p
+        # The code map off the drawer's special draws, for each page in use.
+        codes = {}
+        counts = set()
+        for page in range(first, first + pages):
+            seen = set()
+            for row, (colour, count, off) in sorted(specials[page].items()):
+                code = block[GRID_PAGE * page + GRID_COLS * row + 10]
+                if code in seen:
+                    raise GridRefused("%s: code %d labelled twice on page %d" % (copy, code, page))
+                seen.add(code)
+                codes.setdefault(code, []).append((page, colour, off))
+                counts.add(count)
+        if len(counts) != 1:
+            raise GridRefused("%s: the labels are drawn with %d counts" % (copy, len(counts)))
+        width = counts.pop()
+        size = src_hi - src_lo
+        if not width or size % width:
+            raise GridRefused("%s: a label block of %d bytes in slots of %d" % (copy, size, width))
+        n_codes = GRID_FAMILY_CODES[family]
+        if sorted(codes) != list(range(1, n_codes + 1)):
+            raise GridRefused("%s: labels for codes %s, the family has 1..%d" % (copy, sorted(codes), n_codes))
+        cmap = []
+        for code in range(1, n_codes + 1):
+            seen = codes[code]
+            if len(seen) != pages or len({c for _, c, _ in seen}) != 1 or any(o % width for _, _, o in seen):
+                raise GridRefused("%s: code %d's label is not one colour and one slot a page" % (copy, code))
+            offs = [o // width for _, _, o in seen]
+            if len(set(offs)) == 1:
+                slot, flags = offs[0], 0
+            elif offs == [offs[0] - first + pg for pg in range(first, first + pages)]:
+                slot, flags = offs[0] - first, 1
+            else:
+                raise GridRefused("%s: code %d's label slot follows the page in no way 5a holds" % (copy, code))
+            cmap.append((GRID_ACTIONS[family][code - 1], slot, flags, seen[0][1]))
+        code_maps.append(cmap)
+        raws = [grid_cstr(sections, src_lo + width * k, width) for k in range(size // width)]
+        # The legend, run on two pages: an entry that moves with the page is
+        # 5a's "entry + the page's number".
+        box, calls0, table = grid_read_legend(sections, functions, copy, family, 0)
+        box1, calls1, table1 = grid_read_legend(sections, functions, copy, family, 1)
+        ops0, ops1 = grid_legend_ops(calls0, table, copy), grid_legend_ops(calls1, table1, copy)
+        if box1 != box or table1 != table or len(ops0) != len(ops1):
+            raise GridRefused("%s: the legend's shape changes with the page" % copy)
+        for a, b in zip(ops0, ops1):
+            if a == b:
+                continue
+            if a[0] == 1 and b[:3] == a[:3] and b[3] == a[3] + 1 and b[4:] == a[4:]:
+                a[4] |= 1
+                continue
+            raise GridRefused("%s: a legend draw changes with the page in a way 5a cannot hold" % copy)
+        entries = [grid_cstr(sections, run_word(sections, table + 4 * i), 64) for i in range(GRID_ENTRIES)]
+        copies.append({"copy": copy, "count": width, "raw_labels": raws, "box": box,
+                       "raw_entries": entries, "ops": [tuple(o) for o in ops0]})
+    if code_maps[0] != code_maps[1]:
+        raise GridRefused("START's code map and COMMU02's differ (5a has one map for both copies)")
+    if len(copies[0]["raw_labels"]) != len(copies[1]["raw_labels"]):
+        raise GridRefused("START's label block has %d slots, COMMU02's %d (5a: the same in both)"
+                          % (len(copies[0]["raw_labels"]), len(copies[1]["raw_labels"])))
+    return {"family": family, "first": first, "pages": pages, "block": grid_bytes, "codes": code_maps[0],
+            "copies": copies}
+
+
+def encode_name_grid(reading, build, notes):
+    """A reading in the layer's encodings -> 5a's fields (name_grid_payload's input), or GridRefused."""
+    family, first, pages, block = reading["family"], reading["first"], reading["pages"], reading["block"]
+    n_codes = len(reading["codes"])
+    cells = []
+    for page in range(first, first + pages):
+        for r in range(GRID_ROWS):
+            for c in range(GRID_COLS):
+                code = block[GRID_PAGE * page + GRID_COLS * r + c]
+                special = r >= 3 and c >= 10
+                if code == 0:
+                    cells.append((0, 0, 0, 0))
+                elif special:
+                    if not 1 <= code <= n_codes:
+                        raise GridRefused("page %d row %d column %d: code %d in a special cell" % (page, r, c, code))
+                    cells.append((code, 3, 0, 0))
+                else:
+                    e = encode_char(code) if code >= GRID_GLYPH_MIN else None
+                    if e is None or len(e) not in (1, 2):
+                        raise GridRefused("page %d row %d column %d: code 0x%02X has no encoding in this layer"
+                                          % (page, r, c, code))
+                    cells.append((code, len(e), e[0], e[1] if len(e) == 2 else 0))
+    copies = []
+    for cp in reading["copies"]:
+        labels = []
+        for k, raw in enumerate(cp["raw_labels"]):
+            e = encode_text(raw)
+            if e is None:
+                raise GridRefused("%s: label slot %d has a code this layer cannot encode" % (cp["copy"], k))
+            labels.append(e)
+        named = set()
+        for op in cp["ops"]:
+            if op[0] in (1, 2):
+                named.update(op[3] + (first + pg if op[0] == 1 and op[4] & 1 else 0) for pg in range(pages))
+        entries = []
+        for k, raw in enumerate(cp["raw_entries"]):
+            e = grid_small(raw)
+            if e is None:
+                if k in named:
+                    raise GridRefused("%s: legend entry %d has a code this layer's small text cannot encode" % (cp["copy"], k))
+                notes.append("%s: legend entry %d, which no draw names, does not encode; left empty" % (cp["copy"], k))
+                e = b""
+            entries.append(e)
+        copies.append({"slots": len(labels), "count": cp["count"], "labels": labels, "box": cp["box"],
+                       "entries": entries, "ops": cp["ops"]})
+    return {"version": GRID_VERSION, "family": family, "first": first, "pages": pages, "build": build,
+            "cells": cells, "codes": reading["codes"], "copies": copies}
+
+
+def name_grid_payload(g):
+    """5a's chunk from its fields: the header, the grid, the code map, START's
+    labels and legend, COMMU02's."""
+    build = g["build"].encode("ascii")
+    out = bytearray([g["version"], g["family"], g["pages"], g["first"], len(g["codes"]), 0, 0, 0])
+    out += build.ljust(GRID_ID_ROOM, b"\0")[:GRID_ID_ROOM]
+    for cell in g["cells"]:
+        out += bytes(cell)
+    for code in g["codes"]:
+        out += bytes(code)
+    for cp in g["copies"]:
+        room = max([len(s) + 1 for s in cp["labels"]] + [2])
+        out += bytes([cp["slots"], cp["count"], room, 0])
+        for s in cp["labels"]:
+            out += s.ljust(room, b"\0")
+        room2 = max([len(s) + 1 for s in cp["entries"]] + [2])
+        out += bytes([cp["box"][0], cp["box"][1], len(cp["entries"]), room2, len(cp["ops"]), 0, 0, 0])
+        for s in cp["entries"]:
+            out += s.ljust(room2, b"\0")
+        for op in cp["ops"]:
+            out += bytes(op)
+    return bytes(out)
+
+
+def name_grid_decode(payload):
+    """5a's chunk -> its fields (name_grid_payload's input, with each copy's
+    rooms), or ValueError where it does not parse."""
+    b = payload
+    if len(b) < GRID_HEADER:
+        raise ValueError("shorter than the header")
+    g = {"version": b[0], "family": b[1], "pages": b[2], "first": b[3], "zero": bytes(b[5:8]),
+         "build_raw": bytes(b[8:GRID_HEADER])}
+    n_codes, at = b[4], GRID_HEADER
+    need = at + g["pages"] * GRID_PAGE * 4 + n_codes * 4
+    if len(b) < need:
+        raise ValueError("shorter than its grid and code map")
+    g["cells"] = [tuple(b[at + 4 * i:at + 4 * i + 4]) for i in range(g["pages"] * GRID_PAGE)]
+    at += 4 * len(g["cells"])
+    g["codes"] = [tuple(b[at + 4 * i:at + 4 * i + 4]) for i in range(n_codes)]
+    at += 4 * n_codes
+    g["copies"] = []
+    for k in range(len(GRID_COPIES)):
+        if len(b) < at + 4:
+            raise ValueError("copy %d: no label block" % k)
+        slots, count, room, zero = b[at:at + 4]
+        at += 4
+        if len(b) < at + slots * room:
+            raise ValueError("copy %d: its label slots run past the end" % k)
+        labels = [bytes(b[at + room * i:at + room * (i + 1)]) for i in range(slots)]
+        at += slots * room
+        if len(b) < at + 8:
+            raise ValueError("copy %d: no legend block" % k)
+        w, h, n_entries, room2, n_ops = b[at:at + 5]
+        lzero = bytes(b[at + 5:at + 8])
+        at += 8
+        if len(b) < at + n_entries * room2 + 8 * n_ops:
+            raise ValueError("copy %d: its legend runs past the end" % k)
+        entries = [bytes(b[at + room2 * i:at + room2 * (i + 1)]) for i in range(n_entries)]
+        at += n_entries * room2
+        ops = [tuple(b[at + 8 * i:at + 8 * i + 8]) for i in range(n_ops)]
+        at += 8 * n_ops
+        g["copies"].append({"slots": slots, "count": count, "room": room, "zero": zero, "label_slots": labels,
+                            "box": (w, h), "room2": room2, "lzero": lzero, "entry_slots": entries, "ops": ops})
+    g["trailing"] = len(b) - at
+    return g
+
+
+def name_grid_check(payload):
+    """Every rule of 5a on a kind-22 chunk - its fields' Valid columns and
+    "What makes a chunk pass" - as the engine's take applies them: the
+    errors, [] when it passes. The builder writes no chunk this refuses."""
+    try:
+        g = name_grid_decode(payload)
+    except ValueError as e:
+        return ["the chunk does not parse: %s" % e]
+    errs = []
+    fam, P, F, C = g["family"], g["pages"], g["first"], len(g["codes"])
+    if g["version"] != GRID_VERSION:
+        errs.append("version %d" % g["version"])
+    if fam not in GRID_FAMILIES:
+        return errs + ["family %d" % fam]
+    if (F, P) != GRID_FAMILY_PAGES[fam] or F + P > GRID_BLOCK_PAGES:
+        errs.append("pages %d from %d for the %s family" % (P, F, GRID_FAMILIES[fam]))
+    if C != GRID_FAMILY_CODES[fam]:
+        errs.append("%d special codes for the %s family" % (C, GRID_FAMILIES[fam]))
+    if any(g["zero"]):
+        errs.append("header bytes 5..7 not zero")
+    raw = g["build_raw"].rstrip(b"\0")
+    if not raw or b"\0" in raw or not all(0x20 <= c < 0x7F for c in raw):
+        errs.append("the build id is not printable ASCII then NULs")
+    if g["trailing"]:
+        errs.append("%d bytes after COMMU02's legend" % g["trailing"])
+    # The cells.
+    for i, (code, kind, b0, b1) in enumerate(g["cells"]):
+        where = "page %d row %d column %d" % (F + i // GRID_PAGE, i % GRID_PAGE // GRID_COLS, i % GRID_COLS)
+        ok = (kind == 0 and code == 0 and b0 == 0 and b1 == 0) or \
+             (kind == 1 and code >= GRID_GLYPH_MIN and 0x01 <= b0 <= 0x7F and b1 == 0) or \
+             (kind == 2 and code >= GRID_GLYPH_MIN and b0 >= 0x80) or \
+             (kind == 3 and 1 <= code <= C and b0 == 0 and b1 == 0)
+        if not ok:
+            errs.append("%s: kind %d code %d bytes %02X %02X" % (where, kind, code, b0, b1))
+    pages_cells = [g["cells"][GRID_PAGE * p:GRID_PAGE * (p + 1)] for p in range(P)]
+    for p, cells in enumerate(pages_cells):
+        at = lambda r, c: cells[GRID_COLS * r + c]
+        for r in range(GRID_ROWS):
+            for c in range(GRID_COLS):
+                kind = at(r, c)[1]
+                if r >= 3 and c >= 10:
+                    if kind not in (0, 3):
+                        errs.append("page %d row %d column %d: a glyph in a special cell" % (F + p, r, c))
+                elif kind == 3:
+                    errs.append("page %d row %d column %d: a special outside columns 10..11 of rows 3..7" % (F + p, r, c))
+        rows = {}
+        for r in range(3, GRID_ROWS):
+            if at(r, 10) != at(r, 11):
+                errs.append("page %d row %d: columns 10 and 11 differ" % (F + p, r))
+            if at(r, 10)[1] == 3:
+                rows.setdefault(at(r, 10)[0], []).append(r)
+        if sorted(rows) != list(range(1, C + 1)) or any(len(v) != 1 for v in rows.values()):
+            errs.append("page %d: the special codes are not 1..%d once each" % (F + p, C))
+        if any(at(0, c)[1] == 0 for c in range(GRID_COLS)):
+            errs.append("page %d: an empty cell in row 0" % (F + p))
+    enc, codes_of = {}, {}
+    for code, kind, b0, b1 in g["cells"]:
+        if kind in (1, 2):
+            e = (b0, b1) if kind == 2 else (b0,)
+            enc.setdefault(code, set()).add(e)
+            codes_of.setdefault(e, set()).add(code)
+    if any(len(v) > 1 for v in enc.values()):
+        errs.append("a disc code with two encodings")
+    if any(len(v) > 1 for v in codes_of.values()):
+        errs.append("two disc codes with one encoding")
+    if GRID_SPACE not in enc:
+        errs.append("no glyph of code 0x%02X (the space)" % GRID_SPACE)
+    # The code map.
+    actions = [c[0] for c in g["codes"]]
+    for a in (1, 2, 4, 5):
+        if actions.count(a) != 1:
+            errs.append("action %d %d times in the code map" % (a, actions.count(a)))
+    if actions.count(3) != (1 if P > 1 else 0) or any(a not in (1, 2, 3, 4, 5) for a in actions):
+        errs.append("the code map's actions %s for %d pages" % (actions, P))
+    slots = {cp["slots"] for cp in g["copies"]}
+    if len(slots) != 1:
+        errs.append("the copies' slot counts differ")
+    S = min(slots) if slots else 0
+    named = set()
+    for k, (action, slot, flags, colour) in enumerate(g["codes"]):
+        if flags & ~1:
+            errs.append("code %d: flags 0x%02X" % (k + 1, flags))
+        top = slot + (F + P - 1 if flags & 1 else 0)
+        if top >= S:
+            errs.append("code %d: label slot %d past the %d slots" % (k + 1, top, S))
+        named.update(slot + (F + p if flags & 1 else 0) for p in range(P))
+    # The copies.
+    for k, cp in enumerate(g["copies"]):
+        name = GRID_COPIES[k]
+        if not 1 <= cp["count"] <= 15 or not 2 <= cp["room"] <= 32 or cp["zero"]:
+            errs.append("%s: label block count %d room %d" % (name, cp["count"], cp["room"]))
+        for i, s in enumerate(cp["label_slots"]):
+            if b"\0" not in s or any(s[s.index(b"\0"):]):
+                errs.append("%s: label slot %d not NUL-terminated and NUL-filled" % (name, i))
+            elif i in named and not s[0]:
+                errs.append("%s: label slot %d is named and empty" % (name, i))
+        if cp["box"] != GRID_LEGEND_BOX[name]:
+            errs.append("%s: legend box %s" % (name, cp["box"]))
+        E = len(cp["entry_slots"])
+        if E != GRID_ENTRIES or not 2 <= cp["room2"] <= 32 or not 1 <= len(cp["ops"]) <= 32 or any(cp["lzero"]):
+            errs.append("%s: legend block %d entries room %d, %d ops" % (name, E, cp["room2"], len(cp["ops"])))
+        lnamed = set()
+        for i, op in enumerate(cp["ops"]):
+            kind = op[0]
+            if kind == 1:
+                bad = op[4] & ~1 or op[5] < 1 or op[7]
+                lnamed.update(op[3] + (F + p if op[4] & 1 else 0) for p in range(P))
+            elif kind == 2:
+                bad = op[4] < 1 or op[5] < 1
+                lnamed.add(op[3])
+            elif kind in (3, 4):
+                bad = (op[5] | op[6] << 8) & GRID_CLUT_RESERVED or op[7]
+            else:
+                bad = True
+            if bad:
+                errs.append("%s: legend op %d %s" % (name, i, bytes(op).hex(" ")))
+        for e in sorted(lnamed):
+            if e >= E:
+                errs.append("%s: a legend op names entry %d of %d" % (name, e, E))
+        for i, s in enumerate(cp["entry_slots"]):
+            if b"\0" not in s or any(s[s.index(b"\0"):]):
+                errs.append("%s: legend entry %d not NUL-terminated and NUL-filled" % (name, i))
+            elif i in lnamed and not s[0]:
+                errs.append("%s: legend entry %d is named and empty" % (name, i))
+    return errs
+
+
+def convert_name_grid(disc, build, report):
+    """[(KIND_NAME_GRID, 0, payload)] for FIRST.DAT, or [] with the reason in `report`."""
+    notes = []
+    try:
+        reading = read_name_grid(disc)
+        fields = encode_name_grid(reading, build or "unknown", notes)
+    except (GridRefused, MipsError) as e:
+        report.append("none: %s" % e)
+        return []
+    payload = name_grid_payload(fields)
+    errs = name_grid_check(payload)
+    if errs:
+        report.append("none: the chunk would fail 5a's pass rules (%s)" % "; ".join(errs[:6]))
+        return []
+    kinds = [c[1] for c in fields["cells"]]
+    report.append("%s, page%s %s, %d glyph / %d empty / %d special cells, %d codes, label slots %s, legend ops %s%s"
+                  % (GRID_FAMILIES[fields["family"]], "s" if fields["pages"] > 1 else "",
+                     "..".join(str(p) for p in sorted({fields["first"], fields["first"] + fields["pages"] - 1})),
+                     kinds.count(1) + kinds.count(2), kinds.count(0), kinds.count(3), len(fields["codes"]),
+                     "/".join(str(cp["slots"]) for cp in fields["copies"]),
+                     "/".join(str(len(cp["ops"])) for cp in fields["copies"]),
+                     "".join("; " + n for n in notes)))
+    return [(KIND_NAME_GRID, 0, payload)]
+
+
+def grid_build_id(args, disc, path):
+    """The fixtures.toml build of the disc, for kind 22's header (its log line):
+    --build, a PSP disc's own, or the disc identified (every file hashed); an
+    unheld disc is "unheld", and so is tools/disc_patch_build.py's hybrid (a
+    romhack's sections in the original disc: `disc_opener` is not the plain
+    reader, and the path is the original's, which would identify as it)."""
+    if getattr(args, "build", None):
+        return args.build
+    if is_psp(disc):
+        return disc.build
+    if disc_opener is not psx_disc.Disc:
+        return "unheld"
+    import importer
+    found = importer.identify(path) if isinstance(path, str) and os.path.exists(path) else None
+    return found[0] if found else "unheld"
+
+
 def reset_donor():
     """The module state one donor leaves for the next (`--discs` builds several
     in one process): the Latin atlas's extension, the Japanese flag, the pair
@@ -5261,7 +6315,7 @@ def cmd_all_discs(args):
             rows.append((p, bid, tag, "would build %s.*.DAT" % tag))
             continue
         print("\n== %s: %s, overlays %s.*.DAT ==" % (p, bid, tag))
-        args.lang = tag
+        args.lang, args.build = tag, bid
         n = build_all(args, p)
         rows.append((p, bid, tag, "built %d overlay files" % n))
     w = max(len(r[0]) for r in rows)
@@ -5520,6 +6574,11 @@ def build_all(args, disc_path):
         print("save names: " + ("8 and 60, card file name %s (kind %d, for the save editor)"
                                 % (saves[0][2][1:21].rstrip(b"\0").decode("ascii"), KIND_SAVE_NAMES)
                                 if saves else "none (no card saves on this disc, or a part not found)"))
+        # Kind 22, the name entry's grid (docs/new-game-round.md 5a): the disc's own codes, each cell
+        # in this layer's encoding. None where the disc's routine is not read whole; the layer is then as before.
+        report = []
+        overlays["FIRST.DAT"] += convert_name_grid(disc, grid_build_id(args, disc, disc_path), report)
+        print("name grid (kind %d): %s" % (KIND_NAME_GRID, report[0]))
     for name, chunks in overlays.items():
         write_overlay(src.out_path(args.lang, name), chunks)
     how = "left empty, disc-only" if src.disc_only else "kept as shipped"
@@ -6154,7 +7213,232 @@ def selftest_save_names():
     print("  save names: the chunk whole or not at all; no card file name, no chunk; a short list refused")
 
 
+def mips_asm(kind, *f):
+    """One R3000 word, for the self-test's made-up routines: ("i", op, rs, rt, imm),
+    ("r", funct, rs, rt, rd, sa), ("j", op, target)."""
+    if kind == "i":
+        op, rs, rt, imm = f
+        return (op << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    if kind == "r":
+        funct, rs, rt, rd, sa = f
+        return (rs << 21) | (rt << 16) | (rd << 11) | (sa << 6) | funct
+    op, target = f
+    return (op << 26) | ((target >> 2) & 0x3FFFFFF)
+
+
+def name_grid_synthetic(family):
+    """A made-up kind-22 reading (no disc's): a grid of letters and digits in
+    this family's shape, labels and legend strings of made-up letters, and a
+    legend of every op kind. Codes are the Latin donor's (ASCII letters and
+    digits, 0xFF the space) or, for Japan, the Japanese kana codes."""
+    first, pages = GRID_FAMILY_PAGES[family]
+    n_codes = GRID_FAMILY_CODES[family]
+    block = bytearray(GRID_PAGE * GRID_BLOCK_PAGES)
+    glyphs = (list(range(0x41, 0x5B)) + list(range(0x61, 0x7B)) + list(range(0x30, 0x3A))) if family else \
+        list(range(0x5B, 0xFE))
+    k = 0
+    for page in range(first, first + pages):
+        for r in range(GRID_ROWS):
+            for c in range(GRID_COLS):
+                at = GRID_PAGE * page + GRID_COLS * r + c
+                if r >= 3 and c >= 10:
+                    block[at] = r - 2 if r - 2 <= n_codes else 0
+                elif r == 2 and c >= 8 and page == first + pages - 1:
+                    block[at] = 0                       # a hole, as the discs' last pages have
+                elif r == 1 and c == 0 and page == first:
+                    block[at] = GRID_SPACE
+                else:
+                    block[at] = glyphs[k % len(glyphs)]
+                    k += 1
+    codes = [(GRID_ACTIONS[family][i], i, 0, 4 if i < 2 else 2) for i in range(n_codes)]
+    if family == 0:
+        codes[2] = (3, 4, 1, 4)                         # its label names the page
+    word = [0x41, 0x42, 0x43] if family else [0x5B, 0x5C, 0x5D]
+    copies = []
+    for copy in GRID_COPIES:
+        slots = 7 if family == 0 else 4
+        ops = [(1, 0x2A, 6 + 8 * i, i, 0, 0x10, 0, 0) for i in range(3)]
+        if family == 0:
+            ops.append((1, 0x2A, 0x1E, 4, 1, 0x10, 0, 0))
+        ops += [(2, 0x1A, 6, 7, 5, 3, 4, 8), (3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0)]
+        if copy == "START.EMI":
+            ops.insert(0, (4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0))
+        copies.append({"copy": copy, "count": 4 if family == 0 else 5,
+                       "raw_labels": [bytes(word[:1 + i % 3]) for i in range(slots)],
+                       "box": GRID_LEGEND_BOX[copy], "raw_entries": [bytes(word[:1 + i % 3]) for i in range(GRID_ENTRIES)],
+                       "ops": ops})
+    return {"family": family, "first": first, "pages": pages, "block": bytes(block), "codes": codes, "copies": copies}
+
+
+def name_grid_selfcheck():
+    """Kind 22 on made-up data (no game data): the interpreter on a made-up
+    routine; a synthetic grid of each family built, carried in a synthetic
+    FIRST.DAT layer, taken back and decoded to what went in; every rule of 5a
+    broken once and refused; the encodings' refusals. The errors, [] if all hold."""
+    errs = []
+    # The interpreter: a loop of three calls with the delay slots, an unaligned
+    # lwl / lwr copy onto the stack, a pointer passed on the stack with its source.
+    data = 0x80100000
+    code = [mips_asm("i", 0x09, 29, 29, -0x20),                 # addiu sp, sp, -0x20
+            mips_asm("i", 0x0F, 0, 9, data >> 16),              # lui t1, data
+            mips_asm("i", 0x09, 9, 9, 0x141),                   # addiu t1, t1, 0x141 (unaligned)
+            mips_asm("i", 0x22, 9, 3, 3),                       # lwl v1, 3(t1)
+            mips_asm("i", 0x26, 9, 3, 0),                       # lwr v1, 0(t1)
+            mips_asm("i", 0x2A, 29, 3, 0x1B),                   # swl v1, 0x1B(sp)
+            mips_asm("i", 0x2E, 29, 3, 0x18),                   # swr v1, 0x18(sp)
+            mips_asm("i", 0x09, 0, 16, 0),                      # addiu s0, zero, 0
+            mips_asm("i", 0x23, 9, 2, 0x3F),                    # lw v0, 0x3F(t1) = data + 0x180
+            mips_asm("i", 0x2B, 29, 2, 0x10),                   # sw v0, 0x10(sp)
+            mips_asm("r", 0x21, 16, 0, 4, 0),                   # loop: addu a0, s0, zero
+            mips_asm("j", 0x03, 0x80100100),                    # jal the callee
+            mips_asm("i", 0x09, 0, 5, 7),                       # addiu a1, zero, 7 (delay slot)
+            mips_asm("i", 0x09, 16, 16, 1),                     # addiu s0, s0, 1
+            mips_asm("i", 0x0B, 16, 8, 3),                      # sltiu t0, s0, 3
+            mips_asm("i", 0x05, 8, 0, -6 & 0xFFFF),             # bnez t0, loop
+            mips_asm("r", 0x00, 0, 0, 0, 0),                    # nop
+            mips_asm("r", 0x08, 31, 0, 0, 0),                   # jr ra
+            mips_asm("i", 0x09, 29, 29, 0x20)]                  # addiu sp, sp, 0x20
+    body = bytearray(0x200)
+    struct.pack_into("<%dI" % len(code), body, 0, *code)
+    body[0x141:0x145] = b"WXYZ"
+    struct.pack_into("<I", body, 0x180, data + 0x1C0)
+    seen = []
+    run = MipsRun([(data, bytes(body))], {0x80100100: lambda m: seen.append((m.arg(0), m.arg(1), m.arg(4), m.arg_src(4),
+                                                                           m.load(m.r[29] + 0x18, 4)))})
+    run.run(data)
+    want = [(i, 7, data + 0x1C0, data + 0x180, int.from_bytes(b"WXYZ", "little")) for i in range(3)]
+    if seen != want or run.copy_read != set(range(data + 0x141, data + 0x145)) or len(run.copy_written) != 4:
+        errs.append("MipsRun: the made-up routine's calls %s, copied %d / %d bytes" % (seen, len(run.copy_read),
+                                                                                     len(run.copy_written)))
+    global donor_ja
+    saved = donor_ja
+    try:
+        for family in (1, 0):
+            donor_ja = family == 0
+            reading = name_grid_synthetic(family)
+            notes = []
+            fields = encode_name_grid(reading, "synthetic", notes)
+            payload = name_grid_payload(fields)
+            got = name_grid_check(payload)
+            if got:
+                errs.append("%s synthetic grid refused: %s" % (GRID_FAMILIES[family], got[:3]))
+                continue
+            with tempfile.TemporaryDirectory() as d:
+                path = os.path.join(d, "xx-XX.FIRST.DAT")
+                write_overlay(path, [(KIND_CONFIG, 0, b"\x06synthetic\0"), (KIND_NAME_GRID, 0, payload),
+                                     (KIND_SAVE_NAMES, 0, b"\x01")])
+                blob, chunks = dat.load(path)
+                taken = [blob[c.offset:c.offset + c.size] for c in chunks if (c.kind, c.tag) == (KIND_NAME_GRID, 0)]
+            if taken != [payload]:
+                errs.append("%s: the layer does not give the chunk back whole" % GRID_FAMILIES[family])
+                continue
+            g = name_grid_decode(taken[0])
+            back = {"cells": g["cells"], "codes": g["codes"],
+                    "labels": [[s.split(b"\0")[0] for s in cp["label_slots"]] for cp in g["copies"]],
+                    "entries": [[s.split(b"\0")[0] for s in cp["entry_slots"]] for cp in g["copies"]],
+                    "ops": [cp["ops"] for cp in g["copies"]], "boxes": [cp["box"] for cp in g["copies"]],
+                    "head": (g["family"], g["first"], g["pages"], g["build_raw"].rstrip(b"\0"))}
+            sent = {"cells": [tuple(c) for c in fields["cells"]], "codes": [tuple(c) for c in fields["codes"]],
+                    "labels": [cp["labels"] for cp in fields["copies"]], "entries": [cp["entries"] for cp in fields["copies"]],
+                    "ops": [[tuple(o) for o in cp["ops"]] for cp in fields["copies"]],
+                    "boxes": [tuple(cp["box"]) for cp in fields["copies"]],
+                    "head": (family, fields["first"], fields["pages"], b"synthetic")}
+            if back != sent:
+                errs.append("%s: decoded %s" % (GRID_FAMILIES[family], [k for k in sent if back[k] != sent[k]]))
+            # Each rule broken once.
+            n_cells = 4 * GRID_PAGE * fields["pages"]
+            at_code = GRID_HEADER + n_cells
+            at_copy = at_code + 4 * len(fields["codes"])
+            first_label = at_copy + 4
+            room = payload[at_copy + 2]
+            legend = first_label + fields["copies"][0]["slots"] * room
+            room2, n_ops = payload[legend + 3], payload[legend + 4]
+            first_op = legend + 8 + GRID_ENTRIES * room2
+            cell = lambda r, c, page=0: GRID_HEADER + 4 * (GRID_PAGE * page + GRID_COLS * r + c)
+            space = next(i for i, c in enumerate(fields["cells"]) if c[0] == GRID_SPACE)
+            letter = next(i for i, c in enumerate(fields["cells"]) if c[1] in (1, 2) and c[0] != GRID_SPACE)
+            other = next(i for i, c in enumerate(fields["cells"]) if c[1] in (1, 2) and c[0] not in (GRID_SPACE, fields["cells"][letter][0]))
+            broken = {
+                "a version 2": [(0, 2)],
+                "another family": [(1, 1 - family)],
+                "a page too many": [(2, fields["pages"] + 1)],
+                "a non-zero header byte": [(6, 1)],
+                "a build id with a control byte": [(8, 1)],
+                "an empty cell in row 0": [(cell(0, 1) + i, 0) for i in range(4)],
+                "a glyph of code 3": [(cell(0, 2), 3)],
+                "a special outside columns 10..11": [(cell(1, 4) + 1, 3), (cell(1, 4), 1), (cell(1, 4) + 2, 0), (cell(1, 4) + 3, 0)],
+                "columns 10 and 11 apart": [(cell(3, 11), 2)],
+                "a special code twice on a page": [(cell(4, 10), 1), (cell(4, 11), 1)],
+                "two codes on one encoding": [(GRID_HEADER + 4 * other + 1, payload[GRID_HEADER + 4 * letter + 1]),
+                                              (GRID_HEADER + 4 * other + 2, payload[GRID_HEADER + 4 * letter + 2]),
+                                              (GRID_HEADER + 4 * other + 3, payload[GRID_HEADER + 4 * letter + 3])],
+                "no space glyph": [(GRID_HEADER + 4 * space, 0x7F)],
+                "a kind-1 byte above 0x7F": [(GRID_HEADER + 4 * space + 2, 0x80)],
+                "an action twice": [(at_code + 4, 1)],
+                "a label slot past S": [(at_code + 1, 0x20)],
+                "a flag bit 1": [(at_code + 2, 2)],
+                "a named label slot empty": [(first_label + 0, 0)],
+                "a label slot not NUL-filled": [(first_label + room - 1, 0x41)],
+                "a draw count of 0": [(at_copy + 1, 0)],
+                "another legend box": [(legend, 0x50)],
+                "a CLUT with bit 15": [(first_op + 8 * (n_ops - 1) + 6, 0xF8)],
+                "an unknown op": [(first_op, 9)],
+                "an op naming entry 8": [(first_op + 8 * (n_ops - 2) + 3, GRID_ENTRIES)],
+            }
+            for what, edits in broken.items():
+                bad = bytearray(payload)
+                for off, v in edits:
+                    bad[off] = v
+                if not name_grid_check(bytes(bad)):
+                    errs.append("%s: %s passes" % (GRID_FAMILIES[family], what))
+            for what, bad in (("a trailing byte", payload + b"\0"), ("a cut chunk", payload[:-1]),
+                              ("the header alone", payload[:GRID_HEADER])):
+                if not name_grid_check(bad):
+                    errs.append("%s: %s passes" % (GRID_FAMILIES[family], what))
+            # The encodings' refusals: a cell the layer cannot encode, a named
+            # legend entry it cannot; an unnamed one is left empty, with a note.
+            r2 = name_grid_synthetic(family)
+            blk = bytearray(r2["block"])
+            blk[GRID_PAGE * r2["first"] + 5] = 0x01
+            r2["block"] = bytes(blk)
+            try:
+                encode_name_grid(r2, "synthetic", [])
+                errs.append("%s: a cell of code 1 encoded" % GRID_FAMILIES[family])
+            except GridRefused:
+                pass
+            for entry, named in ((0, True), (3, False)):
+                r3 = name_grid_synthetic(family)
+                r3["copies"][1]["raw_entries"][entry] = b"\x01"
+                notes = []
+                try:
+                    f3 = encode_name_grid(r3, "synthetic", notes)
+                    if named or f3["copies"][1]["entries"][entry] != b"" or len(notes) != 1:
+                        errs.append("%s: legend entry %d (named %s) with a control code" % (GRID_FAMILIES[family], entry, named))
+                except GridRefused:
+                    if not named:
+                        errs.append("%s: an unnamed legend entry refused the chunk" % GRID_FAMILIES[family])
+        # The legend's calls folded into ops: a 2 x 3 run of one-character draws is op 2.
+        calls = [("small", 0x1A + 4 * (i % 3), 6 + 8 * (i // 3), 0, 1, 0, 0x1000 + 28) for i in range(6)] + \
+                [("small", 0x2A, 6, 0, 0x10, 0, 0x1000), ("tile", 0xE, 6, 0x1B, 0, 0x7803, 0x7F),
+                 ("piece", 0x50, 5, 0x2C, 1, 0x784C)]
+        if grid_legend_ops(calls, 0x1000, "synthetic") != [[2, 0x1A, 6, 7, 2, 3, 4, 8], [1, 0x2A, 6, 0, 0, 0x10, 0, 0],
+                                                            [3, 0xE, 6, 0x1B, 0, 0x03, 0x78, 0], [4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0]]:
+            errs.append("grid_legend_ops: the made-up calls fold to %s" % grid_legend_ops(calls, 0x1000, "synthetic"))
+    finally:
+        donor_ja = saved
+    return errs
+
+
+def selftest_name_grid():
+    errs = name_grid_selfcheck()
+    if errs:
+        raise SystemExit("name grid (kind 22): " + "; ".join(errs))
+    print("  name grid (kind 22): the interpreter on a made-up routine; a synthetic grid of each family through a "
+          "synthetic FIRST.DAT and back; every 5a rule broken once and refused; the encodings' refusals")
+
+
 def cmd_selftest(args):
+    selftest_name_grid()
     selftest_save_names()
     selftest_corrections()
     selftest_empty_records()
@@ -6182,6 +7466,8 @@ def main():
             s.add_argument("--disc", action="append", default=[], help="a disc image (.cue, .bin, .iso); repeat for several")
             s.add_argument("--discs", help="a directory: every held PlayStation disc in it is built, each under its own tag")
             s.add_argument("--dry-run", action="store_true", help="identify each image (and check the game) and write nothing")
+            s.add_argument("--build", help="the fixtures.toml build the one --disc is (importer.py passes it); "
+                                           "default: the disc identified, every file hashed")
         else:
             s.add_argument("--disc", required=True)
         s.add_argument("--lang", type=language_tag,
