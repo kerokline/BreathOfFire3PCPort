@@ -85,7 +85,11 @@ unsigned NameGrid_FirstPage();
 void NameGrid_Draw(Copy copy, const Cells& cells, int x, int y);
 
 // The legend at (x, y) for page `page`: `copy`'s box, its draw operations
-// (the chunk's), then its frame. START's (0xA8, 0x2B).
+// (the chunk's), then its frame. START's (0xA8, 0x2B). Each button tile
+// pictures the button the input step tests for its row under the Config now
+// (the family's map, as NameGrid_Input), not the disc's fixed tile; a tile or
+// the piece after a text is drawn on the page the PlayStation's small draw
+// leaves (0x2F). Group BT, docs/new-game-round.md 4c-BT.
 void NameGrid_DrawLegend(Copy copy, unsigned page, int x, int y);
 
 // One frame of the input step on the live pad words (Input_Pressed and
@@ -181,7 +185,10 @@ struct Painter {
     void (*frame)(int x, int y, Copy copy);                                          // Menu_DrawPieces
 };
 void DrawGrid(const Grid& grid, Copy copy, const Cells& cells, int x, int y, const Painter& paint);
-void DrawLegend(const Grid& grid, Copy copy, unsigned page, int x, int y, const Painter& paint);
+// `map`: the family's bit -> the button it is on now (NameGrid_Input's map);
+// a button tile of the sheet is drawn as the tile of map(its bit).
+void DrawLegend(const Grid& grid, Copy copy, unsigned page, int x, int y, const Painter& paint,
+                std::uint16_t (*map)(std::uint16_t));
 
 }  // namespace detail
 
