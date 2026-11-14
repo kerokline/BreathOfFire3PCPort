@@ -58,6 +58,22 @@ attract runs kept the game's pace (10,305 to 10,317 logic frames in 360 s).
   when the two references disagree there; what is reported, and what sets the
   exit code, is NEW against REF where the references agree. `--noise` lists
   the noise too.
+  **Timing pages (2026-11-14, IDEAS I68).** The 17 pages wholly inside
+  `Music_Staging` (`0x7CD000`..`0x7DD000`) are counted on a line of their own
+  and never reported, by `check` and `diff` both; `--timing` compares them as
+  any other page. `Music_Pump` `0x5A7230` refills the buffer when
+  DirectSound's position notification has fired, on every spin of WinMain's
+  wait and whatever the tick, so of three runs the one under test can stand
+  alone at a tick where the two references agree, and the per-tick noise rule
+  reported it. Measured on the frame-interpolation prototype's four routes
+  (two runs off, one on, no skip list): with `--timing` combat, shop and
+  bossAndFlash fail on those 17 pages alone (first at ticks 1304, 346, 498)
+  and bridgeWalk passes; without it all four are identical on every compared
+  tick, the timing pages differing at 47, 27, 64 and 13 ticks. The buffer is
+  decode scratch, copied to DirectSound at once, and those pages hold nothing
+  else. The buffer's two end pages (`0x7CC000`, `0x7DE000`) hold other data
+  and are compared as before. A run hashed under the skip list hashes the
+  buffer as zero, so the rule changes nothing there.
 - `bytes A.bin B.bin` - two raw dumps byte for byte, each range with its
   symbol; `--skip-out` writes the ranges in skip-list form **to be read, not
   fed back**.

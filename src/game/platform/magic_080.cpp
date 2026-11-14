@@ -190,7 +190,7 @@ void InterpDump(const wchar_t* what) {
         for (int i = 0; i < 199 && name[i]; ++i) dir[i] = static_cast<wchar_t>(static_cast<unsigned char>(name[i]));
         // BOF3X_INTERP_DUMP_EVERY=<n> for a denser sample than every 100.
         if (bof3::os::GetEnv("BOF3X_INTERP_DUMP_EVERY", n, sizeof n) > 0 && std::atoi(n) > 1) every = static_cast<unsigned>(std::atoi(n));
-        bof3::Log("interp      dump %s", on ? "on" : "off");
+        if (on) bof3::Log("interp      dump on, every %u frames", every);   // nothing when unset: the default log is unchanged
     }
     const unsigned fc = static_cast<unsigned>(Frame_Counter);
     if (!on || fc % every > 1) return;

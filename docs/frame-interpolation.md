@@ -30,8 +30,8 @@ Colours, textures and draw order in the in-between are frame N's. Only
 | File | What |
 |---|---|
 | `src/render/interp.h`, `interp.cpp` | `Keep` (a copy of the frame just presented, with a look key per draw) and `Build` (the in-between's vertices). All of the matching. |
-| `src/render/render_shim.cpp` | `Present` calls `interp::Keep`; `PresentInBetween` builds, presents, and puts the frame list back as it was, so `BOF3X_FRAMEHASH` is untouched. Logs a stats line every 150 in-betweens. |
-| `src/render/render_d3d11.cpp` | `PresentInBetweenFrame`: `RunFrame` and `Show`, without the sweep of released textures or a pending scale change. |
+| `src/render/render_shim.cpp` | `Present` calls `interp::Keep`; `PresentInBetween` builds, presents, and puts the frame list back as it was, so `BOF3X_FRAMEHASH` is untouched. Logs a stats line every 150 in-betweens, with the matcher's time (mean and most) and how many order tables were dropped. |
+| `src/render/render_d3d11.cpp` | `PresentInBetweenFrame`: `RunFrame` and `Show`, without the sweep of released textures or a pending scale change. `Show` advances the looks' clock by half a game frame for an in-between and for the present after it. |
 | `src/game/platform/magic_080.cpp` | WinMain's loop: the in-between is due at speed 1, not paused, no shot pending; shown in the wait loop. `InterpDump`. |
 
 Switches (all tooling, none in the launcher):
@@ -40,7 +40,7 @@ Switches (all tooling, none in the launcher):
 |---|---|
 | `BOF3X_INTERP=1` | on |
 | `BOF3X_INTERP_MAX=<px>` | the cap on a vertex's move, target pixels (default 96) |
-| `BOF3X_INTERP_DUMP=<dir>` | writes `<Frame_Counter>_real.bmp` and `_mid.bmp` for two passes in every `BOF3X_INTERP_DUMP_EVERY` (default 100) |
+| `BOF3X_INTERP_DUMP=<dir>` | writes `<Frame_Counter>_real.bmp` and `_mid.bmp` for two passes in every `BOF3X_INTERP_DUMP_EVERY` (default 100). The directory must exist: the first four writes log `NOT saved` otherwise. Logs nothing when unset. |
 | `BOF3X_INTERP_DEBUG=<Frame_Counter>` | logs that in-between's every decision (`interp-dbg` lines: `DECIDE`, `VERT`, `FAIL`, `RUN`, `CUT?`) |
 
 ## 3. How draws are matched
@@ -183,8 +183,28 @@ references at every tick and are never compared, as in every proof.
    to the display (`BOF3X_VSYNC` is off by default). Not looked at.
 8. **Not swept:** frame-buffer grab effects, the FMVs, the ending, wide
    modes beyond two routes, the 64-bit build.
-9. **Cost.** The order table is n x m at worst (capped at 8 million cells,
-   then skipped); a frame is 200 to 850 draws. Not measured.
+9. **Cost.** Measured 2026-11-14 on bridgeWalk (about 800 draws a frame):
+   the matcher takes 1.0 to 1.4 ms an in-between on average, 2.8 ms at
+   most, on the game's thread inside the wait. The order table is n x m at
+   worst (capped at 8 million cells); past 8 ms of filling it is dropped
+   and the middle of the list pairs without an order, so a slow table
+   cannot make the next frame late. The stats line counts the drops; none
+   on bridgeWalk or shop.
+10. **The satpixie look** runs on the in-betweens too (2026-11-14). It had
+    counted presents for its animation and faded its trail by
+    `acc_modulate` on each present, so an in-between ran both at twice the
+    game's pace. Now `Show` gives it the picture's time in game frames and
+    the step since the last picture (1, or 0.5 for an in-between and the
+    present after it), and the trail fades by `acc_modulate^step` (0.65
+    becomes 0.8062 a half step, logged once). With the in-between off the
+    step is always 1: the clock is the present count and the knob goes out
+    as it is, so the look is the same bits as before. The grain is fresh on
+    each picture shown. Not seen by eye: `SaveFrame` captures the target,
+    which the look never touches, so the dumps cannot show it.
+11. **Captures between presents.** From the in-between to the next real
+    present the target holds the in-between, so F11 (`SaveFrameBesideDll`)
+    pressed in the second half of a period saves an interpolated picture.
+    Scripted shots are safe: no in-between is due while one is pending.
 
 Before it can ship: the `DIVERGENCE.md` entry, a launcher option written in
 Simplified Technical English, the checkers in `tools/`, the debug logging
