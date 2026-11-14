@@ -1278,6 +1278,92 @@ measured.
   PlayStation rolls before and starts after, M1). Why: the owner
   (2026-11-12) and call 1's proposal. Switch: `NewGameOptions` (code).
 
+## 4c-RT. Group RT as run (stage B)
+
+*Worker agent, worktree `D:\bof3x-runs\ng1114\rt2\wt`, branch `new-game/rt2`
+off `new-game/round` `768e9f74`, local commits only. Root, game copy (TF's,
+copied), launcher folders and captures in `D:\bof3x-runs\ng1114\rt2`
+(game-derived, never committed). No state-hash chain: the machine was not
+quiet.*
+
+**The switch-off line is in one place: `tools/input_run.py`.** Every runner
+(`abc_run`, the state-hash chains, `solo_harness`, the sweeps,
+`quicksave_check`, `music_heard`, `eye_sheet`, `build_reuse`) launches
+through it; the probes that launch directly (`close_probe`, `ini_probe`,
+`key_probe`) stop at the title, and the attract demo never runs the title
+flow. After the `--env` loop, `screens_off` adds `NewGameNameEntry` and
+`NewGameOptions` to `BOF3X_OFF`, as M8 proposed:
+
+- It keeps a caller's `BOF3X_OFF`, or else the launcher folder's
+  `bof3x.ini` `off=` (an environment `BOF3X_OFF` replaces the ini's whole).
+  A name the caller lists already, as off or as `-Name`, is left as written.
+- It adds only the names the launcher folder's build knows, read as the
+  NUL-ended string in its `bof3x.dll` or `bof3x.exe`: a build from before
+  the round stops at start on an unknown name (`detour.cpp`), so an A/B
+  against the old tip gets nothing added on the old side.
+- A route about the screens says so with a header line `# screens new-game`
+  (the game's parser reads it as a comment), or `--new-game-screens`.
+- `CommuNameGrid` is not in the list: it is not a code name in this tree
+  (CR's). If CR's grid changes a route that enters the renamer, the
+  integrator adds it to `NEW_GAME_SCREENS` once the name exists.
+- An environment `BOF3X_OFF` also replaces a preset's names (M8). The
+  harness launches ini-less with `--no-config`; the A/Bs below show no
+  difference, so the default plan adds none today.
+
+**Measured** (32-bit build of this tree in an ini-less `L_new`; TF's
+`L_base`, the `2207d9ce` build, copied to `L_base`; my game copy, `en-US`,
+`BOF3X_SHOT_EVERY=60`, no slot file):
+
+| Run | Result |
+|---|---|
+| `battle_commands.txt`, base against new | **67 of 67 frames identical**; the new side's log: both patches "left alone (BOF3X_OFF)"; the base side: nothing added |
+| `config_screen.txt`, base against new | 23 of 23 identical |
+| `config_controller.txt`, base against new | 18 of 18 identical |
+| `field_menu.txt` (a `# save` route), new, the save read from the main checkout on C: with the worktree on D: | `done` at 1,454; slot 0 swapped and handed back (the case that raised before the fix below) |
+
+Not replayed: the ten state-hash routes and the other save-loading routes
+(they load slot 0 and never reach New Game; the line only adds two names
+they do not reach), the self-test (the game never starts; TF ran it with
+the fuzz pinning the switches), the sweeps.
+
+**The new routes** (`tools/recipes/`, each with a header saying what it
+proves and what it needs; they wait on `Game_Step` `0x66C7EA` and
+`SaveMenu_FlowState` `0x6BDF86`, and reach the battle on `Game_Mode`
+`0x66C7E8` == 5 as `battle_commands.txt` does, by `seek`, not by frames):
+
+| Recipe | Language | Result |
+|---|---|---|
+| `newGameName.txt`: name screen, A B D, Start, Config, the opening's battle | `en-US` | `done` at 3,053; record 0 `0x757952` to `0x444241`, "named, 3 byte(s)"; battle after 184 presses |
+| the same | `ja-JP` | `done` at 2,897; "named, 6 byte(s)"; battle after 171 presses |
+| `newGameOriginal.txt`: no name screen, Config, the opening's battle | the original Chinese | `done` at 2,718; "no name screen here (no kind-22 chunk taken)"; battle after 167 presses |
+| `newGameBlankName.txt`: Start with no letter, Config, `Game_Step` 5 | `en-US` | `done` at 738; record 0 equal before and after, "keeps its default name" |
+| the same | `ja-JP` | `done` at 738; the same |
+| `newGameQuit.txt`: down x5, left (the quit label on the US page), confirm, the title, New Game, the name screen again | `en-US` | `done` at 791; `Game_Step` 1 at 675, the name screen again at 770 |
+
+`newGameQuit.txt` is for the US grid (`en-US`, `en-150`; `en-150` not run):
+the Japan page puts its labels elsewhere. Not run: `fr-FR`, `de-DE`,
+`en-150`, `psp-eu`, the hosted `BOF3.exe`, the wide modes. These routes'
+state-hash pairs are stage C's.
+
+**`tools/recipe_saves.py`.** `os.path.relpath` raised across drives in
+`Slot0.__enter__` after the swap and the lock, so the exception left slot 0
+swapped with no hand-back (shown in scratch on the old file: the recipe's
+bytes in slot 0, the lock left). Every message path now goes through
+`shown()` (relative when it can be, else as it is), as `input_run.py`'s
+already did. `python tools/recipe_saves.py check` swaps and hands back made-up
+files in a temporary game folder, with the save on another drive than the
+checkout when the temporary folder is on one: passes here (C: against D:).
+
+**The renamer's route.** Nothing added: `fairyVillage.txt` already has
+`# save fairyVillage` (stage A), and that save is in the main checkout's
+`tools/recipe_saves/`. CR records the renamer's route from it.
+
+**For the integrator.** `docs/input-script.md` (section 1a or 3) and
+`docs/abc-harness.md` do not yet say that every run gets the two names, or
+name the `# screens new-game` header; `abc_run`'s run meta records the
+environment before `input_run.py` adds the names (`input_run`'s own run-times
+line has them).
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`

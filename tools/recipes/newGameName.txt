@@ -1,0 +1,45 @@
+# New Game -> the name screen -> a three-letter name -> Start -> the
+# options (the Config screen) -> the opening scene, to its scripted battle.
+# Proves (docs/new-game-round.md 4c-TF, 4c-RT): with NewGameNameEntry and
+# NewGameOptions on, New Game opens the name screen as sub-steps of Game_Step
+# 2 (0x66C7EA) on SaveMenu_FlowState 0x6BDF86 (3 = the input step), the
+# finish commits the name to record 0 (0x903A70, peeked before and after),
+# Game_Step 4 is the Config screen, Start there gives Game_Step 5, and the
+# opening runs to the battle (Game_Mode 0x66C7E8 == 5), as battle_commands.txt.
+# Needs: the two switches on (the header below keeps input_run.py from
+# turning them off) and a language layer with the grid chunk: en-US (the
+# US grid, three letters A B D) or ja-JP (the same presses, the Japan grid).
+# No slot file in the game folder (the title cursor then starts on NEW GAME;
+# the seek also handles a save present). Hand-written: its shot lines are
+# steps of their own, not frames of a recording.
+# screens new-game
+wait 480
+press start
+wait 40
+seek up 0x6BDF85 u8 == 0 max 3
+press circle
+until 0x66C7EA u16 == 2 timeout 600
+until 0x6BDF86 u8 == 3 timeout 600
+wait 20
+shot name_empty 1
+press circle
+press right
+press circle
+press right x2
+press circle
+wait 4
+shot name_typed 1
+peek 0x903A70 u32 name0_before
+press start
+until 0x66C7EA u16 == 4 timeout 600
+peek 0x903A70 u32 name0_after
+peek 0x903A74 u32 name4_after
+wait 60
+shot config 1
+press start
+until 0x66C7EA u16 == 5 timeout 600
+mark entered_game_step_5
+seek circle 0x66C7E8 u16 == 5 max 220
+wait 90
+shot opening_battle 1
+end

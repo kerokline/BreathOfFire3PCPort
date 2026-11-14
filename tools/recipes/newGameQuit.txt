@@ -1,0 +1,38 @@
+# New Game -> the name screen -> the quit label -> back to the title menu ->
+# New Game again -> the name screen again.
+# Proves (docs/new-game-round.md 4c-TF, 4c-RT): the quit label (special code
+# 4) puts Game_Step 0x66C7EA back to 1 (SaveMenu_FlowState 0x6BDF86 to 0 in
+# the same frame), the title menu, and New Game from there opens the name screen again (the
+# input step, FlowState 3) - the until lines fail the recipe otherwise.
+# Needs: NewGameNameEntry on (the header below) and the US grid: en-US (or
+# en-150, the same grid; not run there). The hand starts on row 0 column 0;
+# down x5 is row 5, and left from column 0 wraps to the row's special, the
+# quit label on the US page. Not for ja-JP (another page, another label row).
+# No slot file in the game folder (the seek also handles one). Hand-written:
+# its shot lines are steps of their own.
+# screens new-game
+wait 480
+press start
+wait 40
+seek up 0x6BDF85 u8 == 0 max 3
+press circle
+until 0x66C7EA u16 == 2 timeout 600
+until 0x6BDF86 u8 == 3 timeout 600
+wait 20
+press down x5
+press left
+wait 4
+shot on_quit 1
+press circle
+until 0x66C7EA u16 == 1 timeout 120
+mark back_on_the_title
+wait 60
+shot title_again 1
+seek up 0x6BDF85 u8 == 0 max 3
+press circle
+until 0x66C7EA u16 == 2 timeout 600
+until 0x6BDF86 u8 == 3 timeout 600
+mark name_screen_again
+wait 20
+shot name_again 1
+end
