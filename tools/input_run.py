@@ -31,6 +31,13 @@ a scripted run (no BOF3X_INPUT) refuses the swap.
 
 Needs the game windowed (BOF3.CFG first line 0, or the launcher dialog).
 
+New Game's name and options screens (the New Game round) are turned off for
+every run - NewGameNameEntry and NewGameOptions added to BOF3X_OFF, a
+caller's names or the launcher ini's off= kept - so a route that presses New
+Game plays the port's New Game. A recipe about the screens says so with a
+`# screens new-game` header line (or --new-game-screens). A build that does
+not know the names gets nothing added (it would stop at start on them).
+
 A `shot NAME 1 [BUTTONS]` line IS one frame of the route: it stands in place
 of a frame, holding that frame's buttons. To add shots to a recorded recipe
 use tools/recipe_shots.py, which keeps the total. Never insert shot lines by
@@ -64,6 +71,67 @@ LOG = os.path.join(ROOT, 'build', 'bof3x.log')
 SHOT = re.compile(r'input\s+shot (\S+) recipe frame (\d+)( frozen)?')
 END = re.compile(r'input\s+(done|FAILED) at recipe frame (\d+)')
 LOADED = re.compile(r'save\s+loaded slot ([0-9A-F]+)')     # LoadMenu_Read, src/game/save_menu.cpp
+
+# The New Game round (docs/new-game-round.md M8, section 7 trap 1): New Game
+# runs the name screen and the options screen, on by default, so every route
+# that presses New Game would change. Every run gets these code names in
+# BOF3X_OFF - the port's New Game, frame for frame - unless the recipe is
+# about the screens: a `# screens new-game` header line, or --new-game-screens.
+NEW_GAME_SCREENS = ('NewGameNameEntry', 'NewGameOptions')
+SCREENS_HEADER = re.compile(r'^#\s*screens\s+new-game\s*$')
+
+
+def recipe_wants_screens(recipe):
+    """True when the recipe carries the `# screens new-game` header."""
+    with open(recipe, encoding='utf-8', errors='replace') as f:
+        return any(SCREENS_HEADER.match(line) for line in f)
+
+
+def ini_off(launcher):
+    """The off= of the launcher folder's bof3x.ini, '' when there is none: an
+    environment BOF3X_OFF replaces it whole (src/launcher/config.cpp), so the
+    names added here keep it. A gate's launcher folder has no ini."""
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(launcher)), 'bof3x.ini'),
+                  encoding='utf-8', errors='replace') as f:
+            for line in f:
+                key, eq, value = line.strip().partition('=')
+                if eq and key.strip() == 'off':
+                    return value.strip()
+    except OSError:
+        pass
+    return ''
+
+
+def names_known(launcher, names):
+    """The names the launcher folder's game knows as code names: a build from
+    before the round has none of them, and BOF3X_OFF stops the game at start
+    on a name that is not a code name (src/hook/detour.cpp). Read as the
+    NUL-ended string in bof3x.dll or bof3x.exe (code_names.h's table)."""
+    folder = os.path.dirname(os.path.abspath(launcher))
+    blobs = []
+    for fn in ('bof3x.dll', 'bof3x.exe'):
+        try:
+            with open(os.path.join(folder, fn), 'rb') as f:
+                blobs.append(f.read())
+        except OSError:
+            pass
+    return [n for n in names if any(n.encode() + b'\0' in b for b in blobs)]
+
+
+def screens_off(env, launcher):
+    """Merge NEW_GAME_SCREENS into env['BOF3X_OFF'], keeping a caller's names
+    or else the ini's off=. A name the caller already lists, as off or as
+    `-Name`, is left as the caller wrote it. Returns what was added."""
+    have = env.get('BOF3X_OFF')
+    if have is None:
+        have = ini_off(launcher)
+    listed = [n.strip() for n in have.replace(' ', ',').split(',') if n.strip()]
+    bare = {n.lstrip('-') for n in listed}
+    add = [n for n in names_known(launcher, NEW_GAME_SCREENS) if n not in bare]
+    if add:
+        env['BOF3X_OFF'] = ','.join(listed + add)
+    return add
 
 
 def game_window(pid):
@@ -165,6 +233,10 @@ def main():
                     help='the recipe save to put in slot 0 (tools/recipe_saves/NAME.DAT), instead of the one '
                          'the recipe\'s `# save NAME` header names')
     ap.add_argument('--no-save', action='store_true', help='leave slot 0 alone whatever the recipe says')
+    ap.add_argument('--new-game-screens', action='store_true',
+                    help="leave New Game's name and options screens as the build has them; by default every run "
+                         "turns them off (BOF3X_OFF), so a route that presses New Game plays as before the round, "
+                         "unless the recipe has the `# screens new-game` header")
     ap.add_argument('--slot0-shared', action='store_true',
                     help='swap slot 0 although a game that is not a scripted run is up (one that never opens a '
                          'save or load menu)')
@@ -210,6 +282,12 @@ def main():
     for kv in a.env:
         k, _, v = kv.partition('=')
         env[k] = v
+    if a.new_game_screens or recipe_wants_screens(recipe):
+        print('new game: the name and options screens as the build has them (the recipe is about them)')
+    else:
+        added = screens_off(env, a.launcher)
+        print(f'new game: BOF3X_OFF={env.get("BOF3X_OFF", "")}' if added else
+              'new game: nothing added to BOF3X_OFF (listed already, or a build without the screens)')
 
     # The save the recipe loads goes into slot 0 for the run and the owner's
     # slot 0 comes back after it (recipe_saves.py; docs/input-script.md 1a).
