@@ -329,14 +329,11 @@ const Cell& At(const Grid& g, unsigned page, unsigned row, unsigned col) {
 }
 bool Empty(const Grid& g, const Cells& c) { return At(g, c.page, c.row, c.column).kind == kEmpty; }
 
-// "Up to the first cell that is not empty": Japan's page-2 constants (row 4..7
-// of columns 0..9 to row 3 after a move; after a page change also row 2 of
-// columns 6..9 to row 1) are this rule on Japan's page 2. Row 0 is never
-// empty (section 5a), so it ends.
-// ours: the West's step has no clamp, and its Left from a special sets column
-// 9 with no test (US START 0x801E48FC..0x801E491C), so on the US / EU row 5
-// and the French row 5 the original hand lands on an empty cell; the owner
-// observed it never does (call 7), and ours goes up from it as Japan's does.
+// "Up to the first cell that is not empty": Japan's page-2 constants are this
+// rule on Japan's page 2 - after every frame's move block, row 4..7 of columns
+// 0..9 to row 3 (Japan START 0x801E48D0..0x801E4918, read 2026-11-14), and
+// after a page change also row 2 of columns 6..9 to row 1. Row 0 is never
+// empty (section 5a), so it ends. The Japan family only (Step).
 void ClampUp(const Grid& g, Cells& c) {
     while (Empty(g, c)) {
         if (c.row == 0) bof3::Fatal("name grid: column %u of page %u is empty to row 0", c.column, c.page);
@@ -375,7 +372,14 @@ unsigned Step(const Grid& g, Copy copy, Cells& c, const Keys& k, unsigned room, 
     unsigned result = kNothing;
 
     // 1. The hand: one direction a frame, Up first (both families).
+    // Both discs skip an empty cell in the direction of the move (do-while,
+    // wrapping: Japan START 0x801E4614..0x801E48CC; the West's as NG read US
+    // START 0x801E4744..), but
+    // Left / Right from a special store column 9 / 0 with no test of it.
     const bool special_here = At(g, c.page, c.row, c.column).kind == kSpecial;
+    const bool japan = g.family == static_cast<unsigned char>(Family::kJapan);
+    const auto step_left = [&] { c.column = static_cast<unsigned char>(c.column == 0 ? kColumns - 1 : c.column - 1); };
+    const auto step_right = [&] { c.column = static_cast<unsigned char>(c.column + 1 >= kColumns ? 0 : c.column + 1); };
     if (k.up) {
         play(0x100);
         do c.row = static_cast<unsigned char>(c.row == 0 ? kRows - 1 : c.row - 1); while (Empty(g, c));
@@ -384,14 +388,28 @@ unsigned Step(const Grid& g, Copy copy, Cells& c, const Keys& k, unsigned room, 
         do c.row = static_cast<unsigned char>(c.row + 1 >= kRows ? 0 : c.row + 1); while (Empty(g, c));
     } else if (k.left) {
         play(0x100);
-        if (special_here) c.column = 9;
-        else do c.column = static_cast<unsigned char>(c.column == 0 ? kColumns - 1 : c.column - 1); while (Empty(g, c));
+        if (special_here) {
+            c.column = 9;
+            // ours: the West goes on in the direction of the move (the owner,
+            // 2026-11-14: Left from the quit label to that row's last
+            // letter), where the original's hand stays on the empty cell
+            // (US START 0x801E48EC; call 7, settled). The row holds the
+            // special, so the walk ends. Japan keeps its disc's clamp below.
+            if (!japan) while (Empty(g, c)) step_left();
+        } else {
+            do step_left(); while (Empty(g, c));
+        }
     } else if (k.right) {
         play(0x100);
-        if (special_here) c.column = 0;
-        else do c.column = static_cast<unsigned char>(c.column + 1 >= kColumns ? 0 : c.column + 1); while (Empty(g, c));
+        if (special_here) {
+            c.column = 0;
+            if (!japan) while (Empty(g, c)) step_right();   // ours: as Left
+        } else {
+            do step_right(); while (Empty(g, c));
+        }
     }
-    ClampUp(g, c);
+    if (japan) ClampUp(g, c);   // the Japan disc's page-2 clamp, every frame
+    else if (Empty(g, c)) bof3::Fatal("name grid: a move left the hand on an empty cell (page %u row %u column %u)", c.page, c.row, c.column);
 
     // 2. The cell under the hand. A page or a finish code is the original's
     // write of the bit into the pad word, kept here as a flag: the branch
@@ -557,33 +575,150 @@ void DrawGrid(const Grid& g, Copy copy, const Cells& c, int x, int y, const Pain
     paint.hand(hx, y + 8 + 14 * c.row);
 }
 
-void DrawLegend(const Grid& g, Copy copy, unsigned page, int x, int y, const Painter& paint) {
+namespace {
+
+// The button sheet: 8 x 8 tiles of the FIRST image 0x1E000200 (VRAM (960, 0),
+// texture page 0x2F), the page every legend's button tiles are drawn on.
+// Rendered 2026-11-14 (BT, scratch page.py / cmpwin.py): the four shapes at
+// tile v 0, u 0x1B circle, 0x1C triangle, 0x1D cross, 0x1E square; row v 2
+// holds L1, L2, R1, R2 at u 0..3, then START (u 4, 5) and SELECT (u 6, 7). Both
+// windows are identical in the PC's FIRST.DAT and in every held disc's
+// FIRST.EMI (psx-jp, -us, -eu-en, -fr, -de, psp-jp, psp-eu).
+constexpr unsigned kSheetPage = 0x2F;
+struct SheetTile { unsigned char u, v; std::uint16_t bit; };
+constexpr SheetTile kSheet[6] = {
+    {0x1B, 0, 0x20}, {0x1C, 0, 0x10}, {0x1D, 0, 0x40}, {0x1E, 0, 0x80}, {0, 2, 0x04}, {2, 2, 0x08},
+};
+constexpr unsigned char kSheetStartU = 4, kSheetLabelV = 2;   // START's left half, the label row
+
+int SheetOfTile(unsigned u, unsigned v) {
+    for (int i = 0; i < 6; ++i)
+        if (kSheet[i].u == u && kSheet[i].v == v) return i;
+    return -1;
+}
+int SheetOfBit(std::uint16_t bit) {
+    for (int i = 0; i < 6; ++i)
+        if (kSheet[i].bit == bit) return i;
+    return -1;
+}
+
+// The legend's button column, by place: rows 0..3 at dx 0xE, dy 6 + 8i, in
+// every legend read (section 5a's reference values; psp-eu's, PE's chunk,
+// draws rows 2 and 3 there as one-letter texts). Each row names one action,
+// the same order in both families: the action text beside it (entries 0..3
+// at dx 0x2A / 0x1B / 0x22; Japan's row 3 the page entry 4 + page) and, on
+// every PlayStation disc, a tile of that action's bit in the family's step
+// (Japan circle, cross, square, triangle; West cross, triangle, circle,
+// square - M2's tables against 5a's tile lists). psp-eu's own tiles follow
+// the PSP's step, which ours does not run (the owner: the West family on
+// every Western install), so the row's action, not its tile, decides.
+constexpr int kColumnDx = 0xE, kColumnDy0 = 6, kColumnPitch = 8;
+int ColumnRow(const Op& o) {
+    if ((o.op != kTile && o.op != kText) || o.a[0] != kColumnDx) return -1;
+    for (int i = 0; i < 4; ++i)
+        if (o.a[1] == kColumnDy0 + kColumnPitch * i) return i;
+    return -1;
+}
+std::uint16_t RowBit(Family family, int row) {
+    const Bits& b = family == Family::kJapan ? kJapanBits : kWestBits;
+    const std::uint16_t bits[4] = {b.confirm, b.erase, b.next, family == Family::kJapan ? b.page : b.back};
+    return bits[row];
+}
+
+// The draw mode the PlayStation's small text draw leaves: 0x8014FC90 commits,
+// before its glyphs, 0x8014FC00(0)'s SetDrawMode(p, 0, 0, 0x2F, 0) (0x8F on
+// the other graph type; the PC takes 0x2F, section 5a's rule) - US exe, read
+// 2026-11-14. The PC's Text_DrawSmall 0x516E70 commits none (its glyphs carry
+// their own texture), so a legend op after a text or the leaders samples the
+// page the text left on the PlayStation and the one before it on the PC.
+constexpr unsigned kSmallDtd = 0, kSmallPage = kSheetPage;
+
+}  // namespace
+
+void DrawLegend(const Grid& g, Copy copy, unsigned page, int x, int y, const Painter& paint,
+                std::uint16_t (*map)(std::uint16_t)) {
     const CopyData& d = g.copy[static_cast<unsigned>(copy)];
-    if (copy == Copy::kNewGame) paint.mode(1, 0xF);   // every START legend's first draw mode, before its box
+    const Family family = static_cast<Family>(g.family);
+    // The draw mode the PlayStation's GPU holds at this point of the disc's
+    // draw (psx), and the last one this draw committed on the PC (pc): -1 not
+    // known (COMMU02 sets none before its box).
+    int psx_dtd = -1, psx_page = -1, pc_dtd = -1, pc_page = -1;
+    const auto commit = [&](unsigned dtd, unsigned tpage) {
+        paint.mode(dtd, tpage);
+        psx_dtd = pc_dtd = static_cast<int>(dtd);
+        psx_page = pc_page = static_cast<int>(tpage);
+    };
+    // ours: before a tile or the piece, the PC is given the mode the
+    // PlayStation's small draw left (kSmallPage), where it differs from the
+    // last committed one. Without it the US START's four row-4 tiles sampled
+    // the UI page (frame edges, TF's capture) and the French and German
+    // legends' six button tiles too, where the disc draws them on page 0x2F.
+    const auto settle = [&] {
+        if (psx_page >= 0 && (psx_page != pc_page || psx_dtd != pc_dtd)) commit(static_cast<unsigned>(psx_dtd), static_cast<unsigned>(psx_page));
+    };
+    // The CLUTs this copy draws the sheet with: its shapes' (a column tile of
+    // a shape) and its label row's (its START tile).
+    int shape_clut = -1, label_clut = -1;
+    for (unsigned k = 0; k < d.ops; ++k) {
+        const Op& o = d.op[k];
+        if (o.op != kTile) continue;
+        const int s = SheetOfTile(o.a[2], o.a[3]);
+        if (ColumnRow(o) >= 0 && s >= 0 && s < 4) shape_clut = o.a[4] | (o.a[5] << 8);
+        if (o.a[2] == kSheetStartU && o.a[3] == kSheetLabelV) label_clut = o.a[4] | (o.a[5] << 8);
+    }
+    if (copy == Copy::kNewGame) commit(1, 0xF);   // every START legend's first draw mode, before its box
     paint.box(x + 3, y + 3, d.box_w, d.box_h);
     for (unsigned k = 0; k < d.ops; ++k) {
         const Op& o = d.op[k];
         const int dx = o.a[0], dy = o.a[1];
+        const int row = ColumnRow(o);
+        if (row >= 0) {
+            // ours: the column's row pictures the button the step tests for
+            // its action now - the family's bit through the same map as
+            // NameGrid_Input (Sigma, or SigmaFrom(West)) - where the disc
+            // draws its release's default (the owner, 2026-11-14: the
+            // buttons match the mappings; the button round's rule). At the
+            // disc's own defaults every PlayStation legend draws its own
+            // tile. A tile of the sheet, on the sheet's page, whatever the op.
+            const std::uint16_t bit = RowBit(family, row);
+            const int drawn = SheetOfBit(map(bit));
+            if (drawn < 0) bof3::Fatal("name grid: the button map sends 0x%X to no face or shoulder button", bit);
+            const bool shoulder = kSheet[drawn].v == kSheetLabelV;
+            const int clut = shoulder ? label_clut : shape_clut;
+            if (clut < 0)
+                bof3::Fatal("name grid: legend row %d's button needs the %s CLUT, and this legend draws no %s", row,
+                            shoulder ? "label" : "shape", shoulder ? "START label" : "button shape in its column");
+            if (pc_page != static_cast<int>(kSheetPage)) commit(kSmallDtd, kSheetPage);
+            paint.tile(x + dx, y + dy, kSheet[drawn].u, kSheet[drawn].v, static_cast<unsigned>(clut));
+            if (o.op == kText) psx_dtd = kSmallDtd, psx_page = kSmallPage;   // the disc's letter was a small draw
+            continue;
+        }
         switch (o.op) {
         case kText: {
             const unsigned e = o.a[2] + ((o.a[3] & 1) ? page : 0u);
             if (e >= d.entries) bof3::Fatal("name grid: legend entry %u on page %u", e, page);
             paint.small(x + dx, y + dy, o.a[5], o.a[4], d.entry[e]);
+            psx_dtd = kSmallDtd;
+            psx_page = kSmallPage;
             break;
         }
         case kLeaders:
             for (unsigned i = 0; i < o.a[3]; ++i)
                 for (unsigned j = 0; j < o.a[4]; ++j)
                     paint.small(x + dx + o.a[5] * static_cast<int>(j), y + dy + o.a[6] * static_cast<int>(i), 0, 1, d.entry[o.a[2]]);
+            psx_dtd = kSmallDtd;
+            psx_page = kSmallPage;
             break;
         case kTile:
+            settle();
             paint.tile(x + dx, y + dy, o.a[2], o.a[3], static_cast<unsigned>(o.a[4] | (o.a[5] << 8)));
             break;
         case kPiece:
+            settle();
             paint.piece(x + dx, y + dy, o.a[2], o.a[3], static_cast<unsigned>(o.a[4] | (o.a[5] << 8)));
             break;
         case kMode:
-            paint.mode(o.a[0], static_cast<unsigned>(o.a[1] | (o.a[2] << 8)));
+            commit(o.a[0], static_cast<unsigned>(o.a[1] | (o.a[2] << 8)));
             break;
         default:
             bof3::Fatal("name grid: legend operation kind %u", o.op);
@@ -642,6 +777,9 @@ void PlayLive(unsigned short id) { SH_CALL(Sound_PlayEffect)(id); }
 
 std::uint16_t SigmaJapan(std::uint16_t bit) { return bof3x::input::sigma::Sigma(bit); }
 std::uint16_t SigmaWest(std::uint16_t bit) { return bof3x::input::sigma::SigmaFrom(bof3x::input::sigma::Release::kWest, bit); }
+// The family's bits to the buttons now: the step's tests and the legend's
+// pictures ask the same map.
+std::uint16_t (*MapOf(Family family))(std::uint16_t) { return family == Family::kJapan ? SigmaJapan : SigmaWest; }
 
 // The game's side of the draws.
 void PaintCommit(unsigned size) { SH_CALL(Gfx_CommitPrim)(1, size); }
@@ -714,13 +852,14 @@ unsigned NameGrid_FirstPage() { return Live("NameGrid_FirstPage").first; }
 void NameGrid_Draw(Copy copy, const Cells& cells, int x, int y) { detail::DrawGrid(Live("NameGrid_Draw"), copy, cells, x, y, kGame); }
 
 void NameGrid_DrawLegend(Copy copy, unsigned page, int x, int y) {
-    detail::DrawLegend(Live("NameGrid_DrawLegend"), copy, page, x, y, kGame);
+    const Grid& g = Live("NameGrid_DrawLegend");
+    detail::DrawLegend(g, copy, page, x, y, kGame, MapOf(static_cast<Family>(g.family)));
 }
 
 unsigned NameGrid_Input(Copy copy, Cells& cells, unsigned room, const unsigned char* fallback) {
     const Grid& g = Live("NameGrid_Input");
     const Family family = static_cast<Family>(g.family);
-    std::uint16_t (*const map)(std::uint16_t) = family == Family::kJapan ? SigmaJapan : SigmaWest;
+    std::uint16_t (*const map)(std::uint16_t) = MapOf(family);
     const auto pressed = static_cast<std::uint16_t>(Input_Pressed);
     std::uint16_t mask = 0;
     for (unsigned b = 0; b < 16; ++b)

@@ -1278,6 +1278,167 @@ measured.
   PlayStation rolls before and starts after, M1). Why: the owner
   (2026-11-12) and call 1's proposal. Switch: `NewGameOptions` (code).
 
+## 4c-BT. Group BT as run
+
+*Worker agent, 2026-11-14, worktree `D:\bof3x-runs\ng1114\bt\wt`, branch
+`new-game/bt` off `new-game/round` `768e9f74`, local commits only. Runs,
+captures and scratch scripts in `D:\bof3x-runs\ng1114\bt` (game-derived,
+never committed): `s\` holds the scripts (`chunk22.py`, `page.py`,
+`cmpwin.py`, `mdis.py`, `exedis.py`, `kinds.py`). Capstone over the held
+discs through `loc_build.open_disc`. No state-hash chain: the machine was
+not quiet.*
+
+**Why the `START` row of the `en-US` legend showed odd tiles.** The four
+row-4 tiles of the Western `START` legends (u 0..3, v `0x13`) come after the
+legend's texts. The PlayStation's small text draw `0x8014FC90` commits, before
+its glyphs, `0x8014FC00(0)`'s `SetDrawMode(p, 0, 0, 0x2F, 0)` (US exe, read),
+so on the PlayStation those tiles sample page `0x2F`, the FIRST image
+`0x1E000200` (VRAM (960, 0)), where every Western disc's `FIRST.EMI` holds a
+32 x 8 word at u 0..31, v 152..159 (rendered, `page.py`; the Japan disc holds
+other art there). The PC's `Text_DrawSmall` `0x516E70` commits no draw mode
+(symbols.toml; its glyphs carry their own texture), so ours drew them on the
+page the piece's op 5 left, `0x1D`: the UI page, whose texels at that place
+are frame edges, identical in the PC's `START.DAT` and in the US, Japan and
+French `START.EMI` (rendered, `uipage` window). The same cause drew the
+French and German legends' six button tiles from the UI page (they set no
+page of their own after the piece). **Fixed in the routine:** before a tile
+or the piece, the PC is given the draw mode the PlayStation's small draw left
+after a text or the leaders, where it differs from the last committed one
+(`DrawLegend`, `settle`). **What is left:** the PC's `FIRST.DAT` has that
+32 x 8 strip blank (its whole tile u 0..127, v 128..159 has no ink, counted),
+and no layer carries an image, so on a PC install the four tiles now draw
+nothing (the row reads START and the leaders). A chunk or layer change is
+needed to show the word; it is PE's file (below).
+
+**The legend's pictures follow the mapping.** Measured: the button sheet on
+page `0x2F` - tile v 0, u `0x1B` circle, `0x1C` triangle, `0x1D` cross,
+`0x1E` square; tile v 2, u 0..3 L1, L2, R1, R2, u 4, 5 START, u 6, 7 SELECT -
+is identical in the PC's `FIRST.DAT` and in all seven held discs'
+`FIRST.EMI` (`cmpwin.py`). The legend's button column is taken **by place**:
+rows 0..3 at dx `0xE`, dy 6 + 8i, in every copy 5a lists and in PE's
+`psp-eu` chunk, whatever the op kind (`psp-eu` draws rows 2 and 3 as
+one-letter texts). Each row names one action, in the same order in both
+families: confirm, erase, next, then the page (Japan) or back (West) - the
+action texts beside them, and on every PlayStation disc a tile of that
+action's bit in the family's step (Japan circle, cross, square, triangle;
+West cross, triangle, circle, square: M2's tables against 5a's tile lists).
+So no chunk field is needed. A row draws the sheet's tile of
+`map(the family's bit)`, `map` the input step's own (`Sigma` for Japan,
+`SigmaFrom(West)` for the West), on page `0x2F`, in the CLUT the copy draws
+its shape tiles with; a button moved to a shoulder draws the sheet's L1 or
+R1 label in the CLUT the copy draws START with. START is never moved by `σ`.
+At a PlayStation disc's own defaults every legend draws its own tiles; on a
+PC install with a Western layer (Japan's starting words, DIV-0134) the
+Western legend now shows circle, cross, square, triangle, the buttons the
+West's step tests there through `SigmaFrom(West)` - TF's and CR's captures
+showed the disc's cross for OK while circle entered a letter. `psp-eu`'s
+own tiles follow the PSP's step, which ours does not run (the West family's
+step, as 4b has it), so there the row's action decides, not its tile; its
+rows 2 and 3 show the pressed face buttons of next and back, the shoulders
+still work as the West's.
+
+**The starting mapping's order (call: the owner's recollection, 4b).** The
+game takes the install's release in `src/input/sigma.cpp:388-413`
+(`ReleaseOfSources`): Japan if any source is `psx-jp` **or the PC's own data
+(`pc-zh`)** (`kPcIsJapanSource = true`, `:73`), else the PlayStation West,
+else `psp-jp`, else `psp-eu`; no cache or no manifest is Japan
+(`:141-151`). The sources are the cache manifest's `[[source]]` builds,
+written by `tools/importer.py:1473-1474`; the launcher only passes the cache
+(`src/launcher/config.cpp:620-624`) and holds no rule of its own. So the
+order is Japan PlayStation and the PC first, together, then West
+PlayStation, Japan PSP, English PSP. **It differs from the recollection in
+one place: the PC is first, not last.** A PC install with a Western disc
+(`pc-zh` + `psx-us`) starts with Japan's buttons today, where "the PC last"
+would give the West's; the same for the PC with a PSP disc. The PC's
+defaults are Japan's, so nothing else differs. Also not as "the Japanese
+mapping when several sources are used": `psx-us` + `psp-jp` starts with
+the West's. Nothing changed (DIV-0134's `kPcIsJapanSource` is the owner's
+2026-10-17 word); the owner's call.
+
+**The skip's direction (4b).** Both discs already skip an empty cell in the
+direction of a move from a letter (do-while with a wrap: Japan `START`
+`0x801E4614..0x801E48CC`, read whole); only Left / Right from a special
+store column 9 / 0 with no test. The Japan step then clamps, after every
+frame's moves, rows 4..7 of columns 0..9 up to row 3 on page 2
+(`0x801E48D0..0x801E4918`), and after a page change also row 2 of columns
+6..9 up to row 1. **What the owner's rule would do to the Japan family:**
+the two agree everywhere but Left / Right from a special in rows 4..7 of
+page 2, whose columns 0..9 are all empty: the rule would find no letter in
+the row and leave the hand on the special (or its twin), where the disc
+puts it on row 3, column 9 (Left) or column 0 (Right). A page change has no
+direction, so the rule says nothing there. **Built:** the West goes on in
+the direction of the move from a special (Left from the quit label to that
+row's last letter); the Japan family keeps its disc's clamps, every move
+and page change as before. Measured in a game (`en-US`, after the swap
+below): the hand on Quit, Left puts it on the row's last letter.
+
+**The cell beside the full stop (call 7's record).** On the US / EU page,
+row 2 column 11, beside the full stop in column 10, is a glyph cell of code
+`0xFF`: the space, which the routine also uses as the blank marker. An
+empty cell is code 0 (no glyph). So on the original a confirm there enters a
+blank, and on the empty cell a 0, which ends the name at that cell; both
+draw nothing, which is what the owner saw.
+
+**The wide modes.** Nothing to change: under `BOF3X_WIDE` every primitive
+is shifted right by the columns and `Menu_DrawBackdrop` (ours) widens the
+backdrop by `Widescreen_BackdropPairs`, as every menu. Captured at 16:9
+(`en-US`) and 21:9 (`ja-JP`): the screen centred, the wood to both edges,
+no band.
+
+**The legend's piece (5b's last line).** Compared statically: START's call
+`0x801AF270(0x2C, 1)` (the US twin of `Menu_PieceRect`, in `GAME.EMI`) reads
+the table `0x801CCF7C`, whose entry `0x2C` is u 0, v `0xA8`, 40 x 48, the
+same four bytes as the PC's `0x663C8C` entry `0x2C`; the UI page
+`0x1A080200` is identical whole in the PC's `START.DAT` and in the US,
+Japan and French `START.EMI`. With the disc's CLUT the sprite samples the
+same texels; on the captures it is the frame behind the actor. Not compared
+against a PlayStation picture (M10's captures are not taken).
+
+**Captures** (`D:\bof3x-runs\ng1114\bt\captures\`, each
+`name_screen.png`): `en-US_default_4x3`, `en-US_swapped_4x3`,
+`ja-JP_default_4x3`, `ja-JP_swapped_4x3`, `en-US_default_wide1`,
+`ja-JP_default_wide2`, and `en-US_swapped_moves\` (cross types a letter,
+the hand on Quit, Left from it, circle erases). "Swapped" is the title's
+Config, Controller, cross on the Speak line (Speak and Action trade:
+words `0x903580` = `0x43`, `0x90358C` = `0x20`, peeked), then New Game.
+The `ja-JP` captures use PK's `ja-JP.FIRST.DAT`; with it the finish
+label's second kana draws as a white block, which GD's layer with the same
+build does not (`D:\bof3x-runs\ng1114\bt\shots\ja_default_gdlayer\name_screen.png`).
+
+**Run.** The 32-bit build. `BOF3X_SHADOW=name_grid,new_game`
+(self-test only, hosted, an ini-less launcher folder): `name_grid` 145
+checks, 0 mismatches; `new_game` 9, 0. `battle_commands.txt` under
+`BOF3X_OFF=NewGameNameEntry,NewGameOptions`, the tip's build against this
+one, `BOF3X_SHOT_EVERY=60`: 67 of 67 frames identical. **Not run:** the
+64-bit build; `fr-FR`, `de-DE`, `en-150`, `psp-eu` in a game (the French
+fix is from the code and the ops, not seen); a disc-built install.
+
+**Ledger text for stage C** (5b's "the hand" line, amended, and two lines
+to fold into the name-entry entries):
+
+- *The hand.* The original Western step leaves the hand on an empty cell
+  after Left from row 5's special (US / EU, French); a confirm there enters
+  byte 0. Ours, in the West, goes on in the direction of the move to the
+  next cell that is not empty, Left from the quit label to that row's last
+  letter (and Right from a special past an empty column 0, where a grid has
+  one). The Japan family keeps its disc's clamps: after a move, rows 4..7 of
+  columns 0..9 up to row 3 on page 2; after a page change, also row 2 of
+  columns 6..9 up to row 1. Why: the owner, 2026-11-14 (call 7 settled, the
+  skip's direction).
+- *The legend's buttons.* The original's legend draws its release's
+  default buttons as fixed tiles. Ours draws, in each row of the button
+  column, the sheet's tile of the button the step tests for that row's
+  action under the Config now (`Sigma` / `SigmaFrom(West)`), a shoulder as
+  the sheet's L1 / R1 label; at a disc's own defaults its own tiles. On
+  `psp-eu` the rows follow the West family's step, not the PSP's tiles and
+  letters. Why: the owner, 2026-11-14 ("the buttons match the mappings").
+- *The legend's pages.* A tile or the piece after a text is drawn on the
+  page the PlayStation's small draw leaves (`0x2F`), which the PC's small
+  draw does not set. Not a divergence in intent: it restores the disc's
+  pages (the French and German button tiles, the Western START row). The
+  Western START row's word stays blank on a PC install until the layer
+  carries it.
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
@@ -1560,15 +1721,17 @@ empty cell: after every move and every page change the hand goes up to the
 first cell that is not empty (Japan's page-2 constants are this rule), so
 that Left goes to row 4's column 9. A one-press check on the sibling's US
 build (the hand on row 5's special, then Left) would settle whether the
-original does it.
+original does it. *(Superseded by 4b and 4c-BT: the owner's press settled
+it for the code, and the West now goes on in the direction of the move -
+Left from the quit label to row 5's last letter; the Japan family keeps
+the clamp above.)*
 
 **The ledger text for stage C** (to fold into the entries for the name
 entry at New Game and the renamer's grid):
 
-- *The hand.* The original Western step leaves the hand on an empty cell
-  after Left from row 5's special (US / EU, French); a confirm there enters
-  byte 0. Ours moves it up to the first cell that is not empty, as the
-  Japan step's page-2 clamp does. Why: the owner's call 7.
+- *The hand.* As amended in 4c-BT: in the West the hand goes on in the
+  direction of the move to the next cell that is not empty; the Japan
+  family keeps its disc's page-2 clamps.
 - *The field's room.* The original enters any cell; its names are one byte
   a cell. Ours refuses, with `0x107`, a cell whose entry would make the
   name's stored bytes pass the field (8 for a character, 5 for a faerie
@@ -1582,8 +1745,10 @@ entry at New Game and the renamer's grid):
   as on the PlayStation, by a flag of ours rather than a write of the bit
   into `Input_Pressed`. Nothing else in the frame reads the bit.
 - *The legend's piece.* The menu piece SPRT of `START`'s legend is drawn
-  with the PC's `Menu_PieceRect` rectangle and the disc's CLUT; not yet
-  compared on screen (BT, stage C).
+  with the PC's `Menu_PieceRect` rectangle and the disc's CLUT; the
+  rectangle and the UI page are the US disc's byte for byte (4c-BT, static);
+  not compared against a PlayStation picture.
+- *The legend's buttons and pages.* 4c-BT's two lines.
 
 ## 6. Acceptance
 

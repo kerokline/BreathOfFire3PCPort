@@ -128,14 +128,17 @@ Spec JapanSpec() {
         s.ops[k].push_back(Op(1, {0x2A, 0x1E, 4, 1, 0x10, 0}));
         s.ops[k].push_back(Op(2, {0x1A, 6, 7, 5, 3, 4, 8}));
         s.ops[k].push_back(Op(5, {0, 0x2F, 0}));
-        for (unsigned i = 0; i < 4; ++i) s.ops[k].push_back(Op(3, {0xE, static_cast<unsigned char>(6 + 8 * i), static_cast<unsigned char>(0x1B + i), 0, 3, 0x78}));
+        const unsigned char shapes[4] = {0x1B, 0x1D, 0x1E, 0x1C};   // circle, cross, square, triangle: Japan's rows
+        for (unsigned i = 0; i < 4; ++i) s.ops[k].push_back(Op(3, {0xE, static_cast<unsigned char>(6 + 8 * i), shapes[i], 0, 3, 0x78}));
+        s.ops[k].push_back(Op(3, {0xA, 0x26, 4, 2, 0, 0x78}));    // the sheet's START label, two halves
+        s.ops[k].push_back(Op(3, {0x12, 0x26, 5, 2, 0, 0x78}));
     }
     return s;
 }
 
 // The West's shape: one page numbered 2; codes 1..4 in rows 3..6, row 7
-// empty, a hole in row 5 at columns 7..9 (Left from that row's special lands
-// on one) and in row 2 at column 9.
+// empty, holes in row 5 at columns 7..9 and 0 (Left / Right from that row's
+// special lands on one) and in row 2 at column 9.
 Spec WestSpec() {
     Spec s{};
     s.family = 1; s.pages = 1; s.first = 2; s.codes = 4;
@@ -145,7 +148,7 @@ Spec WestSpec() {
             SynCell& cell = s.cell[0][r * 12 + c];
             if (r == 7) cell = kHole;
             else if (r >= 3 && c >= 10) cell = Special(r - 2);
-            else if ((r == 5 && c >= 7 && c <= 9) || (r == 2 && c == 9)) cell = kHole;
+            else if ((r == 5 && ((c >= 7 && c <= 9) || c == 0)) || (r == 2 && c == 9)) cell = kHole;
             else if (r == 6 && c == 0) cell = kSpace;
             else cell = Glyph(n++);
         }
@@ -155,7 +158,8 @@ Spec WestSpec() {
     s.box_w[0] = 0x78; s.box_w[1] = 0x4D;
     for (unsigned k = 0; k < 2; ++k) {
         for (unsigned i = 0; i < 5; ++i) s.ops[k].push_back(Op(1, {0x1B, static_cast<unsigned char>(6 + 8 * i), static_cast<unsigned char>(i), 0, 0x10, 0}));
-        for (unsigned i = 0; i < 4; ++i) s.ops[k].push_back(Op(3, {0xE, static_cast<unsigned char>(6 + 8 * i), static_cast<unsigned char>(0x1D - i), 0, 3, 0x78}));
+        const unsigned char shapes[4] = {0x1D, 0x1C, 0x1B, 0x1E};   // cross, triangle, circle, square: the West's rows
+        for (unsigned i = 0; i < 4; ++i) s.ops[k].push_back(Op(3, {0xE, static_cast<unsigned char>(6 + 8 * i), shapes[i], 0, 3, 0x78}));
     }
     return s;
 }
@@ -279,11 +283,20 @@ void CheckMoves(const Grid& jp, const Grid& w) {
     Check(c.row == 4, "West: Up from row 6 column 8 skips row 5's hole (row %u)", c.row);
     c = At(w, 5, 10);
     Run(w, Copy::kNewGame, c, left);
-    Check(c.row == 4 && c.column == 9 && !EmptyAt(w, c),
-          "West: Left from row 5's special lands on column 9 and goes up from its hole to row 4 (row %u column %u)", c.row, c.column);
+    Check(c.row == 5 && c.column == 6 && Sounds({0x100}),
+          "West: Left from row 5's special goes on left past its holes to the row's last letter (row %u column %u)", c.row, c.column);
     c = At(w, 5, 11);
     Run(w, Copy::kNewGame, c, right);
-    Check(c.row == 5 && c.column == 0, "West: Right from a special goes to column 0 (column %u)", c.column);
+    Check(c.row == 5 && c.column == 1, "West: Right from row 5's special goes on right past column 0's hole (row %u column %u)", c.row, c.column);
+    c = At(w, 4, 11);
+    Run(w, Copy::kNewGame, c, right);
+    Check(c.row == 4 && c.column == 0, "West: Right from a special goes to column 0 (column %u)", c.column);
+    c = At(w, 4, 10);
+    Run(w, Copy::kNewGame, c, left);
+    Check(c.row == 4 && c.column == 9, "West: Left from a special goes to column 9 (column %u)", c.column);
+    c = At(w, 5, 1);
+    Run(w, Copy::kNewGame, c, left);
+    Check(c.row == 5 && c.column == 11, "West: Left from column 1 skips column 0's hole and wraps to the special (column %u)", c.column);
     c = At(w, 5, 6);
     Run(w, Copy::kNewGame, c, right);
     Check(c.row == 5 && c.column == 10, "West: Right from column 6 skips the hole to the special (column %u)", c.column);
@@ -304,7 +317,10 @@ void CheckMoves(const Grid& jp, const Grid& w) {
     Check(c.row == 4 && c.column == 10, "Japan: Down along the specials on page 2 (row %u)", c.row);
     c = At(jp, 6, 10, 2);
     Run(jp, Copy::kNewGame, c, left);
-    Check(c.row == 4 && c.column == 9, "Japan: Left from a special on page 2 clamps up (row %u column %u)", c.row, c.column);
+    Check(c.row == 4 && c.column == 9, "Japan: Left from a special on page 2 clamps up, the disc's rule (row %u column %u)", c.row, c.column);
+    c = At(jp, 6, 11, 2);
+    Run(jp, Copy::kNewGame, c, right);
+    Check(c.row == 4 && c.column == 0, "Japan: Right from a special on page 2 clamps up, the disc's rule (row %u column %u)", c.row, c.column);
     c = At(jp, 4, 0, 2);
     Run(jp, Copy::kNewGame, c, down);
     Check(c.row == 0 && c.column == 0, "Japan: Down from row 4 over page 2's holes wraps to row 0 (row %u)", c.row);
@@ -539,6 +555,29 @@ void CheckCodec(const Grid& jp, const Grid& w) {
     Check(Decode(w, stops, 3, back, nullptr) && back[1] == 0xFF, "decode stops at a NUL");
 }
 
+std::uint16_t Identity(std::uint16_t b) { return b; }
+std::uint16_t SwapPair(std::uint16_t b, std::uint16_t x, std::uint16_t y) { return b == x ? y : b == y ? x : b; }
+std::uint16_t SwapCircleCross(std::uint16_t b) { return SwapPair(b, 0x20, 0x40); }
+std::uint16_t SwapCircleL1(std::uint16_t b) { return SwapPair(b, 0x20, 0x04); }
+std::uint16_t SwapCrossTriangle(std::uint16_t b) { return SwapPair(b, 0x40, 0x10); }
+std::vector<int> Tiles() {   // the tiles drawn, u * 256 + v, in order
+    std::vector<int> out;
+    for (const Drawn& d : g_drawn)
+        if (d.what == 'I') out.push_back(d.a);
+    return out;
+}
+int TileClut(unsigned n) {
+    for (const Drawn& d : g_drawn)
+        if (d.what == 'I' && n-- == 0) return d.b;
+    return -1;
+}
+detail::Op Op8(unsigned char op, std::initializer_list<unsigned char> a) {
+    detail::Op o{op, {}};
+    unsigned i = 0;
+    for (unsigned char b : a) o.a[i++] = b;
+    return o;
+}
+
 void CheckDraws(const Grid& jp, const Grid& w) {
     Cells c = At(jp, 4, 11, 2);
     g_drawn.clear();
@@ -552,17 +591,68 @@ void CheckDraws(const Grid& jp, const Grid& w) {
         if (d.what == 'T' && d.y == 0x67 + 6 + 14 * 5 && d.x == 0x18 + 4 + 0x14 * 8 + 0x1C * 2) page_label = d.s == std::string(3, static_cast<char>('a' + 4 + 2 + 1)) && d.b == 4;
     Check(page_label, "page 2's code-3 label is slot 4 + 2 of the renamer's labels, count 4");
     g_drawn.clear();
-    DrawLegend(jp, Copy::kNewGame, 1, 0xA8, 0x2B, kRecorder);
+    DrawLegend(jp, Copy::kNewGame, 1, 0xA8, 0x2B, kRecorder, Identity);
     Check(g_drawn[0].what == 'M' && g_drawn[0].a == 1 && g_drawn[0].b == 0xF && g_drawn[1].what == 'B' && g_drawn[1].a == 0x78,
           "START's legend: its own mode, then its box");
-    Check(CountDrawn('S') == 5 + 15 && CountDrawn('I') == 4 && CountDrawn('P') == 1 && CountDrawn('M') == 3 && g_drawn.back().what == 'F',
-          "START's legend: five texts, fifteen leaders, four tiles, the piece, three modes, the frame");
+    Check(CountDrawn('S') == 5 + 15 && CountDrawn('I') == 6 && CountDrawn('P') == 1 && CountDrawn('M') == 3 && g_drawn.back().what == 'F',
+          "START's legend: five texts, fifteen leaders, six tiles, the piece, three modes (no extra one), the frame");
     bool by_page = false;
     for (const Drawn& d : g_drawn) by_page |= d.what == 'S' && d.y == 0x2B + 0x1E && static_cast<unsigned char>(d.s[1]) == 0x10 + 4 + 1;
     Check(by_page, "the legend's entry 4 + page");
+    Check(Tiles() == std::vector<int>({0x1B00, 0x1D00, 0x1E00, 0x1C00, 0x0402, 0x0502}), "the identity map draws the chunk's tiles");
+    // A Config swap of circle and cross (Japan's terms): the circle and cross rows trade pictures.
     g_drawn.clear();
-    DrawLegend(w, Copy::kRenamer, 2, 0xA8, 0x2B, kRecorder);
-    Check(g_drawn[0].what == 'B' && g_drawn[0].a == 0x4D && CountDrawn('M') == 0 && CountDrawn('I') == 4, "COMMU02's legend: no mode of its own");
+    DrawLegend(jp, Copy::kNewGame, 1, 0xA8, 0x2B, kRecorder, SwapCircleCross);
+    Check(Tiles() == std::vector<int>({0x1D00, 0x1B00, 0x1E00, 0x1C00, 0x0402, 0x0502}) && TileClut(0) == 0x7803 && TileClut(1) == 0x7803,
+          "a circle / cross swap trades the two rows' tiles, in the shapes' CLUT");
+    // circle on L1: the circle row shows the sheet's L1 label, in the CLUT the legend draws START with.
+    g_drawn.clear();
+    DrawLegend(jp, Copy::kNewGame, 1, 0xA8, 0x2B, kRecorder, SwapCircleL1);
+    Check(Tiles() == std::vector<int>({0x0002, 0x1D00, 0x1E00, 0x1C00, 0x0402, 0x0502}) && TileClut(0) == 0x7800,
+          "circle on L1: the sheet's L1 label in START's CLUT (tile %04X clut %04X)", Tiles()[0], TileClut(0));
+    // COMMU02 of the French shape: texts then tiles with no mode of its own -
+    // the page the PlayStation's small draw left is given before the first tile.
+    g_drawn.clear();
+    DrawLegend(w, Copy::kRenamer, 2, 0xA8, 0x2B, kRecorder, Identity);
+    unsigned first_tile = 0, mode_at = 0;
+    for (unsigned i = 0; i < g_drawn.size(); ++i) {
+        if (g_drawn[i].what == 'I' && first_tile == 0) first_tile = i;
+        if (g_drawn[i].what == 'M') mode_at = i;
+    }
+    Check(g_drawn[0].what == 'B' && g_drawn[0].a == 0x4D && CountDrawn('M') == 1 && CountDrawn('I') == 4 && mode_at + 1 == first_tile &&
+              g_drawn[mode_at].a == 0 && g_drawn[mode_at].b == 0x2F,
+          "COMMU02's legend: no mode of its own; the small draw's page 0x2F before its tiles");
+    g_drawn.clear();
+    DrawLegend(w, Copy::kRenamer, 2, 0xA8, 0x2B, kRecorder, SwapCrossTriangle);
+    Check(Tiles() == std::vector<int>({0x1C00, 0x1D00, 0x1B00, 0x1E00}), "a cross / triangle swap trades those rows");
+    // A tile off the column is drawn as the chunk has it, on the page the disc
+    // leaves; a column row is the sheet's tile on page 0x2F whatever came before.
+    Grid g2 = jp;
+    CopyData& d = g2.copy[0];
+    d.ops = 0;
+    d.op[d.ops++] = Op8(5, {0, 0x1D, 0});
+    d.op[d.ops++] = Op8(3, {0x2A, 0x26, 0x1B, 0, 3, 0x78});   // off the column, on the UI page: as it is, no mode
+    d.op[d.ops++] = Op8(3, {0xE, 6, 0x1B, 0, 3, 0x78});       // the column's row 0: page 0x2F given first
+    d.op[d.ops++] = Op8(5, {0, 0x1D, 0});
+    d.op[d.ops++] = Op8(1, {0x2A, 6, 0, 0, 0x10, 0});
+    d.op[d.ops++] = Op8(3, {0x2A, 0x26, 0, 0x13, 0, 0x78});   // after a text, off the column: the small draw's page
+    g_drawn.clear();
+    DrawLegend(g2, Copy::kNewGame, 0, 0, 0, kRecorder, SwapCircleCross);
+    std::vector<int> modes;
+    for (const Drawn& dr : g_drawn)
+        if (dr.what == 'M') modes.push_back(dr.b);
+    Check(Tiles() == std::vector<int>({0x1B00, 0x1D00, 0x0013}) && modes == std::vector<int>({0xF, 0x1D, 0x2F, 0x1D, 0x2F}),
+          "off the column as the chunk has it; the column's row on 0x2F, remapped; after a text 0x2F (%zu modes)", modes.size());
+    // psp-eu's shape (PE's chunk): rows 2 and 3 of the column are one-letter
+    // texts; they are drawn as the row's button tile like the others.
+    Grid g3 = w;
+    CopyData& e = g3.copy[1];
+    e.op[7] = Op8(1, {0xE, 0x16, 6, 0, 1, 0});
+    e.op[8] = Op8(1, {0xE, 0x1E, 5, 0, 1, 0});
+    g_drawn.clear();
+    DrawLegend(g3, Copy::kRenamer, 2, 0xA8, 0x2B, kRecorder, Identity);
+    Check(Tiles() == std::vector<int>({0x1D00, 0x1C00, 0x1B00, 0x1E00}) && CountDrawn('S') == 5 && TileClut(3) == 0x7803,
+          "psp-eu's letters in the column are drawn as the West's row tiles (%zu tiles, %u texts)", Tiles().size(), CountDrawn('S'));
 }
 
 // The random walk: the hand never on an empty cell, the cells in range.
