@@ -178,6 +178,13 @@ void AppendFill(float x0, float y0, float x1, float y1, U argb);
 using PresentFn = void (*)(Frame& frame);
 void SetPresentHook(PresentFn fn);
 
+// PROTOTYPE (interp.h, BOF3X_INTERP): the frame recorded so far shown with
+// its draws halfway back to the last frame presented, through the hook
+// (which must run the frame and show it and nothing else: the frame itself
+// is presented later). Nothing when off or when no frame is kept.
+void SetInBetweenHook(PresentFn fn);
+void PresentInBetween();
+
 // Start-up: allocates the frame's arrays. Sizes are the limits a frame can
 // hold; a frame that outgrows them ends the process naming the limit.
 void InitShim(U max_vertices, U max_commands, U arena_bytes);

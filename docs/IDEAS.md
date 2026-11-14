@@ -109,6 +109,7 @@ rule ([`README.md`](README.md)) here too.
 | I65 | The title menu's third row as a custom menu of quality-of-life toggles, reachable from inside the game too | menu / uplift | not assessed | open 2026-11-12 (the owner, answering the New Game round's question on the row); nothing designed |
 | I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
 | I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
+| I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | measured, not built | open 2026-11-13 (the owner, after frame-interpolation.md section 5); first step a WAV A/B and the owner's ear |
 
 ---
 
@@ -2650,6 +2651,20 @@ _(2026-11-12) open; the stand-down is what is built._
 **What the measurement says** (the Definitive Edition 1.4 against the European PlayStation and PSP discs): all 58 enemy tables and both pages are reachable; of the 284 distinct lines the patch changes, all but those holding one 28-byte run; 87% of the 2,478 changed table-number bytes are the patch's own. Open: 127 table bytes in runs that change a table's length, which the builder places today by comparing the whole US section with the patched one (`unmoved_section`) - the patch's own copies would have to give that alignment - and 113 / 79 copied table bytes not yet looked for elsewhere on the disc.
 
 **First concrete step:** a sparse decoder in `tools/vcdiff.py` (a window's target ranges from a source that answers only for listed ranges), and `m7_trace.py`'s provenance made into the list's builder; then the enemy tables and pages alone from a European disc, compared byte for byte with the US-disc build.
+
+### Outcome
+_(2026-11-13) open; measured, nothing built._
+
+## I68 — The music staging buffer against the tick
+
+**Ask (2026-11-13, the owner):** after the state-hash A/B of the frame-interpolation prototype: "a note / idea to look at the music buffer next".
+**Kind:** audio / tools. **Feasibility:** measured, not built ([`frame-interpolation.md`](frame-interpolation.md) section 5).   **Gated on:** nothing.
+
+**What was measured.** `Music_Staging` (17 pages from `0x7CD000`) is refilled by wall time from `Sound_Tick` in WinMain's wait loop, not by the frame count. Two runs of one route with nothing changed disagree on those pages at a few ticks (the shop route: 6 of 3,137), so `statehash.py check` compares them only where the references happen to agree. With `BOF3X_INTERP=1` the same pages differ at more ticks (shop 21, bossAndFlash 10, combat 1, bridgeWalk 0): the in-between's present sits between `Sound_Tick` calls. Every other page was identical on all four routes.
+
+**The questions.** (1) Is the moved refill audible - a late refill is an underrun, and nobody has listened. (2) Should the staging buffer be in the state hash at all: it is noise in every proof today, and a skip-list entry or a refill tied to the tick would make it a clean page. (3) Does anything the game computes read the buffer's fill state (it should not; not checked).
+
+**First concrete step:** a WAV A/B of one music-heavy route with the switch off and on ([`wav-dump.md`](wav-dump.md)), and the owner's ear on the same route; then read `Sound_Tick`'s refill condition and decide between the skip list and a tick-tied refill.
 
 ### Outcome
 _(2026-11-13) open; measured, nothing built._

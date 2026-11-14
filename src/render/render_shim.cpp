@@ -16,6 +16,7 @@
 #include "game/pillarbox.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
+#include "render/interp.h"
 #include "os/os.h"
 
 namespace render {
@@ -429,6 +430,7 @@ void LogFrameHash() {
 void Present() {
     if (FrameHashOn()) LogFrameHash();
     pillarbox::Cover();   // DIV-0041 (PB, docs/narrow-pillarbox.md): a narrow area's bars, over the frame, after its hash
+    if (interp::On()) interp::Keep(g_frame);   // PROTOTYPE (interp.h)
     if (g_present) g_present(g_frame);
     ResetFrame();
     ReleaseDeferred();
@@ -1195,6 +1197,67 @@ void ResetFrame() {
 }
 
 void SetPresentHook(PresentFn fn) { g_present = fn; }
+
+namespace interp { extern bool g_debug; }
+// PROTOTYPE (interp.h). The pillarbox bars go on for the in-between picture
+// and come off again: the present adds them itself, after the frame hash.
+namespace {
+PresentFn g_in_between;
+Vertex* g_mid_vertices;
+}  // namespace
+void SetInBetweenHook(PresentFn fn) { g_in_between = fn; }
+
+void PresentInBetween() {
+    if (!interp::On() || !g_in_between || g_frame.n_commands == 0) return;
+    static float max_move = -1;
+    if (max_move < 0) {
+        // BOF3X_INTERP_MAX: the furthest a vertex may move between two frames
+        // and still be shown halfway, in target pixels. Default 96.
+        char v[16] = "";
+        max_move = 96;
+        if (bof3::os::GetEnv("BOF3X_INTERP_MAX", v, sizeof v) > 0 && std::atof(v) > 0) max_move = static_cast<float>(std::atof(v));
+    }
+    if (!g_mid_vertices) {
+        g_mid_vertices = static_cast<Vertex*>(Alloc(g_frame.max_vertices * sizeof(Vertex)));
+        if (!g_mid_vertices) bof3::Fatal("render: out of memory for the in-between frame");
+    }
+    const U n_commands = g_frame.n_commands, n_vertices = g_frame.n_vertices, n_walks = g_n_walks;
+    pillarbox::Cover();
+    interp::Stats s = {};
+    // BOF3X_INTERP_DEBUG=<Frame_Counter>: that in-between's every pair and failure (interp-dbg).
+    static int debug_at = -2;
+    if (debug_at == -2) {
+        char v[16] = "";
+        debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atoi(v) : -1;
+    }
+    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) == debug_at;
+    if (interp::Build(g_frame, g_mid_vertices, max_move, &s)) {
+        Frame mid = g_frame;
+        mid.vertices = g_mid_vertices;
+        g_in_between(mid);
+        static interp::Stats sum;
+        static U frames;
+        sum.draws += s.draws;
+        sum.exact += s.exact;
+        sum.loose += s.loose;
+        sum.moved += s.moved;
+        sum.far_ += s.far_;
+        sum.unmatched += s.unmatched;
+        sum.followed += s.followed;
+        sum.snapped += s.snapped;
+        if (++frames == 150) {
+            bof3::Log("interp      150 in-between frames to Frame_Counter %u: %u draws a frame; exact %u, loose %u, too far %u, "
+                      "unmatched %u (followed %u); moved %u; snapped %u",
+                      static_cast<U>(Frame_Counter), sum.draws / frames, sum.exact / frames, sum.loose / frames,
+                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames, sum.snapped / frames);
+            sum = {};
+            frames = 0;
+        }
+    }
+    g_frame.n_commands = n_commands;
+    g_frame.n_vertices = n_vertices;
+    g_n_walks = n_walks;
+}
 
 void AppendFill(float x0, float y0, float x1, float y1, U argb) {
     Vertex* v = AppendVertices(6);

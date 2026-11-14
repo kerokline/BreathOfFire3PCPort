@@ -1021,6 +1021,7 @@ void* g_render_fiber;
 enum class Job { kNone, kInit, kPresent, kSave };
 Job g_job;
 Frame* g_job_frame;
+bool g_job_in_between;   // PROTOTYPE (interp.h)
 const Options* g_job_options;
 const wchar_t* g_job_path;
 bool g_job_ok;
@@ -1065,6 +1066,15 @@ void PresentFrame(Frame& frame) {
     RunOnFiber(Job::kPresent);
 }
 
+// PROTOTYPE (interp.h).
+void PresentInBetweenFrame(Frame& frame) {
+    if (bof3::os::ThreadId() != g_main_thread) bof3::Fatal("render: the in-between present on thread %u, not the game's", bof3::os::ThreadId());
+    g_job_frame = &frame;
+    g_job_in_between = true;
+    RunOnFiber(Job::kPresent);
+    g_job_in_between = false;
+}
+
 namespace {
 // DIV-0042: the target remade at the scale RequestScale asked for. After the
 // present, so the frame just drawn was recorded and run at one size; before
@@ -1087,6 +1097,9 @@ void PresentOnFiber(Frame& frame) {
     FpuGuard fpu;
     RunFrame(frame);
     Show();
+    // PROTOTYPE (interp.h): an in-between picture is the frame still to be
+    // presented, so its surfaces and the target's size stay as they are.
+    if (g_job_in_between) return;
     // After the frame: a surface released since the last present may have
     // draws in this one, through its snapshot, and needs its GPU object
     // until they have run.
@@ -1102,6 +1115,7 @@ void InitD3d11(const Options& options) {
     g_job_options = &options;
     RunOnFiber(Job::kInit);
     SetPresentHook(&PresentFrame);
+    SetInBetweenHook(&PresentInBetweenFrame);
 }
 
 namespace {
