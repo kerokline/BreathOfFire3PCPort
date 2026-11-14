@@ -558,7 +558,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     // sweep of 2026-11-13: a spell's sphere, the desert floor, a dragon's
     // breath). Such a run of the list is shown where the frame has it, whole.
     struct Run {
-        U n, breaks;
+        U n, breaks, soft;
+        bool parted;
     };
     std::vector<Run> runs;
     std::vector<U> run_of(frame.n_commands, 0);
@@ -566,6 +567,31 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const void* surface = nullptr;
         bool blend = false, open = false;
         float px0 = 0, py0 = 0, px1 = 0, py1 = 0, pmx = 0, pmy = 0;
+        U prev = 0;
+        // Where two touching draws share corners (half a pixel), the corners
+        // say whether they go different ways: 1 when a shared corner parts in
+        // the in-between, 0 when all stay together, -1 when they share none.
+        // A mesh that changes shape between two frames has neighbours whose
+        // first vertices move differently and whose shared corners do not
+        // part: the rope bridge's deck lifts every other row of planks 5
+        // pixels one frame in four, and by first vertices its runs of two and
+        // three tiles were shown unmoved beside moved ones (the owner,
+        // 2026-11-13: a step in the far planks, hairlines between them).
+        const auto SharedCornersPart = [&](const Command& a, const Command& b) {
+            int shared = -1;
+            for (U k = 0; k < a.count; ++k) {
+                const Vertex& p = frame.vertices[a.first + k];
+                for (U m = 0; m < b.count; ++m) {
+                    const Vertex& q = frame.vertices[b.first + m];
+                    if ((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y) > 0.25f) continue;
+                    shared = 0;
+                    const float ex = (out[a.first + k].x - p.x) - (out[b.first + m].x - q.x);
+                    const float ey = (out[a.first + k].y - p.y) - (out[b.first + m].y - q.y);
+                    if (ex * ex + ey * ey > 0.75f * 0.75f) return 1;
+                }
+            }
+            return shared;
+        };
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
             if (!IsDraw(c)) continue;
@@ -578,15 +604,25 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const float mx = half_dx[i] * 2, my = half_dy[i] * 2;
             const bool same = open && SurfaceOf(c) == surface && (c.state.blend_enable != 0) == blend;
             if (!same) {
-                runs.push_back({0, 0});
+                runs.push_back({0, 0, 0, false});
                 surface = SurfaceOf(c), blend = c.state.blend_enable != 0, open = true;
             } else if (x0 <= px1 + 2 && px0 <= x1 + 2 && y0 <= py1 + 2 && py0 <= y1 + 2) {
+                const int part = SharedCornersPart(frame.commands[prev], c);
                 const float d = std::sqrt((mx - pmx) * (mx - pmx) + (my - pmy) * (my - pmy));
                 const float big = std::sqrt(std::max(mx * mx + my * my, pmx * pmx + pmy * pmy));
-                if (d > std::max(4.0f, big * 0.5f)) ++runs.back().breaks;
+                const bool differ = d > std::max(4.0f, big * 0.5f);
+                // Neighbours whose corners stay together and whose first
+                // vertices differ count only in a run where some corner does
+                // part: a spell's sphere, whose facets trade looks, keeps most
+                // of its corners and shows streaks (bossAndFlash,
+                // Frame_Counter 3470); the deck parts none.
+                if (part > 0) ++runs.back().breaks, runs.back().parted = true;
+                else if (part < 0 && differ) ++runs.back().breaks;
+                else if (differ) ++runs.back().soft;
             }
             ++runs.back().n;
             run_of[i] = static_cast<U>(runs.size() - 1);
+            prev = i;
             px0 = x0, px1 = x1, py0 = y0, py1 = y1, pmx = mx, pmy = my;
         }
     }
@@ -601,7 +637,10 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const Command& c = frame.commands[i];
             if (c.kind == Cmd::kDraw && c.count != 0 && done[i] != 2) ++lost;
         }
-        for (const Run& r : runs) breaks += r.breaks;
+        for (Run& r : runs) {
+            if (r.parted) r.breaks += r.soft;
+            breaks += r.breaks;
+        }
         if (g_debug) bof3::Log("interp-dbg  CUT? draws %u lost %u breaks %u", s.draws, lost, breaks);
         if (s.draws >= 16 && (lost * 4 > s.draws || breaks * 10 > s.draws)) {
             std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));

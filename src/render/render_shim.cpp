@@ -1226,13 +1226,17 @@ void PresentInBetween() {
     const U n_commands = g_frame.n_commands, n_vertices = g_frame.n_vertices, n_walks = g_n_walks;
     pillarbox::Cover();
     interp::Stats s = {};
-    // BOF3X_INTERP_DEBUG=<Frame_Counter>: that in-between's every pair and failure (interp-dbg).
-    static int debug_at = -2;
+    // BOF3X_INTERP_DEBUG=<Frame_Counter> or <first>-<last>: those in-betweens'
+    // every pair and failure (interp-dbg), each headed by a FRAME line.
+    static int debug_at = -2, debug_to = -1;
     if (debug_at == -2) {
-        char v[16] = "";
+        char v[32] = "";
         debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atoi(v) : -1;
+        const char* dash = std::strchr(v, '-');
+        debug_to = dash ? std::atoi(dash + 1) : debug_at;
     }
-    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) == debug_at;
+    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) >= debug_at && static_cast<int>(Frame_Counter) <= debug_to;
+    if (interp::g_debug) bof3::Log("interp-dbg  FRAME %u", static_cast<U>(Frame_Counter));
     const std::uint64_t t0 = bof3::os::Counter();
     const bool built = interp::Build(g_frame, g_mid_vertices, max_move, &s);
     const double build_ms = static_cast<double>(bof3::os::Counter() - t0) * 1000.0 / static_cast<double>(bof3::os::CounterFrequency());
