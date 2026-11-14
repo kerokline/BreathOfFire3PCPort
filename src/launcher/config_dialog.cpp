@@ -80,7 +80,10 @@ constexpr SubPage kSubPages[] = {
     // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
     // launcher's extras - today the Row above the text toggle (ruby_ui=).
     {kPageMods, IDD_PAGE_MODS, L"Data"},
-    {kPageMods, IDD_PAGE_EXTRA, L"Extras"},
+    // Extras on two pages since the New Game round (docs/new-game-round.md
+    // 4c-LT), as the Cheats sub-tab: Page 2 holds New Game's two screens.
+    {kPageMods, IDD_PAGE_EXTRA, L"Extras", L"Page 1"},
+    {kPageMods, IDD_PAGE_EXTRA2, L"Extras", L"Page 2"},
     {kPageData, IDD_PAGE_DATA, nullptr},
 };
 constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
@@ -123,6 +126,8 @@ struct DialogState {
     HWND pages[kSubPageCount] = {};       // kSubPages' order
     Cells cells{};
     bool cells_touched = false, cheats_touched = false;
+    // New Game's two boxes (NewGameRefresh): -1 untouched, else the box as clicked.
+    int names_box = -1, options_box = -1;
     // Back applied the pages to cfg: Exit then saves them (kDialogSave).
     bool applied = false;
     // The picture, 32-bit top-down pixels, and the scale it is drawn at.
@@ -1076,6 +1081,44 @@ void SoloReadBack(HWND dlg, Config& cfg) {
     // kSoloKept, or no selection: the ini's value as read
 }
 
+// ---- New Game's screens (docs/new-game-round.md 5 and 4c-LT) -----------------
+//
+// Two boxes on the Extras sub-tab's Page 2 over code names in off=: the name
+// entry (NewGameNameEntry and CommuNameGrid) and the options step
+// (NewGameOptions), both on by default. Each box shows what off= says and is
+// written back only once clicked (ConfigNewGameOffEdit, ConfigBehaviourEdit's
+// rule: the line as read when the box says what it said). Grey, with the
+// reason, as ConfigNewGameState decides for the language and preset chosen
+// now and the cache in the box.
+
+void NewGameRefresh(HWND dlg, const DialogState& state) {
+    if (!state.cfg) return;
+    Config chosen = *state.cfg;
+    chosen.language = LanguageChosen(dlg, state);
+    if (chosen.language.empty()) chosen.language = kLanguageOriginal;
+    const std::string language = ConfigLanguagePlayed(state.game_dir, chosen);
+    const int sel = Selected(dlg, IDC_PRESET);
+    const Preset preset = kPresets[sel >= 0 && static_cast<size_t>(sel) < std::size(kPresets) ? sel : 0].id;
+    const PresetPlan plan = ConfigPresetPlan(state.game_dir, *state.cfg, preset, language);
+    const NewGameState s = ConfigNewGameState(*state.cfg, language,
+                                              ConfigLayerHasNameGrid(state.game_dir, language, DialogDataRoot(dlg)),
+                                              plan.off);
+    Enable(dlg, IDC_EXTRA_NAMES, s.name_entry_enabled);
+    Enable(dlg, IDC_EXTRA_NAMESNOTE, s.name_entry_enabled);
+    Enable(dlg, IDC_EXTRA_OPTIONS, s.options_enabled);
+    Enable(dlg, IDC_EXTRA_OPTIONSNOTE, s.options_enabled);
+    std::wstring why = s.name_entry_why;
+    if (!s.options_why.empty() && s.options_why != why) why += (why.empty() ? L"" : L"\r\n") + s.options_why;
+    SetText(dlg, IDC_EXTRA_NEWGAMEWHY, why.c_str());
+}
+
+void NewGamePopulate(HWND dlg, const DialogState& state) {
+    const NewGameState s = ConfigNewGameState(*state.cfg, std::string(), false, std::string());
+    Check(dlg, IDC_EXTRA_NAMES, s.name_entry);
+    Check(dlg, IDC_EXTRA_OPTIONS, s.options);
+    NewGameRefresh(dlg, state);
+}
+
 // ---- DIV-0050: the Controls page (docs/controls.md section 4.2) -------------
 //
 // Fourteen rows, one a PlayStation input, each with two key cells and two pad
@@ -1661,6 +1704,8 @@ void ApplyPages(HWND dlg, DialogState& state) {
     if (state.cheats_touched)
         CheatsReadBack(SubPageOf(state, IDD_PAGE_GAME), SubPageOf(state, IDD_PAGE_GAME2), state.cfg->cheats);
     SoloReadBack(dlg, *state.cfg);   // an untouched page writes on= and solo.champion= back as read
+    // New Game's boxes: off= as read unless one was clicked (ConfigNewGameOffEdit)
+    state.cfg->off = ConfigNewGameOffEdit(state.cfg->off, state.names_box, state.options_box);
     if (state.cells_touched) {
         const int layout = Selected(dlg, IDC_CT_LAYOUT);
         state.cells.layout = static_cast<input::Layout>(layout < 0 ? 0 : layout);
@@ -1700,6 +1745,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             SendMessageW(mods, kMsgModsOff, 0, reinterpret_cast<LPARAM>(&state->cfg->mods_off));
         CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), state->cfg->cheats);
         SoloPopulate(dlg, *state->cfg);
+        NewGamePopulate(dlg, *state);
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
         Layout(dlg, *state);
@@ -1790,10 +1836,20 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                 SuitesRefresh(dlg, *state);   // a names layer's note follows the language
                 RubyRefresh(dlg, *state);     // the rows above it too
                 PresetRefresh(dlg, *state);   // and what the preset turns off
+                NewGameRefresh(dlg, *state);  // and whether its files have the name entry
             }
             return TRUE;
         case IDC_PRESET:
-            if (HIWORD(wp) == CBN_SELCHANGE) PresetRefresh(dlg, *state);
+            if (HIWORD(wp) == CBN_SELCHANGE) {
+                PresetRefresh(dlg, *state);
+                NewGameRefresh(dlg, *state);
+            }
+            return TRUE;
+        case IDC_EXTRA_NAMES:
+            if (HIWORD(wp) == BN_CLICKED) state->names_box = Checked(dlg, IDC_EXTRA_NAMES) ? 1 : 0;
+            return TRUE;
+        case IDC_EXTRA_OPTIONS:
+            if (HIWORD(wp) == BN_CLICKED) state->options_box = Checked(dlg, IDC_EXTRA_OPTIONS) ? 1 : 0;
             return TRUE;
         case IDC_RUBY:
             if (HIWORD(wp) == CBN_SELCHANGE) RubyPicked(dlg, *state);
@@ -1808,6 +1864,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                     SuitesRefresh(dlg, *state);   // another cache, another manifest
                     MusicRefresh(dlg, *state);    // DIV-0150: which sources it holds
                     RubyRefresh(dlg, *state);     // which reading-row layers it holds
+                    NewGameRefresh(dlg, *state);  // whether its language layer has the name entry
                 }
             }
             return TRUE;

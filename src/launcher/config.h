@@ -518,6 +518,53 @@ struct SoloState {
     std::wstring why;
 };
 SoloState ConfigSoloState(const Config& cfg, bool mode_ticked, const std::vector<std::string>* known = nullptr);
+
+// The New Game round (docs/new-game-round.md 5 and 4c-LT): two boxes on the
+// Mods tab's Extras, Page 2, that stand for code names in off= (BOF3X_OFF,
+// docs/launcher-settings.md 3.2). Both changes are on by default, so a box
+// writes its names into off= only when it is cleared. One box for the name
+// entry's two callers - New Game (NewGameNameEntry) and the faerie village's
+// renamer (CommuNameGrid): one routine, one grid chunk, one rule for when the
+// install can play it, and to the player one screen (the owner's A1). A
+// second box for New Game's options step (NewGameOptions, call 1): another
+// screen, which every language can play.
+inline constexpr const char* kNameEntryCodes[] = {"NewGameNameEntry", "CommuNameGrid"};
+inline constexpr const char* kNewGameOptionsCode = "NewGameOptions";
+// The release's code names (src/hook/code_names.h, the names BOF3X_OFF takes;
+// a name the game lacks stops it at start-up).
+std::vector<std::string> ConfigCodeNamesKnown();
+// Whether the language layer the game reads for `language` holds the name
+// entry's grid: a kind-22 chunk of tag 0 in its FIRST.DAT
+// (docs/new-game-round.md 5a), read by the chunk headers alone. The file is
+// the one the game walks (dat_load WalkOverlay, DIV-0089): <cache>\loc\<tag>\
+// dat\FIRST.DAT when `cache` (ConfigCacheDataRoot) has the layer, else the
+// install's DAT\<tag>.FIRST.DAT. False for the original Chinese ("original"
+// or empty: no layer, and no disc has a grid for it), for a layer built
+// without the chunk (tools/loc_build.py writes none for a build it cannot
+// read whole: psp-eu today), and for a file whose headers do not walk.
+// It does not see the game's other test, the PC's legend frames in the
+// running image (name_grid.cpp NameGrid_Why), which the game logs.
+bool ConfigLayerHasNameGrid(const std::wstring& game_dir, const std::string& language,
+                            const std::wstring& cache = std::wstring());
+// What the page shows for `cfg` (off=): each box ticked unless off= turns off
+// one of its names (ConfigListTurnsOff), and whether it can be changed -
+// greyed, with the reason, when `known` (null: ConfigCodeNamesKnown) lacks a
+// name, when `preset_off` (the chosen preset's code names, PresetPlan::off)
+// turns one off, or, for the name entry, when `has_grid`
+// (ConfigLayerHasNameGrid for `language`, the language played) is false.
+// Every box is shown, greyed or not.
+struct NewGameState {
+    bool name_entry = false, options = false;
+    bool name_entry_enabled = false, options_enabled = false;
+    std::wstring name_entry_why, options_why;
+};
+NewGameState ConfigNewGameState(const Config& cfg, const std::string& language, bool has_grid,
+                                const std::string& preset_off, const std::vector<std::string>* known = nullptr);
+// off= after the page: each box's names turned off (cleared) or back on
+// (ticked) by ConfigBehaviourEdit's rule - a `*` gets `-name` - and the line
+// as read when the box already says what off= says. `name_entry` / `options`:
+// -1 untouched, 0 cleared, 1 ticked.
+std::string ConfigNewGameOffEdit(const std::string& off, int name_entry, int options);
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 
