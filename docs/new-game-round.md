@@ -946,6 +946,13 @@ backlog is on `main` and the check is not in CI.
   takes 5b's "the hand" line as written. Not measured: what byte the cell
   beside the full stop holds, against the 0 the empty cell enters.
 
+- **The skip's direction (the owner, the same day).** Where a move would
+  put the hand on an empty cell, ours is to go on **in the direction of the
+  move** to the next cell that is not empty (Left from the quit label goes
+  to that row's last letter), not up to the row above as NG built it (5b).
+  BT changes the step. The Japan family's page-2 clamps are that disc's own
+  behaviour; BT says what the rule does to them before it changes them.
+
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
 Two groups are new:
