@@ -921,6 +921,134 @@ Two groups are new:
 | **PK** | `tools/loc_build.py`, `tools/importer.py`, their checks; the small-text path only if the kana set needs it | `psp-eu`'s chunk (call 8) and the 8-pixel kana for the `ja-JP` legend (call 9) |
 | **LT** | `src/launcher/`, the switch registry's launcher side | A launcher toggle for the name entry, in the form the launcher's other toggles towards the PlayStation have; its text in ASD-STE100 |
 
+## 4c-CR. Group CR as run (2026-11-14)
+
+*Worker agent, worktree `D:\bof3x-runs\ng1114\cr\wt`, branch `new-game/cr`
+off `new-game/round` 2207d9ce. Harness root `D:\bof3x-runs\ng1114\cr` (its
+own game folder, launcher copy and captures). No state-hash chain.*
+
+**What was built.**
+
+- `src/game/community/commu_name.{h,cpp}`: the switch `CommuNameGrid`
+  (`PatchBytes`, on by default, set after `rest_4d`'s self-test). Where it is
+  on, a grid is loaded (`NameGrid_Available()`) and the entry is not a
+  faerie slot under the Japan family (call 6), the two `BareRet` calls are
+  NG's legend and grid draws and `BareRetZero` its input step
+  (`Copy::kRenamer`), over the PC's own cells (`0x675F98`, `0x675F94`,
+  `0x675FCC` column, `0x675FCA` row, `0x675FCB` page). Elsewhere the six
+  steps are as before (DIV-0075's end).
+- **Entry-in** decodes the stored field (slot 5 bytes, record 8) to cells:
+  each one-byte `0x20` a blank (`0xFF`), the trailing ones dropped, a NUL
+  the end; then cut to the family's cells (4 under Japan, call 5) and to the
+  field's bytes. A name the grid cannot decode opens blank, logged. The page
+  opens on `NameGrid_FirstPage()`.
+- **The input step** answers 1 on a finish and moves the step on at a finish
+  or a quit, as the PlayStation's does.
+- **The answered end** encodes the cells into `0x675F98` and NUL-fills nine
+  bytes, so the commits (R4E's, unchanged) and their text record take the
+  layer's bytes; the member step after the commit writes the NUL at the
+  record's `+8` and at `Text_Records + 0x28` (an eight-byte name has none).
+- **The panels** draw the buffer as text: while the cells are in it they are
+  handed the encoded name for the draw, and the cells are put back after.
+- **Draws before the first entry-in** use the open's cells (first page, row
+  and column 0) while the PC's bytes are off the grid.
+- `src/game/community/commu.cpp`: `CommuFrameWindowInPool` (the defect
+  below; the orchestrator's instruction, from TF's finding).
+- `rest_4d_fuzz.cpp`: `GridTest` (below); `EntryAbandonTest` now runs with
+  a "no grid" API, since the grid's byte is set by then.
+- `src/hook/code_names.h`, and one row each in `analysis/ledger_switches.tsv`
+  for the two code names (the TSV otherwise as it was: its line numbers were
+  already stale; stage C regenerates it).
+
+**What was run.**
+
+- Builds: `i686` and `x86_64`, clean.
+- `BOF3X_SHADOW='*'` headless from the root's ini-less launcher copy: exit
+  0, 922 lines of `0 MISMATCHES` and none other (before the frame fix);
+  `rest_4e,rest_4d` again after it: exit 0, 9 of 9.
+- `GridTest`: the seven entry steps (the six and the member's commit step)
+  with the switch on and no grid against Capcom's with DIV-0075's step,
+  28,000 rounds; the slot's three under a Japan grid, 12,000 rounds; then
+  375,847 checks of the grid's paths on two synthetic grids (each helper's
+  rule, and a random walk: 1,621 finished, 1,556 read back through the slot
+  commit's bytes, 179 quit). A planted defect (page 0 at entry-in) was
+  caught.
+- `ledger_switches.py --check`, `ledger_registry.py --check`,
+  `ledger_check.py`: pass. A code name with no ledger entry is not refused.
+- **Live, `en-US`, the faerie village save** (`fairyVillage`), in the root's
+  own game folder with GD's layers: the renamer entered by a **harness
+  step** - `poke` of `Field_ObjectTriggers` id 8's stores (tail kind `0x17`,
+  sub-kind 3, the object pointer, the script flag), not a player's route; no
+  recorded route reaches the renamer. A member renamed ("Ryu" to "llu") and
+  a slot ("Candy" to "Kit"), each shown by message `0xF5`; F12's save; a
+  second and a third run loaded it and the panels showed "llu" and "Kit";
+  the file holds them at `+0x90`, `+0xCA0` and `+0xF1A` (space-padded).
+- **Live, switch off** (`BOF3X_OFF=CommuNameGrid`): the entry ends as
+  DIV-0075 has it (the buffer `0x20`-padded, the step on the next frame,
+  unanswered, state 4), the record unchanged.
+- **Live, `ja-JP`, the member path**: the grid (three pages) and the kana
+  legend drawn; the save's name, made under `en-US`, is off the Japan grid
+  and opened blank (logged); one kana entered, finished, shown by `0xF5`.
+  Not saved or reloaded.
+
+**Not run.** The slot path under `ja-JP` live (DIV-0075's end there is held
+by the harness rows only); a four-kana name; `fr-FR`, `de-DE`, `en-150`; the
+wide modes; the 64-bit exe in play (built only; the runs used the 32-bit exe
+host and the hosted build); a full `'*'` suite after the frame fix; a
+self-test row for `CommuFrameWindowInPool` with the byte on (fuzzed with the
+byte off; seen live with it on).
+
+**Owed.** The legend's button pictures do not match the keys that act on
+this install: it shows the PlayStation's (cross OK, triangle Del), and the
+PC's circle entered a letter, cross erased, triangle moved the name cursor
+back - BT's call 2. The renamer has no recorded route; RT's could start from
+the poke above or from the village object whose trigger is id 8.
+
+**Defect for `known-defects.md` (stage C to number).** `Commu_DrawTiledFrame`
+(`0x45F1A0`) passes `Gpu_SetDrawMode` a texture-window RECT on its own
+stack; the PC's draw mode keeps the pointer and reads it at the present,
+after the function has returned. The renamer's entry steps, its only
+callers, were cut, so it never ran in play; with the grid wired the game
+ended silently on the entry's first frame (no Fatal, no crash report), and
+with the grid switch off too. Fixed under `CommuFrameWindowInPool`.
+
+**The ledger text for stage C.**
+
+- *The renamer's grid* (new entry; switch `CommuNameGrid`, `PatchBytes`,
+  default on, player yes, toward psx, languages: every layer with a grid).
+  *Original:* the port cut the entry's legend, grid and input step (two
+  `BareRet`, one `BareRetZero`); DIV-0075 ends the entry unanswered. *New:*
+  NG's routine in their place, `COMMU02`'s copy, over the PC's cells; the
+  stored name decoded to cells at entry-in (`0x20` the PC's blank, `0xFF`
+  the routine's; a name off the grid opens blank) and encoded at the
+  answered end, NUL-filled; the member commit's NUL written after it; the
+  panels drawn with the encoded name. 5 bytes for a slot, 8 for a record.
+  Under the Japan family the member path has four cells (call 5) and the
+  slot path keeps DIV-0075's end (call 6). With 5b's items (the hand, the
+  field's room, four kana, the buttons, the pad word) for this copy.
+  *Also:* an all-blank member name takes the record's default from
+  `Char_DefaultRecords` (`0x64B390`, the layer's under DIV-0020), where the
+  port's code reads `CommuName_RecordNames` (`0x669FA4`), the exe's own
+  text, which no layer replaces; the PlayStation takes `COMMU02`'s roster
+  names. *Why:* the owner's A1 (both screens) and call 6. *Off:* DIV-0075's
+  end. `original` preset: off.
+- *DIV-0075 amended:* where `CommuNameGrid` runs, the entry is the grid's
+  and this entry's end does not apply; it holds with the switch off, with
+  no grid (the original Chinese; any layer without the chunk) and for a
+  faerie slot under the Japan family (call 6).
+- *The tiled frame's windows* (a new entry or a line of the renamer's;
+  switch `CommuFrameWindowInPool`, `PatchBytes`, default on). *Original:*
+  the RECT on the stack, read after the return (the defect above). *New:*
+  each RECT in the packet pool, as `Menu_DrawTitleBox` and TF's
+  `DrawGridFrame` do. *Also in the PSX version?* No: its `SetDrawMode`
+  copies the window into the packet at the call.
+
+**Open questions for the owner.** The all-blank member default (above): the
+record's default name, or the name the member had? Whether
+`CommuFrameWindowInPool` should be a switch at all: it is a crash fix with
+no working original to go back to, and a switch so that the self-test can
+compare Capcom's function.
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
