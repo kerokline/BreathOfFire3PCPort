@@ -1278,6 +1278,113 @@ measured.
   PlayStation rolls before and starts after, M1). Why: the owner
   (2026-11-12) and call 1's proposal. Switch: `NewGameOptions` (code).
 
+## 4c-PE. Group PE as run
+
+*Group PE, 2026-11-14, worktree `D:\bof3x-runs\ng1114\pe\wt` (branch
+`new-game/pe` off `new-game/round` `768e9f74`). Capstone and the reader over
+the held discs through `loc_build.open_disc`; scratch scripts and read-offs
+in `D:\bof3x-runs\ng1114\pe\s`. No game byte below: addresses, offsets,
+counts, op kinds and code constants only.*
+
+**`psp-eu` has a kind-22 chunk, read from its own `BOOT.BIN`.** By the
+owner's word on call 8 (4b) it carries family 1, the West's step; its grid,
+code map, page, labels and legend are the PSP disc's. Nothing is borrowed
+from a PlayStation disc and no table is in the source. What was built
+(`tools/loc_build.py` only, no `src/`):
+
+- `AllegrexRun`, `MipsRun` for a `BOOT.BIN` image: code is fetched from
+  `.text` only; a data access inside `.text`'s range is `.bss`
+  (`tools/psp_elf.py`'s rule) and reads as unwritten memory, 0, as an
+  address outside an overlay's sections does on the PlayStation; arguments
+  5..8 come from `$t0..$t3`; the branch-likely instructions, a likely
+  branch not taken skipping its delay slot; and a new role, `copy`, the
+  `memcpy` the drawers copy their label block with, answered in place with
+  its bytes kept as an `lwl` / `lwr` copy's are. Nothing else of the
+  Allegrex was needed; anything else stops the run as an unknown opcode.
+  `MipsRun` itself changed only in naming its fetch and its executable test
+  and in honouring a "nullify" that only the subclass returns.
+- `GridBoot`, the reader's module over `BOOT.BIN` (`GridEmi` is the same
+  over an overlay, the PlayStation path as it was): `.text`'s functions by
+  the overlays' rule, shapes by `allegrex_shape_hash` (`mips_shape_hash`
+  with every `lui` immediate masked too, since link offsets have small high
+  halves), and the PSP's tables: two drawers, two input steps, two legends,
+  the tile helper. Each hash occurs once in `.text`, the helper's seven
+  times.
+- The parts are **run, not read at offsets**: the drawers and legends run as
+  the PlayStation's do, and every offset 4c-PK lists came out of the run:
+  grid `0x2EC7A8` / `0x2EF1C9`, labels `0x2ECB18` / `0x2EF78F` (20 bytes,
+  read by the copy), legend tables `0x2ECB44` / `0x2EF6FC`; drawers
+  `0xC3CD0` / `0x11645C`, legends `0xC3FD0` / `0x1149BC`, input steps
+  `0xC36C0` / `0x116BE0`.
+- The page byte: every call of the drawer passes it, and each function is
+  walked in order with what its registers hold (`grid_track`), because the
+  PSP's code keeps a `lui` base in a saved register for a whole function.
+  `START`'s is `.bss` (link `0x8261B`, loaded `0x3F5DBB`), one store, the
+  constant 2. **`COMMU02`'s (`0x2EF1C8`) is stored after all**, against
+  4c-PK's "no store": two `sb` of the constant 2 (`0x112508`, `0x11356C`)
+  through `$s7`, whose `lui` is 82 words up the function, past the 40-word
+  window PK's scan used. So the rule is the PlayStation's unchanged: every
+  store one constant. A byte store at the cell's low half through a base the
+  walk does not know, or a wider store over the cell, refuses (none found).
+
+**Against `psx-us`, part by part** (the two chunks decoded; the converter
+called on each opened disc): version, family, page count, first page, all 96
+cells and the code map **equal**; both copies' label blocks (slots, draw
+count, room, bytes) and legend boxes **equal**; the header's build id
+differs (`psp-eu`, `psx-us`). The legends: the same 18 and 13 operations
+and the same room; entries 0..4 and 7 equal, entries 5 and 6 differ (one
+character each on the PSP and named by an operation; empty on the US disc
+and named by none). In each copy exactly **three operations differ**, rows
+1..3 of the button column: the PSP's kinds are 3, 1, 1 where the US's are 3,
+3, 3. Row 1 is a tile of another u (the one the US draws on row 2); rows 2
+and 3 are op 1, text, of entry 6 and entry 5, count 1, colour 0, at the
+button column's place (dx `0xE`, dy `0x16` and `0x1E`). 5a expresses
+them as they stand; nothing was added to 5a's ops.
+
+**What BT's routine must know.** In both `psp-eu` copies the six button
+pictures are not all op 3: rows 0 and 1 are op 3 (dx `0xE`, dy 6 and `0xE`),
+rows 2 and 3 op 1 (dx `0xE`, dy `0x16` and `0x1E`, one letter), row 4's two
+op 3 (dx `0xA` and `0x12`, dy `0x26`). A routine that finds the button
+pictures as the op 3s after the button page's op 5 finds four on `psp-eu`
+and six elsewhere; to draw every row's button from the mapping it has to
+take the column by place (dx `0xE`, dy 6 + 8i for rows 0..3, and the two
+at dy `0x26`) whatever the op's kind, and replace an op 1 there as it does an
+op 3. The rows' labels (entries 0..3 at dx `0x2A`) are the US strings,
+entry for entry, so each row names what the US's row names.
+
+**`COMMU02`'s input step is the same third shape as `START`'s** (read to its
+second `jr $ra`; `0x116BE0..0x117190`): the hand on the repeated word's
+`0xF00F`, confirm pressed `0x40`, backspace pressed `0x20`, the name cursor
++ 1 on the repeated `0xA` and - 1 on the repeated `0x5` with no pressed bit,
+finish `0x800`, codes 1..4 the West's actions (code 3 quits: the renamer's
+state byte + 1, result 0). It differs from `START`'s step only in M1's copy
+differences: the finish sound (`0x104`, `START` `0x105`), no default name
+for an all-blank entry, no clear of buffer byte 5, and the quit's result.
+
+**`psp-jp`, for the record (call 10).** Its `BOOT.BIN` also holds the Japan
+disc's 288-byte block, twice (image `0x2ECA60`, `0x2EF440`), and its own
+input steps (`0xC38C8`, `0x116EFC`) carry the **Japan family's bits** (M2):
+confirm pressed `0x20`, code 3 sets the page bit `0x10`, the page on pressed
+`0x10` with the page-2 clamps, the name cursor + 1 on pressed `0x80` or the
+repeated `0xA`, - 1 on the repeated `0x5`, backspace pressed `0x40`, finish
+`0x800`. Read by eye from the disassembly, not run. Call 10 stands: its
+chunk is its EMIs', unchanged.
+
+**Measured.** `loc_build.py all --discs` over a PC game folder with the tree
+before (`768e9f74`, archived) and after: 1,233 files each, **all
+byte-identical** (no PlayStation layer changes). A disc-only `psp-eu` cache
+(`importer.py build --source <psp-eu> --lang en-150 --out
+D:\bof3x-runs\ng1114\pe\out`, the PSP-only install's path): its
+`loc/en-150/dat/FIRST.DAT` holds one kind-22 chunk, 880 bytes, which passes
+`name_grid_check` and equals the chunk the converter makes from the opened
+disc. `loc_build.py selftest` (a new check, `allegrex_selfcheck`: the
+interpreter on made-up code and the page-cell walk's four refusals) and
+`importer.py check` pass.
+
+**Not run:** the game (no `src/` change; whether the screen draws right on a
+`psp-eu` install waits on BT's routine and the owner's look); a `psp-jp`
+`BOOT.BIN` chunk (not wanted, call 10); the 64-bit build.
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
@@ -1315,9 +1422,11 @@ reader takes the chunk each time, replacing what it holds.
 **No chunk** is written for a build GD cannot read whole: every part below
 (the grid, the code map, both copies' labels and both copies' legends) is
 found and encodes, or the build gets no kind-22 chunk and the layer's report
-says why. `psp-eu` today gets none: its parts are all in `BOOT.BIN`, but
-its input step is neither family below and its legend draws that step's
-buttons (call 8; 4c-PK). There is no partial chunk.
+says why. `psp-eu`'s parts are all in `BOOT.BIN` and are read there by
+the PSP's own shapes (4c-PE); its input step is the PSP's own, neither
+family below, and its chunk carries family 1, the West's step, by the
+owner's word on call 8 (4b: the step's buttons and the legend's pictures
+follow the player's mapping on every install). There is no partial chunk.
 
 All numbers are little-endian. "Text encoding" is the layer's encoding for
 `Text_DrawAt` (`encode_text` / `encode_char`, `ja_encode` for a Japanese
@@ -1334,7 +1443,7 @@ still draw the 12-pixel kana at two thirds.
 | Off | Width | Field | Valid |
 |---|---|---|---|
 | `0x00` | 1 | version | 1 |
-| `0x01` | 1 | family: 0 Japan (`psx-jp`, `psp-jp`), 1 West (`psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`) | 0, 1 |
+| `0x01` | 1 | family: 0 Japan (`psx-jp`, `psp-jp`), 1 West (`psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`; `psp-eu` by call 8, 4c-PE) | 0, 1 |
 | `0x02` | 1 | P, the pages in use | Japan 3, West 1 |
 | `0x03` | 1 | F, the disc's number of the first page in use | Japan 0, West 2; F + P <= 3 |
 | `0x04` | 1 | C, the special codes in the map | Japan 5, West 4 |
@@ -1455,10 +1564,12 @@ op 5 with dtd 0 and tpage `0x2F`:
 | French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders, no button page |
 | French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no button page |
 | German | the French, with text dx `0x22` |
+| `psp-eu` `START`, `COMMU02` | US / EU `START`'s and `COMMU02`'s, but for rows 1..3 of the six tiles' four: tile u `0x1B` at dy `0xE`, then text entry 6 at (`0xE`, `0x16`) and text entry 5 at (`0xE`, `0x1E`), each count 1, colour 0 (4c-PE) |
 
 GD reads which shape a copy has off its own legend (M2's normalised code
-hashes in `funcs.py` tell the six apart) and the text dx off the code, not
-off the build's name.
+hashes in `funcs.py` tell the six apart; `psp-eu`'s two by
+`allegrex_shape_hash`, 4c-PE) and the text dx off the code, not off the
+build's name.
 
 **The end.** The chunk ends exactly after the `COMMU02` legend block.
 
@@ -1470,7 +1581,8 @@ off the build's name.
   repeated `0x5`, backspace `0x40`, finish `0x800`; West confirm `0x40`, no
   page bit, name cursor + 1 pressed `0x20` or repeated `0xA`, name cursor - 1
   pressed `0x80` or repeated `0x5`, backspace `0x10`, finish `0x800`. The
-  hand is the repeated word's `0xF00F` in both.
+  hand is the repeated word's `0xF00F` in both. `psp-eu`'s own step's bits
+  (4c-PK) are not keyed: its chunk is family 1 (call 8).
 - **The copy's differences** (M1's list): the quit's result and sound, the
   finish sound, the all-blank rule, buffer byte 5 cleared. The caller says
   which copy it is.
