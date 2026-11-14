@@ -930,7 +930,11 @@ backlog is on `main` and the check is not in CI.
   Japan one. What that leaves for `psp-eu` is a chunk (its grid, labels and
   strings are on its disc, 4c-PK) and the legend's rows drawn from the
   mapping rather than from the PSP's own tiles and letters (groups BT and
-  PE, after TF merges).
+  PE, after TF merges). The owner's recollection of the order the starting
+  mapping is taken in today: Japan PlayStation, then West PlayStation, then
+  Japan PSP, then English PSP, then the PC. **Not checked against the
+  source yet**; BT reads the launcher's and the game's rule first and
+  changes nothing there if it is already so.
 
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
