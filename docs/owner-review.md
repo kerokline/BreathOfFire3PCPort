@@ -1489,3 +1489,15 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   `shell` self-test 0 mismatches with the switch off). Visible only with a
   hand-edited `BOF3.CFG`; a check is to add 25 key lines and see the game
   still start.
+
+- **Smooth motion, DIV-0230** (2026-11-14, the Settings page's "Smooth
+  motion: 60 frames each second (experimental)" box, `interp=1`;
+  [`frame-interpolation.md`](frame-interpolation.md) section 6): sampled by
+  a checker on 29 routes, played only on the bridge and in the shop on the
+  first day. Wanted from play: battles and menus; the flickering beam of
+  rays in the boss fight of recipe bossAndFlash, shown between two
+  flickers (item 12); text that changes outright, fixed the same day and
+  not seen in play (item 3); the SatPixie
+  look with the box on (item 10); the music by ear (IDEAS I68); F11's
+  capture in the second half of a frame (item 11). And a look at the
+  Settings page's layout: its check boxes moved closer for the new box.
