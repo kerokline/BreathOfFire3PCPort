@@ -22,6 +22,7 @@
 #include "common/sha256.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
+#include "render/interp.h"
 #include "render/satpixie.h"
 #include "render/shaders_compiled.h"
 #include "os/os.h"
@@ -1115,7 +1116,15 @@ void InitD3d11(const Options& options) {
     g_job_options = &options;
     RunOnFiber(Job::kInit);
     SetPresentHook(&PresentFrame);
-    SetInBetweenHook(&PresentInBetweenFrame);
+    // PROTOTYPE (interp.h): the satpixie look counts presents for its
+    // animation and blends each present with the one before it, so an
+    // in-between would run both at twice their rate. No hook under that look
+    // (it is chosen once, at start-up), so nothing is matched or shown.
+    if (g_look == Look::kSatpixie) {
+        if (interp::On()) bof3::Log("interp      off under the satpixie look (its animation and feedback count presents)");
+    } else {
+        SetInBetweenHook(&PresentInBetweenFrame);
+    }
 }
 
 namespace {
