@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <vector>
 
@@ -13,7 +14,7 @@ namespace render::interp {
 extern bool g_debug;
 namespace {
 
-using Key = unsigned long long;
+using Key = std::uint64_t;
 
 struct Fnv {
     Key h = 0xCBF29CE484222325ull;
@@ -135,6 +136,15 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));
     for (Entry& e : g_entries) e.used = false;
     const float cap = max_move * max_move;
+    // For the debug lines: a surface by its ordinal among the frame's, in
+    // the order met (an address is not the same from run to run).
+    std::vector<const void*> surface_ids;
+    const auto SurfaceId = [&](const void* surface) {
+        for (std::size_t k = 0; k < surface_ids.size(); ++k)
+            if (surface_ids[k] == surface) return static_cast<U>(k);
+        surface_ids.push_back(surface);
+        return static_cast<U>(surface_ids.size() - 1);
+    };
     // Halfway, when every vertex is within the cap; says whether it was.
     // What a matched draw's first vertex moves back by in the in-between
     // picture, for its unmatched neighbours to follow.
@@ -162,8 +172,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             if (dx != 0 || dy != 0) differs = true;
         }
         if (g_debug)
-            bof3::Log("interp-dbg  cmd %u n %u tex %p blend %d at (%.1f, %.1f) size (%.1f, %.1f) uv (%.4f, %.4f) from (%.1f, %.1f) kept uv (%.4f, %.4f) d (%.1f, %.1f)",
-                      index, c.count, c.state.texture ? static_cast<void*>(c.state.texture->surface) : nullptr, c.state.blend_enable,
+            bof3::Log("interp-dbg  cmd %u n %u tex %u blend %d at (%.1f, %.1f) size (%.1f, %.1f) uv (%.4f, %.4f) from (%.1f, %.1f) kept uv (%.4f, %.4f) d (%.1f, %.1f)",
+                      index, c.count, SurfaceId(c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr), c.state.blend_enable,
                       now[0].x, now[0].y, now[c.count - 1].x - now[0].x, now[c.count - 1].y - now[0].y, now[0].u, now[0].v,
                       was[0].x, was[0].y, was[0].u, was[0].v, dx0, dy0);
         if (g_debug)
@@ -212,7 +222,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     };
     struct Vote {
         const void* surface;
-        long long cell;
+        std::int64_t cell;
         float dx, dy;
     };
     std::vector<Vote> votes;   // sorted by surface; after the count, one a surface
@@ -224,7 +234,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const int k = Nearest(g_by_exact, &Entry::exact, EntryOf(c, frame.vertices + c.first).exact, at);
             if (k < 0) continue;
             const Vertex& p = g_vertices[g_entries[k].first];
-            const long long cx = std::llround((p.x - at.x) / 2), cy = std::llround((p.y - at.y) / 2);
+            const std::int64_t cx = std::llround((p.x - at.x) / 2), cy = std::llround((p.y - at.y) / 2);
             votes.push_back({c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr, cx * 100000 + cy,
                              static_cast<float>(cx) * 2, static_cast<float>(cy) * 2});
         }
@@ -304,7 +314,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (!AlignMotion(i, &dx, &dy) || g_entries[align[i]].used) return false;
         for (int dir = -1; dir <= 1; dir += 2) {
             int seen = 0;
-            for (long long j = static_cast<long long>(i) + dir; j >= 0 && j < static_cast<long long>(frame.n_commands) && seen < 6; j += dir) {
+            for (std::int64_t j = static_cast<std::int64_t>(i) + dir; j >= 0 && j < static_cast<std::int64_t>(frame.n_commands) && seen < 6; j += dir) {
                 const Command& o = frame.commands[j];
                 if (o.kind != Cmd::kDraw || o.count == 0) continue;
                 ++seen;
@@ -338,7 +348,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (mine) want[wants][0] = mine->dx, want[wants][1] = mine->dy, ++wants;
         // The draw before this one in the list, when it was paired.
         int prev_paired = -1;
-        for (long long j = static_cast<long long>(i) - 1; j >= 0; --j) {
+        for (std::int64_t j = static_cast<std::int64_t>(i) - 1; j >= 0; --j) {
             const Command& o = frame.commands[j];
             if (o.kind != Cmd::kDraw || o.count == 0) continue;
             if (done[j] == 2) prev_paired = static_cast<int>(j);
@@ -383,8 +393,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (g_debug) {
             float ax = 0, ay = 0;
             const bool am = AlignMotion(i, &ax, &ay);
-            bof3::Log("interp-dbg  DECIDE cmd %u tex %p at (%.1f, %.1f) looks %u best %d cost %.1f second %.1f look %d wants %d (%.1f, %.1f) (%.1f, %.1f) align %d d (%.1f, %.1f) used %d agrees %d",
-                      i, surface, at.x, at.y, looks, best, best_cost, second_cost, best_is_look, wants, want[0][0], want[0][1],
+            bof3::Log("interp-dbg  DECIDE cmd %u tex %u at (%.1f, %.1f) looks %u best %d cost %.1f second %.1f look %d wants %d (%.1f, %.1f) (%.1f, %.1f) align %d d (%.1f, %.1f) used %d agrees %d",
+                      i, SurfaceId(surface), at.x, at.y, looks, best, best_cost, second_cost, best_is_look, wants, want[0][0], want[0][1],
                       want[1][0], want[1][1], align[i], ax, ay, am && g_entries[align[i]].used, am && AlignAgrees(i));
         }
         // The partner by order first, where its neighbours bear it out, over
@@ -439,8 +449,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             ++s.far_;
             if (g_debug) {
                 const Vertex& p = g_vertices[g_entries[best].first];
-                bof3::Log("interp-dbg  FAIL cmd %u n %u tex %p at (%.1f, %.1f) ext (%.1f, %.1f) looks %u best cost %.1f look %d d (%.1f, %.1f) wants %d (%.1f, %.1f) (%.1f, %.1f)",
-                          i, c.count, surface, at.x, at.y, frame.vertices[c.first + c.count - 1].x - at.x,
+                bof3::Log("interp-dbg  FAIL cmd %u n %u tex %u at (%.1f, %.1f) ext (%.1f, %.1f) looks %u best cost %.1f look %d d (%.1f, %.1f) wants %d (%.1f, %.1f) (%.1f, %.1f)",
+                          i, c.count, SurfaceId(surface), at.x, at.y, frame.vertices[c.first + c.count - 1].x - at.x,
                           frame.vertices[c.first + c.count - 1].y - at.y, looks, best_cost, best_is_look, p.x - at.x, p.y - at.y,
                           wants, want[0][0], want[0][1], want[1][0], want[1][1]);
             }

@@ -1225,12 +1225,12 @@ void PresentInBetween() {
     pillarbox::Cover();
     interp::Stats s = {};
     // BOF3X_INTERP_DEBUG=<Frame_Counter>: that in-between's every pair and failure (interp-dbg).
-    static long debug_at = -2;
+    static int debug_at = -2;
     if (debug_at == -2) {
         char v[16] = "";
-        debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atol(v) : -1;
+        debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atoi(v) : -1;
     }
-    interp::g_debug = debug_at >= 0 && static_cast<long>(Frame_Counter) == debug_at;
+    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) == debug_at;
     if (interp::Build(g_frame, g_mid_vertices, max_move, &s)) {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;

@@ -181,24 +181,21 @@ double g_frame_ms = kFrameMs;
 void InterpDump(const wchar_t* what) {
     static wchar_t dir[200];
     static int on = -1;
-    if (on < 0) on = GetEnvironmentVariableW(L"BOF3X_INTERP_DUMP", dir, 200) > 0 ? 1 : 0;
-    static bool first = true;
-    if (first) {
-        first = false;
+    static unsigned every = 100;
+    if (on < 0) {
+        // Through the seam (os/os.h): the directory's name widened a byte a
+        // character, which holds for the plain paths tooling passes.
+        char name[200] = "", n[16] = "";
+        on = bof3::os::GetEnv("BOF3X_INTERP_DUMP", name, sizeof name) > 0 ? 1 : 0;
+        for (int i = 0; i < 199 && name[i]; ++i) dir[i] = static_cast<wchar_t>(static_cast<unsigned char>(name[i]));
+        // BOF3X_INTERP_DUMP_EVERY=<n> for a denser sample than every 100.
+        if (bof3::os::GetEnv("BOF3X_INTERP_DUMP_EVERY", n, sizeof n) > 0 && std::atoi(n) > 1) every = static_cast<unsigned>(std::atoi(n));
         bof3::Log("interp      dump %s", on ? "on" : "off");
     }
-    const unsigned long fc = static_cast<unsigned long>(Frame_Counter);
-    // BOF3X_INTERP_DUMP_EVERY=<n> for a denser sample than every 100.
-    static unsigned long every = 0;
-    if (every == 0) {
-        wchar_t n[16];
-        every = 100;
-        if (GetEnvironmentVariableW(L"BOF3X_INTERP_DUMP_EVERY", n, 16) > 0 && _wtoi(n) > 1)
-            every = static_cast<unsigned long>(_wtoi(n));
-    }
+    const unsigned fc = static_cast<unsigned>(Frame_Counter);
     if (!on || fc % every > 1) return;
     wchar_t path[260];
-    swprintf(path, 260, L"%ls/%06lu_%ls.bmp", dir, fc, what);
+    swprintf(path, 260, L"%ls/%06u_%ls.bmp", dir, fc, what);
     const bool ok = render::SaveFrame(path);
     static int said;
     if (said < 4) {
