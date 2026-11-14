@@ -50,6 +50,14 @@ extern float g_texel_inset;
 // The inset the draw uses when the switch is on: 1 / scale + 1 / 256 texels.
 double TexelInset(double scale);
 
+// D18's fix (docs/new-game-round.md 4c-PK): true, a lookup that finds every
+// entry used this frame and no hit rebuilds entry g_reuse_next (then the
+// next, in turn) where Capcom's runs one past the table. False is Capcom's
+// overrun; the fuzz compares byte for byte with it off, and checks the reuse
+// with it on.
+extern bool g_full_cache_reuse;
+extern std::uint32_t g_reuse_next;
+
 void SelfTest();   // glyph_draw_fuzz.cpp
 
 }  // namespace glyph_draw

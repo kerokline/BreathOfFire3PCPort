@@ -1150,6 +1150,81 @@ made-up sheet), `importer.py check`, both pass. **Not run:** the game; a
 disc-only `ja-JP` or `psp-jp` layer build end to end; the 64-bit build
 (no `src/` change).
 
+**Follow-up as run** (after `new-game/round` `037a316b` was merged in).
+
+*The finish label's white block under `ja-JP` (BT's report) is D18,
+Capcom's glyph-cache overrun, reached.* A temporary log in
+`Font_GlyphTexture` on the `ja-JP` name screen named four lookups a frame
+that found all 128 entries used and no hit: the finish label's first two
+kana (colour 2) and two colour-0 glyphs. The katakana page, the labels in
+two colours, the message and the legend's 26 new 8 x 8 glyphs pass 128
+distinct textures a frame; GD's layer drew the legend from glyphs the
+screen's other text shares and stayed under. Nothing in the layer collides:
+the label bytes are the same in both layers. **Fixed in the renderer**
+(`src/game/platform/d3d.cpp` `Font_GlyphTexture`): with every entry used
+and no hit, ours rebuilds an entry in turn (`g_reuse_next`) where Capcom's
+index runs one past the table. The draws already made from that entry keep
+their texture: the render shim snapshots a texture written with draws
+pending (`render_shim.cpp` `BeforeWrite`). The switch is
+`glyph_draw::g_full_cache_reuse`, on; the fuzz compares Capcom's overrun
+byte for byte with it off and, in each of the 4,965 overrun rounds, checks
+the reuse with it on (returns the entry, builds it, marks it used, leaves
+the vertex block alone): that is the check that would have caught it.
+Captured after the fix: the label draws whole. **Ledger text (a new
+entry, D18):** "Original: `Font_GlyphTexture` `0x5A2BC0`, with all 128
+glyph textures used in a frame and none a hit, returns 128 and binds the
+vertex block's bytes as a texture (a garbage glyph, seen as a white block).
+New: the entry after the last one rebuilt, in turn, is rebuilt for the new
+glyph; earlier draws keep their texture through the render shim's
+snapshots. Why: the `ja-JP` name screen draws more than 128 glyph
+textures. Toward: neither (the PlayStation draws glyphs from VRAM pages and
+has no such cache)."
+
+*The pair codes skip an index whose low byte is 0* (`ja_new_pair`): the
+241st pair would be `0xE00`, whose code carries a NUL. The slot stays in
+the font (blank) and in kind 13 (the pair `(0, 0)`), so kind 13 stays one
+entry a glyph from `PAIR_AT` and the engine reads it unchanged; below 240
+pairs nothing changes, and the owner's layer has 227, so no built layer and
+no save changes.
+
+*The `START` row's word.* Layers already carry images as kind-1 chunks
+(the title page, the village sheets, the dock page, the plates), and
+`TakeChunk` applies a kind 1 from any overlay, so the strip goes into the
+layer's `FIRST.DAT` as one: `grid_page_chunks` finds every op 3 a copy draws
+on page `0x2F` (after an op 5 of that tpage, or after a text or the leaders
+with no op 5 between - the line added to 5a's op 5 row), compares each
+8 x 8 cell of the disc's `FIRST.EMI` sheet `0x1E000200` with the base's
+(the install's `FIRST.DAT`, or on a disc-only build the layer's own
+re-laid stand-in), and writes each 32 x 32-word tile with a differing cell
+as the base's tile with the disc's cells pasted in. No `src/` change: only
+`FIRST.DAT` and `ENDKANJI.DAT` load that VRAM, so the layer's tile stands
+until the ending. Measured, every held disc: `psx-us` and `psx-eu-en` 4 of
+their 10 page-`0x2F` cells, one tile, `0x1E040100`; `psx-fr`, `psx-de`,
+`psx-jp`, `psp-jp` none (their cells, the button sheet, equal the PC's;
+the French and German discs hold the word but draw no tile on it, the
+Japan disc holds other art); `psp-eu` (disc-only, against its stand-in) 4
+of 8, the same tile. Layers over the PC game folder against the set before
+the follow-up: 1,231 of 1,233 files byte-identical; `en-US.FIRST.DAT` and
+`en-150.FIRST.DAT` each gain that one chunk (2,048 bytes); `ja-JP` is
+unchanged. Captured: the `en-US` legend's `START` row draws its word.
+**Ledger text (a new entry, or an amendment to the name entry's):** "Original: the PC port cleared a rectangle of the
+font page `0x1E000200`, so the four row-4 tiles of the Western New Game
+legend sample blank texels. New: a Western layer carries the disc's own
+texels for the cells its legend draws on page `0x2F` (one 32 x 32-word
+tile, kind 1 in `FIRST.DAT`), where the install's differ. Why: the
+PlayStation draws a word there. Toward: psx."
+
+**Run (follow-up):** the 32- and 64-bit builds; `BOF3X_SHADOW=glyph_draw,
+name_grid,new_game` (self-test only, hosted): glyph_draw's 40,000 lookup
+rounds with 4,965 reuse checks, name_grid 145 checks and new_game 9, 0
+mismatches; `loc_build.py selftest` (new: the pair skip, the page-0x2F
+cells) and `importer.py check`, both pass; `tools/recipes/newGameName.txt`
+under `en-US` and `ja-JP` from `D:\bof3x-runs\ng1114\pk` (captures in
+`pk\cap\en-US` and `pk\cap\ja-JP`). **Not run:** the whole shadow suite;
+the 64-bit build in a game; `psp-eu` and `en-150` in a game; a disc-only
+build end to end (`grid_page_chunks` called on PE's disc-only cache and
+the opened disc only).
+
 ## 4c-TF. Group TF as run (2026-11-14)
 
 *Worker agent on its own worktree `D:\bof3x-runs\ng1114\tf\wt`, branch
@@ -1926,7 +2001,7 @@ NUL, whichever is first, and encodes them.
 | 2 leaders | dx | dy | entry | rows | columns | x step | y step | `Text_DrawSmall(x + dx + xs * j, y + dy + ys * i, 0, 1, entry)` for each row i and column j |
 | 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `cy * 64 + cx / 16` |
 | 4 piece | dx | dy | piece id | the rect query's flags | CLUT, low | CLUT, high | 0 | a sprite of the menu piece's rectangle (`Menu_PieceRect`, PSX `0x801B0270`) at (x + dx, y + dy), shade `0x80` |
-| 5 draw mode | dtd | tpage, low | tpage, high | 0 | 0 | 0 | 0 | `Gpu_SetDrawMode(p, 0, dtd, tpage, 0)`, committed: the texture page the tiles and the piece after it use |
+| 5 draw mode | dtd | tpage, low | tpage, high | 0 | 0 | 0 | 0 | `Gpu_SetDrawMode(p, 0, dtd, tpage, 0)`, committed: the texture page the tiles and the piece after it use. A text or the leaders (ops 1, 2) also leave page `0x2F`: the PlayStation's small draw commits it before its glyphs (US `0x8014FC90`, group BT) |
 
 Every op's entry is below E; ops 1 and 2 have a count or rows and columns
 of at least 1; op 3's and op 4's CLUT has bit 15 clear (bits 6..14 are its row); op 5's dtd

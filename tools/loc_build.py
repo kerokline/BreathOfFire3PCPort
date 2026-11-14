@@ -664,13 +664,30 @@ def ja_name(raw, room):
         if len(a) == 2 and len(b) == 2 and a[0] & 0x80 and b[0] & 0x80 \
                 and ((a[0] & 0x7F) << 8 | a[1]) < PAIR_AT and ((b[0] & 0x7F) << 8 | b[1]) < PAIR_AT:
             key = (((a[0] & 0x7F) << 8) | a[1], ((b[0] & 0x7F) << 8) | b[1])
-            g = ja_pairs.setdefault(key, PAIR_AT + len(ja_pairs))
+            g = ja_pairs[key] if key in ja_pairs else ja_new_pair(key)
             units[k - 1:k + 1] = [bytes([0x80 | (g >> 8), g & 0xFF])]
             k -= 2
         else:
             k -= 1
     out = b"".join(units)
     return out if len(out) <= room else None
+
+
+def ja_new_pair(key):
+    """The next pair glyph for `key`. An index whose low byte is 0 is never
+    a pair: its two-byte code would carry a NUL and end the name there. The
+    table keeps its slot (PAIR_SKIPPED, a blank glyph and the pair (0, 0) in
+    kind 13, whose entries stay one a glyph from PAIR_AT) and the pair takes
+    the next. Below 240 pairs nothing changes (the owner's layer has 227)."""
+    g = PAIR_AT + len(ja_pairs)
+    if g & 0xFF == 0:
+        ja_pairs[(PAIR_SKIPPED, g)] = g
+        g += 1
+    ja_pairs[key] = g
+    return g
+
+
+PAIR_SKIPPED = -1                    # ja_pairs' key (PAIR_SKIPPED, g) for a pair slot left empty
 
 
 def ja_pair_chunks(font_chunks):
@@ -685,7 +702,7 @@ def ja_pair_chunks(font_chunks):
             while len(table) // font_pc.GLYPH_BYTES < PAIR_AT:
                 table += bytes(font_pc.GLYPH_BYTES)
             for (a, b), g in sorted(ja_pairs.items(), key=lambda kv: kv[1]):
-                table += ja_placeholder(a, b)
+                table += bytes(font_pc.GLYPH_BYTES) if a == PAIR_SKIPPED else ja_placeholder(a, b)
             if len(table) // font_pc.GLYPH_BYTES - 1 > GLYPH_LIMIT:
                 raise SystemExit("pair codes run past glyph 0x%X" % GLYPH_LIMIT)
             payload = bytes(table)
@@ -694,11 +711,12 @@ def ja_pair_chunks(font_chunks):
             while len(adv) < PAIR_AT:
                 adv.append(PC_ADVANCE)
             for (a, b), g in sorted(ja_pairs.items(), key=lambda kv: kv[1]):
-                adv.append(adv[a] + adv[b])
+                adv.append(PC_ADVANCE if a == PAIR_SKIPPED else adv[a] + adv[b])
             payload = bytes(adv)
         out.append((kind, tag, payload))
     pairs = sorted(ja_pairs.items(), key=lambda kv: kv[1])
-    body = struct.pack("<H", len(pairs)) + b"".join(struct.pack("<HH", a, b) for (a, b), g in pairs)
+    body = struct.pack("<H", len(pairs)) + b"".join(struct.pack("<HH", *((0, 0) if a == PAIR_SKIPPED else (a, b)))
+                                                    for (a, b), g in pairs)
     return out + [(PAIR_KIND, PAIR_AT, body)]
 
 
@@ -6677,6 +6695,81 @@ def convert_name_grid(disc, build, report):
     return [(KIND_NAME_GRID, 0, payload)]
 
 
+# The legend's tiles on page 0x2F (group PK's follow-up, docs/new-game-round.md
+# 4c-PK): the PlayStation's small text draw (US 0x8014FC90, read by group BT)
+# commits SetDrawMode(.., 0x2F, ..) before its glyphs, so an op 3 after a text
+# or the leaders samples page 0x2F - the image of dest GRID_PAGE_SHEET, VRAM
+# (960, 0), 256 x 256 4-bit texels - as one after an op 5 of tpage 0x2F does.
+# The Western START legends' four row-4 tiles sample a 32 x 8 word there that
+# every Western disc's FIRST.EMI holds and the PC's FIRST.DAT has blank (the
+# port cleared that rectangle, RELAID). Each 32 x 32-word tile of the sheet
+# where a legend's page-0x2F cell differs between the disc and the base
+# install is carried as a kind-1 chunk of the layer's FIRST.DAT: the base's
+# tile with the disc's 8 x 8 cells pasted in. A build whose legend draws no
+# such cell, or whose cells already equal the base's, gets none.
+GRID_PAGE_SHEET, GRID_PAGE_TPAGE = 0x1E000200, 0x2F
+
+
+def grid_page_cells(payload):
+    """The (u, v) texel origins of every 8 x 8 cell a kind-22 chunk's legends
+    draw as an op 3 on page 0x2F: after an op 5 of that tpage, or after a text
+    or the leaders (the small draw's page) with no op 5 between."""
+    g = name_grid_decode(payload)
+    cells = set()
+    for k, cp in enumerate(g["copies"]):
+        page = GRID_PRE_BOX_MODE[1] if GRID_COPIES[k] == "START.EMI" else None
+        for op in cp["ops"]:
+            if op[0] in (1, 2):
+                page = GRID_PAGE_TPAGE
+            elif op[0] == 5:
+                page = op[2] | op[3] << 8
+            elif op[0] == 3 and page == GRID_PAGE_TPAGE:
+                cells.add((8 * op[3], 8 * op[4]))
+    return sorted(cells)
+
+
+def grid_page_chunks(src, disc, payload, report, layer=()):
+    """[(1, tag, one tile)] carrying the disc's page-0x2F cells the legends draw
+    where the base install's differ, or []; the reason in `report`. The base
+    is the layer's own sheet of that dest where `layer` (its FIRST.DAT chunks
+    so far) has one - a disc-only build's stand-in, re-laid with the PC's
+    cleared rectangles (build_standins) - else the install's."""
+    cells = [(u, v) for u, v in grid_page_cells(payload) if u + 8 <= 256 and v + 8 <= 256]
+    if not cells:
+        report.append("no legend tile on page 0x%X" % GRID_PAGE_TPAGE)
+        return []
+    found = disc.find("FIRST.EMI")
+    donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == GRID_PAGE_SHEET] if found else []
+    own = [b for k, t, b in layer if (k, t) == (1, GRID_PAGE_SHEET)]
+    base = (own[-1], len(own[-1])) if own else chunk_of(src, "FIRST.DAT", 1, GRID_PAGE_SHEET)
+    if not donor or base is None or base[0] is None or len(base[0]) != len(donor[0]):
+        report.append("page 0x%X not compared (the disc's FIRST.EMI or the base's FIRST.DAT has no sheet of dest 0x%X "
+                      "the same size)" % (GRID_PAGE_TPAGE, GRID_PAGE_SHEET))
+        return []
+    disc_rows, rows = sheet_pixels(GRID_PAGE_SHEET, donor[0]), sheet_pixels(GRID_PAGE_SHEET, base[0])
+    tiles, changed = set(), 0
+    for u, v in cells:
+        if any(rows[y][u:u + 8] != disc_rows[y][u:u + 8] for y in range(v, v + 8)):
+            changed += 1
+            tiles.add((u // SHEET_TILE_W, v // 32))
+            for y in range(v, v + 8):
+                rows[y][u:u + 8] = disc_rows[y][u:u + 8]
+    if not tiles:
+        report.append("the legend's %d page-0x%X cells are the base's already" % (len(cells), GRID_PAGE_TPAGE))
+        return []
+    body = sheet_body(GRID_PAGE_SHEET, rows)
+    tiles_w = (GRID_PAGE_SHEET >> 8) & 0xFF
+    out = []
+    for tx, ty in sorted(tiles):
+        t = ty * tiles_w + tx
+        tag = ((GRID_PAGE_SHEET >> 24) + tx) << 24 | (((GRID_PAGE_SHEET >> 16) & 0xFF) + ty) << 16 | 1 << 8
+        out.append((1, tag, body[t * SHEET_TILE:(t + 1) * SHEET_TILE]))
+    report.append("%d of the legend's %d page-0x%X cells from the disc, in %d tile%s (%s)"
+                  % (changed, len(cells), GRID_PAGE_TPAGE, len(out), "s" if len(out) > 1 else "",
+                     ", ".join("0x%08X" % t for _, t, _ in out)))
+    return out
+
+
 def grid_build_id(args, disc, path):
     """The fixtures.toml build of the disc, for kind 22's header (its log line):
     --build, a PSP disc's own, or the disc identified (every file hashed); an
@@ -7073,8 +7166,14 @@ def build_all(args, disc_path):
         # Kind 22, the name entry's grid (docs/new-game-round.md 5a): the disc's own codes, each cell
         # in this layer's encoding. None where the disc's routine is not read whole; the layer is then as before.
         report = []
-        overlays["FIRST.DAT"] += convert_name_grid(disc, grid_build_id(args, disc, disc_path), report)
+        grid = convert_name_grid(disc, grid_build_id(args, disc, disc_path), report)
+        overlays["FIRST.DAT"] += grid
         print("name grid (kind %d): %s" % (KIND_NAME_GRID, report[0]))
+        if grid:
+            # The disc's texels the legend's page-0x2F tiles sample, where the base's differ (kind 1).
+            report = []
+            overlays["FIRST.DAT"] += grid_page_chunks(src, disc, grid[0][2], report, overlays["FIRST.DAT"])
+            print("name grid's page 0x%X: %s" % (GRID_PAGE_TPAGE, report[0]))
         if donor_ja and ja_small:
             # The legend's 8 x 8 glyphs, after the pair codes (call 9).
             overlays["FIRST.DAT"] = ja_small_chunks(overlays["FIRST.DAT"])
@@ -7940,6 +8039,22 @@ def name_grid_selfcheck():
         if len(table) != font_pc.GLYPH_BYTES * 0xE02 or g(0xDFF) != want or any(g(0xE00)) or len(adv) != 0xE02 \
                 or adv[0xDFF] != CELL_W or adv[0xE00] != PC_ADVANCE or not any(want):
             errs.append("ja_small_chunks: %d glyphs, the cell %s" % (len(table) // font_pc.GLYPH_BYTES, g(0xDFF) == want))
+        # A pair never takes an index whose low byte is 0 (its code would
+        # carry a NUL): 0xE00 stays an empty slot, blank, (0, 0) in kind 13.
+        ja_small.clear()
+        del ja_small_base[:]
+        ja_pairs.clear()
+        ja_pairs.update({(JA_AT + i // 21, JA_AT + i % 21): PAIR_AT + i for i in range(0xF0)})   # the next would be 0xE00
+        g_new = ja_new_pair((JA_AT + 20, JA_AT + 30))
+        fc = ja_pair_chunks([(3, 0, bytes(font_pc.GLYPH_BYTES * PAIR_AT)), (4, PC_ADVANCE, bytes([PC_ADVANCE]) * PAIR_AT)])
+        body = fc[-1][2]
+        if g_new != 0xE01 or struct.unpack_from("<H", body)[0] != 0xF2 \
+                or struct.unpack_from("<HH", body, 2 + 4 * 0xF0) != (0, 0) \
+                or struct.unpack_from("<HH", body, 2 + 4 * 0xF1) != (JA_AT + 20, JA_AT + 30) \
+                or any(fc[0][2][font_pc.GLYPH_BYTES * 0xE00:font_pc.GLYPH_BYTES * 0xE01]) \
+                or len(fc[0][2]) != font_pc.GLYPH_BYTES * 0xE02:
+            errs.append("ja_new_pair: the pair after 0xDFF is 0x%X, its table %d entries"
+                        % (g_new, struct.unpack_from("<H", body)[0]))
         ja_sheets = None
         ja_small.clear()
         del ja_small_base[:]
@@ -7954,6 +8069,14 @@ def name_grid_selfcheck():
             if got:
                 errs.append("%s synthetic grid refused: %s" % (GRID_FAMILIES[family], got[:3]))
                 continue
+            # The page-0x2F cells: the op 3 after the button page's op 5; and
+            # one after a text with no op 5 between (the small draw's page).
+            g2 = name_grid_decode(payload)
+            ops2 = [list(o) for o in g2["copies"][1]["ops"]]
+            ops2.insert(1, [3, 0x2A, 0x26, 2, 0x13, 0, 0x78, 0])
+            if grid_page_cells(payload) != [(0xD8, 0)] or grid_page_cells(name_grid_payload(dict(
+                    fields, copies=[fields["copies"][0], dict(fields["copies"][1], ops=[tuple(o) for o in ops2])])))                     != [(0x10, 0x98), (0xD8, 0)]:
+                errs.append("%s: grid_page_cells %s" % (GRID_FAMILIES[family], grid_page_cells(payload)))
             with tempfile.TemporaryDirectory() as d:
                 path = os.path.join(d, "xx-XX.FIRST.DAT")
                 write_overlay(path, [(KIND_CONFIG, 0, b"\x06synthetic\0"), (KIND_NAME_GRID, 0, payload),
