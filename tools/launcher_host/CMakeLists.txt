@@ -36,6 +36,6 @@ target_compile_definitions(config_tests PRIVATE BOF3X_LAUNCHER_HOST_DIR="${CMAKE
 # The save editor's format core (src/launcher/save/; docs/save-editor.md):
 #   <scratch>/lh/save_tests.exe <a folder of your own save files> ...
 add_executable(save_tests save_tests.cpp ${REPO_SRC}/launcher/save/block.cpp ${REPO_SRC}/launcher/save/card.cpp
-               ${REPO_SRC}/launcher/save/namemap.cpp)
+               ${REPO_SRC}/launcher/save/finds.cpp ${REPO_SRC}/launcher/save/namemap.cpp)
 target_include_directories(save_tests PRIVATE ${REPO_SRC})
 target_compile_options(save_tests PRIVATE -Wall -Wextra)

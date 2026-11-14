@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 219;
+inline constexpr std::size_t kSwitchCount = 221;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -292,9 +292,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "TownWarp", 0, 8},   // DIV-0225
     {SwitchForm::Ini, "ini:cheat.learn=0", 4, 11},   // DIV-0226
     {SwitchForm::Name, "SaveSlotExpBar", 0, 14},   // DIV-0227
+    {SwitchForm::Name, "SoloCharacter", 0, 13},   // DIV-0228
+    {SwitchForm::Name, "SoloChampionIfPresent", 0, 21},   // DIV-0229
 };
 
-inline constexpr std::size_t kEntryCount = 227;
+inline constexpr std::size_t kEntryCount = 229;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -750,6 +752,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 217, 1, false, Player::Yes, 0, kLangAny},
     {227, "The save slot's EXP bar shows over its frame and stops at its track's end",
      Tier::Intent, State::Active, 0, 218, 1, true, Player::Yes, 0, kLangAny},
+    {228, "A solo-character mode: one chosen champion fights every battle alone",
+     Tier::Extension, State::Active, 0, 219, 1, false, Player::Yes, 0, kLangAny},
+    {229, "The solo champion fights only while the story has them in the party",
+     Tier::Extension, State::Active, 0, 220, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

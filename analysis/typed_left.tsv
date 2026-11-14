@@ -22907,10 +22907,10 @@ src/game/menu/menu.cpp	Menu_DrawItemPanel	global	Text	field_o::at::kListPiecesA	
 src/game/menu/menu.cpp	Menu_DrawItemPanel	global	Text	field_o::at::kItemPiecesB	0	0x663490	-	no-entry	at::kItemPiecesB 0x663490: a Menu_DrawPieces list with no [[data]] entry; B0 had it inside AreaMap_EntryHandlers by that entry's 128-dword count, now 4	c3n
 src/game/menu/menu.cpp	Menu_DrawItemPanel	global	AtFieldO	field_o::at::kListIds	4	0x6bc760	-	no-entry	at::kListIds 0x6bc760 -	b0
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Sprintf	field_o::at::kFmtSlot	0	0x6639d4	-	no-entry	at::kFmtSlot 0x6639d4 -	b0
+src/game/menu/menu.cpp	Menu_DrawSaveSlot	record	Long	summary + 0x10	0	-	param	no-family	`summary`: not shown to point at one of the nine record families	b1-field
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Sprintf	field_o::at::kFmtTime	0	0x654830	-	no-entry	at::kFmtTime 0x654830 -	b0
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Text	field_o::at::kColon	0	0x6639d0	-	no-entry	at::kColon 0x6639d0 -	b0
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Text	field_o::at::kColon	1	0x6639d0	-	no-entry	at::kColon 0x6639d0 -	b0
-src/game/menu/menu.cpp	Menu_DrawSaveSlot	record	Long	summary + 0x10	0	-	param	no-family	`summary`: not shown to point at one of the nine record families	b1-field
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Text	field_o::at::kEmptySlot	0	0x669ccc	-	no-entry	at::kEmptySlot 0x669ccc -	b0
 src/game/menu/menu.cpp	Menu_DrawSaveSlot	global	Text	field_o::at::kSlotPieces	0	0x663584	-	no-entry	at::kSlotPieces 0x663584 -	b0
 src/game/menu/menu_2.cpp	PrintBuf	global	At	battle_window_draw::at::kPrintBuf	0	0x904ba0	-	no-entry	kPrintBuf 0x904ba0 -	b0
@@ -26822,6 +26822,8 @@ src/game/shop/shop_win_2.cpp	MasterWin_DrawPortrait	global	AtRest2h	rest_2h::at:
 src/game/shop/shop_win_2.cpp	MasterWin_DrawPortrait	record	SetWord	p + 0x18	0	-	base=Gfx_PacketNext	no-struct	SetWord(p + 0x18): base=Gfx_PacketNext, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/shop/shop_win_2.cpp	MasterWin_DrawPortrait	record	SetWord	p + 0x1A	0	-	base=Gfx_PacketNext	no-struct	SetWord(p + 0x1A): base=Gfx_PacketNext, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/shop/shop_win_2.cpp	MasterWin_DrawPortrait	record	SetWord	p + 0x16	0	-	base=Gfx_PacketNext	no-struct	SetWord(p + 0x16): base=Gfx_PacketNext, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/solo/solo_battle.cpp	SoloBattle_ChampionFightsThis	global	At	mode_rest::at::kMemberCount	0	0x904ab0	-	no-entry	at::kMemberCount 0x904ab0 -	b0
+src/game/solo/solo_party_set.cpp	LoadedSetData	global	At	mode_rest::at::kFormation	0	0x904aac	-	no-entry	at::kFormation 0x904aac -	b0
 src/game/text/fishing_text.cpp	SelfTest	global	Byte	kLineRecords	0	0x653b98	-	no-entry	kLineRecords 0x653b98 -	b0
 src/game/text/fishing_text.cpp	SelfTest	global	Byte	kLineRecords	1	0x653b98	-	no-entry	kLineRecords 0x653b98 -	b0
 src/game/text/fishing_text.cpp	SelfTest	global	Byte	kLinePens	0	0x653c00	-	no-entry	kLinePens 0x653c00 -	b0

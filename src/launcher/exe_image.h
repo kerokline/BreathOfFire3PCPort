@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "input/bindings.h"
+#include "launcher/save/finds.h"
 
 namespace bof3x {
 
@@ -46,5 +47,13 @@ struct AreaLink {
     std::uint8_t flags;       // the save's +0x27
 };
 bool ExeAreaLinks(const std::wstring& exe, std::vector<AreaLink>& links, std::string& why);
+
+// The finds the save's banks +0x6EC and +0x72C record, for the save editor's
+// rows (launcher/save/finds.h): every op 9x of every area's placement script
+// and of the two 9x tables area code places from (Area42_Placements,
+// Area135_SpawnOps), and every passage entry the take step reads. Read from
+// the file, never copied into our source.
+bool ExeAreaFinds(const std::wstring& exe, std::vector<save::Find>& chests, std::vector<save::Find>& passages,
+                  std::string& why);
 
 }  // namespace bof3x

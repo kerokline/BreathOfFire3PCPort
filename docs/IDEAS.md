@@ -107,6 +107,8 @@ rule ([`README.md`](README.md)) here too.
 | I60 | The source layout's cleanup round: dissolve the 158 files of ours stage C moved whole (each switch and its arming beside the function that reads it, each written-in self-test a fuzz file), `-fno-auto-import`, the register-allocation `inline` rows, the mover's superseded fixes, then I48's comments | tooling / source | HIGH | run 2026-11-09 on `source-layout/stage-c`, before stage D, at the owner's word; the written-in self-tests, the mover and I48 left |
 | I61 | A fuzz table per unit file: a registry that assembles each takeover group's table from pieces, so a unit file's rows sit in a fuzz file of its own name | tooling / source | MEDIUM | open 2026-11-09 (the owner's call C2: moved whole now, the split deferred) |
 | I65 | The title menu's third row as a custom menu of quality-of-life toggles, reachable from inside the game too | menu / uplift | not assessed | open 2026-11-12 (the owner, answering the New Game round's question on the row); nothing designed |
+| I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
+| I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
 
 ---
 
@@ -2619,3 +2621,35 @@ Nothing is designed: which toggles, whether they are the launcher's switches or 
 
 ### Outcome
 _(2026-11-12) open; nothing built._
+
+## I66 — Solo character: a champion whose record is at 0 HP when a battle starts
+
+**Ask (2026-11-12, the owner, on the combat half's hand-back):** "I think the Mikba fight is the 0hp Rei fight. For that one, yeah, let's let Rei start dead, and make an idea to maybe handle it differently."
+**Kind:** gameplay / mode (DIV-0228 `SoloCharacter`). **Feasibility:** not assessed.   **Gated on:** the solo-character round's play ([`solo-character-round.md`](solo-character-round.md) 6d).
+
+**What is built.** Chapter 8's `Scena08_Scene11` leaves record 4 at 0 HP with status `0x6000` (read by group CB, [`solo-character-combat.md`](solo-character-combat.md)). A champion alone at 0 HP would lose at the battle's first frame, so `SoloBattle_Arm` stands the mode down for that one battle: the game's own party fights, and the champion starts dead as the original has it. Which fight that is has not been measured; the owner thinks it is the Mikba fight.
+
+**What the fight is, from the owner's play of it (2026-11-12, the route `mikbaFight`):** "it prompts to choose characters, then the fight starts with rei dead. I waste a little time with a dragon, then revive Rei just so you can see how rei immediately transforms (he is not under control during the fight unless he dies first). then I finish the fight. It prompts for party again after the fight is over." So a revived champion here would not be the player's to command; any other way of handling the fight has to answer that first.
+
+**What could be different** (nothing chosen): the champion revived to fight alone, at 1 HP or at full; the champion revived by the party's first turn; the fight skipped or won for a solo run. Each changes what the story's scene meant by the 0 HP.
+
+**First concrete step:** a save before that fight with record 4 as champion, to see what the stand-down plays like and confirm which fight it is.
+
+### Outcome
+_(2026-11-12) open; the stand-down is what is built._
+
+## I67 — Increased mapping to allow xdelta cross-disc conversions
+
+**Ask (2026-11-13, the owner):** after the measurement of whether a romhack's patch of the US disc could be read without that disc: "lets document it as idea for increased mapping to allow xdelta-cross-disc conversions".
+**Kind:** mods / tools. **Feasibility:** measured, not built ([`disc-patch-round.md`](disc-patch-round.md) 11.6).   **Gated on:** the owner's call that a per-patch list of offsets is within rule 1; a US 1.0 image, to measure that disc.
+
+**What it is for.** A `disc-patch` mod needs the exact disc its patch was made against (US 1.1 for the Definitive Edition): an xdelta is its author's literal bytes and instructions to copy ranges of that track. Where a change lands is already the same on every install; reading the patch is what ties the mod to one disc. A player with a PSP disc alone, a European disc, or the other US revision cannot build it.
+
+**The idea.** A list made for one patch and one other disc - (US offset, length) to (that disc's offset) - built where both discs are, shipped as numbers beside the known patches (`data/mods/known.toml`), and used by the builder in place of the US track for the ranges the mod carries. It is not the image map (`exe_maps/`): the encoder copies from wherever it found a match (63% of the text sections' bytes come from another section than the one written), so the list follows the patch, not the game's layout. The proof is exact: the layers must be the same bytes as the US-disc build's.
+
+**What the measurement says** (the Definitive Edition 1.4 against the European PlayStation and PSP discs): all 58 enemy tables and both pages are reachable; of the 284 distinct lines the patch changes, all but those holding one 28-byte run; 87% of the 2,478 changed table-number bytes are the patch's own. Open: 127 table bytes in runs that change a table's length, which the builder places today by comparing the whole US section with the patched one (`unmoved_section`) - the patch's own copies would have to give that alignment - and 113 / 79 copied table bytes not yet looked for elsewhere on the disc.
+
+**First concrete step:** a sparse decoder in `tools/vcdiff.py` (a window's target ranges from a source that answers only for listed ranges), and `m7_trace.py`'s provenance made into the list's builder; then the enemy tables and pages alone from a European disc, compared byte for byte with the US-disc build.
+
+### Outcome
+_(2026-11-13) open; measured, nothing built._

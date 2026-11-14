@@ -73,6 +73,9 @@ constexpr SubPage kSubPages[] = {
     // (DIV-0188).
     {kPageGame, IDD_PAGE_GAME, L"Cheats", L"Page 1"},
     {kPageGame, IDD_PAGE_GAME2, L"Cheats", L"Page 2"},
+    // The solo-character round (docs/solo-character-round.md 4): the mode, the
+    // champion and the option, a rule of play rather than a cheat.
+    {kPageGame, IDD_PAGE_SOLO, L"Solo character"},
     // The Mods tab's sub-row (the owner's call, 2026-10-22): Data, the player's
     // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
     // launcher's extras - today the Row above the text toggle (ruby_ui=).
@@ -1026,6 +1029,53 @@ bool CheatsSliderMoved(HWND page, HWND h) {
     return false;
 }
 
+// ---- The solo character (docs/solo-character-round.md 4 and 6a) -------------
+//
+// Two boxes that stand for two behaviours in on= (SoloCharacter, and
+// SoloChampionIfPresent), and the champion, solo.champion=. Each box shows
+// what on= asks for and is written back through ConfigBehaviourEdit, which
+// leaves on= byte for byte when the box says what the line said. The champion
+// box: None (an empty value), the six champions, and - only when the ini names
+// a value that is no champion - that value as it is, so an untouched box
+// writes it back for the game to refuse. The champion and the option are grey
+// while the mode's box is not ticked (ConfigSoloState says why).
+
+constexpr int kSoloNone = 0;   // the champion box's first entry; the champions follow it
+constexpr int kSoloKept = kSoloNone + 1 + static_cast<int>(std::size(kSoloChampions));   // the ini's other value
+
+void SoloRefresh(HWND dlg, const Config& cfg) {
+    const SoloState s = ConfigSoloState(cfg, Checked(dlg, IDC_SOLO_MODE));
+    Enable(dlg, IDC_SOLO_MODE, s.mode_enabled);
+    for (int id : {IDC_SOLO_CHAMPLABEL, IDC_SOLO_CHAMPION, IDC_SOLO_CHAMPNOTE}) Enable(dlg, id, s.choices_enabled);
+    Enable(dlg, IDC_SOLO_IFPRESENT, s.if_present_enabled);
+    Enable(dlg, IDC_SOLO_IFNOTE, s.if_present_enabled);
+    SetText(dlg, IDC_SOLO_WHY, s.why.c_str());
+}
+
+void SoloPopulate(HWND dlg, const Config& cfg) {
+    const SoloState s = ConfigSoloState(cfg, false);
+    Check(dlg, IDC_SOLO_MODE, s.mode);
+    Check(dlg, IDC_SOLO_IFPRESENT, s.if_present);
+    SendMessageW(Item(dlg, IDC_SOLO_CHAMPION), CB_RESETCONTENT, 0, 0);
+    AddItem(dlg, IDC_SOLO_CHAMPION, L"None");
+    for (const SoloChampion& c : kSoloChampions) AddItem(dlg, IDC_SOLO_CHAMPION, c.label);
+    const int at = ConfigSoloChampionIndex(cfg.solo_champion);
+    if (at < 0 && !cfg.solo_champion.empty())
+        AddItem(dlg, IDC_SOLO_CHAMPION,
+                (ConfigFromUtf8(cfg.solo_champion) + L" - bof3x.ini: this is not a champion").c_str());
+    Select(dlg, IDC_SOLO_CHAMPION, at >= 0 ? kSoloNone + 1 + at : cfg.solo_champion.empty() ? kSoloNone : kSoloKept);
+    SoloRefresh(dlg, cfg);
+}
+
+void SoloReadBack(HWND dlg, Config& cfg) {
+    cfg.on = ConfigBehaviourEdit(cfg.on, kSoloBehaviour, Checked(dlg, IDC_SOLO_MODE));
+    cfg.on = ConfigBehaviourEdit(cfg.on, kSoloIfPresentBehaviour, Checked(dlg, IDC_SOLO_IFPRESENT));
+    const int sel = Selected(dlg, IDC_SOLO_CHAMPION);
+    if (sel == kSoloNone) cfg.solo_champion.clear();
+    else if (sel > kSoloNone && sel < kSoloKept) cfg.solo_champion = kSoloChampions[sel - kSoloNone - 1].id;
+    // kSoloKept, or no selection: the ini's value as read
+}
+
 // ---- DIV-0050: the Controls page (docs/controls.md section 4.2) -------------
 //
 // Fourteen rows, one a PlayStation input, each with two key cells and two pad
@@ -1610,6 +1660,7 @@ void ApplyPages(HWND dlg, DialogState& state) {
     ReadBack(dlg, state);
     if (state.cheats_touched)
         CheatsReadBack(SubPageOf(state, IDD_PAGE_GAME), SubPageOf(state, IDD_PAGE_GAME2), state.cfg->cheats);
+    SoloReadBack(dlg, *state.cfg);   // an untouched page writes on= and solo.champion= back as read
     if (state.cells_touched) {
         const int layout = Selected(dlg, IDC_CT_LAYOUT);
         state.cells.layout = static_cast<input::Layout>(layout < 0 ? 0 : layout);
@@ -1648,6 +1699,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         if (HWND mods = SubPageOf(*state, IDD_PAGE_MODS))
             SendMessageW(mods, kMsgModsOff, 0, reinterpret_cast<LPARAM>(&state->cfg->mods_off));
         CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), state->cfg->cheats);
+        SoloPopulate(dlg, *state->cfg);
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
         Layout(dlg, *state);
@@ -1779,6 +1831,12 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_CH_LEARN:
             if (HIWORD(wp) == BN_CLICKED) state->cheats_touched = true;
             return TRUE;
+        case IDC_SOLO_MODE:
+            if (HIWORD(wp) == BN_CLICKED) SoloRefresh(dlg, *state->cfg);   // the champion and the option follow it
+            return TRUE;
+        case IDC_SOLO_IFPRESENT:
+        case IDC_SOLO_CHAMPION:
+            return TRUE;   // read back with the page (SoloReadBack)
         case IDC_CH_DEFAULTS:
         case IDC_CH_DEFAULTS2:   // either page's Defaults: every cheat, both pages
             CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), Config::Cheats{});

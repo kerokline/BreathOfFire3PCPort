@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 227 entries, DIV-0001..0227, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 229 entries, DIV-0001..0229, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -12090,6 +12090,28 @@ designed in rather than bolted on.
   one for the other US revision is refused at the build by its undo data
   (`real_bd.log`, `real_bd2.log`). **Not played, and the
   launcher's new text not seen by the owner.**
+- **Amended 2026-11-13 (a US disc's patch over the European English text;
+  [`disc-patch-round.md`](disc-patch-round.md) 11):** a `disc-patch` mod of
+  the US disc was played under `en-US` text alone. Where the install also
+  holds `en-150` text and the disc it came from, the build now makes a third
+  layer, `mod-<id>-en-150`: the patch's lines put into that text slot by
+  slot (the other disc's line where the patch changed nothing, the patch's
+  line where it did - counted and named in the build's log when the
+  European text words that line differently), the names the patch changed
+  record by record, the enemy names and the town warp's text. The launcher
+  hands `mod-<id>` and the text layer of the language played, so the mod
+  goes under either English, and the Mods tab greys it with `built; only
+  with en-US or en-150 text` under another. The US disc is still needed in
+  the source list: the patch is a difference against it. The owner,
+  2026-11-13: "the eu text should mostly match regular eng text ... the
+  patch locations should be easy to flag if they work as is or not".
+  Verification: the Definitive Edition 1.4 on two scratch installs (US +
+  European PSP, US + European PlayStation): the `en-150` layer has the en-US
+  layer's chunk list (383 chunks in 169 files), 124 and 125 of the patch's
+  125 text sections carried (2 and 1 lines worded differently), and a
+  slot-by-slot model over the built chunks holds with 0 problems; the exe
+  host's self-test started by the launcher under `language=en-150` takes
+  both layers with no Fatal. **Not played under `en-150`.**
 - **Rationale:** the owner's call 2 of the round, 2026-10-22: furigana ships
   as a mod zip, "just so we can work on the first mod implementation in this
   round"; the readings can be re-issued without a release. IDEAS I21, I50
@@ -15615,6 +15637,15 @@ designed in rather than bolted on.
   five discs' layers built with the chunk, `loc_build.py selftest`.
   **Not done:** no save from the PC game has been loaded on a PlayStation
   or an emulator.
+  Amended 2026-11-13: **names for the records and finds.** The rows of
+  "Records and finds" show a name after the bit number: the enemy for the
+  two enemy banks, the skill, and for a chest or a passage find its area,
+  cell and contents. All are read from the player's install when the
+  editor opens (`src/launcher/save/finds.cpp`, `ExeAreaFinds`;
+  `docs/save-editor.md` 4.3); a bit with no name keeps its number.
+  `save_tests` 853 checks, 0 failures with the fixtures; the launcher's
+  readers give the same text as `tools/bank_names.py` on two installs.
+  **Not done:** nobody has opened the window with the named rows.
 - **Reversible?** The player does not open it. Each save it replaces is in
   `save-backups\`.
 - **Switch:** none
@@ -16727,5 +16758,191 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SaveSlotExpBar (ini off=)
 - **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### A solo-character mode: one chosen champion fights every battle alone
+
+- **ID:** DIV-0228
+- **Date:** 2026-11-12
+- **Subsystem:** the solo-character mode, `src/game/solo/` (ours):
+  `solo.{h,cpp}` (the switch, the mark, the questions), `solo_battle.{h,cpp}`
+  (the combat swap), `solo_level.{h,cpp}` (the level-1 start),
+  `solo_party_set.{h,cpp}` (fight 16's extra section). Calls: the stamp in
+  `Area_Enter` `0x594E60` (`src/game/menu/item_trade.cpp`) and in
+  `TitleFlow_NewGame` `0x5880E0` (`src/game/core/sound.cpp`); the battle
+  hooks in `GameMode5_Turn` / `_Load` / `_Place` / `_Leave` and
+  `GameMode_Start` (`src/game/core/transition.cpp`); fights 16 and 18 to 20
+  in `src/game/boss/boss_nina.cpp`; the quicksave participant `SOLOCB`.
+  `BOF3X_SOLO` read in `InjectAll` after `Behaviour_Read`; the save block's
+  `+0x1041` (`Solo_ChampionMark`, `0x904A21`, ours); the behaviour
+  `SoloCharacter` ([`mods.md`](mods.md) 11). Docs:
+  [`solo-character-round.md`](solo-character-round.md) (the design and the
+  owner's calls, IDEAS I56, issue #223),
+  [`solo-character-reads.md`](solo-character-reads.md),
+  [`solo-character-combat.md`](solo-character-combat.md),
+  [`solo-character-level1.md`](solo-character-level1.md),
+  [`solo-character-party-set.md`](solo-character-party-set.md),
+  [`solo-character-proof.md`](solo-character-proof.md)
+- **Tier:** Extension - a challenge mode the player asks for
+- **Original behaviour:** every battle is fought by the party the field
+  holds, up to three members (`Field_PartyLoad(1)` from the second list
+  `0x904065`, solo-character-reads.md M4). The save block's `+0x1041` is never
+  addressed: `tools/pe_xref.py --range 0x904A1D:0x904A90` over `BOF3.exe`
+  finds no operand there, [`save-block.md`](save-block.md) lists `+0x1041..`
+  as untouched, and the byte reads 0 in the owner's 25 saves (chapters 0 to
+  15; symbols.toml `Solo_ChampionMark`).
+- **New behaviour:** the mode is three things: the save's champion mark,
+  the level-1 start at New Game, and the combat swap. **The field, the menus,
+  the members screens and team swapping are the original's** (the owner,
+  round doc 6e and 6f: three walkers as the game has them, no mark on any
+  screen); a field fold, scene handling and a members-screen mark were built
+  and removed (branches `solo/fs`, `solo/sa`, `solo/ms`; their docs are
+  marked superseded).
+  **The mark.** `BOF3X_SOLO` (the launcher's champion: `ryu`, `nina`,
+  `garr`, `rei`, `momo`, `peco`, character records 0, 1, 2, 4, 5, 6; records
+  3 and 7 never) is read once at start - unset or empty is no launcher
+  champion (one log line), any other value stops the game with a sentence
+  naming it. With `SoloCharacter` on, New Game sets the save block's
+  `+0x1041` to the champion (0 no solo run, else the record + 1), or to 0
+  when `BOF3X_SOLO` names none, and each `Area_Enter`, after its chapter
+  step, stamps a byte that is still 0 when the live chapter `Cond_ByteFA` is
+  neither 0 (the intro) nor 16 (the attract demo's); once set, the save's
+  champion holds and a different `BOF3X_SOLO` is logged, not applied. A byte
+  that is not 0 or a champion's record + 1 stops the game with a sentence.
+  **The level-1 start.** At New Game with a champion, that record is taken
+  to level 1 by subtraction of what its levels gave (no table of ours;
+  willpower untouched; solo-character-level1.md). A loaded save is not
+  changed. With `SoloCharacter` on and a launcher champion, the tables the
+  start reads (the default records, the level table, as any mod layer left
+  them) are checked at launch, and a table that does not fit stops the game
+  there with a sentence naming the record and the cause; New Game keeps the
+  same check.
+  **The combat swap.** While the mode is active (the switch on, the chapter
+  neither 0 nor 16, a champion in the mark) and the champion fights
+  (DIV-0229 decides while not joined), each battle's party is the champion
+  alone: at the battle load's step 3 the second list `0x904065` becomes the
+  champion's id, the count 1, the formation 0, on a party-set row that holds
+  the champion and keeps the most of the field row's ids; the list, count,
+  formation and set byte are put back after the battle where the battle left
+  them as written, the count held at 1 until step 7's `Field_PartyLoad(0)`
+  (the walkers' records are stale against a changed set file before it:
+  combat.md 9). For the battle's length the party records outside it hold no
+  record index (`+0x148` = 0xFF, put back after), so a set-up's scan by
+  record finds only the battle's members. EXP goes to the champion as the
+  game gives it to a party of one. A quicksave inside a battle carries the
+  swap's state (`SOLOCB`, version 3).
+  **Where a fight has its own rule** (each the owner's call, round doc 6d to
+  6k): a champion at 0 HP when a battle starts stands down for that battle
+  and the party fights (6d; IDEAS I66); fights 25, 26 and 27 (the Beyd
+  training fights) are the original's (6g), and so are fights 13 and 22, the
+  two the story has the party lose (6k); in fights 18 to 20 (chapter 5's
+  one-on-one series) a bout the champion loses is a game over, not the next
+  member's turn (6h); fight 16 needs id 1's battle graphics, so with a row
+  that lacks id 1 that character's section is read from the player's own
+  party-set files into a free column of the loaded battle data, only in a
+  battle the champion fights alone and for its exit's join, nothing written
+  to disk
+  (solo-character-party-set.md), and the mode stands down for that fight
+  with a log line when the files do not fit; in fight 34 a champion who is
+  not record 4 fights with record 4 beside them as the fight leaves him
+  (HP 0), count 2, the champion first, and record 4 as champion is revived
+  and healed at the battle's start and fights alone (6j: "leave rei in the
+  team. So the team becomes rei (dead), champion").
+  With the switch off nothing reads or writes the byte, `Area_Enter`'s and
+  New Game's calls return at their first test, and no battle hook acts.
+- **Rationale:** the owner's request (issue #223, IDEAS I56, 2026-11-03):
+  solo challenges are fun, and knocking your own friends out at the start of
+  every fight is not. The owner's answers of 2026-11-12 (round doc 6 and 6a):
+  the champion is chosen in the launcher; "champion always" is the mode's
+  rule; the mode stands down in chapter 0, the intro; six champions, the
+  main cast; the run's champion is a byte of ours at the save's tail, "like
+  the one map flag we added" (DIV-0191's `+0x1040`). The stamp-once rule is
+  the round doc's proposal on the owner's "maybe". Chapter 16 is a technical
+  stand-down, not an owner's call: the attract demo is a recorded scene, and
+  it returns to the title without `Boot_Task`, so a mark stamped there would
+  reach the next New Game (`TitleFlow_NewGame` does not zero the block).
+- **The save byte:** a save made in the mode holds its champion at
+  `+0x1041`; loaded with the switch off the byte is inert (nothing reads it)
+  and the game is the original's; loaded with it on, the save's champion
+  holds whatever the launcher names. A save made without the mode, loaded
+  with it, is stamped at the first area entry past chapter 0. A memory-card
+  conversion carries the byte; no PlayStation code reads it.
+- **Also in the PSX version?** No: no release has it.
+- **Verification:** 2026-11-12 and -13, the round's groups (hand-backs in
+  the docs above). Both builds (32-bit and 64-bit) of the round's tip;
+  `ledger_check.py`, `ledger_switches.py --check` pass; the exe-host
+  self-test (`solo self-test: 144`, `solo battle self-test: 35 checks`) and
+  the hosted `BOF3X_SHADOW=*` run on group CB's tip; after the round's review
+  (group PS, 2026-11-13) `161` and `39` checks at both widths and hosted, 0
+  mismatches. Boss fights under the
+  harness, plain and each of the six champions (solo-character-proof.md 6d,
+  combat.md 14): fights 2, 8, 12, 13, 16, 23, 24, 29, 31, 34 and 35 end as
+  plain does with the same party and scene after the return, no crash and
+  no "frame of no pieces", but for two rows the harness could not end
+  (fight 35 with record 6, fight 46 with record 2: the battle still turning,
+  no crash; **whether a player can win those alone is not known**). Fight 16
+  with record 4 on the full route; a lost bout of fights 18 to 20 (a won
+  bout is argued from the code: no save reaches the series). Fight 34: all
+  seven sides win, record 4 revived beside another champion transforms and
+  fights without a crash, and a quicksave and quick-load inside the fight
+  goes on to a win. **Argued from the code only:** fight 22 (no save reaches
+  it); that record 2 as champion keeps fight 31's extra EXP into chapter 8;
+  the scene after fight 34 past the harness's window. **The off-proof**
+  (2026-11-13, `solo/round` `af09b08a` against `main` `13801868`,
+  `solo-character-proof.md` 6e): the behaviours off, nine of the ten routes
+  identical; `SoloCharacter` on with no champion, all ten identical.
+  `cutsceneAndNue` with the behaviours off differs on page `0x7DE000` alone,
+  from a different tick in each of four runs, with another game on the
+  machine: read as the harness's noise (D420), **not shown identical**; the
+  owner passed the round on that condition. **Owed:** that route's run once
+  D420 is settled;
+  installs other than the PC files for fight 16's extra section. **Not
+  played by the owner.**
+- **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;
+  `BOF3X_OFF=SoloCharacter` keeps it off. The mark stays in saves made with
+  it.
+- **Switch:** SoloCharacter
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it
+- **Languages:** any
+- **State:** active
+
+### The solo champion fights only while the story has them in the party
+
+- **ID:** DIV-0229
+- **Date:** 2026-11-12
+- **Subsystem:** the solo-character mode's core, `src/game/solo/solo.cpp`
+  (`Solo_ChampionFights`); the behaviour `SoloChampionIfPresent`
+  ([`mods.md`](mods.md) 11); [`solo-character-round.md`](solo-character-round.md)
+  6 and 6a
+- **Tier:** Extension - a variant of DIV-0228's challenge
+- **Original behaviour:** no solo mode (DIV-0228). The game marks a
+  character "joined" by `CharacterRecords +0xB` bit 0, which story scripts
+  set at a join and clear when they take a character away
+  (solo-character-reads.md M6).
+- **New behaviour:** with `SoloCharacter` and `SoloChampionIfPresent` both
+  on, the champion fights alone only while their record has bit 0 set; in a
+  battle while it is clear, the party the field holds fights, as the
+  original. With `SoloChampionIfPresent` off ("champion always", the mode's
+  rule) the champion fights whenever the mode is active, from chapter 1 on,
+  before their first join too, and while the story has them away. On with
+  `SoloCharacter` off, it does nothing (one log line).
+- **Rationale:** the owner's first answer (2026-11-12, round doc 6 item 1):
+  "Lets start it as 'champion if present', but maybe leave an optional
+  flag for 'champion always mode'"; their second answers (6a item 2) made
+  "champion always" the rule and this the option.
+- **Also in the PSX version?** No: no release has it.
+- **Verification:** 2026-11-12, group SC: the decision table's self-test
+  (both switches, joined and not); group CB's gate run of a fight from a
+  record whose joined bit is clear (solo-character-combat.md 7). **Not
+  played.**
+- **Reversible?** Yes - off unless `on=` names it; `BOF3X_OFF=SoloChampionIfPresent`
+  keeps it off.
+- **Switch:** SoloChampionIfPresent
+- **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
+- **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it
 - **Languages:** any
 - **State:** active

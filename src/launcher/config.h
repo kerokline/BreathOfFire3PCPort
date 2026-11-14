@@ -151,6 +151,15 @@ struct Config {
     // (ConfigModOn). Empty (the default): only the mods' needs. Kept as
     // written; the game refuses a name that is not a behaviour of this release.
     std::string on;
+    // The solo-character round (docs/solo-character-round.md, issue #223): the
+    // champion who fights alone, solo.champion= - one of kSoloChampions' ids,
+    // BOF3X_SOLO's value - handed over only while the behaviour SoloCharacter
+    // is on as the game reads it (ConfigBehaviourOn over the BOF3X_ON and
+    // BOF3X_OFF it is given). Empty (the default): no champion. Kept as
+    // written, as on= is: a value that is no champion reaches the game, which
+    // stops and names it. The mode and its option are behaviours in on= (the
+    // Solo character page's two boxes edit that line, ConfigBehaviourEdit).
+    std::string solo_champion;
     // DIV-0157 as amended 2026-11-11 (docs/disc-patch-round.md 4): the ids of
     // the installed mods the player turned off on the Mods tab (the check box
     // at the left of a row), comma-separated. A mod of a kind that is on or
@@ -469,6 +478,46 @@ std::string ConfigModOn(const std::vector<ModAsk>& asks, const std::string& play
 // Whether `list` (BOF3X_OFF's syntax) turns `name` off: named, or `*` with no
 // `-name` (an exclusion wins wherever it stands; detour.cpp NameListed).
 bool ConfigListTurnsOff(const std::string& list, const std::string& name);
+// Whether the game turns the behaviour `name` on from these lists - its own
+// rule (src/hook/behaviour.cpp Behaviour_Read): `on` (BOF3X_ON) names it or
+// says `*`, no `-name` in it, and `off` (BOF3X_OFF) does not turn it off.
+bool ConfigBehaviourOn(const std::string& on, const std::string& off, const std::string& name);
+// `on` (on='s list) edited so that it turns `name` on (`want`) or not, for a
+// check box that stands for one behaviour. When `on` already says what is
+// wanted it is returned byte for byte, so an untouched box writes on= back as
+// read. Else every `name` and `-name` token is taken out; then, if the rest
+// does not yet say what is wanted, `name` is added at the end (want) or
+// `-name` (not want: a `*` still turns it on). The other tokens are kept in
+// their order, joined by commas.
+std::string ConfigBehaviourEdit(const std::string& on, const std::string& name, bool want);
+
+// The solo-character round (docs/solo-character-round.md 4 and 6a): the mode,
+// its option and the six champions - the launcher's own labels for the
+// characters, not text read from the game. The ids are BOF3X_SOLO's values.
+constexpr const char* kSoloBehaviour = "SoloCharacter";
+constexpr const char* kSoloIfPresentBehaviour = "SoloChampionIfPresent";
+struct SoloChampion {
+    const char* id;
+    const wchar_t* label;
+};
+inline constexpr SoloChampion kSoloChampions[] = {
+    {"ryu", L"Ryu"}, {"nina", L"Nina"}, {"garr", L"Garr"}, {"rei", L"Rei"}, {"momo", L"Momo"}, {"peco", L"Peco"},
+};
+// The place of `id` in kSoloChampions, or -1 (an empty id, or one that is no champion).
+int ConfigSoloChampionIndex(const std::string& id);
+// What the Solo character page shows for `cfg` (on=, off=, solo.champion=):
+// each box as on= asks for it; whether the mode's box can be changed (greyed
+// when `known`, the release's behaviours - null: ConfigBehavioursKnown - lacks
+// either name, or off= turns SoloCharacter off); whether the champion can be
+// changed (also `mode_ticked`, the mode's box as the page shows it now); the
+// option likewise, unless off= turns SoloChampionIfPresent off; and the reason
+// for the grey, empty when nothing is grey. Every control is shown, greyed or not.
+struct SoloState {
+    bool mode = false, if_present = false;
+    bool mode_enabled = false, choices_enabled = false, if_present_enabled = false;
+    std::wstring why;
+};
+SoloState ConfigSoloState(const Config& cfg, bool mode_ticked, const std::vector<std::string>* known = nullptr);
 // The mods <home>\mods.toml lists, in its order; none when there is no file.
 std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 
@@ -482,7 +531,10 @@ std::vector<ModInfo> ConfigModsInstalled(const std::wstring& home);
 //    the mod's one required language. Both or neither: the first alone would
 //    leave enemy names blank (disc-patch-round.md 3a). Left off, with a line,
 //    when `language` (what the game is given as BOF3X_LANG; empty for the
-//    port's Chinese) is not <tag>.
+//    port's Chinese) is not <tag> - unless the cache holds the mod's text
+//    for that language, mod-<id>-<language>, which is then the text layer
+//    handed over (a US patch's lines in the European English text,
+//    disc-patch-round.md 11).
 // A mod `mods_off` names (ids, comma-separated) is left off without a line. A
 // mod whose layers the cache does not hold (not built) is left off with a
 // line; so is one whose layers would pass the game's 16. A layer `wanted`

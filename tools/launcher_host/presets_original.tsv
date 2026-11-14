@@ -228,6 +228,8 @@ original	as-shipped	already-off	DIV-0224	LevelSkillCatchUp	Select on the abiliti
 original	as-shipped	already-off	DIV-0225	TownWarp	A mod can give the party a warp to a visited town from the world map	Default off: already off
 original	as-shipped	already-off	DIV-0226	ini:cheat.learn=0	An examining member always learns the enemy's skill: a Cheats switch	Default off: already off
 original	as-shipped	off	DIV-0227	SaveSlotExpBar	The save slot's EXP bar shows over its frame and stops at its track's end	Player yes
+original	as-shipped	already-off	DIV-0228	SoloCharacter	A solo-character mode: one chosen champion fights every battle alone	Default off: already off
+original	as-shipped	already-off	DIV-0229	SoloChampionIfPresent	The solo champion fights only while the story has them in the party	Default off: already off
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -377,6 +379,8 @@ original	repaired	already-off	DIV-0223	CampMasters	A mod can let the player talk
 original	repaired	already-off	DIV-0224	LevelSkillCatchUp	Select on the abilities menu gives the party the level skills they are past (a mod's)	Default off: already off
 original	repaired	already-off	DIV-0225	TownWarp	A mod can give the party a warp to a visited town from the world map	Default off: already off
 original	repaired	already-off	DIV-0226	ini:cheat.learn=0	An examining member always learns the enemy's skill: a Cheats switch	Default off: already off
+original	repaired	already-off	DIV-0228	SoloCharacter	A solo-character mode: one chosen champion fights every battle alone	Default off: already off
+original	repaired	already-off	DIV-0229	SoloChampionIfPresent	The solo champion fights only while the story has them in the party	Default off: already off
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 original	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

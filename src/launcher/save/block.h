@@ -52,6 +52,11 @@ struct Names {
         int flags;   // the entry flags byte, or -1 where the table has none
     };
     std::vector<Entrance> entrances;
+
+    // The records-and-finds bits' names, from the install (save/finds.h):
+    // an enemy kind's name; a chest's or a passage's place and what it holds,
+    // by its bit. A bit with no entry shows its number alone.
+    std::map<unsigned, std::string> enemy, chest, passage;
 };
 
 enum class Type {
@@ -69,6 +74,7 @@ enum class Type {
 enum class List {
     kNone, kItem0, kItem1, kItem2, kItem3, kKeyItem, kAbility, kMember,
     kMaster, kFormation, kChapter, kArea,   // by the reference names
+    kSoloChampion,   // the solo-character mark's values (DIV-0228): None and the six champions
 };
 
 // The spec's classes (section 7): E a normal field, A advanced, D derived (the

@@ -1076,20 +1076,25 @@ def _unlink_dir(dst):
         shutil.rmtree(dst, ignore_errors=True)
 
 
-def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say, warp_lba=None):
+def run_loc(mode, tag, build_id, orig_path, patched_path, cache, pc_rows, work, enemy_names, say, warp_lba=None,
+            port=None):
     """loc_build.py on the hybrid disc, the way the install's layer was built:
     the folder of its containers, and the folder of the names containers for
     `enemy_names` (DAT names) - with, when `warp_lba` names the town warp's
     file (DIV-0225), its text payload as the file WARP_TEXT_FILE there. A
-    child process: loc_build.py keeps a disc's state in its module."""
+    child process: loc_build.py keeps a disc's state in its module.
+
+    `port` (another language's text, port_text): {"disc": that language's
+    disc, "dir": write_ported's folder}. The builder then reads that disc with
+    the ported sections in it, and the image as the install has it."""
     import importer
     names_dir = os.path.join(work, "names")
     os.makedirs(names_dir)
     jobs = os.path.join(work, "names.json")
     with open(jobs, "w") as f:
-        json.dump({"enemy": sorted(enemy_names), "warp": warp_lba}, f)
+        json.dump({"enemy": sorted(enemy_names), "warp": warp_lba, "port": port}, f)
     cmd = [sys.executable, os.path.abspath(__file__), "_loc", orig_path, patched_path, jobs, names_dir, build_id,
-           "all", "--disc", orig_path, "--lang", tag]
+           "all", "--disc", port["disc"] if port else orig_path, "--lang", tag]
     view = None
     try:
         if mode == "cache":
@@ -1143,17 +1148,27 @@ def cmd_loc(argv):
     import loc_build
     import psx_disc
     orig, patched = psx_disc.Disc(orig_path), psx_disc.Disc(patched_path)
-    try:
-        changes, _, unmoved = image_changes(orig, patched, build_id)
-    except Bad as e:
-        print("disc_patch_build: %s" % e)
-        return 1
+    with open(jobs) as f:
+        job = json.load(f)
+    if job.get("port"):
+        # another language's text: its own disc with the ported sections, and the image as it is - that
+        # disc's tables hold Capcom's numbers, which is what the builder finds them by
+        ported = read_ported(job["port"]["dir"])
 
-    def opener(path):
-        # the mod's numbers over the image from here on: loc_build.py opens the disc after it has
-        # checked that a PC install's BOF3.exe is the one it knows, which must see the exe as it is
-        loc_build.image_overlay = changes
-        return HybridDisc(orig, patched, unmoved=unmoved)
+        def opener(path):
+            return PortedDisc(psx_disc.Disc(path), ported)
+    else:
+        try:
+            changes, _, unmoved = image_changes(orig, patched, build_id)
+        except Bad as e:
+            print("disc_patch_build: %s" % e)
+            return 1
+
+        def opener(path):
+            # the mod's numbers over the image from here on: loc_build.py opens the disc after it has
+            # checked that a PC install's BOF3.exe is the one it knows, which must see the exe as it is
+            loc_build.image_overlay = changes
+            return HybridDisc(orig, patched, unmoved=unmoved)
     loc_build.disc_opener = opener
     sys.argv = ["loc_build.py"] + argv[5:]
     try:
@@ -1163,8 +1178,6 @@ def cmd_loc(argv):
         return 1
     if rc:
         return rc
-    with open(jobs) as f:
-        job = json.load(f)
     wanted = job["enemy"]
     for name in wanted:
         found = patched.find(name[:-4] + ".EMI")
@@ -1202,10 +1215,393 @@ def cmd_loc(argv):
     return 0
 
 
+# ---------------------------------------------------------------- the patch's text over another disc's
+#
+# docs/disc-patch-round.md 11. A patch of the US disc changes en-US text. The
+# European English text (en-150: the European PlayStation disc's, the European
+# PSP disc's) is the same script with a few lines worded or broken another way,
+# so the patch's lines are carried over to it line by line. A text block is a
+# table of 16-bit offsets, one a slot, and the messages they point at;
+# loc_build.convert_block reads a block slot by slot and nothing else of it, so
+# a block made again from each slot's message is the same block to the builder.
+#
+#   the patch left the slot's message alone              the other disc's message
+#   the patch changed it, the other disc has the US's    the patch's message ("as is")
+#   the patch changed it, the other disc words it        the patch's message, counted and
+#     differently                                          named in the build's log
+#   the patch changed it, the other disc has no message  the other disc's (a slot it does not use)
+#
+# A block that is not this shape on one of the three sides is not carried, and
+# said. Nothing here reads a language: the bytes are compared, never decoded.
+
+ALSO_TEXT = {"psx-us": ("en-150",)}     # build -> the other tags its patch's text is carried over to
+LAYER_MAX = 23                          # tools/mods.py LAYER_MAX (src/game/dat_load.cpp kOptName - 1)
+DONOR_ARG1 = frozenset((0x04, 0x05, 0x07, 0x08, 0x0A, 0x0C, 0x0F, 0x16))   # loc_build.ARG1: a code and its one argument
+DONOR_CHOICE = 0x14                     # loc_build.CHOICE: four bytes, then as many runs as its fourth byte's low nibble
+POOL_DEST, BLOCK_DEST = 0x8001A000, 0x80010000
+NAME_KIND, NAME_RECORD = 5, 16          # loc_build.KIND_NAMES: a table's names, 16 bytes a record
+
+
+class Unmerged(Exception):
+    """A text section the patch changed cannot be carried over to another disc's text; why, in a few words."""
+
+
+def donor_message(buf, i):
+    """The disc message at offset i of a block, through its end
+    (loc_build.convert_run's walk for a Latin disc): to its NUL, a code of
+    DONOR_ARG1 taking the byte after it, a choice taking its options' runs. A
+    message the block's end cuts short is what is there."""
+    n, start = len(buf), i
+
+    def run(i):
+        while i < n and buf[i]:
+            i += 2 if buf[i] in DONOR_ARG1 else 1
+        return i + 1
+
+    while i < n:
+        b = buf[i]
+        if b == 0:
+            i += 1
+            break
+        if b == DONOR_CHOICE:
+            options = buf[i + 3] & 0xF if i + 3 < n else 0
+            i += 4
+            for _ in range(options):
+                i = run(i)
+            break
+        i += 2 if b in DONOR_ARG1 else 1
+    return bytes(buf[start:min(i, n)])
+
+
+def text_slots(block):
+    """A text block's messages, one a slot, or None when the block does not
+    start with a table of offsets that all lie inside it."""
+    if len(block) < 2:
+        return None
+    n = struct.unpack_from("<H", block, 0)[0] // 2
+    if not n or 2 * n > len(block):
+        return None
+    offs = struct.unpack_from("<%dH" % n, block, 0)
+    if any(o < 2 * n or o > len(block) for o in offs):
+        return None
+    seen = {}
+    for o in offs:
+        if o not in seen:
+            seen[o] = donor_message(block, o)
+    return [seen[o] for o in offs]
+
+
+def slots_block(msgs):
+    """A text block from its slots' messages; the same message is laid once."""
+    at, body, base = {}, bytearray(), 2 * len(msgs)
+    for m in msgs:
+        if m not in at:
+            at[m] = base + len(body)
+            body += m
+    if base + len(body) > 0xFFFF:
+        raise Unmerged("the block would be longer than its 16-bit offsets reach")
+    return struct.pack("<%dH" % len(msgs), *[at[m] for m in msgs]) + bytes(body)
+
+
+def _blank(m):
+    return m in (b"", b"\0")
+
+
+def merge_text_block(uo, up, other):
+    """The block `other` (another disc's) with the lines the patch changed
+    (`uo` the patch's disc's block, `up` the same block patched): (bytes,
+    {"as_is", "lines", "worded": [slot]}). `as_is`: the other disc's block is
+    the patch's disc's, byte for byte, and the patched block is taken whole.
+    `lines`: the distinct lines taken; `worded`: the slots whose line the
+    other disc words differently and the patch's line replaced. A merged
+    block's dict also holds the lines themselves, for a count over sections
+    that share them (a pool is in forty files): `taken`, and `other`, the
+    ones of `worded`. Unmerged when
+    a side is not a slot table, the patch changes the slot count, the other
+    disc has fewer slots, or most of the changed lines are worded differently
+    (the two blocks are then not the same script)."""
+    if other == uo:
+        return up, {"as_is": True, "lines": 0, "worded": []}
+    mo, mp, me = text_slots(uo), text_slots(up), text_slots(other)
+    if mo is None or mp is None:
+        raise Unmerged("the patch's block is not a table of lines")
+    if me is None:
+        raise Unmerged("the other disc's block is not a table of lines")
+    if len(mo) != len(mp):
+        raise Unmerged("the patch changes how many lines the block has")
+    if len(me) < len(mo):
+        raise Unmerged("the other disc's block has fewer lines")
+    out, taken, worded = list(me), set(), []
+    for s in range(len(mo)):
+        if mo[s] == mp[s] or (_blank(me[s]) and not _blank(mo[s])):
+            continue
+        out[s] = mp[s]
+        if me[s] == mo[s]:
+            taken.add(mp[s])
+        else:
+            worded.append(s)
+    lines_worded = {mp[s] for s in worded}
+    if len(lines_worded) > 3 and len(lines_worded) > len(taken):
+        raise Unmerged("most of the lines the patch changes are other lines on the other disc")
+    return slots_block(out), {"as_is": False, "lines": len(taken | lines_worded), "worded": worded,
+                              "taken": taken | lines_worded, "other": lines_worded}
+
+
+def merge_text_section(dest, uo, up, other):
+    """merge_text_block for a section the PC keeps as text: an area's block,
+    a pool (a header of two offsets and two blocks: loc_build.convert_pool),
+    or an area page, which is carried only where the other disc's is the
+    patch's disc's."""
+    if other == uo:
+        return up, {"as_is": True, "lines": 0, "worded": []}
+    if dest == BLOCK_DEST:
+        return merge_text_block(uo, up, other)
+    if dest == POOL_DEST:
+        heads = []
+        for x in (uo, up, other):
+            if len(x) < 8:
+                raise Unmerged("a pool is shorter than its header")
+            first, second = struct.unpack_from("<II", x, 0)
+            if first != 8 or not 8 <= second <= len(x):
+                raise Unmerged("a pool's header is not (8, the second block)")
+            heads.append(second)
+        a, sa = merge_text_block(uo[8:heads[0]], up[8:heads[1]], other[8:heads[2]])
+        b, sb = merge_text_block(uo[heads[0]:], up[heads[1]:], other[heads[2]:])
+        return struct.pack("<II", 8, 8 + len(a)) + a + b, {
+            "as_is": False, "lines": sa["lines"] + sb["lines"],
+            "worded": sa["worded"] + [s + 0x10000 for s in sb["worded"]],     # the second block's slots, marked
+            "taken": sa.get("taken", set()) | sb.get("taken", set()), "other": sa.get("other", set()) | sb.get("other", set())}
+    raise Unmerged("the other disc's page is another picture")
+
+
+def twin_section(mine, theirs, i):
+    """The index in `theirs` ([(type, load address)] of the other disc's EMI)
+    of the section that is section i of `mine`, or None: the same index where
+    the lists are as long and it has the type and address, else the section
+    of that type and address by its place among them. A PSP disc's address
+    has bit 31 clear (loc_build.psp_emi), so that bit is not compared."""
+    def same(a, b):
+        return a[0] == b[0] and a[1] | 0x80000000 == b[1] | 0x80000000
+    if len(mine) == len(theirs) and same(mine[i], theirs[i]):
+        return i
+    a = [k for k, x in enumerate(mine) if same(x, mine[i])]
+    b = [k for k, x in enumerate(theirs) if same(x, mine[i])]
+    return b[a.index(i)] if len(a) == len(b) else None
+
+
+def emi_with(blob, sections):
+    """The EMI `blob` with {index: bytes} in place of those sections; the header's sizes follow."""
+    head, body = bytearray(blob[:0x800]), []
+    for i, _, _, data in emi_sections(blob):
+        data = sections.get(i, data)
+        struct.pack_into("<I", head, 0x10 + 16 * i, len(data))
+        body.append(data + bytes(-len(data) % 0x800))
+    return bytes(head) + b"".join(body)
+
+
+class PortedDisc:
+    """Another disc's file tree with port_text's sections in its EMIs: what
+    loc_build.py is given in place of that disc (its `disc_opener`)."""
+
+    def __init__(self, disc, sections):
+        self.disc, self.sections = disc, sections      # {the disc's path of an EMI: {index: bytes}}
+        self.files = disc.files
+
+    def read(self, name):
+        key = name.upper().replace("\\", "/")
+        blob = self.disc.read(key)
+        return emi_with(blob, self.sections[key]) if key in self.sections else blob
+
+    def find(self, basename):
+        return self.disc.find(basename)
+
+    def sector(self, lba):
+        return self.disc.sector(lba)
+
+    def extent(self, lba, size):
+        return self.disc.extent(lba, size)
+
+
+def port_text(changed, lists, other):
+    """The patch's text sections over the disc `other` (a region_diff.Build):
+    ({the other disc's EMI path: {section index: bytes}}, stats, notes).
+    `changed`: changed_sections' rows; `lists`: {EMI key: [(type, load
+    address)]} of the patch's disc. stats counts the sections taken as is,
+    merged and not carried, and over the merged sections the distinct lines
+    taken (`lines`) and, of them, those the other disc words differently
+    (`worded`); notes is one line a section that is not plainly as is, for
+    the log - places, never text."""
+    out, notes = {}, []
+    stats = collections.Counter()
+    taken, worded = set(), set()
+    for (key, i), (kind, dest, da, db) in sorted(changed.items()):
+        if dest not in KEPT:
+            continue
+        why, at, theirs = None, None, None
+        if key not in other.emis:
+            why = "the other disc has no such file"
+        else:
+            theirs = other.sections(key)
+            at = twin_section(lists[key], [(k, d) for _, k, d, _ in theirs], i)
+            if at is None:
+                why = "the other disc's file has no such section"
+        if why is None:
+            try:
+                data, st = merge_text_section(dest, da, db, theirs[at][3])
+            except Unmerged as e:
+                why = str(e)
+        if why is not None:
+            stats["refused"] += 1
+            notes.append("%s section %d: not carried (%s)" % (key, i, why))
+            continue
+        stats["as_is" if st["as_is"] else "merged"] += 1
+        taken |= st.get("taken", set())
+        worded |= st.get("other", set())
+        if st["worded"]:
+            notes.append("%s section %d: the patch's line replaces a line the other disc words differently, at %s%s"
+                         % (key, i, ", ".join("slot %d%s" % (s & 0xFFFF, " of the second block" if s >> 16 else "")
+                                              for s in st["worded"][:12]),
+                            " and %d more" % (len(st["worded"]) - 12) if len(st["worded"]) > 12 else ""))
+        if data != theirs[at][3]:
+            out.setdefault(other.emis[key], {})[at] = data
+    stats["lines"], stats["worded"] = len(taken), len(worded)
+    return out, stats, notes
+
+
+def port_names(us_diff, us_dir, other_dir):
+    """The names the patch changed (the kind-5 chunks of the text layer's
+    difference `us_diff`), over the other language's names: ({DAT name:
+    [(kind, tag, word, payload)]}, records taken, [why a chunk is not
+    carried]). A record the patch changed is the patch's; every other record
+    is the other language's."""
+    out, taken, notes = {}, 0, []
+    for name, chunks in sorted(us_diff.items()):
+        mine = [c for c in chunks if c[0] == NAME_KIND]
+        if not mine:
+            continue
+        old, theirs = {}, {}
+        for d, into in ((us_dir, old), (other_dir, theirs)):
+            p = os.path.join(d, name)
+            if os.path.isfile(p):
+                with open(p, "rb") as f:
+                    into.update({(k, t): (w, b) for k, t, w, b in read_chunks(f.read(), name)})
+        for kind, tag, word, new in mine:
+            a, e = old.get((kind, tag)), theirs.get((kind, tag))
+            if a is None or e is None or len(a[1]) != len(new) or len(e[1]) != len(new) or len(new) % NAME_RECORD:
+                notes.append("%s: the names at 0x%X are not carried (the other language's table is another shape)"
+                             % (name, tag))
+                continue
+            body = bytearray(e[1])
+            for at in range(0, len(new), NAME_RECORD):
+                if new[at:at + NAME_RECORD] != a[1][at:at + NAME_RECORD]:
+                    body[at:at + NAME_RECORD] = new[at:at + NAME_RECORD]
+                    taken += 1
+            if bytes(body) != e[1]:
+                out.setdefault(name, []).append((kind, tag, e[0], bytes(body)))
+    return out, taken, notes
+
+
+PORT_INDEX = "sections.json"
+
+
+def write_ported(folder, sections):
+    """port_text's sections as files of `folder`, for the text builder's child."""
+    os.makedirs(folder)
+    index = []
+    for path in sorted(sections):
+        for i in sorted(sections[path]):
+            index.append({"path": path, "index": i, "file": "%04d.bin" % len(index)})
+            with open(os.path.join(folder, index[-1]["file"]), "wb") as f:
+                f.write(sections[path][i])
+    with open(os.path.join(folder, PORT_INDEX), "w") as f:
+        json.dump(index, f)
+
+
+def read_ported(folder):
+    with open(os.path.join(folder, PORT_INDEX)) as f:
+        index = json.load(f)
+    out = {}
+    for row in index:
+        with open(os.path.join(folder, row["file"]), "rb") as f:
+            out.setdefault(row["path"], {})[row["index"]] = f.read()
+    return out
+
+
+def loc_source(cache, tag):
+    """(build, 'cache' or 'game') of the install's `tag` text as its manifest
+    records it (loc_mode's two forms), or None when the install has none."""
+    import re
+    p = os.path.join(cache, "manifest.toml")
+    if not os.path.isfile(p):
+        return None
+    with open(p, encoding="utf-8") as f:
+        m = re.search(r'"loc/%s", "([a-z0-9-]+):loc_build(-disc-only)?"' % re.escape(tag), f.read())
+    return (m.group(1), "cache" if m.group(2) else "game") if m else None
+
+
 # ---------------------------------------------------------------- the build
 
 def layer_names(row, tag):
     return "mod-%s" % row["id"], "mod-%s-%s" % (row["id"], tag)
+
+
+def port_layer(cache, rows, work, tag, build_id, changed, lists, us_diff, us_tag, enemy, warp_lba, disc_path,
+               patched_path, say):
+    """The patch's text over the install's `tag` text (ALSO_TEXT): ({DAT name:
+    [(kind, tag, word, payload)]}, the report's counts), or None when the
+    install has no `tag` text. Bad when that text's disc is not in the source
+    list or cannot be read, or the text builder refuses a ported section."""
+    import region_diff
+    found = loc_source(cache, tag)
+    if found is None:
+        return None
+    other_id, mode = found
+    src = next((r for r in rows if r.get("build") == other_id), None)
+    if src is None:
+        raise Bad("the install's %s text was built from the disc %s, which is not in the source list" % (tag, other_id))
+    os.makedirs(work)
+    other_path = src["path"]
+    if other_path.lower().endswith(".zip"):
+        import player_sources
+        say("Unpacking %s" % os.path.basename(other_path))
+        try:
+            other_path, _ = player_sources.unpack_zip(other_path, work)
+        except (ValueError, OSError) as e:
+            raise Bad("the disc %s cannot be unpacked: %s" % (src["path"], e))
+    if not os.path.isfile(other_path):
+        raise Bad("the disc %s is not there (Data, Sources lists it)" % other_path)
+    try:
+        other = region_diff.Build(other_id, other_path)
+    except SystemExit as e:
+        raise Bad("the disc %s cannot be read: %s" % (other_path, e))
+    try:
+        sections, stats, notes = port_text(changed, lists, other)
+    finally:
+        other.disc.f.close()
+    for line in notes:
+        say("    " + line, quiet=True)
+    port_dir = os.path.join(work, "ported")
+    write_ported(port_dir, sections)
+    say("Building the %s text with the patch's lines (the text builder, about two minutes)" % tag)
+    new_loc, names_dir = run_loc(mode, tag, build_id, disc_path, patched_path, cache, rows, work, enemy, say,
+                                 warp_lba, port={"disc": other_path, "dir": port_dir})
+    old_loc = os.path.join(cache, "loc", tag, "dat")
+    text = diff_layer(old_loc, new_loc)
+    names, records, why = port_names(us_diff, os.path.join(cache, "loc", us_tag, "dat"), old_loc)
+    for line in why:
+        say("    " + line, quiet=True)
+    for name, chunks in names.items():
+        mine = {(k, t) for k, t, _, _ in chunks}
+        text[name] = [c for c in text.get(name, []) if (c[0], c[1]) not in mine] + chunks
+    for name in enemy:
+        with open(os.path.join(names_dir, name), "rb") as f:
+            text.setdefault(name, []).extend(read_chunks(f.read(), name))
+    if warp_lba is not None:
+        with open(os.path.join(names_dir, WARP_TEXT_FILE), "rb") as f:
+            text.setdefault("FIRST.DAT", []).append((WARP_KIND, WARP_TEXT_TAG, 0, f.read()))
+    return text, {"sections_as_is": stats["as_is"], "sections_merged": stats["merged"],
+                  "sections_not_carried": stats["refused"], "lines_merged": stats["lines"], "lines_worded": stats["worded"],
+                  "name_records": records, "names_not_carried": len(why)}
 
 
 def build(home, cache, mod_folder, row, tag, where, say):
@@ -1299,12 +1695,14 @@ def build(home, cache, mod_folder, row, tag, where, say):
             out_emis = [x for x in out_emis if x is not warp_file]
 
         mode = loc_mode(cache, tag, build_id)
+        lists = {key: [(k, d) for _, k, d, _ in orig.sections(key)] for key in {k for k, _ in text_secs}}
         say("Building the %s text with the patch's text (the text builder, about two minutes)" % tag)
         orig.disc.f.close()
         patched.disc.f.close()
         new_loc, names_dir = run_loc(mode, tag, build_id, disc_path, patched_path, cache, rows, work, enemy, say,
                                      warp_file["lba"] if warp else None)
         text = diff_layer(os.path.join(cache, "loc", tag, "dat"), new_loc)
+        us_diff = {name: list(chunks) for name, chunks in text.items()}
         for name in enemy:
             with open(os.path.join(names_dir, name), "rb") as f:
                 text.setdefault(name, []).extend(read_chunks(f.read(), name))
@@ -1313,6 +1711,21 @@ def build(home, cache, mod_folder, row, tag, where, say):
             with open(os.path.join(names_dir, WARP_TEXT_FILE), "rb") as f:
                 text.setdefault("FIRST.DAT", []).append((WARP_KIND, WARP_TEXT_TAG, 0, f.read()))
             first_files.setdefault("FIRST.DAT", []).append((WARP_KIND, WARP_TABLE_TAG, 0, town_warp_table(warp)))
+
+        # the patch's text over the install's other text of the same script (ALSO_TEXT); a refusal there
+        # leaves that language without the mod and is said - the mod's own language is built all the same
+        ports = {}
+        for also in ALSO_TEXT.get(build_id, ()):
+            if len(layer_names(row, also)[1]) > LAYER_MAX:
+                continue                    # mods.also_tags: a layer's name holds 23 characters
+            try:
+                got = port_layer(cache, rows, os.path.join(work, "port-" + also), also, build_id, changed, lists,
+                                 us_diff, tag, enemy, warp_file["lba"] if warp else None, disc_path, patched_path, say)
+            except Bad as e:
+                say("  not built for %s text: %s" % (also, e))
+                continue
+            if got is not None and got[0]:
+                ports[also] = got
 
         first, second = layer_names(row, tag)
         staged = os.path.join(work, "layers")
@@ -1327,9 +1740,11 @@ def build(home, cache, mod_folder, row, tag, where, say):
         if not out:
             raise Bad("the patch changes nothing this release can carry (%d sections changed, none of them one the "
                       "PC keeps as a chunk or a table)" % len(changed))
+        for also, (files, _) in ports.items():
+            out[layer_names(row, also)[1]] = write_layer(staged, layer_names(row, also)[1], files, where)
         opt = os.path.join(cache, "opt")
         os.makedirs(opt, exist_ok=True)
-        for layer in (first, second):
+        for layer in (first, second) + tuple(layer_names(row, also)[1] for also in ALSO_TEXT.get(build_id, ())):
             shutil.rmtree(os.path.join(opt, layer), ignore_errors=True)
             if layer in out:
                 os.rename(os.path.join(staged, layer), os.path.join(opt, layer))
@@ -1370,6 +1785,18 @@ def build(home, cache, mod_folder, row, tag, where, say):
                 % notes["pointer"])
         say("  %s: %d chunks in %d files (%s text, and its names for %d enemy tables)"
             % (second, len(out[second]), len(text), tag, len(enemy)))
+        for also, (files, counts) in ports.items():
+            third = layer_names(row, also)[1]
+            say("  %s: %d chunks in %d files (%s text: %d text sections as the patch has them, %d with the patch's "
+                "lines put into that text, %d renamed things)"
+                % (third, len(out[third]), len(files), also, counts["sections_as_is"], counts["sections_merged"],
+                   counts["name_records"]))
+            if counts["lines_worded"]:
+                say("    %d lines that the %s text words differently are the patch's lines now (the log names them)"
+                    % (counts["lines_worded"], also))
+            if counts["sections_not_carried"] or counts["names_not_carried"]:
+                say("    not carried for %s text: %d text sections, %d name tables (the log names them)"
+                    % (also, counts["sections_not_carried"], counts["names_not_carried"]))
         if sound:
             say("  not carried: %d changed sound sections in %d files (a changed sound bank is not built)"
                 % (len(sound), len({k for k, _ in sound})))
@@ -1395,7 +1822,7 @@ def build(home, cache, mod_folder, row, tag, where, say):
             "skipped_bytes": placed["skipped"] if placed else 0,
             "outside_files": len(out_emis), "outside_bytes": sum(x["sectors"] for x in out_emis) * SECTOR,
             "outside_sectors": sum(x["sectors"] for x in outside if x["sections"] is None),
-        })
+        }, {also: dict(counts, text_chunks=len(out[layer_names(row, also)[1]])) for also, (_, counts) in ports.items()})
         return out
     finally:
         shutil.rmtree(work, ignore_errors=True)
@@ -1404,16 +1831,21 @@ def build(home, cache, mod_folder, row, tag, where, say):
 REPORT = "report.toml"
 
 
-def write_report(mod_folder, where, carried, not_carried):
+def write_report(mod_folder, where, carried, not_carried, also=None):
     """<the mod's folder>/report.toml: what this build of the mod has and what
     of the patch it does not have, as counts (docs/disc-patch-round.md 3 step
-    6). Counts only: no byte of the game or of the patch."""
+    6). Counts only: no byte of the game or of the patch. `also`: {tag:
+    port_layer's counts} for each other language the text was carried over
+    to, as a table [also."<tag>"]."""
     lines = ["# What this build of the mod has, and what of the author's patch it does not have.",
              "# Written by tools/disc_patch_build.py when the mod is built; counts only.",
              'source = "%s"' % where, "", "[carried]"]
     lines += ["%s = %d" % (k, v) for k, v in carried.items()]
     lines += ["", "[not_carried]"]
     lines += ["%s = %d" % (k, v) for k, v in not_carried.items()]
+    for tag, counts in sorted((also or {}).items()):
+        lines += ["", '[also."%s"]' % tag]
+        lines += ["%s = %d" % (k, v) for k, v in counts.items()]
     tmp = os.path.join(mod_folder, REPORT + ".tmp")
     with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
@@ -1472,6 +1904,11 @@ def read_report(mod_folder):
             lack.append(count(num(n, "outside_files"), "file") + " that the disc's directory does not list")
         if num(n, "outside_sectors"):
             lack.append(count(num(n, "outside_sectors"), "other sector") + " that the disc's directory does not list")
+        for tag, a in sorted(rep.get("also", {}).items()):
+            got = num(a, "sections_as_is") + num(a, "sections_merged")
+            has.append("its text for %s also (%s%s)" % (
+                tag, count(got, "text section"),
+                ", %d not" % num(a, "sections_not_carried") if num(a, "sections_not_carried") else ""))
     except (OSError, KeyError, ValueError, AttributeError, tomllib.TOMLDecodeError):
         return None, None
     return ("This build of the mod has these changes: %s." % ", ".join(has) if has else None,
@@ -1988,6 +2425,147 @@ def selftest():
                "report: the town warp's places, as words")
     finally:
         shutil.rmtree(root, ignore_errors=True)
+
+    # ---- the patch's text over another disc's (docs/disc-patch-round.md 11); the bytes are this test's own
+    def block(msgs, offsets=None):
+        """A text block: `msgs` laid in order after the table; `offsets` the slots as indexes into msgs."""
+        slots = list(range(len(msgs))) if offsets is None else offsets
+        at, pos = [], 2 * len(slots)
+        for m in msgs:
+            at.append(pos)
+            pos += len(m)
+        return struct.pack("<%dH" % len(slots), *[at[k] for k in slots]) + b"".join(msgs)
+
+    expect(donor_message(b"ab\0cd\0", 0) == b"ab\0" and donor_message(b"ab\0cd\0", 3) == b"cd\0",
+           "port: a message runs to its NUL")
+    expect(donor_message(b"a\x07\0b\0c\0", 0) == b"a\x07\0b\0", "port: a code's argument byte is not the end, a NUL or not")
+    expect(donor_message(b"q\x14\0\0\x02yes\0no\0z\0", 0) == b"q\x14\0\0\x02yes\0no\0",
+           "port: a choice takes the runs of its options")
+    expect(donor_message(b"abc", 1) == b"bc" and donor_message(b"abc", 3) == b"",
+           "port: a message the block's end cuts short is what is there")
+    us_b = block([b"one\0", b"two\0", b"three\0", b"four\0"], [0, 1, 2, 3, 0])
+    expect(text_slots(us_b) == [b"one\0", b"two\0", b"three\0", b"four\0", b"one\0"], "port: a block's messages, one a slot")
+    expect(text_slots(struct.pack("<2H", 4, 99) + b"x\0") is None and text_slots(b"\0") is None
+           and text_slots(struct.pack("<H", 0x3000) + b"x\0") is None,
+           "port: an offset outside the block, or no table: not a table of lines")
+    de_b = block([b"one\0", b"TWO!\0", b"three\0", b"four\0"], [0, 1, 2, 3, 0])
+    got, st = merge_text_block(us_b, de_b, us_b)
+    expect(got == de_b and st["as_is"], "port: the other disc's block is the patch's disc's: the patched block whole")
+    eu_b = block([b"one\0", b"two\0", b"thr-ee\0", b"four\0", b"five\0"], [0, 1, 2, 3, 0, 4])     # worded, one slot more
+    got, st = merge_text_block(us_b, de_b, eu_b)
+    expect(text_slots(got) == [b"one\0", b"TWO!\0", b"thr-ee\0", b"four\0", b"one\0", b"five\0"]
+           and (st["as_is"], st["lines"], st["worded"], st["other"]) == (False, 1, [], set()),
+           "port: the patch's line taken, the other disc's wording and its own slot kept")
+    de_c = block([b"one\0", b"two\0", b"THREE\0", b"four\0"], [0, 1, 2, 3, 0])
+    got, st = merge_text_block(us_b, de_c, eu_b)
+    expect(text_slots(got)[2] == b"THREE\0" and st["worded"] == [2] and st["lines"] == 1,
+           "port: a line the other disc words differently is the patch's line, and its slot is named")
+    eu_blank = block([b"one\0", b"two\0", b"three\0", b"four\0", b""], [0, 1, 2, 3, 4])
+    de_d = block([b"ONE\0", b"two\0", b"three\0", b"four\0"], [0, 1, 2, 3, 0])
+    got, st = merge_text_block(us_b, de_d, eu_blank)
+    expect(text_slots(got) == [b"ONE\0", b"two\0", b"three\0", b"four\0", b""] and st["worded"] == [],
+           "port: a slot the other disc leaves without a message stays so")
+    de_e = block([b"one\0", b"same\0", b"four\0"], [0, 1, 1, 2, 0])          # the patch points two slots at one message
+    got, st = merge_text_block(us_b, de_e, eu_b)
+    expect(text_slots(got)[:4] == [b"one\0", b"same\0", b"same\0", b"four\0"] and st["lines"] == 1 and st["worded"] == [2]
+           and got.count(b"same\0") == 1, "port: slots the patch points at one message share it, laid once")
+
+    def unmerged(fn, word, what):
+        try:
+            fn()
+            expect(False, what + ": not carried")
+        except Unmerged as e:
+            expect(word in str(e), "%s: not carried (%s)" % (what, str(e)[:40]))
+
+    unmerged(lambda: merge_text_block(us_b, block([b"one\0"]), eu_b), "how many lines", "port: the patch changes the slot count")
+    unmerged(lambda: merge_text_block(us_b, de_b, block([b"one\0", b"two\0"])), "fewer lines", "port: the other disc has fewer slots")
+    unmerged(lambda: merge_text_block(us_b, de_b, b"\0\0zz"), "other disc's block", "port: the other disc's block is no table")
+    many_u = block([bytes([65 + k]) + b"\0" for k in range(8)])
+    many_d = block([bytes([97 + k]) + b"!\0" for k in range(8)])
+    many_e = block([bytes([48 + k]) + b"?\0" for k in range(8)])
+    unmerged(lambda: merge_text_block(many_u, many_d, many_e), "other lines", "port: another script altogether")
+    unmerged(lambda: slots_block([bytes([k & 0xFF, k >> 8, 1]) * 30 + b"\0" for k in range(1, 800)]), "16-bit",
+             "port: a block past its offsets' reach")
+    pool = lambda a, b: struct.pack("<II", 8, 8 + len(a)) + a + b
+    got, st = merge_text_section(POOL_DEST, pool(us_b, us_b), pool(de_b, de_c), pool(eu_b, eu_b))
+    first, second = struct.unpack_from("<II", got, 0)
+    expect(first == 8 and text_slots(got[8:second])[1] == b"TWO!\0" and text_slots(got[second:])[2] == b"THREE\0"
+           and st["worded"] == [0x10002] and st["lines"] == 2,
+           "port: a pool's two blocks, each merged; a slot of the second is marked")
+    unmerged(lambda: merge_text_section(POOL_DEST, pool(us_b, us_b), pool(de_b, de_c), b"\x09\0\0\0\0\0\0\0"), "header",
+             "port: a pool with another header")
+    unmerged(lambda: merge_text_section(0x0E001000, b"page", b"PAGE", b"pag3"), "another picture",
+             "port: a page the other disc paints differently")
+    expect(merge_text_section(0x0E001000, b"page", b"PAGE", b"page")[0] == b"PAGE", "port: a page the two discs share: the patch's")
+    mine = [(6, 2), (0, 0x80010000), (0, 0x8001A000), (0, 0x8001A000)]
+    expect(twin_section(mine, mine, 2) == 2 and twin_section(mine, [(6, 2), (0, 0x10000), (0, 0x1A000), (0, 0x1A000)], 3) == 3,
+           "port: the same section by index; a PSP disc's address without bit 31")
+    expect(twin_section(mine, [(9, 1)] + mine, 3) == 4 and twin_section(mine, [(9, 1), (0, 0x8001A000)] + mine[:2], 3) is None,
+           "port: by its place among its kind in a longer list; none when the counts differ")
+    us_e = _emi([(6, 2, bank), (0, 0x80010000, us_b), (0, 0x801F2C00, code)])
+    de_e2 = _emi([(6, 2, bank), (0, 0x80010000, de_b), (0, 0x801F2C00, code2)])
+    eu_e = _emi([(9, 1, b"extra"), (6, 2, bank), (0, 0x10000, eu_b), (0, 0x801F2C00, code)])
+    expect([s[3] for s in emi_sections(emi_with(eu_e, {2: b"new" * 900}))] == [b"extra", bank, b"new" * 900, code],
+           "port: an EMI with one section replaced, the sizes following")
+
+    class _Other:                                      # region_diff.Build's two members port_text reads
+        def __init__(self, files):
+            self.files = files
+            self.emis = {k[4:]: k for k in files}
+
+        def sections(self, key):
+            return emi_sections(self.files[self.emis[key]])
+
+        def read(self, name):
+            return self.files[name]
+
+    po, pn = _Build({"BIN/W/AREA001.EMI": us_e, "BIN/W/AREA002.EMI": us_e, "BIN/W/AREA003.EMI": us_e}), \
+        _Build({"BIN/W/AREA001.EMI": de_e2, "BIN/W/AREA002.EMI": de_e2, "BIN/W/AREA003.EMI": de_e2})
+    pch = changed_sections(po, pn)
+    plists = {key: [(k, d) for _, k, d, _ in emi_sections(us_e)] for key, _ in pch}
+    other = _Other({"BIN/W/AREA001.EMI": eu_e, "BIN/W/AREA002.EMI": us_e,
+                    "BIN/W/AREA003.EMI": _emi([(6, 2, bank), (0, 0x80010000, b"\0\0zz"), (0, 0x801F2C00, code)])})
+    secs, stats, notes = port_text(pch, plists, other)
+    expect(sorted(secs) == ["BIN/W/AREA001.EMI", "BIN/W/AREA002.EMI"] and list(secs["BIN/W/AREA001.EMI"]) == [2]
+           and secs["BIN/W/AREA002.EMI"] == {1: de_b} and dict(stats) == {"merged": 1, "lines": 1, "worded": 0, "as_is": 1,
+                                                                         "refused": 1}
+           and len(notes) == 1 and "W/AREA003.EMI section 1: not carried" in notes[0],
+           "port: three EMIs - one merged at its twin section, one as is, one not carried and named; code is not text")
+    ported = PortedDisc(other, secs)
+    expect(text_slots(emi_sections(ported.read("BIN/W/AREA001.EMI"))[2][3])[1] == b"TWO!\0"
+           and ported.read("BIN/W/AREA003.EMI") == other.files["BIN/W/AREA003.EMI"],
+           "port: the other disc with the sections put in; a file with none is itself")
+    root = tempfile.mkdtemp(prefix="bof3x-dp-port-")
+    try:
+        write_ported(os.path.join(root, "p"), secs)
+        expect(read_ported(os.path.join(root, "p")) == secs, "port: the sections written for the text builder's child read back")
+        rec = lambda *names: b"".join(n.ljust(NAME_RECORD, b"\0") for n in names)
+        for d, body in (("us", rec(b"Sword", b"Cap", b"Ring")), ("eu", rec(b"Sword", b"Hat", b"Ring"))):
+            os.makedirs(os.path.join(root, d))
+            with open(os.path.join(root, d, "FIRST.DAT"), "wb") as f:
+                f.write(container([(NAME_KIND, 0x1000, 0, body), (NAME_KIND, 0x2000, 0, body if d == "us" else body[:16])]))
+        diff = {"FIRST.DAT": [(0, 7, 0, b"text"), (NAME_KIND, 0x1000, 0, rec(b"Blade", b"Cap", b"Ring")),
+                              (NAME_KIND, 0x2000, 0, rec(b"Sword", b"Cap", b"Band"))]}
+        names, taken, why = port_names(diff, os.path.join(root, "us"), os.path.join(root, "eu"))
+        expect(names == {"FIRST.DAT": [(NAME_KIND, 0x1000, 0, rec(b"Blade", b"Hat", b"Ring"))]} and taken == 1
+               and len(why) == 1 and "0x2000" in why[0],
+               "port: a renamed record is the patch's, the others the other language's; a table of another shape is named")
+        with open(os.path.join(root, "manifest.toml"), "w") as f:
+            f.write('overlays = [\n  ["A.DAT", "loc/en-US", "psx-us:loc_build-disc-only", "00"],\n'
+                    '  ["A.DAT", "loc/en-150", "psp-eu:loc_build", "00"],\n]\n')
+        expect(loc_source(root, "en-US") == ("psx-us", "cache") and loc_source(root, "en-150") == ("psp-eu", "game")
+               and loc_source(root, "fr-FR") is None, "port: the disc and the way a language's text was built, from the manifest")
+        write_report(root, "w", {"enemy_tables": 1}, {}, {"en-150": {"sections_as_is": 3, "sections_merged": 2,
+                                                                     "sections_not_carried": 1, "lines_merged": 7, "lines_worded": 4,
+                                                                     "name_records": 0, "names_not_carried": 0,
+                                                                     "text_chunks": 9}})
+        expect(read_report(root)[0] == "This build of the mod has these changes: 1 enemy table, its text for en-150 also "
+               "(5 text sections, 1 not).", "report: the text carried over to another language, as words")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    import mods
+    expect(mods.KINDS["disc-patch"]["also"] == ALSO_TEXT and mods.LAYER_MAX == LAYER_MAX,
+           "port: tools/mods.py lists the same other languages, and the same bound on a layer's name")
     print("disc_patch_build selftest: %d failure(s)" % len(fails))
     return 1 if fails else 0
 

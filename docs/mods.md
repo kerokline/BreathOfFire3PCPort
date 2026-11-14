@@ -328,6 +328,14 @@ cells of the table files. The launcher hands both to the game when the
 language played is that disc's (5d there), and the build's `report.toml` says
 what of the patch the mod does not have.
 
+**European English.** A patch of the US disc is also built for `en-150` text
+(the European PlayStation disc's, the European PSP disc's), where the install
+holds that text and its disc beside the US disc: a third layer,
+`mod-<id>-en-150`, with the patch's lines put into that text line by line
+([`disc-patch-round.md`](disc-patch-round.md) 11). The launcher then plays
+the mod under either English. `mods.py list --json` gives `languages`, every
+language the mod's text is built for in this install.
+
 **On and off.** A `disc-patch` or `table-edit` mod has a check box at the left
 of its row on the Mods tab. It is ticked when the mod is added. Not ticked,
 the mod stays installed and built and its layers are not handed to the game
@@ -337,7 +345,7 @@ the mod stays installed and built and its layers are not handed to the game
 ```toml
 # mod.toml
 [mod]
-id = "example"            # the layers are mod-<id> and mod-<id>-<tag>: 13 characters at most for en-US
+id = "example"            # the layers are mod-<id> and mod-<id>-<tag>: 13 characters at most for en-US (12 to have en-150's too)
 name = "..."
 version = "1.0"
 author = "..."            # required for this kind

@@ -39,6 +39,7 @@
 #include "game/sound_rest.h"
 #include "game/sound_rest_callees.h"
 #include "game/sound_sp.h"
+#include "game/solo/solo.h"
 #include "game/sound_st.h"
 #include "game/title_menu.h"
 #include "game/widescreen.h"
@@ -942,8 +943,11 @@ extern "C" void __cdecl TitleMenu_Leave(void) {
 // cleared; Game_AreaNumber 0xFFFF; Scenario_Start(0); the first dword of
 // every 8 bytes of Cond_Flags up to 0x904030 cleared - half of the 0xA0
 // bytes, as the original's stride has it; Transition_Start(0); Game_Step 5.
+// Ours adds DIV-0228's New Game stamp and level-1 start right after the
+// records are made (solo.h Solo_StampNewGame; nothing with SoloCharacter off).
 extern "C" void __cdecl TitleFlow_NewGame(void) {
     save_menu::g.init_characters();
+    solo::Solo_StampNewGame();
     SaveMenu_NewGameByte = 0;
     Game_AreaNumber = 0xFFFF;
     save_menu::g.scenario_start(0);
