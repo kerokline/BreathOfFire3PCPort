@@ -666,7 +666,7 @@ void SynDraw(ng::Copy copy, const ng::Cells& c, int x, int y) {
 void SynLegend(ng::Copy copy, unsigned page, int x, int y) {
     if (copy != ng::Copy::kRenamer) bof3::Fatal("rest_4d CommuNameGrid: the renamer drew New Game's legend");
     ++g_legends;
-    nd::DrawLegend(*g_live, copy, page, x, y, kQuiet);
+    nd::DrawLegend(*g_live, copy, page, x, y, kQuiet, [](std::uint16_t bit) { return bit; });
 }
 unsigned SynInput(ng::Copy copy, ng::Cells& c, unsigned room, const unsigned char* fallback) {
     return nd::Step(*g_live, copy, c, g_keys, room, SynCount(), fallback, SynPlay);
