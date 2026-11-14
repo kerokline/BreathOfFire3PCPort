@@ -936,6 +936,16 @@ backlog is on `main` and the check is not in CI.
   source yet**; BT reads the launcher's and the game's rule first and
   changes nothing there if it is already so.
 
+- **Call 7, settled (the same day).** The owner ran the US PlayStation
+  release: with the hand on the quit label, Left puts the hand on the empty
+  cell beside it; Right from the last letter of that row goes to the label.
+  A confirm on the empty cell does, as far as the owner can tell, what the
+  cell beside the full stop on row 2 does. So the code's reading (M2, 5b)
+  is right, the original's Western step has the defect, and the owner's
+  earlier observation is withdrawn. Ours never lands there (5b); the ledger
+  takes 5b's "the hand" line as written. Not measured: what byte the cell
+  beside the full stop holds, against the 0 the empty cell enters.
+
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
 Two groups are new:
