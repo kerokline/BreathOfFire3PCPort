@@ -9,7 +9,12 @@
 wait 480
 press start
 wait 40
-press up                 # the title cursor starts on LOAD GAME
+# The title cursor (SaveMenu_Cursor 0x6BDF85, s8) starts on LOAD GAME (1)
+# when a slot file exists and on NEW GAME (0) when none does (TitleFlow_Begin,
+# src/game/core/sound.cpp); without saves up toggles 0 and 2, so a blind
+# `press up` would pick Config there. Seek NEW GAME instead: one press with a
+# save, none without.
+seek up 0x6BDF85 u8 == 0 max 3
 press circle
 wait 50
 press circle
