@@ -5298,7 +5298,13 @@ def build_standins(game, disc, overlays):
 #     (5a's table: Japan quit 4 and finish 5, West quit 3 and finish 4);
 #   - a legend string is in the layer's small encoding (grid_small): on a
 #     Japanese layer the Japan disc's own 8 x 8 cells, appended to the font
-#     after the pair codes (ja_small_glyph, ja_small_chunks).
+#     after the pair codes (ja_small_glyph, ja_small_chunks);
+#   - psp-eu's parts are all in its BOOT.BIN (4c-PK), read the same way by
+#     the PSP's own shapes (GridBoot, AllegrexRun: arguments 5..8 in
+#     $t0..$t3, branch-likely, a memcpy of the label block answered in
+#     place) and written with family 1, the West's step (call 8, 4b): its
+#     legend is the PSP's own, rows 1..3 of the button column as the PSP
+#     draws them (4c-PE).
 #
 # No partial chunk (5a): a part not found, a cell, a label or a named legend
 # entry the layer cannot encode, or a chunk 5a's pass rules (name_grid_check)
@@ -5452,6 +5458,12 @@ class MipsRun:
     def mapped(self, a):
         return any(d <= a < d + len(b) for d, b in self.secs)
 
+    def executable(self, a):
+        return self.mapped(a)
+
+    def fetch(self, pc):
+        return self.load(pc, 4)
+
     def byte(self, a):
         a &= 0xFFFFFFFF
         if a in self.mem:
@@ -5496,6 +5508,9 @@ class MipsRun:
             if flow is None:
                 pc += 4
                 continue
+            if flow[0] == "nullify":    # a branch-likely not taken: its delay slot is not executed
+                pc += 8
+                continue
             if self.step(pc + 4) is not None:
                 raise MipsError("a branch in a delay slot at 0x%08X" % (pc + 4))
             kind, target = flow
@@ -5511,9 +5526,9 @@ class MipsRun:
                 pc = target
 
     def step(self, pc):
-        if not self.mapped(pc):
+        if not self.executable(pc):
             raise MipsError("execution left the sections at 0x%08X" % pc)
-        w = self.load(pc, 4)
+        w = self.fetch(pc)
         r, op = self.r, w >> 26
         rs, rt, rd, sa, fn = (w >> 21) & 31, (w >> 16) & 31, (w >> 11) & 31, (w >> 6) & 31, w & 0x3F
         imm = w & 0xFFFF
@@ -5637,6 +5652,102 @@ class MipsRun:
         return None
 
 
+class AllegrexRun(MipsRun):
+    """MipsRun over a PSP BOOT.BIN image (kind 22 on `psp-eu`, group PE,
+    2026-11-14). The image is the ELF's first program header at link address
+    0 (PspDisc.boot: .text, then .rodata and .data); relocations are not
+    applied, so every address is a link-time offset (tools/psp_elf.py). What
+    differs from the PlayStation's interpreter, and only as far as the name
+    screen's drawers and legends need it:
+
+      - code is fetched from .text only; a data access inside .text's range is
+        .bss (a `.text`-range value used as data, psp_elf.py: link address +
+        the second program header's base), which the image does not hold:
+        it reads as unwritten memory, 0, as an address outside an overlay's
+        sections does in MipsRun. `mapped` (a load's source, a copy's bytes)
+        is the image's data past .text;
+      - arguments 5..8 are passed in $t0..$t3 (the PSP's EABI-style calls),
+        not on the caller's stack, so `arg(k)` for k < 8 is register 4 + k and
+        `arg_src(k)` that register's source;
+      - the branch-likely instructions (beql, bnel, blezl, bgtzl, bltzl,
+        bgezl): a likely branch not taken skips its delay slot.
+
+    Anything else of the Allegrex's (VFPU, seb / seh, min / max, ext / ins)
+    stops the run as an unknown opcode: none of it is in the routines read."""
+
+    def __init__(self, image, text_end, calls, limit=400000):
+        self.image, self.text_end = image, text_end
+        self.secs = [(0, image)]
+        self.calls, self.limit = calls, limit
+        self.mem, self.wsrc = {}, {}
+        self.copy_read, self.copy_written = set(), set()
+
+    def mapped(self, a):
+        return self.text_end <= a < len(self.image)
+
+    def executable(self, a):
+        return 0 <= a < self.text_end and not a & 3
+
+    def fetch(self, pc):
+        return struct.unpack_from("<I", self.image, pc)[0]
+
+    def byte(self, a):
+        a &= 0xFFFFFFFF
+        if a in self.mem:
+            return self.mem[a]
+        return self.image[a] if self.mapped(a) else 0
+
+    def arg(self, k):
+        if k >= 8:
+            raise MipsError("argument %d: past $t3, on a stack this reader does not lay out" % (k + 1))
+        return self.r[4 + k]
+
+    def arg_src(self, k):
+        if k >= 8:
+            raise MipsError("argument %d: past $t3, on a stack this reader does not lay out" % (k + 1))
+        return self.rsrc[4 + k]
+
+    def step(self, pc):
+        if not self.executable(pc):
+            raise MipsError("execution left .text at 0x%08X" % pc)
+        w = self.fetch(pc)
+        op, rs, rt = w >> 26, (w >> 21) & 31, (w >> 16) & 31
+        likely = None
+        sv = lambda x: x - 0x100000000 if x & 0x80000000 else x
+        if 0x14 <= op <= 0x17:
+            a, b = self.r[rs], self.r[rt]
+            likely = (a == b, a != b, sv(a) <= 0, sv(a) > 0)[op - 0x14]
+        elif op == 0x01 and rt in (2, 3):
+            likely = sv(self.r[rs]) < 0 if rt == 2 else sv(self.r[rs]) >= 0
+        if likely is None:
+            return MipsRun.step(self, pc)
+        imm = w & 0xFFFF
+        target = (pc + 4 + ((imm - 0x10000 if imm & 0x8000 else imm) << 2)) & 0xFFFFFFFF
+        return ("jump", target) if likely else ("nullify", None)
+
+
+def allegrex_copy(m):
+    """A memcpy(dst, src, n) answered in place, its bytes kept as an unaligned
+    copy's are (MipsRun's copy_read / copy_written): the PSP drawers copy their
+    label block onto the stack with a call where the PlayStation's use lwl / lwr."""
+    dst, src, n = m.arg(0), m.arg(1), m.arg(2)
+    if not 0 < n <= 0x100:
+        raise MipsError("a block copy of %d bytes" % n)
+    for i in range(n):
+        m.store(dst + i, m.byte(src + i), 1)
+        if m.mapped(src + i):
+            m.copy_read.add(src + i)
+        m.copy_written.add((dst + i) & 0xFFFFFFFF)
+    return dst
+
+
+def allegrex_shape_hash(words):
+    """mips_shape_hash for BOOT.BIN's code, with every `lui`'s immediate masked
+    too: its addresses are link offsets below 0x01000000, so a high half is
+    small and would otherwise be kept."""
+    return mips_shape_hash([w & 0xFFFF0000 if w >> 26 == 0x0F else w for w in words])
+
+
 class GridRefused(Exception):
     """A build whose name grid cannot be read whole or encoded: no chunk (5a)."""
 
@@ -5652,22 +5763,59 @@ def grid_roles(start, words, roles, what):
 GRID_X0, GRID_Y0 = 0x400, 0x800     # the origin a routine is run at; what it draws is read relative to it
 
 
-def grid_find(functions, table, copy, what):
+class GridEmi:
+    """Where one copy's name-screen code is read (kind 22): a PlayStation
+    overlay's sections (START.EMI or COMMU02.EMI), with the PlayStation's
+    shapes. GridBoot is the same over a PSP BOOT.BIN, which holds both copies."""
+    drawers, inputs, legends, tile_helpers, drawer_roles = GRID_DRAWERS, GRID_INPUTS, GRID_LEGENDS, \
+        GRID_TILE_HELPERS, GRID_DRAWER_ROLES
+    where = "the overlay"
+
+    def __init__(self, sections):
+        self.sections = sections
+        self.functions = mips_functions(sections)
+        self._shapes = {}
+
+    def shape(self, start):
+        if start not in self._shapes:
+            self._shapes[start] = mips_shape_hash(self.functions[start][1])
+        return self._shapes[start]
+
+    def runner(self, calls):
+        return MipsRun(self.sections, calls)
+
+    def data(self, va):
+        return any(d <= va < d + len(b) for d, b in kseg0(self.sections))
+
+    def byte(self, va):
+        return MipsRun(self.sections, {}).load(va, 1)
+
+    def word(self, va):
+        return run_word(self.sections, va)
+
+    def cstr(self, va, room):
+        return grid_cstr(self.sections, va, room)
+
+    def page_cell(self, drawer, copy):
+        return grid_page_cell(self.sections, drawer, copy)
+
+
+def grid_find(mod, table, copy, what):
     """(start, end, words, shape) of the one function of `copy` whose hash `table` holds."""
-    hits = [(a, e, w, table[mips_shape_hash(w)]) for a, (e, w) in sorted(functions.items())
-            if mips_shape_hash(w) in table]
+    hits = [(a, e, w, table[mod.shape(a)]) for a, (e, w) in sorted(mod.functions.items())
+            if mod.shape(a) in table]
     hits = [h for h in hits if h[3][0] == copy]
     if len(hits) != 1:
         raise GridRefused("%s: %d %ss of a known shape, wanted one" % (copy, len(hits), what))
     return hits[0]
 
 
-def grid_read_drawer(sections, drawer, page):
+def grid_read_drawer(mod, drawer, page):
     """What the drawer draws for `page`: [(x, y, colour, count, pointer)] in
     order (x, y off the origin), the box, and the block it copies onto the stack."""
     start, end, words, shape = drawer
     texts, boxes = [], []
-    roles = grid_roles(start, words, GRID_DRAWER_ROLES, "the drawer")
+    roles = grid_roles(start, words, mod.drawer_roles, "the drawer")
     answers = {}
     for t, role in roles.items():
         if role == "text":
@@ -5675,9 +5823,11 @@ def grid_read_drawer(sections, drawer, page):
                                                  m.arg(2) & 0xFF, m.arg(3), m.arg(4)))
         elif role == "box":
             answers[t] = lambda m: boxes.append((s16(m.arg(0)) - GRID_X0, s16(m.arg(1)) - GRID_Y0, m.arg(2), m.arg(3)))
+        elif role == "copy":
+            answers[t] = allegrex_copy
         else:
             answers[t] = lambda m: 0
-    run = MipsRun(sections, answers)
+    run = mod.runner(answers)
     run.run(start, (page, GRID_X0, GRID_Y0, 0), ((0x10, 0),))
     return texts, boxes, run
 
@@ -5691,15 +5841,15 @@ def grid_contiguous(addresses, what):
     return lo, hi
 
 
-def grid_read_copy_drawer(sections, functions, copy):
+def grid_read_copy_drawer(mod, copy):
     """The drawer of one copy: its grid address, and for each page the drawer
     can be passed the special draws [(row, colour, count, slot offset)], the
     label block's source bytes. Every cell outside the special columns of rows
     3..7 must be drawn one byte at its place, from the one grid address."""
-    drawer = grid_find(functions, GRID_DRAWERS, copy, "drawer")
+    drawer = grid_find(mod, mod.drawers, copy, "drawer")
     out, grid, block = {}, None, None
     for page in range(GRID_BLOCK_PAGES):
-        texts, boxes, run = grid_read_drawer(sections, drawer, page)
+        texts, boxes, run = grid_read_drawer(mod, drawer, page)
         src = grid_contiguous(run.copy_read, "%s's label block" % copy)
         dst = grid_contiguous(run.copy_written, "%s's label block on the stack" % copy)
         if src[1] - src[0] != dst[1] - dst[0]:
@@ -5787,20 +5937,20 @@ def grid_page_cell(sections, drawer, copy):
     return cell, stores
 
 
-def grid_read_legend(sections, functions, copy, family, page):
+def grid_read_legend(mod, copy, family, page):
     """The legend of one copy run for `page`: ((w, h) of its box, its calls in
     order - ("small", x, y, colour, count, pointer, the slot it was loaded from),
     ("tile", x, y, u, v, CLUT, shade), ("piece", x, y, id, flags, CLUT),
     ("mode", dtd, tpage) for a SetDrawMode after the box - and
     the address of its table of GRID_ENTRIES string pointers)."""
     calls = []
-    legend = grid_find(functions, GRID_LEGENDS, copy, "legend")
+    legend = grid_find(mod, mod.legends, copy, "legend")
     start, end, words, shape = legend
     if shape[1] != family:
         raise GridRefused("%s: the legend is %s's, the input step %s's" % (copy, GRID_FAMILIES[shape[1]], GRID_FAMILIES[family]))
     roles = grid_roles(start, words, shape[3], "the legend")
     for t, role in roles.items():
-        if role == "tile" and (t not in functions or mips_shape_hash(functions[t][1]) not in GRID_TILE_HELPERS):
+        if role == "tile" and (t not in mod.functions or mod.shape(t) not in mod.tile_helpers):
             raise GridRefused("%s: the legend's sprite helper 0x%08X is not of the known shape" % (copy, t))
     RECT = 0x7E000000
     boxes, pending = [], []
@@ -5864,7 +6014,7 @@ def grid_read_legend(sections, functions, copy, family, page):
                                                      m.arg(2), m.arg(3), m.arg(4))),
                       "clut": lambda m: ((m.arg(1) & 0x1FF) << 6) | ((m.arg(0) >> 4) & 0x3F),
                       "-": lambda m: 0}[role]
-    MipsRun(sections, answers).run(start, (page, GRID_X0, GRID_Y0))
+    mod.runner(answers).run(start, (page, GRID_X0, GRID_Y0))
     if len(boxes) != 1 or boxes[0][:2] != (3, 3) or boxes[0][4] != 0:
         raise GridRefused("%s: the legend's box is not one Menu_DrawBox(x + 3, y + 3, w, h, 0, ..)" % copy)
     if pending:
@@ -5877,14 +6027,187 @@ def grid_read_legend(sections, functions, copy, family, page):
         raise GridRefused("%s: a legend string not loaded from a table" % copy)
     for k, op, t in lui_sites(words):
         if all(t <= u < t + 4 * GRID_ENTRIES and (u - t) % 4 == 0 for u in used):
-            ptrs = [run_word(sections, t + 4 * i) for i in range(GRID_ENTRIES)]
-            if all(p is not None and any(d <= p < d + len(b) for d, b in kseg0(sections)) for p in ptrs):
+            ptrs = [mod.word(t + 4 * i) for i in range(GRID_ENTRIES)]
+            if all(p is not None and mod.data(p) for p in ptrs):
                 if table not in (None, t):
                     raise GridRefused("%s: two tables hold the legend's strings" % copy)
                 table = t
     if table is None:
         raise GridRefused("%s: no table of %d string pointers holds the legend's strings" % (copy, GRID_ENTRIES))
     return boxes[0][2:4], calls, table
+
+
+# psp-eu's name screen, in BOOT.BIN (group PE, 2026-11-14; docs/new-game-round.md
+# 4c-PK, 4c-PE). allegrex_shape_hash -> what the function is, measured over the
+# held psp-eu disc, each hash once in .text (the tile helper's seven times: a
+# helper's shape, checked, not searched for). Both input steps are the PSP's
+# own shape, neither of the PlayStation's (4c-PK: backspace pressed 0x20, the
+# name cursor on the repeated 0xA / 0x5 only; confirm 0x40, finish 0x800 and
+# the codes' actions the West's, read in both copies); by the owner's word of
+# 2026-11-14 (4b) the screen runs the West family's step with the buttons from
+# the player's mapping, so they are family 1 here.
+#
+# The roles are GRID_LEGEND_START's, plus copy: the memcpy the PSP drawers
+# copy their label block with. The PSP legends call no GetGraphType: START's
+# passes tpage 0x2F itself.
+GRID_PSP_DRAWERS = {
+    "f6b5d09341fa": ("START.EMI", 1, "PSP-EU START"),
+    "7daee7fe924b": ("COMMU02.EMI", 1, "PSP-EU COMMU02"),
+}
+GRID_PSP_INPUTS = {
+    "6eef19dff064": ("START.EMI", 1, "PSP-EU START (the PSP's own step, run as the West's)"),
+    "30c6203d0fd2": ("COMMU02.EMI", 1, "PSP-EU COMMU02 (the PSP's own step, run as the West's)"),
+}
+GRID_PSP_LEGENDS = {
+    "7d99847ac3eb": ("START.EMI", 1, "PSP-EU START",
+                     ("drawmode", "commit", "box", "tpage", "piece", "-", "-", "clut", "small", "tile", "-")),
+    "f4f60f221643": ("COMMU02.EMI", 1, "PSP-EU COMMU02", ("box", "small", "drawmode", "commit", "clut", "tile", "-")),
+}
+GRID_PSP_TILE_HELPERS = {"f9624b1fd0b6"}
+GRID_PSP_DRAWER_ROLES = ("copy", "box", "text", "-")
+
+
+class GridBoot(GridEmi):
+    """A PSP disc's BOOT.BIN as GridEmi: one image holds both copies (4c-PK),
+    run by AllegrexRun. Its functions are .text's, found as mips_functions
+    finds an overlay's (an `addiu $sp, $sp, -n` to the first `jr $ra`)."""
+    drawers, inputs, legends, tile_helpers, drawer_roles = GRID_PSP_DRAWERS, GRID_PSP_INPUTS, GRID_PSP_LEGENDS, \
+        GRID_PSP_TILE_HELPERS, GRID_PSP_DRAWER_ROLES
+    where = "BOOT.BIN's data"
+
+    def __init__(self, disc):
+        self.image = disc.boot()
+        self.text_end = disc.text_end
+        if self.text_end & 3 or not 0 < self.text_end < len(self.image):
+            raise GridRefused("BOOT.BIN: .text ends at 0x%X in an image of 0x%X" % (self.text_end, len(self.image)))
+        words = struct.unpack_from("<%dI" % (self.text_end // 4), self.image, 0)
+        self.functions = {}
+        for k, w in enumerate(words):
+            if w >> 16 != 0x27BD or not w & 0x8000:
+                continue
+            e = k
+            while e < len(words) and words[e] != 0x03E00008:
+                e += 1
+            if e + 1 < len(words):
+                self.functions[4 * k] = (4 * e + 8, words[k:e + 2])
+        self._shapes = {}
+
+    def shape(self, start):
+        if start not in self._shapes:
+            self._shapes[start] = allegrex_shape_hash(self.functions[start][1])
+        return self._shapes[start]
+
+    def runner(self, calls):
+        return AllegrexRun(self.image, self.text_end, calls)
+
+    def data(self, va):
+        return self.text_end <= va < len(self.image)
+
+    def byte(self, va):
+        return self.image[va] if self.data(va) else 0
+
+    def word(self, va):
+        return struct.unpack_from("<I", self.image, va)[0] if self.data(va) and self.data(va + 3) else None
+
+    def cstr(self, va, room):
+        if va is None or not self.data(va):
+            raise GridRefused("a string at %s outside BOOT.BIN's data" % ("?" if va is None else "0x%X" % va))
+        end = self.image.find(b"\0", va, va + room)
+        return self.image[va:end] if end >= 0 else self.image[va:va + room]
+
+    def page_cell(self, drawer, copy):
+        """(the page cell, the values stored to it) as grid_page_cell gives an
+        overlay's: the byte every call of the drawer passes as its page, and
+        each store to it anywhere in .text, a constant or None. The PSP's code
+        keeps a `lui` base in a saved register across a function, so each
+        function is walked in order with what its registers hold (grid_track),
+        where the PlayStation's reader looks eight words back. A byte store
+        at the cell's low half through a base the walk does not know, or a
+        wider store over the cell, refuses: the walk would miss a value."""
+        cells, stores, wide, blind = set(), [], [], []
+
+        def call(at, t, regs):
+            if t == drawer[0]:
+                v = regs.get(4)
+                cells.add(v[1] if v and v[0] == "byte" else None)
+
+        for start, (end, words) in self.functions.items():
+            grid_track(start, words, call, lambda *s: stores.append(s))
+        if len(cells) != 1 or None in cells:
+            raise GridRefused("%s: the drawer's callers do not all pass one page byte" % copy)
+        cell = cells.pop()
+        values = []
+        for at, op, base, imm, value in stores:
+            if base is None:
+                if op == 0x28 and s16(imm) == s16(cell & 0xFFFF):
+                    blind.append(at)
+                continue
+            if base <= cell < base + {0x28: 1, 0x29: 2, 0x2B: 4}[op]:
+                if op == 0x28:
+                    values.append(value)
+                else:
+                    wide.append(at)
+        if blind:
+            raise GridRefused("%s: a byte store at the page cell's low half through a base the walk does not know (0x%X)"
+                              % (copy, blind[0]))
+        if wide:
+            raise GridRefused("%s: the page cell written by a wider store (0x%X)" % (copy, wide[0]))
+        return cell, values
+
+
+def grid_track(start, words, on_call, on_store):
+    """Walk a function's words in order (branches not followed) with what each
+    register holds: ("const", v) from `lui`, and `addiu` / `ori` on a constant
+    (or $zero); ("byte", address) from an `lb` / `lbu` at a constant address;
+    `move` (addu / or with $zero) copies it; any other write forgets it, and a
+    call forgets what a callee may change once its delay slot has run.
+    `on_call(at, target, regs)` sees each `jal` after its delay slot (a `jalr`
+    with target None); `on_store(at, op, base, imm, value)` each sb / sh / sw:
+    its address (None where the base register is not a known constant) and
+    the stored register's constant (None where it is not one)."""
+    regs = {0: ("const", 0)}
+    pending = None
+    for k, w in enumerate(words):
+        op, rs, rt, rd, fn = w >> 26, (w >> 21) & 31, (w >> 16) & 31, (w >> 11) & 31, w & 0x3F
+        imm = w & 0xFFFF
+        const = lambda r: regs[r][1] if regs.get(r) and regs[r][0] == "const" else None
+        dest, val = None, None
+        if op == 0x0F:
+            dest, val = rt, ("const", imm << 16)
+        elif op in (0x09, 0x0D) and const(rs) is not None:
+            v = const(rs) + s16(imm) if op == 0x09 else const(rs) | imm
+            dest, val = rt, ("const", v & 0xFFFFFFFF)
+        elif op in (0x20, 0x24) and const(rs) is not None:
+            dest, val = rt, ("byte", (const(rs) + s16(imm)) & 0xFFFFFFFF)
+        elif op == 0 and fn in (0x21, 0x25) and (rs == 0 or rt == 0):
+            dest, val = rd, regs.get(rt if rs == 0 else rs)
+        elif op in (0x28, 0x29, 0x2B):
+            base = const(rs)
+            on_store(start + 4 * k, op, None if base is None else (base + s16(imm)) & 0xFFFFFFFF, imm, const(rt))
+        elif op == 0:
+            # R-type: rd, bar jr, mthi / mtlo, mult / div (hi, lo); jalr's link is rd.
+            if fn not in (0x08, 0x11, 0x13, 0x18, 0x19, 0x1A, 0x1B):
+                dest = rd
+        elif op == 0x1F:
+            dest = rt if fn in (0x00, 0x04) else rd      # Allegrex ext / ins write rt; bshfl (seb, seh) rd
+        elif op == 0x1C:
+            dest = rd
+        elif 0x08 <= op <= 0x0E or 0x20 <= op <= 0x27:
+            dest = rt
+        if dest:
+            if val:
+                regs[dest] = val
+            else:
+                regs.pop(dest, None)
+        if pending is not None:
+            on_call(pending[0], pending[1], regs)
+            for r in MIPS_CALL_CLOBBERS:
+                regs.pop(r, None)
+            pending = None
+        if op == 0x03:
+            pending = (start + 4 * k, (w & 0x3FFFFFF) << 2)
+        elif op == 0 and fn == 0x09:
+            pending = (start + 4 * k, None)
 
 
 def run_word(sections, va):
@@ -5959,41 +6282,41 @@ def grid_cstr(sections, va, room):
 
 
 def read_name_grid(disc):
-    """The disc's name grid as a reading (name_grid_payload's input), or GridRefused."""
-    if is_psp(disc) and not donor_ja:
-        # Group PK, 2026-11-14 (docs/new-game-round.md 4c-PK): every part is
-        # in BOOT.BIN - the grid, both copies' labels and 8-pointer legends,
-        # their drawers, legends and input steps - but its input step is a
-        # third shape (backspace, the name cursor's moves) and its legend shows
-        # that shape's buttons, where 5a's family byte holds only Japan and
-        # the PlayStation's West. Not read here until the owner says which.
-        raise GridRefused("a PSP disc in English: its parts are in BOOT.BIN (Allegrex, not read here), but its "
-                          "input step is neither of 5a's families and its legend draws that step's buttons "
-                          "(call 8, docs/new-game-round.md 4c-PK)")
+    """The disc's name grid as a reading (name_grid_payload's input), or GridRefused.
+
+    A PlayStation disc's copies are its START.EMI and COMMU02.EMI. A PSP disc
+    in English (psp-eu) keeps the Japan build's overlays (region-diff.md 5) and
+    draws the screen from BOOT.BIN, which holds both copies (4c-PK): read there
+    by the PSP's own shapes (GridBoot), with the West family's step (call 8,
+    the owner's word of 2026-11-14). A Japanese PSP disc's EMIs are the Japan
+    disc's modules (D280) and are read as a PlayStation disc's (call 10)."""
+    boot = GridBoot(disc) if is_psp(disc) and not donor_ja else None
     copies, grid_bytes, family, first, pages = [], None, None, None, None
     code_maps = []
     for copy in GRID_COPIES:
-        found = disc.find(copy)
-        if not found:
-            raise GridRefused("no %s on the disc" % copy)
-        sections = emi_sections(disc.read(found[0]))
-        functions = mips_functions(sections)
-        inp = grid_find(functions, GRID_INPUTS, copy, "input step")
+        if boot:
+            mod = boot
+        else:
+            found = disc.find(copy)
+            if not found:
+                raise GridRefused("no %s on the disc" % copy)
+            mod = GridEmi(emi_sections(disc.read(found[0])))
+        inp = grid_find(mod, mod.inputs, copy, "input step")
         fam = inp[3][1]
         if family not in (None, fam):
             raise GridRefused("START's input step is %s's, COMMU02's %s's" % (GRID_FAMILIES[family], GRID_FAMILIES[fam]))
         family = fam
-        drawer, grid, (src_lo, src_hi), specials = grid_read_copy_drawer(sections, functions, copy)
+        drawer, grid, (src_lo, src_hi), specials = grid_read_copy_drawer(mod, copy)
         if drawer[3][1] != family:
             raise GridRefused("%s: the drawer is %s's, the input step %s's" % (copy, GRID_FAMILIES[drawer[3][1]], GRID_FAMILIES[family]))
-        block = bytes(MipsRun(sections, {}).load(grid + i, 1) for i in range(GRID_PAGE * GRID_BLOCK_PAGES))
-        if not all(any(d <= grid + i < d + len(b) for d, b in kseg0(sections)) for i in (0, len(block) - 1)):
-            raise GridRefused("%s: the grid runs out of the module" % copy)
+        block = bytes(mod.byte(grid + i) for i in range(GRID_PAGE * GRID_BLOCK_PAGES))
+        if not all(mod.data(grid + i) for i in (0, len(block) - 1)):
+            raise GridRefused("%s: the grid runs out of %s" % (copy, mod.where))
         if grid_bytes is None:
             grid_bytes = block
         elif block != grid_bytes:
             raise GridRefused("START's grid and COMMU02's differ (M2 found them equal in every build)")
-        cell, stores = grid_page_cell(sections, drawer, copy)
+        cell, stores = mod.page_cell(drawer, copy)
         if family == 1:
             consts = set(stores)
             if not stores or None in consts or len(consts) != 1 or not 0 <= min(consts) < GRID_BLOCK_PAGES:
@@ -6048,11 +6371,11 @@ def read_name_grid(disc):
                 raise GridRefused("%s: code %d's label slot follows the page in no way 5a holds" % (copy, code))
             cmap.append((GRID_ACTIONS[family][code - 1], slot, flags, seen[0][1]))
         code_maps.append(cmap)
-        raws = [grid_cstr(sections, src_lo + width * k, width) for k in range(size // width)]
+        raws = [mod.cstr(src_lo + width * k, width) for k in range(size // width)]
         # The legend, run on two pages: an entry that moves with the page is
         # 5a's "entry + the page's number".
-        box, calls0, table = grid_read_legend(sections, functions, copy, family, 0)
-        box1, calls1, table1 = grid_read_legend(sections, functions, copy, family, 1)
+        box, calls0, table = grid_read_legend(mod, copy, family, 0)
+        box1, calls1, table1 = grid_read_legend(mod, copy, family, 1)
         ops0, ops1 = grid_legend_ops(calls0, table, copy), grid_legend_ops(calls1, table1, copy)
         if box1 != box or table1 != table or len(ops0) != len(ops1):
             raise GridRefused("%s: the legend's shape changes with the page" % copy)
@@ -6063,7 +6386,7 @@ def read_name_grid(disc):
                 a[4] |= 1
                 continue
             raise GridRefused("%s: a legend draw changes with the page in a way 5a cannot hold" % copy)
-        entries = [grid_cstr(sections, run_word(sections, table + 4 * i), 64) for i in range(GRID_ENTRIES)]
+        entries = [mod.cstr(mod.word(table + 4 * i), 64) for i in range(GRID_ENTRIES)]
         copies.append({"copy": copy, "count": width, "raw_labels": raws, "box": box,
                        "raw_entries": entries, "ops": [tuple(o) for o in ops0]})
     if code_maps[0] != code_maps[1]:
@@ -7446,6 +7769,104 @@ def name_grid_synthetic(family):
     return {"family": family, "first": first, "pages": pages, "block": bytes(block), "codes": codes, "copies": copies}
 
 
+class _SyntheticBoot:
+    """A made-up BOOT.BIN for allegrex_selfcheck: GridBoot reads boot() and text_end."""
+
+    def __init__(self, image, text_end):
+        self.image, self.text_end = image, text_end
+
+    def boot(self):
+        return self.image
+
+
+def allegrex_selfcheck():
+    """The PSP reader (group PE) on made-up code, no game data: AllegrexRun's
+    arguments in $t0..$t3 with their source, a branch-likely taken and one not
+    taken (its delay slot skipped), a memcpy answered in place, a .bss read
+    (a `.text`-range address used as data) as 0, and its refusals (an
+    argument past $t3, execution leaving .text); GridBoot.page_cell's walk
+    finding the page cell and its one constant store, and refusing a caller
+    that passes another byte, one whose page byte a call clobbered, a store
+    through a base it does not know and a wider store over the cell. The
+    errors, [] if all hold."""
+    errs = []
+    I, R, J = (lambda *f: mips_asm("i", *f)), (lambda *f: mips_asm("r", *f)), (lambda *f: mips_asm("j", *f))
+    NOP, TEXT, CALLEE, COPY = 0, 0x100, 0x80, 0x90
+    image = bytearray(0x200)
+    code = [I(0x09, 29, 29, -0x20 & 0xFFFF),                    # addiu sp, sp, -0x20
+            I(0x0F, 0, 9, 0),                                   # lui t1, 0
+            I(0x23, 9, 8, 0x180),                               # lw t0, 0x180(t1): a pointer, its source 0x180
+            I(0x09, 29, 4, 0x10),                               # addiu a0, sp, 0x10
+            I(0x09, 9, 5, 0x140),                               # addiu a1, t1, 0x140
+            J(0x03, COPY),                                      # jal memcpy
+            I(0x0D, 0, 6, 4),                                   # ori a2, zero, 4 (delay slot)
+            I(0x24, 0, 3, 0x44),                                # lbu v1, 0x44(zero): .bss
+            I(0x0D, 0, 7, 5),                                   # ori a3, zero, 5
+            I(0x15, 0, 0, 2),                                   # bnel zero, zero, +2: not taken
+            I(0x0D, 0, 7, 9),                                   # ori a3, zero, 9 (nullified)
+            I(0x14, 0, 0, 2),                                   # beql zero, zero, +2: taken
+            I(0x0D, 0, 6, 3),                                   # ori a2, zero, 3 (its delay slot runs)
+            I(0x0D, 0, 6, 7),                                   # ori a2, zero, 7 (jumped over)
+            J(0x03, CALLEE),                                    # jal the callee
+            I(0x0D, 0, 9, 0x7F),                                # ori t1, zero, 0x7F (delay slot: argument 6)
+            R(0x08, 31, 0, 0, 0),                               # jr ra
+            I(0x09, 29, 29, 0x20)]                              # addiu sp, sp, 0x20
+    struct.pack_into("<%dI" % len(code), image, 0, *code)
+    struct.pack_into("<I", image, 0x180, 0x1C0)
+    image[0x140:0x144] = b"WXYZ"
+    image[0x44] = 0x55                                          # .text's byte: a data read of it is .bss, 0
+    seen = []
+    calls = {COPY: allegrex_copy,
+             CALLEE: lambda m: seen.append((m.arg(2), m.arg(3), m.arg(4), m.arg_src(4), m.arg(5), m.r[3],
+                                            m.load(m.r[29] + 0x10, 4)))}
+    run = AllegrexRun(bytes(image), TEXT, calls)
+    run.run(0)
+    want = [(3, 5, 0x1C0, 0x180, 0x7F, 0, int.from_bytes(b"WXYZ", "little"))]
+    if seen != want or run.copy_read != set(range(0x140, 0x144)) or len(run.copy_written) != 4:
+        errs.append("AllegrexRun: the made-up routine's call %s, copied %d / %d bytes" % (seen, len(run.copy_read),
+                                                                                        len(run.copy_written)))
+    for what, calls2, entry in (("an argument past $t3", {COPY: allegrex_copy, CALLEE: lambda m: m.arg(8)}, 0),
+                                ("execution in the data", {}, 0x140)):
+        try:
+            AllegrexRun(bytes(image), TEXT, calls2).run(entry)
+            errs.append("AllegrexRun: %s ran" % what)
+        except MipsError:
+            pass
+    # GridBoot.page_cell: a drawer, and callers that read the page byte at
+    # CELL through a saved register's `lui` (s0) and pass it in $a0.
+    CELL, DRAWER = 0x1F0, 0x00
+
+    def boot_with(callers):
+        img = bytearray(0x200)
+        words = [I(0x09, 29, 29, -8 & 0xFFFF), R(0x08, 31, 0, 0, 0), I(0x09, 29, 29, 8)]   # the drawer
+        for body in callers:
+            words += [I(0x09, 29, 29, -0x18 & 0xFFFF), I(0x0F, 0, 16, 0)] + body + [R(0x08, 31, 0, 0, 0),
+                                                                                   I(0x09, 29, 29, 0x18)]
+        struct.pack_into("<%dI" % len(words), img, 0, *words)
+        return GridBoot(_SyntheticBoot(bytes(img), TEXT))
+    opens = [I(0x0D, 0, 5, 2), I(0x28, 16, 5, CELL)]            # ori a1, zero, 2; sb a1, CELL(s0)
+    draws = [I(0x24, 16, 4, CELL), J(0x03, DRAWER), NOP]        # lbu a0, CELL(s0); jal drawer
+    drawer = (DRAWER, 0xC, None, None)
+    try:
+        got = boot_with([opens, draws]).page_cell(drawer, "synthetic")
+        if got != (CELL, [2]):
+            errs.append("GridBoot.page_cell gave %s" % (got,))
+    except GridRefused as e:
+        errs.append("GridBoot.page_cell refused the made-up callers: %s" % e)
+    for what, callers in (("a caller passing another byte",
+                           [opens, draws, [I(0x24, 16, 4, CELL + 1), J(0x03, DRAWER), NOP]]),
+                          ("a page byte a call clobbered",
+                           [opens, [I(0x24, 16, 4, CELL), J(0x03, 0x1F8), NOP, J(0x03, DRAWER), NOP]]),
+                          ("a store through an unknown base", [opens, draws, [I(0x28, 13, 5, CELL)]]),
+                          ("a wider store over the cell", [opens, draws, [I(0x29, 16, 5, CELL)]])):
+        try:
+            boot_with(callers).page_cell(drawer, "synthetic")
+            errs.append("GridBoot.page_cell: %s passes" % what)
+        except GridRefused:
+            pass
+    return errs
+
+
 def name_grid_selfcheck():
     """Kind 22 on made-up data (no game data): the interpreter on a made-up
     routine; a synthetic grid of each family built, carried in a synthetic
@@ -7486,6 +7907,7 @@ def name_grid_selfcheck():
     if seen != want or run.copy_read != set(range(data + 0x141, data + 0x145)) or len(run.copy_written) != 4:
         errs.append("MipsRun: the made-up routine's calls %s, copied %d / %d bytes" % (seen, len(run.copy_read),
                                                                                      len(run.copy_written)))
+    errs += allegrex_selfcheck()
     global donor_ja, ja_sheets
     saved, saved_sheets = donor_ja, ja_sheets
     saved_small, saved_base, saved_pairs = dict(ja_small), list(ja_small_base), dict(ja_pairs)
@@ -7650,7 +8072,8 @@ def selftest_name_grid():
     errs = name_grid_selfcheck()
     if errs:
         raise SystemExit("name grid (kind 22): " + "; ".join(errs))
-    print("  name grid (kind 22): the interpreter on a made-up routine; a synthetic grid of each family through a "
+    print("  name grid (kind 22): the interpreters on made-up routines (the PSP's, and its page-cell walk's "
+          "refusals); a synthetic grid of each family through a "
           "synthetic FIRST.DAT and back; every 5a rule broken once and refused; the encodings' refusals")
 
 
