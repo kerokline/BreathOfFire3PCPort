@@ -3117,6 +3117,7 @@ switch	CommuDraw_WaitKey	detour	costly		src/game/community/commu_name.cpp:1083	B
 switch	CommuEntry_DrawBar	detour	costly		src/game/community/commu.cpp:658	BOF3_INJECT
 switch	CommuEntry_DrawPanel	detour	costly		src/game/community/commu.cpp:656	BOF3_INJECT
 switch	CommuEntry_DrawPanelFrame	detour	costly		src/game/community/commu.cpp:657	BOF3_INJECT
+switch	CommuFrameWindowInPool	code	yes		src/game/community/commu.cpp:675	PatchBytes
 switch	CommuHiLo_BetBack	detour	costly		src/game/community/commu_board.cpp:3000	BOF3_INJECT
 switch	CommuHiLo_BetDispatch	detour	costly		src/game/community/commu_board.cpp:2997	BOF3_INJECT
 switch	CommuHiLo_BetInput	detour	costly		src/game/community/commu_board.cpp:2998	BOF3_INJECT
