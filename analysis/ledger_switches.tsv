@@ -3056,12 +3056,12 @@ switch	Commu_CountInSlot	detour	costly		src/game/community/commu_board.cpp:2959	
 switch	Commu_DrawCard	detour	costly		src/game/community/commu_board.cpp:3023	BOF3_INJECT
 switch	Commu_DrawFrame	detour	costly		src/game/community/commu_board.cpp:3028	BOF3_INJECT
 switch	Commu_DrawPiece	detour	costly		src/game/community/commu_board.cpp:3026	BOF3_INJECT
-switch	Commu_DrawPiece6	detour	costly		src/game/community/commu.cpp:681	BOF3_INJECT
+switch	Commu_DrawPiece6	detour	costly		src/game/community/commu.cpp:685	BOF3_INJECT
 switch	Commu_DrawStakeBox	detour	costly		src/game/community/commu_board.cpp:3029	BOF3_INJECT
-switch	Commu_DrawTiledFrame	detour	costly		src/game/community/commu.cpp:690	BOF3_INJECT
+switch	Commu_DrawTiledFrame	detour	costly		src/game/community/commu.cpp:694	BOF3_INJECT
 switch	Commu_DrawUnderline	detour	costly		src/game/community/commu_board.cpp:3025	BOF3_INJECT
 switch	Commu_DrawZennyBox	detour	costly		src/game/community/commu_board.cpp:3027	BOF3_INJECT
-switch	Commu_LeaveWhenClosed	detour	costly		src/game/community/commu.cpp:664	BOF3_INJECT
+switch	Commu_LeaveWhenClosed	detour	costly		src/game/community/commu.cpp:673	BOF3_INJECT
 switch	Commu_NthInSlot	detour	costly		src/game/community/commu_board.cpp:2960	BOF3_INJECT
 switch	Commu_PushSubscreen	detour	costly		src/game/community/commu_board.cpp:2989	BOF3_INJECT
 switch	Commu_RandDigit	detour	costly		src/game/community/commu_board.cpp:3020	BOF3_INJECT
@@ -3101,7 +3101,7 @@ switch	CommuBoard_SlotHelp	detour	costly		src/game/community/commu_board.cpp:297
 switch	CommuBoard_SlotRecordXY	detour	costly		src/game/community/commu_board.cpp:2968	BOF3_INJECT
 switch	CommuBoard_StepDispatch	detour	costly		src/game/community/commu_board.cpp:2943	BOF3_INJECT
 switch	CommuBoard_StepDispatchB	detour	costly		src/game/community/commu_board.cpp:2946	BOF3_INJECT
-switch	CommuCursor_DrawArrow	detour	costly		src/game/community/commu.cpp:682	BOF3_INJECT
+switch	CommuCursor_DrawArrow	detour	costly		src/game/community/commu.cpp:686	BOF3_INJECT
 switch	CommuDraw_Close	detour	costly		src/game/community/commu_name.cpp:1403	BOF3_INJECT
 switch	CommuDraw_Dispatch	detour	costly		src/game/community/commu_name.cpp:1394	BOF3_INJECT
 switch	CommuDraw_DrawTitle	detour	costly		src/game/community/commu_name.cpp:1405	BOF3_INJECT
@@ -3114,10 +3114,9 @@ switch	CommuDraw_RandBelow	detour	costly		src/game/community/commu_name.cpp:1404
 switch	CommuDraw_Reveal	detour	costly		src/game/community/commu_name.cpp:1400	BOF3_INJECT
 switch	CommuDraw_ShowStep	detour	costly		src/game/community/commu_name.cpp:1398	BOF3_INJECT
 switch	CommuDraw_WaitKey	detour	costly		src/game/community/commu_name.cpp:1401	BOF3_INJECT
-switch	CommuEntry_DrawBar	detour	costly		src/game/community/commu.cpp:680	BOF3_INJECT
-switch	CommuEntry_DrawPanel	detour	costly		src/game/community/commu.cpp:678	BOF3_INJECT
-switch	CommuEntry_DrawPanelFrame	detour	costly		src/game/community/commu.cpp:679	BOF3_INJECT
-switch	CommuFrameWindowInPool	code	yes		src/game/community/commu.cpp:675	PatchBytes
+switch	CommuEntry_DrawBar	detour	costly		src/game/community/commu.cpp:684	BOF3_INJECT
+switch	CommuEntry_DrawPanel	detour	costly		src/game/community/commu.cpp:682	BOF3_INJECT
+switch	CommuEntry_DrawPanelFrame	detour	costly		src/game/community/commu.cpp:683	BOF3_INJECT
 switch	CommuHiLo_BetBack	detour	costly		src/game/community/commu_board.cpp:3000	BOF3_INJECT
 switch	CommuHiLo_BetDispatch	detour	costly		src/game/community/commu_board.cpp:2997	BOF3_INJECT
 switch	CommuHiLo_BetInput	detour	costly		src/game/community/commu_board.cpp:2998	BOF3_INJECT
@@ -3180,12 +3179,12 @@ switch	CommuItem_Prompt	detour	costly		src/game/community/commu_music.cpp:416	BO
 switch	CommuItem_Refused	detour	costly		src/game/core/title.cpp:2253	BOF3_INJECT
 switch	CommuItem_SetupWindow	detour	costly		src/game/core/title.cpp:2254	BOF3_INJECT
 switch	CommuItem_StepDispatch	detour	costly		src/game/community/commu_music.cpp:415	BOF3_INJECT
-switch	CommuMember_Count	detour	costly		src/game/community/commu.cpp:687	BOF3_INJECT
-switch	CommuMember_DrawAll	detour	costly		src/game/community/commu.cpp:686	BOF3_INJECT
-switch	CommuMember_DrawFrame	detour	costly		src/game/community/commu.cpp:689	BOF3_INJECT
-switch	CommuMember_DrawPanel	detour	costly		src/game/community/commu.cpp:684	BOF3_INJECT
-switch	CommuMember_DrawPortrait	detour	costly		src/game/community/commu.cpp:685	BOF3_INJECT
-switch	CommuMember_Nth	detour	costly		src/game/community/commu.cpp:688	BOF3_INJECT
+switch	CommuMember_Count	detour	costly		src/game/community/commu.cpp:691	BOF3_INJECT
+switch	CommuMember_DrawAll	detour	costly		src/game/community/commu.cpp:690	BOF3_INJECT
+switch	CommuMember_DrawFrame	detour	costly		src/game/community/commu.cpp:693	BOF3_INJECT
+switch	CommuMember_DrawPanel	detour	costly		src/game/community/commu.cpp:688	BOF3_INJECT
+switch	CommuMember_DrawPortrait	detour	costly		src/game/community/commu.cpp:689	BOF3_INJECT
+switch	CommuMember_Nth	detour	costly		src/game/community/commu.cpp:692	BOF3_INJECT
 switch	CommuMusic_Browse	detour	costly		src/game/community/commu_music.cpp:406	BOF3_INJECT
 switch	CommuMusic_BrowseDispatch	detour	costly		src/game/community/commu_music.cpp:405	BOF3_INJECT
 switch	CommuMusic_CloseDispatch	detour	costly		src/game/community/commu_music.cpp:408	BOF3_INJECT
@@ -3200,15 +3199,15 @@ switch	CommuMusic_Play	detour	costly		src/game/community/commu_music.cpp:407	BOF
 switch	CommuMusic_SlideIn	detour	costly		src/game/community/commu_music.cpp:404	BOF3_INJECT
 switch	CommuMusic_SlideOut	detour	costly		src/game/community/commu_music.cpp:411	BOF3_INJECT
 switch	CommuName_Begin	detour	costly		src/game/community/commu_name.cpp:1407	BOF3_INJECT
-switch	CommuName_CommitEntry	detour	costly		src/game/community/commu.cpp:692	BOF3_INJECT
-switch	CommuName_CommitMember	detour	costly		src/game/community/commu.cpp:691	BOF3_INJECT
-switch	CommuName_CountSlots	detour	costly		src/game/community/commu.cpp:665	BOF3_INJECT
+switch	CommuName_CommitEntry	detour	costly		src/game/community/commu.cpp:696	BOF3_INJECT
+switch	CommuName_CommitMember	detour	costly		src/game/community/commu.cpp:695	BOF3_INJECT
+switch	CommuName_CountSlots	detour	costly		src/game/community/commu.cpp:674	BOF3_INJECT
 switch	CommuName_Dispatch	detour	costly		src/game/community/commu_name.cpp:1406	BOF3_INJECT
-switch	CommuName_DrawHeader	detour	costly		src/game/community/commu.cpp:669	BOF3_INJECT
-switch	CommuName_DrawSlotBar	detour	costly		src/game/community/commu.cpp:667	BOF3_INJECT
-switch	CommuName_DrawSlotFrame	detour	costly		src/game/community/commu.cpp:668	BOF3_INJECT
+switch	CommuName_DrawHeader	detour	costly		src/game/community/commu.cpp:678	BOF3_INJECT
+switch	CommuName_DrawSlotBar	detour	costly		src/game/community/commu.cpp:676	BOF3_INJECT
+switch	CommuName_DrawSlotFrame	detour	costly		src/game/community/commu.cpp:677	BOF3_INJECT
 switch	CommuName_End	detour	costly		src/game/community/commu_name.cpp:1443	BOF3_INJECT
-switch	CommuName_MakeRandom	detour	costly		src/game/community/commu.cpp:683	BOF3_INJECT
+switch	CommuName_MakeRandom	detour	costly		src/game/community/commu.cpp:687	BOF3_INJECT
 switch	CommuName_MemberChoose	detour	costly		src/game/community/commu_name.cpp:1428	BOF3_INJECT
 switch	CommuName_MemberClose	detour	costly		src/game/community/commu_name.cpp:1442	BOF3_INJECT
 switch	CommuName_MemberConfirm	detour	costly		src/game/community/commu_name.cpp:1429	BOF3_INJECT
@@ -3226,7 +3225,7 @@ switch	CommuName_MemberRandomOut	detour	costly		src/game/community/commu_name.cp
 switch	CommuName_MemberRandomPick	detour	costly		src/game/community/commu_name.cpp:1433	BOF3_INJECT
 switch	CommuName_MemberRandomStep	detour	costly		src/game/community/commu_name.cpp:1432	BOF3_INJECT
 switch	CommuName_MemberStep	detour	costly		src/game/community/commu_name.cpp:1426	BOF3_INJECT
-switch	CommuName_NthSlot	detour	costly		src/game/community/commu.cpp:666	BOF3_INJECT
+switch	CommuName_NthSlot	detour	costly		src/game/community/commu.cpp:675	BOF3_INJECT
 switch	CommuName_PanelReset	detour	costly		src/game/community/commu_name.cpp:1409	BOF3_INJECT
 switch	CommuName_SlotChoose	detour	costly		src/game/community/commu_name.cpp:1411	BOF3_INJECT
 switch	CommuName_SlotClose	detour	costly		src/game/community/commu_name.cpp:1425	BOF3_INJECT
@@ -5903,7 +5902,7 @@ switch	EyeBeamSpark_DrawDisc	detour	costly		src/game/magic/eye_beam.cpp:537	BOF3
 switch	EyeBeamSparks_Clear	detour	costly		src/game/magic/eye_beam.cpp:534	BOF3_INJECT
 switch	EyeBeamSparks_Draw	detour	costly		src/game/magic/eye_beam.cpp:536	BOF3_INJECT
 switch	EyeBeamSparks_Spawn	detour	costly		src/game/magic/eye_beam.cpp:535	BOF3_INJECT
-switch	FaerieNameEnd	code	yes		src/game/community/commu.cpp:696 src/game/community/commu_board.cpp:2976	PatchBytes
+switch	FaerieNameEnd	code	yes		src/game/community/commu.cpp:700 src/game/community/commu_board.cpp:2976	PatchBytes
 switch	Field_ActionState	detour	costly		src/game/field/field_4.cpp:2212	BOF3_INJECT
 switch	Field_AfterBattleTally	detour	costly		src/game/field/field_6.cpp:3311	BOF3_INJECT
 switch	Field_AreaRunState	detour	costly		src/game/field/field_4.cpp:2216	BOF3_INJECT
@@ -10402,7 +10401,7 @@ switch	env:BOF3X_R4A_ONLY	env	yes		src/game/community/rest_4a_fuzz.cpp:611	read 
 switch	env:BOF3X_R4B_ONLY	env	yes		src/game/community/rest_4b_fuzz.cpp:609	read in src/
 switch	env:BOF3X_R4C_ONLY	env	yes		src/game/community/rest_4c_fuzz.cpp:483	read in src/
 switch	env:BOF3X_R4D_ONLY	env	yes		src/game/community/rest_4d_fuzz.cpp:969 src/game/community/rest_4d_fuzz.cpp:999 src/game/community/rest_4d_fuzz.cpp:1046	read in src/
-switch	env:BOF3X_R4E_ONLY	env	yes		src/game/community/rest_4e_fuzz.cpp:472	read in src/
+switch	env:BOF3X_R4E_ONLY	env	yes		src/game/community/rest_4e_fuzz.cpp:480	read in src/
 switch	env:BOF3X_R4F_ONLY	env	yes		src/game/effect/rest_4f_fuzz.cpp:632	read in src/
 switch	env:BOF3X_R4F_ROUNDS	env	yes		src/game/effect/rest_4f_fuzz.cpp:644	read in src/
 switch	env:BOF3X_RECORD	env	yes		src/game/crt_rest.cpp:454 src/hook/input_script.cpp:1301	read in src/
