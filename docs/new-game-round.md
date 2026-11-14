@@ -1009,6 +1009,83 @@ rule: it is a fault of our builder, not the player's disc. No chunk leaves
 `NameGrid_Available()` false, and a call of the draw or the input step then
 aborts loudly (rule 4).
 
+## 5b. NG's routine, built (stage A)
+
+*Group NG, 2026-11-14, on `new-game/ng`. Nothing calls it yet; nothing a
+player sees changes.*
+
+**Where.** `src/game/menu/name_grid.h` / `.cpp`, the self-test
+`name_grid_fuzz.cpp` (`BOF3X_SHADOW=name_grid`), `dat_load.cpp`'s kind 22.
+The chunk's layout is known in two places only: section 5a and
+`ParseChunk`.
+
+**For stage B (TF, CR, BT).**
+
+- The caller owns a `name_grid::Cells` block (buffer of six, name cursor,
+  column, row, page) and opens it as the PlayStation's entry does: cursor,
+  column and row 0, the page `NameGrid_FirstPage()`, the buffer 0xFF or
+  `NameGrid_Decode` of the stored name. The hand must start on a cell that
+  is not empty (row 0 always is); the step stops with a Fatal otherwise.
+- `NameGrid_Input(copy, cells, room, fallback)` returns bits: `kFinished`,
+  `kQuit`. For `kNewGame` both can come in one frame (START's quit does not
+  leave the step); TF does the rest of each (`Game_Step` 1 and sub-step 0;
+  the commit to record 0 with `NameGrid_Encode`, `Transition_Start(0)`, the
+  next sub-step). `fallback` is record 0's name as cells, for the all-blank
+  finish. For `kRenamer`, `kQuit` is the unanswered end; CR advances.
+- `room` is the field's bytes: 8 for a record's name, 5 for a slot. A
+  glyph that would pass it is refused with `0x107`. `NameGrid_CellCount()`
+  is 4 for the Japan family (call 5), 5 for the West.
+- The draws are `NameGrid_Draw(copy, cells, x, y)` and
+  `NameGrid_DrawLegend(copy, page, x, y)`; the caller draws first in
+  `kNewGame`, as START does. The name panel and its underline are the
+  caller's (M1's shape).
+- **The legend frames' lists are the PC's own** (`0x667148`, `0x653000`,
+  section 5a). The take checks both by length and SHA-256 in the running
+  image. When either is missing (a disc-built or exe-less image),
+  `NameGrid_Available()` is false and the reason is logged once and given
+  by `NameGrid_Why()`: the caller skips the screen as it does with no
+  chunk. Chosen over a Fatal so that such an install still plays.
+
+**Call 7, read again.** US `START`'s Left (`0x801E48EC`) and Right
+(`0x801E49B4`) and US `COMMU02`'s (`0x801DA2C8`) read the cell under the
+hand before the move; when it is a special (non-zero, below 6) they store
+column 9 (Left) or 0 (Right) and jump past the other moves with no test of
+the new cell. No other code in `START` writes the column or the row (every
+store to `0x801ED7E0` / `0x801ED7E4`: the open at `0x801E46AC` / `B4` and
+the four moves), and the step has no clamp. **The first reading missed
+nothing that the code shows:** on the US / EU page and the French page,
+row 5's column 9 is empty, so Left from row 5's special (the quit label)
+lands the hand on it, and a confirm there stores byte 0. The owner's
+observation and the code disagree at that one move. Ours never lands on an
+empty cell: after every move and every page change the hand goes up to the
+first cell that is not empty (Japan's page-2 constants are this rule), so
+that Left goes to row 4's column 9. A one-press check on the sibling's US
+build (the hand on row 5's special, then Left) would settle whether the
+original does it.
+
+**The ledger text for stage C** (to fold into the entries for the name
+entry at New Game and the renamer's grid):
+
+- *The hand.* The original Western step leaves the hand on an empty cell
+  after Left from row 5's special (US / EU, French); a confirm there enters
+  byte 0. Ours moves it up to the first cell that is not empty, as the
+  Japan step's page-2 clamp does. Why: the owner's call 7.
+- *The field's room.* The original enters any cell; its names are one byte
+  a cell. Ours refuses, with `0x107`, a cell whose entry would make the
+  name's stored bytes pass the field (8 for a character, 5 for a faerie
+  slot). Why: the layer stores some cells in two bytes (M3).
+- *Four kana.* The original Japan name has five cells; ours four under the
+  Japan family. Why: call 5.
+- *The buttons.* Every face and shoulder test through `Sigma`
+  (DIV-0139's rule): Japan's bits by `Sigma`, the West's by
+  `SigmaFrom(West)`. At the install's starting Config the original's.
+- *The pad word.* The page and finish codes take effect in the same frame
+  as on the PlayStation, by a flag of ours rather than a write of the bit
+  into `Input_Pressed`. Nothing else in the frame reads the bit.
+- *The legend's piece.* The menu piece SPRT of `START`'s legend is drawn
+  with the PC's `Menu_PieceRect` rectangle and the disc's CLUT; not yet
+  compared on screen (BT, stage C).
+
 ## 6. Acceptance
 
 1. With the three switches off: every existing gate identical (self-tests,
