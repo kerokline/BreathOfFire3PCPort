@@ -915,11 +915,14 @@ backlog is on `main` and the check is not in CI.
   sent a picture of its name screen (game-derived, not in the repository):
   the legend names cross for confirm, circle for delete, R and L for the
   name cursor, START for the finish, with R and L drawn as letters. It
-  agrees with PK's reading of the PSP step (4c-PK). The owner's word:
-  **"psp screen with default mappings"**, read here as: a `psp-eu` install
-  shows the PSP's own screen and buttons by default. That is a third family
-  in 5a (group PE, after TF merges); the launcher's toggle to the
-  PlayStation's style on such an install is for the owner to confirm.
+  agrees with PK's reading of the PSP step (4c-PK). A second picture, of
+  the Japan PSP release: circle confirm, cross delete, square the name
+  cursor, triangle the page, START the finish, all five as button shapes,
+  and five labels on rows 3 to 7. That is the Japan family's legend as M2
+  has it, which supports call 10 by the look; `psp-jp`'s own code is still
+  not read. **Not yet answered:** which style a `psp-eu` install shows by
+  default (the PSP's own, a third family in 5a, or the PlayStation's), and
+  what the launcher's toggle switches there.
 
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
