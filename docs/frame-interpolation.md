@@ -145,7 +145,7 @@ references happened to agree. It differs at **more** ticks with the switch on
 `Sound_Tick` calls, so the buffer's refill lands on the other side of a tick
 boundary more often. That is timing of the audio stream, not game state -
 but nobody has listened for it. **Owed:** the owner's ear on music with the
-switch on, and a WAV A/B (`docs/wav-dump.md`).
+switch on, and a WAV A/B (`docs/wav-dump.md`) - IDEAS I68.
 
 Three pages (`0x6BC000`, `0x7CC000`, `0x7DE000`) differ between the
 references at every tick and are never compared, as in every proof.
