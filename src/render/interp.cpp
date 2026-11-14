@@ -47,11 +47,19 @@ void StateInto(Fnv& f, const Command& c) {
     f.Put(c.state.color_key);
 }
 
+// A draw the matcher looks at: kDraw with vertices.
+bool IsDraw(const Command& c) { return c.kind == Cmd::kDraw && c.count != 0; }
+
+// The surface a draw samples; null for an untextured one.
+const void* SurfaceOf(const Command& c) {
+    return c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr;
+}
+
 Entry EntryOf(const Command& c, const Vertex* v) {
     Entry e = {};
     e.first = c.first;
     e.count = c.count;
-    const void* surface = c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr;
+    const void* surface = SurfaceOf(c);
     Fnv x;
     StateInto(x, c);
     x.Put(surface);
@@ -80,23 +88,29 @@ Entry EntryOf(const Command& c, const Vertex* v) {
     return e;
 }
 
+// Each unused kept entry with `key` in `order` (sorted by `member`) to
+// fn(index); returns how many entries have the key, used or not.
+template <class Fn> U EachUnused(const std::vector<U>& order, Key Entry::*member, Key key, const Fn& fn) {
+    auto lo = std::lower_bound(order.begin(), order.end(), key, [&](U i, Key k) { return g_entries[i].*member < k; });
+    U count = 0;
+    for (; lo != order.end() && g_entries[*lo].*member == key; ++lo, ++count)
+        if (!g_entries[*lo].used) fn(static_cast<int>(*lo));
+    return count;
+}
+
 // The nearest unused kept entry with `key` in `order` (sorted by `member`),
 // by the first vertex's distance; -1 when none.
 int Nearest(const std::vector<U>& order, Key Entry::*member, Key key, const Vertex& at) {
-    auto lo = std::lower_bound(order.begin(), order.end(), key,
-                               [&](U i, Key k) { return g_entries[i].*member < k; });
     int best = -1;
     float best_d = 0;
-    for (; lo != order.end() && g_entries[*lo].*member == key; ++lo) {
-        const Entry& e = g_entries[*lo];
-        if (e.used) continue;
-        const Vertex& p = g_vertices[e.first];
+    EachUnused(order, member, key, [&](int k) {
+        const Vertex& p = g_vertices[g_entries[k].first];
         const float dx = p.x - at.x, dy = p.y - at.y, d = dx * dx + dy * dy;
         if (best < 0 || d < best_d) {
-            best = static_cast<int>(*lo);
+            best = k;
             best_d = d;
         }
-    }
+    });
     return best;
 }
 
@@ -118,7 +132,7 @@ void Keep(const Frame& frame) {
     g_entries.clear();
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
-        if (c.kind != Cmd::kDraw || c.count == 0) continue;
+        if (!IsDraw(c)) continue;
         g_entries.push_back(EntryOf(c, frame.vertices + c.first));
     }
     const U n = static_cast<U>(g_entries.size());
@@ -136,6 +150,10 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));
     for (Entry& e : g_entries) e.used = false;
     const float cap = max_move * max_move;
+    // The frame's own entries, once: the vote, the order and the pairing read them.
+    std::vector<Entry> cur(frame.n_commands);
+    for (U i = 0; i < frame.n_commands; ++i)
+        if (IsDraw(frame.commands[i])) cur[i] = EntryOf(frame.commands[i], frame.vertices + frame.commands[i].first);
     // For the debug lines: a surface by its ordinal among the frame's, in
     // the order met (an address is not the same from run to run).
     std::vector<const void*> surface_ids;
@@ -173,7 +191,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         }
         if (g_debug)
             bof3::Log("interp-dbg  cmd %u n %u tex %u blend %d at (%.1f, %.1f) size (%.1f, %.1f) uv (%.4f, %.4f) from (%.1f, %.1f) kept uv (%.4f, %.4f) d (%.1f, %.1f)",
-                      index, c.count, SurfaceId(c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr), c.state.blend_enable,
+                      index, c.count, SurfaceId(SurfaceOf(c)), c.state.blend_enable,
                       now[0].x, now[0].y, now[c.count - 1].x - now[0].x, now[c.count - 1].y - now[0].y, now[0].u, now[0].v,
                       was[0].x, was[0].y, was[0].u, was[0].v, dx0, dy0);
         if (g_debug)
@@ -213,13 +231,6 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     // walking against the scroll) takes the nearest of that look.
     constexpr float kAgree = 5.0f;       // target pixels
     constexpr float kShapeOnly = 1.0f;   // what a pair by shape alone gives away to one by look
-    const auto Each = [&](const std::vector<U>& order, Key Entry::*member, Key key, const auto& fn) {
-        auto lo = std::lower_bound(order.begin(), order.end(), key, [&](U i, Key k) { return g_entries[i].*member < k; });
-        U count = 0;
-        for (; lo != order.end() && g_entries[*lo].*member == key; ++lo, ++count)
-            if (!g_entries[*lo].used) fn(static_cast<int>(*lo));
-        return count;
-    };
     struct Vote {
         const void* surface;
         std::int64_t cell;
@@ -229,13 +240,13 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     {
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
-            if (c.kind != Cmd::kDraw || c.count == 0) continue;
+            if (!IsDraw(c)) continue;
             const Vertex& at = frame.vertices[c.first];
-            const int k = Nearest(g_by_exact, &Entry::exact, EntryOf(c, frame.vertices + c.first).exact, at);
+            const int k = Nearest(g_by_exact, &Entry::exact, cur[i].exact, at);
             if (k < 0) continue;
             const Vertex& p = g_vertices[g_entries[k].first];
             const std::int64_t cx = std::llround((p.x - at.x) / 2), cy = std::llround((p.y - at.y) / 2);
-            votes.push_back({c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr, cx * 100000 + cy,
+            votes.push_back({SurfaceOf(c), cx * 100000 + cy,
                              static_cast<float>(cx) * 2, static_cast<float>(cy) * 2});
         }
         std::sort(votes.begin(), votes.end(), [](const Vote& a, const Vote& b) {
@@ -268,9 +279,9 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         std::vector<Key> a;
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
-            if (c.kind != Cmd::kDraw || c.count == 0) continue;
+            if (!IsDraw(c)) continue;
             cmd.push_back(i);
-            a.push_back(EntryOf(c, frame.vertices + c.first).exact);
+            a.push_back(cur[i].exact);
         }
         const std::size_t n = a.size(), m = g_entries.size();
         std::size_t pre = 0, suf = 0;
@@ -282,25 +293,40 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             static std::vector<unsigned short> t;
             t.assign((N + 1) * (M + 1), 0);
             const auto T = [&](std::size_t i, std::size_t j) -> unsigned short& { return t[i * (M + 1) + j]; };
-            for (std::size_t i = N; i-- > 0;)
+            // The table runs on the game's thread inside the frame's wait: past
+            // kOrderBudgetMs it is dropped, and the middle of the list pairs
+            // without an order, so the next frame is not made late.
+            constexpr double kOrderBudgetMs = 8.0;
+            const std::uint64_t start = bof3::os::Counter();
+            const std::uint64_t budget =
+                static_cast<std::uint64_t>(kOrderBudgetMs * static_cast<double>(bof3::os::CounterFrequency()) / 1000.0);
+            bool timed_out = false;
+            for (std::size_t i = N; i-- > 0 && !timed_out;) {
                 for (std::size_t j = M; j-- > 0;)
                     T(i, j) = a[pre + i] == g_entries[pre + j].exact ? static_cast<unsigned short>(T(i + 1, j + 1) + 1)
                                                                      : std::max(T(i + 1, j), T(i, j + 1));
-            for (std::size_t i = 0, j = 0; i < N && j < M;) {
+                if ((i & 15) == 0 && bof3::os::Counter() - start > budget) timed_out = true;
+            }
+            if (timed_out) {
+                ++s.order_dropped;
+                static bool said;
+                if (!said) {
+                    said = true;
+                    bof3::Log("interp      an order table of %u x %u draws ran past %.0f ms and was dropped (logged once)",
+                              static_cast<U>(N), static_cast<U>(M), kOrderBudgetMs);
+                }
+            }
+            for (std::size_t i = 0, j = 0; !timed_out && i < N && j < M;) {
                 if (a[pre + i] == g_entries[pre + j].exact) align[cmd[pre + i]] = static_cast<int>(pre + j), ++i, ++j;
                 else if (T(i + 1, j) >= T(i, j + 1)) ++i;
                 else ++j;
             }
         }
     }
-    const auto SurfaceOf = [&](U i) {
-        const Command& c = frame.commands[i];
-        return c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr;
-    };
     // The motion draw i's partner by order gives it; false when it has none.
     const auto AlignMotion = [&](U i, float* dx, float* dy) {
         const Command& c = frame.commands[i];
-        if (c.kind != Cmd::kDraw || c.count == 0 || align[i] < 0) return false;
+        if (!IsDraw(c) || align[i] < 0) return false;
         const Vertex& p = g_vertices[g_entries[align[i]].first];
         *dx = p.x - frame.vertices[c.first].x;
         *dy = p.y - frame.vertices[c.first].y;
@@ -316,7 +342,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             int seen = 0;
             for (std::int64_t j = static_cast<std::int64_t>(i) + dir; j >= 0 && j < static_cast<std::int64_t>(frame.n_commands) && seen < 6; j += dir) {
                 const Command& o = frame.commands[j];
-                if (o.kind != Cmd::kDraw || o.count == 0) continue;
+                if (!IsDraw(o)) continue;
                 ++seen;
                 if (!AlignMotion(static_cast<U>(j), &ox, &oy)) continue;
                 if ((ox - dx) * (ox - dx) + (oy - dy) * (oy - dy) <= 2.0f * 2.0f) return true;
@@ -332,11 +358,11 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     std::vector<Last> last;   // a frame binds tens of surfaces: a linear search
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
-        if (c.kind != Cmd::kDraw || c.count == 0) continue;
+        if (!IsDraw(c)) continue;
         ++s.draws;
         const Vertex& at = frame.vertices[c.first];
-        const Entry e = EntryOf(c, frame.vertices + c.first);
-        const void* surface = c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr;
+        const Entry& e = cur[i];
+        const void* surface = SurfaceOf(c);
         // What to agree with: the surface's vote, and what its last paired draw did.
         float want[3][2] = {};
         int wants = 0;
@@ -350,7 +376,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         int prev_paired = -1;
         for (std::int64_t j = static_cast<std::int64_t>(i) - 1; j >= 0; --j) {
             const Command& o = frame.commands[j];
-            if (o.kind != Cmd::kDraw || o.count == 0) continue;
+            if (!IsDraw(o)) continue;
             if (done[j] == 2) prev_paired = static_cast<int>(j);
             break;
         }
@@ -379,8 +405,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const float d = dx * dx + dy * dy;
             if (look && (nearest_look < 0 || d < nearest_d)) nearest_look = k, nearest_d = d;
         };
-        const U looks = Each(g_by_exact, &Entry::exact, e.exact, [&](int k) { Try(k, true); });
-        Each(g_by_loose, &Entry::loose, e.loose, [&](int k) {
+        const U looks = EachUnused(g_by_exact, &Entry::exact, e.exact, [&](int k) { Try(k, true); });
+        EachUnused(g_by_loose, &Entry::loose, e.loose, [&](int k) {
             if (g_entries[k].exact != e.exact) Try(k, false);
         });
         const bool any = best >= 0;
@@ -427,22 +453,24 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                 cost = std::min(cost, std::sqrt((ax - want[w][0]) * (ax - want[w][0]) + (ay - want[w][1]) * (ay - want[w][1])));
             if (cost > best_cost + 1.0f) by_order = false;
         }
+        // A paired draw's motion is what the next draw of its surface agrees with.
+        const auto Remember = [&] {
+            done[i] = 2;
+            if (mine) mine->dx = half_dx[i] * 2, mine->dy = half_dy[i] * 2;
+            else last.push_back({surface, half_dx[i] * 2, half_dy[i] * 2});
+        };
         if (by_order && Pair(i, g_entries[align[i]])) {
-            done[i] = 2;
+            Remember();
             ++s.exact;
-            if (mine) mine->dx = half_dx[i] * 2, mine->dy = half_dy[i] * 2;
-            else last.push_back({surface, half_dx[i] * 2, half_dy[i] * 2});
         } else if (best >= 0 && (agrees || clear) && Pair(i, g_entries[best])) {
-            done[i] = 2;
+            Remember();
             ++(best_is_look ? s.exact : s.loose);
-            if (mine) mine->dx = half_dx[i] * 2, mine->dy = half_dy[i] * 2;
-            else last.push_back({surface, half_dx[i] * 2, half_dy[i] * 2});
         } else if (nearest_look >= 0 && looks <= 2 && nearest_d <= cap / 16 && Pair(i, g_entries[nearest_look])) {
             // Within a quarter of the cap: a line of text that changed has
             // letters whose only look-alike is a letter of the old line, and
             // they slid in from where those stood (the sixth sweep, the
             // shop's message bar).
-            done[i] = 2;
+            Remember();
             ++s.exact;
         } else if (any) {
             done[i] = 1;
@@ -473,7 +501,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     const int n = static_cast<int>(frame.n_commands);
     for (int i = 0; i < n; ++i) {
         const Command& c = frame.commands[i];
-        if (c.kind != Cmd::kDraw || c.count == 0 || done[i] == 2) continue;
+        if (!IsDraw(c) || done[i] == 2) continue;
         // Textured draws alone: a flat one with no pair is a fade or a tint
         // whose colour changed, and following a window's ground it uncovered
         // a strip of the picture (the sweep of 2026-11-13, the world map).
@@ -499,8 +527,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             for (int j = std::max(0, i - kReach); j < std::min(n, i + kReach + 1); ++j) {
                 const Command& q = frame.commands[j];
                 if (done[j] != 2 || q.kind != Cmd::kDraw) continue;
-                const bool same_surface = (c.state.texture ? c.state.texture->surface : nullptr) ==
-                                          (q.state.texture ? q.state.texture->surface : nullptr);
+                const bool same_surface = SurfaceOf(c) == SurfaceOf(q);
                 if (!same_surface || q.state.blend_enable != c.state.blend_enable || q.state.topology != c.state.topology) continue;
                 for (U m = 0; m < q.count; ++m) {
                     const Vertex& p = frame.vertices[q.first + m];
@@ -531,7 +558,8 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     // sweep of 2026-11-13: a spell's sphere, the desert floor, a dragon's
     // breath). Such a run of the list is shown where the frame has it, whole.
     struct Run {
-        U n, breaks;
+        U n, breaks, soft;
+        bool parted, letters;
     };
     std::vector<Run> runs;
     std::vector<U> run_of(frame.n_commands, 0);
@@ -539,9 +567,67 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const void* surface = nullptr;
         bool blend = false, open = false;
         float px0 = 0, py0 = 0, px1 = 0, py1 = 0, pmx = 0, pmy = 0;
+        U prev = 0;
+        // Where two touching draws share corners (half a pixel), the corners
+        // say whether they go different ways: 1 when a shared corner parts in
+        // the in-between, 0 when all stay together, -1 when they share none.
+        // A mesh that changes shape between two frames has neighbours whose
+        // first vertices move differently and whose shared corners do not
+        // part: the rope bridge's deck lifts every other row of planks 5
+        // pixels one frame in four, and by first vertices its runs of two and
+        // three tiles were shown unmoved beside moved ones (the owner,
+        // 2026-11-13: a step in the far planks, hairlines between them).
+        const auto SharedCornersPart = [&](const Command& a, const Command& b) {
+            int shared = -1;
+            for (U k = 0; k < a.count; ++k) {
+                const Vertex& p = frame.vertices[a.first + k];
+                for (U m = 0; m < b.count; ++m) {
+                    const Vertex& q = frame.vertices[b.first + m];
+                    if ((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y) > 0.25f) continue;
+                    shared = 0;
+                    const float ex = (out[a.first + k].x - p.x) - (out[b.first + m].x - q.x);
+                    const float ey = (out[a.first + k].y - p.y) - (out[b.first + m].y - q.y);
+                    if (ex * ex + ey * ey > 0.75f * 0.75f) return 1;
+                }
+            }
+            return shared;
+        };
+        // Two letters of a line: the font gives each letter a surface of its
+        // own, drawn with the same texture coordinates and the same box, so
+        // a line of text is a run of surfaces, one a letter. Where a line
+        // changes outright, its new letters pair with whatever stood at the
+        // surface's vote - another letter of the old line by shape, the same
+        // letter of another word, a partner by order in another place - and
+        // halfway they slid in from there (the shop, Frame_Counter 1860:
+        // "Def1 Wgt0" to "Buy an item"; 1788, the list's letters).
+        const auto LettersAlike = [&](const Command& a, const Command& b) {
+            if (!a.state.texture || !b.state.texture || SurfaceOf(a) == SurfaceOf(b) || a.count != b.count) return false;
+            const Vertex* p = frame.vertices + a.first;
+            const Vertex* q = frame.vertices + b.first;
+            // ... upright on the screen, as a letter is. The sea's tiles are
+            // a surface each with the same coordinates and box too, and in a
+            // run of their own one break left holes in the sea (bridgeWalk,
+            // Frame_Counter 1452); seen from the camera they are not upright.
+            float x0 = p[0].x, x1 = p[0].x, y0 = p[0].y, y1 = p[0].y;
+            for (U k = 1; k < a.count; ++k) {
+                x0 = std::min(x0, p[k].x), x1 = std::max(x1, p[k].x);
+                y0 = std::min(y0, p[k].y), y1 = std::max(y1, p[k].y);
+            }
+            for (U k = 0; k < a.count; ++k) {
+                const bool on_x = std::fabs(p[k].x - x0) < 0.01f || std::fabs(p[k].x - x1) < 0.01f;
+                const bool on_y = std::fabs(p[k].y - y0) < 0.01f || std::fabs(p[k].y - y1) < 0.01f;
+                if (!on_x || !on_y) return false;
+            }
+            for (U k = 0; k < a.count; ++k) {
+                if (p[k].u != q[k].u || p[k].v != q[k].v) return false;
+                const float ex = (p[k].x - p[0].x) - (q[k].x - q[0].x), ey = (p[k].y - p[0].y) - (q[k].y - q[0].y);
+                if (ex * ex + ey * ey > 0.25f) return false;
+            }
+            return true;
+        };
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
-            if (c.kind != Cmd::kDraw || c.count == 0) continue;
+            if (!IsDraw(c)) continue;
             const Vertex* v = frame.vertices + c.first;
             float x0 = v[0].x, x1 = v[0].x, y0 = v[0].y, y1 = v[0].y;
             for (U k = 1; k < c.count; ++k) {
@@ -549,17 +635,31 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                 y0 = std::min(y0, v[k].y), y1 = std::max(y1, v[k].y);
             }
             const float mx = half_dx[i] * 2, my = half_dy[i] * 2;
-            const bool same = open && SurfaceOf(i) == surface && (c.state.blend_enable != 0) == blend;
+            const bool same_blend = open && (c.state.blend_enable != 0) == blend;
+            const bool letter = same_blend && SurfaceOf(c) != surface && LettersAlike(frame.commands[prev], c);
+            const bool same = same_blend && (SurfaceOf(c) == surface || letter);
+            if (letter) runs.back().letters = true;
             if (!same) {
-                runs.push_back({0, 0});
-                surface = SurfaceOf(i), blend = c.state.blend_enable != 0, open = true;
+                runs.push_back({0, 0, 0, false, false});
+                surface = SurfaceOf(c), blend = c.state.blend_enable != 0, open = true;
             } else if (x0 <= px1 + 2 && px0 <= x1 + 2 && y0 <= py1 + 2 && py0 <= y1 + 2) {
+                const int part = SharedCornersPart(frame.commands[prev], c);
                 const float d = std::sqrt((mx - pmx) * (mx - pmx) + (my - pmy) * (my - pmy));
                 const float big = std::sqrt(std::max(mx * mx + my * my, pmx * pmx + pmy * pmy));
-                if (d > std::max(4.0f, big * 0.5f)) ++runs.back().breaks;
+                const bool differ = d > std::max(4.0f, big * 0.5f);
+                // Neighbours whose corners stay together and whose first
+                // vertices differ count only in a run where some corner does
+                // part: a spell's sphere, whose facets trade looks, keeps most
+                // of its corners and shows streaks (bossAndFlash,
+                // Frame_Counter 3470); the deck parts none.
+                if (part > 0) ++runs.back().breaks, runs.back().parted = true;
+                else if (part < 0 && differ) ++runs.back().breaks;
+                else if (differ) ++runs.back().soft;
             }
             ++runs.back().n;
             run_of[i] = static_cast<U>(runs.size() - 1);
+            prev = i;
+            surface = SurfaceOf(c);   // a line of letters goes on from its last letter
             px0 = x0, px1 = x1, py0 = y0, py1 = y1, pmx = mx, pmy = my;
         }
     }
@@ -574,7 +674,10 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const Command& c = frame.commands[i];
             if (c.kind == Cmd::kDraw && c.count != 0 && done[i] != 2) ++lost;
         }
-        for (const Run& r : runs) breaks += r.breaks;
+        for (Run& r : runs) {
+            if (r.parted) r.breaks += r.soft;
+            breaks += r.breaks;
+        }
         if (g_debug) bof3::Log("interp-dbg  CUT? draws %u lost %u breaks %u", s.draws, lost, breaks);
         if (s.draws >= 16 && (lost * 4 > s.draws || breaks * 10 > s.draws)) {
             std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));
@@ -585,12 +688,15 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     }
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
-        if (c.kind != Cmd::kDraw || c.count == 0) continue;
+        if (!IsDraw(c)) continue;
         const Run& r = runs[run_of[i]];
-        if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, half_dx[i], half_dy[i]);
+        if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u letters %d half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, r.letters, half_dx[i], half_dy[i]);
         // A long run takes a few breaks (a field's layer has the scene's
         // parts in it); a short one - a window's text - takes one.
-        const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2);
+        // A line of letters takes none: its letters are one thing, and one
+        // letter going its own way is one that changed (the shop's message
+        // bar: only its last letter slid, from a letter of the old line).
+        const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2) || (r.letters && r.breaks >= 1);
         if (!broken) continue;
         std::memcpy(out + c.first, frame.vertices + c.first, c.count * sizeof(Vertex));
         ++s.snapped;

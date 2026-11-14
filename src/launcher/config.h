@@ -232,6 +232,11 @@ struct Config {
     // DIV-0042: the picture on the window at whole multiples of its size
     // (the default) or stretched to the client's height (BOF3X_SNAP=0).
     bool snap = true;
+    // DIV-0230: a frame between each two of the game's frames, from the draws
+    // of both (docs/frame-interpolation.md). interp=0|1 -> BOF3X_INTERP=1
+    // when on; any other value is dropped to the default (0, the original's
+    // pace of pictures), as snap= is.
+    bool interp = false;
     // DIV-0045 / DIV-0046 / DIV-0187: the cheats on the Cheats sub-page
     // (docs/cheats.md). The multipliers, 0..10, go out as BOF3X_EXP /
     // BOF3X_ZENNY when not 1; the steal switch as BOF3X_STEAL=1 when on; the

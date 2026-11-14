@@ -8,7 +8,9 @@
 #include "render/render_shim.h"
 
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
@@ -1224,19 +1226,30 @@ void PresentInBetween() {
     const U n_commands = g_frame.n_commands, n_vertices = g_frame.n_vertices, n_walks = g_n_walks;
     pillarbox::Cover();
     interp::Stats s = {};
-    // BOF3X_INTERP_DEBUG=<Frame_Counter>: that in-between's every pair and failure (interp-dbg).
-    static int debug_at = -2;
+    // BOF3X_INTERP_DEBUG=<Frame_Counter> or <first>-<last>: those in-betweens'
+    // every pair and failure (interp-dbg), each headed by a FRAME line.
+    static int debug_at = -2, debug_to = -1;
     if (debug_at == -2) {
-        char v[16] = "";
+        char v[32] = "";
         debug_at = bof3::os::GetEnv("BOF3X_INTERP_DEBUG", v, sizeof v) > 0 ? std::atoi(v) : -1;
+        const char* dash = std::strchr(v, '-');
+        debug_to = dash ? std::atoi(dash + 1) : debug_at;
     }
-    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) == debug_at;
-    if (interp::Build(g_frame, g_mid_vertices, max_move, &s)) {
+    interp::g_debug = debug_at >= 0 && static_cast<int>(Frame_Counter) >= debug_at && static_cast<int>(Frame_Counter) <= debug_to;
+    if (interp::g_debug) bof3::Log("interp-dbg  FRAME %u", static_cast<U>(Frame_Counter));
+    const std::uint64_t t0 = bof3::os::Counter();
+    const bool built = interp::Build(g_frame, g_mid_vertices, max_move, &s);
+    const double build_ms = static_cast<double>(bof3::os::Counter() - t0) * 1000.0 / static_cast<double>(bof3::os::CounterFrequency());
+    if (built) {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;
         g_in_between(mid);
         static interp::Stats sum;
         static U frames;
+        static double sum_ms, max_ms;
+        sum_ms += build_ms;
+        max_ms = std::max(max_ms, build_ms);
+        sum.order_dropped += s.order_dropped;
         sum.draws += s.draws;
         sum.exact += s.exact;
         sum.loose += s.loose;
@@ -1247,11 +1260,13 @@ void PresentInBetween() {
         sum.snapped += s.snapped;
         if (++frames == 150) {
             bof3::Log("interp      150 in-between frames to Frame_Counter %u: %u draws a frame; exact %u, loose %u, too far %u, "
-                      "unmatched %u (followed %u); moved %u; snapped %u",
+                      "unmatched %u (followed %u); moved %u; snapped %u; match %.2f ms each, %.2f ms at most, order dropped %u",
                       static_cast<U>(Frame_Counter), sum.draws / frames, sum.exact / frames, sum.loose / frames,
-                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames, sum.snapped / frames);
+                      sum.far_ / frames, sum.unmatched / frames, sum.followed / frames, sum.moved / frames, sum.snapped / frames,
+                      sum_ms / frames, max_ms, sum.order_dropped);
             sum = {};
             frames = 0;
+            sum_ms = max_ms = 0;
         }
     }
     g_frame.n_commands = n_commands;
