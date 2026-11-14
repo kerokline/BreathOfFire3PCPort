@@ -1016,6 +1016,97 @@ measuring process: Extras under the third row ends at 475 of the window's
 its title, and another session uses the launcher on this machine); its
 expectations are updated for the third row over Extras and Page 2's boxes.
 No capture of the page; the owner has not seen it.
+## 4c-PK. Group PK as run
+
+*Group PK, 2026-11-14, worktree `D:\bof3x-runs\ng1114\pk\wt` (branch
+`new-game/pk` off `new-game/round` `2207d9ce`). Capstone over the held
+discs through `loc_build.open_disc`; scratch scripts and every read-off in
+`D:\bof3x-runs\ng1114\pk\s`. No game byte below: addresses, offsets, counts
+and code constants only.*
+
+**Call 9: the 8-pixel kana are on the Japan disc, in the layer's own font
+file.** The Japan disc's small draw (`SLPS_009.90` `0x8014FD78`, the twin
+of `Text_DrawSmall`) samples texture page `0x2F`, which is `ENDKANJI.EMI`
+section 0 - the sheet `build_table_ja` already puts into the `ja-JP` font
+whole. For colour 0 its table `0x8017FF18` gives v base 0 and height 8; a
+byte below `0x5B` is cell `b - 0x20` from y 0, a kana byte (`0x5B..0xFE`)
+cell `b - 0x5B` from v = base - `0x58` as a byte (y `0xA8`), a `0x15 nn`
+code cell `nn + 0x40` from y 0, 32 cells of 8 x 8 to a row; `0xFF` advances
+8. All 164 kana cells have ink (counted on `psx-jp`). The set was in the
+layer already, but as 12-pixel cells: an 8 x 8 cell is never on a 12-pixel
+cell's boundary of its own, so no glyph index named one.
+
+What changed (`tools/loc_build.py` only, no `src/`): a Japanese layer's
+legend strings are encoded by `ja_small_encode` - each character the
+two-byte code of a glyph made from its 8 x 8 cell tripled to 24 x 24 (as
+DIV-0016's Latin set: `Text_DrawSmall` shows the whole glyph at 16 x 16),
+allocated on first use after the pair codes, an index whose low byte is 0
+skipped (its code would carry a NUL), advance 8. `ja_small_chunks` appends
+those glyphs to kinds 3 and 4 after `ja_pair_chunks`; a refused chunk
+allocates none. `Text_DrawSmall` has no glyph bound and the string draw's
+bound follows the table (DIV-0016), so nothing in `src/` changes; the
+reader is encoding-blind.
+
+Measured (`loc_build.py all --discs` with the tree before and after, over a
+PC game folder): 1,233 files each; 1,232 byte-identical. `ja-JP.FIRST.DAT`
+differs in three chunks only: kind 3 grows by 27 glyphs (`0xDF3..0xE0D`, 26
+cells and the skipped `0xE00`) with its first 3,571 glyphs unchanged, kind 4
+by 27 bytes likewise, and kind 22 by its legend entries alone (all 8 in each
+copy, the same byte lengths, so the same size, 1,710 bytes, and the same
+rooms); grid, code map, labels and operations unchanged; the chunk passes
+`name_grid_check`. `psp-jp` (its EMIs, converter called on the opened disc):
+the same chunk and the same 26 cells, pixel for pixel. The glyphs were
+rendered in scratch and read as the disc's kana; nothing has been drawn on a
+screen. Kind 7's Japanese strings (the Config screen) still use the
+12-pixel kana at two thirds: moving them is the same encoding, not done.
+
+**Call 8: `psp-eu`'s parts are all on its disc; its input step is a third
+shape.** Read in `BOOT.BIN` (image offsets; its pointers are link-time
+offsets, a `.text`-range value used as data is `.bss`, `tools/psp_elf.py`):
+
+| Part | `START` | `COMMU02` | Against `psx-us` |
+|---|---|---|---|
+| grid (288 bytes) | `0x2EC7A8` | `0x2EF1C9` | equal (M2's md5) |
+| labels (4 x 5) | `0x2ECB18` | `0x2EF78F` | equal |
+| legend table (8 pointers) | `0x2ECB44` | `0x2EF6FC` | entries 0..4 and 7 equal; 5 and 6 one byte each, empty on the US disc |
+| drawer | `0xC3CD0` | `0x11645C` | West: codes 1..4 at slots 0..3, colours 4, 4, 2, 2, count 5, the same pitches |
+| legend | `0xC3FD0` | `0x1149BC` | as the US ops except rows 1..3 of the button column (below) |
+| input step | `0xC36C0` | not read | not West (below) |
+| page byte | `.bss` + `0x8261B`, one store, constant 2 | `0x2EF1C8`, no store, static 2 | page 2 |
+
+The PSP's code passes arguments 5..8 in `$t0..$t3`, uses branch-likely
+instructions and copies the label block with a call: `MipsRun` reads none
+of that today, and `loc_build.py` reads no `BOOT.BIN` function.
+
+The difference that matters: the PSP `START` input step's backspace is
+pressed bit `0x20` (West `0x10`), the name cursor moves on repeated `0xA` /
+`0x5` only (West adds pressed `0x20` / `0x80`); confirm `0x40`, finish
+`0x800`, the codes' actions and Left / Right from a special are the West's.
+Both PSP legends match that step, not the West's: the button column keeps
+tile u `0x1D` on row 0, has u `0x1B` (US: row 2's) on row 1, and draws
+entries 6 and 5 (count 1) on rows 2 and 3 where the US draws tiles u `0x1B`
+and `0x1E`. A chunk with family 1 and the PSP's legend would put the West
+routine's cursor + 1 button beside the backspace text. No chunk is written;
+the refusal now says this (`read_name_grid`). The owner's choice, each
+still to build: (a) a third family in 5a with the PSP's bits and its own
+legend (the reader and NG's routine change, `name_grid.cpp`); (b) family 1,
+the PlayStation West's routine, with the US legend's operations borrowed
+from a held PlayStation disc and the PSP's strings and grid (the strings
+used are equal); (c) family 1 with the PSP's legend, row 1 mislabelled.
+Any of them needs `BOOT.BIN`'s functions read (the conventions above).
+
+**4a's failing PSP build.** `loc_build.py all --game` (over a PC install)
+with a PSP disc stops in `check_relaid` because the PSP's glyph atlas
+(`STATUS` `0x1C080200`) differs from the port's in one 16 x 16 icon, 121
+pixels, inside the rule's strip (measured in `loc-build-psp.md` 4). That is
+by design: the importer builds a PSP layer disc-only (`--cache`,
+`resolve_languages(psp=True)` only there), where `check_relaid` does not
+run. Not the discs held, not a regression; nothing changed.
+
+**Run:** `loc_build.py selftest` (with a new check of the 8 x 8 path on a
+made-up sheet), `importer.py check`, both pass. **Not run:** the game; a
+disc-only `ja-JP` or `psp-jp` layer build end to end; the 64-bit build
+(no `src/` change).
 
 ## 5. The contracts
 
@@ -1054,14 +1145,19 @@ reader takes the chunk each time, replacing what it holds.
 **No chunk** is written for a build GD cannot read whole: every part below
 (the grid, the code map, both copies' labels and both copies' legends) is
 found and encodes, or the build gets no kind-22 chunk and the layer's report
-says why. `psp-eu` today (its legend was not found, its code not read; call
-8) gets none. There is no partial chunk.
+says why. `psp-eu` today gets none: its parts are all in `BOOT.BIN`, but
+its input step is neither family below and its legend draws that step's
+buttons (call 8; 4c-PK). There is no partial chunk.
 
 All numbers are little-endian. "Text encoding" is the layer's encoding for
 `Text_DrawAt` (`encode_text` / `encode_char`, `ja_encode` for a Japanese
 disc: the bytes a name is stored in). "Small encoding" is the layer's
-encoding for `Text_DrawSmall`, as the layer's other 8 x 8 strings are
-(kind 7's).
+encoding for `Text_DrawSmall`: on a Latin layer as its other 8 x 8 strings
+are (kind 7's, the 8 x 8 set at glyph `0xA00`, DIV-0016); on a Japanese
+layer the Japan disc's own 8 x 8 set, each character a two-byte code of a
+glyph appended to the layer's font after the pair codes (`ja_small_glyph`;
+call 9, 4c-PK), and the word separator `0x20`. Kind 7's Japanese strings
+still draw the 12-pixel kana at two thirds.
 
 ### The header, 0x14 bytes
 

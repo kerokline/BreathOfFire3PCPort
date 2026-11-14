@@ -212,6 +212,21 @@ JA_SPACE = 0xFF                      # the JP word separator, 8,389 uses: a spac
 PAIR_AT, PAIR_KIND = 0xD10, 13
 ja_pairs = {}                        # (glyph a, glyph b) -> pair glyph index
 ja_sheets = None                     # (single, kanji) rows, kept for the placeholders
+# The Japan disc's 8 x 8 set, for the 8 px UI draw (kind 22's legend; the
+# owner's answer to call 9, 2026-11-14). It is in ENDKANJI.EMI section 0, the
+# sheet build_table_ja puts in whole as 12 px cells - so in the layer, but
+# never on a cell boundary of its own. Where, is the JP small draw's (SLPS_009.90
+# 0x8014FD78, read with capstone 2026-11-14): texture page 0x2F (the sheet) and,
+# for colour 0, v base 0 and height 8 (its table 0x8017FF18); a byte b < 0x5B
+# is cell b - 0x20 from y 0, a byte 0x5B..0xFE (the kana) cell b - 0x5B from
+# v = base - 0x58 as a byte, so y 0xA8, a 0x15 nn code cell nn + 0x40 from y 0,
+# 32 cells of 8 x 8 a row; 0xFF advances 8 and draws nothing. All 164 kana
+# cells have ink on psx-jp. Each cell the legend names is appended tripled
+# (as DIV-0016's Latin set) after the pair codes, when it is first named
+# (ja_small_glyph), and the font grows by those alone (ja_small_chunks).
+JA_SMALL_COLS, JA_SMALL_KANA_Y0 = 32, 0xA8
+ja_small = {}                        # (lead, code) -> its 8 x 8 glyph index
+ja_small_base = []                   # [the first small glyph], fixed at the first allocation
 GLYPH_LIMIT = 0x1000             # ours, DIV-0016; the original 0x516C94 was cmp cx, 0xA00
 PC_ADVANCE = 12                  # 0x497A44, 0x516CDE
 TEXT_ROOM = 0x8000               # the CLUT strip as loaded starts here; the system pool at
@@ -685,6 +700,116 @@ def ja_pair_chunks(font_chunks):
     pairs = sorted(ja_pairs.items(), key=lambda kv: kv[1])
     body = struct.pack("<H", len(pairs)) + b"".join(struct.pack("<HH", a, b) for (a, b), g in pairs)
     return out + [(PAIR_KIND, PAIR_AT, body)]
+
+
+def ja_small_cell(code, lead=None):
+    """(x, y) of a JP code's 8 x 8 cell in ENDKANJI.EMI section 0, as the JP
+    small draw maps it (JA_SMALL_KANA_Y0's note), or None for a code it does
+    not draw as a cell (the kanji leads, controls, the space)."""
+    if lead == 0x15:
+        i, y0 = code + 0x40, 0
+    elif lead is None and 0x20 <= code < 0x5B:
+        i, y0 = code - 0x20, 0
+    elif lead is None and 0x5B <= code <= 0xFE:
+        i, y0 = code - 0x5B, JA_SMALL_KANA_Y0
+    else:
+        return None
+    x, y = 8 * (i % JA_SMALL_COLS), y0 + 8 * (i // JA_SMALL_COLS)
+    return (x, y) if y + 8 <= 256 else None      # the sheet's 256 rows (ja_rows)
+
+
+def ja_small_drawn(code, lead=None):
+    """Whether the small draw has a cell for a JP code and (with the sheet
+    read) the cell has ink."""
+    cell = ja_small_cell(code, lead)
+    if cell is None:
+        return False
+    if ja_sheets is not None:
+        x, y = cell
+        return any(ja_sheets[0][y + j][x + i] for j in range(8) for i in range(8))
+    return True
+
+
+def ja_small_glyph(code, lead=None):
+    """The glyph index of a JP code's 8 x 8 cell, allocated after the pair
+    codes on first use; None if ja_small_drawn is not. Indices whose low byte
+    is 0 are skipped: the two-byte code would carry a NUL."""
+    key = (lead, code)
+    if key in ja_small:
+        return ja_small[key]
+    if not ja_small_drawn(code, lead):
+        return None
+    if not ja_small_base:
+        ja_small_base.append(PAIR_AT + len(ja_pairs))
+    g = max(ja_small.values()) + 1 if ja_small else ja_small_base[0]
+    if g & 0xFF == 0:
+        g += 1
+    if g > GLYPH_LIMIT:
+        raise SystemExit("the 8 x 8 glyphs run past glyph 0x%X" % GLYPH_LIMIT)
+    ja_small[key] = g
+    return g
+
+
+def ja_small_encode(raw):
+    """A JP legend string -> PC bytes for Text_DrawSmall from the disc's 8 x 8
+    set: each character the two-byte code of its small glyph, the word
+    separator 0x20 (the PC's blank of 8, as the disc's 0xFF); None if a code
+    has no small cell (and then nothing is allocated)."""
+    units, i = [], 0
+    while i < len(raw):
+        if raw[i] in LEAD:
+            if i + 1 >= len(raw):
+                return None
+            units.append((raw[i + 1], raw[i]))
+            i += 2
+        else:
+            units.append((raw[i], None))
+            i += 1
+    if not all(u == (JA_SPACE, None) or ja_small_drawn(*u) for u in units):
+        return None
+    out = bytearray()
+    for u in units:
+        if u == (JA_SPACE, None):
+            out.append(SPACE_OUT)
+        else:
+            g = ja_small_glyph(*u)
+            out += bytes([0x80 | (g >> 8), g & 0xFF])
+    return bytes(out)
+
+
+def ja_small_chunks(font_chunks):
+    """Extend the font's kind-3 table and kind-4 advances with the 8 x 8 glyphs
+    ja_small_glyph allocated: blank up to the first, each cell tripled to the
+    24 x 24 glyph (the 8 px draw shows the whole glyph at 16 x 16, the
+    PlayStation's doubled 8 x 8; DIV-0016), advance 8. After ja_pair_chunks."""
+    if not ja_small:
+        return font_chunks
+    if ja_small_base[0] != PAIR_AT + len(ja_pairs):
+        raise SystemExit("8 x 8 glyphs from 0x%X, but the pair codes end at 0x%X: a pair was made after them"
+                         % (ja_small_base[0], PAIR_AT + len(ja_pairs)))
+    by_index = {g: k for k, g in ja_small.items()}
+    out = []
+    for kind, tag, payload in font_chunks:
+        if kind == 3:
+            table = bytearray(payload)
+            if len(table) // font_pc.GLYPH_BYTES > ja_small_base[0]:
+                raise SystemExit("the font holds %d glyphs, past the 8 x 8 base 0x%X"
+                                 % (len(table) // font_pc.GLYPH_BYTES, ja_small_base[0]))
+            while len(table) // font_pc.GLYPH_BYTES <= max(by_index):
+                g = len(table) // font_pc.GLYPH_BYTES
+                if g in by_index:
+                    x, y = ja_small_cell(by_index[g][1], by_index[g][0])
+                    table += pc_glyph([ja_sheets[0][y + j][x:x + 8] for j in range(8)], 3)
+                else:
+                    table += bytes(font_pc.GLYPH_BYTES)
+            payload = bytes(table)
+        elif kind == 4:
+            adv = bytearray(payload)
+            while len(adv) <= max(by_index):
+                adv.append(CELL_W if len(adv) in by_index else PC_ADVANCE)
+            payload = bytes(adv)
+        out.append((kind, tag, payload))
+    return out
 
 
 def ja_cell_rows(glyph):
@@ -5170,7 +5295,10 @@ def build_standins(game, disc, overlays):
 #     constant (2) and that is the one page; on a Japan disc the input step
 #     cycles it through the block's three;
 #   - the actions of the special codes are the input step's, by its shape
-#     (5a's table: Japan quit 4 and finish 5, West quit 3 and finish 4).
+#     (5a's table: Japan quit 4 and finish 5, West quit 3 and finish 4);
+#   - a legend string is in the layer's small encoding (grid_small): on a
+#     Japanese layer the Japan disc's own 8 x 8 cells, appended to the font
+#     after the pair codes (ja_small_glyph, ja_small_chunks).
 #
 # No partial chunk (5a): a part not found, a cell, a label or a named legend
 # entry the layer cannot encode, or a chunk 5a's pass rules (name_grid_check)
@@ -5810,13 +5938,14 @@ def grid_legend_ops(calls, table, copy):
 
 
 def grid_small(raw):
-    """A legend string in the layer's encoding for Text_DrawSmall, as kind 7's
-    strings are: a Latin layer's 8 x 8 cells (small_char), a Japanese layer's
-    ordinary glyph codes (ja_fit / encode_text: the ja-JP layer has no 8 x 8
-    set, and 0x516E70 draws a whole 24 x 24 glyph at two thirds,
-    docs/config-screen.md section 4)."""
+    """A legend string in the layer's encoding for Text_DrawSmall: a Latin
+    layer's 8 x 8 cells (small_char, as kind 7's strings are), a Japanese
+    layer's the Japan disc's own 8 x 8 cells (ja_small_encode: the set its
+    small draw uses, appended after the pair codes - call 9, 2026-11-14;
+    before, the 12 px glyphs at two thirds, as kind 7's Japanese strings
+    still are)."""
     if donor_ja:
-        return encode_text(raw)
+        return ja_small_encode(raw)
     enc = [small_char(c) for c in raw]
     return None if any(e is None for e in enc) else b"".join(enc)
 
@@ -5832,8 +5961,15 @@ def grid_cstr(sections, va, room):
 def read_name_grid(disc):
     """The disc's name grid as a reading (name_grid_payload's input), or GridRefused."""
     if is_psp(disc) and not donor_ja:
-        raise GridRefused("a PSP disc in English: its EMIs are the Japan build's, its own code is Allegrex "
-                          "and its legend was not found (call 8)")
+        # Group PK, 2026-11-14 (docs/new-game-round.md 4c-PK): every part is
+        # in BOOT.BIN - the grid, both copies' labels and 8-pointer legends,
+        # their drawers, legends and input steps - but its input step is a
+        # third shape (backspace, the name cursor's moves) and its legend shows
+        # that shape's buttons, where 5a's family byte holds only Japan and
+        # the PlayStation's West. Not read here until the owner says which.
+        raise GridRefused("a PSP disc in English: its parts are in BOOT.BIN (Allegrex, not read here), but its "
+                          "input step is neither of 5a's families and its legend draws that step's buttons "
+                          "(call 8, docs/new-game-round.md 4c-PK)")
     copies, grid_bytes, family, first, pages = [], None, None, None, None
     code_maps = []
     for copy in GRID_COPIES:
@@ -6187,17 +6323,26 @@ def name_grid_check(payload):
 def convert_name_grid(disc, build, report):
     """[(KIND_NAME_GRID, 0, payload)] for FIRST.DAT, or [] with the reason in `report`."""
     notes = []
+    small_before, base_before = dict(ja_small), list(ja_small_base)
+
+    def refuse(why):
+        # No chunk: the 8 x 8 glyphs its legend took are not added to the font.
+        ja_small.clear()
+        ja_small.update(small_before)
+        ja_small_base[:] = base_before
+        report.append("none: %s" % why)
+        return []
     try:
         reading = read_name_grid(disc)
         fields = encode_name_grid(reading, build or "unknown", notes)
     except (GridRefused, MipsError) as e:
-        report.append("none: %s" % e)
-        return []
+        return refuse(e)
     payload = name_grid_payload(fields)
     errs = name_grid_check(payload)
     if errs:
-        report.append("none: the chunk would fail 5a's pass rules (%s)" % "; ".join(errs[:6]))
-        return []
+        return refuse("the chunk would fail 5a's pass rules (%s)" % "; ".join(errs[:6]))
+    if len(ja_small) > len(small_before):
+        notes.append("legend in the disc's 8 x 8 set: %d glyphs from 0x%X" % (len(ja_small), min(ja_small.values())))
     kinds = [c[1] for c in fields["cells"]]
     report.append("%s, page%s %s, %d glyph / %d empty / %d special cells, %d codes, label slots %s, legend ops %s%s"
                   % (GRID_FAMILIES[fields["family"]], "s" if fields["pages"] > 1 else "",
@@ -6233,6 +6378,8 @@ def reset_donor():
     global ext_last, donor_ja, ja_sheets
     ext_last, donor_ja, ja_sheets = EXT_FIRST - 1, False, None
     ja_pairs.clear()
+    ja_small.clear()
+    del ja_small_base[:]
     button_counts.clear()
     save_names.clear()
     set_button_area("", None, False)
@@ -6605,6 +6752,9 @@ def build_all(args, disc_path):
         report = []
         overlays["FIRST.DAT"] += convert_name_grid(disc, grid_build_id(args, disc, disc_path), report)
         print("name grid (kind %d): %s" % (KIND_NAME_GRID, report[0]))
+        if donor_ja and ja_small:
+            # The legend's 8 x 8 glyphs, after the pair codes (call 9).
+            overlays["FIRST.DAT"] = ja_small_chunks(overlays["FIRST.DAT"])
     for name, chunks in overlays.items():
         write_overlay(src.out_path(args.lang, name), chunks)
     how = "left empty, disc-only" if src.disc_only else "kept as shipped"
@@ -7336,9 +7486,42 @@ def name_grid_selfcheck():
     if seen != want or run.copy_read != set(range(data + 0x141, data + 0x145)) or len(run.copy_written) != 4:
         errs.append("MipsRun: the made-up routine's calls %s, copied %d / %d bytes" % (seen, len(run.copy_read),
                                                                                      len(run.copy_written)))
-    global donor_ja
-    saved = donor_ja
+    global donor_ja, ja_sheets
+    saved, saved_sheets = donor_ja, ja_sheets
+    saved_small, saved_base, saved_pairs = dict(ja_small), list(ja_small_base), dict(ja_pairs)
     try:
+        # The Japanese legend's 8 x 8 glyphs (call 9) on a made-up sheet: a
+        # cell's place, the skip of an index whose low byte is 0, an inkless
+        # cell refused, nothing allocated for a string that does not encode,
+        # and the font extended with each cell tripled where its code says.
+        ja_small.clear()
+        del ja_small_base[:]
+        ja_pairs.clear()
+        ja_pairs.update({(0, i): PAIR_AT + i for i in range(0xEF)})   # 0xD10 + 0xEF = 0xDFF: the next is 0xE00
+        sheet = [[0] * 256 for _ in range(256)]
+        for (x, y), v in (((8, JA_SMALL_KANA_Y0), 2), ((16, JA_SMALL_KANA_Y0), 3)):
+            sheet[y + 1][x + 2] = v
+        ja_sheets = (sheet, sheet)
+        got = (ja_small_cell(0x5C), ja_small_cell(0x5D), ja_small_cell(0x41), ja_small_cell(0x01, 0x15),
+               ja_small_cell(0x12, 0x12), ja_small_cell(0x01))
+        if got != ((8, JA_SMALL_KANA_Y0), (16, JA_SMALL_KANA_Y0), (8, 8), (8, 16), None, None):
+            errs.append("ja_small_cell: %s" % (got,))
+        if ja_small_encode(bytes([0x5C, 0x5B])) is not None or ja_small:
+            errs.append("ja_small_encode: an inkless cell encoded, or allocated")
+        enc = ja_small_encode(bytes([0x5C, JA_SPACE, 0x5D, 0x5C]))
+        if enc != bytes([0x8D, 0xFF, 0x20, 0x8E, 0x01, 0x8D, 0xFF]) or ja_small_base != [0xDFF]:
+            errs.append("ja_small_encode: %s from %s" % (enc and enc.hex(" "), ja_small_base))
+        fc = ja_small_chunks([(3, 0, bytes(font_pc.GLYPH_BYTES * 0xD07)), (4, PC_ADVANCE, bytes([PC_ADVANCE]) * 0xD07)])
+        table, adv = fc[0][2], fc[1][2]
+        g = lambda i: table[font_pc.GLYPH_BYTES * i:font_pc.GLYPH_BYTES * (i + 1)]
+        want = pc_glyph([sheet[JA_SMALL_KANA_Y0 + j][8:16] for j in range(8)], 3)
+        if len(table) != font_pc.GLYPH_BYTES * 0xE02 or g(0xDFF) != want or any(g(0xE00)) or len(adv) != 0xE02 \
+                or adv[0xDFF] != CELL_W or adv[0xE00] != PC_ADVANCE or not any(want):
+            errs.append("ja_small_chunks: %d glyphs, the cell %s" % (len(table) // font_pc.GLYPH_BYTES, g(0xDFF) == want))
+        ja_sheets = None
+        ja_small.clear()
+        del ja_small_base[:]
+        ja_pairs.clear()
         for family in (1, 0):
             donor_ja = family == 0
             reading = name_grid_synthetic(family)
@@ -7454,7 +7637,12 @@ def name_grid_selfcheck():
                                                             [4, 0x50, 5, 0x2C, 1, 0x4C, 0x78, 0]]:
             errs.append("grid_legend_ops: the made-up calls fold to %s" % grid_legend_ops(calls, 0x1000, "synthetic"))
     finally:
-        donor_ja = saved
+        donor_ja, ja_sheets = saved, saved_sheets
+        ja_small.clear()
+        ja_small.update(saved_small)
+        ja_small_base[:] = saved_base
+        ja_pairs.clear()
+        ja_pairs.update(saved_pairs)
     return errs
 
 
