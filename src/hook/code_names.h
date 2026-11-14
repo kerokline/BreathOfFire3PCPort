@@ -10,7 +10,7 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 99;
+constexpr int kCount = 100;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
@@ -32,6 +32,7 @@ constexpr const char* kNames[kCount] = {
     "CfgOwnKeyTable",
     "Cheat_StealAlways",
     "CommuNameEntryAbandons",
+    "CommuNameGrid",
     "ConfigController",
     "ConfigJapaneseIcons",
     "ConfigLabelJapanese",

@@ -3245,6 +3245,7 @@ switch	CommuName_SlotRandomPick	detour	costly		src/game/community/commu_name.cpp
 switch	CommuName_SlotRandomStep	detour	costly		src/game/community/commu_name.cpp:1097	BOF3_INJECT
 switch	CommuName_SlotStep	detour	costly		src/game/community/commu_name.cpp:1090	BOF3_INJECT
 switch	CommuNameEntryAbandons	code	yes		src/game/community/commu_name.cpp:1071	PatchBytes
+switch	CommuNameGrid	code	yes		src/game/community/commu_name.cpp:1387	PatchBytes
 switch	CommuPose_Kind0	detour	costly		src/game/community/commu_sim.cpp:898	BOF3_INJECT
 switch	CommuPose_Kind4	detour	costly		src/game/community/commu_sim.cpp:899	BOF3_INJECT
 switch	CommuPose_Kind5	detour	costly		src/game/community/commu_sim.cpp:900	BOF3_INJECT
