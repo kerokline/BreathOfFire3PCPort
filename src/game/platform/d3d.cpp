@@ -3168,6 +3168,17 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
         if (glyph_draw::Word(e) == glyph && glyph_draw::Word(e + 2) == clut && glyph_draw::Long(e + 4) == glyph_draw::Long(glyph_draw::At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8))) break;
         if (free_slot == -1 && glyph_draw::Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
     }
+    // DIVERGENCE (D18, docs/new-game-round.md 4c-PK): with every entry used
+    // this frame and none a hit, Capcom's index runs one past the table (the
+    // overrun below). Ours, under g_full_cache_reuse, rebuilds an entry in
+    // turn instead: the draws already made from it keep the texture they were
+    // made with (the render shim snapshots a texture written with draws
+    // pending, render_shim.cpp BeforeWrite). Reached by the ja-JP name screen
+    // (katakana page, labels, the legend's 8 x 8 kana: over 128 glyphs).
+    if (i == glyph_draw::kEntries && free_slot == -1 && glyph_draw::g_full_cache_reuse) {
+        free_slot = static_cast<int>(glyph_draw::g_reuse_next % glyph_draw::kEntries);
+        glyph_draw::g_reuse_next = (glyph_draw::g_reuse_next + 1) % glyph_draw::kEntries;
+    }
     if (i == glyph_draw::kEntries && free_slot != -1) {
         i = static_cast<glyph_draw::U>(free_slot);
         if (Gfx_RenderFlags & 1) {
@@ -3181,11 +3192,12 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
             reinterpret_cast<Com1>(glyph_draw::Method(device, 0x24))(device);   // BeginScene
         }
     }
-    // Kept, and D18 in docs/known-defects.md: with all 128 entries used this
-    // frame and none a hit, i is 128 here - one entry past the table, which is
-    // the vertex block. SetTexture is handed the bits of vertex 0's sy
-    // (0x7CA95C) as a texture, and the in-use word lands on the low half of
-    // vertex 0's sz (0x7CA960). The addresses below reach exactly those bytes.
+    // Capcom's, kept when g_full_cache_reuse is off, and D18 in
+    // docs/known-defects.md: with all 128 entries used this frame and none a
+    // hit, i is 128 here - one entry past the table, which is the vertex
+    // block. SetTexture is handed the bits of vertex 0's sy (0x7CA95C) as a
+    // texture, and the in-use word lands on the low half of vertex 0's sz
+    // (0x7CA960). The addresses below reach exactly those bytes.
     if (!(Gfx_RenderFlags & 1)) {
         void** device = glyph_draw::Device();
         reinterpret_cast<glyph_draw::Com3>(glyph_draw::Method(device, 0x98))(device, 0, glyph_draw::Long(glyph_draw::At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0xC))); // SetTexture(0, tex)

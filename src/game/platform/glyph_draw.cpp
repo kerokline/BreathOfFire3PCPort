@@ -26,6 +26,8 @@ namespace glyph_draw {
 
 
 float g_texel_inset = 0.0f;
+bool g_full_cache_reuse = true;
+std::uint32_t g_reuse_next = 0;
 
 // DIV-0025, amended 2026-09-27: the inset in texture texels that puts a
 // screen pixel's sample at its own centre. The quad is 12 game units times
