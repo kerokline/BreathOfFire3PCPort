@@ -1407,10 +1407,13 @@ build does not (`D:\bof3x-runs\ng1114\bt\shots\ja_default_gdlayer\name_screen.pn
 
 **Run.** The 32-bit build. `BOF3X_SHADOW=name_grid,new_game`
 (self-test only, hosted, an ini-less launcher folder): `name_grid` 145
-checks, 0 mismatches; `new_game` 9, 0. `battle_commands.txt` under
+checks, 0 mismatches; `new_game` 9, 0. The whole suite
+(`BOF3X_SHADOW='*'`, self-test only, hosted, ini-less): "self-test only:
+done", game exit code 0, 922 self-test lines naming mismatches, every one
+0. The 64-bit preset builds (not run). `battle_commands.txt` under
 `BOF3X_OFF=NewGameNameEntry,NewGameOptions`, the tip's build against this
 one, `BOF3X_SHOT_EVERY=60`: 67 of 67 frames identical. **Not run:** the
-64-bit build; `fr-FR`, `de-DE`, `en-150`, `psp-eu` in a game (the French
+64-bit build in a game; `fr-FR`, `de-DE`, `en-150`, `psp-eu` in a game (the French
 fix is from the code and the ops, not seen); a disc-built install.
 
 **Ledger text for stage C** (5b's "the hand" line, amended, and two lines
