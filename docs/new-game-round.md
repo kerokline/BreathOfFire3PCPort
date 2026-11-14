@@ -801,6 +801,200 @@ disjoint inside a stage.
   there must restore it or be refused, as the other title states are
   ([`quicksave-round.md`](quicksave-round.md)). TF says which.
 
+## 5a. The grid chunk's layout
+
+*Group NG, 2026-11-14: the contract between GD (`tools/loc_build.py`
+writes it) and NG (`src/game/menu/name_grid.cpp` reads it). Layout only: no
+grid byte, label, legend string or message of either game is in this
+section (rule 1). The per-build values below are code constants read with
+capstone over the held discs (`D:\bof3x-runs\discs`, through
+`loc_build.open_disc`; the drawers, legends and input steps at the
+addresses of M2's `funcs.out`, read whole for `psx-jp`, `psx-us`, `psx-fr`
+and `psx-de`, and `psx-de` against `psx-fr` instruction by instruction).*
+
+**Where.** One chunk, **kind 22, tag 0**, in the language layer's
+`FIRST.DAT`. Kind 21 is taken (DIV-0225's town warp, `dat_load.cpp`
+`TakeChunk`, `tools/disc_patch_build.py` `WARP_KIND`), so 22 is the next
+free. `FIRST.DAT` is walked at start and again on a return to the title; the
+reader takes the chunk each time, replacing what it holds.
+
+**No chunk** is written for a build GD cannot read whole: every part below
+(the grid, the code map, both copies' labels and both copies' legends) is
+found and encodes, or the build gets no kind-22 chunk and the layer's report
+says why. `psp-eu` today (its legend was not found, its code not read; call
+8) gets none. There is no partial chunk.
+
+All numbers are little-endian. "Text encoding" is the layer's encoding for
+`Text_DrawAt` (`encode_text` / `encode_char`, `ja_encode` for a Japanese
+disc: the bytes a name is stored in). "Small encoding" is the layer's
+encoding for `Text_DrawSmall`, as the layer's other 8 x 8 strings are
+(kind 7's).
+
+### The header, 0x14 bytes
+
+| Off | Width | Field | Valid |
+|---|---|---|---|
+| `0x00` | 1 | version | 1 |
+| `0x01` | 1 | family: 0 Japan (`psx-jp`, `psp-jp`), 1 West (`psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`) | 0, 1 |
+| `0x02` | 1 | P, the pages in use | Japan 3, West 1 |
+| `0x03` | 1 | F, the disc's number of the first page in use | Japan 0, West 2; F + P <= 3 |
+| `0x04` | 1 | C, the special codes in the map | Japan 5, West 4 |
+| `0x05` | 3 | zero | 0 |
+| `0x08` | 12 | the build the chunk was read from, ASCII, NUL-padded (`exe_maps` id, e.g. `psx-eu-en`); for the log only | printable ASCII, then NULs |
+
+### The grid, P x 96 x 4 bytes, at `0x14`
+
+Pages F .. F + P - 1 in order; in each, rows 0..7, in each row columns 0..11.
+The routine's page cell holds the disc's page number (F + k), as on the
+PlayStation: a Western page is 2. Pages the disc carries but nothing reads
+(the Western 0 and 1) are not in the chunk. One record a cell:
+
+| Off | Field |
+|---|---|
+| +0 | the disc's code: what the PlayStation's buffer would hold for this cell |
+| +1 | kind: 0 empty, 1 glyph of one byte, 2 glyph of two bytes, 3 special |
+| +2 | the cell's first byte in text encoding (0 for kinds 0 and 3) |
+| +3 | its second byte (0 for kinds 0, 1 and 3) |
+
+Per kind: **0** code 0, both bytes 0. **1** code 6..0xFF, byte +2 in
+`0x01..0x7F`. **2** code 6..0xFF, byte +2 in `0x80..0xFF`. **3** code 1..C,
+the special code. A glyph's code is never below 6, so the input step's
+"is this a special" test (code non-zero and below 6) and the position test
+agree.
+
+### The code map, C x 4 bytes, after the grid
+
+Code 1 first. One record a code, the same for both copies:
+
+| Off | Field | Valid |
+|---|---|---|
+| +0 | action: 1 name cursor + 1 (a limit code), 2 name cursor - 1 (a limit code), 3 next page, 4 quit, 5 finish | each of 1, 2, 4, 5 exactly once; 3 once if P > 1, never if P = 1 |
+| +1 | label slot | below the copies' slot count S (with flag bit 0: slot + the last page's number below S) |
+| +2 | flags: bit 0, the label is slot + the page's number (Japan code 3: its label names the page) | bit 0 only |
+| +3 | the label's colour, `Text_DrawAt`'s third argument | 0..0xFF |
+
+Reference values, read from the drawers (US `START` `0x801E6490..0x801E6784`,
+French `0x801E6458..0x801E6770`, Japan `0x801E6418..0x801E675C` and research
+4.1) and the input steps (US `START` `0x801E4744..0x801E4E8C`; Japan M1):
+
+| Family | Code 1 | Code 2 | Code 3 | Code 4 | Code 5 |
+|---|---|---|---|---|---|
+| Japan | 1, slot 0, colour 4 | 2, slot 1, colour 4 | 3, slot 4, flag 1, colour 4 | 4, slot 2, colour 2 | 5, slot 3, colour 2 |
+| West | 1, slot 0, colour 4 | 2, slot 1, colour 4 | 4, slot 2, colour 2 | 5, slot 3, colour 2 | - |
+
+### Then the two copies, `START` (New Game) first, then `COMMU02` (the renamer)
+
+Each copy is a label block followed by a legend block.
+
+**The label block**, 4 + S x R bytes:
+
+| Off | Width | Field | Valid |
+|---|---|---|---|
+| +0 | 1 | S, the slots | Japan 7, US / EU 4, French / German 4; the same in both copies |
+| +1 | 1 | the draw count: `Text_DrawAt`'s fourth argument, characters | Japan 4, US / EU 5, French / German 7 (the disc's slot width); 1..15 |
+| +2 | 1 | R, the bytes a slot takes here, its NUL included | 2..32 |
+| +3 | 1 | zero | 0 |
+| +4 | S x R | each slot's string in text encoding, NUL-terminated within R, NUL-filled after | every slot the code map names is non-empty |
+
+The disc's slot is a fixed width; GD takes its bytes to the width or to a
+NUL, whichever is first, and encodes them.
+
+**The legend block**, 8 + E x R2 + N x 8 bytes:
+
+| Off | Width | Field | Valid |
+|---|---|---|---|
+| +0 | 1 | the box's width: `Menu_DrawBox(x + 3, y + 3, w, h, 0, window colour)` | `START` `0x78`, `COMMU02` `0x4D` in every build read |
+| +1 | 1 | the box's height | `0x2F` |
+| +2 | 1 | E, the legend's entries: the disc's 8-pointer table in pointer order | 8 |
+| +3 | 1 | R2, the bytes an entry takes here, its NUL included | 2..32 |
+| +4 | 1 | N, the draw operations | 1..32 |
+| +5 | 3 | zero | 0 |
+| +8 | E x R2 | each entry in small encoding, NUL-terminated within R2 | an entry an operation names is non-empty; an entry none names may be empty |
+| then | N x 8 | the operations, in the disc's draw order | below |
+
+**An operation**, 8 bytes; (x, y) is the legend's origin, the caller's:
+
+| +0 op | +1 | +2 | +3 | +4 | +5 | +6 | +7 | Draws |
+|---|---|---|---|---|---|---|---|---|
+| 1 text | dx | dy | entry | flags: bit 0, entry + the page's number | count | colour | 0 | `Text_DrawSmall(x + dx, y + dy, colour, count, entry)` |
+| 2 leaders | dx | dy | entry | rows | columns | x step | y step | `Text_DrawSmall(x + dx + xs * j, y + dy + ys * i, 0, 1, entry)` for each row i and column j |
+| 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `(cy << 6) | (cx >> 4)` |
+| 4 piece | dx | dy | piece id | the rect query's flags | CLUT, low | CLUT, high | 0 | a sprite of the menu piece's rectangle (`Menu_PieceRect`, PSX `0x801B0270`) at (x + dx, y + dy), shade `0x80` |
+
+Every op's entry is below E; ops 1 and 2 have a count or rows and columns
+of at least 1; op 3's and op 4's CLUT has bits 15 and 14 clear.
+
+Reference values (the legends read: Japan `START` `0x801E675C..0x801E6BE8`,
+Japan `COMMU02` `0x801D9810..0x801D9B8C`, US `START` `0x801E6784..0x801E6C68`,
+US `COMMU02` `0x801D97C8..0x801D9AC8`, French `START` `0x801E6770..0x801E6AB0`
+and `COMMU02` `0x801D97F4..0x801D9A24`, German the French with another x).
+Every text op is colour 0, count `0x10`; every leader op is entry 7, 5 rows,
+3 columns, steps 4 and 8; "the six tiles" are, in this order, four tiles at
+dx `0xE` and dy 6, `0xE`, `0x16`, `0x1E`, CLUT `0x7803`, then (4, 2) at
+(`0xA`, `0x26`) and (5, 2) at (`0x12`, `0x26`), CLUT `0x7800`:
+
+| Copy | Ops, in order |
+|---|---|
+| Japan `START` | piece `0x2C` flags 1 at (`0x50`, 5), CLUT `0x784C`; text entries 0, 1, 2 at (`0x2A`, 6 + 8i); text entry 3 at (`0x2A`, `0x26`); text entry 4 + page at (`0x2A`, `0x1E`); leaders at (`0x1A`, 6); the six tiles, the four with u `0x1B`, `0x1D`, `0x1E`, `0x1C`, v 0 |
+| Japan `COMMU02` | the same without the piece |
+| US / EU `START` | the piece; text entries 0..3 at (`0x2A`, 6 + 8i); tiles u 0..3, v `0x13` at (`0x2A` + 8k, `0x26`), CLUT `0x7800`; leaders at (`0x1A`, 6); the six tiles, the four with u `0x1D`, `0x1C`, `0x1B`, `0x1E`, v 0 |
+| US / EU `COMMU02` | text entries 0..4 at (`0x2A`, 6 + 8i); leaders at (`0x1A`, 6); the six tiles as US `START`'s |
+| French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders |
+| French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s |
+| German | the French, with text dx `0x22` |
+
+GD reads which shape a copy has off its own legend (M2's normalised code
+hashes in `funcs.py` tell the six apart) and the text dx off the code, not
+off the build's name.
+
+**The end.** The chunk ends exactly after the `COMMU02` legend block.
+
+### What is not in the chunk: constants of the routine
+
+- **The input bits, keyed on the family byte** (M2's table and M6's; each
+  test goes through `Sigma`, DIV-0139): Japan confirm `0x20`, next page
+  `0x10`, name cursor + 1 pressed `0x80` or repeated `0xA`, name cursor - 1
+  repeated `0x5`, backspace `0x40`, finish `0x800`; West confirm `0x40`, no
+  page bit, name cursor + 1 pressed `0x20` or repeated `0xA`, name cursor - 1
+  pressed `0x80` or repeated `0x5`, backspace `0x10`, finish `0x800`. The
+  hand is the repeated word's `0xF00F` in both.
+- **The copy's differences** (M1's list): the quit's result and sound, the
+  finish sound, the all-blank rule, buffer byte 5 cleared. The caller says
+  which copy it is.
+- **The `ja-JP` cap of 4 cells** (call 5) on the Japan family, and the
+  field's byte room, which the caller passes (8 for a record's name, 5 for a
+  faerie slot); the refusal counts each cell's bytes from its kind (1 or 2).
+- **The grid box, the pitches and the hand** (research 4.1: `0x110` x `0x7B`,
+  x by `0x14` or `0x1C`, y by 14, the hand's offsets): the same in every
+  drawer read.
+- **The legend's frame**: `Menu_DrawPieces(x, y, list, 0)` with the PC's own
+  lists, `0x667148` for `START`'s and `0x653000` for `COMMU02`'s: each
+  disc's list is byte-identical in all four builds read and occurs once in
+  `BOF3.exe`'s `.data`, at those addresses (hashed, 53 and 34 pieces).
+- **No message.** `0xBA`, `0xBB`, `0xF4`, `0xF5`, `0xF7` are in every
+  layer's pools (M4).
+
+### What makes a chunk pass
+
+`NameGrid_Available()` is true only after a kind-22 chunk has been taken and
+every rule above holds, plus these on the grid as a whole:
+
+- the cells in columns 10 and 11 of rows 3..7 are each special or empty, and
+  the two of a row are the same record; every other cell is a glyph or empty;
+- each page in use holds every code of the map in exactly one row (its
+  columns 10 and 11), and no other special code;
+- row 0 of each page has no empty cell (so the clamp "up to the first cell
+  that is not empty" ends, and the hand's start, row 0 column 0, is a glyph);
+- one disc code has one encoding wherever it is, and two codes never share
+  one (the reverse, stored bytes to cells, is then exact: M3);
+- a glyph of code `0xFF` exists (the space, which is also the blank marker:
+  M3).
+
+A chunk that is present and fails a rule is a Fatal at the take, naming the
+rule: it is a fault of our builder, not the player's disc. No chunk leaves
+`NameGrid_Available()` false, and a call of the draw or the input step then
+aborts loudly (rule 4).
+
 ## 6. Acceptance
 
 1. With the three switches off: every existing gate identical (self-tests,
