@@ -16,6 +16,7 @@
 #include "game/map_layers.h"
 #include "game/scena_sc15.h"
 #include "game/menu_verbs.h"
+#include "game/menu/name_grid.h"   // the New Game round: the grid chunk, kind 22
 #include "hook/exe_host.h"
 
 #include <filesystem>
@@ -496,6 +497,10 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
     case 21:  // the town warp's table (tag 0) and text (tag 1) from a disc-patch mod
               // (tools/disc_patch_build.py; docs/town-warp.md 4): taken only with TownWarp on. Ours (DIV-0225).
         field_idle::TownWarpTake(h.tag, payload, static_cast<std::uint32_t>(h.size));
+        break;
+    case 22:  // the name entry's grid (docs/new-game-round.md 5a; tools/loc_build.py): ours, read by
+              // src/game/menu/name_grid.cpp. Nothing calls the routine yet (the round's stage B).
+        name_grid::NameGrid_Take(h.tag, payload, static_cast<std::uint32_t>(h.size));
         break;
     default:
         break;

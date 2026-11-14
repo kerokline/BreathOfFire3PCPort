@@ -920,9 +920,20 @@ NUL, whichever is first, and encodes them.
 | 2 leaders | dx | dy | entry | rows | columns | x step | y step | `Text_DrawSmall(x + dx + xs * j, y + dy + ys * i, 0, 1, entry)` for each row i and column j |
 | 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `cy * 64 + cx / 16` |
 | 4 piece | dx | dy | piece id | the rect query's flags | CLUT, low | CLUT, high | 0 | a sprite of the menu piece's rectangle (`Menu_PieceRect`, PSX `0x801B0270`) at (x + dx, y + dy), shade `0x80` |
+| 5 draw mode | dtd | tpage, low | tpage, high | 0 | 0 | 0 | 0 | `Gpu_SetDrawMode(p, 0, dtd, tpage, 0)`, committed: the texture page the tiles and the piece after it use |
 
 Every op's entry is below E; ops 1 and 2 have a count or rows and columns
-of at least 1; op 3's and op 4's CLUT has bits 15 and 14 clear.
+of at least 1; op 3's and op 4's CLUT has bit 15 clear (bits 6..14 are its row); op 5's dtd
+is 0 or 1. **Op 5 is the amendment of 2026-11-14 (NG, step 2):** the
+legends set the tiles' texture page in some copies and not in others (US
+`START`'s four row-4 tiles are drawn on the piece's page, its six button
+tiles on another; the French and German legends set no page before their
+tiles), so the page is the disc's, an operation, not a constant of the
+routine. GD writes one op 5 where the disc's legend calls `SetDrawMode`
+after its box, with the tpage word the PlayStation computes (`GetTPage`'s
+word; where the disc picks `0x8F` or `0x2F` by `GetGraphType`, the `0x2F`
+the PC takes, as `WorldMap_DrawFrame` does). `START`'s draw mode before its
+box (dtd 1, tpage `0xF`, every build) is the routine's, not an op.
 
 Reference values (the legends read: Japan `START` `0x801E675C..0x801E6BE8`,
 Japan `COMMU02` `0x801D9810..0x801D9B8C`, US `START` `0x801E6784..0x801E6C68`,
@@ -931,16 +942,19 @@ and `COMMU02` `0x801D97F4..0x801D9A24`, German the French with another x).
 Every text op is colour 0, count `0x10`; every leader op is entry 7, 5 rows,
 3 columns, steps 4 and 8; "the six tiles" are, in this order, four tiles at
 dx `0xE` and dy 6, `0xE`, `0x16`, `0x1E`, CLUT `0x7803`, then (4, 2) at
-(`0xA`, `0x26`) and (5, 2) at (`0x12`, `0x26`), CLUT `0x7800`:
+(`0xA`, `0x26`) and (5, 2) at (`0x12`, `0x26`), CLUT `0x7800`; "the
+piece" is op 5 with dtd 0 and tpage `0x1D` (`GetTPage(0, 0, 0x340, 0x100)`),
+then piece `0x2C` flags 1 at (`0x50`, 5), CLUT `0x784C`; "the button page" is
+op 5 with dtd 0 and tpage `0x2F`:
 
 | Copy | Ops, in order |
 |---|---|
-| Japan `START` | piece `0x2C` flags 1 at (`0x50`, 5), CLUT `0x784C`; text entries 0, 1, 2 at (`0x2A`, 6 + 8i); text entry 3 at (`0x2A`, `0x26`); text entry 4 + page at (`0x2A`, `0x1E`); leaders at (`0x1A`, 6); the six tiles, the four with u `0x1B`, `0x1D`, `0x1E`, `0x1C`, v 0 |
+| Japan `START` | the piece; text entries 0, 1, 2 at (`0x2A`, 6 + 8i); text entry 3 at (`0x2A`, `0x26`); text entry 4 + page at (`0x2A`, `0x1E`); leaders at (`0x1A`, 6); the button page; the six tiles, the four with u `0x1B`, `0x1D`, `0x1E`, `0x1C`, v 0 |
 | Japan `COMMU02` | the same without the piece |
-| US / EU `START` | the piece; text entries 0..3 at (`0x2A`, 6 + 8i); tiles u 0..3, v `0x13` at (`0x2A` + 8k, `0x26`), CLUT `0x7800`; leaders at (`0x1A`, 6); the six tiles, the four with u `0x1D`, `0x1C`, `0x1B`, `0x1E`, v 0 |
-| US / EU `COMMU02` | text entries 0..4 at (`0x2A`, 6 + 8i); leaders at (`0x1A`, 6); the six tiles as US `START`'s |
-| French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders |
-| French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s |
+| US / EU `START` | the piece; text entries 0..3 at (`0x2A`, 6 + 8i); tiles u 0..3, v `0x13` at (`0x2A` + 8k, `0x26`), CLUT `0x7800`; leaders at (`0x1A`, 6); the button page; the six tiles, the four with u `0x1D`, `0x1C`, `0x1B`, `0x1E`, v 0 |
+| US / EU `COMMU02` | text entries 0..4 at (`0x2A`, 6 + 8i); leaders at (`0x1A`, 6); the button page; the six tiles as US `START`'s |
+| French `START` | the piece; text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no leaders, no button page |
+| French `COMMU02` | text entries 0..4 at (`0x1B`, 6 + 8i); the six tiles as US `START`'s; no button page |
 | German | the French, with text dx `0x22` |
 
 GD reads which shape a copy has off its own legend (M2's normalised code
@@ -994,6 +1008,83 @@ A chunk that is present and fails a rule is a Fatal at the take, naming the
 rule: it is a fault of our builder, not the player's disc. No chunk leaves
 `NameGrid_Available()` false, and a call of the draw or the input step then
 aborts loudly (rule 4).
+
+## 5b. NG's routine, built (stage A)
+
+*Group NG, 2026-11-14, on `new-game/ng`. Nothing calls it yet; nothing a
+player sees changes.*
+
+**Where.** `src/game/menu/name_grid.h` / `.cpp`, the self-test
+`name_grid_fuzz.cpp` (`BOF3X_SHADOW=name_grid`), `dat_load.cpp`'s kind 22.
+The chunk's layout is known in two places only: section 5a and
+`ParseChunk`.
+
+**For stage B (TF, CR, BT).**
+
+- The caller owns a `name_grid::Cells` block (buffer of six, name cursor,
+  column, row, page) and opens it as the PlayStation's entry does: cursor,
+  column and row 0, the page `NameGrid_FirstPage()`, the buffer 0xFF or
+  `NameGrid_Decode` of the stored name. The hand must start on a cell that
+  is not empty (row 0 always is); the step stops with a Fatal otherwise.
+- `NameGrid_Input(copy, cells, room, fallback)` returns bits: `kFinished`,
+  `kQuit`. For `kNewGame` both can come in one frame (START's quit does not
+  leave the step); TF does the rest of each (`Game_Step` 1 and sub-step 0;
+  the commit to record 0 with `NameGrid_Encode`, `Transition_Start(0)`, the
+  next sub-step). `fallback` is record 0's name as cells, for the all-blank
+  finish. For `kRenamer`, `kQuit` is the unanswered end; CR advances.
+- `room` is the field's bytes: 8 for a record's name, 5 for a slot. A
+  glyph that would pass it is refused with `0x107`. `NameGrid_CellCount()`
+  is 4 for the Japan family (call 5), 5 for the West.
+- The draws are `NameGrid_Draw(copy, cells, x, y)` and
+  `NameGrid_DrawLegend(copy, page, x, y)`; the caller draws first in
+  `kNewGame`, as START does. The name panel and its underline are the
+  caller's (M1's shape).
+- **The legend frames' lists are the PC's own** (`0x667148`, `0x653000`,
+  section 5a). The take checks both by length and SHA-256 in the running
+  image. When either is missing (a disc-built or exe-less image),
+  `NameGrid_Available()` is false and the reason is logged once and given
+  by `NameGrid_Why()`: the caller skips the screen as it does with no
+  chunk. Chosen over a Fatal so that such an install still plays.
+
+**Call 7, read again.** US `START`'s Left (`0x801E48EC`) and Right
+(`0x801E49B4`) and US `COMMU02`'s (`0x801DA2C8`) read the cell under the
+hand before the move; when it is a special (non-zero, below 6) they store
+column 9 (Left) or 0 (Right) and jump past the other moves with no test of
+the new cell. No other code in `START` writes the column or the row (every
+store to `0x801ED7E0` / `0x801ED7E4`: the open at `0x801E46AC` / `B4` and
+the four moves), and the step has no clamp. **The first reading missed
+nothing that the code shows:** on the US / EU page and the French page,
+row 5's column 9 is empty, so Left from row 5's special (the quit label)
+lands the hand on it, and a confirm there stores byte 0. The owner's
+observation and the code disagree at that one move. Ours never lands on an
+empty cell: after every move and every page change the hand goes up to the
+first cell that is not empty (Japan's page-2 constants are this rule), so
+that Left goes to row 4's column 9. A one-press check on the sibling's US
+build (the hand on row 5's special, then Left) would settle whether the
+original does it.
+
+**The ledger text for stage C** (to fold into the entries for the name
+entry at New Game and the renamer's grid):
+
+- *The hand.* The original Western step leaves the hand on an empty cell
+  after Left from row 5's special (US / EU, French); a confirm there enters
+  byte 0. Ours moves it up to the first cell that is not empty, as the
+  Japan step's page-2 clamp does. Why: the owner's call 7.
+- *The field's room.* The original enters any cell; its names are one byte
+  a cell. Ours refuses, with `0x107`, a cell whose entry would make the
+  name's stored bytes pass the field (8 for a character, 5 for a faerie
+  slot). Why: the layer stores some cells in two bytes (M3).
+- *Four kana.* The original Japan name has five cells; ours four under the
+  Japan family. Why: call 5.
+- *The buttons.* Every face and shoulder test through `Sigma`
+  (DIV-0139's rule): Japan's bits by `Sigma`, the West's by
+  `SigmaFrom(West)`. At the install's starting Config the original's.
+- *The pad word.* The page and finish codes take effect in the same frame
+  as on the PlayStation, by a flag of ours rather than a write of the bit
+  into `Input_Pressed`. Nothing else in the frame reads the bit.
+- *The legend's piece.* The menu piece SPRT of `START`'s legend is drawn
+  with the PC's `Menu_PieceRect` rectangle and the disc's CLUT; not yet
+  compared on screen (BT, stage C).
 
 ## 6. Acceptance
 

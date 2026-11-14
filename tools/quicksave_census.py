@@ -135,6 +135,7 @@ RULES = [
     (r'd3d_list\.cpp$', r'Operands\(\)::', CF, '-', 'operand values'),
     (r'config_text\.cpp$', r'', CF, '-', 'DIV-0015 Config screen text and operands (language overlay)'),
     (r'(battle_text|labels|fishing_text|pause_text)\.cpp$', r'', CF, '-', 'language overlay text (DIV-0038/0064/...); the span\'s pointer slots name it (section 5)'),
+    (r'menu/name_grid\.cpp$', r'::(g_grid|g_taken|g_available|g_why)$', CF, '-', 'the name entry\'s grid: FIRST.DAT kind 22 of the language layer (docs/new-game-round.md 5a), taken again at every walk; no game state (the cell blocks are the callers\')'),
     (r'text_advance\.cpp$', r'', CF, '-', 'DIV-0006 advance table (heap block of ours), from the overlay'),
     (r'text_pairs\.cpp$', r'', CF, '-', 'pair-code table (heap block of ours), from the overlay'),
     (r'text_draw\.cpp$', r'', CF, '-', 'glyph count / limit (DIV-0016), button-text switch'),
