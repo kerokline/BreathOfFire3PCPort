@@ -1397,7 +1397,8 @@ def build_languages(asked, sources, out, reuse=None):
                         shutil.copyfile(os.path.join(d, name), os.path.join(game, "DAT", tag + "." + name))
                 else:
                     r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc",
-                                        donor.path, "--game", game, "--lang", tag], capture_output=True, text=True)
+                                        donor.path, "--build", donor.id, "--game", game, "--lang", tag],
+                                       capture_output=True, text=True)
                     if r.returncode:
                         raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
                     os.makedirs(d, exist_ok=True)
@@ -1438,7 +1439,7 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
                 take(src, d)
             else:
                 r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
-                                    "--cache", out, "--lang", tag], capture_output=True, text=True)
+                                    "--build", donor.id, "--cache", out, "--lang", tag], capture_output=True, text=True)
                 if r.returncode:
                     raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
         names = sorted(os.listdir(d))
@@ -2789,6 +2790,8 @@ def cmd_check(a):
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
     serrs += ["dial page: " + e for e in dial_check()]   # DIV-0135's repaint, on synthetic pages
+    import loc_build                                   # kind 22, the name grid, on a synthetic grid and layer (5a)
+    serrs += ["loc_build.py kind 22: " + e for e in loc_build.name_grid_selfcheck()]
     import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
     serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     serrs += ["fmv verify: " + e for e in fmv_check()]   # the [fmv] row's forms, the older ffmpeg AVI row among them
@@ -2807,6 +2810,7 @@ def cmd_check(a):
     print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
           "bgm-psp.tsv, recipes/psp.snd.toml, "
           "recipes/psp-standins.toml, a synthetic PSMF, the [fmv] row's forms, the dial page's repaint, "
+          "kind 22's name grid in a synthetic FIRST.DAT layer (docs/new-game-round.md 5a), "
           "%d error(s)" % len(serrs))
     print("cache_walk / suites / build_reuse check: the engine's cache walk against install on a synthetic cache, "
           "the suites, the memos every measured step empties, %d error(s)" % len(werrs))
