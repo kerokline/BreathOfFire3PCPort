@@ -1,9 +1,10 @@
 # Frame interpolation: one in-between frame (prototype)
 
-**Status:** PROTOTYPE (2026-11-13, branch `render/interp-prototype`). Off by
-default (`BOF3X_INTERP=1` turns it on), **unledgered**, not for a release
-until it has a `DIVERGENCE.md` entry and the open faults of section 6 are
-closed or accepted. Nothing the game computes changes, by the state hash on four routes; the
+**Status:** EXPERIMENTAL (prototype 2026-11-13; ledgered 2026-11-14 as
+DIVERGENCE DIV-0230). Off by default; the launcher's Settings page has the
+box "Smooth motion: 60 frames each second (experimental)" (`interp=1` in
+`bof3x.ini`, which goes out as `BOF3X_INTERP=1`). The open items of section 6
+want play more than code. Nothing the game computes changes, by the state hash on four routes; the
 music staging buffer's timing does (section 5). The owner's ask the same day: the game's logic runs at 29.97
 frames a second and the machine has headroom for twice that; show one
 interpolated frame between each two, no more.
@@ -34,7 +35,7 @@ Colours, textures and draw order in the in-between are frame N's. Only
 | `src/render/render_d3d11.cpp` | `PresentInBetweenFrame`: `RunFrame` and `Show`, without the sweep of released textures or a pending scale change. `Show` advances the looks' clock by half a game frame for an in-between and for the present after it. |
 | `src/game/platform/magic_080.cpp` | WinMain's loop: the in-between is due at speed 1, not paused, no shot pending; shown in the wait loop. `InterpDump`. |
 
-Switches (all tooling, none in the launcher):
+Switches (the first is the launcher's `interp=`, DIV-0230; the rest are tooling):
 
 | Variable | What |
 |---|---|
@@ -79,6 +80,19 @@ code beside its rule:
    run where some corner does come apart: a mesh that changes shape (the
    rope bridge's deck, section 6 item 1) has none, a mesh paired wrongly
    (a spell's sphere) has some.
+
+   **A line of letters** is one run too. The font gives each letter a
+   surface of its own, drawn with the same texture coordinates and the same
+   box, so by surface alone each letter was a run of one and nothing held a
+   line together. A draw that follows one of another surface with the same
+   coordinates and the same box, both upright on the screen, goes on the
+   run, and such a run takes no break: one letter going its own way is a
+   letter that changed, and the whole line is shown where frame N has it.
+   Text that scrolls or a window that slides keeps its letters, they pair
+   by look and by order and go one way, and still moves. "Upright" keeps
+   the sea out: its tiles are a surface each with the same coordinates and
+   box too, and without it one break showed a run of them unmoved and left
+   holes in the sea (bridgeWalk 1452, the first form of the rule).
 8. **Cuts.** When a quarter of the draws have no pair, or the runs' breaks
    are a tenth of them, the whole frame is shown unmoved.
 
@@ -113,7 +127,7 @@ change of the rule, frame for frame:
 | Recipe | Sampled | Flagged | Seen by eye |
 |---|---|---|---|
 | bridgeWalk (one in six) | 351 | 3 thin | the character's own animation (732, 1410, 1860); the deck is whole |
-| shop (one in six) | 523 | 14 | same as before the rule changed; the message bar, section 6 |
+| shop (one in six) | 523 | 14 | same as before the rule changed; the message bar's letters, closed later the same day (section 6, 3) |
 | bossAndFlash (one in ten) | 552 | - | compared frame by frame with a build of the old rule: the sphere equal, six frames better, the beam changed (section 6, 12) |
 | combat | 263 | 7 | same |
 | menu_screens | 162 | 7 | same; fast slides |
@@ -141,8 +155,11 @@ changed: the two wide-mode routes, cs_53 and attract_cycle (2026-11-13: 0,
 0, 0 and 5 small flags).
 
 `desertSummary.txt` (recipe frame 2771), `overheatAndDeepSea.txt` (4356)
-and `shisuMinigame.txt` (4619) end FAILED at the same frames with the
-switch **off** too: the recipes, not the in-between.
+and `shisuMinigame.txt` (4619) ended FAILED at the same frames with the
+switch **off** too: the recipes, not the in-between. Each recording ends on
+the F9 that quits the game, and the recorder wrote `wait 1` after it where
+the harness wants `quit`; the three end with `quit` since 2026-11-14 (not
+run again yet when this was written).
 
 `bridgeWalk.txt` had no `# save` line and ran on whatever slot 0 held, three
 times in one day; it names `bridgeWalk` now.
@@ -190,10 +207,33 @@ references at every tick and are never compared, as in every proof.
    streaks, bossAndFlash 3470), and a higher first-vertex bar where corners
    hold (a hairline came back, bridgeWalk 2016).
 2. **Hairlines between planks** - *closed 2026-11-14*, the same cause as 1.
-3. **A message bar whose text changes outright** (shop, Frame_Counter 1860,
-   "Def1 Wgt0" to "Buy an item"): the new letters slide in from old ones for
-   one in-between. The same on the list's letters at shop 1788. Limiting the lone look-alike rule did not cure it; the
-   decision log of that frame has not been read.
+3. **A message bar whose text changes outright** - *closed 2026-11-14.*
+   Shop, Frame_Counter 1860 ("Def1 Wgt0" to "Buy an item") and 1788 (the
+   bar and the list, as the item window closes). The decision log: each
+   letter is a surface of its own, and a new letter has no partner by
+   order. It took whatever stood at its surface's vote, and the vote came
+   from the same letter in some other text on the screen: the "m" of
+   "item" agreed with the sliding list's "m" (-64 px) and took, by shape
+   alone, the old bar's letter 64 px to its left, and slid in from there;
+   at 1788 the list's new letters took old letters by shape (+64), the
+   same letter of another word by look (-32, +82), and partners by order
+   in another place (-96). Other new letters paired by shape with the old
+   letter in their own place, unmoved, which is harmless. Rule 7 could not
+   catch the mixed motions: by surface, each letter was a run of one. Now
+   a line of letters is one run and takes no break (section 3, rule 7).
+   Limiting the lone look-alike rule (rule 4) had not cured it because
+   rule 4 was not the rule that paired them. Both frames now show the new
+   text whole, and the list still slides. Against the build before, frame
+   for frame: shop (one in six) 3 of 523 frames differ, bridgeWalk (one in
+   six) none of 343, menu_screens 1 of 159, combat 4 of 262,
+   cutsceneAndNue 3 of 701; none worse by the measures, and all but combat
+   2070 read by eye: a label "Atk" to "Use", a message bar, a highlight changing colour,
+   spell sparkles, all correct. One reads differently: menu_screens 1740,
+   a title "'s status" leaving at the top, whose letters had paired by
+   order 40 px to one side; it was shown sliding sideways and is now shown
+   where the next frame has it, off the screen, one in-between early.
+   Withdrawn on the way: the first form without "upright" (holes in the
+   sea, bridgeWalk 1452).
 4. **One dark stray** of 44 pixels at bridgeWalk Frame_Counter 427, after
    the right-edge column was fixed at the other nine places. Not read.
 5. **Draws that left the screen** are not drawn in the in-between (they are
@@ -233,7 +273,7 @@ references at every tick and are never compared, as in every proof.
     so the in-between shows a fan halfway between two flickers. It read as
     a normal fan in the frames looked at. The owner's eye decides.
 
-Before it can ship: the `DIVERGENCE.md` entry, a launcher option written in
-Simplified Technical English, the checkers in `tools/`, the debug logging
-trimmed, and the owner's eye over battles and menus (rows in
+Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
+box. Before it leaves "experimental": the checkers in `tools/`, the debug
+logging trimmed, and the owner's eye over battles and menus (the row in
 `owner-review.md`).

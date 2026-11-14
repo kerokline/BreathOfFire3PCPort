@@ -559,7 +559,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     // breath). Such a run of the list is shown where the frame has it, whole.
     struct Run {
         U n, breaks, soft;
-        bool parted;
+        bool parted, letters;
     };
     std::vector<Run> runs;
     std::vector<U> run_of(frame.n_commands, 0);
@@ -592,6 +592,39 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             }
             return shared;
         };
+        // Two letters of a line: the font gives each letter a surface of its
+        // own, drawn with the same texture coordinates and the same box, so
+        // a line of text is a run of surfaces, one a letter. Where a line
+        // changes outright, its new letters pair with whatever stood at the
+        // surface's vote - another letter of the old line by shape, the same
+        // letter of another word, a partner by order in another place - and
+        // halfway they slid in from there (the shop, Frame_Counter 1860:
+        // "Def1 Wgt0" to "Buy an item"; 1788, the list's letters).
+        const auto LettersAlike = [&](const Command& a, const Command& b) {
+            if (!a.state.texture || !b.state.texture || SurfaceOf(a) == SurfaceOf(b) || a.count != b.count) return false;
+            const Vertex* p = frame.vertices + a.first;
+            const Vertex* q = frame.vertices + b.first;
+            // ... upright on the screen, as a letter is. The sea's tiles are
+            // a surface each with the same coordinates and box too, and in a
+            // run of their own one break left holes in the sea (bridgeWalk,
+            // Frame_Counter 1452); seen from the camera they are not upright.
+            float x0 = p[0].x, x1 = p[0].x, y0 = p[0].y, y1 = p[0].y;
+            for (U k = 1; k < a.count; ++k) {
+                x0 = std::min(x0, p[k].x), x1 = std::max(x1, p[k].x);
+                y0 = std::min(y0, p[k].y), y1 = std::max(y1, p[k].y);
+            }
+            for (U k = 0; k < a.count; ++k) {
+                const bool on_x = std::fabs(p[k].x - x0) < 0.01f || std::fabs(p[k].x - x1) < 0.01f;
+                const bool on_y = std::fabs(p[k].y - y0) < 0.01f || std::fabs(p[k].y - y1) < 0.01f;
+                if (!on_x || !on_y) return false;
+            }
+            for (U k = 0; k < a.count; ++k) {
+                if (p[k].u != q[k].u || p[k].v != q[k].v) return false;
+                const float ex = (p[k].x - p[0].x) - (q[k].x - q[0].x), ey = (p[k].y - p[0].y) - (q[k].y - q[0].y);
+                if (ex * ex + ey * ey > 0.25f) return false;
+            }
+            return true;
+        };
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
             if (!IsDraw(c)) continue;
@@ -602,9 +635,12 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                 y0 = std::min(y0, v[k].y), y1 = std::max(y1, v[k].y);
             }
             const float mx = half_dx[i] * 2, my = half_dy[i] * 2;
-            const bool same = open && SurfaceOf(c) == surface && (c.state.blend_enable != 0) == blend;
+            const bool same_blend = open && (c.state.blend_enable != 0) == blend;
+            const bool letter = same_blend && SurfaceOf(c) != surface && LettersAlike(frame.commands[prev], c);
+            const bool same = same_blend && (SurfaceOf(c) == surface || letter);
+            if (letter) runs.back().letters = true;
             if (!same) {
-                runs.push_back({0, 0, 0, false});
+                runs.push_back({0, 0, 0, false, false});
                 surface = SurfaceOf(c), blend = c.state.blend_enable != 0, open = true;
             } else if (x0 <= px1 + 2 && px0 <= x1 + 2 && y0 <= py1 + 2 && py0 <= y1 + 2) {
                 const int part = SharedCornersPart(frame.commands[prev], c);
@@ -623,6 +659,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             ++runs.back().n;
             run_of[i] = static_cast<U>(runs.size() - 1);
             prev = i;
+            surface = SurfaceOf(c);   // a line of letters goes on from its last letter
             px0 = x0, px1 = x1, py0 = y0, py1 = y1, pmx = mx, pmy = my;
         }
     }
@@ -653,10 +690,13 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const Command& c = frame.commands[i];
         if (!IsDraw(c)) continue;
         const Run& r = runs[run_of[i]];
-        if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, half_dx[i], half_dy[i]);
+        if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u letters %d half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, r.letters, half_dx[i], half_dy[i]);
         // A long run takes a few breaks (a field's layer has the scene's
         // parts in it); a short one - a window's text - takes one.
-        const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2);
+        // A line of letters takes none: its letters are one thing, and one
+        // letter going its own way is one that changed (the shop's message
+        // bar: only its last letter slid, from a letter of the old line).
+        const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2) || (r.letters && r.breaks >= 1);
         if (!broken) continue;
         std::memcpy(out + c.first, frame.vertices + c.first, c.count * sizeof(Vertex));
         ++s.snapped;
