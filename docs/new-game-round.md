@@ -920,9 +920,17 @@ backlog is on `main` and the check is not in CI.
   cursor, triangle the page, START the finish, all five as button shapes,
   and five labels on rows 3 to 7. That is the Japan family's legend as M2
   has it, which supports call 10 by the look; `psp-jp`'s own code is still
-  not read. **Not yet answered:** which style a `psp-eu` install shows by
-  default (the PSP's own, a third family in 5a, or the PlayStation's), and
-  what the launcher's toggle switches there.
+  not read. Asked which style a `psp-eu` install shows, the owner: **"lets
+  have the buttons match the mappings, like we try to do in game, and use
+  the jpn mappings as defaults (if multiple sources are used)."** Read
+  here as: the legend's pictures and the step's buttons follow the
+  player's mapping on every install (the button round's rule, call 2,
+  BT's work), so no install gets a style fixed by its disc; and where an
+  install is built from more than one source, the starting mapping is the
+  Japan one. What that leaves for `psp-eu` is a chunk (its grid, labels and
+  strings are on its disc, 4c-PK) and the legend's rows drawn from the
+  mapping rather than from the PSP's own tiles and letters (groups BT and
+  PE, after TF merges).
 
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
