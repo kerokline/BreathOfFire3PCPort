@@ -91,6 +91,7 @@ RULES = [
     (r'inventory_ops\.cpp$', r'::g_on_screen_log$', TL, '-', 'D56 log switch'),
 
     # --- GAME STATE ------------------------------------------------------------
+    (r'core/new_game\.cpp$', r'::(g_cells|g_fresh)$', GS, 'NEWGAME', 'the New Game name cells and the buffer reset flag (new_game.h): saved; a take on the name screen is refused where the screen does not run as it ran'),
     (r'crt_rest\.cpp$', r'::g_seed$', GS, 'ST', 'none - Rand\'s seed (MSVC holdrand) is ours since crt-rest 2.1: 4 bytes, copied'),
     (r'draw_pool\.cpp$', r'DrawPool_Grow\(\)::free_list$', GS, 'ST', 'none - DIV-0062\'s 2,048-entry free ring; DrawItemPool_Top and the items (.pool) are in the span: 4 KB, copied with them'),
     (r'msg_pool\.cpp$', r'MsgPool_Relocate\(\)::pool$', GS, 'ST', 'the area\'s DAT (the 0x4000 chunk) - copied, 32 KB; under a language overlay only (DIV-0007)'),
@@ -136,6 +137,8 @@ RULES = [
     (r'config_text\.cpp$', r'', CF, '-', 'DIV-0015 Config screen text and operands (language overlay)'),
     (r'(battle_text|labels|fishing_text|pause_text)\.cpp$', r'', CF, '-', 'language overlay text (DIV-0038/0064/...); the span\'s pointer slots name it (section 5)'),
     (r'menu/name_grid\.cpp$', r'::(g_grid|g_taken|g_available|g_why)$', CF, '-', 'the name entry\'s grid: FIRST.DAT kind 22 of the language layer (docs/new-game-round.md 5a), taken again at every walk; no game state (the cell blocks are the callers\')'),
+    (r'core/new_game\.cpp$', r'::(g_name_on|g_options_on)$', CF, '-', 'NewGameNameEntry / NewGameOptions: PatchBytes switches set at inject (new_game.h)'),
+    (r'core/new_game\.cpp$', r'::g_logged$', TL, '-', 'log once'),
     (r'text_advance\.cpp$', r'', CF, '-', 'DIV-0006 advance table (heap block of ours), from the overlay'),
     (r'text_pairs\.cpp$', r'', CF, '-', 'pair-code table (heap block of ours), from the overlay'),
     (r'text_draw\.cpp$', r'', CF, '-', 'glyph count / limit (DIV-0016), button-text switch'),
