@@ -1,10 +1,14 @@
 # The New Game round: the name entry and the options screen back in the New Game sequence
 
-**Status:** STAGED, group M run (2026-11-12, on `new-game/staging` off `main`
-`01a67500`; IDEAS I34; nothing built, no game run. Section 3a is what the
-three read-only agents of group M measured, section 3b what that changes and
-the four new calls for the owner. Sections 4 to 9 are as first staged and
-are amended by 3b.)
+**Status:** IN PROGRESS, stage A built (2026-11-14, on the local branch
+`new-game/round` off `main` `651a5ad8`, not pushed; IDEAS I34. Group M ran
+on 2026-11-12: section 3a is what it measured, 3b what that changes and the
+owner's answers. Stage A - the grid's chunk, the routine, the two route
+edits - is built and merged on the branch: section 4a is what was run and
+what is owed, 5a the chunk's layout, 5b the routine as built. Nothing calls
+the routine yet, so nothing a player sees has changed and the ledger has no
+entry. Stage B waits for the owner's word. Sections 4 to 9 are as first
+staged and are amended by 3b and 4a.)
 
 The owner (2026-11-12): stage a round for the character naming screen and the
 options menu at New Game. On the PlayStation, New Game asks for the hero's
@@ -783,6 +787,110 @@ disjoint inside a stage.
   recorded at the tip before the round), then the new routes recorded as
   their own pairs. On a quiet, hands-off machine.
 - The layout against M10's captures, by eye, the owner's.
+
+## 4a. Stage A as run (2026-11-14)
+
+Three worker agents, one worktree each under `D:\bof3x-runs\ng1114`
+(`ng`, `gd`, `rt`; the integration worktree is `round\wt`), merged one at a
+time into `new-game/round`. NG wrote the chunk's layout first (5a) and
+stopped; GD and the routine then ran side by side from it. No state-hash
+chain was run: another session's builds were running, and a proof wants a
+quiet machine.
+
+**What differs from the staged plan.**
+
+- **The chunk is kind 22.** Kind 21 was taken by DIV-0225's town warp after
+  the round was staged (`dat_load.cpp` `TakeChunk`, `disc_patch_build.py`
+  `WARP_KIND`).
+- **5a was amended twice while GD ran.** Its CLUT rule read "bits 15 and 14
+  clear" against reference values that have bit 14 set; it is "bit 15
+  clear" (GD and NG found it independently). The legend's draw mode became
+  an operation (op 5), because the tiles' texture page differs per copy and
+  per build; GD's first chunks lacked it and were rebuilt.
+- **`tools/dat.py`** takes kind 22 in `KINDS` (one entry; `write_overlay`
+  refuses an unknown kind).
+- **`loc_build.py` reads the disc's code by running it**: each copy's
+  drawer, input step and legend are told apart by a normalised hash of
+  their code and run in a small R3000 interpreter with each callee answered
+  by its role. No value is keyed on a build's name. The hash is the tool's
+  own (no capstone); it groups the seven discs as M-B's did.
+
+**RT** (`b2ae08db`). `battle_commands.txt` seeks NEW GAME on the title
+cursor (`seek up 0x6BDF85 u8 == 0 max 3`; the recipe language has no s8,
+and u8 `== 0` is exact for 0). With saves, before against after: 67 of 67
+captured frames identical. With no slot file it reaches the battle with no
+press, where the old `press up` chose the third row. Ten routes carry a
+`# save` header from evidence in the docs and tools (`bridgeWalk` had one
+already); three were replayed against the old file with `--save`
+(`ninaWalkBehindBlock`, `identify`, `deisCave`: every frame identical), the
+other seven were not replayed. **`garrAbility` has no header and gets none:
+the owner (2026-11-14) does not remember its save or its purpose.** M8's
+"lines 9-13" of `battle_commands.txt` are lines 9 to 18 now. No CI step
+reads `tools/recipes/`.
+
+**GD** (`9bb8777e`, `0973ff12`). `loc_build.py all` writes the chunk as the
+last chunk of each layer's `FIRST.DAT`:
+
+| Layer (build) | Chunk | Legend operations, `START` / `COMMU02` |
+|---|---|---|
+| `en-US` (psx-us), `en-150` (psx-eu-en) | written | 18 / 13 |
+| `fr-FR` (psx-fr), `de-DE` (psx-de) | written | 13 / 11 |
+| `ja-JP` (psx-jp) | written | 15 / 13 |
+| psp-jp | the Japan chunk, from its EMIs | 15 / 13 |
+| psp-eu | none (call 8) | - |
+| the original Chinese | none (no disc has a grid) | - |
+
+The shape counts are M2's and M3's; every list equals 5a's reference;
+every other chunk of the five layers is byte for byte what the tree before
+the change builds. `loc_build.py selftest` and `importer.py check` hold
+the chunk on a synthetic grid of each family, with 28 broken variants
+refused. A layer built before this change is offered a rebuild by the
+stale check (`build_all`'s digest changes), read from the tool, the
+launcher not run. The two PSP rows were checked by calling the converter
+on the opened disc only: a whole PSP layer build fails in `check_relaid`
+with and without this change.
+
+**NG** (`00d8edd6`, with 5a's amendments and 5b). The routine, the reader
+(`dat_load.cpp` kind 22) and the self-test. Builds at both widths. The
+self-test: 150 checks over two synthetic grids, 0 mismatches; the full
+shadow suite ran with no mismatch on the build before the two frame
+addresses were named. The five real chunks pass the reader, every legend
+operation is consumed through the recorder, and a random walk over each
+real grid never puts the hand on an empty cell (a temporary edit, not
+committed). **One real take each under `en-US` and `ja-JP`** through the
+exe host, to the title: the grid is taken, the piece-list check against the
+running image passes, no Fatal. Where the legend frames' piece lists
+(`0x667148`, `0x653000`) are not what the routine knows - a disc-built
+image may differ - `NameGrid_Available()` is false with the reason logged,
+and the install skips the screen as one with no chunk does.
+
+**The merged tree** (`new-game/round`): the 32-bit build, `loc_build.py
+selftest` and `importer.py check` pass. `tools/quicksave_census.py check`
+exits 1 on 675 statics with no rule, none of them `name_grid`'s; that
+backlog is on `main` and the check is not in CI.
+
+**Owed on stage A.**
+
+- A hosted (`BOF3.exe`) run with a layer loaded; `fr-FR`, `de-DE` and
+  `en-150` in a real game; the 64-bit build of the merged tree (NG's
+  worktree built it before the last merges); the full shadow suite on the
+  final tree.
+- Nothing has been drawn on a screen. The layout, the texture pages and
+  the look are stage B's (BT) and stage C's.
+- `tools/recipe_saves.py:220` raises when the worktree and the saves
+  folder are on different drives, after slot 0 is swapped (RT worked
+  round it; one line to fix).
+- GD's commits carry the co-author line of the model that wrote them, the
+  others the orchestrating session's.
+
+**Calls for the owner raised by stage A.**
+
+| # | Call | Stands at |
+|---|---|---|
+| 7, again | NG read the Western step's Left and Right from a special a second time, in `START` and in `COMMU02`: the code stores column 9 or 0 with no test of the new cell, and row 5's column 9 is empty on the US / EU and French pages. The owner's observation and the code disagree at that one move. Ours never lands there either way. | One press on a real US build settles what the ledger says (5b has the text for both). |
+| 9 | The `ja-JP` legend's small text: the layer has no 8 x 8 kana set, so the strings use kind 7's encoding (the 12-pixel kana at two thirds, as the Config screen). | Built so. The alternative is no `ja-JP` chunk until the layer has an 8 x 8 set. |
+| 10 | psp-jp takes the Japan chunk from its EMIs; its own code was not read. | Built so. |
+| 8 | psp-eu: no chunk, the screen skipped. | Still not answered; built as proposed. |
 
 ## 5. The contracts
 
