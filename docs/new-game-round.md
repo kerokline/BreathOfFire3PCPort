@@ -921,6 +921,134 @@ Two groups are new:
 | **PK** | `tools/loc_build.py`, `tools/importer.py`, their checks; the small-text path only if the kana set needs it | `psp-eu`'s chunk (call 8) and the 8-pixel kana for the `ja-JP` legend (call 9) |
 | **LT** | `src/launcher/`, the switch registry's launcher side | A launcher toggle for the name entry, in the form the launcher's other toggles towards the PlayStation have; its text in ASD-STE100 |
 
+## 4c-TF. Group TF as run (2026-11-14)
+
+*Worker agent on its own worktree `D:\bof3x-runs\ng1114\tf\wt`, branch
+`new-game/tf` off `new-game/round` `2207d9ce`, local commits only. Runs,
+captures and scratch scripts in `D:\bof3x-runs\ng1114\tf` (game-derived,
+never committed). No state-hash chain: the machine was not quiet.*
+
+**What was built.**
+
+- `src/game/core/new_game.{h,cpp}`: the sequence. The screens are sub-steps
+  of `Game_Step` 2 on `SaveMenu_FlowState` `0x6BDF86`: 0 the open
+  (`NewGame_InitCharacters` and DIV-0228's stamp), 1..4 the name screen (the
+  PlayStation's n0..n3: open, fade in, input, fade out). A recipe waits on
+  `0x66C7EA u16 == 2` and `0x6BDF86 u8 == 3` for the input step. The step
+  list `kScreens` is where IDEAS I56's champion screen joins (its sub-steps
+  after 4, its own test). After the last screen, the port's rest of
+  `TitleFlow_NewGame` (0x9039F2, the area number, `Scenario_Start(0)`, the
+  `Cond_Flags` words) and `Game_Step` 4 with no fade - the screen black and
+  no transition running, as the title's third row enters it - or, with the
+  options off, the port's `Transition_Start(0)` and `Game_Step` 5.
+- `TitleFlow_NewGame` (`sound.cpp`) asks the sequence first and otherwise
+  runs its body unchanged, cut into `TitleFlow_NewGameRecords` and
+  `TitleFlow_NewGameRest`. `TitleFlow_Begin` tells the sequence the title
+  task started (the buffer and page reset, M1); it writes no Capcom byte.
+- **The cursor-2 test** in `TitleFlow_EnterGame` is untouched: nothing of
+  ours writes `0x6BDF85`, so it is 0 through the name screen, the Config
+  screen and step 5 (M1). Measured: the `en-US` route below enters the game
+  after the Config screen; `config_screen.txt` (the third row) was not run.
+- The draw-all is START's `0x801E6F80` call for call, read from the capture
+  (scratch, M-A's lib): backdrop, title box `(0x14, 0x12, 0x118, 0x13)`,
+  message `0xBA` / `0xBB` on bit `0x40` of `Frame_Counter` at `(0x1C,
+  0x15)` count `0xFF`, the name panel, `NameGrid_DrawLegend` as NG built it,
+  the grid's frame, `NameGrid_Draw`, then the actor (every 10 frames `+6`
+  steps through 0..7 with animation `+6 + 8`; queued and ticked each frame).
+  `Draw_PassFlags` 1 at the open; `Field_DrawFrame` after every sub-step.
+  n1 draws then tests the fade; n3 draws only while the fade runs (as
+  `0x801E4550` and `0x801E4E0C`).
+- **The name panel** `0x801E6308`, read whole: box `(x+3, y+3, 0x7D, 0x2F)`,
+  portrait `0x801DC37C(x+6, y+2, 0, 0)`, the name at `(x+0x3B, y+0x19)`
+  count 5 in colour `buffer[5] != 0 ? 2 : 0`, the underline at `x + 0x3B +
+  12 * cursor, y + 0x25`, width `0xC`, then `Menu_DrawPieces(x, y,
+  0x801ECF28, 0)`. Measured against `BOF3.exe` (`panel_cmp.py`,
+  `panel_cmp2.py`): START's piece list equals the PC's `0x652F5C` through
+  its end marker (162 bytes) and START's portrait table entry 0 equals the
+  PC's `0x652F38` entry 0, so the PC's list and `CommuMember_DrawPortrait`
+  draw them. The name is drawn as the layer stores it (`NameGrid_Encode`).
+- **The commit:** record 0's 8-byte name through `NameGrid_Encode`; when the
+  finished cells equal record 0's own name decoded (the all-blank default,
+  or the default typed in), the record is left as it is.
+- **Switches** (code names, `PatchBytes` flags of ours, set after every
+  module's self-test): `NewGameNameEntry` (shows where
+  `NameGrid_Available()`), `NewGameOptions` (call 1's proposal: every
+  language, the original Chinese included). With both off, or the name
+  entry on where there is no grid and the options off, the port's body runs
+  whole. `code_names.h` regenerated (`analysis/ledger_switches.tsv` left as it was: it was already stale on the branch and is not checked).
+  **The ledger checks pass with no entry yet:** `ledger_switches.py
+  --check` (0 errors), `ledger_registry.py --check`, `ledger_check.py` (0
+  errors). The `original` preset turns them off only once stage C's entries
+  carry the fields.
+- **Quicksave: a participant, `NEWGAME`** (the cells and the reset flag).
+  Its check refuses a take made on the name screen when this start has
+  `NewGameNameEntry` off or no grid of the same family ("name screen,
+  switch off" / "name screen, no grid"); every other take loads. Another
+  language is ST's refusal already. Self-test under
+  `BOF3X_SHADOW=new_game`. Census rows in `tools/quicksave_census.py`. No
+  take or load on the screen was run in a game.
+
+**A defect found on the way (the grid's frame).** The PC's
+`Commu_DrawTiledFrame` `0x45F1A0` passes `Gpu_SetDrawMode` a texture-window
+RECT on its own stack, and the PC's draw mode keeps the pointer (dword +8,
+read at the present). Drawn at New Game it crashed: `BOF3X_TEXPAGELOG=1`
+logged `build page 29 ... key 7492,126 13064x130`, then an access violation
+in `D3d_BuildPageTexture` (a draw-skip bisection over six runs put it on
+that call alone). The PC never ran the function in play: the renamer's
+entry steps that call it are the cut ones (research 5.1). Ours draws the
+frame with each RECT in the packet pool (`DrawGridFrame`, as
+`Menu_DrawTitleBox` does). **Group CR meets the same crash** when the
+renamer's steps run `Commu_DrawTiledFrame` (`commu.cpp`, not TF's file).
+It wants a known-defects number and the same fix there.
+
+**What was run** (32-bit build, exe host, my game copy: GD's `BOF3.exe` and
+`DAT\` with its layers, the PC's `BGM\`, `SND\`, movies):
+
+| Run | Result |
+|---|---|
+| `en-US`, scratch `ng_name.txt`: New Game, name screen, three letters, Start, Config, Start, the opening | `done` at 3,234; record 0 `0x444241` (3 bytes) where it held `0x757952`; Config shown; the opening scene and its battle run, no Fatal |
+| `ja-JP`, the same route | `done` at 3,234; Japan grid, 3 pages; record 0 named in 6 bytes; no Fatal |
+| the original Chinese, scratch `ng_orig.txt` | no grid ("no kind-22 chunk taken"): no name screen; Config, then the opening; `done` at 1,367 |
+| `battle_commands.txt`, `en-US`: the tip `2207d9ce` build against this one with `BOF3X_OFF=NewGameNameEntry,NewGameOptions` | **67 of 67 frames identical** (`BOF3X_SHOT_EVERY=60` and the recipe's shots) |
+| `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, hosted, ini-less launcher folder | "self-test only: done"; 917 self-test lines with 0 mismatches and none with more, among them `save_menu`'s (66,000 rounds, `TitleFlow_NewGame` included), `rest_4f`'s, `name_grid`'s and `new_game`'s (9 checks); no Fatal. The launcher was ended by my wrapper's 15-minute timeout while the game process ran on to the end, so the exit code was read from the log, not from the launcher |
+| `BOF3X_SELFTEST_ONLY=1`, exe host | game process exit code 0 |
+| 64-bit preset (`cmake --preset x86_64`, `build-x86_64`) | builds; not run |
+
+Captures kept in the root: `shots\en_new\name_empty.png`,
+`name_typed.png`, `config.png`; `shots\ja_new\` the same.
+
+**Not run, or not reached.** No route reaches a box that prints record 0's
+name: the opening's boxes up to frame 3,234 are other speakers'. Not run:
+the hosted `BOF3.exe`, `fr-FR`, `de-DE`, `en-150`, `psp-eu`; the 64-bit
+build in a game; the special code 4 (quit to the title) and an all-blank
+finish in a game (only through NG's self-test); a quicksave on the name
+screen; `config_screen.txt`; the wide modes. Whether the growth roll after
+the options instead of before (M-A's "order" note) moves anything was not
+measured.
+
+**Ledger text for stage C** (numbers are stage C's).
+
+- *NewGameNameEntry* (Tier: Intent; Toward: psx; Default: on where the
+  layer has the grid). Original (the PC): New Game goes straight to the
+  game; record 0 keeps its default name. PlayStation: New Game opens a name
+  screen for record 0, then the options screen. This: the PlayStation's
+  name screen, START's sub-steps n0..n3 as sub-steps 1..4 of `Game_Step` 2,
+  drawn and run by the shared routine; Start with no name keeps the
+  default (DIV-0020's). Why: the owner (2026-11-12, A1, A3). Switch:
+  `NewGameNameEntry` (code). Fold in 5b's lines (the hand, the field's
+  room, four kana, the buttons, the pad word, the legend's piece) and: the
+  grid's frame drawn with its texture windows in the packet pool, where the
+  PC's `0x45F1A0` leaves them on its stack (the defect above); the default
+  left in record 0 rather than copied back through the grid.
+- *NewGameOptions* (Tier: Intent; Toward: psx; Default: on, every language).
+  Original (the PC): the Config screen is the title's third row only.
+  PlayStation: the options screen after the name, before the game. This:
+  after New Game (and its name screen) the Config screen on the title's
+  `Game_Step` 4 path, unchanged, then the game. The scenario's start and
+  the growth roll keep the port's order (before / after the options; the
+  PlayStation rolls before and starts after, M1). Why: the owner
+  (2026-11-12) and call 1's proposal. Switch: `NewGameOptions` (code).
+
 ## 5. The contracts
 
 - **Switches** (names proposed; the registry's form): `NewGameNameEntry`
