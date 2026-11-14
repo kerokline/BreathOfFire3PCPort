@@ -918,7 +918,7 @@ NUL, whichever is first, and encodes them.
 |---|---|---|---|---|---|---|---|---|
 | 1 text | dx | dy | entry | flags: bit 0, entry + the page's number | count | colour | 0 | `Text_DrawSmall(x + dx, y + dy, colour, count, entry)` |
 | 2 leaders | dx | dy | entry | rows | columns | x step | y step | `Text_DrawSmall(x + dx + xs * j, y + dy + ys * i, 0, 1, entry)` for each row i and column j |
-| 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `(cy << 6) | (cx >> 4)` |
+| 3 tile | dx | dy | u tile | v tile | CLUT, low | CLUT, high | 0 | an 8 x 8 sprite of texture (8u, 8v) at (x + dx, y + dy), shade `0x7F`; the CLUT is the PlayStation's `GetClut` word, `cy * 64 + cx / 16` |
 | 4 piece | dx | dy | piece id | the rect query's flags | CLUT, low | CLUT, high | 0 | a sprite of the menu piece's rectangle (`Menu_PieceRect`, PSX `0x801B0270`) at (x + dx, y + dy), shade `0x80` |
 
 Every op's entry is below E; ops 1 and 2 have a count or rows and columns
