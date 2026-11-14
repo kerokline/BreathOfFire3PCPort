@@ -911,6 +911,15 @@ backlog is on `main` and the check is not in CI.
   has an 8-pixel kana set, and it should already be in the font files. Group
   PK finds it and moves the `ja-JP` legend's strings to it; the 12-pixel
   kana at two thirds goes if the set is there.
+- **Call 8, after PK (the same day).** The owner ran the PSP release and
+  sent a picture of its name screen (game-derived, not in the repository):
+  the legend names cross for confirm, circle for delete, R and L for the
+  name cursor, START for the finish, with R and L drawn as letters. It
+  agrees with PK's reading of the PSP step (4c-PK). The owner's word:
+  **"psp screen with default mappings"**, read here as: a `psp-eu` install
+  shows the PSP's own screen and buttons by default. That is a third family
+  in 5a (group PE, after TF merges); the launcher's toggle to the
+  PlayStation's style on such an install is for the owner to confirm.
 
 **The groups.** TF and CR as section 4 has them. RT's switch-off line and
 new routes, and BT, run after TF merges (both need the screen reachable).
@@ -1016,6 +1025,7 @@ measuring process: Extras under the third row ends at 475 of the window's
 its title, and another session uses the launcher on this machine); its
 expectations are updated for the third row over Extras and Page 2's boxes.
 No capture of the page; the owner has not seen it.
+
 ## 4c-PK. Group PK as run
 
 *Group PK, 2026-11-14, worktree `D:\bof3x-runs\ng1114\pk\wt` (branch
