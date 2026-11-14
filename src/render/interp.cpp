@@ -166,6 +166,10 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                       index, c.count, c.state.texture ? static_cast<void*>(c.state.texture->surface) : nullptr, c.state.blend_enable,
                       now[0].x, now[0].y, now[c.count - 1].x - now[0].x, now[c.count - 1].y - now[0].y, now[0].u, now[0].v,
                       was[0].x, was[0].y, was[0].u, was[0].v, dx0, dy0);
+        if (g_debug)
+            for (U i = 0; i < c.count && i < 6; ++i)
+                bof3::Log("interp-dbg  VERT cmd %u v%u now (%.1f, %.1f) uv (%.4f, %.4f) was (%.1f, %.1f) uv (%.4f, %.4f)", index, i,
+                          now[i].x, now[i].y, now[i].u, now[i].v, was[i].x, was[i].y, was[i].u, was[i].v);
         e.used = true;
         half_dx[index] = dx0 * 0.5f;
         half_dy[index] = dy0 * 0.5f;
@@ -305,7 +309,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                 if (o.kind != Cmd::kDraw || o.count == 0) continue;
                 ++seen;
                 if (!AlignMotion(static_cast<U>(j), &ox, &oy)) continue;
-                if ((ox - dx) * (ox - dx) + (oy - dy) * (oy - dy) <= 5.0f * 5.0f) return true;
+                if ((ox - dx) * (ox - dx) + (oy - dy) * (oy - dy) <= 2.0f * 2.0f) return true;
                 break;
             }
         }
@@ -324,7 +328,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const Entry e = EntryOf(c, frame.vertices + c.first);
         const void* surface = c.state.texture ? static_cast<const void*>(c.state.texture->surface) : nullptr;
         // What to agree with: the surface's vote, and what its last paired draw did.
-        float want[2][2] = {};
+        float want[3][2] = {};
         int wants = 0;
         for (const Vote& v : votes)
             if (v.surface == surface) want[wants][0] = v.dx, want[wants][1] = v.dy, wants = 1;
@@ -332,6 +336,20 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         for (Last& l : last)
             if (l.surface == surface) mine = &l;
         if (mine) want[wants][0] = mine->dx, want[wants][1] = mine->dy, ++wants;
+        // The draw before this one in the list, when it was paired.
+        int prev_paired = -1;
+        for (long long j = static_cast<long long>(i) - 1; j >= 0; --j) {
+            const Command& o = frame.commands[j];
+            if (o.kind != Cmd::kDraw || o.count == 0) continue;
+            if (done[j] == 2) prev_paired = static_cast<int>(j);
+            break;
+        }
+        // ... and what it did: a thing's pieces are drawn together, whatever
+        // their textures (a window's letters), and a far plank of the bridge
+        // within kAgree of the vote was still a row off (the owner,
+        // 2026-11-13: thin seams along the bridge).
+        if (prev_paired >= 0) want[wants][0] = half_dx[prev_paired] * 2, want[wants][1] = half_dy[prev_paired] * 2, ++wants;
+
         int best = -1, nearest_look = -1;
         float best_cost = 0, second_cost = 1e9f, nearest_d = 0;
         bool best_is_look = false;
@@ -351,14 +369,6 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             const float d = dx * dx + dy * dy;
             if (look && (nearest_look < 0 || d < nearest_d)) nearest_look = k, nearest_d = d;
         };
-        // The draw before this one in the list, when it was paired.
-        int prev_paired = -1;
-        for (long long j = static_cast<long long>(i) - 1; j >= 0; --j) {
-            const Command& o = frame.commands[j];
-            if (o.kind != Cmd::kDraw || o.count == 0) continue;
-            if (done[j] == 2) prev_paired = static_cast<int>(j);
-            break;
-        }
         const U looks = Each(g_by_exact, &Entry::exact, e.exact, [&](int k) { Try(k, true); });
         Each(g_by_loose, &Entry::loose, e.loose, [&](int k) {
             if (g_entries[k].exact != e.exact) Try(k, false);
@@ -377,10 +387,12 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                       i, surface, at.x, at.y, looks, best, best_cost, second_cost, best_is_look, wants, want[0][0], want[0][1],
                       want[1][0], want[1][1], align[i], ax, ay, am && g_entries[align[i]].used, am && AlignAgrees(i));
         }
-        // The partner by order first, where its neighbours bear it out -
-        // unless a candidate agreeing with the vote moves less: a field of
-        // look-alike tiles that gained a row pairs by order a whole row off,
-        // and every neighbour bears that out too. Two windows of one page
+        // The partner by order first, where its neighbours bear it out, over
+        // a candidate that merely agrees with the vote: a list's letter took
+        // the same letter of the line above (the fifth sweep, the shop's
+        // list). A field of look-alike tiles that gained a row pairs by
+        // order a whole row off, and every neighbour bears that out too -
+        // the test below on a common look is what stops that. Two windows of one page
         // sliding opposite ways (a menu changing screens) have two motions
         // and one vote, and the vote paired half of one window's letters
         // with the other's (the sweep of 2026-11-13).
@@ -396,12 +408,14 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
                 known = std::max(known, 2 * std::sqrt(half_dx[prev_paired] * half_dx[prev_paired] + half_dy[prev_paired] * half_dy[prev_paired]));
             if (std::sqrt(ax * ax + ay * ay) > known + kAgree) by_order = false;
         }
-        if (by_order && agrees) {
-            float ax = 0, ay = 0;
+        if (by_order && agrees && align[i] != best) {
+            // ... and gives way to a candidate that agrees better with what
+            // is known than it does itself.
+            float ax = 0, ay = 0, cost = 1e9f;
             AlignMotion(i, &ax, &ay);
-            const Vertex& p = g_vertices[g_entries[best].first];
-            const float bx = p.x - at.x, by = p.y - at.y;
-            by_order = std::sqrt(ax * ax + ay * ay) <= std::sqrt(bx * bx + by * by) + 1.0f;
+            for (int w = 0; w < wants; ++w)
+                cost = std::min(cost, std::sqrt((ax - want[w][0]) * (ax - want[w][0]) + (ay - want[w][1]) * (ay - want[w][1])));
+            if (cost > best_cost + 1.0f) by_order = false;
         }
         if (by_order && Pair(i, g_entries[align[i]])) {
             done[i] = 2;
@@ -413,7 +427,11 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             ++(best_is_look ? s.exact : s.loose);
             if (mine) mine->dx = half_dx[i] * 2, mine->dy = half_dy[i] * 2;
             else last.push_back({surface, half_dx[i] * 2, half_dy[i] * 2});
-        } else if (nearest_look >= 0 && looks <= 2 && Pair(i, g_entries[nearest_look])) {
+        } else if (nearest_look >= 0 && looks <= 2 && nearest_d <= cap / 16 && Pair(i, g_entries[nearest_look])) {
+            // Within a quarter of the cap: a line of text that changed has
+            // letters whose only look-alike is a letter of the old line, and
+            // they slid in from where those stood (the sixth sweep, the
+            // shop's message bar).
             done[i] = 2;
             ++s.exact;
         } else if (any) {
@@ -450,32 +468,50 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         // whose colour changed, and following a window's ground it uncovered
         // a strip of the picture (the sweep of 2026-11-13, the world map).
         if (!c.state.texture) continue;
-        const Vertex& at = frame.vertices[c.first];
-        int best = -1;
-        float best_d = cap;
-        for (int j = std::max(0, i - kReach); j < std::min(n, i + kReach + 1); ++j) {
-            const Command& o = frame.commands[j];
-            if (done[j] != 2 || o.kind != Cmd::kDraw) continue;
-            const bool same_surface = (c.state.texture ? c.state.texture->surface : nullptr) ==
-                                      (o.state.texture ? o.state.texture->surface : nullptr);
-            if (!same_surface || o.state.blend_enable != c.state.blend_enable || o.state.topology != c.state.topology) continue;
-            const Vertex& p = frame.vertices[o.first];
-            const float dx = p.x - at.x, dy = p.y - at.y, d = dx * dx + dy * dy;
-            if (d < best_d) {
-                best = j;
-                best_d = d;
-            }
-        }
-        if (best < 0) continue;
-        ++s.followed;
-        const float fx = half_dx[best], fy = half_dy[best];
-        follow.push_back({static_cast<U>(i), fx, fy});
-        if (fx == 0 && fy == 0) continue;
+        // Vertex by vertex: each takes the motion of the vertex it shares with
+        // a paired draw of its surface near it in the list - a mesh's pieces
+        // are drawn together, and share their corners. Moved as one block by
+        // a neighbour's first vertex, a plank entering at the far end of the
+        // swaying bridge (its rows of planks bob in turn) no longer met the
+        // plank beside it (the owner, 2026-11-13: a seam at the upper right).
+        bool any = false;
+        float first_dx = 0, first_dy = 0;
         Vertex* o = out + c.first;
         for (U k = 0; k < c.count; ++k) {
-            o[k].x += fx;
-            o[k].y += fy;
+            const Vertex& v = frame.vertices[c.first + k];
+            // Only a corner it shares (within half a pixel): the rest of a
+            // piece that came in at the picture's edge stays at the edge. A
+            // new sliver of sky at the right edge, moved whole with the sky
+            // beside it, left the last column bare one in-between in sixteen
+            // (the owner, 2026-11-13: a black line at the upper right).
+            float best_d = 0.26f, mx = 0, my = 0;
+            bool found = false;
+            for (int j = std::max(0, i - kReach); j < std::min(n, i + kReach + 1); ++j) {
+                const Command& q = frame.commands[j];
+                if (done[j] != 2 || q.kind != Cmd::kDraw) continue;
+                const bool same_surface = (c.state.texture ? c.state.texture->surface : nullptr) ==
+                                          (q.state.texture ? q.state.texture->surface : nullptr);
+                if (!same_surface || q.state.blend_enable != c.state.blend_enable || q.state.topology != c.state.topology) continue;
+                for (U m = 0; m < q.count; ++m) {
+                    const Vertex& p = frame.vertices[q.first + m];
+                    const float dx = p.x - v.x, dy = p.y - v.y, d = dx * dx + dy * dy;
+                    if (d < best_d) {
+                        best_d = d;
+                        mx = out[q.first + m].x - p.x;
+                        my = out[q.first + m].y - p.y;
+                        found = true;
+                    }
+                }
+            }
+            if (!found) continue;
+            o[k].x += mx;
+            o[k].y += my;
+            if (!any) first_dx = mx, first_dy = my;
+            any = true;
         }
+        if (!any) continue;
+        ++s.followed;
+        follow.push_back({static_cast<U>(i), first_dx, first_dy});
     }
     for (const Follow& f : follow) half_dx[f.i] = f.dx, half_dy[f.i] = f.dy;
     // The last word: a surface whose draws touch in the picture and follow
@@ -515,6 +551,26 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             ++runs.back().n;
             run_of[i] = static_cast<U>(runs.size() - 1);
             px0 = x0, px1 = x1, py0 = y0, py1 = y1, pmx = mx, pmy = my;
+        }
+    }
+    // A cut - another view, another place: the two frames are not the same
+    // scene a step apart, and whatever pairs between them pairs by chance
+    // (the owner, 2026-11-13: the ground shifting on the way into town).
+    // When a quarter of the draws found no pair, or the runs' breaks are a
+    // tenth of them, the frame is shown as it is.
+    {
+        U lost = 0, breaks = 0;
+        for (U i = 0; i < frame.n_commands; ++i) {
+            const Command& c = frame.commands[i];
+            if (c.kind == Cmd::kDraw && c.count != 0 && done[i] != 2) ++lost;
+        }
+        for (const Run& r : runs) breaks += r.breaks;
+        if (g_debug) bof3::Log("interp-dbg  CUT? draws %u lost %u breaks %u", s.draws, lost, breaks);
+        if (s.draws >= 16 && (lost * 4 > s.draws || breaks * 10 > s.draws)) {
+            std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));
+            s.snapped = s.draws;
+            if (stats) *stats = s;
+            return true;
         }
     }
     for (U i = 0; i < frame.n_commands; ++i) {
