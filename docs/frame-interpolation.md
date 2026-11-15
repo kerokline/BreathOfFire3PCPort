@@ -46,13 +46,19 @@ Switches (the first is the launcher's `interp=`, DIV-0230; the rest are tooling)
 
 ## 3. How draws are matched
 
-A draw's *look* is its state, surface and per-vertex texture coordinates
-(colours when untextured); its *shape* is state and box size in steps of 4.
+A draw's *look* is its state, surface and per-vertex texture coordinates to
+the whole texel (colours when untextured); its *shape* is state and box size
+in steps of 4. The whole texel is since 2026-11-15 (section 6, item 13): a
+sprite scaled with its distance has coordinates whose last digits follow the
+scale.
 The order of the rules is what the day's faults taught, each named in the
 code beside its rule:
 
 1. **Votes.** Each surface's commonest motion, from each draw's nearest
-   look-alike. A draw wants to agree (within 5 px) with its surface's vote,
+   look-alike - and from its looks drawn once in each frame alone, where it
+   has any (section 6, item 15: a row of look-alike pieces, moved more than
+   half a piece, has its nearest look-alike a piece over). A draw wants to
+   agree (within 5 px) with its surface's vote,
    with what the last paired draw of its surface did, or with what the draw
    before it in the list did.
 2. **By order.** The longest common run of looks between the two draw lists
@@ -64,6 +70,10 @@ code beside its rule:
    pair a row off by order. It gives way to a candidate that agrees better.
 3. **By motion.** Otherwise the candidate of its look or shape closest to
    what it wants, when within 5 px, or when clearly better than the next.
+   **A cel that changed** - a candidate by shape alone that is clearly the
+   best and agrees with nothing - does not move by the step between the two
+   boxes: it takes the motion its kept draw was shown with the frame before,
+   and none when that draw had no pair (section 6, item 14).
 4. **A lone look-alike** (two or fewer) within a quarter of the cap.
 5. **Rigidity.** A pair is refused when its vertices move differently by
    more than a quarter of the polygon's longest extent (12 px at the least):
@@ -98,7 +108,11 @@ code beside its rule:
 
 ## 4. How it was checked
 
-`BOF3X_INTERP_DUMP` gives triples: real N, the in-between, real N+1. Two
+`BOF3X_INTERP_DUMP` gives triples: real N, the in-between, real N+1. In the
+file names that is `N_real`, `N_mid`, `(N+1)_real`: `N_mid` is shown after
+frame N (read the other way round on 2026-11-15, and a jug then seemed to
+move backwards). `tools/interp_holes.py` is the envelope measure below over
+a dump directory. Two
 checkers (kept in the session's scratch, `bof3x-runs/interp1113/sweep` and
 `bof3x-runs/interp1114/s2/check3.py`, not
 in the tree - worth moving to `tools/` if the work goes on):
@@ -300,6 +314,62 @@ ear and the WAV A/B stay owed (IDEAS I68).
     rule changed (item 1) the rays share their corner and hold together,
     so the in-between shows a fan halfway between two flickers. It read as
     a normal fan in the frames looked at. The owner's eye decides.
+
+13. **Jugs and barrels a step ahead of the ground** - *closed 2026-11-15*
+    (the owner, in play at 21:9: static objects "jumping forward, then
+    skipping back"). worldMapAndAreaTransition at `--wide 2`, Frame_Counter
+    414: the jug is 13 px along in the in-between and the ground 7. The
+    decision log: the jug and the barrel are sprites of one surface, scaled
+    with their distance, and their texture coordinates differ in the last
+    digits from frame to frame (the barrel's `v` 0.1533, then 0.1534), so
+    they had `looks 0` on every frame and paired by shape alone. The shape
+    is the box in steps of 4 px, and on the frame the scaled box crosses a
+    step (the jug at 68 px, the barrel at 76) there was no candidate at
+    all: the draw stood where frame N has it while the ground went halfway.
+    The look now reads texture coordinates to the whole texel; the same
+    in-between has the jug at 6 px and the ground at 7.
+14. **The world map's leader jumping left and right** - *closed
+    2026-11-15* (the owner, the same session). The walk's cel changes every
+    fourth frame (Frame_Counter 1676, 1680, 1684) and the new cel's box is
+    10 px to one side of the old one's, the figure itself unmoved. The new
+    cel paired with the old by shape, and halfway was 5 px to the side of
+    where either frame has the figure. Such a pair now carries the kept
+    draw's own motion (section 3, rule 3). Measured on the two world map
+    stretches, the figure against the next frame's: 10 of 59 sampled
+    in-betweens 3 px or more off before, none after. The first form, which
+    fell back to the boxes' step when the kept draw had no motion, left one
+    (1182, the frame after a turn).
+15. **Gaps as the camera pans** - *closed 2026-11-15* (the owner, at 21:9).
+    Reproduced at Frame_Counter 888 of the same route: a hole in the hedge
+    at the right edge that neither real frame has. The hedge is a row of
+    pieces 41 px apart, some of a look drawn once, and the picture moved
+    22 px: the nearest look-alike of the repeated pieces was the piece
+    beside their own (+19 where the ground went -22), the surface's vote
+    took +19, pieces with a look of their own then went by shape with the
+    wrong piece or the right way alone, and the row opened. A surface now
+    votes by its looks drawn once where it has any (section 3, rule 1). The
+    owner's own capture, a sliver beside a house roof on the same pan, was
+    not logged; it is taken to be the same fault and wants their eye.
+    **The three changes against the build before, 2026-11-15** (items 13
+    to 15; every route at `--wide 2`, `BOF3X_FILTER=point`, one triple in
+    six; "differ" is in-betweens that are not the same picture, between
+    equal real frames; flagged is `tools/interp_holes.py`):
+
+    | Route | Triples | Differ | Flagged before | Flagged after |
+    |---|---|---|---|---|
+    | worldMapAndAreaTransition | 358 | 61 | 2, 524 px | 1, 42 px |
+    | bridgeWalk | 351 | 84 | 29, 2,522 px | 29, 1,914 px |
+    | shop | 527 | 13 | 13, 8,788 px | 13, 8,788 px |
+    | bossAndFlash | 921 | 72 | 25, 23,224 px | 21, 22,981 px |
+    | combat | 437 | 26 | 10, 10,672 px | 10, 10,672 px |
+
+    By the shift measure of section 4 no differing in-between is worse but
+    one, shop 2136, read by eye: the barrel outside the shop, a step ahead
+    before and halfway after - the measure calls halfway "further from
+    both". Thirteen are better. Not run: the other routes of section 4,
+    the original 4:3 picture, and no route was played.
+16. **One stray** of 42 pixels at the bottom edge, Frame_Counter 840 of the
+    same route, before and after the changes of 2026-11-15. Not read.
 
 Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
 box. Before it leaves "experimental": the checkers in `tools/`, the debug

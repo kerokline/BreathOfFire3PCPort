@@ -29,6 +29,10 @@ struct Entry {
     Key exact, loose;
     U first, count;
     bool used;
+    // What Build moved this draw back by (its first vertex, the whole step),
+    // when it had a pair: a cel that changes takes it on (Carry).
+    bool has_motion;
+    float mx, my;
 };
 
 // The kept frame.
@@ -36,6 +40,14 @@ std::vector<Vertex> g_vertices;
 std::vector<Entry> g_entries;
 std::vector<U> g_by_exact, g_by_loose;   // indices into g_entries, sorted by key
 bool g_kept;
+// The motions of the frame Build last saw, a draw each in list order, for
+// Keep to put on that frame's entries.
+struct Motion {
+    bool has;
+    float dx, dy;
+};
+std::vector<Motion> g_built;
+bool g_built_valid;
 
 void StateInto(Fnv& f, const Command& c) {
     f.Put(c.state.topology);
@@ -63,11 +75,20 @@ Entry EntryOf(const Command& c, const Vertex* v) {
     Fnv x;
     StateInto(x, c);
     x.Put(surface);
+    // Texture coordinates to the whole texel. A sprite scaled with its
+    // distance has coordinates a fraction of a texel inside its cel, and the
+    // fraction follows the scale: a barrel's v read 0.1533 on one frame and
+    // 0.1534 on the next, so by the float's bits a jug or a barrel standing
+    // still never had its own look, paired by shape alone, and lost its pair
+    // each time its box crossed a step of the shape (the owner, 2026-11-15:
+    // jugs and barrels a step ahead of the ground, one picture in a few).
+    const float tw = surface ? static_cast<float>(c.state.texture->surface->width) : 0.0f;
+    const float th = surface ? static_cast<float>(c.state.texture->surface->height) : 0.0f;
     float x0 = v[0].x, x1 = v[0].x, y0 = v[0].y, y1 = v[0].y;
     for (U i = 0; i < c.count; ++i) {
         if (surface) {
-            x.Put(v[i].u);
-            x.Put(v[i].v);
+            x.Put(static_cast<std::int32_t>(std::lround(v[i].u * tw)));
+            x.Put(static_cast<std::int32_t>(std::lround(v[i].v * th)));
         } else {
             x.Put(v[i].diffuse);
         }
@@ -98,22 +119,6 @@ template <class Fn> U EachUnused(const std::vector<U>& order, Key Entry::*member
     return count;
 }
 
-// The nearest unused kept entry with `key` in `order` (sorted by `member`),
-// by the first vertex's distance; -1 when none.
-int Nearest(const std::vector<U>& order, Key Entry::*member, Key key, const Vertex& at) {
-    int best = -1;
-    float best_d = 0;
-    EachUnused(order, member, key, [&](int k) {
-        const Vertex& p = g_vertices[g_entries[k].first];
-        const float dx = p.x - at.x, dy = p.y - at.y, d = dx * dx + dy * dy;
-        if (best < 0 || d < best_d) {
-            best = k;
-            best_d = d;
-        }
-    });
-    return best;
-}
-
 }  // namespace
 
 bool g_debug;
@@ -135,6 +140,10 @@ void Keep(const Frame& frame) {
         if (!IsDraw(c)) continue;
         g_entries.push_back(EntryOf(c, frame.vertices + c.first));
     }
+    if (g_built_valid && g_built.size() == g_entries.size())
+        for (std::size_t i = 0; i < g_entries.size(); ++i)
+            g_entries[i].has_motion = g_built[i].has, g_entries[i].mx = g_built[i].dx, g_entries[i].my = g_built[i].dy;
+    g_built_valid = false;
     const U n = static_cast<U>(g_entries.size());
     g_by_exact.resize(n);
     g_by_loose.resize(n);
@@ -213,6 +222,32 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         }
         return true;
     };
+    // A cel that changed: the draw takes the motion its kept draw was shown
+    // with, whole, and not the step between the two boxes. A walk's cels sit
+    // differently in their boxes: the world map's leader, standing in the
+    // middle of the picture, has boxes 10 pixels apart on the frame the cel
+    // changes, and halfway between them is 5 pixels to one side of where
+    // either frame has the figure (the owner, 2026-11-15: the leader jumping
+    // left and right, then back). A kept draw with no motion - it had no
+    // pair itself, the frame the leader turns - gives none: the draw is shown
+    // where the frame has it.
+    const auto Carry = [&](U index, Entry& e) {
+        if (!e.has_motion) e.mx = e.my = 0;
+        if (e.mx * e.mx + e.my * e.my > cap) return false;
+        const Command& c = frame.commands[index];
+        if (g_debug)
+            bof3::Log("interp-dbg  CARRY cmd %u tex %u at (%.1f, %.1f) d (%.1f, %.1f)", index, SurfaceId(SurfaceOf(c)),
+                      frame.vertices[c.first].x, frame.vertices[c.first].y, e.mx, e.my);
+        e.used = true;
+        half_dx[index] = e.mx * 0.5f;
+        half_dy[index] = e.my * 0.5f;
+        if (e.mx != 0 || e.my != 0) {
+            ++s.moved;
+            Vertex* o = out + c.first;
+            for (U i = 0; i < c.count; ++i) o[i].x += e.mx * 0.5f, o[i].y += e.my * 0.5f;
+        }
+        return true;
+    };
     // 0 unmatched, 1 a candidate too far, 2 matched
     std::vector<unsigned char> done(frame.n_commands, 0);
     // Pairing is led by motion, not by the nearest draw of the same look: a
@@ -235,27 +270,55 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         const void* surface;
         std::int64_t cell;
         float dx, dy;
+        bool lone;   // the look is drawn once in each frame
     };
     std::vector<Vote> votes;   // sorted by surface; after the count, one a surface
     {
+        // The frame's looks, sorted, to tell a look drawn once.
+        std::vector<Key> now_looks;
+        for (U i = 0; i < frame.n_commands; ++i)
+            if (IsDraw(frame.commands[i])) now_looks.push_back(cur[i].exact);
+        std::sort(now_looks.begin(), now_looks.end());
         for (U i = 0; i < frame.n_commands; ++i) {
             const Command& c = frame.commands[i];
             if (!IsDraw(c)) continue;
             const Vertex& at = frame.vertices[c.first];
-            const int k = Nearest(g_by_exact, &Entry::exact, cur[i].exact, at);
+            int k = -1;
+            float k_d = 0;
+            const U kept_looks = EachUnused(g_by_exact, &Entry::exact, cur[i].exact, [&](int j) {
+                const Vertex& q = g_vertices[g_entries[j].first];
+                const float d = (q.x - at.x) * (q.x - at.x) + (q.y - at.y) * (q.y - at.y);
+                if (k < 0 || d < k_d) k = j, k_d = d;
+            });
             if (k < 0) continue;
             const Vertex& p = g_vertices[g_entries[k].first];
             const std::int64_t cx = std::llround((p.x - at.x) / 2), cy = std::llround((p.y - at.y) / 2);
+            const auto range = std::equal_range(now_looks.begin(), now_looks.end(), cur[i].exact);
+            const bool lone = kept_looks == 1 && range.second - range.first == 1 && k_d <= cap;
             votes.push_back({SurfaceOf(c), cx * 100000 + cy,
-                             static_cast<float>(cx) * 2, static_cast<float>(cy) * 2});
+                             static_cast<float>(cx) * 2, static_cast<float>(cy) * 2, lone});
         }
+        // A surface with looks drawn once votes by those alone. A row of
+        // pieces that look alike (a hedge, 41 pixels a piece) has its nearest
+        // look-alike a piece over once the picture moves more than half a
+        // piece a frame: the nearest gave +19 where the ground under it went
+        // -22, the vote took it, and the pieces with a look of their own went
+        // by shape with the piece beside their own, or the right way alone,
+        // and the row opened (the owner, 2026-11-15: gaps as the camera pans;
+        // Frame_Counter 888 of worldMapAndAreaTransition at 21:9). A look
+        // drawn once in each frame has one place it can have come from.
         std::sort(votes.begin(), votes.end(), [](const Vote& a, const Vote& b) {
-            return a.surface != b.surface ? a.surface < b.surface : a.cell < b.cell;
+            if (a.surface != b.surface) return a.surface < b.surface;
+            if (a.lone != b.lone) return a.lone;
+            return a.cell < b.cell;
         });
         std::vector<Vote> winners;
         std::size_t run = 0, best = 0;
+        bool lone_only = false;
         for (std::size_t i = 0; i < votes.size(); ++i) {
             const bool same_surface = i > 0 && votes[i].surface == votes[i - 1].surface;
+            if (!same_surface) lone_only = votes[i].lone;
+            if (lone_only && !votes[i].lone) continue;
             run = (same_surface && votes[i].cell == votes[i - 1].cell) ? run + 1 : 1;
             if (!same_surface) {
                 winners.push_back(votes[i]);
@@ -462,6 +525,10 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (by_order && Pair(i, g_entries[align[i]])) {
             Remember();
             ++s.exact;
+        } else if (best >= 0 && !best_is_look && !agrees && clear && Carry(i, g_entries[best])) {
+            // By shape alone and agreeing with nothing: a cel that changed.
+            Remember();
+            ++s.loose;
         } else if (best >= 0 && (agrees || clear) && Pair(i, g_entries[best])) {
             Remember();
             ++(best_is_look ? s.exact : s.loose);
@@ -681,14 +748,18 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (g_debug) bof3::Log("interp-dbg  CUT? draws %u lost %u breaks %u", s.draws, lost, breaks);
         if (s.draws >= 16 && (lost * 4 > s.draws || breaks * 10 > s.draws)) {
             std::memcpy(out, frame.vertices, frame.n_vertices * sizeof(Vertex));
+            g_built.assign(s.draws, Motion{});
+            g_built_valid = true;
             s.snapped = s.draws;
             if (stats) *stats = s;
             return true;
         }
     }
+    g_built.clear();
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
         if (!IsDraw(c)) continue;
+        g_built.push_back({false, 0, 0});
         const Run& r = runs[run_of[i]];
         if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u letters %d half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, r.letters, half_dx[i], half_dy[i]);
         // A long run takes a few breaks (a field's layer has the scene's
@@ -697,10 +768,15 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         // letter going its own way is one that changed (the shop's message
         // bar: only its last letter slid, from a letter of the old line).
         const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2) || (r.letters && r.breaks >= 1);
-        if (!broken) continue;
+        if (!broken) {
+            // A paired draw's motion, for the frame after (Carry).
+            if (done[i] == 2) g_built.back() = {true, half_dx[i] * 2, half_dy[i] * 2};
+            continue;
+        }
         std::memcpy(out + c.first, frame.vertices + c.first, c.count * sizeof(Vertex));
         ++s.snapped;
     }
+    g_built_valid = true;
     if (stats) *stats = s;
     return true;
 }

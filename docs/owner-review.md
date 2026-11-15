@@ -1554,5 +1554,9 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   flickers (item 12); text that changes outright, fixed the same day and
   not seen in play (item 3); the SatPixie
   look with the box on (item 10); the music by ear (IDEAS I68); F11's
-  capture in the second half of a frame (item 11). And a look at the
+  capture in the second half of a frame (item 11). Since 2026-11-15,
+  at 21:9 on the town and the world map: jugs and barrels as the field
+  scrolls (item 13), the leader on the world map (item 14), and the edges
+  of the picture as the camera pans, the sliver beside the house roof
+  above all (item 15). And a look at the
   Settings page's layout: its check boxes moved closer for the new box.
