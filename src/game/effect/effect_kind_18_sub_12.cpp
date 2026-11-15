@@ -262,26 +262,10 @@ extern "C" void __cdecl EffectKind18Sub15_Start(void) {
 
 namespace {
 
-// A primitive at the cursor appended to a layer's frame node - the list the
-// draw pass appends after that layer's cells and before its sprites - as
-// EffectKind18Sub15_LinkLayer does for layer 15's (`tails` its two last
-// pointers' offset in DrawLayers: 0x2F4 layer 15's, 0x24 layer 0's).
-void LinkNode(unsigned size, U tails_offset) {
-    unsigned char* const next = Gfx_PacketNext;
-    const unsigned buffer = Gfx_BufferIndex;
-    const U bytes = size & 0xFFu;
-    const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
-    if (limit <= AddressOf(next) + bytes) {
-        if (draw_order::Tagging())
-            bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
-        return;
-    }
-    const U tails = ::bof3::Img(DrawLayers_addr) + tails_offset;
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(tails + 8 * buffer)))), AddressOf(next));
-    unsigned char* const now = Gfx_PacketNext;
-    SetUL(At(tails + 8u * Gfx_BufferIndex), AddressOf(now));
-    Gfx_PacketNext = now + bytes;
-}
+// DIV-0041 (2026-11-15): set by EffectKind18Sub15_Draw round the wide
+// picture's cloud strips - EffectKind18Sub15_LinkLayer then appends to layer
+// 0's frame node, not layer 15's. Never set narrow or in a self-test.
+bool g_link_first_node;
 
 }  // namespace
 
@@ -364,7 +348,9 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
         // picture, the bridge's far end in the wide one (the deck's two far
         // columns and the far railing stopped at screen x 386 at 21:9). The
         // gradients stay in layer 15's: they are the far sea's haze.
-        LinkNode(0x48, 0x24);
+        g_link_first_node = true;
+        SH_CALL(EffectKind18Sub15_LinkLayer)(0x48);
+        g_link_first_node = false;
     }
     for (U col = 0; !wide && col < 0x300; col += 0x100) {
         prim = Gfx_PacketNext;
@@ -485,9 +471,11 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     // the slope runs on by BridgeRows() rows each way, by the same
     // rule, over the map's rows only. 0 narrow and in every self-test.
     const U more = wide ? BridgeRows(wide) : 0u;
-    const U rows = AreaMap_Header[1];
+    const std::int32_t rows = AreaMap_Header[1];
+    // The party's row for the extra rows' bounds: Field_Kind2Z's high word.
+    const std::int32_t centre_row = static_cast<short>(static_cast<U>(Field_Kind2Z) >> 16);
     for (U i = 0; i < 0xA + more; ++i) {
-        if (i >= 0xA && static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + i + 4u >= rows) break;
+        if (i >= 0xA && centre_row + static_cast<std::int32_t>(i) + 4 >= rows) break;
         const U flat = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + 3u;
         const U lo = static_cast<U>(I(i) / 2) + 0x20u;
         const U hi = static_cast<U>(I(i + 1) / 2) + 0x20u;
@@ -499,7 +487,7 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
         }
     }
     for (U j = 0; j < 0xE + more; ++j) {
-        if (j >= 0xE && SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v)))) - static_cast<std::int32_t>(j) - 4 < 0) break;
+        if (j >= 0xE && centre_row - static_cast<std::int32_t>(j) - 4 < 0) break;
         const U centre = static_cast<U>(SWEffect5c(Word(At(::bof3::Img(at::kKind2ZCell.v)))));
         const U flat = centre - 3u;
         const U lo = static_cast<U>(I(j + 1) / 2) + 0x20u;
@@ -519,7 +507,31 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
 // primitive) and the cursor moved on - if the pool has room, as Gfx_CommitPrim
 // tests it, and silently not at all if it has not. The buffer byte is not
 // checked, as Gfx_CommitPrim's slot is not.
-extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) { LinkNode(size, 0x2f4); }
+extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
+    unsigned char* const next = Gfx_PacketNext;
+    const unsigned buffer = Gfx_BufferIndex;
+    const U bytes = size & 0xFFu;
+    const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
+    if (limit <= AddressOf(next) + bytes) {
+        if (draw_order::Tagging())
+            bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
+        return;
+    }
+    if (g_link_first_node) {
+        // Layer 0's frame node: its last pointer for this buffer is DrawLayers
+        // dword 9 + 2 * buffer (layer 15's, below, is dword 0xBD + 2 * buffer).
+        unsigned long& last = DrawLayers[9u + 2u * (buffer & 1u)];
+        SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+        last = AddressOf(next);
+        Gfx_PacketNext = next + bytes;
+        return;
+    }
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
+                          AddressOf(next));
+    unsigned char* const now = Gfx_PacketNext;
+    SetUL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
+    Gfx_PacketNext = now + bytes;
+}
 
 // original 0x503320 (EffectKind18_States[22], hidden in 0x5032C0; the code past
 // its jmp over padding at 0x503360 is its own, nothing else reaches it): on +2
