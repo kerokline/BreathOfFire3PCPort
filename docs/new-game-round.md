@@ -1995,8 +1995,20 @@ differ on the French disc only, and `fr-FR.START.DAT` now carries that tile
 from its disc (kind 1). German, US, EU, Japan and both PSP builds equal the
 PC's; the owner's German picture agrees.
 
-**Owed on these:** the whole shadow suite and the switch-off frame
-comparisons on the tip that holds them (VF's third pass, below if run).
+**VF's third pass, on `189ed750`** (which also holds `main` as merged at
+`e7cb971c`: PR 246, smooth motion, off in every run). Both widths build.
+The whole 32-bit shadow suite: 922 lines, all 0 mismatches. Against `main`
+as merged (`129ceaa4`), with the two New Game switches off: `battle_commands`
+67 of 67 frames, `config_screen` 23, `config_controller` 18, `field_menu`
+31, `menu_screens` 34, `shop` 52, all identical. The same six with
+`GlyphCacheReuse` off against on: all identical (whether any of them fills
+the cache was not measured). `newGameName` under `en-US`, `ja-JP` and
+`fr-FR`: the START row's word, the `ja-JP` label whole, the French panel
+label. The tool checks pass; the launcher host tests have the base's two
+`TestPresetPlan` failures and no other. Logs: `D:of3x-runs
+g1114f\logs\p3_*`.
+4d's owed list stands otherwise; the proof's routes are now recorded
+against `main` with PR 246 in.
 
 ## 5. The contracts
 
