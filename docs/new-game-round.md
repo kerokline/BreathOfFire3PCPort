@@ -1,14 +1,16 @@
 # The New Game round: the name entry and the options screen back in the New Game sequence
 
-**Status:** IN PROGRESS, stage A built (2026-11-14, on the local branch
-`new-game/round` off `main` `651a5ad8`, not pushed; IDEAS I34. Group M ran
-on 2026-11-12: section 3a is what it measured, 3b what that changes and the
-owner's answers. Stage A - the grid's chunk, the routine, the two route
-edits - is built and merged on the branch: section 4a is what was run and
-what is owed, 5a the chunk's layout, 5b the routine as built. Nothing calls
-the routine yet, so nothing a player sees has changed and the ledger has no
-entry. Stage B waits for the owner's word. Sections 4 to 9 are as first
-staged and are amended by 3b and 4a.)
+**Status:** IN PROGRESS, stages A and B built (2026-11-14, on the local
+branch `new-game/round` off `main` `651a5ad8`, not pushed; IDEAS I34. Group
+M ran on 2026-11-12: section 3a. Stage A: 4a. Stage B, the callers, is
+built and merged on the branch: 4b is the owner's word, the 4c sections are
+each group as run, 4d is the merged tree as verified and what is owed.
+New Game runs the name screen and the options screen, the faerie village
+renamer runs the grid, and the launcher has the two boxes; **the ledger has
+no entry yet, so the branch is not mergeable to `main` as it is (rule 2):
+stage C writes the entries, runs the proof on a quiet machine, and the
+owner plays it.** Sections 4 to 9 are as first staged and are amended by
+3b, 4a and 4b.)
 
 The owner (2026-11-12): stage a round for the character naming screen and the
 options menu at New Game. On the PlayStation, New Game asks for the hero's
@@ -1857,6 +1859,73 @@ to fold into the name-entry entries):
   pages (the French and German button tiles, the Western START row). The
   Western START row's word stays blank on a PC install until the layer
   carries it.
+
+## 4d. Stage B merged: what was verified, and what is owed (2026-11-14)
+
+Merged one group at a time into `new-game/round`: LT, PK, TF, CR, PE, RT,
+CR's follow-up (the tiled frame's fix with no switch), BT, PK's follow-up
+(D18's reuse, the START row's word). One fix at the merge: `rest_4d`'s
+synthetic legend passes BT's map argument. Group VF then ran the merged
+tree and changed nothing, twice: at `037a316b` and at the final tip
+`2068bfdd` (logs and captures under `D:of3x-runs
+g1114f`).
+
+**Verified on `2068bfdd` (VF's second pass unless said).**
+
+- Both widths build. The whole 32-bit shadow suite: 922 result lines, all
+  0 mismatches (`new_game` 9 checks, `name_grid` 145, `glyph_draw` with
+  D18's reuse checked 4,965 times). The 64-bit build cannot run the shadow
+  suite by design (`detour.h` `WantsShadow`); its plain self-test passed at
+  `037a316b` and it was not run in play.
+- With the two New Game switches off, against the build before stage B
+  (`2207d9ce`): `battle_commands` 67 of 67 frames, `config_screen` 23 of
+  23, `config_controller` 18 of 18. Because D18's reuse is not behind those
+  switches, three text-heavy routes too: `field_menu` 31 of 31,
+  `menu_screens` 34 of 34, `shop` 52 of 52 on the repeat (the first base
+  run alone was one frame ahead in a typing message; four repeats agree).
+- `newGameName` under `en-US` and `ja-JP` with PK's layers: the START row
+  draws its word; the `ja-JP` finish label draws whole and the legend is in
+  the 8-pixel kana. `newGameOriginal`, `newGameBlankName`, `newGameQuit`
+  ran at `037a316b`.
+- At `037a316b`: the name screen under `fr-FR`, `de-DE`, `en-150` and over
+  PE's disc-only `psp-eu` cache (a name typed, the options, the opening);
+  the renamer's member path by CR's poke; a quicksave taken on the name
+  screen and loaded back to it; 16:9 with a swapped mapping; the tool
+  checks; the launcher's host tests (the two `TestPresetPlan` failures of
+  the base and no other).
+
+**Owed, for stage C.**
+
+- **The ledger.** Entries for the name entry at New Game, the options at
+  New Game, the renamer's grid, D18's reuse (a renderer change to a Capcom
+  defect, on by default, a plain flag today: whether it is a named switch is
+  the owner's), the tiled frame's windows (PC-only defect, no switch); the
+  START row's word in the layer and the `ja-JP` 8 x 8 glyphs (DIV-0016);
+  DIV-0075 and DIV-0020 amended. The text is in the 4c sections and 5b.
+  Then `ledger_registry.h` and the preset TSVs regenerated (the two
+  `TestPresetPlan` failures are probably the stale TSVs), and
+  `known-defects.md` for the tiled frame and D18.
+- **The proof**: the state-hash routes with the switches off, on a quiet,
+  hands-off machine; the new routes' own pairs.
+- **Not run by anyone:** the 64-bit build in play; a PSP-only home laid out
+  by the launcher's Sources page (VF ran the PSP cache over a PC game
+  folder); the renamer's slot path with save and reload on the final tree,
+  and any player's route into the renamer (it is entered by a harness
+  poke); `tools/launcher_host/dialog_test.py`; the `psp-eu` layer rebuilt
+  with the START row's word; a name carried through `save_convert.py`
+  (acceptance 6); M10's reference captures.
+- **Docs:** `input-script.md` and `abc-harness.md` do not describe the
+  harness's default switch-off or the `# screens new-game` header;
+  `launcher-settings.md` has LT's row only.
+- **For the owner's eye:** the German and French labels look cut to their
+  room (not compared with the discs); the hand at column 0 sits over the
+  grid frame's edge; the options box LT added beside the name-entry box.
+- **Open with the owner:** the starting mapping's order (`sigma.cpp`
+  `ReleaseOfSources`: the PC's own data counts as a Japan source and is
+  first, not last as recalled; US PlayStation with Japan PSP starts with
+  the West's); call 1 for the original Chinese (built: the options screen
+  is shown); the growth roll's order against the options (TF kept the
+  port's).
 
 ## 5. The contracts
 
