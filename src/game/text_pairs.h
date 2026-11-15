@@ -24,3 +24,12 @@ bool TextPair_At(const std::uint8_t* text);
 // loaded. The two callers are the enemy name windows, whose 8-unit draw
 // 0x516E70 is Capcom's (docs/dialogue-localisation.md section 9).
 const std::uint8_t* TextPairs_Expand(const std::uint8_t* text, std::uint8_t* buf, std::uint32_t cap);
+
+// The same for the first `count` characters of `text` only, the ones a
+// draw capped at `count` characters reads: the member windows' names, a
+// field that need not end in a NUL within it (D422). Returns `text` itself
+// when none of those characters is a pair code - always, with no table
+// loaded. A pair adds a character, so the draw's own cap still bounds what
+// it draws; `cap` must hold 4 * count + 1 bytes.
+const std::uint8_t* TextPairs_ExpandFirst(const std::uint8_t* text, std::uint32_t count, std::uint8_t* buf,
+                                          std::uint32_t cap);

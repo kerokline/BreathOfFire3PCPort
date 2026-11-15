@@ -512,6 +512,14 @@ it `TextPairs_Expand`'s copy. Of `0x516E70`'s 18 callers, only these two
 carry names. The rest draw system-pool text, fixed labels, the Config
 screen and character names (`0x802DC0`).
 
+**Missed again, D422 (fixed 2026-11-15):** two of those "character names"
+callers are the member windows, `BattleWin_DrawPartyStatus` `0x442FA0` and
+`BattleWin_DrawTargetMember` `0x443F60`, and a character's name holds a pair
+code under `ja-JP` (character 2's default, DIV-0020's amendment of
+2026-10-31). They now pass the draw `TextPairs_ExpandFirst`'s copy: the
+expansion above, bounded to the five characters the draw's cap reads
+(DIV-0057's amendment of 2026-11-15).
+
 **Enemy names.** `Battle_CopyEnemyData` `0x4946C0` copies 12 bytes to the
 battle record at `+0x80`, and `BattleBanner_ShowName` `0x44A990` copies 8 of
 them to the banner. Both are ours. The enemy windows draw it as above.
