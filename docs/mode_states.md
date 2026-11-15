@@ -123,7 +123,8 @@ Chinese small text goes through it from 18 call sites, `0x42DA35` ..
 `0x4440AE`, the enemy status windows among them) and field-side windows in
 `0x5736FF`..`0x59AC38` (not each read). The address that section 6 wants is `0x516E70`;
 nothing here translates or expands anything - pair codes are the two enemy
-windows' callers' business (`TextPairs_Expand`, already in place), and
+windows' callers' business (`TextPairs_Expand`, already in place; the two
+member windows' since D422, `TextPairs_ExpandFirst`), and
 ours draws exactly what Capcom's did. `text_pairs.h`'s comment calls the
 draw "Capcom's"; it is ours now, the same behaviour.
 
