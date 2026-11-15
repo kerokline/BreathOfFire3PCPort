@@ -18,7 +18,7 @@ movie's repair and the PSP's sound and movie still take the player's ffmpeg.
 
 **Merged since the beta, 2026-11-08..15, one line each (none of it released):**
 
-- **In flight on `cleanup/1115` (this session, 2026-11-15, not yet merged):** DIV-0231 and DIV-0232 from tier Sensible to Intent, the owner's answer of 2026-11-15 to PR #247's question; D422's fix being built. Until both merge, `main` has the two entries Sensible and D422 open.
+- **The cleanup of 2026-11-15 (branch `cleanup/1115`):** DIV-0231 and DIV-0232 are tier Intent, the owner's answer of 2026-11-15 to PR #247's question - only "As shipped" turns the two New Game screens off; D422 seen under `ja-JP` and fixed by DIV-0057's amendment (`TextPairs_ExpandFirst` in `BattleWin_DrawPartyStatus` and `BattleWin_DrawTargetMember`; the `combat` route's state hash unchanged under the original and `en-US` but for the sound page's noise, D420; no ten-route proof); `dialog_test.py` finds its own process, [`stale-overlay-state.md`](stale-overlay-state.md) and its tools landed, the crane and the sailor's tides are left out of DIV-0188 (the owner, 2026-11-03).
 - **PR #213:** the World Map Heal fix (DIV-0208 `FieldHealParty`, D408), renames and doc fixes from the review of Red Herring's notes; D409, IDEAS I59.
 - **PRs #214 and #217:** the source-layout round's stages B0 to D with the cleanup round (IDEAS I60); PR #217 fixed the `IsEnabled`-before-bind regression that `main` held from PR #214 (the paragraph on the 64-bit round below has the record).
 - **PR #218:** the save editor's reference ([`save-editor-spec.md`](save-editor-spec.md), [`save-block.md`](save-block.md), [`story-flags.md`](story-flags.md)); DIV-0133 amended, DIV-0209, DIV-0210.

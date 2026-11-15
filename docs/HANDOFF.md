@@ -32,11 +32,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-15** (the order is the owner's; these are the candidates):
-   - **In flight in this session (the cleanup of 2026-11-15, branches `cleanup/1115*`, to merge today):**
-     DIV-0231 and DIV-0232 move from tier Sensible to Intent, the owner's answer of 2026-11-15 to PR #247's
-     question (so the "Repaired" preset keeps the two New Game screens); and D422 (a `ja-JP` name with a pair code
-     drawn as the pair's placeholder in two battle windows, [`known-defects.md`](known-defects.md)) is being fixed.
-     Until these merge, `main` holds the two entries as Sensible and D422 open.
+   - **The cleanup of 2026-11-15 (branch `cleanup/1115`):** DIV-0231 and DIV-0232 are tier Intent, the owner's
+     answer of 2026-11-15 to PR #247's question, so only "As shipped" turns the two New Game screens off; D422 (a
+     `ja-JP` name with a pair code drawn with the pair's placeholder in the party row and the member target banner)
+     was seen in a game and fixed by DIV-0057's amendment ([`known-defects.md`](known-defects.md) D422; the 64-bit
+     build of it not run in a game, no ten-route proof); three local branches' work landed (`dialog_test.py` by its own
+     process, [`stale-overlay-state.md`](stale-overlay-state.md) with its two tools, the crane and the sailor's tides
+     left out of DIV-0188); 28 worktrees, the merged local branches and every branch on `origin` but `main` removed.
    - **`v0.1.0-beta.2`.** Everything merged since `44fd3204` is unreleased. The routine is
      [`releases/README.md`](releases/README.md). To settle first: whether a `disc-patch` mod ships as playable (the
      disc-patch round's group D, the release, is held by the owner's call 1, [`disc-patch-round.md`](disc-patch-round.md);
@@ -76,8 +78,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      `mod.toml` must name all ten in `needs`. The owner's word is owed on the leave pose skipped for masters 3, 5 and 9
      ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
      `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run
-     again - **the change is on the local branch `tools/dialog-test-own-process`** (one commit, `5cd7753f`, 2026-11-14,
-     not pushed, no run of it recorded; "In flight").
+     again - **done on 2026-11-15** (`capture_page.windows_of`, landed by the cleanup; no run of it recorded; "In flight").
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
      **The hack's version 1.4 (PR #239, 2026-11-12; [`disc-patch-round.md`](disc-patch-round.md) 6d):** `TownWarp` and
      `AllyAnywhere` follow 1.4's rules (DIV-0225 and DIV-0217 amended), the builder keeps a number changed by a moved
@@ -775,9 +776,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   - **`tools/launcher_host/dialog_test.py` was not run** against the new button on the Mods row: it finds the
     launcher by its window title and presses Play, and the owner's launcher was open. Run it with no other
     launcher open, or change it to find its own process's window first (the scratch driver of this session
-    did: windows by the PID it started). The second is written on the local branch
-    `tools/dialog-test-own-process` (`5cd7753f`, 2026-11-14, off the PR #245 merge; windows by the PID it started,
-    through `capture_page.windows_of`), not pushed and with no run of it recorded.
+    did: windows by the PID it started). The second landed on 2026-11-15 (the cleanup; windows by the PID it started,
+    through `capture_page.windows_of`), with no run of it recorded.
   - The pad does not move through the editor's dialog (`padnav` is private to `config_dialog.cpp`).
 
   **Next, in the order talked about (2026-11-10):**
@@ -805,34 +805,16 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
      EXP past the level (needs the install's EXP curve); the button words are read-only; a save with a bad
      checksum opens for editing after one question, not read-only.
   7. `tools/recipe_saves/README.md` says `ammoniteBoss.DAT` is in area 134; the save holds 137.
-- **Local branches and worktrees, 2026-11-15** (`git branch`, `git worktree list`, `git cherry main <branch>`; a
-  `+` line is a commit whose patch is not in `main`; deleting any is the owner's call, Traps). Of the 2026-11-08 list
-  of merged branches to remove, the local branches are gone but for `claude/bold-fermi-cbc0b2` and
-  `cheat/no-fail-vinegar` (below); its scratch roots (`x641107`, `x641101`, `fmv1107`, `logos1102`, `eg1031`,
-  `spm1030`, `ss1026`, `stg1027`, `sl1107`, `end1107`, `holo1107`) still exist on disk without worktrees.
-  - **Nothing outside `main`** (removable with their worktrees): `new-game/round`, `new-game/staging` and the
-    round's groups `new-game/{bt,cr,gd,lg,lt,ng,pe,pf,pk,rt,rt2,tf}` (worktrees under `D:\bof3x-runs\ng1114`, with
-    `vf\wt` detached, and `C:\Users\kerok\bof3x-runs\ng1112\wt`), `merge/new-game-round-with-main`
-    (`C:\Users\kerok\bof3x-runs\interp1114\wt`), `render/interp-prototype` (`interp1113\wt`),
-    `render/interp-review-fixes`, `render/interp-launcher`, `pr245`, `docs/interp-ten-route-proof`
-    (`interp1114\wt2` detached), `solo/cb`, `solo/ps`, `solo/rt` (worktrees under `D:\bof3x-runs\solo1112`, with
-    `RT\base` detached), `docs/solo-character-round`, `docs/shisu-mode-fix` (its scratchpad worktree shows every
-    file deleted: the folder was emptied under it); detached worktrees at `main` ancestors:
-    `D:\bof3x-runs\cr1111\pr225` (one uncommitted change to `src/game/platform/music.cpp`, a look first) and
-    `.claude/worktrees/bold-fermi-cbc0b2` (`68ead961`, not on its branch).
-  - **Squash-merged:** `source-layout/k1` (24 commits, I60 group K1; in `main` as `e17b74e5`), worktree
-    `C:\Users\kerok\bof3x-runs\slc1109\k1`.
-  - **Superseded:** `claude/focused-brahmagupta-18db93` (one commit, 2026-11-07, D406's quicksave fix; `main` has
-    the same change as `d6fe7d2e` by another patch).
-  - **Not in `main`, worth a look before deleting:** `claude/bold-fermi-cbc0b2` (two commits, 2026-11-05:
-    `docs/stale-overlay-state.md`, `tools/stale_census.py`, `tools/revisit_diff.py` and two revisit recipes - the
-    stale overlay state census behind D226, which `main` fixed by DIV-0182's amendment without these files);
-    `cheat/no-fail-vinegar` (one docs commit, 2026-11-03, also on `origin`: "DIV-0188 leaves the crane and the
-    sailor's tides out (owner's call)", while `main`'s `cheats.md` 7 still lists the crane as next under the switch).
-  - **Held:** `gameplay/angel-tower-skip` (one commit, 2026-10-27, the Angel Tower skip measured and unexplained,
-    IDEAS I32 P1; local, not for merge); `tools/dialog-test-own-process` (one commit, the `dialog_test.py` fix the
-    save editor's list above asks for; worktree `D:\bof3x-runs\tool1114\wt`; not pushed, not recorded as run).
-- **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
+- **Local branches and worktrees, 2026-11-15, after the cleanup:** the only local branch beside `main` is
+  `gameplay/angel-tower-skip` (one commit, 2026-10-27, the Angel Tower skip measured and unexplained, IDEAS I32 P1;
+  held, not for merge), and `origin` has `main` alone. The cleanup removed 28 worktrees, 25 local branches whose
+  patches were all in `main` (`git cherry`), the 47 branches on `origin` (heads of merged PRs, and two with no PR
+  and no patch outside `main`) and the superseded `claude/focused-brahmagupta-18db93` and `source-layout/k1`; the
+  work of `claude/bold-fermi-cbc0b2`, `cheat/no-fail-vinegar` and `tools/dialog-test-own-process` was landed first.
+  The source-layout gate's baseline worktree `base3` went with them: a later gate makes its own. The scratch roots
+  of merged rounds (`x641107`, `x641101`, `fmv1107`, `logos1102`, `eg1031`, `spm1030`, `ss1026`, `stg1027`, `sl1107`,
+  `end1107`, `holo1107`) still exist on disk, game-derived, the owner's to delete.
+ `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
   audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs and hand-backs),
   `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run), `amalgam_111` and `stp_census` (PRs #112 and #114's runs),
   `away1020` and `D:\bof3x-runs\away1020` (2026-10-20's launcher copies, disc-only caches and installs);

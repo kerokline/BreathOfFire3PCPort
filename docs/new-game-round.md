@@ -433,7 +433,8 @@ characters.** What cuts is bytes:
   `0x443F60` draw through `Text_DrawSmall`, which does not expand pair codes:
   a `ja-JP` name with a pair would show the pair's placeholder there. From
   the source, not run; it would already apply to the one default name that
-  has a pair.
+  has a pair. **Fixed 2026-11-15** (D422, DIV-0057's
+  amendment): seen on a capture under `ja-JP`; the member windows expand the pair.
 
 ### M6. The pad bits
 
