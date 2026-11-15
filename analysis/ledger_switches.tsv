@@ -10716,3 +10716,9 @@ entry	DIV-0227	code,launcher	yes	SaveSlotExpBar, env:BOF3X_OFF, ini:off		tier In
 entry	DIV-0228	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
 entry	DIV-0229	launcher	yes	env:BOF3X_OFF, ini:on		tier Extension; kind launcher
 entry	DIV-0230	launcher	yes	env:BOF3X_INTERP, ini:interp		tier Sensible; kind launcher
+entry	DIV-0231	code,launcher	yes	NewGameNameEntry, env:BOF3X_OFF, ini:off		tier Sensible; kind code
+entry	DIV-0232	code,launcher	yes	NewGameOptions, env:BOF3X_OFF, ini:off		tier Sensible; kind code
+entry	DIV-0233	code,launcher	yes	CommuNameGrid, env:BOF3X_OFF, ini:off		tier Intent; kind code
+entry	DIV-0234	code,launcher	yes	GlyphCacheReuse, env:BOF3X_OFF, ini:off		tier Intent; kind code
+entry	DIV-0235	detour	costly	Commu_DrawTiledFrame		tier Intent; kind detour
+entry	DIV-0236	lang	yes	lang		tier Sensible; kind lang

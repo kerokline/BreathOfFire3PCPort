@@ -619,10 +619,17 @@ std::wstring FakeCache(const wchar_t* name, const std::vector<std::pair<const ch
     return cache;
 }
 
+// The whole value, however long: a preset's BOF3X_OFF passed 1,024 bytes
+// with the ledger's 92nd code name off (2026-11-14), and a fixed buffer then
+// read it as unset.
 std::string Env(const char* name) {
-    char buf[1024];
-    const DWORD n = GetEnvironmentVariableA(name, buf, sizeof buf);
-    return n == 0 || n >= sizeof buf ? std::string() : std::string(buf, n);
+    const DWORD need = GetEnvironmentVariableA(name, nullptr, 0);
+    if (need == 0) return std::string();
+    std::string v(need, '\0');
+    const DWORD n = GetEnvironmentVariableA(name, v.data(), need);
+    if (n == 0 || n >= need) return std::string();
+    v.resize(n);
+    return v;
 }
 
 void ClearEnv() {
@@ -1428,7 +1435,7 @@ void TestPresetPlan() {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(pc, cfg, Preset::kShipped, "original");
         int off = 0;
         for (const auto& it : plan.items) off += it.action == bof3x::PresetAction::kOff ? 1 : 0;
-        Check(off == 82, "as shipped, original: 82 entries off, as the tool's table", std::to_string(off));
+        Check(off == 92, "as shipped, original: 92 entries off, as the tool's table", std::to_string(off));
         const std::vector<std::string> n = names(plan.off);
         Check(std::find(n.begin(), n.end(), "SunderLoop") != n.end() &&
                   std::find(n.begin(), n.end(), "Game_Clock") != n.end(),
