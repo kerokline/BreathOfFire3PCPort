@@ -1,7 +1,8 @@
 # The solo-character round's proof batch: the off-proof, the solo routes, the boss sweep with a team of one
 
 **Status:** BUILT (2026-11-12, group RT of [`solo-character-round.md`](solo-character-round.md) 4 "RT";
-branch `solo/rt` off the round's stage A tip `10646687`). Three runners and a shared module under
+branch `solo/rt` off the round's stage A tip `10646687`; merged with the round as PR #240, 2026-11-13, after the
+off-proof of section 6e). Three runners and a shared module under
 `tools/`; each smoke-run on the stage A tip, where the mode stamps the save's mark and changes no battle
 or field yet (section 6). The full ten-route off-proof is the coordinator's, on the merged branch, on a
 quiet, hands-off machine (round doc 5). The recordings the owner owes are section 5.

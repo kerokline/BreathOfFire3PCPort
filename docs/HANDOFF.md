@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-11 evening: `main` is `c14b805c`, the PR #229 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224, #227, #228 and #229 ([`STATUS.md`](STATUS.md) has a line each); the item numbers below were not renumbered by this pass)
+**Status:** IN PROGRESS (2026-11-15: `main` is `ce75c996`, the PR #247 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#247 ([`STATUS.md`](STATUS.md) has a line each), none of it released; this session's work in flight is item 00's first bullet; the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -13,8 +13,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `c14b805c`** (PR #229, 2026-11-11 evening). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round (PR #224, DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215) and the Linux native groundwork (PR #229) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
+**10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43; the count was last recorded at `a7c7a9e5`, [`STATUS.md`](STATUS.md) "Where we are"; not measured again at `ce75c996`).
+**`origin/main` is `ce75c996`** (PR #247, 2026-11-15). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round and its measurements (PRs #224, #231; DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215), the Linux native groundwork (PR #229), a docs truth pass (PR #230), the romhack's ten behaviours (PRs #232, #233; DIV-0216..0225) and its version 1.4 (PR #239), the learn cheat (PR #234, DIV-0226), the save slot's EXP bar (PR #235, DIV-0227), the owner's answers of 2026-11-12 (PR #236), the New Game and solo-character rounds' staging docs (PRs #237, #238), the solo-character mode (PR #240, DIV-0228, DIV-0229; issue #223), a romhack's patch added by itself, from its author's archive and under European English (PRs #241, #242, #244), the story watcher and the records' names (PR #243), smooth motion (PRs #245, #246; DIV-0230) and the New Game round (PR #247, DIV-0231..0236) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -22,8 +22,8 @@ sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dia
 issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, the FMV decoders DIV-0205 in the
 last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
 faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
-([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **No PR is open** (2026-11-11 evening).
+([`STATUS.md`](STATUS.md) lists them with their PRs). Every round branch the earlier versions of this file called
+local or unpushed is merged; the local branches with commits not in `main` are listed under "In flight". **No PR is open** (2026-11-15).
 Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -31,46 +31,84 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-00. **Next, 2026-11-11 evening** (the order is the owner's; these are the candidates):
+00. **Next, 2026-11-15** (the order is the owner's; these are the candidates):
+   - **The cleanup of 2026-11-15 (branch `cleanup/1115`):** DIV-0231 and DIV-0232 are tier Intent, the owner's
+     answer of 2026-11-15 to PR #247's question, so only "As shipped" turns the two New Game screens off; D422 (a
+     `ja-JP` name with a pair code drawn with the pair's placeholder in the party row and the member target banner)
+     was seen in a game and fixed by DIV-0057's amendment ([`known-defects.md`](known-defects.md) D422; the 64-bit
+     build of it not run in a game, no ten-route proof); three local branches' work landed (`dialog_test.py` by its own
+     process, [`stale-overlay-state.md`](stale-overlay-state.md) with its two tools, the crane and the sailor's tides
+     left out of DIV-0188); 28 worktrees, the merged local branches and every branch on `origin` but `main` removed.
    - **`v0.1.0-beta.2`.** Everything merged since `44fd3204` is unreleased. The routine is
      [`releases/README.md`](releases/README.md). To settle first: whether a `disc-patch` mod ships as playable (the
-     disc-patch round's group D, the release, is held by the owner's call 1 and nobody has played a romhack mod,
-     [`disc-patch-round.md`](disc-patch-round.md)); the `orig4` state-hash pairs are stale and want recording again at
-     the tip (item 14b).
+     disc-patch round's group D, the release, is held by the owner's call 1, [`disc-patch-round.md`](disc-patch-round.md);
+     the owner played the Definitive Edition 1.0 mod on 2026-11-12, and 1.4's rules, a patch added by itself and the
+     `en-150` build are not played); whether smooth motion ships as it is (off by default, experimental, its open items
+     in [`frame-interpolation.md`](frame-interpolation.md) 6); the `orig4` state-hash pairs are stale and want recording
+     again at the tip (item 14b; the rounds since have proven against fresh pairs of `main`'s own build instead).
+   - **The New Game round is merged** (item 18; PR #247, 2026-11-15). Owed: the owner's play
+     ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
+   - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
+     [`solo-character-round.md`](solo-character-round.md), [`solo-character-proof.md`](solo-character-proof.md) 6e). It was
+     passed by the owner on a condition: `cutsceneAndNue` with the mode off differs from the reference pair on the sound
+     page `0x7DE000` alone, so next is D420 (dump that page at a differing tick, name the bytes, skip or fix them, run that
+     route again on a quiet machine). Owed: the owner's play (none yet; owner-review has no section for it); the save
+     editor's Solo champion field has not been looked at in the editor; the harness could not end fight 35 with record 6
+     or fight 46 with record 2; fight 22 and a won bout of fights 18 to 20 are argued from the code only; fight 16's extra
+     section on installs other than the PC files.
+   - **Smooth motion** (DIV-0230; the prototype PR #245 and PR #246, 2026-11-14; [`frame-interpolation.md`](frame-interpolation.md)):
+     off by default and experimental. Owed: the owner's play and eye (frame doc section 6, the row in
+     [`owner-review.md`](owner-review.md) "Decided and built, not yet seen live": battles, menus, bossAndFlash's beam, the
+     Settings page's tighter layout), the music by ear (IDEAS I68). PR #246's own tip did not run the ten-route proof (the
+     changes after the 2026-11-14 proof are in the in-between's builder and the launcher); the three recipes it ended with
+     `quit` (`desertSummary`, `overheatAndDeepSea`, `shisuMinigame`) have not run since.
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
      and 9 to 12 are still to run on frost's Linux machine (2c).
-   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6c): ten built, eight proven with the game, **all ten
-     played by the owner on 2026-11-12** (`main` `db9619da` from `game\`, the mod on: "all mod fields and behaviors appear to be
-     working as intended"; [`owner-review.md`](owner-review.md); D416, a row-above layer against some masters, parked). **Next:** the two's proof (6b and 6c list what each does; `DoubleHitSwords` and `SmokeSkill`'s encounter
-     side have no automated cover, 6c); `LevelSkillCatchUp` and `TownWarp` (DIV-0224, DIV-0225, [`town-warp.md`](town-warp.md)) are built and have NOT run with
-     the game - the self-tests, the ten routes with the behaviours off and the fuzz are owed on a quiet, hands-off machine
-     (6c's method; a run with `TownWarp` on and no mod layer stops at the title by design, so a proof names the mod's layers
-     or leaves `TownWarp` out). The mod's `mod.toml` must name all ten in `needs`. The owner's word is owed on the leave pose
-     skipped for masters 3, 5 and 9 ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
-     `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run again.
+   - **The romhack's behaviours** ([`disc-patch-round.md`](disc-patch-round.md) 6a to 6d; PRs #232, #233, #239): ten built,
+     eight proven with the game, **all ten played by the owner on 2026-11-12** under version 1.0 (`main` `db9619da` from
+     `game\`, the mod on: "all mod fields and behaviors appear to be working as intended"; [`owner-review.md`](owner-review.md);
+     D416, a row-above layer against some masters, parked). **Next:** the two's proof (6b and 6c list what each does;
+     `DoubleHitSwords` and `SmokeSkill`'s encounter side have no automated cover, 6c); `LevelSkillCatchUp` and `TownWarp`
+     (DIV-0224, DIV-0225, [`town-warp.md`](town-warp.md)) have only PR #239's smoke runs with the game (the exe host's
+     self-test with the 1.4 mod, 10 of 10 behaviours on, and two recorded routes) - the self-tests, the ten routes with
+     the behaviours off and the fuzz are owed on a quiet, hands-off machine (6c's method; a run with `TownWarp` on and no
+     mod layer stops at the title by design, so a proof names the mod's layers or leaves `TownWarp` out). The mod's
+     `mod.toml` must name all ten in `needs`. The owner's word is owed on the leave pose skipped for masters 3, 5 and 9
+     ([`camp-masters.md`](camp-masters.md)), and on the mechanism's four choices (6a).
+     `tools/launcher_host/dialog_test.py` finds its window by title: make it find its own process before it is run
+     again - **done on 2026-11-15** (`capture_page.windows_of`, landed by the cleanup; no run of it recorded; "In flight").
      The reading and the function bundles are game-derived and stay in `D:\bof3x-runs\de1112`.
-     **The hack's version 1.4 (2026-11-12, `romhack/definitive-1.4`; [`disc-patch-round.md`](disc-patch-round.md) 6d):** `TownWarp` and
-     `AllyAnywhere` follow 1.4's rules now (DIV-0225 and DIV-0217 amended), the builder keeps a number changed by a moved
-     distance (D417), and the package needs 1.4's two hashes (`D:\bof3x-runs\de14\zip`). **From `mods/known-patches`
-     (2026-11-13; [`mods.md`](mods.md) 12) there is no package:** the player adds the author's `.xdelta` by itself and
-     `data/mods/known.toml` gives it its name, author and `needs`; a patch the list does not have is added unverified. Owed
-     there: the owner's look at the Mods tab's new text, and a play of a mod added that way. A new version of a hack =
-     measure it, then a `[[patch]]` in the list. **1.4's rules are not played**: the
-     owner's play above was 1.0. Owed: the owner's play of the warp's new learning and of Ally in one of the five areas; the
-     ten routes with the behaviours off.
-     **Under European English (2026-11-13, `romhack/definitive-en-150`; [`disc-patch-round.md`](disc-patch-round.md) 11):** a
-     patch of the US disc also builds `mod-<id>-en-150` where the install holds `en-150` text (the European disc's or the
-     PSP's) beside the US disc, and the launcher plays the mod under either English. Owed: the owner's play under
-     `en-150`; `dialog_test.py` for the row's new words. The US disc is still needed - a PSP-only install cannot build a
-     US patch, and nothing short of the US track can change that.
-   - **The New Game round** (item 18): stages A and B built, stage C's ledger written and its state-hash proof passed (2026-11-14, round doc 4g); the owner's play owed.
-   - **Issue #223, the solo character challenge** (IDEAS I56): **built on `solo/round`, PR 240 (2026-11-13), passed by the owner on a condition: the off-proof ran (`solo-character-proof.md` 6e) and `cutsceneAndNue` with the mode off differs on the sound page alone, so next is D420 (dump page `0x7DE000` at a differing tick, name the bytes, skip or fix them, run that route again), then the owner's play; what follows describes the staging and is superseded by the round doc's 6d to 6j.** **staged as a round** on 2026-11-12 ([`solo-character-round.md`](solo-character-round.md)), the owner's four answers in its section 6, not launched. Group M is run ([`solo-character-reads.md`](solo-character-reads.md); the round doc's 0a is what it corrected). Every design call is answered (its 6, 6a, 6c). **Stage A is built on the local branch `solo/round`, not pushed** (its 4a: the core in `src/game/solo/`, the launcher's "Solo character" page; worktree `D:\bof3x-runs\solo1112\round\wt`); this PR is the docs only. **Owed on stage A:** the in-game self-test, the 64-bit build, the state-hash proof with the behaviours off, `dialog_test.py` and the owner's look at the page. **Next:** stage B at the owner's word (combat, field, the level-1 start at New Game, the members screens, routes and proof).
+     **The hack's version 1.4 (PR #239, 2026-11-12; [`disc-patch-round.md`](disc-patch-round.md) 6d):** `TownWarp` and
+     `AllyAnywhere` follow 1.4's rules (DIV-0225 and DIV-0217 amended), the builder keeps a number changed by a moved
+     distance (D417), and the package needs 1.4's two hashes (`D:\bof3x-runs\de14\zip`). **Since PRs #241 and #242
+     (2026-11-13; [`mods.md`](mods.md) 12) there is no package:** the player adds the author's `.xdelta` (or `.ppf`, or
+     the author's `.7z` / `.zip`) by itself and `data/mods/known.toml` gives it its name, author and `needs`; a patch the
+     list does not have is added unverified. Owed there: the owner's look at the Mods tab's new text, a play of a mod
+     added that way, and both listed mods on together (which text wins where both change a description); D418 open. A
+     new version of a hack = measure it, then a `[[patch]]` in the list. **1.4's rules are not played**: the owner's
+     play above was 1.0. Owed: the owner's play of the warp's new learning and of Ally in one of the five areas; the ten
+     routes with the behaviours off.
+     **Under European English (PR #244, 2026-11-13; [`disc-patch-round.md`](disc-patch-round.md) 11):** a patch of the
+     US disc also builds `mod-<id>-en-150` where the install holds `en-150` text (the European disc's or the PSP's)
+     beside the US disc, and the launcher plays the mod under either English. Owed: the owner's play under `en-150`;
+     `dialog_test.py` for the row's new words; the 64-bit build; the installs rebuilt after the merge of `main`. The US
+     disc is still needed - a PSP-only install cannot build a US patch, and nothing short of the US track can change
+     that (IDEAS I67 measured the alternative, nothing built).
+   - **The save editor's newer parts:** the records and finds rows named from the install (PR #243, DIV-0211
+     amended) - nobody has opened the window with the named rows, chest positions are not checked beside a chest in
+     play, and an install with no `BOF3.exe` gets no chest or passage places; `tools/story_watch.py` beside the game
+     logs each story change ([`story-flags.md`](story-flags.md)).
+   - **The smaller merges of 2026-11-12:** the learn cheat (PR #234, DIV-0226) was seen right by the owner; owed is
+     the eye on the Cheats sub-tab's Page 2 (the third group has no sentence under its box, "Minigames" moved up 2
+     units). The save slot's EXP bar (PR #235, DIV-0227) was confirmed by the owner in their game; not run: the full
+     `BOF3X_SHADOW='*'` suite and the state-hash routes on that PR, and its PlayStation twin is not settled.
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
-   - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner saw the
-     disc-patch mod's changed names and descriptions in play on 2026-11-12; a `table-edit` mod added by hand on the Mods tab is what is left. **Trap paid:** a state-hash chain run while build agents
-     compiled gave five false differences; a proof run wants the machine quiet as well as hands-off.
+   - **The image-layer round is measured whole** (PRs #224, #231; [`image-layer-round.md`](image-layer-round.md) 6a,
+     2026-11-12); the owner saw the disc-patch mod's changed names and descriptions in play on 2026-11-12; a
+     `table-edit` mod added by hand on the Mods tab is what is left. **Trap paid:** a state-hash chain run while build
+     agents compiled gave five false differences; a proof run wants the machine quiet as well as hands-off.
    - **IDEAS I58's next step:** the save editor's entrance list and party table on an install with no `BOF3.exe`
      ("In flight", the save editor's list), then EMI patch mods.
    - **Merged on 2026-11-11:** the PSX media round (PR #228) and the Linux groundwork (PR #229); the owner says the
@@ -116,7 +154,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      on the last place a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check
      the object list before the cells. `tools/cell_peek.py` reads a running game's cells around the leader.
    - **The no-fail minigames** (DIV-0188, PRs #172 and #198; played with, 2026-11-07 night). **Next minigame**,
-     when the owner records its start (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu.
+     when the owner records its start (`BOF3X_RECORD`): the antenna, the ram or the dock's parts menu (the crane and the legendary sailor's tides are left out, the owner's call of 2026-11-03, [`cheats.md`](cheats.md) 7).
      The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
      lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
      `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
@@ -316,6 +354,14 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `0x801DA068` (the function before the twin). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
 13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **2026-11-14** (owner-review's section of that date): the New Game round's play (item 18). The smooth motion
+     row (owner-review "Decided and built, not yet seen live") and the merges of 2026-11-12..14 that owe a play but
+     have no owner-review section yet: the solo-character mode, the romhack's 1.4 rules, a patch added by itself,
+     the mod under `en-150` (item 00).
+   - **2026-11-12** (owner-review's section of that date): struck at the owner's word - the ten romhack behaviours
+     under 1.0, the learn cheat, DIV-0208's heal, the mod's names and descriptions, the PSX logo movie and jingles,
+     DIV-0203's German, DIV-0189's sort, the ending scenes, D406's listen. Still open from that play: a `table-edit`
+     mod added by hand, the Cheats tab's Page 2.
    - **2026-11-11** (owner-review's section of that date): the sound-layer round signed off; the save editor used as a
      converter, an edited save played, a PC-made card read in Mednafen. Still open there: D350 and D344.
    - **2026-11-07** (owner-review's two sections of that date): the ending scenes approved in play; the 64-bit
@@ -454,9 +500,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    table or a static local follows its function. **The main-side finding stands:** the shop route's signature
    moved between b7bd1d29 and 7f215457 (`0x66C000` / `0x7E1000` / `0x7C9000` at ticks 2714..2757, a mode
    transition one frame apart after the `r2` confirm at recipe frame 2579) - bisect main's merges on
-   `tools/recipes/shop.txt` with the state hash, then ledger or fix; stage D will meet it. Removable after the
-   merge into `main`: every worktree under `slb1108`, `slb1109`, `sl1107` and `slc1109`, and the launcher
-   copies beside them (keep `slc1109\base3` until stage D has run).
+   `tools/recipes/shop.txt` with the state hash, then ledger or fix; stage D will meet it. Removable now that PR #217 is
+   in `main`: every worktree under `slb1108`, `slb1109`, `sl1107` and `slc1109`, and the launcher copies beside them
+   (2026-11-15, `git worktree list`: `slc1109\k1` on `source-layout/k1`, squash-merged as `e17b74e5`, and
+   `slc1109\base3`, which stage D has outlived but which the I60 remainder's gate above still names as its
+   baseline).
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
@@ -482,20 +530,23 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    D257 (the PAL banks) was answered and fixed there (DIV-0194). Left to the owner: D256's framing, a look at a
    PSP-EU title capture ([`owner-review.md`](owner-review.md), the PSP-only round's "Still open").
 
-18. **The New Game round: stages A and B built, stage C's ledger written** (2026-11-14, local branch
-   `new-game/round`, not pushed; [`new-game-round.md`](new-game-round.md) 4d, 4e, 4f; DIV-0231..0236, DIV-0016,
-   DIV-0020 and DIV-0075 amended, D18 fixed, D421..D424). **The proof is run** (4g, 2026-11-14, tip `63b44ba1`,
-   quiet machine): the ten state-hash routes with the round's switches off identical to `main` as merged, and the
-   new routes (`newGameName`, `newGameOriginal`, `newGameBlankName`, `newGameQuit`) deterministic, their pairs in
-   `D:\bof3x-runs\ng1114\pf\root\sh`. **Owed before a PR:** the owner's play
-   ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round"). What follows is as first staged.
-   **Staged** (2026-11-12, [`new-game-round.md`](new-game-round.md), branch
-   `new-game/staging`; IDEAS I34): the name entry at New Game and in the faerie village's renamer, and the options
-   screen back in the New Game sequence. The owner's five answers are in its section 2; **group M is run** (section 3a; the
-   branch has its own worktree, `C:\Users\kerok\bof3x-runs\ng1112\wt`). The owner answered calls 5 to 7 of its section 3b that day (`ja-JP` up to 4 kana, the faerie
-   slot path as DIV-0075 has it under `ja-JP`, no landing on an empty cell). **Next: stage A (GD, NG)** at the owner's word. A Mednafen capture session is
-   owed before stage C (3a M10; hands-off). The research is [`name-entry-restoration.md`](name-entry-restoration.md). The empty save
-   slot it was to carry is done by item 14's round (DIV-0193 `SaveSlotBlank`, the owner's "blank it everywhere").
+18. **The New Game round is merged as PR #247** (2026-11-15, `main` `ce75c996`; staged by PR #237 on 2026-11-12;
+   [`new-game-round.md`](new-game-round.md) 4d, 4e, 4f, 4g; IDEAS I34; DIV-0231..0236, DIV-0016, DIV-0020 and
+   DIV-0075 amended, D18 and D421 fixed, D422 open, D423 and D424 fixed). **The proof ran before the PR** (4g,
+   2026-11-14, tip `63b44ba1`, quiet machine): the ten state-hash routes with the round's switches off identical to
+   `main` as merged, and the new routes (`newGameName`, `newGameOriginal`, `newGameBlankName`, `newGameQuit`)
+   deterministic, their pairs in `D:\bof3x-runs\ng1114\pf\root\sh`. `tools/input_run.py` turns the two New Game
+   switches off for every route unless the recipe has `# screens new-game`. **The PR's two open calls:** the tier of
+   DIV-0231 and DIV-0232 (answered by the owner on 2026-11-15: Intent) and D422 (to be fixed) - both this session's
+   work in flight (item 00). **Owed:** the owner's play ([`owner-review.md`](owner-review.md), section "2026-11-14, the
+   New Game round"); and, not run by anyone (the PR's list): the 64-bit build in play, smooth motion on under the
+   state hash, a PSP-only install laid out by the launcher, a `psp-eu` layer rebuilt with the `START` word, the
+   renamer by a player's route and its slot path with save and reload on the final tree, the new routes in fr-FR,
+   de-DE and en-150 under the state hash, a name through `save_convert.py`, `dialog_test.py`. No Mednafen reference
+   capture of the PlayStation's screen was taken (3a M10). The research is
+   [`name-entry-restoration.md`](name-entry-restoration.md). The empty save slot the round was first to carry is done by
+   item 14's round (DIV-0193 `SaveSlotBlank`). The round's worktrees under `D:\bof3x-runs\ng1114` and
+   `C:\Users\kerok\bof3x-runs\ng1112` hold branches with nothing outside `main` ("In flight").
 
 19. **The reading-row round is merged** (PR #106; [`reading-row-round.md`](reading-row-round.md), status and "as
    built" at its top; issue #97; IDEAS I21 and I50). The dialogue box draws an optional reading row over each text
@@ -725,7 +776,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   - **`tools/launcher_host/dialog_test.py` was not run** against the new button on the Mods row: it finds the
     launcher by its window title and presses Play, and the owner's launcher was open. Run it with no other
     launcher open, or change it to find its own process's window first (the scratch driver of this session
-    did: windows by the PID it started).
+    did: windows by the PID it started). The second landed on 2026-11-15 (the cleanup; windows by the PID it started,
+    through `capture_page.windows_of`), with no run of it recorded.
   - The pad does not move through the editor's dialog (`padnav` is private to `config_dialog.cpp`).
 
   **Next, in the order talked about (2026-11-10):**
@@ -753,28 +805,15 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
      EXP past the level (needs the install's EXP curve); the button words are read-only; a save with a bad
      checksum opens for editing after one question, not read-only.
   7. `tools/recipe_saves/README.md` says `ammoniteBoss.DAT` is in area 134; the save holds 137.
-- **Merged, still to remove (2026-11-08; `git cherry` before deleting any, Traps):** the 64-bit round's branches
-  `x64/stage-d`, `x64/d-ci`, `x64/d-music` with the worktrees `C:\Users\kerok\bof3x-runs\x641107\wt_ci`, `wt_music`
-  (the root's launcher copies, game copy and proof - `proof\`: the run scripts' `.out`, the hashes under `sh\`,
-  the WAV pair under `wav\` - can go with them), and the earlier root `C:\Users\kerok\bof3x-runs\x641101`
-  (stages A..C: the agents' worktrees `xa1`..`xa4`, `b1`..`b5`, `round`, `c1` and the proof) with the `x64/xa*`,
-  `x64/b*`, `x64/round`, `x64/c1` branches; `claude/dreamy-kilby-648ea8` (DIV-0205) and `claude/bold-fermi-cbc0b2`
-  (D226's census) with their `.claude/worktrees/` checkouts and the root `C:\Users\kerok\bof3x-runs\fmv1107`;
-  `fix/ending-scenes-1107` (PR #209) and `D:/bof3x-runs/end1107`; `feature/desert-faerie-entrance` (PR #202),
-  `fix/d226-manmo-hill`, `fix/quick-menu-in-battle`, `fix/hologram-edge` with `D:/bof3x-runs/holo1107/wt`,
-  `cheat/no-fail-vinegar` (PR #198); `fix/retire-logos-import` and `C:\Users\kerok\bof3x-runs\logos1102\wt`
-  (PR #186); `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176);
-  `docs/x64-refresh`; `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174) and the branches
-  `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`, local and on
-  `origin`; the scratch roots `ss1026` and `stg1027` (their worktrees are gone). The source-layout worktrees
-  under `C:\Users\kerok\bof3x-runs\sl1107` (`sl1`..`sl3`, `wt`, `pr207`) stay until stage B starts (item 14b).
-- **Other sessions' branches in the main checkout (2026-11-08), not this file's to judge:** `docs/shisu-mode-fix`
-  (a scratchpad worktree), `docs/fish-record-sizes` (`D:/bof3x-runs/fishdocs1106/wt`), `install/pc-zh-iso`
-  (`D:/bof3x-runs/pciso1103/wt`, the PC CD source), `tools/exe-twins-solid-trim` (`D:/bof3x-runs/trim1106/wt`),
-  `docs/ammonite-chase`, `docs/i58-emi-patch-mods`, `docs/idea-i56-solo-character`, `docs/source-layout-staging`,
-  `claude/focused-brahmagupta-18db93`. Check each with `git cherry main <branch>` before touching it.
-- **Local, not for merge:** `gameplay/angel-tower-skip` (one commit, the Angel Tower skip measured and unexplained,
-  IDEAS I32 P1).
+- **Local branches and worktrees, 2026-11-15, after the cleanup:** the only local branch beside `main` is
+  `gameplay/angel-tower-skip` (one commit, 2026-10-27, the Angel Tower skip measured and unexplained, IDEAS I32 P1;
+  held, not for merge), and `origin` has `main` alone. The cleanup removed 28 worktrees, 25 local branches whose
+  patches were all in `main` (`git cherry`), the 47 branches on `origin` (heads of merged PRs, and two with no PR
+  and no patch outside `main`) and the superseded `claude/focused-brahmagupta-18db93` and `source-layout/k1`; the
+  work of `claude/bold-fermi-cbc0b2`, `cheat/no-fail-vinegar` and `tools/dialog-test-own-process` was landed first.
+  The source-layout gate's baseline worktree `base3` went with them: a later gate makes its own. The scratch roots
+  of merged rounds (`x641107`, `x641101`, `fmv1107`, `logos1102`, `eg1031`, `spm1030`, `ss1026`, `stg1027`, `sl1107`,
+  `end1107`, `holo1107`) still exist on disk, game-derived, the owner's to delete.
 - **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
   audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs and hand-backs),
   `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run), `amalgam_111` and `stp_census` (PRs #112 and #114's runs),

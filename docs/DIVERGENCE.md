@@ -4307,7 +4307,8 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** text (only with a Japanese overlay; `tools/loc_build.py`,
   `src/game/text_pairs.cpp`, `Text_DrawString`, `Text_CharCount`,
-  `Text_GlyphCount`, the two enemy name windows)
+  `Text_GlyphCount`, the two enemy name windows, the two member windows
+  since D422)
 - **Tier:** Sensible
 - **Original behaviour:** a glyph code draws one glyph. A Japanese name (at
   most 8 glyphs, `name[8]` on the JP disc) is two bytes a glyph on the PC.
@@ -4369,6 +4370,21 @@ designed in rather than bolted on.
   a rebuild of the same layer gives the same numbers. A layer whose earlier
   pairs change would renumber them (a finding of the round, described in its
   report).
+- **Amended 2026-11-15 (D422, the cleanup session's group PC):** the two
+  member windows expand pairs too. `BattleWin_DrawPartyStatus` `0x442FA0`
+  and `BattleWin_DrawTargetMember` `0x443F60` draw a character's name
+  through the same 8-unit `0x516E70`, capped at 5 characters, and passed it
+  the name as stored, so character 2's default `ja-JP` name (four codes, the
+  last a pair) showed three kana and the half-size placeholder in the party
+  row and in the member target banner, seen on a capture before the fix.
+  Each now passes the name with the pairs among its first five characters
+  replaced by their two codes (`TextPairs_ExpandFirst`, the expansion the
+  enemy windows use, bounded to the characters the capped draw reads, since
+  the name field need not end in a NUL within it). A pair adds a glyph and
+  the draw's own cap of five still bounds what is drawn: at most 40 pixels,
+  inside the room the two windows give a name
+  ([`known-defects.md`](known-defects.md) D422). With no table loaded, or no
+  pair among those characters, the draw is given the same pointer as before.
 - **Reversible?** play without `BOF3X_LANG`, or in any other language.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
@@ -17063,9 +17079,9 @@ designed in rather than bolted on.
   participant `NEWGAME`. Docs: [`new-game-round.md`](new-game-round.md) (3a,
   3b, 4b, 4c-TF, 4c-BT, 4c-PE, 4c-PK, 5a, 5b; IDEAS I34),
   [`name-entry-restoration.md`](name-entry-restoration.md) (the research)
-- **Tier:** Sensible - the port's New Game works without a name screen; the
-  PlayStation's screen changes what is shown and the hero's name, not the
-  rules of play.
+- **Tier:** Intent - the owner's call of 2026-11-15: every preset but "As
+  shipped" keeps the name screen (written Sensible on 2026-11-14; the
+  amendment below).
 - **Original behaviour:** the PC port has no name screen at New Game and no
   remnant of one. `TitleFlow_NewGame` calls `NewGame_InitCharacters`
   `0x437820`, starts scenario 0 and sets `Game_Step` 5; record 0 keeps its
@@ -17192,6 +17208,15 @@ designed in rather than bolted on.
   record 0's entered name (no route reaches one); the 64-bit build in play;
   a name carried through `save_convert.py`; the Mednafen reference captures
   (3a M10); the `psp-eu` layer rebuilt with the `START` row's word.
+- **Amended 2026-11-15 (the owner's call on the tier):** written Sensible on
+  2026-11-14 (round doc 4f: the port's New Game works without a name
+  screen; the PlayStation's screen changes what is shown and the hero's
+  name, not the rules of play). The owner set Intent on 2026-11-15,
+  answering [`owner-review.md`](owner-review.md): "Yes, lets have this
+  applied to all non-'As Shipped' presets." So "Repaired" now keeps the name
+  screen where it turned it off; "As shipped" still turns it off, and
+  "PlayStation" kept it before and keeps it. The original behaviour above is
+  unchanged.
 - **Reversible?** `BOF3X_OFF=NewGameNameEntry` (ini `off=`; the launcher's
   box "Show the name entry screen at New Game and in the faerie village",
   Mods, Extras, Page 2, which also sets `CommuNameGrid`), or hosted
@@ -17215,9 +17240,9 @@ designed in rather than bolted on.
   the Config screen's machine `ConfigScreen_Run` `0x460CB0` on its
   `Game_Step` 4 path, unchanged; [`new-game-round.md`](new-game-round.md)
   (3a M1, 4c-TF, 4e)
-- **Tier:** Sensible - the port moved the options screen to the title menu
-  and New Game works without it; this puts it back where the PlayStation
-  shows it.
+- **Tier:** Intent - the owner's call of 2026-11-15: every preset but "As
+  shipped" keeps the options screen at New Game (written Sensible on
+  2026-11-14; the amendment below).
 - **Original behaviour:** New Game goes straight to the game. The Config
   screen is reached only from the title menu's third row: `TitleMenu_Leave`
   `0x5880A0` sets `Game_Step` to the cursor + 2, so 4, the Config screen's
@@ -17254,6 +17279,15 @@ designed in rather than bolted on.
   whether the growth roll after the options instead of before moves anything
   (the random sequence, the opening's first frame); the state-hash proof on a
   quiet machine; the owner's play.
+- **Amended 2026-11-15 (the owner's call on the tier):** written Sensible on
+  2026-11-14 (round doc 4f: the port moved the options screen to the title
+  menu and New Game works without it; this puts it back where the
+  PlayStation shows it). The owner set Intent on 2026-11-15, answering
+  [`owner-review.md`](owner-review.md): "Yes, lets have this applied to all
+  non-'As Shipped' presets." So "Repaired" now keeps the options screen at
+  New Game where it turned it off; "As shipped" still turns it off, and
+  "PlayStation" kept it before and keeps it. The original behaviour above is
+  unchanged.
 - **Reversible?** `BOF3X_OFF=NewGameOptions` (ini `off=`; the launcher's box
   "Show the options screen at New Game, before the game starts", Mods,
   Extras, Page 2), or hosted `BOF3X_ORIGINAL=NewGameOptions`: New Game then

@@ -16,8 +16,6 @@ read). Needs a desktop session. Writes only --out; reads nothing of the game its
 import argparse, ctypes, os, subprocess, sys, time
 from ctypes import wintypes as W
 
-from PIL import Image
-
 u = ctypes.WinDLL('user32', use_last_error=True)
 g = ctypes.WinDLL('gdi32')
 WNDENUMPROC = ctypes.WINFUNCTYPE(W.BOOL, W.HWND, W.LPARAM)
@@ -75,6 +73,7 @@ def wait_window(pid, want=None, skip=(), timeout=20):
 
 
 def grab(h, path):
+    from PIL import Image   # here, so that a script that only finds windows does not need it
     r = W.RECT()
     u.GetWindowRect(h, ctypes.byref(r))
     w, ht = r.right - r.left, r.bottom - r.top

@@ -1,0 +1,14 @@
+# tools/revisit_diff.py --after: the rest of the owner's desertToManmo route from X through the sand
+# ring's fade (EffectKind18Sub59_Fade, the shades 0x65EF0C..) into the Manmo fight (docs/stale-overlay-state.md 2).
+wait 154
+hold circle 3
+wait 56
+hold circle 4
+wait 351
+hold circle 5
+wait 60
+hold circle 5
+wait 279
+hold circle 2
+wait 584
+wait 300

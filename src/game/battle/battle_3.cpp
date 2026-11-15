@@ -595,7 +595,10 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
                 battle_windows::g.line_semi1(start, y + 0xE, extra + start, y + 0xE, 0xC8, 0, 0);
             }
         }
-        battle_windows::g.tiny_font(xs - 0xE, y + 5, StatusColourName(member_rec->status), 5, m + 0x80);
+        // DIV-0057 (D422): a pair code in the name goes in as its two glyphs, as in the enemy windows
+        std::uint8_t expanded[4 * 5 + 1];
+        battle_windows::g.tiny_font(xs - 0xE, y + 5, StatusColourName(member_rec->status), 5,
+                                    TextPairs_ExpandFirst(m + 0x80, 5, expanded, sizeof expanded));
         battle_windows::g.draw_digit(xs + 0x26, y + 6, 1);
         battle_windows::g.draw_digit(xs - 0x10, y + 0xE, 0);
         const unsigned hp_colour = StatusColourHp(member_rec->status);
@@ -800,7 +803,9 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     battle_windows::g.draw_edge(x, y + 0x13, 3, 0);
     unsigned char* const o = MemberBattleWindows(m & 0xFF);
     auto* const member_rec = rv::As<records::PartyMember>(o);
-    battle_windows::g.tiny_font(x + 4, y + 2, StatusColourName(member_rec->status), 5, o + 0x80);
+    std::uint8_t expanded[4 * 5 + 1];   // DIV-0057 (D422), as in BattleWin_DrawPartyStatus
+    battle_windows::g.tiny_font(x + 4, y + 2, StatusColourName(member_rec->status), 5,
+                                TextPairs_ExpandFirst(o + 0x80, 5, expanded, sizeof expanded));
     const unsigned colour = StatusColourHp(member_rec->status);
     battle_windows::g.draw_digit(x + 2, y + 0xA, 0);
     battle_windows::g.draw_value(x + 0x14, y + 0xC, colour, member_rec->hp);

@@ -10,7 +10,9 @@ its hash; the copy is deleted at the end); the disc-built ones hold none, as a d
 install. Beside the launcher, bof3x.dll is a dummy and bof3x.exe a copy of Windows'
 hostname.exe, so Play starts nothing of the game (the launcher starts bof3x.exe by default
 since state 3; until 2026-10-12 this test predated that and found no dialog). The ini is
-read after each run. Needs a desktop session (the dialog is shown).
+read after each run. Needs a desktop session (the dialog is shown). It finds the dialog and
+any message box among the windows of the launcher process it started (by PID, capture_page's
+windows_of), never by a title alone: the owner's own launcher may be open beside it.
 docs/launcher-settings.md section 3, docs/launcher-suites.md.
 
     python tools/launcher_host/dialog_test.py build/bof3x-launcher.exe <the install>/BOF3.exe [--shots DIR]
@@ -25,9 +27,10 @@ which hides and shows the Row above the text box - captured on both sub-buttons 
 import ctypes, difflib, os, shutil, subprocess, sys, tempfile, time
 from ctypes import wintypes as W
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from capture_page import windows_of   # noqa: E402  the windows of one process, by its PID
+
 u = ctypes.WinDLL("user32", use_last_error=True)
-u.FindWindowW.restype = W.HWND
-u.FindWindowW.argtypes = [W.LPCWSTR, W.LPCWSTR]
 u.GetDlgItem.restype = W.HWND
 u.GetDlgItem.argtypes = [W.HWND, ctypes.c_int]
 u.FindWindowExW.restype = W.HWND
@@ -310,7 +313,6 @@ SHOTS = None
 
 def shot(dlg, name):
     if SHOTS:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import capture_page
         os.makedirs(SHOTS, exist_ok=True)
         time.sleep(0.5)   # the page drawn
@@ -338,10 +340,19 @@ def run(ini, act, env=None):
         raise
 
 
+def own_window(proc, title):
+    """A shown top-level window of the launcher this test started, by its PID and title; never a
+    window found by title alone, which could be the owner's own launcher."""
+    for h, t in windows_of(proc.pid):
+        if t == title:
+            return h
+    return None
+
+
 def drive(proc, p, act):
     dlg = None
     for _ in range(200):
-        dlg = u.FindWindowW(None, "Breath of Fire III - bof3x")
+        dlg = own_window(proc, "Breath of Fire III - bof3x")
         if dlg or proc.poll() is not None: break
         time.sleep(0.05)
     if not dlg:
@@ -358,7 +369,7 @@ def drive(proc, p, act):
     u.PostMessageW(dlg, WM_COMMAND, IDOK, 0)
     for _ in range(200):   # a message box, if the launcher stops: close it
         if proc.poll() is not None: break
-        box = u.FindWindowW(None, "bof3x-launcher")
+        box = own_window(proc, "bof3x-launcher")
         if box: u.PostMessageW(box, WM_CLOSE, 0, 0)
         time.sleep(0.05)
     if proc.poll() is None:

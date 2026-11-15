@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's three checks struck at the owner's word) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's three checks struck at the owner's word; 2026-11-12: the owner's play of `main` `db9619da` struck; 2026-11-14: the New Game round's section, merged as PR #247 on 2026-11-15) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -13,7 +13,7 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
-## 2026-11-14, the New Game round (`new-game/round`, not merged)
+## 2026-11-14, the New Game round (merged as PR #247, 2026-11-15)
 
 The name screen at New Game (DIV-0231), the options screen there (DIV-0232),
 the faerie village's renamer on the grid (DIV-0233), D18's glyph-cache fix
@@ -21,8 +21,8 @@ the faerie village's renamer on the grid (DIV-0233), D18's glyph-cache fix
 switch), and the `START` word and the French panel label from the disc
 (DIV-0236); [`new-game-round.md`](new-game-round.md) 4d, 4e and 4f. Built
 and run by the harness; **nobody has played it.** Play from `game\` after
-the four player files are copied from the branch's build. The proof on a
-quiet machine is owed before the PR, and is not yours.
+the four player files are copied from a build of `main`. The proof on a
+quiet machine ran before the PR (4g).
 
 To play:
 
@@ -64,14 +64,9 @@ and reload on the final tree; `tools/launcher_host/dialog_test.py`; the
 `psp-eu` layer rebuilt with the `START` word; a name carried through
 `save_convert.py`.
 
-To decide (none blocks the PR):
-
-- **The tiers** of the three new entries: the name screen and the options
-  screen at New Game are written Sensible (the port's New Game works without
-  them), the renamer's grid Intent (the port left the renamer waiting on an
-  input that could not come). So the "Repaired" preset turns the two New
-  Game screens off and keeps the renamer's grid. Say if the two screens
-  should be Intent, which "Repaired" keeps.
+The tiers were answered by the owner on 2026-11-15: the two New Game
+screens are Intent, so every preset but "As shipped" keeps them (DIV-0231
+and DIV-0232 as amended; round doc 4f).
 
 ## 2026-11-12, struck at the owner's word
 
