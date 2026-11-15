@@ -4,7 +4,7 @@
 DIVERGENCE DIV-0230). Off by default; the launcher's Settings page has the
 box "Smooth motion: 60 frames each second (experimental)" (`interp=1` in
 `bof3x.ini`, which goes out as `BOF3X_INTERP=1`). The open items of section 6
-want play more than code. Nothing the game computes changes, by the state hash on four routes; the
+want play more than code. Nothing the game computes changes, by the state hash on four routes and the ten proof routes; the
 music staging buffer's timing does (section 5). The owner's ask the same day: the game's logic runs at 29.97
 frames a second and the machine has headroom for twice that; show one
 interpolated frame between each two, no more.
@@ -191,6 +191,34 @@ switch on, and a WAV A/B (`docs/wav-dump.md`) - IDEAS I68.
 
 Three pages (`0x6BC000`, `0x7CC000`, `0x7DE000`) differ between the
 references at every tick and are never compared, as in every proof.
+
+**The ten proof routes, 2026-11-14** (`tools/solo_proof.py`'s method with
+`BOF3X_INTERP=1` as the variant; the base `main` `651a5ad8` run twice a
+route as the references, the candidate the build of `8efb6cfa`; 32-bit
+`bof3x.exe`; run at the owner's word without waiting for a quiet machine,
+with another session's games beside it, and no load of our own added):
+
+| Variant | Routes identical | The rest |
+|---|---|---|
+| the switch off | 10 of 10 | - |
+| `BOF3X_INTERP=1` | 9 of 10 on the first run | dragonTransform: page `0x7DE000` at 215 ticks (2174..2601); identical on the repeat |
+
+`check --timing`, which compares `Music_Staging`'s 17 pages too, reads the
+same on all twenty runs: **the staging buffer is identical at every
+compared tick with the switch on**, where the 2026-11-13 runs above had it
+differ at up to 21 ticks. Why the two days differ is not measured: the
+base moved to `main` `651a5ad8` between them, and so did the machine's load.
+
+The one difference, dragonTransform's first run with the switch on, is
+page `0x7DE000`: the page that holds the staging buffer's last `0x378`
+bytes (`0x7CC378 + 0x12000 = 0x7DE378`) beside `Snd_BufferDesc`,
+`Snd_WaveFormat`, `Music_Events` and `Snd_Device`. It is not one of the 17
+timing pages, because it is not wholly inside the buffer. A page hash
+cannot say which bytes moved; the repeat run is identical, so it does not
+follow the switch on every run, but it was seen only with the switch on
+(1 run of 11 on, 0 of 30 off or base). Not shown: that it is the buffer's
+tail and not a sound object, and whether anything is heard. The owner's
+ear and the WAV A/B stay owed (IDEAS I68).
 
 ## 6. Open faults, and where to start
 

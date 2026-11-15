@@ -16993,7 +16993,12 @@ designed in rather than bolted on.
   neighbours on 29 routes, one frame in six or ten: no hole or gap in the
   frames read, not every flagged frame read (section 4). The matcher
   takes 1.0 to 1.4 ms an in-between on bridgeWalk, 2.8 ms at most
-  (section 6, item 9). **Not verified:** the owner's ear on music with
+  (section 6, item 9). 2026-11-14, the ten proof routes against two
+  runs of `main` `651a5ad8`, on a machine not kept quiet: identical with
+  the switch off on all ten; with it on, identical on nine and on the
+  tenth's repeat, `Music_Staging` included (`check --timing`); the
+  tenth's first run differed on the sound page `0x7DE000` at 215 ticks
+  (frame-interpolation.md section 5). **Not verified:** the owner's ear on music with
   the switch on and a WAV A/B; the wide modes since the runs rule
   changed; frame-buffer grab effects, the FMVs, the 64-bit build; vsync
   and pacing against the display. **Not played by the owner** beyond the
