@@ -882,6 +882,8 @@ static void Watch(std::uint32_t page_index) {
     }
 }
 
+bool StateHash_On() { return g_out != nullptr; }
+
 void StateHash_Tick() {
     if (!g_out) return;
     const std::uint32_t frame = Frame_Counter;

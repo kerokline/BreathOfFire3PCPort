@@ -236,17 +236,53 @@ ours run of a route that lists the saves wants it.
 
 **Open:**
 
-1. **The sound page's noise under load** (`0x7DE000`, section 4's third row):
-   which bytes. A dump at a differing tick names them; they recur only with
-   the machine busy, so the dump wants the same load or luck. Now D420
-   (`known-defects.md`), with the solo-character round's four runs of
-   `cutsceneAndNue` as the route to dump.
+1. **The "sound page's" noise under load** (`0x7DE000`, section 4's third
+   row): answered 2026-11-15, D420 (`known-defects.md`), and it was never
+   the sound. Section 5a.
 2. **The cost per frame** is not measured (3.5 MB hashed).
 3. **Routes other than these two** have no reference yet: the whelp, the
    Nue cutscene, the dragon, the shop and the world map are round thirteen's
    set and each wants a pair (`sh_route.sh`, about four minutes a side).
 4. **The wide picture** (`BOF3X_WIDE=1`) patches operands and draws more:
    not run. Its references are a separate pair.
+
+## 5a. The noise of a machine in use, named and removed (2026-11-15, D420)
+
+Two runs of one build differed on page `0x7DE000`, and sometimes on a
+VRAM-shadow page for one tick, whenever the machine was in use. Read from
+the solo-character proof's kept runs (the method below), it is two things:
+
+- **The real keyboard.** `Key_State` `0x7DE828`, 256 bytes on that page:
+  DirectInput's background keyboard, read at every latch, so every key
+  typed anywhere on the machine during a run. A recipe replaced the pad
+  words and left the bytes. Now cleared at each latch while a recipe plays,
+  and after its end while the hash is written (`ScriptedLatch`).
+- **A late frame.** WinMain skips the draw of a frame whose deadline has
+  passed, and the draw is what puts the two environments (`Gpu_DispEnv`,
+  `Gpu_DrawEnv`, on that page), flushes the dirty strip and drains the
+  upload queue (the VRAM shadow). A hashed run now draws every frame
+  (`StateHash_On`), and runs slower than its speed on a busy machine
+  instead.
+
+So section 4's "record references and run checks with the machine quiet"
+is no longer needed for these two; it still holds for a hosted side under
+`--original "*"` (Capcom's WinMain keeps its skip) and for whatever a busy
+machine does that is not yet named. The pages two runs of one build split
+on a quiet machine too (`0x6C3000`'s texture cache, section 6) are not
+this.
+
+**The method, for a difference that will not recur.** A hash file holds a
+hash a page, not bytes, and a dump needs the difference to happen again at
+a known tick. But the *reference* recurs: replay the same build with
+`BOF3X_STATEHASH_DUMP` at the tick and its neighbours, hash the dump's page
+as the game does, check it equals the reference's recorded hash, and search
+for the change that gives the other run's recorded hash.
+[`tools/statehash_explain.py`](../tools/statehash_explain.py) does it: one
+byte at any value, one or two key bytes, or the bytes of a neighbouring
+tick put in place. On the solo proof's runs it named ten of ten sampled
+ticks: eight as keys (Shift, I, D, R, A, U and Space, O and N), two as
+`Gpu_DispEnv+2` / `Gpu_DrawEnv+2` a tick behind, and the VRAM-shadow page
+of the same tick as three runs of bytes a tick behind.
 
 ## 6. Use in a round
 

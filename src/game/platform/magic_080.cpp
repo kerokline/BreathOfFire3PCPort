@@ -39,6 +39,7 @@
 #include "hook/run_speed.h"
 #include "hook/snapshot.h"
 #include "hook/stallwatch.h"
+#include "hook/statehash.h"
 #include "input/bindings.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
@@ -938,9 +939,12 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     deadline = deadline_base;
                 }
                 // A late frame is not drawn - except one a scripted shot is
-                // about to save, so a capture is the same frame at any speed.
+                // about to save, so a capture is the same frame at any speed,
+                // and every frame of a state-hashed run, so the memory the
+                // draw side writes follows the tick and not the machine's
+                // load (statehash.h StateHash_On; known-defects D420).
                 bool in_between_due = false;   // PROTOTYPE (render/interp.h)
-                if (now < deadline || bof3::InputScript_ShotPending()) {
+                if (now < deadline || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
                     in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
                     if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;

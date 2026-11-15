@@ -43,6 +43,14 @@ void StateHash_AfterInjects();
 // Returns true when the hash is on.
 bool StateHash_Start();
 
+// True while the hash is being written (BOF3X_STATEHASH set and started).
+// WinMain's loop asks, and draws a late frame instead of skipping it: the
+// draw side of a frame - the two environments put, the dirty strip and the
+// upload queue flushed - writes game memory, so a frame skipped because the
+// machine was busy left that memory a frame behind in one run and not in
+// another (known-defects D420).
+bool StateHash_On();
+
 // Called at every latch (input_script.cpp), before Input_Latch runs: hashes
 // when Frame_Counter has moved since the last call, so once a logic frame,
 // at the same point of the loop under Capcom's WinMain and ours.

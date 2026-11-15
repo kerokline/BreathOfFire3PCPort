@@ -184,7 +184,12 @@ Capcom's latch - the devices are polled and re-acquired exactly as they would
 be - and then, while the recipe plays, overwrites pad 1's three words:
 `Input_Held` `0x7E1BE8`, `Input_Previous` `0x7E1BEA`, and `Input_Pressed`
 `0x7E1BEC` as `(previous ^ held) & held`. **The real keyboard is ignored
-until the recipe ends**, then handed back.
+until the recipe ends**, then handed back. Since 2026-11-15 that holds for
+the key bytes too: `Key_State` (`0x7DE828`), which Capcom's latch fills from
+DirectInput's background keyboard, is cleared after each latch while the
+recipe plays - and after its end as well in a state-hashed run - so what is
+typed on the machine during a run leaves nothing in the game's memory
+(known-defects D420).
 
 Two facts from the disassembly decided the shape (both in `symbols.toml`,
 2026-09-21):
