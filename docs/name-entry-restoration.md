@@ -1,8 +1,8 @@
 # Name entry: what the PlayStation has, what the PC stubbed, what bringing it back would take
 
 **Status:** STABLE as research (verified 2026-10-05). **Built by the New Game
-round, 2026-11-14** ([`new-game-round.md`](new-game-round.md), branch
-`new-game/round`, not merged): the name screen at New Game (DIV-0231), the
+round, 2026-11-14** ([`new-game-round.md`](new-game-round.md), merged as
+PR #247 on 2026-11-15): the name screen at New Game (DIV-0231), the
 options screen there (DIV-0232) and the renamer's grid (DIV-0233), from one
 routine over a grid chunk read from the player's disc. The round's group M
 corrected this doc in three places, recorded there and not here: section
