@@ -814,7 +814,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   The source-layout gate's baseline worktree `base3` went with them: a later gate makes its own. The scratch roots
   of merged rounds (`x641107`, `x641101`, `fmv1107`, `logos1102`, `eg1031`, `spm1030`, `ss1026`, `stg1027`, `sl1107`,
   `end1107`, `holo1107`) still exist on disk, game-derived, the owner's to delete.
- `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
+- **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
   audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs and hand-backs),
   `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run), `amalgam_111` and `stp_census` (PRs #112 and #114's runs),
   `away1020` and `D:\bof3x-runs\away1020` (2026-10-20's launcher copies, disc-only caches and installs);
