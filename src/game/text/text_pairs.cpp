@@ -36,13 +36,23 @@ bool TextPair_Of(std::uint32_t glyph, std::uint32_t* first, std::uint32_t* secon
     return true;
 }
 
-const std::uint8_t* TextPairs_Expand(const std::uint8_t* text, std::uint8_t* buf, std::uint32_t cap) {
+namespace {
+
+// The expansion both entries share: the first `limit` characters of `text`
+// (a character is one byte, or two when the first has bit 7 and the second
+// is not the NUL), each pair code replaced by its two glyphs' codes; `text`
+// itself when none of those characters is a pair code, and always with no
+// table loaded.
+const std::uint8_t* ExpandFirst(const std::uint8_t* text, std::uint32_t limit, std::uint8_t* buf, std::uint32_t cap) {
     if (!g_count) return text;
     bool any = false;
-    for (const std::uint8_t* p = text; *p; p += (*p & 0x80) && p[1] ? 2 : 1) any = any || TextPair_At(p);
+    std::uint32_t seen = 0;
+    for (const std::uint8_t* p = text; *p && seen < limit; p += (*p & 0x80) && p[1] ? 2 : 1, ++seen)
+        any = any || TextPair_At(p);
     if (!any) return text;
     std::uint32_t n = 0;
-    for (const std::uint8_t* p = text; *p;) {
+    seen = 0;
+    for (const std::uint8_t* p = text; *p && seen < limit; ++seen) {
         std::uint32_t a, b;
         if ((*p & 0x80) && p[1] && TextPair_Of((static_cast<std::uint32_t>(*p & 0x7F) << 8) + p[1], &a, &b)) {
             if (n + 5 > cap) bof3::Fatal("DIV-0057: an expanded name is over %u bytes", (unsigned)cap - 1);
@@ -59,6 +69,17 @@ const std::uint8_t* TextPairs_Expand(const std::uint8_t* text, std::uint8_t* buf
     }
     buf[n] = 0;
     return buf;
+}
+
+}  // namespace
+
+const std::uint8_t* TextPairs_Expand(const std::uint8_t* text, std::uint8_t* buf, std::uint32_t cap) {
+    return ExpandFirst(text, UINT32_MAX, buf, cap);
+}
+
+const std::uint8_t* TextPairs_ExpandFirst(const std::uint8_t* text, std::uint32_t count, std::uint8_t* buf,
+                                          std::uint32_t cap) {
+    return ExpandFirst(text, count, buf, cap);
 }
 
 bool TextPair_At(const std::uint8_t* text) {
