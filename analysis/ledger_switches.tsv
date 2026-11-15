@@ -6605,6 +6605,7 @@ switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3946	BOF3_INJEC
 switch	Gfx_UploadLzss	detour	costly		src/game/core/title.cpp:2224	BOF3_INJECT
 switch	Gfx_UploadPacked5	detour	costly		src/game/core/title.cpp:2223	BOF3_INJECT
 switch	GiftChestRow	code	yes		src/game/scenario/scena_07_2.cpp:1371	PatchBytes
+switch	GlyphCacheReuse	code	yes		src/game/platform/glyph_draw.cpp:67	PatchBytes
 switch	GlyphTexelCentres	code	yes		src/game/platform/glyph_draw.cpp:58	PatchBytes
 switch	Gpu_AddPrim	detour	costly		src/game/platform/gpu.cpp:240	BOF3_INJECT
 switch	Gpu_ClearOTagR	detour	costly		src/game/platform/gpu_2.cpp:222	BOF3_INJECT

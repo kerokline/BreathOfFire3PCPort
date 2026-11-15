@@ -6728,46 +6728,98 @@ def grid_page_cells(payload):
     return sorted(cells)
 
 
-def grid_page_chunks(src, disc, payload, report, layer=()):
-    """[(1, tag, one tile)] carrying the disc's page-0x2F cells the legends draw
-    where the base install's differ, or []; the reason in `report`. The base
-    is the layer's own sheet of that dest where `layer` (its FIRST.DAT chunks
-    so far) has one - a disc-only build's stand-in, re-laid with the PC's
-    cleared rectangles (build_standins) - else the install's."""
-    cells = [(u, v) for u, v in grid_page_cells(payload) if u + 8 <= 256 and v + 8 <= 256]
-    if not cells:
-        report.append("no legend tile on page 0x%X" % GRID_PAGE_TPAGE)
-        return []
-    found = disc.find("FIRST.EMI")
-    donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == GRID_PAGE_SHEET] if found else []
-    own = [b for k, t, b in layer if (k, t) == (1, GRID_PAGE_SHEET)]
-    base = (own[-1], len(own[-1])) if own else chunk_of(src, "FIRST.DAT", 1, GRID_PAGE_SHEET)
+def carry_rects(src, disc, container, emi, sheet, rects, layer, what, report):
+    """[(1, tag, one tile)] carrying the disc's texels of `rects` ((u, v, w, h)
+    on the 4-bit sheet of dest `sheet`, its section in `emi`) where the base's
+    differ, each 32 x 32-word tile touched being the base's with the disc's
+    rectangles pasted in; or [] with the reason in `report`. The base is the
+    layer's own sheet of that dest where `layer` (the container's chunks so
+    far) has one - a disc-only build's stand-in, re-laid with the PC's cleared
+    rectangles (build_standins) - else the install's `container`."""
+    found = disc.find(emi)
+    donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == sheet] if found else []
+    own = [b for k, t, b in layer if (k, t) == (1, sheet)]
+    base = (own[-1], len(own[-1])) if own else chunk_of(src, container, 1, sheet)
     if not donor or base is None or base[0] is None or len(base[0]) != len(donor[0]):
-        report.append("page 0x%X not compared (the disc's FIRST.EMI or the base's FIRST.DAT has no sheet of dest 0x%X "
-                      "the same size)" % (GRID_PAGE_TPAGE, GRID_PAGE_SHEET))
+        report.append("%s not compared (the disc's %s or the base's %s has no sheet of dest 0x%X the same size)"
+                      % (what, emi, container, sheet))
         return []
-    disc_rows, rows = sheet_pixels(GRID_PAGE_SHEET, donor[0]), sheet_pixels(GRID_PAGE_SHEET, base[0])
+    disc_rows, rows = sheet_pixels(sheet, donor[0]), sheet_pixels(sheet, base[0])
     tiles, changed = set(), 0
-    for u, v in cells:
-        if any(rows[y][u:u + 8] != disc_rows[y][u:u + 8] for y in range(v, v + 8)):
+    for u, v, w, h in rects:
+        if any(rows[y][u:u + w] != disc_rows[y][u:u + w] for y in range(v, v + h)):
             changed += 1
-            tiles.add((u // SHEET_TILE_W, v // 32))
-            for y in range(v, v + 8):
-                rows[y][u:u + 8] = disc_rows[y][u:u + 8]
+            for y in range(v, v + h):
+                rows[y][u:u + w] = disc_rows[y][u:u + w]
+                tiles.update((x // SHEET_TILE_W, y // 32) for x in (u, u + w - 1))
     if not tiles:
-        report.append("the legend's %d page-0x%X cells are the base's already" % (len(cells), GRID_PAGE_TPAGE))
+        report.append("the %d %s are the base's already" % (len(rects), what))
         return []
-    body = sheet_body(GRID_PAGE_SHEET, rows)
-    tiles_w = (GRID_PAGE_SHEET >> 8) & 0xFF
+    body = sheet_body(sheet, rows)
+    tiles_w = (sheet >> 8) & 0xFF
     out = []
     for tx, ty in sorted(tiles):
         t = ty * tiles_w + tx
-        tag = ((GRID_PAGE_SHEET >> 24) + tx) << 24 | (((GRID_PAGE_SHEET >> 16) & 0xFF) + ty) << 16 | 1 << 8
+        tag = ((sheet >> 24) + tx) << 24 | (((sheet >> 16) & 0xFF) + ty) << 16 | 1 << 8
         out.append((1, tag, body[t * SHEET_TILE:(t + 1) * SHEET_TILE]))
-    report.append("%d of the legend's %d page-0x%X cells from the disc, in %d tile%s (%s)"
-                  % (changed, len(cells), GRID_PAGE_TPAGE, len(out), "s" if len(out) > 1 else "",
+    report.append("%d of the %d %s from the disc, in %d tile%s (%s)"
+                  % (changed, len(rects), what, len(out), "s" if len(out) > 1 else "",
                      ", ".join("0x%08X" % t for _, t, _ in out)))
     return out
+
+
+def grid_page_chunks(src, disc, payload, report, layer=()):
+    """[(1, tag, one tile)] for FIRST.DAT carrying the disc's page-0x2F cells
+    the legends draw where the base's differ (carry_rects), or []."""
+    cells = [(u, v, 8, 8) for u, v in grid_page_cells(payload) if u + 8 <= 256 and v + 8 <= 256]
+    if not cells:
+        report.append("no legend tile on page 0x%X" % GRID_PAGE_TPAGE)
+        return []
+    return carry_rects(src, disc, "FIRST.DAT", "FIRST.EMI", GRID_PAGE_SHEET, cells, layer,
+                       "legend's page-0x%X cells" % GRID_PAGE_TPAGE, report)
+
+
+# The name panel's pieces (group PK's second follow-up, docs/new-game-round.md
+# 4c-PK): src/game/core/new_game.cpp draws the panel with the PC's piece list
+# 0x652F5C through Menu_DrawPieces 0x57D910, flag 0: page (0x380, 0x100), the
+# sheet of dest 0x1C080200, each piece's rectangle from 0x663B94. The list
+# and the rectangles are the same bytes in every held disc's START.EMI and
+# GAME.EMI (and psp-eu's BOOT.BIN); the pixels are not everywhere: the French
+# disc's START.EMI sheet holds another word in the label piece (0x23). Each
+# panel piece whose rectangle differs between the disc's START.EMI and the
+# base's START.DAT (the container the title flow has loaded) is carried as
+# for the legend's page 0x2F.
+PANEL_LIST, PANEL_LIST_ROOM, PANEL_RECTS, PANEL_SHEET = 0x652F5C, 162, 0x663B94, 0x1C080200
+
+
+def panel_rects(lst, rects):
+    """The distinct (u, v, w, h) of a piece list's pieces (3-byte records, id
+    at +2, to an id of 0xFF), each id's 4 bytes in `rects`; [] if the list
+    has no end marker within its bytes."""
+    out = []
+    for i in range(0, len(lst) - 2, 3):
+        pid = lst[i + 2]
+        if pid == 0xFF:
+            return sorted(set(out))
+        r = tuple(rects[4 * pid:4 * pid + 4])
+        if len(r) == 4 and r[2] and r[3] and r[0] + r[2] <= 256 and r[1] + r[3] <= 256:
+            out.append(r)
+    return []
+
+
+def grid_panel_chunks(src, disc, report, layer=()):
+    """[(1, tag, one tile)] for START.DAT carrying the disc's name-panel piece
+    texels where the base's differ (carry_rects), or []."""
+    try:
+        lst, rects = exe_bytes(src, PANEL_LIST, PANEL_LIST_ROOM), exe_bytes(src, PANEL_RECTS, 256 * 4)
+    except Exception as e:     # an image without those bytes: nothing to compare
+        report.append("the panel's piece list not read (%s)" % e)
+        return []
+    pieces = panel_rects(lst, rects)
+    if not pieces:
+        report.append("the panel's piece list has no end marker in BOF3.exe's bytes")
+        return []
+    return carry_rects(src, disc, "START.DAT", "START.EMI", PANEL_SHEET, pieces, layer, "name panel's pieces", report)
 
 
 def grid_build_id(args, disc, path):
@@ -7174,6 +7226,12 @@ def build_all(args, disc_path):
             report = []
             overlays["FIRST.DAT"] += grid_page_chunks(src, disc, grid[0][2], report, overlays["FIRST.DAT"])
             print("name grid's page 0x%X: %s" % (GRID_PAGE_TPAGE, report[0]))
+            # The name panel's pieces, where the disc's texels differ (kind 1, START.DAT).
+            report = []
+            panel = grid_panel_chunks(src, disc, report, overlays.get("START.DAT", []))
+            if panel:
+                overlays.setdefault("START.DAT", []).extend(panel)
+            print("name panel: %s" % report[0])
         if donor_ja and ja_small:
             # The legend's 8 x 8 glyphs, after the pair codes (call 9).
             overlays["FIRST.DAT"] = ja_small_chunks(overlays["FIRST.DAT"])
@@ -8055,6 +8113,48 @@ def name_grid_selfcheck():
                 or len(fc[0][2]) != font_pc.GLYPH_BYTES * 0xE02:
             errs.append("ja_new_pair: the pair after 0xDFF is 0x%X, its table %d entries"
                         % (g_new, struct.unpack_from("<H", body)[0]))
+        # The carried rectangles (carry_rects, panel_rects) on made-up sheets:
+        # a piece list's distinct rectangles to its end marker; a rectangle
+        # equal to the base's writes nothing; one that differs writes the
+        # base's tile with only that rectangle pasted, under its tile's tag.
+        sheet_tag = 0x1C080200
+        lst = bytes([0, 0, 1, 1, 0, 2, 2, 0, 1, 0, 0, 0xFF])
+        rect_bytes = bytes(4) + bytes([168, 200, 24, 8]) + bytes([0, 0, 8, 8])
+        if panel_rects(lst, rect_bytes) != [(0, 0, 8, 8), (168, 200, 24, 8)] or panel_rects(lst[:-1], rect_bytes):
+            errs.append("panel_rects: %s" % panel_rects(lst, rect_bytes))
+        base_rows = [bytearray([(x + y) & 7 for x in range(256)]) for y in range(256)]
+        disc_rows = [bytearray(r) for r in base_rows]
+        for y in range(200, 208):
+            disc_rows[y][168:192] = bytes([9] * 24)
+        disc_rows[0][250] = 15                           # outside every rectangle: never carried
+        disc_body = sheet_body(sheet_tag, disc_rows)
+        emi = bytearray(0x800 + len(disc_body))
+        struct.pack_into("<I", emi, 0, 1)
+        emi[8:16] = b"MATH_TBL"
+        struct.pack_into("<II", emi, 0x10, len(disc_body), sheet_tag)
+        emi[0x800:] = disc_body
+
+        class FakeDisc:
+            def find(self, name):
+                return [name]
+
+            def read(self, name):
+                return bytes(emi)
+
+        class FakeSrc:
+            def chunks(self, name):
+                return [(1, sheet_tag, sheet_body(sheet_tag, base_rows), 0x8000)]
+        rep = []
+        same = carry_rects(FakeSrc(), FakeDisc(), "START.DAT", "START.EMI", sheet_tag, [(0, 0, 8, 8)], (), "x", rep)
+        got = carry_rects(FakeSrc(), FakeDisc(), "START.DAT", "START.EMI", sheet_tag, [(0, 0, 8, 8), (168, 200, 24, 8)],
+                          (), "x", rep)
+        want_rows = [bytearray(r) for r in base_rows[192:224]]
+        for y in range(8, 16):
+            want_rows[y][168:192] = bytes([9] * 24)
+        want = rows_to_tiles([list(r[128:256]) for r in want_rows], 1)
+        if same or len(got) != 1 or got[0][:2] != (1, 0x1D0E0100) or got[0][2] != want:
+            errs.append("carry_rects: %d chunks for an equal rectangle, %s for a differing one"
+                        % (len(same), [(k, hex(t), len(b)) for k, t, b in got]))
         ja_sheets = None
         ja_small.clear()
         del ja_small_base[:]

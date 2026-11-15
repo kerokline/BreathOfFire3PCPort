@@ -1167,20 +1167,27 @@ the label bytes are the same in both layers. **Fixed in the renderer**
 and no hit, ours rebuilds an entry in turn (`g_reuse_next`) where Capcom's
 index runs one past the table. The draws already made from that entry keep
 their texture: the render shim snapshots a texture written with draws
-pending (`render_shim.cpp` `BeforeWrite`). The switch is
-`glyph_draw::g_full_cache_reuse`, on; the fuzz compares Capcom's overrun
-byte for byte with it off and, in each of the 4,965 overrun rounds, checks
-the reuse with it on (returns the entry, builds it, marks it used, leaves
-the vertex block alone): that is the check that would have caught it.
-Captured after the fix: the label draws whole. **Ledger text (a new
+pending (`render_shim.cpp` `BeforeWrite`). The switch is the code name
+**`GlyphCacheReuse`** (the owner's word, 2026-11-14): a byte
+(`glyph_draw::g_full_cache_reuse`) that `GlyphDraw_Inject` sets through
+`PatchBytes`, on by default, off under `BOF3X_OFF=GlyphCacheReuse` (or
+`BOF3X_ORIGINAL`), which gives Capcom's overrun exactly; regenerated into
+`src/hook/code_names.h` and `analysis/ledger_switches.tsv`. The fuzz
+compares Capcom's overrun byte for byte with it off and, in each of the
+4,965 overrun rounds, checks the reuse with it on (returns the entry,
+builds it, marks it used, leaves the vertex block alone): that is the check
+that would have caught it. Captured, `ja-JP` `newGameName.txt`: on, the
+label draws whole (`pk\cap\ja_reuse_on`); with `BOF3X_OFF=GlyphCacheReuse`
+the white block returns (`pk\cap\ja_reuse_off`), so the switch is live. **Ledger text (a new
 entry, D18):** "Original: `Font_GlyphTexture` `0x5A2BC0`, with all 128
 glyph textures used in a frame and none a hit, returns 128 and binds the
 vertex block's bytes as a texture (a garbage glyph, seen as a white block).
 New: the entry after the last one rebuilt, in turn, is rebuilt for the new
 glyph; earlier draws keep their texture through the render shim's
 snapshots. Why: the `ja-JP` name screen draws more than 128 glyph
-textures. Toward: neither (the PlayStation draws glyphs from VRAM pages and
-has no such cache)."
+textures. Switch: `GlyphCacheReuse` (code name, default on; Player: yes).
+Toward: neither (the PlayStation draws glyphs from VRAM pages and has no
+such cache)."
 
 *The pair codes skip an index whose low byte is 0* (`ja_new_pair`): the
 241st pair would be `0xE00`, whose code carries a NUL. The slot stays in
@@ -1226,6 +1233,36 @@ under `en-US` and `ja-JP` from `D:\bof3x-runs\ng1114\pk` (captures in
 the 64-bit build in a game; `psp-eu` and `en-150` in a game; a disc-only
 build end to end (`grid_page_chunks` called on PE's disc-only cache and
 the opened disc only).
+
+*The name panel's label (the owner's picture of the French PlayStation
+screen, 2026-11-14).* TF's panel is `Menu_DrawPieces(x, y, 0x652F5C, 0)`:
+page (`0x380`, `0x100`), the sheet of dest `0x1C080200`, each piece's
+rectangle from `0x663B94`. Measured on every held disc: the piece list (162
+bytes) is in each disc's `START.EMI` and the rectangle table in each
+`GAME.EMI` (and `psp-eu`'s `BOOT.BIN`), byte for byte the PC's, so no build
+has another rectangle and `new_game.cpp` needs no change. The list's 53
+records name 19 distinct rectangles. Against the PC's `START.DAT` sheet,
+each disc's `START.EMI` sheet (and its `STATUS.EMI` and `FIRST.EMI` ones,
+which agree) differs in one piece only on `psx-fr`: the label, piece
+`0x23`, 24 x 8 at (168, 200). `psx-us`, `psx-eu-en`, `psx-de`, `psx-jp`,
+`psp-eu` and `psp-jp`: the same as the PC (the Japan builds keep the English
+word, as the owner's PSP picture shows). **Carried** as the legend's strip
+is: `carry_rects` (the comparison and the tile paste, now shared with
+`grid_page_chunks`), `grid_panel_chunks` over the PC's list
+(`panel_rects`), one kind-1 tile in the layer's `START.DAT` (the container
+the title flow has loaded), the base being the install's `START.DAT` or a
+disc-only build's own stand-in. Layers against the set before: 1,232 of
+1,233 byte-identical; `fr-FR.START.DAT` gains one chunk, tag `0x1D0E0100`,
+2,048 bytes. The faerie village's panel draws from the village sheet
+`COMMU01` / `COMMU05` already carry (the disc's own, re-laid). The
+self-test covers `panel_rects` and `carry_rects` on made-up sheets (an
+equal rectangle writes nothing; a differing one writes only its tile, with
+only it pasted). Captured: `pk\cap\fr-FR`. **Ledger text (with the
+`START` row's, or its own):** "Original: the PC's sheet `0x1C080200`
+holds the US release's label in the name panel's piece `0x23`. New: a
+French layer carries the French disc's texels of that piece (one 32 x
+32-word tile, kind 1 in `START.DAT`). Why: the French PlayStation release
+shows its own word there. Toward: psx."
 
 ## 4c-TF. Group TF as run (2026-11-14)
 
@@ -1926,6 +1963,40 @@ g1114f`).
   the West's); call 1 for the original Chinese (built: the options screen
   is shown); the growth roll's order against the options (TF kept the
   port's).
+
+## 4e. After 4d: the owner's answers and the last follow-ups (2026-11-14)
+
+**The owner, by chat, on 4d's open calls.**
+
+- The starting mapping's order stays as `sigma.cpp` has it.
+- The glyph-cache fix is a named switch: `GlyphCacheReuse` (PK, 4c-PK),
+  default on; off gives Capcom's overrun, and the `ja-JP` white block
+  returns with it off (PK's captures).
+- The launcher keeps the options box.
+- The original Chinese: "leave the Chinese with the original options on the
+  new game screen for now", read here as: as built (no name screen, the
+  options screen shown). To be confirmed at the owner's play.
+- A blank name takes the default name (as built, both callers); the tiled
+  frame's fix has no switch (CR's follow-up).
+
+**The German and French words.** PE read both discs, both copies: every
+label and legend word our layers draw is letter for letter what the disc
+stores, short forms included; no string on a disc is longer than its own
+routine draws; ours cuts nothing (the largest label is 7 bytes against a
+count of 7, the largest legend entry 12 against 16). Not read: whether the
+draw count is bytes or glyphs, which no held disc needs. The owner's
+pictures of the French and German PlayStation screens agree with our
+captures in the grid, the labels and the legend words.
+
+**The name panel's label.** The owner's French picture shows a French word
+on the panel's label where ours had the PC's English one. PK: the piece
+list and rectangles are equal in every build; the pixels under piece `0x23`
+differ on the French disc only, and `fr-FR.START.DAT` now carries that tile
+from its disc (kind 1). German, US, EU, Japan and both PSP builds equal the
+PC's; the owner's German picture agrees.
+
+**Owed on these:** the whole shadow suite and the switch-off frame
+comparisons on the tip that holds them (VF's third pass, below if run).
 
 ## 5. The contracts
 

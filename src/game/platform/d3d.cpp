@@ -3170,7 +3170,7 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     }
     // DIVERGENCE (D18, docs/new-game-round.md 4c-PK): with every entry used
     // this frame and none a hit, Capcom's index runs one past the table (the
-    // overrun below). Ours, under g_full_cache_reuse, rebuilds an entry in
+    // overrun below). Ours, under GlyphCacheReuse, rebuilds an entry in
     // turn instead: the draws already made from it keep the texture they were
     // made with (the render shim snapshots a texture written with draws
     // pending, render_shim.cpp BeforeWrite). Reached by the ja-JP name screen
@@ -3192,7 +3192,7 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
             reinterpret_cast<Com1>(glyph_draw::Method(device, 0x24))(device);   // BeginScene
         }
     }
-    // Capcom's, kept when g_full_cache_reuse is off, and D18 in
+    // Capcom's, kept when GlyphCacheReuse is off, and D18 in
     // docs/known-defects.md: with all 128 entries used this frame and none a
     // hit, i is 128 here - one entry past the table, which is the vertex
     // block. SetTexture is handed the bits of vertex 0's sy (0x7CA95C) as a
