@@ -1234,6 +1234,36 @@ the 64-bit build in a game; `psp-eu` and `en-150` in a game; a disc-only
 build end to end (`grid_page_chunks` called on PE's disc-only cache and
 the opened disc only).
 
+*The name panel's label (the owner's picture of the French PlayStation
+screen, 2026-11-14).* TF's panel is `Menu_DrawPieces(x, y, 0x652F5C, 0)`:
+page (`0x380`, `0x100`), the sheet of dest `0x1C080200`, each piece's
+rectangle from `0x663B94`. Measured on every held disc: the piece list (162
+bytes) is in each disc's `START.EMI` and the rectangle table in each
+`GAME.EMI` (and `psp-eu`'s `BOOT.BIN`), byte for byte the PC's, so no build
+has another rectangle and `new_game.cpp` needs no change. The list's 53
+records name 19 distinct rectangles. Against the PC's `START.DAT` sheet,
+each disc's `START.EMI` sheet (and its `STATUS.EMI` and `FIRST.EMI` ones,
+which agree) differs in one piece only on `psx-fr`: the label, piece
+`0x23`, 24 x 8 at (168, 200). `psx-us`, `psx-eu-en`, `psx-de`, `psx-jp`,
+`psp-eu` and `psp-jp`: the same as the PC (the Japan builds keep the English
+word, as the owner's PSP picture shows). **Carried** as the legend's strip
+is: `carry_rects` (the comparison and the tile paste, now shared with
+`grid_page_chunks`), `grid_panel_chunks` over the PC's list
+(`panel_rects`), one kind-1 tile in the layer's `START.DAT` (the container
+the title flow has loaded), the base being the install's `START.DAT` or a
+disc-only build's own stand-in. Layers against the set before: 1,232 of
+1,233 byte-identical; `fr-FR.START.DAT` gains one chunk, tag `0x1D0E0100`,
+2,048 bytes. The faerie village's panel draws from the village sheet
+`COMMU01` / `COMMU05` already carry (the disc's own, re-laid). The
+self-test covers `panel_rects` and `carry_rects` on made-up sheets (an
+equal rectangle writes nothing; a differing one writes only its tile, with
+only it pasted). Captured: `pk\cap\fr-FR`. **Ledger text (with the
+`START` row's, or its own):** "Original: the PC's sheet `0x1C080200`
+holds the US release's label in the name panel's piece `0x23`. New: a
+French layer carries the French disc's texels of that piece (one 32 x
+32-word tile, kind 1 in `START.DAT`). Why: the French PlayStation release
+shows its own word there. Toward: psx."
+
 ## 4c-TF. Group TF as run (2026-11-14)
 
 *Worker agent on its own worktree `D:\bof3x-runs\ng1114\tf\wt`, branch
