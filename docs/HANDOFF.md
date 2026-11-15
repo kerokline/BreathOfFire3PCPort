@@ -65,7 +65,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      PSP's) beside the US disc, and the launcher plays the mod under either English. Owed: the owner's play under
      `en-150`; `dialog_test.py` for the row's new words. The US disc is still needed - a PSP-only install cannot build a
      US patch, and nothing short of the US track can change that.
-   - **The New Game round** (item 18): staged 2026-11-12, group M to launch.
+   - **The New Game round** (item 18): stages A and B built, stage C's ledger written (2026-11-14); the proof and the owner's play owed.
    - **Issue #223, the solo character challenge** (IDEAS I56): **built on `solo/round`, PR 240 (2026-11-13), passed by the owner on a condition: the off-proof ran (`solo-character-proof.md` 6e) and `cutsceneAndNue` with the mode off differs on the sound page alone, so next is D420 (dump page `0x7DE000` at a differing tick, name the bytes, skip or fix them, run that route again), then the owner's play; what follows describes the staging and is superseded by the round doc's 6d to 6j.** **staged as a round** on 2026-11-12 ([`solo-character-round.md`](solo-character-round.md)), the owner's four answers in its section 6, not launched. Group M is run ([`solo-character-reads.md`](solo-character-reads.md); the round doc's 0a is what it corrected). Every design call is answered (its 6, 6a, 6c). **Stage A is built on the local branch `solo/round`, not pushed** (its 4a: the core in `src/game/solo/`, the launcher's "Solo character" page; worktree `D:\bof3x-runs\solo1112\round\wt`); this PR is the docs only. **Owed on stage A:** the in-game self-test, the 64-bit build, the state-hash proof with the behaviours off, `dialog_test.py` and the owner's look at the page. **Next:** stage B at the owner's word (combat, field, the level-1 start at New Game, the members screens, routes and proof).
    - **Issue #109, a randomizer:** nothing staged; the `table-edit` mod kind (DIV-0213) is the likely base.
    - **The image-layer round is measured whole** ([`image-layer-round.md`](image-layer-round.md) 6a, 2026-11-12); the owner saw the
@@ -482,7 +482,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    D257 (the PAL banks) was answered and fixed there (DIV-0194). Left to the owner: D256's framing, a look at a
    PSP-EU title capture ([`owner-review.md`](owner-review.md), the PSP-only round's "Still open").
 
-18. **The New Game round is staged** (2026-11-12, [`new-game-round.md`](new-game-round.md), branch
+18. **The New Game round: stages A and B built, stage C's ledger written** (2026-11-14, local branch
+   `new-game/round`, not pushed; [`new-game-round.md`](new-game-round.md) 4d, 4e, 4f; DIV-0231..0236, DIV-0016,
+   DIV-0020 and DIV-0075 amended, D18 fixed, D421..D424). **Owed before a PR:** the state-hash routes with the
+   round's switches off against `main`, then the new routes (`newGameName`, `newGameOriginal`, `newGameBlankName`,
+   `newGameQuit`) as their own pairs, on a quiet, hands-off machine; then the owner's play
+   ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round"). What follows is as first staged.
+   **Staged** (2026-11-12, [`new-game-round.md`](new-game-round.md), branch
    `new-game/staging`; IDEAS I34): the name entry at New Game and in the faerie village's renamer, and the options
    screen back in the New Game sequence. The owner's five answers are in its section 2; **group M is run** (section 3a; the
    branch has its own worktree, `C:\Users\kerok\bof3x-runs\ng1112\wt`). The owner answered calls 5 to 7 of its section 3b that day (`ja-JP` up to 4 kana, the faerie

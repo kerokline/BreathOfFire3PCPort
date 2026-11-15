@@ -67,24 +67,26 @@ run, original or ours ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0003).
       launch. Expect it to display correctly.
 - Result goes to: DIV-0002 and [`save-files.md`](save-files.md) §3.
 
-### 4. Does the PC port ever ask you to name Ryu?
+### 4. The name entry at New Game and in the faerie village (the New Game round)
 
-*Why:* on the PSX, New Game prompts for Ryu's name before the Dauna mines
-scene; on the PC it does not (owner, 2026-09-19). The port may have dropped
-naming, or moved it — the meeting with Rei and Teepo is the natural place.
-Decides how much name conversion matters
-([`save-interchange.md`](save-interchange.md) §2).
+*Why:* the old question, "does the PC port ever ask you to name Ryu?", is
+answered from the code: no, the port cut the name screen at New Game and the
+renamer's grid ([`save-interchange.md`](save-interchange.md) §2, amended
+2026-11-14). The New Game round brings both back (DIV-0231, DIV-0233) on
+branch `new-game/round`; nobody has played them. The full list of what to
+look at is in [`owner-review.md`](owner-review.md), section "2026-11-14, the
+New Game round".
 
-- [ ] Play on through the meeting with Rei and Teepo. Does a name-entry screen
-      appear there, or anywhere?
-- [ ] The exe's name-entry screen belongs to a **mid-game facility that keeps
-      up to 60 named members in the save** (empty in all early saves, 20 in
-      the 42-hour US save) and can also rename a party member
-      ([`save-interchange.md`](save-interchange.md) §2a). Owner's and agent's
-      recollection: the **Faerie Village** and its name changer. When you
-      reach it: does it offer naming, for members and for
-      party characters, and how many characters does each allow?
-- Result goes to: [`save-interchange.md`](save-interchange.md) §2.
+- [ ] Under `en-US` (or another language with a layer), start a New Game:
+      the name screen, then the options screen, then the opening. Enter a
+      name; does it show where the game prints the hero's name?
+- [ ] Reach the faerie village's renamer in play (no recorded route does):
+      rename a member and a faerie slot, save, load. How a player gets there
+      is not recorded.
+- [ ] Under the original Chinese, New Game has no name screen and shows the
+      options screen (the owner's call, 2026-11-14).
+- Result goes to: [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0231, DIV-0232,
+  DIV-0233.
 
 ### 5. What reverses the controls on the field?
 
@@ -124,7 +126,10 @@ The three rows and the selected row's glow were confirmed by the owner,
 - [ ] The draw has a two-row layout, rows 0 and 2, on a byte nobody has read -
       a guess is "no save files present". If you know when the port shows two
       rows, say; if moving the `BISLPS0?.DAT` files away does it, is it NEW
-      GAME and CONFIG?
+      GAME and CONFIG? (Read from the source, 2026-11-12: the byte
+      `0x6BDF8E` is "a save exists", set by `TitleFlow_Begin` from
+      `Save_ListFiles`, so two rows means no slot file;
+      [`new-game-round.md`](new-game-round.md) 3a M8. Not seen in a game.)
 - [ ] Each row still goes where it went.
 - Result goes to: [`title-menu.md`](title-menu.md) section 3, and DIV-0014's
   "Checked".

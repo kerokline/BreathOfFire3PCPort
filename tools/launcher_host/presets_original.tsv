@@ -231,6 +231,12 @@ original	as-shipped	off	DIV-0227	SaveSlotExpBar	The save slot's EXP bar shows ov
 original	as-shipped	already-off	DIV-0228	SoloCharacter	A solo-character mode: one chosen champion fights every battle alone	Default off: already off
 original	as-shipped	already-off	DIV-0229	SoloChampionIfPresent	The solo champion fights only while the story has them in the party	Default off: already off
 original	as-shipped	already-off	DIV-0230	ini:interp=0	An optional frame between each two of the game's frames (smooth motion)	Default off: already off
+original	as-shipped	skipped-language	DIV-0231	NewGameNameEntry	New Game asks for the hero's name on the PlayStation's grid	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	as-shipped	off	DIV-0232	NewGameOptions	New Game shows the options screen before the game starts	Player yes
+original	as-shipped	skipped-language	DIV-0233	CommuNameGrid	The faerie village's renamer runs the PlayStation's name grid	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	as-shipped	off	DIV-0234	GlyphCacheReuse	A full glyph cache rebuilds an entry in turn instead of running past its table	Player yes
+original	as-shipped	cannot	DIV-0235	Commu_DrawTiledFrame	The tiled frame keeps its texture windows in the packet pool	Player costly: the original is only Capcom's function; this build cannot
+original	as-shipped	skipped-language	DIV-0236	lang	The name screen's START word and the French panel label come from the language's own disc	acts only under en-US, en-150, fr-FR
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -383,6 +389,9 @@ original	repaired	already-off	DIV-0226	ini:cheat.learn=0	An examining member alw
 original	repaired	already-off	DIV-0228	SoloCharacter	A solo-character mode: one chosen champion fights every battle alone	Default off: already off
 original	repaired	already-off	DIV-0229	SoloChampionIfPresent	The solo champion fights only while the story has them in the party	Default off: already off
 original	repaired	already-off	DIV-0230	ini:interp=0	An optional frame between each two of the game's frames (smooth motion)	Default off: already off
+original	repaired	skipped-language	DIV-0231	NewGameNameEntry	New Game asks for the hero's name on the PlayStation's grid	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	repaired	off	DIV-0232	NewGameOptions	New Game shows the options screen before the game starts	Player yes
+original	repaired	skipped-language	DIV-0236	lang	The name screen's START word and the French panel label come from the language's own disc	acts only under en-US, en-150, fr-FR
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 original	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

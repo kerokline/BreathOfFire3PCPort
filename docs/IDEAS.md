@@ -78,7 +78,7 @@ rule ([`README.md`](README.md)) here too.
 | I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **built through state 3** (2026-10-12, PRs #49..#53: the C runtime, minimp3, state 2 proved, `bof3x.exe`); the renderer's remainder open - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | **measured, built in part** (the PSP-only round: the code diff `psp-code-diff*.md`, DIV-0108's two switches, PR #56); opened 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31); early decision 1 **built** 2026-10-28 as the ledger-fields round (PRs #162, #164: the machine-read fields, `BOF3X_OFF`, the presets) |
-| I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
+| I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | built 2026-11-14 by the New Game round on the local branch `new-game/round` (DIV-0231..0236), not merged; owed the proof and the owner's play |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
 | I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | **built 2026-10-21** as RG in the wide-ring round (DIV-0041's 2026-10-21 ring amendment; [`wide-ring.md`](wide-ring.md)); on `wide-ring/round`, PR next; the owner's play owed |
@@ -1566,6 +1566,12 @@ _(2026-11-12) staged as a round at the owner's word:_ [`new-game-round.md`](new-
 both pieces, the options screen back in the New Game sequence with them, the grid from the chosen
 language's disc (the Chinese skips the name screen), names of five, on by default with switches.
 Nothing built.
+_(2026-11-14) built on the local branch `new-game/round`, not merged:_ the name screen at New Game
+(DIV-0231 `NewGameNameEntry`), the options screen there in every language, the original Chinese
+included (DIV-0232 `NewGameOptions`), the renamer on the grid (DIV-0233 `CommuNameGrid`; DIV-0075
+holds where it does not run), with D18's fix (DIV-0234), the tiled frame's (DIV-0235) and the
+disc's art in two places (DIV-0236). Names of four kana under `ja-JP` (call 5). Owed: the state-hash
+proof on a quiet machine and the owner's play ([`owner-review.md`](owner-review.md)).
 
 ## I35 — The music host suite on the owner's machine
 

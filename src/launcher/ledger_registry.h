@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 222;
+inline constexpr std::size_t kSwitchCount = 228;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -295,9 +295,15 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "SoloCharacter", 0, 13},   // DIV-0228
     {SwitchForm::Name, "SoloChampionIfPresent", 0, 21},   // DIV-0229
     {SwitchForm::Ini, "ini:interp=0", 4, 6},   // DIV-0230
+    {SwitchForm::Name, "NewGameNameEntry", 0, 16},   // DIV-0231
+    {SwitchForm::Name, "NewGameOptions", 0, 14},   // DIV-0232
+    {SwitchForm::Name, "CommuNameGrid", 0, 13},   // DIV-0233
+    {SwitchForm::Name, "GlyphCacheReuse", 0, 15},   // DIV-0234
+    {SwitchForm::Name, "Commu_DrawTiledFrame", 0, 20},   // DIV-0235
+    {SwitchForm::Lang, "lang", 0, 4},   // DIV-0236
 };
 
-inline constexpr std::size_t kEntryCount = 230;
+inline constexpr std::size_t kEntryCount = 236;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -759,6 +765,18 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 220, 1, false, Player::Yes, 0, kLangAny},
     {230, "An optional frame between each two of the game's frames (smooth motion)",
      Tier::Sensible, State::Active, 0, 221, 1, false, Player::Yes, 0, kLangAny},
+    {231, "New Game asks for the hero's name on the PlayStation's grid",
+     Tier::Sensible, State::Active, 0, 222, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe | kLangJaJp},
+    {232, "New Game shows the options screen before the game starts",
+     Tier::Sensible, State::Active, 0, 223, 1, true, Player::Yes, kTowardPsx, kLangAny},
+    {233, "The faerie village's renamer runs the PlayStation's name grid",
+     Tier::Intent, State::Active, 0, 224, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe | kLangJaJp},
+    {234, "A full glyph cache rebuilds an entry in turn instead of running past its table",
+     Tier::Intent, State::Active, 0, 225, 1, true, Player::Yes, 0, kLangAny},
+    {235, "The tiled frame keeps its texture windows in the packet pool",
+     Tier::Intent, State::Active, 0, 226, 1, true, Player::Costly, kTowardPsx, kLangAny},
+    {236, "The name screen's START word and the French panel label come from the language's own disc",
+     Tier::Sensible, State::Active, 0, 227, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr},
 };
 
 // The switches of one entry.

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 230 entries, DIV-0001..0230, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 236 entries, DIV-0001..0236, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1237,6 +1237,22 @@ designed in rather than bolted on.
   so moving it is a change to our own code rather than a patch.
 - **Also in the PSX version?** the 8 x 8 cells are the PlayStation's own, at
   the size it draws them. The guard has no PSX counterpart in evidence.
+- **Amended 2026-11-14 (the New Game round, group PK, call 9):** under
+  `ja-JP` the name grid's legend strings (DIV-0231) use the Japan disc's own
+  8 x 8 kana: the cells of the sheet the Japan disc's small text draw samples
+  (texture page `0x2F`, `ENDKANJI.EMI` section 0, already in the `ja-JP`
+  font whole as 12-pixel cells), each tripled to 24 x 24 as the Latin set
+  above, so `Text_DrawSmall` shows it at 16 x 16, and appended to kinds 3
+  and 4 after the pair codes (DIV-0057) on first use, an index whose low
+  byte is 0 skipped (its code would carry a NUL; the pair codes skip it
+  too), advance 8. The layer gains 27 glyphs today (26 cells and the skipped
+  index). Nothing in `src/` changes: `Text_DrawSmall` has no glyph bound and
+  the string draw's follows the table. Kind 7's Japanese strings (the Config
+  screen) still use the 12-pixel kana at two thirds. The owner's word,
+  2026-11-14: the Japanese font has an 8-pixel kana set; use it. Measured:
+  `ja-JP.FIRST.DAT` differs from the layer before in kinds 3, 4 and 22 only;
+  `psp-jp` gives the same 26 cells, pixel for pixel; captured in a run on
+  the `ja-JP` name screen (round doc 4d, 4e), not yet played.
 - **Reversible?** play without `BOF3X_LANG`: the table is the shipped one, the
   count is `0x993` and the bound is the original's `0xA00`.
 - **Switch:** lang
@@ -1437,6 +1453,18 @@ designed in rather than bolted on.
   more bytes in the `ja-JP` font; DIV-0118's amendment, `NameCopy`); every
   name of the PC's and of a Latin layer is at most five, so the copy is five
   for them as before.
+- **Amended 2026-11-14 (the New Game round, DIV-0231 and DIV-0233):** the
+  port now asks for record 0's name at New Game where the layer has a grid,
+  and the renamer edits a name. A blank name keeps the default name in both:
+  at New Game an all-blank finish, or the default typed in, leaves record 0
+  as `NewGame_InitCharacters` wrote it, the layer's name in the layer's bytes
+  (the PlayStation copies its five bytes back); in the renamer an all-blank
+  member name takes the record's name from `Char_DefaultRecords` `0x64B390`,
+  which this entry's chunk writes, where the port's code reads
+  `CommuName_RecordNames` `0x669FA4`, which no layer replaces. The owner's
+  word, 2026-11-14: a blank name takes the default name. "The PlayStation
+  also asks for Ryu's, which the port does not" above is the original's
+  record; with `NewGameNameEntry` on, ours asks too.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
@@ -6040,6 +6068,16 @@ designed in rather than bolted on.
   0 mismatches, three plants refused. Not seen live: no recorded route enters
   the community, and whether the port's play can reach the entry at all is not
   established.
+- **Amended 2026-11-14 (the New Game round, DIV-0233):** where
+  `CommuNameGrid` runs, the entry is the PlayStation's grid and this entry's
+  end does not apply: the input step answers and moves the step on itself.
+  This end still holds with `CommuNameGrid` off, where no grid is loaded (the
+  original Chinese, any layer without the kind-22 chunk, an image without the
+  legend frames' lists), and for a faerie slot under the Japan family, whose
+  five bytes hold two kana (the owner's call 6, 2026-11-12). The renamer's
+  entry steps draw `Commu_DrawTiledFrame`, whose stack RECT ended the game on
+  the entry's first frame in both cases (D421); DIV-0235 fixes it for this
+  end too.
 - **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
   runs Capcom's steps, which do not return from the entry.
   A player turns it off with `BOF3X_OFF=CommuNameEntryAbandons` (the ini's `off=`).
@@ -17010,4 +17048,450 @@ designed in rather than bolted on.
 - **Player:** yes - a launcher key (`src/launcher/config.cpp`)
 - **Toward:** none - no release has it
 - **Languages:** any
+- **State:** active
+
+### New Game asks for the hero's name on the PlayStation's grid
+
+- **ID:** DIV-0231
+- **Date:** 2026-11-14
+- **Subsystem:** the title flow's New Game (`TitleFlow_NewGame` `0x5880E0`,
+  ours in `src/game/core/sound.cpp`, which asks the sequence first) and the
+  sequence `src/game/core/new_game.{h,cpp}` (ours); the shared name-entry
+  routine `src/game/menu/name_grid.{h,cpp}` (ours); the grid's chunk, kind 22
+  of the language layer's `FIRST.DAT`, read by `dat_load.cpp` and written by
+  `tools/loc_build.py` from the language's own disc; the quicksave
+  participant `NEWGAME`. Docs: [`new-game-round.md`](new-game-round.md) (3a,
+  3b, 4b, 4c-TF, 4c-BT, 4c-PE, 4c-PK, 5a, 5b; IDEAS I34),
+  [`name-entry-restoration.md`](name-entry-restoration.md) (the research)
+- **Tier:** Sensible - the port's New Game works without a name screen; the
+  PlayStation's screen changes what is shown and the hero's name, not the
+  rules of play.
+- **Original behaviour:** the PC port has no name screen at New Game and no
+  remnant of one. `TitleFlow_NewGame` calls `NewGame_InitCharacters`
+  `0x437820`, starts scenario 0 and sets `Game_Step` 5; record 0 keeps its
+  default name (the port's, or the layer's under DIV-0020). The PC has no New
+  Game sub-step table (round doc 3a M1). `TitleFlow_Begin` still sets up the
+  name screen's actor in `Sprite_Current` and nothing draws it (M9).
+- **New behaviour:** where the language layer has a grid chunk that passes
+  every rule of round doc 5a, and the running image holds the PC's two legend
+  frame lists (`0x667148`, `0x653000`, checked by length and SHA-256;
+  `NameGrid_Available()`), New Game shows the PlayStation's name screen for
+  character record 0 before the game.
+  **The sequence.** Sub-step 0 of `Game_Step` 2, on `SaveMenu_FlowState`
+  `0x6BDF86`, is the open (`NewGame_InitCharacters` and DIV-0228's stamp);
+  sub-steps 1 to 4 are `START`'s n0 to n3 (open, fade in, the input step,
+  fade out), with `Field_DrawFrame` after each sub-step and `Draw_PassFlags`
+  1 at the open. Then the port's rest of `TitleFlow_NewGame` and, with
+  `NewGameOptions` (DIV-0232), the options screen, else the port's
+  `Transition_Start(0)` and `Game_Step` 5. The draw-all is `START`'s
+  `0x801E6F80` call for call: the backdrop, the title box, system message
+  `0xBA` or `0xBB` by bit `0x40` of `Frame_Counter` (the layer's own
+  messages; no message is carried in the chunk), the name panel, the legend,
+  the grid's frame, the grid, and the actor stepped every 10 frames. The name
+  panel is `START`'s `0x801E6308` (`CommuMember_DrawPanel`'s shape with a box
+  `0x2F` high, portrait entry 0 and the underline under the name cursor); the
+  grid's frame is the PC's `Commu_DrawTiledFrame` term for term with its
+  texture windows in the packet pool (DIV-0235's defect).
+  **The commit.** On a finish, record 0's 8-byte name is the cells in the
+  layer's encoding (`NameGrid_Encode`), NUL-filled; when the finished cells
+  equal record 0's own name decoded (an all-blank finish, or the default
+  typed in), the record is left as it is, so the default stays as the layer
+  stored it (DIV-0020) where the PlayStation copies its five bytes back.
+  `START`'s quit code goes back to the title menu as the PlayStation's does
+  (sound `0x103`, `Game_Step` 1, sub-step 0, no fade), before
+  `Scenario_Start(0)` has run; the buffer and the page are kept and are reset
+  when the title task starts again (`TitleFlow_Begin`), where the PlayStation
+  reloads `START`.
+  **The routine's own lines** (round doc 5b and 4c-BT; the same routine runs
+  the renamer, DIV-0233):
+  - *The hand.* The original Western step leaves the hand on an empty cell
+    after Left from row 5's special on the US / EU and French pages, and a
+    confirm there enters byte 0. Ours, in the West family, goes on in the
+    direction of the move to the next cell that is not empty: Left from the
+    quit label goes to that row's last letter, and Right from a special goes
+    past an empty column 0 where a grid has one. The Japan family keeps its
+    disc's clamps: after a move, rows 4 to 7 of columns 0 to 9 up to row 3 on
+    page 2; after a page change, also row 2 of columns 6 to 9 up to row 1.
+  - *The field's room.* The original enters any cell; its names are one byte
+    a cell. Ours refuses, with sound `0x107`, a cell whose entry would make
+    the name's stored bytes pass the field: 8 for a character, 5 for a faerie
+    slot. A layer stores some cells in two bytes (round doc 3a M3).
+  - *Four kana.* The Japan family's name has four cells where the original
+    has five.
+  - *The buttons.* Every face and shoulder test goes through `Sigma`
+    (DIV-0139's rule): the Japan family's bits by `Sigma`, the West's by
+    `SigmaFrom(West)`. At the install's starting Config (DIV-0134) the tests
+    are the original's.
+  - *The pad word.* The page and finish codes take effect in the frame of
+    the press, as on the PlayStation, by a flag of ours where the
+    PlayStation writes the bit back into the pad word. Nothing else in the
+    frame reads the bit.
+  - *The legend's buttons.* The original's legend draws its release's
+    default buttons as fixed tiles. Ours draws, in each row of the button
+    column (taken by place, whatever the operation's kind), the button
+    sheet's tile of the button the step tests for that row's action under
+    the Config now, and a button moved to a shoulder as the sheet's L1 or R1
+    label. At a disc's own defaults the legend shows its own tiles. On
+    `psp-eu` the rows follow the West family's step, which ours runs there,
+    not the PSP's own tiles and letters.
+  - *The legend's pages.* A tile or the menu piece after a text is drawn on
+    page `0x2F`, the page the PlayStation's small text draw leaves set and
+    the PC's `Text_DrawSmall` does not set. This restores the disc's pages
+    (the French and German button tiles, the Western `START` row); it is not
+    a change of intent.
+  - *The legend's piece.* The menu piece of `START`'s legend is drawn with
+    the PC's `Menu_PieceRect` rectangle and the disc's CLUT; the rectangle
+    and the UI page are the US disc's byte for byte (compared statically,
+    4c-BT).
+  - *The legend's small text.* A Latin layer's legend strings use kind 7's
+    8 x 8 set (DIV-0016); a Japanese layer's use the Japan disc's own 8 x 8
+    kana (DIV-0016's amendment of 2026-11-14).
+  **The grid comes from the player's disc only.** `tools/loc_build.py`
+  writes kind 22, tag 0, as the last chunk of the layer's `FIRST.DAT`: the
+  pages in use, each cell's code and encoding, the special-code map, and both
+  copies' labels and legends, located by running each copy's own code
+  (round doc 4a, 5a). `en-US` from the US disc, `en-150` from the European
+  English disc or, on a PSP-only install, from `psp-eu`'s `BOOT.BIN` with the
+  West family's step (4c-PE, call 8), `fr-FR` and `de-DE` from their discs,
+  `ja-JP` from the Japan disc or `psp-jp`'s EMIs. The original Chinese has no
+  chunk: no disc holds a grid for it. No table is in the source, and a
+  build GD cannot read whole gets no chunk. Where there is no chunk, or the
+  image lacks the frame lists, New Game skips the screen and logs why.
+  **Quicksave.** The participant `NEWGAME` carries the cells and the reset
+  flag; its check refuses a take made on the name screen when this start has
+  `NewGameNameEntry` off or no grid of the same family. Every other take
+  loads.
+- **Rationale:** the owner, 2026-11-12 (round doc 2): the name entry at New
+  Game and in the renamer, one routine (A1); on by default under the chosen
+  language's grid, the Chinese skipping the screen (A3); names of five (A4);
+  record 0 only (A5). 2026-11-12, call 5: up to four kana "for now". 2026-11-14:
+  call 7 settled on the US release (Left from the quit label lands on the
+  empty cell), and ours to go on in the move's direction; call 8, `psp-eu`
+  gets the screen and "lets have the buttons match the mappings"; call 9, the
+  8-pixel kana for the `ja-JP` legend.
+- **Also in the PSX version?** No: the PlayStation asks for the hero's name
+  at New Game (`START.EMI`, the sub-steps n0 to n3 of step 2, round doc 3a
+  M1); the new behaviour is the PlayStation's, with the lines above. Both PSP
+  releases show a name screen at New Game (the owner's pictures, 2026-11-14,
+  round doc 4b); `psp-eu`'s own input step is a third shape that ours does
+  not run (4c-PK, 4c-PE).
+- **Verification:** round doc 4c-TF, 4c-RT, 4c-BT, 4d and 4e. The self-tests
+  `new_game` (9 checks) and `name_grid` (145) and the whole 32-bit shadow
+  suite, 922 lines, 0 mismatches (VF's third pass, `189ed750`).
+  `newGameName.txt` under `en-US`, `ja-JP` and `fr-FR` (record 0 named; the
+  `START` row's word, the `ja-JP` finish label whole, the French panel
+  label); at `037a316b` the screen under `de-DE`, `en-150` and over a
+  disc-only `psp-eu` cache, `newGameOriginal`, `newGameBlankName` (the
+  record unchanged), `newGameQuit` (the title menu, then the screen again),
+  a quicksave taken on the screen and loaded back, 16:9 and 21:9, and a
+  swapped mapping. With `NewGameNameEntry` and `NewGameOptions` off against
+  the build before the round: `battle_commands` 67 of 67 frames,
+  `config_screen` 23, `config_controller` 18, `field_menu` 31,
+  `menu_screens` 34, `shop` 52, all identical. **Not verified:** the
+  state-hash proof on a quiet machine; the owner's play; a box that prints
+  record 0's entered name (no route reaches one); the 64-bit build in play;
+  a name carried through `save_convert.py`; the Mednafen reference captures
+  (3a M10); the `psp-eu` layer rebuilt with the `START` row's word.
+- **Reversible?** `BOF3X_OFF=NewGameNameEntry` (ini `off=`; the launcher's
+  box "Show the name entry screen at New Game and in the faerie village",
+  Mods, Extras, Page 2, which also sets `CommuNameGrid`), or hosted
+  `BOF3X_ORIGINAL=NewGameNameEntry`. With it and
+  `NewGameOptions` off, `TitleFlow_NewGame` runs the port's body whole. The
+  "As shipped" preset turns it off. The harness turns it off for every run
+  unless the recipe has the `# screens new-game` header
+  ([`input-script.md`](input-script.md) 1).
+- **Switch:** NewGameNameEntry
+- **Default:** on - under its languages, where the layer has the grid chunk
+- **Player:** yes - BOF3X_OFF=NewGameNameEntry (ini off=)
+- **Toward:** psx, psp - the PlayStation's screen (above); both PSP releases show one (the owner's pictures, round doc 4b)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the layers that carry kind 22; the original Chinese has none
+- **State:** active
+
+### New Game shows the options screen before the game starts
+
+- **ID:** DIV-0232
+- **Date:** 2026-11-14
+- **Subsystem:** the New Game sequence `src/game/core/new_game.cpp` (ours);
+  the Config screen's machine `ConfigScreen_Run` `0x460CB0` on its
+  `Game_Step` 4 path, unchanged; [`new-game-round.md`](new-game-round.md)
+  (3a M1, 4c-TF, 4e)
+- **Tier:** Sensible - the port moved the options screen to the title menu
+  and New Game works without it; this puts it back where the PlayStation
+  shows it.
+- **Original behaviour:** New Game goes straight to the game. The Config
+  screen is reached only from the title menu's third row: `TitleMenu_Leave`
+  `0x5880A0` sets `Game_Step` to the cursor + 2, so 4, the Config screen's
+  machine; its closing sets `Game_Step` 5, and `TitleFlow_EnterGame`
+  `0x588800` goes back to the menu when the title cursor `0x6BDF85` is 2.
+  The machine's every "mode 2" test of the PlayStation is a "`Game_Step` 4"
+  test on the PC, branch for branch (round doc 3a M1).
+- **New behaviour:** after New Game's records and its name screen (DIV-0231,
+  where it runs), the port's rest of `TitleFlow_NewGame` runs (the byte
+  `0x9039F2`, the area number, `Scenario_Start(0)`, the `Cond_Flags` words),
+  then `Game_Step` 4 with the screen black and no fade running, as the
+  title's third row enters it. The Config screen is the port's, unchanged;
+  its closing sets `Game_Step` 5, and `TitleFlow_EnterGame` finds the cursor
+  0 (nothing of ours writes `0x6BDF85`), rolls the growth and starts the
+  game. In every language, the original Chinese included, where New Game has
+  no name screen. **The order is the port's:** the scenario is started
+  before the options and the growth is rolled after them, where the
+  PlayStation rolls the growth in EnterGame, then shows the options, counts
+  30 frames after their fade and starts the scenario in their closing (M1).
+  The title's third row is unchanged.
+- **Rationale:** the owner, 2026-11-12: the options screen back in the New
+  Game sequence; the title's third row kept (A2). For the original Chinese
+  the owner confirmed on 2026-11-14 (round doc 4e) that New Game keeps the
+  options screen there and has no name screen. Keeping the port's order
+  needs no change to `TitleFlow_EnterGame` or to the Config screen.
+- **Also in the PSX version?** No: the PlayStation shows its options screen
+  at New Game, after the name (`Game_Mode` 2, `0x801E1520`, round doc 3a
+  M1); the new behaviour is the PlayStation's but for the order above.
+- **Verification:** 4c-TF and 4c-RT: `newGameName.txt` (`en-US`, `ja-JP`)
+  and `newGameOriginal.txt` (the original Chinese) reach the Config screen
+  after New Game and then the opening's battle; `config_screen.txt` and
+  `config_controller.txt` with the switches off identical to the build
+  before (23 and 18 frames), and again in VF's third pass. **Not verified:**
+  whether the growth roll after the options instead of before moves anything
+  (the random sequence, the opening's first frame); the state-hash proof on a
+  quiet machine; the owner's play.
+- **Reversible?** `BOF3X_OFF=NewGameOptions` (ini `off=`; the launcher's box
+  "Show the options screen at New Game, before the game starts", Mods,
+  Extras, Page 2), or hosted `BOF3X_ORIGINAL=NewGameOptions`: New Game then
+  ends with the port's `Transition_Start(0)`
+  and `Game_Step` 5. The "As shipped" preset turns it off. The harness turns
+  it off for every run unless the recipe has the `# screens new-game`
+  header.
+- **Switch:** NewGameOptions
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=NewGameOptions (ini off=)
+- **Toward:** psx - the PlayStation's options at New Game (above)
+- **Languages:** any
+- **State:** active
+
+### The faerie village's renamer runs the PlayStation's name grid
+
+- **ID:** DIV-0233
+- **Date:** 2026-11-14
+- **Subsystem:** the community's name screen, `src/game/community/commu_name.{h,cpp}`
+  (ours: the six entry steps and both commits, `CommuName_SlotEntry`
+  `0x45D730`, `CommuName_MemberEntry` `0x45E2C0`, `0x45F5A0`, `0x45F650`),
+  over the shared routine `src/game/menu/name_grid.{h,cpp}` (DIV-0231); the
+  self-test `rest_4d_fuzz.cpp` `GridTest`. Docs:
+  [`new-game-round.md`](new-game-round.md) 4c-CR,
+  [`name-entry-restoration.md`](name-entry-restoration.md)
+- **Tier:** Intent - the port cut the entry's grid, legend and input step
+  but kept every caller and both commits, so the screen waited on an input
+  that could not come (DIV-0075).
+- **Original behaviour:** the grid's draw and the legend are calls to
+  `BareRet` `0x437CC0` that still pass the PlayStation's arguments, and the
+  input step is `BareRetZero` `0x43C9F0` (research section 3). Capcom's
+  steps never leave the entry; DIV-0075 ends it unanswered. The port's
+  entry-in writes `0x20` for a blank where the PlayStation writes `0xFF`.
+- **New behaviour:** where this switch is on and a grid is loaded
+  (DIV-0231's `NameGrid_Available()`), and the entry is not a faerie slot
+  under the Japan family, the two `BareRet` calls are the routine's legend
+  and grid draws and `BareRetZero` its input step, `COMMU02`'s copy (finish
+  sound `0x104`; the quit code is the unanswered end), over the PC's own
+  cells (`0x675F98`, `0x675F94`, column `0x675FCC`, row `0x675FCA`, page
+  `0x675FCB`). The input step answers 1 on a finish and moves the step on at
+  a finish or a quit, as the PlayStation's does.
+  - **Entry-in** decodes the stored field (a slot's 5 bytes, a record's 8)
+    to cells: a one-byte `0x20` is a blank (`0xFF`), the trailing ones are
+    dropped, a NUL ends it; then it is cut to the family's cells and to the
+    field's bytes. A name the grid cannot decode opens blank, logged. The
+    page opens on the grid's first page.
+  - **The answered end** encodes the cells into `0x675F98` in the layer's
+    bytes and NUL-fills nine bytes, so the commits (unchanged) and their text
+    record take the layer's name; the member step after the commit writes
+    the NUL at the record's `+8` and at `Text_Records + 0x28` (an eight-byte
+    name has none). The panels are drawn with the encoded name.
+  - **An all-blank member name** takes the record's default from
+    `Char_DefaultRecords` `0x64B390` (the name New Game gives, the layer's
+    under DIV-0020), where the port's code reads `CommuName_RecordNames`
+    `0x669FA4`, the exe's own text, which no layer replaces. The PlayStation
+    takes `COMMU02`'s roster names. An all-blank slot name takes the slot's
+    default at `0x653200`, as the port's answered branch does.
+  - **The routine's lines** of DIV-0231 hold for this copy: the hand, the
+    field's room (5 bytes for a slot, 8 for a record), the buttons, the pad
+    word, the legend's buttons and pages.
+  - **Under the Japan family** the member path has four cells (call 5), and
+    the slot path keeps DIV-0075's end (call 6): 5 bytes hold two kana.
+  Elsewhere (the switch off, no grid, a slot under the Japan family) the six
+  steps are as before, and DIV-0075's end holds.
+- **Rationale:** the owner, 2026-11-12: the name entry in the renamer as at
+  New Game, one routine (A1); calls 5 and 6 the same day. 2026-11-14: an
+  all-blank member name takes the default name, as built.
+- **Also in the PSX version?** No: the PlayStation's renamer has the grid
+  (`COMMU02.EMI`, input step `0x801DA1D8`, research section 4); the new
+  behaviour is the PlayStation's, with DIV-0231's lines and the default name
+  above.
+- **Verification:** 4c-CR. `GridTest`: the seven entry steps with the switch
+  on and no grid against Capcom's with DIV-0075's step, 28,000 rounds; the
+  slot's three under a Japan grid, 12,000; 375,847 checks of the grid's
+  paths on two synthetic grids, a planted defect caught. Live under `en-US`
+  on the `fairyVillage` save, the renamer entered by a harness poke of
+  `Field_ObjectTriggers` id 8 (no player's route): a member and a slot
+  renamed, each shown by message `0xF5`, saved and loaded back; with
+  `BOF3X_OFF=CommuNameGrid` the entry ends as DIV-0075 has it. Under `ja-JP`
+  the member path: the grid and the kana legend, one kana entered and shown.
+  On the merged tree, the member path again by the same poke (4c-CR's
+  follow-up). **Not verified:** the slot path under `ja-JP` live; a
+  four-kana name; `fr-FR`, `de-DE`, `en-150`; the slot path with a save and
+  reload on the final tree; a player's route into the renamer; the owner's
+  play.
+- **Reversible?** `BOF3X_OFF=CommuNameGrid` (ini `off=`; the launcher's name
+  entry box sets it with `NewGameNameEntry`), or hosted
+  `BOF3X_ORIGINAL=CommuNameGrid`: DIV-0075's end. The "As
+  shipped" preset turns it off.
+- **Switch:** CommuNameGrid
+- **Default:** on - under its languages, where the layer has the grid chunk
+- **Player:** yes - BOF3X_OFF=CommuNameGrid (ini off=)
+- **Toward:** psx - the PlayStation's renamer has the grid (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the layers that carry kind 22, as DIV-0231
+- **State:** active
+
+### A full glyph cache rebuilds an entry in turn instead of running past its table
+
+- **ID:** DIV-0234
+- **Date:** 2026-11-14
+- **Subsystem:** render (`Font_GlyphTexture` `0x5A2BC0`, ours in
+  `src/game/platform/d3d.cpp`; the switch's byte
+  `glyph_draw::g_full_cache_reuse`, set in `GlyphDraw_Inject`,
+  `src/game/platform/glyph_draw.cpp`); [`known-defects.md`](known-defects.md)
+  D18; [`new-game-round.md`](new-game-round.md) 4c-PK
+- **Tier:** Intent - a port repair: Capcom's index runs one past its table.
+- **Original behaviour:** the glyph textures live in a 128-entry cache, and
+  an entry is free only when it has not been used this frame. With all 128
+  used in a frame and none a hit, the lookup returns 128, one past the
+  table, and binds the vertex block's bytes as a texture (D18). Seen on the
+  `ja-JP` name screen (DIV-0231): the finish label's first kana drew as a
+  white block, and a temporary log named four lookups a frame that found the
+  cache full (4c-PK).
+- **New behaviour:** with every entry used and no hit, the entry after the
+  last one rebuilt is rebuilt for the new glyph, in turn (`g_reuse_next`).
+  The draws already made from that entry keep their texture: the render shim
+  snapshots a texture written with draws pending (`render_shim.cpp`
+  `BeforeWrite`). Below 128 distinct glyph textures a frame nothing changes.
+  One log line at start, `D18 glyph cache full: ...`.
+- **Rationale:** the `ja-JP` name screen draws more than 128 glyph textures
+  a frame (the katakana page, the labels in two colours, the message and the
+  legend's 8 x 8 glyphs). The owner, 2026-11-14 (round doc 4e): a named
+  switch, `GlyphCacheReuse`, on by default; off gives Capcom's overrun.
+- **Also in the PSX version?** No: the PlayStation draws glyphs from VRAM
+  pages and has no such cache.
+- **Verification:** `BOF3X_SHADOW=glyph_draw`: 40,000 lookup rounds compare
+  Capcom's overrun byte for byte with the switch off, and in each of the
+  4,965 overrun rounds the reuse is checked with it on (the entry returned,
+  built, marked used, the vertex block left alone). Captured,
+  `newGameName.txt` under `ja-JP`: on, the label draws whole; with
+  `BOF3X_OFF=GlyphCacheReuse` the white block returns (4c-PK). VF's third
+  pass: six text-heavy routes with the switch off against on, all identical
+  (whether any of them fills the cache was not measured). **Not verified:**
+  a dense Chinese screen that fills the cache; the software surfaces' path
+  (D18 did not read what it does with index 128).
+- **Reversible?** `BOF3X_OFF=GlyphCacheReuse` (ini `off=`), or hosted
+  `BOF3X_ORIGINAL=GlyphCacheReuse`: Capcom's overrun. The "As shipped" preset
+  turns it off; "Repaired" and "PlayStation" keep it, as they keep the other
+  repairs of Capcom's PC code with a player's switch (DIV-0200).
+- **Switch:** GlyphCacheReuse
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=GlyphCacheReuse (ini off=)
+- **Toward:** none - the PlayStation has no glyph cache
+- **Languages:** any
+- **State:** active
+
+### The tiled frame keeps its texture windows in the packet pool
+
+- **ID:** DIV-0235
+- **Date:** 2026-11-14
+- **Subsystem:** render / the community's name screen (`Commu_DrawTiledFrame`
+  `0x45F1A0`, ours in `src/game/community/commu.cpp`); New Game's grid frame
+  (`DrawGridFrame`, `src/game/core/new_game.cpp`, DIV-0231);
+  [`known-defects.md`](known-defects.md) D421;
+  [`new-game-round.md`](new-game-round.md) 4c-TF, 4c-CR
+- **Tier:** Intent - a port repair: the draw reads a stack RECT after its
+  function has returned.
+- **Original behaviour:** `Commu_DrawTiledFrame` passes `Gpu_SetDrawMode` a
+  texture-window RECT on its own stack, and the PC's draw mode keeps the
+  pointer (dword `+8`) and reads it at the present, after the function has
+  returned (D421). Drawn by the renamer's entry steps; with the renamer
+  entered (a harness poke, 4c-CR) the game ended on the entry's first frame,
+  with `CommuNameGrid` on and with it off. The same frame drawn at New Game
+  logged a texture build of a 13064 x 130 window and an access violation in
+  `D3d_BuildPageTexture` (4c-TF). Whether the port's play ever reaches the
+  renamer's entry is not established (DIV-0075).
+- **New behaviour:** each window RECT is taken in the packet pool (eight
+  bytes at `Gfx_PacketNext`, the cursor moved past them), as
+  `Menu_DrawTitleBox` `0x574AB0` keeps its own; every other byte, call and
+  argument is Capcom's. New Game's frame is drawn the same way.
+- **Rationale:** a crash in a draw the round's screens reach. The owner,
+  2026-11-14 (round doc 4c-CR): "go ahead and make it unconditional"; first
+  built as the switch `CommuFrameWindowInPool`, removed at that word.
+- **Also in the PSX version?** No: the PlayStation's `SetDrawMode` copies the
+  window into the packet at the call. The new behaviour draws the windows the
+  PlayStation draws.
+- **Verification:** 4c-CR's follow-up: `rest_4e`'s row for `0x45F1A0` runs
+  `Commu_DrawTiledFrameStackWindow` (the same body with the original's stack
+  RECT) against Capcom's clone, every byte, call and argument compared, the
+  windows by their eight bytes; 48 functions, 288,000 rounds, 0 mismatches.
+  The pool placement itself (three lines) has no original to compare with
+  and was seen live: the renamer's member path under `en-US` draws the frame
+  with no crash. New Game's frame in every `newGameName.txt` run.
+- **Reversible?** Hosted only: `BOF3X_ORIGINAL=Commu_DrawTiledFrame` runs
+  Capcom's function, with the stack RECT. There is no player's switch, at the
+  owner's word, and New Game's frame has no original.
+- **Switch:** Commu_DrawTiledFrame
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only), which reads a dead stack RECT
+- **Toward:** psx - the PlayStation copies the window at the call (above)
+- **Languages:** any
+- **State:** active
+
+### The name screen's START word and the French panel label come from the language's own disc
+
+- **ID:** DIV-0236
+- **Date:** 2026-11-14
+- **Subsystem:** text / images (only with a language layer): kind-1 image
+  chunks written by `tools/loc_build.py` (`grid_page_chunks`,
+  `grid_panel_chunks`, `carry_rects`) into the layer's `FIRST.DAT` and
+  `START.DAT`, applied by `TakeChunk` as every layer's images are;
+  [`new-game-round.md`](new-game-round.md) 4c-PK, 4c-BT, 4e
+- **Tier:** Sensible - the release's own art in place of the port's.
+- **Original behaviour:** the PC's font page `0x1E000200` has the
+  rectangle blank where every Western disc's `FIRST.EMI` holds a word that
+  the Western `START` legend draws in four 8 x 8 tiles of its finish row
+  (4c-BT: the whole tile is without ink, counted). The PC's sheet
+  `0x1C080200` (`START.DAT`) holds the US release's label in the name
+  panel's piece `0x23`.
+- **New behaviour:** a layer carries the disc's own texels for the cells
+  its legend draws on page `0x2F` where the install's differ, as one 32 x
+  32-word tile (kind 1 in `FIRST.DAT`): `en-US` and `en-150` (and `psp-eu`'s
+  disc-only layer) get the word; `fr-FR`, `de-DE`, `ja-JP` and `psp-jp` get
+  nothing, as their cells equal the PC's. A French layer carries the French
+  disc's texels of piece `0x23` (one 32 x 32-word tile, kind 1 in
+  `START.DAT`); every other held build's piece equals the PC's. The base is
+  the install's own file, or a disc-only build's re-laid stand-in. Nothing
+  in `src/` changes. Before the change the four tiles drew nothing on a PC
+  install (4c-BT).
+- **Rationale:** the PlayStation draws a word in the Western legend's finish
+  row, and the French release shows its own word on the name panel (the
+  owner's picture of the French PlayStation screen, 2026-11-14, round doc
+  4e).
+- **Also in the PSX version?** No: the Western discs draw the word, and the
+  French disc its own label (above); the new behaviour is the PlayStation's.
+- **Verification:** 4c-PK: layers over the PC game folder against the set
+  before, 1,231 and then 1,232 of 1,233 files byte-identical, the changed
+  ones gaining one chunk each (`en-US.FIRST.DAT`, `en-150.FIRST.DAT`,
+  `fr-FR.START.DAT`); `loc_build.py selftest` covers `panel_rects` and
+  `carry_rects` on made-up sheets. Captured: the `en-US` legend's row draws
+  its word, the `fr-FR` panel its label (VF's third pass). **Not verified:**
+  whether any other screen draws those texels or that piece; the `psp-eu`
+  layer rebuilt with the word, in a game; a disc-only build end to end.
+- **Reversible?** play without `BOF3X_LANG`. A layer rebuilt without the
+  two chunks is a build-time handle, not a switch.
+- **Switch:** lang
+- **Default:** on - under its languages
+- **Player:** yes
+- **Toward:** psx - the PlayStation releases' own art (above)
+- **Languages:** en-US, en-150, fr-FR - the layers that carry one of the two tiles
 - **State:** active

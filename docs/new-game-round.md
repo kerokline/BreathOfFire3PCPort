@@ -1,16 +1,16 @@
 # The New Game round: the name entry and the options screen back in the New Game sequence
 
-**Status:** IN PROGRESS, stages A and B built (2026-11-14, on the local
-branch `new-game/round` off `main` `651a5ad8`, not pushed; IDEAS I34. Group
-M ran on 2026-11-12: section 3a. Stage A: 4a. Stage B, the callers, is
-built and merged on the branch: 4b is the owner's word, the 4c sections are
-each group as run, 4d is the merged tree as verified and what is owed.
-New Game runs the name screen and the options screen, the faerie village
-renamer runs the grid, and the launcher has the two boxes; **the ledger has
-no entry yet, so the branch is not mergeable to `main` as it is (rule 2):
-stage C writes the entries, runs the proof on a quiet machine, and the
-owner plays it.** Sections 4 to 9 are as first staged and are amended by
-3b, 4a and 4b.)
+**Status:** IN PROGRESS, stages A and B built and stage C's ledger written
+(2026-11-14, on the local branch `new-game/round` off `main` `651a5ad8`, not
+pushed; IDEAS I34. Group M ran on 2026-11-12: section 3a. Stage A: 4a. Stage
+B, the callers, is built and merged on the branch: 4b is the owner's word,
+the 4c sections are each group as run, 4d is the merged tree as verified and
+what is owed, 4e the last follow-ups. New Game runs the name screen and the
+options screen, the faerie village renamer runs the grid, and the launcher
+has the two boxes. **Stage C's ledger is written (4f: DIV-0231..0236,
+DIV-0016, DIV-0020 and DIV-0075 amended). Still owed before a PR: the proof
+on a quiet machine, then the owner's play.** Sections 4 to 9 are as first
+staged and are amended by 3b, 4a and 4b.)
 
 The owner (2026-11-12): stage a round for the character naming screen and the
 options menu at New Game. On the PlayStation, New Game asks for the hero's
@@ -1904,8 +1904,7 @@ CR's follow-up (the tiled frame's fix with no switch), BT, PK's follow-up
 (D18's reuse, the START row's word). One fix at the merge: `rest_4d`'s
 synthetic legend passes BT's map argument. Group VF then ran the merged
 tree and changed nothing, twice: at `037a316b` and at the final tip
-`2068bfdd` (logs and captures under `D:of3x-runs
-g1114f`).
+`2068bfdd` (logs and captures under `D:\bof3x-runs\ng1114\vf`).
 
 **Verified on `2068bfdd` (VF's second pass unless said).**
 
@@ -1975,7 +1974,9 @@ g1114f`).
 - The launcher keeps the options box.
 - The original Chinese: "leave the Chinese with the original options on the
   new game screen for now", read here as: as built (no name screen, the
-  options screen shown). To be confirmed at the owner's play.
+  options screen shown). **Confirmed by the owner in words, 2026-11-14,
+  after this section was first written:** the original Chinese keeps the
+  options screen at New Game and has no name screen (DIV-0232).
 - A blank name takes the default name (as built, both callers); the tiled
   frame's fix has no switch (CR's follow-up).
 
@@ -2005,10 +2006,70 @@ as merged (`129ceaa4`), with the two New Game switches off: `battle_commands`
 the cache was not measured). `newGameName` under `en-US`, `ja-JP` and
 `fr-FR`: the START row's word, the `ja-JP` label whole, the French panel
 label. The tool checks pass; the launcher host tests have the base's two
-`TestPresetPlan` failures and no other. Logs: `D:of3x-runs
-g1114f\logs\p3_*`.
+`TestPresetPlan` failures and no other. Logs: `D:\bof3x-runs\ng1114\vf\logs\p3_*`.
 4d's owed list stands otherwise; the proof's routes are now recorded
 against `main` with PR 246 in.
+
+## 4f. Stage C: the ledger as written (2026-11-14)
+
+*Group LG, worktree `D:\bof3x-runs\ng1114\lg\wt`, branch `new-game/lg` off
+`new-game/round` `93e03891`. Docs, the generated tables and the launcher's
+host tests only: no behaviour change.*
+
+| Entry | Switch | Default | Tier, Toward, Languages |
+|---|---|---|---|
+| DIV-0231, New Game asks for the hero's name on the PlayStation's grid | `NewGameNameEntry` | on, under its languages | Sensible; psx, psp; `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP` |
+| DIV-0232, New Game shows the options screen before the game starts | `NewGameOptions` | on | Sensible; psx; any |
+| DIV-0233, the faerie village's renamer runs the PlayStation's name grid | `CommuNameGrid` | on, under its languages | Intent; psx; the five, as DIV-0231 |
+| DIV-0234, a full glyph cache rebuilds an entry in turn (D18) | `GlyphCacheReuse` | on | Intent; none; any |
+| DIV-0235, the tiled frame keeps its texture windows in the packet pool (D421) | `Commu_DrawTiledFrame` (a detour name, Player costly: no player's switch, the owner's word) | on | Intent; psx; any |
+| DIV-0236, the `START` word and the French panel label from the language's own disc | `lang` | on, under its languages | Sensible; psx; `en-US`, `en-150`, `fr-FR` |
+
+**Amended:** DIV-0016 (the `ja-JP` legend's 8 x 8 kana, call 9), DIV-0020
+(a blank name keeps the default, at New Game and in the renamer), DIV-0075
+(its end holds only with `CommuNameGrid` off, with no grid, and for a slot
+under the Japan family). The kind-22 chunk (which builds get one) and 5b's
+and BT's lines are in DIV-0231; the quicksave participant `NEWGAME` too.
+The harness-side facts (`input_run.py`'s switch-off line, the recipes) are
+tooling and have no entry.
+
+**The calls this stage made.**
+
+- *The tiers.* Section 5 does not set them, and TF proposed Intent for both
+  New Game entries. Written Sensible: the port's New Game works without the
+  two screens, so the original is not wrong there; the renamer's grid is
+  Intent, since the port left that screen waiting on an input that could not
+  come (DIV-0075). So "Repaired" turns DIV-0231 and DIV-0232 off and keeps
+  DIV-0233 (owner-review.md asks).
+- *`GlyphCacheReuse` in the presets* as the ledger's other switched repairs
+  of Capcom's PC code (DIV-0200, DIV-0227): Intent, Player yes, Toward none,
+  so "As shipped" turns it off and "Repaired" and "PlayStation" keep it.
+- *The layer's images* are an entry of their own (DIV-0236, `Switch: lang`,
+  as the ledger's other layer chunks), not lines of DIV-0231: they are loaded
+  with the layer whatever `NewGameNameEntry` says. The `ja-JP` 8 x 8 kana go
+  in DIV-0016, as PK asked.
+- *Toward psp* for DIV-0231 rests on the owner's pictures of both PSP
+  releases' name screens (4b); DIV-0232 and DIV-0233 were not seen on a PSP.
+
+**The generated files and the checks.** `ledger_registry.h`,
+`analysis/ledger_switches.tsv` and the two preset tables regenerated
+(`code_names.h` unchanged: the four code names were in it). Under the
+original Chinese "As shipped" turns 92 entries off (90 before:
+`NewGameOptions` and `GlyphCacheReuse`). `ledger_check.py` 0 errors,
+`ledger_registry.py --check` and `ledger_switches.py --check` pass.
+**`TestPresetPlan`'s two failures** (on the base too) were the test's, not
+the launcher's: its count of entries off, 82, was written on 2026-11-03 and
+not moved since (90 on the base, 92 now); and its `Env()` read a variable
+into 1,024 bytes and returned an empty string past that, which the preset's
+`BOF3X_OFF` passes once some 70 code names are in it, so "BOF3X_OFF is the
+union" compared the list with an empty string. Both fixed in
+`tools/launcher_host/config_tests.cpp`; 4,138 checks, 0 failures;
+`save_tests` 101, 0.
+
+**Still owed** (4d): the state-hash proof on a quiet machine with the
+round's switches off, then the four new routes as their own pairs; the
+owner's play ([`owner-review.md`](owner-review.md), "2026-11-14, the New
+Game round"); the 64-bit build in play; `dialog_test.py`.
 
 ## 5. The contracts
 
