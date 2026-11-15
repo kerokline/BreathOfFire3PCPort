@@ -1,7 +1,7 @@
 # The solo-character round: group CB, the combat half
 
 **Status:** IN PROGRESS (2026-11-12, branch `solo/cb` off `solo/round`
-`10646687`). Built and self-tested; the battle routes run in the mode are
+`10646687`; merged with the round as PR #240, 2026-11-13). Built and self-tested; the battle routes run in the mode are
 section 6. Not played by the owner. The design is
 [`solo-character-round.md`](solo-character-round.md) 0a items 1-5, 4 "CB" and
 6a item 2 ("champion always" first); the reads it rests on are

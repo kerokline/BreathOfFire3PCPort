@@ -4,7 +4,7 @@
 word late morning, five groups merged on `exe-gap/round` the same day, the
 end batch run unattended in the afternoon and evening and passed whole
 (section 9a); DIV-0196 the owner's rule on the Config labels after it;
-unpushed. Section 4a has each group as run, section 7 the owner's calls.
+merged as PR #176 the same day. Section 4a has each group as run, section 7 the owner's calls.
 Framed 2026-10-20, re-measured and staged 2026-10-31 morning, briefs under
 `C:\Users\kerok\bof3x-runs\eg1031`.) It also carried HANDOFF's "disc-only
 and PSP polish" item (group AU).

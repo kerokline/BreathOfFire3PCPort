@@ -1,8 +1,10 @@
 # CampMasters: a master's talk from the camp menu's master list
 
 **Status:** IN PROGRESS - design verified against the patched US disc and our
-source 2026-11-12; code on `romhack/b4-masters`; not played (no game was
-started: a proof chain was running on the machine).
+source 2026-11-12; code on `romhack/b4-masters`, merged as PR #232 (2026-11-12);
+played by the owner with the hack's version 1.0 the same day
+([`owner-review.md`](owner-review.md); D416 parked); the leave pose skipped for
+masters 3, 5 and 9 still wants the owner's word.
 
 The Definitive Edition romhack (TheGreatBen, used with permission; issue 216,
 [`romhack-mods.md`](romhack-mods.md)) lets the player talk to a master from

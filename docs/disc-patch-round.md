@@ -8,7 +8,10 @@ below. Groups A, B, E and C are built (5a, 5b, 5c, 5d): the mod builds on the
 player's machine, with the overlays' table numbers as cells of the table files
 (the image-layer round's group D), and the launcher hands its layers to the
 game, with a check box at the left of the mod's row to turn it off. D (the
-release) is held by the owner's call 1. Nobody has played it. Step 4 of
+release) is held by the owner's call 1. Merged as PRs #227 (the round), #232 and #233
+(the behaviours, 6a to 6c), #239 (version 1.4, 6d) and #244 (the `en-150` build, 11). The owner played
+the 1.0 mod with its ten behaviours on 2026-11-12 ([`owner-review.md`](owner-review.md));
+1.4's rules and the `en-150` build are not played. Step 4 of
 romhack-mods.md section 6.
 Read that note first: it holds the measurements this plan stands on. `main`
 holds the three things the round starts from: `tools/vcdiff.py`,

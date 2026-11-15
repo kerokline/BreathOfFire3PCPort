@@ -72,8 +72,8 @@ run, original or ours ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0003).
 *Why:* the old question, "does the PC port ever ask you to name Ryu?", is
 answered from the code: no, the port cut the name screen at New Game and the
 renamer's grid ([`save-interchange.md`](save-interchange.md) §2, amended
-2026-11-14). The New Game round brings both back (DIV-0231, DIV-0233) on
-branch `new-game/round`; nobody has played them. The full list of what to
+2026-11-14). The New Game round brings both back (DIV-0231, DIV-0233),
+merged as PR #247 (2026-11-15); nobody has played them. The full list of what to
 look at is in [`owner-review.md`](owner-review.md), section "2026-11-14, the
 New Game round".
 
