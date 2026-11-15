@@ -1,15 +1,17 @@
 # The New Game round: the name entry and the options screen back in the New Game sequence
 
-**Status:** IN PROGRESS, stages A and B built and stage C's ledger written
-(2026-11-14, on the local branch `new-game/round` off `main` `651a5ad8`, not
+**Status:** IN PROGRESS, stages A and B built, stage C's ledger written and
+its proof run (2026-11-14, on the local branch `new-game/round` off `main` `651a5ad8`, not
 pushed; IDEAS I34. Group M ran on 2026-11-12: section 3a. Stage A: 4a. Stage
 B, the callers, is built and merged on the branch: 4b is the owner's word,
 the 4c sections are each group as run, 4d is the merged tree as verified and
 what is owed, 4e the last follow-ups. New Game runs the name screen and the
 options screen, the faerie village renamer runs the grid, and the launcher
 has the two boxes. **Stage C's ledger is written (4f: DIV-0231..0236,
-DIV-0016, DIV-0020 and DIV-0075 amended). Still owed before a PR: the proof
-on a quiet machine, then the owner's play.** Sections 4 to 9 are as first
+DIV-0016, DIV-0020 and DIV-0075 amended). The proof ran on a quiet machine
+(4g, 2026-11-14, tip `63b44ba1`): the ten state-hash routes identical to
+`main` as merged, the four new routes deterministic and recorded as their
+own pairs. Still owed before a PR: the owner's play.** Sections 4 to 9 are as first
 staged and are amended by 3b, 4a and 4b.)
 
 The owner (2026-11-12): stage a round for the character naming screen and the
@@ -1942,7 +1944,9 @@ tree and changed nothing, twice: at `037a316b` and at the final tip
   `TestPresetPlan` failures are probably the stale TSVs), and
   `known-defects.md` for the tiled frame and D18.
 - **The proof**: the state-hash routes with the switches off, on a quiet,
-  hands-off machine; the new routes' own pairs.
+  hands-off machine; the new routes' own pairs. *Done 2026-11-14 (4g): ten
+  of ten identical, the four new routes deterministic, their pairs
+  recorded.*
 - **Not run by anyone:** the 64-bit build in play; a PSP-only home laid out
   by the launcher's Sources page (VF ran the PSP cache over a PC game
   folder); the renamer's slot path with save and reload on the final tree,
@@ -2069,7 +2073,103 @@ union" compared the list with an empty string. Both fixed in
 **Still owed** (4d): the state-hash proof on a quiet machine with the
 round's switches off, then the four new routes as their own pairs; the
 owner's play ([`owner-review.md`](owner-review.md), "2026-11-14, the New
-Game round"); the 64-bit build in play; `dialog_test.py`.
+Game round"); the 64-bit build in play; `dialog_test.py`. *(The proof is
+4g.)*
+
+## 4g. Stage C: the proof (2026-11-14)
+
+*Group PF, worktree `D:\bof3x-runs\ng1114\pf\wt`, branch `new-game/pf` off
+`new-game/round` `63b44ba1`. No source change: the runs and this section.*
+
+**What was run.** `tools/solo_proof.py`'s method
+([`state-hash.md`](state-hash.md) 6; the PR 246 proof's form,
+[`frame-interpolation.md`](frame-interpolation.md) 5): the base build run
+twice a route as the reference pair (`ref`, `refb`), the candidate once,
+`tools/statehash.py check REF REFB NEW`, a second candidate run on a
+difference. The base is `main` as merged into the round, `129ceaa4`
+(`e7cb971c^2`), built in a detached worktree of the group's own (removed
+afterwards); the candidate is the build of the tip `63b44ba1`. 32-bit
+`bof3x.exe`, the exe host, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the tree's
+skip list, ini-less launcher copies, `--slot0-hold` on the shop, the recipe
+saves of the main checkout copied into the root. The game folder is the
+root's own copy of PK's (`D:\bof3x-runs\ng1114\pk\game`: the current layers,
+the 1,975 `DAT` files the same md5s as VF's game copy). Smooth motion
+(DIV-0230) off in every run, its default. Harness root
+`D:\bof3x-runs\ng1114\pf\root`; scripts in `pf\s`, the chain's log
+`pf\logs\chain.out`, the runs and checks in `pf\root\sh`, `pf\root\proof.log`,
+`pf\REPORT.md`.
+
+**The references.** The PR 246 proof's pair (`main` `651a5ad8`, the base
+before PR 246, `C:\Users\kerok\bof3x-runs\interp1114\proof\root\sh`) was
+recorded on another base than `main` as merged, so the pair was recorded
+again from `129ceaa4`, and the comparison made both ways. The skip list is
+the same file in both trees.
+
+**The ten routes, the round's switches as the harness sets them.** Each
+candidate run's log says `patch OFF NewGameNameEntry` and
+`patch OFF NewGameOptions` (`input_run.py` added both to `BOF3X_OFF`;
+`new game: BOF3X_OFF=NewGameNameEntry,NewGameOptions` in each run's
+output), and `patch ON` for `CommuNameGrid` and `GlyphCacheReuse`, their
+default; `behaviours: 0 of 12 on`; the language the original (no overlay),
+as in the earlier proofs.
+
+| Route | Ticks | Pair at `129ceaa4` with itself | Tip against that pair | Tip against PR 246's pair | PR 246's candidate against the `129ceaa4` pair |
+|---|---|---|---|---|---|
+| combat | 2,625 | identical | identical | identical | identical |
+| shop | 3,137 | identical | identical | identical | identical |
+| caughFish | 3,841 | `0x6C3000` from 395 | identical | identical | identical |
+| field_menu | 1,409 | identical | identical | identical | identical |
+| menu_screens | 1,729 | identical | identical | identical | identical |
+| dragonTransform | 4,289 | identical | identical | identical | identical |
+| cutsceneAndNue | 7,425 | identical | identical | identical | identical |
+| masterAndManillo | 5,505 | `0x6C3000` from 324 | identical | identical | identical |
+| worldMapAndAreaTransition | 2,113 | `0x6C3000` from 1,098 | identical | identical | identical |
+| whelpBoss | 13,185 | `0x7DE000` at 2 ticks (5,440..5,442) | identical | identical | identical |
+
+**Ten of ten identical, on the first run**: no repeat was needed and no
+bisect run. Where the pair disagrees with itself it is on the pages two runs
+of one build split (`Gfx_TexCache`'s page `0x6C3000`, the sound page
+`0x7DE000`; [`state-hash.md`](state-hash.md) 6), which `check` leaves out.
+So `CommuNameGrid` and `GlyphCacheReuse` on, and the two New Game screens
+off, change nothing the ten routes compute. Whether any of the ten fills
+the glyph cache (D18's case) was not measured.
+
+**The four new routes as their own pairs.** Each run twice on the tip's
+build, with the same conditions and `--lang` as below; the recipes carry
+the `# screens new-game` header, so `input_run.py` added nothing to
+`BOF3X_OFF` and each log says `patch ON` for both New Game switches.
+`tools/statehash.py diff` of the two runs:
+
+| Route | Language | Recipe end | Two runs |
+|---|---|---|---|
+| newGameName | `en-US` | done at frame 3,053 | identical on all 3,009 compared ticks |
+| newGameName | `ja-JP` | done at frame 2,897 | identical on all 2,881 |
+| newGameOriginal | the original (no `--lang`) | done at frame 2,718 | identical on all 2,689 |
+| newGameBlankName | `en-US` | done at frame 738 | identical on all 705 |
+| newGameBlankName | `ja-JP` | done at frame 738 | identical on all 705 |
+| newGameQuit | `en-US` | done at frame 791 | identical on all 769 |
+
+Every route is deterministic run to run on this tip. Both `newGameBlankName`
+runs of each language log that record 0 keeps its default name. **The
+pairs** are `cn_<route>_<lang>_ng.sh` / `_ngb.sh` (`<lang>` `enUS`, `jaJP`,
+`orig`) in `D:\bof3x-runs\ng1114\pf\root\sh`: hashes of runs, kept outside
+the repository as every other pair is (the repository holds no pair file).
+They depend, as all pairs do, on the skip list, the recipe, the layers and
+the launcher's settings; a change of the round's routine or of the layers
+wants them recorded again.
+
+**The machine.** Quiet and hands-off. Before the chain (21:35) two checks
+found no game, launcher or compiler process of anyone's; from 21:42 to the
+chain's end (23:13) a poll every 60 s saw none that was not this root's
+(`pf\logs\quiet.log`, 92 lines). The builds ran before the chain, not
+beside it.
+
+**Not run.** The 64-bit build; the hosted build; smooth motion on; the ten
+routes with `CommuNameGrid` or `GlyphCacheReuse` off (nothing to bisect);
+the new routes under `fr-FR`, `de-DE`, `en-150` or the PSP cache (VF ran
+them, not hashed); the renamer under the state hash (it is reached by a
+harness poke, no route); `newGameQuit` under `ja-JP` (the recipe is not for
+it). Still owed after this: the owner's play.
 
 ## 5. The contracts
 
