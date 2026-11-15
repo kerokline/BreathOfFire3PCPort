@@ -3396,49 +3396,49 @@ switch	Cursor_Sync	detour	costly		src/game/platform/magic_080.cpp:1265	BOF3_INJE
 switch	Cyclone_Start	detour	costly		src/game/magic/fx_funnel.cpp:500	BOF3_INJECT
 switch	Cyclone_Task	detour	costly		src/game/magic/fx_funnel.cpp:499	BOF3_INJECT
 switch	Cyclone_Wait	detour	costly		src/game/magic/fx_funnel.cpp:501	BOF3_INJECT
-switch	D3d_AfterDraw	detour	costly		src/game/platform/d3d.cpp:3920	BOF3_INJECT
-switch	D3d_BindTexture	detour	costly		src/game/platform/d3d.cpp:3930	BOF3_INJECT
-switch	D3d_BuildCellTexture	detour	costly		src/game/platform/d3d.cpp:3960	BOF3_INJECT
-switch	D3d_BuildPageTexture	detour	costly		src/game/platform/d3d.cpp:3931	BOF3_INJECT
-switch	D3d_CellTexture	detour	costly		src/game/platform/d3d.cpp:3959	BOF3_INJECT
-switch	D3d_DrawCellSprite	detour	costly		src/game/platform/d3d.cpp:3958	BOF3_INJECT
-switch	D3d_DrawGlyph	detour	costly		src/game/platform/d3d.cpp:3954	BOF3_INJECT
-switch	D3d_DrawLineF2	detour	costly		src/game/platform/d3d.cpp:3943	BOF3_INJECT
-switch	D3d_DrawLineF3	detour	costly		src/game/platform/d3d.cpp:3945	BOF3_INJECT
-switch	D3d_DrawLineF4	detour	costly		src/game/platform/d3d.cpp:3947	BOF3_INJECT
-switch	D3d_DrawLineG2	detour	costly		src/game/platform/d3d.cpp:3944	BOF3_INJECT
-switch	D3d_DrawLineG3	detour	costly		src/game/platform/d3d.cpp:3946	BOF3_INJECT
-switch	D3d_DrawLineG4	detour	costly		src/game/platform/d3d.cpp:3948	BOF3_INJECT
-switch	D3d_DrawPolyF3	detour	costly		src/game/platform/d3d.cpp:3925	BOF3_INJECT
-switch	D3d_DrawPolyF4	detour	costly		src/game/platform/d3d.cpp:3937	BOF3_INJECT
-switch	D3d_DrawPolyFT3	detour	costly		src/game/platform/d3d.cpp:3929	BOF3_INJECT
-switch	D3d_DrawPolyFT4	detour	costly		src/game/platform/d3d.cpp:3938	BOF3_INJECT
-switch	D3d_DrawPolyG3	detour	costly		src/game/platform/d3d.cpp:3939	BOF3_INJECT
-switch	D3d_DrawPolyG4	detour	costly		src/game/platform/d3d.cpp:3941	BOF3_INJECT
-switch	D3d_DrawPolyGT3	detour	costly		src/game/platform/d3d.cpp:3940	BOF3_INJECT
-switch	D3d_DrawPolyGT4	detour	costly		src/game/platform/d3d.cpp:3942	BOF3_INJECT
-switch	D3d_DrawSprt	detour	costly		src/game/platform/d3d.cpp:3951	BOF3_INJECT
-switch	D3d_DrawSprt16	detour	costly		src/game/platform/d3d.cpp:3953	BOF3_INJECT
-switch	D3d_DrawSprt8	detour	costly		src/game/platform/d3d.cpp:3952	BOF3_INJECT
-switch	D3d_DrawTile	detour	costly		src/game/platform/d3d.cpp:3949	BOF3_INJECT
-switch	D3d_DrawTile1	detour	costly		src/game/platform/d3d.cpp:3950	BOF3_INJECT
-switch	D3d_FitTextureSize	detour	costly		src/game/platform/d3d.cpp:3924	BOF3_INJECT
-switch	D3d_FlattenFT3	detour	costly		src/game/platform/d3d.cpp:3935	BOF3_INJECT
-switch	D3d_FreeCellTexture	detour	costly		src/game/platform/d3d.cpp:3961	BOF3_INJECT
-switch	D3d_FreeCellTextures	detour	costly		src/game/platform/d3d.cpp:3976	BOF3_INJECT
-switch	D3d_PageTexel4	detour	costly		src/game/platform/d3d.cpp:3936	BOF3_INJECT
-switch	D3d_PrimColor	detour	costly		src/game/platform/d3d.cpp:3926	BOF3_INJECT
-switch	D3d_RefreshCellTexture	detour	costly		src/game/platform/d3d.cpp:3962	BOF3_INJECT
-switch	D3d_RefreshPageTexture	detour	costly		src/game/platform/d3d.cpp:3933	BOF3_INJECT
-switch	D3d_ReleaseAfterDraw	detour	costly		src/game/platform/d3d.cpp:3972	BOF3_INJECT
-switch	D3d_SetAlphaModulate	detour	costly		src/game/platform/d3d.cpp:3919	BOF3_INJECT
-switch	D3d_SetBackColor	detour	costly		src/game/platform/d3d.cpp:3963	BOF3_INJECT
-switch	D3d_SetBlend	detour	costly		src/game/platform/d3d.cpp:3927	BOF3_INJECT
-switch	D3d_SetShadeMode	detour	costly		src/game/platform/d3d.cpp:3928	BOF3_INJECT
-switch	Dd_ClearSurface	detour	costly		src/game/platform/d3d.cpp:3957	BOF3_INJECT
-switch	Dd_CreatePlainSurface	detour	costly		src/game/platform/d3d.cpp:3922	BOF3_INJECT
-switch	Dd_CreateTextureSurface	detour	costly		src/game/platform/d3d.cpp:3923	BOF3_INJECT
-switch	Dd_InitSurfaceDesc	detour	costly		src/game/platform/d3d.cpp:3921	BOF3_INJECT
+switch	D3d_AfterDraw	detour	costly		src/game/platform/d3d.cpp:3932	BOF3_INJECT
+switch	D3d_BindTexture	detour	costly		src/game/platform/d3d.cpp:3942	BOF3_INJECT
+switch	D3d_BuildCellTexture	detour	costly		src/game/platform/d3d.cpp:3972	BOF3_INJECT
+switch	D3d_BuildPageTexture	detour	costly		src/game/platform/d3d.cpp:3943	BOF3_INJECT
+switch	D3d_CellTexture	detour	costly		src/game/platform/d3d.cpp:3971	BOF3_INJECT
+switch	D3d_DrawCellSprite	detour	costly		src/game/platform/d3d.cpp:3970	BOF3_INJECT
+switch	D3d_DrawGlyph	detour	costly		src/game/platform/d3d.cpp:3966	BOF3_INJECT
+switch	D3d_DrawLineF2	detour	costly		src/game/platform/d3d.cpp:3955	BOF3_INJECT
+switch	D3d_DrawLineF3	detour	costly		src/game/platform/d3d.cpp:3957	BOF3_INJECT
+switch	D3d_DrawLineF4	detour	costly		src/game/platform/d3d.cpp:3959	BOF3_INJECT
+switch	D3d_DrawLineG2	detour	costly		src/game/platform/d3d.cpp:3956	BOF3_INJECT
+switch	D3d_DrawLineG3	detour	costly		src/game/platform/d3d.cpp:3958	BOF3_INJECT
+switch	D3d_DrawLineG4	detour	costly		src/game/platform/d3d.cpp:3960	BOF3_INJECT
+switch	D3d_DrawPolyF3	detour	costly		src/game/platform/d3d.cpp:3937	BOF3_INJECT
+switch	D3d_DrawPolyF4	detour	costly		src/game/platform/d3d.cpp:3949	BOF3_INJECT
+switch	D3d_DrawPolyFT3	detour	costly		src/game/platform/d3d.cpp:3941	BOF3_INJECT
+switch	D3d_DrawPolyFT4	detour	costly		src/game/platform/d3d.cpp:3950	BOF3_INJECT
+switch	D3d_DrawPolyG3	detour	costly		src/game/platform/d3d.cpp:3951	BOF3_INJECT
+switch	D3d_DrawPolyG4	detour	costly		src/game/platform/d3d.cpp:3953	BOF3_INJECT
+switch	D3d_DrawPolyGT3	detour	costly		src/game/platform/d3d.cpp:3952	BOF3_INJECT
+switch	D3d_DrawPolyGT4	detour	costly		src/game/platform/d3d.cpp:3954	BOF3_INJECT
+switch	D3d_DrawSprt	detour	costly		src/game/platform/d3d.cpp:3963	BOF3_INJECT
+switch	D3d_DrawSprt16	detour	costly		src/game/platform/d3d.cpp:3965	BOF3_INJECT
+switch	D3d_DrawSprt8	detour	costly		src/game/platform/d3d.cpp:3964	BOF3_INJECT
+switch	D3d_DrawTile	detour	costly		src/game/platform/d3d.cpp:3961	BOF3_INJECT
+switch	D3d_DrawTile1	detour	costly		src/game/platform/d3d.cpp:3962	BOF3_INJECT
+switch	D3d_FitTextureSize	detour	costly		src/game/platform/d3d.cpp:3936	BOF3_INJECT
+switch	D3d_FlattenFT3	detour	costly		src/game/platform/d3d.cpp:3947	BOF3_INJECT
+switch	D3d_FreeCellTexture	detour	costly		src/game/platform/d3d.cpp:3973	BOF3_INJECT
+switch	D3d_FreeCellTextures	detour	costly		src/game/platform/d3d.cpp:3988	BOF3_INJECT
+switch	D3d_PageTexel4	detour	costly		src/game/platform/d3d.cpp:3948	BOF3_INJECT
+switch	D3d_PrimColor	detour	costly		src/game/platform/d3d.cpp:3938	BOF3_INJECT
+switch	D3d_RefreshCellTexture	detour	costly		src/game/platform/d3d.cpp:3974	BOF3_INJECT
+switch	D3d_RefreshPageTexture	detour	costly		src/game/platform/d3d.cpp:3945	BOF3_INJECT
+switch	D3d_ReleaseAfterDraw	detour	costly		src/game/platform/d3d.cpp:3984	BOF3_INJECT
+switch	D3d_SetAlphaModulate	detour	costly		src/game/platform/d3d.cpp:3931	BOF3_INJECT
+switch	D3d_SetBackColor	detour	costly		src/game/platform/d3d.cpp:3975	BOF3_INJECT
+switch	D3d_SetBlend	detour	costly		src/game/platform/d3d.cpp:3939	BOF3_INJECT
+switch	D3d_SetShadeMode	detour	costly		src/game/platform/d3d.cpp:3940	BOF3_INJECT
+switch	Dd_ClearSurface	detour	costly		src/game/platform/d3d.cpp:3969	BOF3_INJECT
+switch	Dd_CreatePlainSurface	detour	costly		src/game/platform/d3d.cpp:3934	BOF3_INJECT
+switch	Dd_CreateTextureSurface	detour	costly		src/game/platform/d3d.cpp:3935	BOF3_INJECT
+switch	Dd_InitSurfaceDesc	detour	costly		src/game/platform/d3d.cpp:3933	BOF3_INJECT
 switch	DemoSkipButtons	behaviour	yes		src/game/core/title.cpp:1869	BehaviourOn
 switch	DesertDirections	code	yes		src/game/battle/dat_load.cpp:920	PatchBytes
 switch	DiagonalIdentity	code	yes		src/game/effect/effect_gte.cpp:222	PatchBytes
@@ -3448,14 +3448,14 @@ switch	DInput_Init	detour	costly		src/game/platform/d_input.cpp:266	BOF3_INJECT
 switch	DInput_Shutdown	detour	costly		src/game/platform/d_input.cpp:268	BOF3_INJECT
 switch	DirectOpaque	code	yes		src/game/text/tex.cpp:278	PatchBytes
 switch	Disc_Probe	detour	costly		src/game/platform/file.cpp:169	BOF3_INJECT
-switch	Display_DeviceName	detour	costly		src/game/platform/d3d.cpp:3973	BOF3_INJECT
-switch	Display_ErrorBox	detour	costly		src/game/platform/d3d.cpp:3975	BOF3_INJECT
-switch	Display_ReleaseBackdrop	detour	costly		src/game/platform/d3d.cpp:3971	BOF3_INJECT
-switch	Display_ReleaseOrphans	detour	costly		src/game/platform/d3d.cpp:3970	BOF3_INJECT
-switch	Display_Setup	detour	costly		src/game/platform/d3d.cpp:3965	BOF3_INJECT
-switch	Display_Teardown	detour	costly		src/game/platform/d3d.cpp:3966	BOF3_INJECT
-switch	Display_TextOut	detour	costly		src/game/platform/d3d.cpp:3974	BOF3_INJECT
-switch	Display_WindowMoved	detour	costly		src/game/platform/d3d.cpp:3964	BOF3_INJECT
+switch	Display_DeviceName	detour	costly		src/game/platform/d3d.cpp:3985	BOF3_INJECT
+switch	Display_ErrorBox	detour	costly		src/game/platform/d3d.cpp:3987	BOF3_INJECT
+switch	Display_ReleaseBackdrop	detour	costly		src/game/platform/d3d.cpp:3983	BOF3_INJECT
+switch	Display_ReleaseOrphans	detour	costly		src/game/platform/d3d.cpp:3982	BOF3_INJECT
+switch	Display_Setup	detour	costly		src/game/platform/d3d.cpp:3977	BOF3_INJECT
+switch	Display_Teardown	detour	costly		src/game/platform/d3d.cpp:3978	BOF3_INJECT
+switch	Display_TextOut	detour	costly		src/game/platform/d3d.cpp:3986	BOF3_INJECT
+switch	Display_WindowMoved	detour	costly		src/game/platform/d3d.cpp:3976	BOF3_INJECT
 switch	DivineBeam_Descend	detour	costly		src/game/magic/breath_mote.cpp:1631	BOF3_INJECT
 switch	DivineBeam_DrawDisc	detour	costly		src/game/magic/breath_mote.cpp:1633	BOF3_INJECT
 switch	DivineBeam_DrawWall	detour	costly		src/game/magic/breath_mote.cpp:1634	BOF3_INJECT
@@ -6370,10 +6370,10 @@ switch	FocusMote_Grow	detour	costly		src/game/magic/focus_aura.cpp:556	BOF3_INJE
 switch	FocusMote_Rise	detour	costly		src/game/magic/focus_aura.cpp:557	BOF3_INJECT
 switch	FocusMote_Run	detour	costly		src/game/magic/focus_aura.cpp:554	BOF3_INJECT
 switch	FocusMote_Start	detour	costly		src/game/magic/focus_aura.cpp:555	BOF3_INJECT
-switch	Font_BuildGlyphTexture	detour	costly		src/game/platform/d3d.cpp:3956	BOF3_INJECT
-switch	Font_GlyphTexture	detour	costly		src/game/platform/d3d.cpp:3955	BOF3_INJECT
-switch	Font_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3969	BOF3_INJECT
-switch	Font_SetGlyphData	detour	costly		src/game/platform/d3d.cpp:3979	BOF3_INJECT
+switch	Font_BuildGlyphTexture	detour	costly		src/game/platform/d3d.cpp:3968	BOF3_INJECT
+switch	Font_GlyphTexture	detour	costly		src/game/platform/d3d.cpp:3967	BOF3_INJECT
+switch	Font_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3981	BOF3_INJECT
+switch	Font_SetGlyphData	detour	costly		src/game/platform/d3d.cpp:3991	BOF3_INJECT
 switch	Font_UnpackGlyph	detour	costly		src/game/text/tex.cpp:271	BOF3_INJECT
 switch	Foretell_DrawTiles	detour	costly		src/game/magic/foretell.cpp:471	BOF3_INJECT
 switch	Foretell_End	detour	costly		src/game/magic/foretell.cpp:470	BOF3_INJECT
@@ -6574,38 +6574,39 @@ switch	GeoBreathRecord_Run	detour	costly		src/game/magic/geo_breath_child.cpp:70
 switch	GeoBreathRecord_Start	detour	costly		src/game/magic/geo_breath_child.cpp:706	BOF3_INJECT
 switch	GeoBreathRecord_Task	detour	costly		src/game/magic/geo_breath_child.cpp:704	BOF3_INJECT
 switch	Gfx_BeginFrame	detour	costly		src/game/platform/magic_080.cpp:1270	BOF3_INJECT
-switch	Gfx_ClearImage	detour	costly		src/game/platform/d3d.cpp:3910	BOF3_INJECT
-switch	Gfx_ClearPresent	detour	costly		src/game/platform/d3d.cpp:3917	BOF3_INJECT
+switch	Gfx_ClearImage	detour	costly		src/game/platform/d3d.cpp:3922	BOF3_INJECT
+switch	Gfx_ClearPresent	detour	costly		src/game/platform/d3d.cpp:3929	BOF3_INJECT
 switch	Gfx_ClearRect	detour	costly		src/game/core/title.cpp:2232	BOF3_INJECT
 switch	Gfx_ClutAdjust	detour	costly		src/game/field/area_map.cpp:3594	BOF3_INJECT
-switch	Gfx_ClutPixels	detour	costly		src/game/platform/d3d.cpp:3932	BOF3_INJECT
+switch	Gfx_ClutPixels	detour	costly		src/game/platform/d3d.cpp:3944	BOF3_INJECT
 switch	Gfx_ClutStripCopy16	detour	costly		src/game/effect/effect_kind_18.cpp:866	BOF3_INJECT
 switch	Gfx_ClutStripCopyRow	detour	costly		src/game/field/field_2.cpp:594	BOF3_INJECT
 switch	Gfx_ClutStripRestore	detour	costly		src/game/field/field_2.cpp:593	BOF3_INJECT
 switch	Gfx_CommitPrim	detour	costly		src/game/core/title.cpp:2211	BOF3_INJECT
-switch	Gfx_ConvertRow	detour	costly		src/game/platform/d3d.cpp:3916	BOF3_INJECT
+switch	Gfx_ConvertRow	detour	costly		src/game/platform/d3d.cpp:3928	BOF3_INJECT
 switch	Gfx_DrawOTag	detour	costly		src/game/platform/d3d_draw.cpp:157	BOF3_INJECT
 switch	Gfx_DrawSkyGradient	detour	costly		src/game/platform/magic_080.cpp:1273	BOF3_INJECT
 switch	Gfx_DrawSunsetGlow	detour	costly		src/game/platform/magic_080.cpp:1274	BOF3_INJECT
-switch	Gfx_FilterPoint	code	yes		src/game/platform/d3d.cpp:4040 src/game/platform/d3d.cpp:4041	PatchBytes
+switch	Gfx_FilterPoint	code	yes		src/game/platform/d3d.cpp:4052 src/game/platform/d3d.cpp:4053	PatchBytes
 switch	Gfx_FlushDirtyStrip	detour	costly		src/game/field/field_2.cpp:592	BOF3_INJECT
 switch	Gfx_FlushUploadQueue	detour	costly		src/game/core/title.cpp:2219	BOF3_INJECT
-switch	Gfx_FreeClutRows	detour	costly		src/game/platform/d3d.cpp:3967	BOF3_INJECT
+switch	Gfx_FreeClutRows	detour	costly		src/game/platform/d3d.cpp:3979	BOF3_INJECT
 switch	Gfx_InitBufferBlock	detour	costly		src/game/platform/magic_080.cpp:1269	BOF3_INJECT
-switch	Gfx_InvalidateTextures	detour	costly		src/game/platform/d3d.cpp:3911	BOF3_INJECT
+switch	Gfx_InvalidateTextures	detour	costly		src/game/platform/d3d.cpp:3923	BOF3_INJECT
 switch	Gfx_LinkOTags	detour	costly		src/game/platform/magic_080.cpp:1271	BOF3_INJECT
-switch	Gfx_LoadImage	detour	costly		src/game/platform/d3d.cpp:3914	BOF3_INJECT
-switch	Gfx_LoadImageIfChanged	detour	costly		src/game/platform/d3d.cpp:3915	BOF3_INJECT
+switch	Gfx_LoadImage	detour	costly		src/game/platform/d3d.cpp:3926	BOF3_INJECT
+switch	Gfx_LoadImageIfChanged	detour	costly		src/game/platform/d3d.cpp:3927	BOF3_INJECT
 switch	Gfx_MoveCells	detour	costly		src/game/platform/gfx.cpp:42	BOF3_INJECT
-switch	Gfx_MoveImage	detour	costly		src/game/platform/d3d.cpp:3913	BOF3_INJECT
-switch	Gfx_Present	detour	costly		src/game/platform/d3d.cpp:3918	BOF3_INJECT
-switch	Gfx_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3968	BOF3_INJECT
-switch	Gfx_StoreImage	detour	costly		src/game/platform/d3d.cpp:3912	BOF3_INJECT
-switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3934	BOF3_INJECT
+switch	Gfx_MoveImage	detour	costly		src/game/platform/d3d.cpp:3925	BOF3_INJECT
+switch	Gfx_Present	detour	costly		src/game/platform/d3d.cpp:3930	BOF3_INJECT
+switch	Gfx_ReleaseTexCache	detour	costly		src/game/platform/d3d.cpp:3980	BOF3_INJECT
+switch	Gfx_StoreImage	detour	costly		src/game/platform/d3d.cpp:3924	BOF3_INJECT
+switch	Gfx_TexCacheFind	detour	costly		src/game/platform/d3d.cpp:3946	BOF3_INJECT
 switch	Gfx_UploadLzss	detour	costly		src/game/core/title.cpp:2224	BOF3_INJECT
 switch	Gfx_UploadPacked5	detour	costly		src/game/core/title.cpp:2223	BOF3_INJECT
 switch	GiftChestRow	code	yes		src/game/scenario/scena_07_2.cpp:1371	PatchBytes
-switch	GlyphTexelCentres	code	yes		src/game/platform/glyph_draw.cpp:56	PatchBytes
+switch	GlyphCacheReuse	code	yes		src/game/platform/glyph_draw.cpp:67	PatchBytes
+switch	GlyphTexelCentres	code	yes		src/game/platform/glyph_draw.cpp:58	PatchBytes
 switch	Gpu_AddPrim	detour	costly		src/game/platform/gpu.cpp:240	BOF3_INJECT
 switch	Gpu_ClearOTagR	detour	costly		src/game/platform/gpu_2.cpp:222	BOF3_INJECT
 switch	Gpu_GetClut	detour	costly		src/game/platform/gpu_2.cpp:224	BOF3_INJECT
@@ -9532,7 +9533,7 @@ switch	SnapWave_Run	detour	costly		src/game/magic/snap_wave.cpp:641	BOF3_INJECT
 switch	SnapWave_Start	detour	costly		src/game/magic/snap_wave.cpp:642	BOF3_INJECT
 switch	SnapWave_Swing	detour	costly		src/game/magic/snap_wave.cpp:644	BOF3_INJECT
 switch	SnapWave_Task	detour	costly		src/game/magic/snap_wave.cpp:640	BOF3_INJECT
-switch	Snd_Init	detour	costly		src/game/platform/d3d.cpp:3980	BOF3_INJECT
+switch	Snd_Init	detour	costly		src/game/platform/d3d.cpp:3992	BOF3_INJECT
 switch	Snd_LoadBank	detour	costly		src/game/core/sound.cpp:1454	BOF3_INJECT
 switch	Snd_LoadBankFile	detour	costly		src/game/battle/dragon_cmd.cpp:3173	BOF3_INJECT
 switch	SndBuf_CreateFromWave	detour	costly		src/game/platform/music.cpp:811	BOF3_INJECT
@@ -9686,8 +9687,8 @@ switch	Sprite_UpdateScreenA	detour	costly		src/game/field/event_cond.cpp:1169	BO
 switch	Sprite_UpdateScreenScaled	detour	costly		src/game/field/leader_panel.cpp:3500	BOF3_INJECT
 switch	Sprite_UpdateScreenSlot	detour	costly		src/game/field/sprite.cpp:682	BOF3_INJECT
 switch	SpriteCapture	code	yes		src/game/effect/effect_kind_9d.cpp:489 src/game/field/sprite_draw.cpp:781	PatchBytes
-switch	SpriteCell_Add	detour	costly		src/game/platform/d3d.cpp:3978	BOF3_INJECT
-switch	SpriteCell_Reset	detour	costly		src/game/platform/d3d.cpp:3977	BOF3_INJECT
+switch	SpriteCell_Add	detour	costly		src/game/platform/d3d.cpp:3990	BOF3_INJECT
+switch	SpriteCell_Reset	detour	costly		src/game/platform/d3d.cpp:3989	BOF3_INJECT
 switch	SpriteClut_ClearEntry31	detour	costly		src/game/magic/magic_fx_4.cpp:748	BOF3_INJECT
 switch	SpriteClut_CopyToFxRow	detour	costly		src/game/magic/magic_fx_4.cpp:749	BOF3_INJECT
 switch	SpriteClut_RestoreFxRow	detour	costly		src/game/magic/magic_fx_4.cpp:750	BOF3_INJECT
@@ -9859,7 +9860,7 @@ switch	ThunderSpark_Fade	detour	costly		src/game/magic/breath_mote.cpp:1622	BOF3
 switch	ThunderSpark_Grow	detour	costly		src/game/magic/breath_mote.cpp:1621	BOF3_INJECT
 switch	ThunderSpark_Start	detour	costly		src/game/magic/breath_mote.cpp:1620	BOF3_INJECT
 switch	ThunderSpark_Task	detour	costly		src/game/magic/breath_mote.cpp:1619	BOF3_INJECT
-switch	Tile1Quad	code	yes		src/game/platform/d3d.cpp:3992	PatchBytes
+switch	Tile1Quad	code	yes		src/game/platform/d3d.cpp:4004	PatchBytes
 switch	TimedBlow_DrawFlash	detour	costly		src/game/magic/timed_blow.cpp:262	BOF3_INJECT
 switch	TimedBlow_Start	detour	costly		src/game/magic/timed_blow.cpp:255	BOF3_INJECT
 switch	TimedBlow_Task	detour	costly		src/game/magic/timed_blow.cpp:254	BOF3_INJECT
@@ -10314,7 +10315,7 @@ switch	env:BOF3X_FC2_ONLY	env	yes		src/game/effect/field_c2_fuzz.cpp:424	read in
 switch	env:BOF3X_FE2_ONLY	env	yes		src/game/field/field_e2_fuzz.cpp:876	read in src/
 switch	env:BOF3X_FE2_ROUNDS	env	yes		src/game/field/field_e2_fuzz.cpp:883	read in src/
 switch	env:BOF3X_FFMPEG	env	yes		src/launcher/sources_dialog.cpp:454 src/launcher/sources_dialog.cpp:493	read in src/
-switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:637 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4031 src/hook/input_script.cpp:1169 src/launcher/config.cpp:635 src/launcher/config.cpp:1714	read in src/, set by the launcher
+switch	env:BOF3X_FILTER	launcher	yes		src/launcher/config.cpp:637 src/game/platform/d3d.cpp:955 src/game/platform/d3d.cpp:4043 src/hook/input_script.cpp:1169 src/launcher/config.cpp:635 src/launcher/config.cpp:1714	read in src/, set by the launcher
 switch	env:BOF3X_FO_ONLY	env	yes		src/game/field/field_o_fuzz.cpp:530	read in src/
 switch	env:BOF3X_FO_ROUNDS	env	yes		src/game/field/field_o_fuzz.cpp:547	read in src/
 switch	env:BOF3X_FPS_LOG	env	yes		src/game/platform/magic_080.cpp:769	read in src/
@@ -10434,7 +10435,7 @@ switch	env:BOF3X_TEXPAGELOG	env	yes		src/game/platform/d3d.cpp:2589	read in src/
 switch	env:BOF3X_TEXT_SPEED	launcher	yes		src/launcher/config.cpp:652 src/game/text/msgbox.cpp:794 src/launcher/config.cpp:651 src/launcher/config.cpp:1715	read in src/, set by the launcher
 switch	env:BOF3X_TEXTLOG	env	yes		src/game/text/text_draw.cpp:261	read in src/
 switch	env:BOF3X_TICK_BASE	env	yes		src/game/platform/game_clock.cpp:78	read in src/
-switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:3987	read in src/
+switch	env:BOF3X_TILE1	env	yes		src/game/platform/d3d.cpp:3999	read in src/
 switch	env:BOF3X_UNLEARNED_BLUE	launcher	yes		src/launcher/config.cpp:655 src/game/battle/battle_action.cpp:2286 src/launcher/config.cpp:654 src/launcher/config.cpp:1716	read in src/, set by the launcher
 switch	env:BOF3X_VSYNC	env	yes		src/game/platform/d3d.cpp:959	read in src/
 switch	env:BOF3X_WAV_DIR	env	yes		src/hook/wav_dump.cpp:623	read in src/

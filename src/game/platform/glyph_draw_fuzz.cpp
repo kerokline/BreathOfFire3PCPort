@@ -337,9 +337,8 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
         Restore(g_start);
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
-        g_full_cache_reuse = false;            // Capcom's overrun: compared byte for byte below
+        g_full_cache_reuse = 0;                // Capcom's overrun: compared byte for byte below
         const int ret_ours = Font_GlyphTexture(glyph, clut);
-        g_full_cache_reuse = true;
         d3d_fuzz::g_log = nullptr;
 
         // D18's fix: where Capcom's runs one past the table, ours with the
@@ -350,9 +349,11 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
             Restore(g_start);
             const U want = (g_round * 7u) % kEntries;
             g_reuse_next = want;
+            g_full_cache_reuse = 1;
             g_reuse.Clear();
             d3d_fuzz::g_log = &g_reuse;
             const int ret_reuse = Font_GlyphTexture(glyph, clut);
+            g_full_cache_reuse = 0;
             d3d_fuzz::g_log = nullptr;
             const unsigned char* e = At(Font_TexCache_addr + want * kEntry);
             bool built = false;

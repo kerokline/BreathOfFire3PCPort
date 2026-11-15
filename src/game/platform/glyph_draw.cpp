@@ -26,7 +26,7 @@ namespace glyph_draw {
 
 
 float g_texel_inset = 0.0f;
-bool g_full_cache_reuse = true;
+std::uint8_t g_full_cache_reuse = 0;   // GlyphCacheReuse, set by GlyphDraw_Inject
 std::uint32_t g_reuse_next = 0;
 
 // DIV-0025, amended 2026-09-27: the inset in texture texels that puts a
@@ -60,4 +60,11 @@ void GlyphDraw_Inject() {
                      was_bytes, is_bytes, 4);
     bof3::Log("DIV-0025    glyph texels: (2u + 1/scale + 1/256) / 32, %s (0.5 at every scale until 2026-09-27)",
               glyph_draw::g_texel_inset != 0.0f ? "on" : "off");
+
+    // D18's fix (docs/new-game-round.md 4c-PK): a full glyph cache rebuilds
+    // an entry in turn instead of running past the table.
+    static const std::uint8_t reuse_was = 0, reuse_is = 1;
+    bof3::PatchBytes("GlyphCacheReuse", Low32(&glyph_draw::g_full_cache_reuse), &reuse_was, &reuse_is, 1);
+    bof3::Log("D18         glyph cache full: %s", glyph_draw::g_full_cache_reuse ? "an entry rebuilt in turn (GlyphCacheReuse)"
+                                                                               : "Capcom's overrun (GlyphCacheReuse off)");
 }

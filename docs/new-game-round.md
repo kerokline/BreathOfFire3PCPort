@@ -1167,20 +1167,27 @@ the label bytes are the same in both layers. **Fixed in the renderer**
 and no hit, ours rebuilds an entry in turn (`g_reuse_next`) where Capcom's
 index runs one past the table. The draws already made from that entry keep
 their texture: the render shim snapshots a texture written with draws
-pending (`render_shim.cpp` `BeforeWrite`). The switch is
-`glyph_draw::g_full_cache_reuse`, on; the fuzz compares Capcom's overrun
-byte for byte with it off and, in each of the 4,965 overrun rounds, checks
-the reuse with it on (returns the entry, builds it, marks it used, leaves
-the vertex block alone): that is the check that would have caught it.
-Captured after the fix: the label draws whole. **Ledger text (a new
+pending (`render_shim.cpp` `BeforeWrite`). The switch is the code name
+**`GlyphCacheReuse`** (the owner's word, 2026-11-14): a byte
+(`glyph_draw::g_full_cache_reuse`) that `GlyphDraw_Inject` sets through
+`PatchBytes`, on by default, off under `BOF3X_OFF=GlyphCacheReuse` (or
+`BOF3X_ORIGINAL`), which gives Capcom's overrun exactly; regenerated into
+`src/hook/code_names.h` and `analysis/ledger_switches.tsv`. The fuzz
+compares Capcom's overrun byte for byte with it off and, in each of the
+4,965 overrun rounds, checks the reuse with it on (returns the entry,
+builds it, marks it used, leaves the vertex block alone): that is the check
+that would have caught it. Captured, `ja-JP` `newGameName.txt`: on, the
+label draws whole (`pk\cap\ja_reuse_on`); with `BOF3X_OFF=GlyphCacheReuse`
+the white block returns (`pk\cap\ja_reuse_off`), so the switch is live. **Ledger text (a new
 entry, D18):** "Original: `Font_GlyphTexture` `0x5A2BC0`, with all 128
 glyph textures used in a frame and none a hit, returns 128 and binds the
 vertex block's bytes as a texture (a garbage glyph, seen as a white block).
 New: the entry after the last one rebuilt, in turn, is rebuilt for the new
 glyph; earlier draws keep their texture through the render shim's
 snapshots. Why: the `ja-JP` name screen draws more than 128 glyph
-textures. Toward: neither (the PlayStation draws glyphs from VRAM pages and
-has no such cache)."
+textures. Switch: `GlyphCacheReuse` (code name, default on; Player: yes).
+Toward: neither (the PlayStation draws glyphs from VRAM pages and has no
+such cache)."
 
 *The pair codes skip an index whose low byte is 0* (`ja_new_pair`): the
 241st pair would be `0xE00`, whose code carries a NUL. The slot stays in
