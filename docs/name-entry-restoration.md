@@ -1,10 +1,17 @@
 # Name entry: what the PlayStation has, what the PC stubbed, what bringing it back would take
 
-**Status:** IN PROGRESS (verified 2026-10-05). The research is complete. **The
-restoration is deferred to the localisation rework, by the owner's word of
-2026-10-05**: that rework may change the structure of the font files, and the
-font, encoding and glyph-grid choices all depend on it (section 7). Nothing is
-built and nothing here is scheduled. Read-only work: no build and no game run.
+**Status:** STABLE as research (verified 2026-10-05). **Built by the New Game
+round, 2026-11-14** ([`new-game-round.md`](new-game-round.md), branch
+`new-game/round`, not merged): the name screen at New Game (DIV-0231), the
+options screen there (DIV-0232) and the renamer's grid (DIV-0233), from one
+routine over a grid chunk read from the player's disc. The round's group M
+corrected this doc in three places, recorded there and not here: section
+4.4's all-blank finish (`COMMU02` turns it into five 0 bytes), section 4.6's
+`0x801E4430` (the title menu's last sub-step, not a name-screen step) and its
+"mode word" (it is `Game_Step`), and the open's resets (cursor, column and
+row only); and the research's shape is the Japan build's only, the Western
+builds use one page of another shape (3a M1, M2). Read-only work when written:
+no build and no game run.
 Every PSX reading is capstone over the sibling's overlay captures
 (`../BreathOfFire3Recomp/analysis/overlay_captures_all.json`, the bytes the
 PSX loads). Every PC reading is capstone over `bof3/BOF3.exe` plus

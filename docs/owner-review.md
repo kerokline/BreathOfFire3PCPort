@@ -13,6 +13,66 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-14, the New Game round (`new-game/round`, not merged)
+
+The name screen at New Game (DIV-0231), the options screen there (DIV-0232),
+the faerie village's renamer on the grid (DIV-0233), D18's glyph-cache fix
+(DIV-0234, `GlyphCacheReuse`), the tiled frame's windows (DIV-0235, no
+switch), and the `START` word and the French panel label from the disc
+(DIV-0236); [`new-game-round.md`](new-game-round.md) 4d, 4e and 4f. Built
+and run by the harness; **nobody has played it.** Play from `game\` after
+the four player files are copied from the branch's build. The proof on a
+quiet machine is owed before the PR, and is not yours.
+
+To play:
+
+- **New Game under each language you hold** (`en-US`, `en-150`, `fr-FR`,
+  `de-DE`, `ja-JP`): the name screen, a name entered, Start, the options
+  screen, the opening. Look for the name where the game first prints the
+  hero's (no harness route reaches such a box). Under `ja-JP` four kana fit;
+  a fifth is refused with a sound (call 5).
+- **The original Chinese:** no name screen, the options screen, then the
+  game (your call of 2026-11-14).
+- **Start with no letter:** the default name stays. **The quit label** (US
+  page): back to the title menu, then New Game shows the screen again.
+- **The faerie village's renamer, reached as a player would:** rename a
+  member and a faerie slot, save, load. No route reaches it; the harness
+  entered it by a poke. How a player gets there is not recorded.
+- **The buttons:** the legend's pictures follow your mapping. Swap Speak
+  and Action in the Config, then look at the legend and press each row's
+  button.
+- **A quicksave on the name screen** (F6, F7): it loads back to the screen.
+- **The wide modes** (16:9, 21:9): the screen centred, the backdrop to both
+  edges.
+
+To look at (from 4d's list for your eye):
+
+- **The German and French labels** looked cut to their room; PE read both
+  discs since and ours draws every label and legend word as the disc stores
+  it (4e). Say if a word still looks wrong against your PlayStation pictures.
+- **The hand at column 0** sits over the grid frame's edge.
+- **The options box** on the launcher's Extras, Page 2, beside the name
+  entry box (you kept it, 4e). Neither page has a capture yet.
+- **The `ja-JP` legend** in the disc's 8-pixel kana (DIV-0016's amendment),
+  and its finish label drawn whole (DIV-0234).
+- **The layout against the PlayStation's**, by eye: no Mednafen reference
+  capture was taken (round doc 3a M10).
+
+Not run by anyone, for the record: the 64-bit build in play; a PSP-only home
+laid out by the launcher's Sources page; the renamer's slot path with a save
+and reload on the final tree; `tools/launcher_host/dialog_test.py`; the
+`psp-eu` layer rebuilt with the `START` word; a name carried through
+`save_convert.py`.
+
+To decide (none blocks the PR):
+
+- **The tiers** of the three new entries: the name screen and the options
+  screen at New Game are written Sensible (the port's New Game works without
+  them), the renamer's grid Intent (the port left the renamer waiting on an
+  input that could not come). So the "Repaired" preset turns the two New
+  Game screens off and keeps the renamer's grid. Say if the two screens
+  should be Intent, which "Repaired" keeps.
+
 ## 2026-11-12, struck at the owner's word
 
 The owner played `main` `db9619da` (PR #234) from `game\` with the Definitive Edition mod built and its ten

@@ -42,6 +42,36 @@ pictures of Capcom's game and are never committed.
 Routes can also be **recorded by playing** (`BOF3X_RECORD`, §5a) and played
 back as recipes; the owner's `shop.txt` was the first.
 
+**New Game's screens are off in every run** (2026-11-14, the New Game round,
+[`new-game-round.md`](new-game-round.md) 4c-RT). The round puts a name
+screen and the options screen between the title's New Game and the game
+(DIV-0231, DIV-0232), so a route that presses New Game would meet two
+screens it was not recorded with. `input_run.py` adds `NewGameNameEntry`
+and `NewGameOptions` to `BOF3X_OFF` after the `--env` loop: it keeps a
+caller's `BOF3X_OFF`, or else the launcher folder's `bof3x.ini` `off=` (an
+environment `BOF3X_OFF` replaces the ini's whole), and leaves a name the
+caller lists already, as off or as `-Name`, as written. It adds only the
+names the launcher folder's build knows (read as NUL-ended strings in its
+`bof3x.dll` or `bof3x.exe`), so the old side of an A/B against a build from
+before the round gets nothing added. A recipe about the screens carries the
+header line `# screens new-game` (the game's parser reads it as a comment),
+or the run passes `--new-game-screens`; the runner then prints that the
+screens are as the build has them. `CommuNameGrid` (DIV-0233) is not in the
+list: no recorded route enters the faerie village's renamer. An environment
+`BOF3X_OFF` also replaces a preset's names; the harness launches ini-less
+(`--no-config`), so no preset is in play there. `abc_run`'s run meta records
+the environment before `input_run.py` adds the names; `input_run`'s own
+run-times line has them.
+
+The routes about the screens (`tools/recipes/`, each with the header): `newGameName.txt` (the name
+screen, three letters, Start, the options, the opening's battle; `en-US`
+and `ja-JP`), `newGameOriginal.txt` (the original Chinese: no name screen,
+the options, the battle), `newGameBlankName.txt` (Start with no letter: the
+default name kept), `newGameQuit.txt` (the quit label on the US page, the
+title, the name screen again; for the US grid only). They wait on
+`Game_Step` `0x66C7EA` == 2 and `SaveMenu_FlowState` `0x6BDF86` (3 is the
+input step) and reach the battle on `Game_Mode` `0x66C7E8` == 5 by `seek`.
+
 Recipes in `tools/recipes/`:
 
 | Recipe | What it reaches | Frames |
