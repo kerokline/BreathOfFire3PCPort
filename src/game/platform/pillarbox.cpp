@@ -159,24 +159,24 @@ void SelfTest() {
         expect(Framed(r.widest, 53), r.at53, "framed at 16:9");
         expect(Framed(r.widest, 120), r.at120, "framed at 21:9");
     }
-    // The list: exactly 31 and 90 of every area word (0xFFFF, no area, too).
+    // The list: exactly 31 of every area word (0xFFFF, no area, too).
     {
         unsigned listed = 0;
         for (unsigned a = 0; a <= 0xFFFF; ++a)
             if (Listed(a)) {
                 ++listed;
-                Check(a == 31 || a == 90, "an area listed", a, 0);
+                Check(a == 31, "an area listed", a, 0);
             }
-        expect(listed, 2, "areas listed");
+        expect(listed, 1, "areas listed");
     }
-    // The rule by area, at section 1's measurements: the two listed areas
-    // framed at their measured class; the eight taken out on the owner's look
-    // at the sheets (2026-10-21), 198 taken out in play (2026-11-07) and an
-    // ordinary area (2, 30 columns) unframed.
+    // The rule by area, at section 1's measurements: the one listed area
+    // framed at its measured class; the eight taken out on the owner's look
+    // at the sheets (2026-10-21), 198 and 90 taken out in play (2026-11-07,
+    // 2026-11-15) and an ordinary area (2, 30 columns) unframed.
     struct AreaRow {
         unsigned area, widest, at0, at53, at120;
     };
-    const AreaRow areas[] = {{31, 8, 0, 0, 0},       {198, 5, 0, 53, 120},   {90, 15, 0, 53, 53},    {186, 8, 0, 53, 120},
+    const AreaRow areas[] = {{31, 8, 0, 0, 0},       {198, 5, 0, 53, 120},   {90, 15, 0, 53, 120},    {186, 8, 0, 53, 120},
                              {149, 7, 0, 53, 120},   {98, 16, 0, 53, 120},   {53, 15, 0, 53, 120},   {153, 15, 0, 53, 120},
                              {154, 15, 0, 53, 120},  {192, 15, 0, 53, 120},  {194, 15, 0, 53, 120},  {2, 30, 0, 53, 120}};
     for (const AreaRow& r : areas) {
@@ -185,9 +185,11 @@ void SelfTest() {
         expect(Visible(r.area, r.widest, 120), r.at120, "visible at 21:9");
     }
     // Negative controls; each must disagree with the area rows somewhere.
-    // PB's rule (every area by its measurement, no list) frames the eight
-    // taken out; "the narrowest picture that holds the area" frames 90's 15
-    // columns at 560.
+    // PB's rule (every area by its measurement, no list) frames the nine
+    // taken out. "The narrowest picture that holds the area" is checked on
+    // the width rule itself: it frames a row of 15 columns (480 px) at 560,
+    // where the rule frames it at 426. (Until 2026-11-15 area 90's row showed
+    // that; no listed area is of that class now.)
     unsigned refused = 0, refused_holds = 0;
     {
         auto holds = [](unsigned widest, unsigned c) {
@@ -195,10 +197,10 @@ void SelfTest() {
             const unsigned f = px <= 320u ? 0u : px <= 426u ? 53u : 120u;
             return f < c ? f : c;
         };
-        for (const AreaRow& r : areas) {
+        for (const AreaRow& r : areas)
             if (Framed(r.widest, 53) != r.at53 || Framed(r.widest, 120) != r.at120) ++refused;
-            if ((Listed(r.area) ? holds(r.widest, 120) : 120u) != r.at120) ++refused_holds;
-        }
+        for (const Row& r : rule)
+            if (holds(r.widest, 120) != r.at120) ++refused_holds;
     }
     if (refused == 0) bof3::Fatal("pillarbox self-test: the control (every area by its measurement) was not refused");
     if (refused_holds == 0) bof3::Fatal("pillarbox self-test: the control (the narrowest picture that holds) was not refused");
@@ -276,7 +278,7 @@ void Inject() {
     g_on = !(n == 1 && text[0] == '0');
     g_trusted = false;
     g_epoch_area = Game_AreaNumber;
-    bof3::Log("pillarbox   DIV-0041 (PB, PX): areas 31 and 90 framed %s; %u columns a side",
+    bof3::Log("pillarbox   DIV-0041 (PB, PX): area 31 framed %s; %u columns a side",
               g_on ? "on" : "off (BOF3X_PILLARBOX=0)", Widescreen_Live());
 }
 

@@ -15,6 +15,12 @@ framed area stay framed, the owner's call).
 owner's play of the scenes before and after her fight - "this scene should be
 full". The list is **31 and 90**; DIV-0041's amendment of that date. The text
 below keeps the three-area record as it was built.
+**Amended 2026-11-15:** area 90 taken off the list on the owner's play at 21:9:
+the camp outside the tent is to be a circle in the dark, with no bars. (This
+doc's captures of area 90 are all from inside the tent, where the bars lie on
+black; "the room" below is that tent.) The list is **31**; DIV-0041's
+amendment of that date. The self-test's "holds" control moved to the width
+rule's rows.
 
 ## 0. The answer
 

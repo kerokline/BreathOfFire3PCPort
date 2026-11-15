@@ -22,9 +22,16 @@ extern int g_band_fill;   // defined in field_frame.cpp (source-layout B0: promo
 // Field_DrawFrame puts it on the list just before the draw pass, in whatever
 // slots the frame left. Its flag is already set (Sprite_Draw sets it again at
 // its own bound, which lies inside the margins), and the scale dwords +0x40 /
-// +0x44 Sprite_Draw writes are put back after the pass. A model sprite (+0x24
-// bit 6, drawn through Sprite_AddDrawRecords) is not noted: it stays culled
-// at Capcom's margins. Empty while the fills are unarmed (every fuzz).
+// +0x44 Sprite_Draw writes are put back after the pass. Empty while the fills
+// are unarmed (every fuzz).
+//
+// Amended 2026-11-15 (the owner's tree in area 9, docs/ultrawide-culls-fix.md
+// section 8): a model sprite (+0x24 bit 6, drawn through
+// Sprite_AddDrawRecords, which has no cull of its own and writes neither the
+// flag nor the scale) is appended as well. Until then it stayed culled at
+// Capcom's margins, 20 to 40 px INSIDE the 21:9 view: a tree 140 px wide
+// vanished whole while half of it was in the band. Sprite_DrawPass asks
+// BandModelFits before it draws one.
 struct BandSprite {
     unsigned char* sprite;
     unsigned char scale[8];
@@ -32,4 +39,13 @@ struct BandSprite {
 extern BandSprite g_band[0x28];   // defined in field_frame.cpp (source-layout B0: promoted for a moved reader)
 extern unsigned g_band_count;   // defined in field_frame.cpp (source-layout B0: promoted for a moved reader)
 extern unsigned g_band_added;   // defined in field_frame.cpp (source-layout B0: promoted for a moved reader)
+// Whether Sprite_DrawPass may draw the model `object` (event_cond.cpp, beside
+// Sprite_AddDrawRecords). True for every sprite the original listed. For a
+// model BandAppend added: only while its quads, and those of every model of
+// the original's still to come on the list, have room - in Sprite_DrawRecords'
+// 100 records (`records` are used; the models of this layer counted) and in
+// the packet pool. So a band model can neither run the record array over nor
+// make Sprite_AddDrawRecords refuse one of the original's, which returns with
+// the GTE matrix still pushed. `next` is the list index after the object's.
+bool BandModelFits(const unsigned char* object, unsigned records, unsigned next);
 }  // namespace field_frame
