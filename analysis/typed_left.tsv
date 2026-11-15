@@ -8507,6 +8507,7 @@ src/game/community/commu_name.cpp	Scratch	global	At	at::kTextScratch	0	0x904ba0	
 src/game/community/commu_name.cpp	Scratch	global	Text	at::kPoolWords	0	0x803580	-	no-entry	at::kPoolWords 0x803580 -	b0
 src/game/community/commu_name.cpp	Scratch	record	At	words + 2u * static_cast<U>(index)	0	-	param	computed	param (At(words + 2u * static_cast<U>(index)))	b1-rest
 src/game/community/commu_name.cpp	RecordName	global	L	at::kRecordNames	0	0x669fa4	-	gate	at::kRecordNames 0x669fa4 CommuName_RecordNames	b0
+src/game/community/commu_name.cpp	LiveEntryBytes	global	At	rest_4d::at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	Unpicked	global	B	at::kDrawPools	0	0x652e34	-	no-entry	at::kDrawPools 0x652e34 -	b0
 src/game/community/commu_name.cpp	Unpicked	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	PickOfCategory	global	B	at::kPicked	0	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
@@ -8549,10 +8550,12 @@ src/game/community/commu_name.cpp	CommuDraw_DrawTitle	global	PoolText	at::kDrawW
 src/game/community/commu_name.cpp	CommuDraw_DrawTitle	global	PoolText	at::kDrawWords	1	0x803780	-	no-entry	at::kDrawWords 0x803780 -	b0
 src/game/community/commu_name.cpp	CommuDraw_DrawTitle	global	B	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
 src/game/community/commu_name.cpp	CommuDraw_DrawTitle	global	PoolText	at::kTitleWords	0	0x803746	-	no-entry	at::kTitleWords 0x803746 -	b0
+src/game/community/commu_name.cpp	CommuName_SlotEntryIn	global	At	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryIn	global	B	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryIn	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryIn	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryIn	global	B	at::kSlotNames	1	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
+src/game/community/commu_name.cpp	CommuName_SlotEntryOut	global	At	at::kSlotDefaults	0	0x653200	-	no-entry	at::kSlotDefaults 0x653200 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryOut	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryOut	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_SlotEntryOut	global	B	at::kSlotDefaults	0	0x653200	-	no-entry	at::kSlotDefaults 0x653200 -	b0
@@ -8561,13 +8564,17 @@ src/game/community/commu_name.cpp	CommuName_MemberChoose	global	B	at::kCursor	0	
 src/game/community/commu_name.cpp	CommuName_MemberChoose	global	B	at::kCursor	1	0x675f8c	-	gate	at::kCursor 0x675f8c Rest4c_Count	b0
 src/game/community/commu_name.cpp	CommuName_MemberPanelOut	global	-	at::kRecordFlagsEnd	0	0x903ef7	-	no-entry	at::kRecordFlagsEnd 0x903ef7 -	b0
 src/game/community/commu_name.cpp	CommuName_MemberPanelOut	global	S8	at::kCursor	0	0x675f8c	-	gate	at::kCursor 0x675f8c Rest4c_Count	b0
+src/game/community/commu_name.cpp	CommuName_MemberEntryIn	global	At	CharacterRecords_addr + at::kRecordStride * record	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
 src/game/community/commu_name.cpp	CommuName_MemberEntryIn	global	B	CharacterRecords_addr + at::kRecordStride * record + i	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
 src/game/community/commu_name.cpp	CommuName_MemberEntryIn	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_MemberEntryIn	global	B	CharacterRecords_addr + at::kRecordStride * again + i	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
 src/game/community/commu_name.cpp	CommuName_MemberEntryIn	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
+src/game/community/commu_name.cpp	CommuName_MemberEntryOut	global	At	Char_DefaultRecords_addr + at::kRecordStride * record	0	0x64b390	-	expr	the address is part of a larger expression typed_convert does not rewrite (Char_DefaultRecords_addr - -)	new-game
 src/game/community/commu_name.cpp	CommuName_MemberEntryOut	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_MemberEntryOut	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/community/commu_name.cpp	CommuName_MemberEntryOut	record	At	name + i	0	-	via=RecordName	computed	via=RecordName (At(name + i))	b1-rest
+src/game/community/commu_name.cpp	CommuName_MemberEntryDone	global	B	CharacterRecords_addr + at::kRecordStride * committed + comm	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
+src/game/community/commu_name.cpp	CommuName_MemberEntryDone	global	B	at::kTextRecords	0	0x904ce0	-	no-entry	at::kTextRecords 0x904ce0 -	new-game
 src/game/community/commu_name.cpp	CommuName_MemberClose	global	-	at::kRecordFlagsEnd	0	0x903ef7	-	no-entry	at::kRecordFlagsEnd 0x903ef7 -	b0
 src/game/community/commu_sim.cpp	UL	global	At	Community_Records_addr + 8u * i	0	0x9046d0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Records_addr - -)	c4-tc
 src/game/community/commu_sim.cpp	UL	global	At	Community_Buildings_addr + 8u * b	0	0x9048b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Buildings_addr - -)	c4-tc
@@ -9134,6 +9141,8 @@ src/game/core/mode_states_fuzz.cpp	Seed	raw	At	0x7DEE48	0	0x7dee48	-	harness	a f
 src/game/core/mode_states_fuzz.cpp	Seed	global	At	MoveScript_PartyRecords_addr + 0x62	0	0x8034e2	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (MoveScript_PartyRecords_addr - -)	c4-tc
 src/game/core/mode_states_fuzz.cpp	Seed	global	At	at::kCounters	0	0x903848	-	no-entry	at::kCounters 0x903848 -	b0
 src/game/core/mode_states_fuzz.cpp	Seed	global	At	MenuWindows_ListSet_addr	0	0x7dee65	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (MenuWindows_ListSet_addr - -)	c4-tc
+src/game/core/new_game.cpp	NameWanted	global	At	CharacterRecords_addr	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	new-game
+src/game/core/new_game.cpp	NameWanted	global	At	kPanelPieces	0	0x652f5c	-	no-entry	kPanelPieces 0x652f5c -	b0
 src/game/core/save_menu.cpp	save_menu::ReadSummaries	record	Byte	dir + n * at::kDirectoryBytes + 7	0	-	via=AddrSaveMenu	gate	SaveDirEntry::name[7] (char) read as unsigned: the load changed (codegen_same)	c2-scen_ui
 src/game/core/save_menu.cpp	SaveMenu_LoadErrorBody	global	PutWord	at::kGameStep	0	0x66c7ea	-	gate	at::kGameStep 0x66c7ea Game_Step	b0
 src/game/core/save_menu.cpp	RecordBank	global	LongSaveMenu	at::kStreamTables	0	0x6653b0	-	no-entry	at::kStreamTables 0x6653b0 -	b0
@@ -9250,7 +9259,7 @@ src/game/core/sound.cpp	TitleMenu_RowsFadeIn	global	Byte	save_menu::at::kCounter
 src/game/core/sound.cpp	TitleMenu_Choose	global	Byte	save_menu::at::kMenuFlags	0	0x7dee44	-	no-entry	at::kMenuFlags 0x7dee44 -	b0
 src/game/core/sound.cpp	TitleMenu_Choose	global	LongSaveMenu	save_menu::at::kPressed	0	0x7e1bec	-	width	at::kPressed 0x7e1bec Input_Pressed	b0
 src/game/core/sound.cpp	TitleMenu_Choose	global	-	save_menu::at::kRowBright	0	0x6bdf90	-	no-entry	at::kRowBright 0x6bdf90 -	b0
-src/game/core/sound.cpp	TitleFlow_NewGame	global	-	save_menu::at::kCondFlagsEnd	0	0x904030	-	name	at::kCondFlagsEnd 0x904030 Cond_Flags+0xa0	b0
+src/game/core/sound.cpp	TitleFlow_NewGameRest	global	-	save_menu::at::kCondFlagsEnd	0	0x904030	-	name	at::kCondFlagsEnd 0x904030 Cond_Flags+0xa0	b0
 src/game/core/sound.cpp	TitleFlow_Load	global	LongSaveMenu	save_menu::at::kLoadTable	0	0x667228	-	no-entry	at::kLoadTable 0x667228 -	b0
 src/game/core/sound.cpp	LoadMenu_List	global	PutLongSaveMenu	save_menu::at::kSlotTop	0	0x8034d0	-	width	at::kSlotTop 0x8034d0 MoveScript_PartyRecords+0x50	b0
 src/game/core/sound.cpp	LoadMenu_Choose	global	LongSaveMenu	save_menu::at::kSlot	0	0x9036d4	-	gate	at::kSlot 0x9036d4 Rest2c_Slot	b0
@@ -24055,6 +24064,8 @@ src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	Font_TexCache_addr + 
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	record	PutWord	e + 2	0	-	via=Next;stride=0x14	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Next;stride=0x14)	b1-scen_ui
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	record	PutLong	e + 4	0	-	via=Next;stride=0x14	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=Next;stride=0x14)	b1-scen_ui
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	Gfx_RenderFlags_addr	0	0x6c3a4c	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Gfx_RenderFlags_addr - -)	c4-tc
+src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	Font_TexCache_addr + want * kEntry	0	0x7c9f50	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (Font_TexCache_addr - -)	new-game
+src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	D3d_Vertices_addr	0	0x7ca958	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (D3d_Vertices_addr - -)	new-game
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	record	GetLong	e + 4	0	-	stride=0x14	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (stride=0x14)	b1-scen_ui
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	Font_TexCache_addr	1	0x7c9f50	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Font_TexCache_addr - -)	c4-tc
 src/game/platform/glyph_draw_fuzz.cpp	FuzzLookup	global	At	Gfx_RenderFlags_addr	1	0x6c3a4c	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Gfx_RenderFlags_addr - -)	c4-tc
