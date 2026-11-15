@@ -16948,9 +16948,11 @@ designed in rather than bolted on.
   identical; `SoloCharacter` on with no champion, all ten identical.
   `cutsceneAndNue` with the behaviours off differs on page `0x7DE000` alone,
   from a different tick in each of four runs, with another game on the
-  machine: read as the harness's noise (D420), **not shown identical**; the
-  owner passed the round on that condition. **Owed:** that route's run once
-  D420 is settled;
+  machine: read as the harness's noise (D420), not shown identical then; the
+  owner passed the round on that condition. **Shown identical 2026-11-15**
+  (D420 fixed: the bytes were the real keyboard's and a late frame's; two
+  replays of `af09b08a` against the same pair, all 7,425 ticks,
+  `solo-character-proof.md` 6e). **Owed:**
   installs other than the PC files for fight 16's extra section. **Not
   played by the owner.**
 - **Reversible?** Yes - off unless `on=` (or a mod's needs) names it;

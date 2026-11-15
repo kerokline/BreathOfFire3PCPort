@@ -997,8 +997,19 @@ unsigned short NextWord() {
 // changes, and the three words are set from the recipe's own previous and
 // current word - a latch repeated inside one frame writes the same three
 // values again instead of losing the edge in Input_Pressed.
+//
+// The key bytes too (known-defects D420): Capcom's latch reads the real
+// keyboard into Key_State on every pass - the DirectInput keyboard is opened
+// DISCL_BACKGROUND, so that is whatever is typed anywhere on the machine -
+// and the recipe's words replace only what was computed from them. The bytes
+// are game memory the state hash reads, and nothing reads them between two
+// latches (Pad_Read alone, symbols.toml), so while the recipe plays they are
+// cleared: the keyboard is ignored in memory as it is in the pad words. When
+// the recipe ends the keyboard is the player's again - but not in a run whose
+// state is being hashed, where the frames after the end are compared too.
 void __cdecl ScriptedLatch() {
     DeviceLatch();
+    if (g_active || StateHash_On()) std::memset(Key_State, 0, Key_State_count);
     if (!g_active) return;
     const std::uint32_t frame = Frame_Counter;
     if (!g_seen_frame || frame != g_last_frame) {

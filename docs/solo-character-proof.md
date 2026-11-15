@@ -530,6 +530,17 @@ it.
 but conditionally pass this PR". The follow-up is D420 (`known-defects.md`):
 the page's bytes named and skipped or fixed, then this route run again.
 
+**Settled, 2026-11-15 (D420 fixed).** The four runs' differences were not
+the round's and not the sound's: the two kept runs (`_off.sh`, `_off2.sh`)
+hold the real keyboard's bytes at eight of ten sampled ticks (somebody
+typing: Shift, I, D, R, A, U, Space, O, N) and a late frame's undrawn
+environments at the other two (`known-defects.md` D420;
+`tools/statehash_explain.py`). **And the route is shown identical:** two
+replays of this candidate (`af09b08a`, the behaviours off) against the
+section's reference pair, `statehash.py check`, identical on all 7,425
+ticks both times (`D:\bof3x-runs\d420\root\sh`, `cn_cutsceneAndNue_dumpold.sh`,
+`_dumpold2.sh`). The off-proof is ten of ten.
+
 ## 7. Not done here
 
 - **The full ten-route off-proof** on the merged branch, the machine quiet (the coordinator's, round

@@ -32,6 +32,16 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 00. **Next, 2026-11-15** (the order is the owner's; these are the candidates):
+   - **D420 is fixed (branch `harness/d420-hash-noise`, 2026-11-15; the cleanup below merged as PR #248, `main`
+     `31925318`):** the state hash's "sound page" noise was the real keyboard's bytes (`Key_State`, typed anywhere on the
+     machine) and a late frame's undrawn environments, named from the solo proof's kept runs with the new
+     `tools/statehash_explain.py` ([`state-hash.md`](state-hash.md) 5a; [`known-defects.md`](known-defects.md) D420). A
+     recipe now clears the key bytes and a hashed run draws every frame: `cutsceneAndNue` under injected keys and full
+     load is identical to a quiet run on every tick, where `main` differs on 3,000 ticks. **So a proof run in the exe
+     host no longer needs hands off the keyboard**; a build beside it still gave false differences once (the
+     image-layer round's trap) and that is not measured again. Not run: the ten routes, the 64-bit build with a game,
+     the hosted shadow suite. A proof whose base is older than this branch compares a build with the fix against one
+     without: identical on a quiet machine (measured on this route), noise on the old side only.
    - **The cleanup of 2026-11-15 (branch `cleanup/1115`):** DIV-0231 and DIV-0232 are tier Intent, the owner's
      answer of 2026-11-15 to PR #247's question, so only "As shipped" turns the two New Game screens off; D422 (a
      `ja-JP` name with a pair code drawn with the pair's placeholder in the party row and the member target banner)
@@ -49,10 +59,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The New Game round is merged** (item 18; PR #247, 2026-11-15). Owed: the owner's play
      ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
    - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
-     [`solo-character-round.md`](solo-character-round.md), [`solo-character-proof.md`](solo-character-proof.md) 6e). It was
-     passed by the owner on a condition: `cutsceneAndNue` with the mode off differs from the reference pair on the sound
-     page `0x7DE000` alone, so next is D420 (dump that page at a differing tick, name the bytes, skip or fix them, run that
-     route again on a quiet machine). Owed: the owner's play (none yet; owner-review has no section for it); the save
+     [`solo-character-round.md`](solo-character-round.md), [`solo-character-proof.md`](solo-character-proof.md) 6e). The
+     owner's condition is met (2026-11-15, D420 fixed: the page's bytes were the real keyboard's and a late frame's, and
+     `cutsceneAndNue` with the mode off is identical to the round's pair on two replays; proof doc 6e). Owed: the owner's play (none yet; owner-review has no section for it); the save
      editor's Solo champion field has not been looked at in the editor; the harness could not end fight 35 with record 6
      or fight 46 with record 2; fight 22 and a won bout of fights 18 to 20 are argued from the code only; fight 16's extra
      section on installs other than the PC files.

@@ -11154,7 +11154,7 @@ three rows at a time with scrolling) was built on `solo/ms` (commit
 `9b60b48d`) and not merged: the mode that would have reached it was reduced
 (round doc 6f).
 
-## D420 — The state hash's page `0x7DE000` differs between two runs of one build when the machine is busy; which bytes is not known (harness; open)
+## D420 — The state hash's page `0x7DE000` differs between two runs of one build when the machine is in use: the real keyboard's bytes and a late frame's draw (harness; fixed 2026-11-15)
 
 **Seen:** since round fourteen ([`state-hash.md`](state-hash.md) 4 and its
 open item 1; [`ledger-fields-round.md`](ledger-fields-round.md)'s controls;
@@ -11163,35 +11163,85 @@ solo-character round's off-proof
 ([`solo-character-proof.md`](solo-character-proof.md) 6e): `cutsceneAndNue`
 with the behaviours off differed from the reference pair on this page alone
 in four candidate runs, from a different tick each time (357, 813, 5,335,
-6,189), with another session's game running on the machine. The reference
-pair agreed with itself, and the same build with `SoloCharacter` on and no
-champion was identical on that route.
+6,189), with another session's game running on the machine. The page was
+read as "the sound page" (`Snd_BufferDesc`, `Snd_WaveFormat`, the music
+stream's records) and the noise as the stream's timing. **That reading was
+wrong**: no sound byte is involved.
 
-**Established:** the page holds the port's sound device state
-(`Snd_BufferDesc`, `Snd_WaveFormat`, the music stream's records) beside
-other things. The skip list already leaves out `0x7DE3B4` (40 bytes, the
-stream's handles) and `Music_Finished` `0x7DE3E0` ("set from the stream's own
-timing"). Two runs of one build with one set of settings have differed on
-the page for hundreds of ticks (ledger-fields-round's `dOrigR`).
+**Measured, 2026-11-15** (root `D:\bof3x-runs\d420`; the method is
+[`state-hash.md`](state-hash.md) 5a, `tools/statehash_explain.py`). The solo proof's two kept candidate
+runs (`cn_cutsceneAndNue_off.sh`, 379 differing ticks from 813; `_off2.sh`,
+tick 6,189 alone) were read against a replay of the same build
+(`af09b08a`) with raw dumps at twelve of their differing ticks and the
+neighbours of two. The page's hash computed from each dump equals the
+reference's recorded hash, so a byte change that turns it into the
+candidate's recorded hash is what that run held. Two classes, and nothing
+else:
 
-**Not established:** which bytes still vary. The reading that it is the
-stream's wall-clock timing against the frame tick is an inference from the
-above; no byte dump at a differing tick has been taken. That two games on
-one machine share nothing here is also not measured, only that each run has
-its own launcher, game folder and process.
+1. **The real keyboard, `Key_State` `0x7DE828` (256 bytes).** At eight of
+   the ten sampled ticks the candidate's hash is the reference page with
+   one or two key bytes at `0x80`: DIK `0x2A` (left Shift), `0x17` (I),
+   `0x20` (D), `0x13` (R), `0x1E` (A), `0x16` + `0x39` (U, Space), `0x18` +
+   `0x31` (O, N). Somebody was typing. The differing ticks come in bursts
+   of 2 to 34 with gaps between, in two groups (813..1,343 and
+   2,770..3,128). Capcom's keyboard is DirectInput's, opened
+   `DISCL_BACKGROUND`, and `Pad_Read` reads it into these bytes at every
+   latch whatever window has the focus; a recipe replaced the pad words
+   computed from them and left the bytes.
+2. **A frame that was late and not drawn, `Gpu_DispEnv+2` `0x7DECE2` and
+   `Gpu_DrawEnv+2` `0x7DED02`.** At ticks 3,956 and 6,189 the candidate's
+   hash is the reference page with those two words as they were one tick
+   before (the two buffers' `y`, 0 and `0xF0`, not yet swapped), and in step
+   again a tick later. WinMain does not draw a frame whose deadline has
+   passed (`magic_080.cpp`, "A late frame is not drawn"), and the draw is
+   what puts the two environments, flushes the dirty strip and drains the
+   upload queue. So one late frame leaves this page, and the VRAM shadow
+   when an upload was waiting (tick 6,189's `0x7C7000`), a frame behind for
+   one tick. This is also the one-tick VRAM-shadow class of
+   [`state-hash.md`](state-hash.md) 4.
 
-**Cost:** a proof run beside any load can report this page on a route, and
-the verdict then rests on repeats and on argument (as section 6e does)
-where it should rest on `identical`.
+**Fixed (harness only; no ledger entry - nothing a player's game does
+changes):**
 
-**To do:** dump the page at a differing tick from two runs of one build
-(`cutsceneAndNue` showed it four times in four); name the bytes; skip those
-that are the stream's timing, each with its reason, or make them follow the
-tick. Then run `cutsceneAndNue` with the behaviours off again for the solo
-round's missing `identical`.
+- While a recipe plays, `ScriptedLatch` clears `Key_State` after Capcom's
+  latch (`src/hook/input_script.cpp`). Nothing reads the bytes between two
+  latches but `Pad_Read`, and the recipe's words replace its result, so the
+  keyboard is now ignored in memory as it already was in the pad words.
+- While the state hash is written, WinMain draws every frame, late or not
+  (`StateHash_On`, `src/hook/statehash.h`; the same exception a pending
+  scripted shot already had). A hashed run on a busy machine runs slower
+  than its `--speed` instead of skipping draws.
 
-**State:** open. The owner (2026-11-13): "Lets ledger that as something to
-follow up on, but conditionally pass this PR".
+**Proof:** `cutsceneAndNue` (7,425 ticks), the exe host, 32-bit, one game at a
+time; "in use" is a script pressing F13 and F14 in a typing rhythm through
+`SendInput` and one busy process a core at above-normal priority (root
+`D:\bof3x-runs\d420`, `scratch\batch.py`, hashes `root\sh`):
+
+| Runs | Result |
+|---|---|
+| `main` `31925318` quiet against the fix quiet (twice: `m1` / `f1`, `m1` / `f3`) | identical on all 7,425 ticks |
+| `main` quiet against `main` in use (`m1` / `m2`, `m1` / `m3`) | `0x7DE000` on 3,047 and 3,033 ticks; in `m3` the VRAM-shadow page `0x7C7000` at tick 6,642, one tick |
+| the fix quiet against the fix in use (`f3` / `f4`) | **identical on all 7,425 ticks** |
+| `main` quiet against the fix in use (`m1` / `f4`) | **identical on all 7,425 ticks** |
+
+The first cut of the fix cleared the key bytes only while the recipe played
+and differed on the two ticks after the recipe's end (`f1` / `f2`, ticks
+7,423..7,424); the bytes are now cleared after the end too while the hash is
+written. **The solo round's missing `identical`:** two replays of that
+round's candidate (`af09b08a`, the behaviours off; the runs that made the
+dumps) against its kept reference pair of `main` `13801868` are identical
+on all 7,425 ticks (`statehash.py check`, twice). Both widths build; the
+64-bit build and the hosted shadow suite were not run with a game.
+
+**Not covered:** a hosted run under `--original "*"` runs Capcom's WinMain,
+which keeps its own late-frame skip, so the second class can still appear on
+such a reference side; the keyboard class is closed there too (the latch
+wrapper is ours in both hosts). A hashed run with no recipe
+(`HashedLatch`) keeps the real keyboard, by design.
+
+**State:** fixed. The owner (2026-11-13): "Lets ledger that as something to
+follow up on, but conditionally pass this PR"; (2026-11-15) "lets try to
+resolve d420".
 
 ## D421 — The tiled frame reads its texture windows from a stack that is gone: a crash on the renamer's entry and at New Game (Capcom's PC code; seen 2026-11-14; fixed by DIV-0235)
 
