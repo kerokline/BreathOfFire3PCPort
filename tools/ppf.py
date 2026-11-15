@@ -104,13 +104,17 @@ def target_len(patch):
     return max((off + len(b) for off, b, _ in records(patch)), default=0)
 
 
-def apply_file(patch_path, source_path, out_path, max_out=None):
+def apply_file(patch_path, source_path, out_path, max_out=None, source_len=None):
     """(size, sha256) of OUT: SOURCE with the records written over it. OUT is
-    written beside itself and renamed, so a patch that fails leaves no file."""
+    written beside itself and renamed, so a patch that fails leaves no file.
+    `source_len`: the image is SOURCE's first that many bytes (a disc's data
+    track in a file that also holds its audio tracks), and OUT is that long."""
     with open(patch_path, "rb") as f:
         patch = f.read()
     h = header(patch)
     size = os.path.getsize(source_path)
+    if source_len is not None:
+        size = min(size, source_len)
     if size == 0:
         raise PatchError("the source file is empty")
     if max_out is not None and size > max_out:
@@ -123,7 +127,15 @@ def apply_file(patch_path, source_path, out_path, max_out=None):
                                  "(another version or region of the disc)")
     part = out_path + ".part"
     try:
-        shutil.copyfile(source_path, part)
+        if size == os.path.getsize(source_path):
+            shutil.copyfile(source_path, part)
+        else:
+            with open(source_path, "rb") as sf, open(part, "wb") as out:
+                left = size
+                while left:
+                    b = sf.read(min(left, 1 << 20))
+                    out.write(b)
+                    left -= len(b)
         with open(part, "r+b") as out:
             for off, data, old in records(patch, h):
                 if off + len(data) > size:
@@ -205,6 +217,17 @@ def selftest():
                    and target_len(patch) == len(src), "%s: applied, the size and the sha256 of what it made" % name)
         expect(header(make_patch(recs, "a test"))["description"] == "a test", "the description read without its padding")
         expect(len(list(records(make_patch(recs)))) == 5, "a run over 255 bytes is that many records")
+        with open(pp, "wb") as f:
+            f.write(make_patch(recs[:2], undo=src))
+        cut = 0x9800
+        size, sha = apply_file(pp, sp, op, source_len=cut)
+        expect(size == cut and os.path.getsize(op) == cut and sha == hashlib.sha256(
+            src[:0x10] + b"hello" + src[0x15:0x9000] + bytes(range(200)) * 3 + src[0x9258:cut]).hexdigest(),
+               "source_len: the image is the source's first bytes, and the result is that long")
+        with open(pp, "wb") as f:
+            f.write(make_patch(recs))
+        expect(refused(lambda: apply_file(pp, sp, op, source_len=cut), "past the image's end"),
+               "source_len: a record past it is refused")
         with open(pp, "wb") as f:
             f.write(make_patch(recs, block=bytes(BLOCK)))
         expect(refused(lambda: apply_file(pp, sp, op), "a patch of another image") and not os.path.exists(op + ".part"),

@@ -1604,6 +1604,21 @@ def port_layer(cache, rows, work, tag, build_id, changed, lists, us_diff, us_tag
                   "name_records": records, "names_not_carried": len(why)}
 
 
+def data_track_len(path):
+    """The length in bytes of the data track at the start of the raw image
+    `path`: its sectors up to the first that does not begin with the sync
+    pattern (an audio track's do not). A file of the data track alone: its
+    whole sectors."""
+    import psx_disc
+    n = os.path.getsize(path) // psx_disc.RAW
+    with open(path, "rb") as f:
+        for i in range(n):
+            f.seek(i * psx_disc.RAW)
+            if f.read(12) != psx_disc.SYNC:
+                return i * psx_disc.RAW
+    return n * psx_disc.RAW
+
+
 def build(home, cache, mod_folder, row, tag, where, say):
     """Both layers of the disc-patch mod `row` into `cache`:
     {layer: [(name, chunk index, where, sha256)]}, a layer with no chunk left
@@ -1646,7 +1661,13 @@ def build(home, cache, mod_folder, row, tag, where, say):
         with open(patch_path, "rb") as f:
             reader = ppf if ppf.is_ppf(f.read(3)) else vcdiff     # by the file's first bytes (mods.py patch_format)
         try:
-            size, got = reader.apply_file(patch_path, track, patched_path, RESULT_MAX)
+            if reader is ppf:
+                # a PPF writes over the image, so what it makes is as long as the file it is given. A dump
+                # in one .bin holds the audio tracks after the data track: only the data track is the image,
+                # or the result's sha256 is another for each layout of the same disc
+                size, got = ppf.apply_file(patch_path, track, patched_path, RESULT_MAX, data_track_len(track))
+            else:
+                size, got = reader.apply_file(patch_path, track, patched_path, RESULT_MAX)
         except (vcdiff.PatchError, ppf.PatchError) as e:
             raise Bad("the patch does not apply to the disc %s: %s" % (os.path.basename(disc_path), e))
         except OSError as e:

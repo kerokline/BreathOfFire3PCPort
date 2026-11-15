@@ -42,4 +42,4 @@ requires = ["en-US"]
 build = "psx-us"
 format = "ppf"
 patch_sha256 = "ed4ce585ad648d19b2db3d7d11d18a7c5385696f223a13da717da2f6278c0248"
-result_sha256 = "ed63dbded9d9f3cad2f8b92109d72ff63ba470c3c4406767fc7e0d57cd3856e8"
+result_sha256 = "7378dfa22129e5f1544b23991e563ca8692c253f180f461fdf8d99d3eadd3038"

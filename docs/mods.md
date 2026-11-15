@@ -590,7 +590,7 @@ read; 1.0 and 2.0 are refused by version. `ppf.py selftest` runs in
 
 | File | Records | On the `psx-us` disc |
 |---|---|---|
-| "Ginseng Version" (the readme: for US 1.1), sha256 `ed4ce585...f6278c0248`, 174,235 bytes | 6,669 | applies: every record's old bytes are the disc's. The patched track's sha256 is `ed63dbde...57cd3856e8` |
+| "Ginseng Version" (the readme: for US 1.1), sha256 `ed4ce585...f6278c0248`, 174,235 bytes | 6,669 | applies: every record's old bytes are the disc's. The patched data track's sha256 is `7378dfa2...eadd3038` (corrected 2026-11-15: the first figure, `ed63dbde...`, was of a one-file dump, the audio track with it; the builder now gives a PPF the data track alone, so both layouts of the disc make this) |
 | "Vodka Shot Version" (for US 1.0), sha256 `004f5f2a...50e3bd85`, 212,467 bytes | 6,673 | refused at the build: "the bytes at 0x10D71C are not the ones the patch replaces: it is a patch of another image" |
 
 So the `psx-us` build is the disc the readme calls 1.1. The other file is
