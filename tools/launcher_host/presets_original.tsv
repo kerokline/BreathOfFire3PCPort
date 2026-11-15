@@ -389,8 +389,6 @@ original	repaired	already-off	DIV-0226	ini:cheat.learn=0	An examining member alw
 original	repaired	already-off	DIV-0228	SoloCharacter	A solo-character mode: one chosen champion fights every battle alone	Default off: already off
 original	repaired	already-off	DIV-0229	SoloChampionIfPresent	The solo champion fights only while the story has them in the party	Default off: already off
 original	repaired	already-off	DIV-0230	ini:interp=0	An optional frame between each two of the game's frames (smooth motion)	Default off: already off
-original	repaired	skipped-language	DIV-0231	NewGameNameEntry	New Game asks for the hero's name on the PlayStation's grid	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	repaired	off	DIV-0232	NewGameOptions	New Game shows the options screen before the game starts	Player yes
 original	repaired	skipped-language	DIV-0236	lang	The name screen's START word and the French panel label come from the language's own disc	acts only under en-US, en-150, fr-FR
 original	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 original	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off

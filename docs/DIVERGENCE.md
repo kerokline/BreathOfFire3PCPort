@@ -17063,9 +17063,9 @@ designed in rather than bolted on.
   participant `NEWGAME`. Docs: [`new-game-round.md`](new-game-round.md) (3a,
   3b, 4b, 4c-TF, 4c-BT, 4c-PE, 4c-PK, 5a, 5b; IDEAS I34),
   [`name-entry-restoration.md`](name-entry-restoration.md) (the research)
-- **Tier:** Sensible - the port's New Game works without a name screen; the
-  PlayStation's screen changes what is shown and the hero's name, not the
-  rules of play.
+- **Tier:** Intent - the owner's call of 2026-11-15: every preset but "As
+  shipped" keeps the name screen (written Sensible on 2026-11-14; the
+  amendment below).
 - **Original behaviour:** the PC port has no name screen at New Game and no
   remnant of one. `TitleFlow_NewGame` calls `NewGame_InitCharacters`
   `0x437820`, starts scenario 0 and sets `Game_Step` 5; record 0 keeps its
@@ -17192,6 +17192,15 @@ designed in rather than bolted on.
   record 0's entered name (no route reaches one); the 64-bit build in play;
   a name carried through `save_convert.py`; the Mednafen reference captures
   (3a M10); the `psp-eu` layer rebuilt with the `START` row's word.
+- **Amended 2026-11-15 (the owner's call on the tier):** written Sensible on
+  2026-11-14 (round doc 4f: the port's New Game works without a name
+  screen; the PlayStation's screen changes what is shown and the hero's
+  name, not the rules of play). The owner set Intent on 2026-11-15,
+  answering [`owner-review.md`](owner-review.md): "Yes, lets have this
+  applied to all non-'As Shipped' presets." So "Repaired" now keeps the name
+  screen where it turned it off; "As shipped" still turns it off, and
+  "PlayStation" kept it before and keeps it. The original behaviour above is
+  unchanged.
 - **Reversible?** `BOF3X_OFF=NewGameNameEntry` (ini `off=`; the launcher's
   box "Show the name entry screen at New Game and in the faerie village",
   Mods, Extras, Page 2, which also sets `CommuNameGrid`), or hosted
@@ -17215,9 +17224,9 @@ designed in rather than bolted on.
   the Config screen's machine `ConfigScreen_Run` `0x460CB0` on its
   `Game_Step` 4 path, unchanged; [`new-game-round.md`](new-game-round.md)
   (3a M1, 4c-TF, 4e)
-- **Tier:** Sensible - the port moved the options screen to the title menu
-  and New Game works without it; this puts it back where the PlayStation
-  shows it.
+- **Tier:** Intent - the owner's call of 2026-11-15: every preset but "As
+  shipped" keeps the options screen at New Game (written Sensible on
+  2026-11-14; the amendment below).
 - **Original behaviour:** New Game goes straight to the game. The Config
   screen is reached only from the title menu's third row: `TitleMenu_Leave`
   `0x5880A0` sets `Game_Step` to the cursor + 2, so 4, the Config screen's
@@ -17254,6 +17263,15 @@ designed in rather than bolted on.
   whether the growth roll after the options instead of before moves anything
   (the random sequence, the opening's first frame); the state-hash proof on a
   quiet machine; the owner's play.
+- **Amended 2026-11-15 (the owner's call on the tier):** written Sensible on
+  2026-11-14 (round doc 4f: the port moved the options screen to the title
+  menu and New Game works without it; this puts it back where the
+  PlayStation shows it). The owner set Intent on 2026-11-15, answering
+  [`owner-review.md`](owner-review.md): "Yes, lets have this applied to all
+  non-'As Shipped' presets." So "Repaired" now keeps the options screen at
+  New Game where it turned it off; "As shipped" still turns it off, and
+  "PlayStation" kept it before and keeps it. The original behaviour above is
+  unchanged.
 - **Reversible?** `BOF3X_OFF=NewGameOptions` (ini `off=`; the launcher's box
   "Show the options screen at New Game, before the game starts", Mods,
   Extras, Page 2), or hosted `BOF3X_ORIGINAL=NewGameOptions`: New Game then
