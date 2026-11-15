@@ -1,6 +1,6 @@
 # The image-layer round: the exe's tables as one file per table
 
-**Status:** IN PROGRESS (IDEAS I58, its second step; staged 2026-11-11 and
+**Status:** IN PROGRESS (merged as PR #224, 2026-11-11, and its measurements as PR #231, 2026-11-12; acceptance 5, the owner's look, is what is left. IDEAS I58, its second step; staged 2026-11-11 and
 groups A, B and C built the same day on `image-layer/round`, sections 5a to
 5c - the image proven the same on every build, a PC install on the same
 route (DIV-0212), the `table-edit` mod kind (DIV-0213); group D built in the

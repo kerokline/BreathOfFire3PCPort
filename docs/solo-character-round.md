@@ -1,6 +1,7 @@
 # The solo-character round: a champion who fights alone
 
-**Status:** IN PROGRESS (stage A built 2026-11-12, section 4a; staged 2026-11-12, from `main` `01a67500`; nothing built, nothing
+**Status:** BUILT, merged as PR #240 (2026-11-13; the off-proof passed on the owner's condition, D420,
+[`solo-character-proof.md`](solo-character-proof.md) 6e; the owner's play owed; stage A built 2026-11-12, section 4a; staged 2026-11-12, from `main` `01a67500`, when nothing was built or
 launched. The design is IDEAS I56's (the owner, 2026-11-03), issue #223; the
 owner's four answers of 2026-11-12 are in section 6. **Group M is run**
 (2026-11-12, [`solo-character-reads.md`](solo-character-reads.md)): section 0a
