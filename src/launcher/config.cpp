@@ -283,6 +283,9 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
         } else if (key == "snap") {
             if (value == "0") cfg.snap = false;
             else if (value == "1") cfg.snap = true;
+        } else if (key == "interp") {
+            if (value == "0") cfg.interp = false;
+            else if (value == "1") cfg.interp = true;
         } else if (key == "wide") {
             if (value == "0") cfg.wide = 0;
             else if (value == "1") cfg.wide = 1;
@@ -417,6 +420,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# 1 the picture at whole multiples of its size (DIV-0042) | 0 stretched to the window's height\r\n";
     out += std::string("snap=") + (cfg.snap ? "1" : "0") + "\r\n";
+    out += "# 1: smooth motion, a frame between each two of the game's frames (DIV-0230, experimental)\r\n";
+    out += "# | 0 the game's frames only, the original's\r\n";
+    out += std::string("interp=") + (cfg.interp ? "1" : "0") + "\r\n";
     out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window).\r\n";
     out += "# Empty: the size follows the display's scale (2 at 100 %, 3 at 150 %, 4 at 200 %)\r\n";
     out += "scale=" + (cfg.scale_named ? std::to_string(cfg.scale) : std::string()) + "\r\n";
@@ -659,6 +665,9 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
 
     if (GetEnvironmentVariableW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
         SetEnvironmentVariableW(L"BOF3X_SNAP", L"0");
+
+    if (GetEnvironmentVariableW(L"BOF3X_INTERP", existing, 64) == 0 && cfg.interp)
+        SetEnvironmentVariableW(L"BOF3X_INTERP", L"1");
 
     if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
         SetEnvironmentVariableW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
@@ -1714,6 +1723,7 @@ const char* IniVariable(std::string_view key) {
         {"cache", "BOF3X_CACHE"},         {"music", "BOF3X_MUSIC"},   {"filter", "BOF3X_FILTER"},
         {"background", "BOF3X_BACKGROUND"}, {"screen", "BOF3X_PRESENT"}, {"text_speed", "BOF3X_TEXT_SPEED"},
         {"unlearned_blue", "BOF3X_UNLEARNED_BLUE"}, {"snap", "BOF3X_SNAP"}, {"wide", "BOF3X_WIDE"},
+        {"interp", "BOF3X_INTERP"},
         {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
         {"cheat.steal", "BOF3X_STEAL"},   {"cheat.enemy_info", "BOF3X_ENEMY_INFO"},
         {"cheat.no_fail", "BOF3X_NO_FAIL"}, {"cheat.learn", "BOF3X_LEARN"},

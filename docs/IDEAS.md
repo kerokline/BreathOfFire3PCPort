@@ -109,7 +109,7 @@ rule ([`README.md`](README.md)) here too.
 | I65 | The title menu's third row as a custom menu of quality-of-life toggles, reachable from inside the game too | menu / uplift | not assessed | open 2026-11-12 (the owner, answering the New Game round's question on the row); nothing designed |
 | I66 | Solo character: a champion whose record is at 0 HP when a battle starts (the owner thinks this is the Mikba fight, with Rei) | gameplay / mode | not assessed | open 2026-11-12 (the owner); today the game's own party fights and the champion starts dead as the original has it |
 | I67 | Increased mapping to allow xdelta cross-disc conversions: a per-patch, per-disc list of offsets so a romhack's patch of the US disc builds from another disc | mods / tools | measured, not built | open 2026-11-13 (the owner, after disc-patch-round.md 11.6); gated on the rule-1 call and a US 1.0 image |
-| I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | measured, not built | open 2026-11-13 (the owner, after frame-interpolation.md section 5); first step a WAV A/B and the owner's ear |
+| I68 | The music staging buffer against the tick: its refill is by wall time, so its pages differ run to run in the state hash, and more often with an in-between present in the wait loop | audio / tools | built (the tool) | 2026-11-14: `statehash.py` sets the buffer's 17 whole pages aside as timing pages; the WAV A/B and the owner's ear still open |
 
 ---
 
@@ -2667,4 +2667,8 @@ _(2026-11-13) open; measured, nothing built._
 **First concrete step:** a WAV A/B of one music-heavy route with the switch off and on ([`wav-dump.md`](wav-dump.md)), and the owner's ear on the same route; then read `Sound_Tick`'s refill condition and decide between the skip list and a tick-tied refill.
 
 ### Outcome
+_(2026-11-14) Question 2 answered in the tool; 1 and 3 open._ `tools/statehash.py check` and `diff` count the 17 pages wholly inside `Music_Staging` (`0x7CD000`..`0x7DD000`) on a line of their own and never report them; `--timing` compares them as before ([`state-hash.md`](state-hash.md) section 2). The committed skip list already named the buffer (`0x7CC378 73728`), but the proof runs take no skip list, and the per-tick noise rule cannot hold a page written on the sound card's clock: of three runs the one under test stands alone at some ticks where the references agree. On the prototype's four stored routes (two runs off, one on): with `--timing` combat, shop and bossAndFlash fail on those 17 pages alone and bridgeWalk passes; without it all four are identical on every compared tick. No hash format change, no reference re-recorded, no game code changed.
+
+Question 1 (audible?) by arithmetic only, **not heard**: half the ring is `0x12000` bytes, 418 ms at 44,100 Hz 16-bit stereo, and an in-between's present holds one `Sound_Tick` back by milliseconds; the higher count with the switch on is a refill crossing a tick boundary more often, not a late one. The WAV A/B and the owner's ear are still owed. Question 3 (does the game read the fill state) not traced.
+
 _(2026-11-13) open; measured, nothing built._

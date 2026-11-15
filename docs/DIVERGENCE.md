@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 229 entries, DIV-0001..0229, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 230 entries, DIV-0001..0230, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -16943,6 +16943,71 @@ designed in rather than bolted on.
 - **Switch:** SoloChampionIfPresent
 - **Default:** off - a mod's needs or on= turns it on (docs/mods.md 11)
 - **Player:** yes - BOF3X_ON, on=
+- **Toward:** none - no release has it
+- **Languages:** any
+- **State:** active
+
+### An optional frame between each two of the game's frames (smooth motion)
+
+- **ID:** DIV-0230
+- **Date:** 2026-11-14
+- **Subsystem:** render (the present: `src/render/interp.{h,cpp}`,
+  `PresentInBetween` in `src/render/render_shim.cpp`, WinMain's wait loop in
+  `src/game/platform/magic_080.cpp`); the launcher's Settings page
+  (`interp=` in `bof3x.ini`); [`frame-interpolation.md`](frame-interpolation.md)
+- **Tier:** Sensible - presentation only: nothing the game computes changes
+- **Original behaviour:** one picture for each frame of the game's logic,
+  29.97 a second: `Gpu_PutDispEnv` presents the frame recorded on the
+  previous pass of WinMain's loop and the loop then waits for the next
+  (frame-interpolation.md section 1). Between two frames the picture stands
+  still.
+- **New behaviour:** with `interp=1` (the Settings page's "Smooth motion: 60
+  frames each second (experimental)", or `BOF3X_INTERP=1`), half a period
+  after frame N-1 is shown the loop shows an in-between: frame N's draw
+  commands, colours and textures, with each draw's vertices moved halfway
+  back to the matching draw of frame N-1. Frame N is then shown at its own
+  time, so **no frame is shown later than it was** and nothing is added to
+  the delay between a button and the picture. A draw with no match, a
+  scene cut, and a run of touching draws whose shared corners would come
+  apart are shown as frame N has them (the rules: frame-interpolation.md
+  section 3). No in-between is shown while the game is paused, at a speed
+  other than 1, or while a scripted shot is pending. Off, the default, the
+  original's one picture a frame, and no code of the in-between runs.
+- **Rationale:** the owner's ask (2026-11-13): the logic runs at 29.97
+  frames a second and the machine has headroom for twice that; show one
+  interpolated frame between each two, no more. The game counts frames and
+  reads no clock (DIV-0047), so work done at present time cannot change
+  what it computes. Experimental and off by default because its open
+  items (frame-interpolation.md section 6) want play time: a flickering
+  beam is shown between two flickers, a title that leaves the screen can
+  leave one in-between early, and battles and menus have been sampled by
+  a checker, not played.
+- **Also in the PSX version?** Yes: the PlayStation shows one picture a
+  frame of logic too. No release shows in-betweens.
+- **Verification:** 2026-11-13, the state hash on four routes
+  (bridgeWalk, combat, shop, bossAndFlash), the switch on against two
+  references with it off: every page outside the music staging buffer
+  identical on every tick; `Music_Staging`, filled by wall time, differs
+  at more ticks with the switch on (frame-interpolation.md section 5;
+  IDEAS I68). 2026-11-14, in-between pictures against their two
+  neighbours on 29 routes, one frame in six or ten: no hole or gap in the
+  frames read, not every flagged frame read (section 4). The matcher
+  takes 1.0 to 1.4 ms an in-between on bridgeWalk, 2.8 ms at most
+  (section 6, item 9). 2026-11-14, the ten proof routes against two
+  runs of `main` `651a5ad8`, on a machine not kept quiet: identical with
+  the switch off on all ten; with it on, identical on nine and on the
+  tenth's repeat, `Music_Staging` included (`check --timing`); the
+  tenth's first run differed on the sound page `0x7DE000` at 215 ticks
+  (frame-interpolation.md section 5). **Not verified:** the owner's ear on music with
+  the switch on and a WAV A/B; the wide modes since the runs rule
+  changed; frame-buffer grab effects, the FMVs, the 64-bit build; vsync
+  and pacing against the display. **Not played by the owner** beyond the
+  first day's look at the bridge and the shop.
+- **Reversible?** Yes - off by default; the Settings box, `interp=0`, or
+  `BOF3X_INTERP=0`.
+- **Switch:** ini:interp=0
+- **Default:** off
+- **Player:** yes - a launcher key (`src/launcher/config.cpp`)
 - **Toward:** none - no release has it
 - **Languages:** any
 - **State:** active

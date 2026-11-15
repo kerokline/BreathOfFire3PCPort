@@ -225,6 +225,7 @@ close box after the same change left the ini byte for byte.
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
+| Smooth motion: 60 frames each second (experimental) (2026-11-14; `interp=` in the ini, off by default) | `BOF3X_INTERP=1` when on | ours — DIV-0230: a frame between each two of the game's frames; [`frame-interpolation.md`](frame-interpolation.md). The Settings page's three check boxes moved up to an 11-unit pitch for it |
 | Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; since 2026-10-10 the dialog's PSP extras group (§3.1), since 2026-10-12 the dialog's three suites ([`launcher-suites.md`](launcher-suites.md); up to 16 layers) | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch; since 2026-10-29 the enemy-information switch; since 2026-10-30 on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2), the second holding the enemy information and the no-fail minigames switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on, `BOF3X_ENEMY_INFO=1` when on, `BOF3X_NO_FAIL=1` when on, `BOF3X_LEARN=1` when on (the learn switch, Page 2, since 2026-11-12) | ours — DIV-0045, DIV-0046, DIV-0187, DIV-0188, DIV-0226; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini whenever it names 2..8, 2 included; an empty `scale=` sends nothing and the game follows the display's scale (DIV-0036). Written back as read, empty when not named. Until 2026-10-28 it was sent only when not 2 and written back as `scale=2` for every player, so the ini could not fix k = 2 (D395) | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
@@ -556,6 +557,7 @@ screen=clean               # clean | satpixie (DIV-0043); crt (DIV-0037, withdra
 satpixie.acc_modulate=0.65 # ... fourteen satpixie.* lines, the preset's names
 display=fullscreen         # fullscreen (a borderless window) | windowed -> BOF3.CFG line 1
 snap=1                     # DIV-0042
+interp=0                   # DIV-0230: 1 shows a frame between each two of the game's (experimental)
 scale=                     # 2..8, the first window only, until bof3x.window exists; empty follows the display (D395)
 wide=0                     # DIV-0041
 background=1               # DIV-0033
@@ -593,6 +595,7 @@ same way, each only when unset and only when the setting is not at its
 default: also `BOF3X_BACKGROUND`, `BOF3X_PRESENT`, `BOF3X_SATPIXIE`,
 `BOF3X_SNAP`, `BOF3X_WIDE`, `BOF3X_SCALE`, `BOF3X_EXP`, `BOF3X_ZENNY`,
 `BOF3X_STEAL`, `BOF3X_KEYS` and `BOF3X_PAD` - `src/launcher/config.cpp`;
+`BOF3X_INTERP` since 2026-11-14, DIV-0230;
 `BOF3X_SCALE` since 2026-10-28 whenever `scale=` names a value, 2 included, D395.) So a harness that
 must run a particular configuration sets both variables explicitly. The DLL
 reads `BOF3X_LANG=original` as no overlay, and `BOF3X_FILTER=linear` is the

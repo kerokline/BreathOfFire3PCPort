@@ -27,6 +27,7 @@ struct Stats {
     U unmatched;   // no candidate
     U followed;    // of the last two, those moved with a matched neighbour
     U snapped;     // shown where the frame has them: their surface's pairing did not hold together
+    U order_dropped;   // 1 when the order table ran past its time and was not used
 };
 
 // BOF3X_INTERP set and not 0.

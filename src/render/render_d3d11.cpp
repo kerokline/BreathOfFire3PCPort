@@ -66,7 +66,12 @@ ID3D11RasterizerState* g_raster;
 ID3D11BlendState* g_blend_off;
 enum class Look { kClean, kSatpixie };
 Look g_look = Look::kClean;   // DIV-0043 satpixie.cpp (our own CRT, DIV-0037, withdrawn 2026-09-27)
-unsigned g_frame_count;        // presents so far, for the looks' animation
+// The looks' clock, in game frames: +1 a present. With the in-between
+// (interp.h) an in-between and the present after it are half a frame each,
+// so the look moves at the game's pace, not the presents'; without it this
+// counts presents, as it always has.
+double g_picture_time;
+bool g_last_in_between;   // the last picture shown was an in-between
 
 struct BlendEntry {
     U src, dst;
@@ -804,7 +809,7 @@ void RunFrame(Frame& frame) {
     g_ctx->PSSetShaderResources(1, 1, &none);
 }
 
-void Show() {
+void Show(bool in_between) {
     // The window may already be destroyed: WM_DESTROY arrives through the
     // loop's DispatchMessage, and the frame in flight still presents after
     // it. GetClientRect then fails (an unchecked RECT once reached
@@ -850,9 +855,11 @@ void Show() {
     g_ctx->RSSetViewports(1, &vp);
     const float factor[4] = {0, 0, 0, 0};
     g_ctx->OMSetBlendState(g_blend_off, factor, 0xFFFFFFFF);
-    ++g_frame_count;
+    const double step = (in_between || g_last_in_between) ? 0.5 : 1.0;
+    g_last_in_between = in_between;
+    g_picture_time += step;
     if (g_look == Look::kSatpixie) {
-        SatpixieDraw(g_ctx, g_target_srv, g_window_rtv, vp, g_frame_count);
+        SatpixieDraw(g_ctx, g_target_srv, g_window_rtv, vp, g_picture_time, step);
         const HRESULT hr = g_swap->Present(g_opt.vsync ? 1 : 0, 0);
         if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) Check(hr, "Present");
         return;
@@ -1096,7 +1103,7 @@ void ApplyPendingScale() {
 void PresentOnFiber(Frame& frame) {
     FpuGuard fpu;
     RunFrame(frame);
-    Show();
+    Show(g_job_in_between);
     // PROTOTYPE (interp.h): an in-between picture is the frame still to be
     // presented, so its surfaces and the target's size stay as they are.
     if (g_job_in_between) return;

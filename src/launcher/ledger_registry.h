@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 221;
+inline constexpr std::size_t kSwitchCount = 222;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -294,9 +294,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "SaveSlotExpBar", 0, 14},   // DIV-0227
     {SwitchForm::Name, "SoloCharacter", 0, 13},   // DIV-0228
     {SwitchForm::Name, "SoloChampionIfPresent", 0, 21},   // DIV-0229
+    {SwitchForm::Ini, "ini:interp=0", 4, 6},   // DIV-0230
 };
 
-inline constexpr std::size_t kEntryCount = 229;
+inline constexpr std::size_t kEntryCount = 230;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -756,6 +757,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 219, 1, false, Player::Yes, 0, kLangAny},
     {229, "The solo champion fights only while the story has them in the party",
      Tier::Extension, State::Active, 0, 220, 1, false, Player::Yes, 0, kLangAny},
+    {230, "An optional frame between each two of the game's frames (smooth motion)",
+     Tier::Sensible, State::Active, 0, 221, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

@@ -780,6 +780,7 @@ void Populate(HWND dlg, DialogState& state) {
     Select(dlg, IDC_WIDE, cfg.wide == 1 || cfg.wide == 2 ? cfg.wide : 0);
 
     Check(dlg, IDC_SNAP, cfg.snap);
+    Check(dlg, IDC_INTERP, cfg.interp);   // DIV-0230
 
 
     SetText(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
@@ -819,6 +820,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.satpixie = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.snap = Checked(dlg, IDC_SNAP);
+    cfg.interp = Checked(dlg, IDC_INTERP);
     cfg.background = Checked(dlg, IDC_BACKGROUND);
     const int wide = Selected(dlg, IDC_WIDE);
     cfg.wide = wide == 1 || wide == 2 ? wide : 0;

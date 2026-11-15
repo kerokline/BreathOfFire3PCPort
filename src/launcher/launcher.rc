@@ -68,7 +68,7 @@ STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Settings", -1, 0, 0, 296, 162
+    GROUPBOX        "Settings", -1, 0, 0, 296, 164
 
     LTEXT           "&Language:", -1, 9, 17, 62, 9
     COMBOBOX        IDC_LANGUAGE, 77, 15, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -95,16 +95,18 @@ BEGIN
     // DIV-0041: off, 16:9 or 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
     LTEXT           "&Widescreen:", -1, 9, 90, 62, 9
     COMBOBOX        IDC_WIDE, 77, 88, 186, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "&Integer scaling (2x, 3x, 4x ...)", IDC_SNAP, 7, 105, 268, 10
-    AUTOCHECKBOX    "&Keep the game running when its window is not active", IDC_BACKGROUND, 7, 119, 268, 10
+    AUTOCHECKBOX    "&Integer scaling (2x, 3x, 4x ...)", IDC_SNAP, 7, 104, 268, 10
+    // DIV-0230: a frame between each two of the game's frames (interp=).
+    AUTOCHECKBOX    "Smooth &motion: 60 frames each second (experimental)", IDC_INTERP, 7, 115, 268, 10
+    AUTOCHECKBOX    "&Keep the game running when its window is not active", IDC_BACKGROUND, 7, 126, 268, 10
 
-    AUTOCHECKBOX    "&Show this window at start", IDC_SHOW, 7, 133, 200, 10
+    AUTOCHECKBOX    "&Show this window at start", IDC_SHOW, 7, 137, 200, 10
     LTEXT           "Off: the game starts immediately.\nTo show this window again, start bof3x-launcher --config.",
-                    -1, 19, 144, 272, 16
+                    -1, 19, 147, 272, 16
 
     // Shown when the preset (the Preset sub-page) sets a setting of this page,
     // which is then grey (config_dialog.cpp PresetRefresh).
-    LTEXT           "", IDC_PRESETGREY, 0, 165, 296, 9
+    LTEXT           "", IDC_PRESETGREY, 0, 166, 296, 9
 END
 
 // The preset (launcher/config.h, docs/launcher-settings.md "preset="): the

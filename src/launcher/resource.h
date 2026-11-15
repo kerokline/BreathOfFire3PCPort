@@ -38,6 +38,7 @@
 #define IDC_WIDE        1009
 #define IDC_SNAP        1010
 #define IDC_LOOKOPTIONS 1011
+#define IDC_INTERP      1039   // Smooth motion: interp= (DIV-0230)
 // The row above the text (docs/mods.md 5): ruby= in bof3x.ini.
 #define IDC_RUBY        1012
 #define IDC_RUBYLABEL   1013    // its label: both hidden unless ruby_ui=1 (Mods, Extras)

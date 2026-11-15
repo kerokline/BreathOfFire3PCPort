@@ -314,4 +314,4 @@ wait 71
 key f9 0   # recipe frame 4341
 wait 14
 key f9 0   # recipe frame 4355, paused
-wait 1
+quit   # the last F9 quits from the paused title

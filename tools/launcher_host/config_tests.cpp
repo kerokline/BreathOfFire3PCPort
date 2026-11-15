@@ -1689,6 +1689,43 @@ void TestWide() {
     DeleteFileW(a.c_str());
 }
 
+// DIV-0230, the in-between frame (docs/frame-interpolation.md): interp= 0 or 1
+// reads, writes back the same, and goes out as BOF3X_INTERP=1 (nothing for
+// 0); an ini without the line is off; another value is dropped to the
+// default; a BOF3X_INTERP already set (a run tool's --env) wins over the ini.
+void TestInterp() {
+    const std::wstring a = Temp(L"bof3x_config_tests_interp.ini"), game = Temp(L"bof3x_interp_game");
+    MakeDirs(game + L"\\DAT");
+    std::string err;
+    for (int v = 0; v <= 1; ++v) {
+        WriteAll(a, "[bof3x]\r\ninterp=" + std::to_string(v) + "\r\n");
+        bof3x::Config c;
+        Check(bof3x::ConfigLoad(a, c, err) && err.empty() && c.interp == (v == 1), "interp= read",
+              std::to_string(c.interp));
+        Check(bof3x::ConfigSave(a, c), "save");
+        Check(ReadAll(a).find("\r\ninterp=" + std::to_string(v) + "\r\n") != std::string::npos,
+              "the interp= line written");
+        SetEnvironmentVariableA("BOF3X_INTERP", nullptr);
+        bof3x::ConfigApplyEnvironment(game, c, false);
+        Check(Env("BOF3X_INTERP") == (v == 0 ? "" : "1"), "BOF3X_INTERP from interp=", Env("BOF3X_INTERP"));
+        SetEnvironmentVariableA("BOF3X_INTERP", "0");
+        bof3x::ConfigApplyEnvironment(game, c, false);
+        Check(Env("BOF3X_INTERP") == "0", "a BOF3X_INTERP already set is kept", Env("BOF3X_INTERP"));
+    }
+    WriteAll(a, "[bof3x]\r\n");
+    bof3x::Config none;
+    Check(bof3x::ConfigLoad(a, none, err) && !none.interp, "no interp= line is off");
+    for (const char* bad : {"2", "-1", "on", "true"}) {
+        WriteAll(a, std::string("[bof3x]\r\ninterp=") + bad + "\r\n");
+        bof3x::Config c;
+        Check(bof3x::ConfigLoad(a, c, err) && !c.interp, (std::string("interp=") + bad + " is the default").c_str(),
+              std::to_string(c.interp));
+    }
+    SetEnvironmentVariableA("BOF3X_INTERP", nullptr);
+    ClearEnv();
+    DeleteFileW(a.c_str());
+}
+
 // Finding 7: psp= checked up front by the DLL's rule, as opt= is.
 void TestPspValid() {
     std::string why;
@@ -1971,6 +2008,8 @@ int main() {
     TestPresetPlan();
     std::printf("wide= (DIV-0041: off, 16:9, 21:9)\n");
     TestWide();
+    std::printf("interp= (DIV-0230: the in-between frame)\n");
+    TestInterp();
     std::printf("cache path code page\n");
     TestCacheCodePage();
     std::printf("the row above the text (docs/mods.md)\n");
