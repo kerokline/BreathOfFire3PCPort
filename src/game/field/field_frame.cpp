@@ -49,13 +49,15 @@ void BandNote(unsigned char* sprite) {
     if (field_frame::g_band_count < sizeof field_frame::g_band / sizeof field_frame::g_band[0]) field_frame::g_band[field_frame::g_band_count++].sprite = sprite;
 }
 
-// Just before the draw pass: each noted sprite still flagged off screen, still
-// not a model and not already on the list, appended while the list has room.
+// Just before the draw pass: each noted sprite still flagged off screen and
+// not already on the list, appended while the list has room. A model (+0x24
+// bit 6) is appended too since 2026-11-15: the pass draws it through
+// Sprite_AddDrawRecords only where field_frame::BandModelFits lets it.
 void BandAppend() {
     field_frame::g_band_added = 0;
     for (unsigned i = 0; i < field_frame::g_band_count; ++i) {
         field_frame::BandSprite& b = field_frame::g_band[i];
-        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40) || (b.sprite[0x24] & 0x40)) continue;
+        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40)) continue;
         const unsigned char n = Sprite_DrawListCount;
         if (n >= 0x28) break;
         bool listed = false;
@@ -479,8 +481,9 @@ BandCheck BandSelfTest(void* theirs) {
         ++out.rounds;
     }
 
-    // The append: 0x26 entries the frame built, six noted - appended; its
-    // flag cleared since; a model; already listed; appended; no room left.
+    // The append: 0x25 entries the frame built, six noted - appended; its
+    // flag cleared since; a model, appended (2026-11-15); already listed;
+    // appended; no room left.
     static unsigned char objects[8][kObjectBytes];
     for (unsigned i = 0; i < 8; ++i) {
         std::memset(objects[i], 0, kObjectBytes);
@@ -489,19 +492,20 @@ BandCheck BandSelfTest(void* theirs) {
     }
     objects[3][0] = 0x01;     // its flag cleared since
     objects[4][0x24] = 0x40;  // a model
-    for (unsigned i = 0; i < 0x26; ++i) Sprite_DrawList[i] = objects[0];
+    for (unsigned i = 0; i < 0x25; ++i) Sprite_DrawList[i] = objects[0];
     Sprite_DrawList[7] = objects[5];   // already listed
-    Sprite_DrawListCount = 0x26;
+    Sprite_DrawListCount = 0x25;
     field_frame::g_band_count = 0;
     static const unsigned kNoted[] = {1, 3, 4, 5, 2, 6};
     for (const unsigned i : kNoted) BandNote(objects[i]);
     BandAppend();
-    bool ok = Sprite_DrawListCount == 0x28 && Sprite_DrawList[0x26] == objects[1] && Sprite_DrawList[0x27] == objects[2] &&
-              field_frame::g_band_added == 2 && field_frame::g_band_count == 0;
-    for (unsigned i = 0; i < 0x26; ++i) ok = ok && Sprite_DrawList[i] == (i == 7 ? objects[5] : objects[0]);
+    bool ok = Sprite_DrawListCount == 0x28 && Sprite_DrawList[0x25] == objects[1] && Sprite_DrawList[0x26] == objects[4] &&
+              Sprite_DrawList[0x27] == objects[2] && field_frame::g_band_added == 3 && field_frame::g_band_count == 0;
+    for (unsigned i = 0; i < 0x25; ++i) ok = ok && Sprite_DrawList[i] == (i == 7 ? objects[5] : objects[0]);
     for (unsigned i = 0; i < 8; ++i) std::memset(objects[i] + 0x40, 0xEE, 8);   // the draw's scale writes
     BandRestore();
-    for (unsigned i = 1; i <= 2; ++i)
+    static const unsigned kAppended[] = {1, 4, 2};
+    for (const unsigned i : kAppended)
         for (unsigned k = 0; k < 8; ++k) ok = ok && objects[i][0x40 + k] == static_cast<unsigned char>(0x10 * i + k);
     ok = ok && objects[6][0x40] == 0xEE && objects[5][0x40] == 0xEE && field_frame::g_band_added == 0;   // never appended: untouched
     out.append_ok = ok;

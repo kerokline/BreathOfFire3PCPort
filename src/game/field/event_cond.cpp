@@ -282,7 +282,36 @@ constexpr unsigned kPrimBytes = 0x48, kQuadBytes = 0x28, kRecordBytes = 12;
 
 const unsigned char* ObjectData() { return Get<const unsigned char*>(Sprite_Current, 0x54); }
 
+// DIV-0041's band models (field_frame.h): whether BandAppend put the sprite on
+// the list, and a model's quads as Sprite_AddDrawRecords counts them.
+bool BandAdded(const unsigned char* object) {
+    for (unsigned i = 0; i < field_frame::g_band_added; ++i)
+        if (field_frame::g_band[i].sprite == object) return true;
+    return false;
+}
+unsigned ModelQuads(const unsigned char* object) {
+    return static_cast<std::uint16_t>(static_cast<std::int8_t>(Get<const unsigned char*>(object, 0x54)[0]));
+}
+
 }  // namespace
+
+bool field_frame::BandModelFits(const unsigned char* object, unsigned records, unsigned next) {
+    if (g_band_added == 0 || !BandAdded(object)) return true;   // the original's own: as ever
+    constexpr unsigned kRecords = 100;   // Sprite_DrawRecords: 300 longs
+    unsigned quads = ModelQuads(object), layer_quads = quads;
+    const unsigned count = Sprite_DrawListCount;
+    for (unsigned k = next; k < count; ++k) {
+        const unsigned char* const other = Sprite_DrawList[k];
+        if (!(other[0x24] & 0x40) || BandAdded(other)) continue;
+        const unsigned n = ModelQuads(other);
+        quads += n;
+        if (other[0x33] == object[0x33]) layer_quads += n;   // the layer: the key's high byte
+    }
+    if (records + layer_quads > kRecords) return false;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+    const unsigned char* const start = Gfx_PacketNext;
+    return Low32(start) + quads * kPrimBytes <= limit;
+}
 
 // sprite_pose's callee seam, moved here from sprite_pose.cpp by tools/retire_shells.py
 // (docs/source-layout-round.md 5): the group's lowest function lives in this file.

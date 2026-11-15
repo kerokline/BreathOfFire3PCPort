@@ -11286,6 +11286,31 @@ already did. `python tools/recipe_saves.py check` swaps and hands back
 made-up files with the save on another drive than the checkout, and passes
 (`C:` against `D:`). Tooling: no ledger entry.
 
+## D425 — 21:9: a large tree vanishes while half of it is in the picture (ours, DIV-0041's band; seen 2026-11-15; fixed by DIV-0041's amendment)
+
+**Seen:** the owner, 2026-11-15, playing at 21:9 (`wide=2`) in area 9: the big
+autumn tree at the left of the clearing goes in and out of sight as the
+camera moves, first its trunk and then all of it, while the mushrooms at its
+foot (map content) stay. Replayed from the owner's save in a copy of the
+install: the tree is drawn at recipe frame 530 and gone at 540, with its
+trunk about 40 px inside the picture's left edge.
+
+**Cause:** the tree is a model sprite: a type-0x0A sprite with `+0x24` bit 6,
+drawn as quads by `Sprite_AddDrawRecords` `0x57BAE0`. `Sprite_ProjectA`
+`0x57B860` culls a type-0x0A sprite at `Sprite_ScreenMargins`' `[-80, 400]`
+or `[-100, 420]`. The ultrawide round (UC2, 2026-10-13) drew such a sprite in
+the bands through a side list, but left models out
+([`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 2 and 6.3). So a model
+kept Capcom's margins, which lie 40 and 20 px inside the 21:9 view. At 16:9
+they are 27 and 47 px outside it, so a model wider than twice that pops
+there too. Not in the PSX or in Capcom's PC: neither has a wide view.
+
+**Status:** fixed by DIV-0041's amendment of 2026-11-15: a band model is
+appended to the draw list like any other band sprite, and drawn only where
+its quads leave room for the original's own models
+([`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 8). Seen fixed in the
+same replay. Other models (every area's) were not looked at one by one.
+
 ## D424 — The 241st `ja-JP` pair code would carry a NUL in its code (ours, `tools/loc_build.py`; latent; fixed 2026-11-14)
 
 **Found:** the New Game round's group PK, 2026-11-14, while appending the

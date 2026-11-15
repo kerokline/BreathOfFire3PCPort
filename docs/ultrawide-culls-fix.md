@@ -225,6 +225,7 @@ not touched.
 - A breath mote stops being drawn at the 320 view's edge. At 16:9 it has
   done so since the mode was built.
 - `ProjectA`'s model sprites (`+0x24` bit 6) pop at the table's margins.
+  (Until 2026-11-15: section 8 draws them in the bands.)
 
 ## 4. Measured
 
@@ -289,10 +290,11 @@ rounds 0 (`EffectKind18Sub0D_DrawGlow` reached 12,000 times); `effect_5d`
    mote would need a copy of the ring that does not draw a number (for
    example, the last frame's radius kept for a mote in the band). That is a
    staging-class change to how Capcom's effect looks, not a cull.
-3. **`ProjectA`'s models** in the band: drawing them means checking
+3. **`ProjectA`'s models** in the band (**done 2026-11-15, section 8**: the owner's tree in area 9): drawing them means checking
    `Sprite_AddDrawRecords` for state left behind (the GTE matrix push). No
    decision is needed unless a census picture shows one.
 
+## 7. For the other files
 ## 7. For the other files
 
 **`docs/DIVERGENCE.md`, draft B: an amendment of DIV-0041:**
@@ -337,3 +339,63 @@ widened at both widths, two left as logic (a sound, a `Rand`)."
   the ring draws from `Rand`".
 - Section 2's nine readers gain the two whole-byte free-record tests
   (section 1.2 here).
+
+## 8. The band's models (2026-11-15, after the round)
+
+**The report.** The owner, at 21:9 in area 9: a large tree at the left edge
+goes in and out of sight (known-defects D425). Replayed from the owner's save
+in a copy of the install (`tools/input_run.py --wide 2`,
+`BOF3X_SHOT_EVERY=10`, the leader walked right): the whole tree is drawn at
+recipe frame 530 and gone at 540, with its trunk about 40 px inside the left
+edge. The mushrooms at its foot and its shadow are map content and stay.
+
+**The cause** is section 6's call 3. The tree is a model: a type-0x0A sprite
+with `+0x24` bit 6. `BandAppend` skipped models, so the tree kept
+`Sprite_ScreenMargins`' margins, and at 21:9 those are inside the view.
+
+**What section 2 feared, read again.** `Sprite_AddDrawRecords` `0x57BAE0`
+(`event_cond.cpp`):
+
+- It has no cull, and it writes nothing in the object: not bit 7, and not
+  `+0x40`, which it only reads when `+0x48` is 0. So the flag stays as
+  `Sprite_ProjectA` set it, and `BandRestore` puts back bytes nobody changed.
+- When the packet pool has no room it returns 0 with the GTE matrix still
+  pushed. That is the original's behaviour for its own models. A band model
+  must not cause it for one of them by using the room first.
+- `Sprite_DrawPass` gathers a run's records in `Sprite_DrawRecords` (300
+  longs, 100 records), with no bound. A band model must not make an
+  original run pass 100.
+
+**The change.**
+
+- `BandAppend` (`sprite_2.cpp`, and the self-test's copy in
+  `field_frame.cpp`) no longer skips a model.
+- `field_frame::BandModelFits(object, records, next)` (`event_cond.cpp`):
+  true at once for any sprite `BandAppend` did not add. For a band model it
+  adds the model's quads to those of every model of the original's later on
+  the list. They must fit the packet pool, and this layer's must fit the 100
+  records with those already gathered. If not, the band model is not drawn
+  this frame.
+- `Sprite_DrawPass` asks it before it calls `Sprite_AddDrawRecords`. During
+  every fuzz the side list is empty and the answer is true.
+
+**Left** (as section 2's leftovers): `Light_Matrix`, `Light_AnglesCopy`, the
+GTE's loaded matrices, `Prim_VertexScratch` and `Sprite_DrawRecords` hold the
+last model drawn, which can be a band model. `layering::AfterModel`
+(DIV-0071) is given a band model's quads as any model's.
+
+**Measured.** The same replay on the new build: the tree stays until it has
+left the picture. The whole self-test suite
+(`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`, three ini-less
+launcher copies, the owner's install as the game) exits 0 at `BOF3X_WIDE`
+unset, 1 and 2: `inject: 10087 ours, 0 left original`, no non-zero `MISMATCH`
+line. `field_frame`'s band: not run narrow; at 53 columns 4,000 rounds, 425
+sprites noted, 0 mismatches, the append ok; at 120 columns 4,000 rounds, 545
+noted, 0 mismatches, the append ok (the fixed case now appends a model).
+`Sprite_DrawPass`'s own fuzz runs with the side list empty, so it compares
+the original's pass as before.
+
+**Not verified:** other areas' models were not looked at. The state hash was
+not run wide against narrow. The 16:9 view was not replayed: there the
+margins lay outside the view, so only a model wider than about 54 px a side
+could pop, and the same code now covers it.

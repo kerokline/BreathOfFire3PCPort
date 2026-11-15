@@ -3108,6 +3108,46 @@ designed in rather than bolted on.
   state compared, 4,000 rounds, 0 mismatches; the append and restore checked
   on a fixed case). Not seen in play.
 
+  **Amended 2026-11-15 (the owner's tree in area 9,
+  [`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) section 8): the band's
+  model sprites are drawn.** The 2026-10-13 amendment above left a model
+  sprite (`+0x24` bit 6, a type-0x0A sprite drawn as quads through
+  `Sprite_AddDrawRecords` `0x57BAE0`) off the band's side list, so it kept
+  `Sprite_ScreenMargins`' `[-80, 400]` / `[-100, 420]` for its picture. Those
+  lie 40 and 20 px INSIDE the 21:9 view (`[-120, 440]`), and only 27 and 47
+  px past the 16:9 one. The owner, 2026-11-15, playing at 21:9: a large tree
+  in area 9 goes in and out of sight at the left edge (known-defects D425).
+  It is such a model, about 140 px wide, and it vanished whole while half of
+  it was still in the picture. *Original behaviour:* one margin for the flag,
+  the list and the picture. *Before this amendment:* the same, for a model, at
+  every width. *New behaviour:* `BandAppend` puts a noted model on
+  `Sprite_DrawList` as it does any other band sprite, so its picture reaches
+  the margins moved out by the columns (at 120: `[-200, 520]` /
+  `[-220, 540]`, 80 and 100 px past the view, the room Capcom's margins give
+  at 320). The off-screen flag, the original's list and its order are as
+  before: a model's draw has no cull of its own and writes neither the flag
+  nor the scale dwords. `Sprite_DrawPass` `0x593060` draws a band model only
+  where `field_frame::BandModelFits` lets it: its quads, with those of every
+  model of the original's still to come on the list, must fit
+  `Sprite_DrawRecords`' 100 records (this layer's) and the packet pool. A
+  band model therefore cannot run the record array over, and cannot make
+  `Sprite_AddDrawRecords` refuse one of the original's, which would return
+  with the GTE matrix still pushed. A sprite the original listed is never
+  asked. *Left as the draw's leftovers* (picture state, as section 2's):
+  `Light_Matrix`, `Light_AnglesCopy`, the GTE's loaded matrices,
+  `Prim_VertexScratch` and `Sprite_DrawRecords` hold the last model drawn,
+  which can now be a band model. *Why:* the owner's report; and UC2's own
+  note that models were left only until a picture showed one. *Verification:*
+  the owner's save replayed at 21:9 in a copy of the install
+  (`tools/input_run.py`, a frame every 10): before, the tree is gone between
+  frames 530 and 540 with its trunk about 40 px inside the left edge; after,
+  it stays until it has left the picture. `field_frame`'s fixed case now
+  appends a model; the band test at 53 and 120
+  columns is at 0 mismatches (4,000 rounds each, 425 and 545 sprites noted,
+  the append ok), and the whole self-test suite (`BOF3X_SHADOW='*'`) exits 0
+  narrow, at 16:9 and at 21:9 with 10087 ours and no non-zero mismatch line. Narrow, nothing changes: the side list
+  is empty.
+
   **Amended 2026-10-13 (the ultrawide round, group SL,
   [`ultrawide-slides.md`](ultrawide-slides.md)): the faster slide - the
   slide-off bounds split from the picture.** The fourteen slide-off states of
@@ -3360,6 +3400,17 @@ designed in rather than bolted on.
   fills and bars (kinds 0xAC, 0xAA, 0xA8, 0xB0, `Widescreen_FillX` ..
   `FillRight`) now run the picture's full width, not to a 320 frame. The
   self-test's list check is 2 areas, and 198's row is unframed (0, 53, 120).
+  **Amended 2026-11-15: area 90 taken off the list.** The owner, at the
+  camp outside the tent in area 90 at 21:9: the bars should go, so that the
+  camp is a circle in the dark. (The captures of 2026-10-21 showed area 90
+  from inside the tent, where the bars lie on black.) `pillarbox.h` `Listed`
+  is now 31 alone; area 90 draws the full wide picture at 21:9, and its side
+  boxes anchor to the picture's edge again. The self-test's list check is 1
+  area, 90's row is unframed (0, 53, 120), and the "holds" control is checked
+  on the width rule's rows, since no listed area is of the 426 class now.
+  Seen: the owner's save replayed at 21:9 in a copy of the install, bars
+  before and none after (`pillarbox frame ..., area 90 ... (bars on)` is no
+  longer logged).
 - **Switch:** ini:wide=0
 - **Default:** off - `wide=0` is the launcher's default (`src/launcher/config.h`)
 - **Player:** yes

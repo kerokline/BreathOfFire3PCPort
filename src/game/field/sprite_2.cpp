@@ -116,13 +116,15 @@ void GrownLayerBelow(unsigned char item) {
 namespace field_frame { unsigned g_band_added; }
 namespace {
 
-// Just before the draw pass: each noted sprite still flagged off screen, still
-// not a model and not already on the list, appended while the list has room.
+// Just before the draw pass: each noted sprite still flagged off screen and
+// not already on the list, appended while the list has room. A model (+0x24
+// bit 6) is appended too since 2026-11-15: the pass draws it through
+// Sprite_AddDrawRecords only where field_frame::BandModelFits lets it.
 void BandAppend() {
     field_frame::g_band_added = 0;
     for (unsigned i = 0; i < field_frame::g_band_count; ++i) {
         field_frame::BandSprite& b = field_frame::g_band[i];
-        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40) || (b.sprite[0x24] & 0x40)) continue;
+        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40)) continue;
         const unsigned char n = Sprite_DrawListCount;
         if (n >= 0x28) break;
         bool listed = false;
@@ -537,7 +539,10 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     Sprite_Current = object;
                     unsigned long* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
                     if (object[0x24] & 0x40) {
-                        const unsigned char added = static_cast<unsigned char>(draw_pass::g_add_records(record));
+                        // DIV-0041 (2026-11-15): a model from the wide picture's band draws only
+                        // with room to spare for the original's own (field_frame.h).
+                        const unsigned char added = field_frame::BandModelFits(object, records, sprite + 1u)
+                                                        ? static_cast<unsigned char>(draw_pass::g_add_records(record)) : 0;
                         records = static_cast<unsigned char>(records + added);
                         // What the model drew, kept for the next pass's Defer (layering.h, issue 141).
                         if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
