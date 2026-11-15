@@ -153,6 +153,12 @@ same kind of test (`0xA000`, `0x5000`). None of them changes.
   `BareRetZero` ([`name-entry-restoration.md`](name-entry-restoration.md) 1).
   The renamer's surviving steps (`CommuName_*`, `rest_4d.cpp`) test words 7 / 8
   and the d-pad only. The tests apply when I34 restores the routine.
+  **Applied 2026-11-14 by the New Game round** (DIV-0231, DIV-0233;
+  [`new-game-round.md`](new-game-round.md) 3a M6, 5b, 4c-BT): the routine
+  `src/game/menu/name_grid.cpp` tests every face and shoulder bit through
+  `Sigma` for the Japan family and `SigmaFrom(West)` for the West, the hand
+  on the repeated word's `0xF00F`, START never moved; the legend draws each
+  row's button by the same map.
 - **The ram (area 121): nothing to change.** `Area121_PushObject`
   (`area_w3b.cpp:895`) tests `Input_Held` against word 1, the Move line's
   word (`kButtonMap1` `0x903582`). So it already follows the Config. The same

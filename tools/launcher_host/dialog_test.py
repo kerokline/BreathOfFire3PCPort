@@ -183,6 +183,7 @@ TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IDC_RUBY, IDC_TAB_MODS, IDC_TAB_SETTINGS = 1012, 1026, 1022
 # Game Options' Cheats sub-tab and its third row, Page 1 / Page 2 (the owner's call, 2026-10-30).
 IDC_TAB_GAME, IDC_SHEET0, IDC_CH_STEAL_, IDC_CH_INFO_ = 1025, 1036, 1220, 1222
+IDC_EXTRA_NAMES, IDC_EXTRA_OPTIONS = 1750, 1752   # Extras' Page 2 (docs/new-game-round.md 4c-LT)
 IDC_MOD_LIST, IDC_MOD_REMOVE, IDC_MOD_PATH, IDC_MOD_ADD, IDC_MOD_STATUS, IDC_MOD_LOG = 1700, 1701, 1702, 1704, 1705, 1706
 # The Mods tab's sub-row (Data, Extras; the owner's call, 2026-10-22) and Extras' toggle, ruby_ui=:
 # the Settings page's Row above the text box and its label hidden unless it is on.
@@ -682,7 +683,15 @@ def ruby_ui_checks(env, report):
         shot(dlg, "solo_character")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         got["back"] = (vis(item, IDC_EXTRA_RUBY), vis(item, IDC_MOD_LIST))   # the tab keeps its sub-page
-        got["sheets_hidden"] = [vis(item, IDC_SHEET0 + k) for k in range(2)]
+        # Extras on two pages since the New Game round (docs/new-game-round.md 4c-LT): the third
+        # row over Extras, Page 1 up; Page 2 holds New Game's two boxes, ticked (an empty off=)
+        got["sheets_extras"] = [(text(item(IDC_SHEET0 + k)), vis(item, IDC_SHEET0 + k)) for k in range(2)]
+        u.SendMessageW(item(IDC_SHEET0 + 1), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["newgame"] = (vis(item, IDC_EXTRA_RUBY), vis(item, IDC_EXTRA_NAMES), vis(item, IDC_EXTRA_OPTIONS),
+                          u.SendMessageW(item(IDC_EXTRA_NAMES), BM_GETCHECK, 0, 0),
+                          u.SendMessageW(item(IDC_EXTRA_OPTIONS), BM_GETCHECK, 0, 0))
+        shot(dlg, "extras_page2")
     st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\n", act_off, env)
     report("Row above the text toggle: no ruby_ui=, no mod: the box and its label hidden",
            got.get("settings") == (False, False, True), repr(got.get("settings")))
@@ -708,9 +717,12 @@ def ruby_ui_checks(env, report):
     report("  the Cheats sub-tab: a third row, Page 1 / Page 2, Page 1 up (Steal shown, the enemy box not)",
            got.get("sheets") == [("Page 1", True), ("Page 2", True)] and got.get("page1") == (True, False),
            "%r %r" % (got.get("sheets"), got.get("page1")))
-    report("  Page 2 on its button (the enemy box shown, Steal not); the row hidden over Mods",
-           got.get("page2") == (False, True) and got.get("sheets_hidden") == [False, False],
-           "%r %r" % (got.get("page2"), got.get("sheets_hidden")))
+    report("  Page 2 on its button (the enemy box shown, Steal not); over Mods' Extras the row Page 1 / Page 2",
+           got.get("page2") == (False, True) and got.get("sheets_extras") == [("Page 1", True), ("Page 2", True)],
+           "%r %r" % (got.get("page2"), got.get("sheets_extras")))
+    report("  Extras' Page 2: New Game's two boxes shown and ticked, Page 1's toggle not; off= written as read",
+           got.get("newgame") == (False, True, True, 1, 1) and lines(ini).get("off") == "",
+           "%r %r" % (got.get("newgame"), lines(ini).get("off")))
     report("  Solo character: the mode, champion and option boxes shown, the cheats and the third row not",
            got.get("solo") == (True, True, True, False, [False, False]), repr(got.get("solo")))
     report("  ruby_ui=1 written; ruby=en-US as read",

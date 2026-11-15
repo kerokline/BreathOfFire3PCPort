@@ -1,0 +1,26 @@
+# The original Chinese (no language layer): New Game -> no name screen ->
+# the options (the Config screen) -> the opening scene, to its scripted battle.
+# Proves (docs/new-game-round.md 4c-TF, 4c-RT): where there is no grid chunk
+# NewGameNameEntry shows nothing, NewGameOptions still puts the Config screen
+# (Game_Step 0x66C7EA == 4) between New Game and the game (Game_Step 5), and
+# the opening runs to the battle (Game_Mode 0x66C7E8 == 5).
+# Needs: NewGameOptions on (the header below keeps input_run.py from turning
+# the screens off), no --lang and no launcher ini language (the original
+# Chinese). No slot file in the game folder (the seek also handles one).
+# Hand-written: its shot lines are steps of their own.
+# screens new-game
+wait 480
+press start
+wait 40
+seek up 0x6BDF85 u8 == 0 max 3
+press circle
+until 0x66C7EA u16 == 4 timeout 600
+wait 60
+shot config 1
+press start
+until 0x66C7EA u16 == 5 timeout 600
+mark entered_game_step_5
+seek circle 0x66C7E8 u16 == 5 max 220
+wait 90
+shot opening_battle 1
+end

@@ -7,6 +7,7 @@
 #include "hook/code_names.h"   // the behaviours block: the release's behaviours (docs/mods.md 11)
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -1264,6 +1265,116 @@ SoloState ConfigSoloState(const Config& cfg, bool mode_ticked, const std::vector
             s.why = L"off= in bof3x.ini turns off SoloChampionIfPresent. That setting stays off.";
     }
     return s;
+}
+
+std::vector<std::string> ConfigCodeNamesKnown() {
+    return std::vector<std::string>(bof3::code_names::kNames, bof3::code_names::kNames + bof3::code_names::kCount);
+}
+
+namespace {
+// Whether the container at `path` has a chunk of `kind` and `tag`, walking the
+// 16-byte headers as the engine's start-up check does (dat_cache.cpp
+// CountByWin32; docs/DAT_CONTAINER.md): kind at +0, tag at +4, the payload's
+// size at +8, the next header after the payload. False when the file cannot
+// be opened or its headers do not end exactly at its end.
+bool DatHasChunk(const std::wstring& path, int kind, std::uint32_t tag) {
+    HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                           FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (f == INVALID_HANDLE_VALUE) return false;
+    LARGE_INTEGER size{};
+    bool found = false;
+    if (GetFileSizeEx(f, &size)) {
+        long long off = 0;
+        for (int n = 0; n < 4096 && off < size.QuadPart; ++n) {
+            unsigned char h[16];
+            DWORD got = 0;
+            LARGE_INTEGER at;
+            at.QuadPart = off;
+            if (off + 16 > size.QuadPart || !SetFilePointerEx(f, at, nullptr, FILE_BEGIN) ||
+                !ReadFile(f, h, 16, &got, nullptr) || got != 16)
+                break;
+            const std::int8_t k = static_cast<std::int8_t>(h[0]);
+            const std::uint32_t t = h[4] | h[5] << 8 | h[6] << 16 | static_cast<std::uint32_t>(h[7]) << 24;
+            const std::int32_t len =
+                static_cast<std::int32_t>(h[8] | h[9] << 8 | h[10] << 16 | static_cast<std::uint32_t>(h[11]) << 24);
+            if (len < 0) break;
+            if (k == kind && t == tag && len > 0) found = true;
+            off += 16 + static_cast<long long>(len);
+            if (off == size.QuadPart) {
+                CloseHandle(f);
+                return found;
+            }
+        }
+    }
+    CloseHandle(f);
+    return false;
+}
+}  // namespace
+
+bool ConfigLayerHasNameGrid(const std::wstring& game_dir, const std::string& language, const std::wstring& cache) {
+    if (language.empty() || language == kLanguageOriginal) return false;
+    std::wstring tag;
+    for (char c : language) tag += static_cast<wchar_t>(c);
+    // DIV-0089's precedence (dat_cache::PickOverlay): a cache that has the
+    // layer is the one read, whole - its FIRST.DAT or none.
+    if (CacheHasLayer(cache, L"loc", language.c_str()))
+        return DatHasChunk(cache + L"\\loc\\" + tag + L"\\dat\\FIRST.DAT", 22, 0);
+    return DatHasChunk(game_dir + L"\\DAT\\" + tag + L".FIRST.DAT", 22, 0);
+}
+
+NewGameState ConfigNewGameState(const Config& cfg, const std::string& language, bool has_grid,
+                                const std::string& preset_off, const std::vector<std::string>* known) {
+    NewGameState s;
+    const std::vector<std::string> release = known ? std::vector<std::string>() : ConfigCodeNamesKnown();
+    const std::vector<std::string>& have = known ? *known : release;
+    const auto knows = [&have](const char* name) { return std::find(have.begin(), have.end(), name) != have.end(); };
+
+    s.name_entry = true;
+    bool name_known = true, name_preset = false;
+    for (const char* name : kNameEntryCodes) {
+        s.name_entry = s.name_entry && !ConfigListTurnsOff(cfg.off, name);
+        name_known = name_known && knows(name);
+        name_preset = name_preset || ConfigListTurnsOff(preset_off, name);
+    }
+    if (!name_known) {
+        s.name_entry_why = L"This version of the game does not have the name entry screen.";
+    } else if (name_preset) {
+        s.name_entry_why = L"The preset (Settings, Preset) turns off the name entry screen when the game starts.";
+    } else if (!has_grid) {
+        if (language.empty() || language == kLanguageOriginal) {
+            s.name_entry_why = L"The Chinese (PC script) text has no name entry screen. No copy of the game has its "
+                               L"letters.";
+        } else {
+            const wchar_t* label = nullptr;
+            for (const LanguageInfo& l : kLanguages)
+                if (language == l.code) label = l.label;
+            const std::wstring name = label ? std::wstring(label) : ConfigFromUtf8(language);
+            s.name_entry_why = L"The files of this install for " + name +
+                               L" do not have the name entry screen. The importer adds it only from a copy of the "
+                               L"game that has it (Data, Sources).";
+        }
+    } else {
+        s.name_entry_enabled = true;
+    }
+
+    s.options = !ConfigListTurnsOff(cfg.off, kNewGameOptionsCode);
+    if (!knows(kNewGameOptionsCode))
+        s.options_why = L"This version of the game does not have the options screen at New Game.";
+    else if (ConfigListTurnsOff(preset_off, kNewGameOptionsCode))
+        s.options_why = L"The preset (Settings, Preset) turns off the options screen at New Game when the game starts.";
+    else
+        s.options_enabled = true;
+    return s;
+}
+
+std::string ConfigNewGameOffEdit(const std::string& off, int name_entry, int options) {
+    std::string out = off;
+    // ConfigBehaviourEdit's `want` is "the list turns it on": here, off= turns
+    // the change off, so a cleared box (0) wants the name listed.
+    if (name_entry >= 0)
+        for (const char* name : kNameEntryCodes) out = ConfigBehaviourEdit(out, name, name_entry == 0);
+    if (options >= 0) out = ConfigBehaviourEdit(out, kNewGameOptionsCode, options == 0);
+    return out;
 }
 
 std::string ConfigModOn(const std::vector<ModAsk>& asks, const std::string& playable, const std::string& on,

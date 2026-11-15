@@ -1,0 +1,34 @@
+# New Game -> the name screen -> Start with no letter entered -> the options
+# (the Config screen) -> Game_Step 5.
+# Proves (docs/new-game-round.md 4c-TF, 4c-RT): the all-blank finish keeps
+# record 0's default name (0x903A70 peeked before and after: equal; the log
+# says "record 0 keeps its default name") and the sequence goes on to the
+# Config screen (Game_Step 0x66C7EA == 4) and the game (Game_Step 5).
+# Needs: NewGameNameEntry and NewGameOptions on (the header below), a layer
+# with the grid chunk: en-US or ja-JP (Start is the finish on both families).
+# No slot file in the game folder (the seek also handles one). Hand-written:
+# its shot lines are steps of their own.
+# screens new-game
+wait 480
+press start
+wait 40
+seek up 0x6BDF85 u8 == 0 max 3
+press circle
+until 0x66C7EA u16 == 2 timeout 600
+until 0x6BDF86 u8 == 3 timeout 600
+wait 20
+shot name_empty 1
+peek 0x903A70 u32 name0_before
+peek 0x903A74 u32 name4_before
+press start
+until 0x66C7EA u16 == 4 timeout 600
+peek 0x903A70 u32 name0_after
+peek 0x903A74 u32 name4_after
+wait 60
+shot config 1
+press start
+until 0x66C7EA u16 == 5 timeout 600
+mark entered_game_step_5
+wait 60
+shot game_step_5 1
+end

@@ -23,6 +23,7 @@
 #include "game/cheats.h"
 #include "game/psp_code.h"
 #include "game/solo/solo.h"
+#include "game/core/new_game.h"
 #include "input/button_tests.h"
 #include "input/sigma.h"
 #include "game/gfx_flush.h"
@@ -887,6 +888,7 @@ namespace field_hidden { void SelfTest(); }
 namespace field_modes { void SelfTest(); }
 namespace field_o { void SelfTest(); }
 namespace game_last { void SelfTest(); }
+namespace name_grid { void SelfTest(); }
 namespace inventory_ops { void SelfTest(); }
 namespace item_use { void SelfTest(); }
 namespace magic_c1 { void SelfTest(); }
@@ -2804,6 +2806,11 @@ void InjectAll() {
                                 // compared Capcom's text draws (text_draw's, msgbox's)
     if (bof3::WantsShadow("button_tests"))   // group HT (docs/button-tests.md 4): the hard-coded tests' masks and four
         bof3x::input::button_tests::Check(); // of ours under stand-in Config words - after Arm, for the live table
+    if (bof3::WantsShadow("name_grid")) name_grid::SelfTest();   // the New Game round's NG (docs/new-game-round.md): the name entry's
+                                // routine over two synthetic grids; no game state, no layer read, so anywhere after the takeovers
+    new_game::Arm();            // the New Game round's TF (new_game.h): NewGameNameEntry and NewGameOptions, and the
+                                // snapshot participant NEWGAME - after every module's self-test (save_menu's fuzz compared
+                                // Capcom's TitleFlow_NewGame with both 0); BOF3X_SHADOW=new_game its own first
     shoulder_glyphs::Arm();     // DIV-0138 (docs/button-shoulder-corner.md): the item lists' L1 / R1 corner as sigma has
                                 // it - after sigma::Arm and after every module's self-test (menu_windows' compared the original's
                                 // Menu_DrawPiece)

@@ -2943,12 +2943,13 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 21, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 22, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
 //     DIV-0038, DIV-0064, DIV-0069, DIV-0148, kind 18 the reading row's,
 //     docs/reading-row.md 3, taken only from an optional layer, kind 19
 //     DIV-0203's corrected text block, and kind 21 DIV-0225's town warp,
-//     taken only with TownWarp on; kind 20 is read by the launcher alone);
+//     taken only with TownWarp on, and kind 22 the name entry's grid
+//     (docs/new-game-round.md 5a); kind 20 is read by the launcher alone);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and

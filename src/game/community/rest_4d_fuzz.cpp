@@ -13,11 +13,18 @@
 // is seeded below its own table's count. Every callee the standard set types
 // otherwise is re-listed here (registered before the standard rows: the
 // group's listing stands) with what the callee reads, cited.
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <initializer_list>
+#include <string>
+#include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/community/commu_name.h"
+#include "game/menu/name_grid.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_4d.h"
 #include "game/rest_4d_callees.h"
@@ -534,6 +541,421 @@ void __cdecl MemberEntryAbandoned() {
     B(Rest4c_Step_addr) = static_cast<unsigned char>(B(Rest4c_Step_addr) - 1);
 }
 
+// --- CommuNameGrid (the New Game round's CR) ----------------------------------------------
+//
+// Two APIs that are not the live unit: no grid (every call but `available`
+// a Fatal - the entry must not reach them), and a grid of the Japan family
+// that only a slot's steps see (call 6: they must not reach the rest).
+namespace ng = name_grid;
+namespace nd = name_grid::detail;
+
+[[noreturn]] void NoCall(const char* what) { bof3::Fatal("rest_4d CommuNameGrid: the entry called %s with no grid for it", what); }
+bool NoGridAvailable() { return false; }
+bool YesAvailable() { return true; }
+ng::Family NoFamily() { NoCall("family"); }
+ng::Family JapanFamily() { return ng::Family::kJapan; }
+unsigned NoCount() { NoCall("cell_count"); }
+unsigned NoFirst() { NoCall("first_page"); }
+void NoDraw(ng::Copy, const ng::Cells&, int, int) { NoCall("draw"); }
+void NoLegend(ng::Copy, unsigned, int, int) { NoCall("legend"); }
+unsigned NoInput(ng::Copy, ng::Cells&, unsigned, const unsigned char*) { NoCall("input"); }
+unsigned NoEncode(const unsigned char*, unsigned char*, unsigned) { NoCall("encode"); }
+bool NoDecode(const unsigned char*, unsigned, unsigned char*) { NoCall("decode"); }
+const commu_name::GridApi kNoGrid{NoGridAvailable, NoFamily, NoCount, NoFirst, NoDraw, NoLegend, NoInput, NoEncode, NoDecode};
+const commu_name::GridApi kJapanSlotOnly{YesAvailable, JapanFamily, NoCount, NoFirst, NoDraw, NoLegend, NoInput, NoEncode, NoDecode};
+
+// The checks' count; a mismatch is logged (the first 24) and the test ends in a Fatal.
+unsigned g_checks = 0, g_bad = 0;
+void Check(bool ok, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+void Check(bool ok, const char* fmt, ...) {
+    ++g_checks;
+    if (ok) return;
+    if (++g_bad <= 24) {
+        char line[240];
+        va_list ap;
+        va_start(ap, fmt);
+        std::vsnprintf(line, sizeof line, fmt, ap);
+        va_end(ap);
+        bof3::Log("shadow      rest_4d CommuNameGrid MISMATCH: %s", line);
+    }
+}
+
+// Two synthetic grids, written to the chunk's layout (docs/new-game-round.md
+// 5a) and parsed by NG's reader; the codes and bytes are invented, never a
+// disc's. The West's: one page numbered 2, codes 1..4 (next, back, quit,
+// finish) in rows 3..6, row 7 empty, glyphs of one byte (0x30 + n) and,
+// past the first 60, of two (0x81, n), the space (code 0xFF) the byte 0x20
+// at row 6 column 0. The Japan family's: three pages from 0, codes 1..5
+// (next, back, page, quit, finish), glyphs of two bytes (0x82, n), the space
+// (0x81, 0x40) at page 0 row 2 column 5, holes in rows 5..7 of columns 0..9
+// on page 2.
+struct SynCell { unsigned char code, kind, b0, b1; };
+std::vector<unsigned char> BuildGrid(bool japan) {
+    const unsigned pages = japan ? 3 : 1, first = japan ? 0 : 2, codes = japan ? 5 : 4;
+    std::vector<unsigned char> b{1, static_cast<unsigned char>(japan ? 0 : 1), static_cast<unsigned char>(pages),
+                                 static_cast<unsigned char>(first), static_cast<unsigned char>(codes), 0, 0, 0};
+    const char id[12] = {'c', 'r', '-', 's', 'y', 'n', 't', 'h'};
+    b.insert(b.end(), id, id + 12);
+    unsigned n = 0;
+    for (unsigned p = 0; p < pages; ++p)
+        for (unsigned r = 0; r < 8; ++r)
+            for (unsigned c = 0; c < 12; ++c) {
+                SynCell cell{0, 0, 0, 0};
+                if (!japan && r == 7) cell = {0, 0, 0, 0};
+                else if (r >= 3 && c >= 10) cell = {static_cast<unsigned char>(r - 2), 3, 0, 0};
+                else if (japan && p == 2 && r >= 5 && c <= 9) cell = {0, 0, 0, 0};
+                else if (japan && p == 0 && r == 2 && c == 5) cell = {0xFF, 2, 0x81, 0x40};
+                else if (!japan && r == 6 && c == 0) cell = {0xFF, 1, 0x20, 0};
+                else if (japan) { cell = {static_cast<unsigned char>(6 + n), 2, 0x82, static_cast<unsigned char>(n)}; ++n; }
+                else if (n < 60) { cell = {static_cast<unsigned char>(6 + n), 1, static_cast<unsigned char>(0x30 + n), 0}; ++n; }
+                else { cell = {static_cast<unsigned char>(6 + n), 2, 0x81, static_cast<unsigned char>(n)}; ++n; }
+                b.insert(b.end(), {cell.code, cell.kind, cell.b0, cell.b1});
+            }
+    if (japan) b.insert(b.end(), {1, 0, 0, 4, 2, 1, 0, 4, 3, 4, 1, 4, 4, 2, 0, 2, 5, 3, 0, 2});
+    else b.insert(b.end(), {1, 0, 0, 4, 2, 1, 0, 4, 4, 2, 0, 2, 5, 3, 0, 2});
+    const unsigned slots = japan ? 7 : 4;
+    for (unsigned k = 0; k < 2; ++k) {
+        b.insert(b.end(), {static_cast<unsigned char>(slots), 4, 6, 0});
+        for (unsigned s = 0; s < slots; ++s) b.insert(b.end(), {static_cast<unsigned char>('a' + s), 'b', 'c', 0, 0, 0});
+        b.insert(b.end(), {static_cast<unsigned char>(k == 0 ? 0x78 : 0x4D), 0x2F, 8, 4, 1, 0, 0, 0});
+        for (unsigned e = 0; e < 8; ++e) b.insert(b.end(), {static_cast<unsigned char>('A' + e), 'x', 0, 0});
+        b.insert(b.end(), {1, 0x2A, 6, 0, 0, 0x10, 0, 0});
+    }
+    return b;
+}
+
+nd::Grid g_west, g_japan;
+const nd::Grid* g_live = nullptr;    // the grid the synthetic API answers from
+nd::Keys g_keys{};                   // the keys its input step sees
+std::vector<unsigned short> g_sounds;
+unsigned g_draws = 0, g_legends = 0;
+int g_draw_x = 0, g_draw_y = 0;
+ng::Cells g_drawn{};
+
+// The test's pair table (DIV-0057's shape): the two-byte unit (0x9F, k) is the
+// pair of the Japan glyphs n = 10 + 2k and 11 + 2k.
+bool PairOf(std::uint32_t glyph, std::uint32_t* a, std::uint32_t* b) {
+    if ((glyph >> 8) != 0x1F) return false;
+    const unsigned k = glyph & 0xFF;
+    *a = 0x0200 | (10 + 2 * k);
+    *b = 0x0200 | (11 + 2 * k);
+    return true;
+}
+void SynPlay(unsigned short id) { g_sounds.push_back(id); }
+void PBox(int, int, int, int) {}
+void PText(int, int, int, int, const unsigned char*) {}
+void PHand(int, int) {}
+void PMode(unsigned, unsigned) {}
+void PTile(int, int, unsigned, unsigned, unsigned) {}
+void PPiece(int, int, unsigned, unsigned, unsigned) {}
+void PFrame(int, int, ng::Copy) {}
+constexpr nd::Painter kQuiet{PBox, PText, PText, PHand, PMode, PTile, PPiece, PFrame};
+
+bool SynAvailable() { return true; }
+ng::Family SynFamily() { return static_cast<ng::Family>(g_live->family); }
+unsigned SynCount() { return g_live->family == 0 ? 4u : 5u; }
+unsigned SynFirst() { return g_live->first; }
+void SynDraw(ng::Copy copy, const ng::Cells& c, int x, int y) {
+    if (copy != ng::Copy::kRenamer) bof3::Fatal("rest_4d CommuNameGrid: the renamer drew New Game's copy");
+    ++g_draws;
+    g_drawn = c;
+    g_draw_x = x;
+    g_draw_y = y;
+    nd::DrawGrid(*g_live, copy, c, x, y, kQuiet);
+}
+void SynLegend(ng::Copy copy, unsigned page, int x, int y) {
+    if (copy != ng::Copy::kRenamer) bof3::Fatal("rest_4d CommuNameGrid: the renamer drew New Game's legend");
+    ++g_legends;
+    nd::DrawLegend(*g_live, copy, page, x, y, kQuiet, [](std::uint16_t bit) { return bit; });
+}
+unsigned SynInput(ng::Copy copy, ng::Cells& c, unsigned room, const unsigned char* fallback) {
+    return nd::Step(*g_live, copy, c, g_keys, room, SynCount(), fallback, SynPlay);
+}
+unsigned SynEncode(const unsigned char* cells, unsigned char* out, unsigned room) { return nd::Encode(*g_live, cells, out, room); }
+bool SynDecode(const unsigned char* stored, unsigned room, unsigned char* out) { return nd::Decode(*g_live, stored, room, out, PairOf); }
+const commu_name::GridApi kSynthetic{SynAvailable, SynFamily, SynCount, SynFirst, SynDraw, SynLegend, SynInput, SynEncode, SynDecode};
+
+// The code of the West glyph whose byte is `ch` (0x30 + n), of the Japan glyph n.
+unsigned char WestCode(unsigned char ch) { return static_cast<unsigned char>(6 + (ch - 0x30)); }
+unsigned char JapanCode(unsigned n) { return static_cast<unsigned char>(6 + n); }
+
+// An entry of the test's own: the PC's cells as an array.
+struct TestEntry {
+    unsigned char buffer[commu_name::kBufferBytes + 7];
+    unsigned char cursor, column, row, page, done, step;
+    commu_name::EntryBytes Bytes() { return {buffer, &cursor, &column, &row, &page, &done, &step}; }
+};
+
+void Put5(unsigned char* to, std::initializer_list<unsigned char> cells) {
+    unsigned i = 0;
+    for (unsigned char c : cells) to[i++] = c;
+}
+
+bool CellsAre(const unsigned char* got, std::initializer_list<unsigned char> want) {
+    unsigned i = 0;
+    for (unsigned char w : want)
+        if (got[i++] != w) return false;
+    return true;
+}
+
+nd::Keys Press(bool confirm = false, bool finish = false) {
+    nd::Keys k{};
+    k.confirm = confirm;
+    k.finish = finish;
+    return k;
+}
+
+// The renamer's grid paths on the West grid: GridOn, the stored name to
+// cells, the entry-in, the input's answer and step, the answered end, the
+// drawn cells, the shown name, a round trip through the slot commit's bytes.
+void WestChecks() {
+    namespace cg = commu_name;
+    g_live = &g_west;
+    const unsigned char A = WestCode('0'), Bc = WestCode('1'), C = WestCode('2');
+    unsigned char out[5];
+
+    // GridOn: the switch, the grid, call 6.
+    cg::g_grid = 0;
+    Check(!cg::GridOn(true) && !cg::GridOn(false), "GridOn with the switch off");
+    cg::g_grid = 1;
+    Check(cg::GridOn(true) && cg::GridOn(false), "GridOn with a West grid");
+
+    // The stored name: the PC's 0x20 padding, a blank inside, a NUL, all blank.
+    const unsigned char padded[5] = {'0', '1', 0x20, 0x20, 0x20};
+    cg::StoredToCells(padded, 5, out);
+    Check(CellsAre(out, {A, Bc, 0xFF, 0xFF, 0xFF}), "padded slot name -> %02X %02X %02X", out[0], out[1], out[2]);
+    const unsigned char inner[5] = {'0', 0x20, '1', 0x20, 0x20};
+    cg::StoredToCells(inner, 5, out);
+    Check(CellsAre(out, {A, 0xFF, Bc, 0xFF, 0xFF}), "a blank inside -> %02X %02X %02X", out[0], out[1], out[2]);
+    const unsigned char nul[5] = {'0', 0, '1', '2', 0};
+    cg::StoredToCells(nul, 5, out);
+    Check(CellsAre(out, {A, 0xFF, 0xFF, 0xFF, 0xFF}), "a NUL ends the name");
+    const unsigned char blanks[5] = {0x20, 0x20, 0x20, 0x20, 0x20};
+    cg::StoredToCells(blanks, 5, out);
+    Check(CellsAre(out, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), "an all-blank slot");
+    const unsigned char zeros[5] = {0, 0, 0, 0, 0};
+    cg::StoredToCells(zeros, 5, out);
+    Check(CellsAre(out, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), "an empty slot");
+    const unsigned char off[5] = {'0', 0x7E, 0, 0, 0};   // 0x7E is on no cell
+    cg::StoredToCells(off, 5, out);
+    Check(CellsAre(out, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), "a byte on no cell opens blank");
+    const unsigned char six[8] = {'0', '1', '2', '3', '4', '5', 0, 0};   // six cells in a record's field
+    cg::StoredToCells(six, 8, out);
+    Check(CellsAre(out, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), "six cells open blank");
+    const unsigned char wide[8] = {'0', '1', 0x81, 60, 0x81, 61, 0x81, 62};   // five cells, eight bytes
+    cg::StoredToCells(wide, 8, out);
+    Check(CellsAre(out, {A, Bc, static_cast<unsigned char>(6 + 60), static_cast<unsigned char>(6 + 61), static_cast<unsigned char>(6 + 62)}),
+          "five cells of eight bytes");
+    const unsigned char cut[5] = {'0', 0x81, 60, '1', 0x81};   // a lead byte at the field's end
+    cg::StoredToCells(cut, 5, out);
+    Check(CellsAre(out, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF}), "a lead byte at the end opens blank");
+
+    // Entry-in: the cells, the name cursor, column and row 0, the page 2, the step on.
+    TestEntry t{};
+    std::memset(t.buffer, 0xEE, sizeof t.buffer);
+    t.cursor = 3; t.column = 7; t.row = 4; t.page = 0; t.step = 0;
+    cg::GridEntryIn(t.Bytes(), padded, cg::kSlotRoom);
+    Check(CellsAre(t.buffer, {A, Bc, 0xFF, 0xFF, 0xFF}) && t.buffer[5] == 0xEE, "entry-in's buffer");
+    Check(t.cursor == 0 && t.column == 0 && t.row == 0 && t.page == 2 && t.step == 1, "entry-in's cells %u %u %u %u step %u",
+          t.cursor, t.column, t.row, t.page, t.step);
+
+    // The input: nothing pressed - no answer, no step.
+    g_keys = {};
+    g_sounds.clear();
+    t.cursor = 2;
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    Check(t.done == 0 && t.step == 1 && g_sounds.empty(), "an idle frame");
+    // A glyph: row 0 column 2 ('2') at the name cursor 2.
+    t.column = 2;
+    g_keys = Press(true);
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    Check(CellsAre(t.buffer, {A, Bc, C, 0xFF, 0xFF}) && t.cursor == 3 && t.done == 0 && t.step == 1 &&
+              g_sounds == std::vector<unsigned short>{0x103},
+          "a glyph entered");
+    // The byte room: a slot of five, four cells of one byte and a fifth of two.
+    Put5(t.buffer, {A, A, A, A, 0xFF});
+    t.cursor = 4; t.row = 6; t.column = 1;   // row 6 column 1: glyph 66, two bytes
+    g_sounds.clear();
+    g_keys = Press(true);
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    const unsigned char at66 = static_cast<unsigned char>(6 + 66);   // row 6 column 1, glyph 66: (0x81, 66)
+    Check(t.buffer[4] == 0xFF && g_sounds == std::vector<unsigned short>{0x107}, "a two-byte cell refused in a slot's fifth");
+    t.cursor = 3;
+    t.buffer[3] = 0xFF;
+    g_sounds.clear();
+    cg::GridEntryInput(t.Bytes(), cg::kMemberRoom);
+    Check(t.buffer[3] == at66 && g_sounds == std::vector<unsigned short>{0x103}, "a two-byte cell taken in a record's field");
+    // Finish: the answer 1, the step on, the trailing blanks 0.
+    Put5(t.buffer, {A, Bc, C, 0xFF, 0xFF});
+    t.row = 0; t.column = 0; t.cursor = 3;
+    g_sounds.clear();
+    g_keys = Press(false, true);
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    Check(t.done == 1 && t.step == 2 && CellsAre(t.buffer, {A, Bc, C, 0, 0}) && g_sounds == std::vector<unsigned short>{0x104},
+          "a finish: done %u step %u", t.done, t.step);
+    // The answered end: the layer's bytes, NUL-filled to nine.
+    const unsigned char fallback[20] = {'9', '8', 0x20, 0x20, 0x20};
+    unsigned n = cg::GridEntryAnswered(t.Bytes(), cg::kSlotRoom, fallback, cg::kSlotRoom);
+    Check(n == 3 && std::memcmp(t.buffer, "012\0\0\0\0\0\0", 9) == 0, "answered: %u bytes", n);
+    // The slot commit's bytes (0x45F650: five, a NUL as a space), read back.
+    unsigned char slot[5];
+    for (unsigned k = 0; k < 5; ++k) slot[k] = t.buffer[k] == 0 ? 0x20 : t.buffer[k];
+    cg::StoredToCells(slot, 5, out);
+    Check(CellsAre(out, {A, Bc, C, 0xFF, 0xFF}), "the committed slot reads back");
+    // An all-blank finish: five 0 cells; the answered end takes the default.
+    std::memset(t.buffer, 0xFF, 5);
+    t.step = 1;
+    g_keys = Press(false, true);
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    Check(t.done == 1 && CellsAre(t.buffer, {0, 0, 0, 0, 0}), "an all-blank finish");
+    n = cg::GridEntryAnswered(t.Bytes(), cg::kSlotRoom, fallback, cg::kSlotRoom);
+    Check(n == 5 && std::memcmp(t.buffer, "98   \0\0\0\0", 9) == 0, "the slot's default, %u bytes", n);
+    // A long default is cut at eight and given its NUL.
+    std::memset(t.buffer, 0, 5);
+    n = cg::GridEntryAnswered(t.Bytes(), cg::kMemberRoom, (const unsigned char*)"ABCDEFGHIJ", 12);
+    Check(n == 8 && std::memcmp(t.buffer, "ABCDEFGH\0", 9) == 0, "a long default cut at eight");
+    // Quit: the hand on code 3's row (5), confirm - no answer, the step on, no sound.
+    Put5(t.buffer, {A, 0xFF, 0xFF, 0xFF, 0xFF});
+    t.row = 5; t.column = 10; t.step = 1; t.done = 7;
+    g_sounds.clear();
+    g_keys = Press(true);
+    cg::GridEntryInput(t.Bytes(), cg::kSlotRoom);
+    Check(t.done == 0 && t.step == 2 && g_sounds.empty() && t.buffer[0] == A, "a quit: done %u step %u", t.done, t.step);
+
+    // The drawn cells: the PC's while on the grid, the open's while off it.
+    t.page = 0; t.row = 3; t.column = 4;
+    ng::Cells d = cg::GridDrawnCells(t.Bytes());
+    Check(d.page == 2 && d.row == 0 && d.column == 0, "page 0 drawn as the open's");
+    t.page = 2; t.row = 9;
+    d = cg::GridDrawnCells(t.Bytes());
+    Check(d.page == 2 && d.row == 0 && d.column == 0, "row 9 drawn as the open's");
+    t.row = 4; t.column = 11;
+    d = cg::GridDrawnCells(t.Bytes());
+    Check(d.page == 2 && d.row == 4 && d.column == 11, "a hand on the grid drawn where it is");
+
+    // The shown name: a blank inside as the space's byte, the trailing cut, NULs.
+    Put5(t.buffer, {A, 0xFF, Bc, 0xFF, 0xFF});
+    unsigned char shown[cg::kBufferBytes];
+    std::memset(shown, 0xEE, sizeof shown);
+    cg::GridShownName(t.Bytes(), shown);
+    Check(std::memcmp(shown, "0 1\0\0\0\0\0\0", 9) == 0, "the shown name");
+}
+
+// On the Japan family's grid: call 6, the four-cell cap (call 5), a pair code
+// opened, the page code, a record's eight bytes.
+void JapanChecks() {
+    namespace cg = commu_name;
+    g_live = &g_japan;
+    unsigned char out[5];
+    cg::g_grid = 1;
+    Check(!cg::GridOn(true) && cg::GridOn(false), "call 6: a slot keeps DIV-0075's end, a member has the grid");
+
+    // Four kana in eight bytes, as they are.
+    const unsigned char four[8] = {0x82, 0, 0x82, 1, 0x82, 2, 0x82, 3};
+    cg::StoredToCells(four, 8, out);
+    Check(CellsAre(out, {JapanCode(0), JapanCode(1), JapanCode(2), JapanCode(3), 0xFF}), "four kana");
+    // Five through a pair (DIV-0057): cut to four (call 5).
+    const unsigned char five[8] = {0x82, 0, 0x82, 1, 0x82, 2, 0x9F, 1};
+    cg::StoredToCells(five, 8, out);
+    Check(CellsAre(out, {JapanCode(0), JapanCode(1), JapanCode(2), JapanCode(12), 0xFF}), "five kana cut to four: %02X %02X %02X %02X %02X",
+          out[0], out[1], out[2], out[3], out[4]);
+    // The PC's one-byte 0x20 as a blank between kana; the two-byte space as one too.
+    const unsigned char spaced[8] = {0x82, 0, 0x20, 0x81, 0x40, 0x82, 1, 0};
+    cg::StoredToCells(spaced, 8, out);
+    Check(CellsAre(out, {JapanCode(0), 0xFF, 0xFF, JapanCode(1), 0xFF}), "blanks between kana");
+
+    // Entry-in opens on page 0; a page code, then the finish and the answered bytes.
+    TestEntry t{};
+    cg::GridEntryIn(t.Bytes(), four, cg::kMemberRoom);
+    Check(t.page == 0 && t.step == 1, "entry-in's page 0");
+    t.row = 5; t.column = 10;   // code 3, the page
+    g_keys = Press(true);
+    g_sounds.clear();
+    cg::GridEntryInput(t.Bytes(), cg::kMemberRoom);
+    Check(t.page == 1 && t.done == 0 && t.step == 1 && g_sounds == std::vector<unsigned short>{0x103}, "the page code");
+    t.cursor = 3;
+    g_keys = Press(false, true);
+    cg::GridEntryInput(t.Bytes(), cg::kMemberRoom);
+    Check(t.done == 1 && t.step == 2, "finish");
+    const unsigned n = cg::GridEntryAnswered(t.Bytes(), cg::kMemberRoom, (const unsigned char*)"x", 8);
+    Check(n == 8 && std::memcmp(t.buffer, four, 8) == 0 && t.buffer[8] == 0, "four kana answered: %u bytes", n);
+    // The drawn cells keep page 2 (the last in use), the legend and the grid draw it.
+    t.page = 2; t.row = 4; t.column = 9;
+    const ng::Cells d = cg::GridDrawnCells(t.Bytes());
+    Check(d.page == 2 && d.row == 4 && d.column == 9, "page 2 drawn where it is");
+    g_draws = g_legends = 0;
+    cg::g_api->draw(ng::Copy::kRenamer, d, 0x18, 0x67);
+    cg::g_api->legend(ng::Copy::kRenamer, d.page, 0xB0, 0x2B);
+    Check(g_draws == 1 && g_legends == 1 && g_drawn.page == 2, "the draws on page 2");
+}
+
+// A random walk on both grids and both paths: from a stored name drawn at
+// random, frames of random keys until a finish or a quit, every frame the
+// name within the field's bytes, the name cursor within the family's cells,
+// the hand on a cell that is not empty; a finished name, answered and read
+// back as the commit leaves it, is the same cells.
+std::uint32_t g_rng = 0x1DC2u;
+unsigned g_finished = 0, g_quit = 0, g_read_back = 0;   // the walk's ends, for the log
+std::uint32_t Rng() {
+    g_rng ^= g_rng << 13;
+    g_rng ^= g_rng >> 17;
+    g_rng ^= g_rng << 5;
+    return g_rng;
+}
+void Walk(const nd::Grid& grid, bool slot, unsigned rounds) {
+    namespace cg = commu_name;
+    g_live = &grid;
+    const unsigned room = slot ? cg::kSlotRoom : cg::kMemberRoom;
+    for (unsigned r = 0; r < rounds; ++r) {
+        unsigned char stored[8] = {};
+        for (unsigned i = 0; i < room; ++i) {
+            const unsigned pick = Rng() % 6;
+            stored[i] = pick == 0 ? 0x20 : pick == 1 ? 0 : grid.family == 0 ? static_cast<unsigned char>(0x82) : static_cast<unsigned char>(0x30 + Rng() % 40);
+            if (grid.family == 0 && stored[i] == 0x82 && i + 1 < room) stored[++i] = static_cast<unsigned char>(Rng() % 60);
+        }
+        TestEntry t{};
+        cg::GridEntryIn(t.Bytes(), stored, room);
+        for (unsigned frame = 0; frame < 400 && t.step == 1; ++frame) {
+            const std::uint32_t k = Rng();
+            g_keys = {};
+            switch (k % 12) {
+            case 0: g_keys.up = true; break;
+            case 1: g_keys.down = true; break;
+            case 2: g_keys.left = true; break;
+            case 3: g_keys.right = true; break;
+            case 4: case 5: case 6: g_keys.confirm = true; break;
+            case 7: g_keys.erase = true; break;
+            case 8: g_keys.next = true; break;
+            case 9: g_keys.back = true; break;
+            case 10: g_keys.page = true; break;
+            default: g_keys.finish = frame > 40 && (k >> 8) % 4 == 0; break;
+            }
+            g_sounds.clear();
+            cg::GridEntryInput(t.Bytes(), room);
+            const ng::Cells c{{t.buffer[0], t.buffer[1], t.buffer[2], t.buffer[3], t.buffer[4], 0}, t.cursor, t.column, t.row, t.page};
+            const int bytes = nd::EncodedLength(grid, c.buffer);
+            Check(bytes >= 0 && static_cast<unsigned>(bytes) <= room, "walk: %d bytes in a field of %u", bytes, room);
+            Check(t.cursor < (grid.family == 0 ? 4u : 5u), "walk: name cursor %u", t.cursor);
+            Check(grid.cell[t.page - grid.first][t.row * 12 + t.column].kind != 0, "walk: the hand on an empty cell");
+        }
+        if (t.step == 2) ++(t.done == 1 ? g_finished : g_quit);
+        if (t.step != 2 || t.done != 1) continue;
+        unsigned char cells[5];
+        std::memcpy(cells, t.buffer, 5);
+        if (cells[0] == 0) continue;   // all blank: the default's
+        cg::GridEntryAnswered(t.Bytes(), room, (const unsigned char*)"x", room);
+        unsigned char committed[8];
+        for (unsigned k = 0; k < room; ++k) committed[k] = slot && t.buffer[k] == 0 ? 0x20 : t.buffer[k];
+        unsigned char back[5];
+        cg::StoredToCells(committed, room, back);
+        for (unsigned k = 0; k < 5; ++k)
+            if (cells[k] == 0) cells[k] = 0xFF;
+        // a blank inside the name reads back as a blank; trailing ones were cut at the finish
+        Check(std::memcmp(back, cells, 5) == 0, "walk: the committed name reads back (%s, round %u)", slot ? "slot" : "member", r);
+        ++g_read_back;
+    }
+}
+
 }  // namespace
 
 void EntryAbandonTest() {
@@ -560,7 +982,12 @@ void EntryAbandonTest() {
                    [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
+    // DIV-0075's end is the entry's with no grid: CommuNameGrid's byte may be
+    // set by now, and a layer with a grid may be loaded.
+    const commu_name::GridApi* const api = commu_name::g_api;
+    commu_name::g_api = &kNoGrid;
     sh::Run(g);
+    commu_name::g_api = api;
     bof3::Log("shadow      rest_4d DIV-0075: %u entry steps, ours with the switch on, the step one more than Capcom's and "
               "nothing else, 0 MISMATCHES", n);
 }
@@ -584,6 +1011,81 @@ void SelfTest() {
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     sh::Run(g);
+}
+
+// CommuNameGrid's rows (the New Game round's CR). First the harness, the
+// form of DIV-0075's row above: with the switch on, an entry with no grid
+// must be Capcom's entry with DIV-0075's one step more and nothing else -
+// the six entry steps and the member's commit step, the two middle ones
+// through the wrappers that take that step back; then the slot's three steps
+// again with a grid of the Japan family loaded (call 6: they keep DIV-0075's
+// end, and touch nothing of the grid but its family). Then the grid's own
+// paths, which have no original to compare with, against the two synthetic
+// grids above: each rule of the helpers the steps call (commu_name.h), and a
+// random walk. The steps' remaining glue (the draws' coordinates, the panels
+// and the commit's two NULs) is the game's, seen live, not here.
+void GridTest() {
+    const commu_name::GridApi* const api = commu_name::g_api;
+    const unsigned char grid = commu_name::g_grid;
+    commu_name::g_grid = 1;
+
+    struct Row { U base; const void* wrapper; };
+    static const Row kRows[] = {
+        {0x45D610, nullptr},                                                  // CommuName_SlotEntryIn
+        {0x45D730, reinterpret_cast<const void*>(&SlotEntryAbandoned)},       // CommuName_SlotEntry
+        {0x45D7C0, nullptr},                                                  // CommuName_SlotEntryOut
+        {0x45E190, nullptr},                                                  // CommuName_MemberEntryIn
+        {0x45E2C0, reinterpret_cast<const void*>(&MemberEntryAbandoned)},     // CommuName_MemberEntry
+        {0x45E350, nullptr},                                                  // CommuName_MemberEntryOut
+        {0x45E520, nullptr},                                                  // CommuName_MemberEntryDone
+    };
+    constexpr unsigned kSlotRows = 3;   // the first three: a slot's steps
+    static sh::Clone chosen[7];
+    static unsigned index[7];
+    static unsigned* s_index = index;
+    const char* const only = std::getenv("BOF3X_R4D_ONLY");
+    for (unsigned pass = 0; pass < 2; ++pass) {
+        unsigned n = 0;
+        for (unsigned r = 0; r < (pass == 0 ? 7u : kSlotRows); ++r)
+            for (unsigned k = 0; k < kCount; ++k)
+                if (kAll[k].base == kRows[r].base && (!only || !*only || std::strstr(kAll[k].name, only))) {
+                    index[n] = k;
+                    chosen[n] = kAll[k];
+                    if (kRows[r].wrapper) chosen[n].ours = kRows[r].wrapper;
+                    ++n;
+                }
+        if (n == 0) continue;
+        sh::Group g = {pass == 0 ? "rest_4d CommuNameGrid, no grid" : "rest_4d CommuNameGrid, a slot under Japan", chosen, n,
+                       kCallees, sizeof kCallees / sizeof kCallees[0], kTables, sizeof kTables / sizeof kTables[0], kRegions,
+                       sizeof kRegions / sizeof kRegions[0], [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+        g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
+        g.field = true;
+        commu_name::g_api = pass == 0 ? &kNoGrid : &kJapanSlotOnly;
+        sh::Run(g);
+        bof3::Log("shadow      rest_4d CommuNameGrid: %u entry steps with the switch on and %s, Capcom's with DIV-0075's step, "
+                  "0 MISMATCHES", n, pass == 0 ? "no grid" : "a Japan grid on a slot");
+    }
+
+    // The grid's paths.
+    std::string why;
+    const std::vector<unsigned char> west = BuildGrid(false), japan = BuildGrid(true);
+    if (!nd::ParseChunk(west.data(), static_cast<std::uint32_t>(west.size()), g_west, why))
+        bof3::Fatal("rest_4d CommuNameGrid: the synthetic West grid does not parse: %s", why.c_str());
+    if (!nd::ParseChunk(japan.data(), static_cast<std::uint32_t>(japan.size()), g_japan, why))
+        bof3::Fatal("rest_4d CommuNameGrid: the synthetic Japan grid does not parse: %s", why.c_str());
+    commu_name::g_api = &kSynthetic;
+    g_checks = g_bad = g_finished = g_quit = g_read_back = 0;
+    WestChecks();
+    JapanChecks();
+    commu_name::g_grid = 1;
+    Walk(g_west, true, 600);
+    Walk(g_west, false, 600);
+    Walk(g_japan, false, 600);
+    commu_name::g_api = api;
+    commu_name::g_grid = grid;
+    if (g_bad != 0) bof3::Fatal("rest_4d CommuNameGrid: %u of %u checks of the grid's paths MISMATCH (logged above)", g_bad, g_checks);
+    bof3::Log("shadow      rest_4d CommuNameGrid: %u checks of the grid's paths on two synthetic grids (the walk: %u finished, %u "
+              "read back after the commit's bytes, %u quit), 0 MISMATCHES", g_checks, g_finished, g_read_back, g_quit);
 }
 
 }  // namespace rest_4d

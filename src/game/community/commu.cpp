@@ -513,6 +513,25 @@ extern "C" void __cdecl CommuMember_DrawFrame(int x, int y, unsigned pulse, unsi
     Commit(0x38);
 }
 
+// Where the frame's texture windows live. The PC's draw mode keeps the
+// window's pointer and reads the RECT when the frame is presented, after
+// Commu_DrawTiledFrame has returned: the original's RECT on its stack is gone
+// by then (an access violation in D3d_BuildPageTexture, group TF 2026-11-14;
+// the renamer's entry steps, its only callers, were cut, so it never ran in
+// play). Ours puts each RECT in the packet pool, as Menu_DrawTitleBox does,
+// where it lives to the present (the owner, 2026-11-14: unconditional, no
+// switch). The stack placement is the original's, kept for rest_4e's
+// self-test alone, which compares everything else of ours with Capcom's.
+static short* WindowInPool(short*) {
+    unsigned char* const pooled = Gfx_PacketNext;
+    Gfx_PacketNext = Gfx_PacketNext + 8;
+    return reinterpret_cast<short*>(pooled);
+}
+
+static short* WindowOnStack(short* stack) { return stack; }
+
+static void TiledFrame(int x, int y, unsigned w, unsigned h, short* (*place)(short*));
+
 // original 0x45F1A0: a frame of `w` x `h` cells of 8 (their low bytes) at (x,
 // y) - five SPRTs of texture page 0x1D, each through its own texture window
 // (a RECT on the original's stack: the top edge (0x70, 0x98), the bottom (0x98,
@@ -522,11 +541,18 @@ extern "C" void __cdecl CommuMember_DrawFrame(int x, int y, unsigned pulse, unsi
 // 0x29). The SPRTs' sizes are 16-bit stores of 8 w - 0x20, 8 h - 0x20, 8 w -
 // 0x10, 8 h - 0x10; the original computes two of them from a dword whose upper
 // half is uninitialised stack, which the word stores drop.
-extern "C" void __cdecl Commu_DrawTiledFrame(int x, int y, unsigned w, unsigned h) {
+// Ours: each window in the packet pool (above); the rest as the original.
+extern "C" void __cdecl Commu_DrawTiledFrame(int x, int y, unsigned w, unsigned h) { TiledFrame(x, y, w, h, WindowInPool); }
+
+// The original's placement (the RECT on the stack), for rest_4e's self-test.
+void Commu_DrawTiledFrameStackWindow(int x, int y, unsigned w, unsigned h) { TiledFrame(x, y, w, h, WindowOnStack); }
+
+static void TiledFrame(int x, int y, unsigned w, unsigned h, short* (*place)(short*)) {
     const int sx = S16(static_cast<U>(x)), sy = S16(static_cast<U>(y));
     const int a = static_cast<int>(w & 0xFF), b = static_cast<int>(h & 0xFF);
-    short window[4];
-    auto mode = [&window](short wx, short wy, short ww, short wh) {
+    short stack_window[4];
+    auto mode = [&stack_window, place](short wx, short wy, short ww, short wh) {
+        short* const window = place(stack_window);
         window[0] = wx;
         window[1] = wy;
         window[2] = ww;

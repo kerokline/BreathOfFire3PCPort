@@ -58,7 +58,7 @@ struct State {
     unsigned char scales[8];
     unsigned char flags;
 };
-State g_saved, g_start, g_theirs_state;
+State g_saved, g_start, g_theirs_state, g_ours_state;
 
 void Capture(State& s) {
     std::memcpy(s.region, At(Font_TexCache_addr), kRegionBytes);
@@ -224,7 +224,7 @@ bool SameBytes(const unsigned char* ours, const unsigned char* theirs) {
     return std::memcmp(ours, theirs, d3d_fuzz::kSnapBytes) == 0;
 }
 
-d3d_fuzz::Log g_theirs, g_ours;
+d3d_fuzz::Log g_theirs, g_ours, g_reuse;
 
 unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
     unsigned bad = 0;
@@ -284,7 +284,7 @@ unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
 // --- Font_GlyphTexture -------------------------------------------------------
 
 struct LookupCover {
-    unsigned hit, built_software, built_scene, overrun, stale, wide;
+    unsigned hit, built_software, built_scene, overrun, stale, wide, reused;
 };
 
 unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
@@ -337,8 +337,41 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
         Restore(g_start);
         g_ours.Clear();
         d3d_fuzz::g_log = &g_ours;
+        g_full_cache_reuse = 0;                // Capcom's overrun: compared byte for byte below
         const int ret_ours = Font_GlyphTexture(glyph, clut);
         d3d_fuzz::g_log = nullptr;
+
+        // D18's fix: where Capcom's runs one past the table, ours with the
+        // reuse on rebuilds the entry in turn, returns it, marks it in use and
+        // leaves the vertex block alone.
+        if (ret_theirs == static_cast<int>(kEntries)) {
+            Capture(g_ours_state);
+            Restore(g_start);
+            const U want = (g_round * 7u) % kEntries;
+            g_reuse_next = want;
+            g_full_cache_reuse = 1;
+            g_reuse.Clear();
+            d3d_fuzz::g_log = &g_reuse;
+            const int ret_reuse = Font_GlyphTexture(glyph, clut);
+            g_full_cache_reuse = 0;
+            d3d_fuzz::g_log = nullptr;
+            const unsigned char* e = At(Font_TexCache_addr + want * kEntry);
+            bool built = false;
+            for (U k = 0; k < g_reuse.n && k < d3d_fuzz::kMaxCalls; ++k)
+                if (g_reuse.calls[k].what == 6 && g_reuse.calls[k].a[0] == want) built = true;
+            const bool ok = ret_reuse == static_cast<int>(want) && built && e[0x10] == 1 && e[0x11] == 0 &&
+                            g_reuse_next == (want + 1) % kEntries &&
+                            std::memcmp(At(D3d_Vertices_addr), g_start.region + (D3d_Vertices_addr - Font_TexCache_addr),
+                                        d3d_fuzz::kVertexBytes) == 0;
+            if (!ok) {
+                if (bad < 4)
+                    bof3::Log("shadow      glyph_draw MISMATCH: Font_GlyphTexture round %u: the full cache's reuse "
+                              "(returned %d, wanted %u)", r, ret_reuse, (unsigned)want);
+                ++bad;
+            }
+            ++cover.reused;
+            Restore(g_ours_state);
+        }
 
         if (ret_theirs == static_cast<int>(kEntries)) ++cover.overrun;
         else if (g_theirs.n > 0 && g_theirs.calls[0].what == 6) ++cover.built_software;
@@ -405,9 +438,9 @@ void SelfTest() {
 
     bof3::Log("shadow      glyph_draw self-test: D3d_DrawGlyph %u rounds exact + %u with the DIV-0025 inset, "
               "Font_GlyphTexture %u rounds (hit %u, built software %u, built in scene %u, overrun %u, stale hit "
-              "seeded %u, wide argument %u)",
+              "seeded %u, wide argument %u; D18's reuse checked %u)",
               kDrawRounds, kDrawRounds, kLookupRounds, cover.hit, cover.built_software, cover.built_scene,
-              cover.overrun, cover.stale, cover.wide);
+              cover.overrun, cover.stale, cover.wide, cover.reused);
     if (bad) bof3::Fatal("the glyph draw differs from the original in %u self-test rounds", bad);
 }
 

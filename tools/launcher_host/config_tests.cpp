@@ -13,6 +13,7 @@
 #include <windows.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -618,10 +619,17 @@ std::wstring FakeCache(const wchar_t* name, const std::vector<std::pair<const ch
     return cache;
 }
 
+// The whole value, however long: a preset's BOF3X_OFF passed 1,024 bytes
+// with the ledger's 92nd code name off (2026-11-14), and a fixed buffer then
+// read it as unset.
 std::string Env(const char* name) {
-    char buf[1024];
-    const DWORD n = GetEnvironmentVariableA(name, buf, sizeof buf);
-    return n == 0 || n >= sizeof buf ? std::string() : std::string(buf, n);
+    const DWORD need = GetEnvironmentVariableA(name, nullptr, 0);
+    if (need == 0) return std::string();
+    std::string v(need, '\0');
+    const DWORD n = GetEnvironmentVariableA(name, v.data(), need);
+    if (n == 0 || n >= need) return std::string();
+    v.resize(n);
+    return v;
 }
 
 void ClearEnv() {
@@ -1069,6 +1077,138 @@ void TestSolo() {
     ClearEnv();
 }
 
+// A container of chunk headers as docs/DAT_CONTAINER.md has them: kind at +0,
+// tag at +4, size at +8, then `size` payload bytes (zeros). Made-up chunks, no game data.
+std::string FakeContainer(const std::vector<std::pair<int, std::uint32_t>>& chunks, int size = 4) {
+    std::string out;
+    for (const auto& [kind, tag] : chunks) {
+        unsigned char h[16] = {};
+        h[0] = static_cast<unsigned char>(kind);
+        for (int i = 0; i < 4; ++i) h[4 + i] = static_cast<unsigned char>(tag >> (8 * i));
+        for (int i = 0; i < 4; ++i) h[8 + i] = static_cast<unsigned char>(static_cast<std::uint32_t>(size) >> (8 * i));
+        out.append(reinterpret_cast<const char*>(h), 16);
+        out.append(static_cast<size_t>(size), '\0');
+    }
+    return out;
+}
+
+// The New Game round (docs/new-game-round.md 5 and 4c-LT): the Extras Page 2
+// boxes over off= - whether a language layer has the grid chunk, what the page
+// shows and greys, the edits of off=, and the line reaching the game as
+// BOF3X_OFF. The release's code names are passed in as a list of this test's
+// own, so the checks do not wait on the generated header.
+void TestNewGame() {
+    const std::wstring game = Temp(L"bof3x_ng_game"), cache = Temp(L"bof3x_ng_cache");
+    MakeDirs(game + L"\\DAT");
+    MakeDirs(cache + L"\\loc\\en-US\\dat");
+    const std::wstring first = game + L"\\DAT\\en-US.FIRST.DAT", cached = cache + L"\\loc\\en-US\\dat\\FIRST.DAT";
+    DeleteFileW(cached.c_str());
+    WriteAll(first, FakeContainer({{0, 0}, {22, 0}, {7, 3}}));
+    Check(bof3x::ConfigLayerHasNameGrid(game, "en-US"), "DAT\\en-US.FIRST.DAT with kind 22 tag 0: the grid");
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "original"), "the original Chinese: no grid");
+    Check(!bof3x::ConfigLayerHasNameGrid(game, ""), "no language: no grid");
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "fr-FR"), "a language with no FIRST.DAT: no grid");
+    WriteAll(first, FakeContainer({{0, 0}, {21, 0}, {7, 3}}));
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US"), "a FIRST.DAT without kind 22: no grid");
+    WriteAll(first, FakeContainer({{22, 1}}));
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US"), "kind 22 with another tag: no grid");
+    WriteAll(first, FakeContainer({{22, 0}}) + "xyz");
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US"), "headers that do not end at the file's end: no grid");
+    WriteAll(first, FakeContainer({{22, 0}}));
+    WriteAll(cached, FakeContainer({{0, 0}}));
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US", cache),
+          "a cache with the layer is read whole (DIV-0089): its FIRST.DAT without the chunk, no grid");
+    WriteAll(cached, FakeContainer({{0, 0}, {22, 0}}));
+    Check(bof3x::ConfigLayerHasNameGrid(game, "en-US", cache), "the cache's FIRST.DAT with the chunk: the grid");
+    DeleteFileW(cached.c_str());
+    WriteAll(cache + L"\\loc\\en-US\\dat\\AREA000.DAT", "");
+    Check(!bof3x::ConfigLayerHasNameGrid(game, "en-US", cache),
+          "a cache with the layer and no FIRST.DAT: none, the install's not read");
+    DeleteFileW((cache + L"\\loc\\en-US\\dat\\AREA000.DAT").c_str());
+    Check(bof3x::ConfigLayerHasNameGrid(game, "en-US", cache), "a cache without the layer: the install's file");
+
+    const std::vector<std::string> all = {"NewGameNameEntry", "CommuNameGrid", "NewGameOptions", "SunderLoop"};
+    const std::vector<std::string> older = {"SunderLoop"};
+    bof3x::Config cfg;
+    bof3x::NewGameState s = bof3x::ConfigNewGameState(cfg, "en-US", true, "", &all);
+    Check(s.name_entry && s.options && s.name_entry_enabled && s.options_enabled && s.name_entry_why.empty() &&
+              s.options_why.empty(),
+          "an empty off=, the grid there: both boxes ticked and enabled, no reason");
+    s = bof3x::ConfigNewGameState(cfg, "en-US", false, "", &all);
+    Check(s.name_entry && !s.name_entry_enabled && s.options_enabled &&
+              s.name_entry_why.find(L"English (US PlayStation script)") != std::wstring::npos,
+          "no grid in the layer: the name box grey with the language named; the options box enabled");
+    s = bof3x::ConfigNewGameState(cfg, "original", false, "", &all);
+    Check(!s.name_entry_enabled && s.options_enabled && s.name_entry_why.find(L"Chinese") != std::wstring::npos,
+          "the original Chinese: the name box grey, the reason says Chinese; the options box enabled");
+    s = bof3x::ConfigNewGameState(cfg, "en-US", true, "", &older);
+    Check(!s.name_entry_enabled && !s.options_enabled && !s.name_entry_why.empty() && !s.options_why.empty(),
+          "a release without the code names: both boxes grey, each with its reason");
+    s = bof3x::ConfigNewGameState(cfg, "en-US", true, "SunderLoop,CommuNameGrid,NewGameOptions", &all);
+    Check(!s.name_entry_enabled && !s.options_enabled && s.name_entry && s.options &&
+              s.name_entry_why.find(L"preset") != std::wstring::npos,
+          "the preset turns them off: both grey, the boxes as off= says, the preset named");
+    cfg.off = "*";
+    s = bof3x::ConfigNewGameState(cfg, "en-US", true, "", &all);
+    Check(!s.name_entry && !s.options && s.name_entry_enabled, "off=*: both boxes cleared, still enabled");
+    cfg.off = "*,-NewGameOptions";
+    s = bof3x::ConfigNewGameState(cfg, "en-US", true, "", &all);
+    Check(!s.name_entry && s.options, "off=*,-NewGameOptions: the options box ticked");
+    cfg.off = "CommuNameGrid";
+    s = bof3x::ConfigNewGameState(cfg, "en-US", true, "", &all);
+    Check(!s.name_entry && s.options, "off= turns one of the two names off: the name box cleared");
+    const std::vector<std::string> release = bof3x::ConfigCodeNamesKnown();
+    const bool has = std::find(release.begin(), release.end(), "NewGameNameEntry") != release.end() &&
+                     std::find(release.begin(), release.end(), "CommuNameGrid") != release.end();
+    s = bof3x::ConfigNewGameState(bof3x::Config(), "en-US", true, "");
+    Check(s.name_entry_enabled == has, "the release's own code names decide the name box (src/hook/code_names.h)");
+
+    struct Edit {
+        const char* off;
+        int names, options;
+        const char* want;
+    };
+    const Edit edits[] = {
+        {"", -1, -1, ""},
+        {"", 1, 1, ""},
+        {"", 0, -1, "NewGameNameEntry,CommuNameGrid"},
+        {"", -1, 0, "NewGameOptions"},
+        {"SunderLoop", 0, 0, "SunderLoop,NewGameNameEntry,CommuNameGrid,NewGameOptions"},
+        {"SunderLoop, NewGameOptions", -1, 0, "SunderLoop, NewGameOptions"},
+        {"NewGameNameEntry,CommuNameGrid,SunderLoop", 1, -1, "SunderLoop"},
+        {"CommuNameGrid", 1, -1, ""},
+        {"*", 1, 1, "*,-NewGameNameEntry,-CommuNameGrid,-NewGameOptions"},
+        {"*,-NewGameOptions", -1, 0, "*"},
+        {"*", 0, 0, "*"},
+    };
+    for (const Edit& e : edits) {
+        const std::string got = bof3x::ConfigNewGameOffEdit(e.off, e.names, e.options);
+        Check(got == e.want, (std::string("off=") + e.off + " edited to " + e.want).c_str(), got);
+    }
+
+    // what reaches the game: the ini's off= line, and BOF3X_OFF from it, for both hosts
+    const std::wstring ini = Temp(L"bof3x_config_tests_newgame.ini");
+    bof3x::Config page;
+    page.off = bof3x::ConfigNewGameOffEdit(page.off, 0, -1);
+    Check(bof3x::ConfigSave(ini, page) &&
+              ReadAll(ini).find("\r\noff=NewGameNameEntry,CommuNameGrid\r\n") != std::string::npos,
+          "the name box cleared: bof3x.ini says off=NewGameNameEntry,CommuNameGrid");
+    bof3x::Config back;
+    std::string err;
+    Check(bof3x::ConfigLoad(ini, back, err) && back.off == page.off, "off= read back as written", back.off);
+    for (bool hosted : {false, true}) {
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, back, hosted);
+        Check(Env("BOF3X_OFF") == "NewGameNameEntry,CommuNameGrid",
+              hosted ? "the hosted build is given BOF3X_OFF=NewGameNameEntry,CommuNameGrid"
+                     : "bof3x.exe is given BOF3X_OFF=NewGameNameEntry,CommuNameGrid",
+              Env("BOF3X_OFF"));
+    }
+    ClearEnv();
+    DeleteFileW(ini.c_str());
+    DeleteFileW(first.c_str());
+}
+
 // D395 (docs/known-defects.md): scale= 2..8 is named and goes to the game as
 // BOF3X_SCALE, 2 included; an empty or missing scale= sends nothing (the game
 // follows the display's scale) and is written back empty, so the ini can say
@@ -1295,7 +1435,7 @@ void TestPresetPlan() {
         const bof3x::PresetPlan plan = bof3x::ConfigPresetPlan(pc, cfg, Preset::kShipped, "original");
         int off = 0;
         for (const auto& it : plan.items) off += it.action == bof3x::PresetAction::kOff ? 1 : 0;
-        Check(off == 82, "as shipped, original: 82 entries off, as the tool's table", std::to_string(off));
+        Check(off == 92, "as shipped, original: 92 entries off, as the tool's table", std::to_string(off));
         const std::vector<std::string> n = names(plan.off);
         Check(std::find(n.begin(), n.end(), "SunderLoop") != n.end() &&
                   std::find(n.begin(), n.end(), "Game_Clock") != n.end(),
@@ -1865,6 +2005,8 @@ int main() {
     TestOff();
     std::printf("solo.champion= and the solo character page (BOF3X_SOLO, on=)\n");
     TestSolo();
+    std::printf("New Game's screens: the name entry and the options step (off=, docs/new-game-round.md 4c-LT)\n");
+    TestNewGame();
     std::printf("scale= (D395)\n");
     TestScale();
     std::printf("the presets against tools/ledger_registry.py presets\n");

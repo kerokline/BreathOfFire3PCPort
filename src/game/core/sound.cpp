@@ -15,6 +15,7 @@
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"
 #include "game/battle_sprites_callees.h"
+#include "game/core/new_game.h"
 #include "game/cheats.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
@@ -818,6 +819,7 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     SetState(0);
     SaveMenu_AnySave = any;
     SaveMenu_Cursor = any;
+    new_game::NewGame_TitleBegins();   // ours: no Capcom byte; the New Game name buffer's reset (new_game.h)
 }
 
 #pragma clang attribute pop
@@ -944,16 +946,28 @@ extern "C" void __cdecl TitleMenu_Leave(void) {
 // every 8 bytes of Cond_Flags up to 0x904030 cleared - half of the 0xA0
 // bytes, as the original's stride has it; Transition_Start(0); Game_Step 5.
 // Ours adds DIV-0228's New Game stamp and level-1 start right after the
-// records are made (solo.h Solo_StampNewGame; nothing with SoloCharacter off).
-extern "C" void __cdecl TitleFlow_NewGame(void) {
+// records are made (solo.h Solo_StampNewGame; nothing with SoloCharacter off),
+// and the New Game sequence first (new_game.h: the name screen and the Config
+// screen, switches NewGameNameEntry and NewGameOptions; with both off the
+// body below runs whole, as the port's).
+void TitleFlow_NewGameRecords() {
     save_menu::g.init_characters();
     solo::Solo_StampNewGame();
+}
+
+void TitleFlow_NewGameRest(bool fade, unsigned step) {
     SaveMenu_NewGameByte = 0;
     Game_AreaNumber = 0xFFFF;
     save_menu::g.scenario_start(0);
     for (save_menu::U a = ::bof3::Img(Cond_Flags_addr); a < ::bof3::Img(save_menu::at::kCondFlagsEnd.v); a += 8) PutLongSaveMenu(a, 0);
-    save_menu::g.transition(0);
-    Game_Step = 5;
+    if (fade) save_menu::g.transition(0);
+    Game_Step = step;
+}
+
+extern "C" void __cdecl TitleFlow_NewGame(void) {
+    if (new_game::NewGame_Sequence()) return;
+    TitleFlow_NewGameRecords();
+    TitleFlow_NewGameRest(true, 5);
 }
 
 #pragma clang attribute pop

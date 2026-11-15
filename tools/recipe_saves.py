@@ -14,6 +14,7 @@ input_run.py does the swap (`Slot0`); this file is also a small command line:
     python tools/recipe_saves.py list                # the saves and who uses them
     python tools/recipe_saves.py import 5 adult_ryu  # bof3/BISLPS05.DAT -> tools/recipe_saves/adult_ryu.DAT
     python tools/recipe_saves.py restore             # put slot 0 back after a run that died
+    python tools/recipe_saves.py check               # the swap and hand-back on made-up files
 
 The swap: the owner's BISLPS00.DAT is renamed into <game>/.recipe_slot0/ (a
 subdirectory - a file beside the saves whose 8.3 alias matched BISLPS??.DAT
@@ -87,6 +88,17 @@ def save_path(name, game=None):
         if os.path.isfile(p):
             return p
     return os.path.join(DIR, name)
+
+
+def shown(path):
+    """path for a message: relative to the checkout when it can be, else as it
+    is - os.path.relpath raises across drives (a worktree on D: with the saves
+    beside a game on C:), and a raise inside Slot0.__enter__ after the swap
+    left slot 0 swapped with no hand-back."""
+    try:
+        return os.path.relpath(path, ROOT)
+    except ValueError:
+        return path
 
 
 def pid_alive(pid):
@@ -217,7 +229,7 @@ class Slot0:
             shutil.move(P.slot0, P.backup)
         shutil.copyfile(self.save, P.slot0)
         self.held = True
-        print(f'slot 0: {os.path.relpath(self.save, ROOT)} in, the owner\'s save '
+        print(f'slot 0: {shown(self.save)} in, the owner\'s save '
               f'{"backed up" if had else "was absent"}')
         return self
 
@@ -252,6 +264,40 @@ def users(name):
     return out
 
 
+def check():
+    """The swap and the hand-back on made-up files in a temporary game
+    directory, with the save on another drive than the checkout when the
+    temporary directory is on one (the case that raised in relpath). No game
+    file is read. Exit 1 on a failure."""
+    import tempfile
+    fails = []
+    other = ('Y:' if ROOT.upper().startswith('Z:') else 'Z:') + r'\saves\x.DAT'
+    if shown(other) != other:
+        fails.append(f'shown({other}) = {shown(other)}')
+    with tempfile.TemporaryDirectory() as t:
+        game, save = os.path.join(t, 'game'), os.path.join(t, 'probe.DAT')
+        os.makedirs(game)
+        with open(save, 'wb') as f:
+            f.write(b'recipe')
+        with open(os.path.join(game, SLOT0), 'wb') as f:
+            f.write(b'owner')
+        cross = os.path.splitdrive(save)[0].upper() != os.path.splitdrive(ROOT)[0].upper()
+        with Slot0(game, save, shared=True, wait=0, recipe='check') as s:
+            with open(s.P.slot0, 'rb') as f:
+                if f.read() != b'recipe':
+                    fails.append('slot 0 does not hold the recipe save during the block')
+        with open(os.path.join(game, SLOT0), 'rb') as f:
+            if f.read() != b'owner':
+                fails.append("the owner's slot 0 is not back after the block")
+        if os.path.exists(os.path.join(game, LOCK_DIR, 'lock.json')):
+            fails.append('the lock is left behind')
+    for m in fails:
+        print('FAIL ' + m)
+    print(f'check: {"FAILED" if fails else "passed"} (save on {"another drive than" if cross else "the drive of"} '
+          f'the checkout)')
+    return 1 if fails else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -262,6 +308,7 @@ def main():
     p.add_argument('name')
     p.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
     p.add_argument('--force', action='store_true', help='overwrite an existing recipe save')
+    sub.add_parser('check', help='the swap and hand-back on made-up files (no game file read)')
     p = sub.add_parser('restore', help='put the owner\'s slot 0 back after a run that died holding it')
     p.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
     a = ap.parse_args()
@@ -278,7 +325,7 @@ def main():
             if fn.endswith('.txt'):
                 p = recipe_save(os.path.join(RECIPES, fn), a.game)
                 if p and not os.path.exists(p):
-                    print(f'MISSING {os.path.relpath(p, ROOT)} <- {fn}')
+                    print(f'MISSING {shown(p)} <- {fn}')
         lock = Paths(a.game).read_lock()
         if lock:
             alive = lock.get('pid') and pid_alive(lock['pid'])
@@ -301,12 +348,14 @@ def main():
             sys.exit('slot 0 holds a recipe save right now (a run is on, or died - `restore`); not importing it')
         dst = os.path.join(DIR, a.name if a.name.upper().endswith('.DAT') else a.name + '.DAT')
         if os.path.exists(dst) and not a.force:
-            sys.exit(f'{os.path.relpath(dst, ROOT)} exists; --force to overwrite')
+            sys.exit(f'{shown(dst)} exists; --force to overwrite')
         os.makedirs(DIR, exist_ok=True)
         shutil.copyfile(src, dst)
-        print(f'slot {slot:X} -> {os.path.relpath(dst, ROOT)} ({os.path.getsize(dst)} bytes)')
+        print(f'slot {slot:X} -> {shown(dst)} ({os.path.getsize(dst)} bytes)')
     elif a.cmd == 'restore':
         restore(a.game)
+    elif a.cmd == 'check':
+        sys.exit(check())
 
 
 if __name__ == '__main__':

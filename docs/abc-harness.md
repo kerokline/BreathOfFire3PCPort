@@ -116,6 +116,15 @@ checkout's `tools/recipe_saves`, the install's `BOF3X_LANG`, and nothing
 else of the caller's `BOF3X_*` environment. The attract route is a recipe
 written into the run folder: `wait N`, no input.
 
+Since 2026-11-14 `input_run.py` also adds `NewGameNameEntry` and
+`NewGameOptions` to `BOF3X_OFF` for every run (the New Game round's
+screens, DIV-0231 and DIV-0232), unless the recipe has the header line
+`# screens new-game` or the run passes `--new-game-screens`; a build that
+does not know the names gets nothing added
+([`input-script.md`](input-script.md) 1). The run meta written by `abc_run`
+records the environment before that step, so it does not show the two
+names; `input_run`'s run-times line does.
+
 ### 3a. The save every side loads
 
 `input_run.py` puts a recipe's save in slot 0 when the recipe names it in a

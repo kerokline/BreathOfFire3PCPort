@@ -10,7 +10,7 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 99;
+constexpr int kCount = 103;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
@@ -32,6 +32,7 @@ constexpr const char* kNames[kCount] = {
     "CfgOwnKeyTable",
     "Cheat_StealAlways",
     "CommuNameEntryAbandons",
+    "CommuNameGrid",
     "ConfigController",
     "ConfigJapaneseIcons",
     "ConfigLabelJapanese",
@@ -60,6 +61,7 @@ constexpr const char* kNames[kCount] = {
     "GeneNameNul",
     "Gfx_FilterPoint",
     "GiftChestRow",
+    "GlyphCacheReuse",
     "GlyphTexelCentres",
     "InnNightPause",
     "ItemSortById",
@@ -78,6 +80,8 @@ constexpr const char* kNames[kCount] = {
     "MsgBox_DrawChar",
     "MusicFadePerFrame",
     "MusicPlayRefusesNone",
+    "NewGameNameEntry",
+    "NewGameOptions",
     "OneShotKeyOff",
     "PadReset",
     "PauseText",

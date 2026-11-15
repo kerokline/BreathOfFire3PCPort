@@ -3,6 +3,9 @@
 **Status:** IN PROGRESS (2026-09-19) — format established and converter written;
 statically verified both ways; **both converted saves load and play on PC**
 (owner, 2026-09-19, §4). The PC→PSX direction is still only static.
+2026-11-14: §2 and §2a amended for the New Game round
+([`new-game-round.md`](new-game-round.md)): the port's naming was cut, not
+moved, and the round brings it back (DIV-0231, DIV-0233).
 
 [`IDEAS.md`](IDEAS.md) I1. Tool: [`tools/save_convert.py`](../tools/save_convert.py).
 Save files are game-derived data: none is committed, and nothing here quotes
@@ -88,6 +91,22 @@ ours). Consequence for conversion, *if naming is gone*: PSX→PC loses only a cu
 the PC game could not have produced anyway, and any PC save is a complete name
 donor. PC→PSX gives the donor's names. See §2a.
 
+**Amended 2026-11-14 (the New Game round,
+[`new-game-round.md`](new-game-round.md) 1 and 3a M1).** Naming is gone from
+the port, not moved: `TitleFlow_NewGame` `0x5880E0` keeps no remnant of the
+PlayStation's name screen, and the renamer's grid, legend and input step are
+cut (§2a; [`name-entry-restoration.md`](name-entry-restoration.md) 3). That
+answers [`USER_CHECKS.md`](USER_CHECKS.md) item 4 from the code. The round
+brings both back: New Game asks for record 0's name where the language layer
+has a grid (DIV-0231), and the faerie village's renamer edits a member's or a
+faerie slot's name (DIV-0233). **So a PC save can now hold an entered name,**
+stored in the layer's bytes (a Latin layer's letters and digits one byte, some
+other cells two; `ja-JP` two a kana, at most four). The converter still
+takes character names from a donor save, record for record, so a name
+entered on the PC does not cross to the PlayStation and the donor's name
+takes its place. A name kept through `save_convert.py` (the round's
+acceptance 6) is not built or run.
+
 ### 2a. Name-editing code exists in the exe, and is statically reachable
 
 Read 2026-09-19 at the owner's prompt, in two passes; the second corrected the
@@ -135,6 +154,15 @@ the ordinary menu**, so not finding it in the first hours means nothing.
 **Not established:** what opens the character-rename path as opposed to the
 60-entry one; whether any run-time condition blocks either; what message
 `0xF5` says (it comes from whichever area's script pool is loaded).
+
+**2026-11-14 (the New Game round, [`new-game-round.md`](new-game-round.md)
+4c-CR).** The facility is the faerie village (areas 175..185). With the
+grid back (DIV-0233), the renamer was entered by a harness poke of
+`Field_ObjectTriggers` id 8's stores on the `fairyVillage` save, not by a
+player's route: a member and a slot were renamed, each shown by message
+`0xF5`, saved by F12 and loaded back, and the file holds the names at `+0x90`
+(the record), `+0xCA0` (the summary) and `+0xF1A` (the slot), space-padded.
+What a player does to reach the entry is still not recorded.
 
 **Consequence for the converter — a second name problem.** The 60 x 5-byte
 names are text in each release's own encoding and `save_convert.py` copies them
