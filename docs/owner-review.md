@@ -64,14 +64,9 @@ and reload on the final tree; `tools/launcher_host/dialog_test.py`; the
 `psp-eu` layer rebuilt with the `START` word; a name carried through
 `save_convert.py`.
 
-To decide (none blocks the PR):
-
-- **The tiers** of the three new entries: the name screen and the options
-  screen at New Game are written Sensible (the port's New Game works without
-  them), the renamer's grid Intent (the port left the renamer waiting on an
-  input that could not come). So the "Repaired" preset turns the two New
-  Game screens off and keeps the renamer's grid. Say if the two screens
-  should be Intent, which "Repaired" keeps.
+The tiers were answered by the owner on 2026-11-15: the two New Game
+screens are Intent, so every preset but "As shipped" keeps them (DIV-0231
+and DIV-0232 as amended; round doc 4f).
 
 ## 2026-11-12, struck at the owner's word
 
