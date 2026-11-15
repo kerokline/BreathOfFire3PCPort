@@ -1530,6 +1530,16 @@ void TestPresetPlan() {
             if (it.action == bof3x::PresetAction::kOff)
                 Check(it.entry->tier == bof3x::ledger::Tier::Sensible || it.entry->tier == bof3x::ledger::Tier::Extension,
                       "repaired turns off only Sensible and Extension entries", std::to_string(it.entry->id));
+        // New Game's two screens are Intent (the owner, 2026-11-15): every preset but As shipped keeps them
+        for (Preset p : {Preset::kRepaired, Preset::kPlayStation})
+            for (const char* lang : {"en-US", "original"}) {
+                const bof3x::PresetPlan keep = bof3x::ConfigPresetPlan(pc, cfg, p, lang);
+                const std::vector<std::string> n = names(keep.off);
+                Check(!item(keep, 231) && !item(keep, 232) &&
+                          std::find(n.begin(), n.end(), "NewGameNameEntry") == n.end() &&
+                          std::find(n.begin(), n.end(), "NewGameOptions") == n.end(),
+                      (std::string("repaired and playstation keep DIV-0231 and DIV-0232, ") + lang).c_str(), keep.off);
+            }
         const bof3x::PresetPlan ps = bof3x::ConfigPresetPlan(pc, cfg, Preset::kPlayStation, "en-US");
         const auto* d123 = item(ps, 123);
         const auto* d12 = item(ps, 12);
