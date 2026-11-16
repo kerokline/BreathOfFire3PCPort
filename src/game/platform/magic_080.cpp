@@ -220,6 +220,11 @@ int g_speed = 1;
 // thirteen's review, item 1).
 bool g_speed_scripted = false;
 
+// BOF3X_LATE_EVERY=<n> (tooling): the pass at each Frame_Counter that is n - 1
+// past a multiple of n is taken as late and not drawn, as on a machine that
+// cannot keep the period. For the in-between after a late frame
+// (docs/frame-interpolation.md section 6, item 18). 0: off.
+unsigned g_late_every = 0;
 bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
 
 constexpr const char* kStrSpeed2 = "Speed x2";
@@ -768,6 +773,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             g_frame_ms = v;
         }
         if (bof3::os::GetEnv("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
+        if (bof3::os::GetEnv("BOF3X_LATE_EVERY", text, sizeof text) > 0 && std::atoi(text) > 1) {
+            g_late_every = static_cast<unsigned>(std::atoi(text));
+            bof3::Log("WinMain: BOF3X_LATE_EVERY: one pass in %u is not drawn", g_late_every);
+        }
         const DWORD sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
@@ -944,7 +953,9 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // draw side writes follows the tick and not the machine's
                 // load (statehash.h StateHash_On; known-defects D420).
                 bool in_between_due = false;   // PROTOTYPE (render/interp.h)
-                if (now < deadline || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
+                const bool made_late = g_late_every != 0 && !Game_Paused &&
+                                       static_cast<unsigned>(Frame_Counter) % g_late_every == g_late_every - 1;
+                if ((now < deadline && !made_late) || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
                     in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
                     if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;

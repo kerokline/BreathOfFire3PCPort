@@ -617,10 +617,12 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         if (by_order && Pair(i, g_entries[align[i]])) {
             Remember();
             ++s.exact;
+            ++s.by_order;
         } else if (best >= 0 && !best_is_look && !agrees && clear && Carry(i, g_entries[best])) {
             // By shape alone and agreeing with nothing: a cel that changed.
             Remember();
             ++s.loose;
+            ++s.carried;
         } else if (best >= 0 && (agrees || clear) && Pair(i, g_entries[best])) {
             Remember();
             ++(best_is_look ? s.exact : s.loose);
@@ -631,6 +633,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             // shop's message bar).
             Remember();
             ++s.exact;
+            ++s.lone;
         } else if (const int gap = looks == 0 ? GapByOrder(i) : -1; gap >= 0 && Carry(i, g_entries[gap])) {
             // A cel that changed its box and its texture: no candidate by
             // look, and none by shape, or only some other thing's. A man
@@ -646,6 +649,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             done[i] = 2;
             by_gap[i] = true;
             ++s.loose;
+            ++s.by_gap;
         } else if (any) {
             done[i] = 1;
             ++s.far_;
@@ -849,10 +853,21 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             g_built.assign(s.draws, Motion{});
             g_built_valid = true;
             s.snapped = s.draws;
+            s.cut = 1;
             if (stats) *stats = s;
             return true;
         }
     }
+    // A long run takes a few breaks (a field's layer has the scene's
+    // parts in it); a short one - a window's text - takes one.
+    // A line of letters takes none: its letters are one thing, and one
+    // letter going its own way is one that changed (the shop's message
+    // bar: only its last letter slid, from a letter of the old line).
+    const auto Broken = [](const Run& r) {
+        return (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2) || (r.letters && r.breaks >= 1);
+    };
+    for (const Run& r : runs)
+        if (Broken(r)) ++s.broken_runs;
     g_built.clear();
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
@@ -860,13 +875,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         g_built.push_back({false, 0, 0});
         const Run& r = runs[run_of[i]];
         if (g_debug) bof3::Log("interp-dbg  RUN cmd %u run %u n %u breaks %u letters %d half (%.1f, %.1f)", i, run_of[i], r.n, r.breaks, r.letters, half_dx[i], half_dy[i]);
-        // A long run takes a few breaks (a field's layer has the scene's
-        // parts in it); a short one - a window's text - takes one.
-        // A line of letters takes none: its letters are one thing, and one
-        // letter going its own way is one that changed (the shop's message
-        // bar: only its last letter slid, from a letter of the old line).
-        const bool broken = (r.breaks >= 3 && r.breaks * 10 > r.n) || (r.n <= 48 && r.breaks >= 2) || (r.letters && r.breaks >= 1);
-        if (!broken) {
+        if (!Broken(r)) {
             // A paired draw's motion, for the frame after (Carry).
             if (done[i] == 2) g_built.back() = {true, half_dx[i] * 2, half_dy[i] * 2};
             continue;

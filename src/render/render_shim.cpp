@@ -429,10 +429,16 @@ void LogFrameHash() {
         LogWalkHash(g_walk_start[w], w + 1 < g_n_walks ? g_walk_start[w + 1] : g_frame.n_commands, g_walk_tag[w]);
 }
 
+// When Present last ran with the in-between on, for its statistics line.
+std::uint64_t g_interp_present_at;
+
 void Present() {
     if (FrameHashOn()) LogFrameHash();
     pillarbox::Cover();   // DIV-0041 (PB, docs/narrow-pillarbox.md): a narrow area's bars, over the frame, after its hash
-    if (interp::On()) interp::Keep(g_frame);   // PROTOTYPE (interp.h)
+    if (interp::On()) {   // PROTOTYPE (interp.h)
+        interp::Keep(g_frame);
+        g_interp_present_at = bof3::os::Counter();
+    }
     if (g_present) g_present(g_frame);
     ResetFrame();
     ReleaseDeferred();
@@ -1244,6 +1250,21 @@ void PresentInBetween() {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;
         g_in_between(mid);
+        // BOF3X_INTERP_STATS=1 (tooling): a line for each in-between, what
+        // the matcher did with the frame's draws by rule and how long after
+        // the present it was shown; tools/interp_stats.py reads them. Nothing
+        // is logged when unset.
+        static int stats_on = -1;
+        if (stats_on < 0) {
+            char v[8] = "";
+            stats_on = (bof3::os::GetEnv("BOF3X_INTERP_STATS", v, sizeof v) > 0 && v[0] == '1') ? 1 : 0;
+        }
+        if (stats_on)
+            bof3::Log("interp-stat fc %u draws %u order %u exact %u loose %u carried %u gap %u lone %u far %u unmatched %u followed %u "
+                      "moved %u snapped %u runs %u cut %u dropped %u ms %.2f after %.1f",
+                      static_cast<U>(Frame_Counter), s.draws, s.by_order, s.exact, s.loose, s.carried, s.by_gap, s.lone, s.far_,
+                      s.unmatched, s.followed, s.moved, s.snapped, s.broken_runs, s.cut, s.order_dropped, build_ms,
+                      static_cast<double>(t0 - g_interp_present_at) * 1000.0 / static_cast<double>(bof3::os::CounterFrequency()));
         static interp::Stats sum;
         static U frames;
         static double sum_ms, max_ms;
