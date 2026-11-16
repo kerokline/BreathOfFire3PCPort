@@ -56,6 +56,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      `en-150` build are not played); whether smooth motion ships as it is (off by default, experimental, its open items
      in [`frame-interpolation.md`](frame-interpolation.md) 6); the `orig4` state-hash pairs are stale and want recording
      again at the tip (item 14b; the rounds since have proven against fresh pairs of `main`'s own build instead).
+     **The re-record began on 2026-11-16 at `df083903` and is paused** (the owner came back): the new pairs are
+     `cn_<route>_orig5` / `_orig5b` with ours as `_m1116` (`D:\bof3x-runs\orig1116\chain.py`, which skips a file that
+     exists; `chain.out`, `check_<route>.txt`). Recorded: combat, cutsceneAndNue, dragonTransform, field_menu,
+     masterAndManillo, menu_screens, and caughFish's `orig5b` and `m1116`. Not recorded: caughFish's `orig5` (the first
+     run timed out at 40 minutes, not read why; removed), shop, whelpBoss, worldMapAndAreaTransition. Combat's two
+     runs disagree on 91 pages at scattered ticks (the `orig4` pair had 7): record it a third time. Ours differs from
+     every new pair - `0x5FD000` from tick 0 on all, `0x803000` on combat, the pages `0x904000` / `0x665000` /
+     `0x6BD000` / `0x7DE000` from one tick on four routes, 31 pages on masterAndManillo - and none of it is read
+     against the ledger yet, so the `orig5` pairs gate nothing until it is.
    - **The New Game round is merged** (item 18; PR #247, 2026-11-15). Owed: the owner's play
      ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
    - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
