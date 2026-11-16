@@ -298,12 +298,26 @@ ear and the WAV A/B stay owed (IDEAS I68).
     `acc_modulate` on each present, so an in-between ran both at twice the
     game's pace. Now `Show` gives it the picture's time in game frames and
     the step since the last picture (1, or 0.5 for an in-between and the
-    present after it), and the trail fades by `acc_modulate^step` (0.65
-    becomes 0.8062 a half step, logged once). With the in-between off the
-    step is always 1: the clock is the present count and the knob goes out
-    as it is, so the look is the same bits as before. The grain is fresh on
-    each picture shown. Not seen by eye: `SaveFrame` captures the target,
-    which the look never touches, so the dumps cannot show it.
+    present after it). With the in-between off the step is always 1: the
+    clock is the present count, so the look is the same bits as before. The
+    grain is fresh on each picture shown. `SaveFrame` captures the target,
+    which the look never touches, so the dumps cannot show the look.
+
+    **The trail fades by the whole knob on every picture** (2026-11-15).
+    The first form faded it by `acc_modulate^step` (0.65 became 0.8062 a
+    half step), so the trail lasted as long on the screen. The owner saw it
+    in play: a smear on the leader's head and a second copy of every edge
+    that scrolls, at 60 and not at 30. The trail is `max(last * fade, new)`,
+    so it shows only where the last picture is brighter than the new by
+    `0.96 / fade`: 1.48 times at 0.65, 1.19 times at 0.8062. And a walk's
+    new cel comes in on the in-between (it is frame N's commands), when the
+    old cel is half a frame old. Measured on an every-frame dump of
+    pathCouple at 21:9: the leader, still on the screen, is still in 121 of
+    121 in-betweens, so the matcher does not move them; the trail formula
+    run over the dump's pictures gives a double head at 0.8062 and nearly
+    none at 0.65. Now each picture has the trail as strong as with the
+    in-between off, and it lasts half as long. Not captured from the look
+    itself; the owner's eye decides.
 11. **Captures between presents.** From the in-between to the next real
     present the target holds the in-between, so F11 (`SaveFrameBesideDll`)
     pressed in the second half of a period saves an interpolated picture.
