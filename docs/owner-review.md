@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's three checks struck at the owner's word; 2026-11-12: the owner's play of `main` `db9619da` struck; 2026-11-14: the New Game round's section, merged as PR #247 on 2026-11-15) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top; 2026-11-11: the sound-layer listens and the save editor's three checks struck at the owner's word; 2026-11-12: the owner's play of `main` `db9619da` struck; 2026-11-14: the New Game round's section, merged as PR #247 on 2026-11-15; 2026-11-16: the owner's word on New Game, smooth motion, the solo mode and the two romhacks) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -13,6 +13,22 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-16, the owner's word in chat
+
+- **The New Game screen** "looked perfect in eng and jpn" (the section
+  below: the English and Japanese plays are struck; French, German, the
+  original Chinese and the other rows were not named and stay).
+- **Smooth motion** (DIV-0230) is still off by default; the owner has been
+  playing with it on and it is "looking really good". The owner raises an
+  issue for each thing met in play, so the row under "Decided and built,
+  not yet seen live" stays until the owner says the play is through.
+- **The solo-character mode** (PR #240, DIV-0228, DIV-0229): the owner is
+  playing through it. No finding yet; which fights were reached is not
+  recorded.
+- **The two known romhacks** (`data/mods/known.toml`) "both apply / unapply
+  nicely". Not said: both on together, a play under `en-150`, version
+  1.4's rules in play.
+
 ## 2026-11-14, the New Game round (merged as PR #247, 2026-11-15)
 
 The name screen at New Game (DIV-0231), the options screen there (DIV-0232),
@@ -20,14 +36,16 @@ the faerie village's renamer on the grid (DIV-0233), D18's glyph-cache fix
 (DIV-0234, `GlyphCacheReuse`), the tiled frame's windows (DIV-0235, no
 switch), and the `START` word and the French panel label from the disc
 (DIV-0236); [`new-game-round.md`](new-game-round.md) 4d, 4e and 4f. Built
-and run by the harness; **nobody has played it.** Play from `game\` after
+and run by the harness; **the owner played it under English and Japanese
+on 2026-11-16 and it "looked perfect"** (which English, and which rows
+below beside the name screen, was not said). Play from `game\` after
 the four player files are copied from a build of `main`. The proof on a
 quiet machine ran before the PR (4g).
 
 To play:
 
-- **New Game under each language you hold** (`en-US`, `en-150`, `fr-FR`,
-  `de-DE`, `ja-JP`): the name screen, a name entered, Start, the options
+- **New Game under French and German** (`fr-FR`, `de-DE`; English and
+  `ja-JP` seen right on 2026-11-16): the name screen, a name entered, Start, the options
   screen, the opening. Look for the name where the game first prints the
   hero's (no harness route reaches such a box). Under `ja-JP` four kana fit;
   a fifth is refused with a sound (call 5).
