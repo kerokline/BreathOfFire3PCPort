@@ -2933,6 +2933,47 @@ designed in rather than bolted on.
   written, nothing linked, a `draworder` line under `BOF3X_DRAWORDER` -
   unless they end under the limit `LinkLayer` tests. Narrow, nothing
   changes (the bands are never drawn).
+  **The sea bridge's slope, 2026-11-15** (the owner's question: does the
+  bridge reach the edges at 21:9, and does its curve hold there). The same
+  function rewrites the deck's corner heights (columns 45..48) round the
+  party's row `r` each frame: flat at `r - 3 .. r + 3`, a slope of half a
+  unit a row over `r + 4 .. r + 13` and `r - 4 .. r - 17`, nothing restored
+  outside. The slope's far end is at screen x 363 - past the original's 320,
+  inside the 16:9 picture's 373 and well inside the 21:9 one's 440 - and
+  the rows past it are flat or stale, a step down in the deck (the
+  `bridgeWalk` route at 21:9, a capture every 60 frames). Under
+  `Widescreen_Fill()` the slope runs on by a row per 8 columns each way,
+  rounded up (7 rows at 53 columns, 15 at 120), by the same rule and over
+  the map's rows only; `BOF3X_BRIDGE_ROWS=N` moves it, 0 is the original's
+  range. **This writes game state the narrow game does not**: the corner
+  heights of those rows, which `AreaMap_Elevation` reads for anything
+  standing there - nothing does on the recorded route (the party is within
+  the original's rows of itself); not yet run under the state hash. Seen
+  on captures: the step is gone and the deck carries the slope on (16:9:
+  the last 13 px at the right edge).
+  **The sea bridge's far end under the clouds, 2026-11-15** (the same
+  captures: at 21:9 the deck's two far columns and the far railing stopped
+  about 80 px short of the right edge at the top). Not a cull and not the
+  view ring - the ring's walk builds the deck to screen x 490 and more, past
+  the picture's 440 (a log of every bridge cell `BuildCell` took at one
+  frame; the terrain margin at 400, the inset at 14 and `BOF3X_WIDE_RING=0`
+  each changed nothing). The sky's primitives are linked into **layer 15's
+  frame node**, which the draw pass appends after layers 0..14 and layer
+  15's own cells: the opaque cloud strips (y 0..64) were painted over every
+  map cell of those layers. The original's picture has none of them in it;
+  the wide one has the bridge's far end there, from screen x 386 on the
+  deck's far side (layer 15 and below), so 16:9's 373 never reached it.
+  Under `Widescreen_Fill()` the cloud strips go to **layer 0's node**
+  instead, behind every layer but -1 and layer 0's own cells, which are off
+  the picture. The four gradients and the two band gradients stay in layer
+  15's node: they are the far sea's haze, and moved with the strips they
+  left the sea's last rows (y 76..90) unhazed across the whole picture (a
+  first try, compared frame by frame). Seen on the `bridgeWalk` route, a
+  capture every 60 frames against the build before it: at 21:9 the only
+  pixels that differ are the bridge's far end in the top-right corner (16
+  of 34 frames; the deck and both railings reach the edge); at 16:9 a
+  strip 5 px wide at the right edge on 2 frames; narrow, all 34 frames
+  identical (the strips are linked as the original links them).
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;

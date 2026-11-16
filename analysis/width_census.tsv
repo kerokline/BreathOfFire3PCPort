@@ -3806,30 +3806,36 @@ site	src/game/effect/effect_kind_18_sub_11.cpp	60	widen	word_read	live	UL(At(tab
 site	src/game/effect/effect_kind_18_sub_11.cpp	73	long	l	live	long	-	long depth = 0;
 site	src/game/effect/effect_kind_18_sub_11.cpp	178	narrow_call	image	live	EffectKind18Sub11_States	AddressOf	DispatchEffect5c(" ", AddressOf(EffectKind18Sub11_States), EffectKind18Sub11_States_count);
 site	src/game/effect/effect_kind_18_sub_11.cpp	194	narrow_call	image	live	EffectKind18Sub11_Tiles	AddressOf	extern " " void __cdecl EffectKind18Sub11_DrawTiles(unsigned y, unsigned shade) { Tiles(AddressOf(EffectKind18Sub11_Tiles), y, shade); }
-site	src/game/effect/effect_kind_18_sub_12.cpp	51	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
-site	src/game/effect/effect_kind_18_sub_12.cpp	78	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
-site	src/game/effect/effect_kind_18_sub_12.cpp	78	widen	word_read	live	UL(At(table + 4 * state))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
-site	src/game/effect/effect_kind_18_sub_12.cpp	88	narrow_call	image	live	&AreaMap_Corners	AddressOf	void SetCorner(U index, U v) { SetUL(At(AddressOf(&AreaMap_Corners) + 4 * index), v); }
-site	src/game/effect/effect_kind_18_sub_12.cpp	93	long	l	live	long	-	long depth = 0;
-site	src/game/effect/effect_kind_18_sub_12.cpp	196	narrow_call	image_local	live	rect	AddressOf	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, AddressOf(rect));
-site	src/game/effect/effect_kind_18_sub_12.cpp	205	long	l	live	long	-	long t[3];
-site	src/game/effect/effect_kind_18_sub_12.cpp	219	narrow_call	image	live	EffectKind18Sub12_States	AddressOf	DispatchEffect5c(" ", AddressOf(EffectKind18Sub12_States), EffectKind18Sub12_States_count);
-site	src/game/effect/effect_kind_18_sub_12.cpp	235	narrow_call	image	live	EffectKind18Sub12_Tiles	AddressOf	extern " " void __cdecl EffectKind18Sub12_DrawTiles(unsigned y, unsigned shade) { Tiles(AddressOf(EffectKind18Sub12_Tiles), y, shade); }
-site	src/game/effect/effect_kind_18_sub_12.cpp	240	narrow_call	image	live	EffectKind18Sub15_States	AddressOf	DispatchEffect5c(" ", AddressOf(EffectKind18Sub15_States), EffectKind18Sub15_States_count);
-site	src/game/effect/effect_kind_18_sub_12.cpp	383	narrow_call	image	live	EffectKind18Sub15_Columns	AddressOf	const U x0 = Word(At(AddressOf(EffectKind18Sub15_Columns) + 2 * k));
-site	src/game/effect/effect_kind_18_sub_12.cpp	384	narrow_call	image	live	EffectKind18Sub15_Columns	AddressOf	const U x1 = Word(At(AddressOf(EffectKind18Sub15_Columns) + 2 * k + 2));
-site	src/game/effect/effect_kind_18_sub_12.cpp	390	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	Float(quad + 0x2C, I(At(AddressOf(EffectKind18Sub15_Rows) + k)[0] + shift));
-site	src/game/effect/effect_kind_18_sub_12.cpp	392	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	Float(quad + 0x3C, I(At(AddressOf(EffectKind18Sub15_Rows) + k + 1)[0] + shift));
-site	src/game/effect/effect_kind_18_sub_12.cpp	415	narrow_call	image_local	live	quad	AddressOf	const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + ::bof3::Img(at::kPoolLimit) > AddressOf(quad) + bands;
-site	src/game/effect/effect_kind_18_sub_12.cpp	423	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	const std::int32_t row = At(AddressOf(EffectKind18Sub15_Rows) + (k == 0 ? 0u : 4u))[0] + static_cast<std::int32_t>(shift);
-site	src/game/effect/effect_kind_18_sub_12.cpp	476	narrow_call	image_local	live	next	AddressOf	if (limit <= AddressOf(next) + bytes) {
-site	src/game/effect/effect_kind_18_sub_12.cpp	481	long	ul	live	unsigned long	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
-site	src/game/effect/effect_kind_18_sub_12.cpp	481	uintptr	-	live	std::uintptr_t	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
-site	src/game/effect/effect_kind_18_sub_12.cpp	481	widen	word_read	live	UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer))	unsigned long*	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
-site	src/game/effect/effect_kind_18_sub_12.cpp	482	narrow_call	image_local	live	next	AddressOf	AddressOf(next));
-site	src/game/effect/effect_kind_18_sub_12.cpp	484	narrow_call	image_local	live	now	AddressOf	SetUL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
-site	src/game/effect/effect_kind_18_sub_12.cpp	516	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
-site	src/game/effect/effect_kind_18_sub_12.cpp	517	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
+site	src/game/effect/effect_kind_18_sub_12.cpp	52	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
+site	src/game/effect/effect_kind_18_sub_12.cpp	79	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
+site	src/game/effect/effect_kind_18_sub_12.cpp	79	widen	word_read	live	UL(At(table + 4 * state))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
+site	src/game/effect/effect_kind_18_sub_12.cpp	89	narrow_call	image	live	&AreaMap_Corners	AddressOf	void SetCorner(U index, U v) { SetUL(At(AddressOf(&AreaMap_Corners) + 4 * index), v); }
+site	src/game/effect/effect_kind_18_sub_12.cpp	94	long	l	live	long	-	long depth = 0;
+site	src/game/effect/effect_kind_18_sub_12.cpp	197	narrow_call	image_local	live	rect	AddressOf	SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, AddressOf(rect));
+site	src/game/effect/effect_kind_18_sub_12.cpp	206	long	l	live	long	-	long t[3];
+site	src/game/effect/effect_kind_18_sub_12.cpp	231	narrow_call	image	live	EffectKind18Sub12_States	AddressOf	DispatchEffect5c(" ", AddressOf(EffectKind18Sub12_States), EffectKind18Sub12_States_count);
+site	src/game/effect/effect_kind_18_sub_12.cpp	247	narrow_call	image	live	EffectKind18Sub12_Tiles	AddressOf	extern " " void __cdecl EffectKind18Sub12_DrawTiles(unsigned y, unsigned shade) { Tiles(AddressOf(EffectKind18Sub12_Tiles), y, shade); }
+site	src/game/effect/effect_kind_18_sub_12.cpp	252	narrow_call	image	live	EffectKind18Sub15_States	AddressOf	DispatchEffect5c(" ", AddressOf(EffectKind18Sub15_States), EffectKind18Sub15_States_count);
+site	src/game/effect/effect_kind_18_sub_12.cpp	412	narrow_call	image	live	EffectKind18Sub15_Columns	AddressOf	const U x0 = Word(At(AddressOf(EffectKind18Sub15_Columns) + 2 * k));
+site	src/game/effect/effect_kind_18_sub_12.cpp	413	narrow_call	image	live	EffectKind18Sub15_Columns	AddressOf	const U x1 = Word(At(AddressOf(EffectKind18Sub15_Columns) + 2 * k + 2));
+site	src/game/effect/effect_kind_18_sub_12.cpp	419	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	Float(quad + 0x2C, I(At(AddressOf(EffectKind18Sub15_Rows) + k)[0] + shift));
+site	src/game/effect/effect_kind_18_sub_12.cpp	421	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	Float(quad + 0x3C, I(At(AddressOf(EffectKind18Sub15_Rows) + k + 1)[0] + shift));
+site	src/game/effect/effect_kind_18_sub_12.cpp	444	narrow_call	image_local	live	quad	AddressOf	const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + ::bof3::Img(at::kPoolLimit) > AddressOf(quad) + bands;
+site	src/game/effect/effect_kind_18_sub_12.cpp	452	narrow_call	image	live	EffectKind18Sub15_Rows	AddressOf	const std::int32_t row = At(AddressOf(EffectKind18Sub15_Rows) + (k == 0 ? 0u : 4u))[0] + static_cast<std::int32_t>(shift);
+site	src/game/effect/effect_kind_18_sub_12.cpp	515	narrow_call	image_local	live	next	AddressOf	if (limit <= AddressOf(next) + bytes) {
+site	src/game/effect/effect_kind_18_sub_12.cpp	523	long	ul	live	unsigned long	-	unsigned long& last = DrawLayers[9u + 2u * (buffer & 1u)];
+site	src/game/effect/effect_kind_18_sub_12.cpp	524	long	ul	live	unsigned long	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+site	src/game/effect/effect_kind_18_sub_12.cpp	524	narrow_call	image_local	live	next	AddressOf	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+site	src/game/effect/effect_kind_18_sub_12.cpp	524	uintptr	-	live	std::uintptr_t	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+site	src/game/effect/effect_kind_18_sub_12.cpp	524	widen	param	live	last	unsigned long*	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(last)), AddressOf(next));
+site	src/game/effect/effect_kind_18_sub_12.cpp	525	narrow_call	image_local	live	next	AddressOf	last = AddressOf(next);
+site	src/game/effect/effect_kind_18_sub_12.cpp	529	long	ul	live	unsigned long	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
+site	src/game/effect/effect_kind_18_sub_12.cpp	529	uintptr	-	live	std::uintptr_t	-	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
+site	src/game/effect/effect_kind_18_sub_12.cpp	529	widen	word_read	live	UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer))	unsigned long*	SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
+site	src/game/effect/effect_kind_18_sub_12.cpp	530	narrow_call	image_local	live	next	AddressOf	AddressOf(next));
+site	src/game/effect/effect_kind_18_sub_12.cpp	532	narrow_call	image_local	live	now	AddressOf	SetUL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
+site	src/game/effect/effect_kind_18_sub_12.cpp	564	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
+site	src/game/effect/effect_kind_18_sub_12.cpp	565	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
 site	src/game/effect/effect_kind_18_sub_17.cpp	49	low32	helper_def	live	p	Low32	U AddressOf(const void* p) { return Low32(p); }
 site	src/game/effect/effect_kind_18_sub_17.cpp	61	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
 site	src/game/effect/effect_kind_18_sub_17.cpp	61	widen	word_read	live	UL(At(table + 4 * state))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * state))))();
@@ -11340,55 +11346,55 @@ site	src/game/platform/gte.cpp	787	long	ul	live	unsigned long	-	extern " " void 
 site	src/game/platform/gte.cpp	787	long	ul	live	unsigned long	-	extern " " void __cdecl Gte_StoreScreenXY3(unsigned long* out0, unsigned long* out1, unsigned long* out2) {
 site	src/game/platform/gte.cpp	842	long	l	live	long	-	extern " " void __cdecl Gte_StoreDepthQuarter(long* out) { *out = Gte_Depth >> 2; }
 site	src/game/platform/gte.cpp	910	low32	object_ours	live	&psx_gte::g_lv_exact	Low32	Low32(&psx_gte::g_lv_exact), was, is, 4);
-site	src/game/platform/magic_080.cpp	114	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	114	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	116	long	ul	live	unsigned long	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	116	long	ul	live	unsigned long	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	116	uintptr	-	live	std::uintptr_t	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	116	widen	param	live	address	unsigned long*	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	118	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/platform/magic_080.cpp	159	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	159	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/magic_080.cpp	279	long	l	live	long	-	long v[4];
-site	src/game/platform/magic_080.cpp	378	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
-site	src/game/platform/magic_080.cpp	399	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
-site	src/game/platform/magic_080.cpp	419	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
-site	src/game/platform/magic_080.cpp	421	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
-site	src/game/platform/magic_080.cpp	441	long	l	live	long	-	const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
-site	src/game/platform/magic_080.cpp	555	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
-site	src/game/platform/magic_080.cpp	555	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
-site	src/game/platform/magic_080.cpp	578	long	ul	live	unsigned long	-	Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
-site	src/game/platform/magic_080.cpp	579	long	ul	live	unsigned long	-	static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
-site	src/game/platform/magic_080.cpp	616	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
-site	src/game/platform/magic_080.cpp	616	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
-site	src/game/platform/magic_080.cpp	649	long	l	live	long	-	bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));
-site	src/game/platform/magic_080.cpp	652	long	l	live	long	-	if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
-site	src/game/platform/magic_080.cpp	720	long	ul	live	unsigned long	-	bof3::Log(" ", g_speed, static_cast<unsigned long>(Frame_Counter));
-site	src/game/platform/magic_080.cpp	735	long	l	live	long	-	if (wparam == 0) return static_cast<long>(BROADCAST_QUERY_DENY);
-site	src/game/platform/magic_080.cpp	740	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, lparam));
-site	src/game/platform/magic_080.cpp	773	long	l	live	long	-	const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
-site	src/game/platform/magic_080.cpp	807	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/platform/magic_080.cpp	807	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
-site	src/game/platform/magic_080.cpp	862	long	ul	live	unsigned long	-	unsigned long logic_at_fps_tick = 0;
-site	src/game/platform/magic_080.cpp	867	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
-site	src/game/platform/magic_080.cpp	884	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	884	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
-site	src/game/platform/magic_080.cpp	917	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
-site	src/game/platform/magic_080.cpp	935	long	ul	live	unsigned long	-	now - deadline, static_cast<unsigned long>(Frame_Counter));
-site	src/game/platform/magic_080.cpp	952	long	ul	live	unsigned long	-	Gfx_DrawOTag(reinterpret_cast<unsigned long*>(env + 0x8C));
-site	src/game/platform/magic_080.cpp	986	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
-site	src/game/platform/magic_080.cpp	986	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
-site	src/game/platform/magic_080.cpp	1000	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	1000	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
-site	src/game/platform/magic_080.cpp	1002	long	ul	live	unsigned long	-	Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
-site	src/game/platform/magic_080.cpp	1058	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
-site	src/game/platform/magic_080.cpp	1059	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/magic_080.cpp	1060	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
-site	src/game/platform/magic_080.cpp	1072	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
-site	src/game/platform/magic_080.cpp	1103	long	ul	live	unsigned long	-	shell::g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
-site	src/game/platform/magic_080.cpp	1133	long	ul	live	unsigned long	-	unsigned long* head = Gfx_OtHeads + ((b << 5) >> 2);
-site	src/game/platform/magic_080.cpp	1142	low32	image_local	live	node	Low32	node[1] = Low32(node);
-site	src/game/platform/magic_080.cpp	1159	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
+site	src/game/platform/magic_080.cpp	115	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	115	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	117	long	ul	live	unsigned long	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	117	long	ul	live	unsigned long	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	117	uintptr	-	live	std::uintptr_t	-	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	117	widen	param	live	address	unsigned long*	unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	119	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/platform/magic_080.cpp	160	uintptr	-	live	std::uintptr_t	-	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	160	widen	param	live	address	const char*	const char* StrWinMain(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/magic_080.cpp	280	long	l	live	long	-	long v[4];
+site	src/game/platform/magic_080.cpp	379	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
+site	src/game/platform/magic_080.cpp	400	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
+site	src/game/platform/magic_080.cpp	420	long	ul	live	unsigned long	-	if (std::swprintf(slash + 1, room, L" ", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+site	src/game/platform/magic_080.cpp	422	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter), ok ? " " : " ",
+site	src/game/platform/magic_080.cpp	442	long	l	live	long	-	const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
+site	src/game/platform/magic_080.cpp	556	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
+site	src/game/platform/magic_080.cpp	556	long	l	live	long	-	extern " " long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
+site	src/game/platform/magic_080.cpp	579	long	ul	live	unsigned long	-	Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
+site	src/game/platform/magic_080.cpp	580	long	ul	live	unsigned long	-	static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
+site	src/game/platform/magic_080.cpp	617	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+site	src/game/platform/magic_080.cpp	617	long	ul	live	unsigned long	-	const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+site	src/game/platform/magic_080.cpp	650	long	l	live	long	-	bof3::InputScript_RecordKey(static_cast<unsigned>(wparam), static_cast<long>(lparam));
+site	src/game/platform/magic_080.cpp	653	long	l	live	long	-	if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
+site	src/game/platform/magic_080.cpp	721	long	ul	live	unsigned long	-	bof3::Log(" ", g_speed, static_cast<unsigned long>(Frame_Counter));
+site	src/game/platform/magic_080.cpp	736	long	l	live	long	-	if (wparam == 0) return static_cast<long>(BROADCAST_QUERY_DENY);
+site	src/game/platform/magic_080.cpp	741	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, lparam));
+site	src/game/platform/magic_080.cpp	774	long	l	live	long	-	const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
+site	src/game/platform/magic_080.cpp	808	uintptr	-	live	std::uintptr_t	-	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/platform/magic_080.cpp	808	widen	code_place	live	::bof3::Code(bof3::addr::Game_WndProc)	WNDPROC	wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
+site	src/game/platform/magic_080.cpp	863	long	ul	live	unsigned long	-	unsigned long logic_at_fps_tick = 0;
+site	src/game/platform/magic_080.cpp	868	long	l	live	long	-	long long draw_ticks = 0, logic_ticks = 0;
+site	src/game/platform/magic_080.cpp	885	uintptr	-	live	std::uintptr_t	-	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	885	widen	code_place	live	::bof3::Code(bof3::addr::Boot_Task)	void*	Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
+site	src/game/platform/magic_080.cpp	918	long	ul	live	unsigned long	-	static_cast<unsigned long>(Frame_Counter));
+site	src/game/platform/magic_080.cpp	936	long	ul	live	unsigned long	-	now - deadline, static_cast<unsigned long>(Frame_Counter));
+site	src/game/platform/magic_080.cpp	956	long	ul	live	unsigned long	-	Gfx_DrawOTag(reinterpret_cast<unsigned long*>(env + 0x8C));
+site	src/game/platform/magic_080.cpp	990	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+site	src/game/platform/magic_080.cpp	990	long	ul	live	unsigned long	-	const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+site	src/game/platform/magic_080.cpp	1004	uintptr	-	live	std::uintptr_t	-	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	1004	widen	img_place	live	::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride	unsigned char*	unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
+site	src/game/platform/magic_080.cpp	1006	long	ul	live	unsigned long	-	Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
+site	src/game/platform/magic_080.cpp	1062	naked	-	live	Cfg_Load	-	extern " " __attribute__((naked)) void __cdecl Cfg_Load(void) {
+site	src/game/platform/magic_080.cpp	1063	width_if	asm_pair	live	Cfg_Load	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/magic_080.cpp	1064	asm	stack	live	subl $0x3C, %esp	call leal pushl subl	asm("subl $0x3C, %esp\n\t"
+site	src/game/platform/magic_080.cpp	1076	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
+site	src/game/platform/magic_080.cpp	1107	long	ul	live	unsigned long	-	shell::g.clear_otag_r(reinterpret_cast<unsigned long*>(block + kBlockOt), kOtSlots);
+site	src/game/platform/magic_080.cpp	1137	long	ul	live	unsigned long	-	unsigned long* head = Gfx_OtHeads + ((b << 5) >> 2);
+site	src/game/platform/magic_080.cpp	1146	low32	image_local	live	node	Low32	node[1] = Low32(node);
+site	src/game/platform/magic_080.cpp	1163	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
 site	src/game/platform/music.cpp	73	long	l	live	long	-	constexpr long kBufferLostBattleItems = static_cast<long>(0x88780096u);
 site	src/game/platform/music.cpp	73	long	l	live	long	-	constexpr long kBufferLostBattleItems = static_cast<long>(0x88780096u);
 site	src/game/platform/music.cpp	81	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -13636,12 +13642,12 @@ site	src/hook/input_script.cpp	845	widen	img_place	live	::bof3::Img(s.addr)	void
 site	src/hook/input_script.cpp	849	fmt_place	word	live	(unsigned)s.addr	%08X	Log("input POKE 0x%08X = 0x%X (u%u) recipe frame %u", (unsigned)s.addr, (unsigned)s.value,
 site	src/hook/input_script.cpp	934	long	l	live	long	-	Field_Kind2X = static_cast<long>(s.arg[0]);
 site	src/hook/input_script.cpp	935	long	l	live	long	-	Field_Kind2Z = static_cast<long>(s.arg[1]);
-site	src/hook/input_script.cpp	1284	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam) {
-site	src/hook/input_script.cpp	1307	long	ul	live	unsigned long	-	if (r >= sizeof rec) Fatal(" ", (unsigned long)r);
-site	src/hook/input_script.cpp	1308	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
-site	src/hook/input_script.cpp	1336	long	ul	live	unsigned long	-	const unsigned long v = std::strtoul(every, &end, 10);
-site	src/hook/input_script.cpp	1346	long	ul	live	unsigned long	-	std::swprintf(name, 64, L" ", static_cast<unsigned long>(bof3::os::ProcessId()));
-site	src/hook/input_script.cpp	1348	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
+site	src/hook/input_script.cpp	1295	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam) {
+site	src/hook/input_script.cpp	1318	long	ul	live	unsigned long	-	if (r >= sizeof rec) Fatal(" ", (unsigned long)r);
+site	src/hook/input_script.cpp	1319	long	ul	live	unsigned long	-	if (n >= sizeof path) Fatal(" ", (unsigned long)n);
+site	src/hook/input_script.cpp	1347	long	ul	live	unsigned long	-	const unsigned long v = std::strtoul(every, &end, 10);
+site	src/hook/input_script.cpp	1357	long	ul	live	unsigned long	-	std::swprintf(name, 64, L" ", static_cast<unsigned long>(bof3::os::ProcessId()));
+site	src/hook/input_script.cpp	1359	long	ul	live	unsigned long	-	if (!g_release) Fatal(" ", static_cast<unsigned long>(bof3::os::LastError()));
 site	src/hook/input_script.h	37	long	l	live	long	-	void InputScript_RecordKey(unsigned vk, long lparam);
 site	src/hook/snapshot.cpp	75	sizeof_ptr	-	live	sizeof(void*)	-	constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
 site	src/hook/snapshot.cpp	179	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
@@ -13913,10 +13919,10 @@ site	src/hook/statehash.cpp	844	long	ul	live	unsigned long	-	static_cast<unsigne
 site	src/hook/statehash.cpp	880	long	ul	live	unsigned long	-	Log(" ", (unsigned long)g_tick,
 site	src/hook/statehash.cpp	881	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
 site	src/hook/statehash.cpp	881	long	ul	live	unsigned long	-	(unsigned long)va, (unsigned long)w, what, fn ? " " : "", fn ? fn : "", fn ? " " : "");
-site	src/hook/statehash.cpp	898	uintptr	-	live	std::uintptr_t	-	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
-site	src/hook/statehash.cpp	898	widen	other	live	g_data + i * kPage	const unsigned char*	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
-site	src/hook/statehash.cpp	915	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
-site	src/hook/statehash.cpp	915	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
+site	src/hook/statehash.cpp	900	uintptr	-	live	std::uintptr_t	-	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
+site	src/hook/statehash.cpp	900	widen	other	live	g_data + i * kPage	const unsigned char*	const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
+site	src/hook/statehash.cpp	917	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
+site	src/hook/statehash.cpp	917	long	ul	live	unsigned long	-	static_cast<unsigned long>(g_tick), static_cast<unsigned long>(normalised),
 site	src/hook/statehash.h	24	long	ul	live	unsigned long	-	void StateHash_SetImageBase(unsigned long base);
 site	src/hook/stp_census.cpp	31	uintptr	-	live	std::uintptr_t	-	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 site	src/hook/stp_census.cpp	31	widen	param	live	a	const unsigned char*	const unsigned char* At(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
@@ -17745,11 +17751,12 @@ file	src/game/effect/effect_kind_18_sub_11.cpp	live	narrow_call	image	2
 file	src/game/effect/effect_kind_18_sub_11.cpp	live	uintptr	-	1
 file	src/game/effect/effect_kind_18_sub_11.cpp	live	widen	word_read	1
 file	src/game/effect/effect_kind_18_sub_12.cpp	live	long	l	2
-file	src/game/effect/effect_kind_18_sub_12.cpp	live	long	ul	3
+file	src/game/effect/effect_kind_18_sub_12.cpp	live	long	ul	5
 file	src/game/effect/effect_kind_18_sub_12.cpp	live	low32	helper_def	1
 file	src/game/effect/effect_kind_18_sub_12.cpp	live	narrow_call	image	9
-file	src/game/effect/effect_kind_18_sub_12.cpp	live	narrow_call	image_local	5
-file	src/game/effect/effect_kind_18_sub_12.cpp	live	uintptr	-	2
+file	src/game/effect/effect_kind_18_sub_12.cpp	live	narrow_call	image_local	7
+file	src/game/effect/effect_kind_18_sub_12.cpp	live	uintptr	-	3
+file	src/game/effect/effect_kind_18_sub_12.cpp	live	widen	param	1
 file	src/game/effect/effect_kind_18_sub_12.cpp	live	widen	word_read	2
 file	src/game/effect/effect_kind_18_sub_17.cpp	live	long	l	8
 file	src/game/effect/effect_kind_18_sub_17.cpp	live	long	ul	6
@@ -20915,8 +20922,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	16207
-#count sites_live	11989
+#count sites	16213
+#count sites_live	11995
 #count sites_fuzz	4218
 #count fuzz_files	250
 #count narrow	356
@@ -20951,8 +20958,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3297
-#count narrow_call_live	1468
+#count narrow_call	3299
+#count narrow_call_live	1470
 #count narrow_call_live_files	331
 #count narrow_call_fuzz	1829
 #count narrow_call_fuzz_files	234
@@ -20968,8 +20975,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_image	1202
 #count narrow_call_image_live	800
 #count narrow_call_image_live_files	193
-#count narrow_call_image_local	1185
-#count narrow_call_image_local_live	528
+#count narrow_call_image_local	1187
+#count narrow_call_image_local_live	530
 #count narrow_call_image_local_live_files	196
 #count narrow_call_object_ours	524
 #count narrow_call_object_ours_live	64
@@ -20983,8 +20990,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_windows	11
 #count narrow_call_windows_live	5
 #count narrow_call_windows_live_files	2
-#count widen	1343
-#count widen_live	1033
+#count widen	1344
+#count widen_live	1034
 #count widen_live_files	484
 #count widen_fuzz	310
 #count widen_fuzz_files	147
@@ -20997,14 +21004,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_other	209
 #count widen_other_live	195
 #count widen_other_live_files	115
-#count widen_param	639
-#count widen_param_live	357
-#count widen_param_live_files	159
+#count widen_param	640
+#count widen_param_live	358
+#count widen_param_live_files	160
 #count widen_word_read	373
 #count widen_word_read_live	364
 #count widen_word_read_live_files	295
-#count long	7438
-#count long_live	6690
+#count long	7440
+#count long_live	6692
 #count long_live_files	504
 #count long_fuzz	748
 #count long_fuzz_files	79
@@ -21020,8 +21027,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_l	4001
 #count long_l_live	3417
 #count long_l_live_files	390
-#count long_ul	1648
-#count long_ul_live	1484
+#count long_ul	1650
+#count long_ul_live	1486
 #count long_ul_live_files	298
 #count asm	322
 #count asm_live	201
@@ -21091,13 +21098,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	12
 #count sizeof_ptr_-_live	12
 #count sizeof_ptr_-_live_files	7
-#count uintptr	1868
-#count uintptr_live	1202
+#count uintptr	1869
+#count uintptr_live	1203
 #count uintptr_live_files	503
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1868
-#count uintptr_-_live	1202
+#count uintptr_-	1869
+#count uintptr_-_live	1203
 #count uintptr_-_live_files	503
 #count fmt_place	472
 #count fmt_place_live	402
@@ -21235,9 +21242,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	14
 #count asm_live_x87_only_files	42
 #count widen_live_fnptr	472
-#count long_src	5649
-#count long_src_game	5116
-#count long_src_game_ul	1428
+#count long_src	5651
+#count long_src_game	5118
+#count long_src_game_ul	1430
 #count long_ctype	1789
 #count callconv_CALLBACK	20
 #count callconv_CALLBACK_fuzz	1
