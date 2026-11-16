@@ -52,7 +52,7 @@ import movement_scan as ms     # noqa: E402
 import staging_scan as ss      # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'src', 'game', 'wide_staging.cpp')
+SRC = os.path.join(ROOT, 'src', 'game', 'field', 'wide_staging.cpp')
 HALF_W = 12                   # SS's half sprite (staging_scan.HALF_W); wide_staging.cpp kHalfWidth
 WIDTHS = (53, 120)
 MAX_STEPS = 80
