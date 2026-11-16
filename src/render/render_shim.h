@@ -184,6 +184,14 @@ void SetPresentHook(PresentFn fn);
 // is presented later). Nothing when off or when no frame is kept.
 void SetInBetweenHook(PresentFn fn);
 void PresentInBetween();
+// How many times Present has run. WinMain reads it either side of
+// Gpu_PutDispEnv: the original presents only when the display buffer changed
+// since the last frame put, so the frame drawn after a late one is not shown
+// on its own (docs/frame-interpolation.md section 6, item 18).
+U PresentCount();
+// A pass of WinMain's loop that drew and shows no in-between, for the
+// statistics lines (BOF3X_INTERP_STATS); `why` is one word.
+void NoInBetween(const char* why);
 
 // Start-up: allocates the frame's arrays. Sizes are the limits a frame can
 // hold; a frame that outgrows them ends the process naming the limit.

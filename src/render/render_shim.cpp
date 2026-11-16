@@ -431,6 +431,20 @@ void LogFrameHash() {
 
 // When Present last ran with the in-between on, for its statistics line.
 std::uint64_t g_interp_present_at;
+U g_presents;
+
+// BOF3X_INTERP_STATS=1 (tooling): a line for each in-between, what the
+// matcher did with the frame's draws by rule and how long after the present
+// it was shown; tools/interp_stats.py reads them. Nothing is logged when
+// unset.
+bool InterpStatsOn() {
+    static int on = -1;
+    if (on < 0) {
+        char v[8] = "";
+        on = (bof3::os::GetEnv("BOF3X_INTERP_STATS", v, sizeof v) > 0 && v[0] == '1') ? 1 : 0;
+    }
+    return on != 0;
+}
 
 void Present() {
     if (FrameHashOn()) LogFrameHash();
@@ -440,6 +454,7 @@ void Present() {
         g_interp_present_at = bof3::os::Counter();
     }
     if (g_present) g_present(g_frame);
+    ++g_presents;
     ResetFrame();
     ReleaseDeferred();
 }
@@ -1215,6 +1230,12 @@ Vertex* g_mid_vertices;
 }  // namespace
 void SetInBetweenHook(PresentFn fn) { g_in_between = fn; }
 
+U PresentCount() { return g_presents; }
+
+void NoInBetween(const char* why) {
+    if (interp::On() && InterpStatsOn()) bof3::Log("interp-stat fc %u none %s", static_cast<U>(Frame_Counter), why);
+}
+
 void PresentInBetween() {
     if (!interp::On() || !g_in_between || g_frame.n_commands == 0) return;
     static float max_move = -1;
@@ -1250,16 +1271,7 @@ void PresentInBetween() {
         Frame mid = g_frame;
         mid.vertices = g_mid_vertices;
         g_in_between(mid);
-        // BOF3X_INTERP_STATS=1 (tooling): a line for each in-between, what
-        // the matcher did with the frame's draws by rule and how long after
-        // the present it was shown; tools/interp_stats.py reads them. Nothing
-        // is logged when unset.
-        static int stats_on = -1;
-        if (stats_on < 0) {
-            char v[8] = "";
-            stats_on = (bof3::os::GetEnv("BOF3X_INTERP_STATS", v, sizeof v) > 0 && v[0] == '1') ? 1 : 0;
-        }
-        if (stats_on)
+        if (InterpStatsOn())
             bof3::Log("interp-stat fc %u draws %u order %u exact %u loose %u carried %u gap %u lone %u far %u unmatched %u followed %u "
                       "moved %u snapped %u runs %u cut %u dropped %u ms %.2f after %.1f",
                       static_cast<U>(Frame_Counter), s.draws, s.by_order, s.exact, s.loose, s.carried, s.by_gap, s.lone, s.far_,

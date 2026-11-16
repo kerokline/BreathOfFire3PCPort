@@ -890,6 +890,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         std::uint64_t deadline_frames = 0;
         int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
         unsigned stream_hold_frames = 0;   // BOF3X_SPEED: frames held at speed 1 for a playing stream
+        bool shown_last_pass = false;      // the pass before drew and presented (the in-between, render/interp.h)
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
             deadline_base = Now() + kFirstFrameMs;
@@ -953,13 +954,33 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // draw side writes follows the tick and not the machine's
                 // load (statehash.h StateHash_On; known-defects D420).
                 bool in_between_due = false;   // PROTOTYPE (render/interp.h)
+                bool shown_this_pass = false;
                 const bool made_late = g_late_every != 0 && !Game_Paused &&
                                        static_cast<unsigned>(Frame_Counter) % g_late_every == g_late_every - 1;
                 if ((now < deadline && !made_late) || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
-                    in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
                     if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;
+                    const unsigned presents = render::PresentCount();
                     Gpu_PutDispEnv(env);
+                    // The in-between is the frame recorded below halfway back
+                    // to the one this present shows, so that one must be the
+                    // frame of the pass before, alone. After a late pass it is
+                    // neither. Gpu_PutDispEnv presents only when the display
+                    // buffer is not the one last put, and the buffers swap
+                    // every pass, drawn or not: the pass after a late one
+                    // shows nothing and records its frame on top of the last
+                    // one's, and the pass after that shows the two together.
+                    // An in-between built on either had a list of two frames
+                    // to pair, with holes across the sea (bridgeWalk, 21:9),
+                    // and took so long that the next pass was late too
+                    // (docs/frame-interpolation.md section 6, item 18).
+                    const bool shown = render::PresentCount() != presents;
+                    in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
+                    if (in_between_due && !(shown && shown_last_pass)) {
+                        in_between_due = false;
+                        render::NoInBetween("late");
+                    }
+                    shown_this_pass = shown;
                     InterpDump(L"real");   // PROTOTYPE
                     Gpu_PutDrawEnv(env + 0x14);
                     Gfx_FlushDirtyStrip();
@@ -1011,6 +1032,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // 33.334 to the float at 0x6BC628 and held it under 2^32
                 // (0x4FCF0F..0x4FCF3A); that float is not written here.
                 ++deadline_frames;
+                shown_last_pass = shown_this_pass;
                 Gfx_BufferIndex ^= 1;
                 unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;
