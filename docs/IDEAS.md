@@ -1566,7 +1566,7 @@ _(2026-11-12) staged as a round at the owner's word:_ [`new-game-round.md`](new-
 both pieces, the options screen back in the New Game sequence with them, the grid from the chosen
 language's disc (the Chinese skips the name screen), names of five, on by default with switches.
 Nothing built.
-_(2026-11-14) built on the local branch `new-game/round`, not merged:_ the name screen at New Game
+_(2026-11-14) built on the branch `new-game/round`, merged as PR #247 on 2026-11-15:_ the name screen at New Game
 (DIV-0231 `NewGameNameEntry`), the options screen there in every language, the original Chinese
 included (DIV-0232 `NewGameOptions`), the renamer on the grid (DIV-0233 `CommuNameGrid`; DIV-0075
 holds where it does not run), with D18's fix (DIV-0234), the tiled frame's (DIV-0235) and the

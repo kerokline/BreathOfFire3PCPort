@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-15: `main` is `ce75c996`, the PR #247 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#247 ([`STATUS.md`](STATUS.md) has a line each), none of it released; this session's work in flight is item 00's first bullet; the item numbers below were not renumbered by this pass)
+**Status:** IN PROGRESS (2026-11-16: `main` is `df083903`, the PR #255 merge, and no PR is open; `v0.1.0-beta.1` was published on 2026-11-08 from `44fd3204`, the PR #212 merge; merged since the beta: PRs #213, #214, #217..#222, #224 and #227..#247 and #248..#255 ([`STATUS.md`](STATUS.md) has a line each), none of it released; in flight is the state-hash pairs' re-record, paused (item 00, the beta.2 bullet); the item numbers below were not renumbered by this pass)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43; the count was last recorded at `a7c7a9e5`, [`STATUS.md`](STATUS.md) "Where we are"; not measured again at `ce75c996`).
-**`origin/main` is `ce75c996`** (PR #247, 2026-11-15). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round and its measurements (PRs #224, #231; DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215), the Linux native groundwork (PR #229), a docs truth pass (PR #230), the romhack's ten behaviours (PRs #232, #233; DIV-0216..0225) and its version 1.4 (PR #239), the learn cheat (PR #234, DIV-0226), the save slot's EXP bar (PR #235, DIV-0227), the owner's answers of 2026-11-12 (PR #236), the New Game and solo-character rounds' staging docs (PRs #237, #238), the solo-character mode (PR #240, DIV-0228, DIV-0229; issue #223), a romhack's patch added by itself, from its author's archive and under European English (PRs #241, #242, #244), the story watcher and the records' names (PR #243), smooth motion (PRs #245, #246; DIV-0230) and the New Game round (PR #247, DIV-0231..0236) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
+**`origin/main` is `df083903`** (PR #255, 2026-11-15). **`v0.1.0-beta.1` is published** (2026-11-08, the tag at `44fd3204`, the PR #212 merge; `v0.1.0-alpha.6` stayed a draft and was deleted that day, its tag kept). **Since the beta, `main` took** the World Map Heal fix (PR #213, DIV-0208), the source-layout round's stages B0 to D with the cleanup round (PRs #214, #217), the save editor and its reference (PRs #218, #221, #222; DIV-0209..0211), the Proton fixes (PR #219, D411, D412), romhacks as mods (PRs #220, #227; issue #216), the image-layer round and its measurements (PRs #224, #231; DIV-0212, DIV-0213), the PSX media round (PR #228, DIV-0214, DIV-0215), the Linux native groundwork (PR #229), a docs truth pass (PR #230), the romhack's ten behaviours (PRs #232, #233; DIV-0216..0225) and its version 1.4 (PR #239), the learn cheat (PR #234, DIV-0226), the save slot's EXP bar (PR #235, DIV-0227), the owner's answers of 2026-11-12 (PR #236), the New Game and solo-character rounds' staging docs (PRs #237, #238), the solo-character mode (PR #240, DIV-0228, DIV-0229; issue #223), a romhack's patch added by itself, from its author's archive and under European English (PRs #241, #242, #244), the story watcher and the records' names (PR #243), smooth motion (PRs #245, #246; DIV-0230) the New Game round (PR #247, DIV-0231..0236), the cleanup and D420's fix (PRs #248, #249), a PPF applied to the data track alone (PR #250), the wide picture's model sprites, area 90 and the sea bridge's far end (PRs #251, #253; DIV-0041 amended, D425) and smooth motion's faults from the owner's play (PRs #252, #254, #255) - none of it is in a release (item 00). Before the beta, since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -23,7 +23,7 @@ issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, 
 last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
 faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every round branch the earlier versions of this file called
-local or unpushed is merged; the local branches with commits not in `main` are listed under "In flight". **No PR is open** (2026-11-15).
+local or unpushed is merged; the local branches with commits not in `main` are listed under "In flight". **No PR is open** (2026-11-16).
 Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -31,8 +31,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-00. **Next, 2026-11-15** (the order is the owner's; these are the candidates):
-   - **D420 is fixed (branch `harness/d420-hash-noise`, 2026-11-15; the cleanup below merged as PR #248, `main`
+00. **Next, 2026-11-16** (the order is the owner's; these are the candidates):
+   - **D420 is fixed (merged as PR #249, 2026-11-15; the cleanup below merged as PR #248, `main`
      `31925318`):** the state hash's "sound page" noise was the real keyboard's bytes (`Key_State`, typed anywhere on the
      machine) and a late frame's undrawn environments, named from the solo proof's kept runs with the new
      `tools/statehash_explain.py` ([`state-hash.md`](state-hash.md) 5a; [`known-defects.md`](known-defects.md) D420). A
@@ -42,13 +42,21 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      image-layer round's trap) and that is not measured again. Not run: the ten routes, the 64-bit build with a game,
      the hosted shadow suite. A proof whose base is older than this branch compares a build with the fix against one
      without: identical on a quiet machine (measured on this route), noise on the old side only.
-   - **The cleanup of 2026-11-15 (branch `cleanup/1115`):** DIV-0231 and DIV-0232 are tier Intent, the owner's
+   - **The cleanup of 2026-11-15 (merged as PR #248):** DIV-0231 and DIV-0232 are tier Intent, the owner's
      answer of 2026-11-15 to PR #247's question, so only "As shipped" turns the two New Game screens off; D422 (a
      `ja-JP` name with a pair code drawn with the pair's placeholder in the party row and the member target banner)
      was seen in a game and fixed by DIV-0057's amendment ([`known-defects.md`](known-defects.md) D422; the 64-bit
      build of it not run in a game, no ten-route proof); three local branches' work landed (`dialog_test.py` by its own
      process, [`stale-overlay-state.md`](stale-overlay-state.md) with its two tools, the crane and the sailor's tides
      left out of DIV-0188); 28 worktrees, the merged local branches and every branch on `origin` but `main` removed.
+   - **The owner's word of 2026-11-16** ([`owner-review.md`](owner-review.md), its top section): the New Game screen
+     seen right under English and Japanese; smooth motion and the solo mode in the owner's play, an issue raised for
+     each thing met; the two known romhacks apply and unapply. Where a bullet below says "nobody has played" of
+     those, this is newer.
+   - **The wide picture and smooth motion, PRs #250 to #255 (2026-11-15)** ([`STATUS.md`](STATUS.md) has a line
+     each): owed is the ten-route state-hash proof for the three smooth-motion fixes (none recorded), and
+     [`frame-interpolation.md`](frame-interpolation.md) section 6 item 18 is open (holes in the sea after a late frame,
+     in both builds).
    - **`v0.1.0-beta.2`.** Everything merged since `44fd3204` is unreleased. The routine is
      [`releases/README.md`](releases/README.md). To settle first: whether a `disc-patch` mod ships as playable (the
      disc-patch round's group D, the release, is held by the owner's call 1, [`disc-patch-round.md`](disc-patch-round.md);
@@ -65,12 +73,12 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      every new pair - `0x5FD000` from tick 0 on all, `0x803000` on combat, the pages `0x904000` / `0x665000` /
      `0x6BD000` / `0x7DE000` from one tick on four routes, 31 pages on masterAndManillo - and none of it is read
      against the ledger yet, so the `orig5` pairs gate nothing until it is.
-   - **The New Game round is merged** (item 18; PR #247, 2026-11-15). Owed: the owner's play
+   - **The New Game round is merged** (item 18; PR #247, 2026-11-15). The owner saw it right under English and Japanese (2026-11-16). Owed: the rest of the play list
      ([`owner-review.md`](owner-review.md), section "2026-11-14, the New Game round") and what the PR lists as not run.
    - **The solo-character mode is merged** (PR #240, 2026-11-13; IDEAS I56, issue #223 closed;
      [`solo-character-round.md`](solo-character-round.md), [`solo-character-proof.md`](solo-character-proof.md) 6e). The
      owner's condition is met (2026-11-15, D420 fixed: the page's bytes were the real keyboard's and a late frame's, and
-     `cutsceneAndNue` with the mode off is identical to the round's pair on two replays; proof doc 6e). Owed: the owner's play (none yet; owner-review has no section for it); the save
+     `cutsceneAndNue` with the mode off is identical to the round's pair on two replays; proof doc 6e). The owner is playing through it (said 2026-11-16, no finding yet; owner-review's top section); the save
      editor's Solo champion field has not been looked at in the editor; the harness could not end fight 35 with record 6
      or fight 46 with record 2; fight 22 and a won bout of fights 18 to 20 are argued from the code only; fight 16's extra
      section on installs other than the PC files.
@@ -823,9 +831,12 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
      EXP past the level (needs the install's EXP curve); the button words are read-only; a save with a bad
      checksum opens for editing after one question, not read-only.
   7. `tools/recipe_saves/README.md` says `ammoniteBoss.DAT` is in area 134; the save holds 137.
-- **Local branches and worktrees, 2026-11-15, after the cleanup:** the only local branch beside `main` is
+- **Local branches and worktrees, 2026-11-16:** the only local branch with a patch not in `main` (`git cherry`) is
   `gameplay/angel-tower-skip` (one commit, 2026-10-27, the Angel Tower skip measured and unexplained, IDEAS I32 P1;
-  held, not for merge), and `origin` has `main` alone. The cleanup removed 28 worktrees, 25 local branches whose
+  held, not for merge). Six worktrees of branches merged on 2026-11-15 are still on disk and removable:
+  `.claude\worktrees\satpixie-trail` and, under `D:\bof3x-runs`, `chunk1115\wt`, `cl1115\d422\wt`, `cl1115\round\wt`,
+  `cull1115\wt` and `d420\wt`; `orig1116\wt` is this pass's own (`docs/owner-answers-1116`). At the cleanup of
+  2026-11-15 `origin` had `main` alone; not looked at again. The cleanup removed 28 worktrees, 25 local branches whose
   patches were all in `main` (`git cherry`), the 47 branches on `origin` (heads of merged PRs, and two with no PR
   and no patch outside `main`) and the superseded `claude/focused-brahmagupta-18db93` and `source-layout/k1`; the
   work of `claude/bold-fermi-cbc0b2`, `cheat/no-fail-vinegar` and `tools/dialog-test-own-process` was landed first.
