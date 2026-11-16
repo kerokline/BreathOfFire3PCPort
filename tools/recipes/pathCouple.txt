@@ -1,0 +1,28 @@
+# Written by hand, 2026-11-15: the owner's save beside a couple standing by a path,
+# walked past to the left, to the right and back (docs/frame-interpolation.md
+# section 6, item 17: the man's cel changes one frame in five). Recorded for 21:9
+# (--wide 2), BOF3X_LANG=en-US.
+# save pathCouple
+wait 60
+hold start 3
+wait 81
+hold start 3
+wait 45
+hold r2 4
+wait 36
+wait 42
+hold r2 4
+wait 15
+hold r2 5
+wait 120
+shot loaded
+hold left 50
+wait 10
+hold right 160
+wait 10
+shot right
+hold left 160
+wait 10
+hold right 100
+wait 10
+shot end
