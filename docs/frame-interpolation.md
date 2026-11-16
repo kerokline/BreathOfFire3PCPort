@@ -522,10 +522,12 @@ ear and the WAV A/B stay owed (IDEAS I68).
     its in-between. With no pass made late, the two builds' in-betweens are
     the same picture at 346 of 346 triples.
 
-    Not done: the late frame itself. The original's missing present stands
-    (D426), so with the in-between on or off a late frame holds the picture
-    for three periods where two would do. That is a change to what every
-    player sees and is the owner's call.
+    The late frame itself is DIV-0237, the same day at the owner's call:
+    a pass that draws presents the waiting frame when `Gpu_PutDispEnv` did
+    not, so the list never holds two frames. With it the same run has 176
+    passes with no in-between for 175 late ones - one after each late
+    frame, not two - and still none flagged. The in-between's own rule
+    stays: the present after a late frame shows a frame two steps back.
 
 19. **A party figure stands for one in-between as a walk begins** - *open,
     found 2026-11-16* by `tools/interp_motion.py`. worldMapAndAreaTransition

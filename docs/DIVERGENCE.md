@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 236 entries, DIV-0001..0236, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 237 entries, DIV-0001..0237, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -17627,4 +17627,60 @@ designed in rather than bolted on.
 - **Player:** yes
 - **Toward:** psx - the PlayStation releases' own art (above)
 - **Languages:** en-US, en-150, fr-FR - the layers that carry one of the two tiles
+- **State:** active
+
+### A frame that waited through a late frame is shown
+
+- **ID:** DIV-0237
+- **Date:** 2026-11-16
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop,
+  `src/game/platform/magic_080.cpp`); known-defects D426;
+  [`frame-interpolation.md`](frame-interpolation.md) 6, item 18
+- **Tier:** Intent - a frame that was drawn is meant to be seen
+- **Original behaviour:** `Gpu_PutDispEnv` `0x5A7860` presents only when
+  the display environment's `y` differs from the one last put (a 16-bit
+  compare, by disassembly), and the loop swaps its two buffers on every
+  pass whether it drew or not. A late pass is not drawn. So after an odd
+  count of late passes the next pass puts the same buffer as the last one
+  drawn: nothing is presented, the back buffer is not cleared, and the new
+  frame is drawn over the frame that was waiting. The pass after that
+  presents the two together. One late frame holds the picture for three
+  periods, and the picture that ends the hold has both frames'
+  semi-transparent draws in it.
+- **New behaviour:** a pass that draws and whose `Gpu_PutDispEnv` did not
+  present calls `Gfx_Present` `0x59EDF0` itself, at the same place, so the
+  waiting frame is shown alone and the new one is recorded alone. One late
+  frame holds the picture for two periods. No frame is shown off its time
+  and no late frame is drawn: the frame skip is as it was. Nothing differs
+  on a run with no late pass.
+- **Rationale:** the owner's call, 2026-11-16, on D426. The test in
+  `Gpu_PutDispEnv` reads as "the buffers swapped, so there is a frame to
+  show"; with the swap outside the draw it also reads "no frame" after a
+  skipped pass, which nothing suggests was meant. With smooth motion
+  (DIV-0230) the doubled list cost far more: section 6, item 18.
+- **Also in the PSX version?** No: the PlayStation's loop
+  (`Main_FrameLoop` `0x8014AAC8`, the sibling's `symbols.toml`) waits
+  `VSync(2)` and draws on every pass; it skips no frame, and its
+  `PutDispEnv` is the library's, which shows the buffer it is given. The
+  skip and the test are the PC port's.
+- **Verification:** bridgeWalk at `--wide 2`, `BOF3X_LATE_EVERY=12` (one
+  pass in twelve taken as late), `BOF3X_FRAMEHASH=1`, smooth motion off:
+  before, 172 of 1,921 walks of the ordering table were drawn with no
+  clear, each logged at one present with the walk before it; after, none
+  of 1,927, and 175 `DIV-0237` lines for the 175 late passes. Smooth
+  motion on, the same switch, one triple in six: 175 triples, none flagged
+  by `tools/interp_holes.py`, and 176 passes with no in-between where the
+  build before had 351. With no pass made late, 349 of 349 triples are the
+  same three pictures as the build before. **Not verified:** under the
+  hosted `BOF3.exe`; with `BOF3X_SPEED` above 1 on a machine that cannot
+  keep it (at 4 this one drew every pass of bridgeWalk: no late pass, no
+  `DIV-0237` line); that the eye sees the shorter hold; the state hash, which draws
+  every frame and so never has a late pass.
+- **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain`. No switch
+  of its own.
+- **Switch:** Game_WinMain
+- **Default:** on
+- **Player:** costly - no switch of its own: the loop's `Inject` (`src/game/win_main.cpp`)
+- **Toward:** none - the PlayStation's loop skips no frame (above)
+- **Languages:** any
 - **State:** active
