@@ -29,6 +29,9 @@ struct Entry {
     Key exact, loose;
     U first, count;
     bool used;
+    // A textured draw whose surface no other draw of its frame samples: a
+    // figure with a texture of its own (GapByOrder).
+    bool alone;
     // What Build moved this draw back by (its first vertex, the whole step),
     // when it had a pair: a cel that changes takes it on (Carry).
     bool has_motion;
@@ -109,6 +112,33 @@ Entry EntryOf(const Command& c, const Vertex* v) {
     return e;
 }
 
+// Upright on the screen: every vertex on the edge of the draw's box both
+// ways, as a figure's sprite or a letter is and a tile of the ground seen
+// from the camera is not.
+bool Upright(const Vertex* p, U count) {
+    float x0 = p[0].x, x1 = p[0].x, y0 = p[0].y, y1 = p[0].y;
+    for (U k = 1; k < count; ++k) {
+        x0 = std::min(x0, p[k].x), x1 = std::max(x1, p[k].x);
+        y0 = std::min(y0, p[k].y), y1 = std::max(y1, p[k].y);
+    }
+    for (U k = 0; k < count; ++k) {
+        const bool on_x = std::fabs(p[k].x - x0) < 0.01f || std::fabs(p[k].x - x1) < 0.01f;
+        const bool on_y = std::fabs(p[k].y - y0) < 0.01f || std::fabs(p[k].y - y1) < 0.01f;
+        if (!on_x || !on_y) return false;
+    }
+    return true;
+}
+
+// Sets `alone` on the entries of one frame; `surfaces` is theirs, in order.
+void MarkAlone(Entry* entries, const std::vector<const void*>& surfaces) {
+    std::vector<const void*> sorted = surfaces;
+    std::sort(sorted.begin(), sorted.end());
+    for (std::size_t i = 0; i < surfaces.size(); ++i) {
+        const auto range = std::equal_range(sorted.begin(), sorted.end(), surfaces[i]);
+        entries[i].alone = surfaces[i] != nullptr && range.second - range.first == 1;
+    }
+}
+
 // Each unused kept entry with `key` in `order` (sorted by `member`) to
 // fn(index); returns how many entries have the key, used or not.
 template <class Fn> U EachUnused(const std::vector<U>& order, Key Entry::*member, Key key, const Fn& fn) {
@@ -135,11 +165,14 @@ bool On() {
 void Keep(const Frame& frame) {
     g_vertices.assign(frame.vertices, frame.vertices + frame.n_vertices);
     g_entries.clear();
+    std::vector<const void*> surfaces;
     for (U i = 0; i < frame.n_commands; ++i) {
         const Command& c = frame.commands[i];
         if (!IsDraw(c)) continue;
         g_entries.push_back(EntryOf(c, frame.vertices + c.first));
+        surfaces.push_back(SurfaceOf(c));
     }
+    MarkAlone(g_entries.data(), surfaces);
     if (g_built_valid && g_built.size() == g_entries.size())
         for (std::size_t i = 0; i < g_entries.size(); ++i)
             g_entries[i].has_motion = g_built[i].has, g_entries[i].mx = g_built[i].dx, g_entries[i].my = g_built[i].dy;
@@ -163,6 +196,13 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     std::vector<Entry> cur(frame.n_commands);
     for (U i = 0; i < frame.n_commands; ++i)
         if (IsDraw(frame.commands[i])) cur[i] = EntryOf(frame.commands[i], frame.vertices + frame.commands[i].first);
+    {
+        // A command each, draw or not: a null surface is never alone.
+        std::vector<const void*> surfaces(frame.n_commands, nullptr);
+        for (U i = 0; i < frame.n_commands; ++i)
+            if (IsDraw(frame.commands[i])) surfaces[i] = SurfaceOf(frame.commands[i]);
+        MarkAlone(cur.data(), surfaces);
+    }
     // For the debug lines: a surface by its ordinal among the frame's, in
     // the order met (an address is not the same from run to run).
     std::vector<const void*> surface_ids;
@@ -250,6 +290,9 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
     };
     // 0 unmatched, 1 a candidate too far, 2 matched
     std::vector<unsigned char> done(frame.n_commands, 0);
+    // Paired by its place in the list alone (GapByOrder): the draws after it
+    // do not take its motion for something to agree with.
+    std::vector<bool> by_gap(frame.n_commands, false);
     // Pairing is led by motion, not by the nearest draw of the same look: a
     // field is a grid of tiles that look alike, and its animated ones trade
     // looks with their neighbours from frame to frame (the sea), so the
@@ -414,6 +457,55 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         }
         return false;
     };
+    // The kept draw a draw stands in for by the list's order alone: the
+    // nearest draws before and after it with partners by order, and the kept
+    // draws lying between those two partners. A figure's cel that changed is
+    // another texture, so nothing of its look is left to find it by; its
+    // place in the list is. The rule is kept to figures: both draws are
+    // alone on their surfaces, which a tile of the ground is not, and both
+    // are upright on the screen, which a tile of the sea (a surface each) is
+    // not. Tiles have the rules above; without the first test a ground tile
+    // coming in at the edge took the place of one that left. The draws next to it may have no partner either
+    // - a tile that came in at the picture's edge is sorted in beside it -
+    // so of the kept draws in the gap it is the nearest, within half the cap:
+    // the tile is the picture's width away, and the man's wider cel had its
+    // corner 26 pixels from the old one's, the scene's step and the arm's.
+    // -1 for none.
+    const auto GapByOrder = [&](U index) {
+        constexpr int kGap = 4;   // draws without a partner looked past, each way
+        const Command& c = frame.commands[index];
+        if (!cur[index].alone || !Upright(frame.vertices + c.first, c.count)) return -1;
+        int before = -1, after = -1, seen = 0;
+        for (std::int64_t j = static_cast<std::int64_t>(index) - 1; j >= 0 && seen < kGap; --j) {
+            if (!IsDraw(frame.commands[j])) continue;
+            ++seen;
+            if (align[j] >= 0) {
+                before = align[j];
+                break;
+            }
+        }
+        seen = 0;
+        for (U j = index + 1; j < frame.n_commands && seen < kGap; ++j) {
+            if (!IsDraw(frame.commands[j])) continue;
+            ++seen;
+            if (align[j] >= 0) {
+                after = align[j];
+                break;
+            }
+        }
+        if (before < 0 || after <= before + 1 || after > before + 1 + kGap) return -1;
+        const Vertex& at = frame.vertices[c.first];
+        int best = -1;
+        float best_d = cap / 4;
+        for (int k = before + 1; k < after; ++k) {
+            const Entry& e = g_entries[k];
+            if (e.used || !e.alone || e.count != c.count || !Upright(g_vertices.data() + e.first, e.count)) continue;
+            const Vertex& p = g_vertices[e.first];
+            const float d = (p.x - at.x) * (p.x - at.x) + (p.y - at.y) * (p.y - at.y);
+            if (d <= best_d) best = k, best_d = d;
+        }
+        return best;
+    };
     struct Last {
         const void* surface;
         float dx, dy;
@@ -440,7 +532,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
         for (std::int64_t j = static_cast<std::int64_t>(i) - 1; j >= 0; --j) {
             const Command& o = frame.commands[j];
             if (!IsDraw(o)) continue;
-            if (done[j] == 2) prev_paired = static_cast<int>(j);
+            if (done[j] == 2 && !by_gap[j]) prev_paired = static_cast<int>(j);
             break;
         }
         // ... and what it did: a thing's pieces are drawn together, whatever
@@ -539,6 +631,21 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             // shop's message bar).
             Remember();
             ++s.exact;
+        } else if (const int gap = looks == 0 ? GapByOrder(i) : -1; gap >= 0 && Carry(i, g_entries[gap])) {
+            // A cel that changed its box and its texture: no candidate by
+            // look, and none by shape, or only some other thing's. A man
+            // waving beside a path has a new cel one frame in five, another
+            // texture in a box of another size; with no pair he was shown
+            // where the frame has him while the ground under him went halfway
+            // (the owner, 2026-11-15: a figure that wiggles as the party walks
+            // past). The kept draw in his place in the list is him, and he
+            // takes the motion it was shown with, as any changed cel. Nothing
+            // is told of it: a figure is followed in the list by a tile of the
+            // ground or the sea, which must not take a carried motion for one
+            // to agree with.
+            done[i] = 2;
+            by_gap[i] = true;
+            ++s.loose;
         } else if (any) {
             done[i] = 1;
             ++s.far_;
@@ -675,16 +782,7 @@ bool Build(const Frame& frame, Vertex* out, float max_move, Stats* stats) {
             // a surface each with the same coordinates and box too, and in a
             // run of their own one break left holes in the sea (bridgeWalk,
             // Frame_Counter 1452); seen from the camera they are not upright.
-            float x0 = p[0].x, x1 = p[0].x, y0 = p[0].y, y1 = p[0].y;
-            for (U k = 1; k < a.count; ++k) {
-                x0 = std::min(x0, p[k].x), x1 = std::max(x1, p[k].x);
-                y0 = std::min(y0, p[k].y), y1 = std::max(y1, p[k].y);
-            }
-            for (U k = 0; k < a.count; ++k) {
-                const bool on_x = std::fabs(p[k].x - x0) < 0.01f || std::fabs(p[k].x - x1) < 0.01f;
-                const bool on_y = std::fabs(p[k].y - y0) < 0.01f || std::fabs(p[k].y - y1) < 0.01f;
-                if (!on_x || !on_y) return false;
-            }
+            if (!Upright(p, a.count)) return false;
             for (U k = 0; k < a.count; ++k) {
                 if (p[k].u != q[k].u || p[k].v != q[k].v) return false;
                 const float ex = (p[k].x - p[0].x) - (q[k].x - q[0].x), ey = (p[k].y - p[0].y) - (q[k].y - q[0].y);

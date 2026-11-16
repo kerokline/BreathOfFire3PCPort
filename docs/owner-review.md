@@ -1558,5 +1558,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   at 21:9 on the town and the world map: jugs and barrels as the field
   scrolls (item 13), the leader on the world map (item 14), and the edges
   of the picture as the camera pans, the sliver beside the house roof
-  above all (item 15). And a look at the
+  above all (item 15). The man and the woman by the path, walked past
+  (item 17, the wiggle reported 2026-11-15), and with it the party's own
+  figures as the camera moves: a figure whose cel changes now carries its
+  last motion where it stood still before. And a look at the
   Settings page's layout: its check boxes moved closer for the new box.

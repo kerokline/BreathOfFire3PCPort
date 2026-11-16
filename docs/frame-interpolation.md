@@ -74,6 +74,14 @@ code beside its rule:
    best and agrees with nothing - does not move by the step between the two
    boxes: it takes the motion its kept draw was shown with the frame before,
    and none when that draw had no pair (section 6, item 14).
+   **A cel that changed its box and its texture** has no candidate at all,
+   by look or by shape: a figure's new cel is another surface. It is found
+   by its place in the list - the kept draws between the partners by order
+   of the nearest draws before and after it (four looked past each way,
+   since a tile that came in at the picture's edge can be sorted in beside
+   it), the nearest of them within half the cap - and carries that draw's
+   motion the same way (section 6, item 17). It is tried only when every
+   rule above and rule 4 gave no pair.
 4. **A lone look-alike** (two or fewer) within a quarter of the cap.
 5. **Rigidity.** A pair is refused when its vertices move differently by
    more than a quarter of the polygon's longest extent (12 px at the least):
@@ -384,6 +392,53 @@ ear and the WAV A/B stay owed (IDEAS I68).
     the original 4:3 picture, and no route was played.
 16. **One stray** of 42 pixels at the bottom edge, Frame_Counter 840 of the
     same route, before and after the changes of 2026-11-15. Not read.
+17. **A figure that wiggles as the party walks past** - *closed
+    2026-11-15* (the owner, in play at 21:9: a man and a woman standing by
+    a path, the man waving). Route `pathCouple` (the owner's save, walked
+    past both ways at `--wide 2`, every in-between dumped): on the frame
+    the man's cel changes, one in five (Frame_Counter 550, 554, 572, 576,
+    581, 586 ...), the in-between has him where frame N does while the
+    woman and the ground go halfway, 5 to 6 px apart from her. The decision
+    log at 586: his draw has `looks 0 best -1`. The new cel is another
+    surface in a box of another size, so there is no candidate by look or
+    by shape, and a draw with no pair stands still. He is now found by his
+    place in the list and carries his kept draw's motion (section 3, rule
+    3). Measured by matching the pair's picture of frame N in the
+    in-between: 13 of 94 tracked in-betweens had the two apart before, none
+    of 96 after.
+
+    Three forms were withdrawn on the way. By surface: the cel's surface
+    is new, so nothing matched. Between partnered neighbours only: a tile
+    entering at the picture's edge is sorted in beside him two frames in
+    ten. Without "alone on its surface and upright": ground tiles took the
+    rule. A carried figure is also kept out of what the next draw in the
+    list agrees with.
+
+    **Against the build before, 2026-11-15** (`--wide 2`,
+    `BOF3X_FILTER=point`; in-betweens between real frames that are equal
+    in both runs): bridgeWalk, one triple in three, 24 of 212 and 40 of 177
+    differ; the five that differ over more than 170 px were read and are
+    the party's three figures and nothing else. Two runs of one build
+    differ at 2 of 104 and 5 of 280, none over a large area. One triple in
+    six: worldMapAndAreaTransition 29 of 290, shop 11 of 438, combat 19 of
+    302. Read: worldMapAndAreaTransition 1116, the world map's mist patch
+    (a lone upright surface, now carried) and 1416, three small pieces. Not
+    read: the rest. The envelope flags could not judge the change: see
+    item 18. **Not checked: that a party figure carried this way sits
+    better than one left where the frame has it** - the owner's eye.
+18. **Holes in the sea after a late frame** - *open, found 2026-11-15.*
+    Run beside the owner's own game and this session's analysis, bridgeWalk
+    dropped frames (228 to 310 triples where a quiet run has 349 at one in
+    six, about 700 at one in three) and **both builds** then show
+    in-betweens with a chequer of holes in the sea across the picture's
+    width: the build before 8 and 5 flagged triples in two runs (6,017 to
+    13,879 px each for the wide ones), this one 8 and 4; a quiet run of the
+    build before had none. The frames differ from run to run. Taken to be
+    the in-between built against a kept frame two steps old after a
+    present was skipped; not traced. Where to start: whether `Keep` runs
+    for a frame whose present was skipped, and whether an in-between is due
+    at all after one. Until it is closed, a sweep on a loaded machine
+    flags frames that are not the change under test.
 
 Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
 box. Before it leaves "experimental": the checkers in `tools/`, the debug
