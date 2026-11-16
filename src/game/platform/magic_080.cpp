@@ -977,8 +977,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     // put.
                     if (drawn_once && render::PresentCount() == presents) {
                         Gfx_Present();
-                        if (g_late_log) bof3::Log("DIV-0237    Frame_Counter %lu: presented after a late frame",
-                                                  static_cast<unsigned long>(Frame_Counter));
+                        if (g_late_log) bof3::Log("DIV-0237    Frame_Counter %u: presented after a late frame",
+                                                  static_cast<unsigned>(Frame_Counter));
                     }
                     drawn_once = true;
                     // The in-between is the frame recorded below halfway back
