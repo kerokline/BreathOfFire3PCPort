@@ -16,7 +16,8 @@ pixels. For each block and each shift s within --reach, it measures how well
 the block matches frame N at -s and frame N+1 at +s. A part that is halfway
 has one s that is good for both: the same step back as forward. A block is
 counted when each neighbour has a good match somewhere but no single s is
-good for both - it matches the two frames at places that are not opposite.
+good for both - it matches the two frames at places that are not opposite,
+--step pixels or more apart.
 
 A flag is not a fault. Flagged by design: a frame shown unmoved after a cut
 or a broken run (it is frame N+1 again), a line of letters that changed, a
@@ -71,7 +72,10 @@ def measure(job):
     for r, c in cells:
         sa = shifts[len(shifts) - 1 - int(ca[:, r, c].argmin())]   # as a step back: frame N at -sa
         sb = shifts[int(cb[:, r, c].argmin())]
-        found.append((int(r), int(c), sa, sb))
+        # The two steps of a part that is halfway are the same; a pixel or
+        # two apart is a half step rounded, or a figure's own animation.
+        if max(abs(sa[0] - sb[0]), abs(sa[1] - sb[1])) >= a.step:
+            found.append((int(r), int(c), sa, sb))
     if a.mark and len(found) >= a.min:
         strip = Image.new('RGB', (mid.shape[1], mid.shape[0] * 3))
         for k, (m, kind) in enumerate(((n, 'real'), (n, 'mid'), (n + 1, 'real'))):
@@ -93,6 +97,7 @@ def main():
     ap.add_argument('--reach', type=int, default=20, help='the furthest shift tried, pixels')
     ap.add_argument('--good', type=float, default=5.0, help='a match: mean difference of a block, levels')
     ap.add_argument('--apart', type=float, default=10.0, help='how much worse the best opposite pair must be')
+    ap.add_argument('--step', type=int, default=3, help='how far apart the two steps must be, pixels')
     ap.add_argument('--texture', type=float, default=14.0, help="a block's standard deviation before it is read")
     ap.add_argument('--mark', help='directory for the marked pictures of listed triples')
     ap.add_argument('--jobs', type=int, default=8)

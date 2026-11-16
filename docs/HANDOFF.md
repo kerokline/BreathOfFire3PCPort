@@ -70,7 +70,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      [`owner-review.md`](owner-review.md) "Decided and built, not yet seen live": battles, menus, bossAndFlash's beam, the
      Settings page's tighter layout), the music by ear (IDEAS I68). PR #246's own tip did not run the ten-route proof (the
      changes after the 2026-11-14 proof are in the in-between's builder and the launcher); the three recipes it ended with
-     `quit` (`desertSummary`, `overheatAndDeepSea`, `shisuMinigame`) have not run since.
+     `quit` (`desertSummary`, `overheatAndDeepSea`, `shisuMinigame`) have not run since. 2026-11-16 (branch `render/interp-qc`): no in-between after a late frame (frame doc 6, item 18, closed); the owner's call on D426, the original's missing present after a late frame; item 19 open; `tools/interp_stats.py` and `tools/interp_motion.py`, and the loose battle frames they list, not read (frame doc 4a).
    - **The Linux round's next units** are frost's, on his fork ([`linux-round.md`](linux-round.md) 4 and 6; "Waiting on
      someone else"). Here: the renderer's remainder ([`platform-layers-plan.md`](platform-layers-plan.md) 2.2) and the
      second backend (IDEAS I63) gate tier 2, and the API is the owner's call 1 of `linux-round.md` 6. Tier 1's rows 5, 7
