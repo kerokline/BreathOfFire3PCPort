@@ -151,8 +151,15 @@ float4 Picture(V i) : SV_Target {
         }
         col *= vignette;
     }
+    // The roll: the preset's 6 radians a frame is 0.2832 short of a turn, and
+    // that is the roll the eye sees. A picture half a frame on (the
+    // in-between, DIV-0230) takes half of that and not half of 6, which is
+    // near half a turn: the lines changed places on every picture. A whole
+    // frame's roll is the preset's arithmetic, bit for bit.
+    float whole = floor(time);
+    float roll = 6.0 * (whole * scanroll) + (6.0 - 6.28318530718) * ((time - whole) * scanroll);
     time *= scanroll;
-    float scans = clamp(0.35 + 0.18 * sin(6.0 * time - scuv.y * resolution.y * 1.5), 0.0, 1.0);
+    float scans = clamp(0.35 + 0.18 * sin(roll - scuv.y * resolution.y * 1.5), 0.0, 1.0);
     float s = pow(scans, 0.9);
     col = col * s;
     if (shadow_mask > 0.5) {

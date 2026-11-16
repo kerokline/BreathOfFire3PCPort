@@ -17125,7 +17125,12 @@ designed in rather than bolted on.
   shown, so it is as strong on each picture as with the in-between off and
   lasts half as long (2026-11-15; frame-interpolation.md section 6, item
   10: a fade split over the two pictures showed a second copy of every
-  moving edge).
+  moving edge). The look's scan lines roll, on a picture half a frame on,
+  by half of the roll the eye sees in a frame (0.2832 radians back, the
+  preset's 6 less a turn) and not by half of 6 (2026-11-16;
+  frame-interpolation.md section 6, item 10: at 3 radians the lines changed
+  places on every picture). On a whole frame the roll is the preset's
+  arithmetic.
 - **Rationale:** the owner's ask (2026-11-13): the logic runs at 29.97
   frames a second and the machine has headroom for twice that; show one
   interpolated frame between each two, no more. The game counts frames and
