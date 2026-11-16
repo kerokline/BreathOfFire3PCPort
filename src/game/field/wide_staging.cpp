@@ -112,6 +112,7 @@ const Site kSites[] = {
     {0, 0x10, 5, 0x5DAAEC, 0x6EEFAD88, 0x0004, 0x005DA1FC, kNone, 0x003, kNone, kIn, 20, 74, 7, false},  // SS spawn pop, sx 340: shown, then walks south into view
     {0, 0x10, 6, 0x5DAB1C, 0xBD4799D4, 0x0008, 0x005DA20D, kNone, 0x007, kNone, kIn, 40, 83, 9, false},  // SS spawn pop, sx 360 (PSP changed: placed a cell farther)
     {19, 0x18, 3, 0x5E6890, 0x4FEBFC09, 0x0109, 0x00000000, 0x103, 0x108, kNone, kIn, 16, 144, 0, false},  // PD: the PSP's start 2 cells farther (SS: needs census, 16:9 if centred)
+    {28, 0x18, 7, 0x5EDD18, 0x0DCF7A4F, 0x000B, 0x00000000, 0x000, 0x00A, kNone, kIn, 42, 65, 0, false},  // the owner's capture, 2026-11-16: waits at sx -82..-31 (the census), then runs in; not in SS's table
     {27, 0x10, 2, 0x5ECB30, 0x4997E8F8, 0x000D, 0x00000000, kNone, 0x00C, kNone, kOut, 46, 94, 8, false},  // SS parked, sx -46, then E6 (PSP changed: 2 steps more)
     {32, 0x10, 4, 0x5EEAEC, 0x86FDB743, 0x001A, 0x00000000, 0x010, 0x017, kNone, kIn, 46, 171, 0, false},  // SS spawn pop, sx -46 (PSP changed: placed a cell farther)
     {39, 0x10, 34, 0x5F31EC, 0x3AEC2712, 0x0005, 0x005F2AC8, kNone, 0x004, kNone, kIn, 46, 171, 0, false},  // SS parked, waits then enters, sx -46

@@ -589,3 +589,46 @@ new sites go in as section 7 says.
 **`docs/IDEAS.md`:** the sweeps' draw-only mapping (section 8).
 
 **Defects:** none numbered. Found in passing: none.
+
+## 11. A 19th row: area 28, `+0x18[7]` (2026-11-16)
+
+**Status:** BUILT and replayed (2026-11-16); the owner's eye in play is owed.
+
+The owner's report: in a roof scene at 21:9 an actor who runs in from off
+screen after some dialogue stands in view at the left before the run. The
+static scan has no row for it (area 28 has no bank focus, so its rows there
+are "needs census").
+
+**Measured** (the band census, `BOF3X_BANDLOG_SPAN=1`, the owner's save
+replayed with talk pressed, 21:9): party member 1, area 28, standing from
+frame 610 to 994 with its drawn rectangle at x -81.6 .. -30.6, y 22.3 ..
+78.3; the 21:9 hide does not take it, because the rectangle is not wholly
+past -53. From frame 995 it runs, the rectangle's right edge 28.4 px farther
+right after 8 frames. Its script places it with the `0D` at `+0x000`, waits
+for clock 3, sets speed index 4 (`Field_MoveSpeeds` 8: 2 frames a step) and
+walks east with the move ops from `+0x00A`; it steps the clock itself after
+the walk, so nothing can pass it.
+
+**The row:** kIn by the `0D` at `+0x000`, the move at `+0x00A`, `beyond` 42
+(the rectangle's right edge at -30.6, less the rule's half sprite of 12),
+`pps10` 65 (7.1 px a step measured, taken a little short), no `top`, not
+fast (the convention of section 4 for an actor that steps the clock itself).
+14 steps at 120 columns, 4 at 53.
+
+**Replayed** (the same route, the build with the row):
+
+| View | Arm line | Census through the wait | The run |
+|---|---|---|---|
+| 21:9 | `25 of 25 rows armed at 120 columns`; `site 3 ... 14 steps ..., frame 995` | no row for the actor before frame 997 (outside the picture) | from frame 997 at x -170.5 .. -114.5, hidden by DIV-0124 until inside the 16:9 view; the original's start rectangle 28 frames after 995 |
+| 16:9 | `site 3 ... 4 steps at 53 columns, frame 995` | no row before frame 997 | from x -103.1 .. -47.1 |
+| narrow | nothing armed | - | `Rand` equal to the build before the row on all 1,182 frames |
+
+The margins are small: the rectangle clears the edge by about 1 px at each
+width (the visible pixels are narrower than the rectangle).
+
+**Not verified:** `tools/wide_staging_check.py`. Its source path was stale
+after the source layout round (fixed here); with that fixed it reports 6
+problems on main's rows ("no SS row for the camera") and then stops in the
+case-zero replay, before and after this row, which adds a seventh of the
+same kind because the scan has no camera for area 28. The tool wants a
+repair of its own.
