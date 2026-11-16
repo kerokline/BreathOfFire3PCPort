@@ -29,11 +29,11 @@ void SatpixieInit(ID3D11Device* device, U target_w, U target_h, U k);
 void SatpixieResize(ID3D11Device* device, U target_w, U target_h, U k);
 
 // Draws the target onto `window` inside `picture`. `time` is the picture's
-// time in game frames, for the look's animation; `step` is the game frames
-// since the last picture (1 a present; 0.5 with the in-between, interp.h),
-// for the trail's fade. Leaves the render target set to `window`, the
-// viewport to `picture`, and no shader resources bound.
+// time in game frames, for the look's animation (it goes on by half a frame
+// with the in-between, interp.h). The trail fades by its knob on every
+// picture. Leaves the render target set to `window`, the viewport to
+// `picture`, and no shader resources bound.
 void SatpixieDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11RenderTargetView* window,
-                  const D3D11_VIEWPORT& picture, double time, double step);
+                  const D3D11_VIEWPORT& picture, double time);
 
 }  // namespace render

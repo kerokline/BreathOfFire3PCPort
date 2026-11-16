@@ -17121,6 +17121,11 @@ designed in rather than bolted on.
   section 3). No in-between is shown while the game is paused, at a speed
   other than 1, or while a scripted shot is pending. Off, the default, the
   original's one picture a frame, and no code of the in-between runs.
+  Under the satpixie look the trail fades by its knob on every picture
+  shown, so it is as strong on each picture as with the in-between off and
+  lasts half as long (2026-11-15; frame-interpolation.md section 6, item
+  10: a fade split over the two pictures showed a second copy of every
+  moving edge).
 - **Rationale:** the owner's ask (2026-11-13): the logic runs at 29.97
   frames a second and the machine has headroom for twice that; show one
   interpolated frame between each two, no more. The game counts frames and

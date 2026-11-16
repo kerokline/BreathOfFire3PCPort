@@ -359,26 +359,19 @@ void SatpixieInit(ID3D11Device* device, U target_w, U target_h, U) {
 }
 
 void SatpixieDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11RenderTargetView* window,
-                  const D3D11_VIEWPORT& picture, double time, double step) {
+                  const D3D11_VIEWPORT& picture, double time) {
     g_p.frame_count = static_cast<float>(time);
     g_p.output_w = picture.Width;
     g_p.output_h = picture.Height;
-    // The trail fades by acc_modulate a game frame, so a picture `step`
-    // frames after the last fades by acc_modulate^step: half a frame after,
-    // its square root, and the trail lasts as long on the screen with the
-    // in-between as without. A step of 1 sends the knob as it is, bit for bit.
-    const float knob = g_p.acc_modulate;
-    if (step != 1.0) {
-        g_p.acc_modulate = static_cast<float>(std::pow(static_cast<double>(knob), step));
-        static bool said;
-        if (!said) {
-            said = true;
-            bof3::Log("satpixie    a picture %.2f game frames after the last (time %.2f): the trail fades by %.4f, not %.4f",
-                      step, time, g_p.acc_modulate, knob);
-        }
-    }
+    // The trail fades by acc_modulate on each picture shown, an in-between
+    // (DIV-0230) or not. A fade split over the two pictures of a game frame
+    // (the knob's square root on each) kept the trail as long on the screen
+    // but showed it too strong: the last picture, half a step away, stood at
+    // 0.81 of its brightness under the new one and not 0.65, and every edge
+    // that moved carried a second copy (the owner, 2026-11-15). So with the
+    // in-between on the trail is as strong on each picture as with it off,
+    // and lasts half as long.
     PutParams(ctx);
-    g_p.acc_modulate = knob;
     ctx->IASetInputLayout(nullptr);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     ctx->VSSetShader(g_vs, nullptr, 0);

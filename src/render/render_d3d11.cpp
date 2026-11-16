@@ -859,7 +859,7 @@ void Show(bool in_between) {
     g_last_in_between = in_between;
     g_picture_time += step;
     if (g_look == Look::kSatpixie) {
-        SatpixieDraw(g_ctx, g_target_srv, g_window_rtv, vp, g_picture_time, step);
+        SatpixieDraw(g_ctx, g_target_srv, g_window_rtv, vp, g_picture_time);
         const HRESULT hr = g_swap->Present(g_opt.vsync ? 1 : 0, 0);
         if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) Check(hr, "Present");
         return;
