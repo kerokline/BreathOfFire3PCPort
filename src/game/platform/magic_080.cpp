@@ -220,6 +220,12 @@ int g_speed = 1;
 // thirteen's review, item 1).
 bool g_speed_scripted = false;
 
+// BOF3X_LATE_EVERY=<n> (tooling): the pass at each Frame_Counter that is n - 1
+// past a multiple of n is taken as late and not drawn, as on a machine that
+// cannot keep the period. For the in-between after a late frame
+// (docs/frame-interpolation.md section 6, item 18). 0: off.
+unsigned g_late_every = 0;
+bool g_late_log = false;   // with BOF3X_LATE_EVERY or BOF3X_FPS_LOG: a line for each present DIV-0237 adds
 bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
 
 constexpr const char* kStrSpeed2 = "Speed x2";
@@ -768,6 +774,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             g_frame_ms = v;
         }
         if (bof3::os::GetEnv("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
+        if (bof3::os::GetEnv("BOF3X_LATE_EVERY", text, sizeof text) > 0 && std::atoi(text) > 1) {
+            g_late_every = static_cast<unsigned>(std::atoi(text));
+            bof3::Log("WinMain: BOF3X_LATE_EVERY: one pass in %u is not drawn", g_late_every);
+        }
+        g_late_log = g_late_every != 0 || g_fps_log;
         const DWORD sn = bof3::os::GetEnv("BOF3X_SPEED", text, sizeof text);
         if (sn > 0) {
             char* end = nullptr;
@@ -881,6 +892,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         std::uint64_t deadline_frames = 0;
         int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
         unsigned stream_hold_frames = 0;   // BOF3X_SPEED: frames held at speed 1 for a playing stream
+        bool shown_last_pass = false;      // the pass before drew and presented (the in-between, render/interp.h)
+        bool drawn_once = false;           // a frame has been recorded: one may wait unshown (DIV-0237)
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
             deadline_base = Now() + kFirstFrameMs;
@@ -944,11 +957,45 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // draw side writes follows the tick and not the machine's
                 // load (statehash.h StateHash_On; known-defects D420).
                 bool in_between_due = false;   // PROTOTYPE (render/interp.h)
-                if (now < deadline || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
-                    in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
+                bool shown_this_pass = false;
+                const bool made_late = g_late_every != 0 && !Game_Paused &&
+                                       static_cast<unsigned>(Frame_Counter) % g_late_every == g_late_every - 1;
+                if ((now < deadline && !made_late) || bof3::InputScript_ShotPending() || bof3::StateHash_On()) {
                     if (g_fps_log) q0 = static_cast<std::int64_t>(bof3::os::Counter());
                     unsigned char* env = Gfx_CurrentEnv;
+                    const unsigned presents = render::PresentCount();
                     Gpu_PutDispEnv(env);
+                    // DIV-0237: a pass that draws shows the frame that waits.
+                    // Gpu_PutDispEnv presents only when the display buffer is
+                    // not the one last put, and the buffers swap every pass,
+                    // drawn or not: after an odd count of late passes the
+                    // next pass put the same buffer, showed nothing, and
+                    // recorded its frame on top of the waiting one, and the
+                    // pass after that showed the two together (known-defects
+                    // D426). The present is Capcom's own, called as
+                    // Gpu_PutDispEnv calls it, before the draw environment is
+                    // put.
+                    if (drawn_once && render::PresentCount() == presents) {
+                        Gfx_Present();
+                        if (g_late_log) bof3::Log("DIV-0237    Frame_Counter %u: presented after a late frame",
+                                                  static_cast<unsigned>(Frame_Counter));
+                    }
+                    drawn_once = true;
+                    // The in-between is the frame recorded below halfway back
+                    // to the one this present shows, so that one must be the
+                    // frame of the pass before: none on the pass after a late
+                    // one, whose present shows a frame two steps back. An
+                    // in-between built there, on the two frames the original
+                    // left in the list, had holes across the sea (bridgeWalk,
+                    // 21:9) and took so long that the next pass was late too
+                    // (docs/frame-interpolation.md section 6, item 18).
+                    const bool shown = render::PresentCount() != presents;
+                    in_between_due = speed == 1 && !Game_Paused && !bof3::InputScript_ShotPending();
+                    if (in_between_due && !(shown && shown_last_pass)) {
+                        in_between_due = false;
+                        render::NoInBetween("late");
+                    }
+                    shown_this_pass = shown;
                     InterpDump(L"real");   // PROTOTYPE
                     Gpu_PutDrawEnv(env + 0x14);
                     Gfx_FlushDirtyStrip();
@@ -1000,6 +1047,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // 33.334 to the float at 0x6BC628 and held it under 2^32
                 // (0x4FCF0F..0x4FCF3A); that float is not written here.
                 ++deadline_frames;
+                shown_last_pass = shown_this_pass;
                 Gfx_BufferIndex ^= 1;
                 unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;

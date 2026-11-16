@@ -1,6 +1,6 @@
 # Frame interpolation: one in-between frame (prototype)
 
-**Status:** EXPERIMENTAL (prototype 2026-11-13; ledgered 2026-11-14 as
+**Status:** EXPERIMENTAL (prototype 2026-11-13; item 18 closed and two measures added 2026-11-16; ledgered 2026-11-14 as
 DIVERGENCE DIV-0230). Off by default; the launcher's Settings page has the
 box "Smooth motion: 60 frames each second (experimental)" (`interp=1` in
 `bof3x.ini`, which goes out as `BOF3X_INTERP=1`). The open items of section 6
@@ -43,6 +43,8 @@ Switches (the first is the launcher's `interp=`, DIV-0230; the rest are tooling)
 | `BOF3X_INTERP_MAX=<px>` | the cap on a vertex's move, target pixels (default 96) |
 | `BOF3X_INTERP_DUMP=<dir>` | writes `<Frame_Counter>_real.bmp` and `_mid.bmp` for two passes in every `BOF3X_INTERP_DUMP_EVERY` (default 100). The directory must exist: the first four writes log `NOT saved` otherwise. Logs nothing when unset. |
 | `BOF3X_INTERP_DEBUG=<Frame_Counter>` or `<first>-<last>` | logs those in-betweens' every decision (`interp-dbg` lines: `FRAME` at the head of each, then `DECIDE`, `VERT`, `FAIL`, `RUN`, `CUT?`) |
+| `BOF3X_INTERP_STATS=1` | one `interp-stat` line for each in-between: the draws by the rule that paired them, the runs broken, whether the frame was a cut, the matcher's time, and the time since the present (`after`); `none late` for a pass that drew and shows no in-between (section 6, item 18). `tools/interp_stats.py` reads them. Logs nothing when unset. |
+| `BOF3X_LATE_EVERY=<n>` | not the in-between's own: WinMain takes the pass at each `Frame_Counter` that is n - 1 past a multiple of n as late and does not draw it, as on a machine that cannot keep the period. With a dump of one in six and n = 12, half the triples follow a late pass. |
 
 ## 3. How draws are matched
 
@@ -120,7 +122,8 @@ code beside its rule:
 file names that is `N_real`, `N_mid`, `(N+1)_real`: `N_mid` is shown after
 frame N (read the other way round on 2026-11-15, and a jug then seemed to
 move backwards). `tools/interp_holes.py` is the envelope measure below over
-a dump directory. Two
+a dump directory. `tools/interp_stats.py` and `tools/interp_motion.py` are
+of 2026-11-16 (section 4a). Two
 checkers (kept in the session's scratch, `bof3x-runs/interp1113/sweep` and
 `bof3x-runs/interp1114/s2/check3.py`, not
 in the tree - worth moving to `tools/` if the work goes on):
@@ -185,6 +188,67 @@ run again yet when this was written).
 
 `bridgeWalk.txt` had no `# save` line and ran on whatever slot 0 held, three
 times in one day; it names `bridgeWalk` now.
+
+## 4a. Two more measures (2026-11-16)
+
+Every fault the owner saw in play on 2026-11-15 (section 6, items 13, 14,
+17) was one the envelope cannot see: a thing drawn whole, a few pixels from
+where it belongs. And a picture dump of one triple in six leaves five in six
+unread.
+
+**`tools/interp_stats.py LOG...`** reads the `interp-stat` lines
+(`BOF3X_INTERP_STATS=1`). It needs no dump, so it covers every in-between of
+a route at the cost of a log line. It lists the in-betweens where the
+matcher was least sure - draws left unmoved beside draws that moved, the
+slow ones - and counts cuts, changed cels carried, and passes with no
+in-between after a late frame. `--csv` appends one row a log with the
+commit, for a chart over commits.
+
+**`tools/interp_motion.py DUMP_DIR`** is a proof of concept. It cuts the
+in-between into blocks of 16 pixels and asks of each whether one step s
+serves both ways: the block in frame N at -s and in frame N+1 at +s. A block
+that matches each neighbour well somewhere, at places 3 pixels or more from
+opposite, is counted. What it flags by design: a frame shown unmoved (a cut,
+a broken run), a line of letters that changed. What it cannot see: a part
+whose cel changed outright, a flat part, a step beyond its reach (20 px).
+About 0.7 s a triple on eight processes.
+
+**What the motion measure found** (2026-11-16, the build of `c3a2c7d8`,
+`--wide 2`, `BOF3X_FILTER=point`). On pathCouple with every in-between
+dumped it lists the six frames of section 6 item 17 (550, 554, 572, 576,
+581, 586) on the build before that fix - yesterday's dump, 44 of 1,014
+triples listed - and none of the six on this build, 19 of 930 listed. One
+triple in six on the other routes:
+
+| Route | Triples | Listed | Read |
+|---|---|---|---|
+| worldMapAndAreaTransition | 357 | 6 | 480: section 6, item 19 |
+| bridgeWalk | 350 | 22 | 960: a figure of the cutscene whose cel changed, shown where frame N+1 has it |
+| combat | 435 | 8 | 588: a message bar that jumps 16 px with its text where frame N+1 has it, the bar the same; 450: a fighter whose cel changed, shown where frame N+1 has it |
+| shop | 526 | 18 | not read; the largest are steps of +20 and -20, the reach, on the floor's pattern |
+| bossAndFlash | 921 | 68 | not read; most are in 2856..2910, the spell |
+
+Four listed triples were read, of 141. A repeating pattern (the shop's
+floor) matches at many steps and is listed falsely when the true step is
+past the reach.
+
+**What the statistics lines gave** on the same runs (`tools/interp_stats.py`;
+"loose" is in-betweens with draws left unmoved beside draws that moved, a
+twentieth of the frame's or 24):
+
+| Route | In-betweens | None, late | Cuts | Loose | Changed cels carried | Match ms, mean and most |
+|---|---|---|---|---|---|---|
+| bossAndFlash | 5,528 | 1 | 10 | 536 | 3,179 | 1.41, 4.0 |
+| combat | 2,615 | 3 | 3 | 153 | 1,433 | 1.06, 2.3 |
+| pathCouple | 926 | 1 | 3 | 2 | 691 | 0.88, 2.4 |
+| shop | 3,158 | 3 | 31 | 31 | 263 | 0.34, 2.4 |
+| worldMapAndAreaTransition | 2,146 | 1 | 12 | 31 | 951 | 1.00, 5.3 |
+
+None of the loose in-betweens was read. The worst are battle frames where
+about half the draws stand: bossAndFlash 2860..2868 (a run of 496 draws
+broken, 230 to 300 too far) and combat 1091..1101 and 2073..2079 (the
+same shape, 328 to 384 draws). The shop has three runs of three or more
+cuts (1859..1863, 2976..2980, 3126..3128). Those are where to look next.
 
 ## 5. Logic neutrality
 
@@ -426,21 +490,61 @@ ear and the WAV A/B stay owed (IDEAS I68).
     read: the rest. The envelope flags could not judge the change: see
     item 18. **Not checked: that a party figure carried this way sits
     better than one left where the frame has it** - the owner's eye.
-18. **Holes in the sea after a late frame** - *open, found 2026-11-15.*
-    Run beside the owner's own game and this session's analysis, bridgeWalk
-    dropped frames (228 to 310 triples where a quiet run has 349 at one in
-    six, about 700 at one in three) and **both builds** then show
-    in-betweens with a chequer of holes in the sea across the picture's
-    width: the build before 8 and 5 flagged triples in two runs (6,017 to
-    13,879 px each for the wide ones), this one 8 and 4; a quiet run of the
-    build before had none. The frames differ from run to run. Taken to be
-    the in-between built against a kept frame two steps old after a
-    present was skipped; not traced. Where to start: whether `Keep` runs
-    for a frame whose present was skipped, and whether an in-between is due
-    at all after one. Until it is closed, a sweep on a loaded machine
-    flags frames that are not the change under test.
+18. **Holes in the sea after a late frame** - *closed 2026-11-16.* Not the
+    kept frame being two steps old, as first taken: the list the in-between
+    was built from held two frames. `Gpu_PutDispEnv` (`0x5A7860`) presents
+    only when the display buffer's `y` is not the one last put, and WinMain
+    swaps the buffers every pass, drawn or not. So after one late pass the
+    next pass puts the same buffer again: nothing is shown, the frame list
+    is not reset, and `Gfx_DrawOTag` records the new frame on top of the last
+    one's. The pass after that shows both. This is so with the in-between off
+    too (known-defects D426). With it on, the in-between of each of those two
+    passes paired a list of two frames against the kept one.
+
+    Measured with `BOF3X_LATE_EVERY=12` on bridgeWalk at `--wide 2`,
+    `BOF3X_FILTER=point`, one triple in six, the build before
+    (`bfdbde94`): of 131 triples 6 flagged for 52,028 px, 5 of them the
+    in-between right after a made-late pass. And it fed itself: the matcher
+    on a doubled list took long enough (7.4 ms on average, 89 ms at most,
+    against 3.2 and 7.5) that the next pass was late, so the pass after it
+    put the same buffer again and showed nothing again, and the list grew -
+    to 14,890 draws where a frame has about 1,450. 814 passes of 2,097 had
+    no in-between beyond the 174 made late, and the longest time between a
+    present and an in-between was 1,422 ms: the picture stood for that long.
+    That is what a loaded machine saw on 2026-11-15, the frames differing
+    from run to run.
+
+    Now an in-between is shown only when this pass and the pass before both
+    presented (`magic_080.cpp`, `render::PresentCount`): two passes without
+    one after each late frame. The same run on the fix (`c3a2c7d8`): 175
+    triples, none flagged; 351 passes with no in-between for the 174 made
+    late and none else; 1,534 draws at most; 17 ms at most from a present to
+    its in-between. With no pass made late, the two builds' in-betweens are
+    the same picture at 346 of 346 triples.
+
+    The late frame itself is DIV-0237, the same day at the owner's call:
+    a pass that draws presents the waiting frame when `Gpu_PutDispEnv` did
+    not, so the list never holds two frames. With it the same run has 176
+    passes with no in-between for 175 late ones - one after each late
+    frame, not two - and still none flagged. The in-between's own rule
+    stays: the present after a late frame shows a frame two steps back.
+
+19. **A party figure stands for one in-between as a walk begins** - *open,
+    found 2026-11-16* by `tools/interp_motion.py`. worldMapAndAreaTransition
+    at `--wide 2`, Frame_Counter 480, in town: the ground goes halfway
+    (898 of 903 draws moved, about 16 px by 5) and the two party figures are
+    shown where frame N+1 has them, 11 px by 6 from where frame N has them.
+    The decision log: one figure's draw has `looks 0 best -1` and no pair by
+    its place either; the other is a cel that changed, carried with
+    `d (0.0, 0.0)`. A carried cel takes the motion its kept draw was shown
+    with (rule 3), and on the first frame of a scroll that motion is none.
+    pathCouple 530 and 913 have the same step (10 px, nothing to frame N+1)
+    and are taken to be the same; not logged. Not seen in play. Where to
+    start: a carried draw whose kept motion is none, in a frame whose other
+    draws move - against the world map's leader (item 14), who is rightly
+    still while the ground moves.
 
 Done 2026-11-14: the `DIVERGENCE.md` entry (DIV-0230) and the launcher's
-box. Before it leaves "experimental": the checkers in `tools/`, the debug
+box. Before it leaves "experimental": the black and shift checkers in `tools/`, the debug
 logging trimmed, and the owner's eye over battles and menus (the row in
 `owner-review.md`).

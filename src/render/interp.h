@@ -28,6 +28,14 @@ struct Stats {
     U followed;    // of the last two, those moved with a matched neighbour
     U snapped;     // shown where the frame has them: their surface's pairing did not hold together
     U order_dropped;   // 1 when the order table ran past its time and was not used
+    // Which rule gave the pair (docs/frame-interpolation.md section 3); each
+    // is counted in exact or loose too.
+    U by_order;      // rule 2: the partner by the list's order
+    U carried;       // rule 3: a cel that changed, by shape alone, with its kept draw's motion
+    U by_gap;        // rule 3: a cel that changed box and texture, by its place in the list
+    U lone;          // rule 4: a lone look-alike
+    U broken_runs;   // rule 7: runs shown unmoved
+    U cut;           // rule 8: 1 when the whole frame was shown unmoved
 };
 
 // BOF3X_INTERP set and not 0.
