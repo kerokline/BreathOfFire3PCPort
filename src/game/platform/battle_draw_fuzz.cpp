@@ -273,7 +273,7 @@ unsigned char __cdecl StubCountUsed(U category) {
 }
 // sprintf: the two conversions, written into the buffer as hex - nothing of
 // the CRT (the self-test runs before it is initialised).
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const U a = va_arg(ap, U);

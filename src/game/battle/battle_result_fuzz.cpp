@@ -195,7 +195,7 @@ unsigned __cdecl StubExpToNext(unsigned slot) {
 }
 // A short text of the value into the buffer, so that the draws that read it
 // see what was formatted.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const unsigned value = va_arg(ap, unsigned);

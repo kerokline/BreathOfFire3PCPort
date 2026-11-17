@@ -229,7 +229,7 @@ void BuildFakes() {
 }
 
 // --- The stand-ins ------------------------------------------------------------
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     unsigned n = 0;
     for (const char* p = fmt; *p; ++p)
         if (*p == '%') ++n;

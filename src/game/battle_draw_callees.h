@@ -79,7 +79,7 @@ struct Callees {
     unsigned char (__cdecl* char_count)(const unsigned char*);             // Text_CharCount 0x57D800
     const unsigned char* (__cdecl* text_draw_at)(int, int, int, int, const unsigned char*);  // Text_DrawAt 0x516B30
     unsigned char (__cdecl* count_used)(unsigned);                         // Inventory_CountUsed 0x591A80
-    int (__cdecl* sprintf_)(char*, const char*, ...);                      // Crt_sprintf 0x5B9380
+    int (*sprintf_)(char*, const char*, ...);                      // Crt_sprintf 0x5B9380
     void (__cdecl* font8)(int, int, int, const unsigned char*);            // Text_DrawFont8 0x517090
     void (__cdecl* pieces)(int, int, const unsigned char*, int);           // Menu_DrawPieces 0x57D910
     void (__cdecl* piece)(int, int, unsigned, unsigned);                   // Menu_DrawPiece 0x57D860

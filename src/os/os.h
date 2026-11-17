@@ -9,6 +9,8 @@
 #include "os/dialog.h"
 #include "os/env.h"
 #include "os/file.h"
+#include "os/find.h"
 #include "os/hash.h"
 #include "os/memory.h"
+#include "os/stream.h"
 #include "os/text.h"

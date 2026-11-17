@@ -400,12 +400,68 @@ void TestSha256() {
     fs::remove_all(os::Path(dir.c_str()), ec);
 }
 
+// The search with a handle (os/find.h) and the two stream questions
+// (os/stream.h): what the game's save list and its file layer ask.
+void TestFindAndStreams() {
+    const std::string dir = Scratch() + "_find";
+    std::error_code ec;
+    fs::create_directories(os::Path(dir.c_str()), ec);
+    for (const char* name : {"SAVE1.DAT", "save0.dat", "SAVE2.DAT", "OTHER.TXT"}) Touch(dir + "/" + name);
+    std::ofstream(os::Path((dir + "/SAVE2.DAT").c_str()), std::ios::binary) << "twelve bytes";
+    fs::create_directories(os::Path((dir + "/SAVEDIR.DAT").c_str()), ec);
+    const std::int32_t now = static_cast<std::int32_t>(
+        std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+
+    // The game's own spelling: a backslash before the leaf pattern.
+    os::FindData found{};
+    const std::int32_t h = os::FindFirst((dir + "\\SAVE*.DAT").c_str(), &found);
+    CHECK(h != -1);
+    std::vector<std::string> names;
+    std::vector<std::uint32_t> sizes, attribs;
+    bool times = true;
+    if (h != -1) {
+        do {
+            names.push_back(found.name);
+            sizes.push_back(found.size);
+            attribs.push_back(found.attrib);
+            times = times && found.time_write > now - 3600 && found.time_write < now + 3600;
+        } while (os::FindNext(h, &found) == 0);
+        CHECK(os::FindNext(h, &found) == -1);   // the end stays the end
+        CHECK(os::FindClose(h) == 0);
+    }
+    // ASCII case counts neither in the match nor in the order; the folder that matches is handed too.
+    const std::vector<std::string> want = {"save0.dat", "SAVE1.DAT", "SAVE2.DAT", "SAVEDIR.DAT"};
+    CHECK(names == want);
+    CHECK(sizes.size() == 4 && sizes[0] == 1 && sizes[1] == 1 && sizes[2] == 12);
+    CHECK(attribs.size() == 4 && !(attribs[0] & os::kFindDirectory) && (attribs[3] & os::kFindDirectory));
+    CHECK(times);
+    CHECK(os::FindFirst((dir + "\\NONE*.DAT").c_str(), &found) == -1);
+    // Two searches at once keep their own places.
+    os::FindData a{}, b{};
+    const std::int32_t ha = os::FindFirst((dir + "/SAVE?.DAT").c_str(), &a);
+    const std::int32_t hb = os::FindFirst((dir + "/*.TXT").c_str(), &b);
+    CHECK(ha != -1 && hb != -1 && ha != hb && std::string(a.name) == "save0.dat" && std::string(b.name) == "OTHER.TXT");
+    CHECK(os::FindNext(hb, &b) == -1 && os::FindNext(ha, &a) == 0 && std::string(a.name) == "SAVE1.DAT");
+    CHECK(os::FindClose(ha) == 0 && os::FindClose(hb) == 0);
+
+    std::FILE* const f = std::fopen((dir + "/SAVE2.DAT").c_str(), "rb");
+    CHECK(f != nullptr);
+    if (f) {
+        const int fd = os::StreamDescriptor(f);
+        CHECK(fd > 2 && os::DescriptorLength(fd) == 12);
+        std::fclose(f);
+    }
+    CHECK(os::DescriptorLength(-1) == -1);
+    fs::remove_all(os::Path(dir.c_str()), ec);
+}
+
 }  // namespace
 
 int main() {
     TestMemory();
     TestFiles();
     TestNarrowNames();
+    TestFindAndStreams();
     TestClocks();
     TestEnvironment();
     TestSha256();

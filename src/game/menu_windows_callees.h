@@ -122,7 +122,7 @@ struct Callees {
     void (__cdecl* set_line_f4)(unsigned char*);                                              // Gpu_SetLineF4
     void (__cdecl* set_tile)(unsigned char*);                                                 // Gpu_SetTile
     unsigned char (__cdecl* area_byte)(int, int);                                             // AreaMap_ByteAt
-    int (__cdecl* sprintf_)(char*, const char*, ...);                                         // Crt_sprintf
+    int (*sprintf_)(char*, const char*, ...);                                         // Crt_sprintf
     // group W's and X's
     void (__cdecl* stat_icon)(unsigned, int, int, unsigned, unsigned, unsigned);
     void (__cdecl* draw_hand)(int, int, int);

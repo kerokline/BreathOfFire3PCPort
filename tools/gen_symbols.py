@@ -444,6 +444,13 @@ def main():
         cc = e.get('cc', '__cdecl')
         if cc not in CCS:
             fail(f'{e["name"]}: unknown calling convention {cc!r}')
+        if cc == '__cdecl' and e['params'].rstrip().endswith('...'):
+            # A variadic function carries no calling convention: __cdecl is
+            # the default on x86-32 and means nothing on x86-64 Windows, so
+            # the Windows builds are unchanged; where __cdecl is ms_abi
+            # (x86-64 Linux, docs/linux-round.md LA3) it would make va_start
+            # an error and the list unusable by the C library's v* calls.
+            cc = ''
         if 'impl' in e:
             if not os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(a.toml)), e['impl'])):
                 fail(f'{e["name"]}: impl file {e["impl"]} does not exist')

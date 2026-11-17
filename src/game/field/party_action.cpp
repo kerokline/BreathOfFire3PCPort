@@ -1849,7 +1849,7 @@ extern "C" void __cdecl PartyAction0_Form0Begin(void) { Form0Begin(); }
 // originals 0x51C190 / 0x51C980 / 0x51CED0 (0xDB bytes each): sets 0, 1 and
 // 2's form-0 state 1 (Form0Resolve above), each with its own set's pickup.
 extern "C" void __cdecl PartyAction0_Form0Resolve(void) {
-    Form0Resolve([](unsigned x, unsigned z) -> unsigned char { return SH_CALL(PartyAction0_CellPickup)(x, z); },
+    Form0Resolve([](unsigned x, unsigned z) __cdecl -> unsigned char { return SH_CALL(PartyAction0_CellPickup)(x, z); },
                  "PartyAction0_Form0Resolve (0x51C190)");
 }
 
@@ -1963,7 +1963,7 @@ extern "C" void __cdecl PartyAction1_Form0(void) { CodeAt(::bof3::Img(PartyActio
 extern "C" void __cdecl PartyAction1_Form0Begin(void) { Form0Begin(); }
 
 extern "C" void __cdecl PartyAction1_Form0Resolve(void) {
-    Form0Resolve([](unsigned x, unsigned z) -> unsigned char { return SH_CALL(PartyAction1_CellPickup)(x, z); },
+    Form0Resolve([](unsigned x, unsigned z) __cdecl -> unsigned char { return SH_CALL(PartyAction1_CellPickup)(x, z); },
                  "PartyAction1_Form0Resolve (0x51C980)");
 }
 
@@ -2017,7 +2017,7 @@ extern "C" void __cdecl PartyAction2_Form0(void) { CodeAt(::bof3::Img(PartyActio
 extern "C" void __cdecl PartyAction2_Form0Begin(void) { Form0Begin(); }
 
 extern "C" void __cdecl PartyAction2_Form0Resolve(void) {
-    Form0Resolve([](unsigned x, unsigned z) -> unsigned char { return SH_CALL(PartyAction2_CellPickup)(x, z); },
+    Form0Resolve([](unsigned x, unsigned z) __cdecl -> unsigned char { return SH_CALL(PartyAction2_CellPickup)(x, z); },
                  "PartyAction2_Form0Resolve (0x51CED0)");
 }
 

@@ -160,7 +160,7 @@ unsigned __cdecl StubAlloc(unsigned slot, unsigned kind) {
 }
 // sprintf: %[width]d written in decimal, right-aligned in spaces; every other
 // byte copied; no more than 0x20 characters.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     std::uint32_t args[2] = {};

@@ -193,7 +193,7 @@ void __cdecl StubFont8(int x, int y, int colour, const unsigned char* text) {
 }
 // sprintf: nothing of the CRT - the format's first bytes and a value of the
 // stand-ins' own, written into the buffer.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     Record(7, Id(dst), Id(fmt), TextHash(reinterpret_cast<const unsigned char*>(fmt), 8));
     const std::uint32_t h = Hash();
     unsigned n = 0;

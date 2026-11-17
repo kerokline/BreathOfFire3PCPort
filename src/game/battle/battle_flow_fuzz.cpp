@@ -213,7 +213,7 @@ void __cdecl StubDrawNumber(int x, int y, unsigned clut, unsigned value) {
 // of anything - spaces, digits, other bytes - and for an empty string a few
 // more after its NUL (the original draws the first character before any NUL
 // test). The text ends by 0x904BA0 + 0x20, which the fuzz keeps zero.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const unsigned value = va_arg(ap, unsigned);

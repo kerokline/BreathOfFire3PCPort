@@ -107,7 +107,7 @@ struct Callees {
     unsigned char (__cdecl* add_zenny)(unsigned, unsigned);
     void (__cdecl* draw_frame)(int, int, int, int);
     unsigned (__cdecl* exp_to_next)(unsigned);
-    int (__cdecl* crt_sprintf)(char*, const char*, ...);
+    int (*crt_sprintf)(char*, const char*, ...);
     const unsigned char* (__cdecl* msg_system)(unsigned);
     void (__cdecl* party_set_select)(unsigned, unsigned);
     unsigned (__cdecl* window_alloc)(unsigned, unsigned);

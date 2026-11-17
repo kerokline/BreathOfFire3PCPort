@@ -27,7 +27,6 @@
 #include "hook/run_speed.h"
 #include "game/save_menu.h"
 
-#include <io.h>
 
 #include <cstdint>
 #include <cstring>
@@ -46,6 +45,7 @@
 #include "input/sigma.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "os/os.h"
 
 namespace save_menu {
 
@@ -196,7 +196,7 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
         entry += at::kDirectoryBytes;
         ++count;
     } while (g.find_next(handle, found) == 0);
-    if (close) _findclose(static_cast<intptr_t>(handle));
+    if (close) bof3::os::FindClose(handle);
     return count;
 }
 

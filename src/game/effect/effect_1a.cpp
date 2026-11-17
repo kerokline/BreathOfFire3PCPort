@@ -187,7 +187,7 @@ void FishingEmptySelfTest() {
         SetW(object + 0x2E, 0x125);
         Sprite_Current = object;
     };
-    auto run = [&](void (*state)(), const char* what, unsigned want_calls) {
+    auto run = [&](void (__cdecl* state)(), const char* what, unsigned want_calls) {
         const unsigned calls = EffectKind0F_GlyphCalls();
         state();
         check(Gfx_PacketNext == saved_packet, what, Gfx_PacketNext == saved_packet ? 0 : 1, 0);

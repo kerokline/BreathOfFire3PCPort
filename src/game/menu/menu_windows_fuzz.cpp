@@ -257,7 +257,7 @@ unsigned char __cdecl StubAreaByte(int x, int y) {
 }
 // sprintf: the conversions the format names (1 or 2 here), written into the
 // buffer as hex - nothing of the CRT.
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     unsigned n = 0;
     for (const char* p = fmt; *p; ++p)
         if (p[0] == '%' && p[1] != '%') ++n;

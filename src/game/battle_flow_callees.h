@@ -111,7 +111,7 @@ struct Callees {
     void (__cdecl* release_tint)(unsigned char*);
     void (__cdecl* clear_turn_bit)(unsigned);
     void (__cdecl* load_dat)(int);
-    int (__cdecl* crt_sprintf)(char*, const char*, ...);
+    int (*crt_sprintf)(char*, const char*, ...);
     unsigned (__cdecl* get_tpage)(unsigned, unsigned, int, int);
     void (__cdecl* draw_mode)(unsigned char*, int, int, unsigned, std::uint32_t);
     void (__cdecl* commit)(unsigned, unsigned);

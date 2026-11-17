@@ -152,7 +152,7 @@ struct Callees {
     void (__cdecl* file_close)(int);                           // File_Close (ours)
     void* (__cdecl* malloc)(unsigned);                         // Crt_malloc
     void (__cdecl* free)(void*);                               // Crt_free
-    int (__cdecl* sprintf)(char*, const char*, ...);           // Crt_sprintf
+    int (*sprintf)(char*, const char*, ...);           // Crt_sprintf
     std::int32_t (__cdecl* find_first)(const char*, void*);            // _findfirst
     int (__cdecl* find_next)(std::int32_t, void*);                     // _findnext
     int (__cdecl* rand)();                                     // Rand

@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <io.h>
 #include <string>
 #include <vector>
 
@@ -19,6 +18,7 @@
 #include "game/battle_e6_callees.h"
 #include "game/battle_sprites_callees.h"
 #include "game/battle_text.h"
+#include "os/os.h"
 #include "game/boss_harness.h"
 #include "game/char_names.h"
 #include "game/cheats.h"
@@ -2992,7 +2992,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
     }
     // DIV-0147: the quick menu's text is the title's load menu's, kept from
     // the title's pool (a battle's pool has other messages at its ids).
-    if (_stricmp(name, "FIRST.DAT") == 0) {
+    if (bof3::os::SameName(name, "FIRST.DAT")) {
         bof3::QuickMenu_TitlePoolLoaded();
         // DIV-0225: TownWarp on needs the mod's kind-21 chunks, which FIRST.DAT's
         // layers carry; without them the game stops here, at the title.

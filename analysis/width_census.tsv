@@ -2107,59 +2107,59 @@ site	src/game/core/save_menu_fuzz.cpp	996	narrow_call	object_ours	fuzz	&g_buffer
 site	src/game/core/save_menu_fuzz.cpp	1086	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[i])	Addr	for (unsigned i = 0; i < kTableEntries; ++i) PutLong(::bof3::Img(at::kStepTable.v) + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 site	src/game/core/save_menu_fuzz.cpp	1124	fmt_place	word	fuzz	ours.result	%08X	bof3::Log("shadow save_menu MISMATCH: round %u, %s, cw %04X, result %08X / %08X, log %u / %u, "
 site	src/game/core/save_menu_fuzz.cpp	1124	fmt_place	word	fuzz	theirs.result	%08X	bof3::Log("shadow save_menu MISMATCH: round %u, %s, cw %04X, result %08X / %08X, log %u / %u, "
-site	src/game/core/sound.cpp	77	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	77	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	79	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	102	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	102	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	104	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	187	low32	helper_def	live	p	Low32	std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	189	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	189	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	206	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/core/sound.cpp	206	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/core/sound.cpp	215	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	215	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	225	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	271	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	271	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/core/sound.cpp	273	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/core/sound.cpp	312	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/core/sound.cpp	312	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/core/sound.cpp	389	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
-site	src/game/core/sound.cpp	408	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
-site	src/game/core/sound.cpp	412	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
-site	src/game/core/sound.cpp	520	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/core/sound.cpp	521	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/core/sound.cpp	560	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
-site	src/game/core/sound.cpp	585	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	589	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	608	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
-site	src/game/core/sound.cpp	609	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	610	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
-site	src/game/core/sound.cpp	612	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
-site	src/game/core/sound.cpp	619	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
-site	src/game/core/sound.cpp	620	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	621	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
-site	src/game/core/sound.cpp	623	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
-site	src/game/core/sound.cpp	633	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	635	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
-site	src/game/core/sound.cpp	641	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	641	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/core/sound.cpp	651	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/core/sound.cpp	654	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	670	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
-site	src/game/core/sound.cpp	671	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	672	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
-site	src/game/core/sound.cpp	674	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
-site	src/game/core/sound.cpp	713	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
-site	src/game/core/sound.cpp	759	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
-site	src/game/core/sound.cpp	762	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
-site	src/game/core/sound.cpp	772	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
-site	src/game/core/sound.cpp	1113	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
-site	src/game/core/sound.cpp	1114	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/core/sound.cpp	1115	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/core/sound.cpp	1121	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
+site	src/game/core/sound.cpp	76	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	76	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	78	low32	helper_def	live	p	Low32	U Addr(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	101	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	101	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	103	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	186	low32	helper_def	live	p	Low32	std::uint32_t AddrScenaSx2(const void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	188	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	188	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	205	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/core/sound.cpp	205	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/core/sound.cpp	214	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	214	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	224	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	270	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	270	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/core/sound.cpp	272	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/core/sound.cpp	311	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/core/sound.cpp	311	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/core/sound.cpp	388	narrow_call	image	live	Sound_Channels	AddrScenaSx2	for (std::uint32_t p = AddrScenaSx2(Sound_Channels); p < ::bof3::Img(scena_sx2::at::kChannelsEnd); p += 4) {
+site	src/game/core/sound.cpp	407	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t cue_at = AddrScenaSx2(Sound_Banks) + bank + (c & 0xFF) * 16;
+site	src/game/core/sound.cpp	411	narrow_call	image	live	Sound_Banks	AddrScenaSx2	const std::uint32_t buffer = UScenaSx2(LongScenaSx2(AtScenaSx2(AddrScenaSx2(Sound_Banks) + scena_sx2::at::kBankVoices + bank + (voice & 0xFF) * 8)));
+site	src/game/core/sound.cpp	519	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	sound::g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/core/sound.cpp	520	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	sound::g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/core/sound.cpp	559	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
+site	src/game/core/sound.cpp	584	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	588	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	607	naked	-	live	Sound_StopMusic	-	extern " " __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
+site	src/game/core/sound.cpp	608	width_if	asm_pair	live	Sound_StopMusic	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	609	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
+site	src/game/core/sound.cpp	611	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, halt)));
+site	src/game/core/sound.cpp	618	naked	-	live	Sound_ResumeAll	-	extern " " __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
+site	src/game/core/sound.cpp	619	width_if	asm_pair	live	Sound_ResumeAll	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	620	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
+site	src/game/core/sound.cpp	622	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, resume)));
+site	src/game/core/sound.cpp	632	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	634	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
+site	src/game/core/sound.cpp	640	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	640	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/core/sound.cpp	650	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/core/sound.cpp	653	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	669	naked	-	live	Sound_MusicPlaying	-	extern " " __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
+site	src/game/core/sound.cpp	670	width_if	asm_pair	live	Sound_MusicPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	671	asm	stack	live	jmp *(	jmp	__asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
+site	src/game/core/sound.cpp	673	asm	stack	live	jmp *%c0+	jmp	__asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(sound_rest::Callees, music_playing)));
+site	src/game/core/sound.cpp	712	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
+site	src/game/core/sound.cpp	758	narrow_call	image_local	live	payload	Addr	const display_env::U src = Addr(payload);
+site	src/game/core/sound.cpp	761	narrow_call	heap	live	display_env::g.malloc(bytes)	Addr	const display_env::U data = Addr(display_env::g.malloc(bytes));
+site	src/game/core/sound.cpp	771	narrow_call	unread	live	display_env::g.from_wave(display_env::At(sample))	Addr	PutLong(entry + 4, Addr(display_env::g.from_wave(display_env::At(sample))));
+site	src/game/core/sound.cpp	1112	naked	-	live	LoadMenu_Error	-	extern " " __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
+site	src/game/core/sound.cpp	1113	width_if	asm_pair	live	LoadMenu_Error	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/core/sound.cpp	1114	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/core/sound.cpp	1120	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody)); // the caller's ecx is the body's first argument already
 site	src/game/core/task.cpp	18	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	18	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/core/task.cpp	48	uintptr	-	live	std::uintptr_t	-	const auto e = reinterpret_cast<std::uintptr_t>(entry);
@@ -2253,12 +2253,12 @@ site	src/game/core/transition.cpp	1538	uintptr	-	live	std::uintptr_t	-	mode_flow
 site	src/game/core/transition.cpp	1538	widen	code_place	live	::bof3::Code(kTitleLoadEntry.v)	void*	mode_flow::g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
 site	src/game/core/transition.cpp	1592	low32	object_ours	live	&mode_flow::g_area_track_fallback	Low32	Low32(&mode_flow::g_area_track_fallback), was, is, 4);
 site	src/game/core/transition.cpp	1598	low32	object_ours	live	&mode_rest::g_event_keeps_music	Low32	bof3::PatchBytes(" ", Low32(&mode_rest::g_event_keeps_music),
-site	src/game/crt_rest.cpp	76	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
-site	src/game/crt_rest.cpp	77	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
-site	src/game/crt_rest.cpp	79	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
-site	src/game/crt_rest.cpp	87	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
-site	src/game/crt_rest.cpp	89	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
-site	src/game/crt_rest.cpp	457	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
+site	src/game/crt_rest.cpp	75	low32	func_ours	live	ret	Low32	const auto at = Low32(ret);
+site	src/game/crt_rest.cpp	76	low32	object_ours	live	&__ImageBase	Low32	const auto dll = Low32(&__ImageBase);
+site	src/game/crt_rest.cpp	78	fmt_place	pointer	live	static_cast<unsigned>(::bof3::VaOf(at))	%08X	std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
+site	src/game/crt_rest.cpp	86	fmt_place	word	live	Low32(fmt)	%08X	bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
+site	src/game/crt_rest.cpp	88	low32	image_local	live	fmt	Low32	fmt, Low32(fmt), static_cast<int>(len), spec,
+site	src/game/crt_rest.cpp	452	low32	crt	live	Crt_GetPtd	Low32	const auto get_ptd = Low32(Crt_GetPtd);
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)ours	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	54	fmt_place	word	fuzz	(unsigned)theirs	%08X	bof3::Log("shadow crt_rest self-test MISMATCH: %s, round %u: original %08X, ours %08X", what, round,
 site	src/game/crt_rest_fuzz.cpp	123	narrow	crt	fuzz	Crt_GetPtd	-	const auto get_ptd = static_cast<U>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));
@@ -3965,24 +3965,24 @@ site	src/game/field/event_script_ours.cpp	167	low32	object_ours	live	&event_scri
 site	src/game/field/faerie_ring.cpp	118	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
 site	src/game/field/faerie_ring.cpp	118	long	l	live	long	-	const long long file_size = static_cast<long long>(h.tellg());
 site	src/game/field/faerie_ring.cpp	321	fmt_place	word	live	g_ring.word	%08X	bof3::Log("DIV-0204 the ring laid: page-0 cell 0x%02x, palette %u entries %u..255, texture word %08X",
-site	src/game/field/field_2.cpp	77	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
-site	src/game/field/field_2.cpp	93	low32	helper_def	live	p	Low32	std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
-site	src/game/field/field_2.cpp	101	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/field/field_2.cpp	114	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %%ecx" : "=a"(quot), "=&d"(rem) : "a"(dividend), "c"(divisor) : "cc");
-site	src/game/field/field_2.cpp	149	uintptr	-	live	std::uintptr_t	-	unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/field_2.cpp	149	widen	param	live	a	unsigned char*	unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/field/field_2.cpp	151	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_2.cpp	151	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_2.cpp	172	uintptr	-	live	std::uintptr_t	-	template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_2.cpp	172	widen	param	live	address	To	template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/field_2.cpp	181	widen	img_place	live	::bof3::Img(Field_LeaderStates_addr)	const std::uint32_t*	Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderStates_addr)),
-site	src/game/field/field_2.cpp	183	widen	img_place	live	::bof3::Img(Field_LeaderControlSteps_addr)	const std::uint32_t*	reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderControlSteps_addr)), Sprite_ScriptTick,
-site	src/game/field/field_2.cpp	196	widen	img_place	live	::bof3::Img(Field_PendingJumps_addr)	const std::uint32_t*	reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_PendingJumps_addr)),
-site	src/game/field/field_2.cpp	213	uintptr	-	live	std::uintptr_t	-	const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Fie
-site	src/game/field/field_2.cpp	276	narrow_call	image_local	live	object	Addr	if (LBattleE6(move_script::At(::bof3::Img(Field_Slots_addr) + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
-site	src/game/field/field_2.cpp	359	narrow_call	image_local	live	sprite	Address	battle_sprites::SetLong(rec + 8, Address(sprite));
-site	src/game/field/field_2.cpp	383	narrow_call	image_local	live	sprite	Address	if (static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
-site	src/game/field/field_2.cpp	521	narrow_call	image_local	live	object	Addr	SetL(slot + 0xC, Addr(object));
+site	src/game/field/field_2.cpp	76	low32	helper_def	live	p	Low32	U Addr(const void* p) { return Low32(p); }
+site	src/game/field/field_2.cpp	92	low32	helper_def	live	p	Low32	std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
+site	src/game/field/field_2.cpp	100	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/field/field_2.cpp	113	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %%ecx" : "=a"(quot), "=&d"(rem) : "a"(dividend), "c"(divisor) : "cc");
+site	src/game/field/field_2.cpp	148	uintptr	-	live	std::uintptr_t	-	unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/field_2.cpp	148	widen	param	live	a	unsigned char*	unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/field/field_2.cpp	150	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_2.cpp	150	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_2.cpp	171	uintptr	-	live	std::uintptr_t	-	template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_2.cpp	171	widen	param	live	address	To	template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/field_2.cpp	180	widen	img_place	live	::bof3::Img(Field_LeaderStates_addr)	const std::uint32_t*	Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderStates_addr)),
+site	src/game/field/field_2.cpp	182	widen	img_place	live	::bof3::Img(Field_LeaderControlSteps_addr)	const std::uint32_t*	reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderControlSteps_addr)), Sprite_ScriptTick,
+site	src/game/field/field_2.cpp	195	widen	img_place	live	::bof3::Img(Field_PendingJumps_addr)	const std::uint32_t*	reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_PendingJumps_addr)),
+site	src/game/field/field_2.cpp	212	uintptr	-	live	std::uintptr_t	-	const frame_callees::CalleesFrameCallees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Fie
+site	src/game/field/field_2.cpp	275	narrow_call	image_local	live	object	Addr	if (LBattleE6(move_script::At(::bof3::Img(Field_Slots_addr) + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
+site	src/game/field/field_2.cpp	358	narrow_call	image_local	live	sprite	Address	battle_sprites::SetLong(rec + 8, Address(sprite));
+site	src/game/field/field_2.cpp	382	narrow_call	image_local	live	sprite	Address	if (static_cast<std::uint32_t>(move_script::Long(move_script::At(::bof3::Img(MoveScript_TintRecords_addr) + 0x8 + i * 12))) == Address(sprite))
+site	src/game/field/field_2.cpp	520	narrow_call	image_local	live	object	Addr	SetL(slot + 0xC, Addr(object));
 site	src/game/field/field_3.cpp	62	uintptr	-	live	std::uintptr_t	-	unsigned char* AtBattleMisc(battle_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/field/field_3.cpp	62	widen	param	live	address	unsigned char*	unsigned char* AtBattleMisc(battle_misc::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/field/field_3.cpp	124	low32	helper_def	live	p	Low32	template <typename T> U AddressOf(T* p) { return Low32(p); }
@@ -4848,8 +4848,8 @@ site	src/game/field/rest_2f_fuzz.cpp	380	narrow_call	image_local	fuzz	ShisuList(
 site	src/game/field/rest_2f_fuzz.cpp	477	narrow_call	image_local	fuzz	sh::Scratch(0)	Key	a[0] = Key(sh::Scratch(0));
 site	src/game/field/rest_2f_fuzz.cpp	487	narrow_call	image_local	fuzz	Mem(Rec(g_arg_rec, 0))	Key	case kDrawItemList: a[0] = Key(Mem(Rec(g_arg_rec, 0))); break;
 site	src/game/field/rest_2f_fuzz.cpp	553	narrow_call	object_ours	fuzz	g_text	Key	regions[sizeof kRegions / sizeof kRegions[0] - 1].at = Key(g_text);
-site	src/game/field/save.cpp	29	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/field/save.cpp	29	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/save.cpp	28	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/field/save.cpp	28	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 site	src/game/field/scena_se_fuzz.cpp	64	narrow	helper_def	fuzz	p	-	std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/field/scena_se_fuzz.cpp	64	uintptr	-	fuzz	std::uintptr_t	-	std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/field/scena_se_fuzz.cpp	65	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -6837,44 +6837,44 @@ site	src/game/platform/magic_080.cpp	1112	asm	stack	live	subl $0x3C, %esp	call l
 site	src/game/platform/magic_080.cpp	1124	asm	stack	live	subq $0x68, %rsp	call leaq subq	asm("subq $0x68, %rsp\n\t"
 site	src/game/platform/magic_080.cpp	1194	low32	image_local	live	node	Low32	node[1] = Low32(node);
 site	src/game/platform/magic_080.cpp	1211	narrow_call	image	live	Gfx_CurrentEnv	Addr	const U block = Addr(Gfx_CurrentEnv);
-site	src/game/platform/music.cpp	81	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/music.cpp	81	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/music.cpp	111	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/music.cpp	111	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/platform/music.cpp	123	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/platform/music.cpp	336	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/platform/music.cpp	336	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/platform/music.cpp	389	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	402	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	402	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
-site	src/game/platform/music.cpp	403	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	403	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
-site	src/game/platform/music.cpp	425	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	425	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	487	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
-site	src/game/platform/music.cpp	595	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/platform/music.cpp	608	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	608	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/platform/music.cpp	609	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	609	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/platform/music.cpp	619	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
-site	src/game/platform/music.cpp	620	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	621	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	627	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	639	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
-site	src/game/platform/music.cpp	640	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	641	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	647	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	658	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/platform/music.cpp	727	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	727	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
-site	src/game/platform/music.cpp	762	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
-site	src/game/platform/music.cpp	763	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	764	asm	stack	live	push %ecx	call push	__asm__ volatile(
-site	src/game/platform/music.cpp	770	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
-site	src/game/platform/music.cpp	786	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/platform/music.cpp	787	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
-site	src/game/platform/music.cpp	794	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	80	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/music.cpp	80	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/music.cpp	110	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/music.cpp	110	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/platform/music.cpp	122	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/platform/music.cpp	335	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
+site	src/game/platform/music.cpp	335	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
+site	src/game/platform/music.cpp	388	asm	x87	live	fildl %[level]	fildl fistpll fldcw fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	401	uintptr	-	live	std::uintptr_t	-	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	401	widen	param	live	sound::kInverse127At	const float*	: [level] " "(level), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+site	src/game/platform/music.cpp	402	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	402	widen	param	live	sound::k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
+site	src/game/platform/music.cpp	424	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	424	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	486	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	sound::g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
+site	src/game/platform/music.cpp	594	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/platform/music.cpp	607	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	607	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/platform/music.cpp	608	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	608	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/platform/music.cpp	618	naked	-	live	Music_Halt	-	extern " " __attribute__((naked)) int __cdecl Music_Halt(void) {
+site	src/game/platform/music.cpp	619	width_if	asm_pair	live	Music_Halt	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	620	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	626	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	638	naked	-	live	Music_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
+site	src/game/platform/music.cpp	639	width_if	asm_pair	live	Music_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	640	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	646	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	657	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/platform/music.cpp	726	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	726	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/platform/music.cpp	761	naked	-	live	SndStream_IsPlaying	-	extern " " __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
+site	src/game/platform/music.cpp	762	width_if	asm_pair	live	SndStream_IsPlaying	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	763	asm	stack	live	push %ecx	call push	__asm__ volatile(
+site	src/game/platform/music.cpp	769	asm	stack	live	jmp	jmp	__asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody)); // the caller's ecx is the body's first argument already
+site	src/game/platform/music.cpp	785	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/platform/music.cpp	786	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+site	src/game/platform/music.cpp	793	handle_array	native	live	events	g.msg_wait	const unsigned signalled = sound::g.msg_wait(2, events, 0, 0, 0xFF);
 site	src/game/platform/music_seq.cpp	105	uintptr	-	live	std::uintptr_t	-	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	105	widen	img_place	live	::bof3::Img(Rest4f_Setting3_addr)	const volatile unsigned char*	bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 site	src/game/platform/music_seq.cpp	145	long	l	live	long	-	const long long size = static_cast<long long>(h.tellg());
@@ -7809,18 +7809,18 @@ site	src/game/shop/field_s_fuzz.cpp	306	uintptr	-	fuzz	std::uintptr_t	-	auto* co
 site	src/game/shop/field_s_fuzz.cpp	306	widen	param	fuzz	a[3]	unsigned char*	auto* const state = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[3]));
 site	src/game/shop/field_s_fuzz.cpp	319	uintptr	-	fuzz	std::uintptr_t	-	auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
 site	src/game/shop/field_s_fuzz.cpp	319	widen	param	fuzz	a[0]	unsigned char*	auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
-site	src/game/shop/field_save.cpp	86	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/field_save.cpp	86	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/field_save.cpp	127	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	127	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	129	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
-site	src/game/shop/field_save.cpp	154	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	154	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	162	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	162	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/field_save.cpp	829	uintptr	-	live	std::uintptr_t	-	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
-site	src/game/shop/field_save.cpp	829	widen	word_read	live	L(descriptor)	const unsigned char*	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
-site	src/game/shop/field_save.cpp	1043	low32	object_ours	live	&g_summary_record0	Low32	Low32(&g_summary_record0), &was, &is, 1);
+site	src/game/shop/field_save.cpp	85	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/field_save.cpp	85	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/field_save.cpp	126	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	126	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	128	low32	image_local	live	p	Low32	save_menu::U AddrSaveMenu(const volatile void* p) { return Low32(p); }
+site	src/game/shop/field_save.cpp	153	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	153	widen	param	live	address	T	template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	161	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	161	widen	param	live	address	unsigned char*	unsigned char* AtShopStates(shop_states::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/field_save.cpp	828	uintptr	-	live	std::uintptr_t	-	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
+site	src/game/shop/field_save.cpp	828	widen	word_read	live	L(descriptor)	const unsigned char*	SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
+site	src/game/shop/field_save.cpp	1042	low32	object_ours	live	&g_summary_record0	Low32	Low32(&g_summary_record0), &was, &is, 1);
 site	src/game/shop/menu_draw_helpers.cpp	69	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/menu_draw_helpers.cpp	69	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/menu_draw_helpers.cpp	83	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
@@ -7927,15 +7927,15 @@ site	src/game/shop/shop_states_fuzz.cpp	207	narrow_call	image_local	fuzz	fmt	Add
 site	src/game/shop/shop_states_fuzz.cpp	214	narrow_call	image_local	fuzz	text	Addr	Record(17, slot, length, Addr(text));
 site	src/game/shop/shop_states_fuzz.cpp	660	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[i])	Addr	for (unsigned i = 0; i < kModeEntries; ++i) PutLong(ShopMode_States_addr + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 site	src/game/shop/shop_states_fuzz.cpp	662	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(TargetTable()[kModeEntries + i])	Addr	PutLong(Inn_Steps_addr + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[kModeEntries + i])));
-site	src/game/shop/shop_trade.cpp	71	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shop_trade.cpp	71	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
-site	src/game/shop/shop_trade.cpp	77	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	77	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	97	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	97	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/shop/shop_trade.cpp	246	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/shop/shop_trade.cpp	246	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
-site	src/game/shop/shop_trade.cpp	1282	low32	object_ours	live	&g_shop_yes_no_hand	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_hand),
+site	src/game/shop/shop_trade.cpp	70	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shop_trade.cpp	70	widen	other	live	LRest2c(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
+site	src/game/shop/shop_trade.cpp	76	uintptr	-	live	std::uintptr_t	-	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	76	widen	param	live	address	unsigned char*	unsigned char* AtSaveMenu(save_menu::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	96	uintptr	-	live	std::uintptr_t	-	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	96	widen	param	live	address	unsigned char*	unsigned char* AtShopStates2(shop_states2::U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/shop/shop_trade.cpp	245	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/shop/shop_trade.cpp	245	widen	param	live	target	Handler [fn]	return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(target));
+site	src/game/shop/shop_trade.cpp	1281	low32	object_ours	live	&g_shop_yes_no_hand	Low32	bof3::PatchBytes(" ", Low32(&g_shop_yes_no_hand),
 site	src/game/shop/shop_win.cpp	35	uintptr	-	live	std::uintptr_t	-	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/shop_win.cpp	35	widen	img_place	live	::bof3::Img(BattleWinStates_Current_addr)	volatile std::uint32_t*	return AtMenuDrawHelpers(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 site	src/game/shop/shop_win.cpp	51	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<menu_draw_helpers::U>(LongMenuDrawHelpers(AtMenuDrawHelpers(table + index * 4)))))();
@@ -15479,9 +15479,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count callconv_CALLBACK_live	19
 #count callconv_WINAPI	24
 #count callconv_WINAPI_live	24
-#count callconv___cdecl	16404
-#count callconv___cdecl_fuzz	2027
-#count callconv___cdecl_live	14377
+#count callconv___cdecl	16383
+#count callconv___cdecl_fuzz	2014
+#count callconv___cdecl_live	14369
 #count callconv___stdcall	354
 #count callconv___stdcall_fuzz	96
 #count callconv___stdcall_live	258

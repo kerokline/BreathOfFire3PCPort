@@ -76,7 +76,7 @@ inline Fn Method(void* object, unsigned offset) {
 
 struct Callees {
     // The C runtime and the file layer (File_* are ours, file_io.cpp)
-    int (__cdecl* sprintf)(char*, const char*, ...);                          // Crt_sprintf
+    int (*sprintf)(char*, const char*, ...);                          // Crt_sprintf
     void* (__cdecl* malloc)(unsigned);                                       // Crt_malloc
     void (__cdecl* free)(void*);                                             // Crt_free
     int (__cdecl* file_open)(const char*, int, int);                          // File_Open

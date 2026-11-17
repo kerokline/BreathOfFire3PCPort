@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Which source files compile for x86-64 Linux today (docs/linux-round.md, unit LB0).
 
-Every `.cpp` under src/ but the launcher's and the Win32 backend's is compiled `-fsyntax-only` for
+Every `.cpp` under src/ but the launcher's, the Win32 backend's and the fuzz files (`*_fuzz.cpp`: the 64-bit host
+drops them, CMakeLists.txt, and a Linux build is the 64-bit host) is compiled `-fsyntax-only` for
 `x86_64-linux-gnu` with clang, with no stub for any Windows header: a file that needs one fails on the include,
 and that is the answer. `__cdecl` is `ms_abi`, the road stage LA3 chose. Reads src/ and symbols.toml; writes
 nothing into the repository but the list, and only when asked.
@@ -45,7 +46,7 @@ def sources():
     for d, _, fs in os.walk(os.path.join(ROOT, 'src')):
         for f in fs:
             rel = os.path.relpath(os.path.join(d, f), ROOT).replace('\\', '/')
-            if f.endswith('.cpp') and not rel.startswith(SKIP):
+            if f.endswith('.cpp') and not f.endswith('_fuzz.cpp') and not rel.startswith(SKIP):
                 out.append(rel)
     return sorted(out)
 

@@ -9,7 +9,6 @@
 #include <cstring>
 #include <emmintrin.h>
 #include <initializer_list>
-#include <io.h>
 #include <malloc.h>
 #include <vector>
 

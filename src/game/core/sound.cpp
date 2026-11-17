@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <io.h>
 #include <malloc.h>
 #include <vector>
 

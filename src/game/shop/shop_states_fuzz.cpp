@@ -235,7 +235,7 @@ const Callees kStubs = {
     StubPlay, StubStream, StubStreamDone,
     StubSlots, StubReadSummaries, StubAutoRepeat, StubYesNo,
     StubTransition, StubFace, StubResetWindows,
-    reinterpret_cast<int (__cdecl*)(char*, const char*, ...)>(StubSprintf), StubTextRecord, StubChoices, StubBlack,
+    reinterpret_cast<int (*)(char*, const char*, ...)>(StubSprintf), StubTextRecord, StubChoices, StubBlack,
     StubRestore,
 };
 

@@ -187,7 +187,7 @@ unsigned Kinds(const char* fmt, char* kinds) {
     return n;
 }
 
-using SprintfFn = int (__cdecl*)(char*, const char*, ...);
+using SprintfFn = int (*)(char*, const char*, ...);
 
 // Up to three arguments, as the formats have.
 int Call(SprintfFn f, char* out, const char* fmt, const U* args) { return f(out, fmt, args[0], args[1], args[2]); }
@@ -679,7 +679,7 @@ void ScanString(unsigned round, char* s) {
 }
 
 // The planted bugs.
-int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
+int PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
     std::va_list args;
     va_start(args, fmt);
     void* const a = va_arg(args, void*);
@@ -688,7 +688,7 @@ int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where
     const int r = ::Crt_sscanf(s, fmt, a, b);
     return r < 0 ? 0 : r;
 }
-int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
+int PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
     std::va_list args;
     va_start(args, fmt);
     void* const a = va_arg(args, void*);
@@ -702,7 +702,7 @@ int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the 
     return r;
 }
 
-using ScanFn = int (__cdecl*)(const char*, const char*, ...);
+using ScanFn = int (*)(const char*, const char*, ...);
 // hex false: Cfg_Load's format at 0x65DAD0; true: the decoder's at 0x672854.
 unsigned CompareScan(ScanFn ours, unsigned rounds, bool log, bool hex = false) {
     const ScanFn theirs = bof3::orig::Crt_sscanf;   // orig:: converts to its pointer (tools/gen_symbols.py)

@@ -641,8 +641,9 @@ same lines respelled), `analysis/typed_left.tsv` (7 rows of
 `drain_orb_a.cpp`, whose function column read `long`). The other checks of
 `checks.yml` that read `src/` pass unchanged.
 
-**Not run:** the hosted self-tests and the state-hash routes. The machine
-code is the proof made. No ledger entry: nothing a player sees changes.
+**Not run** for this part alone: the hosted self-tests (the second part ran
+them on both parts together) and the state-hash routes. No ledger entry:
+nothing a player sees changes.
 
 **The measure after.** `python tools/linux_probe/linux_tree.py`: 1,055 files
 (the fuzz files too), **991 compile for x86-64 Linux, 64 do not**.
@@ -661,12 +662,71 @@ this source is not tried.
 | `name` | 2 | `_strnicmp` (`mp3.cpp`), `_msize` (`sound_ours.cpp`) |
 | `d3d11.h` | 2 | `render_d3d11.cpp`, `satpixie.cpp`: DXVK-native's headers (call 1) |
 
-So what stands between the source and a Linux compile is small and named.
 The `io.h` ten, the two names, the five type sites and the eight `va_start`
-files are one more unit of this kind (25 files, no decision to make). The
-rest is L2 (the window, the key codes) and L3 (the fibers, the crash
-catcher), as section 6 orders them. A compile is not a link: stage LC's
-items (the ELF preset, the low-memory image, DXVK-native) are untouched.
+files were the next unit, below.
+
+### LB0, second part: the 25 files (2026-11-17, the same branch)
+
+The files the list gave under `io.h`, `name`, `type` and `va_start`.
+
+- **Fuzz files are not counted.** The 64-bit host drops every `*_fuzz.cpp`
+  (`CMakeLists.txt`), and a Linux build is the 64-bit host, so
+  `linux_tree.py` skips them: 802 files, not 1,055. Eleven of the 25 were
+  fuzz files.
+- **A variadic function has no `__cdecl`.** `__cdecl` is the default on
+  x86-32 and means nothing on x86-64 Windows; where it is `ms_abi`, `va_start`
+  is an error and the list cannot go to the C library's `v*` calls.
+  `tools/gen_symbols.py` writes no convention for a `params` that ends in
+  `...` (`Crt_sprintf`, `Crt_sscanf`), and the definitions, the stand-ins and
+  the callee tables' pointer types (28 lines) follow.
+- **Two pointer types say `__cdecl`** where they take one of ours
+  (`effect_1a.cpp:190`, three lambdas of `party_action.cpp`).
+- **Six `#include <io.h>` were dead** and are gone.
+- **`_stricmp` and `_strnicmp`**, which only Windows' C library has:
+  `dragon_cmd.cpp` and `mp3.cpp` use `os::SameName` / `SameNameN` (the same
+  ASCII fold), and `Crt_stricmp` is written out as its comment describes the
+  original.
+- **The save list's search and the file layer's two questions are in the
+  seam.** `os/find.h` (`FindFirst`, `FindNext`, `FindClose` into
+  `os::FindData`, MSVC 6's `_finddata_t`) and `os/stream.h`
+  (`StreamDescriptor`, `DescriptorLength`): the C runtime's calls on Windows,
+  the portable walk and `fstat` on POSIX. POSIX has no creation time, so
+  `time_create` and `time_access` read -1, as MSVC says them for a file system
+  without them.
+
+**A weakness of the 64-bit Windows build, found by the new test and
+removed.** The runtime's search handle is an `intptr_t` and the game keeps a
+32-bit word. In `tools/os_host`'s 64-bit process the handle lay above 4 GB
+and `_findnext32` faulted on the narrowed one. The engine's own process has a
+low heap and never showed it. On x86-64 the Win32 backend now gives the game
+the number of a slot that holds the handle; on x86-32 the word is the handle,
+as before.
+
+**Proof.**
+
+| Check | Result |
+|---|---|
+| Both presets | build, no error, no `-Wformat` warning |
+| Objects against the first part's commit, both widths | 4 differ in code beyond a constant: `mp3.cpp`, `dragon_cmd.cpp`, `save_menu.cpp`, `crt_rest.cpp` - the four with a changed function. On the 64-bit build five more differ in a `__LINE__` constant (a removed include line) |
+| `os_tests` | Win32 backend, 32-bit: 112 checks, 0 failed; 64-bit: 113, 0 failed; POSIX backend (g++ 15.2 in the WSL): 113, 0 failed. `TestFindAndStreams` is new |
+| The hosted shadow suite (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, 32-bit, a clean launcher folder, the PC install) | runs to `self-test only: done`; 922 summary lines, each `0 MISMATCHES`; `crt_rest`'s among them: `_stricmp` 60,000 rounds, `_findfirst / _findnext` 2,029 matches over 5 patterns, the file layer |
+
+**Not run:** the state-hash routes; the 64-bit game itself with the handle
+slots (its save list was not opened).
+
+**The measure now.** 802 files, **764 compile for x86-64 Linux, 38 do not**:
+
+| Reason | Files | What they are |
+|---|---:|---|
+| `windows.h` | 26 | `BOUNDARY_WAITING`'s files (L2, L3, the PE host), the harness watchers of `src/hook`, two harness files of `src/game` |
+| `dinput.h` | 9 | DirectInput's key codes (call 4: retired for SDL3) |
+| `d3d11.h` | 2 | `render_d3d11.cpp`, `satpixie.cpp`: DXVK-native's headers (call 1) |
+| `name` | 1 | `sound_ours.cpp`: `_msize`, the exact size of a heap block. glibc's `malloc_usable_size` answers a larger number, so this waits for the arena at the `Crt_malloc` chokepoint that LA2 found the heap needs anyway |
+
+Every file left belongs to a unit section 6 already names: L2 (the window,
+the keys), L3 (the fibers, the crash catcher), the renderer's headers, the
+heap. A compile is not a link: stage LC's items (the ELF preset, the
+low-memory image, DXVK-native) are untouched.
 
 ### Stage LC - link and run on Linux
 

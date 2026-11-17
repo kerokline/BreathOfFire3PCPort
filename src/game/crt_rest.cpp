@@ -13,7 +13,6 @@
 // strncpy users and _fcloseall - with them.
 #include "game/crt_rest.h"
 
-#include <io.h>
 
 #include <cstdarg>
 #include <cstddef>
@@ -150,7 +149,7 @@ extern "C" int __cdecl Rand(void) {
 
 // original 0x5B9380: sprintf over MSVC 6's _output, for the conversions above.
 // Returns the characters written, the NUL not counted.
-extern "C" int __cdecl Crt_sprintf(char* dst, const char* fmt, ...) {
+extern "C" int Crt_sprintf(char* dst, const char* fmt, ...) {
     const void* const caller = __builtin_return_address(0);   // named by a refusal
     va_list ap;
     va_start(ap, fmt);
@@ -241,36 +240,32 @@ extern "C" int __cdecl Crt_atoi(const char* s) {
 // original 0x5C2B40: _stricmp. Under the "C" locale (the game never sets one:
 // __lc_handle[LC_CTYPE] 0x7DEC18 stays 0) both bytes are folded A..Z to a..z
 // and compared unsigned; the answer is -1, 0 or 1 (`sbb al, al; sbb al,
-// 0xFF; movsx eax, al`). The toolchain's folds the same way and answers the
-// difference: its sign is the original's answer.
+// 0xFF; movsx eax, al`). Written out, so no C library's own fold is asked
+// (Windows' _stricmp is not a name every system has).
 extern "C" int __cdecl Crt_stricmp(const char* a, const char* b) {
-    const int r = _stricmp(a, b);
-    return (r > 0) - (r < 0);
+    const auto fold = [](char c) -> unsigned char {
+        const unsigned char u = static_cast<unsigned char>(c);
+        return u >= 'A' && u <= 'Z' ? static_cast<unsigned char>(u + 0x20) : u;
+    };
+    for (;; ++a, ++b) {
+        const unsigned char x = fold(*a), y = fold(*b);
+        if (x != y) return x < y ? -1 : 1;
+        if (x == 0) return 0;
+    }
 }
 
 // original 0x5B979A / 0x5B9867: _findfirst / _findnext into MSVC 6's
 // _finddata_t - attrib u32 +0, time_create / time_access / time_write 32-bit
-// +4 / +8 / +0xC, size u32 +0x10, name[260] +0x14, 0x118 bytes. The
-// toolchain's _finddata32_t is that layout (checked below); its _finddata_t is
-// not (64-bit times). The handle goes only between the two (Save_ListFiles,
-// which never closes it: the original's leak, kept there).
-static_assert(offsetof(_finddata32_t, attrib) == 0x0 && sizeof(_finddata32_t::attrib) == 4, "_finddata32_t.attrib");
-static_assert(offsetof(_finddata32_t, time_create) == 0x4 && sizeof(_finddata32_t::time_create) == 4,
-              "_finddata32_t.time_create");
-static_assert(offsetof(_finddata32_t, time_access) == 0x8 && sizeof(_finddata32_t::time_access) == 4,
-              "_finddata32_t.time_access");
-static_assert(offsetof(_finddata32_t, time_write) == 0xC && sizeof(_finddata32_t::time_write) == 4,
-              "_finddata32_t.time_write");
-static_assert(offsetof(_finddata32_t, size) == 0x10 && sizeof(_finddata32_t::size) == 4, "_finddata32_t.size");
-static_assert(offsetof(_finddata32_t, name) == 0x14 && sizeof(_finddata32_t::name) == 260, "_finddata32_t.name");
-static_assert(sizeof(_finddata32_t) == 0x118, "_finddata32_t is MSVC 6's _finddata_t");
-
+// +4 / +8 / +0xC, size u32 +0x10, name[260] +0x14, 0x118 bytes: os::FindData
+// (os/find.h), which each system's backend fills. The handle goes only between
+// the two (Save_ListFiles, which never closes it: the original's leak, kept
+// there).
 extern "C" std::int32_t __cdecl Crt_findfirst(const char* pattern, void* found) {
-    return static_cast<std::int32_t>(_findfirst32(pattern, static_cast<_finddata32_t*>(found)));
+    return bof3::os::FindFirst(pattern, static_cast<bof3::os::FindData*>(found));
 }
 
 extern "C" int __cdecl Crt_findnext(std::int32_t handle, void* found) {
-    return _findnext32(static_cast<intptr_t>(handle), static_cast<_finddata32_t*>(found));
+    return bof3::os::FindNext(handle, static_cast<bof3::os::FindData*>(found));
 }
 
 // The file layer: every stream is opened, used and closed by ours - File_Open
@@ -309,12 +304,12 @@ extern "C" int __cdecl Crt_fseek(void* stream, int offset, int whence) {
 
 // original 0x5C3660: the stream's descriptor (MSVC 6's FILE._file).
 extern "C" int __cdecl Crt_fileno(void* stream) {
-    return _fileno(bof3::FileOfToken(stream));
+    return bof3::os::StreamDescriptor(bof3::FileOfToken(stream));
 }
 
 // original 0x5C35D6: the descriptor's length, -1 for a bad one.
 extern "C" int __cdecl Crt_filelength(int fd) {
-    return static_cast<int>(_filelength(fd));
+    return bof3::os::DescriptorLength(fd);
 }
 
 // original 0x5B9ADA: fgets - Cfg_Load's two lines of BOF3.CFG, a text stream.
@@ -416,7 +411,7 @@ bool ScanNumber(const unsigned char*& p, bool hex, std::uint32_t* out, bool* end
 
 }  // namespace
 
-extern "C" int __cdecl Crt_sscanf(const char* s, const char* fmt, ...) {
+extern "C" int Crt_sscanf(const char* s, const char* fmt, ...) {
     const bool decimal = std::strcmp(fmt, "%d %d") == 0;
     if (!decimal && std::strcmp(fmt, "%lx@%lx") != 0)
         bof3::Fatal("Crt_sscanf: the format \"%s\" is neither Cfg_Load's \"%%d %%d\" nor the decoder's \"%%lx@%%lx\"", fmt);

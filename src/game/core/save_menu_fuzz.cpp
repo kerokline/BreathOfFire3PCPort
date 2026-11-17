@@ -208,7 +208,7 @@ void* __cdecl StubMalloc(unsigned n) {
     return g_heap + (Hash(0x3A1) % 8) * 4;
 }
 void __cdecl StubFree(void* p) { Record(0x07, Addr(p)); }
-int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
+int StubSprintf(char* dst, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const U arg = va_arg(ap, U);

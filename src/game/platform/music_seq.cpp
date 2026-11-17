@@ -624,7 +624,7 @@ TestFile* Lookup(const char* path) {
     return nullptr;
 }
 bool TestExists(const char* path) { return Lookup(path) != nullptr; }
-int __cdecl TestSprintf(char* out, const char* format, ...) {
+int TestSprintf(char* out, const char* format, ...) {
     va_list args;
     va_start(args, format);
     const int n = std::vsprintf(out, format, args);

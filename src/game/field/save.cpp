@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <io.h>
 
 #include "bof3/symbols.gen.h"
 #include "common/asm_name.h"

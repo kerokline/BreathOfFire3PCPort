@@ -77,7 +77,7 @@ struct Callees {
     void (__cdecl* set_poly_ft4)(unsigned char*);                                       // Gpu_SetPolyFT4
     const unsigned char* (__cdecl* text_draw_at)(int, int, int, int, const unsigned char*);  // Text_DrawAt
     void (__cdecl* font8)(int, int, int, const unsigned char*);                         // Text_DrawFont8
-    int (__cdecl* sprintf_)(char*, const char*, ...);                                   // Crt_sprintf
+    int (*sprintf_)(char*, const char*, ...);                                   // Crt_sprintf
     void (__cdecl* icon)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);   // Menu_DrawIcon
     void (__cdecl* update_screen)();                                                    // Sprite_UpdateScreen
     unsigned (__cdecl* script_tick)();                                                  // Sprite_ScriptTick (al)

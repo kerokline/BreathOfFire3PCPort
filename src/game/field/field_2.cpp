@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <io.h>
 #include <utility>
 
 #include "bof3/symbols.gen.h"
